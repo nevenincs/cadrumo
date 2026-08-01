@@ -40,7 +40,9 @@ from dev.packaging.installed_tax_oracle import (
     RELATIONS,
     TARGET_CASILLA,
     YEAR,
+    assert_envelope_contract,
     assert_grounded_observations,
+    assert_no_diagnostic_notices,
     checkout_imports_removed,
     isolated_product_environment,
 )
@@ -183,36 +185,11 @@ def _structured(result: CallToolResult, *, operation: str) -> dict[str, Any]:
 
 
 def _assert_envelope(payload: dict[str, Any], *, command_key: str) -> dict[str, Any]:
-    if payload.get("command") != command_key:
-        raise InstalledMcpOracleError(
-            f"expected command {command_key!r}, got {payload.get('command')!r}",
-        )
-    if payload.get("status") not in {"success", "warning"}:
-        raise InstalledMcpOracleError(f"{command_key} did not succeed: {payload!r}")
-    if payload.get("active_profile") != PROFILE_LABEL:
-        raise InstalledMcpOracleError(
-            f"{command_key} used active profile {payload.get('active_profile')!r}",
-        )
-    result = payload.get("result")
-    if not isinstance(result, dict):
-        raise InstalledMcpOracleError(f"{command_key} result is not an object")
-    if not isinstance(payload.get("notices"), list):
-        raise InstalledMcpOracleError(f"{command_key} notices are not a list")
-    return result
+    return assert_envelope_contract(payload, command=command_key, error=InstalledMcpOracleError)
 
 
 def _assert_no_diagnostic_notices(payload: dict[str, Any], *, command_key: str) -> None:
-    if payload.get("status") != "success":
-        raise InstalledMcpOracleError(f"{command_key} expected success status: {payload!r}")
-    diagnostics = [
-        notice
-        for notice in payload["notices"]
-        if isinstance(notice, dict) and notice.get("severity") in {"warning", "error"}
-    ]
-    if diagnostics:
-        raise InstalledMcpOracleError(
-            f"{command_key} emitted unexpected diagnostic notices: {diagnostics!r}",
-        )
+    assert_no_diagnostic_notices(payload, command=command_key, error=InstalledMcpOracleError)
 
 
 async def _call_tool(

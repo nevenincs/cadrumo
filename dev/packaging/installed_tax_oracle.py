@@ -14,7 +14,7 @@ import re
 import secrets
 import subprocess
 import time
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -262,6 +262,53 @@ def _run(
     return evidence
 
 
+def assert_envelope_contract(
+    envelope: Mapping[str, Any],
+    *,
+    command: str,
+    error: Callable[[str], Exception],
+) -> dict[str, Any]:
+    """Assert the canonical envelope spine of one delivered command, returning its result.
+
+    Every delivery oracle acquires its envelope over a different transport but
+    then checks the same contract: the envelope names the command it was asked
+    for, reports a non-failing status, ran under the expected active profile,
+    and carries an object result beside a notices list. Acquisition stays with
+    the caller; ``error`` builds the caller's own refusal so each oracle keeps
+    reporting failures in its own type.
+    """
+    if envelope.get("command") != command:
+        raise error(f"expected command {command!r}, got {envelope.get('command')!r}")
+    if envelope.get("status") not in {"success", "warning"}:
+        raise error(f"{command} did not succeed: {envelope!r}")
+    if envelope.get("active_profile") != PROFILE_LABEL:
+        raise error(f"{command} used active profile {envelope.get('active_profile')!r}")
+    result = envelope.get("result")
+    if not isinstance(result, dict):
+        raise error(f"{command} result is not an object")
+    if not isinstance(envelope.get("notices"), list):
+        raise error(f"{command} notices are not a list")
+    return result
+
+
+def assert_no_diagnostic_notices(
+    envelope: Mapping[str, Any],
+    *,
+    command: str,
+    error: Callable[[str], Exception],
+) -> None:
+    """Assert a delivered command reported plain success and raised no diagnostic notice."""
+    if envelope.get("status") != "success":
+        raise error(f"{command} expected success status: {envelope!r}")
+    diagnostics = [
+        notice
+        for notice in envelope["notices"]
+        if isinstance(notice, dict) and notice.get("severity") in {"warning", "error"}
+    ]
+    if diagnostics:
+        raise error(f"{command} emitted unexpected diagnostic notices: {diagnostics!r}")
+
+
 def _json_envelope(evidence: CommandEvidence, *, expected_command: str) -> dict[str, Any]:
     try:
         document = json.loads(evidence.stdout)
@@ -271,35 +318,12 @@ def _json_envelope(evidence: CommandEvidence, *, expected_command: str) -> dict[
         ) from exc
     if not isinstance(document, dict):
         raise InstalledTaxOracleError(f"{expected_command} emitted a non-object JSON document")
-    if document.get("command") != expected_command:
-        raise InstalledTaxOracleError(
-            f"expected command {expected_command!r}, got {document.get('command')!r}",
-        )
-    if document.get("status") not in {"success", "warning"}:
-        raise InstalledTaxOracleError(f"{expected_command} did not succeed: {document!r}")
-    if document.get("active_profile") != PROFILE_LABEL:
-        raise InstalledTaxOracleError(
-            f"{expected_command} used active profile {document.get('active_profile')!r}",
-        )
-    if not isinstance(document.get("result"), dict):
-        raise InstalledTaxOracleError(f"{expected_command} result is not an object")
-    if not isinstance(document.get("notices"), list):
-        raise InstalledTaxOracleError(f"{expected_command} notices are not a list")
+    assert_envelope_contract(document, command=expected_command, error=InstalledTaxOracleError)
     return document
 
 
 def _assert_no_diagnostic_notices(document: dict[str, Any], *, command: str) -> None:
-    if document.get("status") != "success":
-        raise InstalledTaxOracleError(f"{command} expected success status: {document!r}")
-    diagnostics = [
-        notice
-        for notice in document["notices"]
-        if isinstance(notice, dict) and notice.get("severity") in {"warning", "error"}
-    ]
-    if diagnostics:
-        raise InstalledTaxOracleError(
-            f"{command} emitted unexpected diagnostic notices: {diagnostics!r}",
-        )
+    assert_no_diagnostic_notices(document, command=command, error=InstalledTaxOracleError)
 
 
 def assert_grounded_observations(
