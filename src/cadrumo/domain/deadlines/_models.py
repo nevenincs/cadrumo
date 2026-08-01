@@ -815,9 +815,12 @@ class Recovery(BaseModel):
             for absolutely-time-barred filings can be added without
             reshaping the model.
         recargo_band: The :class:`RecargoBand` resolved from the
-            completed-months window (Art. 27.2 LGT).
-        legal_ref: Same as ``recargo_band.legal_ref``; carried at the
-            top level so renderers do not dereference.
+            completed-months window (Art. 27.2 LGT). It carries the legal
+            reference for the band; read it as
+            ``recovery.recargo_band.legal_ref`` rather than mirroring it
+            onto this payload, so there is exactly one place a renderer
+            can read the grounding from and no way for two copies to
+            disagree.
         next_command: Literal shell command the operator can copy to
             calculate the late filing.
     """
@@ -826,7 +829,6 @@ class Recovery(BaseModel):
 
     still_filable: bool = True
     recargo_band: RecargoBand
-    legal_ref: str = Field(min_length=1, max_length=128)
     next_command: str = Field(min_length=1, max_length=256)
 
 

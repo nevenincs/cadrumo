@@ -265,7 +265,6 @@ def build_recovery_for_overdue(
     return Recovery(
         still_filable=True,
         recargo_band=resolved,
-        legal_ref=resolved.legal_ref,
         next_command=next_command,
     )
 

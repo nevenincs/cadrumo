@@ -14,9 +14,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core import Period
 from .._errors import DeadlineValidationError
+from .._models import Recovery
 from .._recargo import (
     build_recovery_for_overdue,
     completed_months_late,
@@ -140,7 +142,7 @@ def test_build_recovery_uses_completed_months_not_day_bracket() -> None:
     assert recovery.still_filable is True
     assert recovery.recargo_band.surcharge_pct == Decimal("2.00")
     assert recovery.recargo_band.interest_applies is False
-    assert "ley-58-2003" in recovery.legal_ref
+    assert "ley-58-2003" in recovery.recargo_band.legal_ref
     assert recovery.next_command == "aeat app modelo work --help"
 
 
@@ -220,3 +222,36 @@ def test_day_after_twelve_month_anniversary_enters_interest_tail() -> None:
     assert recovery.recargo_band.id == "after_12_months"
     assert recovery.recargo_band.surcharge_pct == Decimal("15.00")
     assert recovery.recargo_band.interest_applies is True
+
+
+def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band() -> None:
+    """The grounding has exactly one home, so two copies cannot disagree.
+
+    ``Recovery`` used to mirror ``recargo_band.legal_ref`` onto a top-level
+    ``legal_ref`` with no equality invariant, so a payload could be built whose
+    top-level reference contradicted its nested one and both survived
+    ``model_dump()``. A renderer reading whichever slot it happened to know
+    about would then cite a different provision than the band it displays.
+
+    Removing the mirror makes the contradiction unconstructible rather than
+    merely discouraged: ``Recovery`` is ``extra="forbid"``, so supplying the
+    retired field is refused outright.
+    """
+    recovery = build_recovery_for_overdue(
+        closes_on=date(2026, 4, 20),
+        reference_today=date(2026, 5, 21),
+        modelo="130",
+        period=Period.from_year_and_code(2026, "1T"),
+    )
+
+    # The grounding is still reachable, and from one place only.
+    assert "ley-58-2003" in recovery.recargo_band.legal_ref
+    assert not hasattr(recovery, "legal_ref")
+
+    with pytest.raises(ValidationError):
+        Recovery(
+            still_filable=True,
+            recargo_band=recovery.recargo_band,
+            legal_ref="not-canonical",
+            next_command="aeat app modelo work --help",
+        )
