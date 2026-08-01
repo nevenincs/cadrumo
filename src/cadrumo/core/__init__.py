@@ -220,6 +220,7 @@ if TYPE_CHECKING:
         FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
         MODELO_720_FOREIGN_ASSET_CLASS_CODES,
         ForeignAssetObligationGroup,
+        foreign_asset_declaration_threshold,
         foreign_asset_obligation_group,
     )
     from ._fsync import fsync_parent_dir
@@ -325,6 +326,7 @@ __all__: list[str] = [
     "derive_result_disposition",
     "exclusive_file_lock",
     "expected_floor",
+    "foreign_asset_declaration_threshold",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
@@ -393,6 +395,7 @@ def __getattr__(name: str) -> object:
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
         "ForeignAssetObligationGroup",
+        "foreign_asset_declaration_threshold",
         "foreign_asset_obligation_group",
     ):
         from . import _foreign_asset_obligation
