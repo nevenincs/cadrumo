@@ -57,7 +57,43 @@ class CertificateSessionDetail(BaseModel):
         return value
 
 
-class ClaveMovilSessionDetail(BaseModel):
+#: Discriminants of the Cl@ve-backed providers. Declared once so the shared
+#: Cl@ve bases below stay closed over exactly the two providers whose detail
+#: shapes they own, and a third Cl@ve provider cannot silently inherit them
+#: without widening this alias.
+_ClaveProviderKind = Literal[_AuthProviderKind.CLAVE_MOVIL, _AuthProviderKind.CLAVE_PERMANENTE]
+
+
+class _ClaveSessionDetailBase(BaseModel):
+    """Identity and landing fields shared by every Cl@ve session detail.
+
+    Both Cl@ve providers authenticate a DNI/NIE and record the authenticated
+    AEAT URL they landed on, with identical constraints and identical meaning.
+    Declaring those fields once means the non-empty identity check and the
+    landing-URL contract cannot drift between Móvil and Permanente. ``kind`` is
+    declared here — required, and open across both Cl@ve providers — so every
+    concrete detail narrows it explicitly to its own provider, and so the base
+    itself can never be constructed without naming one.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    kind: _ClaveProviderKind
+    dni_nie: str = Field(
+        min_length=1,
+        description="DNI/NIE used for the Cl@ve login (authoritative identity).",
+    )
+    landing_url: str | None = Field(
+        default=None,
+        description=(
+            "Concrete authenticated AEAT URL observed after login. "
+            "Used by live verification and resume probes so the provider "
+            "does not re-enter the auth selector when a session is already live."
+        ),
+    )
+
+
+class ClaveMovilSessionDetail(_ClaveSessionDetailBase):
     """Detail shape for a Cl@ve Móvil-authenticated AEAT session.
 
     :class:`adapters.outbound.aeat.auth.ClaveMovilAuthProvider` projects
@@ -66,15 +102,12 @@ class ClaveMovilSessionDetail(BaseModel):
     :class:`adapters.outbound.aeat.auth.AeatSession` records. The session
     does not carry long-lived credential material; the cookie set in encrypted
     browser storage remains the authority for reuse.
+
+    Extends :class:`_ClaveSessionDetailBase` with the two signals unique to the
+    QR/push flow.
     """
 
-    model_config = _STRICT_FROZEN
-
     kind: Literal[_AuthProviderKind.CLAVE_MOVIL] = _AuthProviderKind.CLAVE_MOVIL
-    dni_nie: str = Field(
-        min_length=1,
-        description="DNI/NIE used for the login (authoritative identity).",
-    )
     used_non_qr_fallback: bool = Field(
         default=False,
         description="True when the DNI/NIE + contraste fallback form was used rather than the QR code.",
@@ -86,40 +119,20 @@ class ClaveMovilSessionDetail(BaseModel):
             "login; recorded for audit only. Not reused on resume."
         ),
     )
-    landing_url: str | None = Field(
-        default=None,
-        description=(
-            "Concrete authenticated AEAT URL observed after login. "
-            "Used by live verification and resume probes so the provider "
-            "does not re-enter the auth selector when a session is already live."
-        ),
-    )
 
 
-class ClavePermanenteSessionDetail(BaseModel):
+class ClavePermanenteSessionDetail(_ClaveSessionDetailBase):
     """Detail shape for a Cl@ve Permanente-authenticated AEAT session.
 
     :class:`adapters.outbound.aeat.auth.ClavePermanenteAuthProvider`
     populates this detail for DNI/NIE + password logins. Unlike Cl@ve Móvil,
     the flow carries no verification code and no phone-approval state — the
-    login form is fully headless-automatable for AEAT read paths.
+    login form is fully headless-automatable for AEAT read paths, so this
+    detail adds nothing to :class:`_ClaveSessionDetailBase` beyond its own
+    discriminant.
     """
 
-    model_config = _STRICT_FROZEN
-
     kind: Literal[_AuthProviderKind.CLAVE_PERMANENTE] = _AuthProviderKind.CLAVE_PERMANENTE
-    dni_nie: str = Field(
-        min_length=1,
-        description="DNI/NIE used as the Cl@ve Permanente login username (authoritative identity).",
-    )
-    landing_url: str | None = Field(
-        default=None,
-        description=(
-            "Concrete authenticated AEAT URL observed after login. "
-            "Used by live verification and resume probes so the provider "
-            "does not re-enter the auth selector when a session is already live."
-        ),
-    )
 
 
 class CertificateLoginAssertionDetail(BaseModel):
@@ -137,54 +150,44 @@ class CertificateLoginAssertionDetail(BaseModel):
     parsed_subject: str | None = None
 
 
-class ClaveMovilLoginAssertionDetail(BaseModel):
-    """Verification detail for a Cl@ve Móvil-backed session probe.
+class _ClaveLoginAssertionDetailBase(BaseModel):
+    """Probe signals shared by every Cl@ve login assertion detail.
 
-    After a successful Cl@ve Móvil login, the provider probes an AEAT Sede page
-    to confirm that the session cookies are still live. This detail records the
-    cookie and landing-URL signals carried by
-    :class:`adapters.outbound.aeat.auth.AeatLoginAssertion`.
+    After a successful Cl@ve login, either provider probes an AEAT Sede page to
+    confirm the session cookies are still live, and both record the same two
+    signals carried by :class:`adapters.outbound.aeat.auth.AeatLoginAssertion`.
+    Declaring them once keeps the cookie signal and the landing-URL contract
+    identical across providers. ``kind`` is declared here — required, and open
+    across both Cl@ve providers — so every concrete detail narrows it
+    explicitly to its own provider.
     """
 
     model_config = _STRICT_FROZEN
+
+    kind: _ClaveProviderKind
+    session_cookie_present: bool = Field(
+        default=False,
+        description=(
+            "True when the probe response carried an AEAT session cookie; "
+            "primary signal that the Cl@ve login is still live."
+        ),
+    )
+    landing_url: str | None = Field(
+        default=None,
+        description="Final URL Playwright landed on after following redirects.",
+    )
+
+
+class ClaveMovilLoginAssertionDetail(_ClaveLoginAssertionDetailBase):
+    """Verification detail for a Cl@ve Móvil-backed session probe."""
 
     kind: Literal[_AuthProviderKind.CLAVE_MOVIL] = _AuthProviderKind.CLAVE_MOVIL
-    session_cookie_present: bool = Field(
-        default=False,
-        description=(
-            "True when the probe response carried an AEAT session cookie; "
-            "primary signal that Cl@ve Móvil login is still live."
-        ),
-    )
-    landing_url: str | None = Field(
-        default=None,
-        description="Final URL Playwright landed on after following redirects.",
-    )
 
 
-class ClavePermanenteLoginAssertionDetail(BaseModel):
-    """Verification detail for a Cl@ve Permanente-backed session probe.
-
-    After a successful Cl@ve Permanente login, the provider probes an AEAT
-    Sede page to confirm the session cookies are still live. This detail
-    records the cookie and landing-URL signals carried by
-    :class:`adapters.outbound.aeat.auth.AeatLoginAssertion`.
-    """
-
-    model_config = _STRICT_FROZEN
+class ClavePermanenteLoginAssertionDetail(_ClaveLoginAssertionDetailBase):
+    """Verification detail for a Cl@ve Permanente-backed session probe."""
 
     kind: Literal[_AuthProviderKind.CLAVE_PERMANENTE] = _AuthProviderKind.CLAVE_PERMANENTE
-    session_cookie_present: bool = Field(
-        default=False,
-        description=(
-            "True when the probe response carried an AEAT session cookie; "
-            "primary signal that Cl@ve Permanente login is still live."
-        ),
-    )
-    landing_url: str | None = Field(
-        default=None,
-        description="Final URL Playwright landed on after following redirects.",
-    )
 
 
 AuthSessionDetail = CertificateSessionDetail | ClaveMovilSessionDetail | ClavePermanenteSessionDetail
