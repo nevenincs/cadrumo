@@ -228,6 +228,7 @@ class ScanResult:
     facade_count: int
     module_count: int
     syntax_errors: list[str]
+    missing_modules: list[FacadeBreak]
 
 
 def scan(rev: str, *, repo_root: Path = REPO_ROOT) -> ScanResult:
@@ -246,6 +247,10 @@ def scan(rev: str, *, repo_root: Path = REPO_ROOT) -> ScanResult:
     path_of = {module: path for path, module in module_of.items()}
     facts = {module_of[path]: module_facts(tree) for path, tree in trees.items()}
     packages = {module_of[path] for path in trees if path.endswith("__init__.py")}
+
+    def _normalise(target: str) -> str:
+        """Collapse an explicit ``pkg.__init__`` target onto the package itself."""
+        return target[: -len(".__init__")] if target.endswith(".__init__") else target
 
     # ``from pkg import sub`` where ``pkg.sub`` is a real module is a SUBMODULE
     # import: legal, and it needs neither a definition nor an ``__all__`` entry.
@@ -288,6 +293,7 @@ def scan(rev: str, *, repo_root: Path = REPO_ROOT) -> ScanResult:
                 forward.append(FacadeBreak(facade, name, facade, "exported-not-bound"))
 
     mirror: list[FacadeBreak] = []
+    missing_modules: list[FacadeBreak] = []
     for path, tree in trees.items():
         consumer = module_of[path]
         base = _binding_package(path, consumer)
@@ -299,6 +305,18 @@ def scan(rev: str, *, repo_root: Path = REPO_ROOT) -> ScanResult:
             elif node.module and node.module.split(".")[0] == "cadrumo":
                 target = node.module
             else:
+                continue
+            target = _normalise(target)
+            # A committed import of a module that does not exist at this
+            # revision breaks the same way a missing symbol does, and arrives by
+            # the same route: the module is present in every working tree while
+            # still untracked, so the consumer looks committed and sound. The
+            # symbol-level checks cannot see it -- there is no target module to
+            # compare a name against -- so it is reported separately.
+            if target not in facts:
+                missing_modules.append(
+                    FacadeBreak(consumer, node.module or ".", target, "module-not-at-revision"),
+                )
                 continue
             if target not in packages or target == consumer:
                 continue
@@ -320,6 +338,7 @@ def scan(rev: str, *, repo_root: Path = REPO_ROOT) -> ScanResult:
         facade_count=len(packages),
         module_count=len(trees),
         syntax_errors=syntax_errors,
+        missing_modules=sorted(missing_modules, key=lambda b: (b.facade, b.target)),
     )
 
 

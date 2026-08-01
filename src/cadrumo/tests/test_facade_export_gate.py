@@ -234,3 +234,31 @@ def test_planted_break_is_detected_in_each_direction() -> None:
     assert lazy_facts.has_lazy_getattr
     assert "LazilyResolved" in lazy_facts.lazy
     assert "ZzzAbsent" not in lazy_facts.lazy
+
+
+def test_no_committed_import_targets_a_module_absent_at_head(head_scan: ScanResult) -> None:
+    """Every ``cadrumo`` module a committed import names exists at HEAD.
+
+    The untracked-module variant of the same outage: a module present in every
+    working tree but never added to git makes its importers look committed and
+    sound while a clean checkout cannot resolve them. The symbol-level checks
+    are blind to it, because there is no target module against which to compare
+    a name -- so this is reported separately rather than folded in.
+    """
+    assert head_scan.missing_modules == [], (
+        "committed import(s) name a module that does not exist at HEAD -- most "
+        "likely a module that is still untracked, which resolves in every "
+        "worktree and fails only on a clean checkout:\n  "
+        + "\n  ".join(b.describe() for b in head_scan.missing_modules)
+    )
+
+
+def test_explicit_dunder_init_targets_are_not_reported_missing(head_scan: ScanResult) -> None:
+    """``from ..__init__ import x`` addresses the package, not a module named ``__init__``.
+
+    Without that normalisation the scan reports a real, working import as a
+    missing module. Pinned because the false positive is indistinguishable from
+    a genuine untracked-module break in the gate's output, and would train a
+    reader to dismiss the check.
+    """
+    assert not any(b.target.endswith(".__init__") for b in head_scan.missing_modules)
