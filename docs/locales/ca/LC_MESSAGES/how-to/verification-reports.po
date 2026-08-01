@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -32,12 +32,12 @@ msgid ""
 "calculate, then verify, then export or record the filing."
 msgstr ""
 "Aquesta pàgina tracta la verificació d'una presentació en esborrany: "
-"executar la comprovació, llegir l'informe desat i actuar sobre cada tipus de "
-"troballa. La verificació comprova el teu càlcul desat localment contra les "
-"regles oficials del formulari i desa un informe del que ha trobat. No "
-"s'envia res a l'AEAT; tot passa al teu ordinador. L'ordre sempre és el "
-"mateix: calcular, després verificar i després exportar o registrar la "
-"presentació."
+"executar la comprovació, llegir l'informe desat i actuar sobre cada tipus"
+" de troballa. La verificació comprova el teu càlcul desat localment "
+"contra les regles oficials del formulari i desa un informe del que ha "
+"trobat. No s'envia res a l'AEAT; tot passa al teu ordinador. L'ordre "
+"sempre és el mateix: calcular, després verificar i després exportar o "
+"registrar la presentació."
 
 #: ../../how-to/verification-reports.md:10
 msgid ""
@@ -51,12 +51,12 @@ msgid ""
 msgstr ""
 "La comprovació es pregunta tres coses: si cada casilla obligatòria té un "
 "valor; si les sumes quadren de manera coherent, sense que cap casilla "
-"contradigui una altra; i si alguna cosa impedeix que el formulari es tracti "
-"com a complet. També comprova condicions fora de l'esborrany mateix: que "
-"qualsevol període anterior sobre el qual s'edifica aquest formulari estigui "
-"presentat i evidenciat, que el saldo d'IVA acumulat arrossegat entre "
-"períodes es conciliï, i que cada xifra arrossegada continuï apuntant a la "
-"revisió sota la qual es va presentar."
+"contradigui una altra; i si alguna cosa impedeix que el formulari es "
+"tracti com a complet. També comprova condicions fora de l'esborrany "
+"mateix: que qualsevol període anterior sobre el qual s'edifica aquest "
+"formulari estigui presentat i evidenciat, que el saldo d'IVA acumulat "
+"arrossegat entre períodes es conciliï, i que cada xifra arrossegada "
+"continuï apuntant a la revisió sota la qual es va presentar."
 
 #: ../../how-to/verification-reports.md:18
 msgid ""
@@ -71,10 +71,11 @@ msgstr ""
 "Una comprovació superada és una comprovació local. Tracta-la com «el meu "
 "esborrany és complet i coherent», mai com «he presentat» o «vaig dins de "
 "termini». Verificar **no** és que l'agència accepti la teva presentació "
-"(l'eina mai no contacta amb l'AEAT), **no** és cap garantia que la pujada "
-"tindrà èxit (la presentació passa a part, fora de l'eina) i **no** és una "
-"comprovació de terminis (un esborrany pot passar molt després del termini; "
-"consulta [la secció del termini](#the-filing-deadline-has-passed))."
+"(l'eina mai no contacta amb l'AEAT), **no** és cap garantia que la pujada"
+" tindrà èxit (la presentació passa a part, fora de l'eina) i **no** és "
+"una comprovació de terminis (un esborrany pot passar molt després del "
+"termini; consulta [la secció del termini](#the-filing-deadline-has-"
+"passed))."
 
 #: ../../how-to/verification-reports.md:25
 msgid "Before you start"
@@ -89,13 +90,13 @@ msgid ""
 "dependency on a prior period you never filed, so verification can pass. "
 "See [Set up your profile](profile-setup.md)."
 msgstr ""
-"**Requisit:** un perfil de contribuent actiu amb un nom i uns cognoms, i un "
-"esborrany calculat per comprovar. Crea un perfil amb `aeat config profile "
-"create`, aportant el nom, els cognoms i una data d'inici d'activitat. La "
-"data d'inici d'activitat és important per a una primera presentació: deixa "
-"fora d'abast la dependència d'un període anterior que no vas presentar mai, "
-"de manera que la verificació pugui passar. Consulta [Configura el teu "
-"perfil](profile-setup.md)."
+"**Requisit:** un perfil de contribuent actiu amb un nom i uns cognoms, i "
+"un esborrany calculat per comprovar. Crea un perfil amb `aeat config "
+"profile create`, aportant el nom, els cognoms i una data d'inici "
+"d'activitat. La data d'inici d'activitat és important per a una primera "
+"presentació: deixa fora d'abast la dependència d'un període anterior que "
+"no vas presentar mai, de manera que la verificació pugui passar. Consulta"
+" [Configura el teu perfil](profile-setup.md)."
 
 #: ../../how-to/verification-reports.md:34
 msgid ""
@@ -104,10 +105,10 @@ msgid ""
 "then create and calculate the draft. The sequence below does all of this "
 "from the seed ledger."
 msgstr ""
-"També necessites una contrasenya de clau mestra (Cadrumo la demana). Per a "
-"un Modelo 303 de primer període, registra alguna activitat de negoci al "
-"ledger i, tot seguit, crea i calcula l'esborrany. La seqüència de més avall "
-"fa tot això a partir del ledger inicial."
+"També necessites una contrasenya de clau mestra (Cadrumo la demana). Per "
+"a un Modelo 303 de primer període, registra alguna activitat de negoci al"
+" ledger i, tot seguit, crea i calcula l'esborrany. La seqüència de més "
+"avall fa tot això a partir del ledger inicial."
 
 #: ../../how-to/verification-reports.md:39
 msgid ""
@@ -117,11 +118,11 @@ msgstr ""
 "Si vols entendre com encaixen les presentacions i els càlculs desats, "
 "llegeix primer [El flux de treball de presentació](filing-spine.md)."
 
-#: ../../how-to/verification-reports.md:42
+#: ../../how-to/verification-reports.md:43
 msgid "Run verification"
 msgstr "Executa la verificació"
 
-#: ../../how-to/verification-reports.md:44
+#: ../../how-to/verification-reports.md:45
 msgid ""
 "Create the draft, calculate it, verify it, and open the saved report. "
 "Verify saves a report whether or not the draft passes, and `verification-"
@@ -131,17 +132,17 @@ msgstr ""
 "verificació desa un informe tant si l'esborrany passa com si no, i "
 "`verification-report view` el torna a obrir per id:"
 
-#: ../../how-to/verification-reports.md:52
+#: ../../how-to/verification-reports.md:53
 msgid ""
 "Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to"
 " `12` for months - see [Period tokens and dates](filing-calendar.md"
 "#period-tokens-and-dates)."
 msgstr ""
-"Els tokens de període són `0A` per a l'anual, `1T` a `4T` per als trimestres "
-"i `01` a `12` per als mesos: consulta [Tokens de període i dates](filing-"
-"calendar.md#period-tokens-and-dates)."
+"Els tokens de període són `0A` per a l'anual, `1T` a `4T` per als "
+"trimestres i `01` a `12` per als mesos: consulta [Tokens de període i "
+"dates](filing-calendar.md#period-tokens-and-dates)."
 
-#: ../../how-to/verification-reports.md:55
+#: ../../how-to/verification-reports.md:56
 msgid ""
 "With the profile and draft above, this first-period Modelo 303 passes: "
 "the report reads `granted_verificado_completo` `true` and a "
@@ -150,10 +151,10 @@ msgid ""
 msgstr ""
 "Amb el perfil i l'esborrany de més amunt, aquest Modelo 303 de primer "
 "període passa: l'informe diu `granted_verificado_completo` `true` i un "
-"`completeness_status` de `complete` - el càlcul desat ara està verificat i a "
-"punt per exportar."
+"`completeness_status` de `complete` - el càlcul desat ara està verificat "
+"i a punt per exportar."
 
-#: ../../how-to/verification-reports.md:59
+#: ../../how-to/verification-reports.md:60
 msgid ""
 "When the draft does not pass, the report reads "
 "`granted_verificado_completo` `false` and a `completeness_status` of "
@@ -162,27 +163,27 @@ msgid ""
 " later."
 msgstr ""
 "Quan l'esborrany no passa, l'informe diu `granted_verificado_completo` "
-"`false` i un `completeness_status` de `incomplete` o `blocked`, i el càlcul "
-"desat continua sent un esborrany. L'ordre desa l'informe en tots dos casos, "
-"de manera que pots tornar a les troballes més endavant."
+"`false` i un `completeness_status` de `incomplete` o `blocked`, i el "
+"càlcul desat continua sent un esborrany. L'ordre desa l'informe en tots "
+"dos casos, de manera que pots tornar a les troballes més endavant."
 
-#: ../../how-to/verification-reports.md:64
+#: ../../how-to/verification-reports.md:65
 msgid ""
 "By default `work verify` checks the current saved calculation, and it "
 "checks only drafts. To pick a different draft, use `--select latest-"
 "draft` or pass that calculation's revision ID directly. Use `--by` to "
 "record who ran the check."
 msgstr ""
-"Per defecte, `work verify` comprova el càlcul desat actual, i comprova només "
-"esborranys. Per triar un esborrany diferent, fes servir `--select latest-"
-"draft` o passa directament l'ID de revisió d'aquell càlcul. Fes servir "
-"`--by` per registrar qui ha executat la comprovació."
+"Per defecte, `work verify` comprova el càlcul desat actual, i comprova "
+"només esborranys. Per triar un esborrany diferent, fes servir `--select "
+"latest-draft` o passa directament l'ID de revisió d'aquell càlcul. Fes "
+"servir `--by` per registrar qui ha executat la comprovació."
 
-#: ../../how-to/verification-reports.md:68
+#: ../../how-to/verification-reports.md:69
 msgid "List your verification reports"
 msgstr "Llista els teus informes de verificació"
 
-#: ../../how-to/verification-reports.md:70
+#: ../../how-to/verification-reports.md:71
 msgid ""
 "Every verification run leaves a report. List them with `aeat app modelo "
 "verification-report list`."
@@ -190,7 +191,7 @@ msgstr ""
 "Cada execució de verificació deixa un informe. Llista'ls amb `aeat app "
 "modelo verification-report list`."
 
-#: ../../how-to/verification-reports.md:73
+#: ../../how-to/verification-reports.md:74
 msgid ""
 "To narrow the list to the reports for one saved calculation, add "
 "`--calculation-revision-id` with that calculation's ID."
@@ -198,73 +199,73 @@ msgstr ""
 "Per limitar la llista als informes d'un càlcul desat, afegeix "
 "`--calculation-revision-id` amb l'ID d'aquell càlcul."
 
-#: ../../how-to/verification-reports.md:76
+#: ../../how-to/verification-reports.md:77
 msgid "View a report and read the findings"
 msgstr "Consulta un informe i llegeix les troballes"
 
-#: ../../how-to/verification-reports.md:78
+#: ../../how-to/verification-reports.md:79
 msgid ""
 "Open one report by its ID with `aeat app modelo verification-report view "
 "<verification-report-id>` (the sequence above did exactly this on the "
 "report it had just produced)."
 msgstr ""
 "Obre un informe pel seu ID amb `aeat app modelo verification-report view "
-"<verification-report-id>` (la seqüència de més amunt ha fet exactament això "
-"sobre l'informe que acabava de produir)."
+"<verification-report-id>` (la seqüència de més amunt ha fet exactament "
+"això sobre l'informe que acabava de produir)."
 
-#: ../../how-to/verification-reports.md:82
+#: ../../how-to/verification-reports.md:83
 msgid "The report shows:"
 msgstr "L'informe mostra:"
 
-#: ../../how-to/verification-reports.md:84
+#: ../../how-to/verification-reports.md:85
 msgid "The completeness status: `complete`, `incomplete`, or `blocked`."
 msgstr "L'estat de completesa: `complete`, `incomplete` o `blocked`."
 
-#: ../../how-to/verification-reports.md:85
+#: ../../how-to/verification-reports.md:86
 msgid "Whether the draft became verified (`granted_verificado_completo`)."
 msgstr "Si l'esborrany ha quedat verificat (`granted_verificado_completo`)."
 
-#: ../../how-to/verification-reports.md:86
+#: ../../how-to/verification-reports.md:87
 msgid "When the run happened and who ran it."
 msgstr "Quan va passar l'execució i qui la va executar."
 
-#: ../../how-to/verification-reports.md:87
+#: ../../how-to/verification-reports.md:88
 msgid "How many casillas the calculation resolved."
 msgstr "Quantes casilles va resoldre el càlcul."
 
-#: ../../how-to/verification-reports.md:88
+#: ../../how-to/verification-reports.md:89
 msgid "Which required casillas are still missing."
 msgstr "Quines casilles obligatòries encara falten."
 
-#: ../../how-to/verification-reports.md:89
+#: ../../how-to/verification-reports.md:90
 msgid "The list of findings."
 msgstr "La llista de troballes."
 
-#: ../../how-to/verification-reports.md:91
+#: ../../how-to/verification-reports.md:92
 msgid "Each finding carries:"
 msgstr "Cada troballa porta:"
 
-#: ../../how-to/verification-reports.md:93
+#: ../../how-to/verification-reports.md:94
 msgid "A severity: **blocking** or **warning**."
 msgstr "Una gravetat: **blocking** o **warning**."
 
-#: ../../how-to/verification-reports.md:94
+#: ../../how-to/verification-reports.md:95
 msgid "The affected casilla, where one applies."
 msgstr "La casilla afectada, quan n'hi ha una."
 
-#: ../../how-to/verification-reports.md:95
+#: ../../how-to/verification-reports.md:96
 msgid "A message describing what the rule checked."
 msgstr "Un missatge que descriu què va comprovar la regla."
 
-#: ../../how-to/verification-reports.md:96
+#: ../../how-to/verification-reports.md:97
 msgid "A suggested next action."
 msgstr "Una acció següent suggerida."
 
-#: ../../how-to/verification-reports.md:97
+#: ../../how-to/verification-reports.md:98
 msgid "The legal references behind the rule, where the rule has them."
 msgstr "Les referències legals que hi ha darrere de la regla, quan la regla en té."
 
-#: ../../how-to/verification-reports.md:99
+#: ../../how-to/verification-reports.md:100
 msgid ""
 "For the legal references in machine-readable form, render the report as "
 "JSON. `--format json` is a global flag, so it goes before the command. "
@@ -273,12 +274,12 @@ msgid ""
 "just produced."
 msgstr ""
 "Per obtenir les referències legals en format llegible per màquina, "
-"renderitza l'informe com a JSON. `--format json` és una opció global, així "
-"que va abans de l'ordre. La targeta de [Executa la verificació](#run-"
-"verification) fa exactament això: el seu marc de tancament és el "
+"renderitza l'informe com a JSON. `--format json` és una opció global, "
+"així que va abans de l'ordre. La targeta de [Executa la verificació"
+"](#run-verification) fa exactament això: el seu marc de tancament és el "
 "`verification-report view` en JSON de l'informe que acabava de produir."
 
-#: ../../how-to/verification-reports.md:104
+#: ../../how-to/verification-reports.md:105
 msgid ""
 "Each finding in the JSON output carries `legal_refs` and `source_refs`. "
 "Most findings name a legal reference - a cross-period dependency, for "
@@ -290,24 +291,24 @@ msgstr ""
 "majoria de troballes anomenen una referència legal: una dependència de "
 "període creuat, per exemple, cita la llei que hi ha darrere de "
 "l'arrossegament de la presentació anterior. Unes poques comprovacions "
-"purament estructurals, com ara una instantània del registre no resolta, no "
-"en tenen cap, de manera que per a aquestes aquests camps són buits."
+"purament estructurals, com ara una instantània del registre no resolta, "
+"no en tenen cap, de manera que per a aquestes aquests camps són buits."
 
-#: ../../how-to/verification-reports.md:109
+#: ../../how-to/verification-reports.md:110
 msgid ""
 "Blocking findings prevent the draft from becoming verified, and export "
 "needs a verified calculation. Warnings do not block; read them, decide "
 "whether they apply to you, and move on."
 msgstr ""
-"Les troballes bloquejadores impedeixen que l'esborrany quedi verificat, i "
-"l'exportació necessita un càlcul verificat. Els advertiments no bloquegen; "
-"llegeix-los, decideix si t'apliquen i continua."
+"Les troballes bloquejadores impedeixen que l'esborrany quedi verificat, i"
+" l'exportació necessita un càlcul verificat. Els advertiments no "
+"bloquegen; llegeix-los, decideix si t'apliquen i continua."
 
-#: ../../how-to/verification-reports.md:113
+#: ../../how-to/verification-reports.md:115
 msgid "After any fix: re-run verification"
 msgstr "Després de qualsevol correcció: torna a executar la verificació"
 
-#: ../../how-to/verification-reports.md:115
+#: ../../how-to/verification-reports.md:117
 msgid ""
 "After you change anything, run `aeat app modelo work verify` again for "
 "the same target, exactly as the card in [Run verification](#run-"
@@ -315,13 +316,14 @@ msgid ""
 "passing `--modelo`, `--year`, and `--period` instead re-runs the check "
 "against the current draft for that target."
 msgstr ""
-"Després de canviar qualsevol cosa, torna a executar `aeat app modelo work "
-"verify` per al mateix objectiu, exactament com fa la targeta de [Executa la "
-"verificació](#run-verification). Aquella targeta adreça l'esborrany pel seu "
-"id de revisió; passar en canvi `--modelo`, `--year` i `--period` torna a "
-"executar la comprovació contra l'esborrany actual d'aquell objectiu."
+"Després de canviar qualsevol cosa, torna a executar `aeat app modelo work"
+" verify` per al mateix objectiu, exactament com fa la targeta de [Executa"
+" la verificació](#run-verification). Aquella targeta adreça l'esborrany "
+"pel seu id de revisió; passar en canvi `--modelo`, `--year` i `--period` "
+"torna a executar la comprovació contra l'esborrany actual d'aquell "
+"objectiu."
 
-#: ../../how-to/verification-reports.md:120
+#: ../../how-to/verification-reports.md:122
 msgid ""
 "Confirm the finding you addressed is gone from the new report. Repeat "
 "until the result shows `granted_verificado_completo` `true`. Each symptom"
@@ -332,36 +334,39 @@ msgstr ""
 "`true`. Cada secció de símptomes d'aquesta guia acaba amb aquest pas de "
 "tornar a executar."
 
-#: ../../how-to/verification-reports.md:124
+#: ../../how-to/verification-reports.md:126
 msgid "The report says incomplete"
 msgstr "L'informe diu incomplet"
 
-#: ../../how-to/verification-reports.md:126
+#: ../../how-to/verification-reports.md:128
 msgid ""
 "Incomplete means required casillas have no value yet. The report lists "
 "which ones under **missing required casillas**."
 msgstr ""
-"Incomplet vol dir que hi ha casilles obligatòries que encara no tenen valor. "
-"L'informe llista quines sota **missing required casillas**."
+"Incomplet vol dir que hi ha casilles obligatòries que encara no tenen "
+"valor. L'informe llista quines sota **missing required casillas**."
 
-#: ../../how-to/verification-reports.md:129
+#: ../../how-to/verification-reports.md:131
+#, fuzzy
 msgid ""
 "`--casilla` works only on boxes whose input kind is `manual`. A box "
 "filled from your ledger or another source is `bound`, and `--casilla` "
 "refuses it with `cannot override bucket-derived source-bound casillas`. "
 "Fix the source for those. See [Review your calculation values](review-"
 "calculation-values.md). Check which kind a box is, then supply the value "
-"for a manual one and recalculate:"
+"for a manual one and recalculate. The example supplies box 44, the "
+"prorrata regularisation, and the recalculation carries it into the "
+"deductible total:"
 msgstr ""
-"`--casilla` només funciona en casilles el tipus d'entrada de les quals és "
-"`manual`. Una casilla emplenada des del teu ledger o d'una altra font és "
-"`bound`, i `--casilla` la rebutja amb `cannot override bucket-derived "
-"source-bound casillas`. Corregeix la font per a aquestes. Consulta [Revisa "
-"els valors del teu càlcul](review-calculation-values.md). Comprova de quin "
-"tipus és una casilla i, tot seguit, aporta el valor per a una de manual i "
-"torna a calcular:"
+"`--casilla` només funciona en casilles el tipus d'entrada de les quals és"
+" `manual`. Una casilla emplenada des del teu ledger o d'una altra font és"
+" `bound`, i `--casilla` la rebutja amb `cannot override bucket-derived "
+"source-bound casillas`. Corregeix la font per a aquestes. Consulta "
+"[Revisa els valors del teu càlcul](review-calculation-values.md). "
+"Comprova de quin tipus és una casilla i, tot seguit, aporta el valor per "
+"a una de manual i torna a calcular:"
 
-#: ../../how-to/verification-reports.md:139
+#: ../../how-to/verification-reports.md:143
 msgid ""
 "Then [re-run verification](#after-any-fix-re-run-verification). For the "
 "full input workflow, including where values come from and how to check "
@@ -372,21 +377,21 @@ msgstr ""
 "valors i com comprovar-los, consulta [Revisa els valors del teu càlcul"
 "](review-calculation-values.md)."
 
-#: ../../how-to/verification-reports.md:143
+#: ../../how-to/verification-reports.md:147
 msgid "The report says blocked"
 msgstr "L'informe diu bloquejat"
 
-#: ../../how-to/verification-reports.md:145
+#: ../../how-to/verification-reports.md:149
 msgid ""
 "Blocked means at least one blocking finding stands between your draft and"
 " a verified calculation. You cannot export the draft until you resolve "
 "every blocking finding."
 msgstr ""
-"Bloquejat vol dir que almenys una troballa bloquejadora s'interposa entre el "
-"teu esborrany i un càlcul verificat. No pots exportar l'esborrany fins que "
-"no resolguis cada troballa bloquejadora."
+"Bloquejat vol dir que almenys una troballa bloquejadora s'interposa entre"
+" el teu esborrany i un càlcul verificat. No pots exportar l'esborrany "
+"fins que no resolguis cada troballa bloquejadora."
 
-#: ../../how-to/verification-reports.md:149
+#: ../../how-to/verification-reports.md:153
 msgid ""
 "Read each finding's suggested next action first; it tells you what the "
 "tool expects you to do. The common kinds of blocking finding:"
@@ -394,53 +399,55 @@ msgstr ""
 "Llegeix primer l'acció següent suggerida de cada troballa; t'indica què "
 "espera l'eina que facis. Els tipus habituals de troballa bloquejadora:"
 
-#: ../../how-to/verification-reports.md:152
+#: ../../how-to/verification-reports.md:156
 msgid ""
 "**A cross-field rule failed.** Two or more casillas disagree in a way the"
 " form rules do not allow. Check the values named in the finding against "
 "your records."
 msgstr ""
 "**Ha fallat una regla entre camps.** Dues o més casilles no coincideixen "
-"d'una manera que les regles del formulari no permeten. Comprova els valors "
-"anomenats a la troballa contra els teus registres."
+"d'una manera que les regles del formulari no permeten. Comprova els "
+"valors anomenats a la troballa contra els teus registres."
 
-#: ../../how-to/verification-reports.md:154
+#: ../../how-to/verification-reports.md:158
 msgid ""
 "**A value could not be derived.** The tool needed to compute a casilla "
 "but your data did not provide enough input. Supply the missing input or "
 "enter the value directly."
 msgstr ""
-"**No s'ha pogut derivar un valor.** L'eina necessitava calcular una casilla "
-"però les teves dades no van proporcionar prou entrada. Aporta l'entrada que "
-"falta o introdueix el valor directament."
+"**No s'ha pogut derivar un valor.** L'eina necessitava calcular una "
+"casilla però les teves dades no van proporcionar prou entrada. Aporta "
+"l'entrada que falta o introdueix el valor directament."
 
-#: ../../how-to/verification-reports.md:157
+#: ../../how-to/verification-reports.md:161
+#, fuzzy
 msgid ""
 "**A prior-period record is missing.** This filing depends on a filing "
 "from an earlier period that is missing or unconfirmed. Record or confirm "
 "that earlier filing first. If you had no obligation in that earlier "
 "period because you had not started your activity yet, set your activity-"
-"start date on the profile so the dependency is scoped out (replace `me` "
-"with your profile name):"
+"start date on the profile so the dependency is scoped out. Name your own "
+"profile in place of `docs-sequence-sandbox`:"
 msgstr ""
-"**Falta un registre de període anterior.** Aquesta presentació depèn d'una "
-"presentació d'un període anterior que falta o que no està confirmada. "
-"Registra o confirma primer aquella presentació anterior. Si no tenies cap "
-"obligació en aquell període anterior perquè encara no havies iniciat "
-"l'activitat, estableix la teva data d'inici d'activitat al perfil perquè la "
-"dependència quedi fora d'abast (reemplaça `me` amb el nom del teu perfil):"
+"**Falta un registre de període anterior.** Aquesta presentació depèn "
+"d'una presentació d'un període anterior que falta o que no està "
+"confirmada. Registra o confirma primer aquella presentació anterior. Si "
+"no tenies cap obligació en aquell període anterior perquè encara no "
+"havies iniciat l'activitat, estableix la teva data d'inici d'activitat al"
+" perfil perquè la dependència quedi fora d'abast (reemplaça `me` amb el "
+"nom del teu perfil):"
 
-#: ../../how-to/verification-reports.md:167
+#: ../../how-to/verification-reports.md:172
 msgid "After each fix, [re-run verification](#after-any-fix-re-run-verification)."
 msgstr ""
-"Després de cada correcció, [torna a executar la verificació](#after-any-fix-"
-"re-run-verification)."
+"Després de cada correcció, [torna a executar la verificació](#after-any-"
+"fix-re-run-verification)."
 
-#: ../../how-to/verification-reports.md:169
+#: ../../how-to/verification-reports.md:174
 msgid "Export refuses because no verified calculation exists"
 msgstr "L'exportació es nega perquè no existeix cap càlcul verificat"
 
-#: ../../how-to/verification-reports.md:171
+#: ../../how-to/verification-reports.md:176
 msgid ""
 "Export needs a verified (or locally-filed) saved calculation. It refuses "
 "a plain draft with a message such as \"current revision is still draft; "
@@ -450,63 +457,63 @@ msgid ""
 "verification). Check where the filing stands, then retry the export once "
 "verification grants verified-complete:"
 msgstr ""
-"L'exportació necessita un càlcul desat verificat (o presentat localment). "
-"Rebutja un esborrany simple amb un missatge com ara «current revision is "
-"still draft; verify it before exporting» o «no exportable verified or filed "
-"revision exists». Si el càlcul desat encara és un esborrany, verifica'l "
-"primer, com a [Després de qualsevol correcció: torna a executar la "
-"verificació](#after-any-fix-re-run-verification). Comprova com està la "
-"presentació i, tot seguit, torna a provar l'exportació un cop la verificació "
-"atorgui el verificat-complet:"
+"L'exportació necessita un càlcul desat verificat (o presentat localment)."
+" Rebutja un esborrany simple amb un missatge com ara «current revision is"
+" still draft; verify it before exporting» o «no exportable verified or "
+"filed revision exists». Si el càlcul desat encara és un esborrany, "
+"verifica'l primer, com a [Després de qualsevol correcció: torna a "
+"executar la verificació](#after-any-fix-re-run-verification). Comprova "
+"com està la presentació i, tot seguit, torna a provar l'exportació un cop"
+" la verificació atorgui el verificat-complet:"
 
-#: ../../how-to/verification-reports.md:183
+#: ../../how-to/verification-reports.md:188
 msgid "More than one filing matches"
 msgstr "Coincideix més d'una presentació"
 
-#: ../../how-to/verification-reports.md:185
+#: ../../how-to/verification-reports.md:190
 msgid ""
 "When more than one filing or saved calculation matches the modelo, year, "
 "and period you named, the tool refuses to guess and prints the candidates"
 " instead."
 msgstr ""
-"Quan més d'una presentació o càlcul desat coincideix amb el modelo, l'any i "
-"el període que has anomenat, l'eina es nega a endevinar i, en el seu lloc, "
-"imprimeix els candidats."
+"Quan més d'una presentació o càlcul desat coincideix amb el modelo, l'any"
+" i el període que has anomenat, l'eina es nega a endevinar i, en el seu "
+"lloc, imprimeix els candidats."
 
-#: ../../how-to/verification-reports.md:188
+#: ../../how-to/verification-reports.md:193
 msgid ""
 "List your filings with their work-unit IDs with `aeat app modelo work "
 "list`, then target the one you mean by passing its work-unit ID directly "
 "to `aeat app modelo work verify --work-unit-id <work-unit-id>`."
 msgstr ""
 "Llista les teves presentacions amb els seus IDs d'unitat de treball amb "
-"`aeat app modelo work list` i, tot seguit, apunta la que vols passant el seu "
-"ID d'unitat de treball directament a `aeat app modelo work verify --work-"
-"unit-id <work-unit-id>`."
+"`aeat app modelo work list` i, tot seguit, apunta la que vols passant el "
+"seu ID d'unitat de treball directament a `aeat app modelo work verify "
+"--work-unit-id <work-unit-id>`."
 
-#: ../../how-to/verification-reports.md:192
+#: ../../how-to/verification-reports.md:197
 msgid ""
 "To confirm which filing a command touched, check its state and the "
 "actions taken on it:"
 msgstr ""
-"Per confirmar quina presentació ha tocat una ordre, comprova el seu estat i "
-"les accions que s'hi han fet:"
+"Per confirmar quina presentació ha tocat una ordre, comprova el seu estat"
+" i les accions que s'hi han fet:"
 
-#: ../../how-to/verification-reports.md:199
+#: ../../how-to/verification-reports.md:205
 msgid "The filing deadline has passed"
 msgstr "El termini de presentació ha passat"
 
-#: ../../how-to/verification-reports.md:201
+#: ../../how-to/verification-reports.md:207
 msgid ""
 "Verification does not check filing deadlines. It still runs for a past "
 "period and can pass; the deadline gate applies later, when you record the"
 " filing with `work file`."
 msgstr ""
-"La verificació no comprova els terminis de presentació. Igualment s'executa "
-"per a un període passat i pot passar; la porta del termini s'aplica més "
-"tard, quan registres la presentació amb `work file`."
+"La verificació no comprova els terminis de presentació. Igualment "
+"s'executa per a un període passat i pot passar; la porta del termini "
+"s'aplica més tard, quan registres la presentació amb `work file`."
 
-#: ../../how-to/verification-reports.md:205
+#: ../../how-to/verification-reports.md:211
 msgid ""
 "If the deadline has passed, file late through AEAT's own channels; "
 "consult AEAT or an advisor about any surcharges that may apply."
@@ -515,11 +522,11 @@ msgstr ""
 "l'AEAT; consulta l'AEAT o un assessor sobre qualsevol recàrrec que pugui "
 "aplicar-se."
 
-#: ../../how-to/verification-reports.md:208
+#: ../../how-to/verification-reports.md:214
 msgid "Where to get help"
 msgstr "On demanar ajuda"
 
-#: ../../how-to/verification-reports.md:210
+#: ../../how-to/verification-reports.md:216
 msgid ""
 "Command labels and messages display in Spanish to match the official AEAT"
 " forms, while this guide is in English. The field names this guide names "
@@ -528,13 +535,13 @@ msgid ""
 " line back to the step that describes it."
 msgstr ""
 "Les etiquetes i els missatges de les ordres es mostren en castellà per "
-"coincidir amb els formularis oficials de l'AEAT, mentre que aquesta guia és "
-"en anglès. Els noms de camp que aquesta guia anomena "
-"-`granted_verificado_completo`, `completeness_status`, `finding_legal_refs`- "
-"coincideixen exactament amb la sortida, de manera que pots relacionar una "
-"línia en castellà amb el pas que la descriu."
+"coincidir amb els formularis oficials de l'AEAT, mentre que aquesta guia "
+"és en anglès. Els noms de camp que aquesta guia anomena "
+"-`granted_verificado_completo`, `completeness_status`, "
+"`finding_legal_refs`- coincideixen exactament amb la sortida, de manera "
+"que pots relacionar una línia en castellà amb el pas que la descriu."
 
-#: ../../how-to/verification-reports.md:216
+#: ../../how-to/verification-reports.md:222
 #, python-brace-format
 msgid ""
 "If a report or an error message does not match what this guide describes,"
@@ -543,34 +550,34 @@ msgid ""
 "command output to ask for help, remove personal tax identifiers such as "
 "your NIF, CIF, DNI, NIE, or NII."
 msgstr ""
-"Si un informe o un missatge d'error no coincideix amb el que descriu aquesta "
-"guia, consulta [Diagnostica i repara](troubleshooting.md). Els termes que no "
-"et resultin familiars es defineixen al {doc}`glossari </_generated/"
-"glossary>`. Abans de compartir la sortida d'una ordre per demanar ajuda, "
-"elimina els identificadors tributaris personals com ara el teu NIF, CIF, "
-"DNI, NIE o NII."
+"Si un informe o un missatge d'error no coincideix amb el que descriu "
+"aquesta guia, consulta [Diagnostica i repara](troubleshooting.md). Els "
+"termes que no et resultin familiars es defineixen al {doc}`glossari "
+"</_generated/glossary>`. Abans de compartir la sortida d'una ordre per "
+"demanar ajuda, elimina els identificadors tributaris personals com ara el"
+" teu NIF, CIF, DNI, NIE o NII."
 
-#: ../../how-to/verification-reports.md:222
+#: ../../how-to/verification-reports.md:228
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/verification-reports.md:224
+#: ../../how-to/verification-reports.md:230
 msgid ""
 "[File at AEAT](file-at-aeat.md): upload the exported file at the AEAT "
 "portal."
 msgstr ""
-"[Presenta a l'AEAT](file-at-aeat.md): puja el fitxer exportat al portal de "
-"l'AEAT."
+"[Presenta a l'AEAT](file-at-aeat.md): puja el fitxer exportat al portal "
+"de l'AEAT."
 
-#: ../../how-to/verification-reports.md:225
+#: ../../how-to/verification-reports.md:231
 msgid ""
 "[Review your calculation values](review-calculation-values.md): check and"
 " correct the inputs behind each casilla."
 msgstr ""
-"[Revisa els valors del teu càlcul](review-calculation-values.md): comprova i "
-"corregeix les entrades que hi ha darrere de cada casilla."
+"[Revisa els valors del teu càlcul](review-calculation-values.md): "
+"comprova i corregeix les entrades que hi ha darrere de cada casilla."
 
-#: ../../how-to/verification-reports.md:226
+#: ../../how-to/verification-reports.md:232
 msgid ""
 "[The filing workflow](filing-spine.md): how filings, saved calculations, "
 "and reports fit together."
@@ -578,6 +585,7 @@ msgstr ""
 "[El flux de treball de presentació](filing-spine.md): com encaixen les "
 "presentacions, els càlculs desats i els informes."
 
-#: ../../how-to/verification-reports.md:227
+#: ../../how-to/verification-reports.md:233
 msgid "[CLI reference](../cli/index.rst): every command and option."
 msgstr "[Referència de la CLI](../cli/index.rst): cada ordre i opció."
+

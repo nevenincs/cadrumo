@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -32,10 +32,10 @@ msgid ""
 "consultant."
 msgstr ""
 "Ez az oldal egy teljes IRPF-évet tárgyal egy példaadózó számára: négy "
-"negyedéves Modelo 130 előleg, mindegyik az előzőekre épül, az éves Modelo "
-"100 Renta-bevallással zárva, amely az egész évet összegyűjti. Egy üres "
-"tárolóból indul; a végére előkészített és exportált minden IRPF-benyújtást, "
-"amelyet az év egy önfoglalkoztató tanácsadótól kér."
+"negyedéves Modelo 130 előleg, mindegyik az előzőekre épül, az éves Modelo"
+" 100 Renta-bevallással zárva, amely az egész évet összegyűjti. Egy üres "
+"tárolóból indul; a végére előkészített és exportált minden IRPF-"
+"benyújtást, amelyet az év egy önfoglalkoztató tanácsadótól kér."
 
 #: ../../how-to/irpf-lifecycle.md:9
 msgid ""
@@ -46,8 +46,8 @@ msgid ""
 msgstr ""
 "A Cadrumo (az `aeat` parancs) helyi fájlokat készít elő a spanyol "
 "adónyomtatványokhoz. Nem nyújtja be őket az Agencia Estatal de "
-"Administración Tributariának (AEAT). Minden benyújtásnál Ön maga tölti fel "
-"az exportált fájlt az AEAT-portálon keresztül."
+"Administración Tributariának (AEAT). Minden benyújtásnál Ön maga tölti "
+"fel az exportált fájlt az AEAT-portálon keresztül."
 
 #: ../../how-to/irpf-lifecycle.md:14
 msgid ""
@@ -58,12 +58,12 @@ msgid ""
 "lifecycle.md) - the two run-throughs describe the same business from two "
 "tax angles."
 msgstr ""
-"Ismerje meg a személyt, akit ez a végigfutás követ: Ana García López, egy "
-"tanácsadó (*consultoría*), aki 2026. január 1-jén kezdte meg a "
+"Ismerje meg a személyt, akit ez a végigfutás követ: Ana García López, egy"
+" tanácsadó (*consultoría*), aki 2026. január 1-jén kezdte meg a "
 "tevékenységét, 21 százalékos IVA-val számláz az ügyfeleinek, és menet "
-"közben irodaszert vásárol. Ugyanez a személy és ugyanaz a ledger folytatódik "
-"[Az IVA-év](iva-lifecycle.md) oldalon - a két végigfutás ugyanazt az "
-"üzletet írja le két adóügyi szemszögből."
+"közben irodaszert vásárol. Ugyanez a személy és ugyanaz a ledger "
+"folytatódik [Az IVA-év](iva-lifecycle.md) oldalon - a két végigfutás "
+"ugyanazt az üzletet írja le két adóügyi szemszögből."
 
 #: ../../how-to/irpf-lifecycle.md:21
 msgid ""
@@ -85,10 +85,10 @@ msgid ""
 "setup.md)) and a master-key passphrase. `aeat` encrypts your data with a "
 "passphrase and prompts for it the first time each command runs."
 msgstr ""
-"Szüksége van egy működő `aeat` parancsra (lásd [A Cadrumo "
-"telepítése](../workstation-setup.md)) és egy mesterkulcs-jelmondatra. Az "
-"`aeat` egy jelmondattal titkosítja az adatait, és bekéri, amikor egy "
-"parancs először fut."
+"Szüksége van egy működő `aeat` parancsra (lásd [A Cadrumo telepítése"
+"](../workstation-setup.md)) és egy mesterkulcs-jelmondatra. Az `aeat` egy"
+" jelmondattal titkosítja az adatait, és bekéri, amikor egy parancs "
+"először fut."
 
 #: ../../how-to/irpf-lifecycle.md:31
 msgid "Stage 1: set up the taxpayer"
@@ -140,39 +140,50 @@ msgid "Stage 2: the first quarter"
 msgstr "2. szakasz: az első negyedév"
 
 #: ../../how-to/irpf-lifecycle.md:58
+#, fuzzy
 msgid ""
 "Record the first quarter's activity - one sale, one expense. The "
 "`--amount` is the gross total (taxable base plus IVA), and an expense row"
 " needs a `--category-id` (list the valid ids with `aeat app ledger "
-"categories`). The two `ledger add` commands appear as the collapsed setup"
-" of the sequence below."
+"categories`)."
 msgstr ""
 "Rögzítse az első negyedév tevékenységét - egy értékesítést, egy kiadást. "
 "Az `--amount` a bruttó végösszeg (adóalap plusz IVA), egy kiadássornak "
 "pedig `--category-id`-ra van szüksége (az érvényes azonosítókat az `aeat "
-"app ledger categories` paranccsal listázhatja). A két `ledger add` parancs "
-"az alábbi sorozat összecsukott előkészítéseként jelenik meg."
+"app ledger categories` paranccsal listázhatja). A két `ledger add` "
+"parancs az alábbi sorozat összecsukott előkészítéseként jelenik meg."
 
-#: ../../how-to/irpf-lifecycle.md:63
+#: ../../how-to/irpf-lifecycle.md:62
+msgid ""
+"Register the supplier's invoice for that expense, and link it to the "
+"expense row before you calculate. An expense row that claims deductible "
+"IVA cannot be exported or filed without its invoice. A draft bundles its "
+"evidence at the moment you verify it, so an invoice linked after that "
+"never reaches the filing. The invoice registration and the two `ledger "
+"add` commands appear as the collapsed preparation of the sequence below."
+msgstr ""
+
+#: ../../how-to/irpf-lifecycle.md:69
+#, fuzzy
 msgid ""
 "Create and calculate the first instalment. Modelo 130 is cumulative, and "
 "a true first period has no history, so the three prior-period carries are"
 " passed as zeros - this is the only quarter where you do this. The "
 "sequence below records the quarter's two rows, creates and calculates the"
-" draft, and verifies it; the export, file, and reconcile commands that "
-"close the quarter are shown after the verified result (they run against "
-"your own evidenced, filed history, not the sandbox):"
+" draft, verifies it, and exports the fichero-BOE file; the file and "
+"reconcile commands that close the quarter are shown after the exported "
+"result:"
 msgstr ""
 "Hozza létre és számítsa ki az első előleget. A Modelo 130 halmozott, és "
 "egy valódi első időszaknak nincs előzménye, ezért a három előző időszaki "
 "átvezetést nullaként adja át - ez az egyetlen negyedév, ahol ezt teszi. "
 "Az alábbi sorozat rögzíti a negyedév két sorát, létrehozza és kiszámítja "
 "a piszkozatot, és ellenőrzi; a negyedévet lezáró export-, file- és "
-"reconcile-parancsok az ellenőrzött eredmény után jelennek meg (ezek az Ön "
-"saját, bizonyítékokkal alátámasztott, benyújtott előzményein futnak, nem a "
-"sandboxban):"
+"reconcile-parancsok az ellenőrzött eredmény után jelennek meg (ezek az Ön"
+" saját, bizonyítékokkal alátámasztott, benyújtott előzményein futnak, nem"
+" a sandboxban):"
 
-#: ../../how-to/irpf-lifecycle.md:75
+#: ../../how-to/irpf-lifecycle.md:80
 msgid ""
 "The key figures show the year so far: 1000 earned, 500 spent, and an "
 "instalment of 20 percent on the net:"
@@ -180,7 +191,7 @@ msgstr ""
 "A kulcsszámok az eddigi évet mutatják: 1000 kereset, 500 kiadás és egy "
 "előleg, a nettó 20 százaléka:"
 
-#: ../../how-to/irpf-lifecycle.md:84
+#: ../../how-to/irpf-lifecycle.md:89
 msgid ""
 "(The final result is 0.00 here because the minoración for low net income "
 "absorbs the whole instalment - casilla 13 in the output shows it.)"
@@ -188,7 +199,7 @@ msgstr ""
 "(A végeredmény itt 0.00, mert az alacsony nettó jövedelemre vonatkozó "
 "minoración felszívja a teljes előleget - a kimenet casilla 13-a mutatja.)"
 
-#: ../../how-to/irpf-lifecycle.md:87
+#: ../../how-to/irpf-lifecycle.md:92
 msgid ""
 "Verify reports `completeness_status complete` and "
 "`granted_verificado_completo true` (the sequence above asserts this). "
@@ -202,7 +213,8 @@ msgstr ""
 "útvonalát, méretét és SHA-256 ellenőrzőösszegét - jegyezze fel az "
 "ellenőrzőösszeget; ez pontosan azonosítja, melyik fájlt tölti fel."
 
-#: ../../how-to/irpf-lifecycle.md:92
+#: ../../how-to/irpf-lifecycle.md:97
+#, fuzzy
 msgid ""
 "Upload the file at the AEAT portal (the checklist is [Upload your "
 "exported modelo at the AEAT portal](file-at-aeat.md)), then record the "
@@ -210,67 +222,69 @@ msgid ""
 "window is open. `work file` saves a local marker only - it does not "
 "submit anything. The marker is what lets the next quarter's carries "
 "resolve from this one. Finally, pull the justificante with `aeat app "
-"modelo reconcile pull` so the official receipt is on record. All three "
-"commands (export, file, reconcile pull) are shown after the verified "
-"result in the sequence above."
+"modelo reconcile pull` so the official receipt is on record. Both "
+"commands (file, reconcile pull) are shown after the exported result in "
+"the sequence above."
 msgstr ""
 "Töltse fel a fájlt az AEAT-portálon (az ellenőrzőlista [Töltse fel az "
 "exportált modelóját az AEAT-portálon](file-at-aeat.md)), majd rögzítse a "
 "benyújtást helyileg az `aeat app modelo work file` paranccsal, amíg a "
-"benyújtási időablak nyitva van. A `work file` csak egy helyi jelölőt ment "
-"- nem nyújt be semmit. A jelölő az, ami lehetővé teszi, hogy a következő "
-"negyedév átvezetései ebből oldódjanak fel. Végül húzza le a justificantét "
-"az `aeat app modelo reconcile pull` paranccsal, hogy a hivatalos "
-"bizonylat rögzítve legyen. Mindhárom parancs (export, file, reconcile "
-"pull) az ellenőrzött eredmény után jelenik meg a fenti sorozatban."
+"benyújtási időablak nyitva van. A `work file` csak egy helyi jelölőt ment"
+" - nem nyújt be semmit. A jelölő az, ami lehetővé teszi, hogy a következő"
+" negyedév átvezetései ebből oldódjanak fel. Végül húzza le a "
+"justificantét az `aeat app modelo reconcile pull` paranccsal, hogy a "
+"hivatalos bizonylat rögzítve legyen. Mindhárom parancs (export, file, "
+"reconcile pull) az ellenőrzött eredmény után jelenik meg a fenti "
+"sorozatban."
 
-#: ../../how-to/irpf-lifecycle.md:101
+#: ../../how-to/irpf-lifecycle.md:106
 msgid "Stage 3: the second and third quarters"
 msgstr "3. szakasz: a második és a harmadik negyedév"
 
-#: ../../how-to/irpf-lifecycle.md:103
+#: ../../how-to/irpf-lifecycle.md:108
+#, fuzzy
 msgid ""
 "The year continues; record each quarter's activity as it happens. For the"
-" second quarter, say Ana invoices twice and buys once. Now the cumulative"
-" behaviour shows itself: the second-quarter draft calculates with NO "
-"`--binding` zeros, resolving the carries from the filed first quarter. "
-"The whole second quarter runs against Ana's evidenced, filed first-"
-"quarter record and inside the July presentation window, neither of which "
-"the frozen documentation sandbox can reproduce, so the chain is shown as "
-"display frames:"
+" second quarter, say Ana invoices twice and buys once. Link the purchase "
+"invoice to that expense row here too, before you calculate. Now the "
+"cumulative behaviour shows itself: the second-quarter draft calculates "
+"with NO `--binding` zeros, resolving the carries from the filed first "
+"quarter. The sequence below prepares and files that first quarter in its "
+"collapsed preparation, then runs the whole second quarter through to its "
+"exported file:"
 msgstr ""
 "Az év folytatódik; rögzítse minden negyedév tevékenységét, ahogy "
 "történik. A második negyedévhez mondjuk Ana kétszer számláz és egyszer "
 "vásárol. Most megmutatkozik a halmozott viselkedés: a második negyedév "
-"piszkozata `--binding` nullák NÉLKÜL számol, a benyújtott első negyedévből "
-"oldva fel az átvezetéseket. A teljes második negyedév Ana bizonyítékokkal "
-"alátámasztott, benyújtott első negyedéves nyilvántartásán és a júliusi "
-"benyújtási időablakon belül fut, amelyek egyikét sem tudja reprodukálni a "
-"befagyasztott dokumentációs sandbox, ezért a lánc megjelenítő keretként "
-"szerepel:"
+"piszkozata `--binding` nullák NÉLKÜL számol, a benyújtott első "
+"negyedévből oldva fel az átvezetéseket. A teljes második negyedév Ana "
+"bizonyítékokkal alátámasztott, benyújtott első negyedéves nyilvántartásán"
+" és a júliusi benyújtási időablakon belül fut, amelyek egyikét sem tudja "
+"reprodukálni a befagyasztott dokumentációs sandbox, ezért a lánc "
+"megjelenítő keretként szerepel:"
 
-#: ../../how-to/irpf-lifecycle.md:114
+#: ../../how-to/irpf-lifecycle.md:120
 msgid "Read the revision and compare it with the first quarter's:"
 msgstr "Olvassa el a revíziót, és hasonlítsa össze az első negyedévével:"
 
-#: ../../how-to/irpf-lifecycle.md:116
+#: ../../how-to/irpf-lifecycle.md:122
 msgid ""
 "Casilla `01` (ingresos) now covers January through June - the ledger "
 "window for `2T` is the year to date, not the quarter alone."
 msgstr ""
-"A casilla `01` (ingresos) most januártól júniusig terjed - a `2T` "
-"ledger-időablaka az év eleji halmozott, nem csak a negyedév."
+"A casilla `01` (ingresos) most januártól júniusig terjed - a `2T` ledger-"
+"időablaka az év eleji halmozott, nem csak a negyedév."
 
-#: ../../how-to/irpf-lifecycle.md:118
+#: ../../how-to/irpf-lifecycle.md:124
 msgid ""
 "Casilla `05` (pagos fraccionados anteriores) carries the instalment you "
 "paid in the first quarter, read from your own filed record."
 msgstr ""
 "A casilla `05` (pagos fraccionados anteriores) hordozza az első "
-"negyedévben befizetett előleget, az Ön saját benyújtott "
-"nyilvántartásából olvasva."
+"negyedévben befizetett előleget, az Ön saját benyújtott nyilvántartásából"
+" olvasva."
 
-#: ../../how-to/irpf-lifecycle.md:120
+#: ../../how-to/irpf-lifecycle.md:126
 msgid ""
 "If an earlier quarter had ended negative, casilla `15` would offset it "
 "here."
@@ -278,7 +292,7 @@ msgstr ""
 "Ha egy korábbi negyedév negatívan zárult volna, a casilla `15` itt "
 "beszámítaná."
 
-#: ../../how-to/irpf-lifecycle.md:123
+#: ../../how-to/irpf-lifecycle.md:129
 msgid ""
 "If calculate blocks instead with a cross-period finding, the first "
 "quarter is not filed and evidenced on your record - go back to stage 2 "
@@ -291,7 +305,14 @@ msgstr ""
 "egyeztesse. Az eszköz soha nem találja ki a hiányzó negyedévet; egy "
 "látható üres jobb, mint egy megtippelt nulla."
 
-#: ../../how-to/irpf-lifecycle.md:128
+#: ../../how-to/irpf-lifecycle.md:134
+msgid ""
+"Record this quarter's filing with `aeat app modelo work file` once the "
+"July window opens. That command is shown as a display frame because it "
+"refuses outside its presentation window, and `reconcile pull` follows it."
+msgstr ""
+
+#: ../../how-to/irpf-lifecycle.md:138
 msgid ""
 "The third quarter is the same chain one period later, with `3T` in place "
 "of `2T` throughout. Every quarter after the first is this one rhythm."
@@ -299,42 +320,42 @@ msgstr ""
 "A harmadik negyedév ugyanaz a lánc egy időszakkal később, végig `3T`-vel "
 "a `2T` helyett. Az első utáni minden negyedév ez az egy ritmus."
 
-#: ../../how-to/irpf-lifecycle.md:131
+#: ../../how-to/irpf-lifecycle.md:141
 msgid "Stage 4: the fourth quarter closes the instalment year"
 msgstr "4. szakasz: a negyedik negyedév lezárja az előlegévet"
 
-#: ../../how-to/irpf-lifecycle.md:133
+#: ../../how-to/irpf-lifecycle.md:143
 msgid ""
 "Run the same chain for `4T` in January of the following year, the fourth "
 "quarter's presentation window being January 1 to 30. After it is filed, "
 "Ana has four instalments on record; together they are the payments on "
 "account the annual declaration will set against her full-year income."
 msgstr ""
-"Futtassa ugyanazt a láncot `4T`-re a következő év januárjában, a negyedik "
-"negyedév benyújtási időablaka január 1-től 30-ig tart. Miután benyújtotta, "
-"Anának négy előlege van a nyilvántartásban; ezek együtt azok az "
-"előlegfizetések, amelyeket az éves bevallás a teljes éves jövedelmével "
-"szembeállít."
+"Futtassa ugyanazt a láncot `4T`-re a következő év januárjában, a negyedik"
+" negyedév benyújtási időablaka január 1-től 30-ig tart. Miután "
+"benyújtotta, Anának négy előlege van a nyilvántartásban; ezek együtt azok"
+" az előlegfizetések, amelyeket az éves bevallás a teljes éves "
+"jövedelmével szembeállít."
 
-#: ../../how-to/irpf-lifecycle.md:138
+#: ../../how-to/irpf-lifecycle.md:148
 msgid "Check the year's IRPF position at any point:"
 msgstr "Bármikor ellenőrizheti az év IRPF-pozícióját:"
 
-#: ../../how-to/irpf-lifecycle.md:144
+#: ../../how-to/irpf-lifecycle.md:154
 msgid "Stage 5: the annual Renta declaration"
 msgstr "5. szakasz: az éves Renta-bevallás"
 
-#: ../../how-to/irpf-lifecycle.md:146
+#: ../../how-to/irpf-lifecycle.md:156
 msgid ""
 "The following spring, the annual Modelo 100 gathers the year. It is "
 "annual, so the period token is `0A`, and the filing year is the income "
 "year - the 2026 declaration is prepared and filed in 2027."
 msgstr ""
-"A következő tavasszal az éves Modelo 100 összegyűjti az évet. Éves, ezért "
-"az időszak-token `0A`, és a benyújtási év a jövedelem éve - a 2026-os "
+"A következő tavasszal az éves Modelo 100 összegyűjti az évet. Éves, ezért"
+" az időszak-token `0A`, és a benyújtási év a jövedelem éve - a 2026-os "
 "bevallást 2027-ben készítik elő és nyújtják be."
 
-#: ../../how-to/irpf-lifecycle.md:150
+#: ../../how-to/irpf-lifecycle.md:160
 msgid ""
 "Before creating it, confirm the year's records are clean. The ledger "
 "preflight for the annual period runs locally:"
@@ -342,7 +363,7 @@ msgstr ""
 "A létrehozása előtt erősítse meg, hogy az év nyilvántartásai tiszták. Az "
 "éves időszakra vonatkozó ledger-előellenőrzés helyileg fut:"
 
-#: ../../how-to/irpf-lifecycle.md:157
+#: ../../how-to/irpf-lifecycle.md:167
 msgid ""
 "The rest of the annual chain resolves the four filed instalments and the "
 "2026 Modelo 100 registry revision, which is published for the 2027 filing"
@@ -355,19 +376,19 @@ msgid ""
 "earlier Renta. Employment or capital income the ledger cannot know about "
 "is supplied as manual casillas, found with `bindings list --missing`:"
 msgstr ""
-"Az éves lánc többi része feloldja a négy benyújtott előleget és a 2026-os "
-"Modelo 100 nyilvántartási revíziót, amelyet a 2027-es benyújtási "
+"Az éves lánc többi része feloldja a négy benyújtott előleget és a 2026-os"
+" Modelo 100 nyilvántartási revíziót, amelyet a 2027-es benyújtási "
 "szezonra tesznek közzé, miután ez a dokumentáció felépült, ezért ezek a "
 "parancsok megjelenítő keretként szerepelnek. A `dependencies` felsorolja "
 "az egyes benyújtásokat, amelyeket a bevallás bevon, köztük a négy Modelo "
 "130 előleget, és azt, hogy a bizonyítéka teljesül-e. A bevallás négyféle "
-"forrásból áll össze: Ana profiladatai, az év osztályozott ledgere, a négy "
-"benyújtott előleg (előlegfizetésként bevonva) és bármely átvezetés egy "
+"forrásból áll össze: Ana profiladatai, az év osztályozott ledgere, a négy"
+" benyújtott előleg (előlegfizetésként bevonva) és bármely átvezetés egy "
 "korábbi Rentából. A munkaviszonyból vagy tőkéből származó jövedelmet, "
 "amelyről a ledger nem tudhat, kézi casillaként adja meg, amelyeket a "
 "`bindings list --missing` paranccsal talál meg:"
 
-#: ../../how-to/irpf-lifecycle.md:171
+#: ../../how-to/irpf-lifecycle.md:181
 msgid ""
 "How every value arrives, and how to trace any figure to its rule and its "
 "article of law, is the subject of [Deep dive: how the Renta declaration "
@@ -377,11 +398,11 @@ msgstr ""
 "szám a szabályához és a törvénycikkéhez, [Elmélyülés: hogyan áll össze a "
 "Renta-bevallás](../explanation/how-renta-is-assembled.md) témája."
 
-#: ../../how-to/irpf-lifecycle.md:175
+#: ../../how-to/irpf-lifecycle.md:185
 msgid "What you completed"
 msgstr "Amit elvégzett"
 
-#: ../../how-to/irpf-lifecycle.md:177
+#: ../../how-to/irpf-lifecycle.md:187
 msgid ""
 "You carried one taxpayer through a whole IRPF year: a first quarter with "
 "explicit zero carries, three quarters whose carries resolved from your "
@@ -391,24 +412,24 @@ msgid ""
 msgstr ""
 "Egy adózót vezetett végig egy teljes IRPF-éven: egy első negyedév "
 "kifejezett nulla átvezetésekkel, három negyedév, amelyek átvezetései az "
-"Ön saját benyújtott nyilvántartásaiból oldódtak fel, és egy éves bevallás, "
-"amely az előlegeket egyetlen elszámolásba vonta. Minden szám "
+"Ön saját benyújtott nyilvántartásaiból oldódtak fel, és egy éves "
+"bevallás, amely az előlegeket egyetlen elszámolásba vonta. Minden szám "
 "visszavezethető maradt a ledger-sorokhoz és az azokat előállító "
 "szabályokhoz."
 
-#: ../../how-to/irpf-lifecycle.md:183
+#: ../../how-to/irpf-lifecycle.md:193
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/irpf-lifecycle.md:185
+#: ../../how-to/irpf-lifecycle.md:195
 msgid ""
 "[The IVA year](iva-lifecycle.md) - the same persona and ledger, through "
 "the IVA cycle."
 msgstr ""
-"[Az IVA-év](iva-lifecycle.md) - ugyanaz a személy és ledger, az "
-"IVA-cikluson keresztül."
+"[Az IVA-év](iva-lifecycle.md) - ugyanaz a személy és ledger, az IVA-"
+"cikluson keresztül."
 
-#: ../../how-to/irpf-lifecycle.md:187
+#: ../../how-to/irpf-lifecycle.md:197
 msgid ""
 "[Prepare a Modelo 130 IRPF instalment](modelo-130.md) - the standalone "
 "per-quarter recipe."
@@ -416,11 +437,11 @@ msgstr ""
 "[Egy Modelo 130 IRPF-előleg előkészítése](modelo-130.md) - az önálló, "
 "negyedévenkénti recept."
 
-#: ../../how-to/irpf-lifecycle.md:189
+#: ../../how-to/irpf-lifecycle.md:199
 msgid "[Prepare the annual Modelo 100 Renta declaration](modelo-100.md)"
 msgstr "[Az éves Modelo 100 Renta-bevallás előkészítése](modelo-100.md)"
 
-#: ../../how-to/irpf-lifecycle.md:190
+#: ../../how-to/irpf-lifecycle.md:200
 msgid ""
 "[Deep dive: how the Renta declaration is assembled](../explanation/how-"
 "renta-is-assembled.md)"
@@ -428,6 +449,7 @@ msgstr ""
 "[Elmélyülés: hogyan áll össze a Renta-bevallás](../explanation/how-renta-"
 "is-assembled.md)"
 
-#: ../../how-to/irpf-lifecycle.md:191
+#: ../../how-to/irpf-lifecycle.md:201
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
 msgstr "[A helyi beállítás diagnosztizálása és javítása](troubleshooting.md)"
+

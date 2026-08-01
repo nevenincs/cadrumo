@@ -20,7 +20,9 @@ from typing import Any, Final
 import pytest
 
 from dev.packaging.marketplace_publish import (
+    _SUPERSESSION_REPORT,
     MarketplacePublishError,
+    SupersessionVerdict,
     assert_supersession_complete,
     merge_marketplace_index,
     publish_cohort_plugins,
@@ -672,3 +674,63 @@ def test_a_cohort_that_retires_nothing_is_not_checked(tmp_path: Path) -> None:
         plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}, {"name": "aeat", "source": "./plugins/aeat"}],
     )
     assert_supersession_complete(marketplace=marketplace, cohort=_cohort(tmp_path, name="cadrumo", body="x"))
+
+
+def test_the_preflight_reports_that_a_verified_run_actually_checked_something(tmp_path: Path) -> None:
+    """A permit says WHICH question it answered, not merely that it did not refuse."""
+    marketplace = _published_marketplace(tmp_path, plugins=[{"name": "cadrumo", "source": "./plugins/cadrumo"}])
+
+    verdict = assert_supersession_complete(
+        marketplace=marketplace,
+        cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+    )
+
+    assert verdict is SupersessionVerdict.VERIFIED
+
+
+def test_a_marketplace_that_does_not_exist_is_refused_rather_than_reported_clean(tmp_path: Path) -> None:
+    """A wrong path leaves the invariant UNVERIFIED, which is not the same as satisfied.
+
+    The verb takes the marketplace as an operator-supplied path, so pointing it
+    somewhere wrong is an ordinary mistake. It previously returned silently and
+    the CLI printed that no retired identity survives -- a confident claim about
+    an index it had never opened.
+    """
+    with pytest.raises(MarketplacePublishError, match="UNVERIFIED"):
+        assert_supersession_complete(
+            marketplace=tmp_path / "no-such-checkout",
+            cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+        )
+
+
+def test_a_marketplace_with_no_published_index_is_reported_as_not_checked(tmp_path: Path) -> None:
+    """A first release has nothing published to contradict, and says so.
+
+    Distinct from the refusal above: the checkout exists, there is simply no
+    index yet. Both used to return the same silent success.
+    """
+    marketplace = tmp_path / "empty-checkout"
+    marketplace.mkdir()
+
+    verdict = assert_supersession_complete(
+        marketplace=marketplace,
+        cohort=_superseding_cohort(tmp_path, name="cadrumo", retires=["aeat"]),
+    )
+
+    assert verdict is SupersessionVerdict.NOTHING_PUBLISHED
+
+
+def test_every_verdict_reports_a_distinct_line_and_only_one_claims_the_invariant() -> None:
+    """The operator-visible half: three outcomes must not read as one.
+
+    A verdict added later without a report line would raise here rather than
+    silently reusing another outcome's wording.
+    """
+    lines = {verdict: _SUPERSESSION_REPORT[verdict] for verdict in SupersessionVerdict}
+
+    assert len(set(lines.values())) == len(SupersessionVerdict)
+    assert not lines[SupersessionVerdict.VERIFIED].startswith("NOT CHECKED")
+    for verdict in (SupersessionVerdict.NOTHING_RETIRED, SupersessionVerdict.NOTHING_PUBLISHED):
+        assert lines[verdict].startswith("NOT CHECKED"), (
+            f"{verdict} reports as though the invariant was established: {lines[verdict]!r}"
+        )

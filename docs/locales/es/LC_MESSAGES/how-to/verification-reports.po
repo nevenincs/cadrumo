@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -92,11 +92,11 @@ msgid ""
 msgstr ""
 "**Requisito:** un perfil de contribuyente activo con nombre y apellidos, "
 "y un borrador calculado que comprobar. Crea un perfil con `aeat config "
-"profile create`, aportando el nombre, los apellidos y una fecha de inicio "
-"de actividad. La fecha de inicio de actividad importa para una primera "
+"profile create`, aportando el nombre, los apellidos y una fecha de inicio"
+" de actividad. La fecha de inicio de actividad importa para una primera "
 "presentación: deja fuera del alcance la dependencia de un periodo "
-"anterior que nunca presentaste, para que la verificación pueda superarse. "
-"Consulta [Configura tu perfil](profile-setup.md)."
+"anterior que nunca presentaste, para que la verificación pueda superarse."
+" Consulta [Configura tu perfil](profile-setup.md)."
 
 #: ../../how-to/verification-reports.md:34
 msgid ""
@@ -118,11 +118,11 @@ msgstr ""
 "Si quiere entender cómo encajan las presentaciones y los cálculos "
 "guardados, lee primero [El flujo de presentación](filing-spine.md)."
 
-#: ../../how-to/verification-reports.md:42
+#: ../../how-to/verification-reports.md:43
 msgid "Run verification"
 msgstr "Ejecuta la verificación"
 
-#: ../../how-to/verification-reports.md:44
+#: ../../how-to/verification-reports.md:45
 msgid ""
 "Create the draft, calculate it, verify it, and open the saved report. "
 "Verify saves a report whether or not the draft passes, and `verification-"
@@ -132,7 +132,7 @@ msgstr ""
 "verificación guarda un informe pase o no pase el borrador, y "
 "`verification-report view` lo reabre por su id:"
 
-#: ../../how-to/verification-reports.md:52
+#: ../../how-to/verification-reports.md:53
 msgid ""
 "Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to"
 " `12` for months - see [Period tokens and dates](filing-calendar.md"
@@ -142,7 +142,7 @@ msgstr ""
 "trimestres y `01` a `12` para los meses; consulta [Tokens de periodo y "
 "fechas](filing-calendar.md#period-tokens-and-dates)."
 
-#: ../../how-to/verification-reports.md:55
+#: ../../how-to/verification-reports.md:56
 msgid ""
 "With the profile and draft above, this first-period Modelo 303 passes: "
 "the report reads `granted_verificado_completo` `true` and a "
@@ -154,7 +154,7 @@ msgstr ""
 "`true` y un `completeness_status` de `complete`; el cálculo guardado "
 "queda ahora verificado y listo para exportar."
 
-#: ../../how-to/verification-reports.md:59
+#: ../../how-to/verification-reports.md:60
 msgid ""
 "When the draft does not pass, the report reads "
 "`granted_verificado_completo` `false` and a `completeness_status` of "
@@ -168,7 +168,7 @@ msgstr ""
 " El comando guarda el informe en ambos casos, para que pueda volver a los"
 " hallazgos más tarde."
 
-#: ../../how-to/verification-reports.md:64
+#: ../../how-to/verification-reports.md:65
 msgid ""
 "By default `work verify` checks the current saved calculation, and it "
 "checks only drafts. To pick a different draft, use `--select latest-"
@@ -180,11 +180,11 @@ msgstr ""
 "latest-draft` o pasa directamente el ID de revisión de ese cálculo. Usa "
 "`--by` para registrar quién ejecutó la comprobación."
 
-#: ../../how-to/verification-reports.md:68
+#: ../../how-to/verification-reports.md:69
 msgid "List your verification reports"
 msgstr "Lista sus informes de verificación"
 
-#: ../../how-to/verification-reports.md:70
+#: ../../how-to/verification-reports.md:71
 msgid ""
 "Every verification run leaves a report. List them with `aeat app modelo "
 "verification-report list`."
@@ -192,7 +192,7 @@ msgstr ""
 "Cada ejecución de la verificación deja un informe. Lístalos con `aeat app"
 " modelo verification-report list`."
 
-#: ../../how-to/verification-reports.md:73
+#: ../../how-to/verification-reports.md:74
 msgid ""
 "To narrow the list to the reports for one saved calculation, add "
 "`--calculation-revision-id` with that calculation's ID."
@@ -200,11 +200,11 @@ msgstr ""
 "Para acotar la lista a los informes de un cálculo guardado, añade "
 "`--calculation-revision-id` con el ID de ese cálculo."
 
-#: ../../how-to/verification-reports.md:76
+#: ../../how-to/verification-reports.md:77
 msgid "View a report and read the findings"
 msgstr "Consulta un informe y lee los hallazgos"
 
-#: ../../how-to/verification-reports.md:78
+#: ../../how-to/verification-reports.md:79
 msgid ""
 "Open one report by its ID with `aeat app modelo verification-report view "
 "<verification-report-id>` (the sequence above did exactly this on the "
@@ -214,59 +214,59 @@ msgstr ""
 "<verification-report-id>` (la secuencia anterior hizo exactamente esto "
 "con el informe que acababa de producir)."
 
-#: ../../how-to/verification-reports.md:82
+#: ../../how-to/verification-reports.md:83
 msgid "The report shows:"
 msgstr "El informe muestra:"
 
-#: ../../how-to/verification-reports.md:84
+#: ../../how-to/verification-reports.md:85
 msgid "The completeness status: `complete`, `incomplete`, or `blocked`."
 msgstr "El estado de completitud: `complete`, `incomplete` o `blocked`."
 
-#: ../../how-to/verification-reports.md:85
+#: ../../how-to/verification-reports.md:86
 msgid "Whether the draft became verified (`granted_verificado_completo`)."
 msgstr "Si el borrador quedó verificado (`granted_verificado_completo`)."
 
-#: ../../how-to/verification-reports.md:86
+#: ../../how-to/verification-reports.md:87
 msgid "When the run happened and who ran it."
 msgstr "Cuándo se ejecutó y quién lo ejecutó."
 
-#: ../../how-to/verification-reports.md:87
+#: ../../how-to/verification-reports.md:88
 msgid "How many casillas the calculation resolved."
 msgstr "Cuántas casillas resolvió el cálculo."
 
-#: ../../how-to/verification-reports.md:88
+#: ../../how-to/verification-reports.md:89
 msgid "Which required casillas are still missing."
 msgstr "Qué casillas obligatorias siguen faltando."
 
-#: ../../how-to/verification-reports.md:89
+#: ../../how-to/verification-reports.md:90
 msgid "The list of findings."
 msgstr "La lista de hallazgos."
 
-#: ../../how-to/verification-reports.md:91
+#: ../../how-to/verification-reports.md:92
 msgid "Each finding carries:"
 msgstr "Cada hallazgo lleva:"
 
-#: ../../how-to/verification-reports.md:93
+#: ../../how-to/verification-reports.md:94
 msgid "A severity: **blocking** or **warning**."
 msgstr "Una severidad: **bloqueante** o **advertencia**."
 
-#: ../../how-to/verification-reports.md:94
+#: ../../how-to/verification-reports.md:95
 msgid "The affected casilla, where one applies."
 msgstr "La casilla afectada, cuando corresponde una."
 
-#: ../../how-to/verification-reports.md:95
+#: ../../how-to/verification-reports.md:96
 msgid "A message describing what the rule checked."
 msgstr "Un mensaje que describe qué comprobó la regla."
 
-#: ../../how-to/verification-reports.md:96
+#: ../../how-to/verification-reports.md:97
 msgid "A suggested next action."
 msgstr "Una acción siguiente sugerida."
 
-#: ../../how-to/verification-reports.md:97
+#: ../../how-to/verification-reports.md:98
 msgid "The legal references behind the rule, where the rule has them."
 msgstr "Las referencias legales que respaldan la regla, cuando la regla las tiene."
 
-#: ../../how-to/verification-reports.md:99
+#: ../../how-to/verification-reports.md:100
 msgid ""
 "For the legal references in machine-readable form, render the report as "
 "JSON. `--format json` is a global flag, so it goes before the command. "
@@ -276,12 +276,11 @@ msgid ""
 msgstr ""
 "Para obtener las referencias legales en formato legible por máquina, "
 "muestra el informe como JSON. `--format json` es una opción global, así "
-"que va antes del comando. La tarjeta de [Ejecuta la "
-"verificación](#run-verification) hace exactamente esto: su marco de "
-"cierre es el `verification-report view` en JSON del informe que acababa "
-"de producir."
+"que va antes del comando. La tarjeta de [Ejecuta la verificación](#run-"
+"verification) hace exactamente esto: su marco de cierre es el "
+"`verification-report view` en JSON del informe que acababa de producir."
 
-#: ../../how-to/verification-reports.md:104
+#: ../../how-to/verification-reports.md:105
 msgid ""
 "Each finding in the JSON output carries `legal_refs` and `source_refs`. "
 "Most findings name a legal reference - a cross-period dependency, for "
@@ -296,21 +295,21 @@ msgstr ""
 "como una instantánea del registro sin resolver, no tienen ninguna, así "
 "que esos campos están vacíos para ellas."
 
-#: ../../how-to/verification-reports.md:109
+#: ../../how-to/verification-reports.md:110
 msgid ""
 "Blocking findings prevent the draft from becoming verified, and export "
 "needs a verified calculation. Warnings do not block; read them, decide "
 "whether they apply to you, and move on."
 msgstr ""
 "Los hallazgos bloqueantes impiden que el borrador quede verificado, y la "
-"exportación necesita un cálculo verificado. Las advertencias no bloquean; "
-"léelas, decide si te corresponden y continúa."
+"exportación necesita un cálculo verificado. Las advertencias no bloquean;"
+" léelas, decide si te corresponden y continúa."
 
-#: ../../how-to/verification-reports.md:113
+#: ../../how-to/verification-reports.md:115
 msgid "After any fix: re-run verification"
 msgstr "Tras cualquier corrección: vuelve a ejecutar la verificación"
 
-#: ../../how-to/verification-reports.md:115
+#: ../../how-to/verification-reports.md:117
 msgid ""
 "After you change anything, run `aeat app modelo work verify` again for "
 "the same target, exactly as the card in [Run verification](#run-"
@@ -325,22 +324,22 @@ msgstr ""
 "en su lugar vuelve a ejecutar la comprobación contra el borrador actual "
 "de ese objetivo."
 
-#: ../../how-to/verification-reports.md:120
+#: ../../how-to/verification-reports.md:122
 msgid ""
 "Confirm the finding you addressed is gone from the new report. Repeat "
 "until the result shows `granted_verificado_completo` `true`. Each symptom"
 " section in this guide finishes with this re-run step."
 msgstr ""
-"Confirma que el hallazgo que abordaste ha desaparecido del nuevo informe. "
-"Repite hasta que el resultado muestre `granted_verificado_completo` "
+"Confirma que el hallazgo que abordaste ha desaparecido del nuevo informe."
+" Repite hasta que el resultado muestre `granted_verificado_completo` "
 "`true`. Cada sección de síntomas de esta guía termina con este paso de "
 "reejecución."
 
-#: ../../how-to/verification-reports.md:124
+#: ../../how-to/verification-reports.md:126
 msgid "The report says incomplete"
 msgstr "El informe indica incompleto"
 
-#: ../../how-to/verification-reports.md:126
+#: ../../how-to/verification-reports.md:128
 msgid ""
 "Incomplete means required casillas have no value yet. The report lists "
 "which ones under **missing required casillas**."
@@ -348,14 +347,17 @@ msgstr ""
 "Incompleto significa que las casillas obligatorias aún no tienen valor. "
 "El informe enumera cuáles bajo **missing required casillas**."
 
-#: ../../how-to/verification-reports.md:129
+#: ../../how-to/verification-reports.md:131
+#, fuzzy
 msgid ""
 "`--casilla` works only on boxes whose input kind is `manual`. A box "
 "filled from your ledger or another source is `bound`, and `--casilla` "
 "refuses it with `cannot override bucket-derived source-bound casillas`. "
 "Fix the source for those. See [Review your calculation values](review-"
 "calculation-values.md). Check which kind a box is, then supply the value "
-"for a manual one and recalculate:"
+"for a manual one and recalculate. The example supplies box 44, the "
+"prorrata regularisation, and the recalculation carries it into the "
+"deductible total:"
 msgstr ""
 "`--casilla` solo funciona en las casillas cuyo tipo de entrada es "
 "`manual`. Una casilla rellenada desde tu ledger u otra fuente es `bound`,"
@@ -364,7 +366,7 @@ msgstr ""
 "de tu cálculo](review-calculation-values.md). Comprueba de qué tipo es "
 "una casilla, aporta después el valor de una manual y recalcule:"
 
-#: ../../how-to/verification-reports.md:139
+#: ../../how-to/verification-reports.md:143
 msgid ""
 "Then [re-run verification](#after-any-fix-re-run-verification). For the "
 "full input workflow, including where values come from and how to check "
@@ -375,11 +377,11 @@ msgstr ""
 "vienen los valores y cómo comprobarlos, consulta [Revisa los valores de "
 "tu cálculo](review-calculation-values.md)."
 
-#: ../../how-to/verification-reports.md:143
+#: ../../how-to/verification-reports.md:147
 msgid "The report says blocked"
 msgstr "El informe indica bloqueado"
 
-#: ../../how-to/verification-reports.md:145
+#: ../../how-to/verification-reports.md:149
 msgid ""
 "Blocked means at least one blocking finding stands between your draft and"
 " a verified calculation. You cannot export the draft until you resolve "
@@ -389,7 +391,7 @@ msgstr ""
 "entre tu borrador y un cálculo verificado. No puede exportar el borrador "
 "hasta que resuelva cada hallazgo bloqueante."
 
-#: ../../how-to/verification-reports.md:149
+#: ../../how-to/verification-reports.md:153
 msgid ""
 "Read each finding's suggested next action first; it tells you what the "
 "tool expects you to do. The common kinds of blocking finding:"
@@ -397,7 +399,7 @@ msgstr ""
 "Lee primero la acción siguiente sugerida de cada hallazgo; le indica qué "
 "espera de ti la herramienta. Los tipos habituales de hallazgo bloqueante:"
 
-#: ../../how-to/verification-reports.md:152
+#: ../../how-to/verification-reports.md:156
 msgid ""
 "**A cross-field rule failed.** Two or more casillas disagree in a way the"
 " form rules do not allow. Check the values named in the finding against "
@@ -407,24 +409,25 @@ msgstr ""
 "forma que las reglas del formulario no permiten. Comprueba los valores "
 "nombrados en el hallazgo contra tus registros."
 
-#: ../../how-to/verification-reports.md:154
+#: ../../how-to/verification-reports.md:158
 msgid ""
 "**A value could not be derived.** The tool needed to compute a casilla "
 "but your data did not provide enough input. Supply the missing input or "
 "enter the value directly."
 msgstr ""
 "**No se pudo derivar un valor.** La herramienta necesitaba calcular una "
-"casilla pero tus datos no aportaron suficiente entrada. Aporta la entrada "
-"que falta o introduce el valor directamente."
+"casilla pero tus datos no aportaron suficiente entrada. Aporta la entrada"
+" que falta o introduce el valor directamente."
 
-#: ../../how-to/verification-reports.md:157
+#: ../../how-to/verification-reports.md:161
+#, fuzzy
 msgid ""
 "**A prior-period record is missing.** This filing depends on a filing "
 "from an earlier period that is missing or unconfirmed. Record or confirm "
 "that earlier filing first. If you had no obligation in that earlier "
 "period because you had not started your activity yet, set your activity-"
-"start date on the profile so the dependency is scoped out (replace `me` "
-"with your profile name):"
+"start date on the profile so the dependency is scoped out. Name your own "
+"profile in place of `docs-sequence-sandbox`:"
 msgstr ""
 "**Falta un registro de un periodo anterior.** Esta presentación depende "
 "de una presentación de un periodo anterior que falta o no está "
@@ -434,17 +437,17 @@ msgstr ""
 "que la dependencia quede fuera del alcance (sustituye `me` por el nombre "
 "de tu perfil):"
 
-#: ../../how-to/verification-reports.md:167
+#: ../../how-to/verification-reports.md:172
 msgid "After each fix, [re-run verification](#after-any-fix-re-run-verification)."
 msgstr ""
 "Tras cada corrección, [vuelve a ejecutar la verificación](#after-any-fix-"
 "re-run-verification)."
 
-#: ../../how-to/verification-reports.md:169
+#: ../../how-to/verification-reports.md:174
 msgid "Export refuses because no verified calculation exists"
 msgstr "La exportación se niega porque no existe ningún cálculo verificado"
 
-#: ../../how-to/verification-reports.md:171
+#: ../../how-to/verification-reports.md:176
 msgid ""
 "Export needs a verified (or locally-filed) saved calculation. It refuses "
 "a plain draft with a message such as \"current revision is still draft; "
@@ -464,11 +467,11 @@ msgstr ""
 "exportación una vez que la verificación otorgue el estado verificado-"
 "completo:"
 
-#: ../../how-to/verification-reports.md:183
+#: ../../how-to/verification-reports.md:188
 msgid "More than one filing matches"
 msgstr "Coincide más de una presentación"
 
-#: ../../how-to/verification-reports.md:185
+#: ../../how-to/verification-reports.md:190
 msgid ""
 "When more than one filing or saved calculation matches the modelo, year, "
 "and period you named, the tool refuses to guess and prints the candidates"
@@ -478,7 +481,7 @@ msgstr ""
 " el año y el periodo que nombró, la herramienta se niega a adivinar e "
 "imprime los candidatos en su lugar."
 
-#: ../../how-to/verification-reports.md:188
+#: ../../how-to/verification-reports.md:193
 msgid ""
 "List your filings with their work-unit IDs with `aeat app modelo work "
 "list`, then target the one you mean by passing its work-unit ID directly "
@@ -486,10 +489,10 @@ msgid ""
 msgstr ""
 "Lista tus presentaciones con sus IDs de unidad de trabajo con `aeat app "
 "modelo work list`, y luego apunta a la que quieras pasando su ID de "
-"unidad de trabajo directamente a `aeat app modelo work verify "
-"--work-unit-id <work-unit-id>`."
+"unidad de trabajo directamente a `aeat app modelo work verify --work-"
+"unit-id <work-unit-id>`."
 
-#: ../../how-to/verification-reports.md:192
+#: ../../how-to/verification-reports.md:197
 msgid ""
 "To confirm which filing a command touched, check its state and the "
 "actions taken on it:"
@@ -497,11 +500,11 @@ msgstr ""
 "Para confirmar qué presentación tocó un comando, comprueba su estado y "
 "las acciones realizadas sobre ella:"
 
-#: ../../how-to/verification-reports.md:199
+#: ../../how-to/verification-reports.md:205
 msgid "The filing deadline has passed"
 msgstr "El plazo de presentación ha pasado"
 
-#: ../../how-to/verification-reports.md:201
+#: ../../how-to/verification-reports.md:207
 msgid ""
 "Verification does not check filing deadlines. It still runs for a past "
 "period and can pass; the deadline gate applies later, when you record the"
@@ -512,7 +515,7 @@ msgstr ""
 "plazo se aplica más tarde, cuando registra la presentación con `work "
 "file`."
 
-#: ../../how-to/verification-reports.md:205
+#: ../../how-to/verification-reports.md:211
 msgid ""
 "If the deadline has passed, file late through AEAT's own channels; "
 "consult AEAT or an advisor about any surcharges that may apply."
@@ -521,11 +524,11 @@ msgstr ""
 " la AEAT; consulta a la AEAT o a un asesor sobre los recargos que puedan "
 "aplicarse."
 
-#: ../../how-to/verification-reports.md:208
+#: ../../how-to/verification-reports.md:214
 msgid "Where to get help"
 msgstr "Dónde obtener ayuda"
 
-#: ../../how-to/verification-reports.md:210
+#: ../../how-to/verification-reports.md:216
 msgid ""
 "Command labels and messages display in Spanish to match the official AEAT"
 " forms, while this guide is in English. The field names this guide names "
@@ -537,10 +540,10 @@ msgstr ""
 "coincidir con los formularios oficiales de la AEAT, mientras que esta "
 "guía está en inglés. Los nombres de campo que esta guía nombra "
 "(`granted_verificado_completo`, `completeness_status`, "
-"`finding_legal_refs`) coinciden exactamente con la salida, para que pueda "
-"relacionar una línea en español con el paso que la describe."
+"`finding_legal_refs`) coinciden exactamente con la salida, para que pueda"
+" relacionar una línea en español con el paso que la describe."
 
-#: ../../how-to/verification-reports.md:216
+#: ../../how-to/verification-reports.md:222
 #, python-brace-format
 msgid ""
 "If a report or an error message does not match what this guide describes,"
@@ -555,11 +558,11 @@ msgstr ""
 "Antes de compartir la salida de un comando para pedir ayuda, elimina los "
 "identificadores fiscales personales como tu NIF, CIF, DNI, NIE o NII."
 
-#: ../../how-to/verification-reports.md:222
+#: ../../how-to/verification-reports.md:228
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/verification-reports.md:224
+#: ../../how-to/verification-reports.md:230
 msgid ""
 "[File at AEAT](file-at-aeat.md): upload the exported file at the AEAT "
 "portal."
@@ -567,7 +570,7 @@ msgstr ""
 "[Presenta ante la AEAT](file-at-aeat.md): sube el fichero exportado en el"
 " portal de la AEAT."
 
-#: ../../how-to/verification-reports.md:225
+#: ../../how-to/verification-reports.md:231
 msgid ""
 "[Review your calculation values](review-calculation-values.md): check and"
 " correct the inputs behind each casilla."
@@ -575,7 +578,7 @@ msgstr ""
 "[Revisa los valores de tu cálculo](review-calculation-values.md): "
 "comprueba y corrige las entradas que hay tras cada casilla."
 
-#: ../../how-to/verification-reports.md:226
+#: ../../how-to/verification-reports.md:232
 msgid ""
 "[The filing workflow](filing-spine.md): how filings, saved calculations, "
 "and reports fit together."
@@ -583,7 +586,7 @@ msgstr ""
 "[El flujo de presentación](filing-spine.md): cómo encajan las "
 "presentaciones, los cálculos guardados y los informes."
 
-#: ../../how-to/verification-reports.md:227
+#: ../../how-to/verification-reports.md:233
 msgid "[CLI reference](../cli/index.rst): every command and option."
 msgstr "[Referencia de la CLI](../cli/index.rst): todos los comandos y opciones."
 

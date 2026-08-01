@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -206,17 +206,17 @@ msgid ""
 " negative casilla-17 balance is carried forward as `saldo-negativo-fin-"
 "periodo` for later quarters."
 msgstr ""
-"El Modelo 130 calcula el pago a cuenta del IRPF del trimestre a partir de "
-"las cifras acumuladas del ejercicio de su actividad: los ingresos "
-"acumulados (casilla `01`) menos los gastos deducibles acumulados (casilla "
-"`02`) dan el rendimiento neto (casilla `03`); el pago fraccionado "
+"El Modelo 130 calcula el pago a cuenta del IRPF del trimestre a partir de"
+" las cifras acumuladas del ejercicio de su actividad: los ingresos "
+"acumulados (casilla `01`) menos los gastos deducibles acumulados (casilla"
+" `02`) dan el rendimiento neto (casilla `03`); el pago fraccionado "
 "(casilla `04`) es un porcentaje de ese neto; los pagos fraccionados ya "
 "realizados este año (casilla `05`) y las retenciones que soportaste "
 "(casilla `06`) se restan; la minoración por nivel de rendimiento neto "
 "(casilla `13`) y los resultados negativos de trimestres anteriores "
-"(casilla `15`) ajustan la cifra; y la casilla `19` es el resultado final. "
-"Un saldo negativo de la casilla 17 se arrastra como "
-"`saldo-negativo-fin-periodo` para los trimestres posteriores."
+"(casilla `15`) ajustan la cifra; y la casilla `19` es el resultado final."
+" Un saldo negativo de la casilla 17 se arrastra como `saldo-negativo-fin-"
+"periodo` para los trimestres posteriores."
 
 #: ../../how-to/modelo-130.md:78
 msgid ""
@@ -248,8 +248,8 @@ msgstr ""
 "La casilla `06` (Retenciones e ingresos a cuenta) es una casilla manual: "
 "el ledger no la rellena, así que la aportas a mano con `--casilla`. "
 "Pásala en la misma llamada de cálculo que los bindings del primer "
-"periodo, y revisa después el cálculo guardado para confirmar que su valor "
-"quedó registrado:"
+"periodo, y revisa después el cálculo guardado para confirmar que su valor"
+" quedó registrado:"
 
 #: ../../how-to/modelo-130.md:99
 msgid ""
@@ -266,11 +266,11 @@ msgstr ""
 "consulta [Revisa y aporta las entradas de cálculo](review-calculation-"
 "values.md) para el flujo de entrada completo."
 
-#: ../../how-to/modelo-130.md:105
+#: ../../how-to/modelo-130.md:106
 msgid "Each quarter is cumulative"
 msgstr "Cada trimestre es acumulativo"
 
-#: ../../how-to/modelo-130.md:107
+#: ../../how-to/modelo-130.md:108
 msgid ""
 "Modelo 130 is a year-to-date form, not a quarter-slice form. The second "
 "quarter's casilla `01` covers January through June, not April through "
@@ -283,7 +283,7 @@ msgstr ""
 " se calcula sobre todo el año transcurrido, y los pagos fraccionados que "
 "ya realizó se restan mediante la casilla `05`."
 
-#: ../../how-to/modelo-130.md:112
+#: ../../how-to/modelo-130.md:113
 msgid ""
 "The tool implements this through cumulative ledger bindings (the ledger "
 "window for `2T` is January 1 to June 30) and `previous_filing` bindings "
@@ -294,7 +294,7 @@ msgstr ""
 " `previous_filing` que leen tus propios trimestres presentados "
 "anteriores:"
 
-#: ../../how-to/modelo-130.md:116
+#: ../../how-to/modelo-130.md:117
 msgid ""
 "`modelo-130-pagos-fraccionados-anteriores` - the instalments already paid"
 " this year, from your filed `1T`..`3T` records."
@@ -302,7 +302,7 @@ msgstr ""
 "`modelo-130-pagos-fraccionados-anteriores`: los pagos fraccionados ya "
 "realizados este año, de tus registros presentados `1T`..`3T`."
 
-#: ../../how-to/modelo-130.md:118
+#: ../../how-to/modelo-130.md:119
 msgid ""
 "`modelo-130-resultados-negativos-anteriores` - negative results carried "
 "from earlier quarters."
@@ -310,7 +310,7 @@ msgstr ""
 "`modelo-130-resultados-negativos-anteriores`: los resultados negativos "
 "arrastrados de trimestres anteriores."
 
-#: ../../how-to/modelo-130.md:120
+#: ../../how-to/modelo-130.md:121
 msgid ""
 "`irpf.previous_year_economic_activity_net_income` - last year's net "
 "income, which decides the minoración tier."
@@ -318,7 +318,7 @@ msgstr ""
 "`irpf.previous_year_economic_activity_net_income`: el rendimiento neto "
 "del año pasado, que decide el tramo de la minoración."
 
-#: ../../how-to/modelo-130.md:123
+#: ../../how-to/modelo-130.md:124
 msgid ""
 "For a first period these have no history, which is why the first-quarter "
 "chain passes them as `--binding ...=0`. For later quarters do NOT pass "
@@ -336,11 +336,11 @@ msgstr ""
 "presentación anterior (consulta [Concilia una "
 "presentación](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:130
+#: ../../how-to/modelo-130.md:131
 msgid "Calculate, review, verify, export"
 msgstr "Calcula, revisa, verifica, exporta"
 
-#: ../../how-to/modelo-130.md:132
+#: ../../how-to/modelo-130.md:133
 msgid ""
 "The chain is the standard filing workflow - see [The filing workflow"
 "](filing-spine.md) for how work units and calculation revisions behave. "
@@ -350,30 +350,29 @@ msgstr ""
 "presentación](filing-spine.md) para saber cómo se comportan las unidades "
 "de trabajo y las revisiones de cálculo. En resumen:"
 
-#: ../../how-to/modelo-130.md:140
+#: ../../how-to/modelo-130.md:141
 msgid ""
 "Once the draft verifies, export it. Export refuses until every "
 "deductible-expense row carries linked purchase-invoice evidence (see "
-"[Attach invoices and receipts](ledger-evidence.md)); this simple Modelo "
-"130 example omits that evidence, so the export and the post-portal filed "
-"marker are shown as display frames. The full evidence-to-export chain "
-"runs end to end, executed, on [Prepare a Modelo 303 IVA "
-"filing](modelo-303.md):"
+"[Attach invoices and receipts](ledger-evidence.md)), so this example "
+"registers the supplier invoice and attaches it before it calculates. "
+"Attach in that order: a draft bundles its evidence when you verify it, so"
+" an invoice attached afterwards does not reach the filing."
 msgstr ""
-"Una vez que el borrador se verifica, expórtalo. La exportación se niega "
-"hasta que cada fila de gasto deducible lleve vinculada la evidencia de la"
-" factura de compra (consulta [Adjunta facturas y recibos](ledger-"
-"evidence.md)); este ejemplo sencillo del Modelo 130 omite esa evidencia, "
-"por lo que la exportación y el marcado de presentado posterior al portal "
-"se muestran como marcos ilustrativos. La cadena completa de la evidencia "
-"a la exportación se ejecuta de principio a fin, ejecutada, en [Prepara "
-"una presentación de IVA con el Modelo 303](modelo-303.md):"
 
-#: ../../how-to/modelo-130.md:150
+#: ../../how-to/modelo-130.md:152
+msgid ""
+"Recording the filed marker is optional, and it applies only while the "
+"obligation window is open. Export is the local finish line; the marker is"
+" an internal note that you have already presented the file at the portal."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:156
+#, fuzzy
 msgid ""
 "Each computed casilla carries its formula, legal references, and source "
 "references; show them with the revision view or [review the calculation "
-"values](review-calculation-values.md). After you record the marker, "
+"values](review-calculation-values.md). If you recorded the marker, "
 "reconcile against the justificante (see [Reconcile a "
 "filing](reconcile.md))."
 msgstr ""
@@ -383,7 +382,7 @@ msgstr ""
 "registrar el marcador, concilia con el justificante (consulta [Concilia "
 "una presentación](reconcile.md))."
 
-#: ../../how-to/modelo-130.md:156
+#: ../../how-to/modelo-130.md:162
 msgid ""
 "Modelo 130's quarterly results feed your annual Renta declaration: the "
 "four instalments are folded into Modelo 100 as payments on account. See "
@@ -394,27 +393,58 @@ msgstr ""
 "como pagos a cuenta. Consulta [Prepara la declaración anual de la Renta "
 "con el Modelo 100](modelo-100.md)."
 
-#: ../../how-to/modelo-130.md:160
+#: ../../how-to/modelo-130.md:166
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/modelo-130.md:162
+#: ../../how-to/modelo-130.md:168
 msgid "[The income-tax year (run-through)](irpf-lifecycle.md)"
 msgstr "[El año del IRPF (recorrido)](irpf-lifecycle.md)"
 
-#: ../../how-to/modelo-130.md:163
+#: ../../how-to/modelo-130.md:169
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flujo de presentación](filing-spine.md)"
 
-#: ../../how-to/modelo-130.md:164
+#: ../../how-to/modelo-130.md:170
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa y aporta las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/modelo-130.md:165
+#: ../../how-to/modelo-130.md:171
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Sube tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-130.md:166
+#: ../../how-to/modelo-130.md:172
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Concilia una presentación](reconcile.md)"
+
+#~ msgid ""
+#~ "Once the draft verifies, export it. "
+#~ "Export refuses until every deductible-"
+#~ "expense row carries linked purchase-"
+#~ "invoice evidence (see [Attach invoices "
+#~ "and receipts](ledger-evidence.md)); this "
+#~ "simple Modelo 130 example omits that "
+#~ "evidence, so the export and the "
+#~ "post-portal filed marker are shown as"
+#~ " display frames. The full evidence-"
+#~ "to-export chain runs end to end, "
+#~ "executed, on [Prepare a Modelo 303 "
+#~ "IVA filing](modelo-303.md):"
+#~ msgstr ""
+#~ "Una vez que el borrador se "
+#~ "verifica, expórtalo. La exportación se "
+#~ "niega hasta que cada fila de gasto"
+#~ " deducible lleve vinculada la evidencia "
+#~ "de la factura de compra (consulta "
+#~ "[Adjunta facturas y recibos](ledger-"
+#~ "evidence.md)); este ejemplo sencillo del "
+#~ "Modelo 130 omite esa evidencia, por "
+#~ "lo que la exportación y el marcado"
+#~ " de presentado posterior al portal se"
+#~ " muestran como marcos ilustrativos. La "
+#~ "cadena completa de la evidencia a "
+#~ "la exportación se ejecuta de principio"
+#~ " a fin, ejecutada, en [Prepara una"
+#~ " presentación de IVA con el Modelo"
+#~ " 303](modelo-303.md):"
 

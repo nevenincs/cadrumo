@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -115,12 +115,12 @@ msgid ""
 "checking now is cheaper. This is a live read-only command - see [Check "
 "AEAT notifications and live observations](check-aeat-notifications.md)."
 msgstr ""
-"Verifica el número de IVA europeo de cada contraparte en el registro "
-"VIES antes de fiarse de él con `aeat app live verify nif-iva "
-"ESB12345678`. Un número no válido o no registrado es la corrección más "
-"frecuente del 349 más adelante; comprobarlo ahora sale más barato. Este "
-"es un comando en vivo de solo lectura; consulta [Consulta notificaciones "
-"de la AEAT y observaciones en vivo](check-aeat-notifications.md)."
+"Verifica el número de IVA europeo de cada contraparte en el registro VIES"
+" antes de fiarse de él con `aeat app live verify nif-iva ESB12345678`. Un"
+" número no válido o no registrado es la corrección más frecuente del 349 "
+"más adelante; comprobarlo ahora sale más barato. Este es un comando en "
+"vivo de solo lectura; consulta [Consulta notificaciones de la AEAT y "
+"observaciones en vivo](check-aeat-notifications.md)."
 
 #: ../../how-to/modelo-349.md:45
 msgid "Create, calculate, and verify"
@@ -133,9 +133,9 @@ msgid ""
 "creates the draft, aggregates the invoices into the declaration, and "
 "verifies it:"
 msgstr ""
-"La preparación siguiente registra dos facturas emitidas intracomunitarias "
-"(una entrega de bienes a un cliente alemán y un servicio a uno francés), "
-"después crea el borrador, agrega las facturas a la declaración y la "
+"La preparación siguiente registra dos facturas emitidas intracomunitarias"
+" (una entrega de bienes a un cliente alemán y un servicio a uno francés),"
+" después crea el borrador, agrega las facturas a la declaración y la "
 "verifica:"
 
 #: ../../how-to/modelo-349.md:55
@@ -147,8 +147,8 @@ msgid ""
 "operaciones`), and verify grants verified-complete. Inspect what was "
 "bound and what is missing, then show the built rows:"
 msgstr ""
-"El cálculo agrega los registros de factura del periodo a las casillas del "
-"resumen y construye las filas de detalle por operador. Con las dos "
+"El cálculo agrega los registros de factura del periodo a las casillas del"
+" resumen y construye las filas de detalle por operador. Con las dos "
 "facturas anteriores, el resumen informa de dos operadores "
 "intracomunitarios (`decl.numero-operadores`) por un total de 8000 euros "
 "de operaciones (`decl.importe-operaciones`), y la verificación otorga el "
@@ -198,17 +198,19 @@ msgid "Export the verified declaration:"
 msgstr "Exporta la declaración verificada:"
 
 #: ../../how-to/modelo-349.md:87
+#, fuzzy
 msgid ""
 "After you file at the portal, record the local marker, then [reconcile "
-"against the justificante](reconcile.md). The marker records a filing you "
-"have already presented at the portal, so it is shown as a display frame:"
+"against the justificante](reconcile.md). The marker needs a pending "
+"filing obligation, so the preparation below declares the intra-community "
+"obligation on the profile first:"
 msgstr ""
 "Después de presentar en el portal, registra el marcador local y luego "
 "[concilia con el justificante](reconcile.md). El marcador registra una "
 "presentación que ya has presentado en el portal, por lo que se muestra "
 "como un marco ilustrativo:"
 
-#: ../../how-to/modelo-349.md:94
+#: ../../how-to/modelo-349.md:96
 msgid ""
 "The marker is optional and only applies while the obligation window is "
 "open; export is the local finish line."
@@ -216,7 +218,7 @@ msgstr ""
 "El marcador es opcional y solo se aplica mientras la ventana de la "
 "obligación esté abierta; la exportación es la meta local."
 
-#: ../../how-to/modelo-349.md:97
+#: ../../how-to/modelo-349.md:99
 msgid ""
 "Modelo 349 runs alongside your periodic Modelo 303: the same intra-"
 "community operations that appear here also feed the 303's intra-community"
@@ -226,32 +228,32 @@ msgid ""
 msgstr ""
 "El Modelo 349 se ejecuta junto con su Modelo 303 periódico: las mismas "
 "operaciones intracomunitarias que aparecen aquí también alimentan las "
-"casillas intracomunitarias del 303. Mantén ambos coherentes corrigiendo"
-" los registros de factura y de ledger subyacentes, no las declaraciones. "
+"casillas intracomunitarias del 303. Mantén ambos coherentes corrigiendo "
+"los registros de factura y de ledger subyacentes, no las declaraciones. "
 "Consulta [Prepara una presentación de IVA con el Modelo "
 "303](modelo-303.md)."
 
-#: ../../how-to/modelo-349.md:102
+#: ../../how-to/modelo-349.md:104
 msgid "Next steps"
 msgstr "Pasos siguientes"
 
-#: ../../how-to/modelo-349.md:104
+#: ../../how-to/modelo-349.md:106
 msgid "[Manage invoices](manage-invoices.md)"
 msgstr "[Gestiona las facturas](manage-invoices.md)"
 
-#: ../../how-to/modelo-349.md:105
+#: ../../how-to/modelo-349.md:107
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
 msgstr "[Prepara una presentación de IVA con el Modelo 303](modelo-303.md)"
 
-#: ../../how-to/modelo-349.md:106
+#: ../../how-to/modelo-349.md:108
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica tu calendario de presentaciones](filing-calendar.md)"
 
-#: ../../how-to/modelo-349.md:107
+#: ../../how-to/modelo-349.md:109
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Sube tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-349.md:108
+#: ../../how-to/modelo-349.md:110
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Concilia una presentación](reconcile.md)"
 

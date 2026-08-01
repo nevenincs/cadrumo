@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -203,14 +203,15 @@ msgid "Check the figures and export"
 msgstr "Comprova les xifres i exporta"
 
 #: ../../how-to/first-quarterly-filing.md:90
+#, fuzzy
 msgid ""
 "The verification result is the signal that the draft is ready. When "
 "`granted_verificado_completo` reads true, export the file. Export refuses"
 " until every deductible-expense row carries linked purchase-invoice "
-"evidence; this first-filing example omits that evidence, so the export "
-"and the post-portal filed marker are shown as display frames. The full "
-"evidence-to-export chain runs end to end, executed, on [Prepare a Modelo "
-"303 IVA filing](modelo-303.md):"
+"evidence, so this example registers the supplier invoice and attaches it "
+"before it calculates. Attach in that order: a draft bundles its evidence "
+"when you verify it, so an invoice attached afterwards does not reach the "
+"filing."
 msgstr ""
 "El resultat de la verificació és el senyal que l'esborrany està a punt. "
 "Quan `granted_verificado_completo` diu cert, exporta el fitxer. "
@@ -222,7 +223,7 @@ msgstr ""
 "cap a cap, executada, a [Prepara una presentació del Model 303 "
 "d'IVA](modelo-303.md):"
 
-#: ../../how-to/first-quarterly-filing.md:100
+#: ../../how-to/first-quarterly-filing.md:101
 msgid ""
 "A later quarter builds on this one: leave the three prior-period bindings"
 " unset so they resolve from your filed history. See [Prepare a Modelo 130"
@@ -235,23 +236,23 @@ msgstr ""
 "fraccionat del Model 130 d'IRPF](modelo-130.md) per al comportament "
 "acumulatiu de l'any fins a la data."
 
-#: ../../how-to/first-quarterly-filing.md:105
+#: ../../how-to/first-quarterly-filing.md:106
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/first-quarterly-filing.md:107
+#: ../../how-to/first-quarterly-filing.md:108
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Prepara un pagament fraccionat del Model 130 d'IRPF](modelo-130.md)"
 
-#: ../../how-to/first-quarterly-filing.md:108
+#: ../../how-to/first-quarterly-filing.md:109
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Classifica els moviments](classify-transactions.md)"
 
-#: ../../how-to/first-quarterly-filing.md:109
+#: ../../how-to/first-quarterly-filing.md:110
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flux de treball de presentació](filing-spine.md)"
 
-#: ../../how-to/first-quarterly-filing.md:110
+#: ../../how-to/first-quarterly-filing.md:111
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Puja el teu model exportat al portal de l'AEAT](file-at-aeat.md)"
 

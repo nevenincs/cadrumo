@@ -1,9 +1,9 @@
 """Install the MCPB through its client runtime and require the real tax oracle.
 
-Step ``S30`` of the distribution-installation-readiness plan requires that the
-built ``.mcpb`` bundle install through the runtime each claimed MCP-bundle
-client uses, start its cohort-pinned server, and complete the grounded Modelo
-200 tax-work tool call. The bundle carries no client or operating-system
+The built ``.mcpb`` bundle must install through the runtime each claimed
+MCP-bundle client uses, start its cohort-pinned server, and complete the
+grounded Modelo 200 tax-work tool call. The bundle carries no client or
+operating-system
 compatibility row: every MCP-bundle client provisions the same unpacked
 extension through the manifest's declared ``uv`` launcher after the official
 ``@anthropic-ai/mcpb`` validator accepts it, then speaks the public MCP
@@ -13,14 +13,16 @@ This integration test drives that exact runtime once against a real product
 cohort — official MCPB validation, host-style ``uv`` provisioning into the
 bundle-local environment, concurrent server launches, and the real MCP
 protocol oracle from :func:`dev.packaging.smoke_mcpb.run_mcpb_smoke` — and
-binds the result to the ADR contract ``DP200014:00562 == 23000.00`` grounded in
-``modelo-200-cuota-integra``. There is no mock, stub, patch, or skip: a missing
-runtime piece (``uv``, ``npx``, or the official validator) fails loudly.
+binds the result to the grounded expectation ``DP200014:00562 == 23000.00``
+from ``modelo-200-cuota-integra``. There is no mock, stub, patch, or skip: a
+missing runtime piece (``uv``, ``npx``, or the official validator) fails
+loudly.
 
 The graphical per-client install acceptance — the Claude Desktop UI install and
-the Cowork host-loop session — is the manual ``W03.P08`` client matrix; this
-test proves the shared install runtime those clients consume, so a bundle that
-cannot install and calculate through that runtime can never pass a client row.
+the Cowork host-loop session — is performed by hand and is not automated here;
+this test proves the shared install runtime those clients consume, so a bundle
+that cannot install and calculate through that runtime can never pass a
+per-client check.
 """
 
 from __future__ import annotations
@@ -54,8 +56,8 @@ _CLIENT_INSTALL_TIMEOUT_SECONDS: Final[float] = 1200.0
 
 # The MCP-bundle clients the product claims. They share one MCPB install
 # runtime (the official validator plus the manifest's ``uv`` launcher); this
-# test proves that shared runtime, while each client's graphical install is the
-# separately retained manual ``W03.P08`` acceptance.
+# test proves that shared runtime, while each client's graphical install is
+# checked by hand and is not automated here.
 _CLAIMED_MCPB_CLIENTS: Final[tuple[str, ...]] = ("Claude Desktop", "Cowork")
 
 _EXPECTED_TARGET_CASILLA: Final[str] = "DP200014:00562"
@@ -192,7 +194,7 @@ def client_install_evidence(tmp_path_factory: pytest.TempPathFactory) -> dict[st
 def test_mcpb_client_runtime_completes_the_grounded_tax_oracle(
     client_install_evidence: dict[str, Any],
 ) -> None:
-    """The installed bundle completes the ADR Modelo 200 oracle through real MCP."""
+    """The installed bundle completes the Modelo 200 tax oracle through real MCP."""
     oracle = client_install_evidence["mcp_oracle"]
 
     assert oracle["target_casilla"] == _EXPECTED_TARGET_CASILLA

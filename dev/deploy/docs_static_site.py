@@ -11,7 +11,7 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from http.client import HTTPException, HTTPSConnection
 from pathlib import Path
@@ -117,6 +117,18 @@ def _required_executable(name: str) -> str:
 def _site_build_environment(*, base_environment: Mapping[str, str] | None = None) -> dict[str, str]:
     """Return the deployment-specific strict docs build environment.
 
+    The Pagefind contract is pinned to ``full`` on every deploy root, English
+    and localized alike: the deployed index carries the injected concept,
+    casilla, and CLI records, not the rendered pages alone. It is pinned
+    explicitly rather than left to the build default so an ambient
+    ``CADRUMO_DOCS_PAGEFIND_MODE`` in the publishing session cannot narrow the
+    shipped search contract — ``base`` is the real process environment in
+    production, and these keys are layered over it.
+
+    The value is decided, not incidental: a ``pages`` value arrived here inside
+    an unrelated env-key rename and silently discarded every injected record
+    from the published site for as long as it stood.
+
     Args:
         base_environment: DI seam for tests. When ``None`` (production), the
             deploy-specific keys are layered over the real process
@@ -129,7 +141,7 @@ def _site_build_environment(*, base_environment: Mapping[str, str] | None = None
         **base,
         "CADRUMO_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
         "CADRUMO_DOCS_JOBS": "1",
-        "CADRUMO_DOCS_PAGEFIND_MODE": "pages",
+        "CADRUMO_DOCS_PAGEFIND_MODE": "full",
     }
 
 
@@ -215,10 +227,42 @@ def _validate_site_artifacts(html_root: Path) -> None:
     unexpected = [location for location in locations if not location.startswith(f"{CANONICAL_DOCS_BASE_URL}/")]
     if unexpected:
         raise SystemExit("Docs build sitemap contains a non-canonical URL: " + unexpected[0])
-    pagefind_index = html_root / "pagefind" / "index"
-    index_chunks = [chunk for chunk in pagefind_index.rglob("*.pf_index") if chunk.stat().st_size > 0]
+    _require_search_index(html_root, root_label="Docs build")
+
+
+def _require_search_index(site_root: Path, *, root_label: str) -> None:
+    """Refuse a site root whose Pagefind index is empty OR carries no records.
+
+    Two distinct failures, both fatal, checked in order. An index with no
+    substantive chunks means the pass produced nothing. An index with chunks but
+    no injected records is the shape that shipped for weeks: the deploy
+    environment selected the pages-only contract, the build wrote 75 rendered
+    pages and not one concept, casilla, or CLI record, and every check in front
+    of it stayed green because a pages-only index is full of non-empty chunks.
+    Non-emptiness cannot separate the two, so it is kept AND supplemented.
+
+    The record read is :func:`~dev.docs.pagefind_index.injected_record_kinds_in_index`
+    -- the same artefact scan the CI parity gate performs, in one place so the
+    publish preflight and the gate cannot drift apart.
+    """
+    from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS, injected_record_kinds_in_index
+
+    index_chunks = [
+        chunk for chunk in (site_root / "pagefind" / "index").rglob("*.pf_index") if chunk.stat().st_size > 0
+    ]
     if not index_chunks:
-        raise SystemExit("Docs build Pagefind index has no substantive generated index data.")
+        raise SystemExit(f"{root_label} Pagefind index has no substantive generated index data.")
+
+    present = injected_record_kinds_in_index(site_root)
+    missing = sorted(DECIDED_INJECTED_RECORD_KINDS - present)
+    if missing:
+        raise SystemExit(
+            f"{root_label} Pagefind index carries no records of kind(s) {', '.join(missing)} "
+            f"(found: {', '.join(sorted(present)) or 'none'}). The index holds rendered pages only, "
+            "so a reader could not search that surface at all. This is a pages-only index: confirm the "
+            "build ran with the record-injecting contract (CADRUMO_DOCS_PAGEFIND_MODE=full) for this "
+            f"root, then rebuild before publishing. Index read at {site_root / 'pagefind'}.",
+        )
 
 
 def _localized_languages() -> tuple[str, ...]:
@@ -260,9 +304,11 @@ def _language_build_command(language: str, out_dir: Path) -> list[str]:
 def _language_build_environment(language: str) -> dict[str, str]:
     """Return the deploy build environment for one localized site root.
 
-    The shared deployment environment (serial workers, page-only Pagefind
-    contract) with the canonical base URL pointed at the language's own root so
-    the per-language sitemap and canonical/OpenGraph URLs are correct.
+    The shared deployment environment (serial workers, full record-injected
+    Pagefind contract) with the canonical base URL pointed at the language's own
+    root so the per-language sitemap and canonical/OpenGraph URLs are correct.
+    Each localized root therefore carries the injected records too: a reader on
+    ``/es/`` searches the same record kinds as a reader on the English root.
     """
     return {**_site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
 
@@ -296,10 +342,7 @@ def _validate_language_roots(html_root: Path) -> None:
         index = root / "index.html"
         if not index.is_file():
             raise SystemExit(f"Localized site root {language!r} is missing its rendered index page: {index}")
-        pagefind_index = root / "pagefind" / "index"
-        index_chunks = [chunk for chunk in pagefind_index.rglob("*.pf_index") if chunk.stat().st_size > 0]
-        if not index_chunks:
-            raise SystemExit(f"Localized site root {language!r} has no substantive Pagefind index data.")
+        _require_search_index(root, root_label=f"Localized site root {language!r}")
 
 
 def _aws_base_command(aws: str) -> list[str]:
@@ -543,15 +586,117 @@ def _endpoint_response(url: str) -> tuple[int, dict[str, str]]:
         connection.close()
 
 
-def _verify_public_delivery(target: DeploymentTarget) -> None:
-    """Require the canonical, legacy, missing, and private-origin responses."""
-    checks = (
+def _public_delivery_checks(target: DeploymentTarget) -> tuple[tuple[str, int], ...]:
+    """Return the post-publish endpoint checks as ``(url, expected status)`` pairs.
+
+    Named separately from the run so the deployment-parity gate can assert the
+    published surface is covered — every localized root among them — without
+    reaching the network.
+    """
+    return (
         (f"{CANONICAL_DOCS_BASE_URL}/", 200),
         *tuple((f"{_language_site_url(language)}/", 200) for language in _localized_languages()),
         (_LEGACY_DOCS_URL, 308),
         (f"{CANONICAL_DOCS_BASE_URL}/{_MISSING_DOCS_PATH}", 404),
         (f"https://{target.bucket}.s3.{STACK_REGION}.amazonaws.com/docs/index.html", 403),
     )
+
+
+def _published_body(url: str) -> bytes:
+    """Return one published artefact's body, under the same HTTPS guard as the status checks.
+
+    Shared by both publishers: the status checks in :func:`_endpoint_response`
+    deliberately discard the body, so a content assertion needs its own read.
+    """
+    parsed = urlsplit(url)
+    if parsed.scheme != "https" or parsed.hostname is None:
+        raise SystemExit(f"Endpoint check requires a complete HTTPS URL: {url}")
+    path = parsed.path or "/"
+    connection = HTTPSConnection(parsed.hostname, port=parsed.port, timeout=_ENDPOINT_TIMEOUT_SECONDS)
+    try:
+        connection.request("GET", path, headers={"User-Agent": "cadrumo-docs-delivery-check"})
+        response = connection.getresponse()
+        body = response.read()
+        if response.status != 200:
+            raise SystemExit(f"Published artefact is not served at {url}: HTTP {response.status}.")
+        return body
+    except (HTTPException, TimeoutError, OSError) as exc:
+        raise SystemExit(f"Endpoint check could not reach {url}: {exc}") from exc
+    finally:
+        connection.close()
+
+
+def _indexed_entry_counts(payload: bytes, *, origin: str) -> dict[str, int]:
+    """Return ``{language: page_count}`` from a ``pagefind-entry.json`` body."""
+    try:
+        document = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"{origin} is not valid JSON: {exc}") from exc
+    languages = document.get("languages") if isinstance(document, dict) else None
+    if not isinstance(languages, dict) or not languages:
+        raise SystemExit(f"{origin} declares no index languages; it is not a Pagefind entry document.")
+    return {str(name): int(split["page_count"]) for name, split in languages.items()}
+
+
+def _assert_served_index_matches_build(*, built: Path, served: bytes, label: str) -> None:
+    """Require the served index to carry exactly what the validated build carried.
+
+    The preflight has already refused a record-free build, so the local entry is
+    known to carry records. Requiring the SERVED counts to equal the BUILT counts
+    therefore proves the published index carries them too -- without hardcoding a
+    record total that would rot on the next corpus change.
+
+    This is the check the status codes cannot make. A root serving a record-free
+    index answers 200 on every URL the delivery checks probe, which is exactly
+    how a pages-only index shipped and stayed shipped: everything answered, and
+    nothing read what it answered with.
+    """
+    if not built.is_file():
+        raise SystemExit(f"{label}: no built Pagefind entry at {built} to compare the published one against.")
+    expected = _indexed_entry_counts(built.read_bytes(), origin=f"{label} built entry {built}")
+    actual = _indexed_entry_counts(served, origin=f"{label} published entry")
+    if actual != expected:
+        raise SystemExit(
+            f"{label}: the published search index does not match the build that was validated. "
+            f"Built {expected}, published {actual}. A published count below the built one means the "
+            "upload is incomplete or a stale index is being served; either way a reader is searching "
+            "an index this publish never approved.",
+        )
+
+
+def _verify_published_search_index(
+    html_root: Path,
+    *,
+    base_url: str = CANONICAL_DOCS_BASE_URL,
+    fetch: Callable[[str], bytes] = _published_body,
+) -> None:
+    """Require every published root to serve the search index its build produced.
+
+    Args:
+        html_root: The built site root the publish uploaded from.
+        base_url: DI seam. Production uses the canonical docs URL.
+        fetch: DI seam for the HTTPS body read, so the comparison can be proven
+            against real built artefacts without standing up a TLS endpoint.
+    """
+    roots: tuple[tuple[str, Path, str], ...] = (
+        (f"{base_url}/", html_root, "docs root"),
+        *tuple(
+            (f"{base_url}/{language}/", html_root / language, f"localized root {language!r}")
+            for language in _localized_languages()
+        ),
+    )
+    for root_url, built_root, label in roots:
+        served = fetch(f"{root_url}pagefind/pagefind-entry.json")
+        _assert_served_index_matches_build(
+            built=built_root / "pagefind" / "pagefind-entry.json",
+            served=served,
+            label=label,
+        )
+
+
+def _verify_public_delivery(target: DeploymentTarget) -> None:
+    """Require the canonical, legacy, missing, and private-origin responses."""
+    checks = _public_delivery_checks(target)
     legacy_headers: dict[str, str] | None = None
     for url, expected_status in checks:
         actual_status, headers = _endpoint_response(url)
@@ -648,6 +793,7 @@ def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None
     _sync_site(aws, repo_root, html_root, target.bucket)
     _invalidate_distribution_paths(aws, repo_root, target.distribution_id, _DOCS_INVALIDATION_PATHS)
     _verify_public_delivery(target)
+    _verify_published_search_index(html_root)
     print(f"Published {CANONICAL_DOCS_BASE_URL}/", flush=True)
     return 0
 

@@ -143,9 +143,7 @@ def test_the_build_path_carries_no_automation_conditional() -> None:
     local_command = _language_build_command("es", Path("out"))
 
     automated_base = {"CI": "true", "GITHUB_ACTIONS": "true", _DEPLOY_ROLE_VARIABLE: _ROLE}
-    automated_environment = {
-        key: _site_build_environment(base_environment=automated_base)[key] for key in deploy_keys
-    }
+    automated_environment = {key: _site_build_environment(base_environment=automated_base)[key] for key in deploy_keys}
 
     assert automated_environment == local_environment
     assert _language_build_command("es", Path("out")) == local_command

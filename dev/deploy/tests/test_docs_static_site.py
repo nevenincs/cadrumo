@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import gzip
 import http.server
 import json
 import threading
@@ -19,9 +20,12 @@ from dev.deploy.docs_static_site import (
     _language_site_url,
     _localized_languages,
     _refresh_download_latest,
+    _site_build_environment,
     _validate_language_roots,
 )
+from dev.docs.build import pagefind_index_mode
 from dev.docs.i18n import TARGET_LANGUAGES
+from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 
 from cadrumo.core.external_constants import OutputLanguage
 
@@ -29,13 +33,32 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _materialise_language_root(html_root: Path, language: str) -> None:
-    """Write a minimal valid localized site root: an index page and a Pagefind chunk."""
+    """Write a minimal VALID localized site root: index page, index chunk, records.
+
+    "Valid" now means what the publish contract means by it. The earlier version
+    wrote only a non-empty ``.pf_index`` chunk, which encoded exactly the
+    property the old preflight measured -- so a root carrying rendered pages and
+    zero search records read as complete here, which is the shape that shipped.
+    The fragments below carry the decided record kinds so a complete matrix is
+    complete under the real contract.
+
+    These fragments are SYNTHESISED, in the real on-disk shape, because what
+    this module tests is the root-MATRIX logic: that every language is visited
+    and the failing one is named. The index READ itself is proven against real
+    Pagefind output in ``test_publish_preflight_search_records``, where a
+    genuine no-injection build is the subject.
+    """
     root = html_root / language
     (root).mkdir(parents=True, exist_ok=True)
     (root / "index.html").write_text("<html></html>", encoding="utf-8")
     index_dir = root / "pagefind" / "index"
     index_dir.mkdir(parents=True, exist_ok=True)
     (index_dir / "en_abc.pf_index").write_bytes(b"substantive-index-data")
+    fragment_dir = root / "pagefind" / "fragment"
+    fragment_dir.mkdir(parents=True, exist_ok=True)
+    for kind in sorted(DECIDED_INJECTED_RECORD_KINDS):
+        payload = json.dumps({"url": f"/records/{kind}.html", "filters": {"kind": [kind]}})
+        (fragment_dir / f"en_{kind}.pf_fragment").write_bytes(gzip.compress(f"pagefind_dcd{payload}".encode()))
 
 
 def test_localized_languages_are_the_translation_targets_not_english() -> None:
@@ -69,11 +92,31 @@ def test_language_build_command_reuses_the_driver_language_and_out_dir_flags(tmp
 
 
 def test_language_build_environment_points_the_base_url_at_the_language_root() -> None:
-    """Each localized build carries the page-only Pagefind contract and its own base URL."""
+    """Each localized build carries the full Pagefind contract and its own base URL."""
     env = _language_build_environment("hu")
     assert env["CADRUMO_DOCS_BASE_URL"] == f"{CANONICAL_DOCS_BASE_URL}/hu"
-    assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "pages"
+    assert env["CADRUMO_DOCS_PAGEFIND_MODE"] == "full"
     assert env["CADRUMO_DOCS_JOBS"] == "1"
+
+
+def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> None:
+    """English and every localized root deploy the record-injected index, not pages alone.
+
+    The deployed contract is ``full`` on every root. Read through
+    :func:`pagefind_index_mode` - the build's own resolver - rather than
+    comparing the raw string, so this pins the contract the build will actually
+    select rather than a value that merely looks right.
+
+    An ambient ``pages`` in the publishing session must not narrow it either,
+    which is why the deploy layer pins the key explicitly instead of relying on
+    the build default; the hostile base below is the proof.
+    """
+    hostile_base = {"CADRUMO_DOCS_PAGEFIND_MODE": "pages"}
+
+    assert pagefind_index_mode(_site_build_environment(base_environment={})) == "full"
+    assert pagefind_index_mode(_site_build_environment(base_environment=hostile_base)) == "full"
+    for language in _localized_languages():
+        assert pagefind_index_mode(_language_build_environment(language)) == "full"
 
 
 def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> None:
@@ -100,7 +143,7 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
     empty = _localized_languages()[0]
     for chunk in (tmp_path / empty / "pagefind" / "index").rglob("*.pf_index"):
         chunk.write_bytes(b"")
-    with pytest.raises(SystemExit, match="no substantive Pagefind index data"):
+    with pytest.raises(SystemExit, match="no substantive generated index data"):
         _validate_language_roots(tmp_path)
 
 

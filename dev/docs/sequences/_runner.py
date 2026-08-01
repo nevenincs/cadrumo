@@ -60,6 +60,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
 
+import keyring
+import keyring.backends.null
+import keyring.core
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
@@ -421,6 +424,53 @@ def _isolated_external_tool_env(sandbox_root: Path) -> Iterator[None]:
 
 
 @contextmanager
+def _absent_credential_vault() -> Iterator[None]:
+    """Pin the OS credential vault to a stable absence for the scope.
+
+    The host's credential vault is workstation state exactly as ``PATH`` and the
+    Playwright cache are (:func:`_isolated_external_tool_env`), and it is the one
+    such channel that reaches OPERATOR-VISIBLE OUTPUT: ``config login`` custodies
+    its session key through :mod:`keyring`, so on a vault-bearing host the login
+    envelope carries ``session_persisted: true``, while on a headless CI runner
+    the same frame emits the ``config.login.session_not_persisted`` warning and a
+    ``warning`` spine status. A golden built from either side is therefore
+    unstable BY CONSTRUCTION — it encodes the capturing machine, and flips as
+    soon as a differently-postured machine runs the gate.
+
+    Pinning absence resolves that without blocking the frames: every host now
+    executes the documented path a machine with no usable vault takes, so the
+    frames stay executed truth and the golden is a property of the sandbox rather
+    than of the contributor's workstation. Absence — rather than a synthetic
+    working vault — is the only admissible pin here: the vault-bearing path
+    WRITES a real wrapped session key into the operator's own credential store
+    (measured: a ``cadrumo:profile-session`` entry under a per-run sandbox bucket
+    id, surviving the run), which a hermetic docs sandbox must never do.
+
+    Both resolution channels are closed, because both are live: the environment
+    variable covers the subprocess execution paths, and
+    :func:`keyring.set_keyring` covers the in-process one — :mod:`keyring` caches
+    its detected backend in a module global, so the environment variable ALONE is
+    a no-op once anything in the process has already resolved a backend. The
+    previous backend is restored verbatim on exit; ``None`` restores the
+    not-yet-detected state so the next detection re-runs normally.
+    """
+    pins = {"PYTHON_KEYRING_BACKEND": "keyring.backends.null.Keyring"}
+    previous_env = {key: os.environ.get(key) for key in pins}
+    previous_backend = keyring.core._keyring_backend
+    os.environ.update(pins)
+    keyring.set_keyring(keyring.backends.null.Keyring())
+    try:
+        yield
+    finally:
+        keyring.core._keyring_backend = previous_backend
+        for key, value in previous_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+
+@contextmanager
 def sequence_sandbox(
     *,
     sequence_id: str,
@@ -433,7 +483,10 @@ def sequence_sandbox(
     :data:`SANDBOX_INSTANT`, the deterministic :data:`SANDBOX_PROFILE_ID`
     registered and active, ``cadrumo_output_language`` pinned to English, the
     operator's ambient ``CADRUMO_*`` / ``AEAT_*`` environment scrubbed for the
-    whole scope (restored on exit; the storage-root isolation pin survives),
+    whole scope (restored on exit; the storage-root isolation pin survives), the
+    OS credential vault pinned absent so a ``config login`` frame's output is a
+    property of the sandbox rather than of the host machine
+    (:func:`_absent_credential_vault`),
     and the process working directory moved to a scratch ``workdir`` seeded
     with a copy of the committed synthetic fixtures — so a frame's relative
     ``fixtures/...`` input reads the committed artifact's copy and a frame's
@@ -484,6 +537,7 @@ def sequence_sandbox(
     with (
         _neutralized_ambient_env(),
         _isolated_external_tool_env(sandbox_root),
+        _absent_credential_vault(),
         suppress_operator_dotenv(),
         # The docs sandbox runs genuinely zero-auth: per the operator ruling,
         # auth-provider readiness binds only live/AEAT-touching purposes, never

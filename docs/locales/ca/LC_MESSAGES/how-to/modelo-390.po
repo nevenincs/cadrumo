@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -30,8 +30,8 @@ msgid ""
 " Modelo 303 IVA self-assessments."
 msgstr ""
 "Fes servir aquesta guia quan el perfil actiu hagi de preparar el Modelo "
-"390, el resum anual de l'Impuesto sobre el Valor Añadido (IVA). El Modelo "
-"390 és una declaració anual, però part de la seva revisió depèn de les "
+"390, el resum anual de l'Impuesto sobre el Valor Añadido (IVA). El Modelo"
+" 390 és una declaració anual, però part de la seva revisió depèn de les "
 "autoliquidacions periòdiques d'IVA del Modelo 303 del mateix any."
 
 #: ../../how-to/modelo-390.md:8
@@ -41,8 +41,8 @@ msgid ""
 " that you upload through the official AEAT channel yourself."
 msgstr ""
 "Cadrumo no presenta el Modelo 390 a l'Agencia Estatal de Administración "
-"Tributaria (AEAT). L'exportació crea un fitxer fichero-BOE local que puges "
-"tu mateix pel canal oficial de l'AEAT."
+"Tributaria (AEAT). L'exportació crea un fitxer fichero-BOE local que "
+"puges tu mateix pel canal oficial de l'AEAT."
 
 #: ../../how-to/modelo-390.md:12
 msgid "The filing task"
@@ -66,8 +66,7 @@ msgstr "Crea un esborrany del Modelo 390 per al període anual (`--period 0A`)."
 
 #: ../../how-to/modelo-390.md:18
 msgid "Calculate the annual summary from your year's ledger and the 303 values."
-msgstr ""
-"Calcula el resum anual a partir del ledger de l'any i dels valors del 303."
+msgstr "Calcula el resum anual a partir del ledger de l'any i dels valors del 303."
 
 #: ../../how-to/modelo-390.md:19
 msgid "Review the calculated totals against your quarterly records."
@@ -83,8 +82,7 @@ msgstr "Exporta el fitxer anual."
 
 #: ../../how-to/modelo-390.md:22
 msgid "Upload the file at the AEAT portal yourself and keep the justificante."
-msgstr ""
-"Puja tu mateix el fitxer al portal de l'AEAT i conserva el justificante."
+msgstr "Puja tu mateix el fitxer al portal de l'AEAT i conserva el justificante."
 
 #: ../../how-to/modelo-390.md:24
 msgid ""
@@ -108,8 +106,8 @@ msgid ""
 "setup.md)."
 msgstr ""
 "**Requisit:** un perfil de contribuent vàlid. Crea'n un amb `aeat config "
-"profile create <name>`. Consulta [Configura el teu perfil de "
-"contribuent](profile-setup.md)."
+"profile create <name>`. Consulta [Configura el teu perfil de contribuent"
+"](profile-setup.md)."
 
 #: ../../how-to/modelo-390.md:35
 msgid ""
@@ -119,10 +117,10 @@ msgid ""
 "the annual return needs the year's four quarters already filed:"
 msgstr ""
 "La preparació de més avall presenta localment els quatre trimestres del "
-"Modelo 303 de 2025, de manera que el resum anual els hi pugui integrar, i "
-"tot seguit crea l'esborrany del Modelo 390 de 2025, el calcula i el "
-"verifica. L'exemple utilitza 2025 perquè la declaració anual necessita els "
-"quatre trimestres de l'any ja presentats:"
+"Modelo 303 de 2025, de manera que el resum anual els hi pugui integrar, i"
+" tot seguit crea l'esborrany del Modelo 390 de 2025, el calcula i el "
+"verifica. L'exemple utilitza 2025 perquè la declaració anual necessita "
+"els quatre trimestres de l'any ja presentats:"
 
 #: ../../how-to/modelo-390.md:44
 msgid ""
@@ -142,21 +140,21 @@ msgid ""
 "guide explains each stage and the checks around it."
 msgstr ""
 "La verificació atorga el verificat-complet i informa d'advertiments no "
-"bloquejadors: els quatre trimestres estan presentats localment però encara "
-"no porten cap justificante extern de l'AEAT, de manera que l'eina revela "
-"que la conciliació anual descansa sobre evidència només local. Aquesta "
-"revelació és correcta: un trimestre presentat localment és evidència "
-"honesta per a la integració anual, i l'advertiment t'indica on un "
-"justificante oficial reforçaria el registre. En aquest exemple els quatre "
-"trimestres van repercutir 1470.00 d'IVA entre tots (420 + 315 + 210 + 525) "
-"i l'any porta 105.00 d'IVA suportat deduïble (una compra evidenciada, 500 "
-"de base al 21%), de manera que la cuota devengada anual és 1470.00, el "
-"total deducible és 105.00 i el resultat del régimen general és 1365.00 "
-"(1470.00 − 105.00) - l'equació anual d'IVA completa, amb cada xifra "
-"coincidint amb la suma dels trimestres (la invariant de conciliació). "
-"L'IVA suportat només compta un cop la compra porta evidència de factura "
-"vinculada. La resta d'aquesta guia explica cada etapa i les comprovacions "
-"que l'envolten."
+"bloquejadors: els quatre trimestres estan presentats localment però "
+"encara no porten cap justificante extern de l'AEAT, de manera que l'eina "
+"revela que la conciliació anual descansa sobre evidència només local. "
+"Aquesta revelació és correcta: un trimestre presentat localment és "
+"evidència honesta per a la integració anual, i l'advertiment t'indica on "
+"un justificante oficial reforçaria el registre. En aquest exemple els "
+"quatre trimestres van repercutir 1470.00 d'IVA entre tots (420 + 315 + "
+"210 + 525) i l'any porta 105.00 d'IVA suportat deduïble (una compra "
+"evidenciada, 500 de base al 21%), de manera que la cuota devengada anual "
+"és 1470.00, el total deducible és 105.00 i el resultat del régimen "
+"general és 1365.00 (1470.00 − 105.00) - l'equació anual d'IVA completa, "
+"amb cada xifra coincidint amb la suma dels trimestres (la invariant de "
+"conciliació). L'IVA suportat només compta un cop la compra porta "
+"evidència de factura vinculada. La resta d'aquesta guia explica cada "
+"etapa i les comprovacions que l'envolten."
 
 #: ../../how-to/modelo-390.md:58
 msgid "Setup steps before you start"
@@ -187,16 +185,17 @@ msgid ""
 "Use [Plan your filing calendar](filing-calendar.md) to confirm the annual"
 " filing window."
 msgstr ""
-"Fes servir [Planifica el teu calendari de presentacions](filing-calendar."
-"md) per confirmar la finestra de presentació anual."
+"Fes servir [Planifica el teu calendari de presentacions](filing-"
+"calendar.md) per confirmar la finestra de presentació anual."
 
 #: ../../how-to/modelo-390.md:67
 msgid ""
 "Confirm the annual period token with [Period tokens and dates](filing-"
 "calendar.md#period-tokens-and-dates). Modelo 390 uses `--period 0A`."
 msgstr ""
-"Confirma el token de període anual amb [Tokens de període i dates](filing-"
-"calendar.md#period-tokens-and-dates). El Modelo 390 utilitza `--period 0A`."
+"Confirma el token de període anual amb [Tokens de període i dates"
+"](filing-calendar.md#period-tokens-and-dates). El Modelo 390 utilitza "
+"`--period 0A`."
 
 #: ../../how-to/modelo-390.md:70
 msgid ""
@@ -205,8 +204,8 @@ msgid ""
 "depend on the active profile's classified IVA rows."
 msgstr ""
 "[Importa o afegeix les teves transaccions](import-bank-statements.md) i, "
-"tot seguit, [classifica-les](classify-transactions.md). Els totals anuals "
-"del ledger depenen de les files d'IVA classificades del perfil actiu."
+"tot seguit, [classifica-les](classify-transactions.md). Els totals anuals"
+" del ledger depenen de les files d'IVA classificades del perfil actiu."
 
 #: ../../how-to/modelo-390.md:73
 msgid ""
@@ -239,8 +238,8 @@ msgid ""
 "annual IVA ledger aggregates for the full filing year (binding source "
 "`ledger_iva_aggregation`)"
 msgstr ""
-"els agregats anuals d'IVA del ledger per a tot l'any de presentació (font "
-"del binding `ledger_iva_aggregation`)"
+"els agregats anuals d'IVA del ledger per a tot l'any de presentació (font"
+" del binding `ledger_iva_aggregation`)"
 
 #: ../../how-to/modelo-390.md:84
 msgid ""
@@ -249,10 +248,10 @@ msgid ""
 "`origin=registry_relation`), where the registry names the 303 casillas "
 "and periods that feed the annual summary"
 msgstr ""
-"els valors derivats del 303 obtinguts dels trimestres del mateix any (font "
-"del binding `relation_prefill`, que les troballes de verificació informen "
-"com a `origin=registry_relation`), on el registre anomena les casilles i "
-"els períodes del 303 que alimenten el resum anual"
+"els valors derivats del 303 obtinguts dels trimestres del mateix any "
+"(font del binding `relation_prefill`, que les troballes de verificació "
+"informen com a `origin=registry_relation`), on el registre anomena les "
+"casilles i els períodes del 303 que alimenten el resum anual"
 
 #: ../../how-to/modelo-390.md:89
 msgid ""
@@ -263,9 +262,9 @@ msgid ""
 msgstr ""
 "Les entrades derivades del 303 depenen de l'evidència presentada de cada "
 "trimestre. La verificació es bloqueja de manera dura fins que aquesta "
-"evidència hi és present (consulta «Què necessita cada trimestre del Modelo "
-"303 abans de verificar» més avall). La CLI no garanteix que l'historial "
-"remot de l'AEAT sigui actual, capturat o conciliat."
+"evidència hi és present (consulta «Què necessita cada trimestre del "
+"Modelo 303 abans de verificar» més avall). La CLI no garanteix que "
+"l'historial remot de l'AEAT sigui actual, capturat o conciliat."
 
 #: ../../how-to/modelo-390.md:94
 msgid ""
@@ -275,15 +274,15 @@ msgid ""
 "303 periods."
 msgstr ""
 "Els bindings del registre del 390 implementats inclouen les sumes dels "
-"trimestres del 303 per a la conciliació anual de la devengada, la deducible "
-"i el resultat del régimen general. També inclouen valors de compensació "
-"copiats o sumats dels períodes del 303 del mateix any."
+"trimestres del 303 per a la conciliació anual de la devengada, la "
+"deducible i el resultat del régimen general. També inclouen valors de "
+"compensació copiats o sumats dels períodes del 303 del mateix any."
 
-#: ../../how-to/modelo-390.md:98
+#: ../../how-to/modelo-390.md:99
 msgid "What each Modelo 303 quarter needs before you verify"
 msgstr "Què necessita cada trimestre del Modelo 303 abans de verificar"
 
-#: ../../how-to/modelo-390.md:100
+#: ../../how-to/modelo-390.md:101
 msgid ""
 "Modelo 390 verification depends on the four quarterly Modelo 303 returns."
 " `work calculate` for Modelo 390 produces a draft, but `work verify` "
@@ -293,16 +292,16 @@ msgid ""
 "reports `blockers=missing_observation, missing_current_filing_record` for"
 " every quarter that lacks a filed record."
 msgstr ""
-"La verificació del Modelo 390 depèn de les quatre declaracions trimestrals "
-"del Modelo 303. `work calculate` per al Modelo 390 produeix un esborrany, "
-"però `work verify` es bloqueja de manera dura amb troballes bloquejadores "
-"`cross_period_dependency_unclean` fins que cada trimestre del 303 (`1T`, "
-"`2T`, `3T`, `4T`) tingui desada evidència de *presentat*. Un esborrany del "
-"303 calculat o verificat no n'hi ha prou: la porta informa de "
-"`blockers=missing_observation, missing_current_filing_record` per a cada "
-"trimestre a què falti un registre de presentat."
+"La verificació del Modelo 390 depèn de les quatre declaracions "
+"trimestrals del Modelo 303. `work calculate` per al Modelo 390 produeix "
+"un esborrany, però `work verify` es bloqueja de manera dura amb troballes"
+" bloquejadores `cross_period_dependency_unclean` fins que cada trimestre "
+"del 303 (`1T`, `2T`, `3T`, `4T`) tingui desada evidència de *presentat*. "
+"Un esborrany del 303 calculat o verificat no n'hi ha prou: la porta "
+"informa de `blockers=missing_observation, missing_current_filing_record` "
+"per a cada trimestre a què falti un registre de presentat."
 
-#: ../../how-to/modelo-390.md:108
+#: ../../how-to/modelo-390.md:109
 msgid ""
 "Establish each quarter's evidence one of two ways before you verify "
 "Modelo 390."
@@ -310,7 +309,7 @@ msgstr ""
 "Estableix l'evidència de cada trimestre d'una de dues maneres abans de "
 "verificar el Modelo 390."
 
-#: ../../how-to/modelo-390.md:110
+#: ../../how-to/modelo-390.md:111
 msgid ""
 "The first way is to mark each 303 quarter as filed locally, while its "
 "AEAT filing-obligation window is open. Prepare and verify each quarter "
@@ -320,15 +319,15 @@ msgid ""
 "AEAT, and it refuses outside the obligation window:"
 msgstr ""
 "La primera manera és marcar cada trimestre del 303 com a presentat "
-"localment, mentre la seva finestra d'obligació de presentació a l'AEAT és "
-"oberta. Prepara i verifica cada trimestre (consulta [Prepara una "
+"localment, mentre la seva finestra d'obligació de presentació a l'AEAT és"
+" oberta. Prepara i verifica cada trimestre (consulta [Prepara una "
 "presentació d'IVA amb el Modelo 303](modelo-303.md)) i, tot seguit, "
 "registra cadascun amb el marcador de presentat local, repetint-ho per a "
 "`1T`, `2T`, `3T` i `4T`. `work file` registra la presentació només "
 "localment; no la presenta a l'AEAT i es nega fora de la finestra "
 "d'obligació:"
 
-#: ../../how-to/modelo-390.md:120
+#: ../../how-to/modelo-390.md:121
 msgid ""
 "The second way is to capture or reconcile the official AEAT justificante "
 "for each quarter. `live filed pull-sources` reads filed declarations from"
@@ -337,29 +336,30 @@ msgid ""
 "as a display frame. `reconcile file` reads a local justificante PDF and "
 "never contacts AEAT, but it needs the real receipt:"
 msgstr ""
-"La segona manera és capturar o conciliar el justificante oficial de l'AEAT "
-"de cada trimestre. `live filed pull-sources` llegeix les declaracions "
-"presentades de l'AEAT i es nega quan l'autenticació de l'AEAT no està "
-"configurada (necessita una identitat Cl@ve que coincideixi amb el perfil "
-"actiu), de manera que és una lectura en directe que es mostra com a marc "
-"il·lustratiu. `reconcile file` llegeix un PDF de justificante local i mai "
-"no contacta amb l'AEAT, però necessita el rebut real:"
+"La segona manera és capturar o conciliar el justificante oficial de "
+"l'AEAT de cada trimestre. `live filed pull-sources` llegeix les "
+"declaracions presentades de l'AEAT i es nega quan l'autenticació de "
+"l'AEAT no està configurada (necessita una identitat Cl@ve que coincideixi"
+" amb el perfil actiu), de manera que és una lectura en directe que es "
+"mostra com a marc il·lustratiu. `reconcile file` llegeix un PDF de "
+"justificante local i mai no contacta amb l'AEAT, però necessita el rebut "
+"real:"
 
-#: ../../how-to/modelo-390.md:130
+#: ../../how-to/modelo-390.md:131
 msgid ""
 "If you cannot establish a quarter's evidence, do not force the annual "
 "return past the block. Repair the missing 303 evidence first, or report "
 "the gap."
 msgstr ""
 "Si no pots establir l'evidència d'un trimestre, no forcis la declaració "
-"anual per passar el bloqueig. Repara primer l'evidència del 303 que falta, "
-"o informa de la mancança."
+"anual per passar el bloqueig. Repara primer l'evidència del 303 que "
+"falta, o informa de la mancança."
 
-#: ../../how-to/modelo-390.md:133
+#: ../../how-to/modelo-390.md:134
 msgid "Check each visible filing target"
 msgstr "Comprova cada objectiu de presentació visible"
 
-#: ../../how-to/modelo-390.md:135
+#: ../../how-to/modelo-390.md:136
 msgid ""
 "Use the same active profile for every command. Inspect the four 303 "
 "filing targets before you work on the annual target, repeating the `work "
@@ -368,30 +368,30 @@ msgid ""
 "sequence under \"Inspect the annual work unit\" below runs `work list` "
 "and the annual `work status`)."
 msgstr ""
-"Fes servir el mateix perfil actiu per a cada ordre. Inspecciona els quatre "
-"objectius de presentació del 303 abans de treballar sobre l'objectiu anual, "
-"repetint la comprovació `work status` per a cadascun de `1T`, `2T`, `3T` i "
-"`4T`, i llista tota la feina desada amb `work list` per veure la superfície "
-"de presentació més àmplia (la seqüència d'inspecció de sota «Inspecciona la "
-"unitat de treball anual» més avall executa `work list` i el `work status` "
-"anual)."
+"Fes servir el mateix perfil actiu per a cada ordre. Inspecciona els "
+"quatre objectius de presentació del 303 abans de treballar sobre "
+"l'objectiu anual, repetint la comprovació `work status` per a cadascun de"
+" `1T`, `2T`, `3T` i `4T`, i llista tota la feina desada amb `work list` "
+"per veure la superfície de presentació més àmplia (la seqüència "
+"d'inspecció de sota «Inspecciona la unitat de treball anual» més avall "
+"executa `work list` i el `work status` anual)."
 
-#: ../../how-to/modelo-390.md:141
+#: ../../how-to/modelo-390.md:142
 msgid ""
 "No command switches a current filing target for you. To move from one "
 "quarter to another, change `--period`. To move from the quarterly 303 "
 "review to the annual 390 review, change both `--modelo` and `--period`."
 msgstr ""
-"Cap ordre no et canvia un objectiu de presentació actual. Per passar d'un "
-"trimestre a un altre, canvia `--period`. Per passar de la revisió "
-"trimestral del 303 a la revisió anual del 390, canvia tant `--modelo` com "
-"`--period`."
+"Cap ordre no et canvia un objectiu de presentació actual. Per passar d'un"
+" trimestre a un altre, canvia `--period`. Per passar de la revisió "
+"trimestral del 303 a la revisió anual del 390, canvia tant `--modelo` com"
+" `--period`."
 
-#: ../../how-to/modelo-390.md:145
+#: ../../how-to/modelo-390.md:146
 msgid "Review the 303 values that feed Modelo 390"
 msgstr "Revisa els valors del 303 que alimenten el Modelo 390"
 
-#: ../../how-to/modelo-390.md:147
+#: ../../how-to/modelo-390.md:148
 msgid ""
 "For each Modelo 303 period, list its saved revisions and inspect the "
 "filed one. These reads resolve the year's filed 303 quarters, which the "
@@ -401,38 +401,38 @@ msgid ""
 "latest-verified` or `--select current`:"
 msgstr ""
 "Per a cada període del Modelo 303, llista les seves revisions desades i "
-"inspecciona la presentada. Aquestes lectures resolen els trimestres del 303 "
-"presentats de l'any, que l'entorn de proves de documentació de llavor única "
-"reprodueix a la cadena anual de més amunt, de manera que aquí es mostren com "
-"a marcs il·lustratius. Si no existeix cap revisió presentada localment, "
-"inspecciona la revisió actual o verificada amb `--select latest-verified` o "
-"`--select current`:"
+"inspecciona la presentada. Aquestes lectures resolen els trimestres del "
+"303 presentats de l'any, que l'entorn de proves de documentació de llavor"
+" única reprodueix a la cadena anual de més amunt, de manera que aquí es "
+"mostren com a marcs il·lustratius. Si no existeix cap revisió presentada "
+"localment, inspecciona la revisió actual o verificada amb `--select "
+"latest-verified` o `--select current`:"
 
-#: ../../how-to/modelo-390.md:157
+#: ../../how-to/modelo-390.md:158
 msgid ""
 "Repeat that review for `2T`, `3T`, and `4T`. Pay attention to the values "
 "that Modelo 390 reconciles from Modelo 303:"
 msgstr ""
-"Repeteix aquesta revisió per a `2T`, `3T` i `4T`. Para atenció als valors "
-"que el Modelo 390 concilia a partir del Modelo 303:"
+"Repeteix aquesta revisió per a `2T`, `3T` i `4T`. Para atenció als valors"
+" que el Modelo 390 concilia a partir del Modelo 303:"
 
-#: ../../how-to/modelo-390.md:160
+#: ../../how-to/modelo-390.md:161
 msgid "`iva.cuota-devengada-total`"
 msgstr "`iva.cuota-devengada-total`"
 
-#: ../../how-to/modelo-390.md:161
+#: ../../how-to/modelo-390.md:162
 msgid "`iva.cuota-deducible-total`"
 msgstr "`iva.cuota-deducible-total`"
 
-#: ../../how-to/modelo-390.md:162
+#: ../../how-to/modelo-390.md:163
 msgid "`iva.resultado-regimen-general`"
 msgstr "`iva.resultado-regimen-general`"
 
-#: ../../how-to/modelo-390.md:163
+#: ../../how-to/modelo-390.md:164
 msgid "`iva.compensacion-generada-periodo`"
 msgstr "`iva.compensacion-generada-periodo`"
 
-#: ../../how-to/modelo-390.md:165
+#: ../../how-to/modelo-390.md:166
 msgid ""
 "If a 303 return was filed outside Cadrumo, capture or reconcile the "
 "official evidence before you rely on local values, with the `live filed "
@@ -444,16 +444,16 @@ msgid ""
 "prerequisite for calculation."
 msgstr ""
 "Si una declaració del 303 es va presentar fora de Cadrumo, captura o "
-"concilia l'evidència oficial abans de refiar-te dels valors locals, amb les "
-"ordres `live filed pull-sources` o `reconcile file` que es mostren sota "
-"[Què necessita cada trimestre del Modelo 303](#what-each-modelo-303-quarter-"
-"needs-before-you-verify) més amunt. La captura de presentats en directe és "
-"de només lectura; la conciliació llegeix el fitxer de justificante o de "
-"declaració que aportes. El camí de càlcul actual del Modelo 390 no fa que "
-"una comprovació fresca de l'estat remot de l'AEAT sigui un requisit previ "
-"general per al càlcul."
+"concilia l'evidència oficial abans de refiar-te dels valors locals, amb "
+"les ordres `live filed pull-sources` o `reconcile file` que es mostren "
+"sota [Què necessita cada trimestre del Modelo 303](#what-each-modelo-303"
+"-quarter-needs-before-you-verify) més amunt. La captura de presentats en "
+"directe és de només lectura; la conciliació llegeix el fitxer de "
+"justificante o de declaració que aportes. El camí de càlcul actual del "
+"Modelo 390 no fa que una comprovació fresca de l'estat remot de l'AEAT "
+"sigui un requisit previ general per al càlcul."
 
-#: ../../how-to/modelo-390.md:173
+#: ../../how-to/modelo-390.md:174
 msgid ""
 "For IVA compensation history, use the IVA wallet commands; they support "
 "the compensation carry-forward review but are not a general Modelo 390 "
@@ -463,16 +463,16 @@ msgid ""
 "Seeding and correcting mutate stored history, and the history reads reach"
 " AEAT, so they are shown as display frames:"
 msgstr ""
-"Per a l'historial de compensació d'IVA, fes servir les ordres de la cartera "
-"d'IVA; admeten la revisió de l'arrossegament de compensació però no són una "
-"porta de conciliació general del Modelo 390. Inspecciona el saldo amb el "
-"marc `iva-wallet balance` de la seqüència d'inspecció de més amunt. Sembra "
-"un saldo inicial, o corregeix una llavor errònia, o revisa l'historial del "
-"costat de l'AEAT amb les ordres següents. Sembrar i corregir muten "
-"l'historial desat, i les lectures d'historial accedeixen a l'AEAT, de "
-"manera que es mostren com a marcs il·lustratius:"
+"Per a l'historial de compensació d'IVA, fes servir les ordres de la "
+"cartera d'IVA; admeten la revisió de l'arrossegament de compensació però "
+"no són una porta de conciliació general del Modelo 390. Inspecciona el "
+"saldo amb el marc `iva-wallet balance` de la seqüència d'inspecció de més"
+" amunt. Sembra un saldo inicial, o corregeix una llavor errònia, o revisa"
+" l'historial del costat de l'AEAT amb les ordres següents. Sembrar i "
+"corregir muten l'historial desat, i les lectures d'historial accedeixen a"
+" l'AEAT, de manera que es mostren com a marcs il·lustratius:"
 
-#: ../../how-to/modelo-390.md:185
+#: ../../how-to/modelo-390.md:186
 msgid ""
 "`pull-history` requires both `--from-year` and `--to-year`; it reads "
 "filed Modelo 303 history from AEAT and refuses when AEAT authentication "
@@ -480,15 +480,16 @@ msgid ""
 "compensation balance from before the local Modelo 303 history."
 msgstr ""
 "`pull-history` requereix tant `--from-year` com `--to-year`; llegeix "
-"l'historial presentat del Modelo 303 de l'AEAT i es nega quan l'autenticació "
-"de l'AEAT no està configurada. Fes servir `seed` només quan tinguis un saldo "
-"de compensació inicial real d'abans de l'historial local del Modelo 303."
+"l'historial presentat del Modelo 303 de l'AEAT i es nega quan "
+"l'autenticació de l'AEAT no està configurada. Fes servir `seed` només "
+"quan tinguis un saldo de compensació inicial real d'abans de l'historial "
+"local del Modelo 303."
 
-#: ../../how-to/modelo-390.md:190
+#: ../../how-to/modelo-390.md:191
 msgid "Inspect the annual work unit"
 msgstr "Inspecciona la unitat de treball anual"
 
-#: ../../how-to/modelo-390.md:192
+#: ../../how-to/modelo-390.md:193
 msgid ""
 "Check the saved annual target and its bindings, casillas, and formulas. "
 "Add `--missing` to the bindings listing to focus on unfilled fields. The "
@@ -496,14 +497,14 @@ msgid ""
 "full-value chain that folds in the four filed quarters is the \"Create, "
 "calculate, and verify\" sequence above:"
 msgstr ""
-"Comprova l'objectiu anual desat i els seus bindings, casilles i fórmules. "
-"Afegeix `--missing` al llistat de bindings per centrar-te en els camps sense "
-"emplenar. La seqüència de més avall crea l'esborrany anual i n'inspecciona "
-"l'estructura; la cadena de valor complet que hi integra els quatre "
-"trimestres presentats és la seqüència «Crea, calcula i verifica» de més "
-"amunt:"
+"Comprova l'objectiu anual desat i els seus bindings, casilles i fórmules."
+" Afegeix `--missing` al llistat de bindings per centrar-te en els camps "
+"sense emplenar. La seqüència de més avall crea l'esborrany anual i "
+"n'inspecciona l'estructura; la cadena de valor complet que hi integra els"
+" quatre trimestres presentats és la seqüència «Crea, calcula i verifica» "
+"de més amunt:"
 
-#: ../../how-to/modelo-390.md:202
+#: ../../how-to/modelo-390.md:203
 msgid ""
 "The binding list shows ledger IVA aggregation bindings (source "
 "`ledger_iva_aggregation`) and 303-derived bindings (source "
@@ -514,17 +515,17 @@ msgid ""
 msgstr ""
 "La llista de bindings mostra els bindings d'agregació d'IVA del ledger "
 "(font `ledger_iva_aggregation`) i els bindings derivats del 303 (font "
-"`relation_prefill`, amb els ids prefixats `modelo-390-prev-303-`). Tracta "
-"les files derivades del 303 com a valors que s'han de revisar contra els "
-"períodes del 303 anteriors. No donis per fet que `work calculate` escaneja "
-"automàticament cada unitat de treball local del 303, cada revisió de càlcul "
-"o cada registre de presentació local."
+"`relation_prefill`, amb els ids prefixats `modelo-390-prev-303-`). Tracta"
+" les files derivades del 303 com a valors que s'han de revisar contra els"
+" períodes del 303 anteriors. No donis per fet que `work calculate` "
+"escaneja automàticament cada unitat de treball local del 303, cada "
+"revisió de càlcul o cada registre de presentació local."
 
-#: ../../how-to/modelo-390.md:209
+#: ../../how-to/modelo-390.md:210
 msgid "Supply reviewed 303-derived values if needed"
 msgstr "Aporta valors derivats del 303 revisats si cal"
 
-#: ../../how-to/modelo-390.md:211
+#: ../../how-to/modelo-390.md:212
 msgid ""
 "Check the annual ledger window before calculation with the `ledger "
 "preflight` and `ledger status` frames in the inspect sequence above."
@@ -533,24 +534,30 @@ msgstr ""
 "`ledger preflight` i `ledger status` de la seqüència d'inspecció de més "
 "amunt."
 
-#: ../../how-to/modelo-390.md:214
+#: ../../how-to/modelo-390.md:215
+#, fuzzy
 msgid ""
 "The annual calculation uses the annual ledger window for 390 ledger-"
 "backed IVA aggregates. For 303-derived values, the registry defines the "
 "binding IDs and the source periods. If those binding values are not "
 "already available to the calculation, inspect the missing binding list "
 "and supply reviewed values explicitly. The reviewed sums come from your "
-"own 303 review, so this override is shown as a display frame:"
+"own 303 review; the example below passes the ones this guide's year "
+"produces (1470.00 devengada, 105.00 deducible, 1365.00 régimen-general), "
+"and its preparation only creates the annual draft, so the annual ledger "
+"totals stay at zero while the reconciliation casillas carry the supplied "
+"figures:"
 msgstr ""
 "El càlcul anual utilitza la finestra anual del ledger per als agregats "
 "d'IVA del 390 basats en el ledger. Per als valors derivats del 303, el "
-"registre defineix els ids dels bindings i els períodes d'origen. Si aquests "
-"valors de binding no estan ja disponibles per al càlcul, inspecciona la "
-"llista de bindings que falten i aporta els valors revisats explícitament. "
-"Les sumes revisades provenen de la teva pròpia revisió del 303, de manera "
-"que aquesta substitució es mostra com a marc il·lustratiu:"
+"registre defineix els ids dels bindings i els períodes d'origen. Si "
+"aquests valors de binding no estan ja disponibles per al càlcul, "
+"inspecciona la llista de bindings que falten i aporta els valors revisats"
+" explícitament. Les sumes revisades provenen de la teva pròpia revisió "
+"del 303, de manera que aquesta substitució es mostra com a marc "
+"il·lustratiu:"
 
-#: ../../how-to/modelo-390.md:224
+#: ../../how-to/modelo-390.md:229
 msgid ""
 "Use reviewed numbers, not placeholders. If the reviewed 303 history is "
 "missing or inconsistent, stop and repair the 303 evidence before "
@@ -558,28 +565,28 @@ msgid ""
 "and supply calculation inputs](review-calculation-values.md)."
 msgstr ""
 "Fes servir xifres revisades, no marcadors de posició. Si l'historial del "
-"303 revisat falta o és inconsistent, atura't i repara l'evidència del 303 "
-"abans de continuar. Per a la revisió a nivell de casilla i la mecànica dels "
-"bindings, consulta [Revisa i aporta entrades de càlcul](review-calculation-"
-"values.md)."
+"303 revisat falta o és inconsistent, atura't i repara l'evidència del 303"
+" abans de continuar. Per a la revisió a nivell de casilla i la mecànica "
+"dels bindings, consulta [Revisa i aporta entrades de càlcul](review-"
+"calculation-values.md)."
 
-#: ../../how-to/modelo-390.md:229
+#: ../../how-to/modelo-390.md:234
 msgid "Review the annual calculation"
 msgstr "Revisa el càlcul anual"
 
-#: ../../how-to/modelo-390.md:231
+#: ../../how-to/modelo-390.md:236
 msgid ""
 "Inspect the saved annual revisions with the `work revisions` and `work "
 "revision` frames in the inspect sequence above."
 msgstr ""
-"Inspecciona les revisions anuals desades amb els marcs `work revisions` i "
-"`work revision` de la seqüència d'inspecció de més amunt."
+"Inspecciona les revisions anuals desades amb els marcs `work revisions` i"
+" `work revision` de la seqüència d'inspecció de més amunt."
 
-#: ../../how-to/modelo-390.md:234
+#: ../../how-to/modelo-390.md:239
 msgid "Compare the annual totals with the 303 reconciliation values:"
 msgstr "Compara els totals anuals amb els valors de conciliació del 303:"
 
-#: ../../how-to/modelo-390.md:236
+#: ../../how-to/modelo-390.md:241
 msgid ""
 "`iva.anual.cuota-devengada-total` should be reviewed against "
 "`iva.anual.reconciliacion.devengada-303`."
@@ -587,7 +594,7 @@ msgstr ""
 "`iva.anual.cuota-devengada-total` s'hauria de revisar contra "
 "`iva.anual.reconciliacion.devengada-303`."
 
-#: ../../how-to/modelo-390.md:238
+#: ../../how-to/modelo-390.md:243
 msgid ""
 "`iva.anual.cuota-deducible-total` should be reviewed against "
 "`iva.anual.reconciliacion.deducible-303`."
@@ -595,7 +602,7 @@ msgstr ""
 "`iva.anual.cuota-deducible-total` s'hauria de revisar contra "
 "`iva.anual.reconciliacion.deducible-303`."
 
-#: ../../how-to/modelo-390.md:240
+#: ../../how-to/modelo-390.md:245
 msgid ""
 "`iva.anual.resultado-regimen-general` should be reviewed against "
 "`iva.anual.reconciliacion.resultado-303`."
@@ -603,7 +610,7 @@ msgstr ""
 "`iva.anual.resultado-regimen-general` s'hauria de revisar contra "
 "`iva.anual.reconciliacion.resultado-303`."
 
-#: ../../how-to/modelo-390.md:243
+#: ../../how-to/modelo-390.md:248
 msgid ""
 "If the annual ledger totals and 303-derived reconciliation values "
 "diverge, do not force the 390 to pass first. Review the annual ledger "
@@ -618,19 +625,20 @@ msgstr ""
 "els bindings del 390 aportats. Fes servir el cicle de revisió en full de "
 "càlcul quan necessitis una superfície de càlcul més àmplia, i després "
 "`compute` i `verify` sobre el mateix objectiu. L'exportació del full de "
-"càlcul accedeix a Google, de manera que es mostra com a marc il·lustratiu:"
+"càlcul accedeix a Google, de manera que es mostra com a marc "
+"il·lustratiu:"
 
-#: ../../how-to/modelo-390.md:253
+#: ../../how-to/modelo-390.md:258
 msgid "The spreadsheet workflow is a review surface; it does not submit to AEAT."
 msgstr ""
 "El flux de treball del full de càlcul és una superfície de revisió; no "
 "presenta res a l'AEAT."
 
-#: ../../how-to/modelo-390.md:255
+#: ../../how-to/modelo-390.md:260
 msgid "Export and file"
 msgstr "Exporta i presenta"
 
-#: ../../how-to/modelo-390.md:257
+#: ../../how-to/modelo-390.md:262
 msgid ""
 "The verify step in the sequence above promoted the annual draft to "
 "`verificado_completo`. If verification instead reports "
@@ -641,16 +649,17 @@ msgid ""
 "has accepted the filing. Inspect the stored verification report by id "
 "when you need the detailed result:"
 msgstr ""
-"El pas de verificació de la seqüència de més amunt ha promogut l'esborrany "
-"anual a `verificado_completo`. Si en canvi la verificació informa de "
-"troballes bloquejadores `cross_period_dependency_unclean`, a cada trimestre "
-"del 303 anomenat li falta evidència de presentat; estableix-la primer "
-"(consulta [Què necessita cada trimestre del Modelo 303](#what-each-modelo-"
-"303-quarter-needs-before-you-verify) més amunt) i torna a verificar. La "
-"verificació no demostra que l'AEAT hagi acceptat la presentació. Inspecciona "
-"l'informe de verificació desat per id quan necessitis el resultat detallat:"
+"El pas de verificació de la seqüència de més amunt ha promogut "
+"l'esborrany anual a `verificado_completo`. Si en canvi la verificació "
+"informa de troballes bloquejadores `cross_period_dependency_unclean`, a "
+"cada trimestre del 303 anomenat li falta evidència de presentat; "
+"estableix-la primer (consulta [Què necessita cada trimestre del Modelo "
+"303](#what-each-modelo-303-quarter-needs-before-you-verify) més amunt) i "
+"torna a verificar. La verificació no demostra que l'AEAT hagi acceptat la"
+" presentació. Inspecciona l'informe de verificació desat per id quan "
+"necessitis el resultat detallat:"
 
-#: ../../how-to/modelo-390.md:269
+#: ../../how-to/modelo-390.md:274
 msgid ""
 "Export the verified or locally filed revision. Export needs the four "
 "filed 303 quarters' evidence, which the single-seed sandbox demonstrates "
@@ -659,21 +668,23 @@ msgid ""
 msgstr ""
 "Exporta la revisió verificada o presentada localment. L'exportació "
 "necessita l'evidència dels quatre trimestres presentats del 303, que "
-"l'entorn de proves de llavor única demostra a la cadena anual de més amunt, "
-"de manera que l'exportació i els passos posteriors al portal aquí són marcs "
-"il·lustratius:"
+"l'entorn de proves de llavor única demostra a la cadena anual de més "
+"amunt, de manera que l'exportació i els passos posteriors al portal aquí "
+"són marcs il·lustratius:"
 
-#: ../../how-to/modelo-390.md:276
+#: ../../how-to/modelo-390.md:281
+#, fuzzy
 msgid ""
 "Upload the exported file through AEAT's official channel; the full "
 "checklist is in [Upload your exported modelo at the AEAT portal](file-at-"
 "aeat.md). Review your filing records with `filing-record list` and "
 "`filing-record view`. `work file` is an internal local marker; it does "
-"not submit anything to AEAT. If the annual return was filed outside this "
+"not submit anything to AEAT. The listing below runs in a sandbox that "
+"filed nothing, so it reports no records; your own listing carries one row"
+" per filing you recorded. If the annual return was filed outside this "
 "local workflow, import an external filing record only from official "
-"evidence, and inspect any evidence bundle a verification or export "
-"workflow created with the audit commands. These address records and "
-"bundles by id, so they are display frames:"
+"evidence. That import needs the official receipt, and the evidence-bundle"
+" read beneath it addresses a bundle by id, so both stay display frames:"
 msgstr ""
 "Puja el fitxer exportat pel canal oficial de l'AEAT; la llista de "
 "comprovació completa és a [Puja el teu modelo exportat al portal de "
@@ -686,34 +697,34 @@ msgstr ""
 "d'exportació hagi creat amb les ordres d'auditoria. Aquestes adrecen "
 "registres i paquets per id, de manera que són marcs il·lustratius:"
 
-#: ../../how-to/modelo-390.md:288
+#: ../../how-to/modelo-390.md:295
 msgid "What Modelo 390 does not check for you"
 msgstr "Què no comprova per tu el Modelo 390"
 
-#: ../../how-to/modelo-390.md:290
+#: ../../how-to/modelo-390.md:297
 msgid ""
 "The current implementation supports Modelo 390's annual 303 "
 "reconciliation in the registry, but it does not enforce every operational"
 " policy you might want for a dependable annual filing workflow."
 msgstr ""
-"La implementació actual admet la conciliació anual del 303 del Modelo 390 al "
-"registre, però no fa complir totes les polítiques operatives que potser "
-"voldries per a un flux de treball de presentació anual fiable."
+"La implementació actual admet la conciliació anual del 303 del Modelo 390"
+" al registre, però no fa complir totes les polítiques operatives que "
+"potser voldries per a un flux de treball de presentació anual fiable."
 
-#: ../../how-to/modelo-390.md:294
+#: ../../how-to/modelo-390.md:301
 msgid "Use these limits when deciding how much evidence to review:"
 msgstr "Fes servir aquests límits quan decideixis quanta evidència revisar:"
 
-#: ../../how-to/modelo-390.md:296
+#: ../../how-to/modelo-390.md:303
 msgid ""
 "Modelo 390 does not look at all local filing history regardless of state."
 " 303-derived resolution is keyed by modelo, filing year, and period."
 msgstr ""
-"El Modelo 390 no mira tot l'historial de presentació local independentment "
-"de l'estat. La resolució derivada del 303 està indexada per modelo, any de "
-"presentació i període."
+"El Modelo 390 no mira tot l'historial de presentació local "
+"independentment de l'estat. La resolució derivada del 303 està indexada "
+"per modelo, any de presentació i període."
 
-#: ../../how-to/modelo-390.md:298
+#: ../../how-to/modelo-390.md:305
 msgid ""
 "The calculate-time resolver and the verify gate treat 303 evidence "
 "differently. The resolver that prefills 303-derived values does not apply"
@@ -724,14 +735,14 @@ msgid ""
 msgstr ""
 "El resolutor en el moment del càlcul i la porta de verificació tracten "
 "l'evidència del 303 de manera diferent. El resolutor que preomple els "
-"valors derivats del 303 no aplica cap filtre d'estat de cicle de vida, de "
-"manera que `work calculate` pot produir un esborrany. La porta de "
+"valors derivats del 303 no aplica cap filtre d'estat de cicle de vida, de"
+" manera que `work calculate` pot produir un esborrany. La porta de "
 "verificació és més estricta: es bloqueja fins que cada trimestre del 303 "
 "tingui un registre de presentat o un justificante de l'AEAT "
-"capturat/conciliat (consulta «Què necessita cada trimestre del Modelo 303 "
-"abans de verificar»)."
+"capturat/conciliat (consulta «Què necessita cada trimestre del Modelo 303"
+" abans de verificar»)."
 
-#: ../../how-to/modelo-390.md:304
+#: ../../how-to/modelo-390.md:311
 msgid ""
 "The annual `work calculate` path should not be treated as a general "
 "\"latest active 303 revision\" selector. Use `work revision --select "
@@ -740,10 +751,10 @@ msgid ""
 msgstr ""
 "El camí anual `work calculate` no s'hauria de tractar com un selector "
 "general de «última revisió activa del 303». Fes servir `work revision "
-"--select filed`, `latest-verified` o ids de revisió exactes quan necessitis "
-"un valor específic del 303."
+"--select filed`, `latest-verified` o ids de revisió exactes quan "
+"necessitis un valor específic del 303."
 
-#: ../../how-to/modelo-390.md:307
+#: ../../how-to/modelo-390.md:314
 msgid ""
 "Local `work file` records, AEAT captured filed observations, and "
 "justificante reconciliation are related but separate evidence surfaces. "
@@ -755,26 +766,27 @@ msgstr ""
 "d'evidència relacionades però separades. La CLI actual no requereix que "
 "estiguin sincronitzades abans de cada càlcul del Modelo 390."
 
-#: ../../how-to/modelo-390.md:310
+#: ../../how-to/modelo-390.md:317
 msgid ""
 "Missing 303 history can leave 390 303-derived bindings unavailable or "
 "force operator-supplied reviewed values. Calculation can still produce a "
 "draft, but verify blocks until the missing quarters have filed evidence."
 msgstr ""
-"Un historial del 303 que falti pot deixar els bindings del 390 derivats del "
-"303 no disponibles o forçar valors revisats aportats per l'operador. El "
-"càlcul encara pot produir un esborrany, però la verificació es bloqueja fins "
-"que els trimestres que falten tinguin evidència de presentat."
+"Un historial del 303 que falti pot deixar els bindings del 390 derivats "
+"del 303 no disponibles o forçar valors revisats aportats per l'operador. "
+"El càlcul encara pot produir un esborrany, però la verificació es "
+"bloqueja fins que els trimestres que falten tinguin evidència de "
+"presentat."
 
-#: ../../how-to/modelo-390.md:313
+#: ../../how-to/modelo-390.md:320
 msgid ""
 "Remote AEAT state is not binding unless you explicitly capture or "
 "reconcile it in the workflow you are running."
 msgstr ""
-"L'estat remot de l'AEAT no és vinculant tret que el capturis o el concilis "
-"explícitament al flux de treball que estàs executant."
+"L'estat remot de l'AEAT no és vinculant tret que el capturis o el "
+"concilis explícitament al flux de treball que estàs executant."
 
-#: ../../how-to/modelo-390.md:316
+#: ../../how-to/modelo-390.md:323
 msgid ""
 "For a conservative annual close, calculate and review every 303 period, "
 "reconcile official evidence where available, inspect the 390 303-derived "
@@ -783,39 +795,42 @@ msgid ""
 "enforced behavior."
 msgstr ""
 "Per a un tancament anual conservador, calcula i revisa cada període del "
-"303, concilia l'evidència oficial quan estigui disponible, inspecciona els "
-"bindings del 390 derivats del 303 i verifica l'esborrany anual abans "
+"303, concilia l'evidència oficial quan estigui disponible, inspecciona "
+"els bindings del 390 derivats del 303 i verifica l'esborrany anual abans "
 "d'exportar. Si la CLI no exposa la comprovació que necessites, informa "
 "d'aquella mancança en lloc de documentar-la com a comportament imposat."
 
-#: ../../how-to/modelo-390.md:321
+#: ../../how-to/modelo-390.md:328
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/modelo-390.md:323
+#: ../../how-to/modelo-390.md:330
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
 msgstr "[Prepara una presentació d'IVA amb el Modelo 303](modelo-303.md)"
 
-#: ../../how-to/modelo-390.md:324
+#: ../../how-to/modelo-390.md:331
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/modelo-390.md:325
+#: ../../how-to/modelo-390.md:332
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisa càlculs amb Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/modelo-390.md:326
+#: ../../how-to/modelo-390.md:333
 msgid "[How to reconcile a filed Modelo against its justificante](reconcile.md)"
-msgstr "[Com conciliar un Modelo presentat contra el seu justificante](reconcile.md)"
+msgstr ""
+"[Com conciliar un Modelo presentat contra el seu "
+"justificante](reconcile.md)"
 
-#: ../../how-to/modelo-390.md:327
+#: ../../how-to/modelo-390.md:334
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[El flux de treball de presentació](filing-spine.md)"
 
-#: ../../how-to/modelo-390.md:328
+#: ../../how-to/modelo-390.md:335
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
 msgstr "[Diagnostica i repara la teva configuració local](troubleshooting.md)"
 
-#: ../../how-to/modelo-390.md:329
+#: ../../how-to/modelo-390.md:336
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
+

@@ -1,5 +1,4 @@
-@setup aeat config profile create me --quiet --entity-type natural_person --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"
-  @step Set the activity-start date so an unstarted prior period is scoped out.
-  @result aeat --format json config profile edit me --quiet --activity-start-date 2026-01-01
-  @expect result.profile_name == "me"
-  @expect exit_code == 0
+@step Set the activity-start date so an unstarted prior period is scoped out.
+@result aeat --format json config profile edit docs-sequence-sandbox --quiet --activity-start-date 2026-01-01
+@expect result.profile_name == "docs-sequence-sandbox"
+@expect exit_code == 0

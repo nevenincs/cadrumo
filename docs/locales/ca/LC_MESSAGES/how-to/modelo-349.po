@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -32,12 +32,12 @@ msgid ""
 "Declaración recapitulativa de operaciones intracomunitarias.\""
 msgstr ""
 "Aquesta pàgina tracta la presentació del Modelo 349: registrar les "
-"operacions intracomunitàries que llista, comprovar els NIF-IVA de la UE de "
-"les teves contraparts i executar la cadena de crear-calcular-verificar-"
-"exportar. El Modelo 349 és la declaració informativa recapitulativa "
-"d'operacions intracomunitàries; el títol oficial del registre és «Modelo "
-"349. Declaración Informativa. Declaración recapitulativa de operaciones "
-"intracomunitarias.»"
+"operacions intracomunitàries que llista, comprovar els NIF-IVA de la UE "
+"de les teves contraparts i executar la cadena de crear-calcular-"
+"verificar-exportar. El Modelo 349 és la declaració informativa "
+"recapitulativa d'operacions intracomunitàries; el títol oficial del "
+"registre és «Modelo 349. Declaración Informativa. Declaración "
+"recapitulativa de operaciones intracomunitarias.»"
 
 #: ../../how-to/modelo-349.md:10
 msgid ""
@@ -47,11 +47,11 @@ msgid ""
 "code, EU VAT number, name, operation key, and base - plus rectification "
 "rows when you correct a previously declared period."
 msgstr ""
-"El Modelo 349 no declara cap cuota: és un llistat pur. La declaració porta "
-"un bloc de resum (amb quants operadors intracomunitaris has tractat i per "
-"quins imports) i una fila de detall per operador -codi de país, NIF-IVA de "
-"la UE, nom, clau d'operació i base-, més files de rectificació quan "
-"corregeixes un període declarat anteriorment."
+"El Modelo 349 no declara cap cuota: és un llistat pur. La declaració "
+"porta un bloc de resum (amb quants operadors intracomunitaris has tractat"
+" i per quins imports) i una fila de detall per operador -codi de país, "
+"NIF-IVA de la UE, nom, clau d'operació i base-, més files de rectificació"
+" quan corregeixes un període declarat anteriorment."
 
 #: ../../how-to/modelo-349.md:16
 msgid ""
@@ -72,10 +72,11 @@ msgid ""
 "Create a profile with `aeat config profile create <name>`. See [Set up "
 "your taxpayer profile](profile-setup.md)."
 msgstr ""
-"**Requisit:** un perfil de contribuent vàlid amb activitat intracomunitària "
-"(ROI) i els registres de factura intracomunitària que llista la declaració. "
-"Crea un perfil amb `aeat config profile create <name>`. Consulta [Configura "
-"el teu perfil de contribuent](profile-setup.md)."
+"**Requisit:** un perfil de contribuent vàlid amb activitat "
+"intracomunitària (ROI) i els registres de factura intracomunitària que "
+"llista la declaració. Crea un perfil amb `aeat config profile create "
+"<name>`. Consulta [Configura el teu perfil de contribuent](profile-"
+"setup.md)."
 
 #: ../../how-to/modelo-349.md:26
 msgid ""
@@ -97,12 +98,12 @@ msgid ""
 "[Attach invoices and receipts](ledger-evidence.md)."
 msgstr ""
 "Registra les operacions com a registres de factura, no pas com a simples "
-"files del ledger. El llistat del 349 es construeix a partir del teu catàleg "
-"de factures: les factures emeses a operadors de la UE alimenten el costat "
-"de les entregas, i les factures rebudes de proveïdors de la UE alimenten el "
-"costat de les adquisiciones. Cada factura necessita el país i el NIF-IVA de "
-"la UE de la seva contrapart. Consulta [Gestiona factures](manage-invoices."
-"md) i [Adjunta factures i rebuts](ledger-evidence.md)."
+"files del ledger. El llistat del 349 es construeix a partir del teu "
+"catàleg de factures: les factures emeses a operadors de la UE alimenten "
+"el costat de les entregas, i les factures rebudes de proveïdors de la UE "
+"alimenten el costat de les adquisiciones. Cada factura necessita el país "
+"i el NIF-IVA de la UE de la seva contrapart. Consulta [Gestiona factures"
+"](manage-invoices.md) i [Adjunta factures i rebuts](ledger-evidence.md)."
 
 #: ../../how-to/modelo-349.md:39
 msgid ""
@@ -115,9 +116,9 @@ msgstr ""
 "Verifica el NIF-IVA de la UE de cada contrapart contra el registre VIES "
 "abans de refiar-te'n amb `aeat app live verify nif-iva ESB12345678`. Un "
 "número no vàlid o no registrat és la correcció més habitual del 349 més "
-"endavant; comprovar-ho ara és més barat. Aquesta és una ordre en directe de "
-"només lectura: consulta [Consulta notificacions de l'AEAT i observacions en "
-"directe](check-aeat-notifications.md)."
+"endavant; comprovar-ho ara és més barat. Aquesta és una ordre en directe "
+"de només lectura: consulta [Consulta notificacions de l'AEAT i "
+"observacions en directe](check-aeat-notifications.md)."
 
 #: ../../how-to/modelo-349.md:45
 msgid "Create, calculate, and verify"
@@ -131,9 +132,9 @@ msgid ""
 "verifies it:"
 msgstr ""
 "La preparació de més avall registra dues factures emeses "
-"intracomunitàries -un lliurament de béns a un client alemany i un servei a "
-"un de francès- i, tot seguit, crea l'esborrany, agrega les factures a la "
-"declaració i la verifica:"
+"intracomunitàries -un lliurament de béns a un client alemany i un servei "
+"a un de francès- i, tot seguit, crea l'esborrany, agrega les factures a "
+"la declaració i la verifica:"
 
 #: ../../how-to/modelo-349.md:55
 msgid ""
@@ -145,12 +146,12 @@ msgid ""
 "bound and what is missing, then show the built rows:"
 msgstr ""
 "El càlcul agrega els registres de factura del període a les casilles de "
-"resum i construeix les files de detall per operador. Amb les dues factures "
-"de més amunt, el resum informa de dos operadors intracomunitaris "
-"(`decl.numero-operadores`) per un total de 8000 euros d'operacions "
-"(`decl.importe-operaciones`), i la verificació atorga el verificat-complet. "
-"Inspecciona què s'ha vinculat i què falta, i tot seguit mostra les files "
-"construïdes:"
+"resum i construeix les files de detall per operador. Amb les dues "
+"factures de més amunt, el resum informa de dos operadors intracomunitaris"
+" (`decl.numero-operadores`) per un total de 8000 euros d'operacions "
+"(`decl.importe-operaciones`), i la verificació atorga el verificat-"
+"complet. Inspecciona què s'ha vinculat i què falta, i tot seguit mostra "
+"les files construïdes:"
 
 #: ../../how-to/modelo-349.md:66
 msgid ""
@@ -163,8 +164,8 @@ msgstr ""
 "Els camps de la fila per operador (codi de país, NIF-IVA de la UE, nom, "
 "clau d'operació, base) provenen dels registres de factura; una dada de "
 "contrapart que falti a una factura apareix aquí com un valor de fila que "
-"falta. Corregeix el registre de factura en lloc de forçar un valor manual: "
-"el llistat ha de coincidir amb la teva evidència de factures."
+"falta. Corregeix el registre de factura en lloc de forçar un valor "
+"manual: el llistat ha de coincidir amb la teva evidència de factures."
 
 #: ../../how-to/modelo-349.md:71
 msgid "Rectify an earlier period"
@@ -178,10 +179,10 @@ msgid ""
 "previously declared. Record the correction on the invoice record for the "
 "original operation; the rectification rows aggregate from there."
 msgstr ""
-"Quan una operació ja declarada canvia (una factura corregida, una factura "
-"d'abonament), el 349 posterior declara la rectificació: les files de "
-"rectificació anomenen l'any i el període rectificats, la base corregida i "
-"la base declarada anteriorment. Registra la correcció al registre de "
+"Quan una operació ja declarada canvia (una factura corregida, una factura"
+" d'abonament), el 349 posterior declara la rectificació: les files de "
+"rectificació anomenen l'any i el període rectificats, la base corregida i"
+" la base declarada anteriorment. Registra la correcció al registre de "
 "factura de l'operació original; les files de rectificació s'agreguen a "
 "partir d'allà."
 
@@ -194,25 +195,27 @@ msgid "Export the verified declaration:"
 msgstr "Exporta la declaració verificada:"
 
 #: ../../how-to/modelo-349.md:87
+#, fuzzy
 msgid ""
 "After you file at the portal, record the local marker, then [reconcile "
-"against the justificante](reconcile.md). The marker records a filing you "
-"have already presented at the portal, so it is shown as a display frame:"
+"against the justificante](reconcile.md). The marker needs a pending "
+"filing obligation, so the preparation below declares the intra-community "
+"obligation on the profile first:"
 msgstr ""
-"Després de presentar al portal, registra el marcador local i, tot seguit, "
-"[concilia contra el justificante](reconcile.md). El marcador registra una "
-"presentació que ja has fet al portal, de manera que es mostra com a marc "
-"il·lustratiu:"
+"Després de presentar al portal, registra el marcador local i, tot seguit,"
+" [concilia contra el justificante](reconcile.md). El marcador registra "
+"una presentació que ja has fet al portal, de manera que es mostra com a "
+"marc il·lustratiu:"
 
-#: ../../how-to/modelo-349.md:94
+#: ../../how-to/modelo-349.md:96
 msgid ""
 "The marker is optional and only applies while the obligation window is "
 "open; export is the local finish line."
 msgstr ""
-"El marcador és opcional i només s'aplica mentre la finestra d'obligació és "
-"oberta; l'exportació és la línia d'arribada local."
+"El marcador és opcional i només s'aplica mentre la finestra d'obligació "
+"és oberta; l'exportació és la línia d'arribada local."
 
-#: ../../how-to/modelo-349.md:97
+#: ../../how-to/modelo-349.md:99
 msgid ""
 "Modelo 349 runs alongside your periodic Modelo 303: the same intra-"
 "community operations that appear here also feed the 303's intra-community"
@@ -224,28 +227,30 @@ msgstr ""
 "operacions intracomunitàries que apareixen aquí també alimenten les "
 "casilles intracomunitàries del 303. Mantén-los coherents corregint els "
 "registres de factura i del ledger subjacents, no pas les declaracions. "
-"Consulta [Prepara una presentació d'IVA amb el Modelo 303](modelo-303.md)."
+"Consulta [Prepara una presentació d'IVA amb el Modelo "
+"303](modelo-303.md)."
 
-#: ../../how-to/modelo-349.md:102
+#: ../../how-to/modelo-349.md:104
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/modelo-349.md:104
+#: ../../how-to/modelo-349.md:106
 msgid "[Manage invoices](manage-invoices.md)"
 msgstr "[Gestiona factures](manage-invoices.md)"
 
-#: ../../how-to/modelo-349.md:105
+#: ../../how-to/modelo-349.md:107
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
 msgstr "[Prepara una presentació d'IVA amb el Modelo 303](modelo-303.md)"
 
-#: ../../how-to/modelo-349.md:106
+#: ../../how-to/modelo-349.md:108
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/modelo-349.md:107
+#: ../../how-to/modelo-349.md:109
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md)"
 
-#: ../../how-to/modelo-349.md:108
+#: ../../how-to/modelo-349.md:110
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Concilia una presentació](reconcile.md)"
+

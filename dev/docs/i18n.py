@@ -199,6 +199,17 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
         "CADRUMO_DOCS_ONLY": os.pathsep.join(pages),
         "CADRUMO_DOCS_MASTER_DOC": "index",
         "CADRUMO_DOCS_SKIP_CLI_REFERENCE": "1",
+        # Message extraction reads source prose; it has no dependency whatever
+        # on the cli-sequence goldens. Without this opt-out the gettext builder
+        # still runs the build-time golden check, which EXECUTES every enrolled
+        # sequence in a pool of child interpreters - work this build cannot
+        # consume, and which was measured hanging indefinitely on a single page
+        # (the tree sat at ~15 ms of CPU across 45 s before the bound above
+        # terminated it, having written zero templates). The dedicated pytest
+        # goldens gate owns that verification and runs it exactly once, which is
+        # the same reason every sibling gate build sets this
+        # (``dev/docs/tests/_sphinx_build_harness.py``).
+        "CADRUMO_DOCS_SKIP_SEQUENCE_CHECK": "1",
     }
     command = [
         sys.executable,

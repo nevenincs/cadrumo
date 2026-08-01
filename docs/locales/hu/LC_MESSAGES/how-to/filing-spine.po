@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -32,8 +32,8 @@ msgid ""
 "your filing work between steps."
 msgstr ""
 "Ez az oldal a benyújtási munkafolyamat két építőelemét tárgyalja - a "
-"munkaegységet (egy benyújtási célhoz mentett munkaterület) és a számítási "
-"revíziót (egy mentett számítási eredmény) -, valamint hogy a create, a "
+"munkaegységet (egy benyújtási célhoz mentett munkaterület) és a számítási"
+" revíziót (egy mentett számítási eredmény) -, valamint hogy a create, a "
 "calculate, a verify, a file és az export hogyan választanak közöttük. A "
 "gyorsindító elvégzése után használja, ha meg szeretné érteni, hogyan "
 "szervezi és tárolja az eszköz a benyújtási munkáját a lépések között."
@@ -59,21 +59,23 @@ msgstr ""
 "Ha nincs profilja, először hozzon létre egyet (lásd [Az adózói profil "
 "beállítása](profile-setup.md)). Adja meg a `--quiet` kapcsolót a nem "
 "interaktív formához (egy önálló `profile create NAME` interaktív "
-"varázslót nyit meg). Egy profilnak, amely eljut az `export`-ig, "
-"hordoznia kell egy nevet és vezetékneveket, különben az `export` a "
-"„requires the operator name” üzenettel elutasítja a műveletet:"
+"varázslót nyit meg). Egy profilnak, amely eljut az `export`-ig, hordoznia"
+" kell egy nevet és vezetékneveket, különben az `export` a „requires the "
+"operator name” üzenettel elutasítja a műveletet:"
 
 #: ../../how-to/filing-spine.md:23
 msgid ""
 "Every profile-scoped command needs the master-key passphrase; the tool "
 "prompts for it."
 msgstr ""
-"Minden profilhoz kötött parancshoz szükség van a mesterkulcs-jelmondatra; "
-"az eszköz bekéri Öntől."
+"Minden profilhoz kötött parancshoz szükség van a mesterkulcs-jelmondatra;"
+" az eszköz bekéri Öntől."
 
 #: ../../how-to/filing-spine.md:26
 msgid "The CLI emits help, results, and refusals in Spanish."
-msgstr "A CLI a súgót, az eredményeket és az elutasításokat spanyolul jeleníti meg."
+msgstr ""
+"A CLI a súgót, az eredményeket és az elutasításokat spanyolul jeleníti "
+"meg."
 
 #: ../../how-to/filing-spine.md:28
 msgid "The filing chain"
@@ -96,12 +98,12 @@ msgid ""
 "refuses. To file a period that folds in a real prior period, import that "
 "prior filing's evidence first; see [Reconcile a filing](reconcile.md)."
 msgstr ""
-"A fenti profilban lévő `--activity-start-date` kizárja az előző időszakra "
-"vonatkozó függőséget ennél az első benyújtásnál, így a `verify` "
-"`complete`-et jelent, és az `export` kiírja a `.boe`-t. Nélküle a `verify` "
-"elakad egy feloldatlan, az előző időszakra vonatkozó, időszakok közötti "
-"függőségen, és az `export` elutasítja a műveletet. Egy olyan időszak "
-"benyújtásához, amely egy valódi előző időszakot von be, először "
+"A fenti profilban lévő `--activity-start-date` kizárja az előző időszakra"
+" vonatkozó függőséget ennél az első benyújtásnál, így a `verify` "
+"`complete`-et jelent, és az `export` kiírja a `.boe`-t. Nélküle a "
+"`verify` elakad egy feloldatlan, az előző időszakra vonatkozó, időszakok "
+"közötti függőségen, és az `export` elutasítja a műveletet. Egy olyan "
+"időszak benyújtásához, amely egy valódi előző időszakot von be, először "
 "importálja annak az előző benyújtásnak a bizonyítékát; lásd [Egy "
 "benyújtás egyeztetése](reconcile.md)."
 
@@ -161,8 +163,8 @@ msgid ""
 msgstr ""
 "Ha még nincs mentett munka, először hozza létre az `aeat app modelo work "
 "create` paranccsal (a fenti lánc- és látható-cél sorozatok a teljes "
-"formát futtatják). Ugyanannak a create parancsnak az újbóli futtatása nem "
-"hoz létre másodpéldányt. Az adott benyújtáshoz tartozó meglévő mentett "
+"formát futtatják). Ugyanannak a create parancsnak az újbóli futtatása nem"
+" hoz létre másodpéldányt. Az adott benyújtáshoz tartozó meglévő mentett "
 "munkát adja vissza."
 
 #: ../../how-to/filing-spine.md:71
@@ -187,8 +189,8 @@ msgid ""
 "`--revision` only when support or an error message asks you to target a "
 "specific ruleset version."
 msgstr ""
-"Az eszköz tudja, hogy a hivatalos adószabályok melyik verziója vonatkozik "
-"az egyes nyomtatványokra és időszakokra. Ezt nem kell kézzel "
+"Az eszköz tudja, hogy a hivatalos adószabályok melyik verziója vonatkozik"
+" az egyes nyomtatványokra és időszakokra. Ezt nem kell kézzel "
 "kiválasztania. A `--revision`-t csak akkor használja, amikor a támogatás "
 "vagy egy hibaüzenet arra kéri, hogy egy adott szabálykészlet-verziót "
 "célozzon meg."
@@ -203,21 +205,22 @@ msgstr ""
 "Miután megvan a `work_unit_id`, szólítsa meg ugyanazt a mentett munkát "
 "azonosító alapján:"
 
-#: ../../how-to/filing-spine.md:92
+#: ../../how-to/filing-spine.md:93
 msgid ""
 "Prefer the visible target for hand-run commands. Use the reference number"
 " when Cadrumo reports that more than one filing matches the same modelo, "
 "year, and period."
 msgstr ""
 "Kézzel futtatott parancsokhoz részesítse előnyben a látható célt. A "
-"hivatkozási számot akkor használja, amikor a Cadrumo azt jelzi, hogy egynél "
-"több benyújtás felel meg ugyanannak a modelónak, évnek és időszaknak."
+"hivatkozási számot akkor használja, amikor a Cadrumo azt jelzi, hogy "
+"egynél több benyújtás felel meg ugyanannak a modelónak, évnek és "
+"időszaknak."
 
-#: ../../how-to/filing-spine.md:95
+#: ../../how-to/filing-spine.md:96
 msgid "A work unit is one filing in progress"
 msgstr "A munkaegység egy folyamatban lévő benyújtás"
 
-#: ../../how-to/filing-spine.md:97
+#: ../../how-to/filing-spine.md:98
 msgid ""
 "A work unit is the saved workspace for one filing target. It is the thing"
 " that connects later commands to the same local filing work."
@@ -225,7 +228,7 @@ msgstr ""
 "A munkaegység egy benyújtási célhoz mentett munkaterület. Ez az, ami a "
 "későbbi parancsokat ugyanahhoz a helyi benyújtási munkához kapcsolja."
 
-#: ../../how-to/filing-spine.md:100
+#: ../../how-to/filing-spine.md:101
 msgid ""
 "For example, `aeat app modelo work create` creates or reuses the work "
 "unit for Modelo 303 Q1 2026 (the chain sequence above runs the full "
@@ -235,25 +238,25 @@ msgstr ""
 "Modelo 303 2026 1T munkaegységét (a fenti láncsorozat a teljes formát "
 "futtatja)."
 
-#: ../../how-to/filing-spine.md:103
+#: ../../how-to/filing-spine.md:104
 msgid "The tool keeps a record of your filing work. That record links to:"
 msgstr ""
 "Az eszköz nyilvántartást vezet a benyújtási munkájáról. Az a "
 "nyilvántartás a következőkre hivatkozik:"
 
-#: ../../how-to/filing-spine.md:105
+#: ../../how-to/filing-spine.md:106
 msgid "the latest calculated draft"
 msgstr "a legutóbbi kiszámított piszkozat"
 
-#: ../../how-to/filing-spine.md:106
+#: ../../how-to/filing-spine.md:107
 msgid "the verified draft, if you have verified one"
 msgstr "az ellenőrzött piszkozat, ha ellenőrzött egyet"
 
-#: ../../how-to/filing-spine.md:107
+#: ../../how-to/filing-spine.md:108
 msgid "the filed record, if you have marked one as filed locally"
 msgstr "a benyújtott nyilvántartás, ha helyileg benyújtottként megjelölt egyet"
 
-#: ../../how-to/filing-spine.md:109
+#: ../../how-to/filing-spine.md:110
 msgid ""
 "No separate command \"switches\" the current work unit. The active "
 "profile is global, but the filing work is selected on each command. To "
@@ -261,15 +264,15 @@ msgid ""
 "different `work_unit_id`:"
 msgstr ""
 "Egyetlen külön parancs sem „vált” az aktuális munkaegységre. Az aktív "
-"profil globális, de a benyújtási munkát minden parancsnál kiválasztja. Egy "
-"másik benyújtáson való munkához adjon meg egy másik látható célt, vagy "
-"adjon meg egy másik `work_unit_id`-t:"
+"profil globális, de a benyújtási munkát minden parancsnál kiválasztja. "
+"Egy másik benyújtáson való munkához adjon meg egy másik látható célt, "
+"vagy adjon meg egy másik `work_unit_id`-t:"
 
-#: ../../how-to/filing-spine.md:116
+#: ../../how-to/filing-spine.md:118
 msgid "A calculation revision is one saved result"
 msgstr "A számítási revízió egy mentett eredmény"
 
-#: ../../how-to/filing-spine.md:118
+#: ../../how-to/filing-spine.md:120
 msgid ""
 "A calculation revision is one saved calculation result inside a work "
 "unit. It has its own reference number, the calculation-revision-id, which"
@@ -279,15 +282,16 @@ msgstr ""
 "Saját hivatkozási száma van, a calculation-revision-id, amelyet a "
 "`calculate` hoz létre, és amely külön van a work-unit-id-től."
 
-#: ../../how-to/filing-spine.md:122
+#: ../../how-to/filing-spine.md:124
+#, fuzzy
 msgid ""
 "When you run `aeat app modelo work calculate`, Cadrumo saves a draft "
-"calculation revision (the chain sequence above runs it)."
+"calculation revision, run by the chain sequence above."
 msgstr ""
 "Amikor az `aeat app modelo work calculate` parancsot futtatja, a Cadrumo "
 "elment egy piszkozat számítási revíziót (a fenti láncsorozat futtatja)."
 
-#: ../../how-to/filing-spine.md:125
+#: ../../how-to/filing-spine.md:127
 msgid ""
 "Running calculation again does not overwrite the old result. Every saved "
 "calculation is immutable: earlier revisions stay on disk exactly as they "
@@ -300,19 +304,19 @@ msgid ""
 msgstr ""
 "A számítás újbóli futtatása nem írja felül a régi eredményt. Minden "
 "mentett számítás megváltoztathatatlan: a korábbi revíziók pontosan úgy "
-"maradnak a lemezen, ahogy voltak, a pontos tartalmuk alapján "
-"azonosítva, így összehasonlíthatja a revíziókat, és visszaléphet. Ha a "
-"tranzakciói vagy kézi értékei megváltoztak, az eszköz a régi mellett új "
-"mentett számítást hoz létre; ha semmi sem változott, ugyanazt az "
-"eredményt használja újra. Az eszköz frissíti a benyújtási "
-"nyilvántartását, hogy tükrözze a legutóbbi kiszámított piszkozatot. Egy "
-"mentett revízió egy próbálkozás nyilvántartása, nem döntés"
+"maradnak a lemezen, ahogy voltak, a pontos tartalmuk alapján azonosítva, "
+"így összehasonlíthatja a revíziókat, és visszaléphet. Ha a tranzakciói "
+"vagy kézi értékei megváltoztak, az eszköz a régi mellett új mentett "
+"számítást hoz létre; ha semmi sem változott, ugyanazt az eredményt "
+"használja újra. Az eszköz frissíti a benyújtási nyilvántartását, hogy "
+"tükrözze a legutóbbi kiszámított piszkozatot. Egy mentett revízió egy "
+"próbálkozás nyilvántartása, nem döntés"
 
-#: ../../how-to/filing-spine.md:132
+#: ../../how-to/filing-spine.md:134
 msgid "its numbers commit to nothing until you verify and file it."
 msgstr "a számai semmire sem köteleznek, amíg nem ellenőrzi és nyújtja be."
 
-#: ../../how-to/filing-spine.md:134
+#: ../../how-to/filing-spine.md:136
 msgid ""
 "List the saved calculation revisions for a filing with `aeat app modelo "
 "work revisions`, and show the current revision's persisted values with "
@@ -324,7 +328,7 @@ msgstr ""
 "értékeit az `aeat app modelo work revision` paranccsal (a fenti "
 "látható-cél sorozat mindkettőt futtatja)."
 
-#: ../../how-to/filing-spine.md:138
+#: ../../how-to/filing-spine.md:140
 msgid ""
 "If you need to view one specific saved calculation, type its reference "
 "number after the command:"
@@ -332,35 +336,35 @@ msgstr ""
 "Ha egy adott mentett számítást kell megtekintenie, írja be a hivatkozási "
 "számát a parancs után:"
 
-#: ../../how-to/filing-spine.md:144
+#: ../../how-to/filing-spine.md:147
 msgid "Reference numbers to know:"
 msgstr "Ismerendő hivatkozási számok:"
 
-#: ../../how-to/filing-spine.md:146
+#: ../../how-to/filing-spine.md:149
 msgid "the filing workspace reference - from `aeat app modelo work list`"
 msgstr "a benyújtási munkaterület hivatkozása - az `aeat app modelo work list`-ből"
 
-#: ../../how-to/filing-spine.md:147
+#: ../../how-to/filing-spine.md:150
 msgid "the saved calculation reference - from `aeat app modelo work revisions`"
 msgstr "a mentett számítás hivatkozása - az `aeat app modelo work revisions`-ból"
 
-#: ../../how-to/filing-spine.md:148
+#: ../../how-to/filing-spine.md:151
 msgid "the rules version reference - shown in status output; you rarely need this"
 msgstr ""
-"a szabályverzió hivatkozása - a status kimenetben látható; erre ritkán van "
-"szüksége"
+"a szabályverzió hivatkozása - a status kimenetben látható; erre ritkán "
+"van szüksége"
 
-#: ../../how-to/filing-spine.md:149
+#: ../../how-to/filing-spine.md:152
 msgid "a run reference - only appears when a command was interrupted mid-way"
 msgstr ""
 "egy futtatás hivatkozása - csak akkor jelenik meg, amikor egy parancs "
 "félúton megszakadt"
 
-#: ../../how-to/filing-spine.md:151
+#: ../../how-to/filing-spine.md:154
 msgid "How verify, file, and export choose a revision"
 msgstr "Hogyan választanak revíziót a verify, a file és az export"
 
-#: ../../how-to/filing-spine.md:153
+#: ../../how-to/filing-spine.md:156
 msgid ""
 "Most commands start from the visible filing target and then choose the "
 "relevant calculation revision under that work unit."
@@ -368,28 +372,30 @@ msgstr ""
 "A legtöbb parancs a látható benyújtási célból indul ki, majd kiválasztja "
 "az adott munkaegység alatti releváns számítási revíziót."
 
-#: ../../how-to/filing-spine.md:156
+#: ../../how-to/filing-spine.md:159
 msgid ""
 "Verification defaults to the current draft revision; run it with `aeat "
 "app modelo work verify` (the chain sequence above runs it)."
 msgstr ""
 "Az ellenőrzés alapértelmezésben az aktuális piszkozat revíziót veszi; "
-"futtassa az `aeat app modelo work verify` paranccsal (a fenti láncsorozat "
-"futtatja)."
+"futtassa az `aeat app modelo work verify` paranccsal (a fenti láncsorozat"
+" futtatja)."
 
-#: ../../how-to/filing-spine.md:159
+#: ../../how-to/filing-spine.md:162
 msgid "Local filing defaults to the current verified revision:"
-msgstr "A helyi benyújtás alapértelmezésben az aktuális ellenőrzött revíziót veszi:"
+msgstr ""
+"A helyi benyújtás alapértelmezésben az aktuális ellenőrzött revíziót "
+"veszi:"
 
-#: ../../how-to/filing-spine.md:164
+#: ../../how-to/filing-spine.md:168
 msgid ""
 "`work file` records a local filed marker. It does not submit anything to "
 "AEAT."
 msgstr ""
-"A `work file` egy helyi benyújtási jelölőt rögzít. Nem nyújt be semmit az "
-"AEAT-hoz."
+"A `work file` egy helyi benyújtási jelölőt rögzít. Nem nyújt be semmit az"
+" AEAT-hoz."
 
-#: ../../how-to/filing-spine.md:166
+#: ../../how-to/filing-spine.md:170
 msgid ""
 "Export defaults to the filed revision if one exists. Otherwise, it uses "
 "the current verified revision; run it with `aeat app modelo export` (the "
@@ -399,7 +405,7 @@ msgstr ""
 "Egyébként az aktuális ellenőrzött revíziót használja; futtassa az `aeat "
 "app modelo export` paranccsal (a fenti láncsorozat futtatja)."
 
-#: ../../how-to/filing-spine.md:170
+#: ../../how-to/filing-spine.md:174
 msgid ""
 "Export refuses a plain draft. The upload file is the artefact that leaves"
 " the tool for AEAT, so it is built only from a revision that passed the "
@@ -414,7 +420,7 @@ msgstr ""
 "hogy egy hiányos vagy következetlen piszkozat véletlenül benyújtássá "
 "váljon."
 
-#: ../../how-to/filing-spine.md:175
+#: ../../how-to/filing-spine.md:179
 msgid ""
 "The `.boe` extension is a naming convention. The tool writes the file to "
 "the `--output` path you choose and always produces a fixed-width fichero-"
@@ -425,21 +431,21 @@ msgstr ""
 "szélességű fichero-BOE szövegfájlt állít elő, bármilyen kiterjesztést is "
 "ad neki."
 
-#: ../../how-to/filing-spine.md:179
+#: ../../how-to/filing-spine.md:183
 msgid "Each command automatically picks the most appropriate saved calculation:"
 msgstr ""
-"Minden parancs automatikusan a legmegfelelőbb mentett számítást választja "
-"ki:"
+"Minden parancs automatikusan a legmegfelelőbb mentett számítást választja"
+" ki:"
 
-#: ../../how-to/filing-spine.md:181
+#: ../../how-to/filing-spine.md:185
 msgid "`verify` uses the latest draft"
 msgstr "a `verify` a legutóbbi piszkozatot használja"
 
-#: ../../how-to/filing-spine.md:182
+#: ../../how-to/filing-spine.md:186
 msgid "`file` uses the latest verified draft"
 msgstr "a `file` a legutóbbi ellenőrzött piszkozatot használja"
 
-#: ../../how-to/filing-spine.md:183
+#: ../../how-to/filing-spine.md:187
 msgid ""
 "`export` uses whichever was marked as filed; if none was filed, it uses "
 "the verified draft"
@@ -447,7 +453,7 @@ msgstr ""
 "az `export` azt használja, amelyik benyújtottként volt megjelölve; ha "
 "egyiket sem nyújtották be, az ellenőrzött piszkozatot használja"
 
-#: ../../how-to/filing-spine.md:186
+#: ../../how-to/filing-spine.md:190
 msgid ""
 "If you need a different saved calculation, use `--select` with the "
 "visible target:"
@@ -455,58 +461,58 @@ msgstr ""
 "Ha másik mentett számításra van szüksége, használja a `--select`-et a "
 "látható céllal:"
 
-#: ../../how-to/filing-spine.md:192
+#: ../../how-to/filing-spine.md:197
 msgid "You can also pass exact IDs on commands that accept them:"
 msgstr ""
-"Pontos azonosítókat is átadhat azoknál a parancsoknál, amelyek elfogadják "
-"őket:"
+"Pontos azonosítókat is átadhat azoknál a parancsoknál, amelyek elfogadják"
+" őket:"
 
-#: ../../how-to/filing-spine.md:197
+#: ../../how-to/filing-spine.md:203
 msgid "For the complete option list, see the [CLI reference](../cli/index.rst)."
 msgstr "A teljes kapcsolólistáért lásd a [CLI-referenciát](../cli/index.rst)."
 
-#: ../../how-to/filing-spine.md:199
+#: ../../how-to/filing-spine.md:205
 msgid "Rename, discard, or review a filing's history"
 msgstr "Egy benyújtás átnevezése, elvetése vagy előzményeinek áttekintése"
 
-#: ../../how-to/filing-spine.md:201
+#: ../../how-to/filing-spine.md:207
 msgid "Manage or review the lifecycle of a work unit as it progresses:"
 msgstr "Kezelje vagy tekintse át egy munkaegység életciklusát, ahogy halad:"
 
-#: ../../how-to/filing-spine.md:203
+#: ../../how-to/filing-spine.md:209
 msgid "`rename`: Add or update a friendly display name for the work unit:"
 msgstr ""
-"`rename`: Adjon hozzá vagy frissítsen egy barátságos megjelenítendő nevet "
-"a munkaegységhez:"
+"`rename`: Adjon hozzá vagy frissítsen egy barátságos megjelenítendő nevet"
+" a munkaegységhez:"
 
-#: ../../how-to/filing-spine.md:208
+#: ../../how-to/filing-spine.md:215
 msgid "`history`: Review all actions the tool has taken on this filing, in order:"
 msgstr ""
 "`history`: Tekintse át sorrendben az összes műveletet, amelyet az eszköz "
 "ezen a benyújtáson végzett:"
 
-#: ../../how-to/filing-spine.md:213
+#: ../../how-to/filing-spine.md:221
 msgid ""
 "`discard`: Mark the filing workspace as discarded. The tool records this "
 "action in the history log. Use this if you created the workspace by "
 "mistake or want to replace it with a fresh one:"
 msgstr ""
-"`discard`: Jelölje meg a benyújtási munkaterületet elvetettként. Az eszköz "
-"ezt a műveletet rögzíti az előzménynaplóban. Akkor használja, ha "
+"`discard`: Jelölje meg a benyújtási munkaterületet elvetettként. Az "
+"eszköz ezt a műveletet rögzíti az előzménynaplóban. Akkor használja, ha "
 "tévedésből hozta létre a munkaterületet, vagy egy frissre szeretné "
 "cserélni:"
 
-#: ../../how-to/filing-spine.md:220
+#: ../../how-to/filing-spine.md:229
 msgid "The `--reason` text is for your own records only. It is not sent to AEAT."
 msgstr ""
 "A `--reason` szöveg csak az Ön saját nyilvántartásának való. Nem kerül "
 "elküldésre az AEAT-hoz."
 
-#: ../../how-to/filing-spine.md:222
+#: ../../how-to/filing-spine.md:231
 msgid "Resume an interrupted filing"
 msgstr "Egy megszakadt benyújtás folytatása"
 
-#: ../../how-to/filing-spine.md:224
+#: ../../how-to/filing-spine.md:233
 msgid ""
 "If a command was interrupted halfway through (for example, because your "
 "connection dropped while the tool was reading live AEAT data), you can "
@@ -516,13 +522,13 @@ msgstr ""
 "miközben az eszköz élő AEAT-adatokat olvasott), ellenőrizheti és "
 "újraindíthatja:"
 
-#: ../../how-to/filing-spine.md:228
+#: ../../how-to/filing-spine.md:237
 msgid "`runs`: List recent flow runs, from most recent to oldest:"
 msgstr ""
 "`runs`: Listázza a legutóbbi folyamfuttatásokat, a legutóbbitól a "
 "legrégebbiig:"
 
-#: ../../how-to/filing-spine.md:233
+#: ../../how-to/filing-spine.md:243
 msgid ""
 "`resume`: Restart an interrupted command using the filing details or the "
 "reference number shown in the error message:"
@@ -530,19 +536,19 @@ msgstr ""
 "`resume`: Indítson újra egy megszakadt parancsot a benyújtási részletek "
 "vagy a hibaüzenetben mutatott hivatkozási szám használatával:"
 
-#: ../../how-to/filing-spine.md:239
+#: ../../how-to/filing-spine.md:249
 msgid "When to use exact IDs"
 msgstr "Mikor használjon pontos azonosítókat"
 
-#: ../../how-to/filing-spine.md:241
+#: ../../how-to/filing-spine.md:251
 msgid "Use modelo, year, and period for all normal work."
 msgstr "Minden szokásos munkához a modelót, az évet és az időszakot használja."
 
-#: ../../how-to/filing-spine.md:243
+#: ../../how-to/filing-spine.md:253
 msgid "Use the exact reference number when:"
 msgstr "A pontos hivatkozási számot akkor használja, amikor:"
 
-#: ../../how-to/filing-spine.md:245
+#: ../../how-to/filing-spine.md:255
 msgid ""
 "Cadrumo tells you that more than one filing matches the same modelo, "
 "year, and period (Cadrumo refuses to guess; it prints candidates for you "
@@ -552,11 +558,11 @@ msgstr ""
 "modelónak, évnek és időszaknak (a Cadrumo nem hajlandó találgatni; "
 "jelölteket nyomtat ki, hogy Ön választhasson)"
 
-#: ../../how-to/filing-spine.md:247
+#: ../../how-to/filing-spine.md:257
 msgid "you are replaying or inspecting one specific saved calculation"
 msgstr "egy adott mentett számítást játszik vissza vagy vizsgál meg"
 
-#: ../../how-to/filing-spine.md:248
+#: ../../how-to/filing-spine.md:258
 msgid ""
 "support asks you to share the exact reference number from the command "
 "output"
@@ -564,11 +570,11 @@ msgstr ""
 "a támogatás arra kéri, hogy ossza meg a pontos hivatkozási számot a "
 "parancs kimenetéből"
 
-#: ../../how-to/filing-spine.md:250
+#: ../../how-to/filing-spine.md:260
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/filing-spine.md:252
+#: ../../how-to/filing-spine.md:262
 msgid ""
 "[Quickstart: produce a modelo file](quickstart.md) - the shortest path "
 "from profile to exported file."
@@ -576,7 +582,7 @@ msgstr ""
 "[Gyorsindító: állítson elő egy modelo-fájlt](quickstart.md) - a "
 "legrövidebb út a profiltól az exportált fájlig."
 
-#: ../../how-to/filing-spine.md:254
+#: ../../how-to/filing-spine.md:264
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "how to inspect saved values, missing bindings, and manual inputs."
@@ -585,16 +591,16 @@ msgstr ""
 "values.md) - hogyan vizsgálja meg a mentett értékeket, a hiányzó "
 "kötéseket és a kézi bemeneteket."
 
-#: ../../how-to/filing-spine.md:256
+#: ../../how-to/filing-spine.md:266
 msgid ""
 "[Review calculations with Google Sheets](review-with-google-sheets.md) - "
 "how to inspect calculation workbooks outside the terminal."
 msgstr ""
 "[Számítások áttekintése Google Táblázatokkal](review-with-google-"
-"sheets.md) - hogyan vizsgálja meg a számítási munkafüzeteket a terminálon "
-"kívül."
+"sheets.md) - hogyan vizsgálja meg a számítási munkafüzeteket a terminálon"
+" kívül."
 
-#: ../../how-to/filing-spine.md:258
+#: ../../how-to/filing-spine.md:268
 msgid ""
 "[Reconcile a filing](reconcile.md) - how to compare a filed modelo with "
 "its justificante."
@@ -602,8 +608,9 @@ msgstr ""
 "[Egy benyújtás egyeztetése](reconcile.md) - hogyan hasonlítson össze egy "
 "benyújtott modelót a justificantéjával."
 
-#: ../../how-to/filing-spine.md:260
+#: ../../how-to/filing-spine.md:270
 msgid "[Command reference](../cli/index.rst) - exact flags and selector options."
 msgstr ""
 "[Parancsreferencia](../cli/index.rst) - pontos kapcsolók és "
 "kiválasztó-opciók."
+

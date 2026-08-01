@@ -491,6 +491,47 @@ class TestAmbientEnvNeutralisation:
 
         assert os.environ.get("PATH") == original_path
 
+    def test_credential_vault_is_pinned_absent_on_every_host(self, tmp_path: Path) -> None:
+        """A ``config login`` frame's output is a sandbox property, not a host one.
+
+        ``config login`` custodies its session key through :mod:`keyring`, so on a
+        vault-bearing workstation it reports ``session_persisted: true`` while a
+        headless CI runner emits the ``session_not_persisted`` warning and a
+        ``warning`` spine status. That made four committed goldens encode the
+        CAPTURING MACHINE, flipping red whenever a differently-postured machine
+        ran the gate. Pinning absence is what makes them stable, so this probe
+        guards the pin from both sides.
+
+        BOTH resolution channels are asserted because both are load-bearing and
+        they fail differently: the environment variable is what subprocess
+        execution paths read, while :func:`keyring.set_keyring` is what the
+        in-process path needs — :mod:`keyring` caches its detected backend in a
+        module global, so on any host where something resolved a backend before
+        the sandbox opened (a pytest session, a docs build) the environment
+        variable alone is inert. Asserting only the variable would therefore pass
+        on a fresh process while the real gate still flapped.
+        """
+        import os
+
+        import keyring
+        import keyring.core
+
+        from .._runner import sequence_sandbox
+
+        host_backend = keyring.core._keyring_backend
+        with sequence_sandbox(sequence_id="credential-vault-probe", sandbox_root=tmp_path / "scope"):
+            assert os.environ["PYTHON_KEYRING_BACKEND"] == "keyring.backends.null.Keyring"
+            # Probe the REAL custody call the login path uses, not the backend's
+            # name: a write must reach nothing and read back absent, which is
+            # what keeps the sandbox out of the operator's own credential store.
+            keyring.set_password("cadrumo:probe", "sandbox-bucket", "must-not-be-retained")
+            assert keyring.get_password("cadrumo:probe", "sandbox-bucket") is None
+
+        # Restored verbatim: the pin must not leak into the rest of the session,
+        # or every real keychain-custody test downstream would silently pass
+        # against a no-op backend.
+        assert keyring.core._keyring_backend is host_backend
+
     def test_frames_execute_green_and_leak_free_under_ambient_operator_env(
         self,
         tmp_path: Path,

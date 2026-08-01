@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -213,15 +213,13 @@ msgid "Stage 3: a credit quarter, and the carry"
 msgstr "Etapa 3: un trimestre de crèdit, i el trasllat"
 
 #: ../../how-to/iva-lifecycle.md:92
+#, fuzzy
 msgid ""
 "Suppose the second quarter goes the other way: Ana buys a laptop and "
 "other equipment, and her deductible IVA exceeds what she charged. When "
 "deductible IVA exceeds charged IVA, the result box is negative and the "
 "return declares the difference as credit to compensate: the quarter ends "
-"with nothing to pay, and the wallet remembers the credit. The whole "
-"second quarter runs against Ana's filed first quarter and inside the July"
-" presentation window, which the frozen documentation sandbox cannot "
-"reproduce, so the chain is shown as display frames:"
+"with nothing to pay, and the wallet remembers the credit."
 msgstr ""
 "Suposem que el segon trimestre va a la inversa: l'Ana compra un portàtil "
 "i altres equips, i el seu IVA deduïble supera el que va repercutir. Quan "
@@ -233,7 +231,23 @@ msgstr ""
 "proves congelat de la documentació no pot reproduir, de manera que la "
 "cadena es mostra com a marcs de visualització:"
 
-#: ../../how-to/iva-lifecycle.md:103
+#: ../../how-to/iva-lifecycle.md:98
+msgid ""
+"Record the equipment purchase, then run the same chain as the first "
+"quarter:"
+msgstr ""
+
+#: ../../how-to/iva-lifecycle.md:104
+msgid ""
+"The commands from `work calculate` onwards each read the filed first "
+"quarter the credit carries from, so they are shown as display frames. "
+"Link the equipment supplier's invoice to the ledger row before you "
+"calculate: a quarter that claims deductible IVA cannot be exported or "
+"filed until every deductible row carries its invoice. [Attach invoices "
+"and receipts](ledger-evidence.md) walks through it."
+msgstr ""
+
+#: ../../how-to/iva-lifecycle.md:110
 msgid ""
 "In the third quarter the carry shows itself: the same chain with `3T` "
 "brings the prior-compensation box from the wallet, so the second "
@@ -246,7 +260,7 @@ msgstr ""
 "mou el saldo al llarg de l'any amb l'ordre de saldo de la cartera que es "
 "mostra executant-se a l'etapa 1 anterior."
 
-#: ../../how-to/iva-lifecycle.md:108
+#: ../../how-to/iva-lifecycle.md:115
 msgid ""
 "The balance reports the total, active, and expired credit and the lots it"
 " is made of. Credit expires after the legal window, so the wallet also "
@@ -256,11 +270,11 @@ msgstr ""
 "compon. El crèdit caduca després de la finestra legal, de manera que la "
 "cartera també anomena el proper any de caducitat."
 
-#: ../../how-to/iva-lifecycle.md:112
+#: ../../how-to/iva-lifecycle.md:119
 msgid "Stage 4 (optional): intra-community operations and Modelo 349"
 msgstr "Etapa 4 (opcional): operacions intracomunitàries i Model 349"
 
-#: ../../how-to/iva-lifecycle.md:114
+#: ../../how-to/iva-lifecycle.md:121
 msgid ""
 "Skip this stage unless you invoice clients or buy from suppliers in other"
 " EU member states."
@@ -268,7 +282,7 @@ msgstr ""
 "Omet aquesta etapa tret que factures clients o compres a proveïdors "
 "d'altres estats membres de la UE."
 
-#: ../../how-to/iva-lifecycle.md:117
+#: ../../how-to/iva-lifecycle.md:124
 msgid ""
 "If Ana takes an EU client, the operations must also appear on the "
 "recapitulative Modelo 349 - a listing, per EU operator, of the period's "
@@ -285,7 +299,7 @@ msgstr ""
 "registre VIES. Aquesta comprovació és una lectura en directe de l'AEAT, "
 "de manera que es mostra com a marc de visualització:"
 
-#: ../../how-to/iva-lifecycle.md:127
+#: ../../how-to/iva-lifecycle.md:134
 msgid ""
 "The full workflow - invoice records, the operation keys, rectifications "
 "of earlier periods - is [Prepare a Modelo 349 recapitulative "
@@ -299,11 +313,11 @@ msgstr ""
 "també alimenten les caselles intracomunitàries del 303; mantén-los "
 "coherents corregint els registres subjacents, mai les declaracions."
 
-#: ../../how-to/iva-lifecycle.md:133
+#: ../../how-to/iva-lifecycle.md:140
 msgid "Stage 5: the fourth quarter and the annual summary"
 msgstr "Etapa 5: el quart trimestre i el resum anual"
 
-#: ../../how-to/iva-lifecycle.md:135
+#: ../../how-to/iva-lifecycle.md:142
 msgid ""
 "Close the fourth quarter with the same `4T` chain in January. Then "
 "prepare the annual Modelo 390 summary, annual token `0A`, same year. "
@@ -325,18 +339,18 @@ msgstr ""
 "regla de reconciliació: un total anual que no concordi amb la suma dels "
 "trimestres és una troballa bloquejadora, no un avís."
 
-#: ../../how-to/iva-lifecycle.md:144
-msgid ""
-"The annual summary resolves the four filed quarters and the 2026 Modelo "
-"390 registry revision, published for the 2027 filing season after this "
-"documentation is built, so the chain is shown as display frames:"
-msgstr ""
-"El resum anual resol els quatre trimestres presentats i la revisió del "
-"registre del Model 390 del 2026, publicada per a la campanya de "
-"presentació del 2027 després que aquesta documentació es compili, de "
-"manera que la cadena es mostra com a marcs de visualització:"
-
 #: ../../how-to/iva-lifecycle.md:151
+msgid "Open the annual summary, then run the same chain as a quarter:"
+msgstr ""
+
+#: ../../how-to/iva-lifecycle.md:157
+msgid ""
+"The commands from `work calculate` onwards each resolve all four filed "
+"quarters, so they are shown as display frames until every quarter of the "
+"year is filed."
+msgstr ""
+
+#: ../../how-to/iva-lifecycle.md:160
 msgid ""
 "The per-box detail is [Prepare the annual Modelo 390 "
 "summary](modelo-390.md)."
@@ -344,11 +358,11 @@ msgstr ""
 "El detall casella per casella és [Prepara el resum anual del Model "
 "390](modelo-390.md)."
 
-#: ../../how-to/iva-lifecycle.md:154
+#: ../../how-to/iva-lifecycle.md:163
 msgid "What you completed"
 msgstr "Què has completat"
 
-#: ../../how-to/iva-lifecycle.md:156
+#: ../../how-to/iva-lifecycle.md:165
 msgid ""
 "You carried the same taxpayer through a full IVA year: an opening wallet "
 "balance declared once, a paying quarter, a credit quarter whose "
@@ -362,33 +376,50 @@ msgstr ""
 "declaració següent, una branca recapitulativa opcional, i un resum anual "
 "que va reconciliar amb els quatre trimestres del teu propi registre."
 
-#: ../../how-to/iva-lifecycle.md:161
+#: ../../how-to/iva-lifecycle.md:170
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/iva-lifecycle.md:163
+#: ../../how-to/iva-lifecycle.md:172
 msgid "[The income-tax year](irpf-lifecycle.md) - the same persona through IRPF."
 msgstr ""
 "[L'any de l'impost sobre la renda](irpf-lifecycle.md): la mateixa persona"
 " a través de l'IRPF."
 
-#: ../../how-to/iva-lifecycle.md:164
+#: ../../how-to/iva-lifecycle.md:173
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
 msgstr "[Prepara una presentació del Model 303 d'IVA](modelo-303.md)"
 
-#: ../../how-to/iva-lifecycle.md:165
+#: ../../how-to/iva-lifecycle.md:174
 msgid "[Prepare the annual Modelo 390 summary](modelo-390.md)"
 msgstr "[Prepara el resum anual del Model 390](modelo-390.md)"
 
-#: ../../how-to/iva-lifecycle.md:166
+#: ../../how-to/iva-lifecycle.md:175
 msgid "[Prepare a Modelo 349 recapitulative declaration](modelo-349.md)"
 msgstr "[Prepara una declaració recapitulativa del Model 349](modelo-349.md)"
 
-#: ../../how-to/iva-lifecycle.md:167
+#: ../../how-to/iva-lifecycle.md:176
 msgid ""
 "[Deduct input IVA under prorrata](prorrata.md) - when your activity mixes"
 " IVA-taxed and exempt operations."
 msgstr ""
 "[Dedueix l'IVA suportat amb prorrata](prorrata.md): quan la teva "
 "activitat barreja operacions gravades amb IVA i exemptes."
+
+#~ msgid ""
+#~ "The annual summary resolves the four "
+#~ "filed quarters and the 2026 Modelo "
+#~ "390 registry revision, published for the"
+#~ " 2027 filing season after this "
+#~ "documentation is built, so the chain "
+#~ "is shown as display frames:"
+#~ msgstr ""
+#~ "El resum anual resol els quatre "
+#~ "trimestres presentats i la revisió del"
+#~ " registre del Model 390 del 2026, "
+#~ "publicada per a la campanya de "
+#~ "presentació del 2027 després que aquesta"
+#~ " documentació es compili, de manera "
+#~ "que la cadena es mostra com a "
+#~ "marcs de visualització:"
 

@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -34,12 +34,12 @@ msgid ""
 msgstr ""
 "Ez az oldal a ledger-tranzakciók osztályozását tárgyalja: annak "
 "eldöntését, hogy egy sor üzleti, személyes vagy vegyes, a számításhoz "
-"szükséges kategória- és adómezők hozzáadását, a vegyes használatú "
-"arányok rögzítését, a kötegelt és szabályalapú osztályozást, valamint az "
+"szükséges kategória- és adómezők hozzáadását, a vegyes használatú arányok"
+" rögzítését, a kötegelt és szabályalapú osztályozást, valamint az "
 "ellenőrzési sort, amely felsorol mindent, ami még döntésre vár. Akkor "
-"használja, miután a tranzakciók bekerültek az aktív profil ledgerébe - az "
-"importált soroknak van dátumuk és összegük, de még nem mondják meg, hogyan "
-"kezelje őket az adószámítás."
+"használja, miután a tranzakciók bekerültek az aktív profil ledgerébe - az"
+" importált soroknak van dátumuk és összegük, de még nem mondják meg, "
+"hogyan kezelje őket az adószámítás."
 
 #: ../../how-to/classify-transactions.md:11
 msgid ""
@@ -81,9 +81,9 @@ msgid ""
 "](import-bank-statements.md) to import a bank statement or add rows by "
 "hand."
 msgstr ""
-"Egy ledger, amelyben tranzakciók vannak. Lásd [Tranzakciók importálása és "
-"kezelése](import-bank-statements.md) egy bankszámlakivonat importálásához "
-"vagy sorok kézi hozzáadásához."
+"Egy ledger, amelyben tranzakciók vannak. Lásd [Tranzakciók importálása és"
+" kezelése](import-bank-statements.md) egy bankszámlakivonat "
+"importálásához vagy sorok kézi hozzáadásához."
 
 #: ../../how-to/classify-transactions.md:22
 msgid ""
@@ -91,8 +91,8 @@ msgid ""
 "in English. When a step sends you to `--help`, expect Spanish option "
 "names."
 msgstr ""
-"A CLI súgója és hibaszövege spanyolul jelenik meg, még akkor is, ha ez az "
-"útmutató angolul van. Amikor egy lépés a `--help`-hez irányítja, "
+"A CLI súgója és hibaszövege spanyolul jelenik meg, még akkor is, ha ez az"
+" útmutató angolul van. Amikor egy lépés a `--help`-hez irányítja, "
 "számítson spanyol nyelvű kapcsolónevekre."
 
 #: ../../how-to/classify-transactions.md:24
@@ -180,8 +180,8 @@ msgid ""
 "supplier invoices and `--kind issued` for customer invoices."
 msgstr ""
 "Használja az `OUTGOING`-ot plusz egy kiadáskategóriát a beszállítói "
-"beszerzésekhez és más levonható kiadásokhoz. Használja az `INCOMING`-ot a "
-"kiállított számlákhoz, ügyfélkifizetésekhez vagy a vevőknek nyújtott "
+"beszerzésekhez és más levonható kiadásokhoz. Használja az `INCOMING`-ot a"
+" kiállított számlákhoz, ügyfélkifizetésekhez vagy a vevőknek nyújtott "
 "szolgáltatásokhoz. Ha a számlanyilvántartásokat külön is nyomon követi, "
 "használja az `aeat app ledger invoice` parancsot a `--kind received` "
 "kapcsolóval a beszállítói számlákhoz és a `--kind issued` kapcsolóval a "
@@ -208,8 +208,8 @@ msgid ""
 "cases. Use `aeat app ledger classify --help` for the exact current option"
 " list."
 msgstr ""
-"A gyakori mezők közé tartozik az adóalap, az IVA-kulcs, az IVA-összeg, az "
-"IVA-kategória, az IRPF-kategória és a partner EU-tagállama a közösségen "
+"A gyakori mezők közé tartozik az adóalap, az IVA-kulcs, az IVA-összeg, az"
+" IVA-kategória, az IRPF-kategória és a partner EU-tagállama a közösségen "
 "belüli IVA-esetekhez. A pontos, aktuális kapcsolólistáért használja az "
 "`aeat app ledger classify --help` parancsot."
 
@@ -235,15 +235,15 @@ msgstr ""
 "A legtöbb, a szokásos 21%-os kulccsal terhelt beszerzéshez nincs szükség "
 "`--iva-category`-ra. Csak különleges esetekhez adja hozzá: kedvezményes "
 "kulcs (élelmiszer, könyv), adómentes termékértékesítés, EU-s "
-"beszállítóktól való beszerzés vagy recargo de equivalencia. Az elfogadott "
-"értékek megtekintéséhez futtassa az `aeat app ledger classify --help` "
+"beszállítóktól való beszerzés vagy recargo de equivalencia. Az elfogadott"
+" értékek megtekintéséhez futtassa az `aeat app ledger classify --help` "
 "parancsot."
 
-#: ../../how-to/classify-transactions.md:86
+#: ../../how-to/classify-transactions.md:87
 msgid "Classify mixed-use transactions"
 msgstr "Vegyes használatú tranzakciók osztályozása"
 
-#: ../../how-to/classify-transactions.md:88
+#: ../../how-to/classify-transactions.md:89
 msgid ""
 "A mixed-use transaction is one you use partly for business and partly "
 "personally, such as a phone bill, a car cost, or a home-office expense. "
@@ -258,14 +258,14 @@ msgstr ""
 "személyes célra használ, például egy telefonszámla, egy autóköltség vagy "
 "egy otthoni iroda kiadása. Rögzítse az üzleti arányt, hogy a számítás "
 "csak a levonható részt vegye figyelembe. A megosztás három helyről "
-"származhat, a megalapozottság növekvő sorrendjében: egy százalék egyetlen "
-"nyilvántartáson, egy egész kategóriára mentett alapértelmezett arány, "
+"származhat, a megalapozottság növekvő sorrendjében: egy százalék egyetlen"
+" nyilvántartáson, egy egész kategóriára mentett alapértelmezett arány, "
 "vagy egy, a nyilvántartott adataiból kiszámított arány (például a "
 "nyilvántartott otthoni iroda területe az otthona méretéhez viszonyítva). "
 "Mindhárom csak a költségnek azt a részét tartja meg, amely valóban az "
 "üzlethez tartozik."
 
-#: ../../how-to/classify-transactions.md:97
+#: ../../how-to/classify-transactions.md:98
 msgid ""
 "A `MIXED` row needs a proportionality reference before a modelo can "
 "calculate from it. The reference is a saved category ratio applied "
@@ -281,7 +281,7 @@ msgstr ""
 "előellenőrzés továbbra is `missing_proportionality_reference` értéket "
 "jelent, amíg a sor nem hordozza a `--usage-ratio-id`-t."
 
-#: ../../how-to/classify-transactions.md:103
+#: ../../how-to/classify-transactions.md:104
 msgid ""
 "For one-row commands, `--usage-ratio-id` lives on the `allocate` verb "
 "(and on `add`), not on `classify`. Its value is the spending-category id,"
@@ -295,7 +295,7 @@ msgstr ""
 "aránynak. A sorozat ellenőrzi a jogosult kategóriákat, ment egy arányt, "
 "és felosztja az arányt egy soron:"
 
-#: ../../how-to/classify-transactions.md:112
+#: ../../how-to/classify-transactions.md:113
 msgid ""
 "A row's `--usage-ratio-id` must name a ratio-eligible category (the ones "
 "`ratios eligible` lists, such as `telefonia_movil` or a home-office "
@@ -314,7 +314,7 @@ msgstr ""
 "felosztásból `MIXED`, egy `1` felosztásból `BUSINESS`, egy `0` "
 "felosztásból pedig `PERSONAL` lesz."
 
-#: ../../how-to/classify-transactions.md:120
+#: ../../how-to/classify-transactions.md:121
 msgid ""
 "List or check the saved ratios at any time. The sequence saves a ratio, "
 "lists the saved ratios, and validates them:"
@@ -322,15 +322,15 @@ msgstr ""
 "Bármikor listázhatja vagy ellenőrizheti a mentett arányokat. A sorozat "
 "ment egy arányt, listázza a mentett arányokat, és ellenőrzi őket:"
 
-#: ../../how-to/classify-transactions.md:127
+#: ../../how-to/classify-transactions.md:128
 msgid ""
 "Remove a category ratio you no longer want with `aeat app ledger ratios "
 "unset <category-id>`."
 msgstr ""
-"Egy kategóriaarányt, amelyet már nem szeretne, az `aeat app ledger ratios "
-"unset <category-id>` paranccsal távolíthat el."
+"Egy kategóriaarányt, amelyet már nem szeretne, az `aeat app ledger ratios"
+" unset <category-id>` paranccsal távolíthat el."
 
-#: ../../how-to/classify-transactions.md:130
+#: ../../how-to/classify-transactions.md:131
 msgid ""
 "For home-office expenses, save a ratio for the relevant home-office "
 "category and allocate as above. Home-office ratios follow the manual or "
@@ -341,16 +341,17 @@ msgstr ""
 "Otthoni iroda kiadásaihoz mentsen arányt a megfelelő otthoni iroda "
 "kategóriához, és ossza fel a fentiek szerint. Az otthoni iroda arányai a "
 "kézi vagy a mentett arány munkafolyamatát követik; először tartsa "
-"helyesen a censo-adatokat a profiljában - lásd [A Modelo 036 censo-adatok "
-"karbantartása a profiljában](censo-update.md)."
+"helyesen a censo-adatokat a profiljában - lásd [A Modelo 036 censo-adatok"
+" karbantartása a profiljában](censo-update.md)."
 
-#: ../../how-to/classify-transactions.md:135
+#: ../../how-to/classify-transactions.md:136
 msgid "Classify many rows from CSV"
 msgstr "Sok sor osztályozása CSV-ből"
 
-#: ../../how-to/classify-transactions.md:137
+#: ../../how-to/classify-transactions.md:138
+#, fuzzy
 msgid ""
-"For bulk review, `classify --from-csv` reads a CSV with columns "
+"For bulk review, `classify --file` reads a CSV with columns "
 "`transaction_id`, `classification`, and optional classification facts "
 "such as `category_id`, `business_pct`, `usage_ratio_id`, taxable-base and"
 " IVA columns, `iva_category`, and `irpf_category`. Prepare a narrow CSV "
@@ -358,22 +359,23 @@ msgid ""
 msgstr ""
 "Tömeges áttekintéshez a `classify --from-csv` egy olyan CSV-t olvas be, "
 "amelynek oszlopai a `transaction_id`, a `classification`, valamint "
-"opcionális osztályozási adatok, például a `category_id`, a `business_pct`, "
-"a `usage_ratio_id`, az adóalap- és IVA-oszlopok, az `iva_category` és az "
-"`irpf_category`. Készítsen egy szűk CSV-t, amely csak azokat a sorokat "
-"tartalmazza, amelyeket módosítani szándékozik, tranzakciónként egy sort:"
+"opcionális osztályozási adatok, például a `category_id`, a "
+"`business_pct`, a `usage_ratio_id`, az adóalap- és IVA-oszlopok, az "
+"`iva_category` és az `irpf_category`. Készítsen egy szűk CSV-t, amely "
+"csak azokat a sorokat tartalmazza, amelyeket módosítani szándékozik, "
+"tranzakciónként egy sort:"
 
-#: ../../how-to/classify-transactions.md:150
+#: ../../how-to/classify-transactions.md:151
 msgid ""
 "The sequence below imports the quarter, lists the rows still needing a "
 "decision, exports a review snapshot to work from, applies a prepared CSV,"
 " and confirms the result:"
 msgstr ""
-"Az alábbi sorozat importálja a negyedévet, felsorolja a még döntésre váró "
-"sorokat, exportál egy ellenőrzési pillanatképet a munkához, alkalmaz egy "
-"előkészített CSV-t, és megerősíti az eredményt:"
+"Az alábbi sorozat importálja a negyedévet, felsorolja a még döntésre váró"
+" sorokat, exportál egy ellenőrzési pillanatképet a munkához, alkalmaz egy"
+" előkészített CSV-t, és megerősíti az eredményt:"
 
-#: ../../how-to/classify-transactions.md:158
+#: ../../how-to/classify-transactions.md:159
 msgid ""
 "Use the CSV path when filtered review shows many rows you can classify "
 "safely from their descriptions, counterparties, and source documents. "
@@ -392,11 +394,11 @@ msgstr ""
 "felosztási/összevonási állapotot; ezekhez a sorszintű szerkesztésekhez "
 "használja a tranzakciós munkafolyamatot."
 
-#: ../../how-to/classify-transactions.md:165
+#: ../../how-to/classify-transactions.md:166
 msgid "Apply stored rules automatically"
 msgstr "Tárolt szabályok automatikus alkalmazása"
 
-#: ../../how-to/classify-transactions.md:167
+#: ../../how-to/classify-transactions.md:168
 msgid ""
 "Rules automatically classify transactions whose description contains a "
 "word or phrase you specify. Matching ignores uppercase and lowercase "
@@ -409,20 +411,20 @@ msgstr ""
 "különbségeket. A sorozat hozzáad egy szabályt, listázza a szabályokat, "
 "előnézetben megmutatja a hatását, majd alkalmazza:"
 
-#: ../../how-to/classify-transactions.md:175
+#: ../../how-to/classify-transactions.md:176
 msgid ""
 "Run `--dry-run` first. Add `--reaffirm` only if you want the rule to "
 "overwrite classifications you already set by hand."
 msgstr ""
-"Először futtassa a `--dry-run`-t. Csak akkor adja hozzá a `--reaffirm`-et, "
-"ha azt szeretné, hogy a szabály felülírja a már kézzel beállított "
-"osztályozásokat."
+"Először futtassa a `--dry-run`-t. Csak akkor adja hozzá a "
+"`--reaffirm`-et, ha azt szeretné, hogy a szabály felülírja a már kézzel "
+"beállított osztályozásokat."
 
-#: ../../how-to/classify-transactions.md:178
+#: ../../how-to/classify-transactions.md:179
 msgid "Use an LLM suggestion"
 msgstr "LLM-javaslat használata"
 
-#: ../../how-to/classify-transactions.md:180
+#: ../../how-to/classify-transactions.md:181
 msgid ""
 "Cadrumo can use an AI assistant to suggest how to classify each "
 "transaction. The suggestion is a starting point. You must confirm or "
@@ -431,23 +433,23 @@ msgid ""
 msgstr ""
 "A Cadrumo egy MI-asszisztenst használhat annak javaslására, hogyan "
 "osztályozza az egyes tranzakciókat. A javaslat kiindulópont. Meg kell "
-"erősítenie vagy javítania kell. Nem tölti ki az adóösszegeket, például az "
-"adóalapot, az IVA-kulcsot vagy az IRPF-kategóriát."
+"erősítenie vagy javítania kell. Nem tölti ki az adóösszegeket, például az"
+" adóalapot, az IVA-kulcsot vagy az IRPF-kategóriát."
 
-#: ../../how-to/classify-transactions.md:184
+#: ../../how-to/classify-transactions.md:185
 msgid ""
 "Use [Classify transactions with an LLM](classify-with-llm.md) for the "
 "full provider, preview, apply, and override flow."
 msgstr ""
 "A teljes szolgáltató-, előnézet-, alkalmazás- és felülbírálási "
-"folyamathoz használja a [Tranzakciók osztályozása "
-"LLM-mel](classify-with-llm.md) útmutatót."
+"folyamathoz használja a [Tranzakciók osztályozása LLM-mel](classify-with-"
+"llm.md) útmutatót."
 
-#: ../../how-to/classify-transactions.md:187
+#: ../../how-to/classify-transactions.md:189
 msgid "See everything that still needs a decision"
 msgstr "Tekintsen meg mindent, ami még döntést igényel"
 
-#: ../../how-to/classify-transactions.md:189
+#: ../../how-to/classify-transactions.md:191
 msgid ""
 "The review queue is one profile-wide list of everything that still wants "
 "your attention before a filing: transactions without a classification, "
@@ -461,14 +463,14 @@ msgstr ""
 "Az ellenőrzési sor egy profilszintű lista mindarról, ami még figyelmet "
 "igényel egy benyújtás előtt: osztályozás nélküli tranzakciók, "
 "párosítatlan vagy vitatott számlanyilvántartások, valamint a modelo "
-"piszkozatokon talált ellenőrzési észrevételek. Minden sor megnevezi azt a "
-"pontos parancsot, amely megoldja, így a sor egy teendőlista, amelyet "
+"piszkozatokon talált ellenőrzési észrevételek. Minden sor megnevezi azt a"
+" pontos parancsot, amely megoldja, így a sor egy teendőlista, amelyet "
 "fentről lefelé haladva dolgozhat fel. A sor csak olvasható; a tételek "
-"akkor tűnnek el, amikor a mögöttes nyilvántartást a sor által megnevezett "
-"paranccsal kijavítja. A sorozat importálja a negyedévet, majd beolvassa a "
-"sort:"
+"akkor tűnnek el, amikor a mögöttes nyilvántartást a sor által megnevezett"
+" paranccsal kijavítja. A sorozat importálja a negyedévet, majd beolvassa "
+"a sort:"
 
-#: ../../how-to/classify-transactions.md:201
+#: ../../how-to/classify-transactions.md:203
 msgid ""
 "Each row shows the item id, its kind, the affected record, the period, a "
 "severity (`critical`, `high`, `normal`, or `info`), and a final column "
@@ -479,7 +481,7 @@ msgstr ""
 "és egy utolsó oszlopot mutat a következőként futtatandó paranccsal. "
 "Szűkítse a listát típus, modelo vagy állapot szerint:"
 
-#: ../../how-to/classify-transactions.md:209
+#: ../../how-to/classify-transactions.md:211
 msgid ""
 "Accepted `--kind` tokens are `ledger_transaction`, "
 "`purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`, "
@@ -499,7 +501,7 @@ msgstr ""
 "használja a globális `--format json` kapcsolót (a parancs előtt) minden "
 "sorban egy `legal_refs` mezőért."
 
-#: ../../how-to/classify-transactions.md:217
+#: ../../how-to/classify-transactions.md:219
 msgid ""
 "Transaction items clear when you classify the row (this page). Invoice "
 "items clear when you link or update the invoice - see [Attach invoices "
@@ -509,25 +511,25 @@ msgid ""
 msgstr ""
 "A tranzakciós tételek akkor tűnnek el, amikor osztályozza a sort (ez az "
 "oldal). A számlatételek akkor tűnnek el, amikor összekapcsolja vagy "
-"frissíti a számlát - lásd [Számlák és bizonylatok "
-"csatolása](ledger-evidence.md). A modelo észrevételei akkor tűnnek el, "
-"amikor kijavítja a jelentett értékeket, és újra ellenőriz - lásd [Egy "
-"benyújtás ellenőrzése](verification-reports.md)."
+"frissíti a számlát - lásd [Számlák és bizonylatok csatolása](ledger-"
+"evidence.md). A modelo észrevételei akkor tűnnek el, amikor kijavítja a "
+"jelentett értékeket, és újra ellenőriz - lásd [Egy benyújtás ellenőrzése"
+"](verification-reports.md)."
 
-#: ../../how-to/classify-transactions.md:223
+#: ../../how-to/classify-transactions.md:225
 msgid "Confirm readiness"
 msgstr "Erősítse meg a felkészültséget"
 
-#: ../../how-to/classify-transactions.md:225
+#: ../../how-to/classify-transactions.md:227
 msgid ""
 "Run preflight after classification. The sequence imports and classifies "
 "the quarter, then runs preflight and reads the ledger status:"
 msgstr ""
 "Az osztályozás után futtasson előellenőrzést. A sorozat importálja és "
-"osztályozza a negyedévet, majd lefuttatja az előellenőrzést, és beolvassa "
-"a ledger állapotát:"
+"osztályozza a negyedévet, majd lefuttatja az előellenőrzést, és beolvassa"
+" a ledger állapotát:"
 
-#: ../../how-to/classify-transactions.md:232
+#: ../../how-to/classify-transactions.md:234
 msgid ""
 "Preflight names rows that still need category, taxable base, IVA amount, "
 "IVA rate, currency, or proportionality reference."
@@ -536,11 +538,11 @@ msgstr ""
 "adóalapra, IVA-összegre, IVA-kulcsra, pénznemre vagy arányossági "
 "hivatkozásra van szükségük."
 
-#: ../../how-to/classify-transactions.md:235
+#: ../../how-to/classify-transactions.md:237
 msgid "Correct a classification"
 msgstr "Egy osztályozás javítása"
 
-#: ../../how-to/classify-transactions.md:237
+#: ../../how-to/classify-transactions.md:239
 msgid ""
 "Re-run `classify` on the same transaction id. A manual decision replaces "
 "the previous classification. The sequence classifies a row as business, "
@@ -550,38 +552,43 @@ msgstr ""
 "döntés felülírja a korábbi osztályozást. A sorozat üzletiként osztályoz "
 "egy sort, majd személyesre javítja:"
 
-#: ../../how-to/classify-transactions.md:245
+#: ../../how-to/classify-transactions.md:247
 msgid "Inspect the row again with `ledger view` before calculating."
 msgstr "A számítás előtt vizsgálja meg újra a sort a `ledger view` paranccsal."
 
-#: ../../how-to/classify-transactions.md:247
+#: ../../how-to/classify-transactions.md:249
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/classify-transactions.md:249
+#: ../../how-to/classify-transactions.md:251
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/classify-transactions.md:250
+#: ../../how-to/classify-transactions.md:252
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Tranzakciók osztályozása LLM-mel](classify-with-llm.md)"
 
-#: ../../how-to/classify-transactions.md:251
+#: ../../how-to/classify-transactions.md:253
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
 msgstr ""
-"[Hogyan válnak a nyilvántartásai adószámokká](../explanation/from-records-"
-"to-figures.md)"
-
-#: ../../how-to/classify-transactions.md:252
-msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr "[Számítási bemenetek áttekintése és megadása](review-calculation-values.md)"
-
-#: ../../how-to/classify-transactions.md:253
-msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
-msgstr "[Számítások áttekintése Google Táblázatokkal](review-with-google-sheets.md)"
+"[Hogyan válnak a nyilvántartásai adószámokká](../explanation/from-"
+"records-to-figures.md)"
 
 #: ../../how-to/classify-transactions.md:254
+msgid "[Review and supply calculation inputs](review-calculation-values.md)"
+msgstr ""
+"[Számítási bemenetek áttekintése és megadása](review-calculation-"
+"values.md)"
+
+#: ../../how-to/classify-transactions.md:255
+msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
+msgstr ""
+"[Számítások áttekintése Google Táblázatokkal](review-with-google-"
+"sheets.md)"
+
+#: ../../how-to/classify-transactions.md:256
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
+
