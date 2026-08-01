@@ -39,6 +39,7 @@ import json
 import re
 import shutil
 import sys
+from enum import StrEnum
 from pathlib import Path
 from typing import Any, Final
 
@@ -345,7 +346,24 @@ def _names_retired_identity(value: str, retired: frozenset[str], *, prose: bool)
     return bool(tokens & retired)
 
 
-def assert_supersession_complete(*, marketplace: Path, cohort: Path) -> None:
+class SupersessionVerdict(StrEnum):
+    """Which question the supersession check was actually able to answer.
+
+    Three outcomes that a bare ``None`` return conflated. Only ``VERIFIED``
+    means the invariant was checked against a real published index; the other
+    two mean there was nothing to check, and saying so is the difference
+    between a verified invariant and an unexamined one.
+    """
+
+    #: A published index was read and carries no retired identity.
+    VERIFIED = "verified"
+    #: The cohort retires no identity, so there is nothing to look for.
+    NOTHING_RETIRED = "nothing-retired"
+    #: The marketplace exists but has published no index yet (a first release).
+    NOTHING_PUBLISHED = "nothing-published"
+
+
+def assert_supersession_complete(*, marketplace: Path, cohort: Path) -> SupersessionVerdict:
     """Refuse while a retired identity, or its metadata, is still live.
 
     Fail-closed and re-run on every release, not only the one that retires the
@@ -362,11 +380,17 @@ def assert_supersession_complete(*, marketplace: Path, cohort: Path) -> None:
     cohort_index = _read_cohort_index(cohort)
     retired = superseded_names(cohort_index)
     if not retired:
-        return
+        return SupersessionVerdict.NOTHING_RETIRED
+
+    if not marketplace.is_dir():
+        raise MarketplacePublishError(
+            f"marketplace checkout {marketplace} does not exist, so no published index could be read; "
+            "the supersession invariant is UNVERIFIED, not satisfied",
+        )
 
     published_index_path = marketplace / _INDEX_RELATIVE
     if not published_index_path.is_file():
-        return
+        return SupersessionVerdict.NOTHING_PUBLISHED
     published = _read_index(published_index_path)
 
     live = sorted(
@@ -400,6 +424,20 @@ def assert_supersession_complete(*, marketplace: Path, cohort: Path) -> None:
             f"marketplace {sorted(stale_metadata)} still names the retired identity; "
             "the rename is one event, so metadata and entries retire together",
         )
+    return SupersessionVerdict.VERIFIED
+
+
+#: What each verdict entitles the verb to claim. Only the first asserts the
+#: invariant; the others report, truthfully, that there was nothing to check.
+_SUPERSESSION_REPORT: Final[dict[SupersessionVerdict, str]] = {
+    SupersessionVerdict.VERIFIED: "no retired plugin identity survives in the published marketplace index",
+    SupersessionVerdict.NOTHING_RETIRED: (
+        "NOT CHECKED: this cohort retires no plugin identity, so there is nothing to verify"
+    ),
+    SupersessionVerdict.NOTHING_PUBLISHED: (
+        "NOT CHECKED: the marketplace has published no index yet, so no retired identity could be live in one"
+    ),
+}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -415,11 +453,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.verify_supersession:
         try:
-            assert_supersession_complete(marketplace=args.marketplace, cohort=args.cohort)
+            verdict = assert_supersession_complete(marketplace=args.marketplace, cohort=args.cohort)
         except MarketplacePublishError as exc:
             print(f"REFUSED: {exc}", file=sys.stderr)
             return 1
-        print("no retired plugin identity survives in the marketplace")
+        # Each outcome says what was actually established. The old single line
+        # claimed the invariant held even when nothing had been examined, which
+        # is the one report a verification verb must never produce.
+        print(_SUPERSESSION_REPORT[verdict])
         return 0
     try:
         published = publish_cohort_plugins(marketplace=args.marketplace, cohort=args.cohort)
