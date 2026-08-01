@@ -356,7 +356,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    source_modelo: str = Field(default=Modelo.M322.value, min_length=1, max_length=8)
+    source_modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)] = Modelo.M322
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
     member_nifs: tuple[str, ...] = Field(min_length=1)
@@ -833,6 +833,30 @@ class Recovery(BaseModel):
     next_command: str = Field(min_length=1, max_length=256)
 
 
+def _parse_modelo_identifier(value: object) -> Modelo:
+    """Coerce a canonical modelo token into the closed :class:`Modelo` enum.
+
+    The models here are strict, so an enum-typed field would refuse the plain
+    ``"303"`` that callers and persisted JSON both use. This validator keeps
+    that ergonomics while closing the set: an unknown identifier or a
+    whitespace-divergent spelling is refused rather than carried into registry
+    matching and downstream projections, which would otherwise interpret it
+    differently from every other surface.
+    """
+    if isinstance(value, Modelo):
+        return value
+    if isinstance(value, str):
+        try:
+            return Modelo(value)
+        except ValueError as exc:
+            raise DeadlineValidationError(
+                f"modelo identifier {value!r} is not a supported AEAT modelo",
+            ) from exc
+    raise DeadlineValidationError(
+        f"modelo identifier must be a string or Modelo, got {type(value).__name__}",
+    )
+
+
 def _parse_modelo_deadline_period(value: object) -> Period:
     """Coerce runtime or persisted periods into :class:`~cadrumo.core.Period`.
 
@@ -876,7 +900,7 @@ class ModeloDeadline(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1)
+    modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)]
     period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
     opens_on: date
     closes_on: date
