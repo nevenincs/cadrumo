@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
-modified: '2026-07-31'
+modified: '2026-08-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:52f1618293a4450e1af4f34f3d3ec6c9be0ac255c0293a7b8c64ae7fdfa0396d'
+body_hash: 'sha256:185609a800943d80bb8d2d5050da39617914dbca17f497b227af6539fa93050b'
 related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -72,3 +72,14 @@ The operator's intent and the corpus's own doctrine coincide: the accepted docs-
 - The command-and-corpus vector-ranking duplication flagged by the 2026-07-31 semantic-code-deduplication campaign audit is resolved by deletion of the shared mechanics.
 - The pathway stays open: because the corpus is static and chunk identifiers are stable, a laundered related-provisions or term-expansion artefact can later restore concept adjacency with zero runtime model, through the same pipeline and licence gate the docs surface already trusts.
 - A future ADR reintroducing any runtime embedding surface must supersede this record explicitly; the boundary is now that the product ships no semantic runtime, not that one is merely optional.
+
+
+## Update 1 (2026-08-01): execution corrections and one ratification
+
+Recorded after the deletion landed (P02 `2933492a88`, P03 `13935ef3a2`; 337 tests passing across the search and MCP trees, clean collection, apidocs check clean, `uv tree --no-dev` free of model2vec, huggingface-hub, and numpy). Original text stands; three corrections govern where they conflict.
+
+1. **R5's extras-reporting instruction is VACATED for lack of a subject.** The migration order's third step instructs that "the extras-reporting surface (`config check`) drops the capability", but `_check_cli.py` and `_check_payloads.py` never named a search extra - confirmed three times independently at HEAD (an executor read, a read-only inventory, and this record's own probe). The executor rightly declined to invent work to match the instruction; the companion plan step is re-worded to its real half (the install-hint sweep) so no future reader either fabricates the work or falsely marks it done.
+
+2. **The plan's lockfile verification criterion was wrong as worded and is corrected to the product-closure criterion.** Only `model2vec` leaves the lock entirely; `huggingface-hub` and `numpy` intentionally remain as dev-group transitives of vaultspec-rag, the dev-side compilation oracle R2 depends on. The correct check is that the PRODUCT closure (`uv tree --no-dev`) carries none of the three - which it does. The original wording could never pass and its natural "fix" would have been removing the dev oracle the architecture requires; the correction is recorded here rather than silently edited for exactly that reason.
+
+3. **RATIFIED: the deletion of `corpus_search/_ranking.py` and its test.** Peer commit `71a89d0d2d` created the module AFTER this ADR was authored, centralizing the RRF and cosine primitives R3's deletion list names as the fusion half; nothing consumed it after the P02 rewire. Deleting it with `test_ranking.py` is the R3 list correctly applied to a module that post-dates the list, consistent with the coverage mapping in `2026-08-01-user-docs-search-consolidation-adr` Update 2.

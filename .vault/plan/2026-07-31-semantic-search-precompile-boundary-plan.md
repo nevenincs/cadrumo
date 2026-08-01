@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
-modified: '2026-07-31'
-body_hash: 'sha256:a4e36694de5452d5ea70d4aa667a8e15dac393e1473d940b2420bb16ba8660d8'
+modified: '2026-08-01'
+body_hash: 'sha256:90336aad1917d7cd270f359d2a70a90910b56c54438b937401320da251903caf'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-adr]]'
@@ -131,7 +131,7 @@ Remove the search extra and its dependency pins, promote the stemmer to core, an
 
 - [ ] `P03.S08` - Delete the search optional extra with its model2vec, huggingface-hub, and numpy pins, prune the all aggregate, promote snowballstemmer into the core dependency set, and refresh the lockfile; `pyproject.toml`.
 - [ ] `P03.S09` - Retire CorpusSearchDependencyError together with its error-registry row, and remove its locale keys through the locales CLI leaving scaffold check clean; `src/cadrumo/core/errors/registry/_application_part1.py`.
-- [ ] `P03.S10` - Drop the search capability from the config check extras-reporting surface and sweep every remaining install hint naming the retired extra from production strings; `src/cadrumo/`.
+- [ ] `P03.S10` - Sweep every remaining install hint naming the retired extra from production strings, the extras-reporting half of this step being vacated by ADR Update 1 because config check never named a search extra; `src/cadrumo/`.
 
 ### Phase `P04` - Surface truth sweep and verification
 
@@ -149,7 +149,7 @@ Phases are sequential: P01 gates everything (live peer WIP sits on the P02 delet
 ## Verification
 
 - No module under `src/cadrumo/` imports model2vec, huggingface-hub, or numpy, verified by grep over the production tree.
-- `pyproject.toml` declares no `search` extra, the `all` aggregate omits it, and the lockfile resolves without the three retired packages.
+- `pyproject.toml` declares no `search` extra, the `all` aggregate omits it, and the PRODUCT closure (`uv tree --no-dev`) resolves without the three retired packages. Corrected 2026-08-01 per ADR Update 1: `huggingface-hub` and `numpy` legitimately remain in the lock as dev-group transitives of the vaultspec-rag oracle, so their absence from the lockfile is NOT a criterion and must not be "fixed" by removing the dev oracle.
 - `search_corpus` and the command-search index return ranked results on a bare-core install with no network access, proven by the rewritten shippability and ranking-golden tests running with sockets unavailable.
 - The full suite collects cleanly and the corpus-search, command-search, and MCP test trees pass sequentially.
 - `python -m dev.docs.apidocs scaffold --check` exits clean, the docs build gates pass, and the harness rule-surface drift gate passes.
