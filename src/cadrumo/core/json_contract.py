@@ -37,10 +37,11 @@ from collections.abc import Callable, Mapping, Sequence
 from enum import StrEnum
 from typing import IO, Any, Protocol, cast, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, RootModel, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, RootModel, TypeAdapter, ValidationError
 
 from .errors import CadrumoError
 from .logging import get_logger
+from .output_rendering import jsonable_output_payload
 from .redaction import redact_structured_for_cli_output
 
 _log = get_logger(__name__)
@@ -300,7 +301,7 @@ def emit_json_document(
     the envelope, status derivation, and redaction pass remain uniform.
 
     Args:
-        payload: Any object reachable by :func:`_jsonable_payload`
+        payload: Any object reachable by :func:`jsonable_output_payload`
             (typically a :class:`pydantic.BaseModel`, a mapping, or a
             collection thereof).
         indent: Indent width passed to :func:`json.dumps`; ``None``
@@ -318,7 +319,7 @@ def emit_json_document(
                 exc,
             )
     document = json.dumps(
-        _jsonable_payload(payload),
+        jsonable_output_payload(payload),
         ensure_ascii=False,
         indent=indent,
         sort_keys=sort_keys,
@@ -380,8 +381,8 @@ def emit_json_success(
             "command": command,
             "active_profile": active_profile,
             "status": derive_status(resolved_notices).value,
-            "result": _jsonable_payload(result),
-            "notices": [_jsonable_payload(notice) for notice in resolved_notices],
+            "result": jsonable_output_payload(result),
+            "notices": [jsonable_output_payload(notice) for notice in resolved_notices],
         },
         reveal_identifiers=reveal_cli_identifiers_opt_in(),
     )
@@ -481,29 +482,6 @@ def register_schema[RegisteredSchemaT: OutputSchema | OutputRootSchema[Any]](
     return _decorator
 
 
-def _jsonable_payload(payload: object) -> object:
-    """Recursively coerce ``payload`` to JSON-serialisable primitives.
-
-    :class:`pydantic.BaseModel` instances are dumped via ``model_dump``,
-    mappings are walked key-wise, sequences and sets are walked
-    element-wise, and every other value passes through unchanged (with
-    :func:`json.dumps` falling back to ``default=str`` for anything
-    unrecognised).
-
-    This is a transport helper, not a schema-normalisation authority.
-    Command payload classes own their field types and JSON projections;
-    this helper only prepares already-validated objects for the final
-    :func:`json.dumps` call.
-    """
-    if isinstance(payload, BaseModel):
-        return payload.model_dump(mode="json")
-    if isinstance(payload, dict):
-        return {key: _jsonable_payload(value) for key, value in payload.items()}
-    if isinstance(payload, list | tuple | set | frozenset):
-        return [_jsonable_payload(item) for item in payload]
-    return payload
-
-
 def validate_registered_result(command: str, result: object) -> OutputSchema | OutputRootSchema[Any]:
     """Validate one operator result against the schema registered for ``command``.
 
@@ -524,6 +502,51 @@ def validate_registered_result(command: str, result: object) -> OutputSchema | O
         ) from error
 
 
+def validate_registered_envelope_document(document: object) -> dict[str, object]:
+    """Strictly validate one emitted CLI success or error JSON document."""
+    if not isinstance(document, dict):
+        raise OutputSchemaError("operator JSON envelope must be an object")
+    status = document.get("status")
+    if status == EnvelopeStatus.ERROR.value:
+        from .errors import ErrorEnvelope
+
+        required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
+        if set(document) != required_keys:
+            raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")
+        if document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
+            raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
+        command = document.get("command")
+        active_profile = document.get("active_profile")
+        if command is not None and (not isinstance(command, str) or not command):
+            raise OutputSchemaError("operator JSON error envelope has an invalid command")
+        if active_profile is not None and not isinstance(active_profile, str):
+            raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
+        try:
+            ErrorEnvelope.model_validate(document["error"])
+            TypeAdapter(list[Notice]).validate_python(document["notices"])
+        except ValidationError as error:
+            raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
+        return document
+
+    command = document.get("command")
+    if not isinstance(command, str) or not command:
+        raise OutputSchemaError("operator JSON envelope has no usable command")
+    required_keys = {"schema_version", "command", "active_profile", "status", "result", "notices"}
+    if set(document) != required_keys:
+        raise OutputSchemaError("operator JSON success envelope has an invalid outer shape")
+    if document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
+        raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
+    schema = SCHEMA_REGISTRY.get(command)
+    if schema is None:
+        raise OutputSchemaError(f"operator JSON command {command!r} has no registered output schema")
+    envelope_model = cast("type[SchemaEnvelope[OutputSchema]]", SchemaEnvelope.__class_getitem__(schema))
+    try:
+        validated = envelope_model.model_validate_json(json.dumps(document))
+    except ValidationError as error:
+        raise OutputSchemaError("operator JSON success envelope failed strict validation") from error
+    return cast(dict[str, object], validated.model_dump(mode="json"))
+
+
 __all__ = [
     "ENVELOPE_SCHEMA_VERSION",
     "SCHEMA_REGISTRY",
@@ -538,5 +561,6 @@ __all__ = [
     "emit_json_document",
     "emit_json_success",
     "register_schema",
+    "validate_registered_envelope_document",
     "validate_registered_result",
 ]

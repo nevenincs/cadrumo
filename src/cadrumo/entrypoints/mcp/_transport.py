@@ -27,9 +27,16 @@ from pathlib import Path
 from ...adapters.persistence.storage import close_active_bucket_session
 from ...core import PRODUCT_IDENTITY
 from ...core.config import load_settings
+from ...core.errors import ErrorEnvelope
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import (
+    ENVELOPE_SCHEMA_VERSION,
+    EnvelopeStatus,
+    Notice,
+    NoticeSeverity,
+    validate_registered_envelope_document,
+)
 from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
 from ._inprocess import (
     CompletedCliRun,
@@ -61,6 +68,35 @@ class McpTransport(StrEnum):
     SUBPROCESS_FALLBACK = "subprocess_fallback"
 
 
+def _transport_error_envelope(
+    *,
+    command_key: str,
+    code: str,
+    message: str,
+    retryable: bool,
+    context: dict[str, str],
+) -> dict[str, object]:
+    """Build one strict canonical error document for an MCP transport failure."""
+    document = {
+        "schema_version": ENVELOPE_SCHEMA_VERSION,
+        "command": command_key,
+        "active_profile": None,
+        "status": EnvelopeStatus.ERROR.value,
+        "error": ErrorEnvelope(
+            code=code,
+            category="refused",
+            message=message,
+            suggestion=None,
+            retryable=retryable,
+            runbook_id=None,
+            context=context,
+            trace_id=None,
+        ).model_dump(mode="json"),
+        "notices": [],
+    }
+    return validate_registered_envelope_document(document)
+
+
 def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: float) -> dict[str, object]:
     """Build the localized timed-out refusal envelope for a hung CLI call."""
     message = tr(
@@ -73,7 +109,13 @@ def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: fl
             "Retry, or run the equivalent Cadrumo command directly in a terminal for a long operation."
         ),
     )
-    return {"status": "error", "refusal": message, "timed_out": True}
+    return _transport_error_envelope(
+        command_key=command_key,
+        code="mcp.transport.timeout",
+        message=message,
+        retryable=True,
+        context={"tier": tier.value, "timeout_seconds": str(int(timeout_s)), "timed_out": "true"},
+    )
 
 
 def _installed_cli_executable() -> str:
@@ -112,13 +154,15 @@ def _attested_cli_executable() -> str:
         return ""
 
 
-def _cli_resolution_refusal_envelope(error: OSError) -> dict[str, object]:
+def _cli_resolution_refusal_envelope(*, command_key: str, error: OSError) -> dict[str, object]:
     """Build a structured refusal for an incomplete MCP installation."""
-    return {
-        "status": "error",
-        "refusal": str(error),
-        "installation_incomplete": True,
-    }
+    return _transport_error_envelope(
+        command_key=command_key,
+        code="mcp.transport.installation_incomplete",
+        message=str(error),
+        retryable=False,
+        context={"installation_incomplete": "true"},
+    )
 
 
 @dataclass(frozen=True)
@@ -166,7 +210,7 @@ def _run_subprocess_tool(
         result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
     except OSError as error:
         return SubprocessToolOutcome(
-            envelope=_cli_resolution_refusal_envelope(error),
+            envelope=_cli_resolution_refusal_envelope(command_key=descriptor.command_key, error=error),
             is_error=True,
             executable="",
             transport=McpTransport.SUBPROCESS,
