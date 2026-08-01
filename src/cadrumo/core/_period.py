@@ -77,8 +77,9 @@ class StandardPeriodCode(StrEnum):
 _STANDARD_PERIOD_SET = frozenset(StandardPeriodCode)
 _EXTENDED_PERIOD_SET = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
 _AD_HOC_PERIOD = "AD-HOC"
+_ADMINISTRATIVE_PERIOD_SET = frozenset(("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"))
 _EXT_PERIOD_RE = re.compile(r"^EXT-[1-4]T$")
-_EVENT_PERIOD_RE = re.compile(r"^EVENT-\d+$")
+_EVENT_PERIOD_RE = re.compile(r"^EVENT-(?:N|\d+)$")
 _DISPLAY_PERIOD_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
 
 
@@ -102,6 +103,8 @@ def _validate_period_against_registry(value: str) -> str:
         return normalized
     if normalized == _AD_HOC_PERIOD:
         return normalized
+    if normalized in _ADMINISTRATIVE_PERIOD_SET:
+        return normalized
     if _EVENT_PERIOD_RE.match(normalized):
         return normalized
 
@@ -117,7 +120,7 @@ def accepted_period_codes() -> tuple[str, ...]:
     pair it with :func:`accepted_period_patterns` when building help text or
     parse-error guidance.
     """
-    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD}))
+    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD} | _ADMINISTRATIVE_PERIOD_SET))
 
 
 def accepted_period_patterns() -> tuple[str, ...]:
@@ -126,6 +129,7 @@ def accepted_period_patterns() -> tuple[str, ...]:
         "StandardPeriodCode (1T-4T, 1P-4P, 0A, 01-12)",
         "Extended OSS/IOSS (EXT-1T, EXT-2T, EXT-3T, EXT-4T)",
         "Ad-hoc (AD-HOC)",
+        "Administrative (ALTA, MODIFICACION, BAJA)",
         "Event-driven (EVENT-N where N is an integer)",
     )
 
@@ -138,6 +142,7 @@ def _format_accepted_period_set() -> str:
         f"StandardPeriodCode: {', '.join(standard)}",
         f"Extended: {', '.join(extended)}",
         f"Ad-hoc: {_AD_HOC_PERIOD}",
+        f"Administrative: {', '.join(sorted(_ADMINISTRATIVE_PERIOD_SET))}",
         "Event-driven: EVENT-N (where N is an integer)",
     ]
     return "; ".join(lines)
@@ -146,6 +151,17 @@ def _format_accepted_period_set() -> str:
 #: Pydantic field annotation for bare registry period tokens. Use
 #: :class:`Period` instead when a filing year is known.
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
+
+
+def _validate_registry_selector_period(value: str) -> str:
+    """Validate a registry token while preserving declaration casing for event selectors."""
+    normalized = _validate_period_against_registry(value)
+    if normalized in _ADMINISTRATIVE_PERIOD_SET:
+        return normalized.lower()
+    return normalized
+
+
+RegistrySelectorPeriodCode = Annotated[str, BeforeValidator(_validate_registry_selector_period)]
 
 
 class PeriodError(CadrumoError, ValueError):
