@@ -58,6 +58,7 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
 from ....core.time import now
 from ._errors import LLMCacheError
+from ._retention import select_retention_removal_keys
 
 __all__ = ["LLMRunRecord", "LLMRunTelemetryRecorder", "LLMRunTelemetrySummary"]
 
@@ -280,14 +281,14 @@ class LLMRunTelemetryRecorder:
         cutoff = now() - timedelta(days=effective_retention_days)
         rows = self._load_records_with_object_keys()
 
-        to_remove: list[str] = [object_key for record, object_key in rows if record.started_at < cutoff]
-        remaining = [row for row in rows if row[0].started_at >= cutoff]
-        if len(remaining) > effective_max_records:
-            excess_count = len(remaining) - effective_max_records
-            # ``rows`` is sorted oldest-first (see
-            # ``_load_records_with_object_keys``), so the leading slice of
-            # the still-retained rows is the oldest excess beyond the cap.
-            to_remove.extend(object_key for _, object_key in remaining[:excess_count])
+        # ``rows`` is sorted oldest-first (see ``_load_records_with_object_keys``),
+        # which is what lets the count cap evict the oldest excess.
+        to_remove = select_retention_removal_keys(
+            rows,
+            cutoff=cutoff,
+            max_records=effective_max_records,
+            timestamp=lambda record: record.started_at,
+        )
 
         repository = secure_object_repository_for_active_bucket()
         removed = 0

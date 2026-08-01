@@ -33,10 +33,9 @@ from ._models import (
     LLMRequest,
     LLMResponse,
 )
+from ._retention import select_retention_removal_keys
 
 if TYPE_CHECKING:
-    from datetime import datetime
-
     from ....adapters.persistence.storage import SecureObjectRepository
 
 _log = get_logger(__name__)
@@ -44,25 +43,6 @@ _log = get_logger(__name__)
 _CACHE_NAMESPACE = LLM_CACHE_NAMESPACE.namespace
 _CACHE_VERSION = LLM_CACHE_NAMESPACE.schema_version
 _CACHE_SENSITIVITY = LLM_CACHE_NAMESPACE.sensitivity
-
-
-def _select_cache_removal_keys(
-    rows: list[tuple[CachedEntry, str]],
-    *,
-    cutoff: datetime,
-    max_records: int,
-) -> list[str]:
-    """Select object keys to delete under the two-stage retention/count bound.
-
-    ``rows`` are sorted oldest-first: every entry older than ``cutoff`` is removed,
-    then -- if more than ``max_records`` survive -- the oldest excess entries too.
-    """
-    to_remove: list[str] = [object_key for entry, object_key in rows if entry.created_at < cutoff]
-    remaining = [row for row in rows if row[0].created_at >= cutoff]
-    if len(remaining) > max_records:
-        excess_count = len(remaining) - max_records
-        to_remove.extend(object_key for _, object_key in remaining[:excess_count])
-    return to_remove
 
 
 class LLMCache:
@@ -262,7 +242,12 @@ class LLMCache:
         repository = secure_object_repository_for_active_bucket()
         rows = self._collect_prunable_rows(repository)
         cutoff = now() - timedelta(days=effective_retention_days)
-        to_remove = _select_cache_removal_keys(rows, cutoff=cutoff, max_records=effective_max_records)
+        to_remove = select_retention_removal_keys(
+            rows,
+            cutoff=cutoff,
+            max_records=effective_max_records,
+            timestamp=lambda entry: entry.created_at,
+        )
 
         removed = 0
         for object_key in to_remove:
