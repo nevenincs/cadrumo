@@ -1059,6 +1059,7 @@ application:
         window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+      calculate_typed_text_input_invalid: 'The --casilla value is not valid for that casilla''s declared type.'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare

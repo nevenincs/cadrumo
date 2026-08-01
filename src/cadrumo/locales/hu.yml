@@ -915,6 +915,8 @@ application:
         a tag kiválasztásához.
       calculate_text_input_empty: A --casilla érték egy szöveges casillához tartozik,
         és nem lehet üres.
+      calculate_typed_text_input_invalid: A --casilla érték nem érvényes a rovat deklarált
+        típusához.
       calculation_registry_root_missing: A(z) %{registry_root} registry gyökér hiányzik;
         a modell számítás nem folytatható.
       calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}

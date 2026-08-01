@@ -977,6 +977,8 @@ application:
         aquesta casella per al selector de membre.
       calculate_text_input_empty: El valor de --casilla correspon a una casella de
         text i no pot estar buit.
+      calculate_typed_text_input_invalid: El valor de --casilla no és vàlid per al
+        tipus declarat d'aquesta casella.
       calculation_registry_root_missing: L'arrel del registre %{registry_root} no
         existeix; el càlcul del model no pot continuar.
       calculation_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània

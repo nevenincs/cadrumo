@@ -182,29 +182,6 @@ _QUARTER_ORDINALS: dict[StandardPeriodCode, int] = {
     StandardPeriodCode.Q4: 4,
 }
 
-# Numeric values used by informational ``filing_period`` casillas. The first
-# three corporate-tax instalment codes are declared filing periods; ``4P`` is
-# deliberately absent because it has no corresponding declaration ordinal.
-_DECLARATION_PERIOD_ORDINALS: dict[StandardPeriodCode, int] = {
-    **_QUARTER_ORDINALS,
-    StandardPeriodCode.ANNUAL: 0,
-    StandardPeriodCode.JAN: 1,
-    StandardPeriodCode.FEB: 2,
-    StandardPeriodCode.MAR: 3,
-    StandardPeriodCode.APR: 4,
-    StandardPeriodCode.MAY: 5,
-    StandardPeriodCode.JUN: 6,
-    StandardPeriodCode.JUL: 7,
-    StandardPeriodCode.AUG: 8,
-    StandardPeriodCode.SEP: 9,
-    StandardPeriodCode.OCT: 10,
-    StandardPeriodCode.NOV: 11,
-    StandardPeriodCode.DEC: 12,
-    StandardPeriodCode.P1: 1,
-    StandardPeriodCode.P2: 2,
-    StandardPeriodCode.P3: 3,
-}
-
 
 class Period(BaseModel):
     """A filing period as one typed value: a year paired with a registry code.
@@ -320,20 +297,6 @@ class Period(BaseModel):
     def is_quarterly(self) -> bool:
         """Return whether this is one of the four ordinary quarterly periods."""
         return self.quarter_ordinal is not None
-
-    @property
-    def declaration_period_ordinal(self) -> int | None:
-        """Return the informational ``filing_period`` casilla ordinal, when declared.
-
-        This is a projection for registry declaration metadata, not a generic
-        numeric interpretation of a token. Unsupported extended, event, and
-        ad-hoc forms return ``None``; so does ``4P``, which has no declared
-        instalment ordinal on that metadata surface.
-        """
-        standard_code = self.standard_code
-        if standard_code is None:
-            return None
-        return _DECLARATION_PERIOD_ORDINALS.get(standard_code)
 
     @property
     def kind(self) -> PeriodKind:

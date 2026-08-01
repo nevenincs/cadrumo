@@ -121,14 +121,14 @@ def test_declaration_period_inputs_project_real_registry_period_token(
 def test_declaration_period_inputs_express_an_extended_oss_period() -> None:
     """An ``EXT-`` quarter is expressible; the retired ordinal projection was not.
 
-    ``Period.declaration_period_ordinal`` returns ``None`` for every extended
-    OSS/IOSS token, so the previous ordinal fill raised for Modelo 369 rather
-    than producing a value. The token is total over every declared period form.
+    The retired ``declaration_period_ordinal`` projection returned ``None`` for
+    every extended OSS/IOSS token, so the previous ordinal fill raised for
+    Modelo 369 rather than producing a value. The token is total over every
+    declared period form, which is what makes this case expressible at all.
     """
     snapshot = resources().modelos.authority.snapshot("369", filing_year=2025, period="EXT-1T")
     filing_period = next(casilla for casilla in snapshot.revision.casillas if casilla.semantic_role == "filing_period")
     period = Period.from_year_and_code(2025, "EXT-1T")
-    assert period.declaration_period_ordinal is None
 
     resolved = binding_resolution.resolve_declaration_period_inputs(
         snapshot.revision,

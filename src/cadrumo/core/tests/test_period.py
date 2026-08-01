@@ -215,31 +215,29 @@ class TestPeriodAccessors:
     """Verify the read-only accessors and the date-span semantics."""
 
     @pytest.mark.parametrize(
-        ("code", "expected_quarter_ordinal", "expected_declaration_ordinal"),
+        ("code", "expected_quarter_ordinal"),
         (
-            pytest.param("1T", 1, 1, id="first-standard-quarter"),
-            pytest.param("4T", 4, 4, id="fourth-standard-quarter"),
-            pytest.param("0A", None, 0, id="annual-declaration-period"),
-            pytest.param("03", None, 3, id="monthly-declaration-period"),
-            pytest.param("1P", None, 1, id="first-instalment-declaration-period"),
-            pytest.param("3P", None, 3, id="third-instalment-declaration-period"),
-            pytest.param("4P", None, None, id="fourth-instalment-has-no-declaration-ordinal"),
-            pytest.param("EXT-1T", None, None, id="extended-token-is-not-a-quarter"),
-            pytest.param("AD-HOC", None, None, id="ad-hoc-token-has-no-ordinal"),
-            pytest.param("EVENT-1", None, None, id="event-token-has-no-ordinal"),
+            pytest.param("1T", 1, id="first-standard-quarter"),
+            pytest.param("4T", 4, id="fourth-standard-quarter"),
+            pytest.param("0A", None, id="annual-period-is-not-a-quarter"),
+            pytest.param("03", None, id="monthly-period-is-not-a-quarter"),
+            pytest.param("1P", None, id="first-instalment-is-not-a-quarter"),
+            pytest.param("3P", None, id="third-instalment-is-not-a-quarter"),
+            pytest.param("4P", None, id="fourth-instalment-is-not-a-quarter"),
+            pytest.param("EXT-1T", None, id="extended-token-is-not-a-quarter"),
+            pytest.param("AD-HOC", None, id="ad-hoc-token-is-not-a-quarter"),
+            pytest.param("EVENT-1", None, id="event-token-is-not-a-quarter"),
         ),
     )
-    def test_typed_period_classification_and_ordinal_projections(
+    def test_typed_period_classification_and_quarter_projection(
         self,
         code: str,
         expected_quarter_ordinal: int | None,
-        expected_declaration_ordinal: int | None,
     ) -> None:
         period = Period.from_year_and_code(2026, code)
 
         assert period.quarter_ordinal == expected_quarter_ordinal
         assert period.is_quarterly is (expected_quarter_ordinal is not None)
-        assert period.declaration_period_ordinal == expected_declaration_ordinal
 
     def test_period_date_span(self) -> None:
         for year, code, expected_start, expected_end, inside, outside in (
