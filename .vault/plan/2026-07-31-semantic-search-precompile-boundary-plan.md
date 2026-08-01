@@ -4,7 +4,7 @@ tags:
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
 modified: '2026-08-01'
-body_hash: 'sha256:71b1cf0d11fadcac074b0a805080fe416301775e7a85fce75725af2db4386831'
+body_hash: 'sha256:c16df3358f1b69bd340aa8675529c039e235dab9c21c19185ef90b11c933b806'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-adr]]'
@@ -137,10 +137,10 @@ Remove the search extra and its dependency pins, promote the stemmer to core, an
 
 Make every operator-facing surface stop claiming semantic retrieval, rebuild the shippability and ranking gates around the single lexical shape, and close with the mandated fresh-context honesty review.
 
-- [ ] `P04.S11` - Sweep the MCP corpus and meta tool descriptions and docstrings to describe lexical plus citation retrieval, keeping the harness rule-surface drift gate green; `src/cadrumo/entrypoints/mcp/`.
-- [ ] `P04.S12` - Sweep the operator harness documents and user documentation for hybrid or semantic retrieval claims and verify the docs build gates; `docs/`.
-- [ ] `P04.S13` - Run the corpus-search and command-search suites sequentially plus full collect-only, and record the gate outputs in the exec records; `src/cadrumo/application/corpus_search/tests/`.
-- [ ] `P04.S14` - Run the fresh-context honesty review against the closure summary and persist it as a vault audit before declaring the campaign structurally complete; `.vault/audit/`.
+- [x] `P04.S11` - Sweep the MCP corpus and meta tool descriptions and docstrings to describe lexical plus citation retrieval, keeping the harness rule-surface drift gate green; `src/cadrumo/entrypoints/mcp/`.
+- [x] `P04.S12` - Sweep the operator harness documents and user documentation for hybrid or semantic retrieval claims and verify the docs build gates; `docs/`.
+- [x] `P04.S13` - Run the corpus-search and command-search suites sequentially plus full collect-only, and record the gate outputs in the exec records; `src/cadrumo/application/corpus_search/tests/`.
+- [x] `P04.S14` - Run the fresh-context honesty review against the closure summary and persist it as a vault audit before declaring the campaign structurally complete; `.vault/audit/`.
 
 ## Parallelization
 
@@ -150,7 +150,7 @@ Phases are sequential: P01 gates everything (live peer WIP sits on the P02 delet
 
 - No module under `src/cadrumo/` imports model2vec, huggingface-hub, or numpy, verified by grep over the production tree.
 - `pyproject.toml` declares no `search` extra, the `all` aggregate omits it, and the PRODUCT closure (`uv tree --no-dev`) resolves without the three retired packages. Corrected 2026-08-01 per ADR Update 1: `huggingface-hub` and `numpy` legitimately remain in the lock as dev-group transitives of the vaultspec-rag oracle, so their absence from the lockfile is NOT a criterion and must not be "fixed" by removing the dev oracle.
-- `search_corpus` and the command-search index return ranked results on a bare-core install with no network access, proven by the rewritten shippability and ranking-golden tests running with sockets unavailable.
+- `search_corpus` and the command-search index return ranked results on a bare-core install with no network access. Corrected 2026-08-01 per the P04 close honesty review: the original wording claimed this was "proven by the rewritten shippability and ranking-golden tests running with sockets unavailable", but NO socket-blocking mechanism exists in those tests and none was ever built. The real and stronger proof is structural, in two parts: an AST gate walks every shipped module of both search packages (with an anti-vacuity floor refusing a collapsed walk) and refuses any import of model2vec, huggingface_hub, numpy, onnxruntime, or torch, including function-local and TYPE_CHECKING imports a runtime socket blocker would miss; and the retrieval, lexical-index, and ranking-golden tests then produce ranked results from exactly those modules. No production search module can reach the network because none imports a client, which is a compile-visible guarantee rather than a per-test runtime one. The criterion stands; only its stated mechanism was wrong.
 - The full suite collects cleanly and the corpus-search, command-search, and MCP test trees pass sequentially.
 - `python -m dev.docs.apidocs scaffold --check` exits clean, the docs build gates pass, and the harness rule-surface drift gate passes.
 - No production string, tool description, harness document, or user doc references the retired extra or claims semantic or hybrid retrieval.

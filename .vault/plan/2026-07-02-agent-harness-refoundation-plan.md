@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-17'
-body_hash: 'sha256:af8cf65f10bec663f6c34a3036cead25636ee3cd62c0cd05a41b925320ccb289'
+modified: '2026-08-01'
+body_hash: 'sha256:ab7d9ba04f6262b1bd76f5b57a6eaf7bd7e87fc13b687f5277768bbedb2d0871'
 tier: L3
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
@@ -166,6 +166,8 @@ Author the six WHEN-layer skills, regularizar-atrasos first, each with a golden 
 ## Wave `W06` - Grounding and packaging
 
 Behind a blocking licence gate, build the on-host hybrid corpus index from the bundled extracted triples, expose corpus and terminology search tools plus aeat corpus resources that resolve citations to verbatim text, and package the console as a signed mcpb Desktop Extension behind the agent extra. Depends on the W01 tool surface; the licence gate blocks the rest of the Wave. Backed by ADR decisions R3 and R8.
+
+Annotation added 2026-08-01: the SEMANTIC half of this Wave is RETIRED and no longer describes the shipped product. The accepted `2026-07-31-semantic-search-precompile-boundary-adr` amends ruling R3, and its execution deleted the runtime query embedder, the corpus-vector build, the cosine and RRF fusion, and the capability-gated `search` extra with its model2vec, huggingface-hub, and numpy pins. The Step rows below are left exactly as executed, because they are a true record of what was built at the time; they are NOT a description of current architecture. What survives from this Wave is the lexical half and the structured half: the FTS5 index with the Spanish stemmed column (`snowballstemmer` promoted to a core dependency), the exact-citation lookup returning verbatim authoritative text, the terminology lookup, and the corpus, resource, and terminology console tools. The shipped product now loads no embedding model, computes no vectors, and reaches no model host for retrieval. Semantic search is a dev-side precompile step whose laundered output ships with the documentation.
 
 ### Phase `W06.P12` - Build-time lexical index and precomputed vectors
 
