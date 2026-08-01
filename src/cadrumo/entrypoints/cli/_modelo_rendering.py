@@ -541,6 +541,7 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
             operand_values=tuple(str(v) for v in obs.operand_values),
             legal_refs=tuple(obs.legal_refs),
             source_refs=tuple(obs.source_refs),
+            absent_by_design=obs.absent_by_design,
         )
         for obs in _visible_calculation_observations(rev)
     )
