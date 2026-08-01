@@ -43,7 +43,10 @@ from ....application.ledger import (
 )
 from ....core import PRODUCT_IDENTITY
 from ....core.json_contract import SCHEMA_REGISTRY, OutputSchema, SchemaEnvelope
-from ...schema_surface import GROUP_CALLBACK_SCHEMA_KEYS, SCHEMA_KEY_BY_CLI_PATH
+from ...schema_surface import (
+    GROUP_CALLBACK_SCHEMA_KEYS,
+    normalise_cli_path_to_schema_key,
+)
 
 # Import the per-package payload modules so their @register_schema
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
@@ -91,8 +94,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # the normalised CLI path will diverge and the gate will surface both
 # sides in its failure diagnostic.
 
-_APP_NAMESPACE_PASSTHROUGH = frozenset({"live"})
-_APP_NAMESPACE_FLATTEN = frozenset({"diagnostics", "ledger", "modelo", "overview", "registry", "review"})
 
 
 class _PayloadWithStaleDraftRefs(Protocol):
@@ -114,19 +115,7 @@ type _LedgerPayloadClass = type[OutputSchema]
 # verb relocation. The leaf path therefore diverges from its registry key by
 # design; this map records the divergence so the no-allowlist gate stays exact
 # without silently masking an accidental mismatch elsewhere.
-def _normalise_command_path(path: tuple[str, ...]) -> str:
-    """Project a Typer leaf-command path onto the registry key convention."""
-    tokens = [token.replace("-", "_") for token in path]
-    if tokens and tokens[0] == PRODUCT_IDENTITY.cli_executable:
-        tokens = tokens[1:]
-    if len(tokens) >= 2 and tokens[0] == "app":
-        head = tokens[1]
-        if head in _APP_NAMESPACE_FLATTEN:
-            tokens = tokens[1:]
-        elif head in _APP_NAMESPACE_PASSTHROUGH:
-            pass  # keep ``app.`` prefix
-    normalised = ".".join(tokens)
-    return SCHEMA_KEY_BY_CLI_PATH.get(normalised, normalised)
+_normalise_command_path = normalise_cli_path_to_schema_key
 
 
 # ---------------------------------------------------------------------
