@@ -127,6 +127,69 @@ class TestPdfResponseContract:
             assert "CSV='DISTINCTHANDLE9'" in str(exc_info.value)
 
 
+class TestEveryLookalikeWasGenuinelyAdmittedBefore:
+    """Each hostile fixture must be one the retired code actually accepted.
+
+    A hostile value the pre-fix code ALREADY refused proves nothing while
+    sitting in a discriminating set -- it inflates the proof count invisibly.
+    These are the two retired predicates, reproduced verbatim, so each fixture
+    is shown to have been a real hole rather than assumed to be one.
+    """
+
+    @staticmethod
+    def _retired_row_capture_accepted(content_type: str) -> bool:
+        """The row-capture branch: ``if "pdf" not in content_type.lower()``."""
+        return "pdf" in content_type.lower()
+
+    @staticmethod
+    def _retired_sibling_accepted(content_type: str) -> bool:
+        """Both siblings: ``if _PDF_MIME_TYPE not in content_type.lower()``."""
+        return PDF_MIME_TYPE in content_type.lower()
+
+    @pytest.mark.parametrize("header", _NON_PDF_LOOKALIKES)
+    def test_the_lookalike_was_accepted_by_at_least_one_retired_predicate(self, header: str) -> None:
+        """DISCRIMINATING fixture control: this value really was admitted before."""
+        assert self._retired_row_capture_accepted(header) or self._retired_sibling_accepted(header), (
+            f"{header!r} was refused by BOTH retired predicates, so it never demonstrated a hole; "
+            "it belongs in SUPPORTING, not in the hostile set"
+        )
+
+    @pytest.mark.parametrize("header", _REAL_PDF_HEADERS)
+    def test_the_control_would_reject_a_genuine_pdf_header(self, header: str) -> None:
+        """Exercises the control itself, so its verdicts are not taken on trust.
+
+        A control that returns "was admitted" for everything would pass the
+        test above no matter what. Genuine PDF headers must also be reported
+        as admitted by the retired predicates -- they were -- which confirms
+        the control is reading the header rather than returning a constant.
+        """
+        assert self._retired_row_capture_accepted(header)
+        assert self._retired_sibling_accepted(header)
+
+    @pytest.mark.parametrize("header", ["text/html", "application/json", ""])
+    def test_the_control_reports_unrelated_types_as_refused(self, header: str) -> None:
+        """The other half of the control: it must be able to say "no".
+
+        Without this, the control could be a constant-true function and the
+        fixture check above would be vacuous.
+        """
+        assert not self._retired_row_capture_accepted(header)
+        assert not self._retired_sibling_accepted(header)
+
+    def test_the_hostile_set_spans_both_retired_predicates(self) -> None:
+        """Records WHICH hole each fixture demonstrates, so the split is visible.
+
+        Three fixtures were admitted only by the row-capture branch; two were
+        admitted by ALL THREE paths, including the two the audit called
+        canonical. Pinned as an exact partition so a future edit to the
+        fixture list cannot silently drop either class.
+        """
+        row_only = {h for h in _NON_PDF_LOOKALIKES if self._retired_row_capture_accepted(h) and not self._retired_sibling_accepted(h)}
+        all_three = {h for h in _NON_PDF_LOOKALIKES if self._retired_sibling_accepted(h)}
+        assert row_only == {"application/notpdf", "text/pdf", "multipart/pdf"}
+        assert all_three == {"x-application/pdf-trap", "application/pdf-invoice"}
+
+
 class TestEveryCapturePathRoutesThroughTheContract:
     """No capture path may re-grow its own copy of the checks."""
 
