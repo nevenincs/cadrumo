@@ -15,6 +15,7 @@ Submodules
 
    cadrumo.adapters.persistence.profile._filing_runtime
    cadrumo.adapters.persistence.profile._modelo_runtime
+   cadrumo.adapters.persistence.profile._secure_model_document
    cadrumo.adapters.persistence.profile.assets
    cadrumo.adapters.persistence.profile.bienes_inversion
    cadrumo.adapters.persistence.profile.buckets

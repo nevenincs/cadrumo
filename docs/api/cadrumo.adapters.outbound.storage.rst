@@ -19,5 +19,6 @@ Submodules
    cadrumo.adapters.outbound.storage._integrity
    cadrumo.adapters.outbound.storage._local
    cadrumo.adapters.outbound.storage._mirror_manifest
+   cadrumo.adapters.outbound.storage._object_name
    cadrumo.adapters.outbound.storage._protocol
    cadrumo.adapters.outbound.storage._records
