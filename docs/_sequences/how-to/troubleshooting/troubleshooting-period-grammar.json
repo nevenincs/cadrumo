@@ -258,7 +258,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "calculation_revision_id": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -354,7 +354,7 @@
             "76": "0",
             "77": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "1",
+            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -415,7 +415,7 @@
             "74": "0",
             "75": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "1",
+            "decl.periodo": "1T",
             "iva.autorepercutido.interior.deducible": "0",
             "iva.autorepercutido.interior.devengado": "0",
             "iva.autorepercutido.intracomunitaria": "0",
@@ -2357,7 +2357,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "1"
+              "value": "0"
             },
             {
               "casilla_id": "iva.autoconsumo.promotor.base",
@@ -3244,7 +3244,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d`.",
+          "saved_confirmation": "Saved as draft calculation revision 4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

@@ -251,7 +251,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d"
+          "value": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6"
         }
       ],
       "envelope": {
@@ -289,7 +289,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "calculation_revision_id": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -385,7 +385,7 @@
             "76": "0",
             "77": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "1",
+            "decl.periodo": "0",
             "iva.autoconsumo.promotor.base": "0",
             "iva.autoconsumo.promotor.cuota": "0.00",
             "iva.autorepercutido.interior.deducible": "0",
@@ -446,7 +446,7 @@
             "74": "0",
             "75": "0",
             "decl.ejercicio": "2026",
-            "decl.periodo": "1",
+            "decl.periodo": "1T",
             "iva.autorepercutido.interior.deducible": "0",
             "iva.autorepercutido.interior.devengado": "0",
             "iva.autorepercutido.intracomunitaria": "0",
@@ -2388,7 +2388,7 @@
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
-              "value": "1"
+              "value": "0"
             },
             {
               "casilla_id": "iva.autoconsumo.promotor.base",
@@ -3275,7 +3275,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d`.",
+          "saved_confirmation": "Saved as draft calculation revision 4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6`.",
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3301,7 +3301,7 @@
         "modelo",
         "work",
         "verify",
-        "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d"
+        "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6"
       ],
       "captures": [],
       "envelope": {
@@ -3353,7 +3353,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "calculation_revision_id": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6",
           "completeness_status": "complete",
           "findings": [
             {
@@ -3412,7 +3412,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "de24c59b484a17c40f1a5f95136faf5ba0bb3c5d0bc263755e938a8ebc3965df",
+          "verification_report_id": "e2d65757078044b5d336c1f02bec7024b1c4de5882460e8785e8a5691f259036",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -3449,11 +3449,11 @@
           "aeat_accepted": false,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "calculation_revision_id": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "d3aba9a63f88b624c7f8483921985a37366c57258ec6dc383c8c8da5488b60a4",
+          "filing_record_id": "c36e01d9abec9bfebbe3a8f0d5ba0f64a9c20ec6d67b7e1c1cbc9b01a5310dea",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -3514,10 +3514,10 @@
           }
         ],
         "result": {
-          "bucket_event_id": "d2d228225132e242ab202e881cde5f0d0e11bab4a471ee269eb3de9194718844",
+          "bucket_event_id": "345531a0ec5eca72b403da138e9e6958bcb4c6eec1e243c67939e0fbf4ff6858",
           "bucket_id": "<bucket-id>",
           "byte_size": 7365,
-          "calculation_revision_id": "50dadd637c97cc6b63afdfc52e477532ddc78cc8bad203041d4bffba21e55a4d",
+          "calculation_revision_id": "4108835b14e9338343bd396e3d5a543c8845405770f8f5e368e2d6658ff715b6",
           "file_sha256": "c3286914c69801bab03607c0ed9718c3e39c031d9bd50b02f2e772aeceb13259",
           "filing_year": 2026,
           "format": "fichero-boe",
