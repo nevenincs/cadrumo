@@ -55,6 +55,7 @@ from .. import (
     ModeloIvaWalletCorrectionSealedError,
     ModeloIvaWalletSeedNegativeAmountError,
     correct_iva_compensation_period_for_bucket,
+    record_iva_compensation_override_for_bucket,
     seed_iva_compensation_period_for_bucket,
 )
 from .._iva_wallet_gate import taxpayer_nif_for_bucket
@@ -221,16 +222,36 @@ def test_correction_refuses_when_no_record_exists() -> None:
         )
 
 
-def test_correction_refuses_negative_amount() -> None:
-    """A negative corrected amount is refused, mirroring the seed guard."""
-    _seed(Decimal("500.00"))
-    with pytest.raises(ModeloIvaWalletSeedNegativeAmountError):
+def test_every_wallet_mutation_refuses_the_same_negative_amount_contract() -> None:
+    """Seed, correction, and override reject a negative amount before any write."""
+    amount = Decimal("-1.00")
+
+    with pytest.raises(ModeloIvaWalletSeedNegativeAmountError) as seed_error:
+        seed_iva_compensation_period_for_bucket(
+            bucket_id=_BUCKET_ID,
+            period=_SEED_FILING_PERIOD,
+            amount=amount,
+        )
+    with pytest.raises(ModeloIvaWalletSeedNegativeAmountError) as correction_error:
         correct_iva_compensation_period_for_bucket(
             bucket_id=_BUCKET_ID,
             period=_SEED_FILING_PERIOD,
-            amount=Decimal("-1.00"),
+            amount=amount,
             reason="negative",
         )
+    with pytest.raises(ModeloIvaWalletSeedNegativeAmountError) as override_error:
+        record_iva_compensation_override_for_bucket(
+            bucket_id=_BUCKET_ID,
+            period=_SEED_FILING_PERIOD,
+            amount=amount,
+            reason="negative",
+            evidence_locator="operator-test:negative",
+        )
+
+    expected_context = {"amount": "-1.00"}
+    assert seed_error.value.context == expected_context
+    assert correction_error.value.context == expected_context
+    assert override_error.value.context == expected_context
 
 
 @pytest.mark.parametrize(
