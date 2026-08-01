@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
 from ...core.time import now as utc_now
+from ...core.time import validate_utc_aware
 from ..modelos import CalculationRevision as _CalculationRevision
 from ..modelos import ModeloRecord as _ModeloRecord
 from ..modelos import WorkUnit as _WorkUnit
@@ -78,6 +79,17 @@ class CarriedSecureObject(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     payload_b64: str = Field(min_length=1)
+
+    @field_validator("written_at")
+    @classmethod
+    def _written_at_is_utc(cls, value: datetime) -> datetime:
+        """Reject a carried write instant that is naive or not UTC.
+
+        The bundle serialises as JSON, which preserves the offset, so a
+        carried object can be held to the canonical instant contract rather
+        than transporting an ambiguous local time into another bucket.
+        """
+        return validate_utc_aware(value)
 
     @field_validator("namespace", "object_key")
     @classmethod
