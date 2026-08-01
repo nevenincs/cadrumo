@@ -149,7 +149,7 @@ class FacadeInfo:
     is_pure_reexport_shape: bool = False
 
 
-def _dunder_all_assignment_value(node: ast.stmt) -> ast.expr | None:
+def dunder_all_assignment_value(node: ast.stmt) -> ast.expr | None:
     """Return the assigned value expression if ``node`` assigns ``__all__``.
 
     Handles both the plain form (``__all__ = [...]``, :class:`ast.Assign`) and
@@ -182,7 +182,7 @@ def discover_facades() -> dict[str, FacadeInfo]:
         all_names: list[str] = []
         has_real_all = False
         for node in ast.walk(tree):
-            value = _dunder_all_assignment_value(node)
+            value = dunder_all_assignment_value(node)
             if value is None or not isinstance(value, (ast.List, ast.Tuple, ast.Set)):
                 continue
             names = [elt.value for elt in value.elts if isinstance(elt, ast.Constant) and isinstance(elt.value, str)]

@@ -510,6 +510,11 @@ convention = "google"
 # value is a repository root the caller already owns.
 "dev/audit/checkout_drift.py" = ["S603"]
 "dev/audit/tests/test_checkout_drift.py" = ["S603"]
+# The facade export scan reads module sources through read-only `git ls-tree` /
+# `git cat-file` with a fixed argv; the only interpolated value is a revision
+# the caller supplies. It must read the object store rather than the working
+# tree, so the subprocess call is the point of the module, not an incidental.
+"dev/facade_export_scan.py" = ["S603", "S607"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
@@ -625,6 +630,9 @@ convention = "google"
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
 "src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
+# The facade export gate resolves HEAD and probes its pinned fixture commit with
+# read-only git verbs on a fixed argv.
+"src/cadrumo/tests/test_facade_export_gate.py" = ["S603", "S607"]
 # Same rationale: the content-boundary gate builds the project's own wheel with
 # the trusted `uv` build driver (partial path resolved from PATH by design).
 "src/cadrumo/tests/test_wheel_content_boundary.py" = ["S603", "S607"]
