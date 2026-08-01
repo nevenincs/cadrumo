@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
+from pydantic import ValidationError
 
 from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ....application.user_profile import profile_create_storage_span
@@ -27,6 +28,12 @@ from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from .._diagnostics_payloads import (
+    ErrorKindCountPayload,
+    LatencyPercentilesPayload,
+    LlmRunProviderPayload,
+    RunRecordPayload,
+)
 from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -183,3 +190,71 @@ def test_run_health_rejects_malformed_date(_isolated_backend: None) -> None:
     result = _invoke(["--format", "json", "app", "diagnostics", "run-health", "--since", "01/04/2026"])
     assert result.exit_code != 0
     assert "ISO date" in result.output
+
+
+def test_run_health_payloads_mirror_their_canonical_bounds() -> None:
+    """The diagnostics transport must refuse what its canonical models refuse.
+
+    The run-health payload family redeclared provider/run/caller identities and
+    every counter as bare strings and ints, so an empty identity, a negative
+    run or duration, and a malformed timestamp could all cross the
+    ``diagnostics.*`` envelopes.
+
+    The bounds mirror the canonical models exactly, including two places the
+    obvious guess is wrong: the nullable duration and percentile fields carry
+    NO lower bound (the canonical models leave them unbounded, and a bound
+    invented here would be stricter than the contract it claims to mirror), and
+    ``ErrorKindCount.count`` is ``ge=1`` rather than ``ge=0`` because a row only
+    exists for an error kind that occurred.
+    """
+    provider_row = LlmRunProviderPayload(provider="claude", runs=1, succeeded=1, failed=0)
+    assert provider_row.min_duration_ms is None
+
+    for label, model, base, override in (
+        ("empty provider", LlmRunProviderPayload,
+         {"provider": "claude", "runs": 1, "succeeded": 1, "failed": 0}, {"provider": ""}),
+        ("negative runs", LlmRunProviderPayload,
+         {"provider": "claude", "runs": 1, "succeeded": 1, "failed": 0}, {"runs": -1}),
+        ("empty run id", RunRecordPayload, _RUN_RECORD_BASE, {"run_id": ""}),
+        ("empty caller", RunRecordPayload, _RUN_RECORD_BASE, {"caller": ""}),
+        ("negative duration", RunRecordPayload, _RUN_RECORD_BASE, {"duration_ms": -1}),
+        ("negative entries", LatencyPercentilesPayload, {"entries": 1}, {"entries": -1}),
+        ("empty error kind", ErrorKindCountPayload,
+         {"error_kind": "timeout", "provider": "claude", "count": 1}, {"error_kind": ""}),
+        ("zero error count", ErrorKindCountPayload,
+         {"error_kind": "timeout", "provider": "claude", "count": 1}, {"count": 0}),
+    ):
+        model(**base)  # positive control: the base must be accepted
+        try:
+            model(**(base | override))
+        except ValidationError:
+            continue
+        pytest.fail(f"{label} was accepted by the transport row")
+
+    # Deliberately permitted, because the canonical models permit them.
+    LatencyPercentilesPayload(entries=1, p50_duration_ms=-1)
+    LlmRunProviderPayload(provider="claude", runs=1, succeeded=1, failed=0, min_duration_ms=-1)
+
+
+def test_run_record_timestamp_round_trips_and_refuses_malformed_text() -> None:
+    """``started_at`` is a real datetime on the canonical record, not free text."""
+    row = RunRecordPayload(**_RUN_RECORD_BASE)
+    rendered = row.model_dump_json()
+    assert '"started_at":"2026-01-01T00:00:00Z"' in rendered
+    assert RunRecordPayload.model_validate_json(rendered) == row
+
+    tampered = json.loads(rendered) | {"started_at": "not-date"}
+    with pytest.raises(ValidationError):
+        RunRecordPayload.model_validate_json(json.dumps(tampered))
+
+
+_RUN_RECORD_BASE = {
+    "run_id": "run-1",
+    "caller": "cli",
+    "provider": "claude",
+    "model": "sonnet",
+    "duration_ms": 5,
+    "succeeded": True,
+    "error_kind": "",
+    "started_at": datetime(2026, 1, 1, tzinfo=UTC),
+}

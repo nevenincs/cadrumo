@@ -303,7 +303,7 @@ def diagnostics_runs(
                 duration_ms=row.duration_ms,
                 succeeded=row.succeeded,
                 error_kind=row.error_kind,
-                started_at=row.started_at.isoformat(),
+                started_at=row.started_at,
             )
             for row in rows
         ],

@@ -23,7 +23,21 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import datetime
+from decimal import Decimal
+
+from pydantic import Field
+
+from ._decimal_wire import DecimalWireText, bounded_decimal_wire_text
 from ._schemas import OutputSchema, register_schema
+
+# The canonical run-health models express these bounds on real int/Decimal
+# fields; the transport carries rendered strings for the decimals, so the same
+# bound is re-asserted on the text. Duration and percentile fields are
+# deliberately left unbounded because the canonical models leave them so --
+# the transport mirrors the canonical contract rather than inventing a
+# stricter one.
+_SuccessRateText = bounded_decimal_wire_text(minimum=Decimal("0"), maximum=Decimal("1"))
 
 
 class LlmRunProviderPayload(OutputSchema):
@@ -32,13 +46,13 @@ class LlmRunProviderPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.LlmRunProviderMetrics`.
     """
 
-    provider: str
-    runs: int
-    succeeded: int
-    failed: int
+    provider: str = Field(min_length=1)
+    runs: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
-    mean_duration_ms: str | None = None
+    mean_duration_ms: DecimalWireText | None = None
 
 
 @register_schema("diagnostics.run_health")
@@ -55,9 +69,9 @@ class RunHealthResult(OutputSchema):
     since: str | None = None
     until: str | None = None
     llm_providers: list[LlmRunProviderPayload]
-    total_runs: int
-    total_succeeded: int
-    total_failed: int
+    total_runs: int = Field(ge=0)
+    total_succeeded: int = Field(ge=0)
+    total_failed: int = Field(ge=0)
     has_run_data: bool
     auth_provider: str
     auth_configured: bool
@@ -74,14 +88,16 @@ class RunRecordPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.RunRecordView`.
     """
 
-    run_id: str
-    caller: str
-    provider: str
+    run_id: str = Field(min_length=1)
+    caller: str = Field(min_length=1)
+    provider: str = Field(min_length=1)
+    # `model` and `error_kind` stay unbounded: the canonical RunRecordView
+    # defaults both to the empty string, so a blank is representable.
     model: str
-    duration_ms: int
+    duration_ms: int = Field(ge=0)
     succeeded: bool
     error_kind: str
-    started_at: str
+    started_at: datetime
 
 
 @register_schema("diagnostics.runs")
@@ -108,10 +124,10 @@ class LatencyPercentilesPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.LatencyPercentiles`.
     """
 
-    entries: int
+    entries: int = Field(default=0, ge=0)
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
-    mean_duration_ms: str | None = None
+    mean_duration_ms: DecimalWireText | None = None
     p50_duration_ms: int | None = None
     p95_duration_ms: int | None = None
     p99_duration_ms: int | None = None
@@ -120,7 +136,7 @@ class LatencyPercentilesPayload(OutputSchema):
 class LatencyProviderRowPayload(OutputSchema):
     """One provider's :class:`LatencyPercentilesPayload` row."""
 
-    provider: str
+    provider: str = Field(min_length=1)
     percentiles: LatencyPercentilesPayload
 
 
@@ -149,9 +165,12 @@ class ErrorKindCountPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.ErrorKindCount`.
     """
 
-    error_kind: str
-    provider: str
-    count: int
+    error_kind: str = Field(min_length=1)
+    provider: str = Field(min_length=1)
+    # ge=1, not ge=0: the canonical ErrorKindCount only materialises a row for
+    # an error kind that actually occurred, so a zero-count row is not a
+    # representable observation.
+    count: int = Field(ge=1)
 
 
 @register_schema("diagnostics.errors")
@@ -167,8 +186,8 @@ class ErrorsBreakdownResult(OutputSchema):
     since: str | None = None
     until: str | None = None
     provider: str | None = None
-    total_runs: int
-    total_failed: int
+    total_runs: int = Field(ge=0)
+    total_failed: int = Field(ge=0)
     by_error_kind: list[ErrorKindCountPayload]
     has_failures: bool
 
@@ -179,15 +198,17 @@ class LlmUsageModelPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.LlmUsageModelMetrics`.
     """
 
+    # `model` stays unbounded: the canonical LlmUsageModelMetrics defaults it
+    # to the empty string.
     model: str
-    runs: int
-    succeeded: int
-    failed: int
+    runs: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
-    mean_duration_ms: str | None = None
-    total_duration_ms: int
-    success_rate: str
+    mean_duration_ms: DecimalWireText | None = None
+    total_duration_ms: int = Field(default=0, ge=0)
+    success_rate: _SuccessRateText  # type: ignore[valid-type]
 
 
 class LlmUsageProviderPayload(OutputSchema):
@@ -196,15 +217,15 @@ class LlmUsageProviderPayload(OutputSchema):
     Mirrors :class:`~application.diagnostics_run_health.LlmUsageProviderMetrics`.
     """
 
-    provider: str
-    runs: int
-    succeeded: int
-    failed: int
+    provider: str = Field(min_length=1)
+    runs: int = Field(ge=0)
+    succeeded: int = Field(ge=0)
+    failed: int = Field(ge=0)
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
-    mean_duration_ms: str | None = None
-    total_duration_ms: int
-    success_rate: str
+    mean_duration_ms: DecimalWireText | None = None
+    total_duration_ms: int = Field(default=0, ge=0)
+    success_rate: _SuccessRateText  # type: ignore[valid-type]
     models: list[LlmUsageModelPayload]
 
 
