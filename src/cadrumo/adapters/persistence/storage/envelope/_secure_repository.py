@@ -176,6 +176,33 @@ class SecureBoundRepository[T: BaseModel]:
     # CRUD
     # ------------------------------------------------------------------
 
+    def _validate_envelope(self, payload: bytes, *, subject: str) -> Envelope[BaseModel]:
+        """Parse one stored payload and enforce the repository's envelope gates.
+
+        The single classification/version gate behind both read paths. ``load``
+        and :meth:`_iter_validated_envelopes` applied the same two checks
+        independently and differed only in how they named the row, so a change
+        to either gate had to be made twice. ``subject`` carries that naming --
+        ``"namespace/identifier"`` for a single load, ``"namespace iterator
+        row"`` for a scan -- so the diagnostics stay as specific as before.
+
+        Raises:
+            ClassificationError: The stored envelope's classification is not the
+                one this repository expects.
+            EnvelopeVersionError: The stored envelope is not at this
+                repository's exact schema version.
+        """
+        envelope = self._envelope_cls().model_validate_json(payload.decode("utf-8"))
+        if envelope.classification is not self.sensitivity:
+            raise ClassificationError(
+                f"{subject} has classification {envelope.classification}; consumer expected {self.sensitivity}",
+            )
+        if envelope.schema_version != self.schema_version:
+            raise EnvelopeVersionError(
+                f"{subject} is at version {envelope.schema_version}; consumer expects {self.schema_version}",
+            )
+        return envelope
+
     def load(self, identifier: str) -> T | None:
         """Return the persisted payload or ``None`` if absent."""
         safe_repository_id(identifier, context="identifier")
@@ -187,18 +214,7 @@ class SecureBoundRepository[T: BaseModel]:
         )
         if record is None:
             return None
-        envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not self.sensitivity:
-            raise ClassificationError(
-                f"{self.namespace}/{identifier} has classification "
-                f"{envelope.classification}; consumer expected {self.sensitivity}",
-            )
-        if envelope.schema_version != self.schema_version:
-            raise EnvelopeVersionError(
-                f"{self.namespace}/{identifier} is at version "
-                f"{envelope.schema_version}; consumer expects "
-                f"{self.schema_version}",
-            )
+        envelope = self._validate_envelope(record.payload, subject=f"{self.namespace}/{identifier}")
         # Safe: _envelope_cls() returns Envelope[self.payload_model()] which equals
         # Envelope[T] for this repository's concrete T. Pydantic's model_validate_json
         # has already validated payload against the T schema, so the runtime type
@@ -300,24 +316,12 @@ class SecureBoundRepository[T: BaseModel]:
         any row is unreadable, so a full consumption never yields a readable
         subset past a corrupt row.
         """
-        envelope_cls = self._envelope_cls()
         for record in self._objects.list_records(
             self.namespace,
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
-            envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
-            if envelope.classification is not self.sensitivity:
-                raise ClassificationError(
-                    f"{self.namespace} iterator row has classification "
-                    f"{envelope.classification}; consumer expected {self.sensitivity}",
-                )
-            if envelope.schema_version != self.schema_version:
-                raise EnvelopeVersionError(
-                    f"{self.namespace} iterator row is at version "
-                    f"{envelope.schema_version}; consumer expects {self.schema_version}",
-                )
-            yield envelope
+            yield self._validate_envelope(record.payload, subject=f"{self.namespace} iterator row")
 
     def iter_ids(self) -> Iterator[str]:
         """Yield every persisted identifier in storage order.
