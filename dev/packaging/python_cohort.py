@@ -447,6 +447,19 @@ def load_python_cohort(directory: Path) -> PythonCohort:
             f"Python cohort manifest keys drifted: artifacts={set(artifacts)!r}, sha256={set(sha256)!r}",
         )
 
+    # The cohort directory is a closed world: the manifest plus exactly the
+    # artifacts it declares. An unmanifested file is refused here -- before any
+    # per-artifact digest work -- for the same reason ``load_release_cohort``
+    # compares the inventory first: an extra file crosses acquisition, smoke,
+    # and promote gates unnoticed when only the declared names are checked.
+    declared_files = {str(name) for name in artifacts.values()} | {_MANIFEST_NAME}
+    observed_files = {path.relative_to(cohort_dir).as_posix() for path in cohort_dir.rglob("*") if path.is_file()}
+    if observed_files != declared_files:
+        raise SystemExit(
+            f"Python cohort file inventory drifted: "
+            f"declared={sorted(declared_files)!r}, observed={sorted(observed_files)!r}",
+        )
+
     resolved: dict[str, Path] = {}
     for name in sorted(expected_keys):
         filename = artifacts[name]
