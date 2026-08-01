@@ -178,9 +178,13 @@ agent = [
 # shipped-search-licence-clean gate forbids both): the corpus vectors are BUILT
 # behind this extra on first use by `ensure_corpus_embeddings` into an
 # app-controlled cache, and a bare-core install keeps the degraded lexical-only
-# mode.
+# mode. huggingface-hub is declared directly (not left as an incidental
+# transitive dependency of model2vec's own tokenizers>=0.20 floor) because
+# `_model_loader.load_static_model` imports and calls it directly to pin the
+# model revision and root the download under the app-controlled cache dir.
 search = [
   "model2vec>=0.8,<1",
+  "huggingface-hub>=0.24,<2",
   "snowballstemmer>=2.2,<4",
   "numpy>=1.26,<3",
 ]
@@ -1055,9 +1059,20 @@ ignore_decorators = [
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
-# `model2vec`: the optional search loader imports this module deliberately
-# through `importlib` so a bare-core installation retains lexical-only search;
-# deptry cannot observe that capability-gated dynamic import.
-DEP002 = ["cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "formulas", "model2vec", "python-dotenv", "rich", "tzdata"]
+# `model2vec` / `huggingface-hub`: the optional search loader imports both
+# modules deliberately through `importlib` so a bare-core installation retains
+# lexical-only search; deptry cannot observe that capability-gated dynamic
+# import for either module.
+DEP002 = [
+  "cadrumo",
+  "cadrumo-data-manuals",
+  "cadrumo-data-official",
+  "formulas",
+  "huggingface-hub",
+  "model2vec",
+  "python-dotenv",
+  "rich",
+  "tzdata",
+]
 DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]
