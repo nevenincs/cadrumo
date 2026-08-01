@@ -48,3 +48,8 @@ def default_viewport() -> ViewportSize:
 def selector_probe_timeout_ms() -> int:
     """Return the configured selector-probe timeout (ms) from settings."""
     return load_settings().cadrumo_browser_selector_probe_timeout_ms
+
+
+def navigation_timeout_ms() -> int:
+    """Return the configured navigation timeout (ms) from settings."""
+    return load_settings().cadrumo_browser_navigation_timeout_ms

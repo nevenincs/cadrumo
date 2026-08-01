@@ -19,7 +19,9 @@ from unicodedata import category, normalize
 from urllib.parse import urlsplit
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core import is_aeat_csv as _core_is_aeat_csv
 from .....core.config import Settings
+from .....core.external_constants import PDF_MIME_TYPE
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -29,22 +31,22 @@ from pydantic import BaseModel
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ._errors import BrowserAdapterTypeError, SedeFailureMode, SedeParseError
+from ._errors import BrowserAdapterTypeError, JustificanteFetchError, SedeFailureMode, SedeParseError
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
-_AEAT_CSV_PATTERN = compile(r"[A-Z0-9]{8,32}")
 _EXTERNAL = Settings.external_constants()
 
 
 def is_aeat_csv(value: str) -> bool:
     """Return whether ``value`` is one complete AEAT CSV identifier.
 
-    AEAT's documented and observed CSV widths are 8 through 32 uppercase
-    alphanumeric characters.  Callers keep their local error translation;
-    this helper owns only the shared shape constraint.
+    Delegates to the canonical :func:`core.is_aeat_csv` contract so the sede
+    adapters, the inbound justificante extractor, and the public verifier
+    cannot drift on what width AEAT actually issues. Re-exported here because
+    the sede modules already import their shape helpers from this module.
     """
-    return bool(_AEAT_CSV_PATTERN.fullmatch(value))
+    return _core_is_aeat_csv(value)
 
 
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:
@@ -181,6 +183,58 @@ def make_locate_helper(
         )
 
     return _locate
+
+
+def response_media_type(content_type: str) -> str:
+    """Return the bare media type from a ``Content-Type`` header value.
+
+    Strips any parameter tail (``; charset=binary``), surrounding whitespace,
+    and case, so a header may carry parameters without changing what media
+    type it names.
+    """
+    return content_type.split(";", 1)[0].strip().lower()
+
+
+def assert_pdf_response(
+    *,
+    status: int,
+    content_type: str,
+    body: bytes,
+    subject: str,
+) -> None:
+    """Validate one AEAT PDF download response, or raise.
+
+    The single contract every sede PDF capture path shares: a 2xx status, a
+    non-empty body, and a ``Content-Type`` whose media type IS
+    :data:`~core.external_constants.PDF_MIME_TYPE`.
+
+    The media-type comparison is equality on the parameter-stripped header
+    rather than a substring test. A substring test admits any type that merely
+    CONTAINS the token: ``application/notpdf`` and ``text/pdf`` satisfy
+    ``"pdf" in ...``, and ``x-application/pdf-trap`` satisfies even
+    ``"application/pdf" in ...``. None of those is a PDF, and a captured
+    artefact is stored as filing evidence, so admitting one records a non-PDF
+    body under a PDF ``kind``. Equality on the media type still admits the
+    parameterised ``application/pdf; charset=binary`` AEAT actually sends.
+
+    Args:
+        status: HTTP status code of the PDF response.
+        content_type: Raw ``Content-Type`` header value, possibly parameterised.
+        body: Raw response body bytes.
+        subject: Caller-supplied identification of what was fetched, embedded
+            verbatim in the failure message (e.g. ``"CSV='ABC123'"``) so each
+            capture path keeps its own diagnostic handle.
+
+    Raises:
+        JustificanteFetchError: On a non-2xx status, an empty body, or a
+            content type whose media type is not ``application/pdf``.
+    """
+    if not (200 <= status < 300):
+        raise JustificanteFetchError(f"pdf fetch for {subject} returned HTTP {status}")
+    if not body:
+        raise JustificanteFetchError(f"empty PDF body for {subject}")
+    if response_media_type(content_type) != PDF_MIME_TYPE:
+        raise JustificanteFetchError(f"unexpected content-type {content_type!r} for {subject}")
 
 
 def normalize_response_text(text: str) -> str:
@@ -367,6 +421,7 @@ __all__ = [
     "SedeVerdict",
     "_LocateHelper",
     "_SedeCheckerModel",
+    "assert_pdf_response",
     "assert_query_browser_action_for",
     "extract_marker_verdict",
     "first_visible_locator",
@@ -375,4 +430,5 @@ __all__ = [
     "normalize_response_text",
     "registry_failure_message",
     "require_playwright_page",
+    "response_media_type",
 ]

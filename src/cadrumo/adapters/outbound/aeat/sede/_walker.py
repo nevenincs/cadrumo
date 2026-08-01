@@ -22,14 +22,14 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
 from .....core.async_cleanup import close_async_resources
-from .....core.config import Settings, load_settings
-from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
+from .....core.config import Settings
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
+from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_TIMEOUT_SHORT_MS as _TIMEOUT_SHORT_MS,
@@ -39,7 +39,6 @@ from ._browser_constants import (
 )
 from ._errors import (
     ExpedienteNotFoundError,
-    JustificanteFetchError,
     SedeNavigationError,
 )
 from ._parse import parse_expediente_detail, parse_resumen_tree
@@ -56,10 +55,6 @@ _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 
 DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
-
-
-def _get_navigation_timeout_ms() -> int:
-    return load_settings().cadrumo_browser_navigation_timeout_ms
 
 
 @asynccontextmanager
@@ -247,14 +242,14 @@ async def capture_justificante(
         )
 
         pdf_response = await context.request.get(str(ref.pdf_url))
-        if not (200 <= pdf_response.status < 300):
-            raise JustificanteFetchError(f"pdf fetch for CSV={ref.csv!r} returned HTTP {pdf_response.status}")
         content_type = pdf_response.headers.get("content-type", "")
         body = await pdf_response.body()
-        if not body:
-            raise JustificanteFetchError(f"empty PDF body for CSV={ref.csv!r}")
-        if _PDF_MIME_TYPE not in content_type.lower():
-            raise JustificanteFetchError(f"unexpected content-type {content_type!r} for CSV={ref.csv!r}")
+        _assert_pdf_response(
+            status=pdf_response.status,
+            content_type=content_type,
+            body=body,
+            subject=f"CSV={ref.csv!r}",
+        )
         sha256 = sha256_hex(body)
         log.info(
             "capture_justificante: captured PDF expediente=%s CSV=%s size=%d sha256=%s",

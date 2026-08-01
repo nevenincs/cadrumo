@@ -34,9 +34,11 @@ from .....domain.calculations.registry import (
     RemoteStateGuardPolicy,
 )
 from .._playwright import BrowserContext, Page, PlaywrightError
+from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
+from ._browser_constants import navigation_timeout_ms as _get_navigation_timeout_ms
 from ._declarations_remote import assert_read_browser_action as _remote_assert_read_browser_action
 from ._declarations_remote import assert_read_http as _remote_assert_read_http
 from ._declarations_remote import extract_csv_from_url as _extract_csv_from_url
@@ -98,52 +100,6 @@ _COTEJO_DOCUMENT_PATH = _EXTERNAL.aeat.sede_paths.cotejo_document
 _COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
 
 
-# The one numbered host still named in a live reader, and it is measured
-# rather than assumed. AEAT assigns the answering host per session, so a
-# named number is normally wrong -- the censal and IVA-wallet readers name
-# none. This one stays because the obvious de-pin does not work: requesting
-# the declarations listing on the UNNUMBERED sede origin with a valid
-# session attached returns a genuine 404, landing on the requested host
-# rather than bouncing. Confirmed on a live authenticated session,
-# 2026-07-26.
-#
-# The readers that carry no number reach their surface through the Cl@ve
-# access selector and let AEAT dispatch. This module has no selector entry
-# and deliberately does not get one, for two measured reasons.
-#
-# This host is not only a navigation string: it is also a lookup key. The
-# capture path resolves its read-guard policy by matching this hostname
-# against the registry's declared allowed_hosts for the declarations read
-# surface, and requires exactly one match. That lookup never reads the host
-# a navigation actually landed on, so routing navigation through the
-# selector would change no outcome -- and de-pinning the lookup as well
-# matches zero declarations and raises, failing every capture at the
-# guard's own resolution step.
-#
-# The selector's failure path also leads nowhere better than here. Its
-# reference implementation refuses outright when the selector does not
-# dispatch, rather than degrading to the unnumbered origin, so that path
-# reaches no host at all; and a dispatch to a host that does not serve this
-# listing reaches a 404 there. Neither failure mode arrives at a host known
-# to serve the route, while this constant names one that does.
-#
-# Recorded URLs do NOT use this constant. They name the host that actually
-# answered, because a recorded URL is a claim about where a read happened.
-_SEDE_BASE = _EXTERNAL.aeat.domains.www6
-
-
-_LISTING_PATH = _EXTERNAL.aeat.sede_paths.declarations_listing
-
-
-_COTEJO_QUERY_PATH = _EXTERNAL.aeat.sede_paths.cotejo_query
-
-
-_COTEJO_DOCUMENT_PATH = _EXTERNAL.aeat.sede_paths.cotejo_document
-
-
-_COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
-
-
 def _origin_of(landed_url: str | None) -> str:
     """Return the scheme and host a read actually landed on.
 
@@ -180,10 +136,6 @@ def _cotejo_view_url(origin: str, csv: str) -> str:
 def _cotejo_document_url(origin: str, csv: str) -> str:
     """Return the cotejo document URL for ``csv`` against ``origin``."""
     return f"{origin}{_COTEJO_DOCUMENT_PATH}?CSV={csv}"
-
-
-def _get_navigation_timeout_ms() -> int:
-    return load_settings().cadrumo_browser_navigation_timeout_ms
 
 
 def _get_form_interaction_timeout_ms() -> int:
@@ -254,14 +206,14 @@ async def _capture_row_pdf_artefact(
     pdf_url = AnyHttpUrl(_cotejo_document_url(_origin_of(cotejo_url), csv))
     _assert_read_http("GET", str(pdf_url), policy=read_policy)
     response = await context.request.get(str(pdf_url))
-    if not (200 <= response.status < 300):
-        raise JustificanteFetchError(f"PDF fetch for CSV={csv!r} returned HTTP {response.status}")
     content_type = response.headers.get("content-type", "")
     body = await response.body()
-    if not body:
-        raise JustificanteFetchError(f"empty PDF body for CSV={csv!r}")
-    if "pdf" not in content_type.lower():
-        raise JustificanteFetchError(f"unexpected content-type {content_type!r} for CSV={csv!r}")
+    _assert_pdf_response(
+        status=response.status,
+        content_type=content_type,
+        body=body,
+        subject=f"CSV={csv!r}",
+    )
     return (
         FiledDeclaracionArtefact(
             kind=kind,
