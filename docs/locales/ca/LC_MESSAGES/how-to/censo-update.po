@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -43,28 +43,27 @@ msgstr ""
 
 #: ../../how-to/censo-update.md:10
 msgid ""
-"You enter census facts by hand. The tool does not read your censo from "
-"AEAT: AEAT publishes no read-only census view, and the only sede surface "
-"that shows census data is the census *modification* tool, which this "
-"application never operates. The tool does not file Modelo 036, does not "
-"submit changes to AEAT, and does not modify AEAT records."
+"You fill census facts three ways: pull them from AEAT, read them from a "
+"certificate you downloaded, or enter them by hand. The pull reads AEAT's "
+"own *Mis Datos Censales* consulta and fills your identity and address; it"
+" cannot reach the regime facts, so you enter those yourself."
 msgstr ""
-"Introdueix les dades censals a mà. L'eina no llegeix el teu censo de "
-"l'AEAT: l'AEAT no publica cap vista censal de només lectura, i l'única "
-"superfície de la sede que mostra dades censals és l'eina de *modificació*"
-" del cens, que aquesta aplicació no opera mai. L'eina no presenta el "
-"Model 036, no envia canvis a l'AEAT i no modifica els registres de "
-"l'AEAT."
 
-#: ../../how-to/censo-update.md:16
+#: ../../how-to/censo-update.md:15
+msgid ""
+"The tool never files Modelo 036, never submits changes to AEAT, and never"
+" modifies AEAT records. The pull reads and stops there."
+msgstr ""
+
+#: ../../how-to/censo-update.md:18
 msgid "Before you start"
 msgstr "Abans de començar"
 
-#: ../../how-to/censo-update.md:18
+#: ../../how-to/censo-update.md:20
 msgid "You need:"
 msgstr "Necessita:"
 
-#: ../../how-to/censo-update.md:20
+#: ../../how-to/censo-update.md:22
 msgid ""
 "an active taxpayer profile; see [Set up your taxpayer profile](profile-"
 "setup.md)"
@@ -72,13 +71,13 @@ msgstr ""
 "un perfil de contribuent actiu; consulta [Configura el teu perfil de "
 "contribuent](profile-setup.md)"
 
-#: ../../how-to/censo-update.md:21
+#: ../../how-to/censo-update.md:23
 msgid "the taxpayer's fiscal ID (NIF, CIF, DNI, or NIE) saved in that profile"
 msgstr ""
 "l'identificador fiscal del contribuent (NIF, CIF, DNI o NIE) desat en "
 "aquest perfil"
 
-#: ../../how-to/censo-update.md:22
+#: ../../how-to/censo-update.md:24
 msgid ""
 "your censo facts as AEAT holds them: activity description and start date,"
 " tax regime, IVA regime, and enrollment facts. Read them from your Modelo"
@@ -88,7 +87,7 @@ msgstr ""
 "d'inici de l'activitat, règim fiscal, règim d'IVA i dades d'alta. "
 "Llegeix-les de la teva còpia del Model 036 o de la sede de l'AEAT."
 
-#: ../../how-to/censo-update.md:26
+#: ../../how-to/censo-update.md:28
 msgid ""
 "Every command on this page needs your master-key passphrase; the tool "
 "prompts for it. The tool's messages are in Spanish."
@@ -96,7 +95,7 @@ msgstr ""
 "Cada ordre d'aquesta pàgina necessita la contrasenya de la clau mestra; "
 "l'eina te la demana. Els missatges de l'eina són en castellà."
 
-#: ../../how-to/censo-update.md:29
+#: ../../how-to/censo-update.md:31
 msgid ""
 "If you have no profile yet, create one non-interactively with `--quiet` "
 "(a bare `profile create NAME` opens an interactive wizard instead):"
@@ -104,19 +103,19 @@ msgstr ""
 "Si encara no tens cap perfil, crea'n un de manera no interactiva amb "
 "`--quiet` (un simple `profile create NAME` obre un assistent interactiu):"
 
-#: ../../how-to/censo-update.md:35
+#: ../../how-to/censo-update.md:37
 msgid "Check the active profile first:"
 msgstr "Comprova primer el perfil actiu:"
 
-#: ../../how-to/censo-update.md:41
+#: ../../how-to/censo-update.md:43
 msgid "Why census facts matter"
 msgstr "Per què són importants les dades censals"
 
-#: ../../how-to/censo-update.md:43
+#: ../../how-to/censo-update.md:45
 msgid "Census facts drive profile-dependent workflows:"
 msgstr "Les dades censals impulsen els fluxos de treball que depenen del perfil:"
 
-#: ../../how-to/censo-update.md:45
+#: ../../how-to/censo-update.md:47
 msgid ""
 "the activity start date keeps the filing calendar from showing "
 "obligations before your registered activity start"
@@ -124,7 +123,7 @@ msgstr ""
 "la data d'inici de l'activitat evita que el calendari de presentacions "
 "mostri obligacions anteriors a l'inici de l'activitat registrada"
 
-#: ../../how-to/censo-update.md:47
+#: ../../how-to/censo-update.md:49
 msgid ""
 "the tax regime, IVA regime, and Renta/IRPF regime select which modelos "
 "and which calculation paths apply"
@@ -132,13 +131,13 @@ msgstr ""
 "el règim fiscal, el règim d'IVA i el règim de Renda/IRPF seleccionen "
 "quins models i quines vies de càlcul s'apliquen"
 
-#: ../../how-to/censo-update.md:49
+#: ../../how-to/censo-update.md:51
 msgid "enrollment facts feed the filing calendar's obligation derivation"
 msgstr ""
 "les dades d'alta nodreixen la derivació d'obligacions del calendari de "
 "presentacions"
 
-#: ../../how-to/censo-update.md:51
+#: ../../how-to/censo-update.md:53
 msgid ""
 "Enter them carefully. The application treats your entries as operator-"
 "declared facts, not as AEAT-verified facts. The filing calendar reports "
@@ -153,15 +152,15 @@ msgstr ""
 "projecció estricta fins que acceptes aquesta base; consulta [Planifica el"
 " teu calendari de presentacions](filing-calendar.md)."
 
-#: ../../how-to/censo-update.md:57
+#: ../../how-to/censo-update.md:59
 msgid "Enter or correct census facts"
 msgstr "Introdueix o corregeix les dades censals"
 
-#: ../../how-to/censo-update.md:59
+#: ../../how-to/censo-update.md:61
 msgid "Edit the active profile with the wizard:"
 msgstr "Edita el perfil actiu amb l'assistent:"
 
-#: ../../how-to/censo-update.md:64
+#: ../../how-to/censo-update.md:66
 msgid ""
 "The wizard walks the profile fields, including the census-backed ones. "
 "For a scripted update, pass the field flags with `--quiet`. Name your own"
@@ -172,7 +171,7 @@ msgstr ""
 "`--quiet`. Posa el nom del teu propi perfil en lloc de `docs-sequence-"
 "sandbox`:"
 
-#: ../../how-to/censo-update.md:72
+#: ../../how-to/censo-update.md:74
 msgid ""
 "Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do "
 "not guess a regime or a start date."
@@ -180,11 +179,138 @@ msgstr ""
 "Copia cada valor de la teva còpia del Model 036 o de la sede de l'AEAT "
 "exactament. No endevinis un règim ni una data d'inici."
 
-#: ../../how-to/censo-update.md:75
+#: ../../how-to/censo-update.md:77
+#, fuzzy
+msgid "Pull your census facts from AEAT"
+msgstr "Per què són importants les dades censals"
+
+#: ../../how-to/censo-update.md:79
+msgid ""
+"AEAT publishes your current census position at *Mis Datos Censales*. Pull"
+" it into the active profile. The first step previews; the second records:"
+msgstr ""
+
+#: ../../how-to/censo-update.md:85
+msgid "Nothing is written until you add `--apply`."
+msgstr ""
+
+#: ../../how-to/censo-update.md:87
+msgid ""
+"Authenticate first; see [Authenticate with AEAT](authenticate-with-"
+"aeat.md). The pull reads your own record and takes your fiscal ID from "
+"the authenticated session, so you cannot point it at another taxpayer."
+msgstr ""
+
+#: ../../how-to/censo-update.md:92
+msgid "What the pull reports"
+msgstr ""
+
+#: ../../how-to/censo-update.md:94
+msgid "Every field comes back as one of three outcomes."
+msgstr ""
+
+#: ../../how-to/censo-update.md:96
+msgid "**Adopted**: the profile had no answer, so AEAT's value fills it."
+msgstr ""
+
+#: ../../how-to/censo-update.md:98
+msgid "**Unchanged**: you and AEAT already agree."
+msgstr ""
+
+#: ../../how-to/censo-update.md:100
+msgid ""
+"**Diverging**: you and AEAT disagree. The pull reports the difference and"
+" writes nothing. You decide which is right, then correct the profile or "
+"your censo. A value you declared is never overwritten. A field you "
+"deliberately cleared stays cleared, and the pull tells you AEAT still "
+"holds a value for it."
+msgstr ""
+
+#: ../../how-to/censo-update.md:105
+msgid ""
+"Once the pull has filled a blank field, a later pull refreshes that same "
+"field when AEAT's value changes. It filled it, so it may update it. "
+"Anything you declared yourself stays yours."
+msgstr ""
+
+#: ../../how-to/censo-update.md:109
+msgid "What the pull cannot fill"
+msgstr ""
+
+#: ../../how-to/censo-update.md:111
+msgid "The pull fills your fiscal address, postcode, and cadastral reference."
+msgstr ""
+
+#: ../../how-to/censo-update.md:113
+msgid ""
+"It does not fill your fiscal ID. It reads your fiscal ID to confirm the "
+"record AEAT returned is yours, and never writes it."
+msgstr ""
+
+#: ../../how-to/censo-update.md:116
+msgid ""
+"It does not fill your regime facts: activity, tax regime, IVA regime, "
+"enrollment. AEAT publishes no read-only surface that carries them. Enter "
+"those by hand as described below."
+msgstr ""
+
+#: ../../how-to/censo-update.md:120
+msgid ""
+"It does not split your name. AEAT returns surnames and given names as one"
+" string, and a wrong split is worse than a blank field, so the pull "
+"leaves both alone."
+msgstr ""
+
+#: ../../how-to/censo-update.md:124
+msgid ""
+"If a pull returns a record whose fiscal ID is not your profile's, it "
+"refuses outright rather than reporting a difference. A read of someone "
+"else's census is not a disagreement to weigh."
+msgstr ""
+
+#: ../../how-to/censo-update.md:129
+msgid "Import a Certificado de Situación Censal"
+msgstr ""
+
+#: ../../how-to/censo-update.md:131
+msgid ""
+"The sede issues a *Certificado de Situación Censal* (procedure G313) that"
+" states your census facts as AEAT holds them. Download it yourself from "
+"the sede, then read it into your profile from the file. The first step "
+"previews; the second records:"
+msgstr ""
+
+#: ../../how-to/censo-update.md:139
+msgid ""
+"The command previews the census facts the certificate carries without "
+"writing anything. Add `--apply` to record them onto the active profile."
+msgstr ""
+
+#: ../../how-to/censo-update.md:142
+msgid ""
+"Facts recorded this way carry a *non-official evidence* marker: they came"
+" from a document you supplied, not from an AEAT-confirmed read, so "
+"profile views show their provenance and the filing calendar's "
+"`censo.enrolment_unverified` warning still applies. Where a certificate "
+"value disagrees with an answer you gave in setup, the profile keeps a "
+"record of the divergence and `aeat config profile show` warns you until "
+"you resolve it."
+msgstr ""
+
+#: ../../how-to/censo-update.md:150
+msgid ""
+"Reading the certificate's contents is not yet active: the command "
+"currently refuses every document while layout coverage for AEAT-issued "
+"certificates is being completed, and tells you so. Until then, enter the "
+"facts by hand as described above. The command's interface is stable, and "
+"this page applies unchanged once reading activates."
+msgstr ""
+
+#: ../../how-to/censo-update.md:157
 msgid "Record a Modelo 036 filing done outside Cadrumo"
 msgstr "Registra una presentació del Model 036 feta fora de Cadrumo"
 
-#: ../../how-to/censo-update.md:77
+#: ../../how-to/censo-update.md:159
 msgid ""
 "If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, "
 "record that fact locally so later filings can rely on it. [Record a "
@@ -201,32 +327,42 @@ msgstr ""
 "presentació, actualitza els camps del perfil que la presentació hagi "
 "canviat."
 
-#: ../../how-to/censo-update.md:83
+#: ../../how-to/censo-update.md:165
 msgid "Check the profile afterwards"
 msgstr "Comprova el perfil després"
 
-#: ../../how-to/censo-update.md:85
+#: ../../how-to/censo-update.md:167
 msgid "Validate the active profile after editing census facts:"
 msgstr "Valida el perfil actiu després d'editar les dades censals:"
 
-#: ../../how-to/censo-update.md:91
+#: ../../how-to/censo-update.md:173
 msgid "If the profile still reports missing facts, edit those fields directly:"
 msgstr ""
 "Si el perfil encara informa de dades que falten, edites aquests camps "
 "directament:"
 
-#: ../../how-to/censo-update.md:96
+#: ../../how-to/censo-update.md:178
 msgid "For modelo-specific readiness, use profile preflight:"
 msgstr "Per a la preparació específica d'un model, usa el preflight del perfil:"
 
-#: ../../how-to/censo-update.md:102
+#: ../../how-to/censo-update.md:184
 msgid "Keep the facts current"
 msgstr "Mantén les dades actualitzades"
 
-#: ../../how-to/censo-update.md:104
+#: ../../how-to/censo-update.md:186
+msgid "Your AEAT census can change - a new activity, a regime change, a baja."
+msgstr ""
+
+#: ../../how-to/censo-update.md:188
 msgid ""
-"Your AEAT census can change - a new activity, a regime change, a baja. "
-"The application cannot detect that drift. Re-check the profile against "
+"Pull again to catch drift in your identity and address. The pull reports "
+"anything AEAT now holds that your profile does not."
+msgstr ""
+
+#: ../../how-to/censo-update.md:191
+#, fuzzy
+msgid ""
+"The pull cannot see a regime change, so re-check those fields against "
 "your latest Modelo 036 copy whenever you file a censo change, and before "
 "you plan a new filing year."
 msgstr ""
@@ -236,23 +372,47 @@ msgstr ""
 "vegada que presentes un canvi censal, i abans de planificar un nou any de"
 " presentació."
 
-#: ../../how-to/censo-update.md:109
+#: ../../how-to/censo-update.md:195
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/censo-update.md:111
+#: ../../how-to/censo-update.md:197
 msgid "[Set up your taxpayer profile](profile-setup.md)"
 msgstr "[Configura el teu perfil de contribuent](profile-setup.md)"
 
-#: ../../how-to/censo-update.md:112
+#: ../../how-to/censo-update.md:198
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
-#: ../../how-to/censo-update.md:113
+#: ../../how-to/censo-update.md:199
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
-#: ../../how-to/censo-update.md:114
+#: ../../how-to/censo-update.md:200
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i proporciona les dades de càlcul](review-calculation-values.md)"
+
+#~ msgid ""
+#~ "You enter census facts by hand. "
+#~ "The tool does not read your censo"
+#~ " from AEAT: AEAT publishes no "
+#~ "read-only census view, and the only"
+#~ " sede surface that shows census data"
+#~ " is the census *modification* tool, "
+#~ "which this application never operates. "
+#~ "The tool does not file Modelo 036,"
+#~ " does not submit changes to AEAT, "
+#~ "and does not modify AEAT records."
+#~ msgstr ""
+#~ "Introdueix les dades censals a mà. "
+#~ "L'eina no llegeix el teu censo de"
+#~ " l'AEAT: l'AEAT no publica cap vista"
+#~ " censal de només lectura, i l'única"
+#~ " superfície de la sede que mostra "
+#~ "dades censals és l'eina de *modificació*"
+#~ " del cens, que aquesta aplicació no"
+#~ " opera mai. L'eina no presenta el "
+#~ "Model 036, no envia canvis a "
+#~ "l'AEAT i no modifica els registres "
+#~ "de l'AEAT."
 

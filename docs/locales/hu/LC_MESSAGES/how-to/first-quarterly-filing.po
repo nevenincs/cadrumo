@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -31,8 +31,8 @@ msgid ""
 "self-employed taxpayer with a NIF, CIF, NIE, or other filing identity who"
 " is running Cadrumo for the first time."
 msgstr ""
-"Ez az oldal az első negyedéves Modelo 130 benyújtását tárgyalja, elejétől "
-"a végéig: hozzon be egy negyedévnyi tranzakciót a ledgerbe, osztályozza "
+"Ez az oldal az első negyedéves Modelo 130 benyújtását tárgyalja, elejétől"
+" a végéig: hozzon be egy negyedévnyi tranzakciót a ledgerbe, osztályozza "
 "őket üzleti bevételként és levonható kiadásként, készítse el a "
 "piszkozatot, és ellenőrizze, hogy átment-e az ellenőrzésen, mielőtt "
 "exportálja. Egy NIF-fel, CIF-fel, NIE-vel vagy más benyújtási "
@@ -118,10 +118,10 @@ msgid ""
 "from the listing above. The income classification takes only the business"
 " decision:"
 msgstr ""
-"Jelölje meg a beszedett kifizetést üzleti bevételként, a beszerzést pedig "
-"levonható üzleti kiadásként egy kategóriával. Minden tranzakcióazonosítót "
-"a fenti listából vegyen. A bevétel osztályozása csak az üzleti döntést "
-"veszi:"
+"Jelölje meg a beszedett kifizetést üzleti bevételként, a beszerzést pedig"
+" levonható üzleti kiadásként egy kategóriával. Minden "
+"tranzakcióazonosítót a fenti listából vegyen. A bevétel osztályozása csak"
+" az üzleti döntést veszi:"
 
 #: ../../how-to/first-quarterly-filing.md:52
 msgid ""
@@ -168,8 +168,8 @@ msgid ""
 "Create the draft for Modelo 130, first quarter 2026. The command reports "
 "a `work_unit_id` that addresses the draft."
 msgstr ""
-"Hozza létre a Modelo 130 piszkozatát a 2026-os első negyedévre. A parancs "
-"jelent egy `work_unit_id`-t, amely megszólítja a piszkozatot."
+"Hozza létre a Modelo 130 piszkozatát a 2026-os első negyedévre. A parancs"
+" jelent egy `work_unit_id`-t, amely megszólítja a piszkozatot."
 
 #: ../../how-to/first-quarterly-filing.md:77
 msgid ""
@@ -183,46 +183,47 @@ msgid ""
 "period carries a true first quarter does not have."
 msgstr ""
 "Számítsa ki. A Cadrumo beolvassa az osztályozott ledgert, és kitölti a "
-"rovatokat: a casilla `01` a negyedév bevétele, a casilla `02` a levonható "
-"kiadások, a casilla `03` a nettó hozam, a casilla `04` pedig az előleg. A "
-"casilla 01 az 1000.00-t mutatja, nem az Ön által beszedett 1210.00-t: az "
-"IVA soha nem része a bevételének, ezért a 210.00 IVA kimarad. A "
-"példa-ledgerrel a nettó hozam `500.00`, az előleg pedig `100.00`, a nettó "
-"húsz százaléka. A három `--binding ...=0` érték az előző időszaki "
-"átvezetés, amely egy valódi első negyedévnek nincs."
+"rovatokat: a casilla `01` a negyedév bevétele, a casilla `02` a levonható"
+" kiadások, a casilla `03` a nettó hozam, a casilla `04` pedig az előleg. "
+"A casilla 01 az 1000.00-t mutatja, nem az Ön által beszedett 1210.00-t: "
+"az IVA soha nem része a bevételének, ezért a 210.00 IVA kimarad. A példa-"
+"ledgerrel a nettó hozam `500.00`, az előleg pedig `100.00`, a nettó húsz "
+"százaléka. A három `--binding ...=0` érték az előző időszaki átvezetés, "
+"amely egy valódi első negyedévnek nincs."
 
 #: ../../how-to/first-quarterly-filing.md:85
 msgid ""
 "Verify the draft. The result reads `granted_verificado_completo` true, so"
 " the draft is complete and ready to export."
 msgstr ""
-"Ellenőrizze a piszkozatot. Az eredmény `granted_verificado_completo` "
-"igaz értéket mutat, így a piszkozat teljes és exportálásra kész."
+"Ellenőrizze a piszkozatot. Az eredmény `granted_verificado_completo` igaz"
+" értéket mutat, így a piszkozat teljes és exportálásra kész."
 
 #: ../../how-to/first-quarterly-filing.md:88
 msgid "Check the figures and export"
 msgstr "Ellenőrizze a számokat és exportáljon"
 
 #: ../../how-to/first-quarterly-filing.md:90
+#, fuzzy
 msgid ""
 "The verification result is the signal that the draft is ready. When "
 "`granted_verificado_completo` reads true, export the file. Export refuses"
 " until every deductible-expense row carries linked purchase-invoice "
-"evidence; this first-filing example omits that evidence, so the export "
-"and the post-portal filed marker are shown as display frames. The full "
-"evidence-to-export chain runs end to end, executed, on [Prepare a Modelo "
-"303 IVA filing](modelo-303.md):"
+"evidence, so this example registers the supplier invoice and attaches it "
+"before it calculates. Attach in that order: a draft bundles its evidence "
+"when you verify it, so an invoice attached afterwards does not reach the "
+"filing."
 msgstr ""
 "Az ellenőrzés eredménye a jelzés arról, hogy a piszkozat kész. Amikor a "
 "`granted_verificado_completo` igaz értéket mutat, exportálja a fájlt. Az "
 "export elutasítja a műveletet, amíg minden levonható-kiadás sor nem "
 "hordoz összekapcsolt beszerzési-számla bizonyítékot; ez az első "
-"benyújtási példa kihagyja azt a bizonyítékot, ezért az export és a "
-"portál utáni benyújtási jelölő megjelenítő keretként szerepel. A teljes, "
+"benyújtási példa kihagyja azt a bizonyítékot, ezért az export és a portál"
+" utáni benyújtási jelölő megjelenítő keretként szerepel. A teljes, "
 "bizonyítéktól exportig tartó lánc elejétől a végéig, végrehajtva fut a "
 "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md) oldalon:"
 
-#: ../../how-to/first-quarterly-filing.md:100
+#: ../../how-to/first-quarterly-filing.md:101
 msgid ""
 "A later quarter builds on this one: leave the three prior-period bindings"
 " unset so they resolve from your filed history. See [Prepare a Modelo 130"
@@ -230,26 +231,27 @@ msgid ""
 "behaviour."
 msgstr ""
 "Egy későbbi negyedév erre épül: hagyja a három előző időszaki kötést "
-"beállítatlanul, hogy a benyújtott előzményeiből oldódjanak fel. Az "
-"év eleji halmozott viselkedésért lásd [Egy Modelo 130 IRPF-előleg "
+"beállítatlanul, hogy a benyújtott előzményeiből oldódjanak fel. Az év "
+"eleji halmozott viselkedésért lásd [Egy Modelo 130 IRPF-előleg "
 "előkészítése](modelo-130.md)."
 
-#: ../../how-to/first-quarterly-filing.md:105
+#: ../../how-to/first-quarterly-filing.md:106
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/first-quarterly-filing.md:107
+#: ../../how-to/first-quarterly-filing.md:108
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
 msgstr "[Egy Modelo 130 IRPF-előleg előkészítése](modelo-130.md)"
 
-#: ../../how-to/first-quarterly-filing.md:108
+#: ../../how-to/first-quarterly-filing.md:109
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók osztályozása](classify-transactions.md)"
 
-#: ../../how-to/first-quarterly-filing.md:109
+#: ../../how-to/first-quarterly-filing.md:110
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/first-quarterly-filing.md:110
+#: ../../how-to/first-quarterly-filing.md:111
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Töltse fel az exportált modelóját az AEAT-portálon](file-at-aeat.md)"
+

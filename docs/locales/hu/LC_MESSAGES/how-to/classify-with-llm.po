@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-08-01 10:30+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -33,11 +33,11 @@ msgid ""
 msgstr ""
 "Ez az oldal az LLM-segített osztályozási munkafolyamatot tárgyalja: egy "
 "szolgáltató beállítását, egy tranzakcióra vonatkozó javaslat előnézetét, "
-"az ellenőrzési kört (alkalmazás, elutasítás vagy felülbírálás), az "
-"IVA-adómezők telítését, valamint egy csatolt számla beolvasását egy "
-"modellel, a saját gépén vagy - kifejezett hozzájárulással - egy "
-"felhőszolgáltatón keresztül. A javaslat mindig kiindulópont: Ön erősíti "
-"meg vagy javítja, és a modell soha nem állít be euróösszeget."
+"az ellenőrzési kört (alkalmazás, elutasítás vagy felülbírálás), az IVA-"
+"adómezők telítését, valamint egy csatolt számla beolvasását egy modellel,"
+" a saját gépén vagy - kifejezett hozzájárulással - egy felhőszolgáltatón "
+"keresztül. A javaslat mindig kiindulópont: Ön erősíti meg vagy javítja, "
+"és a modell soha nem állít be euróösszeget."
 
 #: ../../how-to/classify-with-llm.md:10
 msgid ""
@@ -46,10 +46,10 @@ msgid ""
 "provider setup; see [the privacy boundary](#privacy-boundary) before "
 "using real taxpayer data."
 msgstr ""
-"Az osztályozás nem lép kapcsolatba az AEAT-tal, és nem nyújt be semmit. A "
-"szolgáltató CLI-je a szolgáltatóbeállításától függően kapcsolatba léphet a "
-"saját külső szolgáltatásával; valós adózói adatok használata előtt lásd "
-"[az adatvédelmi határvonalat](#privacy-boundary)."
+"Az osztályozás nem lép kapcsolatba az AEAT-tal, és nem nyújt be semmit. A"
+" szolgáltató CLI-je a szolgáltatóbeállításától függően kapcsolatba léphet"
+" a saját külső szolgáltatásával; valós adózói adatok használata előtt "
+"lásd [az adatvédelmi határvonalat](#privacy-boundary)."
 
 #: ../../how-to/classify-with-llm.md:15
 msgid ""
@@ -95,13 +95,15 @@ msgstr "Egy telepített, a `PATH`-on lévő és bejelentkezett szolgáltató CLI
 
 #: ../../how-to/classify-with-llm.md:30
 msgid "The runtime emits help, prompts, and messages in Spanish."
-msgstr "A futtatókörnyezet a súgót, a kéréseket és az üzeneteket spanyolul jeleníti meg."
+msgstr ""
+"A futtatókörnyezet a súgót, a kéréseket és az üzeneteket spanyolul "
+"jeleníti meg."
 
-#: ../../how-to/classify-with-llm.md:32
+#: ../../how-to/classify-with-llm.md:33
 msgid "Set up a provider"
 msgstr "Szolgáltató beállítása"
 
-#: ../../how-to/classify-with-llm.md:34
+#: ../../how-to/classify-with-llm.md:35
 msgid ""
 "`aeat` does not store LLM credentials and has no separate LLM account "
 "configuration. It runs a provider CLI that is already installed and "
@@ -110,14 +112,14 @@ msgid ""
 "Google's `agy` CLI, the supported successor to the retired standalone "
 "`gemini` CLI."
 msgstr ""
-"Az `aeat` nem tárol LLM-hitelesítő adatokat, és nincs külön "
-"LLM-fiókbeállítása. Egy olyan szolgáltató CLI-t futtat, amely már "
-"telepítve és hitelesítve van a rendszerén. Az osztályozási parancs "
-"elfogad olyan szolgáltatóneveket, mint a `claude`, az `antigravity` és a "
-"`codex`; az `antigravity` a Google `agy` CLI-jét használja, amely a "
-"visszavonult önálló `gemini` CLI támogatott utódja."
+"Az `aeat` nem tárol LLM-hitelesítő adatokat, és nincs külön LLM-"
+"fiókbeállítása. Egy olyan szolgáltató CLI-t futtat, amely már telepítve "
+"és hitelesítve van a rendszerén. Az osztályozási parancs elfogad olyan "
+"szolgáltatóneveket, mint a `claude`, az `antigravity` és a `codex`; az "
+"`antigravity` a Google `agy` CLI-jét használja, amely a visszavonult "
+"önálló `gemini` CLI támogatott utódja."
 
-#: ../../how-to/classify-with-llm.md:41
+#: ../../how-to/classify-with-llm.md:42
 msgid ""
 "List the provider CLIs visible on `PATH`. Each row reports a provider, "
 "its status (`available` or `unavailable`), and a fix when something is "
@@ -127,7 +129,7 @@ msgstr ""
 "szolgáltatót, annak állapotát (`available` vagy `unavailable`) és egy "
 "javítást jelent, ha valami hiányzik:"
 
-#: ../../how-to/classify-with-llm.md:47
+#: ../../how-to/classify-with-llm.md:49
 msgid ""
 "This checks discoverability only, not account login. The local vision "
 "reader appears here too: `ollama-vision` shows `unavailable` with a fix "
@@ -143,7 +145,7 @@ msgstr ""
 "`disponible`-ként vagy `ausente`-ként sorol fel, minden problémához "
 "tartozó javítással."
 
-#: ../../how-to/classify-with-llm.md:53
+#: ../../how-to/classify-with-llm.md:55
 msgid ""
 "Install and authenticate the provider with its own CLI or account flow. "
 "The login command and data-retention settings belong to the provider, not"
@@ -154,22 +156,22 @@ msgstr ""
 "beállítások a szolgáltatóhoz tartoznak, nem az `aeat`-hoz. Ezután "
 "végezzen füstpróbát egy előnézettel, amely semmit sem ment:"
 
-#: ../../how-to/classify-with-llm.md:60
+#: ../../how-to/classify-with-llm.md:62
 msgid ""
 "A logged-out provider makes the command refuse and relay the provider's "
 "own error (for example `La clasificacion por LLM fallo: claude CLI exited"
 " with 1: 'Not logged in ...'`). Complete that provider's login and retry."
 msgstr ""
 "Egy kijelentkezett szolgáltatónál a parancs elutasítja a műveletet, és "
-"továbbítja a szolgáltató saját hibáját (például `La clasificacion por LLM "
-"fallo: claude CLI exited with 1: 'Not logged in ...'`). Fejezze be az "
+"továbbítja a szolgáltató saját hibáját (például `La clasificacion por LLM"
+" fallo: claude CLI exited with 1: 'Not logged in ...'`). Fejezze be az "
 "adott szolgáltató bejelentkezését, és próbálja újra."
 
-#: ../../how-to/classify-with-llm.md:64
+#: ../../how-to/classify-with-llm.md:66
 msgid "Ask for a suggestion"
 msgstr "Kérjen javaslatot"
 
-#: ../../how-to/classify-with-llm.md:66
+#: ../../how-to/classify-with-llm.md:68
 msgid ""
 "Find a row that still needs classification and inspect it. Then send that"
 " one row to the provider for a preview:"
@@ -177,7 +179,7 @@ msgstr ""
 "Keressen egy sort, amely még osztályozásra vár, és vizsgálja meg. Ezután "
 "küldje el azt az egy sort a szolgáltatónak előnézetre:"
 
-#: ../../how-to/classify-with-llm.md:73
+#: ../../how-to/classify-with-llm.md:75
 msgid ""
 "`aeat` sends that one row to the selected provider CLI, which suggests a "
 "classification (`BUSINESS`, `PERSONAL`, or `MIXED`), an expense category "
@@ -187,14 +189,14 @@ msgid ""
 "fields, put the global JSON flag before the subcommand:"
 msgstr ""
 "Az `aeat` elküldi azt az egy sort a kiválasztott szolgáltató CLI-nek, "
-"amely javasol egy osztályozást (`BUSINESS`, `PERSONAL` vagy `MIXED`), egy "
-"kiadáskategóriát, amikor tud választani az engedélyezett listából, egy "
+"amely javasol egy osztályozást (`BUSINESS`, `PERSONAL` vagy `MIXED`), egy"
+" kiadáskategóriát, amikor tud választani az engedélyezett listából, egy "
 "megbízhatóságot és egy rövid indoklást. Előnézeti módban semmi sem kerül "
 "mentésre. A teljes, géppel olvasható nyilvántartáshoz, beleértve a "
-"`provenance` (`llm:<provider>`) és a `persisted` mezőket, tegye a globális "
-"JSON-kapcsolót az alparancs elé:"
+"`provenance` (`llm:<provider>`) és a `persisted` mezőket, tegye a "
+"globális JSON-kapcsolót az alparancs elé:"
 
-#: ../../how-to/classify-with-llm.md:83
+#: ../../how-to/classify-with-llm.md:85
 msgid ""
 "Use the row description, amount, direction, counterparty, and source "
 "documents to decide whether the suggestion makes sense. For the "
@@ -202,19 +204,19 @@ msgid ""
 "transactions.md)."
 msgstr ""
 "Annak eldöntéséhez, hogy a javaslatnak van-e értelme, használja a sor "
-"leírását, összegét, irányát, partnerét és forrásdokumentumait. A mögöttes "
-"kézi fogalmakhoz lásd [Tranzakciók osztályozása](classify-"
+"leírását, összegét, irányát, partnerét és forrásdokumentumait. A mögöttes"
+" kézi fogalmakhoz lásd [Tranzakciók osztályozása](classify-"
 "transactions.md)."
 
-#: ../../how-to/classify-with-llm.md:87
+#: ../../how-to/classify-with-llm.md:89
 msgid "Review, apply, reject, or override"
 msgstr "Áttekintés, alkalmazás, elutasítás vagy felülbírálás"
 
-#: ../../how-to/classify-with-llm.md:89
+#: ../../how-to/classify-with-llm.md:91
 msgid "The review loop has four terminals:"
 msgstr "Az ellenőrzési körnek négy végpontja van:"
 
-#: ../../how-to/classify-with-llm.md:91
+#: ../../how-to/classify-with-llm.md:93
 msgid ""
 "**Review.** Preview without `--apply`. Nothing is saved; walking away "
 "leaves the row unchanged."
@@ -222,7 +224,7 @@ msgstr ""
 "**Áttekintés.** Előnézet `--apply` nélkül. Semmi sem kerül mentésre; ha "
 "kilép, a sor változatlan marad."
 
-#: ../../how-to/classify-with-llm.md:93
+#: ../../how-to/classify-with-llm.md:95
 msgid ""
 "**Apply.** Persist the suggestion after review. The apply output shows "
 "the transaction id, `clasificado-por llm:<provider>`, and the new review "
@@ -235,7 +237,7 @@ msgstr ""
 "megbízhatóság és az indoklás az osztályozási eseménnyel együtt kerül "
 "rögzítésre."
 
-#: ../../how-to/classify-with-llm.md:96
+#: ../../how-to/classify-with-llm.md:98
 msgid ""
 "**Reject.** Record that the model was wrong, with your reason, as an "
 "audit event; the row stays unclassified and the record stays in history. "
@@ -248,7 +250,7 @@ msgstr ""
 "előnézet és a kilépés szintén nem változtat semmin, de a `--reject` az, "
 "ami rögzíti az audit-nyomvonalat."
 
-#: ../../how-to/classify-with-llm.md:100
+#: ../../how-to/classify-with-llm.md:102
 msgid ""
 "**Override.** Classify manually whenever the suggestion is wrong or "
 "incomplete. Manual classification always wins and supersedes a derived or"
@@ -258,7 +260,7 @@ msgstr ""
 "vagy hiányos. A kézi osztályozás mindig nyer, és felülírja a levezetett "
 "vagy modell által alkalmazott értéket."
 
-#: ../../how-to/classify-with-llm.md:104
+#: ../../how-to/classify-with-llm.md:106
 msgid ""
 "Apply and reject both run the provider, so they are shown as display-only"
 " frames:"
@@ -266,7 +268,7 @@ msgstr ""
 "Az alkalmazás és az elutasítás egyaránt futtatja a szolgáltatót, ezért "
 "csak megjelenítő keretként szerepelnek:"
 
-#: ../../how-to/classify-with-llm.md:110
+#: ../../how-to/classify-with-llm.md:112
 msgid ""
 "Override runs entirely on your machine. Classify the row by hand with the"
 " classification and category you choose:"
@@ -274,7 +276,7 @@ msgstr ""
 "A felülbírálás teljes egészében az Ön gépén fut. Osztályozza a sort "
 "kézzel az Ön által választott osztályozással és kategóriával:"
 
-#: ../../how-to/classify-with-llm.md:117
+#: ../../how-to/classify-with-llm.md:119
 msgid ""
 "If the row is mixed-use, the LLM suggestion alone is not enough; supply "
 "the business share through the normal [mixed-use workflow](classify-"
@@ -282,16 +284,15 @@ msgid ""
 "corrections, re-run preflight for the period:"
 msgstr ""
 "Ha a sor vegyes használatú, az LLM-javaslat önmagában nem elég; adja meg "
-"az üzleti arányt a szokásos [vegyes használatú "
-"munkafolyamattal](classify-transactions.md#classify-mixed-use-"
-"transactions). A fontos javítások után futtassa újra az előellenőrzést az "
-"időszakra:"
+"az üzleti arányt a szokásos [vegyes használatú munkafolyamattal"
+"](classify-transactions.md#classify-mixed-use-transactions). A fontos "
+"javítások után futtassa újra az előellenőrzést az időszakra:"
 
-#: ../../how-to/classify-with-llm.md:126
+#: ../../how-to/classify-with-llm.md:128
 msgid "Fill in the tax fields automatically"
 msgstr "Töltse ki automatikusan az adómezőket"
 
-#: ../../how-to/classify-with-llm.md:128
+#: ../../how-to/classify-with-llm.md:130
 msgid ""
 "A plain applied suggestion saves the classification and the expense "
 "category; it does not fill in the regulated tax fields. Add `--saturate` "
@@ -308,7 +309,7 @@ msgstr ""
 "nyilvántartásból származik, az adóalapot és az IVA-összeget pedig a "
 "tranzakció végösszegéből számítja ki:"
 
-#: ../../how-to/classify-with-llm.md:138
+#: ../../how-to/classify-with-llm.md:140
 msgid ""
 "The preview adds the selected IVA category and, when the category has a "
 "Spanish rate, the derived figures; base and IVA always add up to the "
@@ -321,13 +322,13 @@ msgstr ""
 "Az előnézet hozzáadja a kiválasztott IVA-kategóriát, és amikor a "
 "kategóriának van spanyol kulcsa, a levezetett számokat; az adóalap és az "
 "IVA mindig kiadja a tranzakció végösszegét. Egy egyszerű spanyol kulcs "
-"nélküli kategória (egy közösségen belüli termékértékesítés, egy fordított "
-"adózású beszerzés) számok helyett egy megjegyzést mutat, amelyeket kézzel "
-"egészít ki. A modell vissza is utasíthatja, és találgatás helyett "
+"nélküli kategória (egy közösségen belüli termékértékesítés, egy fordított"
+" adózású beszerzés) számok helyett egy megjegyzést mutat, amelyeket "
+"kézzel egészít ki. A modell vissza is utasíthatja, és találgatás helyett "
 "`unknown`-t adhat vissza; futtassa újra, vagy válassza ki maga a "
 "kategóriát."
 
-#: ../../how-to/classify-with-llm.md:145
+#: ../../how-to/classify-with-llm.md:147
 msgid ""
 "When you already know the IVA category, or the model returned `unknown`, "
 "classify the row as business first, then let the system derive the "
@@ -343,7 +344,7 @@ msgstr ""
 "rendszer által levezetettként rögzíti őket. Csak az IVA-mezőket érinti, "
 "és a sornak már üzletiként vagy vegyesként osztályozottnak kell lennie:"
 
-#: ../../how-to/classify-with-llm.md:155
+#: ../../how-to/classify-with-llm.md:157
 msgid ""
 "To override any field by hand, classify manually with the figures "
 "yourself. The taxable base plus IVA must equal the transaction total to "
@@ -353,7 +354,7 @@ msgstr ""
 "számokat. Az adóalapnak plusz az IVA-nak centre pontosan meg kell "
 "egyeznie a tranzakció végösszegével:"
 
-#: ../../how-to/classify-with-llm.md:162
+#: ../../how-to/classify-with-llm.md:164
 msgid ""
 "IRPF category is still entered manually in [Classify transactions"
 "](classify-transactions.md). Use [Review and supply calculation inputs"
@@ -365,11 +366,11 @@ msgstr ""
 "[Számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md) útmutatót, amikor egy modelo később hiányzó értékeket jelez."
 
-#: ../../how-to/classify-with-llm.md:167
+#: ../../how-to/classify-with-llm.md:169
 msgid "Read the attached invoice"
 msgstr "A csatolt számla beolvasása"
 
-#: ../../how-to/classify-with-llm.md:169
+#: ../../how-to/classify-with-llm.md:171
 msgid ""
 "Attach a purchase invoice or receipt to a transaction (see [Attach "
 "invoices and receipts](ledger-evidence.md)), then let the model read it "
@@ -378,27 +379,26 @@ msgid ""
 "euro amount from the registry. How the document is read depends on the "
 "file:"
 msgstr ""
-"Csatoljon egy beszerzési számlát vagy bizonylatot egy tranzakcióhoz (lásd "
-"[Számlák és bizonylatok csatolása](ledger-evidence.md)), majd hagyja, "
+"Csatoljon egy beszerzési számlát vagy bizonylatot egy tranzakcióhoz (lásd"
+" [Számlák és bizonylatok csatolása](ledger-evidence.md)), majd hagyja, "
 "hogy a modell beolvassa az osztályozás közben a `--read-evidence` "
-"kapcsolóval. A modell abból választja ki a kiadáskategóriát és az "
-"IVA-helyzetet, amit beolvas; az `aeat` minden euróösszeget a "
-"nyilvántartásból vezet le. A dokumentum beolvasásának módja a fájltól "
-"függ:"
+"kapcsolóval. A modell abból választja ki a kiadáskategóriát és az IVA-"
+"helyzetet, amit beolvas; az `aeat` minden euróösszeget a nyilvántartásból"
+" vezet le. A dokumentum beolvasásának módja a fájltól függ:"
 
-#: ../../how-to/classify-with-llm.md:175
+#: ../../how-to/classify-with-llm.md:177
 msgid ""
 "**A scanned PDF or an image** is read on your own machine by a local "
 "vision model. Nothing leaves the machine, no acknowledgement is needed, "
 "no `--llm` provider is needed, and it works in gestor and professional "
 "deployments."
 msgstr ""
-"**Egy beszkennelt PDF-et vagy egy képet** egy helyi vízió-modell olvas be "
-"az Ön saját gépén. Semmi sem hagyja el a gépet, nincs szükség "
+"**Egy beszkennelt PDF-et vagy egy képet** egy helyi vízió-modell olvas be"
+" az Ön saját gépén. Semmi sem hagyja el a gépet, nincs szükség "
 "nyugtázásra, nincs szükség `--llm` szolgáltatóra, és működik gestor- és "
 "professzionális telepítésekben."
 
-#: ../../how-to/classify-with-llm.md:179
+#: ../../how-to/classify-with-llm.md:181
 msgid ""
 "**A text-layer PDF** has its text extracted and sent to a cloud provider "
 "(the same `--llm` providers). This sends the text off your machine, so it"
@@ -407,20 +407,20 @@ msgid ""
 msgstr ""
 "**Egy szövegrétegű PDF** szövegét kinyeri és elküldi egy "
 "felhőszolgáltatónak (ugyanazok az `--llm` szolgáltatók). Ez elküldi a "
-"szöveget a gépéről, ezért alapértelmezésben ki van kapcsolva, "
-"gestor-telepítésekben tiltva van, és egy kifejezett, futtatásonkénti "
-"nyugtázás mögé van zárva."
+"szöveget a gépéről, ezért alapértelmezésben ki van kapcsolva, gestor-"
+"telepítésekben tiltva van, és egy kifejezett, futtatásonkénti nyugtázás "
+"mögé van zárva."
 
-#: ../../how-to/classify-with-llm.md:184
+#: ../../how-to/classify-with-llm.md:186
 msgid ""
 "Prefer the on-host path. Install Ollama and pull the default vision model"
 " first (this is an Ollama command, not an `aeat` command):"
 msgstr ""
-"Részesítse előnyben a gépen belüli utat. Először telepítse az Ollamát, és "
-"húzza le az alapértelmezett vízió-modellt (ez egy Ollama-parancs, nem "
+"Részesítse előnyben a gépen belüli utat. Először telepítse az Ollamát, és"
+" húzza le az alapértelmezett vízió-modellt (ez egy Ollama-parancs, nem "
 "`aeat`-parancs):"
 
-#: ../../how-to/classify-with-llm.md:191
+#: ../../how-to/classify-with-llm.md:193
 msgid ""
 "`qwen2.5vl:3b` is about 3 GB and runs on a consumer GPU or on CPU. On an "
 "8 GB or larger GPU, pull `qwen2.5vl:7b` for stronger reading of dense "
@@ -428,23 +428,23 @@ msgid ""
 "classify from the attached image, previewing first. Override the vision "
 "model for one run with `--vision-model qwen2.5vl:7b`:"
 msgstr ""
-"A `qwen2.5vl:3b` körülbelül 3 GB, és fogyasztói GPU-n vagy CPU-n fut. Egy "
-"8 GB-os vagy nagyobb GPU-n húzza le a `qwen2.5vl:7b`-t a sűrű szkennek "
+"A `qwen2.5vl:3b` körülbelül 3 GB, és fogyasztói GPU-n vagy CPU-n fut. Egy"
+" 8 GB-os vagy nagyobb GPU-n húzza le a `qwen2.5vl:7b`-t a sűrű szkennek "
 "erősebb olvasásához; egy kevés memóriájú vagy csak CPU-s géphez húzza le "
 "a `moondream`-et. Ezután osztályozzon a csatolt képből, először "
 "előnézetben. Egyetlen futtatáshoz a `--vision-model qwen2.5vl:7b` "
 "kapcsolóval bírálhatja felül a vízió-modellt:"
 
-#: ../../how-to/classify-with-llm.md:200
+#: ../../how-to/classify-with-llm.md:202
 msgid ""
 "Reading a text-layer PDF through a cloud provider requires all of the "
 "following, or the command refuses and explains why:"
 msgstr ""
-"Egy szövegrétegű PDF felhőszolgáltatón keresztüli beolvasásához az "
-"összes alábbi szükséges, különben a parancs elutasítja a műveletet, és "
+"Egy szövegrétegű PDF felhőszolgáltatón keresztüli beolvasásához az összes"
+" alábbi szükséges, különben a parancs elutasítja a műveletet, és "
 "megmagyarázza, miért:"
 
-#: ../../how-to/classify-with-llm.md:203
+#: ../../how-to/classify-with-llm.md:205
 msgid ""
 "The installation permits it. Cloud evidence reads are off by default and "
 "stay off in gestor installations; whoever administers the installation "
@@ -455,31 +455,31 @@ msgstr ""
 "maradnak; ezt a telepítési beállítást az dönti el, aki a telepítést "
 "adminisztrálja."
 
-#: ../../how-to/classify-with-llm.md:206
+#: ../../how-to/classify-with-llm.md:208
 msgid ""
 "You acknowledge it on this run with `--evidence-acknowledged`. The "
 "acknowledgement is never remembered; pass it every time."
 msgstr ""
-"Ön nyugtázza ezt a futtatáson az `--evidence-acknowledged` kapcsolóval. A "
-"nyugtázás soha nincs megjegyezve; minden alkalommal adja meg."
+"Ön nyugtázza ezt a futtatáson az `--evidence-acknowledged` kapcsolóval. A"
+" nyugtázás soha nincs megjegyezve; minden alkalommal adja meg."
 
-#: ../../how-to/classify-with-llm.md:212
+#: ../../how-to/classify-with-llm.md:214
 msgid ""
 "The acknowledgement gates the upload of the invoice text only. A "
 "transaction with no attached evidence sends nothing extra: the provider "
 "receives only the transaction row, exactly as in the plain suggestion "
 "flow."
 msgstr ""
-"A nyugtázás csak a számla szövegének feltöltését engedélyezi. Egy csatolt "
-"bizonyíték nélküli tranzakció nem küld semmi extrát: a szolgáltató csak a "
-"tranzakciósort kapja meg, pontosan úgy, mint az egyszerű javaslati "
+"A nyugtázás csak a számla szövegének feltöltését engedélyezi. Egy csatolt"
+" bizonyíték nélküli tranzakció nem küld semmi extrát: a szolgáltató csak "
+"a tranzakciósort kapja meg, pontosan úgy, mint az egyszerű javaslati "
 "folyamatban."
 
-#: ../../how-to/classify-with-llm.md:216
+#: ../../how-to/classify-with-llm.md:218
 msgid "Split a multi-line invoice automatically"
 msgstr "Egy többsoros számla automatikus felosztása"
 
-#: ../../how-to/classify-with-llm.md:218
+#: ../../how-to/classify-with-llm.md:220
 msgid ""
 "When the model reads an invoice with several lines at different rates or "
 "categories, the preview adds a `split recommended` note with the exact "
@@ -492,12 +492,12 @@ msgstr ""
 "kulcsokkal vagy kategóriákkal, az előnézet egy `split recommended` "
 "megjegyzést ad hozzá a pontos paranccsal, amely szétválasztja őket. "
 "Minden sornak saját bejegyzéssé kell válnia, hogy a levonható IVA-ja és "
-"az alapkulcsos kiadása önállóan kerüljön be a bevallásba. Ha egy lépésben "
-"szeretne rá reagálni, adja hozzá az `--auto-split` kapcsolót. Az "
+"az alapkulcsos kiadása önállóan kerüljön be a bevallásba. Ha egy lépésben"
+" szeretne rá reagálni, adja hozzá az `--auto-split` kapcsolót. Az "
 "`--auto-split` megköveteli a `--read-evidence`-t, és nem kombinálható a "
 "kézi felülbírálási kapcsolókkal:"
 
-#: ../../how-to/classify-with-llm.md:228
+#: ../../how-to/classify-with-llm.md:230
 msgid ""
 "A multi-line invoice previews one child transaction per line, each with "
 "its own category, IVA category, and registry-derived base and IVA; the "
@@ -507,24 +507,24 @@ msgstr ""
 "Egy többsoros számla soronként egy gyermektranzakciót mutat előnézetben, "
 "mindegyiket a saját kategóriájával, IVA-kategóriájával és a "
 "nyilvántartásból levezetett adóalapjával és IVA-jával; a gyermekek "
-"összege pontosan kiadja az eredeti összeget. Egy egysoros számlát helyben "
-"osztályoz felosztás nélkül."
+"összege pontosan kiadja az eredeti összeget. Egy egysoros számlát helyben"
+" osztályoz felosztás nélkül."
 
-#: ../../how-to/classify-with-llm.md:233
+#: ../../how-to/classify-with-llm.md:235
 msgid "How `aeat` protects the documents it reads"
 msgstr "Hogyan védi az `aeat` az általa beolvasott dokumentumokat"
 
-#: ../../how-to/classify-with-llm.md:235
+#: ../../how-to/classify-with-llm.md:237
 msgid ""
 "Invoice bytes live only in encrypted secure storage. Reading decrypts "
 "them into memory for the one call and never writes them to a temp file, a"
 " log, or a cache."
 msgstr ""
 "A számla bájtjai csak titkosított biztonságos tárolóban élnek. A "
-"beolvasás az egyetlen híváshoz a memóriába fejti vissza őket, és soha nem "
-"írja ki ideiglenes fájlba, naplóba vagy gyorsítótárba."
+"beolvasás az egyetlen híváshoz a memóriába fejti vissza őket, és soha nem"
+" írja ki ideiglenes fájlba, naplóba vagy gyorsítótárba."
 
-#: ../../how-to/classify-with-llm.md:238
+#: ../../how-to/classify-with-llm.md:240
 msgid ""
 "A scanned or image read sends the image only to the local model over a "
 "loopback connection on your machine. Nothing leaves the machine."
@@ -533,7 +533,7 @@ msgstr ""
 "egy loopback-kapcsolaton keresztül az Ön gépén. Semmi sem hagyja el a "
 "gépet."
 
-#: ../../how-to/classify-with-llm.md:240
+#: ../../how-to/classify-with-llm.md:242
 msgid ""
 "A text-layer read sends only the extracted text, and only to a cloud "
 "provider you explicitly permitted and acknowledged. It never sends the "
@@ -543,7 +543,7 @@ msgstr ""
 "olyan felhőszolgáltatónak, amelyet Ön kifejezetten engedélyezett és "
 "nyugtázott. Soha nem küldi el a PDF bájtjait."
 
-#: ../../how-to/classify-with-llm.md:243
+#: ../../how-to/classify-with-llm.md:245
 msgid ""
 "The model selects only the classification, the category, the IVA "
 "category, and a split proportion. `aeat` derives every rate, base, and "
@@ -552,17 +552,17 @@ msgid ""
 " review shows an advisory so you can check before filing."
 msgstr ""
 "A modell csak az osztályozást, a kategóriát, az IVA-kategóriát és egy "
-"felosztási arányt választ ki. Az `aeat` minden kulcsot, adóalapot és "
-"IVA-összeget a nyilvántartásból vezet le, és nem hajlandó elmenteni egy "
-"olyan eredményt, amelynek részei nem adnak ki összeget. Amikor a "
-"kinyomtatott IVA nem egyezik a kiszámított IVA-val, az áttekintés egy "
-"figyelmeztetést mutat, hogy a benyújtás előtt ellenőrizhesse."
+"felosztási arányt választ ki. Az `aeat` minden kulcsot, adóalapot és IVA-"
+"összeget a nyilvántartásból vezet le, és nem hajlandó elmenteni egy olyan"
+" eredményt, amelynek részei nem adnak ki összeget. Amikor a kinyomtatott "
+"IVA nem egyezik a kiszámított IVA-val, az áttekintés egy figyelmeztetést "
+"mutat, hogy a benyújtás előtt ellenőrizhesse."
 
-#: ../../how-to/classify-with-llm.md:249
+#: ../../how-to/classify-with-llm.md:251
 msgid "Evidence deployment settings"
 msgstr "Bizonyíték-telepítési beállítások"
 
-#: ../../how-to/classify-with-llm.md:251
+#: ../../how-to/classify-with-llm.md:253
 msgid ""
 "Consent and model settings are deployment configuration, off by default "
 "and administered outside this workflow. The full list lives in the "
@@ -573,11 +573,11 @@ msgstr ""
 "adminisztrálva. A teljes lista a [környezeti felülírások "
 "referenciájában](../reference/environment-overrides.md) található."
 
-#: ../../how-to/classify-with-llm.md:255
+#: ../../how-to/classify-with-llm.md:257
 msgid "See how each suggestion was produced"
 msgstr "Tekintse meg, hogyan készült az egyes javaslatok"
 
-#: ../../how-to/classify-with-llm.md:257
+#: ../../how-to/classify-with-llm.md:259
 msgid ""
 "Every applied result records how it was produced, so a later review shows"
 " the source:"
@@ -585,39 +585,40 @@ msgstr ""
 "Minden alkalmazott eredmény rögzíti, hogyan készült, így egy későbbi "
 "áttekintés megmutatja a forrást:"
 
-#: ../../how-to/classify-with-llm.md:260
+#: ../../how-to/classify-with-llm.md:262
 msgid "`llm:local-vision:<model>`: read on-host by the local vision model."
 msgstr "`llm:local-vision:<model>`: a helyi vízió-modell olvasta be a gépen."
 
-#: ../../how-to/classify-with-llm.md:261
+#: ../../how-to/classify-with-llm.md:263
 msgid "`llm:<provider>:<model>`: classified by a cloud provider."
 msgstr "`llm:<provider>:<model>`: egy felhőszolgáltató osztályozta."
 
-#: ../../how-to/classify-with-llm.md:262
+#: ../../how-to/classify-with-llm.md:264
 msgid ""
 "`derived:iva-category`: you chose the IVA category and `aeat` derived the"
 " rest."
 msgstr ""
-"`derived:iva-category`: Ön választotta ki az IVA-kategóriát, és az `aeat` "
-"vezette le a többit."
+"`derived:iva-category`: Ön választotta ki az IVA-kategóriát, és az `aeat`"
+" vezette le a többit."
 
-#: ../../how-to/classify-with-llm.md:264
+#: ../../how-to/classify-with-llm.md:266
 msgid "`manual`: you set the classification by hand."
 msgstr "`manual`: Ön állította be az osztályozást kézzel."
 
-#: ../../how-to/classify-with-llm.md:266
+#: ../../how-to/classify-with-llm.md:268
 msgid "Inspect a transaction and its history at any time:"
 msgstr "Bármikor megvizsgálhat egy tranzakciót és annak előzményeit:"
 
-#: ../../how-to/classify-with-llm.md:272
+#: ../../how-to/classify-with-llm.md:274
 msgid "Limits and batch alternatives"
 msgstr "Korlátok és kötegelt alternatívák"
 
-#: ../../how-to/classify-with-llm.md:274
+#: ../../how-to/classify-with-llm.md:276
+#, fuzzy
 msgid ""
 "The LLM path is single-transaction only; it cannot be combined with "
-"`--from-csv` or manual `--classification` flags. For bulk work use the "
-"CSV-based manual path (`aeat app ledger classify --from-csv "
+"`--file` or manual `--classification` flags. For bulk work use the CSV-"
+"based manual path (`aeat app ledger classify --file "
 "./classifications.csv`) or deterministic stored rules (`aeat app ledger "
 "rule add` then `rule apply --dry-run` then `rule apply`); both are "
 "covered in [Classify transactions](classify-transactions.md)."
@@ -630,11 +631,11 @@ msgstr ""
 "majd `rule apply`); mindkettőt a [Tranzakciók osztályozása](classify-"
 "transactions.md) tárgyalja."
 
-#: ../../how-to/classify-with-llm.md:281
+#: ../../how-to/classify-with-llm.md:284
 msgid "Privacy boundary"
 msgstr "Adatvédelmi határvonal"
 
-#: ../../how-to/classify-with-llm.md:283
+#: ../../how-to/classify-with-llm.md:286
 msgid ""
 "LLM classification calls the selected provider CLI on your machine. That "
 "CLI may send prompt data to the provider's cloud service, depending on "
@@ -648,30 +649,33 @@ msgstr ""
 "gépén. Az a CLI a szolgáltató felhőszolgáltatásának küldhet promptadatot "
 "attól függően, hogyan működik az adott szolgáltató, és hogyan van "
 "beállítva a fiókja. Kezelje a promptban lévő tranzakcióleírásokat, "
-"partnereket, összegeket, kategóriákat és bármely profilkörnyezetet adózói "
-"adatként. Ne használjon éles adatokat LLM-szolgáltatóval, hacsak a "
+"partnereket, összegeket, kategóriákat és bármely profilkörnyezetet adózói"
+" adatként. Ne használjon éles adatokat LLM-szolgáltatóval, hacsak a "
 "szolgáltatóbeállítása és az adatvédelmi szabályzata nem engedi."
 
-#: ../../how-to/classify-with-llm.md:290
+#: ../../how-to/classify-with-llm.md:293
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/classify-with-llm.md:292
+#: ../../how-to/classify-with-llm.md:295
 msgid "[Classify transactions](classify-transactions.md)"
 msgstr "[Tranzakciók osztályozása](classify-transactions.md)"
 
-#: ../../how-to/classify-with-llm.md:293
+#: ../../how-to/classify-with-llm.md:296
 msgid "[Attach invoices and receipts](ledger-evidence.md)"
 msgstr "[Számlák és bizonylatok csatolása](ledger-evidence.md)"
 
-#: ../../how-to/classify-with-llm.md:294
+#: ../../how-to/classify-with-llm.md:297
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/classify-with-llm.md:295
+#: ../../how-to/classify-with-llm.md:298
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr "[Számítási bemenetek áttekintése és megadása](review-calculation-values.md)"
+msgstr ""
+"[Számítási bemenetek áttekintése és megadása](review-calculation-"
+"values.md)"
 
-#: ../../how-to/classify-with-llm.md:296
+#: ../../how-to/classify-with-llm.md:299
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
+
