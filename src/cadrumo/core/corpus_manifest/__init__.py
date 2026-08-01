@@ -453,8 +453,7 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
         raise CorpusManifestError(f"manifest at {target} is structurally invalid: {exc}") from exc
     except _UnsupportedManifestVersionError as exc:
         raise CorpusManifestError(
-            f"manifest at {target} is at version {exc}; "
-            f"consumer supports up to {_MANIFEST_VERSION}",
+            f"manifest at {target} is at version {exc}; consumer supports up to {_MANIFEST_VERSION}",
         ) from exc
     except _TamperedManifestPayloadError as exc:
         _logger.error(
