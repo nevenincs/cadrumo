@@ -19,6 +19,11 @@ this module only documents their CLI transport projections.
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from pydantic import Field
+
+from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationVerdict
 from ...core import Period
 from ...core.identity import BucketId
 from ...domain.modelos import WorkUnitId
@@ -110,15 +115,15 @@ class ModeloReconciliationHistoryRowPayload(OutputSchema):
     instant.
     """
 
-    event_id: str
+    event_id: str = Field(min_length=1, max_length=128)
     bucket_id: BucketId
     work_unit_id: WorkUnitId
-    source_kind: str
+    source_kind: ModeloReconciliationEvidenceKind
     source_path: str
-    verdict: str
-    diff_count: int
-    actor: str
-    reconciled_at: str
+    verdict: ModeloReconciliationVerdict
+    diff_count: int = Field(ge=0)
+    actor: str = Field(min_length=1, max_length=64)
+    reconciled_at: datetime
 
 
 @register_schema("modelo.reconcile.history")
@@ -133,7 +138,7 @@ class ModeloReconciliationHistoryResult(OutputSchema):
     operation: str = "modelo.reconcile.history"
     bucket_id: BucketId
     work_unit_id: WorkUnitId | None = None
-    reconciliation_count: int
+    reconciliation_count: int = Field(ge=0)
     reconciliations: list[ModeloReconciliationHistoryRowPayload]
 
 

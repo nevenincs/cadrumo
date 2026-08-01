@@ -10,12 +10,20 @@ guard), and rejects invalid date input cleanly.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
+from datetime import UTC, datetime
 
 import pytest
 from click.testing import Result
+from pydantic import ValidationError
 
+from ....application.modelo import ModeloReconciliationEvidenceKind, ModeloReconciliationVerdict
 from ....tests.cli_runner import invoke_cached_cli
+from .._modelo_payloads_m036 import (
+    ModeloReconciliationHistoryResult,
+    ModeloReconciliationHistoryRowPayload,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -67,3 +75,58 @@ def test_m036_refuses_without_active_profile() -> None:
         # required for any actual record write; tests of the service body
         # itself live in ``application/modelo/test_m036_lifecycle_service.py``.
         assert result.output != "", verb
+
+
+def test_reconciliation_history_row_enforces_the_canonical_entry_contract() -> None:
+    """The transport row must not accept values its canonical entry refuses.
+
+    ``ModeloReconciliationHistoryEntry`` closes ``source_kind``/``verdict`` to
+    enums, bounds ``event_id``/``actor``, requires a non-negative ``diff_count``
+    and a real ``reconciled_at``. The CLI row redeclared all of them as free
+    strings and ints, so a malformed reconciliation could cross the
+    ``modelo.reconcile.history`` envelope.
+    """
+    base = dict(
+        event_id="e" * 32,
+        bucket_id="b" * 64,
+        work_unit_id="a1" * 32,
+        source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+        source_path="justificante.pdf",
+        verdict=ModeloReconciliationVerdict.MATCHES,
+        diff_count=0,
+        actor="operator",
+        reconciled_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )
+    row = ModeloReconciliationHistoryRowPayload(**base)
+    assert row.source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE
+    assert row.verdict is ModeloReconciliationVerdict.MATCHES
+
+    rendered = json.loads(row.model_dump_json())
+    assert rendered["source_kind"] == "justificante"
+    assert rendered["verdict"] == "matches"
+
+    for label, override in (
+        ("blank event id", {"event_id": ""}),
+        ("overlong event id", {"event_id": "e" * 200}),
+        ("unknown source kind", {"source_kind": "bogus"}),
+        ("unknown verdict", {"verdict": "bogus"}),
+        ("negative diff count", {"diff_count": -1}),
+        ("blank actor", {"actor": ""}),
+        ("overlong actor", {"actor": "a" * 65}),
+        ("malformed timestamp", {"reconciled_at": "not-date"}),
+    ):
+        try:
+            ModeloReconciliationHistoryRowPayload(**(base | override))
+        except ValidationError:
+            continue
+        pytest.fail(f"{label} was accepted by the transport row")
+
+
+def test_reconciliation_history_result_refuses_a_negative_count() -> None:
+    """``reconciliation_count`` is a cardinality, so a negative value is not representable."""
+    with pytest.raises(ValidationError):
+        ModeloReconciliationHistoryResult(
+            bucket_id="b" * 64,
+            reconciliation_count=-1,
+            reconciliations=[],
+        )
