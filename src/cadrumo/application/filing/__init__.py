@@ -752,19 +752,42 @@ def _binding_data_type(binding: object) -> str:
 
 
 def _binding_input(binding_id: _BindingId, value: object, binding: object) -> ModeloScalar:
+    """Route one binding input to the channel its declared data type belongs to.
+
+    The runtime family comes from the registry classifier rather than a local
+    comparison against literal type names. The registry owns the scalar
+    taxonomy, so a family it adds — the eleven specific text families beyond
+    generic ``text``, for instance — is routed here without this function
+    being edited, and a data type the registry does not declare is refused by
+    the classifier instead of falling through a chain of string equalities.
+    """
     data_type = _binding_data_type(binding)
-    if data_type == "text":
-        return str(value)
-    if data_type == "integer":
+    try:
+        family = _registry_scalar_value_type(data_type)
+    except _RegistryValidationError as exc:
+        raise ModeloBuilderError(f"binding input {binding_id!r} declares unsupported data type {data_type!r}") from exc
+    if family == "str":
+        # Coerce first so the generic ``text`` channel keeps accepting a
+        # non-string scalar (an integer ``rectified_year``); the canonical
+        # validator is an identity for ``text`` and a real check for the
+        # specific families, which previously bypassed their validators.
+        try:
+            return _validate_registry_text_scalar(data_type, str(value))
+        except _RegistryValidationError as exc:
+            raise ModeloBuilderError(f"binding input {binding_id!r} is invalid: {exc}") from exc
+    if family == "int":
         decimal_value = _decimal_input(binding_id, value)
         if decimal_value != decimal_value.to_integral_value():
             raise ModeloBuilderError(f"binding input {binding_id!r} must be an integer value")
         return int(decimal_value)
-    if data_type == "boolean":
+    if family == "bool":
         return _boolean_input(binding_id, value)
-    if data_type in {"decimal", "money"}:
+    if family == "decimal":
         return _decimal_input(binding_id, value)
-    raise ModeloBuilderError(f"binding input {binding_id!r} declares unsupported data type {data_type!r}")
+    raise ModeloBuilderError(
+        f"binding input {binding_id!r} declares data type {data_type!r}, whose {family!r} family "
+        "has no filing input channel",
+    )
 
 
 def _decimal_input(input_id: str, value: object) -> Decimal:
