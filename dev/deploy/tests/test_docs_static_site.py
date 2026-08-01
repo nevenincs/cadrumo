@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import gzip
 import http.server
 import json
 import threading
@@ -24,6 +25,7 @@ from dev.deploy.docs_static_site import (
 )
 from dev.docs.build import pagefind_index_mode
 from dev.docs.i18n import TARGET_LANGUAGES
+from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS
 
 from cadrumo.core.external_constants import OutputLanguage
 
@@ -31,13 +33,32 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _materialise_language_root(html_root: Path, language: str) -> None:
-    """Write a minimal valid localized site root: an index page and a Pagefind chunk."""
+    """Write a minimal VALID localized site root: index page, index chunk, records.
+
+    "Valid" now means what the publish contract means by it. The earlier version
+    wrote only a non-empty ``.pf_index`` chunk, which encoded exactly the
+    property the old preflight measured -- so a root carrying rendered pages and
+    zero search records read as complete here, which is the shape that shipped.
+    The fragments below carry the decided record kinds so a complete matrix is
+    complete under the real contract.
+
+    These fragments are SYNTHESISED, in the real on-disk shape, because what
+    this module tests is the root-MATRIX logic: that every language is visited
+    and the failing one is named. The index READ itself is proven against real
+    Pagefind output in ``test_publish_preflight_search_records``, where a
+    genuine no-injection build is the subject.
+    """
     root = html_root / language
     (root).mkdir(parents=True, exist_ok=True)
     (root / "index.html").write_text("<html></html>", encoding="utf-8")
     index_dir = root / "pagefind" / "index"
     index_dir.mkdir(parents=True, exist_ok=True)
     (index_dir / "en_abc.pf_index").write_bytes(b"substantive-index-data")
+    fragment_dir = root / "pagefind" / "fragment"
+    fragment_dir.mkdir(parents=True, exist_ok=True)
+    for kind in sorted(DECIDED_INJECTED_RECORD_KINDS):
+        payload = json.dumps({"url": f"/records/{kind}.html", "filters": {"kind": [kind]}})
+        (fragment_dir / f"en_{kind}.pf_fragment").write_bytes(gzip.compress(f"pagefind_dcd{payload}".encode()))
 
 
 def test_localized_languages_are_the_translation_targets_not_english() -> None:
@@ -122,7 +143,7 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
     empty = _localized_languages()[0]
     for chunk in (tmp_path / empty / "pagefind" / "index").rglob("*.pf_index"):
         chunk.write_bytes(b"")
-    with pytest.raises(SystemExit, match="no substantive Pagefind index data"):
+    with pytest.raises(SystemExit, match="no substantive generated index data"):
         _validate_language_roots(tmp_path)
 
 

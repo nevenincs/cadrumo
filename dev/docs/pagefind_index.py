@@ -45,7 +45,10 @@ loading instead of lazy chunking.
 from __future__ import annotations
 
 import asyncio
+import gzip
+import json
 import re
+import zlib
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -70,6 +73,23 @@ _UTF_8: Final[str] = "utf-8"
 
 _BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefind-ignore\b)")
 
+#: The injected record kinds a shipped index must carry.
+#:
+#: Spelled as literals because this module imports
+#: :class:`~dev.docs.terminology.SearchRecordKind` lazily (the terminology
+#: package is heavy and only needed per page). The literals are therefore held
+#: to the enum by ``test_decided_kinds_match_the_canonical_enum``, which fails
+#: if a member is renamed or removed -- the drift this constant would otherwise
+#: be blind to.
+#:
+#: ``PAGE`` is deliberately absent: the directory pass produces page records, so
+#: requiring it would be satisfied by exactly the pages-only index this set
+#: exists to reject. The set is enumerated rather than derived as "every kind
+#: except PAGE" on purpose -- a kind added to the enum before its injector ships
+#: would then refuse a correct publish, and a false RED at publish time is its
+#: own outage. When a new injector ships, add its kind here in the same change.
+DECIDED_INJECTED_RECORD_KINDS: Final[frozenset[str]] = frozenset({"concept", "casilla", "cli"})
+
 #: A ``<body>`` tag that is neither excluded from the index nor already carrying
 #: a Pagefind meta attribute. The two negative lookaheads keep the display-class
 #: stamping idempotent (a second pass matches nothing) and skip every page the
@@ -78,6 +98,84 @@ _BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefi
 _BODY_UNSTAMPED_RE: Final[re.Pattern[str]] = re.compile(
     r"<body\b(?![^>]*\bdata-pagefind-ignore\b)(?![^>]*\bdata-pagefind-meta=)"
 )
+
+
+def injected_record_kinds_in_index(html_root: Path) -> frozenset[str]:
+    """Return the injected record kinds present in the index WRITTEN under ``html_root``.
+
+    Reads the artefact, never the build configuration or the injection's own
+    report. A pages-only index -- the shape a mode misconfiguration produces --
+    returns an empty set here while still carrying plenty of non-empty index
+    chunks, which is precisely why a non-emptiness check cannot stand in for
+    this one.
+
+    The fragments are the ground truth a reader's palette narrows over, so this
+    scans them directly rather than parsing ``pagefind-entry.json``: the entry
+    file's ``page_count`` proves records exist only against a separately
+    measured pages baseline, and a publish-time preflight has no cheap way to
+    build one.
+
+    Args:
+        html_root: A built site root (the directory holding ``pagefind/``).
+
+    Returns:
+        The subset of :data:`DECIDED_INJECTED_RECORD_KINDS` found on disk.
+        Missing directories yield an empty set rather than raising, so the
+        caller renders one refusal naming what is absent.
+    """
+    found: set[str] = set()
+    for fragment in sorted((html_root / "pagefind" / "fragment").rglob("*.pf_fragment")):
+        for kind in _fragment_filter_kinds(fragment):
+            if kind in DECIDED_INJECTED_RECORD_KINDS:
+                found.add(kind)
+        if found >= DECIDED_INJECTED_RECORD_KINDS:
+            break
+    return frozenset(found)
+
+
+def _fragment_filter_kinds(fragment: Path) -> tuple[str, ...]:
+    """Return the ``kind`` filter values declared by one written fragment.
+
+    A fragment is gzipped JSON behind a short ``pagefind_dcd`` marker. The
+    payload is PARSED rather than substring-scanned, for two reasons measured
+    against real output on 2026-08-01: the record's kind lives in
+    ``{"filters": {"kind": ["concept"]}}``, so a scan for ``"kind":"concept"``
+    reads a different field; and a scan over raw bytes also matches ordinary
+    PAGE prose that happens to contain the token, which would let rendered
+    pages satisfy a record check -- the exact false green this read exists to
+    close.
+
+    ``filters`` is the right field rather than ``meta`` (production stamps
+    both): filters are what the reader's palette narrows by, so they are the
+    surface a reader can actually reach.
+
+    A fragment that cannot be decompressed or parsed contributes nothing rather
+    than raising; the caller's verdict is then driven by what IS readable,
+    which fails closed.
+    """
+    try:
+        raw = gzip.decompress(fragment.read_bytes())
+    except (OSError, EOFError, zlib.error):
+        return ()
+    text = raw.decode(_UTF_8, errors="replace")
+    start = text.find("{")
+    if start < 0:
+        return ()
+    try:
+        payload = json.loads(text[start:])
+    except json.JSONDecodeError:
+        return ()
+    if not isinstance(payload, dict):
+        return ()
+    filters = payload.get("filters")
+    if not isinstance(filters, dict):
+        return ()
+    kinds = filters.get("kind")
+    if isinstance(kinds, str):
+        return (kinds,)
+    if not isinstance(kinds, list):
+        return ()
+    return tuple(value for value in kinds if isinstance(value, str))
 
 
 def _mark_excluded_pages(html_root: Path) -> int:

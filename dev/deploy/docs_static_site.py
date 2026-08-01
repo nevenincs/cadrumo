@@ -227,10 +227,42 @@ def _validate_site_artifacts(html_root: Path) -> None:
     unexpected = [location for location in locations if not location.startswith(f"{CANONICAL_DOCS_BASE_URL}/")]
     if unexpected:
         raise SystemExit("Docs build sitemap contains a non-canonical URL: " + unexpected[0])
-    pagefind_index = html_root / "pagefind" / "index"
-    index_chunks = [chunk for chunk in pagefind_index.rglob("*.pf_index") if chunk.stat().st_size > 0]
+    _require_search_index(html_root, root_label="Docs build")
+
+
+def _require_search_index(site_root: Path, *, root_label: str) -> None:
+    """Refuse a site root whose Pagefind index is empty OR carries no records.
+
+    Two distinct failures, both fatal, checked in order. An index with no
+    substantive chunks means the pass produced nothing. An index with chunks but
+    no injected records is the shape that shipped for weeks: the deploy
+    environment selected the pages-only contract, the build wrote 75 rendered
+    pages and not one concept, casilla, or CLI record, and every check in front
+    of it stayed green because a pages-only index is full of non-empty chunks.
+    Non-emptiness cannot separate the two, so it is kept AND supplemented.
+
+    The record read is :func:`~dev.docs.pagefind_index.injected_record_kinds_in_index`
+    -- the same artefact scan the CI parity gate performs, in one place so the
+    publish preflight and the gate cannot drift apart.
+    """
+    from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS, injected_record_kinds_in_index
+
+    index_chunks = [
+        chunk for chunk in (site_root / "pagefind" / "index").rglob("*.pf_index") if chunk.stat().st_size > 0
+    ]
     if not index_chunks:
-        raise SystemExit("Docs build Pagefind index has no substantive generated index data.")
+        raise SystemExit(f"{root_label} Pagefind index has no substantive generated index data.")
+
+    present = injected_record_kinds_in_index(site_root)
+    missing = sorted(DECIDED_INJECTED_RECORD_KINDS - present)
+    if missing:
+        raise SystemExit(
+            f"{root_label} Pagefind index carries no records of kind(s) {', '.join(missing)} "
+            f"(found: {', '.join(sorted(present)) or 'none'}). The index holds rendered pages only, "
+            "so a reader could not search that surface at all. This is a pages-only index: confirm the "
+            "build ran with the record-injecting contract (CADRUMO_DOCS_PAGEFIND_MODE=full) for this "
+            f"root, then rebuild before publishing. Index read at {site_root / 'pagefind'}.",
+        )
 
 
 def _localized_languages() -> tuple[str, ...]:
@@ -310,10 +342,7 @@ def _validate_language_roots(html_root: Path) -> None:
         index = root / "index.html"
         if not index.is_file():
             raise SystemExit(f"Localized site root {language!r} is missing its rendered index page: {index}")
-        pagefind_index = root / "pagefind" / "index"
-        index_chunks = [chunk for chunk in pagefind_index.rglob("*.pf_index") if chunk.stat().st_size > 0]
-        if not index_chunks:
-            raise SystemExit(f"Localized site root {language!r} has no substantive Pagefind index data.")
+        _require_search_index(root, root_label=f"Localized site root {language!r}")
 
 
 def _aws_base_command(aws: str) -> list[str]:
