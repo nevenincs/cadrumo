@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:890fb25a91d4833e5f56b5b2b557833356678c9b23e152838f0cb73864572fc9'
+body_hash: 'sha256:b9dfa6b8832b441e938d26b81b438a378cfb5c702da4fe7b765988098810e803'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
@@ -48,8 +48,8 @@ Prove the multilingual recall claim against the built site, keep every existing 
 
 Make the deployed site carry the decided search contract: the pages-only env value is retired for full mode on every root, the built language roots become reachable live, and a deployment-parity gate makes any future silent re-narrowing of the shipped contract a loud failure.
 
-- [ ] `P04.S10` - Retire the pages-only CADRUMO_DOCS_PAGEFIND_MODE deploy value so every root builds the full record-injected index, updating the deploy-environment test to pin full mode; `dev/deploy/docs_static_site.py`.
-- [ ] `P04.S11` - Add a deployment-parity gate asserting the built site's pagefind entry carries every decided record kind and every language root, so an env value can never silently re-narrow the shipped contract again; `dev/docs/tests/`.
+- [x] `P04.S10` - Retire the pages-only CADRUMO_DOCS_PAGEFIND_MODE deploy value so every root builds the full record-injected index, updating the deploy-environment test to pin full mode; `dev/deploy/docs_static_site.py`.
+- [x] `P04.S11` - Add a deployment-parity gate asserting the built site's pagefind entry carries every decided record kind and every language root, so an env value can never silently re-narrow the shipped contract again; `dev/docs/tests/`.
 - [ ] `P04.S12` - Close the gap that leaves the built language roots unreachable on the live site and prove es, ca, and hu roots respond after deploy; `dev/deploy/docs_static_site.py`.
 - [ ] `P04.S13` - Redeploy and live-verify the full-mode index, the casilla destination pages, and the language roots, recording the live checks in the exec record; `dev/deploy/`.
 
