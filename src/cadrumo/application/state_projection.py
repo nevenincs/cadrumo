@@ -728,7 +728,11 @@ def _missing_calculation_bindings_for_readiness(
         revision_date_binding_ids,
     )
     from .calculations import relation_prefill_period_zero_default_binding_ids
-    from .modelo import ProfileBindingResolutionError, resolve_profile_sourced_bindings
+    from .modelo import (
+        ProfileBindingResolutionError,
+        profile_resolved_binding_ids,
+        resolve_profile_sourced_bindings,
+    )
 
     revision = snapshot.revision
     enum_consumed = {str(binding_id) for binding_id in enum_consumed_binding_ids(revision)}
@@ -757,11 +761,7 @@ def _missing_calculation_bindings_for_readiness(
         )
         profile_resolved: set[str] = set()
     else:
-        profile_resolved = {
-            *(str(binding_id) for binding_id in profile_resolution.binding_values),
-            *(str(binding_id) for binding_id in profile_resolution.enum_binding_values),
-            *(str(binding_id) for binding_id in profile_resolution.date_binding_values),
-        }
+        profile_resolved = {str(binding_id) for binding_id in profile_resolved_binding_ids(profile_resolution)}
 
     missing: list[ProjectionModeloBindingRequirement] = []
     for binding in sorted(revision.bindings, key=lambda item: str(item.id)):

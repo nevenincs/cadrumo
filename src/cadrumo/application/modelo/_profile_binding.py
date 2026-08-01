@@ -838,6 +838,40 @@ def _resolve_profile_binding_channels(
     return channels
 
 
+def _profile_value_channel_ids(
+    decimal_values: Mapping[BindingId, Decimal],
+    enum_values: Mapping[BindingId, str],
+    date_values: Mapping[BindingId, date],
+) -> frozenset[BindingId]:
+    """Union the three value channels a profile resolution populates."""
+    return frozenset(set(decimal_values) | set(enum_values) | set(date_values))
+
+
+def profile_resolved_binding_ids(resolution: CalculationSourceResolution) -> frozenset[BindingId]:
+    """Return the binding ids a profile resolution actually satisfied.
+
+    :class:`CalculationSourceResolution` is the shared envelope for every
+    source resolver and carries seven value channels; a profile resolution
+    populates exactly three of them. Which three is a fact about this
+    resolver, so it is stated here once rather than re-encoded by each
+    consumer -- the Modelo binding-readiness gate and the operator state
+    projection previously open-coded the same union independently, and a
+    fourth channel would have been picked up by whichever site was edited.
+
+    Args:
+        resolution: The result returned by
+            :func:`resolve_profile_sourced_bindings`.
+
+    Returns:
+        The binding ids the profile satisfied, across all populated channels.
+    """
+    return _profile_value_channel_ids(
+        resolution.binding_values,
+        resolution.enum_binding_values,
+        resolution.date_binding_values,
+    )
+
+
 def resolve_profile_sourced_bindings(
     snapshot: RegistrySnapshot,
     *,
@@ -898,7 +932,7 @@ def resolve_profile_sourced_bindings(
     decimal_values = channels.decimal_values
     enum_values = channels.enum_values
     date_values = channels.date_values
-    sourced = tuple(sorted(set(decimal_values) | set(enum_values) | set(date_values)))
+    sourced = tuple(sorted(_profile_value_channel_ids(decimal_values, enum_values, date_values)))
     fingerprint = facts.fingerprint if sourced else None
     return CalculationSourceResolution(
         resolver_id=_PROFILE_RESOLVER_ID,

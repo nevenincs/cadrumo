@@ -250,6 +250,7 @@ from ._participation_index_rebuild import (
 )
 from ._profile_binding import (
     ProfileBindingResolutionError,
+    profile_resolved_binding_ids,
     resolve_profile_sourced_bindings,
 )
 from ._profile_readiness_gate import (
@@ -828,6 +829,7 @@ __all__ = [
     "pre_activity_period_refusal",
     "preview_maritime_exemption_for_active_profile",
     "profile_resolvable_binding_ids",
+    "profile_resolved_binding_ids",
     "project_modelo_100_from_m130",
     "project_modelo_work_target",
     "project_modelo_work_unit",
