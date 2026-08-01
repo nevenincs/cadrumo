@@ -13,6 +13,7 @@ from reportlab.pdfgen import canvas
 
 from .....core import Period
 from .....core.errors import CadrumoError
+from .....core.money import round_to_cents
 from .....core.resources import resources
 from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .....domain.justificante import PdfModeloImportError
@@ -231,5 +232,12 @@ def _write_declaration_pdf(
 
 
 def _spanish_amount(value: Decimal) -> str:
-    formatted = f"{value:,.2f}"
+    """Render ``value`` the way an AEAT declaración prints a money-2 amount.
+
+    ``format`` rounds half-even, so it is not allowed to do the rounding:
+    a cent-tie such as ``1.005`` would print ``1,00`` where AEAT requires
+    ``1,01``. :func:`round_to_cents` applies the canonical half-up rule
+    first, leaving ``format`` an exact two-decimal value to lay out.
+    """
+    formatted = f"{round_to_cents(value):,.2f}"
     return formatted.replace(",", "_").replace(".", ",").replace("_", ".")
