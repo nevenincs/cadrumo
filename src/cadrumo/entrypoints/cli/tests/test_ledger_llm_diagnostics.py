@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import Result
+from pydantic import ValidationError
 
 from ....adapters.outbound.llm import LLMProvider, LLMResponse, UsageRecorder
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -39,6 +40,11 @@ from ....domain.transactions import (
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from .._ledger_rule_payloads import (
+    LedgerLlmDiagnosticsResult,
+    LlmConfidenceProviderPayload,
+    LlmUsageProviderPayload,
+)
 from .envelope_helpers import unwrap_cli_result as _json_result
 from .envelope_helpers import unwrap_envelope_notices
 
@@ -230,3 +236,88 @@ def test_llm_diagnostics_rejects_out_of_range_threshold(_isolated_backend: None)
     )
     assert result.exit_code != 0
     assert "0..1" in result.output
+
+
+def test_llm_diagnostics_payloads_mirror_their_canonical_bounds() -> None:
+    """The transport must refuse what the canonical diagnostics models refuse.
+
+    ``LlmUsageProviderMetrics`` and ``LlmConfidenceProviderMetrics`` require a
+    non-empty provider and non-negative counters, and ``LlmDiagnosticsReport``
+    requires non-negative totals plus a real decimal threshold. The CLI rows
+    redeclared all of them as bare strings and ints, so an empty provider, a
+    negative counter, and non-decimal text could cross the
+    ``ledger.llm_diagnostics`` envelope.
+
+    The decimal fields carry the canonical grammar but NO range: the canonical
+    models declare ``cost_estimate_usd`` and the confidence figures as plain
+    ``Decimal`` / ``Decimal | None``, so bounding them here would make the
+    transport stricter than the contract it mirrors.
+    """
+    usage_base = {
+        "provider": "claude",
+        "calls": 1,
+        "cache_hits": 0,
+        "input_tokens": 5,
+        "output_tokens": 5,
+        "total_tokens": 10,
+        "cost_estimate_usd": "0.01",
+    }
+    confidence_base = {
+        "provider": "claude",
+        "classified_count": 1,
+        "low_confidence_count": 0,
+        "high_confidence_count": 1,
+        "medium_confidence_count": 0,
+        "mean_confidence": "0.9",
+    }
+
+    for label, model, base, override in (
+        ("empty usage provider", LlmUsageProviderPayload, usage_base, {"provider": ""}),
+        ("negative calls", LlmUsageProviderPayload, usage_base, {"calls": -1}),
+        ("negative cache hits", LlmUsageProviderPayload, usage_base, {"cache_hits": -1}),
+        ("negative total tokens", LlmUsageProviderPayload, usage_base, {"total_tokens": -1}),
+        ("non-decimal cost", LlmUsageProviderPayload, usage_base, {"cost_estimate_usd": "bogus"}),
+        ("empty confidence provider", LlmConfidenceProviderPayload, confidence_base, {"provider": ""}),
+        ("negative classified", LlmConfidenceProviderPayload, confidence_base, {"classified_count": -1}),
+        ("negative low confidence", LlmConfidenceProviderPayload, confidence_base, {"low_confidence_count": -1}),
+        ("non-decimal mean", LlmConfidenceProviderPayload, confidence_base, {"mean_confidence": "bogus"}),
+    ):
+        model(**base)  # positive control: the base must be accepted
+        try:
+            model(**(base | override))
+        except ValidationError:
+            continue
+        pytest.fail(f"{label} was accepted by the transport row")
+
+    # Decimal magnitudes stay unbounded, matching the canonical models.
+    LlmUsageProviderPayload(**(usage_base | {"cost_estimate_usd": "-1.00"}))
+    LlmConfidenceProviderPayload(**(confidence_base | {"mean_confidence": "-1"}))
+
+
+def test_llm_diagnostics_result_refuses_negative_totals() -> None:
+    """``LlmDiagnosticsReport`` bounds every total at zero; the envelope must too."""
+    base = {
+        "low_confidence_threshold": "0.5",
+        "usage_providers": [],
+        "total_calls": 0,
+        "total_cache_hits": 0,
+        "total_input_tokens": 0,
+        "total_output_tokens": 0,
+        "total_cost_estimate_usd": "0",
+        "confidence_providers": [],
+        "total_classified": 0,
+        "total_low_confidence": 0,
+        "has_data": False,
+    }
+    LedgerLlmDiagnosticsResult.model_validate(base)
+
+    for label, override in (
+        ("negative total calls", {"total_calls": -1}),
+        ("negative total classified", {"total_classified": -1}),
+        ("non-decimal threshold", {"low_confidence_threshold": "bogus"}),
+    ):
+        try:
+            LedgerLlmDiagnosticsResult.model_validate(base | override)
+        except ValidationError:
+            continue
+        pytest.fail(f"{label} was accepted by the diagnostics envelope")

@@ -479,7 +479,22 @@ def _evaluate_browser_action(policy: RemoteStateGuardPolicy, operation: RemoteOp
     token = _first_forbidden_token(normalized)
     if token is not None:
         return _blocked(policy, f"AEAT browser action token {token!r} is forbidden")
-    if policy.allowed_browser_action_patterns and not _matches_allowed_browser_action(policy, text):
+    # An EMPTY allow-list refuses every action; it does not wave them through.
+    #
+    # This guard previously read ``if policy.allowed_browser_action_patterns
+    # and not _matches(...)``, so a policy declaring no actions imposed no
+    # restriction at all. Dropping a pattern set therefore did not NARROW the
+    # allow-list, it REMOVED the gate -- fail-open in the configuration most
+    # likely to arise by accident, since the field defaults to an empty tuple
+    # and a registry key that is simply absent lands there silently.
+    #
+    # Refusing on absence is what the surrounding code already assumed: the
+    # expedientes walker documents its deliberately-empty tuple as meaning
+    # "any future browser action added here fails the guard until it is
+    # declared", a guarantee the old branch did not actually provide.
+    if not policy.allowed_browser_action_patterns:
+        return _blocked(policy, f"AEAT policy {policy.id!r} declares no allowed browser actions")
+    if not _matches_allowed_browser_action(policy, text):
         return _blocked(policy, f"AEAT browser action {text!r} is not in the explicit read-only allow-list")
     return RemoteStateGuardResult(decision="allowed", reason="read-only browser action allowed", policy_id=policy.id)
 
