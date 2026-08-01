@@ -49,16 +49,9 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
-)
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    NoEncryption,
-    PrivateFormat,
-    PublicFormat,
 )
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -66,6 +59,13 @@ from .. import HEX_PATTERN_64 as _HEX_PATTERN_64
 from .. import HEX_PATTERN_128 as _HEX_PATTERN_128
 from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..atomic_write import atomic_write_hardened_text
+from ..ed25519_signing import (
+    digest_signature_is_valid,
+    ed25519_private_key_from_hex,
+    ed25519_public_key_from_hex,
+    generate_ed25519_keypair_hex,
+    sign_digest_hex,
+)
 from ..errors import CadrumoError
 from ..external_constants import UTF_8_ENCODING
 from ..time import now as _utc_now
@@ -116,11 +116,11 @@ class CorpusSigningKeypair(BaseModel):
 
     def private_key(self) -> Ed25519PrivateKey:
         """Reconstruct the live :class:`Ed25519PrivateKey` from stored raw bytes."""
-        return Ed25519PrivateKey.from_private_bytes(bytes.fromhex(self.private_key_hex))
+        return ed25519_private_key_from_hex(self.private_key_hex)
 
     def public_key(self) -> Ed25519PublicKey:
         """Reconstruct the live :class:`Ed25519PublicKey` from stored raw bytes."""
-        return Ed25519PublicKey.from_public_bytes(bytes.fromhex(self.public_key_hex))
+        return ed25519_public_key_from_hex(self.public_key_hex)
 
 
 class CorpusSigningPublicKey(BaseModel):
@@ -197,18 +197,10 @@ def generate_corpus_signing_keypair(
         The freshly minted
         :class:`~core.corpus_manifest.CorpusSigningKeypair`.
     """
-    private_key = Ed25519PrivateKey.generate()
-    public_key = private_key.public_key()
+    minted = generate_ed25519_keypair_hex()
     keypair = CorpusSigningKeypair(
-        private_key_hex=private_key.private_bytes(
-            encoding=Encoding.Raw,
-            format=PrivateFormat.Raw,
-            encryption_algorithm=NoEncryption(),
-        ).hex(),
-        public_key_hex=public_key.public_bytes(
-            encoding=Encoding.Raw,
-            format=PublicFormat.Raw,
-        ).hex(),
+        private_key_hex=minted.private_key_hex,
+        public_key_hex=minted.public_key_hex,
         created_at=generated_at or _utc_now(),
     )
     resolved = private_key_path.resolve()
@@ -297,12 +289,15 @@ def sign_corpus_bundle(
     from . import assert_corpus_bundle_verifies
 
     manifest = assert_corpus_bundle_verifies(bundle_path)
-    signature = keypair.private_key().sign(bytes.fromhex(manifest.manifest_sha256))
+    signature_hex = sign_digest_hex(
+        private_key_hex=keypair.private_key_hex,
+        digest_hex=manifest.manifest_sha256,
+    )
 
     return SignedCorpusBundle(
         corpus_root_name=manifest.corpus_root_name,
         manifest_sha256=manifest.manifest_sha256,
-        signature_hex=signature.hex(),
+        signature_hex=signature_hex,
         public_key_hex=keypair.public_key_hex,
         signed_at=signed_at or _utc_now(),
     )
@@ -360,15 +355,11 @@ def verify_corpus_bundle_signature(
     if result.manifest.manifest_sha256 != signed_bundle.manifest_sha256:
         return False
 
-    public_key = Ed25519PublicKey.from_public_bytes(bytes.fromhex(public_key_hex))
-    try:
-        public_key.verify(
-            bytes.fromhex(signed_bundle.signature_hex),
-            bytes.fromhex(signed_bundle.manifest_sha256),
-        )
-    except InvalidSignature:
-        return False
-    return True
+    return digest_signature_is_valid(
+        public_key_hex=public_key_hex,
+        digest_hex=signed_bundle.manifest_sha256,
+        signature_hex=signed_bundle.signature_hex,
+    )
 
 
 def assert_corpus_bundle_signature_verifies(

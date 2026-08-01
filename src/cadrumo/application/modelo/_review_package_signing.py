@@ -46,16 +46,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
-)
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    NoEncryption,
-    PrivateFormat,
-    PublicFormat,
 )
 from pydantic import BaseModel, Field
 
@@ -64,6 +57,13 @@ from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import HEX_PATTERN_128 as _HEX_PATTERN_128
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
+from ...core.ed25519_signing import (
+    digest_signature_is_valid,
+    ed25519_private_key_from_hex,
+    ed25519_public_key_from_hex,
+    generate_ed25519_keypair_hex,
+    sign_digest_hex,
+)
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
@@ -110,11 +110,11 @@ class ReviewPackageSigningKeypair(BaseModel):
 
     def private_key(self) -> Ed25519PrivateKey:
         """Reconstruct the live :class:`Ed25519PrivateKey` from stored raw bytes."""
-        return Ed25519PrivateKey.from_private_bytes(bytes.fromhex(self.private_key_hex))
+        return ed25519_private_key_from_hex(self.private_key_hex)
 
     def public_key(self) -> Ed25519PublicKey:
         """Reconstruct the live :class:`Ed25519PublicKey` from stored raw bytes."""
-        return Ed25519PublicKey.from_public_bytes(bytes.fromhex(self.public_key_hex))
+        return ed25519_public_key_from_hex(self.public_key_hex)
 
 
 class ReviewPackageSigningPublicKey(BaseModel):
@@ -179,8 +179,9 @@ def ensure_review_package_signing_keypair(
     Loads the existing keypair from
     :data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`
     when present; otherwise generates a fresh keypair via
-    ``Ed25519PrivateKey.generate()``, persists it (private key included) as
-    ciphertext, and returns it. Idempotent: a second call against the same
+    :func:`~core.ed25519_signing.generate_ed25519_keypair_hex`, persists it
+    (private key included) as ciphertext, and returns it. Idempotent: a second
+    call against the same
     bucket returns the SAME keypair rather than rotating it, so a package
     signed today verifies against a keypair fetched next week.
 
@@ -203,19 +204,11 @@ def ensure_review_package_signing_keypair(
     if existing is not None:
         return _keypair_from_repository_payload(existing.payload, bucket_id=bucket_id)
 
-    private_key = Ed25519PrivateKey.generate()
-    public_key = private_key.public_key()
+    minted = generate_ed25519_keypair_hex()
     keypair = ReviewPackageSigningKeypair(
         bucket_id=bucket_id,
-        private_key_hex=private_key.private_bytes(
-            encoding=Encoding.Raw,
-            format=PrivateFormat.Raw,
-            encryption_algorithm=NoEncryption(),
-        ).hex(),
-        public_key_hex=public_key.public_bytes(
-            encoding=Encoding.Raw,
-            format=PublicFormat.Raw,
-        ).hex(),
+        private_key_hex=minted.private_key_hex,
+        public_key_hex=minted.public_key_hex,
         created_at=generated_at or _utc_now(),
     )
     repository.save(
@@ -306,13 +299,16 @@ def sign_review_package(
     """
     manifest = assert_review_package_verifies(package_path)
     manifest_sha256 = _package_manifest_sha256(package_path)
-    signature = keypair.private_key().sign(bytes.fromhex(manifest_sha256))
+    signature_hex = sign_digest_hex(
+        private_key_hex=keypair.private_key_hex,
+        digest_hex=manifest_sha256,
+    )
 
     return SignedReviewPackage(
         bucket_id=manifest.bucket_id,
         calculation_revision_id=manifest.calculation_revision_id,
         manifest_sha256=manifest_sha256,
-        signature_hex=signature.hex(),
+        signature_hex=signature_hex,
         public_key_hex=keypair.public_key_hex,
         signed_at=signed_at or _utc_now(),
     )
@@ -367,15 +363,11 @@ def verify_review_package_signature(
     if result.manifest.manifest_sha256 != signed_package.manifest_sha256:
         return False
 
-    public_key = Ed25519PublicKey.from_public_bytes(bytes.fromhex(public_key_hex))
-    try:
-        public_key.verify(
-            bytes.fromhex(signed_package.signature_hex),
-            bytes.fromhex(signed_package.manifest_sha256),
-        )
-    except InvalidSignature:
-        return False
-    return True
+    return digest_signature_is_valid(
+        public_key_hex=public_key_hex,
+        digest_hex=signed_package.manifest_sha256,
+        signature_hex=signed_package.signature_hex,
+    )
 
 
 def _package_manifest_sha256(package_path: Path) -> str:

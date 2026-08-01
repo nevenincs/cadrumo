@@ -88,6 +88,7 @@ Submodules
    cadrumo.core.compatibility_lifecycle
    cadrumo.core.config
    cadrumo.core.corpus_text
+   cadrumo.core.ed25519_signing
    cadrumo.core.env_io
    cadrumo.core.external_constants
    cadrumo.core.file_permissions
