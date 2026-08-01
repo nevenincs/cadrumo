@@ -39,7 +39,7 @@ from typing import IO, Any, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel, TypeAdapter, ValidationError
 
-from .errors import CadrumoError
+from .errors import CadrumoError, ErrorEnvelope
 from .logging import get_logger
 from .output_rendering import jsonable_output_payload
 from .redaction import redact_structured_for_cli_output
@@ -508,8 +508,6 @@ def validate_registered_envelope_document(document: object) -> dict[str, object]
         raise OutputSchemaError("operator JSON envelope must be an object")
     status = document.get("status")
     if status == EnvelopeStatus.ERROR.value:
-        from .errors import ErrorEnvelope
-
         required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
         if set(document) != required_keys:
             raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")
