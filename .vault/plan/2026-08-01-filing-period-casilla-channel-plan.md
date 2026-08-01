@@ -4,7 +4,7 @@ tags:
   - '#filing-period-casilla-channel'
 date: '2026-08-01'
 modified: '2026-08-01'
-body_hash: 'sha256:06f20bac2f3e018917ac42b187900f1f4cdeffb57c9cdefe1d36bfdbf8890899'
+body_hash: 'sha256:6f24c85e7d2e1f66db353135415df38a55d49f4f47f529a9aa984d750a162a9d'
 tier: L2
 related:
   - '[[2026-08-01-filing-period-casilla-channel-adr]]'
@@ -34,15 +34,15 @@ and unblocks the publish, P04 opens the named follow-ups as tracked items.
 
 Deliver the period-token fill, the adopted three-package typed-scalar routing set, the replay adjustment, and every dependent test update as a single explicit-pathspec commit so HEAD stays importable.
 
-- [ ] `P01.S01` - Verify working-tree ownership of the uncommitted typed-scalar routing set with the owning campaign and adopt it unchanged rather than re-authoring it; `src/cadrumo/application/filing/__init__.py`.
-- [ ] `P01.S02` - Supply period.registry_token for the filing_period semantic role on the string channel, keeping filing_year on the Decimal channel; `src/cadrumo/application/modelo/_binding_resolution.py`.
-- [ ] `P01.S03` - Thread the resolved period token through the engine text_inputs channel so it persists in input_values_by_casilla_id; `src/cadrumo/application/modelo/_calculation_resolution.py`.
-- [ ] `P01.S04` - Verify the replay merge precedence already favours the string channel for the filing-period token (no code change was required); `src/cadrumo/application/modelo/_revision_replay_inputs.py`.
-- [ ] `P01.S05` - Update the parametrised ordinal pins to assert the token on the string channel; `src/cadrumo/application/modelo/tests/test_declaration_period_binding.py`.
-- [ ] `P01.S06` - Update the two conditional-formula-trace tests refused by the typed text channel; `src/cadrumo/application/filing/tests/test_build_draft_conditional_formula_trace.py`.
-- [ ] `P01.S07` - Populate the CalculationRevision roundtrip fixture with a non-default period_code entry in input_values_by_casilla_id; `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`.
-- [ ] `P01.S08` - Add the anti-tautology proof that an ordinal-shaped persisted period value is refused loudly at draft build; `src/cadrumo/application/filing/tests/test_text_casilla_routing.py`.
-- [ ] `P01.S09` - Observe clean collect-only and land the whole set as one explicit-pathspec commit; `src/cadrumo`.
+- [x] `P01.S01` - Verify working-tree ownership of the uncommitted typed-scalar routing set with the owning campaign and adopt it unchanged rather than re-authoring it; `src/cadrumo/application/filing/__init__.py`.
+- [x] `P01.S02` - Supply period.registry_token for the filing_period semantic role on the string channel, keeping filing_year on the Decimal channel; `src/cadrumo/application/modelo/_binding_resolution.py`.
+- [x] `P01.S03` - Thread the resolved period token through the engine text_inputs channel so it persists in input_values_by_casilla_id; `src/cadrumo/application/modelo/_calculation_resolution.py`.
+- [x] `P01.S04` - Verify the replay merge precedence already favours the string channel for the filing-period token (no code change was required); `src/cadrumo/application/modelo/_revision_replay_inputs.py`.
+- [x] `P01.S05` - Update the parametrised ordinal pins to assert the token on the string channel; `src/cadrumo/application/modelo/tests/test_declaration_period_binding.py`.
+- [x] `P01.S06` - Update the two conditional-formula-trace tests refused by the typed text channel; `src/cadrumo/application/filing/tests/test_build_draft_conditional_formula_trace.py`.
+- [x] `P01.S07` - Populate the CalculationRevision roundtrip fixture with a non-default period_code entry in input_values_by_casilla_id; `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`.
+- [x] `P01.S08` - Add the anti-tautology proof that an ordinal-shaped persisted period value is refused loudly at draft build; `src/cadrumo/application/filing/tests/test_text_casilla_routing.py`.
+- [x] `P01.S09` - Observe clean collect-only and land the whole set as one explicit-pathspec commit; `src/cadrumo`.
 
 ### Phase `P02` - close the literal-membership class beyond the filing builder
 
