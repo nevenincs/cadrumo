@@ -24,7 +24,7 @@ import secrets
 from collections.abc import Generator, Iterable
 from contextlib import ExitStack, contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
@@ -34,6 +34,7 @@ from ...adapters.persistence.storage import (
     StorageCustodyProfile,
 )
 from ...adapters.persistence.storage.bucket import acquire_lock, release_lock
+from ...adapters.persistence.storage.master_key import KdfParams
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time import now
@@ -122,6 +123,13 @@ _ARCHIVE_SCHEMA_VERSION = 3
 #: moves forward only through a deliberate, superseding decision.
 _ARCHIVE_DURABILITY_FLOOR = 3
 _RECOVERY_WRAP_SALT_BYTES = 16
+
+#: Argon2 version and derived-key length the recovery-wrap member implies but
+#: does not carry on the wire. The export path derives under Argon2id v1.3 with
+#: a 32-byte output, so the reader pins both and lets the canonical
+#: :class:`KdfParams` window reject anything that does not match.
+_RECOVERY_WRAP_ARGON2_VERSION = 19
+_RECOVERY_WRAP_OUTPUT_BYTES = 32
 
 
 def ensure_archive_schema_readable(archive_schema_version: int) -> None:
@@ -1268,15 +1276,6 @@ def _format_missing_flags(missing_flags: tuple[str, ...]) -> str:
     return " ".join(f"--{flag}" for flag in missing_flags)
 
 
-class _RecoveryWrapKdf(NamedTuple):
-    """Argon2id parameters read back from a sealed archive's recovery-wrap member."""
-
-    salt: bytes
-    memory_cost: int
-    time_cost: int
-    parallelism: int
-
-
 def _recovery_wrap_bytes(salt: bytes, *, memory_cost: int, time_cost: int, parallelism: int) -> bytes:
     return json.dumps(
         {
@@ -1289,22 +1288,33 @@ def _recovery_wrap_bytes(salt: bytes, *, memory_cost: int, time_cost: int, paral
     ).encode(UTF_8_ENCODING)
 
 
-def _recovery_wrap_kdf(payload: bytes) -> _RecoveryWrapKdf:
+def _recovery_wrap_kdf(payload: bytes) -> KdfParams:
+    """Decode a sealed archive's recovery-wrap member into canonical Argon2id parameters.
+
+    The recovery-wrap member is attacker-reachable: it rides inside the archive
+    an importer was handed, so its Argon2 costs decide how much work an offline
+    brute force of the operator's passphrase must do. Validation therefore runs
+    through :class:`~adapters.persistence.storage.master_key.KdfParams` -- the
+    same OWASP-baseline window the substrate enforces everywhere else -- rather
+    than a local "is it positive" check, so a tampered archive cannot drive the
+    importer's KDF into a weaker regime than the exporter is allowed to mint.
+
+    ``version`` and ``output_length`` are not carried in the wire member; they
+    are pinned to the Argon2id v1.3 / 32-byte contract the export path derives
+    under, and the canonical model rejects anything else.
+    """
     try:
         raw = json.loads(payload.decode(UTF_8_ENCODING))
         if raw.get("kdf") != "argon2id":
             raise ValueError("unsupported recovery-wrap kdf")
-        salt = base64.b64decode(raw["salt_b64"].encode("ascii"), validate=True)
-        memory_cost = int(raw["memory_cost"])
-        time_cost = int(raw["time_cost"])
-        parallelism = int(raw["parallelism"])
-        if memory_cost <= 0 or time_cost <= 0 or parallelism <= 0:
-            raise ValueError("non-positive argon2 parameter")
-        return _RecoveryWrapKdf(
-            salt=salt,
-            memory_cost=memory_cost,
-            time_cost=time_cost,
-            parallelism=parallelism,
+        return KdfParams(
+            algorithm="argon2id",
+            version=_RECOVERY_WRAP_ARGON2_VERSION,
+            memory_cost=int(raw["memory_cost"]),
+            time_cost=int(raw["time_cost"]),
+            parallelism=int(raw["parallelism"]),
+            salt=base64.b64decode(raw["salt_b64"].encode("ascii"), validate=True),
+            output_length=_RECOVERY_WRAP_OUTPUT_BYTES,
         )
     except Exception as exc:
         raise BucketImportError(
