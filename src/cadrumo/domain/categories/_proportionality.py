@@ -13,12 +13,19 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
+from urllib.parse import urlsplit
 
-from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, model_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, TypeAdapter, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.external_constants import load_external_constants
 from ...core.i18n import Translatable as tr
 from ._errors import CategoryValidationError
+
+#: The only scheme a citation may cite. Every AEAT and BOE surface the
+#: shipped profiles reference publishes over TLS, so a non-``https``
+#: citation is a downgrade rather than a legitimate authority.
+_CITATION_SCHEME = "https"
 
 
 class _ProportionalityStrictFrozenModel(BaseModel):
@@ -31,6 +38,33 @@ def _require_translatable_text(value: tr, field_name: str) -> None:
     """Assert a translatable authority field contains non-blank text."""
     if not str(value).strip():
         raise CategoryValidationError(f"{field_name} must contain authoritative Spanish text")
+
+
+def _authoritative_citation_origins() -> frozenset[str]:
+    """Return the registered domains a category citation may cite.
+
+    Derived from the canonical
+    :class:`core.external_constants.AeatDomains` registry, which owns every
+    AEAT / BOE hostname, so this module never restates a hostname literal
+    and a domain rotation reaches citations automatically.
+    """
+    domains = load_external_constants().aeat.domains
+    origins = {domains.host_suffix.lower()}
+    for origin in (domains.boe, domains.legacy_www):
+        host = urlsplit(origin).hostname
+        if host is not None:
+            origins.add(host.lower())
+    return frozenset(origins)
+
+
+def _host_is_authoritative(host: str, accepted: frozenset[str]) -> bool:
+    """Return whether ``host`` is an accepted origin or a subdomain of one.
+
+    Suffix matching is anchored on a dot boundary so a look-alike host such
+    as ``evil-agenciatributaria.gob.es`` cannot pass by ending in the same
+    characters as the real origin.
+    """
+    return any(host == origin or host.endswith(f".{origin}") for origin in accepted)
 
 
 class CategoryCitationSource(StrEnum):
@@ -61,7 +95,9 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
             edition, BOE number).
         locator: Section, article, or page locator within the
             referenced document.
-        url: Canonical URL where the citation can be checked.
+        url: Canonical URL where the citation can be checked. Constrained
+            to an official AEAT or BOE origin over ``https`` -- see
+            :meth:`_validate_authoritative_url`.
         quote: Authoritative Spanish-language quote backing the rule.
     """
 
@@ -70,6 +106,29 @@ class CategoryCitation(_ProportionalityStrictFrozenModel):
     locator: str = Field(min_length=1, max_length=256)
     url: AnyHttpUrl
     quote: tr = Field(description="Authoritative Spanish-language quote.")
+
+    @field_validator("url", mode="after")
+    @classmethod
+    def _validate_authoritative_url(cls, value: AnyHttpUrl) -> AnyHttpUrl:
+        """Refuse a citation that does not resolve to an official origin.
+
+        A citation is the operator's route back to the authority behind a
+        deduction rule, so an arbitrary host is not a weaker citation --
+        it is an unverifiable one. ``AnyHttpUrl`` alone accepts any host on
+        either scheme, so the origin is constrained here against the
+        canonical :class:`core.external_constants.AeatDomains` registry
+        rather than against hostname literals restated in this module.
+        """
+        accepted = _authoritative_citation_origins()
+        host = (value.host or "").lower()
+        scheme = value.scheme.lower()
+        if scheme != _CITATION_SCHEME or not _host_is_authoritative(host, accepted):
+            raise CategoryValidationError(
+                f"category citation url {str(value)!r} is not an official authority: "
+                f"expected an {_CITATION_SCHEME} URL whose host is, or is a subdomain of, "
+                f"one of {', '.join(sorted(accepted))}",
+            )
+        return value
 
     @model_validator(mode="after")
     def _validate_quote(self) -> CategoryCitation:
