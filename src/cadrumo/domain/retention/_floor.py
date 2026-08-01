@@ -18,8 +18,8 @@ on the returned :class:`RetentionFloorAssessment`.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
-from typing import Final, Protocol, runtime_checkable
+from datetime import date, datetime
+from typing import Final, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field
 
@@ -116,18 +116,17 @@ class RetentionFloorAssessment(BaseModel):
         return max(record.earliest_safe_erase_date for record in self.retained)
 
 
-def _add_years(moment: datetime, years: int) -> datetime:
-    """Add whole ``years`` to ``moment``, clamping 29 Feb to 28 Feb.
+def add_prescription_years[CalendarMoment: date](moment: CalendarMoment, years: int) -> CalendarMoment:
+    """Add whole calendar years to a legal prescription boundary.
 
-    A leap-day filing whose target year is not a leap year would otherwise raise
-    ``ValueError`` on ``replace``; clamping to 28 Feb keeps the floor a
-    well-defined instant one day earlier, which is the conservative direction
-    (the record becomes erasable no later than the naive anniversary).
+    A leap-day boundary whose target year is not a leap year clamps to 28
+    February. This keeps every legal period well-defined without each consumer
+    redeclaring date arithmetic.
     """
     try:
-        return moment.replace(year=moment.year + years)
+        return cast("CalendarMoment", moment.replace(year=moment.year + years))
     except ValueError:
-        return moment.replace(year=moment.year + years, month=2, day=28)
+        return cast("CalendarMoment", moment.replace(year=moment.year + years, month=2, day=28))
 
 
 def earliest_safe_erase_date(
@@ -142,7 +141,7 @@ def earliest_safe_erase_date(
     carries; anchoring on it is conservative for the common case (filing occurs
     at or near the deadline) and errs toward keeping late-filed records longer.
     """
-    return _add_years(filed_at, floor_years)
+    return add_prescription_years(filed_at, floor_years)
 
 
 def assess_retention_floor(

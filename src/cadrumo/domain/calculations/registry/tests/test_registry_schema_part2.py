@@ -375,7 +375,7 @@ def test_validator_rejects_casilla_equals_implies_nonzero_malformed_m130_predica
         (
             "non-text-antecedent",
             'casilla_equals_implies_nonzero(["01", "general", "07"])',
-            r"antecedent casilla '01' must have data_type 'text'",
+            r"antecedent casilla '01' must be a text-family casilla",
         ),
     )
     for case_id, expression, match in cases:
@@ -413,7 +413,7 @@ def test_validator_rejects_casilla_equals_implies_nonzero_text_consequent() -> N
 
     with pytest.raises(
         RegistryValidationError,
-        match=r"consequent casilla 'tipo_renta' must not have data_type 'text'",
+        match=r"consequent casilla 'tipo_renta' must be a numeric casilla, not a text-family one",
     ):
         RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
 
@@ -464,7 +464,7 @@ def test_validator_rejects_deduccion_requires_adquisicion_before_malformed_m130_
         (
             "non-text-date",
             'deduccion_requires_adquisicion_before(["01", "07", "07", "2013-01-01"])',
-            r"acquisition-date casilla '07' must have data_type 'text'",
+            r"acquisition-date casilla '07' must carry a parseable date",
         ),
         (
             "bad-cutoff",

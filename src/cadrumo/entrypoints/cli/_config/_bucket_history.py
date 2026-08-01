@@ -7,8 +7,8 @@ active profile bucket's append-only events.
 from __future__ import annotations
 
 import typing
-from collections.abc import Mapping
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -18,6 +18,9 @@ from ....core.time import coerce_utc_aware
 from ....domain.buckets import BucketEvent, BucketEventType
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
+
+if TYPE_CHECKING:
+    from .._config_bucket_history_payloads import BucketHistoryEventPayload
 
 
 def register_bucket_history_commands(profile_app: typer.Typer) -> None:
@@ -75,7 +78,7 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
         """Browse the active profile's append-only event history."""
         _activate_subcommand_output_language(ctx, output_language)
         from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-        from .._config_payloads import BucketHistoryResult
+        from .._config_bucket_history_payloads import BucketHistoryResult
 
         profile_label, bucket_id = _resolve_profile_history_target(profile)
         selected = _parse_bucket_event_types(event_type)
@@ -102,12 +105,12 @@ def register_bucket_history_commands(profile_app: typer.Typer) -> None:
         bucket_result = BucketHistoryResult(
             operation="config.bucket.history",
             bucket_id=bucket_id,
-            event_types=[t.value for t in selected] if selected else None,
-            since=since_dt.isoformat() if since_dt else None,
-            until=until_dt.isoformat() if until_dt else None,
+            event_types=list(selected) if selected else None,
+            since=since_dt,
+            until=until_dt,
             object_id=object_id_token,
             actor=actor_token,
-            events=[dict(_bucket_history_event_payload(event)) for event in events],
+            events=[_bucket_history_event_payload(event) for event in events],
         )
         lines = ["operation\tconfig.profile.history", f"profile\t{profile_label}", f"event_count\t{len(events)}"] + [
             f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
@@ -190,17 +193,19 @@ def _bucket_history_event_matches(
     return not (actor_token is not None and event.actor != actor_token)
 
 
-def _bucket_history_event_payload(event: BucketEvent) -> Mapping[str, object]:
-    """Project one bucket event onto its JSON payload row."""
-    return {
-        "event_id": event.event_id,
-        "event_type": event.event_type.value,
-        "occurred_at": event.occurred_at.isoformat(),
-        "actor": event.actor,
-        "object_type": event.object_type.value,
-        "object_id": event.object_id,
-        "payload": dict(event.payload),
-    }
+def _bucket_history_event_payload(event: BucketEvent) -> BucketHistoryEventPayload:
+    """Project one bucket event onto its typed JSON payload row."""
+    from .._config_bucket_history_payloads import BucketHistoryEventPayload
+
+    return BucketHistoryEventPayload(
+        event_id=event.event_id,
+        event_type=event.event_type,
+        occurred_at=event.occurred_at,
+        actor=event.actor,
+        object_type=event.object_type,
+        object_id=event.object_id,
+        payload=dict(event.payload),
+    )
 
 
 __all__ = ["_parse_bucket_event_types", "register_bucket_history_commands"]

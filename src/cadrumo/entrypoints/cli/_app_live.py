@@ -477,6 +477,7 @@ def iva_wallet_pull_history_cmd(
         _metric_line("captured_count", report.captured_count),
         _metric_line("calculation_observation_count", report.calculation_observation_count),
         _metric_line("reloaded_history_count", report.reloaded_history_count),
+        _metric_line("failed_declaration_count", report.failed_declaration_count),
         _metric_line("output_root", report.output_root),
     )
     from ._app_live_payloads import IvaWalletCaptureHistoryResult
@@ -488,6 +489,12 @@ def iva_wallet_pull_history_cmd(
         captured_count=report.captured_count,
         calculation_observation_count=report.calculation_observation_count,
         reloaded_history_count=report.reloaded_history_count,
+        casilla_count=report.casilla_count,
+        observation_paths=list(report.observation_paths),
+        artefact_refs=list(report.artefact_refs),
+        calculation_observation_keys=list(report.calculation_observation_keys),
+        failed_declaration_count=report.failed_declaration_count,
+        failed_declarations=list(report.failed_declarations),
     )
     _emit_envelope(ctx, command="app.live.iva_wallet.pull_history", result=result, lines=lines)
 

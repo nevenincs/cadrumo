@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageRemoteMirrorPolicy
@@ -266,6 +267,49 @@ def test_remote_mirror_manifest_loader_wraps_malformed_payload_in_storage_error(
         get_remote_mirror_namespace_manifest(provider, manifest.namespace)
 
 
+def test_duplicate_object_keys_in_a_remote_manifest_fail_closed_on_load(tmp_path: Path) -> None:
+    """A conflicting duplicate row must refuse rather than be discarded by keyed comparison.
+
+    Comparison keys both manifests by ``object_key_hmac``; before the manifest
+    enforced uniqueness a repeated key silently dropped every earlier row, so a
+    remote manifest carrying a revision conflict followed by a matching row
+    compared clean while still reporting two objects.
+    """
+    manifest = _single_object_manifest(tmp_path)
+    provider = LocalFileSystemProvider(tmp_path / "mirror")
+    manifest_metadata = put_remote_mirror_namespace_manifest(provider, manifest)
+
+    original = json.loads(manifest.model_dump_json())
+    conflicting_entry = dict(original["objects"][0])
+    conflicting_entry["ciphertext_hash"] = "c" * 64
+    tampered = dict(original)
+    tampered["objects"] = [conflicting_entry, original["objects"][0]]
+    tampered["object_count"] = 2
+    tampered_payload = json.dumps(tampered).encode("utf-8")
+
+    provider.put(
+        REMOTE_MIRROR_MANIFEST_NAMESPACE,
+        manifest_metadata.object_key_hmac,
+        tampered_payload,
+        content_hash=f"sha256-{hashlib.sha256(tampered_payload).hexdigest()}",
+        label="duplicate-keys",
+    )
+
+    with pytest.raises(OutboundStorageIntegrityError, match="remote mirror manifest"):
+        get_remote_mirror_namespace_manifest(provider, manifest.namespace)
+
+
+def test_remote_mirror_manifest_object_count_must_match_recorded_objects(tmp_path: Path) -> None:
+    """``object_count`` is the manifest's own claim about ``objects`` and must agree with it."""
+    manifest = _single_object_manifest(tmp_path)
+
+    payload = json.loads(manifest.model_dump_json())
+    assert payload["object_count"] == 1
+
+    with pytest.raises(ValidationError, match="object_count"):
+        RemoteMirrorNamespaceManifest.model_validate_json(json.dumps(payload | {"object_count": 7}))
+
+
 def test_remote_mirror_comparison_detects_stale_remote_revision(tmp_path: Path) -> None:
     remote_manifest, local_manifest = _overwrite_manifest_pair(tmp_path)
 
@@ -451,3 +495,64 @@ def _three_revision_manifest_pair(
         assert remote_manifest is not None
         local_manifest = build_remote_mirror_namespace_manifest(namespace, tuple(repo.iter_all_records_raw()))
         return remote_manifest, local_manifest
+
+
+def test_manifest_refuses_child_objects_from_another_namespace() -> None:
+    """A manifest describes one namespace, so a foreign child is not representable.
+
+    Each child entry carries its own ``namespace`` and nothing bound it to the
+    parent's, while ``inspect_remote_mirror_download`` fetches by the *child's*
+    value. A manifest named ``target`` holding a child named ``foreign`` therefore
+    inspected clean and would pull another namespace's ciphertext under the
+    target's identity.
+    """
+    from .._records import RemoteMirrorObjectManifest
+
+    def _entry(namespace: str) -> RemoteMirrorObjectManifest:
+        return RemoteMirrorObjectManifest(
+            namespace=namespace,
+            object_key_hmac="a" * 64,
+            classification="FINANCIAL",
+            schema_version=1,
+            byte_length=10,
+            ciphertext_hash="b" * 64,
+            row_written_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+    with pytest.raises(ValidationError, match="foreign namespaces"):
+        RemoteMirrorNamespaceManifest(
+            namespace="target",
+            object_count=1,
+            objects=(_entry("foreign"),),
+        )
+
+    # The matching-namespace manifest is unaffected.
+    manifest = RemoteMirrorNamespaceManifest(
+        namespace="target",
+        object_count=1,
+        objects=(_entry("target"),),
+    )
+    assert manifest.objects[0].namespace == manifest.namespace
+
+
+def test_manifest_refuses_a_mixed_namespace_object_set() -> None:
+    """One foreign child among genuine ones is refused, and the refusal names it."""
+    from .._records import RemoteMirrorObjectManifest
+
+    def _entry(namespace: str, key_char: str) -> RemoteMirrorObjectManifest:
+        return RemoteMirrorObjectManifest(
+            namespace=namespace,
+            object_key_hmac=key_char * 64,
+            classification="FINANCIAL",
+            schema_version=1,
+            byte_length=10,
+            ciphertext_hash="b" * 64,
+            row_written_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
+
+    with pytest.raises(ValidationError, match="smuggled"):
+        RemoteMirrorNamespaceManifest(
+            namespace="target",
+            object_count=2,
+            objects=(_entry("target", "a"), _entry("smuggled", "c")),
+        )

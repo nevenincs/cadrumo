@@ -34,7 +34,7 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import PlaywrightError
 from ..browser import DefaultBrowserSession, default_browser_session_factory
-from ._adapter_utils import is_aeat_auth_gate_redirect
+from ._adapter_utils import is_aeat_auth_gate_redirect, landed_origin
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -542,9 +542,24 @@ async def _submit_wallet_execute_gate_if_present(
             context=_wallet_page_shape_context(html, landing_url=getattr(page, "url", "") or ""),
         )
     if result == "wallet-execute-submit-present":
+        # Same landed-origin question as the observation source_url, and the
+        # same answer: the host that answered decides, and an origin that
+        # cannot be established is refused rather than guessed. The retired
+        # shape fell back to ``expected_url`` and then urlsplit it, so an
+        # ``about:blank`` landing built a malformed ``about://<path>`` and
+        # submitted to it.
+        # Kept for diagnostics only: naming the landing in a shape-context
+        # report is not the same claim as recording it as an origin.
         current_url = getattr(page, "url", "") or expected_url
-        current = urlsplit(current_url)
-        submission_url = f"{current.scheme}://{current.netloc}{expected_path}"
+        current_origin = landed_origin(getattr(page, "url", "") or "")
+        if current_origin is None:
+            raise SedeNavigationError(
+                "AEAT IVA wallet execute gate landed on no usable origin; "
+                "the host that answered cannot be established, so no "
+                "submission URL can be built for this read",
+                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            )
+        submission_url = f"{current_origin}{expected_path}"
         method = _wallet_execute_form_method(html)
         _assert_read_http(method, submission_url)
         _assert_read_browser_action(_WALLET_EXECUTE_READ_ACTION)
@@ -762,13 +777,29 @@ def _landed_wallet_url(page: Page) -> str:
     evidence and is what the value is defended with later, so it must name
     the host that answered.
 
-    Falls back to the unnumbered wallet URL when the landing is unreadable,
-    which is the best true answer available rather than a preference.
+    REFUSES when the landing is unreadable, rather than falling back to the
+    unnumbered wallet URL.
+
+    The fallback used to be defended as "the best true answer available".
+    It is not an answer at all: AEAT dispatches the authenticated session
+    across its numbered pool, so exactly when the landing cannot be read is
+    when there is no evidence the read stayed on the unnumbered origin.
+    Recording it would print a guess into the observation's ``source_url``,
+    where a later reader cannot distinguish it from a measurement.
+
+    Conforms to the censal reader, which already refused for this reason.
+
+    Raises:
+        SedeNavigationError: When the landing carries no usable scheme + host.
     """
-    landed = urlsplit(getattr(page, "url", "") or "")
-    if landed.scheme and landed.netloc:
-        return f"{landed.scheme}://{landed.netloc}{_WALLET_PATH}"
-    return _WALLET_URL
+    origin = landed_origin(getattr(page, "url", "") or "")
+    if origin is None:
+        raise SedeNavigationError(
+            "AEAT IVA compensation wallet read landed on no usable origin; "
+            "the host that answered cannot be established, so no source URL "
+            "can be recorded for this observation",
+        )
+    return f"{origin}{_WALLET_PATH}"
 
 
 def _assert_read_http(method: str, url: str) -> None:

@@ -51,7 +51,7 @@ from typer._click.types import BoolParamType, FloatParamType, IntParamType
 from typer.main import get_command as typer_get_command
 
 from ....core.config import DEV_TEST_DATABASE_PASSWORD
-from ....core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY
+from ....core.json_contract import SCHEMA_REGISTRY
 from ....tests import temporary_env
 from ...cli import app as cli_app
 from ...cli import command_schema_refs
@@ -394,55 +394,6 @@ def test_request_schema_parity_detects_an_injected_descriptor_drift() -> None:
     assert _request_schema_mismatches(descriptors) == []
 
 
-def _expected_response_schema(command_key: str) -> dict[str, object]:
-    """The response schema the CLI surface authorises for one verb.
-
-    The CLI emits the command's registered :class:`OutputSchema` (from
-    :data:`SCHEMA_REGISTRY`) inside the shared envelope; a verb with no
-    registered result model advertises the generic object. This mirrors the CLI
-    authority independently of the MCP tool builder, so the diff is a genuine
-    cross-surface check rather than a re-derivation of the same function.
-    """
-    schema = SCHEMA_REGISTRY.get(command_key)
-    if schema is None:
-        return {"type": "object"}
-    result_schema = thin_output_schema(command_key, schema.model_json_schema())
-    definitions = result_schema.pop("$defs", {})
-    return {
-        "$defs": definitions,
-        "type": "object",
-        "properties": {
-            "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
-            "command": {"const": command_key, "type": "string"},
-            "active_profile": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-            "status": {"enum": ["success", "warning"], "type": "string"},
-            "result": result_schema,
-            "notices": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "severity": {"enum": ["info", "warning"], "type": "string"},
-                        "code": {"minLength": 1, "type": "string"},
-                        "message": {"minLength": 1, "type": "string"},
-                        "suggestion": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-                        "context": {
-                            "anyOf": [
-                                {"type": "object", "additionalProperties": {"type": "string"}},
-                                {"type": "null"},
-                            ],
-                        },
-                    },
-                    "required": ["severity", "code", "message", "suggestion", "context"],
-                    "additionalProperties": False,
-                },
-            },
-        },
-        "required": ["schema_version", "command", "active_profile", "status", "result", "notices"],
-        "additionalProperties": False,
-    }
-
-
 def test_response_schema_embeds_the_cli_registered_result_model_for_every_verb() -> None:
     # The MCP response schema per verb must embed exactly the CLI-registered
     # result model inside the shared envelope. Diffing every advertised
@@ -451,13 +402,27 @@ def test_response_schema_embeds_the_cli_registered_result_model_for_every_verb()
     # thinning, or a stale result model for any verb fails here.
     descriptors = _mcp_descriptors_by_key()
     grounded = 0
-    mismatched: list[str] = []
     for key, descriptor in descriptors.items():
-        if SCHEMA_REGISTRY.get(key) is not None:
-            grounded += 1
-        if descriptor.output_schema != _expected_response_schema(key):
-            mismatched.append(key)
-    assert mismatched == []
+        branches = descriptor.output_schema["oneOf"]
+        assert isinstance(branches, list) and len(branches) == 2
+        success_branch, error_branch = branches
+        assert isinstance(success_branch, dict)
+        assert isinstance(error_branch, dict)
+        success_properties = success_branch["properties"]
+        error_properties = error_branch["properties"]
+        assert isinstance(success_properties, dict)
+        assert isinstance(error_properties, dict)
+        assert success_properties["command"] == {"const": key, "type": "string"}
+        assert success_properties["status"] == {"enum": ["success", "warning"], "type": "string"}
+        assert error_properties["status"] == {"const": "error", "type": "string"}
+        assert set(error_branch["required"]) == {"schema_version", "command", "active_profile", "status", "error", "notices"}
+        schema = SCHEMA_REGISTRY.get(key)
+        if schema is None:
+            continue
+        grounded += 1
+        expected_result = thin_output_schema(key, schema.model_json_schema())
+        expected_result.pop("$defs", None)
+        assert success_properties["result"] == expected_result
     # Non-vacuous: a substantial share of verbs carry a real registered result
     # model, so the diff is not trivially the generic-object fallback everywhere.
     assert grounded >= 100
@@ -474,9 +439,15 @@ def test_advertised_response_schema_describes_the_real_cli_emitted_envelope() ->
     # transport runs the real CLI pipeline and emits the genuine envelope.
     _, envelope = _both_transports("contract", {})
     output_schema = descriptor.output_schema
-    required = output_schema["required"]
+    branches = output_schema["oneOf"]
+    assert isinstance(branches, list)
+    success_branch = branches[0]
+    assert isinstance(success_branch, dict)
+    required = success_branch["required"]
     assert isinstance(required, list)
     for field in required:
         assert field in envelope, f"CLI envelope for 'contract' is missing MCP-advertised field {field!r}"
-    assert envelope["command"] == output_schema["properties"]["command"]["const"]
-    assert envelope["status"] in output_schema["properties"]["status"]["enum"]
+    properties = success_branch["properties"]
+    assert isinstance(properties, dict)
+    assert envelope["command"] == properties["command"]["const"]
+    assert envelope["status"] in properties["status"]["enum"]

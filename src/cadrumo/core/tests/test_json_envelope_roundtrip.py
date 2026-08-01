@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import io
 import json
+from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -29,6 +31,7 @@ from ..json_contract import (
     NoticeSeverity,
     OutputSchema,
     SchemaEnvelope,
+    emit_json_document,
     emit_json_success,
 )
 from ..redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_OBJECT_KEY_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
@@ -176,6 +179,26 @@ def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
     assert roundtripped.result == result
     assert roundtripped.result.operand_refs == _RENDIMIENTO_NETO_OPERANDS
     assert roundtripped.result.operand_casilla_refs == _RENDIMIENTO_NETO_OPERANDS
+
+
+def test_json_document_uses_the_canonical_scalar_normalizer() -> None:
+    """Envelope-independent JSON output preserves CLI scalar wire contracts."""
+    buffer = io.StringIO()
+
+    emit_json_document(
+        {
+            "destination": Path("C:/evidence/result.json"),
+            "amount": Decimal("1E+3"),
+            "as_of": "2026-08-01",
+        },
+        stream=buffer,
+    )
+
+    assert json.loads(buffer.getvalue()) == {
+        "amount": "1000",
+        "as_of": "2026-08-01",
+        "destination": "C:/evidence/result.json",
+    }
 
 
 def test_emit_json_success_redacts_sensitive_values_without_breaking_envelope_shape() -> None:

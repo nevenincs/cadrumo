@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
+from .....core.time import validate_utc_aware
 from ._errors import AeatLoginAssertionError
 
 AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 2
@@ -46,6 +47,19 @@ class PersistedSessionMetadata(BaseModel):
     idle_deadline: datetime
     storage_state_sha256: str = Field(min_length=64, max_length=64)
     protected_resource_url: str = AEAT_CERTIFICATE_PROTECTED_URL
+
+    @field_validator("authenticated_at", "idle_deadline")
+    @classmethod
+    def _instants_are_utc(cls, value: datetime) -> datetime:
+        """Reject a session instant that is naive or not UTC.
+
+        The metadata is persisted inside the encrypted session envelope as
+        JSON, which preserves the offset, so the canonical contract holds at
+        this boundary. Both fields are compared against the clock on resume:
+        a naive value would be read as UTC and could extend or expire an idle
+        deadline by the local offset.
+        """
+        return validate_utc_aware(value)
 
     @field_validator("protected_resource_url")
     @classmethod

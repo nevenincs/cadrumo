@@ -9,7 +9,7 @@ consumer can read exactly which stage the chain reached and where it halted.
 
 from __future__ import annotations
 
-from ...application.modelo import QuickfileResult
+from ...application.modelo import QuickfileResult, QuickfileStage, QuickfileStageStatus
 from ...core import Period
 from ._modelo_payloads import ModeloExportPayload
 from ._schemas import OutputSchema, register_schema
@@ -18,14 +18,18 @@ from ._schemas import OutputSchema, register_schema
 class QuickfileStageOutcomePayload(OutputSchema):
     """One quickfile stage's outcome projected for the JSON envelope.
 
-    ``stage`` is a :class:`~application.modelo.QuickfileStage` value and
-    ``status`` a :class:`~application.modelo.QuickfileStageStatus` value;
-    both are surfaced as their string form. ``context`` carries the stage's
-    structured refs (work-unit id, revision id, refusal counts) verbatim.
+    ``stage`` and ``status`` reuse the canonical
+    :class:`~application.modelo.QuickfileStage` and
+    :class:`~application.modelo.QuickfileStageStatus` enums the application
+    layer owns, so an unknown stage or status is refused at the transport
+    boundary rather than crossing it as an opaque string. Both are
+    ``StrEnum`` members and therefore still serialise to their string form.
+    ``context`` carries the stage's structured refs (work-unit id, revision
+    id, refusal counts) verbatim.
     """
 
-    stage: str
-    status: str
+    stage: QuickfileStage
+    status: QuickfileStageStatus
     message: str = ""
     context: dict[str, str] = {}
 
@@ -46,7 +50,7 @@ class QuickfileResultPayload(OutputSchema):
     period: Period
     registry_revision_id: str
     completed: bool
-    stopped_at_stage: str | None = None
+    stopped_at_stage: QuickfileStage | None = None
     work_unit_id: str | None = None
     calculation_revision_id: str | None = None
     granted_verificado_completo: bool | None = None
@@ -63,7 +67,7 @@ class QuickfileResultPayload(OutputSchema):
             period=result.period,
             registry_revision_id=result.registry_revision_id,
             completed=result.completed,
-            stopped_at_stage=result.stopped_at_stage.value if result.stopped_at_stage is not None else None,
+            stopped_at_stage=result.stopped_at_stage,
             work_unit_id=result.work_unit.work_unit_id if result.work_unit is not None else None,
             calculation_revision_id=(
                 result.calculation_revision.calculation_revision_id if result.calculation_revision is not None else None
@@ -72,8 +76,8 @@ class QuickfileResultPayload(OutputSchema):
             export=ModeloExportPayload.from_result(result.export_result) if result.export_result is not None else None,
             stages=tuple(
                 QuickfileStageOutcomePayload(
-                    stage=outcome.stage.value,
-                    status=outcome.status.value,
+                    stage=outcome.stage,
+                    status=outcome.status,
                     message=outcome.message,
                     context=dict(outcome.context),
                 )

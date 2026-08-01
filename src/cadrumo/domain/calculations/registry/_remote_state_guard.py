@@ -14,7 +14,13 @@ from urllib.parse import urlparse
 from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ._aeat_hosts import first_aeat_host, is_aeat_host, is_sanctioned_gov_idp_host
+from ._aeat_hosts import (
+    REMOTE_READ_SCHEME,
+    canonical_remote_hostname,
+    first_aeat_host,
+    is_aeat_host,
+    is_sanctioned_gov_idp_host,
+)
 from ._errors import RegistryValidationError
 from ._schema import LiveCrossReferenceDecision
 
@@ -422,8 +428,37 @@ def _evaluate_http(policy: RemoteStateGuardPolicy, operation: RemoteOperation) -
     )
     if method not in _READ_ONLY_HTTP_METHODS and not read_post_allowed:
         return _blocked(policy, f"AEAT remote write method {method!r} is forbidden")
-    host = operation.url.host
-    if host is None or not _host_within_policy(policy, host):
+    # Scheme, user-info and port are decided by the one canonical authority
+    # helper, not by ``operation.url.host`` — that attribute reports a host
+    # with user-info and any port already stripped, so a credentialed or
+    # off-port authority reads as a plain AEAT host and slips the allow-list.
+    #
+    # The URL is re-canonicalised from its serialised form because pydantic
+    # normalises the authority at model construction.
+    #
+    # ACCEPTED EQUIVALENCE — an explicit DEFAULT port. ``AnyUrl`` erases
+    # ``:443`` from an https URL before the guard runs, so ``https://host:443/``
+    # is admitted as ``https://host/``. This is deliberate, not an unclosed
+    # hole: the two denote the same origin, so admitting them alike is what a
+    # URL type should do. The alternative — widening ``RemoteOperation.url`` to
+    # ``str`` to preserve the raw text — would trade a typed boundary for a
+    # distinction that carries no security difference.
+    #
+    # Everything that DOES carry a difference is refused: every non-default
+    # port survives serialisation and is rejected, as is every user-info
+    # authority and every non-``https`` scheme. Note the string-level callers
+    # of the same helper (the Cl@ve landing predicates) never see pydantic
+    # normalisation and so refuse an explicit ``:443`` outright; the two
+    # populations agree on every authority that differs in origin.
+    raw_url = str(operation.url)
+    host = canonical_remote_hostname(raw_url)
+    if host is None:
+        return _blocked(
+            policy,
+            f"AEAT remote authority {raw_url!r} is not a bare {REMOTE_READ_SCHEME} host "
+            "(scheme, user-info or port refused)",
+        )
+    if not _host_within_policy(policy, host):
         return _blocked(policy, f"AEAT host {host!r} is not in allowed read-only hosts")
     text = f"{operation.url} {operation.action or ''}".lower()
     action = _first_declared_forbidden_action(policy, text)
@@ -444,7 +479,22 @@ def _evaluate_browser_action(policy: RemoteStateGuardPolicy, operation: RemoteOp
     token = _first_forbidden_token(normalized)
     if token is not None:
         return _blocked(policy, f"AEAT browser action token {token!r} is forbidden")
-    if policy.allowed_browser_action_patterns and not _matches_allowed_browser_action(policy, text):
+    # An EMPTY allow-list refuses every action; it does not wave them through.
+    #
+    # This guard previously read ``if policy.allowed_browser_action_patterns
+    # and not _matches(...)``, so a policy declaring no actions imposed no
+    # restriction at all. Dropping a pattern set therefore did not NARROW the
+    # allow-list, it REMOVED the gate -- fail-open in the configuration most
+    # likely to arise by accident, since the field defaults to an empty tuple
+    # and a registry key that is simply absent lands there silently.
+    #
+    # Refusing on absence is what the surrounding code already assumed: the
+    # expedientes walker documents its deliberately-empty tuple as meaning
+    # "any future browser action added here fails the guard until it is
+    # declared", a guarantee the old branch did not actually provide.
+    if not policy.allowed_browser_action_patterns:
+        return _blocked(policy, f"AEAT policy {policy.id!r} declares no allowed browser actions")
+    if not _matches_allowed_browser_action(policy, text):
         return _blocked(policy, f"AEAT browser action {text!r} is not in the explicit read-only allow-list")
     return RemoteStateGuardResult(decision="allowed", reason="read-only browser action allowed", policy_id=policy.id)
 

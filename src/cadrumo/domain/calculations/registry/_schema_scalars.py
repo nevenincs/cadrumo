@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, SerializeAsAny
 
@@ -37,6 +38,8 @@ __all__ = [
     "_validate_iban_string",
     "_validate_nif_string",
     "_validate_period_code",
+    "registry_scalar_value_type",
+    "validate_registry_text_scalar",
 ]
 
 
@@ -355,6 +358,72 @@ def _validate_bic_string(value: object) -> object:
 
 BicString = Annotated[str, BeforeValidator(_validate_bic_string)]
 """SWIFT BIC for the registry boundary."""
+
+
+type RegistryScalarValueType = Literal["decimal", "int", "str", "bool", "date"]
+"""Runtime family for a registry casilla ``data_type`` declaration."""
+
+
+_REGISTRY_SCALAR_VALUE_TYPES: dict[str, RegistryScalarValueType] = {
+    "decimal": "decimal",
+    "money": "decimal",
+    "ratio": "decimal",
+    "integer": "int",
+    "year": "int",
+    "text": "str",
+    "nif": "str",
+    "nif_iva": "str",
+    "name": "str",
+    "period_code": "str",
+    "country_code": "str",
+    "ccaa_code": "str",
+    "province_code": "str",
+    "municipality_code": "str",
+    "postal_code": "str",
+    "iban": "str",
+    "bic": "str",
+    "boolean": "bool",
+    "date": "date",
+}
+
+_REGISTRY_TEXT_SCALAR_VALIDATORS: dict[str, Callable[[object], object]] = {
+    "text": lambda value: value,
+    "nif": _validate_nif_string,
+    "nif_iva": _validate_nif_iva_string,
+    "name": _validate_name_string,
+    "period_code": _validate_period_code,
+    "country_code": _validate_country_code,
+    "ccaa_code": _validate_ccaa_code,
+    "province_code": _validate_province_code,
+    "municipality_code": _validate_municipality_code,
+    "postal_code": _validate_postal_code,
+    "iban": _validate_iban_string,
+    "bic": _validate_bic_string,
+}
+
+
+def registry_scalar_value_type(data_type: str) -> RegistryScalarValueType:
+    """Return the runtime family declared by a registry scalar data type."""
+    try:
+        return _REGISTRY_SCALAR_VALUE_TYPES[data_type]
+    except KeyError as exc:
+        raise RegistryValidationError(f"unsupported registry casilla data type {data_type!r}") from exc
+
+
+def validate_registry_text_scalar(data_type: str, value: object) -> str:
+    """Canonicalise one text-family casilla value through its declared validator."""
+    if registry_scalar_value_type(data_type) != "str":
+        raise RegistryValidationError(f"registry casilla data type {data_type!r} is not a text scalar")
+    if not isinstance(value, str):
+        raise RegistryValidationError(f"{data_type} value must be a string, got {type(value).__name__}")
+    stripped = value.strip()
+    if not stripped:
+        raise RegistryValidationError(f"{data_type} value must not be blank")
+    validator = _REGISTRY_TEXT_SCALAR_VALIDATORS[data_type]
+    result = validator(stripped)
+    if not isinstance(result, str):
+        raise RegistryValidationError(f"{data_type} validator did not return a string")
+    return result
 
 
 _DATE_DDMMAAAA_RE = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")

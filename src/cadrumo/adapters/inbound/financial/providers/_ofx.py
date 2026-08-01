@@ -39,7 +39,9 @@ from typing import Protocol, override, runtime_checkable
 
 from .....core import OFX_EXTRA, MissingOptionalExtraError, optional_extra_available, require_optional_extra
 from .....core.decimal import coerce_decimal
+from .....core.errors import CoreValidationError
 from .....core.logging import get_logger
+from .....core.parsing import normalise_iso_4217_currency
 from .....domain.transactions import SourceFormat
 from ._base import (
     FinancialProvider,
@@ -114,8 +116,26 @@ class _ParsedOfxRow:
 
 
 def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
-    """Return the ``(currency, account_id)`` context for one OFX statement block."""
-    currency = (getattr(statement, "curdef", None) or default_currency()).strip().upper()
+    """Return the ``(currency, account_id)`` context for one OFX statement block.
+
+    The statement's ``CURDEF`` is validated against the same ISO 4217 shape
+    policy the CSV column and the persisted
+    :class:`~domain.transactions.RawTransaction` use
+    (:func:`~core.parsing.normalise_iso_4217_currency`). A malformed
+    ``CURDEF`` is refused here, naming the statement, rather than being passed
+    through to fail later as an opaque model validation error.
+
+    Raises:
+        InvalidFinancialSourceError: ``CURDEF`` is not a three-letter ISO 4217
+            code.
+    """
+    raw_currency = getattr(statement, "curdef", None) or default_currency()
+    try:
+        currency = normalise_iso_4217_currency(raw_currency)
+    except CoreValidationError as exc:
+        raise InvalidFinancialSourceError(
+            f"OFX statement CURDEF must be a three-letter ISO 4217 code; got {raw_currency!r}",
+        ) from exc
     account = statement.account
     account_id = (getattr(account, "acctid", None) or "account") if account is not None else "account"
     return currency, account_id

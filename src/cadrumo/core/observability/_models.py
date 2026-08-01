@@ -40,11 +40,25 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..time import validate_utc_aware
+
+#: Canonical shape of a run identifier: 16 lowercase hex characters, the form
+#: minted by :func:`core.observability._context._mint_run_id`. Declared once here
+#: so the observability records, the workflow link, and the on-disk run-directory
+#: guard in :mod:`core.observability._store` describe one identity rather than
+#: several independent conventions.
+RUN_ID_PATTERN = r"^[0-9a-f]{16}$"
+
+#: A run identifier constrained to :data:`RUN_ID_PATTERN`. Applying it on the
+#: record types refuses a malformed id where the record is *built*, not only
+#: where it is persisted — and because the store derives ``runs_dir / run_id``
+#: from this value, an unconstrained id is also a path-traversal surface.
+RunId = Annotated[str, Field(pattern=RUN_ID_PATTERN)]
 
 
 class ArgumentSource(StrEnum):
@@ -242,7 +256,7 @@ class WorkflowLinkPayload(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    workflow_run_id: str
+    workflow_run_id: RunId
 
 
 class GenericPayload(BaseModel):
@@ -346,7 +360,7 @@ class RunEvent(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    run_id: str
+    run_id: RunId
     step_id: str
     kind: RunEventKind
     payload: RunEventPayload
@@ -389,7 +403,7 @@ class RunTrace(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    run_id: str
+    run_id: RunId
     started_at: datetime
     finished_at: datetime | None
     entrypoint: str
@@ -398,7 +412,7 @@ class RunTrace(BaseModel):
     db_sha256: str
     cert_fingerprint: str
     outcome: RunOutcome
-    replay_of: str | None = None
+    replay_of: RunId | None = None
 
     @model_validator(mode="after")
     def _require_tz_aware_timestamps(self) -> RunTrace:

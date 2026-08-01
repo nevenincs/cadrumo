@@ -27,6 +27,7 @@ from typing import Never
 
 from pydantic import ValidationError
 
+from ..atomic_write import atomic_write_text
 from ..config import Settings, load_settings
 from ..logging import get_logger
 from ..time import now
@@ -144,7 +145,7 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     target = _run_dir(trace.run_id, settings=settings) / _TRACE_FILENAME
     redacted = redact_structured(trace.model_dump(mode="json"), rules=diagnostic_rules())
     try:
-        target.write_text(json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
+        atomic_write_text(target, json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
     except OSError as exc:
         _raise_persistence_error("save_trace", target, exc)
     _logger.info(
@@ -230,7 +231,8 @@ def save_envelope(
     """
     target = _run_dir(run_id, settings=settings) / _ENVELOPE_FILENAME
     try:
-        target.write_text(
+        atomic_write_text(
+            target,
             json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True),
             encoding="utf-8",
         )

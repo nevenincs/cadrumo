@@ -401,11 +401,14 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     # Build resolved inputs the same way calculate_modelo_revision does,
     # using zero casilla overrides (the work unit has no explicit inputs here —
     # the comparison uses pure profile bindings).
+    # ``compare_taxation_modes`` is Modelo 100 only, and no Modelo 100 revision
+    # declares a ``filing_period`` semantic role, so the text channel of this
+    # projection is empty here; only the Decimal ``filing_year`` role applies.
     declaration_inputs = _resolve_declaration_period_inputs(
         snapshot.revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
-    )
+    ).casilla_inputs
     bound_inputs = resolve_available_bound_inputs_by_casilla_id(
         snapshot.revision,
         resolution.binding_values,

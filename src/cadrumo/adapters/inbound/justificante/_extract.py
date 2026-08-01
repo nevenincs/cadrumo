@@ -31,7 +31,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from ....core import Period, PeriodError
+from ....core import Period, PeriodError, is_aeat_csv
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.justificante import (
@@ -52,18 +52,20 @@ _logger = get_logger(__name__)
 _ANY_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
 
 
-# The CSV is 16 uppercase alphanumeric characters in the modern AEAT
-# format, but historical receipts sometimes stretch to 20. We therefore
-# accept 8..24 [A-Z0-9] to stay robust while still rejecting obvious noise.
+# Each tier captures a candidate at the canonical AEAT CSV width
+# (:data:`core.AEAT_CSV_PATTERN`, 8..32 uppercase alphanumeric); the capture is
+# then confirmed against :func:`core.is_aeat_csv` in :func:`_extract_csv`. The
+# tiers previously stopped at 24, so a legitimately longer CSV was truncated
+# to a wrong identifier or missed entirely.
 _CSV_LABEL_RE = re.compile(
-    r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n\s*[:\-]?\s*([A-Z0-9]{8,24})\b",
+    r"C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n\s*[:\-]?\s*([A-Z0-9]{8,32})\b",
     re.IGNORECASE,
 )
 # Older AEAT layouts (Modelo 100 pre-2022) render labels on the right
 # column and values on the left, so pdfplumber's top-down / left-right
 # traversal emits VALUE then LABEL.
 _CSV_LABEL_INVERTED_RE = re.compile(
-    r"\b([A-Z0-9]{8,24})\s+C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n",
+    r"\b([A-Z0-9]{8,32})\s+C[óo]digo\s+Seguro\s+de\s+Verificaci[óo]n",
     re.IGNORECASE,
 )
 # Every AEAT justificante ends with a stable authenticity footer:
@@ -74,20 +76,20 @@ _CSV_LABEL_INVERTED_RE = re.compile(
 # lifts into the text. This footer is the most reliable fallback.
 _CSV_AUTHENTICITY_FOOTER_RE = re.compile(
     r"mediante\s+el\s+C[óo]digo\s+Seguro\s*(?:\d+\s+)?"
-    r"de\s+Verificaci[óo]n\s+([A-Z0-9]{8,24})\b",
+    r"de\s+Verificaci[óo]n\s+([A-Z0-9]{8,32})\b",
     re.IGNORECASE,
 )
 # AEAT also serves the receipt in English when the user files via
 # the English-language sede UI. pdfplumber sees
 # "Secure Verification Code: <csv>" in place of the Spanish label.
 _CSV_LABEL_EN_RE = re.compile(
-    r"Secure\s+Verification\s+Code\s*[:\-]?\s*([A-Z0-9]{8,24})\b",
+    r"Secure\s+Verification\s+Code\s*[:\-]?\s*([A-Z0-9]{8,32})\b",
     re.IGNORECASE,
 )
 # Used only as a last resort: the 'CSV' token is noisy in normalised
 # text ("Presentador" includes the letter sequence), so we require a
 # colon/dash separator and the 'CSV=' equality form.
-_CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9]{8,24})\b", re.IGNORECASE)
+_CSV_FALLBACK_RE = re.compile(r"\bCSV\s*[=:]\s*([A-Z0-9]{8,32})\b", re.IGNORECASE)
 
 _MODELO_RE = re.compile(
     # Spanish "Modelo <N>" or English "Form <N>" (English-language
@@ -417,7 +419,12 @@ def _extract_csv(text: str, normalised: str, source_label: object) -> str:
     )
     if csv_match is None:
         raise JustificanteCsvNotFoundError(f"no Código Seguro de Verificación found in {source_label}")
-    return csv_match.group(1).upper()
+    csv = csv_match.group(1).upper()
+    if not is_aeat_csv(csv):
+        raise JustificanteCsvNotFoundError(
+            f"Código Seguro de Verificación {csv!r} in {source_label} does not match the AEAT shape",
+        )
+    return csv
 
 
 def _extract_period_and_ejercicio(normalised: str) -> tuple[str, str | None]:

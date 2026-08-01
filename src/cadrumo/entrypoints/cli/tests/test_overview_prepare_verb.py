@@ -13,10 +13,14 @@ data-prep walkthrough's operator contract from #260:
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
+from ....application.overview import DataPrepStepId, DataPrepStepState
+from .._overview_payloads import OverviewPrepareStepPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -113,3 +117,33 @@ def test_prepare_rejects_unknown_modelo_with_registry_grounded_message(_isolated
         ["--format", "json", "app", "overview", "prepare", "--modelo", "999", "--year", "2026", "--period", "1T"],
     )
     assert result.exit_code != 0
+
+
+def test_prepare_step_row_enforces_the_canonical_step_contract() -> None:
+    """``step_id``/``state`` are closed enums on :class:`DataPrepStep`.
+
+    The CLI row redeclared both as free strings, so a malformed step or state
+    token could cross the ``overview.prepare`` envelope.
+    """
+    step_id = next(iter(DataPrepStepId))
+    state = next(iter(DataPrepStepState))
+    row = OverviewPrepareStepPayload(
+        step_id=step_id,
+        state=state,
+        summary="import your bank statements",
+        next_command="aeat app ledger import --file STATEMENT.csv",
+    )
+    rendered = json.loads(row.model_dump_json())
+    assert rendered["step_id"] == step_id.value
+    assert rendered["state"] == state.value
+
+    base = {"step_id": step_id, "state": state, "summary": "s", "next_command": "c"}
+    for label, override in (
+        ("unknown step id", {"step_id": "bogus"}),
+        ("unknown step state", {"state": "bogus"}),
+    ):
+        try:
+            OverviewPrepareStepPayload(**(base | override))
+        except ValidationError:
+            continue
+        pytest.fail(f"{label} was accepted by the transport row")

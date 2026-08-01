@@ -451,6 +451,12 @@ def _parse_decimal_text(value: str) -> Decimal | None:
         return None
 
 
+def serialize_renta_web_open_replay_decimal(value: str) -> str | None:
+    """Render a captured Renta WEB amount as a fixed-point replay expectation."""
+    parsed = _parse_decimal_text(value)
+    return None if parsed is None else format(parsed, "f")
+
+
 def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> Literal["match", "mismatch", "unverifiable"]:
     if any(field.verdict == "mismatch" for field in fields):
         return "mismatch"
@@ -481,6 +487,7 @@ __all__ = [
     "RentaWebOpenSyntheticProfile",
     "equivalent_renta_web_open_value",
     "parse_renta_web_open_live_payload",
+    "serialize_renta_web_open_replay_decimal",
     "validate_renta_web_open_expected_casilla_ids",
     "validate_renta_web_open_expected_casilla_values",
 ]

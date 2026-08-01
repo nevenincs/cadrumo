@@ -17,7 +17,7 @@ only the four canonical source-kind values ``ledger_transaction``,
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
@@ -29,12 +29,16 @@ from ...core import (
     ForeignAssetObligationGroup,
     Modelo,
     Period,
-    foreign_asset_declaration_threshold,
     foreign_asset_obligation_group,
 )
 from ...core.aggregation import ForeignAssetClass
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import Modelo720RowObservation, resolve_foreign_asset_binding_row_values
+from .._foreign_asset_thresholds import (
+    ForeignAssetDeclarationThreshold,
+    foreign_asset_declaration_thresholds,
+    foreign_asset_declaration_thresholds_for_revision,
+)
 from ._source_mesh import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
 
 _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
@@ -163,28 +167,49 @@ class ForeignAssetsAggregation(BaseModel):
         return self
 
 
-def declarable_asset_classes_720(aggregation: ForeignAssetsAggregation) -> frozenset[ForeignAssetClass]:
+def declarable_asset_classes_720(
+    aggregation: ForeignAssetsAggregation,
+    *,
+    thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold] | None = None,
+) -> frozenset[ForeignAssetClass]:
     """Return present asset classes whose obligation block exceeds its 720 declaration floor.
 
     Returns a frozenset of :class:`ForeignAssetClass` members.
     """
+    resolved_thresholds = thresholds or foreign_asset_declaration_thresholds(
+        modelo=Modelo.M720.value,
+        filing_year=aggregation.period.filing_year,
+    )
     group_totals: dict[ForeignAssetObligationGroup, Decimal] = {}
     asset_classes_by_group: dict[ForeignAssetObligationGroup, set[ForeignAssetClass]] = {}
     for rollup in aggregation.rollups:
         group = foreign_asset_obligation_group(rollup.asset_class)
         group_totals[group] = group_totals.get(group, Decimal("0")) + rollup.total_valuation_eur
         asset_classes_by_group.setdefault(group, set()).add(rollup.asset_class)
+    unsupported_groups = set(group_totals) - set(resolved_thresholds)
+    if unsupported_groups:
+        classes = sorted(
+            asset_class.value
+            for group in unsupported_groups
+            for asset_class in asset_classes_by_group[group]
+        )
+        raise ValueError(f"asset classes {classes!r}: not a Modelo 720 foreign-asset class")
     return frozenset(
         asset_class
         for group, total in group_totals.items()
-        if total > foreign_asset_declaration_threshold(group).initial_declaration_floor_eur
+        if total > resolved_thresholds[group].initial_declaration_floor_eur
         for asset_class in asset_classes_by_group[group]
     )
 
 
-def declarable_class(aggregation: ForeignAssetsAggregation, *, asset_class: ForeignAssetClass) -> bool:
+def declarable_class(
+    aggregation: ForeignAssetsAggregation,
+    *,
+    asset_class: ForeignAssetClass,
+    thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold] | None = None,
+) -> bool:
     """Return True iff an asset class's obligation block crosses the 720 declaration floor."""
-    return asset_class in declarable_asset_classes_720(aggregation)
+    return asset_class in declarable_asset_classes_720(aggregation, thresholds=thresholds)
 
 
 def aggregate_foreign_assets_720(
@@ -256,10 +281,20 @@ class ForeignAssetsAggregationSourceResolver:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
         aggregation = aggregate_foreign_assets_720(self._observations, period=context.period)
-        selected_observations = _selected_foreign_asset_observations(aggregation, self._observations)
+        thresholds = foreign_asset_declaration_thresholds_for_revision(
+            modelo=context.modelo,
+            revision=context.revision,
+            filing_date=context.period.end_date,
+        )
+        selected_observations = _selected_foreign_asset_observations(
+            aggregation,
+            self._observations,
+            thresholds=thresholds,
+        )
         row_observations = _registry_observations_from_foreign_assets_aggregation(
             aggregation,
             selected_observations,
+            thresholds=thresholds,
         )
         row_binding_values = resolve_foreign_asset_binding_row_values(context.revision, row_observations)
         return CalculationSourceResolution(
@@ -290,8 +325,10 @@ def _foreign_asset_source_for_revision(context: CalculationSourceContext) -> boo
 def _registry_observations_from_foreign_assets_aggregation(
     aggregation: ForeignAssetsAggregation,
     observations: Iterable[ForeignAssetIngestObservation],
+    *,
+    thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold] | None = None,
 ) -> tuple[Modelo720RowObservation, ...]:
-    declarable_classes = declarable_asset_classes_720(aggregation)
+    declarable_classes = declarable_asset_classes_720(aggregation, thresholds=thresholds)
     return tuple(
         _registry_observation_from_foreign_asset(observation)
         for observation in observations
@@ -302,8 +339,10 @@ def _registry_observations_from_foreign_assets_aggregation(
 def _selected_foreign_asset_observations(
     aggregation: ForeignAssetsAggregation,
     observations: Iterable[ForeignAssetIngestObservation],
+    *,
+    thresholds: Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold] | None = None,
 ) -> tuple[ForeignAssetIngestObservation, ...]:
-    declarable_classes = declarable_asset_classes_720(aggregation)
+    declarable_classes = declarable_asset_classes_720(aggregation, thresholds=thresholds)
     return tuple(observation for observation in observations if observation.asset_class in declarable_classes)
 
 

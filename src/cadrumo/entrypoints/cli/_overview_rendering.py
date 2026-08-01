@@ -342,8 +342,8 @@ def overview_prepare_output(walkthrough) -> tuple[OverviewPrepareResult, list[st
         period=walkthrough.period,
         steps=[
             OverviewPrepareStepPayload(
-                step_id=step.step_id.value,
-                state=step.state.value,
+                step_id=step.step_id,
+                state=step.state,
                 summary=step.summary,
                 next_command=step.next_command,
             )
@@ -384,7 +384,7 @@ def overview_pipeline_output(report, *, ledger) -> tuple[OverviewPipelineResult,
             OverviewPipelineModeloPayload(
                 modelo=row.modelo,
                 work_unit_id=row.work_unit_id,
-                state=row.state.value,
+                state=row.state,
                 blocking_finding_count=row.blocking_finding_count,
                 warning_finding_count=row.warning_finding_count,
                 summary=row.summary,

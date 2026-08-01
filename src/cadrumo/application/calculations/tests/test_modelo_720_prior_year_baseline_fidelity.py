@@ -58,10 +58,8 @@ import pytest
 from ....core import (
     CasillaId,
     ForeignAssetObligationGroup,
-    foreign_asset_declaration_threshold,
     validated_casilla_id,
 )
-from ....core.external_constants import MODELO_720_REPORTING_THRESHOLD_EUR
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     CasillaObservation,
@@ -71,6 +69,7 @@ from ....domain.calculations.registry import (
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
+from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -92,13 +91,12 @@ _CONTEXT_LABEL = "720-bienes-extranjero-prior-year-asset-baseline-two-annual-cyc
 
 #: Initial declaration threshold per RD 1065/2007 art. 2.1 (registry parameter
 #: ``modelo-720-asset-declaration-threshold-eur`` = €50,000).
-_INITIAL_THRESHOLD_EUR = MODELO_720_REPORTING_THRESHOLD_EUR
+_M720_THRESHOLDS = foreign_asset_declaration_thresholds(modelo=_MODELO, filing_year=_YEAR_N_PLUS_1)
+_INITIAL_THRESHOLD_EUR = _M720_THRESHOLDS[ForeignAssetObligationGroup.CUENTAS].initial_declaration_floor_eur
 
 #: Re-declaration delta threshold per arts. 42-bis.5 / 42-ter.5 / 54-bis.7
 #: (€20,000 increment over last-declared baseline triggers re-declaration obligation).
-_REDECLARATION_DELTA_EUR = foreign_asset_declaration_threshold(
-    ForeignAssetObligationGroup.CUENTAS
-).redeclaration_increase_delta_eur
+_REDECLARATION_DELTA_EUR = _M720_THRESHOLDS[ForeignAssetObligationGroup.CUENTAS].redeclaration_increase_delta_eur
 
 # Year-N asset valuations (both above €50k initial threshold).
 _CUENTAS_N = Decimal("60000.00")  # cuentas (C-class: bank accounts)
@@ -150,11 +148,9 @@ _BASELINE_BINDINGS = frozenset(
 
 _M720_SOURCE_REFS = ("aeat-modelo-720-procedure",)
 _M720_HEADER_LEGAL_REFS = ("ley-58-2003:da-18",)
-_M720_CUENTAS_LEGAL_REFS = foreign_asset_declaration_threshold(ForeignAssetObligationGroup.CUENTAS).legal_refs
-_M720_VALORES_LEGAL_REFS = foreign_asset_declaration_threshold(
-    ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS
-).legal_refs
-_M720_INMUEBLES_LEGAL_REFS = foreign_asset_declaration_threshold(ForeignAssetObligationGroup.INMUEBLES).legal_refs
+_M720_CUENTAS_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup.CUENTAS].legal_refs
+_M720_VALORES_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS].legal_refs
+_M720_INMUEBLES_LEGAL_REFS = _M720_THRESHOLDS[ForeignAssetObligationGroup.INMUEBLES].legal_refs
 _M720_CASILLA_LEGAL_REFS = {
     _CUENTAS_CODIGO_DE_CUENTA_CASILLA: _M720_CUENTAS_LEGAL_REFS,
     _CUENTAS_VALORACION_CASILLA: _M720_CUENTAS_LEGAL_REFS,

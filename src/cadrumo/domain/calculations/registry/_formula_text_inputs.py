@@ -21,6 +21,7 @@ from collections.abc import Mapping
 
 from ._errors import RegistryValidationError
 from ._ids import CasillaId, validated_casilla_id
+from ._schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
 from ._schema_surfaces import CasillaDefinition
 
 __all__ = ["validate_text_input_targets", "validated_text_input_casilla_ids"]
@@ -71,14 +72,18 @@ def validate_text_input_targets(
     text_inputs: Mapping[CasillaId, str],
     *,
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
-) -> None:
-    """Ensure text inputs reference declared text casillas.
+) -> dict[CasillaId, str]:
+    """Validate and canonicalise text-family inputs against declared casillas.
 
     The runtime passes the revision's
     :class:`~domain.calculations.registry.CasillaDefinition` map so callers
     cannot supply unknown casillas or route text into numeric registry targets.
     """
-    text_casilla_ids = {casilla_id for casilla_id, casilla in casillas_by_id.items() if casilla.data_type == "text"}
+    text_casilla_ids = {
+        casilla_id
+        for casilla_id, casilla in casillas_by_id.items()
+        if registry_scalar_value_type(casilla.data_type) == "str"
+    }
     unknown_text_inputs = sorted(set(text_inputs).difference(casillas_by_id))
     if unknown_text_inputs:
         raise RegistryValidationError(
@@ -93,3 +98,13 @@ def validate_text_input_targets(
             translated_message="errors.calc.text_input_non_text_casillas",
             context={"casilla_ids": ",".join(mistyped_text_inputs)},
         )
+    validated: dict[CasillaId, str] = {}
+    for casilla_id, value in text_inputs.items():
+        casilla = casillas_by_id[casilla_id]
+        canonical = validate_registry_text_scalar(casilla.data_type, value)
+        if casilla.constraints is not None:
+            reason = casilla.constraints.violates_text(canonical)
+            if reason is not None:
+                raise RegistryValidationError(f"text_input {casilla_id!r} {reason}")
+        validated[casilla_id] = canonical
+    return validated

@@ -24,9 +24,39 @@ BusinessInvoiceRecordPayload`` (etc.) call sites keep resolving unchanged.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from decimal import Decimal
+from typing import TYPE_CHECKING, Annotated
 
+from pydantic import AfterValidator, Field
+
+from ...domain.contribuyente.inventory import INVENTORY_SCHEMA_VERSION, MovementKind, ValuationMethod
+from ._decimal_wire import bounded_decimal_wire_text
 from ._schemas import OutputSchema, register_schema
+from ._wire_scalars import IsoDateText, enum_value_text
+
+_ZERO = Decimal("0")
+_HUNDRED = Decimal("100")
+_ONE = Decimal("1")
+
+# The inventory transport is built by dumping the canonical InventoryLedger to
+# JSON and re-validating the mapping, so every field below stays a string on
+# the wire while carrying the canonical model's own bound.
+_PositiveQuantity = bounded_decimal_wire_text(minimum=_ZERO, exclusive_minimum=True)
+_NonNegativeAmount = bounded_decimal_wire_text(minimum=_ZERO)
+_IvaRatePct = bounded_decimal_wire_text(minimum=_ZERO, maximum=_HUNDRED)
+_DeductibleRatio = bounded_decimal_wire_text(minimum=_ZERO, maximum=_ONE)
+_MovementKindText = enum_value_text(MovementKind)
+_ValuationMethodText = enum_value_text(ValuationMethod)
+
+
+def _validate_inventory_schema_version(value: str) -> str:
+    """Refuse a schema version the canonical InventoryLedger would reject."""
+    if value != INVENTORY_SCHEMA_VERSION:
+        raise ValueError(f"unsupported inventory schema_version {value!r}; expected {INVENTORY_SCHEMA_VERSION!r}")
+    return value
+
+
+_InventorySchemaVersion = Annotated[str, AfterValidator(_validate_inventory_schema_version)]
 
 if TYPE_CHECKING:
     from ...application.inventory import InventoryValuationPreviewResult as _AppInventoryValuationPreviewResult
@@ -124,26 +154,26 @@ class InvoiceListResult(BusinessInvoiceListResult):
 class InventoryStockLayerPayload(OutputSchema):
     """One :class:`StockLayer` transport row."""
 
-    sku: str = "default"
-    quantity: str
-    unit_cost: str
-    source_movement_id: str
+    sku: str = Field(default="default", min_length=1)
+    quantity: _PositiveQuantity  # type: ignore[valid-type]
+    unit_cost: _NonNegativeAmount  # type: ignore[valid-type]
+    source_movement_id: str = Field(min_length=1)
 
 
 class InventoryMovementPayload(OutputSchema):
     """One :class:`MovementRecord` transport row."""
 
-    movement_id: str
-    movement_date: str
-    kind: str
-    sku: str = "default"
-    quantity: str
-    unit_cost: str | None = None
-    taxable_base: str | None = None
-    iva_rate: str
-    iva_amount: str | None = None
-    deductible_iva_ratio: str
-    schema_version: str
+    movement_id: str = Field(min_length=1)
+    movement_date: IsoDateText
+    kind: _MovementKindText  # type: ignore[valid-type]
+    sku: str = Field(default="default", min_length=1)
+    quantity: _PositiveQuantity  # type: ignore[valid-type]
+    unit_cost: _NonNegativeAmount | None = None  # type: ignore[valid-type]
+    taxable_base: _NonNegativeAmount | None = None  # type: ignore[valid-type]
+    iva_rate: _IvaRatePct  # type: ignore[valid-type]
+    iva_amount: _NonNegativeAmount | None = None  # type: ignore[valid-type]
+    deductible_iva_ratio: _DeductibleRatio  # type: ignore[valid-type]
+    schema_version: _InventorySchemaVersion
 
 
 class InventoryLedgerPayload(OutputSchema):
@@ -154,14 +184,14 @@ class InventoryLedgerPayload(OutputSchema):
     CLI appends at the emit site.
     """
 
-    actividad_id: str
-    year: int
-    valuation_method: str
-    opening_stock: str
+    actividad_id: str = Field(min_length=1)
+    year: int = Field(ge=1900)
+    valuation_method: _ValuationMethodText  # type: ignore[valid-type]
+    opening_stock: _NonNegativeAmount  # type: ignore[valid-type]
     opening_layers: list[InventoryStockLayerPayload] = []
-    closing_stock: str | None = None
+    closing_stock: _NonNegativeAmount | None = None  # type: ignore[valid-type]
     period_movements: list[InventoryMovementPayload] = []
-    schema_version: str
+    schema_version: _InventorySchemaVersion
     bucket_event_ids: list[str] = []
 
 

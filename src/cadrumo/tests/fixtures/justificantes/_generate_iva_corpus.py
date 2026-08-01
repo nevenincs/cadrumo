@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas
 
+from ....core.money import round_to_cents
 from ._generate_base import _SEDE_ORIGIN
 
 
@@ -90,16 +91,16 @@ def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal,
     Arithmetic grounded in Orden EHA/3786/2008 art. 1 (box 46) and Orden HAC/819/2024
     art. 1 (boxes 64/66/69/71). Registry formula expressions in 2023-y-siguientes/revision.toml.
     """
-    c46: Decimal = (c27 - c45).quantize(Decimal("0.01"))
+    c46: Decimal = round_to_cents(c27 - c45)
     # Standard single-regime: c58=0, c76=0 â†’ c64 = c46
-    c64: Decimal = c46.quantize(Decimal("0.01"))
+    c64: Decimal = round_to_cents(c46)
     # territorio comÃºn: c65=100 â†’ c66 = c64 Ã— 100 / 100 = c64
-    c66: Decimal = c64.quantize(Decimal("0.01"))
+    c66: Decimal = round_to_cents(c64)
     # No importation IVA (c77=0), no joint-taxation (c68=0), no prior compensation (c78=0):
     #   c69 = c66 - 0 = c66
-    c69: Decimal = c66.quantize(Decimal("0.01"))
+    c69: Decimal = round_to_cents(c66)
     # No prior filings (c70=0), no returns (c109=0): c71 = c69
-    c71: Decimal = c69.quantize(Decimal("0.01"))
+    c71: Decimal = round_to_cents(c69)
     return c46, c64, c66, c69, c71
 
 
@@ -579,7 +580,7 @@ def _compute_m130_closure(c03: Decimal) -> Decimal:
     """
     # c04 = max(0, c03 * 20/100)
     rate: Decimal = Decimal("20") / Decimal("100")
-    c04: Decimal = max(Decimal("0"), (c03 * rate).quantize(Decimal("0.01")))
+    c04: Decimal = max(Decimal("0"), round_to_cents(c03 * rate))
     # c07 = c04 - 0 - 0
     c07: Decimal = c04
     # c12 = max(0, c07 + 0)
@@ -587,11 +588,11 @@ def _compute_m130_closure(c03: Decimal) -> Decimal:
     # c13 = 100 (prev_year_income=0 â‰¤ 9000)
     c13: Decimal = Decimal("100.00")
     # c14 = c12 - c13
-    c14: Decimal = (c12 - c13).quantize(Decimal("0.01"))
+    c14: Decimal = round_to_cents(c12 - c13)
     # c17 = (c14 - 0) - 0 = c14  [c01=0 â†’ standard path]
     c17: Decimal = c14
     # c19 = c17 - 0
-    c19: Decimal = c17.quantize(Decimal("0.01"))
+    c19: Decimal = round_to_cents(c17)
     return c19
 
 
@@ -874,9 +875,9 @@ def _compute_m390_closure(
     Arithmetic grounded in Orden EHA/3111/2009 art. 1 and the registry formula
     expressions in formulas/0001-formulas.toml.
     """
-    c47: Decimal = (c06 + c04 + c02 + c26).quantize(Decimal("0.01"))
-    c64: Decimal = (c49 + c26).quantize(Decimal("0.01"))
-    c65: Decimal = (c47 - c64).quantize(Decimal("0.01"))
+    c47: Decimal = round_to_cents(c06 + c04 + c02 + c26)
+    c64: Decimal = round_to_cents(c49 + c26)
+    c65: Decimal = round_to_cents(c47 - c64)
     return c47, c64, c65
 
 

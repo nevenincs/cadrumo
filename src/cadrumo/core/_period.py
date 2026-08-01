@@ -77,8 +77,9 @@ class StandardPeriodCode(StrEnum):
 _STANDARD_PERIOD_SET = frozenset(StandardPeriodCode)
 _EXTENDED_PERIOD_SET = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
 _AD_HOC_PERIOD = "AD-HOC"
+_ADMINISTRATIVE_PERIOD_SET = frozenset(("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"))
 _EXT_PERIOD_RE = re.compile(r"^EXT-[1-4]T$")
-_EVENT_PERIOD_RE = re.compile(r"^EVENT-\d+$")
+_EVENT_PERIOD_RE = re.compile(r"^EVENT-(?:N|\d+)$")
 _DISPLAY_PERIOD_RE = re.compile(r"^(?P<year>\d{4})\s+(?P<code>[A-Z0-9]+(?:-[A-Z0-9]+)*)$", re.I)
 
 
@@ -102,6 +103,8 @@ def _validate_period_against_registry(value: str) -> str:
         return normalized
     if normalized == _AD_HOC_PERIOD:
         return normalized
+    if normalized in _ADMINISTRATIVE_PERIOD_SET:
+        return normalized
     if _EVENT_PERIOD_RE.match(normalized):
         return normalized
 
@@ -117,7 +120,7 @@ def accepted_period_codes() -> tuple[str, ...]:
     pair it with :func:`accepted_period_patterns` when building help text or
     parse-error guidance.
     """
-    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD}))
+    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD} | _ADMINISTRATIVE_PERIOD_SET))
 
 
 def accepted_period_patterns() -> tuple[str, ...]:
@@ -126,6 +129,7 @@ def accepted_period_patterns() -> tuple[str, ...]:
         "StandardPeriodCode (1T-4T, 1P-4P, 0A, 01-12)",
         "Extended OSS/IOSS (EXT-1T, EXT-2T, EXT-3T, EXT-4T)",
         "Ad-hoc (AD-HOC)",
+        "Administrative (ALTA, MODIFICACION, BAJA)",
         "Event-driven (EVENT-N where N is an integer)",
     )
 
@@ -138,6 +142,7 @@ def _format_accepted_period_set() -> str:
         f"StandardPeriodCode: {', '.join(standard)}",
         f"Extended: {', '.join(extended)}",
         f"Ad-hoc: {_AD_HOC_PERIOD}",
+        f"Administrative: {', '.join(sorted(_ADMINISTRATIVE_PERIOD_SET))}",
         "Event-driven: EVENT-N (where N is an integer)",
     ]
     return "; ".join(lines)
@@ -146,6 +151,17 @@ def _format_accepted_period_set() -> str:
 #: Pydantic field annotation for bare registry period tokens. Use
 #: :class:`Period` instead when a filing year is known.
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
+
+
+def _validate_registry_selector_period(value: str) -> str:
+    """Validate a registry token while preserving declaration casing for event selectors."""
+    normalized = _validate_period_against_registry(value)
+    if normalized in _ADMINISTRATIVE_PERIOD_SET:
+        return normalized.lower()
+    return normalized
+
+
+RegistrySelectorPeriodCode = Annotated[str, BeforeValidator(_validate_registry_selector_period)]
 
 
 class PeriodError(CadrumoError, ValueError):
@@ -180,29 +196,6 @@ _QUARTER_ORDINALS: dict[StandardPeriodCode, int] = {
     StandardPeriodCode.Q2: 2,
     StandardPeriodCode.Q3: 3,
     StandardPeriodCode.Q4: 4,
-}
-
-# Numeric values used by informational ``filing_period`` casillas. The first
-# three corporate-tax instalment codes are declared filing periods; ``4P`` is
-# deliberately absent because it has no corresponding declaration ordinal.
-_DECLARATION_PERIOD_ORDINALS: dict[StandardPeriodCode, int] = {
-    **_QUARTER_ORDINALS,
-    StandardPeriodCode.ANNUAL: 0,
-    StandardPeriodCode.JAN: 1,
-    StandardPeriodCode.FEB: 2,
-    StandardPeriodCode.MAR: 3,
-    StandardPeriodCode.APR: 4,
-    StandardPeriodCode.MAY: 5,
-    StandardPeriodCode.JUN: 6,
-    StandardPeriodCode.JUL: 7,
-    StandardPeriodCode.AUG: 8,
-    StandardPeriodCode.SEP: 9,
-    StandardPeriodCode.OCT: 10,
-    StandardPeriodCode.NOV: 11,
-    StandardPeriodCode.DEC: 12,
-    StandardPeriodCode.P1: 1,
-    StandardPeriodCode.P2: 2,
-    StandardPeriodCode.P3: 3,
 }
 
 
@@ -320,20 +313,6 @@ class Period(BaseModel):
     def is_quarterly(self) -> bool:
         """Return whether this is one of the four ordinary quarterly periods."""
         return self.quarter_ordinal is not None
-
-    @property
-    def declaration_period_ordinal(self) -> int | None:
-        """Return the informational ``filing_period`` casilla ordinal, when declared.
-
-        This is a projection for registry declaration metadata, not a generic
-        numeric interpretation of a token. Unsupported extended, event, and
-        ad-hoc forms return ``None``; so does ``4P``, which has no declared
-        instalment ordinal on that metadata surface.
-        """
-        standard_code = self.standard_code
-        if standard_code is None:
-            return None
-        return _DECLARATION_PERIOD_ORDINALS.get(standard_code)
 
     @property
     def kind(self) -> PeriodKind:

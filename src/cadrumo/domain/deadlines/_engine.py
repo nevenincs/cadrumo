@@ -47,8 +47,15 @@ _logger = get_logger(__name__)
 _DEFAULT_DUE_SOON_DAYS = 14
 
 
-def _classify(closes_on: date, today: date, due_soon_days: int) -> ObligationStatus:
+def classify_obligation_status(closes_on: date, today: date, due_soon_days: int) -> ObligationStatus:
     """Map a window close date to an :class:`ObligationStatus`.
+
+    This is the single owner of the OVERDUE / DUE_TODAY / DUE_SOON / UPCOMING
+    boundary rules. The deadline engine applies it to every registry-scheduled
+    obligation, and the overview calendar applies it to a locally-created work
+    unit after its own filing-pointer gate has run — that gate is the only
+    intentional difference between the two callers, and it decides whether to
+    call this function at all, never how the boundaries fall.
 
     Args:
         closes_on: The day the AEAT filing window closes.
@@ -241,7 +248,7 @@ class DeadlineEngine:
             activity_end_date=profile.activity_end_date,
         ):
             return None
-        obligation_status = _classify(window.closes_on, reference_today, self.due_soon_days)
+        obligation_status = classify_obligation_status(window.closes_on, reference_today, self.due_soon_days)
         return ModeloDeadline(
             modelo=modelo,
             period=window.period,

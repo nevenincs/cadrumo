@@ -350,7 +350,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = _casillas_by_id(revision)
-    _validate_text_input_targets(resolved_text_inputs, casillas_by_id=casillas_by_id)
+    resolved_text_inputs = _validate_text_input_targets(resolved_text_inputs, casillas_by_id=casillas_by_id)
     # Per-casilla provenance accumulator. Formula-computed casillas overwrite
     # the input/bound placeholder with the full operand lineage; non-computed
     # casillas keep the registry-sourced legal_refs/source_refs.

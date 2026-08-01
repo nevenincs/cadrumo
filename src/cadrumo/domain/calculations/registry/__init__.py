@@ -44,6 +44,7 @@ See Also:
 # package during validation bootstrap.
 from __future__ import annotations
 
+from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle, AeatNifIvaObservation
 from ._ids import (
     ApplicationLinkId,
@@ -428,6 +429,7 @@ from ._renta_web_open_oracle import (
     RentaWebOpenSyntheticProfile,
     equivalent_renta_web_open_value,
     parse_renta_web_open_live_payload,
+    serialize_renta_web_open_replay_decimal,
     validate_renta_web_open_expected_casilla_ids,
     validate_renta_web_open_expected_casilla_values,
 )
@@ -451,6 +453,7 @@ from ._schema import (
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
     CasillaContinuidadEvolutionDefinition,
+    CasillaConstraints,
     CasillaDefinition,
     CasillaFieldKind,
     CasillaFieldKindValue,
@@ -475,6 +478,7 @@ from ._schema import (
     ModeloFilingCapability,
     ModeloRevision,
     ModeloScheduleDefinition,
+    OneBasedExportOffset,
     ParameterDefinition,
     PeriodSelector,
     ProfilePredicateDefinition,
@@ -486,6 +490,7 @@ from ._schema import (
     SupportRemovalDecisionDefinition,
     WorkbookParityReference,
 )
+from ._schema_scalars import registry_scalar_value_type, validate_registry_text_scalar
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode
 from ._schema_verification import (
@@ -496,6 +501,7 @@ from ._schema_verification import (
     VerificationPredicateDefinition,
 )
 from ._snapshot import build_snapshot
+from ._snapshot_coordinate import registry_snapshot_id, registry_snapshot_id_for
 from ._temporal import select_revision, select_revision_for_year
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
@@ -551,6 +557,7 @@ __all__ = [
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "LEDGER_BINDING_SOURCE_KINDS",
     "MODELO_303_IVA_COMPENSATION_BINDING_ID",
+    "REMOTE_READ_SCHEME",
     "REQUIRED_COVERAGE_TIERS",
     "REVISION_GOVERNANCE_FIELDS",
     "REVISION_MANIFEST_ONLY_FIELDS",
@@ -571,6 +578,7 @@ __all__ = [
     "BracketEntry",
     "CalculationCompletenessCasilla",
     "CalculationCompletenessManifest",
+    "CasillaConstraints",
     "CasillaContinuidadEvolutionDefinition",
     "CasillaDefinition",
     "CasillaFieldKind",
@@ -679,6 +687,7 @@ __all__ = [
     "ModeloSupportMatrixReport",
     "ModeloSupportRemovalRecord",
     "NoRevisionForPeriodError",
+    "OneBasedExportOffset",
     "OracleAttributionGap",
     "OracleEnvironment",
     "OracleId",
@@ -808,6 +817,7 @@ __all__ = [
     "calculation_closure_casilla_ids",
     "calculation_closure_legal_refs",
     "calculation_closure_record_design_metadata",
+    "canonical_remote_hostname",
     "casilla_noncanonical_reference_targets",
     "casilla_noncanonical_reference_tokens",
     "casillas_by_id",
@@ -887,6 +897,9 @@ __all__ = [
     "profile_condition_matches",
     "read_parameter",
     "register_cross_domain_snapshot_check",
+    "registry_scalar_value_type",
+    "registry_snapshot_id",
+    "registry_snapshot_id_for",
     "relation_aggregation_op",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
@@ -940,6 +953,7 @@ __all__ = [
     "select_revision_for_year",
     "selector_as_dict",
     "selector_model_for_source",
+    "serialize_renta_web_open_replay_decimal",
     "stamp_bundled_registry_verdict",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "taxpayer_model_is_declared",
@@ -960,6 +974,7 @@ __all__ = [
     "validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition",
     "validate_ledger_renta_income_aggregation_binding_definition",
     "validate_registry_scope",
+    "validate_registry_text_scalar",
     "validate_renta_web_open_expected_casilla_ids",
     "validate_renta_web_open_expected_casilla_values",
     "validate_retenciones_aggregation_binding",

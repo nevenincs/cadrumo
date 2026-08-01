@@ -52,13 +52,16 @@ from ...domain.calculations.registry import (
     CasillaId,
     DataBindingDefinition,
     ModeloRevision,
+    RegistryValidationError,
     RelationId,
     boolean_binding_encoded_values,
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     declared_casilla_ids,
     enum_consumed_binding_ids,
+    registry_scalar_value_type,
     revision_date_binding_ids,
+    validate_registry_text_scalar,
 )
 from ...domain.contribuyente import compute_deduccion_maternidad_0611
 from ...domain.modelos import (
@@ -106,7 +109,7 @@ class ModeloCalculateDecimalInputError(ModeloCalculateInputError):
 
 
 class ModeloCalculateTextInputError(ModeloCalculateInputError):
-    """Raised when a ``--casilla`` override targets a text casilla with an empty value."""
+    """Raised when a ``--casilla`` override targets a text casilla with a value its type refuses."""
 
 
 class ModeloCalculateCasillaInputError(ModeloCalculateInputError):
@@ -138,7 +141,10 @@ class WorkCalculateInputBundle:
     overrides, enum binding overrides, relation values, typed detail rows, and
     the optional borrador snapshot id so each downstream channel keeps its
     registry-declared type. ``text_casilla_inputs`` carries operator-supplied
-    ``data_type = "text"`` casilla values (e.g. Modelo 210's ``tipo_renta``) on
+    text-scalar casilla values — every family whose
+    :func:`~cadrumo.domain.calculations.registry.registry_scalar_value_type` is
+    ``"str"``, such as Modelo 210's ``tipo_renta`` (``text``) and Modelo 303's
+    ``decl.periodo`` (``period_code``) — on
     a channel parallel to ``casilla_inputs``: the registry engine's
     ``calculate_registry_snapshot(text_inputs=...)`` reads it for categorical
     formula dispatch, and it rides into the persisted
@@ -350,10 +356,16 @@ def build_work_calculate_input_bundle(
     validation step. ``--casilla`` values must be canonical casilla ids; printed
     numbers and ambiguous noncanonical references are refused. A ``--casilla``
     key whose registry :class:`~cadrumo.domain.calculations.registry.CasillaDefinition`
-    declares ``data_type = "text"`` (e.g. Modelo 210's ``tipo_renta``) is routed
-    onto the parallel text-casilla channel as a raw, non-empty string instead of
-    being forced through the decimal parser; every other ``--casilla`` key keeps
-    the existing decimal-only contract. ``--binding`` is routed by the
+    declares a text-scalar ``data_type`` — every family whose
+    :func:`~cadrumo.domain.calculations.registry.registry_scalar_value_type` is
+    ``"str"``, so ``text`` (Modelo 210's ``tipo_renta``) alongside
+    ``period_code``, ``nif``, ``iban`` and the rest — is routed onto the
+    parallel text-casilla channel, canonicalised by that family's own declared
+    validator instead of being forced through the decimal parser; every other
+    ``--casilla`` key keeps the existing decimal-only contract. Membership is
+    derived from the type family rather than keyed on one literal member, so a
+    string-family override can never be silently routed to the Decimal channel.
+    ``--binding`` is routed by the
     registry-declared channel, so enum bindings stay as strings, decimal
     bindings are parsed as :class:`~decimal.Decimal`, and date-valued profile
     bindings are rejected with profile guidance. ``--relation`` values must
@@ -373,14 +385,14 @@ def build_work_calculate_input_bundle(
         _refuse_detail_casilla_override(raw_key)
         key = _validated_canonical_casilla_id(raw_key, revision)
         casilla_def = revision_casillas_by_id.get(key)
-        if casilla_def is not None and casilla_def.data_type == "text":
+        if casilla_def is not None and registry_scalar_value_type(casilla_def.data_type) == "str":
             if casilla_def.semantic_role == "irnr_tipo_renta":
                 m210_official_tipo_renta_code = _validated_m210_official_tipo_renta_code(raw_value, key=key)
                 text_casilla_inputs[key] = M210_TIPO_RENTA_CODE_PROJECTION[m210_official_tipo_renta_code].value
             elif casilla_def.semantic_role == _DECLARANTE_SELECTOR_SEMANTIC_ROLE:
                 text_casilla_inputs[key] = _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def)
             else:
-                text_casilla_inputs[key] = _text_value(raw_value, key=key)
+                text_casilla_inputs[key] = _typed_text_value(raw_value, key=key, casilla_def=casilla_def)
         else:
             casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
     casilla_inputs = validate_casilla_input_ids(revision, casilla_inputs)
@@ -537,14 +549,42 @@ def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> De
     return parsed
 
 
+def _typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinition) -> str:
+    """Canonicalise a ``--casilla`` value through its casilla's declared text-scalar validator.
+
+    The text channel carries the whole registry string family (``period_code``,
+    ``nif``, ``iban``, ``country_code``, ... — every ``data_type`` whose
+    :func:`cadrumo.domain.calculations.registry.registry_scalar_value_type` is
+    ``"str"``), not only bare ``text``. Each family member declares its own
+    validator, so running it here keeps the CLI the operator's first
+    instructive surface: a malformed ``period_code`` is refused by name at the
+    boundary instead of surfacing as a generic registry error deeper in the
+    calculation pipeline. The canonical form the validator returns is what
+    reaches the engine, exactly as
+    :func:`cadrumo.domain.calculations.registry.validate_registry_text_scalar`
+    would produce there.
+    """
+    value = _text_value(raw_value, key=key)
+    try:
+        return validate_registry_text_scalar(casilla_def.data_type, value)
+    except RegistryValidationError as exc:
+        raise ModeloCalculateTextInputError(
+            f"--casilla value for {key!r} is not a valid {casilla_def.data_type} value: {exc}",
+            context={"key": key, "value": raw_value, "data_type": casilla_def.data_type},
+            translated_message="application.modelo.errors.calculate_typed_text_input_invalid",
+        ) from exc
+
+
 def _text_value(raw_value: str, *, key: str) -> str:
-    """Validate a ``--casilla`` value routed to a ``data_type = "text"`` casilla.
+    """Validate that a ``--casilla`` value routed to the text channel is a non-empty string.
 
     Mirrors the registry engine's own
     :func:`cadrumo.domain.calculations.registry.validated_text_input_casilla_ids`
     non-empty-string contract at the CLI boundary, so an empty text value
     refuses loudly here instead of surfacing a generic registry error deeper in
-    the calculation pipeline.
+    the calculation pipeline. Callers routing a value to a declared text-scalar
+    family go through :func:`_typed_text_value`, which adds that family's own
+    validator on top of this contract.
     """
     value = raw_value.strip()
     if not value:

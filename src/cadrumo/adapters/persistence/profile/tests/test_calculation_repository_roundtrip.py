@@ -63,6 +63,8 @@ _IVA_BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id(
 )
 _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01")
 _CASILLA_12: CasillaId = validated_casilla_id("casilla-12", surface="_CASILLA_12")
+_DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="_DECL_PERIODO_CASILLA")
+_DECL_PERIODO_CODE = "1T"
 
 
 def _hex(seed: str) -> str:
@@ -86,7 +88,15 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
     created_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     verified_at = created_at + timedelta(hours=3)
 
-    input_values_by_casilla_id = {_IVA_BASE_IMPONIBLE_CASILLA: "1000.00"}
+    # ``decl.periodo`` is a ``period_code`` casilla: its AEAT token rides the
+    # string-valued ``input_values_by_casilla_id`` channel, never the strictly
+    # Decimal ``casilla_values``. A non-decimal-shaped entry is the only fixture
+    # value that would surface a boundary regression coercing this map's values
+    # through a numeric parser.
+    input_values_by_casilla_id = {
+        _IVA_BASE_IMPONIBLE_CASILLA: "1000.00",
+        _DECL_PERIODO_CASILLA: _DECL_PERIODO_CODE,
+    }
     binding_overrides = {"modelo-303-compensacion-pendiente-anteriores": "50.00"}
     casilla_values = {_CASILLA_01: Decimal("1000.00"), _CASILLA_12: Decimal("210.00")}
     source_transaction_ids = (_hex("d"), _hex("e"))
@@ -170,6 +180,9 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert len(loaded.revisions) == 1
     (revision,) = loaded.values()
     assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    # The non-decimal ``period_code`` entry must survive verbatim: the string
+    # replay channel is where every text-family casilla persists.
+    assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == _DECL_PERIODO_CODE
     # The typed observations envelope must survive the boundary
     # with its full formula provenance intact.
     assert len(revision.observations) == 2

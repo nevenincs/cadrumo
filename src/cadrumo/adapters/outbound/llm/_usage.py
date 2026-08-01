@@ -15,11 +15,7 @@ import json
 from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING
 from uuid import uuid4
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE, secure_object_repository_for_active_bucket
 from ....core.classification import SensitivityClass
@@ -29,29 +25,11 @@ from ....core.redaction import default_rules_for_class, redact_structured
 from ....core.time import now
 from ._errors import LLMCacheError
 from ._models import LLMResponse, UsageRecord, UsageSummary
+from ._retention import select_retention_removal_keys
 
 _USAGE_NAMESPACE = LLM_USAGE_NAMESPACE.namespace
 _USAGE_VERSION = LLM_USAGE_NAMESPACE.schema_version
 _USAGE_SENSITIVITY = LLM_USAGE_NAMESPACE.sensitivity
-
-
-def _select_usage_removal_keys(
-    rows: tuple[tuple[UsageRecord, str], ...],
-    *,
-    cutoff: datetime,
-    max_records: int,
-) -> list[str]:
-    """Select object keys to delete under the two-stage retention/count bound.
-
-    ``rows`` are sorted oldest-first: every record older than ``cutoff`` is removed,
-    then -- if more than ``max_records`` survive -- the oldest excess records too.
-    """
-    to_remove = [object_key for record, object_key in rows if record.created_at < cutoff]
-    remaining = [row for row in rows if row[0].created_at >= cutoff]
-    if len(remaining) > max_records:
-        excess_count = len(remaining) - max_records
-        to_remove.extend(object_key for _, object_key in remaining[:excess_count])
-    return to_remove
 
 
 class UsageRecorder:
@@ -224,7 +202,12 @@ class UsageRecorder:
 
         cutoff = now() - timedelta(days=effective_retention_days)
         rows = self._load_records_with_object_keys()
-        to_remove = _select_usage_removal_keys(rows, cutoff=cutoff, max_records=effective_max_records)
+        to_remove = select_retention_removal_keys(
+            rows,
+            cutoff=cutoff,
+            max_records=effective_max_records,
+            timestamp=lambda record: record.created_at,
+        )
 
         repository = secure_object_repository_for_active_bucket()
         removed = 0

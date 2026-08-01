@@ -90,6 +90,11 @@ def _validate_site_artifacts(dist_root: Path) -> None:
     # earlier build -- and then serves a blank page. The references are what the
     # browser actually requests, so they are what must resolve.
     referenced = _referenced_asset_names((dist_root / "index.html").read_text(encoding="utf-8", errors="replace"))
+    if not referenced:
+        raise SystemExit(
+            f"Landing page index.html references no bundled assets under {_DEPLOYMENT_BUILD_OUTPUT}/assets/; "
+            "the preflight cannot prove visitors will receive a working page.",
+        )
     unresolved = sorted(name for name in referenced if not (assets / name).is_file())
     if unresolved:
         raise SystemExit(

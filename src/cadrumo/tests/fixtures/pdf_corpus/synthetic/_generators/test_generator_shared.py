@@ -26,8 +26,57 @@ def test_format_amount_matches_aeat_style() -> None:
 
 
 def test_format_amount_quantises_to_two_decimals() -> None:
+    """Two-decimal rendering.
+
+    SUPPORTING. ``100.555`` is the case where half-up and half-even
+    happen to agree, so it passes under both rules and cannot tell them
+    apart. It is kept as a shape check only; the discriminating ties are
+    pinned separately below.
+    """
     assert format_amount(Decimal("100.5")) == "100,50"
-    assert format_amount(Decimal("100.555")) == "100,56"  # ROUND_HALF_EVEN -> 56
+    assert format_amount(Decimal("100.555")) == "100,56"
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (Decimal("1.005"), "1,01"),
+        (Decimal("-1.005"), "-1,01"),
+        (Decimal("0.125"), "0,13"),
+        (Decimal("-0.125"), "-0,13"),
+        (Decimal("2.345"), "2,35"),
+        (Decimal("-2.345"), "-2,35"),
+    ],
+)
+def test_format_amount_rounds_cent_ties_half_up_like_aeat(value: Decimal, expected: str) -> None:
+    """Cent ties round away from zero, as AEAT money-2 requires.
+
+    DISCRIMINATING. Every value here sits exactly on a half-cent with an
+    EVEN cent digit below it, so ``Decimal.quantize``'s default half-even
+    rounds it DOWN while half-up rounds it UP. Restoring the default
+    rounding fails all six of these; ``100.555`` would not, which is why
+    it is kept separate as a supporting case.
+
+    Negatives are covered because the formatter rounds the magnitude and
+    re-applies the sign, so a sign-handling regression would surface as a
+    tie resolving toward zero.
+    """
+    assert format_amount(value) == expected
+
+
+def test_format_amount_agrees_with_the_canonical_money_rule() -> None:
+    """The generator's rounding is the production rule, not a copy of it.
+
+    DISCRIMINATING. Asserted against :func:`round_to_cents` itself rather
+    than against literal expected strings, so the fixture corpus cannot
+    encode arithmetic the engine forbids even if someone later re-derives
+    the expectations. Fails on the first tie under half-even.
+    """
+    from ......core.money import round_to_cents
+
+    for raw in ("1.005", "-1.005", "0.125", "-0.125", "2.345", "99999.995"):
+        value = Decimal(raw)
+        assert format_amount(value) == format_amount(round_to_cents(value)), raw
 
 
 def test_format_amount_nbsp_thousands() -> None:

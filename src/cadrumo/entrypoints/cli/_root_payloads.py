@@ -26,7 +26,31 @@ See Also:
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
+
+from pydantic import BaseModel, model_validator
+
 from ._schemas import OutputSchema, register_schema
+
+
+def _canonical_branch_payload(
+    value: object,
+    *,
+    branches: tuple[type[BaseModel], ...],
+) -> dict[str, object]:
+    """Return a JSON payload validated by one of the canonical branch DTOs."""
+    if not isinstance(value, Mapping):
+        raise ValueError("root result must be a mapping")
+
+    serialized = json.dumps(dict(value))
+    for branch in branches:
+        try:
+            return branch.model_validate_json(serialized).model_dump(mode="json")
+        except ValueError:
+            continue
+    expected = ", ".join(branch.__name__ for branch in branches)
+    raise ValueError(f"root result must match one canonical branch: {expected}")
 
 
 @register_schema("root.status")
@@ -37,8 +61,8 @@ class RootStatusResult(OutputSchema):
     :class:`HelpDocument` for ``aeat --help``, :class:`RootLandingReport` for the
     cold-start / no-session landing, or :class:`OverviewStatusReport` when an
     active session can render the full overview. These shapes vary
-    significantly, so the schema accepts extra fields while still registering
-    the stable ``root.status`` envelope key.
+    significantly, so the schema preserves their flat JSON shape while
+    validating every value through one of those canonical models.
 
     The text half of the landing branch is rendered by
     :func:`render_cli_root_landing_lines`; JSON mode keeps the application DTO
@@ -50,6 +74,17 @@ class RootStatusResult(OutputSchema):
     # mypy assignment check is incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
 
+    @model_validator(mode="before")
+    @classmethod
+    def _validate_canonical_branch(cls, value: object) -> dict[str, object]:
+        from ...application.operator_surface import HelpDocument, RootLandingReport
+        from ...application.overview import OverviewStatusReport
+
+        return _canonical_branch_payload(
+            value,
+            branches=(HelpDocument, RootLandingReport, OverviewStatusReport),
+        )
+
 
 @register_schema("root.app")
 class AppRootResult(OutputSchema):
@@ -57,8 +92,7 @@ class AppRootResult(OutputSchema):
 
     The app group callback wraps :class:`HelpDocument` under the stable
     ``root.app`` group-callback key. Like :class:`RootStatusResult`, the schema
-    allows the application-owned help fields to pass through without modelling
-    every help-section variant in the CLI layer.
+    preserves the application-owned help fields after canonical validation.
 
     The document is produced by :func:`build_help_document` for the ``app`` help
     surface and emitted through :class:`SchemaEnvelope`.
@@ -68,3 +102,10 @@ class AppRootResult(OutputSchema):
     # pydantic v2 model_config class var shadows ConfigDict descriptor;
     # mypy assignment check is incorrect.
     model_config = {"extra": "allow"}  # type: ignore[assignment]
+
+    @model_validator(mode="before")
+    @classmethod
+    def _validate_help_document(cls, value: object) -> dict[str, object]:
+        from ...application.operator_surface import HelpDocument
+
+        return _canonical_branch_payload(value, branches=(HelpDocument,))

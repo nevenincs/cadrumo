@@ -332,12 +332,12 @@ def reconcile_history_verb(
                 event_id=entry.event_id,
                 bucket_id=entry.bucket_id,
                 work_unit_id=entry.work_unit_id,
-                source_kind=entry.source_kind.value,
+                source_kind=entry.source_kind,
                 source_path=entry.source_path,
-                verdict=entry.verdict.value,
+                verdict=entry.verdict,
                 diff_count=entry.diff_count,
                 actor=entry.actor,
-                reconciled_at=entry.reconciled_at.isoformat(),
+                reconciled_at=entry.reconciled_at,
             )
             for entry in entries
         ],

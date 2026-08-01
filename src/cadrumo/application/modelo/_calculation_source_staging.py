@@ -285,15 +285,17 @@ def materialise_registry_values_for_source_resolution(
         ),
         **dict(backend_casilla_inputs or {}),
     }
-    resolved_inputs = _resolve_calculation_inputs(
+    channel_inputs = _resolve_calculation_inputs(
         revision=revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
         backend_casilla_inputs=resolved_backend_inputs,
         resolved_bindings=effective_binding_values,
         casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
     )
-    resolved_text_inputs = text_casilla_inputs or {}
+    resolved_inputs = channel_inputs.casilla_inputs
+    resolved_text_inputs = channel_inputs.text_casilla_inputs
     engine_result = calculate_registry_snapshot(
         registry_snapshot,
         inputs=resolved_inputs,

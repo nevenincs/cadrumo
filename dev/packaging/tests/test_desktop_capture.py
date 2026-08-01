@@ -225,4 +225,24 @@ def test_extract_target_value_matches_separator_variants() -> None:
     assert dc.extract_target_value("The cuota is 23000.00 euros", target_value="23000.00")
     assert dc.extract_target_value("resultado: 23,000.00", target_value="23000.00")
     assert dc.extract_target_value("importe 23.000,00 EUR", target_value="23000.00")
+    assert dc.extract_target_value("importe 23 000,00 EUR", target_value="23000.00")
     assert not dc.extract_target_value("nothing relevant here", target_value="23000.00")
+
+
+def test_extract_target_value_refuses_larger_or_embedded_numeric_replies() -> None:
+    """A capture proves the exact requested value, never a larger or embedded digit sequence."""
+    target_value = "23000.00"
+
+    assert not dc.extract_target_value("importe 123000.00 EUR", target_value=target_value)
+    assert not dc.extract_target_value("importe 1,230,000.00 EUR", target_value=target_value)
+    assert not dc.extract_target_value("x23000.00y", target_value=target_value)
+
+
+def test_extract_target_value_refuses_distinct_values_with_the_same_digit_sequence() -> None:
+    """Punctuation removal must not make different numeric values satisfy the oracle."""
+    target_value = "23000.00"
+
+    assert not dc.extract_target_value("importe 2300000 EUR", target_value=target_value)
+    assert not dc.extract_target_value("importe 2300.000 EUR", target_value=target_value)
+    assert not dc.extract_target_value("importe 2,300,000 EUR", target_value=target_value)
+    assert not dc.extract_target_value("importe 2 3000 EUR", target_value=target_value)

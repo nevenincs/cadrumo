@@ -37,7 +37,7 @@ from ...domain.calculations.registry import (
     select_revision_for_year,
 )
 from ...domain.user_profile import ProfileNotFoundError
-from ._profile_binding import resolve_profile_sourced_bindings
+from ._profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 from ._registry_resources import authority_via_resources
 
 _log = get_logger(__name__)
@@ -117,7 +117,7 @@ def profile_resolvable_binding_ids(
         )
         return frozenset()
     return frozenset(
-        set(result.binding_values) | set(result.enum_binding_values) | set(result.date_binding_values),
+        str(binding_id) for binding_id in profile_resolved_binding_ids(result)
     )
 
 

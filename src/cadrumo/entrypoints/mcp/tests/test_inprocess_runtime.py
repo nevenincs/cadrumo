@@ -11,6 +11,8 @@ subprocess transport itself is proven separately in
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 from .._call_runtime import CallTier
@@ -59,26 +61,64 @@ def test_dispatch_verb_in_process_reconstructs_the_argv_from_the_schema() -> Non
     assert envelope["command"] == "contract"
 
 
-def test_parse_cli_envelope_reads_success_from_stdout() -> None:
+def test_parse_cli_envelope_rejects_obsolete_success_envelope_version() -> None:
     run = CompletedCliRun(
         stdout='{"schema_version": "1", "command": "contract", "status": "success", "result": {}, "notices": []}',
         stderr="",
         returncode=0,
     )
     envelope, is_error = parse_cli_envelope(run)
-    assert is_error is False
-    assert envelope["command"] == "contract"
+    assert is_error is True
+    assert envelope["status"] == "error"
+    assert "schema_version" in str(envelope["raw"])
 
 
 def test_parse_cli_envelope_reads_error_document_from_stderr() -> None:
     run = CompletedCliRun(
         stdout="",
-        stderr='{"schema_version": "1", "command": "modelo.export", "status": "error", "error": {}}',
+        stderr=(
+            '{"schema_version":"2","command":"modelo.export","active_profile":null,'
+            '"status":"error","error":{"code":"REFUSED_TEST","category":"refused",'
+            '"message":"refused","suggestion":null,"retryable":false,"runbook_id":null,'
+            '"context":null,"trace_id":null},"notices":[]}'
+        ),
         returncode=2,
     )
     envelope, is_error = parse_cli_envelope(run)
     assert is_error is True
     assert envelope["command"] == "modelo.export"
+
+
+@pytest.mark.parametrize(
+    "body",
+    (
+        '{"schema_version":"2","command":"contract","status":"success","result":{},"notices":[]}',
+        '{"schema_version":"2","command":"contract","active_profile":null,"status":"unknown","result":{},"notices":[]}',
+    ),
+    ids=("missing-envelope-spine", "unknown-status"),
+)
+def test_parse_cli_envelope_rejects_malformed_success_documents(body: str) -> None:
+    run = CompletedCliRun(stdout=body, stderr="", returncode=0)
+
+    envelope, is_error = parse_cli_envelope(run)
+
+    assert is_error is True
+    assert envelope["status"] == "error"
+
+
+def test_parse_cli_envelope_rejects_a_real_registered_result_with_wrong_shape() -> None:
+    """The MCP parser cannot admit a result shape the CLI registry rejects."""
+    run = run_cli_in_process(["--format", "json", "app", "contract"], acquire_timeout_s=30.0)
+    assert run is not None
+    document = json.loads(run.stdout)
+    document["result"] = []
+
+    envelope, is_error = parse_cli_envelope(
+        CompletedCliRun(stdout=json.dumps(document), stderr="", returncode=0),
+    )
+
+    assert is_error is True
+    assert envelope["status"] == "error"
 
 
 def test_parse_cli_envelope_non_zero_exit_marks_error_even_on_success_body() -> None:

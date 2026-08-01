@@ -359,6 +359,8 @@ def checkpoint_smoke_evidence(
             raise ValueError(f"packaging smoke manifest is not successful: {manifest}")
 
         target = evidence_root / f"{work_dir.name}.json"
+        if target.exists():
+            raise FileExistsError(f"packaging smoke evidence already exists: {target}")
         temporary = target.with_suffix(".json.tmp")
         temporary.write_bytes(payload)
         temporary.replace(target)

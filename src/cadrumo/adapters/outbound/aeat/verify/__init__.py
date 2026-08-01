@@ -37,6 +37,7 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 from bs4 import BeautifulSoup
 from pydantic import AnyUrl
 
+from .....core import is_aeat_csv as _is_aeat_csv
 from .....core.async_cleanup import close_async_resources as _close_async_resources
 from .....core.config import Settings as _Settings
 from .....core.errors import CadrumoError as _CadrumoError
@@ -212,8 +213,10 @@ async def verify_csv(
             fails.
     """
     csv = csv.strip().upper()
-    if not csv:
-        raise _JustificanteVerificationError("cannot verify an empty CSV")
+    if not _is_aeat_csv(csv):
+        raise _JustificanteVerificationError(
+            f"cannot verify {csv!r}: an AEAT CSV is 8-32 uppercase alphanumeric characters",
+        )
 
     own_browser = False
     session = browser
@@ -255,7 +258,14 @@ def _response_confirms_valid_csv(body: str, *, expected_csv: str, final_url: str
     The live-grounded AEAT verifier reference records this exact viewer route
     and its CSV-bound document iframe. Unknown HTML fails closed rather than
     trusting generic words such as ``válido`` or ``correcto``.
+
+    ``expected_csv`` is re-checked against the canonical shape here as well as
+    at the entry point: this comparison is what turns a rendered iframe into a
+    "valid" verdict, so a malformed expectation reaching it would let any page
+    echoing that same malformed value confirm a document that cannot exist.
     """
+    if not _is_aeat_csv(expected_csv):
+        return False
     final = urlsplit(final_url)
     if final.scheme != "https" or final.netloc != _VERIFY_HOST:
         return False

@@ -25,6 +25,9 @@ documents and validates the transport shape emitted by :mod:`_overview`.
 
 from __future__ import annotations
 
+from pydantic import Field
+
+from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
 from ._ledger_payloads import LedgerStatusResult
 from ._schemas import OutputSchema, register_schema
 
@@ -348,8 +351,8 @@ class OverviewPrepareStepPayload(OutputSchema):
     summary, and the exact next ``cadrumo`` command to run.
     """
 
-    step_id: str
-    state: str
+    step_id: DataPrepStepId
+    state: DataPrepStepState
     summary: str
     next_command: str
 
@@ -381,9 +384,9 @@ class OverviewPipelineModeloPayload(OutputSchema):
 
     modelo: str
     work_unit_id: str | None = None
-    state: str
-    blocking_finding_count: int = 0
-    warning_finding_count: int = 0
+    state: ModeloReadinessState
+    blocking_finding_count: int = Field(default=0, ge=0)
+    warning_finding_count: int = Field(default=0, ge=0)
     summary: str
     next_command: str
 

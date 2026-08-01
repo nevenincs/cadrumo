@@ -57,9 +57,10 @@ from pydantic import BaseModel
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import load_settings
 from .....core.decimal import coerce_decimal
-from .....core.errors import CadrumoError
+from .....core.errors import CadrumoError, CoreValidationError
 from .....core.hashing import sha256_hex as _sha256_hex
 from .....core.logging import get_logger
+from .....core.parsing import normalise_iso_4217_currency
 from .....core.time import now
 from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat, TransactionDirection
 
@@ -713,5 +714,27 @@ def build_raw_transaction(
 
 
 def default_currency() -> str:
-    """Return the configured project-default financial currency."""
-    return load_settings().financial_base_currency.strip().upper()
+    """Return the configured project-default financial currency.
+
+    Every provider falls back to this value when a source omits a per-row
+    currency, so it reaches the persisted
+    :class:`~domain.transactions.RawTransaction` on the fallback branch
+    without passing through any column-level check. The
+    ``financial_base_currency`` setting itself declares no shape, so it is
+    validated here — at the single owner of the fallback — against the same
+    :func:`~core.parsing.normalise_iso_4217_currency` policy the per-column
+    and per-statement paths use.
+
+    Raises:
+        FinancialValidationError: ``financial_base_currency`` is not a
+            three-letter ISO 4217 code. Failing here names the misconfigured
+            setting, instead of surfacing an opaque record-validation error
+            once the value has already been copied onto a parsed row.
+    """
+    configured = load_settings().financial_base_currency
+    try:
+        return normalise_iso_4217_currency(configured)
+    except CoreValidationError as exc:
+        raise FinancialValidationError(
+            f"financial_base_currency setting must be a three-letter ISO 4217 code; got {configured!r}",
+        ) from exc

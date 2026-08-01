@@ -70,7 +70,6 @@ import pytest
 from ....core import (
     CasillaId,
     ForeignAssetObligationGroup,
-    foreign_asset_declaration_threshold,
     validated_casilla_id,
 )
 from ....domain.calculations.registry import (
@@ -80,6 +79,7 @@ from ....domain.calculations.registry import (
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....tests.registry_observations import registry_grounded_observation_rows
 from ....tests.secure_sql import isolated_runtime_profile
+from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from .._foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -99,7 +99,10 @@ _CONTEXT_LABEL = "721-monedas-virtuales-extranjero-prior-year-baseline-two-annua
 
 #: Initial declaration threshold per RD 1065/2007 art. 42-quater (same structure
 #: as 720: €50,000 aggregate value at 31 December through a third-party custodian).
-_MONEDAS_VIRTUALES_THRESHOLD = foreign_asset_declaration_threshold(ForeignAssetObligationGroup.MONEDAS_VIRTUALES)
+_MONEDAS_VIRTUALES_THRESHOLD = foreign_asset_declaration_thresholds(
+    modelo=_MODELO,
+    filing_year=_YEAR_N_PLUS_1,
+)[ForeignAssetObligationGroup.MONEDAS_VIRTUALES]
 _INITIAL_THRESHOLD_EUR = _MONEDAS_VIRTUALES_THRESHOLD.initial_declaration_floor_eur
 
 #: Re-declaration increment threshold per art. 42-quater: if 31-December aggregate

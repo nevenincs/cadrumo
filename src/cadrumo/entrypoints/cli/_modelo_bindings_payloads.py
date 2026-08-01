@@ -49,25 +49,27 @@ class BindingEncodedOptionPayload(OutputSchema):
     registry_value: str
 
 
-class BindingListRowPayload(OutputSchema):
-    """One binding row in the bindings list output.
+class BindingGroundingPayload(OutputSchema):
+    """Identity and regulatory grounding shared by every binding row payload.
 
-    Carries the binding's regulatory grounding (``legal_refs`` /
-    ``source_refs``, sourced from the registry binding definition) at
-    parity with the casilla half (``CasillaRowPayload``). ``source`` renders
-    the typed :class:`~core.BindingSourceKind` value as a string.
+    Per `binding-values-carry-provenance`, an operator-facing binding value
+    carries its ``legal_refs`` / ``source_refs`` and its typed source kind at
+    parity with the casilla half. The ``bindings list`` and ``bindings
+    resolve`` (preview) surfaces describe the *same* binding, so they declare
+    that grounding once here rather than twice: a constraint relaxed for one
+    surface would otherwise leave the other silently covered, and operator
+    list JSON could carry provenance the preview JSON refuses.
+
+    Subclasses add only the fields that genuinely differ between the two
+    surfaces -- listing context and input channel for the list row, the
+    resolved override value for the preview row.
     """
 
-    modelo: str
-    revision: str
-    filing_year: int | None
-    period: str | None
     binding_id: BindingId
     source: str
+    """The typed :class:`~core.BindingSourceKind` value rendered as a string."""
     readiness: str
     typed_enum: str | None
-    input_channel: str
-    borrador_capable: bool
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     relation_inputs: tuple[RelationId, ...] = ()
@@ -78,7 +80,7 @@ class BindingListRowPayload(OutputSchema):
     rather than ``--binding``. Derived from the resolved revision's
     relations (:class:`~domain.calculations.registry.RelationDefinition`
     ``target_binding``), so a relation-fed binding's source is discoverable
-    in this listing before a calculation is attempted, for any modelo.
+    before a calculation is attempted, for any modelo.
     """
     encoded_options: tuple[BindingEncodedOptionPayload, ...] = ()
     """Accepted decimal encodings for a boolean-typed ``input_channel=decimal`` binding.
@@ -86,9 +88,25 @@ class BindingListRowPayload(OutputSchema):
     Non-empty only for a boolean-flag binding the registry consumes as a numeric
     ``1`` / ``0`` operand (the Modelo 100 estimación-directa modality flag). Each
     entry pairs the decimal the operator must type on ``--binding`` with its
-    boolean meaning and the underlying casilla token, so the mapping is visible in
-    the listing before a calculation is attempted.
+    boolean meaning and the underlying casilla token, so the mapping is visible
+    before a calculation is attempted.
     """
+
+
+class BindingListRowPayload(BindingGroundingPayload):
+    """One binding row in the bindings list output.
+
+    Adds the listing context (which modelo/revision/period the row was listed
+    for), the input channel, and borrador capability to the shared
+    :class:`BindingGroundingPayload` identity and grounding.
+    """
+
+    modelo: str
+    revision: str
+    filing_year: int | None
+    period: str | None
+    input_channel: str
+    borrador_capable: bool
 
 
 @register_schema("modelo.bindings.list")
@@ -104,25 +122,14 @@ class ModeloBindingsListResult(OutputSchema):
     bindings: tuple[BindingListRowPayload, ...]
 
 
-class BindingPreviewRowPayload(OutputSchema):
+class BindingPreviewRowPayload(BindingGroundingPayload):
     """One binding preview row with optional override value.
 
-    Carries the binding's regulatory grounding (``legal_refs`` /
-    ``source_refs``, sourced from the registry binding definition) at
-    parity with the casilla half.
+    Adds the resolved override to the shared :class:`BindingGroundingPayload`
+    identity and grounding.
     """
 
-    binding_id: BindingId
-    source: str
-    readiness: str
-    typed_enum: str | None
     override: str | None
-    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
-    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
-    relation_inputs: tuple[RelationId, ...] = ()
-    """Registry relation ids that feed this binding (see ``BindingListRowPayload``)."""
-    encoded_options: tuple[BindingEncodedOptionPayload, ...] = ()
-    """Accepted decimal encodings for a boolean flag binding (see ``BindingListRowPayload``)."""
 
 
 @register_schema("modelo.bindings.resolve")

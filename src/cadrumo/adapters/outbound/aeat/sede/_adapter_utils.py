@@ -14,12 +14,14 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Mapping
 from re import compile
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 from unicodedata import category, normalize
 from urllib.parse import urlsplit
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core import is_aeat_csv as _core_is_aeat_csv
 from .....core.config import Settings
+from .....core.external_constants import PDF_MIME_TYPE
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -29,22 +31,22 @@ from pydantic import BaseModel
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ._errors import BrowserAdapterTypeError, SedeFailureMode, SedeParseError
+from ._errors import BrowserAdapterTypeError, JustificanteFetchError, SedeFailureMode, SedeParseError
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
-_AEAT_CSV_PATTERN = compile(r"[A-Z0-9]{8,32}")
 _EXTERNAL = Settings.external_constants()
 
 
 def is_aeat_csv(value: str) -> bool:
     """Return whether ``value`` is one complete AEAT CSV identifier.
 
-    AEAT's documented and observed CSV widths are 8 through 32 uppercase
-    alphanumeric characters.  Callers keep their local error translation;
-    this helper owns only the shared shape constraint.
+    Delegates to the canonical :func:`core.is_aeat_csv` contract so the sede
+    adapters, the inbound justificante extractor, and the public verifier
+    cannot drift on what width AEAT actually issues. Re-exported here because
+    the sede modules already import their shape helpers from this module.
     """
-    return bool(_AEAT_CSV_PATTERN.fullmatch(value))
+    return _core_is_aeat_csv(value)
 
 
 def is_aeat_auth_gate_redirect(current_url: str) -> bool:
@@ -183,6 +185,79 @@ def make_locate_helper(
     return _locate
 
 
+def landed_origin(landed_url: str | None) -> str | None:
+    """Return the ``scheme://host`` a read actually landed on, or ``None``.
+
+    The single extraction every sede reader uses to answer "which host
+    answered this read". Returns ``None`` when the landing carries no usable
+    scheme and host -- an empty or absent ``page.url``, ``about:blank``, or a
+    relative path -- leaving the REFUSAL to the caller, which is the only
+    layer that knows what its surface is allowed to do with the absence.
+
+    Callers must not substitute a constructed origin for a ``None`` result.
+    A recorded URL is a claim about where a read happened, and a read whose
+    host cannot be established has no such claim to make.
+    """
+    if not landed_url:
+        return None
+    landed = urlsplit(landed_url)
+    if not landed.scheme or not landed.netloc:
+        return None
+    return f"{landed.scheme}://{landed.netloc}"
+
+
+def response_media_type(content_type: str) -> str:
+    """Return the bare media type from a ``Content-Type`` header value.
+
+    Strips any parameter tail (``; charset=binary``), surrounding whitespace,
+    and case, so a header may carry parameters without changing what media
+    type it names.
+    """
+    return content_type.split(";", 1)[0].strip().lower()
+
+
+def assert_pdf_response(
+    *,
+    status: int,
+    content_type: str,
+    body: bytes,
+    subject: str,
+) -> None:
+    """Validate one AEAT PDF download response, or raise.
+
+    The single contract every sede PDF capture path shares: a 2xx status, a
+    non-empty body, and a ``Content-Type`` whose media type IS
+    :data:`~core.external_constants.PDF_MIME_TYPE`.
+
+    The media-type comparison is equality on the parameter-stripped header
+    rather than a substring test. A substring test admits any type that merely
+    CONTAINS the token: ``application/notpdf`` and ``text/pdf`` satisfy
+    ``"pdf" in ...``, and ``x-application/pdf-trap`` satisfies even
+    ``"application/pdf" in ...``. None of those is a PDF, and a captured
+    artefact is stored as filing evidence, so admitting one records a non-PDF
+    body under a PDF ``kind``. Equality on the media type still admits the
+    parameterised ``application/pdf; charset=binary`` AEAT actually sends.
+
+    Args:
+        status: HTTP status code of the PDF response.
+        content_type: Raw ``Content-Type`` header value, possibly parameterised.
+        body: Raw response body bytes.
+        subject: Caller-supplied identification of what was fetched, embedded
+            verbatim in the failure message (e.g. ``"CSV='ABC123'"``) so each
+            capture path keeps its own diagnostic handle.
+
+    Raises:
+        JustificanteFetchError: On a non-2xx status, an empty body, or a
+            content type whose media type is not ``application/pdf``.
+    """
+    if not (200 <= status < 300):
+        raise JustificanteFetchError(f"pdf fetch for {subject} returned HTTP {status}")
+    if not body:
+        raise JustificanteFetchError(f"empty PDF body for {subject}")
+    if response_media_type(content_type) != PDF_MIME_TYPE:
+        raise JustificanteFetchError(f"unexpected content-type {content_type!r} for {subject}")
+
+
 def normalize_response_text(text: str) -> str:
     """Casefold + strip diacritics + collapse whitespace for marker matching."""
     if not text:
@@ -190,6 +265,72 @@ def normalize_response_text(text: str) -> str:
     decomposed = normalize("NFKD", text)
     without_accents = "".join(ch for ch in decomposed if category(ch) != "Mn")
     return _WHITESPACE_RE.sub(" ", without_accents.casefold()).strip()
+
+
+SPANISH_NEGATIVE_VERDICT_MARKERS: tuple[str, ...] = (
+    "no consta",
+    "no valido",
+    "no es valido",
+    "no es un nif valido",
+    "el campo nif no es un nif valido",
+    "no identificado",
+    "no esta identificado",
+    "no se encuentra identificado",
+    "operador no identificado",
+    "invalid",
+)
+"""Normalised AEAT phrases that reject an identity, shared by every checker.
+
+Every sede identity checker reads the same Spanish rejection vocabulary off
+the same AEAT template family, so the negative table is one contract rather
+than a per-driver table. It is deliberately the union of the phrases observed
+across the checkers: a driver that omits one classifies an explicit rejection
+as ``unknown`` at best, and -- when a generic ``valido`` substring survives in
+its positive table -- as ``valid``, turning a refusal into a false pass.
+
+Markers are matched against :func:`normalize_response_text` output, so they
+are casefolded, unaccented, and whitespace-collapsed.
+"""
+
+
+type SedeVerdict = Literal["valid", "invalid", "unknown"]
+"""Closed verdict vocabulary every sede identity checker reports."""
+
+
+def extract_marker_verdict(
+    body_text: str,
+    *,
+    positive_markers: tuple[str, ...],
+    negative_markers: tuple[str, ...] = SPANISH_NEGATIVE_VERDICT_MARKERS,
+) -> SedeVerdict:
+    """Classify an AEAT response body as ``valid``, ``invalid``, or ``unknown``.
+
+    Negative markers are tested first and win outright. AEAT phrases a
+    rejection by negating the same word it uses to affirm (``no es un NIF
+    válido``), so a positive-first or negative-incomplete parser reads an
+    explicit refusal as a pass. Precedence, not marker richness, is what makes
+    the classification safe.
+
+    Args:
+        body_text: Raw response body text scraped from the AEAT page.
+        positive_markers: Driver-specific phrases that affirm the identity.
+            Positive vocabulary is surface-specific (a GROI registration
+            phrase does not affirm a VIES NIF-IVA), so it stays per driver.
+        negative_markers: Rejection phrases; defaults to the shared
+            :data:`SPANISH_NEGATIVE_VERDICT_MARKERS` contract.
+
+    Returns:
+        ``"invalid"`` on any negative marker, ``"valid"`` on any positive
+        marker, ``"unknown"`` for empty or structurally unanswerable text.
+    """
+    normalized = normalize_response_text(body_text)
+    if not normalized:
+        return "unknown"
+    if any(marker in normalized for marker in negative_markers):
+        return "invalid"
+    if any(marker in normalized for marker in positive_markers):
+        return "valid"
+    return "unknown"
 
 
 def registry_failure_message(exc: BaseException) -> str:
@@ -297,13 +438,19 @@ def nif_check_operation_tail(expected: Mapping[str, object]) -> tuple[RemoteOper
 
 
 __all__ = [
+    "SPANISH_NEGATIVE_VERDICT_MARKERS",
+    "SedeVerdict",
     "_LocateHelper",
     "_SedeCheckerModel",
+    "assert_pdf_response",
     "assert_query_browser_action_for",
+    "extract_marker_verdict",
     "first_visible_locator",
+    "landed_origin",
     "make_locate_helper",
     "nif_check_operation_tail",
     "normalize_response_text",
     "registry_failure_message",
     "require_playwright_page",
+    "response_media_type",
 ]

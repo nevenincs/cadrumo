@@ -24,7 +24,7 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
-from ...user_profile import UserProfileLifecycleRepository
+from ...user_profile import UserProfileLifecycleRepository, record_to_path_values
 from .. import (
     ModeloProfileReadinessError,
     WorkUnitMutationRefusedError,
@@ -34,7 +34,9 @@ from .. import (
     ensure_modelo_work_unit_for_visible_target,
     mark_revision_verificado_completo,
     modelo_applicability_refusal,
+    pre_activity_period_refusal,
 )
+from .._profile_readiness_gate import _profile_activity_start_date
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -672,3 +674,70 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
                 clock=_NOW,
             )
         assert "setup_incomplete" in str(excinfo.value.translated_message)
+
+
+def _reversed_declaration_order_record() -> UserProfileRecord:
+    """A record whose later effective window is declared FIRST.
+
+    Both facts are live at one effective-dated path, so declaration order and
+    ``valid_from`` order disagree and the two readers can be told apart.
+    """
+    return UserProfileRecord(
+        profile_id=_OPERATOR_PROFILE_ID,
+        display_name="Reversed declaration order",
+        facts=(
+            UserProfileFact(
+                path="censo.activity_start_date",
+                value=date(2026, 1, 1),
+                valid_from=date(2026, 1, 1),
+            ),
+            UserProfileFact(
+                path="censo.activity_start_date",
+                value=date(2020, 1, 1),
+                valid_from=date(2020, 1, 1),
+            ),
+        ),
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+
+
+def test_activity_start_reader_agrees_with_the_canonical_effective_projection() -> None:
+    """The readiness reader resolves the same effective fact as the canonical projection.
+
+    Two readers of one effective-dated path must not disagree about which fact
+    is in force. Declaration order is not the effective order: here the later
+    window is declared first, so a reverse scan returns the 2020 fact while
+    ``valid_from`` ordering returns the 2026 one.
+    """
+    record = _reversed_declaration_order_record()
+
+    canonical = record_to_path_values(record)["censo.activity_start_date"]
+    resolved = _profile_activity_start_date(record)
+
+    assert resolved == date(2026, 1, 1)
+    assert resolved is not None
+    assert resolved.isoformat() == canonical
+
+
+def test_pre_activity_refusal_uses_the_effective_window_not_declaration_order() -> None:
+    """A period before the effective activity start is refused, not admitted.
+
+    The reader decides whether a target period is pre-activity, so resolving the
+    wrong fact fails open: reading the superseded 2020 window would admit a 2021
+    period that the effective 2026 start puts before the activity ever began.
+    """
+    record = _reversed_declaration_order_record()
+
+    refusal = pre_activity_period_refusal(
+        record=record,
+        bucket_id=_OPERATOR_PROFILE_ID,
+        modelo=Modelo.M303.value,
+        filing_year=2021,
+        period=Period.from_year_and_code(2021, "1T"),
+    )
+
+    assert refusal is not None
+    message, context = refusal
+    assert "pre-activity period" in message
+    assert context["activity_start_date"] == "2026-01-01"

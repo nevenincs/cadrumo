@@ -12,12 +12,24 @@ tests pin the corrected ``dict[CasillaId, str]`` contract at the CLI wire bounda
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry import CasillaId, RelationId, validated_casilla_id
+from ....domain.calculations.registry import (
+    CasillaId,
+    CasillaObservation,
+    RelationId,
+    validated_casilla_id,
+)
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from .._modelo_payloads import (
     CalculationRevisionPayload,
     ObservationPayload,
@@ -25,6 +37,7 @@ from .._modelo_payloads import (
     WorkObservationsResult,
     WorkRevisionResult,
 )
+from .._modelo_rendering import calculation_revision_payload
 from .._modelo_revision_payload_parts import DetailRowPayload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -32,6 +45,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _REVISION_ID = "a" * 64
 _WORK_UNIT_ID = "b" * 64
 _NOW = "2025-01-01T00:00:00+00:00"
+_REVISION_TIMESTAMP = datetime(2025, 1, 1, tzinfo=UTC)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -310,3 +324,52 @@ def test_work_observations_result_roundtrips_observation_contract() -> None:
     assert restored == payload
     assert restored.observation_count == 1
     assert restored.observations[0].legal_refs == ("ley-58-2003:art-120",)
+
+
+def test_calculation_revision_projection_preserves_absent_by_design_marker() -> None:
+    """An intentional zero must stay distinguishable from a value-bearing zero at the CLI edge.
+
+    :class:`CasillaObservation` persists ``absent_by_design`` so a casilla whose
+    binding produced no source anchor for the period (Modelo 130 casilla 15 at
+    1T) is not read as a declared zero. The projection dropped the marker, so
+    the operator-facing payload could not tell the two apart.
+    """
+    absent = CasillaObservation(
+        casilla_id=_PAYLOAD_CASILLA,
+        value=Decimal("0"),
+        legal_refs=("ley-58-2003:art-120",),
+        source_refs=("libro-1",),
+        absent_by_design=True,
+    )
+    declared_zero = CasillaObservation(
+        casilla_id=_INPUT_EJERCICIO_CASILLA,
+        value=Decimal("0"),
+        legal_refs=("ley-58-2003:art-120",),
+        source_refs=("libro-1",),
+    )
+    casilla_values = {_PAYLOAD_CASILLA: Decimal("0"), _INPUT_EJERCICIO_CASILLA: Decimal("0")}
+    revision = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=_WORK_UNIT_ID,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values=casilla_values,
+        ),
+        work_unit_id=_WORK_UNIT_ID,
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values=casilla_values,
+        observations=(absent, declared_zero),
+        created_at=_REVISION_TIMESTAMP,
+        updated_at=_REVISION_TIMESTAMP,
+    )
+
+    payload = calculation_revision_payload(revision)
+    by_casilla = {row.casilla_id: row for row in payload.observations}
+
+    assert by_casilla[_PAYLOAD_CASILLA].absent_by_design is True
+    assert by_casilla[_INPUT_EJERCICIO_CASILLA].absent_by_design is False
+
+    restored = CalculationRevisionPayload.model_validate_json(payload.model_dump_json())
+    restored_by_casilla = {row.casilla_id: row for row in restored.observations}
+    assert restored_by_casilla[_PAYLOAD_CASILLA].absent_by_design is True
+    assert restored_by_casilla[_INPUT_EJERCICIO_CASILLA].absent_by_design is False

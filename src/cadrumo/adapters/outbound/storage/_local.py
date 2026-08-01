@@ -194,6 +194,7 @@ class LocalFileSystemProvider:
 
         namespace_dir = self._ensure_namespace_dir(namespace_clean)
         existing_path = self._resolve_object_path(namespace_clean, hmac_clean)
+        stale_pair: tuple[Path, Path] | None = None
         if existing_path is not None and existing_path.name != build_provider_object_name(
             hmac_clean,
             label_clean,
@@ -202,11 +203,17 @@ class LocalFileSystemProvider:
             # Label drifted; the rename is part of put() semantics. The
             # coordinator's diff classifier handles "did label change"
             # via the rename-detection path on push.
-            existing_sidecar = existing_path.with_name(
-                existing_path.stem + _SIDECAR_EXTENSION,
+            #
+            # The stale pair is recorded here but removed only after the
+            # replacement payload AND its sidecar have both committed. The
+            # replacement lands under a different filename (the label is part
+            # of the name), so deferring the removal cannot clobber it, while
+            # removing it up front meant a failing sidecar write left neither
+            # the old object nor the new one on disk.
+            stale_pair = (
+                existing_path,
+                existing_path.with_name(existing_path.stem + _SIDECAR_EXTENSION),
             )
-            existing_path.unlink(missing_ok=True)
-            existing_sidecar.unlink(missing_ok=True)
 
         target_path = namespace_dir / build_provider_object_name(
             hmac_clean,
@@ -260,6 +267,12 @@ class LocalFileSystemProvider:
                 context={"path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.sidecar_write_failed",
             ) from None
+
+        if stale_pair is not None:
+            # Both halves of the replacement are committed; only now is the
+            # previous label's pair genuinely superseded.
+            for stale in stale_pair:
+                stale.unlink(missing_ok=True)
 
         return ProviderObjectMetadata(
             namespace=namespace_clean,
@@ -551,6 +564,18 @@ class LocalFileSystemProvider:
             _logger.debug(
                 "local storage probe cleanup failed with error_type=%s",
                 type(exc).__name__,
+            )
+            # The round-trip is a write AND a delete. Reporting writable=True
+            # after the delete failed claims a guarantee the probe did not
+            # obtain, and leaves the sentinel behind to prove it; the Google
+            # provider reports writable=False on the equivalent failure.
+            del metadata
+            return ProviderProbeReport(
+                provider_kind=ProviderKind.LOCAL_FILESYSTEM,
+                read_only=read_only,
+                reachable=True,
+                writable=False,
+                detail=f"sentinel cleanup failed: {type(exc).__name__}",
             )
         del metadata
         return ProviderProbeReport(

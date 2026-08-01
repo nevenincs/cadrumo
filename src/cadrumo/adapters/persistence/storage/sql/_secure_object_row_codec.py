@@ -126,6 +126,140 @@ def write_revision_metadata(
     )
 
 
+def decode_secure_object_row(
+    *,
+    namespace: str,
+    row_id: int,
+    object_key: bytes,
+    classification_str: str,
+    schema_version: int,
+    written_at: datetime,
+    payload_wire: bytes,
+    revision_id: object,
+    previous_revision_id: str | None,
+    payload_hash: str | None,
+    ciphertext_hash: str | None,
+    previous_payload_hash: str | None,
+    expected_class: SensitivityClass,
+    max_supported_version: int,
+    namespace_definition: SecureObjectNamespaceDefinition | None,
+    enforce_registered_row_schema: Callable[..., None],
+) -> SecureObjectRecord:
+    """Validate and decrypt one secure-object row, raising on every failure.
+
+    The single decode pipeline behind both read surfaces. It always RAISES;
+    choosing between propagating that failure and converting it to an
+    unreadable row is the caller's policy, so the two surfaces cannot drift in
+    WHAT they check or in WHICH ORDER, only in how they report.
+
+    Order is part of the contract, and is deliberately integrity-before-crypto:
+
+    1. classification is a known value, and is the one this namespace expects
+    2. the stored schema version is readable, and registered for the namespace
+    3. revision lineage is self-consistent
+    4. the AEAD opens
+    5. a below-current payload is chain-upgraded
+
+    Step 3 runs before step 4 on purpose: a row whose stored lineage metadata
+    already contradicts itself is refused without spending an AEAD open on it.
+    That metadata is UNAUTHENTICATED until step 4 verifies the tag, so the
+    pre-decrypt check is strictly refuse-only -- it can reject a row, and it can
+    do nothing else. It never marks a row readable, never skips a later step,
+    and never selects a decode branch, so hostile header metadata cannot buy an
+    attacker anything beyond a refusal they could have caused anyway.
+
+    Raises:
+        ClassificationError: Unknown classification, or one that does not match
+            the namespace's expected class.
+        EnvelopeVersionError: Schema version unreadable, unregistered for the
+            namespace, or an upgrade hop failure.
+        SecureObjectUnreadableError: Revision lineage self-consistency failed.
+        DecryptionError: The AEAD did not open.
+    """
+    try:
+        classification = SensitivityClass(classification_str)
+    except ValueError as exc:
+        raise ClassificationError(
+            context={
+                "namespace": namespace,
+                "classification": classification_str,
+            },
+            translated_message="errors.storage.namespace.unknown_classification",
+        ) from exc
+    if classification is not expected_class:
+        raise ClassificationError(
+            context={
+                "namespace": namespace,
+                "classification": classification.value,
+                "expected": expected_class.value,
+            },
+            translated_message="errors.storage.namespace.classification_mismatch",
+        )
+    ensure_schema_version_readable(
+        namespace=namespace,
+        schema_version=schema_version,
+        current_version=max_supported_version,
+    )
+    enforce_registered_row_schema(
+        namespace=namespace,
+        schema_version=schema_version,
+        definition=namespace_definition,
+    )
+    if not verify_revision_self_consistency(
+        namespace=namespace,
+        object_key=object_key,
+        schema_version=schema_version,
+        written_at=written_at,
+        revision_id=revision_id,
+        previous_revision_id=previous_revision_id,
+        payload_hash=payload_hash,
+        ciphertext_hash=ciphertext_hash,
+        previous_payload_hash=previous_payload_hash,
+    ):
+        _log.error(
+            "secure_objects: revision lineage self-consistency failed for namespace=%s row id=%s",
+            namespace,
+            row_id,
+        )
+        raise SecureObjectUnreadableError(namespace, row_id)
+    payload_plain = decrypt_secure_object_payload(
+        payload_wire,
+        associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
+    )
+    if schema_version < max_supported_version:
+        payload_plain = upgrade_secure_object_payload(
+            payload_plain,
+            namespace=namespace,
+            from_version=schema_version,
+            to_version=max_supported_version,
+        )
+    return SecureObjectRecord(
+        namespace=namespace,
+        object_key=object_key,
+        classification=classification,
+        schema_version=max_supported_version,
+        written_at=written_at,
+        payload=payload_plain,
+        revision_id=str(revision_id),
+    )
+
+
+def _classification_reason(exc: ClassificationError) -> str:
+    """Render a classification failure as the batch surface's diagnostic string.
+
+    The batch reason stays a stable, structural English string rather than the
+    error's translated message: it is a diagnostic field on a machine-readable
+    unreadable-row record, not operator-facing prose, and callers match on its
+    shape.
+    """
+    context = getattr(exc, "context", None) or {}
+    classification = str(context.get("classification", ""))
+    expected = context.get("expected")
+    if expected is None:
+        return f"unknown classification {classification!r}"
+    return f"classification {classification!r} does not match expected {str(expected)!r}"
+
+
 def secure_object_record_from_row(
     row: _orm.SecureObjectRow,
     *,
@@ -134,104 +268,30 @@ def secure_object_record_from_row(
     namespace_definition: SecureObjectNamespaceDefinition | None = None,
     enforce_registered_row_schema: Callable[..., None],
 ) -> SecureObjectRecord:
-    try:
-        classification = SensitivityClass(row.classification)
-    except ValueError as exc:
-        raise ClassificationError(
-            context={
-                "namespace": row.namespace,
-                "classification": row.classification,
-            },
-            translated_message="errors.storage.namespace.unknown_classification",
-        ) from exc
-    if classification is not expected_class:
-        raise ClassificationError(
-            context={
-                "namespace": row.namespace,
-                "classification": classification.value,
-                "expected": expected_class.value,
-            },
-            translated_message="errors.storage.namespace.classification_mismatch",
-        )
-    ensure_schema_version_readable(
+    """Decode one ORM row, propagating the typed failure.
+
+    Fail-closed policy: a caller loading a specific row wants the typed error,
+    not a placeholder. Normalisation of the ORM row is the only thing this
+    wrapper adds; every check lives in :func:`decode_secure_object_row`.
+    """
+    return decode_secure_object_row(
         namespace=row.namespace,
-        schema_version=row.schema_version,
-        current_version=max_supported_version,
-    )
-    enforce_registered_row_schema(
-        namespace=row.namespace,
-        schema_version=row.schema_version,
-        definition=namespace_definition,
-    )
-    if not verify_revision_self_consistency(
-        namespace=row.namespace,
+        row_id=int(row.id),
         object_key=bytes(row.object_key),
+        classification_str=row.classification,
         schema_version=row.schema_version,
         written_at=row.written_at,
+        payload_wire=bytes(row.payload),
         revision_id=row.revision_id,
         previous_revision_id=row.previous_revision_id,
         payload_hash=row.payload_hash,
         ciphertext_hash=row.ciphertext_hash,
         previous_payload_hash=row.previous_payload_hash,
-    ):
-        _log.error(
-            "secure_objects: revision lineage self-consistency failed for namespace=%s row id=%s",
-            row.namespace,
-            row.id,
-        )
-        raise SecureObjectUnreadableError(row.namespace, int(row.id))
-    payload_plain = decrypt_secure_object_payload(
-        bytes(row.payload),
-        associated_data=secure_object_payload_aad(
-            row.namespace,
-            bytes(row.object_key),
-            row.schema_version,
-        ),
+        expected_class=expected_class,
+        max_supported_version=max_supported_version,
+        namespace_definition=namespace_definition,
+        enforce_registered_row_schema=enforce_registered_row_schema,
     )
-    if row.schema_version < max_supported_version:
-        payload_plain = upgrade_secure_object_payload(
-            payload_plain,
-            namespace=row.namespace,
-            from_version=row.schema_version,
-            to_version=max_supported_version,
-        )
-    return SecureObjectRecord(
-        namespace=row.namespace,
-        object_key=bytes(row.object_key),
-        classification=classification,
-        schema_version=max_supported_version,
-        written_at=row.written_at,
-        payload=payload_plain,
-        revision_id=str(row.revision_id),
-    )
-
-
-def _upgraded_payload(
-    payload_plain: bytes,
-    *,
-    namespace: str,
-    from_version: int,
-    to_version: int,
-) -> tuple[bytes, str | None]:
-    """Chain-upgrade a below-current payload, reporting a failure as a reason.
-
-    Returns ``(payload, None)`` when the payload is already current or the
-    upgrade succeeded, and ``(payload, reason)`` when it failed — the caller
-    turns the reason into an unreadable row rather than raising, so one bad
-    row does not abort a batch.
-    """
-    if from_version >= to_version:
-        return payload_plain, None
-    try:
-        upgraded = upgrade_secure_object_payload(
-            payload_plain,
-            namespace=namespace,
-            from_version=from_version,
-            to_version=to_version,
-        )
-    except Exception as exc:
-        return payload_plain, resolve_error_message(exc) if isinstance(exc, EnvelopeVersionError) else str(exc)
-    return upgraded, None
 
 
 def secure_object_list_item_from_raw_row(
@@ -249,11 +309,17 @@ def secure_object_list_item_from_raw_row(
     namespace.
 
     Fault-isolated: every failure mode (unknown classification, classification
-    mismatch, unreadable schema version, decrypt failure, revision-lineage
-    inconsistency, upgrade failure) returns a
+    mismatch, unreadable schema version, revision-lineage inconsistency,
+    decrypt failure, upgrade failure) returns a
     :class:`~._secure_object_records.SecureObjectUnreadable` carrying the
     reason instead of raising, so a caller iterating many rows can attribute a
     failure to its own row and keep inspecting the rest.
+
+    Fault isolation is the ONLY thing this wrapper adds to
+    :func:`decode_secure_object_row`; the checks and their order live there, so
+    the batch surface cannot validate a row differently from the single-row
+    surface. Note ``SecureObjectUnreadableError`` subclasses ``DecryptionError``
+    and so must be caught first.
     """
     # CAST-RATIONALE-SECURE-OBJECT-RAW-ROW: SQL row tuples are structurally validated by this codec.
     row = cast(_SecureObjectListRawRow, raw)
@@ -286,60 +352,33 @@ def secure_object_list_item_from_raw_row(
         )
 
     try:
-        classification = SensitivityClass(classification_str)
-    except ValueError:
-        return unreadable(f"unknown classification {classification_str!r}")
-    if classification is not expected_class:
-        return unreadable(f"classification {classification.value!r} does not match expected {expected_class.value!r}")
-    try:
-        ensure_schema_version_readable(
+        return decode_secure_object_row(
             namespace=namespace,
+            row_id=row_id,
+            object_key=object_key,
+            classification_str=classification_str,
             schema_version=schema_version,
-            current_version=max_supported_version,
+            written_at=written_at,
+            payload_wire=payload_wire,
+            revision_id=row.revision_id,
+            previous_revision_id=row.previous_revision_id,
+            payload_hash=row.payload_hash,
+            ciphertext_hash=row.ciphertext_hash,
+            previous_payload_hash=row.previous_payload_hash,
+            expected_class=expected_class,
+            max_supported_version=max_supported_version,
+            namespace_definition=namespace_definition,
+            enforce_registered_row_schema=enforce_registered_row_schema,
         )
-    except EnvelopeVersionError as exc:
-        return unreadable(resolve_error_message(exc))
-    try:
-        enforce_registered_row_schema(
-            namespace=namespace,
-            schema_version=schema_version,
-            definition=namespace_definition,
-        )
-    except EnvelopeVersionError as exc:
-        return unreadable(resolve_error_message(exc))
-    try:
-        payload_plain = decrypt_secure_object_payload(
-            payload_wire,
-            associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
-        )
+    except SecureObjectUnreadableError:
+        return unreadable("revision lineage self-consistency check failed")
     except DecryptionError as exc:
         return unreadable(str(exc))
-    if not verify_revision_self_consistency(
-        namespace=namespace,
-        object_key=object_key,
-        schema_version=schema_version,
-        written_at=written_at,
-        revision_id=row.revision_id,
-        previous_revision_id=row.previous_revision_id,
-        payload_hash=row.payload_hash,
-        ciphertext_hash=row.ciphertext_hash,
-        previous_payload_hash=row.previous_payload_hash,
-    ):
-        return unreadable("revision lineage self-consistency check failed")
-    payload_plain, upgrade_failure = _upgraded_payload(
-        payload_plain,
-        namespace=namespace,
-        from_version=schema_version,
-        to_version=max_supported_version,
-    )
-    if upgrade_failure is not None:
-        return unreadable(upgrade_failure)
-    return SecureObjectRecord(
-        namespace=namespace,
-        object_key=object_key,
-        classification=classification,
-        schema_version=max_supported_version,
-        written_at=written_at,
-        payload=payload_plain,
-        revision_id=str(row.revision_id),
-    )
+    except ClassificationError as exc:
+        return unreadable(_classification_reason(exc))
+    except EnvelopeVersionError as exc:
+        return unreadable(resolve_error_message(exc))
+    except Exception as exc:
+        # An upgrade hop is namespace-supplied and may raise anything; a batch
+        # scan must attribute that to its row rather than abort the whole scan.
+        return unreadable(str(exc))

@@ -92,6 +92,15 @@ def test_validate_refuses_a_build_without_bundled_assets(tmp_path: Path) -> None
         _validate_site_artifacts(tmp_path)
 
 
+def test_validate_refuses_a_landing_page_without_bundle_references(tmp_path: Path) -> None:
+    """A complete artifact set cannot publish a blank page that loads none of its bundles."""
+    _complete_build(tmp_path)
+    (tmp_path / "index.html").write_text("<html><body>blank</body></html>", encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="references no bundled assets"):
+        _validate_site_artifacts(tmp_path)
+
+
 def test_hashed_assets_are_immutable_and_never_invalidated() -> None:
     """Content-hashed assets carry a forever cache and skip invalidation."""
     from dev.deploy.frontend_static_site import _ASSET_CACHE_CONTROL, _INVALIDATION_PATHS

@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
+from pydantic import ValidationError
 
 from ....application.live import (
     BulkFiledDataCaptureReport,
@@ -10,7 +13,9 @@ from ....application.live import (
     FiledDataCaptureReport,
     SourceFiledDataCaptureReport,
 )
+from ....application.live._remote_state_models import IvaCompensationHistoryCaptureReport
 from ....core import Period
+from .._app_live_payloads import IvaWalletCaptureHistoryResult
 from .._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -135,3 +140,69 @@ def test_live_filed_pull_sources_text_reports_target_period_and_evidence_counts(
     assert "captured_count=2" in lines
     assert "justificante_metadata_count=1" in lines
     assert "filing_evidence_stamped_count=1" in lines
+
+
+def test_capture_history_result_names_its_failed_declarations() -> None:
+    """A partial capture must not present counts without naming what failed.
+
+    ``IvaCompensationHistoryCaptureReport`` carries the failed-declaration
+    count and details plus the observation/artefact/casilla evidence behind its
+    counts. The CLI result exposed only the success counters, so a run that
+    failed to read some declarations was indistinguishable from a complete one.
+    """
+    report = IvaCompensationHistoryCaptureReport(
+        output_root="var/cadrumo/iva-history",
+        year_from=2023,
+        year_to=2024,
+        captured_count=5,
+        observation_paths=("obs/2023-1T.json", "obs/2023-2T.json"),
+        artefact_refs=("artefact:2023-1T",),
+        casilla_count=12,
+        calculation_observation_count=3,
+        calculation_observation_keys=("k1", "k2", "k3"),
+        reloaded_history_count=2,
+        reloaded_rows=(),
+        failed_declaration_count=1,
+        failed_declarations=("303-2024-2T: read timed out",),
+    )
+
+    result = IvaWalletCaptureHistoryResult(
+        output_root=report.output_root,
+        year_from=report.year_from,
+        year_to=report.year_to,
+        captured_count=report.captured_count,
+        calculation_observation_count=report.calculation_observation_count,
+        reloaded_history_count=report.reloaded_history_count,
+        casilla_count=report.casilla_count,
+        observation_paths=list(report.observation_paths),
+        artefact_refs=list(report.artefact_refs),
+        calculation_observation_keys=list(report.calculation_observation_keys),
+        failed_declaration_count=report.failed_declaration_count,
+        failed_declarations=list(report.failed_declarations),
+    )
+
+    rendered = json.loads(result.model_dump_json())
+    # `reloaded_rows` is deliberately not projected here: its operator surface
+    # is the sibling `iva-wallet history` verb, and `reloaded_history_count`
+    # already reports its cardinality on this result.
+    expected = set(report.model_dump()) - {"reloaded_rows"}
+    assert expected - set(rendered) == set()
+    assert rendered["failed_declaration_count"] == 1
+    assert rendered["failed_declarations"] == ["303-2024-2T: read timed out"]
+
+    assert IvaWalletCaptureHistoryResult.model_validate_json(result.model_dump_json()) == result
+
+
+def test_capture_history_result_refuses_a_failure_count_without_its_names() -> None:
+    """A bare failure number would reinstate the defect the named list closes."""
+    with pytest.raises(ValidationError, match="failed_declaration_count"):
+        IvaWalletCaptureHistoryResult(
+            output_root="var/cadrumo/iva-history",
+            year_from=2024,
+            year_to=2024,
+            captured_count=0,
+            calculation_observation_count=0,
+            reloaded_history_count=0,
+            failed_declaration_count=3,
+            failed_declarations=["303-2024-2T: read timed out"],
+        )

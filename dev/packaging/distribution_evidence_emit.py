@@ -30,7 +30,9 @@ import json
 import re
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from dev.packaging.cohort_manifest import LoadedReleaseCohort, sha256_file
 from dev.packaging.evidence import (
@@ -76,6 +78,16 @@ _REQUIRED_REAL_CLIENT_ROW_IDS: Final[frozenset[str]] = frozenset(
         "claude-desktop-mcpb",
     },
 )
+
+
+class RealClientSession(BaseModel):
+    """The minimum successful client-session proof permitted in passing release evidence."""
+
+    model_config = ConfigDict(extra="allow", frozen=True, strict=True)
+
+    connected: Literal[True]
+    status: Literal["passed"]
+    tool_called: str = Field(min_length=1)
 
 
 def _command_transcript(command: CommandEvidence) -> CommandTranscript:
@@ -322,11 +334,19 @@ def build_client_evidence(
             "only by real-client lanes (authenticated Claude Code / operator in-app captures). "
             "Emit this SDK acquire proof under a distinct artifact-serves id instead.",
         )
-    if is_required_real_client_row and not real_client_session:
+    if is_required_real_client_row and real_client_session is None:
         raise ValueError(
             f"the real-client row {row_id!r} requires a real Claude client session as its real-client "
             "proof; an owned launch alone cannot satisfy a real-client claim.",
         )
+    validated_real_client_session: RealClientSession | None = None
+    if real_client_session is not None:
+        try:
+            validated_real_client_session = RealClientSession.model_validate(real_client_session)
+        except ValidationError as exc:
+            raise ValueError(
+                "real-client evidence requires a connected, passed session with a recorded tool_called value",
+            ) from exc
     isolation = ExecutionIsolation(
         # Derived from the MCP oracle's recorded isolation (see build_installed_oracle_evidence).
         checkout_imports_removed=mcp_evidence.checkout_imports_removed,
@@ -334,8 +354,8 @@ def build_client_evidence(
         installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
     )
     observations: dict[str, Any] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
-    if real_client_session is not None:
-        observations["real_client_session"] = real_client_session
+    if validated_real_client_session is not None:
+        observations["real_client_session"] = validated_real_client_session.model_dump(mode="json")
     result = ResultIdentity(
         status=EvidenceStatus.PASSED,
         assertions=(

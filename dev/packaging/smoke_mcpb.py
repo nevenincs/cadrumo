@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import shutil
@@ -19,6 +18,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from dev.packaging._hashing import sha256_path  # noqa: E402
 from dev.packaging.constraint_effect import assert_installed_matches_constraints  # noqa: E402
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
 from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
@@ -26,14 +26,6 @@ from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
 _UTF_8: Final[str] = "utf-8"
 _MCPB_CLI_VERSION: Final[str] = "2.1.2"
 _BUILDER = _REPO_ROOT / "packaging" / "mcpb" / "build.py"
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _run(argv: list[str], *, cwd: Path, env: dict[str, str], log: Path, timeout: float) -> None:
@@ -401,7 +393,7 @@ def run_mcpb_smoke(
         json.dumps(
             {
                 "bundle": str(bundle),
-                "bundle_sha256": _sha256(bundle),
+                "bundle_sha256": sha256_path(bundle),
                 "bundle_size": bundle.stat().st_size,
                 "cohort": {
                     "source_commit": cohort.source_commit,

@@ -59,7 +59,6 @@ from ....application.storage.calc_sheets import (
 )
 from ....core import STRICT_FROZEN_CONFIG
 from ..storage import (
-    OutboundStorageConflictError,
     OutboundStorageNetworkError,
     OutboundStorageValidationError,
 )
@@ -73,6 +72,16 @@ from ._calc_sheets_apply_values import (
 )
 from ._calc_sheets_apply_values import (
     _coerce_cell_value as _coerce_cell_value,
+)
+from ._drive_entries import (
+    OWNERSHIP_KEY as _OWNERSHIP_KEY,
+)
+from ._drive_entries import (
+    OWNERSHIP_VALUE as _OWNERSHIP_VALUE,
+)
+from ._drive_entries import (
+    find_owned_drive_entry,
+    require_drive_entry_id,
 )
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
@@ -93,8 +102,6 @@ def _vault_folder_name() -> str:
 
 
 _CALC_SHEETS_FOLDER_NAME: Final[str] = "calc-sheets"
-_OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
-_OWNERSHIP_VALUE: Final[str] = "cadrumo"
 _RELATION_METADATA_PREFIX: Final[str] = "cadrumo_relation:"
 _MANAGED_DEVELOPER_METADATA_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -171,39 +178,28 @@ def _find_folder(
     # Narrowing breaks downstream lookups by string key. Same rationale
     # as the body-side ``Any`` documented on google_drive.py and on
     # browser/session.py.
-    safe_name = name.replace("'", "\\'")
-    query = f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{_FOLDER_MIME}' and trashed = false"
-    response = execute_request(
-        drive.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
-        action="drive.files.list",
-    )
-    for entry in response.get("files", []):
-        existing = entry.get("appProperties") or {}
-        if existing.get(_OWNERSHIP_KEY) == _OWNERSHIP_VALUE:
-            return entry
-        if not existing:
-            # Backfill the marker on a folder we created on a previous
-            # run that predated marker stamping.
-            execute_request(
-                drive.files().update(
-                    fileId=entry["id"],
-                    body={"appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE}},
-                    fields="id,appProperties",
-                ),
-                action="drive.files.update.backfill_marker",
-            )
-            return entry
-        raise OutboundStorageConflictError(
+    #
+    # Ownership acceptance, marker backfill, foreign-content refusal,
+    # query-name escaping, and entry-id validation are the shared policy in
+    # ``_drive_entries``; only the MIME type and the action/error text are
+    # folder-specific.
+    return find_owned_drive_entry(
+        drive,
+        parent_id=parent_id,
+        name=name,
+        mime_type=_FOLDER_MIME,
+        list_action="drive.files.list",
+        backfill_action="drive.files.update.backfill_marker",
+        conflict_message=(
             f"folder named {name!r} under parent {parent_id!r} exists but is not marked as "
-            "app-owned; refusing to adopt foreign Drive content",
-            context={"parent_id": parent_id, "name": name},
-            suggestion=(
-                "either delete the existing folder, stamp "
-                f"appProperties.{_OWNERSHIP_KEY}={_OWNERSHIP_VALUE} on it, "
-                "or choose a different Drive root"
-            ),
-        )
-    return None
+            "app-owned; refusing to adopt foreign Drive content"
+        ),
+        conflict_suggestion=(
+            "either delete the existing folder, stamp "
+            f"appProperties.{_OWNERSHIP_KEY}={_OWNERSHIP_VALUE} on it, "
+            "or choose a different Drive root"
+        ),
+    )
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
@@ -240,9 +236,9 @@ def _ensure_folder(
 ) -> str:
     existing = _find_folder(drive, parent_id=parent_id, name=name)
     if existing is not None:
-        return existing["id"]
+        return require_drive_entry_id(existing, name=name, parent_id=parent_id)
     created = _create_folder(drive, parent_id=parent_id, name=name)
-    return created["id"]
+    return require_drive_entry_id(created, name=name, parent_id=parent_id)
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
@@ -256,34 +252,20 @@ def _find_spreadsheet(
 ) -> dict[str, Any] | None:
     # ``dict[str, Any]`` is the irreducible Google Drive API shape;
     # see the rationale on ``_find_folder`` above.
-    safe_name = name.replace("'", "\\'")
-    query = (
-        f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{_SPREADSHEET_MIME}' and trashed = false"
-    )
-    response = execute_request(
-        drive.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
-        action="drive.files.list.spreadsheet",
-    )
-    for entry in response.get("files", []):
-        existing = entry.get("appProperties") or {}
-        if existing.get(_OWNERSHIP_KEY) == _OWNERSHIP_VALUE:
-            return entry
-        if not existing:
-            execute_request(
-                drive.files().update(
-                    fileId=entry["id"],
-                    body={"appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE}},
-                    fields="id,appProperties",
-                ),
-                action="drive.files.update.backfill_marker.spreadsheet",
-            )
-            return entry
-        raise OutboundStorageConflictError(
+    # Same shared ownership/backfill/refusal policy as ``_find_folder``; only
+    # the MIME type and the action/error text are spreadsheet-specific.
+    return find_owned_drive_entry(
+        drive,
+        parent_id=parent_id,
+        name=name,
+        mime_type=_SPREADSHEET_MIME,
+        list_action="drive.files.list.spreadsheet",
+        backfill_action="drive.files.update.backfill_marker.spreadsheet",
+        conflict_message=(
             f"spreadsheet {name!r} exists under parent {parent_id!r} but is not marked as "
-            "app-owned; refusing to overwrite",
-            context={"parent_id": parent_id, "name": name},
-        )
-    return None
+            "app-owned; refusing to overwrite"
+        ),
+    )
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
@@ -1011,7 +993,7 @@ def _open_or_create_plan_spreadsheet(
     else:
         spreadsheet = execute_request(
             sheets.spreadsheets().get(
-                spreadsheetId=existing["id"],
+                spreadsheetId=require_drive_entry_id(existing, name=title, parent_id=period_folder_id),
                 fields=(
                     "spreadsheetId,spreadsheetUrl,"
                     "developerMetadata(metadataId,metadataKey,metadataValue,location),"

@@ -10,10 +10,36 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ..core import STRICT_FROZEN_CONFIG
+from ..core.identity import BucketId
+from ..core.time import validate_utc_aware
+
+_AuthOperationId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"),
+]
+"""Identity of one durable auth operation.
+
+Producers derive it as ``hashlib.sha256(...).hexdigest()``, so the value is
+always lowercase hex. The previous length-only bound admitted uppercase and
+non-hex strings that no producer can emit, which a resume path would then
+fail to match against the operation it was meant to continue.
+"""
+
+
+def _require_utc(*values: datetime | None) -> None:
+    """Reject any populated timestamp that is not UTC-aware.
+
+    Timestamps on these records are persisted as JSON, which preserves the
+    offset, so the canonical contract is enforceable at the model boundary.
+    """
+    for value in values:
+        if value is not None:
+            validate_utc_aware(value)
 
 
 class CertificateSourceRecord(BaseModel):
@@ -25,6 +51,12 @@ class CertificateSourceRecord(BaseModel):
     certificate_path: str = Field(min_length=1)
     friendly_name: str | None = None
     registered_at: datetime
+
+    @model_validator(mode="after")
+    def _timestamps_are_utc(self) -> CertificateSourceRecord:
+        """Reject a registration instant that is naive or not UTC."""
+        _require_utc(self.registered_at)
+        return self
 
 
 class AuthCleanupOperationKind(StrEnum):
@@ -42,15 +74,21 @@ class AuthCleanupCertificateSource(BaseModel):
     name: str = Field(min_length=1, max_length=160)
     registered_at: datetime
 
+    @model_validator(mode="after")
+    def _timestamps_are_utc(self) -> AuthCleanupCertificateSource:
+        """Reject a witness instant that is naive or not UTC."""
+        _require_utc(self.registered_at)
+        return self
+
 
 class AuthCleanupIntent(BaseModel):
     """Secret-free durable plan for one resumable operator auth cleanup."""
 
     model_config = STRICT_FROZEN_CONFIG
 
-    operation_id: str = Field(min_length=64, max_length=64)
+    operation_id: _AuthOperationId
     operation_kind: AuthCleanupOperationKind
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     provider_ids: tuple[str, ...]
     all_providers: bool
     started_at: datetime
@@ -66,6 +104,12 @@ class AuthCleanupIntent(BaseModel):
     lock_provider_ids: tuple[str, ...] = ()
     secret_source_names: tuple[str, ...] = ()
 
+    @model_validator(mode="after")
+    def _timestamps_are_utc(self) -> AuthCleanupIntent:
+        """Reject any populated intent instant that is naive or not UTC."""
+        _require_utc(self.started_at, self.configured_at_at_start, self.authenticated_at_at_start)
+        return self
+
 
 class CertificateSecretMutationEventKind(StrEnum):
     """Stable event classifications for certificate-secret mutations."""
@@ -80,14 +124,20 @@ class CertificateSecretMutationIntent(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    operation_id: str = Field(min_length=64, max_length=64)
-    bucket_id: str = Field(min_length=1)
+    operation_id: _AuthOperationId
+    bucket_id: BucketId
     source_name: str = Field(min_length=1, max_length=160)
     event_kind: CertificateSecretMutationEventKind
     started_at: datetime
     prior_present: bool
     request_witness: str | None = Field(default=None, min_length=64, max_length=64)
     completion_witness: str | None = None
+
+    @model_validator(mode="after")
+    def _timestamps_are_utc(self) -> CertificateSecretMutationIntent:
+        """Reject a mutation start instant that is naive or not UTC."""
+        _require_utc(self.started_at)
+        return self
 
 
 class AuthState(BaseModel):
@@ -104,3 +154,9 @@ class AuthState(BaseModel):
     active_certificate_source: str | None = None
     cleanup_intent: AuthCleanupIntent | None = None
     certificate_secret_mutation_intent: CertificateSecretMutationIntent | None = None
+
+    @model_validator(mode="after")
+    def _timestamps_are_utc(self) -> AuthState:
+        """Reject any populated auth-state instant that is naive or not UTC."""
+        _require_utc(self.configured_at, self.authenticated_at)
+        return self

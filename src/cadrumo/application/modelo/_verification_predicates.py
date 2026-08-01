@@ -23,11 +23,11 @@ import decimal as _decimal
 import re as _re
 from collections.abc import Callable, Mapping
 from datetime import date as _date
-from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
 
 from ...core.i18n import tr
+from ...core.parsing import parse_date
 from ...domain.calculations.registry import (
     KNOWN_PROFILE_FLAG_ADVISORY_FIELDS,
     CasillaId,
@@ -264,21 +264,28 @@ def _parse_predicate_raw_tokens(ids_fragment: str) -> list[str]:
 def _parse_predicate_date(raw: str) -> _date | None:
     """Parse an operator-entered date string, or ``None`` when absent/unparseable.
 
-    Accepts the ISO ``YYYY-MM-DD`` form (the cutoff literal shape) and the two
-    common Spanish operator-entry forms ``DD/MM/YYYY`` and ``DD-MM-YYYY``. Used
-    by the ``deduccion_requires_adquisicion_before`` advisory to read the
-    acquisition-date TEXT casilla and the cutoff literal. An empty or malformed
-    value returns ``None`` so the advisory treats it as "no eligibility signal"
-    (conservative: a non-blocking prompt to correct or confirm the date).
+    Accepts the ISO form (the cutoff literal shape) and the Spanish day-first
+    operator-entry forms ``DD/MM/YYYY`` and ``DD-MM-YYYY``, both resolved by the
+    canonical :func:`core.parsing.parse_date` contract rather than a local
+    format list. Used by the ``deduccion_requires_adquisicion_before`` advisory
+    to read the acquisition-date TEXT casilla and the cutoff literal.
+
+    The canonical parser requires two-digit day and month components, so a
+    partially-typed ``1/2/2024`` is no longer silently resolved to a date. That
+    matters here specifically: the value decides a deduction's eligibility
+    against a statutory cutoff, and an under-specified entry is a date the
+    operator has not actually stated. It returns ``None`` like any other
+    unparseable value, so the advisory treats it as "no eligibility signal" --
+    a non-blocking prompt to correct or confirm the date -- rather than acting
+    on a guess.
     """
     text = raw.strip()
     if not text:
         return None
-    for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
-        try:
-            return datetime.strptime(text, fmt).date()
-        except ValueError:
-            continue
+    for fmt in ("iso8601", "ddmmyyyy"):
+        parsed = parse_date(text, fmt=fmt, on_error="none")
+        if parsed is not None:
+            return parsed
     return None
 
 

@@ -640,7 +640,7 @@ nitpick_ignore_regex = [
     # real CamelCase class.
     (
         r"py:.*",
-        r"^(T|K|V|Key|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CasillaKey|CasillaValue|BindingKey|ExpectedKey|CheckerObservation|ObservationT|DocumentT)$",
+        r"^(T|K|V|Key|KT|VT|RT|_T|T_co|T_contra|TPayload|PayloadT|PayloadT_co|ResultT|RecordT|PayloadType|CasillaKey|CasillaValue|BindingKey|ExpectedKey|CheckerObservation|ObservationT|DocumentT|CalendarMoment)$",
     ),
     # SQLAlchemy column/type vocabulary referenced from the encrypted-column
     # adapters; resolved online via the vendored sqlalchemy inventory under its
@@ -801,6 +801,15 @@ nitpick_ignore_regex = [
         r"RecordId|RelationId|RevisionId|SourceRefId|SupportRemovalDecisionId|"
         r"VerificationExpectationId|WorkbookFixtureId|WorkbookOutputId|WorkbookParityRefId)$",
     ),
+    # ``OneBasedExportOffset`` is the same category as the registry typed-id
+    # aliases above -- a PEP 695 ``type`` alias
+    # (``type OneBasedExportOffset = Annotated[int, Field(ge=1)]``), not a
+    # documentable class -- but it is declared in ``_schema_surfaces`` and reaches
+    # the gate through its BARE short-form render, which the qualified
+    # ``domain.calculations.registry.*`` pattern above cannot match. Named on its
+    # own rather than folded into a broader alias pattern so it cannot mask a
+    # future real class of the same name.
+    (r"py:.*", r"^OneBasedExportOffset$"),
     (r"py:.*", r"^ModeloDetailRow$"),
     # Bound-method references on external (pydantic / SQLAlchemy / asyncio /
     # google) types written ``Owner.method`` or ``obj.method``; the owning type

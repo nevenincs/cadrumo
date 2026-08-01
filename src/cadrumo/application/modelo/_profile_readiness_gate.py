@@ -266,18 +266,20 @@ def _report_for_target(
 
 
 def _profile_activity_start_date(record: UserProfileRecord) -> date | None:
-    for fact in reversed(record.facts):
-        if fact.path != _PROFILE_ACTIVITY_START_PATH or fact.value is None:
-            continue
-        if isinstance(fact.value, date):
-            return fact.value
-        if isinstance(fact.value, str):
-            try:
-                return parse_iso8601_date(fact.value)
-            except ValueError:
-                return None
+    """Read the effective ``censo.activity_start_date`` through the canonical projection.
+
+    Which of several live facts at one path is *effective* is owned by
+    :func:`application.user_profile.record_to_path_values`, which orders them by
+    ``valid_from`` so the chronologically last window wins. Scanning declaration
+    order answers a different question: a record whose later window was declared
+    first resolves to the earlier date, and because this value decides whether a
+    target period is refused as pre-activity, the disagreement fails open — a
+    period before the effective activity start is admitted for work.
+    """
+    rendered = record_to_path_values(record).get(_PROFILE_ACTIVITY_START_PATH)
+    if rendered is None:
         return None
-    return None
+    return parse_iso8601_date(rendered)
 
 
 def _require_not_pre_activity_period(

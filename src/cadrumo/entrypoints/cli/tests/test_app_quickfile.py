@@ -429,3 +429,60 @@ def test_quickfile_requires_output_flag() -> None:
     )
     assert result.exit_code != 0
     assert "output" in result.output.lower()
+
+
+def test_quickfile_stage_payload_refuses_unknown_stage_and_status() -> None:
+    """The transport payload refuses a stage or status outside the canonical enums.
+
+    ``QuickfileStageOutcomePayload`` mirrors the application-owned
+    :class:`QuickfileStage` / :class:`QuickfileStageStatus` closed sets. Before
+    these fields were typed from those enums the machine-facing payload accepted
+    any string, so a drifted or malformed stage crossed the CLI boundary intact.
+    """
+    from pydantic import ValidationError
+
+    from ....application.modelo import QuickfileStage, QuickfileStageStatus
+    from .._app_quickfile_payloads import QuickfileStageOutcomePayload
+
+    with pytest.raises(ValidationError):
+        QuickfileStageOutcomePayload(stage="bogus", status=QuickfileStageStatus.OK)
+
+    with pytest.raises(ValidationError):
+        QuickfileStageOutcomePayload(stage=QuickfileStage.VERIFY, status="bogus")
+
+
+def test_quickfile_stage_payload_serialises_enums_as_strings() -> None:
+    """A valid stage/status round-trips to the same JSON strings the CLI emitted before.
+
+    Typing the fields must not change the wire contract: ``StrEnum`` members
+    serialise to their value, so machine consumers keep reading plain strings.
+    """
+    from ....application.modelo import QuickfileStage, QuickfileStageStatus
+    from .._app_quickfile_payloads import QuickfileStageOutcomePayload
+
+    row = QuickfileStageOutcomePayload(
+        stage=QuickfileStage.VERIFY,
+        status=QuickfileStageStatus.REFUSED,
+    )
+    dumped = row.model_dump(mode="json")
+    assert dumped["stage"] == "verify"
+    assert dumped["status"] == "refused"
+
+
+def test_quickfile_result_payload_refuses_unknown_stopped_stage() -> None:
+    """``stopped_at_stage`` names a canonical stage or nothing at all."""
+    from pydantic import ValidationError
+
+    from ....core import Period
+    from .._app_quickfile_payloads import QuickfileResultPayload
+
+    with pytest.raises(ValidationError):
+        QuickfileResultPayload(
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            registry_revision_id="rev-1",
+            completed=False,
+            stopped_at_stage="bogus",
+            stages=(),
+        )

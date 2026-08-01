@@ -132,7 +132,13 @@ from ...domain.calculations.registry import (
     format_noncanonical_casilla_reference,
 )
 from ...domain.calculations.registry import (
+    registry_scalar_value_type as _registry_scalar_value_type,
+)
+from ...domain.calculations.registry import (
     revision_date_binding_ids as _revision_date_binding_ids,
+)
+from ...domain.calculations.registry import (
+    validate_registry_text_scalar as _validate_registry_text_scalar,
 )
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
@@ -248,7 +254,7 @@ def build_draft(
             f"{snapshot.revision.id!r}",
         )
     casilla_ids = set(_declared_casilla_ids(snapshot.revision))
-    text_casilla_ids = _text_casilla_ids(snapshot)
+    text_casilla_data_types = _text_casilla_data_types(snapshot)
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
@@ -262,8 +268,8 @@ def build_draft(
         accepted_ids=casilla_ids | set(bindings) | relation_ids,
         snapshot=snapshot,
     )
-    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids - text_casilla_ids)
-    text_casilla_inputs = _text_inputs_for_ids(inputs, text_casilla_ids)
+    casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids - set(text_casilla_data_types))
+    text_casilla_inputs = _text_inputs_for_ids(inputs, text_casilla_data_types)
     binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
     enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
     # Date bindings (e.g. taxpayer birth_date for age_at_year_end) and period
@@ -498,9 +504,13 @@ def _relation_ids(snapshot: _RegistrySnapshot) -> set[_RelationId]:
     return {relation.id for relation in snapshot.revision.relations}
 
 
-def _text_casilla_ids(snapshot: _RegistrySnapshot) -> set[_CasillaId]:
-    """Collect declared casillas that travel on the registry text-input channel."""
-    return {casilla.id for casilla in snapshot.revision.casillas if casilla.data_type == "text"}
+def _text_casilla_data_types(snapshot: _RegistrySnapshot) -> dict[_CasillaId, str]:
+    """Map casillas assigned to the registry's typed text-scalar channel."""
+    return {
+        casilla.id: casilla.data_type
+        for casilla in snapshot.revision.casillas
+        if _registry_scalar_value_type(casilla.data_type) == "str"
+    }
 
 
 def _validate_filing_input_keys(
@@ -579,18 +589,18 @@ def _decimal_inputs_for_ids[InputId: str](
     return decimal_inputs
 
 
-def _text_inputs_for_ids(inputs: ModeloInputs, input_ids: set[_CasillaId]) -> dict[_CasillaId, str]:
+def _text_inputs_for_ids(inputs: ModeloInputs, input_data_types: Mapping[_CasillaId, str]) -> dict[_CasillaId, str]:
     text_inputs: dict[_CasillaId, str] = {}
-    for input_id in input_ids:
+    for input_id, data_type in input_data_types.items():
         value = inputs.get(input_id)
         if value is None:
             continue
         if not isinstance(value, str):
             raise ModeloBuilderError(f"text casilla input {input_id!r} must be a string")
-        stripped = value.strip()
-        if not stripped:
-            raise ModeloBuilderError(f"text casilla input {input_id!r} must be a non-empty string")
-        text_inputs[input_id] = stripped
+        try:
+            text_inputs[input_id] = _validate_registry_text_scalar(data_type, value)
+        except _RegistryValidationError as exc:
+            raise ModeloBuilderError(f"text casilla input {input_id!r} is invalid: {exc}") from exc
     return text_inputs
 
 
@@ -742,19 +752,42 @@ def _binding_data_type(binding: object) -> str:
 
 
 def _binding_input(binding_id: _BindingId, value: object, binding: object) -> ModeloScalar:
+    """Route one binding input to the channel its declared data type belongs to.
+
+    The runtime family comes from the registry classifier rather than a local
+    comparison against literal type names. The registry owns the scalar
+    taxonomy, so a family it adds — the eleven specific text families beyond
+    generic ``text``, for instance — is routed here without this function
+    being edited, and a data type the registry does not declare is refused by
+    the classifier instead of falling through a chain of string equalities.
+    """
     data_type = _binding_data_type(binding)
-    if data_type == "text":
-        return str(value)
-    if data_type == "integer":
+    try:
+        family = _registry_scalar_value_type(data_type)
+    except _RegistryValidationError as exc:
+        raise ModeloBuilderError(f"binding input {binding_id!r} declares unsupported data type {data_type!r}") from exc
+    if family == "str":
+        # Coerce first so the generic ``text`` channel keeps accepting a
+        # non-string scalar (an integer ``rectified_year``); the canonical
+        # validator is an identity for ``text`` and a real check for the
+        # specific families, which previously bypassed their validators.
+        try:
+            return _validate_registry_text_scalar(data_type, str(value))
+        except _RegistryValidationError as exc:
+            raise ModeloBuilderError(f"binding input {binding_id!r} is invalid: {exc}") from exc
+    if family == "int":
         decimal_value = _decimal_input(binding_id, value)
         if decimal_value != decimal_value.to_integral_value():
             raise ModeloBuilderError(f"binding input {binding_id!r} must be an integer value")
         return int(decimal_value)
-    if data_type == "boolean":
+    if family == "bool":
         return _boolean_input(binding_id, value)
-    if data_type in {"decimal", "money"}:
+    if family == "decimal":
         return _decimal_input(binding_id, value)
-    raise ModeloBuilderError(f"binding input {binding_id!r} declares unsupported data type {data_type!r}")
+    raise ModeloBuilderError(
+        f"binding input {binding_id!r} declares data type {data_type!r}, whose {family!r} family "
+        "has no filing input channel",
+    )
 
 
 def _decimal_input(input_id: str, value: object) -> Decimal:

@@ -268,3 +268,28 @@ def test_checkpoint_prunes_only_completed_work_directories(tmp_path) -> None:
     assert checkpointed == (evidence_root / "browser-20260715T214000Z.json",)
     assert not completed.exists()
     assert (incomplete / "failure.log").read_text(encoding="utf-8") == "ENOSPC\n"
+
+
+def test_checkpoint_refuses_to_replace_existing_immutable_evidence(tmp_path: Path) -> None:
+    """A checkpoint collision preserves both the retained artifact and its smoke work directory."""
+    smoke_root = tmp_path / "packaging-smoke"
+    work_dir = smoke_root / "browser-20260715T214000Z"
+    work_dir.mkdir(parents=True)
+    _write_smoke_manifest(
+        work_dir,
+        lane="browser-extra",
+        artifacts={"wheel": "wheel/cadrumo.whl"},
+        checks=("localhost browser health smoke",),
+    )
+    evidence_root = tmp_path / "packaging-smoke-evidence"
+    evidence_root.mkdir()
+    target = evidence_root / "browser-20260715T214000Z.json"
+    sentinel = b'{"retained":"immutable evidence"}\n'
+    target.write_bytes(sentinel)
+
+    with pytest.raises(FileExistsError, match="smoke evidence already exists"):
+        checkpoint_smoke_evidence(smoke_root, evidence_root, prune_completed=True)
+
+    assert target.read_bytes() == sentinel
+    assert work_dir.is_dir()
+    assert not target.with_suffix(".json.tmp").exists()

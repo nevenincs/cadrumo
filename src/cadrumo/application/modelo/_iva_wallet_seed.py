@@ -125,6 +125,15 @@ class ModeloIvaWalletOverrideFreshWalletError(ModeloIvaWalletSeedError):
     """
 
 
+def _require_non_negative_wallet_amount(amount: Decimal) -> None:
+    """Refuse a negative opening, correction, or operator-override amount."""
+    if amount < Decimal("0"):
+        raise ModeloIvaWalletSeedNegativeAmountError(
+            translated_message="application.modelo.iva_wallet.seed_negative_amount",
+            context={"amount": str(amount)},
+        )
+
+
 def seed_iva_compensation_period_for_bucket(
     *,
     bucket_id: str,
@@ -148,11 +157,7 @@ def seed_iva_compensation_period_for_bucket(
         Gate-side resolver that requires a persisted decision before applying
         the prior-compensation binding.
     """
-    if amount < Decimal("0"):
-        raise ModeloIvaWalletSeedNegativeAmountError(
-            translated_message="application.modelo.iva_wallet.seed_negative_amount",
-            context={"amount": str(amount)},
-        )
+    _require_non_negative_wallet_amount(amount)
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
         raise ModeloIvaWalletSeedNoTaxpayerError(
@@ -256,11 +261,7 @@ def correct_iva_compensation_period_for_bucket(
         :class:`cadrumo.domain.buckets.BucketEventType`
         Declares the ``MODELO_IVA_WALLET_CORRECTED`` audit event emitted here.
     """
-    if amount < Decimal("0"):
-        raise ModeloIvaWalletSeedNegativeAmountError(
-            translated_message="application.modelo.iva_wallet.seed_negative_amount",
-            context={"amount": str(amount)},
-        )
+    _require_non_negative_wallet_amount(amount)
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
         raise ModeloIvaWalletSeedNoTaxpayerError(
@@ -435,11 +436,7 @@ def record_iva_compensation_override_for_bucket(
         Replay gate that ensures exported/filed revisions still match the
         persisted decision.
     """
-    if amount < Decimal("0"):
-        raise ModeloIvaWalletSeedNegativeAmountError(
-            translated_message="application.modelo.iva_wallet.seed_negative_amount",
-            context={"amount": str(amount)},
-        )
+    _require_non_negative_wallet_amount(amount)
     taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
     if taxpayer_nif is None:
         raise ModeloIvaWalletSeedNoTaxpayerError(

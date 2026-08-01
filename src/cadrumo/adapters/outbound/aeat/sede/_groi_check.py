@@ -61,9 +61,9 @@ from ._adapter_utils import (
     _LocateHelper,
     _SedeCheckerModel,
     assert_query_browser_action_for,
+    extract_marker_verdict,
     make_locate_helper,
     nif_check_operation_tail,
-    normalize_response_text,
     registry_failure_message,
     require_playwright_page,
 )
@@ -443,34 +443,24 @@ async def _check_single_nif(
     return extract_verdict_from_response_text(body_text)
 
 
+_POSITIVE_MARKERS: tuple[str, ...] = (
+    "consta un operador intracomunitario",
+    "consta como operador intracomunitario",
+    "operador intracomunitario identificado",
+)
+
+
 def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "invalid", "unknown"]:
     """Parse the AEAT GROI verdict from the response body text.
 
-    Markers verified against live AEAT response samples captured
-    2026-05-07. Negative markers are checked first so explicit
-    rejection cannot be misclassified by a generic positive token.
+    Positive markers are GROI's own ROI-registration phrases, verified
+    against live AEAT response samples captured 2026-05-07. Rejection is
+    classified by the shared
+    :data:`~._adapter_utils.SPANISH_NEGATIVE_VERDICT_MARKERS` table, which
+    every sede checker reads so one driver cannot recognise a refusal the
+    other misses.
     """
-    normalized = normalize_response_text(body_text)
-    if not normalized:
-        return "unknown"
-    negative_markers = (
-        "no consta",
-        "no es un nif valido",
-        "el campo nif no es un nif valido",
-        "operador no identificado",
-        "no se encuentra identificado",
-        "no esta identificado",
-    )
-    if any(marker in normalized for marker in negative_markers):
-        return "invalid"
-    positive_markers = (
-        "consta un operador intracomunitario",
-        "consta como operador intracomunitario",
-        "operador intracomunitario identificado",
-    )
-    if any(marker in normalized for marker in positive_markers):
-        return "valid"
-    return "unknown"
+    return extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS)
 
 
 __all__ = [

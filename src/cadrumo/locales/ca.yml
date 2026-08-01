@@ -977,6 +977,8 @@ application:
         aquesta casella per al selector de membre.
       calculate_text_input_empty: El valor de --casilla correspon a una casella de
         text i no pot estar buit.
+      calculate_typed_text_input_invalid: El valor de --casilla no és vàlid per al
+        tipus declarat d'aquesta casella.
       calculation_registry_root_missing: L'arrel del registre %{registry_root} no
         existeix; el càlcul del model no pot continuar.
       calculation_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
@@ -5241,6 +5243,7 @@ cli:
       workbook_count: llibres de treball
       workbook_parity_ref_count: refs de paritat del llibre
       workbook_path: ruta del llibre de treball
+      failed_declaration_count: 'Nombre de declaracions fallides'
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
     parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals

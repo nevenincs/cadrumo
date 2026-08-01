@@ -13,6 +13,7 @@ extraction).
 from __future__ import annotations
 
 import re
+from html import unescape
 from typing import Final
 from urllib.parse import urljoin, urlparse
 
@@ -21,7 +22,7 @@ from pydantic import AnyHttpUrl
 
 from .....core.config import Settings
 from .....core.logging import get_logger
-from ._adapter_utils import is_aeat_csv
+from ._declarations_remote import extract_csv_from_url
 from ._errors import SedeParseError
 from ._schema import Expediente, JustificanteRef
 
@@ -44,8 +45,13 @@ _IRPF_ENDPOINT: Final[re.Pattern[str]] = re.compile(
     rf"{re.escape(_SEDE_PATHS.irpf_expediente_detail_year_suffix)}",
 )
 
-_COTEJO_CSV: Final[re.Pattern[str]] = re.compile(
-    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]+)(?![A-Z0-9])",
+# Locate the cotejo link by its PATH and capture the whole query string; the
+# CSV parameter is then read by the canonical query-aware extractor. Matching
+# the literal ``?CSV=`` sequence instead would refuse a link that merely
+# carries another parameter first, or orders its parameters differently --
+# neither of which changes what AEAT served.
+_COTEJO_HREF: Final[re.Pattern[str]] = re.compile(
+    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?(?P<query>[^\"'\s>]+)",
 )
 
 
@@ -154,17 +160,21 @@ def parse_expediente_detail(
     Raises:
         SedeParseError: If no CSV-carrying anchor is present.
     """
-    match = _COTEJO_CSV.search(html)
+    match = _COTEJO_HREF.search(html)
     if match is None:
         raise SedeParseError(
             f"expediente {expediente_id!r}: no /CotejoIdSv?CSV= link on detail page; "
             "session may have expired or the modelo exposes a different verifier",
         )
-    csv = match.group("csv")
-    if not is_aeat_csv(csv):
+    # Anchors carry HTML-escaped ampersands; unescape before parsing the query
+    # so a second parameter does not swallow the CSV key.
+    query = unescape(match.group("query"))
+    try:
+        csv = extract_csv_from_url(f"{_SEDE_PATHS.cotejo_query}?{query}")
+    except SedeParseError as exc:
         raise SedeParseError(
-            f"expediente {expediente_id!r}: cotejo CSV does not match the AEAT shape",
-        )
+            f"expediente {expediente_id!r}: cotejo CSV does not match the AEAT shape: {exc}",
+        ) from exc
     cotejo_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_query}?CSV={csv}")
     pdf_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_document}?CSV={csv}")
     return JustificanteRef(

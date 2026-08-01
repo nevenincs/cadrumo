@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ....core.aggregation import BindingSourceKind
 from ._errors import RegistryValidationError
-from ._schema import DataBindingDefinition
+from ._schema import DataBindingDefinition, OneBasedExportOffset
 
 __all__ = [
     "BindingExportDataType",
@@ -41,7 +41,7 @@ class BindingFixedExportSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     record: str = Field(min_length=1, max_length=64)
-    offset: int = Field(ge=1)
+    offset: OneBasedExportOffset
     length: int = Field(ge=1)
     data_type: BindingExportDataType
     field: str | None = Field(default=None, min_length=1, max_length=128)
@@ -77,7 +77,7 @@ class _BindingExportProjection(BaseModel):
 
     record: str | None = Field(default=None, min_length=1, max_length=64)
     row_field: str | None = Field(default=None, min_length=1, max_length=128)
-    offset: int | None = Field(default=None, ge=1)
+    offset: OneBasedExportOffset | None = None
     length: int | None = Field(default=None, ge=1)
     data_type: BindingExportDataType | None = None
     field: str | None = Field(default=None, min_length=1, max_length=128)

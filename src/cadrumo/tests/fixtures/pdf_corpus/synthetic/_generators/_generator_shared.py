@@ -22,6 +22,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfgen import canvas as _canvas
 
+from ......core.money import round_to_cents
 from ......domain.calculations.registry import CasillaId
 
 # A4 dimensions and standard AEAT-like margins.
@@ -64,12 +65,19 @@ def format_amount(value: Decimal, *, thousands_sep: str = ".") -> str:
     tests continue to match the committed canonical rendering.
 
     Negative values carry a leading minus; zero prints as ``0,00``.
+
+    Rounding goes through :func:`round_to_cents`, the canonical AEAT
+    money-2 rule (half-up), rather than ``Decimal.quantize``'s default
+    half-even. Synthetic evidence must not encode arithmetic the
+    production engine forbids: at half-even a ``1.005`` cent-tie renders
+    ``1,00`` where AEAT requires ``1,01``, and a fixture carrying that
+    would teach an extractor test the wrong legal answer.
     """
     if value.is_zero():
         return "0,00"
     sign = "-" if value.is_signed() else ""
     abs_value = abs(value)
-    quantised = abs_value.quantize(Decimal("0.01"))
+    quantised = round_to_cents(abs_value)
     whole, _, frac = f"{quantised:,.2f}".partition(".")
     whole_es = whole.replace(",", thousands_sep)
     return f"{sign}{whole_es},{frac}"

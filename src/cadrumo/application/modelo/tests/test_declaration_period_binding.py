@@ -168,36 +168,56 @@ def test_modelo_303_declaration_year_resolves_from_work_unit_filing_year(tmp_pat
 
 
 @pytest.mark.parametrize(
-    ("period", "period_date", "expected_ordinal"),
+    ("period", "period_date", "expected_token"),
     [
-        ("1T", date(2026, 3, 31), Decimal("1")),
-        ("2T", date(2026, 6, 30), Decimal("2")),
-        ("3T", date(2026, 9, 30), Decimal("3")),
-        ("4T", date(2026, 12, 31), Decimal("4")),
+        ("1T", date(2026, 3, 31), "1T"),
+        ("2T", date(2026, 6, 30), "2T"),
+        ("3T", date(2026, 9, 30), "3T"),
+        ("4T", date(2026, 12, 31), "4T"),
     ],
 )
 def test_modelo_303_declaration_period_resolves_from_work_unit_period(
     period: str,
     period_date: date,
-    expected_ordinal: Decimal,
+    expected_token: str,
     tmp_path: Path,
 ) -> None:
-    """``decl.periodo`` carries the work unit's quarter ordinal, not ``0``."""
+    """``decl.periodo`` carries the AEAT period token, on the string channel.
+
+    ``decl.periodo`` is declared ``data_type = "period_code"``, whose registry
+    validator accepts exactly the AEAT forms (``1T``-``4T`` here). The token is
+    therefore persisted on ``input_values_by_casilla_id``, the strictly
+    string-valued replay channel.
+
+    On the strictly Decimal ``casilla_values`` the engine keeps the structural
+    zero it gives every declared casilla absent from the Decimal input map — the
+    same placeholder every other text-family casilla carries. Pinning it to zero
+    is the anti-regression guard: reinstating the ordinal fill would put
+    ``Decimal("1")``-``Decimal("4")`` back on this channel and fail here.
+    """
     revision = _calculate_303(
         filing_year=2026,
         period=period,
         period_date=period_date,
         tmp_path=tmp_path,
     )
-    assert revision.casilla_values[_DECL_PERIODO_CASILLA] == expected_ordinal
+    assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == expected_token
+    assert revision.casilla_values[_DECL_PERIODO_CASILLA] == Decimal("0")
 
 
 def test_modelo_303_declaration_casillas_carry_registry_provenance(tmp_path: Path) -> None:
-    """The informational casillas land as typed observations with legal grounding.
+    """The Decimal-channel informational casilla lands as a grounded observation.
 
     A populated value with empty ``legal_refs`` / ``source_refs``
     would be a provenance-loss regression: the audit surface
     depends on every casilla carrying its registry grounding.
+
+    ``decl.periodo`` keeps its grounded observation row, but the row's strictly
+    ``Decimal`` ``value`` is now the structural zero every string-family casilla
+    carries there — the real token lives on the string channel. That the
+    observation envelope cannot express a text value is a family-wide gap
+    predating this casilla (M210 ``tipo_renta`` and the M184 member NIF hold the
+    same posture); it is tracked follow-up work, not a regression here.
     """
     revision = _calculate_303(
         filing_year=2025,
@@ -212,7 +232,8 @@ def test_modelo_303_declaration_casillas_carry_registry_provenance(tmp_path: Pat
         assert observation.legal_refs
         assert observation.source_refs
     assert observations[_DECL_EJERCICIO_CASILLA].value == Decimal("2025")
-    assert observations[_DECL_PERIODO_CASILLA].value == Decimal("2")
+    assert observations[_DECL_PERIODO_CASILLA].value == Decimal("0")
+    assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == "2T"
 
 
 def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Path) -> None:

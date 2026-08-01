@@ -15,6 +15,7 @@ provides no legacy spelling, compatibility lookup, or fallback.
 
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from typing import Final, NamedTuple
 
@@ -68,10 +69,18 @@ PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
 #: Short legal name retained only for the external tax authority referent.
 AEAT_AUTHORITY_SHORT_NAME: Final[str] = "AEAT"
 
+_STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
+
+
+def normalise_product_identity_references(value: str) -> str:
+    """Replace only stale human command prefixes with the canonical executable."""
+    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, value)
+
 
 __all__ = [
     "AEAT_AUTHORITY_SHORT_NAME",
     "PRODUCT_IDENTITY",
     "IdentityReferent",
     "ProductIdentity",
+    "normalise_product_identity_references",
 ]

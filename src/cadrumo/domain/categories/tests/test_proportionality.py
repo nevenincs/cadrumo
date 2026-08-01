@@ -33,7 +33,7 @@ def _citation() -> CategoryCitation:
         source=CategoryCitationSource.LEY_IRPF,
         reference="Ley 35/2006",
         locator="art. 30",
-        url=parse_http_url("https://example.com/ley"),
+        url=parse_http_url("https://www.boe.es/ley"),
         quote=tr("Texto de prueba."),
     )
 

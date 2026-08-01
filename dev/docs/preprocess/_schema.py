@@ -22,8 +22,9 @@ detectable by a gate without an allowlist.
 from __future__ import annotations
 
 from enum import StrEnum
+from pathlib import PurePosixPath
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 #: Current sidecar schema version. Bump on any breaking field change; the
 #: loader refuses an unknown version rather than silently coercing.
@@ -140,6 +141,20 @@ class PreprocessOutput(BaseModel):
         ),
     )
     units: tuple[PreprocessUnit, ...] = Field(default=())
+
+    @field_validator("source_relpath")
+    @classmethod
+    def _source_relpath_is_canonical_posix_relative(cls, value: str) -> str:
+        """Refuse non-repository locators before they can become persisted provenance."""
+        path = PurePosixPath(value)
+        if (
+            "\\" in value
+            or path.is_absolute()
+            or path.as_posix() != value
+            or any(part in {".", ".."} or ":" in part for part in path.parts)
+        ):
+            raise ValueError("source_relpath must be a canonical POSIX-relative repository path")
+        return value
 
     def render_text(self) -> str:
         """Render the indexable plain-text body written to ``*.extracted.md``.

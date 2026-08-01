@@ -61,6 +61,10 @@ class ObservationPayload(OutputSchema):
     operand_values: tuple[str, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+    # Carried from :class:`CasillaObservation` so an intentional zero (a
+    # binding whose selector produced no source anchor for the target period)
+    # stays distinguishable from a value-bearing zero at the operator surface.
+    absent_by_design: bool = False
 
     @model_validator(mode="after")
     def _operand_casilla_refs_are_traced(self) -> ObservationPayload:

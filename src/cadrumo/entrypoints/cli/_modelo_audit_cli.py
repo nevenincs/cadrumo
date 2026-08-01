@@ -57,18 +57,18 @@ def audit_show(
         work_unit_id=bundle.work_unit_id,
         calculation_revision_id=bundle.calculation_revision_id,
         filing_record_id=bundle.filing_record_id,
-        verification_state=bundle.verification_state.value,
+        verification_state=bundle.verification_state,
         completeness_ratio=bundle.completeness_ratio,
         records=[
             EvidenceRecordRefPayload(
-                object_type=rec.object_type.value,
+                object_type=rec.object_type,
                 object_id=rec.object_id,
                 content_sha256=rec.content_sha256,
                 payload_size_bytes=rec.payload_size_bytes,
             )
             for rec in bundle.records
         ],
-        created_at=bundle.created_at.isoformat(),
+        created_at=bundle.created_at,
         notes=bundle.notes,
     )
     lines = [
@@ -103,7 +103,7 @@ def audit_check(
 
     result = ModeloAuditCheckResult(
         bundle_id=report.bundle_id,
-        verification_state=report.verification_state.value,
+        verification_state=report.verification_state,
         completeness_ratio=report.completeness_ratio,
         findings=[
             EvidenceBundleCheckFindingPayload(
@@ -171,7 +171,7 @@ def audit_export(
         bucket_id=bucket_id,
         bundle_id=bundle.bundle_id,
         output=str(output_path),
-        verification_state=bundle.verification_state.value,
+        verification_state=bundle.verification_state,
         records=len(bundle.records),
     )
     lines = [

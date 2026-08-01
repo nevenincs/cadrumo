@@ -35,6 +35,8 @@ See Also:
 from __future__ import annotations
 
 import json
+import os
+import stat
 import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -263,6 +265,71 @@ def test_two_keypairs_generated_at_different_paths_are_independent(tmp_path: Pat
     assert (
         verify_corpus_bundle_signature(bundle_path, signed_by_one, public_key_hex=keypair_two.public_key_hex) is False
     )
+
+
+_PLACEHOLDER_KEY_FILE_CONTENT = "PLACEHOLDER-NOT-A-SECRET"
+
+
+class TestSigningKeyPersistenceClosesThePermissionWindow:
+    """The plaintext Ed25519 private key never enters a permissively-moded file.
+
+    The retired writer created the destination with the ambient process
+    umask, wrote the secret into it, and only afterwards tightened the
+    permissions. The secret therefore existed on disk at a permissive mode
+    for a real window -- and because
+    :func:`~core.file_permissions.restrict_file_permissions` is documented
+    best-effort and swallows every failure, a tightening step that could not
+    be applied left the secret readable with no error surfaced at all.
+
+    Asserting the FINAL mode cannot detect that window: the retired writer
+    also ended at ``0o600`` whenever its chmod happened to succeed, so such
+    an assertion passes either way. The discriminating observation is WHICH
+    inode receives the secret bytes. Hard-linking a second name to the
+    pre-existing destination gives the test a durable handle on the original
+    inode: an in-place write is observable through that handle, whereas a
+    staged write swapped in by :func:`os.replace` is not.
+    """
+
+    def test_secret_never_enters_the_preexisting_destination_inode(self, tmp_path: Path) -> None:
+        """A pre-existing permissive file at the destination never receives the key."""
+        key_path = tmp_path / "corpus-signing-key.json"
+        key_path.write_text(_PLACEHOLDER_KEY_FILE_CONTENT, encoding="utf-8")
+        if os.name != "nt":
+            os.chmod(key_path, 0o644)
+
+        witness = tmp_path / "witness-same-inode.json"
+        os.link(key_path, witness)
+        assert key_path.stat().st_ino == witness.stat().st_ino
+
+        keypair = generate_corpus_signing_keypair(
+            private_key_path=key_path,
+            generated_at=_GENERATED_AT,
+        )
+
+        # The destination carries the freshly minted secret ...
+        assert keypair.private_key_hex in key_path.read_text(encoding="utf-8")
+        # ... but the permissively-moded inode that existed before the call
+        # never saw a single byte of it.
+        witness_content = witness.read_text(encoding="utf-8")
+        assert witness_content == _PLACEHOLDER_KEY_FILE_CONTENT
+        assert keypair.private_key_hex not in witness_content
+        assert key_path.stat().st_ino != witness.stat().st_ino
+        assert sorted(tmp_path.glob("*.tmp")) == []
+
+    def test_persisted_key_is_owner_only_on_posix(self, tmp_path: Path) -> None:
+        """The persisted key ends at ``0o600``.
+
+        A supporting end-state assertion, not the discriminating one: the
+        retired post-hoc hardening reached the same final mode whenever its
+        chmod succeeded. The sibling test above is what proves the window
+        between creation and tightening is gone.
+        """
+        key_path = tmp_path / "mode-check-key.json"
+        generate_corpus_signing_keypair(private_key_path=key_path, generated_at=_GENERATED_AT)
+
+        assert key_path.exists()
+        if os.name != "nt":
+            assert stat.S_IMODE(key_path.stat().st_mode) == 0o600
 
 
 __all__: list[str] = []

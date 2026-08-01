@@ -1,9 +1,9 @@
 """Foreign-asset re-declaration advisory helpers for Modelo 720 and 721.
 
 See Also:
-    :mod:`~core._foreign_asset_obligation`
-        Declares the per-bloque declaration floors and re-declaration deltas
-        consumed by these advisory checks.
+    :mod:`~application._foreign_asset_thresholds`
+        Resolves the per-bloque declaration floors and re-declaration deltas
+        from the effective registry revision.
     :class:`~domain.calculations.registry.RegistryModeloObservation`
         Registry-grounded observation envelope accepted as prior, current, and
         current-declaration evidence.
@@ -21,16 +21,14 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 
-from ...core import CasillaId, ForeignAssetObligationGroup, Modelo, foreign_asset_declaration_threshold
+from ...core import CasillaId, ForeignAssetObligationGroup, Modelo
 from ...domain.calculations.registry import RegistryModeloObservation
 from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
-
-_MODELO_720_SOURCE_REFS = ("aeat-modelo-720-procedure",)
-_MODELO_721_SOURCE_REFS = ("aeat-modelo-721-procedure",)
+from .._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 
 _M720_VALUATION_CASILLA_GROUPS: Mapping[CasillaId, ForeignAssetObligationGroup] = {
     "cuentas.valoracion": ForeignAssetObligationGroup.CUENTAS,
@@ -71,7 +69,7 @@ def modelo_720_redeclaration_advisory_findings(
     so a correctly present row produces no advisory.
 
     See Also:
-        :func:`~core._foreign_asset_obligation.foreign_asset_declaration_threshold`
+        :func:`~application._foreign_asset_thresholds.foreign_asset_declaration_thresholds`
             Supplies the strict per-obligation-block re-declaration delta.
     """
     return _redeclaration_advisory_findings(
@@ -79,7 +77,7 @@ def modelo_720_redeclaration_advisory_findings(
         prior_positions=_modelo_720_positions(prior_observation),
         current_positions=_modelo_720_positions(current_observation),
         declared_positions=_modelo_720_positions(current_declaration_observation or current_observation),
-        source_refs=_MODELO_720_SOURCE_REFS,
+        filing_year=current_observation.filing_year,
     )
 
 
@@ -101,7 +99,7 @@ def modelo_721_redeclaration_advisory_findings(
         prior_positions=_modelo_721_positions(prior_observation),
         current_positions=_modelo_721_positions(current_observation),
         declared_positions=_modelo_721_positions(current_declaration_observation or current_observation),
-        source_refs=_MODELO_721_SOURCE_REFS,
+        filing_year=current_observation.filing_year,
     )
 
 
@@ -111,8 +109,9 @@ def _redeclaration_advisory_findings(
     prior_positions: Mapping[tuple[str, ...], _RedeclarationPosition],
     current_positions: Mapping[tuple[str, ...], _RedeclarationPosition],
     declared_positions: Mapping[tuple[str, ...], _RedeclarationPosition],
-    source_refs: tuple[str, ...],
+    filing_year: int,
 ) -> tuple[ModeloVerificationFinding, ...]:
+    thresholds = foreign_asset_declaration_thresholds(modelo=modelo, filing_year=filing_year)
     findings: list[ModeloVerificationFinding] = []
     for key in sorted(prior_positions):
         prior = prior_positions[key]
@@ -120,7 +119,7 @@ def _redeclaration_advisory_findings(
         if current is None or key in declared_positions:
             continue
 
-        threshold = foreign_asset_declaration_threshold(prior.group)
+        threshold = thresholds[prior.group]
         delta_eur = current.value_eur - prior.value_eur
         if delta_eur <= threshold.redeclaration_increase_delta_eur:
             continue
@@ -140,7 +139,7 @@ def _redeclaration_advisory_findings(
                     "or record non-declarability evidence before filing."
                 ),
                 legal_refs=threshold.legal_refs,
-                source_refs=source_refs,
+                source_refs=threshold.source_refs,
             )
         )
     return tuple(findings)

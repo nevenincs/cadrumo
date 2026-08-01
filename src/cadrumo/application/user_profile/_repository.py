@@ -23,7 +23,6 @@ objects encrypted at rest by
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date
 
 from pydantic import ValidationError
 
@@ -50,6 +49,7 @@ from ...domain.user_profile import (
     UserProfileRecord,
     UserProfileSnapshot,
 )
+from ._projections import record_to_path_values
 
 USER_PROFILE_VALUE_NAMESPACE = USER_PROFILE_VALUE_STORAGE_NAMESPACE.namespace
 USER_PROFILE_SNAPSHOT_NAMESPACE = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace
@@ -64,7 +64,6 @@ _PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storag
 _PROFILE_SNAPSHOT_CLASSIFICATION_MESSAGE = "profile snapshot classification is incompatible with this repository"
 _PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
 _OUTPUT_LANGUAGE_FACT_PATH = "preferences.output_language"
-_SENTINEL_DATE = date.min
 _log = get_logger(__name__)
 
 
@@ -99,11 +98,7 @@ def _clear_output_language_cache() -> None:
 
 
 def _record_output_language(record: UserProfileRecord) -> str | None:
-    matches = [fact for fact in record.facts if fact.path == _OUTPUT_LANGUAGE_FACT_PATH and fact.value is not None]
-    if not matches:
-        return None
-    matches.sort(key=lambda fact: fact.valid_from or _SENTINEL_DATE)
-    return str(matches[-1].value)
+    return record_to_path_values(record).get(_OUTPUT_LANGUAGE_FACT_PATH)
 
 
 def _refresh_output_language_hint(*, bucket_id: str, record: UserProfileRecord) -> None:

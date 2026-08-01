@@ -23,6 +23,7 @@ from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
     WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
 )
+from ...core.time import validate_utc_aware
 from ..contribuyente import (
     UE_EEA_COUNTRY_CODES,
     FiscalResidency,
@@ -355,7 +356,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    source_modelo: str = Field(default=Modelo.M322.value, min_length=1, max_length=8)
+    source_modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)] = Modelo.M322
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
     member_nifs: tuple[str, ...] = Field(min_length=1)
@@ -815,9 +816,12 @@ class Recovery(BaseModel):
             for absolutely-time-barred filings can be added without
             reshaping the model.
         recargo_band: The :class:`RecargoBand` resolved from the
-            completed-months window (Art. 27.2 LGT).
-        legal_ref: Same as ``recargo_band.legal_ref``; carried at the
-            top level so renderers do not dereference.
+            completed-months window (Art. 27.2 LGT). It carries the legal
+            reference for the band; read it as
+            ``recovery.recargo_band.legal_ref`` rather than mirroring it
+            onto this payload, so there is exactly one place a renderer
+            can read the grounding from and no way for two copies to
+            disagree.
         next_command: Literal shell command the operator can copy to
             calculate the late filing.
     """
@@ -826,8 +830,31 @@ class Recovery(BaseModel):
 
     still_filable: bool = True
     recargo_band: RecargoBand
-    legal_ref: str = Field(min_length=1, max_length=128)
     next_command: str = Field(min_length=1, max_length=256)
+
+
+def _parse_modelo_identifier(value: object) -> Modelo:
+    """Coerce a canonical modelo token into the closed :class:`Modelo` enum.
+
+    The models here are strict, so an enum-typed field would refuse the plain
+    ``"303"`` that callers and persisted JSON both use. This validator keeps
+    that ergonomics while closing the set: an unknown identifier or a
+    whitespace-divergent spelling is refused rather than carried into registry
+    matching and downstream projections, which would otherwise interpret it
+    differently from every other surface.
+    """
+    if isinstance(value, Modelo):
+        return value
+    if isinstance(value, str):
+        try:
+            return Modelo(value)
+        except ValueError as exc:
+            raise DeadlineValidationError(
+                f"modelo identifier {value!r} is not a supported AEAT modelo",
+            ) from exc
+    raise DeadlineValidationError(
+        f"modelo identifier must be a string or Modelo, got {type(value).__name__}",
+    )
 
 
 def _parse_modelo_deadline_period(value: object) -> Period:
@@ -873,7 +900,7 @@ class ModeloDeadline(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(min_length=1)
+    modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)]
     period: Annotated[Period, BeforeValidator(_parse_modelo_deadline_period)]
     opens_on: date
     closes_on: date
@@ -905,7 +932,10 @@ class Schedule(BaseModel):
         obligations: Tuple of :class:`ModeloDeadline` ordered by
             ``(closes_on, modelo, period)``.
         generated_at: UTC timestamp of when :meth:`DeadlineEngine.compute`
-            built this schedule. The only non-deterministic field.
+            built this schedule. The only non-deterministic field, and
+            validated as UTC-aware rather than merely documented as such:
+            a naive or offset timestamp on filing evidence is ambiguous
+            about the day a window opened or closed.
     """
 
     model_config = _STRICT_FROZEN
@@ -914,3 +944,10 @@ class Schedule(BaseModel):
     year: int = Field(ge=1900, le=2999)
     obligations: tuple[ModeloDeadline, ...]
     generated_at: datetime
+
+    @field_validator("generated_at")
+    @classmethod
+    def _require_utc_generated_at(cls, value: datetime) -> datetime:
+        """Route the stamp through the canonical UTC-aware contract."""
+        return validate_utc_aware(value)
+

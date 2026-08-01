@@ -34,7 +34,6 @@ from pydantic import AnyHttpUrl
 from .....core import Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
-from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -50,10 +49,12 @@ from .....domain.calculations.registry import (
     RegistryValidationError,
     RemoteStateGuardPolicy,
     previous_filing_observation_requirements,
+    registry_snapshot_id,
     relation_source_requirements,
 )
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
+from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -701,18 +702,14 @@ async def capture_declaration(
 
         _assert_read_http("GET", str(ref.pdf_url), policy=read_policy)
         pdf_response = await context.request.get(str(ref.pdf_url))
-        if not (200 <= pdf_response.status < 300):
-            raise JustificanteFetchError(
-                f"pdf fetch for CSV={csv!r} returned HTTP {pdf_response.status}",
-            )
         content_type = pdf_response.headers.get("content-type", "")
         body = await pdf_response.body()
-        if not body:
-            raise JustificanteFetchError(f"empty PDF body for CSV={csv!r}")
-        if _PDF_MIME_TYPE not in content_type.lower():
-            raise JustificanteFetchError(
-                f"unexpected content-type {content_type!r} for CSV={csv!r}",
-            )
+        _assert_pdf_response(
+            status=pdf_response.status,
+            content_type=content_type,
+            body=body,
+            subject=f"CSV={csv!r}",
+        )
 
         from ._schema import Expediente
 
@@ -956,8 +953,14 @@ async def _capture_filed_declaration_observation_from_row(
         casillas=casillas,
         metadata=metadata,
         extraction_coverage=extraction_coverage,
-        registry_snapshot_id=(
-            f"{snapshot.modelo.id}:{snapshot.revision.id}:{declaration.ejercicio}:{declaration.period.registry_token}"
+        # Year and period come from the DECLARATION, not the snapshot: stamping
+        # what the document itself declares is what lets a later comparison
+        # against the law-resolved snapshot detect a coordinate mismatch.
+        registry_snapshot_id=registry_snapshot_id(
+            modelo=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+            filing_year=declaration.ejercicio,
+            period=declaration.period.registry_token,
         ),
     )
 

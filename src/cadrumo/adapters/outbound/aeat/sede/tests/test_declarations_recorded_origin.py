@@ -27,9 +27,14 @@ What changed is that the reason is evidence rather than an assumption.
 
 from __future__ import annotations
 
+import ast
+from collections import Counter
+from pathlib import Path
+
 import pytest
 
 from ......core.config import Settings
+from .. import _declarations_fetch
 from .._declarations import (
     _SEDE_BASE,
     _cotejo_document_url,
@@ -37,6 +42,7 @@ from .._declarations import (
     _listing_url_for,
     _origin_of,
 )
+from .._errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -71,15 +77,48 @@ class TestOriginOf:
             == origin
         )
 
-    @pytest.mark.parametrize("landed", ["", None, "not-a-url", "/relative/only"])
-    def test_an_unusable_landing_falls_back_to_the_navigated_origin(self, landed: str | None) -> None:
-        """With no usable landing, the origin the navigation used is the best true answer.
+    @pytest.mark.parametrize("landed", ["", None, "not-a-url", "/relative/only", "about:blank"])
+    def test_an_unusable_landing_is_refused(self, landed: str | None) -> None:
+        """DISCRIMINATING: an origin that cannot be established must not be invented.
 
-        This is a truthfulness fallback rather than a preference: the read
-        was issued against that origin, so naming it is accurate even when
-        the landing cannot be read.
+        This assertion previously read the other way, requiring a fallback to
+        the navigated origin and defending it as "the best true answer
+        available". That defence does not survive inspection: AEAT
+        load-balances the authenticated session across its numbered pool, so
+        precisely when the landing cannot be read is when there is no evidence
+        the read stayed on the requested host. The fallback's truth was
+        guaranteed only in the case where it was never needed.
+
+        The recorded value feeds an evidence ``source_url``, so a guess there
+        is indistinguishable from a measurement to every later reader. Missing
+        evidence must read as missing.
+
+        Reverting the refusal makes this fail by observably producing the
+        fabricated origin -- see the paired production check below.
         """
-        assert _origin_of(landed) == _SEDE_BASE
+        with pytest.raises(SedeNavigationError) as exc_info:
+            _origin_of(landed)
+        assert repr(landed) in str(exc_info.value)
+
+    @pytest.mark.parametrize("landed", ["", None, "not-a-url", "/relative/only", "about:blank"])
+    def test_no_fabricated_origin_is_produced_for_an_unusable_landing(self, landed: str | None) -> None:
+        """DISCRIMINATING positive control: name what the old code produced.
+
+        Asserting only "it raises" would pass against a function that raised
+        for an unrelated reason. This pins the specific wrong value the
+        retired fallback returned, so a revert reports the fabrication itself
+        rather than a bare missing exception.
+        """
+        produced: str | None = None
+        try:
+            produced = _origin_of(landed)
+        except SedeNavigationError:
+            produced = None
+        assert produced != _SEDE_BASE, (
+            f"FABRICATED ORIGIN {produced!r} recorded for an unusable landing {landed!r}; "
+            "this is a guess written into an evidence source_url"
+        )
+        assert produced is None
 
 
 class TestRecordedUrlsUseTheLandedOrigin:
@@ -115,3 +154,44 @@ class TestRecordedUrlsUseTheLandedOrigin:
             _cotejo_document_url(foreign, "FIXTURECSV1234X7"),
         ):
             assert not built.startswith(_SEDE_BASE)
+
+
+class TestDeclarationsUrlPrimitiveAuthority:
+    """The fetch adapter owns each Sede URL primitive exactly once."""
+
+    def test_url_primitives_have_one_module_level_definition(self) -> None:
+        """Prevent a second assignment from silently shadowing the URL authority."""
+        source = Path(_declarations_fetch.__file__).read_text(encoding="utf-8")
+        tree = ast.parse(source)
+        assignments = Counter(
+            target.id
+            for node in tree.body
+            if isinstance(node, (ast.Assign, ast.AnnAssign))
+            for target in (
+                node.targets
+                if isinstance(node, ast.Assign)
+                else (node.target,)
+            )
+            if isinstance(target, ast.Name)
+        )
+
+        assert {
+            name: assignments[name]
+            for name in (
+                "_SEDE_BASE",
+                "_SEDE_HOST",
+                "_LISTING_URL",
+                "_LISTING_PATH",
+                "_COTEJO_QUERY_PATH",
+                "_COTEJO_DOCUMENT_PATH",
+                "_COTEJO_PATH_PREFIX",
+            )
+        } == {
+            "_SEDE_BASE": 1,
+            "_SEDE_HOST": 1,
+            "_LISTING_URL": 1,
+            "_LISTING_PATH": 1,
+            "_COTEJO_QUERY_PATH": 1,
+            "_COTEJO_DOCUMENT_PATH": 1,
+            "_COTEJO_PATH_PREFIX": 1,
+        }

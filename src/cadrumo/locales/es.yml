@@ -984,6 +984,8 @@ application:
         reserva esta casilla para el selector de miembro.
       calculate_text_input_empty: El valor de --casilla corresponde a una casilla
         de texto y no puede estar vacío.
+      calculate_typed_text_input_invalid: El valor de --casilla no es válido para
+        el tipo declarado de esa casilla.
       calculation_registry_root_missing: Falta la raíz del registro {registry_root};
         el cálculo del modelo no puede continuar.
       calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
@@ -5284,6 +5286,7 @@ cli:
       workbook_count: Nº libros (workbooks)
       workbook_parity_ref_count: Nº referencias de paridad de libro
       workbook_path: Ruta del libro
+      failed_declaration_count: 'Número de declaraciones fallidas'
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
     parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales

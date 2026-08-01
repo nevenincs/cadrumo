@@ -21,6 +21,7 @@ from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
 from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
 from ._runtime_graph import expression_binding_refs
+from ._snapshot_coordinate import registry_snapshot_id_for
 from ._scenario_filing_period import hydrate_scenario_filing_period
 
 ScenarioStatus = Literal["match", "mismatch"]
@@ -179,7 +180,7 @@ def run_registry_calculation_scenario(
     status: ScenarioStatus = "match" if all(comparison.status == "match" for comparison in comparisons) else "mismatch"
     return RegistryScenarioRunReport(
         scenario_id=scenario.id,
-        registry_snapshot_id=f"{snapshot.modelo.id}:{snapshot.revision.id}:{snapshot.period}",
+        registry_snapshot_id=registry_snapshot_id_for(snapshot),
         status=status,
         comparisons=comparisons,
         calculation=calculation,

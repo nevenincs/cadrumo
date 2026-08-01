@@ -42,6 +42,7 @@ from collections.abc import Sequence
 from pydantic import BaseModel, ConfigDict
 
 from ...core import PRODUCT_IDENTITY
+from ...core.json_contract import OutputSchemaError, validate_registered_envelope_document
 from ._call_runtime import CallTier
 from ._input_schema import VerbInputSchema, cli_argv_for
 
@@ -222,7 +223,9 @@ def parse_cli_envelope(run: CompletedCliRun) -> tuple[dict[str, object], bool]:
         envelope = json.loads(raw)
     except json.JSONDecodeError:
         return {"status": "error", "raw": raw}, True
-    if not isinstance(envelope, dict):
+    try:
+        validated = validate_registered_envelope_document(envelope)
+    except OutputSchemaError:
         return {"status": "error", "raw": raw}, True
-    is_error = envelope.get("status") == "error" or run.returncode != 0
-    return envelope, bool(is_error)
+    is_error = validated["status"] == "error" or run.returncode != 0
+    return validated, is_error

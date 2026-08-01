@@ -845,9 +845,9 @@ def work_history(
         events=[
             WorkUnitHistoryEventPayload(
                 event_id=event.event_id,
-                occurred_at=event.occurred_at.isoformat(),
-                event_type=event.event_type.value,
-                object_type=event.object_type.value,
+                occurred_at=event.occurred_at,
+                event_type=event.event_type,
+                object_type=event.object_type,
                 object_id=event.object_id,
                 actor=event.actor,
                 payload=event.payload,
@@ -1200,10 +1200,10 @@ def modelo_history(
         events=[
             ModeloLifecycleEventPayload(
                 event_id=e.event_id,
-                event_type=e.event_type.value,
-                occurred_at=e.occurred_at.isoformat(),
+                event_type=e.event_type,
+                occurred_at=e.occurred_at,
                 actor=e.actor,
-                object_type=e.object_type.value,
+                object_type=e.object_type,
                 object_id=e.object_id,
                 payload=dict(e.payload),
             )

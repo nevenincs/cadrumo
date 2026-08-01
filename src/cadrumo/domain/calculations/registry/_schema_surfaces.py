@@ -44,11 +44,16 @@ __all__ = [
     "ExportLayoutDefinition",
     "ExportLayoutFormatValue",
     "ExportRecordDefinition",
+    "OneBasedExportOffset",
     "RecordDiscriminator",
     "RelationDefinition",
     "RelationPeriodAlignment",
     "RelationRevisionSelector",
 ]
+
+
+type OneBasedExportOffset = Annotated[int, Field(ge=1)]
+"""A positive one-based byte coordinate in an AEAT fixed-width export record."""
 
 
 def _require_official_text(value: str, field_name: str) -> None:
@@ -649,7 +654,7 @@ class RelationDefinition(RegistryModel):
 
 class ExportFieldDefinition(RegistryModel):
     id: ExportFieldId
-    offset: int | None = Field(default=None, ge=0)
+    offset: OneBasedExportOffset | None = None
     length: int | None = Field(default=None, gt=0)
     kind: CasillaFieldKindValue
     casilla_id: CasillaId | None = None
@@ -697,7 +702,7 @@ class RecordDiscriminator(RegistryModel):
     the correct record while reading binding-row sequences.
     """
 
-    offset: int = Field(ge=1)
+    offset: OneBasedExportOffset
     length: int = Field(gt=0)
     requires: Literal["blank", "non_blank"]
 

@@ -10,10 +10,13 @@ payloads live in the cohesive sibling :mod:`_config_sandbox_payloads`.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Literal
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field
 
+from ...core.errors import BaseSeverity
+from ...core.identity import BucketId
 from ._schemas import OutputSchema, register_schema
 
 # The two wizard-owned profile result schemas register through the manifest's
@@ -93,7 +96,7 @@ class ProfileIssuePayload(OutputSchema):
     diagnostics without importing domain records into the CLI layer.
     """
 
-    severity: str
+    severity: BaseSeverity
     code: str
     path: str | None = None
     message: str
@@ -138,6 +141,73 @@ class ConfigRootResult(OutputSchema):
 # P05 — repair verb result schemas
 
 
+class ConfigRepairRegistryPayload(OutputSchema):
+    """JSON-safe projection of the config-repair registry summary."""
+
+    available: bool
+    registry_root: str
+    modelo_count: int = Field(ge=0)
+    revision_count: int = Field(ge=0)
+    casilla_count: int = Field(ge=0)
+    formula_count: int = Field(ge=0)
+    revision_ids: list[str]
+    error: str | None = None
+
+
+class ConfigRepairSetupPayload(OutputSchema):
+    """JSON-safe projection of the active-profile readiness summary."""
+
+    active_profile: str | None
+    profile_ready: bool
+    identity_ready: bool
+    enrolment_ready: bool
+    missing_required: list[str]
+    missing_enrolment: list[str]
+    profile_present_keys: int = Field(ge=0)
+    profile_total_keys: int = Field(ge=0)
+    auth_provider: str
+    login_ready: bool
+    next_action: str
+
+
+class ConfigRepairNamespacePayload(OutputSchema):
+    """One secure-object namespace row in the config-repair report."""
+
+    namespace: str = Field(min_length=1)
+    readable: int = Field(ge=0)
+    unreadable: int = Field(ge=0)
+
+
+class ConfigRepairSecureObjectsPayload(OutputSchema):
+    """JSON-safe projection of secure-object integrity totals."""
+
+    namespaces: list[ConfigRepairNamespacePayload]
+    readable_total: int = Field(ge=0)
+    unreadable_total: int = Field(ge=0)
+
+
+class ConfigRepairFindingPayload(OutputSchema):
+    """One concrete explanatory finding nested in a repair check."""
+
+    summary: str
+    detail: str | None = None
+    next_action: str | None = None
+    requirement: Literal["required", "optional"] | None = None
+
+
+class ConfigRepairCheckPayload(OutputSchema):
+    """JSON-safe projection of one actionable config-repair check."""
+
+    name: str
+    status: Literal["ok", "warn", "fail"]
+    summary: str
+    detail: str | None = None
+    next_action: str | None = None
+    dead_end: str | None = None
+    audience: Literal["operator", "internal"]
+    findings: list[ConfigRepairFindingPayload]
+
+
 @register_schema("config.repair")
 class ConfigRepairResult(OutputSchema):
     """JSON envelope for the composite ``aeat config repair`` report.
@@ -147,15 +217,15 @@ class ConfigRepairResult(OutputSchema):
     top-level contract while preserving those already validated nested DTOs.
     """
 
-    overall: str
+    overall: Literal["ok", "warn", "fail"]
     package_name: str
     package_version: str
     python_version: str
     log_file: str
-    registry: dict[str, object]
-    setup: dict[str, object] | None
-    secure_objects: dict[str, object]
-    checks: list[dict[str, object]]
+    registry: ConfigRepairRegistryPayload
+    setup: ConfigRepairSetupPayload | None
+    secure_objects: ConfigRepairSecureObjectsPayload
+    checks: list[ConfigRepairCheckPayload]
 
 
 @register_schema("config.repair.logs")
@@ -270,7 +340,7 @@ class ConfigLoginResult(OutputSchema):
     this payload.
     """
 
-    profile_id: str
+    profile_id: BucketId
     active_profile: str
     backend_kind: str
     authenticated_at: str
@@ -767,25 +837,6 @@ class ApoderadoCheckResult(OutputSchema):
     granted_scopes: list[str] | None = None
 
 
-@register_schema("config.bucket.history")
-class BucketHistoryResult(OutputSchema):
-    """JSON envelope for ``aeat config profile history``.
-
-    The envelope token ``config.bucket.history`` is a stable machine API and
-    is intentionally retained after the operator-facing verb moved from
-    ``config bucket history`` to ``config profile history`` (D1 family).
-    """
-
-    operation: str
-    bucket_id: str
-    event_types: list[str] | None = None
-    since: str | None = None
-    until: str | None = None
-    object_id: str | None = None
-    actor: str | None = None
-    events: list[dict[str, object]]
-
-
 # Profile wizard / lifecycle verb result schemas
 #
 # ``config.profile.create`` / ``config.profile.edit`` are declared at their real
@@ -882,7 +933,7 @@ class ConfigProfileArchiveExportResult(OutputSchema):
     profile_id: str
     display_name: str
     out: str
-    manifest_digest: str
+    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     recovery_wrap_present: bool
 
 
@@ -897,9 +948,9 @@ class ConfigProfileArchiveImportResult(OutputSchema):
     ``--force`` is supplied.
     """
 
-    profile_id: str
-    manifest_digest: str
-    archive_schema_version: int
+    profile_id: BucketId
+    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    archive_schema_version: int = Field(ge=1)
 
 
 @register_schema("config.profile.archive.inspect")
@@ -913,12 +964,12 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
     per-store contents are reported here.
     """
 
-    profile_id: str
-    manifest_digest: str
+    profile_id: BucketId
+    manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     recovery_wrap_present: bool
-    archive_schema_version: int
-    created_at: str
-    size_bytes: int
+    archive_schema_version: int = Field(ge=1)
+    created_at: datetime
+    size_bytes: int = Field(ge=0)
 
 
 # Repair verb result schemas (profile / integrity sub-app)
@@ -1185,50 +1236,6 @@ class AuthDiagnosticsReportResult(OutputSchema):
 
 
 # Descendiente verb result schemas
-
-
-class ProfileDescendientePayload(OutputSchema):
-    """One declared descendant row in the ``config profile descendiente`` surface.
-
-    Mirrors :class:`~cadrumo.domain.contribuyente.DescendantInfo` as plain JSON;
-    ``index`` is the 0-based position :func:`~cadrumo.domain.contribuyente.descendant_list_from_facts`
-    assigns, the same index ``descendiente remove`` addresses.
-    """
-
-    index: int
-    birth_date: str
-    adoption_date: str | None = None
-    discapacidad_grado: int | None = None
-    convive_con_contribuyente: bool
-    custodia_compartida: bool
-    nif: str | None = None
-
-
-@register_schema("config.profile.descendiente.add")
-class ConfigProfileDescendienteAddResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente add``."""
-
-    profile: str
-    added: int
-    total: int
-
-
-@register_schema("config.profile.descendiente.list")
-class ConfigProfileDescendienteListResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente list``."""
-
-    profile: str
-    total: int
-    descendientes: list[ProfileDescendientePayload] = []
-
-
-@register_schema("config.profile.descendiente.remove")
-class ConfigProfileDescendienteRemoveResult(OutputSchema):
-    """JSON envelope for ``aeat config profile descendiente remove``."""
-
-    profile: str
-    removed_index: int
-    total: int
 
 
 class CensoFileFactPayload(OutputSchema):

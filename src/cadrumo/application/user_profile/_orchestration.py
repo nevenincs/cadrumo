@@ -31,7 +31,6 @@ from __future__ import annotations
 import secrets
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
-from datetime import date
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, close_active_bucket_session
@@ -66,6 +65,7 @@ from ._lifecycle import ProfileLifecycleService
 from ._login_session import close_profile_session_artefacts
 from ._profile_pointer_transaction import active_profile_pointer_transaction
 from ._profile_repository import ProfileRepository
+from ._projections import record_to_path_values
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -76,7 +76,6 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 _SHARED_SCHEMA: ProfileSchemaDefinition | None = None
-_SENTINEL_DATE = date.min
 
 
 def _shared_schema() -> ProfileSchemaDefinition:
@@ -844,13 +843,7 @@ def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
     the same path (effective-dated windows) resolve to the
     chronologically last :attr:`UserProfileFact.valid_from`.
     """
-    if record is None:
-        return None
-    matches = [fact for fact in record.facts if fact.path == path and fact.value is not None]
-    if not matches:
-        return None
-    matches.sort(key=lambda fact: fact.valid_from or _SENTINEL_DATE)
-    return str(matches[-1].value)
+    return record_to_path_values(record).get(path)
 
 
 def _require_active(state: WorkflowState) -> str:

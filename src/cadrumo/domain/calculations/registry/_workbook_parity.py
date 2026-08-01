@@ -39,6 +39,7 @@ from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
 from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId, WorkbookOutputId, is_registry_id
 from ._schema import EvidenceTier, RegistrySnapshot
+from ._snapshot_coordinate import registry_snapshot_id_for
 from ._workbook_parity_models import (
     SyntheticInputSet,
     SyntheticInputValue,
@@ -708,7 +709,7 @@ def run_registry_workbook_parity(
         expected_workbook_values=workbook_values,
         actual_registry_values=registry_values,
         output_cells=output_cells,
-        registry_snapshot_id=f"{snapshot.modelo.id}:{snapshot.revision.id}",
+        registry_snapshot_id=registry_snapshot_id_for(snapshot),
         legal_refs=legal_refs,
         source_refs=source_refs,
         tolerance=tolerance,

@@ -162,3 +162,12 @@ def test_emit_latest_projects_cohort_manifest(tmp_path: Path) -> None:
     assert main(["emit-latest", "--cohort-manifest", str(manifest_path), "--output", str(output)]) == 0
     reloaded = json.loads(output.read_text(encoding="utf-8"))
     assert reloaded["schema_name"] == "cadrumo.download-latest.v1"
+
+
+@pytest.mark.parametrize("release_base_url", ("not-a-url", "http://example.invalid/releases/v9.9.9", "https://example.invalid/releases/v9.9.9?asset=x"))
+def test_emit_latest_refuses_malformed_or_noncanonical_release_base_url(tmp_path: Path, release_base_url: str) -> None:
+    """Asset URLs are derived only from an unambiguous HTTPS release directory."""
+    manifest_path = _write_cohort_manifest(tmp_path)
+
+    with pytest.raises(ValueError, match="release_base_url"):
+        build_download_latest(cohort_manifest_path=manifest_path, release_base_url=release_base_url)

@@ -121,7 +121,7 @@ def test_verify_declaracion_uses_modelo_130_registry_snapshot() -> None:
         },
     )
 
-    assert verdict.registry_snapshot_id == "registry:130:2019-y-siguientes"
+    assert verdict.registry_snapshot_id == "130:2019-y-siguientes:2025:1T"
     # The coverage-gated contract plus the exhaustive reconcile-when-present
     # contract both apply; the reconcile-when-present casillas (15,
     # saldo-negativo) are excluded from the coverage denominator, so a clean
@@ -229,7 +229,7 @@ def test_verify_declaracion_uses_modelo_115_registry_snapshot() -> None:
 
     verdict = verify_declaracion(filing)
 
-    assert verdict.registry_snapshot_id == "registry:115:2019-y-siguientes"
+    assert verdict.registry_snapshot_id == "115:2019-y-siguientes:2026:1T"
     assert verdict.verification_expectation_ids == ("modelo-115-calculation-verification",)
     assert verdict.status is VerificationStatus.VERIFIED
     assert verdict.coverage == 1.0
@@ -262,7 +262,7 @@ def test_verify_declaracion_uses_modelo_123_current_registry_snapshot() -> None:
 
     verdict = verify_declaracion(filing)
 
-    assert verdict.registry_snapshot_id == "registry:123:2024-y-siguientes"
+    assert verdict.registry_snapshot_id == "123:2024-y-siguientes:2026:1T"
     assert verdict.verification_expectation_ids == ("modelo-123-calculation-verification",)
     assert verdict.status is VerificationStatus.VERIFIED
     assert verdict.coverage == 1.0
@@ -289,7 +289,7 @@ def test_verify_declaracion_uses_modelo_123_historical_registry_snapshot() -> No
 
     verdict = verify_declaracion(filing)
 
-    assert verdict.registry_snapshot_id == "registry:123:2019-2023"
+    assert verdict.registry_snapshot_id == "123:2019-2023:2023:1T"
     assert verdict.verification_expectation_ids == ("modelo-123-2019-calculation-verification",)
     assert verdict.status is VerificationStatus.VERIFIED
     assert verdict.coverage == 1.0
@@ -310,8 +310,8 @@ def test_verify_declaracion_refuses_snapshot_ref_revision_divergence() -> None:
     assert error.context == {
         "modelo": "130",
         "period": "2025 1T",
-        "observed_ref": "registry:130:wrong-revision:2025:1T",
-        "resolved_ref": "registry:130:2019-y-siguientes:2025:1T",
+        "observed_ref": "130:wrong-revision:2025:1T",
+        "resolved_ref": "130:2019-y-siguientes:2025:1T",
     }
 
 
@@ -564,7 +564,7 @@ class TestVerdictJsonRoundTrip:
         verdict = VerificationVerdict(
             modelo="130",
             period=Period.from_year_and_code(2025, "1T"),
-            registry_snapshot_id="registry:130:2019-y-siguientes",
+            registry_snapshot_id="130:2019-y-siguientes:2025:1T",
             verification_expectation_ids=("modelo-130-calculation-verification",),
             status=VerificationStatus.VERIFIED,
             discrepancies=(),

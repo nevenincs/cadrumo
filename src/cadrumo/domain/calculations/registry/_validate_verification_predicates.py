@@ -31,6 +31,7 @@ import re as _re
 from collections.abc import Mapping
 
 from ._ids import CasillaId
+from ._schema_scalars import registry_scalar_value_type
 from ._schema_surfaces import CasillaDefinition
 from ._schema_verification import KNOWN_PROFILE_FLAG_ADVISORY_FIELDS
 
@@ -199,10 +200,10 @@ def _casilla_equals_implies_nonzero_predicate_failures(
         failures.append(
             f"{prefix}: {owner} casilla_equals_implies_nonzero references unknown antecedent casilla {antecedent_id!r}",
         )
-    elif antecedent is not None and antecedent.data_type != "text":
+    elif antecedent is not None and registry_scalar_value_type(antecedent.data_type) != "str":
         failures.append(
             f"{prefix}: {owner} casilla_equals_implies_nonzero antecedent casilla {antecedent_id!r} "
-            "must have data_type 'text'",
+            f"must be a text-family casilla (scalar family 'str'), not data_type {antecedent.data_type!r}",
         )
     if not literal:
         failures.append(f"{prefix}: {owner} casilla_equals_implies_nonzero literal must be non-empty")
@@ -211,10 +212,10 @@ def _casilla_equals_implies_nonzero_predicate_failures(
         failures.append(
             f"{prefix}: {owner} casilla_equals_implies_nonzero references unknown consequent casilla {consequent_id!r}",
         )
-    elif consequent is not None and consequent.data_type == "text":
+    elif consequent is not None and registry_scalar_value_type(consequent.data_type) == "str":
         failures.append(
             f"{prefix}: {owner} casilla_equals_implies_nonzero consequent casilla {consequent_id!r} "
-            "must not have data_type 'text'",
+            f"must be a numeric casilla, not a text-family one; declares data_type {consequent.data_type!r}",
         )
     return failures
 
@@ -265,10 +266,10 @@ def _casilla_equals_implies_profile_flag_predicate_failures(
             f"{prefix}: {owner} casilla_equals_implies_profile_flag references unknown "
             f"antecedent casilla {antecedent_id!r}",
         )
-    elif antecedent is not None and antecedent.data_type != "text":
+    elif antecedent is not None and registry_scalar_value_type(antecedent.data_type) != "str":
         failures.append(
             f"{prefix}: {owner} casilla_equals_implies_profile_flag antecedent casilla {antecedent_id!r} "
-            "must have data_type 'text'",
+            f"must be a text-family casilla (scalar family 'str'), not data_type {antecedent.data_type!r}",
         )
     if not literal:
         failures.append(f"{prefix}: {owner} casilla_equals_implies_profile_flag literal must be non-empty")
@@ -326,10 +327,10 @@ def _casilla_equals_implies_diverges_predicate_failures(
             f"{prefix}: {owner} casilla_equals_implies_diverges references unknown antecedent "
             f"casilla {antecedent_id!r}",
         )
-    elif antecedent is not None and antecedent.data_type != "text":
+    elif antecedent is not None and registry_scalar_value_type(antecedent.data_type) != "str":
         failures.append(
             f"{prefix}: {owner} casilla_equals_implies_diverges antecedent casilla {antecedent_id!r} "
-            "must have data_type 'text'",
+            f"must be a text-family casilla (scalar family 'str'), not data_type {antecedent.data_type!r}",
         )
     if not literal:
         failures.append(f"{prefix}: {owner} casilla_equals_implies_diverges literal must be non-empty")
@@ -340,23 +341,22 @@ def _casilla_equals_implies_diverges_predicate_failures(
                 f"{prefix}: {owner} casilla_equals_implies_diverges references unknown {role} casilla "
                 f"{consequent_id!r}",
             )
-        elif consequent is not None and consequent.data_type == "text":
+        elif consequent is not None and registry_scalar_value_type(consequent.data_type) == "str":
             failures.append(
                 f"{prefix}: {owner} casilla_equals_implies_diverges {role} casilla {consequent_id!r} "
-                "must not have data_type 'text'",
+                f"must be a numeric casilla, not a text-family one; declares data_type {consequent.data_type!r}",
             )
     return failures
 
 
 # deduccion_requires_adquisicion_before(["amount_id", "acquisition_date_id",
-# "construction_date_id", "cutoff_iso"]) — eligibility-conditional advisory.
-# Mixes three casilla ids with a trailing ISO-date literal, so it cannot route
-# through the generic _casilla_list_predicate_failures (which validates every
-# bracketed token as a casilla id). This authoring-time gate rejects a malformed
-# arity, an unknown amount/date casilla, a non-text date casilla, or an
-# unparseable cutoff at registry load rather than letting the runtime evaluator's
-# defensive bad-arity / unparseable-cutoff branch (returns False — never fires)
-# silently mask a typo.
+# "construction_date_id", "cutoff_iso"]) — eligibility-conditional advisory. Mixes three
+# casilla ids with a trailing ISO-date literal, so it cannot route through the generic
+# _casilla_list_predicate_failures (which validates every bracketed token as a casilla
+# id). This authoring-time gate rejects a malformed arity, an unknown amount/date
+# casilla, a date casilla whose family cannot carry a parseable date, or an unparseable
+# cutoff at registry load rather than letting the runtime evaluator's defensive
+# bad-arity / unparseable-cutoff branch (returns False — never fires) silently mask a typo.
 _DEDUCCION_REQUIRES_ADQUISICION_BEFORE_PREDICATE = _re.compile(
     r"^deduccion_requires_adquisicion_before\(\[(?P<ids>[^\]]*)\]\)$",
 )
@@ -401,10 +401,10 @@ def _deduccion_requires_adquisicion_before_predicate_failures(
             )
             continue
         casilla = casilla_by_id.get(date_id)
-        if casilla is not None and casilla.data_type != "text":
+        if casilla is not None and registry_scalar_value_type(casilla.data_type) not in {"str", "date"}:
             failures.append(
                 f"{prefix}: {owner} deduccion_requires_adquisicion_before {role} casilla {date_id!r} "
-                "must have data_type 'text'",
+                f"must carry a parseable date (scalar family 'str' or 'date'), not data_type {casilla.data_type!r}",
             )
     if not _ISO_DATE_LITERAL.match(cutoff):
         failures.append(

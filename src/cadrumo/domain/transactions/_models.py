@@ -16,11 +16,12 @@ from pydantic_core import core_schema
 
 from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.errors import CoreValidationError
 from ...core.external_constants import CLASSIFIED_BY_AUTO, DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
 from ...core.money import round_to_cents
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction, parse_iso8601_date
 from ...core.time import now
 from .._identifiers import canonical_decimal_string
 from ..iva import (
@@ -965,15 +966,17 @@ class Transaction(BaseModel):
         through every ledger boundary. Required for IRNR scope enforcement and
         for the Art. 93 LIRPF impatriado base filter; ``None`` means the
         current record explicitly declares the jurisdiction unknown.
+
+        The shape policy is owned by
+        :func:`~core.parsing.normalise_iso_3166_alpha2_jurisdiction`, shared
+        with the application-layer ledger command and payload models, so the
+        two boundaries cannot drift apart on which tokens they accept. Only
+        the domain error type is re-raised here.
         """
-        if value is None:
-            return None
-        normalised = value.strip()
-        if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
-            raise TransactionValidationError(
-                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code",
-            )
-        return normalised
+        try:
+            return normalise_iso_3166_alpha2_jurisdiction(value)
+        except CoreValidationError as exc:
+            raise TransactionValidationError(str(exc)) from exc
 
     @model_validator(mode="after")
     def _enforce_business_pct(self) -> Self:

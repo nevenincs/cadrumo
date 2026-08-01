@@ -15,6 +15,13 @@ command emitters keep one payload import surface.
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from pydantic import Field, model_validator
+
+from ...application.ledger import LLMProvider
+from ...domain.transactions import BusinessClassification, LedgerClassificationRule
+from ._decimal_wire import DecimalWireText
 from ._schemas import OutputSchema, register_schema
 
 
@@ -31,13 +38,26 @@ class ClassificationRulePayload(OutputSchema):
     values run before higher ones.
     """
 
-    rule_id: str
-    description_pattern: str
-    classification: str
+    rule_id: str = Field(min_length=64, max_length=64)
+    description_pattern: str = Field(min_length=1)
+    classification: BusinessClassification
     category_id: str | None = None
-    priority: int
-    actor: str
-    created_at: str
+    priority: int = Field(ge=1)
+    actor: str = Field(min_length=1)
+    created_at: datetime
+
+    @model_validator(mode="after")
+    def _validate_canonical_rule(self) -> ClassificationRulePayload:
+        LedgerClassificationRule(
+            rule_id=self.rule_id,
+            description_pattern=self.description_pattern,
+            classification=self.classification,
+            category_id=self.category_id,
+            priority=self.priority,
+            created_at=self.created_at,
+            actor=self.actor,
+        )
+        return self
 
 
 @register_schema("ledger.rule.add")
@@ -77,8 +97,8 @@ class RuleApplyMatchPayload(OutputSchema):
 
     transaction_id: str
     description: str
-    matched_rule_id: str
-    classification: str
+    matched_rule_id: str = Field(min_length=64, max_length=64)
+    classification: BusinessClassification
 
 
 class RuleApplyAppliedPayload(OutputSchema):
@@ -94,8 +114,8 @@ class RuleApplyAppliedPayload(OutputSchema):
     """
 
     transaction_id: str
-    matched_rule_id: str
-    classification: str
+    matched_rule_id: str = Field(min_length=64, max_length=64)
+    classification: BusinessClassification
 
 
 @register_schema("ledger.rule.apply")
@@ -136,8 +156,8 @@ class LLMProviderAvailabilityPayload(OutputSchema):
     not spawn the provider CLI or send transaction data to a cloud service.
     """
 
-    provider: str
-    cli_binary: str
+    provider: LLMProvider
+    cli_binary: str = Field(min_length=1)
     available: bool
     resolved_path: str | None = None
 
@@ -182,13 +202,15 @@ class LlmUsageProviderPayload(OutputSchema):
     (cache hits included); ``cost_estimate_usd`` is the summed estimate.
     """
 
-    provider: str
-    calls: int
-    cache_hits: int
-    input_tokens: int
-    output_tokens: int
-    total_tokens: int
-    cost_estimate_usd: str
+    provider: str = Field(min_length=1)
+    calls: int = Field(ge=0)
+    cache_hits: int = Field(ge=0)
+    input_tokens: int = Field(ge=0)
+    output_tokens: int = Field(ge=0)
+    total_tokens: int = Field(ge=0)
+    # The canonical LlmUsageProviderMetrics declares this a plain Decimal with
+    # no bound, so the transport asserts the decimal grammar only.
+    cost_estimate_usd: DecimalWireText
 
 
 class LlmConfidenceProviderPayload(OutputSchema):
@@ -201,14 +223,17 @@ class LlmConfidenceProviderPayload(OutputSchema):
     distribution buckets.
     """
 
-    provider: str
-    classified_count: int
-    low_confidence_count: int
-    high_confidence_count: int
-    medium_confidence_count: int
-    min_confidence: str | None = None
-    max_confidence: str | None = None
-    mean_confidence: str | None = None
+    provider: str = Field(min_length=1)
+    classified_count: int = Field(ge=0)
+    low_confidence_count: int = Field(ge=0)
+    high_confidence_count: int = Field(ge=0)
+    medium_confidence_count: int = Field(ge=0)
+    # Unbounded on purpose: the canonical LlmConfidenceProviderMetrics carries
+    # these as `Decimal | None` with no range, so the transport mirrors that
+    # rather than inventing a [0, 1] bound the contract does not state.
+    min_confidence: DecimalWireText | None = None
+    max_confidence: DecimalWireText | None = None
+    mean_confidence: DecimalWireText | None = None
 
 
 @register_schema("ledger.llm_diagnostics")
@@ -227,14 +252,14 @@ class LedgerLlmDiagnosticsResult(OutputSchema):
 
     since: str | None = None
     until: str | None = None
-    low_confidence_threshold: str
+    low_confidence_threshold: DecimalWireText
     usage_providers: list[LlmUsageProviderPayload]
-    total_calls: int
-    total_cache_hits: int
-    total_input_tokens: int
-    total_output_tokens: int
-    total_cost_estimate_usd: str
+    total_calls: int = Field(ge=0)
+    total_cache_hits: int = Field(ge=0)
+    total_input_tokens: int = Field(ge=0)
+    total_output_tokens: int = Field(ge=0)
+    total_cost_estimate_usd: DecimalWireText
     confidence_providers: list[LlmConfidenceProviderPayload]
-    total_classified: int
-    total_low_confidence: int
+    total_classified: int = Field(ge=0)
+    total_low_confidence: int = Field(ge=0)
     has_data: bool

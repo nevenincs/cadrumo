@@ -18,6 +18,7 @@ from .. import create_work_unit
 from .._calculate_input import (
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,
+    ModeloCalculateTextInputError,
     WorkCalculateInputBundle,
     build_work_calculate_input_bundle,
 )
@@ -163,3 +164,70 @@ def test_casilla_override_accepts_canonical_decimal(raw_value: str, tmp_path: Pa
     """
     bundle = _m200_bundle_with_casilla_value(raw_value, tmp_path=tmp_path)
     assert bundle.casilla_inputs[_M200_MANUAL_DECIMAL_CASILLA] == Decimal(raw_value)
+
+
+# Modelo 303's informational period casilla is declared
+# ``data_type = "period_code"``, a member of the registry's string scalar
+# family but NOT the literal ``"text"``. While this boundary keyed its
+# text-channel membership on ``data_type == "text"``, every non-``text``
+# string family fell through to the Decimal parser: a perfectly valid
+# ``--casilla decl.periodo=1T`` was refused as "not a decimal", and any
+# string family whose values happen to parse as numbers would have been
+# silently corrupted into a Decimal instead. Membership now derives from the
+# type family, so these two tests fail if the literal is ever restored.
+_M303_PERIOD_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="_M303_PERIOD_CASILLA")
+_M303_PROFILE_ID = "20000000-0000-4000-8000-000000000303"
+
+
+def _m303_bundle_with_period_override(raw_value: str, *, tmp_path: Path) -> WorkCalculateInputBundle:
+    """Drive the real calculate-input boundary with one ``period_code`` ``--casilla`` value."""
+    period = Period.from_year_and_code(2025, "1T")
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period=period.registry_token)
+    bucket_id = _M303_PROFILE_ID
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(bucket_id):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=bucket_id,
+                overrides={
+                    "identity.tax_id": "B66012345",
+                    "identity.legal_name": "Calculate Input SL",
+                    "taxpayer_type.entity_type": "legal_entity",
+                    "taxpayer_type.legal_entity_form": "sl",
+                },
+            ),
+        )
+        work_unit = create_work_unit(
+            bucket_id=bucket_id,
+            modelo="303",
+            filing_year=2025,
+            period=period,
+            revision_id=snapshot.revision.id,
+            clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
+        )
+        return build_work_calculate_input_bundle(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_overrides={_M303_PERIOD_CASILLA: raw_value},
+            binding_overrides={},
+            relation_overrides={},
+            detail_rows=(),
+            borrador_snapshot_id=None,
+        )
+
+
+def test_period_code_casilla_override_routes_to_the_text_channel(tmp_path: Path) -> None:
+    """A ``period_code`` override lands on the string channel, never the Decimal one."""
+    bundle = _m303_bundle_with_period_override("1T", tmp_path=tmp_path)
+
+    assert bundle.text_casilla_inputs[_M303_PERIOD_CASILLA] == "1T"
+    assert _M303_PERIOD_CASILLA not in bundle.casilla_inputs
+
+
+def test_period_code_casilla_override_refuses_a_malformed_token(tmp_path: Path) -> None:
+    """The declared family validator runs at the boundary, naming the data_type."""
+    with pytest.raises(ModeloCalculateTextInputError) as exc_info:
+        _m303_bundle_with_period_override("9Q", tmp_path=tmp_path)
+
+    message = str(exc_info.value)
+    assert "period_code" in message
+    assert "9Q" in message

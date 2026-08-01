@@ -1,13 +1,21 @@
-"""Decryptability diagnostics for SQL secure-object persistence."""
+"""Decryptability diagnostics for SQL secure-object persistence.
+
+The three operations here -- quarantine, namespace counting, and per-row
+enumeration -- differ in what they DO with an undecryptable row (move it,
+count it, describe it) but agree exactly on how they DECIDE one:
+:func:`probe_row_decryptability` is that single decision. Keeping it in one
+place means an AAD change or a new decryption-failure mode cannot be applied
+to two of the three surfaces and missed on the third.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from logging import Logger
+from typing import NamedTuple, Protocol, cast
 
 from sqlalchemy import Engine, bindparam, text
 
-from .....core.external_constants import UTF_8_ENCODING
 from ..crypto import (
     decrypt_secure_object_payload,
     secure_object_payload_aad,
@@ -17,6 +25,63 @@ from . import _orm
 from ._secure_object_records import SecureObjectDecryptabilityRow, SecureObjectNamespaceIntegrity
 from ._secure_object_schema import database_bytes, ensure_quarantine_table, quarantine_timestamp
 from .session import session_scope
+
+
+class _DecryptableRawRow(Protocol):
+    """The row columns the decryptability decision reads.
+
+    Every query behind the three integrity operations projects at least these
+    three columns; the protocol pins that shared minimum.
+    """
+
+    object_key: str | bytes
+    schema_version: int
+    payload: bytes
+
+
+class RowDecryptability(NamedTuple):
+    """Whether one stored row decrypts, with the bytes the caller needs to act.
+
+    ``object_key`` and ``payload`` are the normalised wire bytes: callers that
+    quarantine a row re-insert exactly these, so the row that moves is the row
+    that was probed. ``reason`` carries the decryption failure text and is
+    ``None`` when ``readable`` is ``True``.
+    """
+
+    object_key: bytes
+    payload: bytes
+    readable: bool
+    reason: str | None
+
+
+def probe_row_decryptability(raw: object, *, namespace: str) -> RowDecryptability:
+    """Decide whether one secure-object row decrypts under the current master key.
+
+    The single decryptability decision behind quarantine, namespace counting,
+    and per-row enumeration. Normalises the row's bytes through
+    :func:`~adapters.persistence.storage.sql._secure_object_schema.database_bytes`
+    (SQLite returns ``bytes``, ``memoryview``, or ``str`` depending on the
+    driver and query form), rebuilds the row-identity AAD, and attempts the
+    AEAD open.
+
+    Only :class:`~adapters.persistence.storage.errors.DecryptionError` is
+    treated as "unreadable": a row whose bytes are structurally impossible to
+    normalise is a programming or schema fault and propagates.
+    """
+    # CAST-RATIONALE-SECURE-OBJECT-INTEGRITY-ROW: SQL row tuples are structurally
+    # validated by this probe's own column reads.
+    row = cast(_DecryptableRawRow, raw)
+    object_key = database_bytes(row.object_key)
+    payload = database_bytes(row.payload)
+    schema_version = int(row.schema_version)
+    try:
+        decrypt_secure_object_payload(
+            payload,
+            associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
+        )
+    except DecryptionError as exc:
+        return RowDecryptability(object_key=object_key, payload=payload, readable=False, reason=str(exc))
+    return RowDecryptability(object_key=object_key, payload=payload, readable=True, reason=None)
 
 
 def quarantine_unreadable_rows(
@@ -49,28 +114,15 @@ def quarantine_unreadable_rows(
             quarantined = 0
             retained = 0
             for raw in rows:
-                payload_bytes = raw.payload if isinstance(raw.payload, bytes) else bytes(raw.payload)
-                object_key_value = (
-                    raw.object_key
-                    if isinstance(raw.object_key, bytes | bytearray | memoryview)
-                    else str(raw.object_key).encode(UTF_8_ENCODING)
-                )
-                object_key_bytes = bytes(object_key_value)
-                try:
-                    decrypt_secure_object_payload(
-                        payload_bytes,
-                        associated_data=secure_object_payload_aad(
-                            namespace,
-                            object_key_bytes,
-                            int(raw.schema_version),
-                        ),
-                    )
-                except DecryptionError as exc:
+                probe = probe_row_decryptability(raw, namespace=namespace)
+                payload_bytes = probe.payload
+                object_key_bytes = probe.object_key
+                if not probe.readable:
                     logger.debug(
                         "secure_objects: quarantining unreadable row id=%s namespace=%s (%s)",
                         int(raw.id),
                         namespace,
-                        exc,
+                        probe.reason,
                     )
                     session.execute(
                         text(
@@ -145,24 +197,16 @@ def probe_namespace_integrity(
         )
         rows = session.execute(stmt).all()
     for raw in rows:
-        try:
-            decrypt_secure_object_payload(
-                bytes(raw.payload),
-                associated_data=secure_object_payload_aad(
-                    namespace,
-                    bytes(raw.object_key),
-                    int(raw.schema_version),
-                ),
-            )
-        except DecryptionError as exc:
+        probe = probe_row_decryptability(raw, namespace=namespace)
+        if probe.readable:
+            readable += 1
+        else:
             logger.debug(
                 "secure_objects probe: unreadable row in namespace=%s (%s)",
                 namespace,
-                exc,
+                probe.reason,
             )
             unreadable += 1
-        else:
-            readable += 1
     return SecureObjectNamespaceIntegrity(
         namespace=namespace,
         readable=readable,
@@ -193,35 +237,14 @@ def iter_namespace_decryptability(
         )
         rows = session.execute(stmt).all()
     for raw in rows:
-        object_key_value = database_bytes(raw.object_key)
-        payload_value = database_bytes(raw.payload)
-        try:
-            decrypt_secure_object_payload(
-                payload_value,
-                associated_data=secure_object_payload_aad(
-                    namespace,
-                    object_key_value,
-                    int(raw.schema_version),
-                ),
-            )
-        except DecryptionError as exc:
-            yield SecureObjectDecryptabilityRow(
-                namespace=namespace,
-                row_id=int(raw.id),
-                object_key=object_key_value,
-                classification=str(raw.classification),
-                schema_version=int(raw.schema_version),
-                written_at=raw.written_at,
-                readable=False,
-                reason=str(exc),
-            )
-        else:
-            yield SecureObjectDecryptabilityRow(
-                namespace=namespace,
-                row_id=int(raw.id),
-                object_key=object_key_value,
-                classification=str(raw.classification),
-                schema_version=int(raw.schema_version),
-                written_at=raw.written_at,
-                readable=True,
-            )
+        probe = probe_row_decryptability(raw, namespace=namespace)
+        yield SecureObjectDecryptabilityRow(
+            namespace=namespace,
+            row_id=int(raw.id),
+            object_key=probe.object_key,
+            classification=str(raw.classification),
+            schema_version=int(raw.schema_version),
+            written_at=raw.written_at,
+            readable=probe.readable,
+            reason=probe.reason,
+        )

@@ -49,10 +49,10 @@ from ._adapter_utils import (
     _LocateHelper,
     _SedeCheckerModel,
     assert_query_browser_action_for,
+    extract_marker_verdict,
     is_aeat_auth_gate_redirect,
     make_locate_helper,
     nif_check_operation_tail,
-    normalize_response_text,
     registry_failure_message,
     require_playwright_page,
 )
@@ -493,40 +493,28 @@ async def _check_single_nif(
     return extract_verdict_from_response_text(body_text)
 
 
-def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "invalid", "unknown"]:
-    """Parse the AEAT-rendered verdict from response body text.
+_POSITIVE_MARKERS: tuple[str, ...] = (
+    "si consta",
+    "si esta identificado",
+    "operador intracomunitario identificado",
+    "operador identificado",
+    "nif iva valido",
+    "nif-iva valido",
+    "valid",
+)
 
-    AEAT renders the VIES response in Spanish. The parser is conservative:
-    explicit negative verdicts win over generic positive words such as
-    ``válido`` so phrases like ``no válido`` cannot be misclassified.
+
+def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "invalid", "unknown"]:
+    """Parse the AEAT-rendered VIES verdict from response body text.
+
+    AEAT renders the VIES response in Spanish and phrases a rejection by
+    negating the same word it uses to affirm, so the bare ``valid`` positive
+    marker below is safe only because rejection is classified first, through
+    the shared
+    :data:`~._adapter_utils.SPANISH_NEGATIVE_VERDICT_MARKERS` table every sede
+    checker reads.
     """
-    normalized = normalize_response_text(body_text)
-    if not normalized:
-        return "unknown"
-    negative_markers = (
-        "no consta",
-        "no valido",
-        "no es valido",
-        "no esta identificado",
-        "no se encuentra identificado",
-        "no identificado",
-        "operador no identificado",
-        "invalid",
-    )
-    if any(marker in normalized for marker in negative_markers):
-        return "invalid"
-    positive_markers = (
-        "si consta",
-        "si esta identificado",
-        "operador intracomunitario identificado",
-        "operador identificado",
-        "nif iva valido",
-        "nif-iva valido",
-        "valid",
-    )
-    if any(marker in normalized for marker in positive_markers):
-        return "valid"
-    return "unknown"
+    return extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS)
 
 
 async def _select_country_code(page: Page, country_code: str, *, timeout_ms: int) -> None:

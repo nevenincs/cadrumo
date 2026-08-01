@@ -64,7 +64,7 @@ from typing import TYPE_CHECKING
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.entrypoints.schema_surface import (
     GROUP_CALLBACK_SCHEMA_KEYS,
-    SCHEMA_KEY_BY_CLI_PATH,
+    normalise_cli_path_to_schema_key,
 )
 
 if TYPE_CHECKING:
@@ -88,11 +88,6 @@ _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = GROUP_CALLBACK_SCHEMA_KEYS
 
 #: Command-path normalisation rules that mirror the conformance-test normaliser
 #: in :mod:`cadrumo.entrypoints.cli.test_json_schema_conformance`.
-_APP_NAMESPACE_FLATTEN: frozenset[str] = frozenset(
-    {"diagnostics", "ledger", "modelo", "overview", "registry", "review"}
-)
-_APP_NAMESPACE_PASSTHROUGH: frozenset[str] = frozenset({"live"})
-
 #: Deterministic wrap width for a captured group ``--help`` block, pinned via
 #: ``max_content_width`` (see :func:`_captured_help_text`) so the rendered
 #: reference is byte-stable across machines.
@@ -263,30 +258,7 @@ def _assert_no_fallback_surfaces(root: click.Command) -> None:  # type: ignore[n
 # ---------------------------------------------------------------------------
 
 
-def _normalise_command_path(path: tuple[str, ...]) -> str:
-    """Project a Click leaf-command path onto the schema-registry key convention.
-
-    Mirrors the normaliser in
-    :mod:`cadrumo.entrypoints.cli.test_json_schema_conformance`.
-
-    Args:
-        path: Tuple of command name tokens from the root, e.g.
-            ``("aeat", "app", "modelo", "work", "calculate")``.
-
-    Returns:
-        The dot-joined registry key, e.g. ``"modelo.work.calculate"``.
-    """
-    tokens = [token.replace("-", "_") for token in path]
-    if tokens and tokens[0] == "aeat":
-        tokens = tokens[1:]
-    if len(tokens) >= 2 and tokens[0] == "app":
-        head = tokens[1]
-        if head in _APP_NAMESPACE_FLATTEN:
-            tokens = tokens[1:]
-        elif head in _APP_NAMESPACE_PASSTHROUGH:
-            pass  # keep ``app.`` prefix
-    normalised = ".".join(tokens)
-    return SCHEMA_KEY_BY_CLI_PATH.get(normalised, normalised)
+_normalise_command_path = normalise_cli_path_to_schema_key
 
 
 # ---------------------------------------------------------------------------

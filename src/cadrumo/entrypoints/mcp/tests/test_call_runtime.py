@@ -89,17 +89,35 @@ def test_a_child_spawning_process_is_killed_as_a_tree() -> None:
 
 
 def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
-    from .._transport import _timeout_refusal_envelope
+    from ....core.json_contract import ENVELOPE_SCHEMA_VERSION, validate_registered_envelope_document
+    from .._transport import _cli_resolution_refusal_envelope, _timeout_refusal_envelope
 
     envelope = _timeout_refusal_envelope(command_key="app.live.expedientes.pull", tier=CallTier.LIVE, timeout_s=420.0)
+    assert validate_registered_envelope_document(envelope) == envelope
+    assert envelope["schema_version"] == ENVELOPE_SCHEMA_VERSION
+    assert envelope["command"] == "app.live.expedientes.pull"
     assert envelope["status"] == "error"
-    assert envelope["timed_out"] is True
-    refusal = envelope["refusal"]
+    error = envelope["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == "mcp.transport.timeout"
+    assert error["context"] == {"tier": "live", "timeout_seconds": "420", "timed_out": "true"}
+    refusal = error["message"]
     assert isinstance(refusal, str)
     # The refusal names the command, the tier, and the ceiling.
     assert "app.live.expedientes.pull" in refusal
     assert "live" in refusal
     assert "420" in refusal
+
+    installation = _cli_resolution_refusal_envelope(
+        command_key="contract",
+        error=FileNotFoundError("Installed Cadrumo CLI executable is missing"),
+    )
+    assert validate_registered_envelope_document(installation) == installation
+    assert installation["command"] == "contract"
+    installation_error = installation["error"]
+    assert isinstance(installation_error, dict)
+    assert installation_error["code"] == "mcp.transport.installation_incomplete"
+    assert installation_error["context"] == {"installation_incomplete": "true"}
 
 
 def test_serving_limiter_is_a_settings_sized_singleton() -> None:

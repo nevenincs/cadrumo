@@ -8,12 +8,13 @@ assessment code under test, so a wrong floor would fail these tests.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 import pytest
 
 from ...retention import (
     RetentionFloorAssessment,
+    add_prescription_years,
     assess_retention_floor,
     earliest_safe_erase_date,
 )
@@ -58,6 +59,11 @@ def test_leap_day_filed_at_clamps_to_28_february() -> None:
     assert earliest_safe_erase_date(_dt(2020, 2, 29)) == _dt(2024, 2, 29)
     # A one-year floor from a leap day into a non-leap year clamps to 28 Feb.
     assert earliest_safe_erase_date(_dt(2020, 2, 29), floor_years=1) == _dt(2021, 2, 28)
+
+
+def test_prescription_year_addition_preserves_date_or_datetime_kind() -> None:
+    assert add_prescription_years(date(2020, 2, 29), 1) == date(2021, 2, 28)
+    assert add_prescription_years(_dt(2020, 2, 29), 1) == _dt(2021, 2, 28)
 
 
 def test_record_inside_window_blocks_erase() -> None:

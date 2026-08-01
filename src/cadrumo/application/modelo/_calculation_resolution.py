@@ -69,6 +69,20 @@ class ResolvedCalculationChannels:
 
 
 @dataclass(frozen=True, slots=True)
+class ResolvedCalculationInputs:
+    """Canonical per-channel casilla inputs for one engine run.
+
+    ``casilla_inputs`` feeds ``calculate_registry_snapshot(inputs=...)`` and
+    ``text_casilla_inputs`` feeds its ``text_inputs=...`` channel. Callers
+    receive both together so a string-family casilla cannot be silently dropped
+    on the way to the engine.
+    """
+
+    casilla_inputs: dict[CasillaId, Decimal]
+    text_casilla_inputs: dict[CasillaId, str]
+
+
+@dataclass(frozen=True, slots=True)
 class CalculationReplayPayloads:
     """Canonical string payloads stored for calculation replay.
 
@@ -177,8 +191,9 @@ def resolve_calculation_inputs(
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
     resolved_bindings: Mapping[BindingId, Decimal],
     casilla_inputs: Mapping[CasillaId, Decimal],
-) -> dict[CasillaId, Decimal]:
-    """Build the canonical casilla input map for engine execution.
+    text_casilla_inputs: Mapping[CasillaId, str] | None = None,
+) -> ResolvedCalculationInputs:
+    """Build the canonical casilla input maps for engine execution.
 
     The ``revision`` is the :class:`ModeloRevision` whose declaration-period and
     bound casilla inputs are being projected. The :class:`~core.Period`
@@ -187,21 +202,39 @@ def resolve_calculation_inputs(
 
     Declaration-period bindings are projected first, followed by backend casilla
     inputs, bound casillas resolved from merged binding values, and finally the
-    caller's explicit casilla overrides. The resulting map is sorted for stable
+    caller's explicit casilla overrides. Both returned maps are sorted for stable
     replay payloads and revision identity.
+
+    The two channels are returned together, and never merged, because the
+    registry assigns each casilla to exactly one of them by declared
+    ``data_type`` family: the ``filing_period`` role is ``period_code`` (a
+    string family whose ``period_code`` validator accepts ``1T``, ``EXT-1T``,
+    and every other declared token), while ``filing_year`` is ``year`` and stays
+    on the Decimal channel.
     """
-    return dict(
-        sorted(
-            {
-                **resolve_declaration_period_inputs(
-                    revision,
-                    filing_year=filing_year,
-                    period=period,
-                ),
-                **dict(backend_casilla_inputs or {}),
-                **resolve_available_bound_inputs_by_casilla_id(revision, resolved_bindings),
-                **casilla_inputs,
-            }.items(),
+    declaration = resolve_declaration_period_inputs(
+        revision,
+        filing_year=filing_year,
+        period=period,
+    )
+    return ResolvedCalculationInputs(
+        casilla_inputs=dict(
+            sorted(
+                {
+                    **declaration.casilla_inputs,
+                    **dict(backend_casilla_inputs or {}),
+                    **resolve_available_bound_inputs_by_casilla_id(revision, resolved_bindings),
+                    **casilla_inputs,
+                }.items(),
+            ),
+        ),
+        text_casilla_inputs=dict(
+            sorted(
+                {
+                    **declaration.text_casilla_inputs,
+                    **dict(text_casilla_inputs or {}),
+                }.items(),
+            ),
         ),
     )
 
@@ -265,6 +298,7 @@ def _row_binding_replay_values(
 __all__ = [
     "CalculationReplayPayloads",
     "ResolvedCalculationChannels",
+    "ResolvedCalculationInputs",
     "build_calculation_replay_payloads",
     "resolve_calculation_binding_channels",
     "resolve_calculation_inputs",

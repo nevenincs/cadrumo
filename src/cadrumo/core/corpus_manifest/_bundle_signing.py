@@ -30,12 +30,10 @@ have never provisioned a profile at all. This module therefore has no
 (this is a ``core`` module; ``core`` may not import ``adapters`` or
 ``application`` -- see the ``core-not-outer`` import-linter contract) and
 persists a maintainer's private key as a hex-encoded file on disk instead,
-hardened with :func:`~core.file_permissions.restrict_file_permissions`
-(the same best-effort POSIX ``chmod 0o600`` / Windows ACL hardening the
-AEAT-session-state writers use). The corresponding public key carries no
-secrecy requirement: it is meant to be embedded in the ``aeat`` distribution
-(or passed explicitly) so every installer can verify a downloaded bundle
-against a key they already trust, without contacting anyone.
+through :func:`~core.atomic_write.atomic_write_hardened_text`. The corresponding
+public key carries no secrecy requirement: it is meant to be embedded in the
+``aeat`` distribution (or passed explicitly) so every installer can verify a
+downloaded bundle against a key they already trust, without contacting anyone.
 
 See Also:
     :mod:`~core.corpus_manifest`
@@ -51,25 +49,25 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
-)
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    NoEncryption,
-    PrivateFormat,
-    PublicFormat,
 )
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .. import HEX_PATTERN_64 as _HEX_PATTERN_64
 from .. import HEX_PATTERN_128 as _HEX_PATTERN_128
 from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..atomic_write import atomic_write_hardened_text
+from ..ed25519_signing import (
+    digest_signature_is_valid,
+    ed25519_private_key_from_hex,
+    ed25519_public_key_from_hex,
+    generate_ed25519_keypair_hex,
+    sign_digest_hex,
+)
 from ..errors import CadrumoError
 from ..external_constants import UTF_8_ENCODING
-from ..file_permissions import restrict_file_permissions
 from ..time import now as _utc_now
 from ..time import validate_utc_aware as _validate_utc_aware
 
@@ -118,11 +116,11 @@ class CorpusSigningKeypair(BaseModel):
 
     def private_key(self) -> Ed25519PrivateKey:
         """Reconstruct the live :class:`Ed25519PrivateKey` from stored raw bytes."""
-        return Ed25519PrivateKey.from_private_bytes(bytes.fromhex(self.private_key_hex))
+        return ed25519_private_key_from_hex(self.private_key_hex)
 
     def public_key(self) -> Ed25519PublicKey:
         """Reconstruct the live :class:`Ed25519PublicKey` from stored raw bytes."""
-        return Ed25519PublicKey.from_public_bytes(bytes.fromhex(self.public_key_hex))
+        return ed25519_public_key_from_hex(self.public_key_hex)
 
 
 class CorpusSigningPublicKey(BaseModel):
@@ -179,14 +177,13 @@ def generate_corpus_signing_keypair(
 ) -> CorpusSigningKeypair:
     """Mint a fresh Ed25519 keypair and persist it (private key included) to disk.
 
-    Writes the keypair as JSON to ``private_key_path``, then hardens the
-    file's permissions via
-    :func:`~core.file_permissions.restrict_file_permissions`
-    (best-effort ``chmod 0o600`` on POSIX; an ACL-stripping ``icacls`` call on
-    Windows). This is a maintainer-side, offline, one-time act: unlike the
-    review-package keypair (minted per profile bucket, on demand), a corpus
-    signing keypair is generated once by the project and its public half is
-    then embedded in the distribution or handed to installers explicitly.
+    Writes the keypair as JSON to ``private_key_path`` through the hardened
+    atomic secret-write owner: collision-hardened staging, restrictive mode,
+    durability barriers, replacement, and cleanup on failure. This is a
+    maintainer-side, offline, one-time act: unlike the review-package keypair
+    (minted per profile bucket, on demand), a corpus signing keypair is
+    generated once by the project and its public half is then embedded in the
+    distribution or handed to installers explicitly.
 
     Args:
         private_key_path: Destination path for the keypair JSON. Parent
@@ -200,24 +197,18 @@ def generate_corpus_signing_keypair(
         The freshly minted
         :class:`~core.corpus_manifest.CorpusSigningKeypair`.
     """
-    private_key = Ed25519PrivateKey.generate()
-    public_key = private_key.public_key()
+    minted = generate_ed25519_keypair_hex()
     keypair = CorpusSigningKeypair(
-        private_key_hex=private_key.private_bytes(
-            encoding=Encoding.Raw,
-            format=PrivateFormat.Raw,
-            encryption_algorithm=NoEncryption(),
-        ).hex(),
-        public_key_hex=public_key.public_bytes(
-            encoding=Encoding.Raw,
-            format=PublicFormat.Raw,
-        ).hex(),
+        private_key_hex=minted.private_key_hex,
+        public_key_hex=minted.public_key_hex,
         created_at=generated_at or _utc_now(),
     )
     resolved = private_key_path.resolve()
-    resolved.parent.mkdir(parents=True, exist_ok=True)
-    resolved.write_text(keypair.model_dump_json(), encoding=UTF_8_ENCODING)
-    restrict_file_permissions(resolved)
+    atomic_write_hardened_text(
+        resolved,
+        keypair.model_dump_json(),
+        encoding=UTF_8_ENCODING,
+    )
     return keypair
 
 
@@ -298,12 +289,15 @@ def sign_corpus_bundle(
     from . import assert_corpus_bundle_verifies
 
     manifest = assert_corpus_bundle_verifies(bundle_path)
-    signature = keypair.private_key().sign(bytes.fromhex(manifest.manifest_sha256))
+    signature_hex = sign_digest_hex(
+        private_key_hex=keypair.private_key_hex,
+        digest_hex=manifest.manifest_sha256,
+    )
 
     return SignedCorpusBundle(
         corpus_root_name=manifest.corpus_root_name,
         manifest_sha256=manifest.manifest_sha256,
-        signature_hex=signature.hex(),
+        signature_hex=signature_hex,
         public_key_hex=keypair.public_key_hex,
         signed_at=signed_at or _utc_now(),
     )
@@ -361,15 +355,11 @@ def verify_corpus_bundle_signature(
     if result.manifest.manifest_sha256 != signed_bundle.manifest_sha256:
         return False
 
-    public_key = Ed25519PublicKey.from_public_bytes(bytes.fromhex(public_key_hex))
-    try:
-        public_key.verify(
-            bytes.fromhex(signed_bundle.signature_hex),
-            bytes.fromhex(signed_bundle.manifest_sha256),
-        )
-    except InvalidSignature:
-        return False
-    return True
+    return digest_signature_is_valid(
+        public_key_hex=public_key_hex,
+        digest_hex=signed_bundle.manifest_sha256,
+        signature_hex=signed_bundle.signature_hex,
+    )
 
 
 def assert_corpus_bundle_signature_verifies(

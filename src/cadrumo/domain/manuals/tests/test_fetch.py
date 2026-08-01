@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -91,6 +92,32 @@ class TestManifestIO:
 
         with pytest.raises(ManifestError, match=r"cannot write manifest"):
             write_manifest(directory_target, manifest)
+
+        assert sorted(tmp_path.glob("*.tmp")) == []
+
+    def test_write_manifest_replaces_the_authoritative_file_atomically(self, tmp_path: Path) -> None:
+        """A prior manifest is swapped out, never overwritten in place.
+
+        The manifest is the authoritative record a later verification reads
+        to decide whether the downloaded PDF is intact, so a torn write
+        behind a trusted name is the failure this pins. A hard link holds a
+        durable handle on the prior inode: an in-place write shows through
+        that handle, an atomic stage-and-replace does not.
+        """
+        path = tmp_path / "manifest.json"
+        write_manifest(path, _manifest(sha256="a" * 64, length=10))
+        prior_content = path.read_text(encoding="utf-8")
+        witness = tmp_path / "manifest-witness.json"
+        os.link(path, witness)
+        assert path.stat().st_ino == witness.stat().st_ino
+
+        write_manifest(path, _manifest(sha256="b" * 64, length=20))
+
+        assert load_manifest(path).sha256 == "b" * 64
+        assert witness.read_text(encoding="utf-8") == prior_content
+        assert "b" * 64 not in witness.read_text(encoding="utf-8")
+        assert path.stat().st_ino != witness.stat().st_ino
+        assert sorted(tmp_path.glob("*.tmp")) == []
 
     def test_load_manifest_missing_raises(self, tmp_path: Path) -> None:
         """load_manifest raises ManifestError when the file is absent."""
