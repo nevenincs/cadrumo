@@ -54,6 +54,7 @@ from ...adapters.persistence.storage import (
     USER_PROFILE_VALUE_NAMESPACE,
     SecureBoundRepository,
     SecureObjectNamespaceDefinition,
+    SecureObjectWrite,
     StorageCustodyProfile,
     secure_object_repository_for_bucket,
 )
@@ -510,10 +511,22 @@ def restore_carried_objects(
     Each row is written through the raw secure-object substrate under its
     natural key, so the recipient bucket re-digests the key under its own DEK
     and re-encrypts the payload. The caller holds the target bucket session.
+
+    The whole set commits as ONE unit of work. Saving row by row made a
+    failure partway through leave every earlier row durable while the call
+    raised, which is the worst of both outcomes for a custody boundary: the
+    caller is told the restore did not happen, and the target nonetheless
+    holds part of another bucket's key material. A retry then had to reason
+    about which rows already existed rather than about whether the restore
+    ran, and nothing recorded where it stopped.
+
+    Batching is not merely an optimisation here -- it is what makes the
+    failure legible. Either the target has all the carried custody rows or
+    it has none of them, so "did this restore happen" is answerable from the
+    target alone.
     """
-    repository = secure_object_repository_for_bucket(target_bucket_id)
-    for carried in carried_objects:
-        repository.save(
+    writes = tuple(
+        SecureObjectWrite(
             namespace=carried.namespace,
             object_key=carried.object_key,
             classification=carried.classification,
@@ -521,6 +534,11 @@ def restore_carried_objects(
             written_at=carried.written_at,
             payload=carried.payload,
         )
+        for carried in carried_objects
+    )
+    if not writes:
+        return
+    secure_object_repository_for_bucket(target_bucket_id).save_many(writes)
 
 
 __all__ = [
