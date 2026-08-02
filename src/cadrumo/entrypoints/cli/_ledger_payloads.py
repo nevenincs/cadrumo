@@ -961,11 +961,16 @@ class LedgerParticipationRebuildResult(OutputSchema):
     regenerates the derived participation index from the authoritative finalized
     calculation-revision catalogue.  The result is a repair summary for the
     read-side cache, not a mutation of ledger transactions.
+
+    ``stale_removed_count`` reports the participation objects pruned because the
+    regenerated catalogue no longer records them; a non-zero value means the
+    cache had been surfacing revisions the authoritative catalogue had dropped.
     """
 
     transaction_count: int
     participation_count: int
     revision_count: int
+    stale_removed_count: int
 
 
 class LedgerTrackingProvenancePayload(OutputSchema):
