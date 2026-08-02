@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
+from ...core.time import UtcInstant, validate_utc_aware
 from ..contribuyente import ProfileName as _ProfileName
 from ._errors import BucketEventValidationError
 
@@ -329,7 +330,17 @@ def derive_bucket_event_id(
     object_id: str,
     payload: Mapping[str, str],
 ) -> str:
-    """Return the deterministic SHA-256 id for a bucket event."""
+    """Return the deterministic SHA-256 id for a bucket event.
+
+    ``occurred_at`` is held to the canonical UTC contract before it reaches
+    the digest. The instant is hashed as text, so each spelling of one
+    moment -- naive, ``+01:00``, UTC -- produced a different id, and the
+    append path assigns by id: the same event submitted twice under two
+    spellings became two immutable history rows rather than collapsing, and
+    the content-addressing the catalogue documents held only for callers who
+    happened to agree on a timezone.
+    """
+    validate_utc_aware(occurred_at)
     body = {
         "bucket_id": bucket_id.strip(),
         "event_type": event_type.value,
@@ -368,7 +379,7 @@ class BucketEvent(BaseModel):
     event_id: BucketEventId
     bucket_id: _ProfileName
     event_type: BucketEventType
-    occurred_at: datetime
+    occurred_at: UtcInstant
     actor: BucketActorLabel
     object_type: BucketEventObjectType
     object_id: _ObjectId
