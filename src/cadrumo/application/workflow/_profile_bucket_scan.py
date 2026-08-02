@@ -251,11 +251,10 @@ def list_profile_buckets(
             continue
         if not include_tombstoned and manifest.status is UserProfileStatus.TOMBSTONED:
             continue
-        result[manifest.bucket_id] = ProfileBucketPointer(
-            bucket_id=manifest.bucket_id,
-            label=manifest.label,
-            status=manifest.status,
-        )
+        pointer = _pointer_or_none(manifest)
+        if pointer is None:
+            continue
+        result[manifest.bucket_id] = pointer
     return result
 
 
@@ -298,11 +297,43 @@ def _read_manifest_or_none(paths: BucketPaths) -> BucketManifest | None:
         return None
 
 
+def _pointer_or_none(manifest: BucketManifest) -> ProfileBucketPointer | None:
+    """Project one manifest onto its operator-facing pointer, or ``None`` if it will not project.
+
+    The manifest and the pointer share one core constraint for both identity
+    fields, so a manifest that loaded cannot normally fail to project. This
+    stays as a guard because the failure mode it covers is severe out of
+    proportion to its cost: a single malformed row used to abort the whole
+    enumeration with an uncaught validation error, taking every OTHER profile
+    off the operator's surface with it. Degrading to a skip keeps the rest of
+    the list reachable, and the same manifest is reported by
+    :func:`list_profile_bucket_scan_issues`.
+    """
+    try:
+        return ProfileBucketPointer(
+            bucket_id=manifest.bucket_id,
+            label=manifest.label,
+            status=manifest.status,
+        )
+    except ValidationError as exc:
+        _log.debug(
+            "profile bucket scan: skipping manifest that does not project to a pointer bucket_id=%s",
+            manifest.bucket_id,
+            exc_info=exc,
+        )
+        return None
+
+
 def _profile_bucket_scan_issue(bucket_id: str, paths: BucketPaths) -> ProfileBucketScanIssue | None:
     try:
-        read_manifest(paths)
+        manifest = read_manifest(paths)
     except _MANIFEST_SCAN_EXCEPTIONS as exc:
         return ProfileBucketScanIssue(bucket_id=bucket_id, reason=_compact_manifest_error(exc))
+    if _pointer_or_none(manifest) is None:
+        return ProfileBucketScanIssue(
+            bucket_id=bucket_id,
+            reason="ValidationError: manifest does not project to a profile bucket pointer",
+        )
     return None
 
 

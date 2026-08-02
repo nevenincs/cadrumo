@@ -2,29 +2,26 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ProfileLabel
 from ...domain.user_profile import UserProfileStatus
 
 
 class ProfileBucketPointer(BaseModel):
-    """Pointer to a secure profile bucket and its operator-facing label."""
+    """Pointer to a secure profile bucket and its operator-facing label.
+
+    Both identity fields carry the shared core constraint the bucket
+    manifest persists them under, so the projection from a manifest to this
+    pointer cannot fail on a value the manifest accepted.
+    """
 
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    label: str = Field(min_length=1, max_length=160)
+    label: ProfileLabel
     status: UserProfileStatus = UserProfileStatus.ACTIVE
-
-    @field_validator("bucket_id", "label")
-    @classmethod
-    def _trim_text(cls, value: str) -> str:
-        trimmed = value.strip()
-        if not trimmed:
-            raise ValueError("value must not be blank")
-        return trimmed
 
 
 __all__ = ["ProfileBucketPointer"]

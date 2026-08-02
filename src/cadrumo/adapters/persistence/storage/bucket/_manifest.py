@@ -27,7 +27,7 @@ from typing import Final, Literal
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core.identity import BucketId
+from .....core.identity import BucketId, ProfileLabel
 from .....core.time import validate_utc_aware
 from .....domain.user_profile import UserProfileStatus
 from .._kdf_bounds import (
@@ -122,7 +122,7 @@ class BucketManifest(BaseModel):
     model_config = _STRICT_FROZEN
 
     bucket_id: BucketId
-    label: str
+    label: ProfileLabel
     created_at: datetime
     last_unlocked_at: datetime | None
     kdf_params: ManifestKdfParams
