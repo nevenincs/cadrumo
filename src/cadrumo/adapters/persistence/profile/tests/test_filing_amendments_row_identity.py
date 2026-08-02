@@ -39,7 +39,7 @@ from .....domain.filing import (
     registry_schema_version,
 )
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...storage import Envelope, FILING_AMENDMENTS_NAMESPACE, SecureObjectRowIdentityError
+from ...storage import FILING_AMENDMENTS_NAMESPACE, Envelope, SecureObjectRowIdentityError
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..filing_amendments import ModeloAmendmentRepository
 
