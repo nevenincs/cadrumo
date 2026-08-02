@@ -171,8 +171,41 @@ def decode_secure_object_row(
     attacker anything beyond a refusal they could have caused anyway.
 
     Args:
+        namespace: The secure-object namespace the row was stored under; it
+            selects the registered row schema and scopes the diagnostics.
+        row_id: The row's primary key, carried only so a refusal can name the
+            offending row.
+        object_key: The row's opaque object key, used as AEAD associated data
+            so a payload cannot be replayed under a different key.
+        classification_str: The classification exactly as stored. Parsed in
+            step 1 and matched against ``expected_class``.
+        schema_version: The payload schema version as stored. Checked for
+            readability and namespace registration in step 2, and drives the
+            chain upgrade in step 5.
+        written_at: The row's stored write timestamp, carried onto the decoded
+            record.
+        payload_wire: The stored wire bytes -- the sealed envelope the AEAD
+            opens in step 4.
+        revision_id: The row's own revision identifier, or ``None`` when the
+            row carries no revision metadata.
+        previous_revision_id: The revision this row supersedes, or ``None`` for
+            a chain head.
+        payload_hash: Digest of this row's plaintext payload, or ``None``.
+        ciphertext_hash: Digest of this row's wire bytes, or ``None``.
+        previous_payload_hash: Digest of the superseded row's payload, or
+            ``None``. Together with the two revision ids this forms the
+            lineage triple checked in step 3.
         expected_class: The :class:`SensitivityClass` this namespace declares;
             the stored row's own classification must match it exactly.
+        max_supported_version: The highest schema version this reader can
+            handle. A row above it is refused rather than guessed at; a row
+            below it is chain-upgraded.
+        namespace_definition: The namespace's registered definition, or
+            ``None`` when the namespace is unregistered.
+        enforce_registered_row_schema: The namespace-registration check
+            invoked in step 2. Injected so the codec does not reach back into
+            the registry, and so tests can drive registration failures
+            directly.
 
     Raises:
         ClassificationError: Unknown classification, or one that does not match
@@ -287,9 +320,18 @@ def secure_object_record_from_row(
     wrapper adds; every check lives in :func:`decode_secure_object_row`.
 
     Args:
+        row: The ORM row to decode. Its columns are coerced to the concrete
+            types the codec requires (``int`` id, ``bytes`` object key and
+            payload) and forwarded; nothing is otherwise interpreted here.
         expected_class: The :class:`SensitivityClass` the row's own
             classification must match, forwarded verbatim to
             :func:`decode_secure_object_row`.
+        max_supported_version: The highest schema version this reader can
+            handle, forwarded verbatim.
+        namespace_definition: The namespace's registered definition, or
+            ``None`` when unregistered, forwarded verbatim.
+        enforce_registered_row_schema: The namespace-registration check,
+            forwarded verbatim.
     """
     return decode_secure_object_row(
         namespace=row.namespace,

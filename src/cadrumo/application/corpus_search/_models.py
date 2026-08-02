@@ -153,7 +153,7 @@ class RetrievalResponse(BaseModel):
     citation: CitationResolution | None = None
 
     @model_validator(mode="after")
-    def _mode_and_result_agree(self) -> "RetrievalResponse":
+    def _mode_and_result_agree(self) -> RetrievalResponse:
         if self.mode is RetrievalMode.CITATION:
             if self.citation is None:
                 raise ValueError("a CITATION response must carry a citation")

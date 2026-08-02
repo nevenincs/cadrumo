@@ -61,6 +61,8 @@ from ...domain.buckets import (
 )
 from ...domain.currency import ExchangeRateProvider
 
+_ZERO = Decimal("0")
+
 
 class BusinessOperationInvoiceDirection(StrEnum):
     """The two invoice-direction variants this module covers.
@@ -174,10 +176,10 @@ class BusinessOperationInvoice(BaseModel):
     invoice_number: str = Field(min_length=1, max_length=100)
     invoice_date: str = Field(min_length=10, max_length=10)
     currency: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
-    taxable_base: Decimal = Field(default=Decimal("0"), ge=0)
+    taxable_base: Decimal = Field(default=_ZERO, ge=_ZERO)
     iva_rate: Decimal | None = Field(default=None)
-    iva_amount: Decimal = Field(default=Decimal("0"), ge=0)
-    total_amount: Decimal = Field(default=Decimal("0"), ge=0)
+    iva_amount: Decimal = Field(default=_ZERO, ge=_ZERO)
+    total_amount: Decimal = Field(default=_ZERO, ge=_ZERO)
     # Euro-conversion stamp for a foreign-currency invoice, resolved at entry
     # from the ECB reference rate. Both are absent for a EUR invoice (already
     # euro) and for a foreign invoice whose rate could not be resolved -- which

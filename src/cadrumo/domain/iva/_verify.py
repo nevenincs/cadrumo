@@ -24,6 +24,7 @@ from ._schema import (
 
 _logger = get_logger(__name__)
 
+
 def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
     """Run every cross-record check on ``catalogue``.
 
@@ -69,7 +70,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                     IvaVerificationIssue(
                         level="error",
                         code="empty_quoted_text",
-                        message=f"citation {citation.article!r} has empty quoted_text",
+                        message=f"citation {citation.legal_reference!r} has empty quoted_text",
                         category_id=regulation.category.value,
                     ),
                 )
@@ -105,8 +106,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                         level="error",
                         code="legal_reference_unverified",
                         message=(
-                            f"citation legal_reference {citation.legal_reference!r} "
-                            f"has invalid corpus evidence: {exc}"
+                            f"citation legal_reference {citation.legal_reference!r} has invalid corpus evidence: {exc}"
                         ),
                         category_id=regulation.category.value,
                     ),
