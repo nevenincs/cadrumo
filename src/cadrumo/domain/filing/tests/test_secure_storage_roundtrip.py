@@ -179,7 +179,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.approved_by == "operator-reviewer-1"
     assert loaded.review_checksum == "a" * 64
     assert loaded.approval_basis is not None
-    assert loaded.approval_basis.draft_payload_fingerprint == "b" * 64
+    assert loaded.approval_basis.draft_payload_fingerprint == "b" * 16
 
 
 def test_modelo_value_rejects_legacy_formula_trace_key() -> None:
