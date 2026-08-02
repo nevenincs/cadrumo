@@ -307,7 +307,6 @@ class ProfileLifecycleService:
         )
         return ProfileLifecycleResult(profile=target, applied_at=now)
 
-
     # ── helpers ────────────────────────────────────────────────────
 
     def _reject_invalid(
