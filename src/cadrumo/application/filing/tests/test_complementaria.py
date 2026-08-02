@@ -17,6 +17,7 @@ from ....domain.filing import (
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
+    registry_schema_version,
 )
 from ....domain.submission import ModeloDraftStatus, ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from .. import (
@@ -70,10 +71,10 @@ def _persisted_amendment_ids() -> tuple[str, ...]:
     return ModeloAmendmentRepository().list_amendment_ids()
 
 
-def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistrySnapshotRef:
     return RegistrySnapshotRef(
         modelo=modelo,
-        revision_id=schema_version,
+        revision_id=revision_id,
         modelo_year=period.filing_year,
         period=period.registry_token,
     )
@@ -115,7 +116,11 @@ def _submitted_filing(
 
 def _draft(modelo: str, period: Period, casillas: dict[CasillaId, Decimal]) -> ModeloDraft:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
-    schema_version = f"registry:{modelo}:missing"
+    # The draft names a revision the registry does not carry; its schema marker
+    # must still be the marker for THAT revision, not a second, differently
+    # shaped string.
+    revision_id = "missing"
+    schema_version = registry_schema_version(modelo=modelo, revision_id=revision_id)
     values = tuple(
         ModeloValue(
             casilla_id=casilla_id,
@@ -131,7 +136,7 @@ def _draft(modelo: str, period: Period, casillas: dict[CasillaId, Decimal]) -> M
         period=period,
         profile_tax_id="00000000T",
         subject_tax_id="00000000T",
-        snapshot_ref=_snapshot_ref(modelo=modelo, period=period, schema_version=schema_version),
+        snapshot_ref=_snapshot_ref(modelo=modelo, period=period, revision_id=revision_id),
         status=ModeloDraftStatus.PRESENTADA,
         values=values,
         created_at=now,
@@ -220,13 +225,25 @@ class TestBuildComplementaria:
         assert _persisted_amendment_ids() == ()
 
     def test_complementaria_requires_original_registry_snapshot(self) -> None:
-        original_draft = _registry_draft(
+        built = _registry_draft(
             inputs={
                 _M130_INGRESOS_CASILLA: Decimal("10000"),
                 _M130_GASTOS_CASILLA: Decimal("4000"),
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             },
-        ).model_copy(update={"schema_version": "registry:130:wrong-revision"})
+        )
+        # Restate the draft as one built against a NON-ACTIVE registry revision.
+        # Both identity fields move together: a draft whose schema marker names
+        # one revision while its snapshot_ref names another is incoherent and no
+        # longer persists, so moving only the marker would exercise the
+        # persistence refusal instead of the stale-snapshot refusal under test.
+        stale_revision = "wrong-revision"
+        original_draft = built.model_copy(
+            update={
+                "snapshot_ref": built.snapshot_ref.model_copy(update={"revision_id": stale_revision}),
+                "schema_version": registry_schema_version(modelo=built.modelo, revision_id=stale_revision),
+            },
+        )
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft)
 

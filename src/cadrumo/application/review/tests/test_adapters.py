@@ -45,6 +45,7 @@ from ...filing import (
     ModeloValidationFinding,
     ModeloValue,
     ModeloValueKind,
+    registry_schema_version,
 )
 from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
@@ -101,8 +102,11 @@ def _summary(text: str = "demo") -> tr:
     return tr("translation")
 
 
+_TEST_REVISION_ID = "test-revision"
+
+
 def _schema_version(modelo: str = "130") -> str:
-    return f"test-schema-{modelo}"
+    return registry_schema_version(modelo=modelo, revision_id=_TEST_REVISION_ID)
 
 
 def _case_profile_id(index: int) -> str:
@@ -422,7 +426,7 @@ def _draft(
         subject_tax_id="00000000T",
         snapshot_ref=RegistrySnapshotRef(
             modelo=modelo,
-            revision_id=_schema_version(modelo),
+            revision_id=_TEST_REVISION_ID,
             modelo_year=period.filing_year,
             period=period.registry_token,
         ),

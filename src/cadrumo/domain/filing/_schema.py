@@ -188,6 +188,19 @@ class ModeloApprovalBasis(BaseModel):
     schema_formula_fingerprint: str
 
 
+def registry_schema_version(*, modelo: str, revision_id: str) -> str:
+    """Return the canonical ``registry:{modelo}:{revision}`` schema marker.
+
+    The marker names the registry modelo and revision a filing artefact was
+    built against. It is the sole declaration of that format: the runtime
+    projection, the draft's ``schema_version``, and the staleness comparisons in
+    :mod:`application.filing` all derive it here rather than re-inlining the
+    f-string, so the marker and the coherence checks that read it cannot drift
+    apart.
+    """
+    return f"registry:{modelo}:{revision_id}"
+
+
 class ModeloDraft(BaseModel):
     """A typed, validated draft of one filing.
 
@@ -246,6 +259,21 @@ class ModeloDraft(BaseModel):
             raise FilingValidationError(
                 f"draft taxpayer identity diverges: profile_tax_id {self.profile_tax_id!r} "
                 f"and subject_tax_id {self.subject_tax_id!r} must name one taxpayer",
+            )
+        if self.modelo != self.snapshot_ref.modelo:
+            raise FilingValidationError(
+                f"draft modelo {self.modelo!r} does not match its snapshot_ref modelo "
+                f"{self.snapshot_ref.modelo!r}",
+            )
+        expected_schema_version = registry_schema_version(
+            modelo=self.snapshot_ref.modelo,
+            revision_id=self.snapshot_ref.revision_id,
+        )
+        if self.schema_version != expected_schema_version:
+            raise FilingValidationError(
+                f"draft schema_version {self.schema_version!r} does not match the registry marker "
+                f"{expected_schema_version!r} derived from snapshot_ref "
+                f"(modelo={self.snapshot_ref.modelo!r}, revision={self.snapshot_ref.revision_id!r})",
             )
         return self
 

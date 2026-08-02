@@ -77,7 +77,7 @@ from ...domain.calculations.registry import (
     registry_scalar_value_type,
     revision_reference_identity_failures,
 )
-from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError
+from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError, registry_schema_version
 
 
 class TaxpayerProfileIdentity(Protocol):
@@ -592,7 +592,7 @@ def collection_from_snapshot(snapshot: RegistrySnapshot) -> RegistryCasillaColle
     """
     modelo = snapshot.modelo
     revision = snapshot.revision
-    schema_version = f"registry:{modelo.id}:{revision.id}"
+    schema_version = registry_schema_version(modelo=modelo.id, revision_id=revision.id)
     identity_failures = revision_reference_identity_failures(f"runtime schema {schema_version}", revision)
     if identity_failures:
         raise ModeloBuilderError(
@@ -631,7 +631,10 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
     return RegistryModeloSubview(
         modelo_id=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
-        schema_version=f"registry:{snapshot.modelo.id}:{snapshot.revision.id}",
+        schema_version=registry_schema_version(
+            modelo=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+        ),
         cadence=snapshot.modelo.cadence,
         period_selector_periods=snapshot.revision.period_selector.periods,
         legal_ref_ids=tuple(sorted(snapshot.legal)),

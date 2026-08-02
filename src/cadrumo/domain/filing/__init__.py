@@ -103,6 +103,7 @@ from ._schema import (
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
+    registry_schema_version,
 )
 from ._validator import (
     ModeloValidator,
@@ -154,4 +155,5 @@ __all__ = [
     "compute_modelo_draft_id",
     "derive_validation_status",
     "make_amendment_id",
+    "registry_schema_version",
 ]

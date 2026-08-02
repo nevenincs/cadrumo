@@ -47,6 +47,7 @@ from .._schema import (
     ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
+    registry_schema_version,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -112,7 +113,7 @@ def _populated_draft() -> ModeloDraft:
         findings=(),
         created_at=_DRAFT_TIMESTAMP,
         updated_at=_DRAFT_TIMESTAMP,
-        schema_version="schema-2025-1",
+        schema_version=registry_schema_version(modelo="130", revision_id="2019-y-siguientes"),
         notes="Draft pending operator review",
     )
 
