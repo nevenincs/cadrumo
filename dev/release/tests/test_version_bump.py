@@ -198,7 +198,7 @@ def test_apply_version_refuses_a_duplicate_changelog_section(tmp_path: Path) -> 
         version_bump.apply_version(root, "1.2.3", changelog_block=_CHANGELOG_BLOCK, release_date="2026-08-02")
 
 
-def _write_stub_uv(bin_dir: Path, *, fail_on: str | None = None) -> Path:
+def _write_probe_uv(bin_dir: Path, *, fail_on: str | None = None) -> Path:
     """Write a real executable `uv` script that no-ops `lock`/`lock --check`.
 
     Mirrors the `_write_probe_gh` pattern `test_readiness.py` already uses for
@@ -241,29 +241,29 @@ def test_regenerate_and_verify_lock_runs_both_real_legs(tmp_path: Path) -> None:
     """A clean stub `uv` satisfies both `lock` and `lock --check` legs."""
     root = tmp_path / "repo"
     root.mkdir()
-    stub = _write_stub_uv(tmp_path / "bin")
+    probe_uv = _write_probe_uv(tmp_path / "bin")
 
-    version_bump.regenerate_and_verify_lock(root, uv_executable=str(stub))
+    version_bump.regenerate_and_verify_lock(root, uv_executable=str(probe_uv))
 
 
 def test_regenerate_and_verify_lock_refuses_when_lock_generation_fails(tmp_path: Path) -> None:
     """A real non-zero `uv lock` exit refuses with its captured output."""
     root = tmp_path / "repo"
     root.mkdir()
-    stub = _write_stub_uv(tmp_path / "bin", fail_on="lock")
+    probe_uv = _write_probe_uv(tmp_path / "bin", fail_on="lock")
 
     with pytest.raises(version_bump.VersionBumpError, match="lock"):
-        version_bump.regenerate_and_verify_lock(root, uv_executable=str(stub))
+        version_bump.regenerate_and_verify_lock(root, uv_executable=str(probe_uv))
 
 
 def test_regenerate_and_verify_lock_refuses_when_the_lock_check_fails(tmp_path: Path) -> None:
     """A real non-zero `uv lock --check` exit refuses -- a drifted lock is caught."""
     root = tmp_path / "repo"
     root.mkdir()
-    stub = _write_stub_uv(tmp_path / "bin", fail_on="check")
+    probe_uv = _write_probe_uv(tmp_path / "bin", fail_on="check")
 
     with pytest.raises(version_bump.VersionBumpError, match="check"):
-        version_bump.regenerate_and_verify_lock(root, uv_executable=str(stub))
+        version_bump.regenerate_and_verify_lock(root, uv_executable=str(probe_uv))
 
 
 def test_regenerate_and_verify_lock_refuses_when_uv_is_unresolvable(tmp_path: Path) -> None:
@@ -310,14 +310,14 @@ def test_verify_bump_refuses_a_stale_surface(tmp_path: Path) -> None:
 def test_stage_bump_composes_apply_lock_and_reverify(tmp_path: Path) -> None:
     """A clean stage_bump call updates every surface and leaves the lock verified."""
     root = _make_repo_root(tmp_path, version="1.2.3")
-    stub = _write_stub_uv(tmp_path / "bin")
+    probe_uv = _write_probe_uv(tmp_path / "bin")
 
     updates = version_bump.stage_bump(
         root,
         "2.0.0",
         changelog_block=_CHANGELOG_BLOCK,
         release_date="2026-08-02",
-        uv_executable=str(stub),
+        uv_executable=str(probe_uv),
     )
 
     assert len(updates) == 7
@@ -333,7 +333,7 @@ def test_stage_bump_refuses_before_any_commit_when_the_lock_check_fails(tmp_path
     runs after `stage_bump` RETURNS, never executes.
     """
     root = _make_repo_root(tmp_path, version="1.2.3")
-    stub = _write_stub_uv(tmp_path / "bin", fail_on="check")
+    probe_uv = _write_probe_uv(tmp_path / "bin", fail_on="check")
 
     with pytest.raises(version_bump.VersionBumpError, match="check"):
         version_bump.stage_bump(
@@ -341,7 +341,7 @@ def test_stage_bump_refuses_before_any_commit_when_the_lock_check_fails(tmp_path
             "2.0.0",
             changelog_block=_CHANGELOG_BLOCK,
             release_date="2026-08-02",
-            uv_executable=str(stub),
+            uv_executable=str(probe_uv),
         )
 
 
@@ -377,9 +377,9 @@ def _make_git_repo_root(tmp_path: Path, *, version: str = "1.2.3", manifest_floo
     root = _make_repo_root(tmp_path, version=version)
     if manifest_floor is not None:
         (root / ".release-please-manifest.json").write_text(json.dumps({".": manifest_floor}), encoding="utf-8")
-    # `commit_tag_and_push` stages `uv.lock` (release-apply checklist step 9);
-    # in real orchestration `stage_bump` has already regenerated it by
-    # the time this stage runs, so the fixture seeds a placeholder.
+    # `commit_tag_and_push` stages `uv.lock` (retired manual bump checklist
+    # step 9); in real orchestration `stage_bump` has already regenerated it
+    # by the time this stage runs, so the fixture seeds a placeholder.
     (root / "uv.lock").write_text("# stub lock\n", encoding="utf-8")
     _git(root, "init", "-q", "-b", "main")
     _git(root, "add", "-A")
@@ -534,10 +534,70 @@ def test_parse_computed_version_extracts_from_a_real_captured_dry_run_log() -> N
 
     Unlike the synthetic-fixture cases above, this is not a guess at the
     output shape -- it is the shape a real live run actually produced. The
-    PR title itself carries no version in this repo's current config
-    (`pullRequestTitlePattern miss the part of '${version}'`, present
+    pull-request title itself carries no version in this repo's current
+    config (`pullRequestTitlePattern miss the part of '${version}'`, present
     verbatim in the real log though not asserted here), which is why the
     `<summary>`/changelog-heading patterns, not a title pattern, are what
     make this real log parseable at all.
     """
     assert version_bump.parse_computed_version(_REAL_DRY_RUN_LOG_EXCERPT) == "0.2.0"
+
+
+def test_rehearse_bump_refuses_a_burned_version_and_leaves_the_real_root_untouched(tmp_path: Path) -> None:
+    """A rehearsal proves what it claims: it catches a burned version before any real dispatch.
+
+    Exercises the real seven-surface mutation, lock regeneration, parity
+    re-check, and identity guard against a discarded COPY -- not a return
+    immediately after computing the version, which could never surface this
+    class of refusal at all.
+    """
+    root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="0.1.0")
+    before_manifest = (root / ".release-please-manifest.json").read_text(encoding="utf-8")
+    before_head = _git(root, "rev-parse", "HEAD").strip()
+    stub = _write_probe_uv(tmp_path / "bin")
+
+    with pytest.raises(version_identity.VersionIdentityError, match="burned"):
+        version_bump.rehearse_bump(
+            root,
+            "0.2.0",
+            changelog_block=_CHANGELOG_BLOCK,
+            release_date="2026-08-02",
+            repository="nevenincs/cadrumo",
+            uv_executable=str(stub),
+            skip_network=True,
+        )
+
+    # The real root: no surface written, no ref created, HEAD unmoved.
+    assert (root / ".release-please-manifest.json").read_text(encoding="utf-8") == before_manifest
+    assert _git(root, "rev-parse", "HEAD").strip() == before_head
+    assert "v0.2.0" not in _git(root, "tag", "-l").split()
+
+
+def test_rehearse_bump_succeeds_for_a_clean_version_and_still_leaves_the_real_root_untouched(
+    tmp_path: Path,
+) -> None:
+    """A clean rehearsal runs the full chain without raising, and mutates nothing real.
+
+    The positive control for the case above: proves the rehearsal genuinely
+    exercises `stage_bump` and `commit_tag_and_push` (not a no-op that would
+    trivially "pass" any version), while the real repository root is
+    provably unaffected either way.
+    """
+    root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="1.0.0")
+    before_manifest = (root / ".release-please-manifest.json").read_text(encoding="utf-8")
+    before_head = _git(root, "rev-parse", "HEAD").strip()
+    stub = _write_probe_uv(tmp_path / "bin")
+
+    version_bump.rehearse_bump(
+        root,
+        "2.0.0",
+        changelog_block=_CHANGELOG_BLOCK,
+        release_date="2026-08-02",
+        repository="nevenincs/cadrumo",
+        uv_executable=str(stub),
+        skip_network=True,
+    )  # must not raise
+
+    assert (root / ".release-please-manifest.json").read_text(encoding="utf-8") == before_manifest
+    assert _git(root, "rev-parse", "HEAD").strip() == before_head
+    assert "v2.0.0" not in _git(root, "tag", "-l").split()

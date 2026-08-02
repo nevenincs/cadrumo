@@ -1,11 +1,11 @@
-"""Version bump executor: the pipeline stage replacing `release-apply`.
+"""Version bump executor: the pipeline stage replacing the retired manual bump recipe.
 
-`just release-apply` printed eleven instructions for a human to transcribe by
-hand: compute the version, apply it to seven declaration surfaces, regenerate
-and verify the lock, stage, commit, tag, and (on a separate human decision)
-push. This module is that sequence made executable and tested, so the release
-orchestrator's first job can run it without a human re-typing seven file
-paths.
+The retired local recipe printed eleven instructions for a human to
+transcribe by hand: compute the version, apply it to seven declaration
+surfaces, regenerate and verify the lock, stage, commit, tag, and (on a
+separate human decision) push. This module is that sequence made executable
+and tested, so the release orchestrator's first job can run it without a
+human re-typing seven file paths.
 
 The version stays computed, never chosen, from conventional-commit history --
 :func:`run_release_please_dry_run` shells out to the same `release-please@16
@@ -20,7 +20,7 @@ cohort version over it at build time.
 
 See Also:
     :func:`apply_version`
-        The seven-surface mutation, mirroring the retiring `release-apply`
+        The seven-surface mutation, mirroring the retired manual bump
         checklist's steps 1-7.
     :func:`dev.release.readiness.check_version_surfaces_agree`
         The parity check re-run after every bump so a transcription-class
@@ -38,6 +38,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -49,7 +50,8 @@ from dev.release import readiness, version_identity
 
 _UTF_8: Final[str] = "utf-8"
 
-#: The seven declaration surfaces `release-apply` printed as steps 1-7,
+#: The seven declaration surfaces the retired manual bump checklist printed
+#: as steps 1-7,
 #: relative to the repository root. NOT included: `packaging/mcpb/manifest.json`
 #: -- its tracked "version" is a build-stamped sentinel
 #: (`dev.release.readiness.check_version_surfaces_agree` requires it stay put;
@@ -131,9 +133,9 @@ def _bump_init(repo_root: Path, version: str) -> SurfaceUpdate:
 def _bump_dependency_pins(repo_root: Path, version: str) -> SurfaceUpdate:
     """Bump both mandatory exact companion pins in the root `pyproject.toml`.
 
-    Counted as ONE of the seven surfaces (`release-apply` step 6 named both
-    pins together), so this returns a single :class:`SurfaceUpdate` covering
-    both substitutions.
+    Counted as ONE of the seven surfaces (the retired manual bump checklist's
+    step 6 named both pins together), so this returns a single
+    :class:`SurfaceUpdate` covering both substitutions.
     """
     path = repo_root / ROOT_PYPROJECT_RELATIVE
     before = path.read_text(encoding=_UTF_8)
@@ -175,8 +177,8 @@ def apply_version(
 ) -> tuple[SurfaceUpdate, ...]:
     """Apply *version* to all seven release declaration surfaces.
 
-    Mirrors the seven numbered instructions the retiring `release-apply`
-    justfile recipe printed for a human to transcribe: the release-please
+    Mirrors the seven numbered instructions the retired manual bump justfile
+    recipe printed for a human to transcribe: the release-please
     manifest, the three `pyproject.toml` versions, the package dunder
     version, both mandatory companion dependency pins (one surface), and the
     changelog block. Each surface is read, exactly-one-match substituted (or,
@@ -235,7 +237,7 @@ def _run(argv: list[str], *, cwd: Path, timeout: int = _SUBPROCESS_TIMEOUT_S) ->
 def regenerate_and_verify_lock(repo_root: Path, *, uv_executable: str | None = None) -> None:
     """Regenerate `uv.lock`, then verify it via `uv lock --check`.
 
-    Mirrors the retiring `release-apply` checklist's step 8: the pins
+    Mirrors the retired manual bump checklist's step 8: the pins
     :func:`apply_version` just rewrote must resolve into a lock the fail-closed
     `uv lock --check` gate accepts, catching a resolution failure or a drifted
     lock before anything is staged or committed.
@@ -270,7 +272,7 @@ def stage_bump(
 ) -> tuple[SurfaceUpdate, ...]:
     """Apply *version*, regenerate and verify the lock, then re-verify parity.
 
-    Composes steps 1-8 of the retiring `release-apply` checklist. Nothing
+    Composes steps 1-8 of the retired manual bump checklist. Nothing
     here touches git: a failure at any stage leaves the working tree mutated
     but never staged or committed, because the commit/tag/push stage only
     runs after this returns successfully.
@@ -282,9 +284,10 @@ def stage_bump(
 
 
 #: The bumped surfaces plus the regenerated lock, staged for the release
-#: commit. Mirrors `release-apply` checklist step 9's explicit `git add`
-#: file list exactly (which deliberately excludes `packaging/mcpb/manifest.json`
-#: -- see the module docstring and `apply_version`).
+#: commit. Mirrors the retired manual bump checklist's step 9 explicit
+#: `git add` file list exactly (which deliberately excludes
+#: `packaging/mcpb/manifest.json` -- see the module docstring and
+#: `apply_version`).
 _STAGED_RELATIVE_PATHS: Final[tuple[Path, ...]] = (
     MANIFEST_RELATIVE,
     ROOT_PYPROJECT_RELATIVE,
@@ -454,7 +457,7 @@ def commit_tag_and_push(
     BEFORE any ref leaves the runner -- before even the local commit -- so a
     version an index, the tag/release namespace, the burned ledger, or the
     manifest floor already owns refuses before a tag exists rather than
-    after. This mirrors `release-apply` checklist steps 9-11.
+    after. This mirrors the retired manual bump checklist's steps 9-11.
 
     `push` defaults to False: local commit and tag only, matching the
     non-local/CI-only push leg (a real `git push` needs a real remote and
@@ -522,6 +525,118 @@ def commit_tag_and_push(
     return commit_sha
 
 
+#: Directories excluded from the rehearsal's repository copy: none of them
+#: are read by `apply_version`, `regenerate_and_verify_lock`, or the identity
+#: guard, and skipping them keeps the discarded copy cheap.
+_REHEARSAL_COPY_EXCLUDED_DIRS: Final[frozenset[str]] = frozenset(
+    {
+        ".git",
+        ".venv",
+        "var",
+        "__pycache__",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        "node_modules",
+        "dist",
+        "build",
+        "htmlcov",
+    },
+)
+
+
+def _ignore_rehearsal_copy_dirs(_directory: str, names: list[str]) -> set[str]:
+    return {name for name in names if name in _REHEARSAL_COPY_EXCLUDED_DIRS}
+
+
+def rehearse_bump(
+    repo_root: Path,
+    version: str,
+    *,
+    changelog_block: str,
+    release_date: str,
+    repository: str,
+    uv_executable: str | None = None,
+    git_executable: str | None = None,
+    skip_network: bool = False,
+    own_source_commit: str | None = None,
+) -> None:
+    """Exercise the real bump mechanics against a discarded temporary tree.
+
+    A rehearsal must prove what its own prose and the decision record both
+    claim it proves -- that the computed version would survive the
+    seven-surface mutation, the lock regeneration, the parity re-check, and
+    the all-destination identity guard -- not merely that a version could be
+    computed. Returning immediately after :func:`parse_computed_version`
+    proves nothing about any of those; in particular it cannot surface an
+    owned, burned, or below-floor version before a real dispatch, which is
+    the class of refusal an operator would most want to see in a rehearsal.
+
+    Copies `repo_root` (excluding `.git`, `.venv`, build/cache directories,
+    and `var/`) into a fresh temporary directory, seeds a throwaway git
+    history there (so the identity guard's HEAD-anchored floor lookup has
+    something to read), runs the real `stage_bump` +
+    `commit_tag_and_push(push=False)` sequence against that COPY, then
+    unconditionally discards the directory. The real `repo_root` is never
+    written to and no real ref is ever created; `commit_tag_and_push`'s
+    network identity checks (unless `skip_network`) still query the REAL
+    `repository` remote, because that is the destination a real dispatch
+    would check against -- only the git mutations (commit, tag) land on the
+    disposable copy.
+
+    Raises:
+        VersionBumpError: If any surface refuses, the lock fails to
+            regenerate or verify, or the post-bump parity re-check fails.
+        version_identity.VersionIdentityError: If the version collides with
+            any destination the identity guard checks.
+    """
+    with tempfile.TemporaryDirectory(prefix="cadrumo-release-rehearsal-") as tmp:
+        rehearsal_root = Path(tmp) / "repo"
+        shutil.copytree(repo_root, rehearsal_root, ignore=_ignore_rehearsal_copy_dirs)
+
+        git = git_executable or shutil.which("git")
+        if git is None:
+            raise VersionBumpError("git is not on PATH; cannot rehearse the bump")
+        _run([git, "init", "-q", "-b", "main"], cwd=rehearsal_root)
+        _run(
+            [git, "-c", "user.email=rehearsal@cadrumo.invalid", "-c", "user.name=rehearsal", "add", "-A"],
+            cwd=rehearsal_root,
+        )
+        _run(
+            [
+                git,
+                "-c",
+                "user.email=rehearsal@cadrumo.invalid",
+                "-c",
+                "user.name=rehearsal",
+                "commit",
+                "-q",
+                "-m",
+                "rehearsal seed",
+            ],
+            cwd=rehearsal_root,
+        )
+
+        stage_bump(
+            rehearsal_root,
+            version,
+            changelog_block=changelog_block,
+            release_date=release_date,
+            uv_executable=uv_executable,
+        )
+        commit_tag_and_push(
+            rehearsal_root,
+            version,
+            repository=repository,
+            git_executable=git,
+            push=False,
+            skip_network=skip_network,
+            own_source_commit=own_source_commit,
+        )
+        # Falling off the `with` block deletes `tmp` (and everything under
+        # `rehearsal_root`) unconditionally, success or refusal alike.
+
+
 def _changelog_block_for(version: str, log: str) -> str:
     """Return the changelog body release-please computed, or a minimal stand-in.
 
@@ -538,7 +653,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Execute the version bump as one pipeline stage.
 
     This is the entry point the release orchestrator invokes. It composes the
-    library functions above in the order the retiring `release-apply` checklist
+    library functions above in the order the retired manual bump checklist
     printed for a human: compute the version from conventional-commit history,
     apply it to all seven declaration surfaces, regenerate and verify the lock,
     re-check parity, then guard, commit, tag, and push.
@@ -547,9 +662,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     `--version` flag, because a hand-supplied version is the transcription
     error class the whole bump stage exists to remove.
 
-    `--dry-run` stops after the computation and prints what would happen,
-    touching no surface and leaving no ref, so the rehearsal covers this stage
-    rather than skipping it.
+    `--dry-run` runs the real mutation and identity-guard logic against a
+    discarded temporary copy of the repository (:func:`rehearse_bump`) rather
+    than skipping straight to a printed version, so the rehearsal proves this
+    stage rather than merely computing a number: it can surface an owned,
+    burned, or below-floor version, a surface refusal, or a lock-regeneration
+    failure before a real dispatch, while touching no surface and leaving no
+    ref in the real repository.
     """
     parser = argparse.ArgumentParser(description="Bump every release declaration surface and land the release commit.")
     parser.add_argument("--repository", required=True)
@@ -567,7 +686,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     version = parse_computed_version(log)
 
     if args.dry_run:
-        print(f"dry-run: would bump to {version}; no surface written, no ref created")
+        rehearse_bump(
+            repo_root,
+            version,
+            changelog_block=_changelog_block_for(version, log),
+            release_date=datetime.now(UTC).date().isoformat(),
+            repository=args.repository,
+        )
+        print(
+            f"dry-run: {version} passed the seven-surface mutation, lock regeneration, parity re-check, "
+            "and identity guard; no surface written, no ref created",
+        )
         _emit_bump_outputs(args.github_output, version=version, commit="")
         return 0
 
