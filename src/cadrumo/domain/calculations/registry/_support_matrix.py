@@ -44,7 +44,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from ....core import ExportLayoutFormat
 from ._authority import ValidatedRegistryAuthority
@@ -58,7 +58,9 @@ __all__ = [
     "ModeloPortalCompatibilityRef",
     "ModeloRenameRecord",
     "ModeloSupportRemovalRecord",
+    "RevisionCapabilityProbe",
     "build_support_matrix",
+    "revision_capability_probe",
 ]
 
 
@@ -74,6 +76,54 @@ def _latest_revision(modelo: ModeloDefinition) -> ModeloRevision:
 
 def _calculation_closure_casilla_ids(revision: ModeloRevision, modelo_id: str):
     return calculation_closure_casilla_ids(revision, modelo_id)
+
+
+class RevisionCapabilityProbe(BaseModel):
+    """The capability predicates ONE modelo revision declares.
+
+    The support matrix folds these over a modelo's latest revision; the
+    application-layer conformance composer folds them over whichever revision
+    its row names. Both need the identical predicate set, so it is defined
+    once here — the support authority owns what "calc grade" and "has a
+    fixed-width export" mean, and a consumer that recomputed the expressions
+    locally would silently drift from the canonical support row the first time
+    a primitive or a scope changed.
+
+    Attributes:
+        calc_grade: Whether the revision's calculation closure is non-empty.
+        has_completeness_manifest: Whether the revision declares a
+            calculation-completeness manifest.
+        has_fixed_width_export: Whether it registers a fichero-BOE layout.
+        has_xml_dictionary_export: Whether it registers an XML-dictionary layout.
+        has_extractor: Whether it declares any extraction profile.
+        extraction_profile_count: Extraction profiles declared on the revision.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    calc_grade: bool
+    has_completeness_manifest: bool
+    has_fixed_width_export: bool
+    has_xml_dictionary_export: bool
+    has_extractor: bool
+    extraction_profile_count: int = Field(ge=0)
+
+
+def revision_capability_probe(revision: ModeloRevision, *, modelo_id: str) -> RevisionCapabilityProbe:
+    """Fold the capability predicates ``revision`` declares.
+
+    ``modelo_id`` scopes the calculation-closure traversal; it is the owning
+    modelo's identifier, not a revision id.
+    """
+    export_formats = {layout.format for layout in revision.export_layouts}
+    return RevisionCapabilityProbe(
+        calc_grade=bool(_calculation_closure_casilla_ids(revision, modelo_id)),
+        has_completeness_manifest=revision.completeness_manifest is not None,
+        has_fixed_width_export=ExportLayoutFormat.FIXED_WIDTH in export_formats,
+        has_xml_dictionary_export=ExportLayoutFormat.XML_DICTIONARY in export_formats,
+        has_extractor=bool(revision.extraction_profiles),
+        extraction_profile_count=len(revision.extraction_profiles),
+    )
 
 
 class ModeloRenameRecord(BaseModel):
@@ -224,8 +274,7 @@ def _rename_record(evolution: CasillaContinuidadEvolutionDefinition) -> ModeloRe
 
 def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
     revision = _latest_revision(modelo)
-    closure = _calculation_closure_casilla_ids(revision, modelo.id)
-    export_formats = {layout.format for layout in revision.export_layouts}
+    capabilities = revision_capability_probe(revision, modelo_id=modelo.id)
     supported_revision_ids = tuple(
         item.id for item in sorted(modelo.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
     )
@@ -255,12 +304,12 @@ def _entry_for_modelo(modelo: ModeloDefinition) -> ModeloEntry:
         latest_revision_id=revision.id,
         latest_revision_valid_from=revision.valid_from,
         supported_revision_ids=supported_revision_ids,
-        calc_grade=bool(closure),
-        has_completeness_manifest=revision.completeness_manifest is not None,
-        has_fixed_width_export=ExportLayoutFormat.FIXED_WIDTH in export_formats,
-        has_xml_dictionary_export=ExportLayoutFormat.XML_DICTIONARY in export_formats,
-        has_extractor=bool(revision.extraction_profiles),
-        extraction_profile_count=len(revision.extraction_profiles),
+        calc_grade=capabilities.calc_grade,
+        has_completeness_manifest=capabilities.has_completeness_manifest,
+        has_fixed_width_export=capabilities.has_fixed_width_export,
+        has_xml_dictionary_export=capabilities.has_xml_dictionary_export,
+        has_extractor=capabilities.has_extractor,
+        extraction_profile_count=capabilities.extraction_profile_count,
         renames=renames,
         deprecations=deprecations,
         portal_compatibility_refs=portal_refs,
