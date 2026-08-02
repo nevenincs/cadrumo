@@ -8,10 +8,8 @@ import pytest
 
 from ._modelo_100_legal_refs_support import (
     _ANUALIDADES_ALIMENTOS_TOTAL_CASILLA,
-    _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF,
     _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
     _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
-    _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
     _BASE_LIQUIDABLE_ART_50_REF,
     _BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA,
     _BROAD_DEDUCTION_ART_68_REF,
@@ -35,6 +33,27 @@ _LIVE_M100_YEARS = tuple(range(2020, 2026))
 _ANUALIDADES_FORMULA_YEARS = tuple(range(2022, 2026))
 _ANUALIDADES_MANUAL_INPUT_YEARS = (2020, 2021)
 _EXTRACTION_PROFILE_YEARS = tuple(range(2021, 2024))
+
+#: Each pre-2024/2025 filing year's applicability window predates arts. 75/76's
+#: current catalogue redactions (effective_from 2025-04-03 / 2024-12-22), so it
+#: cites the version-scoped redaction actually in force for that filing year
+#: instead of the bare current id.
+_AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR = {
+    2020: "ley-35-2006:art-75-2015",
+    2021: "ley-35-2006:art-75-2015",
+    2022: "ley-35-2006:art-75-2015",
+    2023: "ley-35-2006:art-75-2015",
+    2024: "ley-35-2006:art-75",
+    2025: "ley-35-2006:art-75",
+}
+_AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR = {
+    2020: "ley-35-2006:art-76-2015",
+    2021: "ley-35-2006:art-76-2021",
+    2022: "ley-35-2006:art-76-2021",
+    2023: "ley-35-2006:art-76-2023",
+    2024: "ley-35-2006:art-76",
+    2025: "ley-35-2006:art-76",
+}
 
 
 @lru_cache
@@ -111,12 +130,11 @@ def test_modelo_100_2025_scale_result_casillas_use_scale_articles_not_fractional
 
 
 def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
-    expected_refs = {
-        _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
-        _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF,
-    }
-
     for filing_year in _ANUALIDADES_FORMULA_YEARS:
+        expected_refs = {
+            _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
+            _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
+        }
         revision = _revision_for(filing_year)
         formula_id = f"renta-{filing_year}-anualidades-alimentos-hijos-suma"
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
@@ -135,12 +153,11 @@ def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
 
 def test_modelo_100_anualidades_casilla_is_manual_input_pre_2022() -> None:
     """2020/2021 carry 0527 as a manual scalar input with no sum formula."""
-    expected_refs = {
-        _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
-        _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF,
-    }
-
     for filing_year in _ANUALIDADES_MANUAL_INPUT_YEARS:
+        expected_refs = {
+            _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
+            _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
+        }
         revision = _revision_for(filing_year)
         formula_id = f"renta-{filing_year}-anualidades-alimentos-hijos-suma"
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
@@ -192,17 +209,19 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
         form_order_refs = {_MODELO_100_2025_FORM_ORDER_REF} if filing_year == 2025 else set()
         separate_escala_ids = _autonomic_separate_escala_formula_ids(filing_year)
         regime_modelled = filing_year in _SEPARATE_ESCALA_MODELLED_YEARS
-        regime_refs = {_AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF} if regime_modelled else set()
+        art_75_ref = _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year]
+        art_76_ref = _AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR[filing_year]
+        regime_refs = {art_75_ref} if regime_modelled else set()
         expected_refs_by_formula = {
             f"renta-{filing_year}-tipo-medio-gravamen-autonomico-base-liquidable-general": {
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
             },
             f"renta-{filing_year}-tipo-medio-gravamen-autonomico-base-liquidable-ahorro": {
-                _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+                art_76_ref,
             },
             f"renta-{filing_year}-minimo-personal-base-liquidable-ahorro-autonomica": {
                 _PERSONAL_FAMILY_MINIMUM_ART_56_REF,
-                _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+                art_76_ref,
                 *form_order_refs,
             },
             f"renta-{filing_year}-cuota-escala-autonomica-sobre-base-liquidable-general": {
@@ -226,7 +245,7 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
             f"renta-{filing_year}-cuota-integra-autonomica": {
                 _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
-                _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+                art_76_ref,
                 *form_order_refs,
             },
         }
@@ -241,7 +260,7 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
             assert _STATE_DEDUCTION_ART_67_REF not in legal_refs, formula_id
             # art-75 is permitted only on the separate-escala formulas in modelled years.
             if not (regime_modelled and formula_id in separate_escala_ids):
-                assert _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF not in legal_refs, formula_id
+                assert art_75_ref not in legal_refs, formula_id
 
         assert not offenders, filing_year
 

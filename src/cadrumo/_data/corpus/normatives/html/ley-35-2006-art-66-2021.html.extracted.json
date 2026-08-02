@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-66-2021.html",
+  "source_sha256": "e145796631fac8d407f3f923d895f20e8b7e6b10a9e9d4fdad5bbdc6954a2082",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. La parte de base liquidable del ahorro que exceda, en su caso, del importe del mínimo personal y familiar a que se refiere el artículo 56 de esta Ley será gravada de la siguiente forma:\n1.º A la base liquidable del ahorro se le aplicarán los tipos que se indican en la siguiente escala:\nBase liquidable del ahorro\n–\nHasta euros\nCuota íntegra\n–\nEuros\nResto base liquidable del ahorro\n–\nHasta euros\nTipo aplicable\n–\nPorcentaje\n0\n0\n6.000\n9,5\n6.000,00\n570\n44.000\n10,5\n50.000,00\n5.190\n150.000\n11,5\n200.000,00\n22.440\nEn adelante\n13,00\n2.º La cuantía resultante se minorará en el importe derivado de aplicar a la parte de la base liquidable del ahorro correspondiente al mínimo personal y familiar, la escala prevista en el número 1.º anterior.\n2. En el caso de los contribuyentes que tuviesen su residencia habitual en el extranjero por concurrir alguna de las circunstancias a las que se refieren el apartado 2 del artículo 8 y el apartado 1 del artículo 10 de esta Ley, la parte de base liquidable del ahorro que exceda, en su caso, del importe del mínimo personal y familiar a que se refiere el artículo 56 de esta Ley será gravada de la siguiente forma:\n1.º A la base liquidable del ahorro se le aplicarán los tipos que se indican en la siguiente escala:\nBase liquidable del ahorro\n–\nHasta euros\nCuota íntegra\n–\nEuros\nResto base liquidable del ahorro\n–\nHasta euros\nTipo aplicable\n–\nPorcentaje\n0\n0\n6.000\n19\n6.000,00\n1.140\n44.000\n21\n50.000,00\n10.380\n150.000\n23\n200.000,00\n44.880\nEn adelante\n26\n2.º La cuantía resultante se minorará en el importe derivado de aplicar a la parte de la base liquidable del ahorro correspondiente al mínimo personal y familiar, la escala prevista en el número 1.º anterior.\nSe modifica, con efectos desde 1 de enero de 2021, por el art. 59.1 de la Ley 11/2020, de 30 de diciembre. Ref. BOE-A-2020-17339\nSe modifica por el art. 1.42 de la Ley 26/2014, de 27 de noviembre. Ref. BOE-A-2014-12327.\nSe modifica el apartado 1, con efectos desde 1 de enero de 2010, por el art. 63.1 de la Ley 39/2010, de 22 de diciembre. Ref. BOE-A-2010-19703.\nSe modifica, con efectos desde el 1 de enero de 2010 por el art. 69.1 de la Ley 26/2009, de 23 de diciembre. Ref. BOE-A-2009-20765\nSe modifica el apartado 1 por la disposición final 2.6 de la Ley 22/2009, de 18 de diciembre. Ref. BOE-A-2009-20375\nEsta modificación entra en vigor y surte efectos desde el 1 de enero de 2010, según establece la disposición final 5.",
+      "title": "Artículo 66. Tipos de gravamen del ahorro.",
+      "section": "Artículo 66. Tipos de gravamen del ahorro.",
+      "anchor": "#a66"
+    }
+  ]
+}

@@ -4258,6 +4258,295 @@ required_text = [
     "autoliquidación presentada antes",
 ]
 
+[legal."ley-35-2006:art-52-2015"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-52-2015.html#a52"
+document_id = "BOE-A-2006-20764"
+article = "52"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn=1#a52"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2020-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 52, redaction selected by BOE at 2014-11-28 (art. 1.32 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2020-12-31: joint reduction limit was the lesser of 30 percent of net trabajo/actividades income or 8.000 euros annually, plus 5.000 euros for dependencia insurance premiums, before Ley 11/2020 art. 62.2 reduced the flat amount to 2.000 euros with effect from 2021-01-01. Grounds the 2020 Modelo 100 previsión social reduction casillas for the filing year the pre-2021 limit applied."
+required_text = [
+    "Límite de reducción.",
+    "límite máximo conjunto",
+    "apartados 1, 2, 3, 4 y 5 del artículo 51",
+    "El 30 por 100 de la suma",
+    "8.000 euros anuales",
+    "5.000 euros anuales para las primas a seguros colectivos de dependencia",
+    "podrán reducir en los cinco ejercicios siguientes",
+]
+
+[legal."ley-35-2006:art-52-2021"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-52-2021.html#a52"
+document_id = "BOE-A-2006-20764"
+article = "52"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20201231&tn=1#a52"
+published_at = 2006-11-29
+effective_from = 2021-01-01
+effective_to = 2021-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 52, redaction selected by BOE at 2020-12-31 (art. 62.2 Ley 11/2020, BOE-A-2020-17339), in force 2021-01-01 to 2021-12-31: joint reduction limit was the lesser of 30 percent of net trabajo/actividades income or 2.000 euros annually, increased by 8.000 euros for empresarial contributions, plus 5.000 euros for dependencia insurance premiums, before the further tiered increase Ley 22/2021 introduced with effect from 2022-01-01. Grounds the 2021 Modelo 100 previsión social reduction casillas."
+required_text = [
+    "Límite de reducción.",
+    "El 30 por 100 de la suma",
+    "2.000 euros anuales",
+    "incrementará en 8.000 euros",
+    "contribuciones empresariales",
+    "5.000 euros anuales para las primas a seguros colectivos de dependencia",
+]
+
+[legal."ley-35-2006:art-66-2015"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-66-2015.html#a66"
+document_id = "BOE-A-2006-20764"
+article = "66"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn=1#a66"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2020-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 66, redaction selected by BOE at 2014-11-28 (art. 1.42 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2020-12-31: three-bracket estatal savings scale (9,5/10,5/11,5 percent up to 6.000/44.000/en adelante euros), before Ley 11/2020 art. 59.2 added the fourth bracket (13,00 percent above 200.000 euros) with effect from 2021-01-01. Grounds the 2020 Modelo 100 base liquidable del ahorro estatal scale casillas and formulas."
+required_text = [
+    "Tipos de gravamen del ahorro.",
+    "base liquidable del ahorro que exceda",
+    "A la base liquidable del ahorro se le aplicarán los tipos",
+    "50.000,00",
+    "5.190",
+    "En adelante",
+    "11,5",
+]
+
+[legal."ley-35-2006:art-66-2021"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-66-2021.html#a66"
+document_id = "BOE-A-2006-20764"
+article = "66"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20201231&tn=1#a66"
+published_at = 2006-11-29
+effective_from = 2021-01-01
+effective_to = 2022-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 66, redaction selected by BOE at 2020-12-31 (art. 59.2 Ley 11/2020, BOE-A-2020-17339), in force 2021-01-01 to 2022-12-31: four-bracket estatal savings scale adding the 13,00 percent tranche above 200.000 euros, before Ley 31/2022 art. 63.2 restructured the top brackets with effect from 2023-01-01. Grounds the 2021 and 2022 Modelo 100 base liquidable del ahorro estatal scale casillas and formulas."
+required_text = [
+    "Tipos de gravamen del ahorro.",
+    "base liquidable del ahorro que exceda",
+    "150.000",
+    "200.000,00",
+    "22.440",
+    "En adelante",
+    "13,00",
+]
+
+[legal."ley-35-2006:art-66-2023"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-66-2023.html#a66"
+document_id = "BOE-A-2006-20764"
+article = "66"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20221224&tn=1#a66"
+published_at = 2006-11-29
+effective_from = 2023-01-01
+effective_to = 2024-12-21
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 66, redaction selected by BOE at 2022-12-24 (art. 63.2 Ley 31/2022, BOE-A-2022-22128), in force 2023-01-01 to 2024-12-21: five-bracket estatal savings scale adding the 13,5/14 percent tranches above 200.000/300.000 euros, before the 2024-12-22 redaction. Grounds the 2023 Modelo 100 base liquidable del ahorro estatal scale casillas and formulas."
+required_text = [
+    "Tipos de gravamen del ahorro.",
+    "base liquidable del ahorro que exceda",
+    "150.000",
+    "200.000,00",
+    "22.440",
+    "100.000",
+    "13,5",
+]
+
+[legal."ley-35-2006:art-68-2018"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-2018.html#a68"
+document_id = "BOE-A-2006-20764"
+article = "68"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20180704&tn=1#a68"
+published_at = 2006-11-29
+effective_from = 2018-07-05
+effective_to = 2022-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 68, redaction selected by BOE at 2018-07-04, in force 2018-07-05 to 2022-12-31: the empresas-de-nueva-creación deduction was 30 percent of the amounts invested with a 60.000 euros annual maximum base, before Ley 28/2022 art. 3 (Startups law) increased it to 50 percent and 100.000 euros with effect from 2023-01-01. Grounds the 2020 and 2021 Modelo 100 deducción por inversión en empresas de nueva o reciente creación casillas and formulas."
+required_text = [
+    "Deducción por inversión en empresas de nueva o reciente creación.",
+    "30 por ciento de las cantidades satisfechas",
+    "La base máxima de deducción será de 60.000 euros anuales",
+    "Deducciones en actividades económicas",
+    "Deducciones por donativos y otras aportaciones",
+    "Deducción por rentas obtenidas en Ceuta o Melilla",
+]
+
+[legal."ley-35-2006:art-75-2015"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-75-2015.html#a75"
+document_id = "BOE-A-2006-20764"
+article = "75"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn=1#a75"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2025-04-02
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 75, redaction selected by BOE at 2014-11-28 (art. 1.50 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2025-04-02: unchanged text through the 2020-2023 filing years, before the Ley 1/2025 amendment took effect 2025-04-03. Grounds the 2020-2023 Modelo 100 anualidades por alimentos autonomic-quota specialty casillas and formulas."
+required_text = [
+    "aplicarán la escala prevista",
+    "mínimo personal y familiar",
+    "incrementado en 1.980 euros anuales",
+    "sin que pueda resultar negativa",
+]
+
+[legal."ley-35-2006:art-76-2015"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-76-2015.html#a76"
+document_id = "BOE-A-2006-20764"
+article = "76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn=1#a76"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2020-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 76, redaction selected by BOE at 2014-11-28 (art. 1.51 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2020-12-31: three-bracket autonómica savings scale mirroring art. 66's pre-2021 brackets, before Ley 11/2020 art. 59.2 added the fourth bracket with effect from 2021-01-01. Grounds the 2020 Modelo 100 base liquidable del ahorro autonómica scale casillas and formulas."
+required_text = [
+    "Tipo de gravamen del ahorro.",
+    "base liquidable del ahorro que exceda",
+    "50.000,00",
+    "5.190",
+    "En adelante",
+    "11,5",
+]
+
+[legal."ley-35-2006:art-76-2021"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-76-2021.html#a76"
+document_id = "BOE-A-2006-20764"
+article = "76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20201231&tn=1#a76"
+published_at = 2006-11-29
+effective_from = 2021-01-01
+effective_to = 2022-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 76, redaction selected by BOE at 2020-12-31 (art. 59.2 Ley 11/2020, BOE-A-2020-17339), in force 2021-01-01 to 2022-12-31: four-bracket autonómica savings scale adding the 13,00 percent tranche above 200.000 euros, before Ley 31/2022 art. 63.2 restructured the top brackets with effect from 2023-01-01. Grounds the 2021 and 2022 Modelo 100 base liquidable del ahorro autonómica scale casillas and formulas."
+required_text = [
+    "Tipo de gravamen del ahorro.",
+    "150.000",
+    "200.000,00",
+    "22.440",
+    "En adelante",
+]
+
+[legal."ley-35-2006:art-76-2023"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-76-2023.html#a76"
+document_id = "BOE-A-2006-20764"
+article = "76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20221224&tn=1#a76"
+published_at = 2006-11-29
+effective_from = 2023-01-01
+effective_to = 2024-12-21
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 76, redaction selected by BOE at 2022-12-24 (art. 63.2 Ley 31/2022, BOE-A-2022-22128), in force 2023-01-01 to 2024-12-21: five-bracket autonómica savings scale adding the 13,5/14 percent tranches above 200.000/300.000 euros, before the 2024-12-22 redaction. Grounds the 2023 Modelo 100 base liquidable del ahorro autonómica scale casillas and formulas."
+required_text = [
+    "Tipo de gravamen del ahorro.",
+    "150.000",
+    "200.000,00",
+    "22.440",
+    "100.000",
+    "13,5",
+]
+
+[legal."ley-35-2006:art-87-2007"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-87-2007.html#a87"
+document_id = "BOE-A-2006-20764"
+article = "87"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20061129&tn=1#a87"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+effective_to = 2022-10-19
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 87, original 2006-11-29 text, in force 2007-01-01 to 2022-10-19: defines entities under the attribution-of-income regime (art. 8.3 entities, analogous foreign entities, the sociedades agrarias de transformación exclusion, the non-IS-subject rule), before Ley 31/2022 art. 62.5 added the LIS art. 15 bis.12 exception clause with effect from 2022-10-20. Grounds the 2020 and 2021 Modelo 100 régimen de atribución de rentas casillas."
+required_text = [
+    "Entidades en régimen de atribución de rentas.",
+    "artículo 8.3 de esta Ley",
+    "entidades constituidas en el extranjero",
+    "no estarán sujetas al Impuesto sobre Sociedades",
+]
+
+[legal."ley-35-2006:art-91-2015"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-91-2015.html#a91"
+document_id = "BOE-A-2006-20764"
+article = "91"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn=1#a91"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2021-07-10
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 91, redaction selected by BOE at 2014-11-28 (art. 1.58 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2021-07-10: imputes income under the international fiscal transparency regime for controlled non-resident entities, before Ley 11/2021 art. 3.4 (antifraude) amended the article with effect from 2021-07-11. Grounds the 2020 Modelo 100 TFI entity/name and imputation amount casillas for the filing year the pre-2021 redaction applied."
+required_text = [
+    "Los contribuyentes imputarán las rentas positivas obtenidas",
+    "entidad no residente en territorio español",
+    "participación igual o superior al 50 por ciento",
+    "inferior al 75 por ciento del que hubiera correspondido",
+    "organización de medios materiales y personales",
+    "Titularidad de bienes inmuebles rústicos y urbanos",
+    "Participación en fondos propios de cualquier tipo de entidad",
+    "Operaciones de capitalización y seguro",
+]
+
 [legal."ley-35-2006:dt-38"]
 evidence_tier = "legal_authority"
 authority = "boe"
