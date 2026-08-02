@@ -130,8 +130,10 @@ def test_only_publish_release_gate3_creates_a_non_draft_release() -> None:
         if job_name == "publish":
             continue
         job_surface = "\n".join(str(step.get("run", "")) for step in (job.get("steps") or []))
-        # Invocation lines only: the operator-preflight instruction text
-        # legitimately DESCRIBES the operator's draft-create command.
+        # Invocation lines only, because workflow prose legitimately DESCRIBES
+        # a draft-create command without running one. (The original instance
+        # was the retired operator-preflight refusal text; the distinction
+        # outlives it, since any comment may quote the verb.)
         invocations = [line for line in job_surface.splitlines() if line.strip().startswith("gh release create")]
         assert invocations == [], (job_name, invocations)
 
