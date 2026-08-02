@@ -63,6 +63,36 @@ def test_parse_xlsx_with_header_row(tmp_path: Path) -> None:
     assert values == {"01": Decimal("1234.56"), "03": Decimal("789.1")}
 
 
+def test_parse_csv_rejects_duplicate_casilla_rows_before_last_writer_wins(tmp_path: Path) -> None:
+    """Two amounts for one casilla are ambiguous; row order cannot select one."""
+    path = tmp_path / "duplicate.csv"
+    path.write_text("casilla_code,value\n01,1000.00\n01,1.00\n", encoding="utf-8")
+
+    with pytest.raises(ModeloLocalObservationError) as exc_info:
+        parse_casilla_value_spreadsheet(path)
+
+    assert "row 2: duplicate casilla_code '01' (first declared on row 1)" in str(exc_info.value)
+    assert exc_info.value.context == {"path": str(path), "malformed_row_count": "1"}
+
+
+def test_parse_xlsx_rejects_duplicate_casilla_rows_even_when_values_match(tmp_path: Path) -> None:
+    """Coordinate uniqueness applies independently of coincidentally equal values."""
+    path = tmp_path / "duplicate.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    assert sheet is not None
+    sheet.append(["casilla_code", "value"])
+    sheet.append(["01", 1000])
+    sheet.append(["01", 1000])
+    workbook.save(path)
+
+    with pytest.raises(ModeloLocalObservationError) as exc_info:
+        parse_casilla_value_spreadsheet(path)
+
+    assert "row 2: duplicate casilla_code '01' (first declared on row 1)" in str(exc_info.value)
+    assert exc_info.value.context == {"path": str(path), "malformed_row_count": "1"}
+
+
 def test_parse_rejects_non_numeric_value(tmp_path: Path) -> None:
     """A non-numeric value raises, naming the offending row and casilla."""
     path = tmp_path / "sheet.csv"

@@ -94,6 +94,7 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
 
     code_index, value_index, data_rows = _locate_columns(rows)
     values: dict[str, Decimal] = {}
+    first_row_by_code: dict[str, int] = {}
     malformed: list[str] = []
     for row_number, row in enumerate(data_rows, start=1):
         code = _cell(row, code_index)
@@ -103,6 +104,13 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
         if not code or not raw_value:
             malformed.append(f"row {row_number}: incomplete (casilla_code={code!r}, value={raw_value!r})")
             continue
+        first_row = first_row_by_code.get(code)
+        if first_row is not None:
+            malformed.append(
+                f"row {row_number}: duplicate casilla_code {code!r} (first declared on row {first_row})",
+            )
+            continue
+        first_row_by_code[code] = row_number
         try:
             normalized = normalize_decimal_separators(raw_value, strip_thousands="," in raw_value)
             value = Decimal(normalized)
