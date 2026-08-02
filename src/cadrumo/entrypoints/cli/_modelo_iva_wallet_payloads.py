@@ -27,22 +27,51 @@ See Also:
 
 from __future__ import annotations
 
+from pydantic import Field, field_validator
+
 from ...core import Period
+from ...core.decimal import try_parse_canonical_decimal
 from ._schemas import OutputSchema, register_schema
 
 
 @register_schema("modelo.iva_wallet.balance")
 class IvaWalletBalanceResult(OutputSchema):
-    """IVA compensation carry-forward wallet balance."""
+    """IVA compensation carry-forward wallet balance.
+
+    Every field mirrors the constraint the canonical
+    :class:`~domain.iva_compensation.IvaWalletBalanceReport` already enforces.
+    Redeclared as free strings and unbounded primitives this payload accepted
+    balance claims the domain report refuses -- a 1900 reference year, a
+    negative or ``NaN`` balance, a negative lot count -- and emitted them at the
+    operator-facing boundary, which is the one surface a reader has no way to
+    check against the domain.
+
+    The amounts stay wire strings, matching every other amount-bearing CLI
+    payload, but are validated through the canonical decimal grammar rather
+    than accepted as arbitrary text.
+    """
 
     operation: str = "modelo.iva_wallet.balance"
-    as_of_year: int
+    as_of_year: int = Field(ge=2000, le=2099)
     total_balance: str
     active_balance: str
     expired_balance: str
-    lot_count: int
-    next_expiry_year: int | None
+    lot_count: int = Field(ge=0)
+    next_expiry_year: int | None = Field(default=None, ge=2000, le=2200)
     unallocated_applied_amount: str
+
+    @field_validator("total_balance", "active_balance", "expired_balance", "unallocated_applied_amount")
+    @classmethod
+    def _is_a_non_negative_canonical_amount(cls, value: str) -> str:
+        """Refuse an amount the canonical balance report could never have produced.
+
+        ``signed=False`` rejects a negative amount, and the canonical grammar
+        rejects ``NaN``, ``Infinity`` and free text, so the wire carries only
+        amounts the domain report's ``ge=0`` Decimal fields admit.
+        """
+        if try_parse_canonical_decimal(value, signed=False) is None:
+            raise ValueError(f"amount must be a non-negative canonical decimal, got {value!r}")
+        return value
 
 
 @register_schema("modelo.iva_wallet.seed")
