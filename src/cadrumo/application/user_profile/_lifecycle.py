@@ -125,7 +125,7 @@ class ProfileLifecycleService:
         """Return the live :class:`UserProfileRecord` aggregate or raise :class:`ProfileNotFoundError`."""
         return self._repository.load(profile_id)
 
-    # ── edit / remove / duplicate ──────────────────────────────────
+    # ── edit / remove / reactivate / rename ────────────────────────
 
     def edit_field(self, command: EditProfileFieldCommand) -> ProfileLifecycleResult:
         """Upsert one effective-dated fact into a profile aggregate and return a :class:`ProfileLifecycleResult`."""
