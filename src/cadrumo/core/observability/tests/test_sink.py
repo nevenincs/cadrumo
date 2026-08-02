@@ -21,6 +21,7 @@ Covers:
 from __future__ import annotations
 
 import logging
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
@@ -278,6 +279,45 @@ class TestStorePersistenceErrors:
         assert error.operation == "load_trace"
         assert error.path == trace_path
         assert isinstance(error.__cause__, OSError)
+
+    def test_load_trace_refuses_an_embedded_identity_from_another_run(self, tmp_path: Path) -> None:
+        """A valid trace copied from run B cannot be replayed through run A."""
+        run_a = "0123456789abcdef"
+        run_b = "abcdef0123456789"
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+            trace_b = self._trace(run_b)
+            source = save_trace(trace_b)
+            target = runs_dir() / run_a / "trace.json"
+            target.parent.mkdir()
+            shutil.copyfile(source, target)
+
+            assert load_trace(run_b) == trace_b
+            with pytest.raises(RunTraceValidationError, match=rf"run {run_a!r} contains embedded run_id {run_b!r}"):
+                load_trace(run_a)
+
+    def test_iter_runs_logs_and_skips_trace_copied_from_another_run(
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Run enumeration retains B and skips its copied trace under directory A."""
+        run_a = "0123456789abcdef"
+        run_b = "abcdef0123456789"
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+            trace_b = self._trace(run_b)
+            source = save_trace(trace_b)
+            target = runs_dir() / run_a / "trace.json"
+            target.parent.mkdir()
+            shutil.copyfile(source, target)
+
+            caplog.set_level(logging.WARNING, logger="cadrumo.core.observability._store")
+            assert list(iter_runs()) == [(run_b, trace_b)]
+
+        messages = [record.getMessage() for record in caplog.records]
+        assert any(
+            "skipping run directory 0123456789abcdef" in message and "embedded run_id 'abcdef0123456789'" in message
+            for message in messages
+        )
 
     def test_iter_runs_logs_skipped_entries(self, tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
         runs_root = tmp_path / "runs"
