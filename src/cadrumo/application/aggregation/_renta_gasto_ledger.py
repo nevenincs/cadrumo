@@ -46,7 +46,6 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, PeriodKind
 from ...domain.calculations.registry import CasillaId, validated_casilla_id
 from ...domain.transactions import (
-    IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,
     BusinessClassification,
     OutOfWindowTransactionSummary,
     Transaction,
@@ -54,6 +53,7 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
+    has_activity_irpf_category,
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
@@ -361,7 +361,7 @@ def _gasto_business_proportion(transaction: Transaction) -> Decimal | None:
     income-side category gate, while reviewed exclusions are short-circuited by
     the caller before reaching this helper.
     """
-    if transaction.irpf_category == IRPF_CATEGORY_ACTIVIDAD_ECONOMICA:
+    if has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return Decimal("1")
     return business_proportion(transaction.business_classification, transaction.business_pct)
 

@@ -53,6 +53,8 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
+    has_activity_irpf_category,
+    has_employment_irpf_category,
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
@@ -387,10 +389,6 @@ def _resolve_quarterly_period(period: Period) -> Period:
     return resolved
 
 
-_IRPF_CATEGORY_ACTIVIDAD_ECONOMICA: str = "actividad_economica"
-_IRPF_CATEGORY_TRABAJO: str = "trabajo"
-
-
 def _classify_income_transaction(
     transaction: Transaction,
     *,
@@ -431,7 +429,7 @@ def _classify_income_transaction(
 
     # Nómina entries (irpf_category="trabajo") belong to rendimientos del
     # trabajo and must not feed M130 actividad-económica casillas.
-    if transaction.irpf_category == _IRPF_CATEGORY_TRABAJO:
+    if has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return RentaIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME,
@@ -494,7 +492,7 @@ def _income_business_amount(transaction: Transaction) -> Decimal | None:
     before the broader ``business_classification`` sweep has run.
     """
     amount = abs(transaction.raw.amount)
-    if transaction.irpf_category == _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA:
+    if has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         # The explicit IRPF category is the authoritative M130 eligibility gate.
         return amount
     proportion = business_proportion(transaction.business_classification, transaction.business_pct)
@@ -519,7 +517,7 @@ def _computable_income_amount(observation: RentaIncomeObservation) -> Decimal:
 
 
 def _income_withheld_amount(transaction: Transaction) -> Decimal:
-    if transaction.irpf_category != _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA:
+    if not has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return Decimal("0")
     if transaction.taxable_base is None or transaction.iva_amount is None:
         return Decimal("0")

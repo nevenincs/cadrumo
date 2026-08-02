@@ -59,6 +59,8 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
+    has_activity_irpf_category,
+    has_employment_irpf_category,
 )
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
@@ -79,9 +81,6 @@ _TARGET_CASILLA_IMPATRIADO_BASE: CasillaId = validated_casilla_id(
 # ISO 3166-1 alpha-2 code for Spain. The impatriado base admits only rows whose
 # declared source jurisdiction equals this code (art. 93.2 IRNR scope).
 _SPANISH_SOURCE_JURISDICTION: str = "ES"
-
-_IRPF_CATEGORY_ACTIVIDAD_ECONOMICA: str = "actividad_economica"
-_IRPF_CATEGORY_TRABAJO: str = "trabajo"
 
 
 class ImpatriadoIncomeLedgerAggregationIssueReason(StrEnum):
@@ -407,7 +406,10 @@ def _impatriado_income_amount(transaction: Transaction) -> Decimal | None:
     transfer contributes nothing.
     """
     amount = abs(transaction.raw.amount)
-    if transaction.irpf_category in {_IRPF_CATEGORY_TRABAJO, _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA}:
+    if has_employment_irpf_category(
+        transaction.irpf_category,
+        direction=transaction.direction,
+    ) or has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         # The explicit IRPF income category is the authoritative eligibility gate
         # for the impatriado base.
         return amount

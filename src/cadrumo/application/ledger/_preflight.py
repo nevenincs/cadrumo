@@ -43,6 +43,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
     TransactionValidationError,
+    has_employment_irpf_category,
 )
 from ...domain.usage_ratios import CensoRatioMismatchError
 from ..aggregation import (
@@ -467,13 +468,14 @@ def _transaction_is_trabajo_income(transaction: Transaction) -> bool:
     IVA component; the row's IRPF-side retenciones binding consumes
     the gross amount and the IVA aggregation never reads it. The
     preflight must therefore skip the IVA-fact checks on these rows.
+
+    Resolved through the closed catalogue so this reader and the gross
+    invariant agree on what a token names. Comparing the stripped, lowercased
+    string to a local ``"trabajo"`` literal here meant ``TRABAJO`` classified
+    as employment in the preflight while naming no descriptor at all in the
+    gross invariant.
     """
-    if transaction.direction is not TransactionDirection.INCOMING:
-        return False
-    irpf_category = transaction.irpf_category
-    if not isinstance(irpf_category, str):
-        return False
-    return irpf_category.strip().lower() == "trabajo"
+    return has_employment_irpf_category(transaction.irpf_category, direction=transaction.direction)
 
 
 def _preflight_reason_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> LedgerPreflightIssueReason:
