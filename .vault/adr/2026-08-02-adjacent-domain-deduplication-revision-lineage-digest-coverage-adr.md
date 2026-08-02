@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:325c035594e612e0ddf313179303af5840d68c28f5aaa38def630a6c31ebd146'
+body_hash: 'sha256:b444f2d14c8d4547fb738bf1e29974d2571f3eafe09f65618719c053f56b97c1'
 related:
   - "[[2026-08-02-adjacent-domain-deduplication-fleet-burndown-findings-audit]]"
 ---
@@ -55,13 +55,29 @@ restorability test after the checkpoint flip.
   constraint on namespace and object key and `write_revision_metadata` updates in
   place, so a superseded revision leaves no row to walk back to and
   `revision_ancestor_ids` is the only record of the chain beyond the direct parent.
-- Multi-generation mirror lag is a structurally expected state, not an edge case. The
-  push is an operator-invoked CLI verb, not a per-write hook, and it accepts
-  `--namespace` and `--limit` filters that deliberately cover a subset of the store.
-  Nothing bounds how far a namespace falls behind between pushes, and
-  `build_revision_ancestor_ids` in `_secure_object_schema.py` carries the whole prior
-  chain forward with a dedupe and no cap, so depth greater than one is the design's
-  own expectation.
+- Multi-generation chains are the ordinary state, measured rather than inferred. A
+  probe writing one object six times through the real repository grew the stored chain
+  by exactly one entry per write, to depth five, against a single database row. Every
+  object written three or more times carries a multi-generation chain.
+- Nothing bounds mirror lag. The push has one production entry point, an
+  operator-invoked CLI verb, with no scheduler, no per-write hook, and no background
+  sync. `--limit` is refused on a real push, so a push is complete for the namespaces
+  it covers, but `--namespace` is allowed, so a selective push leaves other namespaces
+  behind. Lag resets on push and grows one generation per write between pushes, so a
+  mirror more than one generation behind is the ordinary case, not an edge case.
+- The frequency half of that question is not determinable from the repository. Actual
+  operator push cadence is field data; nothing persists a push timestamp. What would
+  settle it is a persisted push timestamp or the observed distribution of chain depth
+  across real operator buckets.
+- Nothing in the codebase exercises depth. `build_revision_ancestor_ids` in
+  `_secure_object_schema.py` has no tests, and no fixture or test constructs a valid
+  chain of length two or more; the new coverage gate performs two writes and reaches
+  depth one.
+- `revision_ancestor_ids` has exactly one decision-making consumer tree-wide,
+  `_is_stale_remote_entry`. Every other site only carries it forward. It also grows
+  without truncation, roughly one digest per write, re-serialised on every write, so
+  its storage and write cost on a frequently-rewritten row is quadratic in the number
+  of writes.
 - `_is_stale_remote_entry` is a disjunction: the remote revision matches the local
   `previous_revision_id`, or it appears in the ancestor chain. The first disjunct is a
   derivation input and the second is not, so the two halves of one predicate carry
@@ -97,6 +113,11 @@ restorability test after the checkpoint flip.
   multi-generation lag is the expected state under an operator-invoked, subsettable
   push. It also buys nothing against a deliberate adversary, because the surviving
   disjunct rests on `previous_revision_id`, forgeable by the same recomputation.
+- **F. Drop the ancestor disjunct and delete the column outright.** Rejected on the
+  same capability ground as C, and named explicitly because it is the only coherent
+  form of C: since the disjunct is the column's sole decision-making consumer,
+  dropping one without the other would leave an unbounded, untrusted, unread column,
+  which is the one indefensible outcome available here.
 - **D. Make the revision id a keyed MAC under a master-key sub-key.** Deferred, not
   rejected: it is the only option that actually defeats the stated threat model, but it
   couples verification to master-key availability, which collides with the
@@ -170,7 +191,11 @@ for no persisted-format change, which dominates widening the digest to recover o
 column on a path that would still not check it.
 
 Keeping both disjuncts in `_is_stale_remote_entry` follows from the same reasoning
-plus a capability argument. The disjunct that survives narrowing is not meaningfully
+plus a measured capability argument. One-generation staleness is not enough: an object
+written twice between two pushes already exceeds it, and that is the ordinary case
+under an operator-invoked push with no bound on the interval. Capping recognition at
+one generation would therefore reclassify routine lag as a conflict and block ordinary
+pushes, which is a worse failure than the forgery it would prevent. The disjunct that survives narrowing is not meaningfully
 more trustworthy than the one removed, so narrowing trades an integrity gain a
 deliberate adversary sidesteps against a permanent cap on staleness recognition — and
 because prior revisions are overwritten in place, that cap cannot be recovered by
@@ -200,6 +225,17 @@ A latent tension is surfaced for whoever takes up keying: verification under a k
 digest needs the master key, and the raw iterator exists precisely to surface rows when
 the key has rotated. Those two cannot both hold unchanged, and that reconciliation is
 the real blocking dependency on option D — not the restamp, which is cheap today.
+
+One defect this record does not close, and deliberately names rather than absorbing
+into the decision: the ancestor chain grows without truncation, so a frequently
+rewritten row pays quadratic storage and re-serialisation cost in its own write count.
+The remedy shape is a bounded chain, and choosing the bound is the part that cannot be
+settled here — a cap shorter than real mirror lag reintroduces exactly the blocking
+misclassification that rules out option C, and the push cadence that would size it is
+field data the repository does not hold. The interim position is therefore to leave
+the chain uncapped, because an uncapped chain fails toward correct classification while
+an undersized cap fails toward blocking a legitimate push, and to size a cap only once
+push-cadence evidence exists. Pre-release keeps that change cheap whenever it is taken.
 
 Running the gate on the mirror preflight will make some rows unpushable that are
 pushable now. That is the intended direction, but it converts a silent pass into an
