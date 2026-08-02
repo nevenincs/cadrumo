@@ -27,7 +27,13 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from . import BucketPointer
+# Imported from its owning submodule, not the ``cadrumo.core`` facade: the
+# facade serves this name through a PEP 562 ``__getattr__`` defined near the end
+# of ``core/__init__``, so a facade import here fails for any caller reached
+# while that package is still executing its own body. This module sits on the
+# active-profile resolution path, which settings validation reaches, so it must
+# stay importable from the earliest point in core's own initialisation.
+from ._bucket_pointer import BucketPointer
 from ._fsync import fsync_parent_dir
 
 if TYPE_CHECKING:  # pragma: no cover — annotation-only import
