@@ -207,12 +207,20 @@ class _BucketBoundRepository:
         stored row and its contents disagreed about whose profile it was, and
         nothing on either path compared them.
 
-        Deliberately NOT applied to the live-profile repository. The lifecycle
-        service's ``duplicate`` holds one bucket-bound repository while it
-        reads the source profile and writes the new one, so a foreign identity
-        is a real exercised shape there rather than a leak. Whether that shape
-        should exist is a design question about duplication, not something to
-        settle with a guard that would simply break it.
+        NOT applied to the live-profile repository yet, and the reason is a
+        loose end rather than a principle. Production always binds a lifecycle
+        repository to its own profile -- the operator duplicate verb
+        provisions a fresh bucket, and the aggregation readers pass the same
+        id as both arguments -- so the guard would be correct there too.
+
+        The one in-tree consumer it would break is
+        :meth:`ProfileLifecycleService.duplicate`, which holds a single
+        bucket-bound repository across a read of the source and a write of the
+        target. That method has no production callers: outside its own unit
+        tests nothing invokes it, and the operator verb does not route through
+        it. So it is not evidence that a foreign identity is legitimate; it is
+        a dead surface that has to be deleted or wired up before the guard can
+        extend, and that decision is larger than this boundary.
         """
         trimmed = profile_id.strip()
         if trimmed != self._bucket_id:
