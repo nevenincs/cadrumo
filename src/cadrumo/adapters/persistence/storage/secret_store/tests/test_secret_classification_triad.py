@@ -53,9 +53,45 @@ _VALUE = b"classification-triad-secret"
 _CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
 _EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
 
+#: The closed set as this module expects it, written out rather than derived.
+#: The two foreign-class tests below parametrize over the *complement* of
+#: ``SECRET_STORE_CLASSES``, so admitting a class to that set does not make
+#: them fail -- it deletes their cases. Pinning the set independently is what
+#: turns a widening into a red instead of a smaller collection count.
+_EXPECTED_STORE_CLASSES = frozenset({SensitivityClass.SECRET, SensitivityClass.SESSION})
+
 _FOREIGN_CLASSES = tuple(
     pytest.param(member, id=member.value) for member in SensitivityClass if member not in SECRET_STORE_CLASSES
 )
+
+
+def test_the_closed_set_is_exactly_secret_and_session() -> None:
+    """Widening the closed set must fail here, not vanish from the parametrize.
+
+    Six of the seven foreign classes were pinned by nothing at all. Only
+    ``FINANCIAL`` was named literally anywhere in this package (as one case of
+    ``test_secret_record_validation_rejects_invalid_fields``), so admitting it
+    reddened a test while admitting ``IDENTITY``, ``CACHE``, ``AUDIT``,
+    ``CORPUS``, ``DIAGNOSTIC`` or ``OPERATIONAL`` was a green-suite change --
+    the store accepted the class and the only trace was this module collecting
+    one case fewer. That single red is what made the net look complete.
+
+    Assert the set, not a consequence of it: every other check here reads
+    ``SECRET_STORE_CLASSES`` and so moves with it. Do not replace this literal
+    with anything derived from the production constant.
+    """
+    assert SECRET_STORE_CLASSES == _EXPECTED_STORE_CLASSES
+
+
+def test_every_class_outside_the_closed_set_is_actually_parametrized() -> None:
+    """The foreign-class cases exist, and there is one per foreign class.
+
+    Guards the collapse directly: if ``SECRET_STORE_CLASSES`` ever absorbs the
+    whole enum, ``_FOREIGN_CLASSES`` empties and both parametrized tests below
+    silently stop existing rather than failing.
+    """
+    assert len(_FOREIGN_CLASSES) == len(SensitivityClass) - len(_EXPECTED_STORE_CLASSES)
+    assert _FOREIGN_CLASSES
 
 
 @pytest.fixture
