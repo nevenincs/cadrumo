@@ -877,6 +877,7 @@ application:
           con el identificador solicitado.
         observation_prefix_ambiguous: El prefijo de la observación de verificación
           coincide con varias observaciones.
+        observation_key_mismatch: 'La observación de verificación está almacenada bajo la clave de otra observación.'
   modelo:
     borrador_binding:
       errors:
@@ -1586,6 +1587,8 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
+      censal_read_identity_profile_malformed: 'El NIF de este perfil no es un identificador fiscal español válido, por lo que no puede confirmarse que la lectura censal le corresponda. Corrija el NIF y vuelva a ejecutar la consulta.'
+      censal_read_identity_read_malformed: 'El NIF de la lectura censal no es un identificador fiscal español válido, por lo que no puede confirmarse que corresponda a este perfil.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'

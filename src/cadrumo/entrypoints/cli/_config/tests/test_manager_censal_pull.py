@@ -237,7 +237,7 @@ def test_a_read_for_a_different_taxpayer_is_refused_outright() -> None:
     record = workflow_state_repository().load().active_profile_record()
 
     with pytest.raises(CensalIdentityMismatchError):
-        reconcile_censal_read(record, censal_facts_from_read(_read(nif="Y0000001Z")), incoming_identity="Y0000001Z")
+        reconcile_censal_read(record, censal_facts_from_read(_read(nif=_FOREIGN_NIF)), incoming_identity=_FOREIGN_NIF)
 
 
 def _profile_tax_id() -> str:
@@ -252,7 +252,16 @@ def _profile_tax_id() -> str:
     return str(next(fact.value for fact in record.facts if fact.path == "identity.tax_id"))
 
 
-def _read(*, codigo_postal: str = "08032", nif: str = "Y0000001Z") -> CensalDatosResult:
+#: A checksum-VALID identity belonging to somebody other than the fixture
+#: profile, whose NIF is an 8-digit one derived from its id. Validity is
+#: load-bearing: the ownership guard canonicalises both sides through the
+#: shared tax-id authority, so a fabricated identity refuses as malformed and
+#: the refusal below would pass without ever testing that the read belongs to
+#: a DIFFERENT taxpayer.
+_FOREIGN_NIF = "X1234567L"
+
+
+def _read(*, codigo_postal: str = "08032", nif: str = _FOREIGN_NIF) -> CensalDatosResult:
     """Build a censal read with the shape the consulta surface renders."""
     domicilio = CensalDomicilio(
         tipo_via="CALLE",

@@ -811,6 +811,7 @@ application:
         observation_not_found: Nem található verify megfigyelés a kért azonosítóhoz.
         observation_prefix_ambiguous: A verify megfigyelés előtagja több megfigyeléssel
           egyezik.
+        observation_key_mismatch: 'A verify megfigyelés egy másik megfigyelés kulcsa alatt van tárolva.'
   modelo:
     borrador_binding:
       errors:
@@ -1510,6 +1511,8 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
+      censal_read_identity_profile_malformed: 'Ennek a profilnak az adóazonosítója nem érvényes spanyol adóazonosító, ezért nem erősíthető meg, hogy a nyilvántartási olvasás hozzá tartozik. Javítsa az adóazonosítót, majd futtassa újra a lekérdezést.'
+      censal_read_identity_read_malformed: 'A nyilvántartási olvasás adóazonosítója nem érvényes spanyol adóazonosító, ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'

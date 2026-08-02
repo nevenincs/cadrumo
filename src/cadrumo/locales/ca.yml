@@ -871,6 +871,7 @@ application:
           amb l identificador sol.licitat.
         observation_prefix_ambiguous: El prefix de l observació de verificació coincideix
           amb diverses observacions.
+        observation_key_mismatch: 'L''observació de verificació està emmagatzemada sota la clau d''una altra observació.'
   modelo:
     borrador_binding:
       errors:
@@ -1577,6 +1578,8 @@ application:
         instantània de perfil no és compatible amb aquesta aplicació.
       unsupported_bundle_schema_version: La versió de l'esquema del paquet no és compatible
         amb aquesta versió de l'aplicació.
+      censal_read_identity_profile_malformed: 'El NIF d''aquest perfil no és un identificador fiscal espanyol vàlid, de manera que no es pot confirmar que la lectura censal li correspongui. Corregiu el NIF i torneu a executar la consulta.'
+      censal_read_identity_read_malformed: 'El NIF de la lectura censal no és un identificador fiscal espanyol vàlid, de manera que no es pot confirmar que correspongui a aquest perfil.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'

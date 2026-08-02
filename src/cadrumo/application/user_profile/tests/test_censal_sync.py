@@ -48,7 +48,14 @@ _PROFILE_ID = "5d5d5d5d-5d5d-4d5d-8d5d-5d5d5d5d5d5d"
 #: registered profile must hold. A profile whose tax id is a placeholder could
 #: never match any real read, so the ownership guard would refuse every case and
 #: the tests below would pass for the wrong reason.
-_PROFILE_NIF = "Y0000001Z"
+#:
+#: It is also CHECKSUM-VALID, and that is load-bearing rather than tidy. The
+#: guard canonicalises both sides through the shared tax-id authority, so a
+#: fabricated identity refuses as malformed — which would make every case below
+#: pass on the malformed refusal instead of on the property it names. The
+#: previous value ``Y0000001Z`` was exactly that: a plausible-looking NIE whose
+#: control letter is ``S``.
+_PROFILE_NIF = "Y0000001S"
 #: Source URL stamped on the fixture read. Nothing here asserts it — it only
 #: populates a required field — so the origin is deliberately the UNNUMBERED
 #: sede host rather than a numbered one. A numbered host is not invariant:
@@ -506,13 +513,87 @@ class TestIdentityOwnership:
             state = _register(schema, routing)
             state = set_active_fields(
                 state,
-                (UserProfileFact(path="identity.tax_id", value=" y0000001z ", source=CENSO_SOURCE_TAG),),
+                (UserProfileFact(path="identity.tax_id", value=" y0000001s ", source=CENSO_SOURCE_TAG),),
             )
             record = state.active_profile_record(schema=schema)
             outcome = reconcile_censal_read(
-                record, censal_facts_from_read(_read(nif="Y0000001Z")), incoming_identity="Y0000001Z"
+                record, censal_facts_from_read(_read(nif=_PROFILE_NIF)), incoming_identity=_PROFILE_NIF
             )
             assert "contact.postcode" in {fact.path for fact in outcome.adopted}
+
+    def test_the_match_ignores_the_punctuation_the_two_sides_write_it_with(
+        self,
+        schema: ProfileSchemaDefinition,
+    ) -> None:
+        """One identity written two ways is one taxpayer, not two.
+
+        AEAT prints the identity the way it prints it and an operator types it
+        the way they hold it, so a hyphen or a dot on one side and not the
+        other is a spelling difference. A strip-and-upper comparison called
+        that a different taxpayer and refused the whole read; the canonical
+        form the shared tax-id authority returns is what decides, and it
+        removes the separators on both sides.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="identity.tax_id", value="Y-0000001-S", source=CENSO_SOURCE_TAG),),
+            )
+            record = state.active_profile_record(schema=schema)
+            outcome = reconcile_censal_read(
+                record, censal_facts_from_read(_read(nif="Y0000001S")), incoming_identity="Y0000001S"
+            )
+            assert "contact.postcode" in {fact.path for fact in outcome.adopted}
+
+    @pytest.mark.parametrize(
+        "malformed",
+        [
+            pytest.param("bad", id="wrong-shape"),
+            pytest.param("12345678A", id="checksum-fails"),
+            pytest.param("Y0000001Z", id="plausible-but-fabricated"),
+        ],
+    )
+    def test_a_malformed_profile_identity_cannot_confirm_ownership(
+        self,
+        schema: ProfileSchemaDefinition,
+        malformed: str,
+    ) -> None:
+        """A profile identity that names nobody cannot confirm a read is theirs.
+
+        The guard used to answer "are these two strings equal", so a profile
+        and a read carrying the SAME malformed identity confirmed each other
+        and the read's address facts were adopted. Whether the value names a
+        taxpayer at all is prior to whether the two agree, and the shared
+        tax-id authority is what answers it.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="identity.tax_id", value=malformed, source=CENSO_SOURCE_TAG),),
+            )
+            record = state.active_profile_record(schema=schema)
+            with pytest.raises(CensalIdentityMismatchError):
+                reconcile_censal_read(record, censal_facts_from_read(_read(nif=malformed)), incoming_identity=malformed)
+
+    def test_a_malformed_read_identity_cannot_confirm_ownership(self, schema: ProfileSchemaDefinition) -> None:
+        """A read whose identity is not a tax identifier confirms nothing either.
+
+        Refused separately from the profile side so the operator is told which
+        half is wrong: one is theirs to correct, the other is not.
+        """
+        with profile_create_storage_span(_PROFILE_ID) as routing:
+            state = _register(schema, routing)
+            state = set_active_fields(
+                state,
+                (UserProfileFact(path="identity.tax_id", value=_PROFILE_NIF, source=CENSO_SOURCE_TAG),),
+            )
+            record = state.active_profile_record(schema=schema)
+            with pytest.raises(CensalIdentityMismatchError):
+                reconcile_censal_read(
+                    record, censal_facts_from_read(_read(nif="12345678A")), incoming_identity="12345678A"
+                )
 
     def test_the_apply_path_refuses_a_foreign_read_too(self, schema: ProfileSchemaDefinition) -> None:
         """The commit door refuses identically to the preview.

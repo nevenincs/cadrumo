@@ -785,6 +785,7 @@ application:
         observation_not_found: No verify observation matches the requested id.
         observation_prefix_ambiguous: The verify observation prefix matches multiple
           observations.
+        observation_key_mismatch: 'Verify observation is stored under a different observation''s key.'
   modelo:
     borrador_binding:
       errors:
@@ -1453,6 +1454,8 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      censal_read_identity_profile_malformed: 'This profile''s fiscal ID is not a valid Spanish tax identifier, so a census read cannot be confirmed to belong to it. Correct the fiscal ID and pull again.'
+      censal_read_identity_read_malformed: 'The census read''s tax identity is not a valid Spanish tax identifier, so it cannot be confirmed to belong to this profile.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
