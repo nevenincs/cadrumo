@@ -33,6 +33,8 @@ from .._m036_lifecycle import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_PROFILE_ID = "30303030-3030-4030-8030-303030303030"
+
 
 def _command(
     *,
@@ -42,7 +44,7 @@ def _command(
     note: str | None = None,
 ) -> M036DeclarationCommand:
     return M036DeclarationCommand(
-        profile_id="30303030-3030-4030-8030-303030303030",
+        profile_id=_PROFILE_ID,
         event_kind=event_kind,
         declared_on=declared_on,
         sede_justificante=justificante,
@@ -52,7 +54,7 @@ def _command(
 
 def test_list_returns_every_recorded_declaration(tmp_path: Path) -> None:
     """alta + modificacion + baja all surface in list with their persisted fields."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         alta = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.ALTA,
@@ -105,7 +107,7 @@ def test_view_returns_exact_recorded_record_strict_equality(tmp_path: Path) -> N
     save-drops-field / load-re-defaults-field regression cannot hide behind a
     default value.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         recorded = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.MODIFICACION,
@@ -127,7 +129,7 @@ def test_view_returns_exact_recorded_record_strict_equality(tmp_path: Path) -> N
 
 def test_view_resolves_unambiguous_prefix(tmp_path: Path) -> None:
     """A unique prefix of the declaration id resolves to the single record."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         recorded = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.ALTA,
@@ -145,7 +147,7 @@ def test_view_resolves_unambiguous_prefix(tmp_path: Path) -> None:
 
 def test_view_unknown_id_refuses(tmp_path: Path) -> None:
     """An id matching no recorded declaration raises the not-found error."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         record_m036_declaration(
             _command(event_kind=CensoModeloEventKind.ALTA, declared_on=date(2026, 6, 1)),
             bucket_id=runtime.bucket_id,
@@ -157,7 +159,7 @@ def test_view_unknown_id_refuses(tmp_path: Path) -> None:
 
 def test_list_on_empty_bucket_returns_clean_empty(tmp_path: Path) -> None:
     """An untouched bucket lists no declarations — a clean empty, not an error."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         declarations = list_m036_declarations(bucket_id=runtime.bucket_id)
 
     assert declarations == ()
@@ -173,7 +175,7 @@ def test_anti_tautology_unrecorded_declaration_absent_from_list(tmp_path: Path) 
     """
     from .._m036_lifecycle import derive_m036_declaration_id
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         recorded = record_m036_declaration(
             _command(
                 event_kind=CensoModeloEventKind.ALTA,
@@ -184,7 +186,7 @@ def test_anti_tautology_unrecorded_declaration_absent_from_list(tmp_path: Path) 
             bucket_id=runtime.bucket_id,
         )
         never_recorded_id = derive_m036_declaration_id(
-            profile_id="30303030-3030-4030-8030-303030303030",
+            profile_id=_PROFILE_ID,
             event_kind=CensoModeloEventKind.BAJA,
             declared_on=date(2027, 1, 1),
             sede_justificante="ACUSE-NEVER",

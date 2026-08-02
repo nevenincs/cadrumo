@@ -22,10 +22,12 @@ from ....adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile
+from ...live import LiveApplicationInputError
 from .._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
     derive_m036_declaration_id,
+    list_m036_declarations,
     record_m036_declaration,
 )
 
@@ -44,7 +46,7 @@ def _alta_command(*, justificante: str | None = None) -> M036DeclarationCommand:
 
 def test_record_alta_persists_result_with_bucket_scope(tmp_path: Path) -> None:
     """A successful record returns a typed result carrying bucket_id + the SHA-256 id."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         result = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
 
     assert isinstance(result, M036DeclarationResult)
@@ -62,7 +64,7 @@ def test_record_alta_persists_result_with_bucket_scope(tmp_path: Path) -> None:
 
 def test_record_persists_to_secure_object_namespace(tmp_path: Path) -> None:
     """The record lands in LIVE_M036_DECLARATION_NAMESPACE keyed by bucket+declaration_id."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         result = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
 
         record = runtime.repository.load(
@@ -78,7 +80,7 @@ def test_record_persists_to_secure_object_namespace(tmp_path: Path) -> None:
 
 def test_record_alta_emits_bucket_event_of_matching_kind(tmp_path: Path) -> None:
     """Recording ALTA appends a CENSO_DECLARATION_ALTA event to the bucket history."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         result = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
         catalogue = BucketEventHistoryRepository().load()
 
@@ -101,7 +103,7 @@ def test_record_modificacion_emits_modificacion_event(tmp_path: Path) -> None:
         event_kind=CensoModeloEventKind.MODIFICACION,
         declared_on=date(2026, 6, 4),
     )
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         result = record_m036_declaration(command, bucket_id=runtime.bucket_id)
         catalogue = BucketEventHistoryRepository().load()
 
@@ -117,7 +119,7 @@ def test_record_baja_emits_baja_event(tmp_path: Path) -> None:
         event_kind=CensoModeloEventKind.BAJA,
         declared_on=date(2026, 6, 4),
     )
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         result = record_m036_declaration(command, bucket_id=runtime.bucket_id)
         catalogue = BucketEventHistoryRepository().load()
 
@@ -133,7 +135,7 @@ def test_record_is_idempotent_for_identical_input(tmp_path: Path) -> None:
     the catalogue retains a single event because the event_id is also
     content-addressed over the identical tuple.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         first = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
         second = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
         catalogue = BucketEventHistoryRepository().load()
@@ -151,7 +153,7 @@ def test_record_with_distinct_justificante_yields_distinct_record(
     tmp_path: Path,
 ) -> None:
     """Pre-acuse and post-acuse declarations are distinct records, not coalesced."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
         draft = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
         confirmed = record_m036_declaration(
             _alta_command(justificante="ACUSE-SVC-1"),
@@ -161,3 +163,83 @@ def test_record_with_distinct_justificante_yields_distinct_record(
     assert draft.declaration_id != confirmed.declaration_id
     assert draft.sede_justificante is None
     assert confirmed.sede_justificante == "ACUSE-SVC-1"
+
+
+def test_record_refuses_a_command_profile_that_does_not_own_the_bucket(
+    tmp_path: Path,
+) -> None:
+    """A profile-B declaration cannot be recorded into bucket A.
+
+    A bucket identity IS the profile UUID owning it, so a command naming a
+    different profile is incoherent. Without the guard the two identities split
+    across the same call: ``declaration_id`` and the event payload derive from
+    ``command.profile_id`` while the stored row and the event scope key on
+    ``bucket_id``. The repository cross-check compares only the result's own
+    ``bucket_id`` against its binding, so it cannot see the foreign profile
+    identity riding inside the payload.
+    """
+    foreign_profile = "39393939-3939-4939-8939-393939393939"
+    assert foreign_profile != _PROFILE_ID
+    command = M036DeclarationCommand(
+        profile_id=foreign_profile,
+        event_kind=CensoModeloEventKind.ALTA,
+        declared_on=date(2026, 6, 4),
+        sede_justificante=None,
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        with pytest.raises(LiveApplicationInputError) as exc_info:
+            record_m036_declaration(command, bucket_id=runtime.bucket_id)
+
+        assert exc_info.value.context["profile_id"] == foreign_profile
+        assert exc_info.value.context["bucket_id"] == _PROFILE_ID
+        assert list_m036_declarations(bucket_id=runtime.bucket_id) == ()
+        catalogue = BucketEventHistoryRepository().load()
+
+    assert catalogue.events == {}
+
+
+def test_record_refuses_before_deriving_the_declaration_id(tmp_path: Path) -> None:
+    """The refusal precedes id derivation, so no foreign address is minted.
+
+    Anti-tautology for the guard: the id the foreign command WOULD have produced
+    must be absent from storage, not merely unreachable through the read-back
+    surface. A guard placed after derivation would leave that address recorded.
+    """
+    foreign_profile = "39393939-3939-4939-8939-393939393939"
+    foreign_declaration_id = derive_m036_declaration_id(
+        profile_id=foreign_profile,
+        event_kind=CensoModeloEventKind.ALTA,
+        declared_on=date(2026, 6, 4),
+        sede_justificante=None,
+    )
+    command = M036DeclarationCommand(
+        profile_id=foreign_profile,
+        event_kind=CensoModeloEventKind.ALTA,
+        declared_on=date(2026, 6, 4),
+        sede_justificante=None,
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        with pytest.raises(LiveApplicationInputError):
+            record_m036_declaration(command, bucket_id=runtime.bucket_id)
+
+        assert (
+            runtime.repository.load(
+                LIVE_M036_DECLARATION_NAMESPACE.namespace,
+                f"m036-declaration:{runtime.bucket_id}:{foreign_declaration_id}",
+                expected_class=LIVE_M036_DECLARATION_NAMESPACE.sensitivity,
+                max_supported_version=LIVE_M036_DECLARATION_NAMESPACE.schema_version,
+            )
+            is None
+        )
+
+
+def test_record_accepts_the_owning_profile_and_reads_back(tmp_path: Path) -> None:
+    """Valid same-profile parity: the guard does not refuse the coherent case."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        result = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
+        recorded = list_m036_declarations(bucket_id=runtime.bucket_id)
+
+    assert result.profile_id == result.bucket_id == _PROFILE_ID
+    assert recorded == (result,)
