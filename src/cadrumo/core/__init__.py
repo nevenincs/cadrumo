@@ -187,6 +187,12 @@ from .compatibility_lifecycle import (
 )
 from .corpus_text import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
 from .external_constants import M347_THRESHOLD_EUR
+from .manual_corpus_sidecar import (
+    MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
+    MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
+    MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
+    ManualCorpusTextSidecar,
+)
 from .product_identity import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
@@ -251,6 +257,9 @@ __all__: list[str] = [
     "LENGTH_FAIR_FLOOR",
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",
+    "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
+    "MANUAL_CORPUS_TEXT_SCHEMA_VERSION",
+    "MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "NIST_PASSPHRASE_MIN_LENGTH",
     "NON_REGISTRY_MODELOS",
@@ -288,6 +297,7 @@ __all__: list[str] = [
     "LinkInconsistencyDirection",
     "M210GrossIncomeSourceMode",
     "M210PayerMode",
+    "ManualCorpusTextSidecar",
     "MissingOptionalExtraError",
     "Modelo",
     "OfficialTipoRentaCode",
