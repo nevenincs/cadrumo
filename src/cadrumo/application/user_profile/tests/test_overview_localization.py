@@ -17,6 +17,9 @@ back, which is exactly the state the change exists to leave behind.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from ....core.config import override_settings
@@ -25,12 +28,38 @@ from ....domain.user_profile import (
     UserProfileRecord,
     UserProfileStatus,
     load_user_profile_schema,
+    profile_field_label_key,
 )
 from .. import MASKED_PLACEHOLDER, build_profile_overview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "22222222-2222-4222-8222-222222222222"
+
+_ALLOWLIST_PATH = Path(__file__).resolve().parents[3] / "locales" / "_intentional_identical.json"
+
+
+def _identical_by_nature(locale: str) -> frozenset[str]:
+    """Return the field paths whose label is allowed to equal English.
+
+    Read from the catalogues' own exemption file rather than restated here.
+    A term like IBAN or SWIFT-BIC is an ISO code name that is identical in
+    every language, so an equal label is correct rather than untranslated —
+    but that judgement already has one home, and duplicating it as a literal
+    here would let this gate and the translation-honesty ratchet drift apart.
+    Anything NOT in that file must still differ, so an untranslated label
+    cannot hide behind this exemption.
+    """
+    raw = json.loads(_ALLOWLIST_PATH.read_text(encoding="utf-8"))
+    entries = raw.get(locale, {}) if isinstance(raw, dict) else {}
+    exempt_keys = {key for key in entries if not key.startswith("_")}
+    schema = load_user_profile_schema()
+    return frozenset(
+        f"{section.key}.{field.key}"
+        for section in schema.sections
+        for field in section.fields
+        if profile_field_label_key(section.key, field.key) in exempt_keys
+    )
 
 
 def _record() -> UserProfileRecord:
@@ -77,13 +106,35 @@ def test_every_section_title_is_localized() -> None:
 
 
 def test_every_field_label_is_localized() -> None:
-    """No field label is left rendering one language to both operators."""
+    """No field label is left rendering one language to both operators.
+
+    Labels that are identical by nature -- ISO code names such as IBAN --
+    are exempt, but only when the catalogues' own exemption file says so.
+    An untranslated label therefore still fails here rather than passing on
+    a blanket carve-out.
+    """
     english = {field.path: field.label for section in _overview_in("en").sections for field in section.fields}
     spanish = {field.path: field.label for section in _overview_in("es").sections for field in section.fields}
+    exempt = _identical_by_nature("es")
 
     assert english.keys() == spanish.keys()
-    identical = sorted(path for path in english if english[path] == spanish[path])
-    assert not identical, f"field labels identical under en and es: {identical[:10]}"
+    identical = sorted(path for path in english if english[path] == spanish[path] and path not in exempt)
+    assert not identical, f"field labels identical under en and es without an exemption: {identical[:10]}"
+
+
+def test_the_identical_by_nature_exemption_is_narrow_and_real() -> None:
+    """The exemption names real fields and does not swallow the schema.
+
+    Anti-vacuity for the gate above: an exemption set that grew to cover
+    everything, or that named paths the schema does not declare, would make
+    that assertion pass over a fully untranslated catalogue.
+    """
+    exempt = _identical_by_nature("es")
+    declared = set(load_user_profile_schema().field_paths)
+
+    assert exempt, "no exemption resolved; the gate above would be asserting nothing new"
+    assert exempt <= declared, f"exemption names paths the schema does not declare: {sorted(exempt - declared)}"
+    assert len(exempt) < len(declared) // 10, "the identical-by-nature carve-out has grown into a blanket bypass"
 
 
 def test_no_label_renders_a_raw_locale_key() -> None:
