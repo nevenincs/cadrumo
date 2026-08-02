@@ -1703,6 +1703,7 @@ application:
       state_unreadable: No se pudo leer el estado de configuración local.
       state_write_invalid_payload: 'No se pudo guardar el estado del flujo de trabajo:
         carga útil no válida.'
+      run_identity_mismatch: 'La ejecución almacenada no coincide con el identificador con el que se ha leído.'
 auth:
   catalogue:
     certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM

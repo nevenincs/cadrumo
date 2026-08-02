@@ -1626,6 +1626,7 @@ application:
       state_unreadable: A helyi konfigurációs állapot nem olvasható.
       state_write_invalid_payload: 'A munkafolyamat-állapot nem menthető: érvénytelen
         adattartalom.'
+      run_identity_mismatch: 'A tárolt futás nem egyezik azzal az azonosítóval, amellyel beolvasták.'
 auth:
   catalogue:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy

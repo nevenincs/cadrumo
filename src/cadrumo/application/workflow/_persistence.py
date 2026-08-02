@@ -51,6 +51,7 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_cold_bootstrap_state,
 )
+from ...adapters.persistence.storage.crypto import secure_object_key_digest
 from ...core import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
@@ -390,7 +391,17 @@ class WorkflowRunRepository:
     def load(self, run_id: str) -> WorkflowResult:
         """Load one persisted :class:`WorkflowResult` from the secure backend.
 
+        ``save`` files each run under its own ``run_id``, so the secure-object
+        key IS the run's durable identity -- nothing else in the row asserts
+        it. The decrypted payload's ``run_id`` is therefore compared with the
+        requested key: a valid run B re-encrypted under A's key would otherwise
+        be returned here, and resume reads it to decide what to continue.
+
         Returns the :class:`WorkflowResult` for ``run_id``.
+
+        Raises:
+            WorkflowError: When no run is stored under ``run_id``, or when the
+                stored payload names a different run than the key it sits under.
         """
         safe_run_id = _validate_run_id(run_id)
         record = self._objects.load(
@@ -413,6 +424,11 @@ class WorkflowRunRepository:
             raise EnvelopeVersionError(
                 f"workflow run is at version {envelope.schema_version}; consumer supports up to {_RUN_VERSION}",
             )
+        if envelope.payload.run_id != safe_run_id:
+            raise WorkflowError(
+                translated_message="application.workflow.errors.run_identity_mismatch",
+                context={"run_id": safe_run_id},
+            )
         return envelope.payload
 
     def list(self, *, since: date | None = None) -> tuple[WorkflowResult, ...]:
@@ -429,6 +445,14 @@ class WorkflowRunRepository:
         for record in records:
             envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
             result = envelope.payload
+            # Enumeration has no requested key to compare against, so the
+            # payload's own id is checked against the row's stored key digest --
+            # the same digest the write path derived from ``run_id``.
+            if secure_object_key_digest(result.run_id) != record.object_key:
+                raise WorkflowError(
+                    translated_message="application.workflow.errors.run_identity_mismatch",
+                    context={"run_id": result.run_id},
+                )
             if since is not None and result.started_at.date() < since:
                 continue
             runs.append(result)
