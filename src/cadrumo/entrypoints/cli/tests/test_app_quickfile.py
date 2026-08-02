@@ -486,3 +486,100 @@ def test_quickfile_result_payload_refuses_unknown_stopped_stage() -> None:
             stopped_at_stage="bogus",
             stages=(),
         )
+
+
+def _readiness(**overrides: object) -> object:
+    from ....application.state_projection import ProjectionModeloReadiness
+
+    period = Period.from_year_and_code(2026, "1T")
+    base: dict[str, object] = {
+        "profile_id": "11111111-1111-4111-8111-111111111111",
+        "modelo": "130",
+        "revision_id": "rev-1",
+        "filing_year": 2026,
+        "period": period,
+        "profile_ready": True,
+        "ready": True,
+    }
+    base.update(overrides)
+    return ProjectionModeloReadiness(**base)
+
+
+def test_quickfile_result_payload_carries_the_typed_readiness_report_when_ready() -> None:
+    """A ready readiness report reaches the operator through the quickfile envelope."""
+    from .._app_quickfile_payloads import QuickfileResultPayload
+
+    payload = QuickfileResultPayload(
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        registry_revision_id="rev-1",
+        completed=False,
+        stopped_at_stage=None,
+        readiness=_readiness(),
+        stages=(),
+    )
+
+    assert payload.readiness is not None
+    assert payload.readiness.ready is True
+
+
+def test_quickfile_result_payload_carries_the_typed_readiness_report_when_not_ready() -> None:
+    """A not-ready readiness report (blocked on a missing profile requirement) round-trips cleanly."""
+    from ....application.state_projection import ProjectionModeloReadiness
+    from ....application.user_profile import ProfilePreflightRequirement
+    from .._app_quickfile_payloads import QuickfileResultPayload
+
+    not_ready = _readiness(
+        profile_ready=False,
+        ready=False,
+        missing=(
+            ProfilePreflightRequirement(selector="identity.tax_id", section_key="identity", field_key="tax_id"),
+        ),
+    )
+    payload = QuickfileResultPayload(
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        registry_revision_id="rev-1",
+        completed=False,
+        stopped_at_stage=None,
+        readiness=not_ready,
+        stages=(),
+    )
+
+    assert payload.readiness is not None
+    assert payload.readiness.ready is False
+    assert payload.readiness.missing[0].selector == "identity.tax_id"
+    assert isinstance(payload.readiness, ProjectionModeloReadiness)
+
+
+def test_quickfile_result_payload_carries_a_missing_binding_requirement() -> None:
+    """A binding-blocked readiness report carries the missing-binding row through the envelope."""
+    from ....application.state_projection import ProjectionModeloBindingRequirement
+    from .._app_quickfile_payloads import QuickfileResultPayload
+
+    blocked = _readiness(
+        binding_ready=False,
+        ready=False,
+        missing_bindings=(
+            ProjectionModeloBindingRequirement(
+                binding_id="binding-1",
+                source="ledger",
+                input_channel="preflight",
+            ),
+        ),
+    )
+    payload = QuickfileResultPayload(
+        modelo="130",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        registry_revision_id="rev-1",
+        completed=False,
+        stopped_at_stage=None,
+        readiness=blocked,
+        stages=(),
+    )
+
+    assert payload.readiness is not None
+    assert payload.readiness.missing_bindings[0].binding_id == "binding-1"

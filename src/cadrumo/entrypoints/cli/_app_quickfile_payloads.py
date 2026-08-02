@@ -10,6 +10,7 @@ consumer can read exactly which stage the chain reached and where it halted.
 from __future__ import annotations
 
 from ...application.modelo import QuickfileResult, QuickfileStage, QuickfileStageStatus
+from ...application.state_projection import ProjectionModeloReadiness
 from ...core import Period
 from ._modelo_payloads import ModeloExportPayload
 from ._schemas import OutputSchema, register_schema
@@ -41,7 +42,11 @@ class QuickfileResultPayload(OutputSchema):
     ``completed`` is true only when the terminal local fichero-BOE export
     succeeded. ``stopped_at_stage`` names the stage that refused when the chain
     halted early. ``export`` is the path-reference export receipt (never raw
-    bytes) and is ``None`` when the chain stopped before export.
+    bytes) and is ``None`` when the chain stopped before export. ``readiness``
+    is the canonical :class:`~cadrumo.application.state_projection.ProjectionModeloReadiness`
+    report the readiness-check stage produced (``None`` when that stage never
+    ran), carried verbatim so an operator can see exactly which axis (profile,
+    registry, binding, ledger) blocked the chain.
     """
 
     operation: str = "quickfile"
@@ -51,6 +56,7 @@ class QuickfileResultPayload(OutputSchema):
     registry_revision_id: str
     completed: bool
     stopped_at_stage: QuickfileStage | None = None
+    readiness: ProjectionModeloReadiness | None = None
     work_unit_id: str | None = None
     calculation_revision_id: str | None = None
     granted_verificado_completo: bool | None = None
@@ -68,6 +74,7 @@ class QuickfileResultPayload(OutputSchema):
             registry_revision_id=result.registry_revision_id,
             completed=result.completed,
             stopped_at_stage=result.stopped_at_stage,
+            readiness=result.readiness,
             work_unit_id=result.work_unit.work_unit_id if result.work_unit is not None else None,
             calculation_revision_id=(
                 result.calculation_revision.calculation_revision_id if result.calculation_revision is not None else None
