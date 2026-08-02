@@ -4,14 +4,37 @@ from __future__ import annotations
 
 from decimal import Decimal
 from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import pytest
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 
 from .._action_errors import ModeloLocalObservationError
 from .._local_observation_spreadsheet import parse_casilla_value_spreadsheet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _write_xlsx_with_stale_formula_cache(path: Path) -> None:
+    """Create a real workbook whose formula and cached amount contradict."""
+    workbook = Workbook()
+    sheet = workbook.active
+    assert sheet is not None
+    sheet.append(["casilla_code", "value"])
+    sheet.append(["01", 1])
+    workbook.save(path)
+    workbook.close()
+
+    worksheet_member = "xl/worksheets/sheet1.xml"
+    original_cell = b'<c r="B2" t="n"><v>1</v></c>'
+    formula_cell_with_stale_cache = b'<c r="B2"><f>1+1</f><v>9999</v></c>'
+    with ZipFile(path) as source_archive:
+        members = {member.filename: source_archive.read(member) for member in source_archive.infolist()}
+    assert members[worksheet_member].count(original_cell) == 1
+    members[worksheet_member] = members[worksheet_member].replace(original_cell, formula_cell_with_stale_cache)
+    with ZipFile(path, mode="w", compression=ZIP_DEFLATED) as destination_archive:
+        for filename, contents in members.items():
+            destination_archive.writestr(filename, contents)
 
 
 def test_parse_csv_with_header_row(tmp_path: Path) -> None:
@@ -61,6 +84,31 @@ def test_parse_xlsx_with_header_row(tmp_path: Path) -> None:
     values = parse_casilla_value_spreadsheet(path)
 
     assert values == {"01": Decimal("1234.56"), "03": Decimal("789.1")}
+
+
+def test_parse_xlsx_refuses_stale_formula_cache_before_value_materialisation(tmp_path: Path) -> None:
+    """A cached amount that contradicts its formula cannot become prefill evidence."""
+    path = tmp_path / "stale-formula.xlsx"
+    _write_xlsx_with_stale_formula_cache(path)
+
+    formula_workbook = load_workbook(filename=path, read_only=True, data_only=False)
+    cached_workbook = load_workbook(filename=path, read_only=True, data_only=True)
+    try:
+        formula_sheet = formula_workbook.active
+        cached_sheet = cached_workbook.active
+        assert formula_sheet is not None
+        assert cached_sheet is not None
+        assert formula_sheet["B2"].value == "=1+1"
+        assert cached_sheet["B2"].value == 9999
+    finally:
+        formula_workbook.close()
+        cached_workbook.close()
+
+    with pytest.raises(ModeloLocalObservationError, match=r"formula cell at row 2, column 2") as exc_info:
+        parse_casilla_value_spreadsheet(path)
+
+    assert "formula cached values are not accepted" in str(exc_info.value)
+    assert exc_info.value.context == {"path": str(path), "row": "2", "column": "2"}
 
 
 def test_parse_csv_rejects_duplicate_casilla_rows_before_last_writer_wins(tmp_path: Path) -> None:
