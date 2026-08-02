@@ -125,6 +125,17 @@ def promote_once(
         return decision
 
     candidate = decision.candidate
+    if candidate.dry_run:
+        # A rehearsal candidate proves the chain end to end and must never
+        # publish. It is refused here rather than filtered out of selection, so
+        # the rehearsal is VISIBLE in the promoter's output: silently skipping
+        # it would make a dry_run seal indistinguishable from no seal at all,
+        # which is the failure the whole rehearsal exists to rule out.
+        return PromotionDecision(
+            None,
+            f"{candidate.version} is a dry_run rehearsal candidate; its soak completed and it will never publish",
+        )
+
     report = readiness_for(candidate)
     if blocking := report.blocking_failures:
         named = "; ".join(f"{check.name}: {check.detail}" for check in blocking)

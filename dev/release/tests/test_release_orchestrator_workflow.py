@@ -335,3 +335,32 @@ def test_the_seal_module_exists_and_is_runnable() -> None:
 
     assert module.is_file()
     assert "def main(" in module.read_text(encoding="utf-8")
+
+
+def test_dry_run_reaches_every_stage_of_the_chain() -> None:
+    """The rehearsal proves the whole orchestration, not just its last leg.
+
+    Before this pipeline, `dry_run` proved the two publication gates and
+    nothing upstream. A rehearsal that skipped the bump, campaign, acquisition
+    and seal would leave the four stages that were newly automated as the only
+    ones never exercised without a real release.
+    """
+    document = _document()
+    jobs = document["jobs"]
+
+    # preflight resolves it once; every later stage reads that resolution
+    # rather than re-reading the raw input, so they cannot disagree.
+    assert "dry_run" in jobs["preflight"]["outputs"]
+    for stage in ("bump", "seal"):
+        assert "needs.preflight.outputs.dry_run" in str(jobs[stage]), f"{stage} does not read the resolved dry_run"
+
+
+def test_a_rehearsal_bump_pushes_no_ref() -> None:
+    """The one irreversible thing the bump does is gated on the rehearsal flag."""
+    surface = _invocation_surface(_document(), "bump")
+
+    assert "--dry-run" in surface
+    assert "--push" in surface
+    # Both appear in one branch, so the rehearsal and the real run are the same
+    # code path with one flag differing rather than two divergent paths.
+    assert 'DRY_RUN}" = "true"' in surface

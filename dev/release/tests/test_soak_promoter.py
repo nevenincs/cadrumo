@@ -359,3 +359,43 @@ def test_a_hotfix_still_faces_the_full_readiness_gate() -> None:
     assert decision.promotes is False
     assert dispatched == []
     assert "invalidated" in decision.reason
+
+
+def test_a_dry_run_candidate_completes_its_soak_and_never_publishes() -> None:
+    """The rehearsal proves the whole chain including the wait, and stops there.
+
+    Refused rather than filtered out of selection, deliberately: a silently
+    skipped rehearsal candidate is indistinguishable from no candidate having
+    been sealed, which is precisely the failure the rehearsal exists to rule
+    out. It must be visible in the promoter's own output.
+    """
+    candidate = seal_candidate(
+        cohort_id="a" * 64,
+        version="1.2.3",
+        source_commit=_COMMIT,
+        packaging_run_id="4242",
+        claimed_channels=("python",),
+        dry_run=True,
+        window=_WINDOW,
+        opened_at=_OPENED,
+    )
+    dispatched: list[ReleaseCandidate] = []
+    consulted: list[ReleaseCandidate] = []
+
+    def _record(subject: ReleaseCandidate) -> ReadinessReport:
+        consulted.append(subject)
+        return _clean_report()
+
+    decision = promote_once(
+        (candidate,),
+        now=candidate.soak_deadline + timedelta(hours=1),
+        readiness_for=_record,
+        dispatch=dispatched.append,
+    )
+
+    assert decision.promotes is False
+    assert dispatched == [], "a rehearsal candidate must never reach the publication dispatch"
+    assert "dry_run" in decision.reason
+    # Selection still ran (the soak was observed) and the refusal happens
+    # before the expensive re-verification.
+    assert consulted == []
