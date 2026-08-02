@@ -424,7 +424,26 @@ class SecretStore:
             blob_sha256_plaintext_hex=blob_ref.sha256_plaintext_hex,
             classification=record.classification,
         )
-        self._write_index(index)
+        try:
+            self._write_index(index)
+        except (OSError, ValidationError, ValueError):
+            # The blob is already published and discoverable by the blob store,
+            # but no index entry owns it. Leaving it would accumulate
+            # unreferenced sensitive material that inventory cannot associate
+            # with any natural key, and a retry would add another copy. Undo
+            # the publication so the failed put leaves the store exactly as it
+            # found it, then surface the original failure.
+            #
+            # Guarded against discarding a blob the unchanged index still
+            # points at. In practice a re-put mints a fresh blob -- the
+            # envelope stamps ``written_at``, so the wire bytes differ every
+            # time -- but content addressing does not forbid the references
+            # coinciding, and if they did, deleting would destroy the live
+            # record rather than an orphan.
+            if existing is None or existing.blob_sha256_plaintext_hex != blob_ref.sha256_plaintext_hex:
+                self._discard_unreferenced_blob(blob_ref)
+            raise
+
         if existing is not None and existing.blob_sha256_plaintext_hex != blob_ref.sha256_plaintext_hex:
             # Drop the previous payload to keep the store tidy. Only
             # the benign "blob already gone" case is silently absorbed;
@@ -441,6 +460,22 @@ class SecretStore:
             except (BlobIntegrityError, OSError):
                 _log.warning("stale secret-store blob cleanup failed", exc_info=True)
         return blob_ref
+
+    def _discard_unreferenced_blob(self, blob_ref: BlobReference) -> None:
+        """Best-effort removal of a blob no index entry owns.
+
+        Used only to unwind a publication whose index commit failed. A failure
+        here is logged rather than raised: the caller is already unwinding an
+        error, and replacing that error with this one would hide the reason
+        the put failed. The blob is left behind in that case, which is the
+        same outcome as before this compensation existed.
+        """
+        try:
+            self._blob_store.delete(blob_ref)
+        except BlobNotFoundError:
+            _log.debug("secret-store rollback skipped because the blob is already absent")
+        except (BlobIntegrityError, OSError):
+            _log.warning("secret-store could not roll back an unreferenced blob after an index failure", exc_info=True)
 
     def get(self, key: str) -> SecretRecord:
         """Return the :class:`SecretRecord` persisted under ``key``.
@@ -481,6 +516,18 @@ class SecretStore:
             raise _storage_validation_error(
                 "secret-store classification disagreement between index, envelope, and record",
             )
+        # The index binds a lookup digest to a blob reference, but nothing bound
+        # the ENCRYPTED RECORD back to the key it was filed under. Repointing one
+        # index entry at another entry's blob therefore returned a perfectly valid
+        # record for a different key: same class, same envelope, every existing
+        # check satisfied. The class triad above cannot see it, because both
+        # records are the same class. The record states its own key, and that
+        # statement is the one the writer sealed and an index editor cannot reach,
+        # so it is what the lookup must agree with.
+        if record.key != key:
+            raise _storage_validation_error(
+                "secret-store record does not carry the key it was addressed by",
+            )
         return record
 
     def delete(self, key: str) -> None:
@@ -495,22 +542,30 @@ class SecretStore:
         digest = self._digest(key)
         with exclusive_file_lock(self._lock_target()):
             index = self._read_index()
-            entry = index.entries.pop(digest, None)
+            entry = index.entries.get(digest)
             if entry is None:
                 raise SecretNotFoundError("no secret persisted for the requested key")
-            self._write_index(index)
             blob_ref = BlobReference(
                 sha256_plaintext_hex=entry.blob_sha256_plaintext_hex,
                 classification=entry.classification,
             )
-            # Mirrors the put path: the benign already-gone case is
-            # logged at DEBUG; the rest is logged as a WARNING.
+            # Delete the payload BEFORE dropping index ownership of it. The
+            # previous order rewrote the index first and then swallowed a
+            # failed blob delete as a warning, which left complete encrypted
+            # secret material on disk that nothing in the store any longer
+            # referenced: list_digests() was empty and get() raised
+            # SecretNotFoundError, while the original BlobReference still
+            # loaded the secret. Deleting first makes a failure leave the
+            # record fully owned and the operation simply retryable.
+            #
+            # An already-absent blob is the benign case: there is nothing to
+            # orphan, so the index entry is dropped as usual.
             try:
                 self._blob_store.delete(blob_ref)
             except BlobNotFoundError:
                 _log.debug("secret-store blob cleanup on delete skipped because blob is already absent")
-            except (BlobIntegrityError, OSError):
-                _log.warning("secret-store blob cleanup on delete failed", exc_info=True)
+            del index.entries[digest]
+            self._write_index(index)
 
     def list_digests(self) -> Iterable[str]:
         """Yield every persisted lookup digest.

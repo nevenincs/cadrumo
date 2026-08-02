@@ -19,6 +19,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.classification import SensitivityClass
+from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...blob_store import EncryptedBlobStore
 from ...crypto import KEY_SIZE
@@ -316,3 +317,153 @@ class TestListDigests:
         digests = list(store.list_digests())
         assert len(digests) == 4
         assert all(len(d) == 64 for d in digests)
+
+
+def _payload_paths(blob_root: Path) -> list[Path]:
+    """Return the encrypted payload files the blob store has written."""
+    return sorted(path for path in blob_root.rglob("*.enc") if path.is_file())
+
+
+def _block_path_with_a_directory(target: Path) -> None:
+    """Replace ``target`` with a non-empty directory so unlinking it really fails.
+
+    A genuine filesystem condition rather than a test double: the production
+    delete path runs unmodified and meets an ``OSError`` from the real
+    ``Path.unlink`` (``PermissionError`` on Windows, ``IsADirectoryError`` on
+    POSIX -- both ``OSError``).
+    """
+    target.unlink()
+    target.mkdir()
+    (target / "blocker").write_text("blocker", encoding=UTF_8_ENCODING)
+
+
+class TestNaturalKeyBinding:
+    """The encrypted record must answer for the key it was addressed by."""
+
+    def test_get_refuses_a_valid_record_filed_under_another_key(self, store: SecretStore, tmp_path: Path) -> None:
+        """Repointing one index entry at another entry's blob must not resolve.
+
+        The index bound a digest to a blob reference, but nothing bound the
+        encrypted record back to the key it was filed under. Both records are
+        the same class, so the index/envelope/record classification triad saw
+        no disagreement and the store returned a perfectly valid record for a
+        different key.
+        """
+        store.put(_make_record(key="wave7:A", value=b"payload-A"))
+        store.put(_make_record(key="wave7:B", value=b"payload-B"))
+
+        index_path = tmp_path / "secrets" / "index.json"
+        index = json.loads(index_path.read_text(encoding=UTF_8_ENCODING))
+        a_digest, b_digest = list(index["entries"])
+        index["entries"][a_digest]["blob_sha256_plaintext_hex"] = index["entries"][b_digest][
+            "blob_sha256_plaintext_hex"
+        ]
+        index_path.write_text(json.dumps(index, indent=2), encoding=UTF_8_ENCODING)
+
+        with pytest.raises(StorageValidationError):
+            store.get("wave7:A")
+
+    def test_get_still_returns_an_untampered_record(self, store: SecretStore) -> None:
+        """Positive control: the binding check discriminates rather than always refusing."""
+        store.put(_make_record(key="wave7:A", value=b"payload-A"))
+        store.put(_make_record(key="wave7:B", value=b"payload-B"))
+
+        assert store.get("wave7:A").value == b"payload-A"
+        assert store.get("wave7:B").value == b"payload-B"
+
+
+class TestDeleteOwnershipOrdering:
+    """Index ownership is not dropped before the payload is confirmed gone."""
+
+    def test_failed_blob_removal_leaves_the_record_owned_and_retryable(
+        self,
+        store: SecretStore,
+        tmp_path: Path,
+    ) -> None:
+        """A blob that cannot be removed must not be disowned by the index.
+
+        The delete path used to rewrite the index first and then swallow a
+        failed blob removal as a warning. That left complete encrypted secret
+        material on disk that nothing referenced: ``list_digests()`` was empty
+        and ``get`` raised ``SecretNotFoundError`` while the original
+        ``BlobReference`` still loaded the secret. Deleting the payload first
+        makes the failure leave the record fully owned, so the operator can
+        retry rather than losing track of live key material.
+        """
+        record = _make_record(key="aeat:test:ordering", value=b"payload")
+        store.put(record)
+        payloads = _payload_paths(tmp_path / "blobs")
+        assert len(payloads) == 1
+        payload_path = payloads[0]
+        payload_bytes = payload_path.read_bytes()
+        _block_path_with_a_directory(payload_path)
+
+        with pytest.raises(OSError):
+            store.delete("aeat:test:ordering")
+
+        # Ownership survived the failure rather than being dropped ahead of it.
+        assert list(store.list_digests()) != []
+
+        # Clearing the fault makes the same delete succeed, so the failure left
+        # a retryable state rather than a half-deleted one.
+        (payload_path / "blocker").unlink()
+        payload_path.rmdir()
+        payload_path.write_bytes(payload_bytes)
+
+        store.delete("aeat:test:ordering")
+
+        assert list(store.list_digests()) == []
+        assert _payload_paths(tmp_path / "blobs") == []
+
+    def test_successful_delete_removes_both_the_payload_and_the_index_entry(
+        self,
+        store: SecretStore,
+        tmp_path: Path,
+    ) -> None:
+        """Positive control for the ordering above: the normal path still clears both."""
+        store.put(_make_record(key="aeat:test:ordering", value=b"payload"))
+        assert len(_payload_paths(tmp_path / "blobs")) == 1
+
+        store.delete("aeat:test:ordering")
+
+        assert _payload_paths(tmp_path / "blobs") == []
+        assert list(store.list_digests()) == []
+        with pytest.raises(SecretNotFoundError):
+            store.get("aeat:test:ordering")
+
+
+class TestPutBlobOwnership:
+    """A published blob is owned by exactly one index entry, or by none."""
+
+    def test_successful_put_leaves_no_unreferenced_payload(self, store: SecretStore, tmp_path: Path) -> None:
+        """Every payload on disk is reachable through the index after a put."""
+        store.put(_make_record(key="aeat:test:owned", value=b"payload"))
+
+        payloads = _payload_paths(tmp_path / "blobs")
+        index = json.loads((tmp_path / "secrets" / "index.json").read_text(encoding=UTF_8_ENCODING))
+        owned = {entry["blob_sha256_plaintext_hex"] for entry in index["entries"].values()}
+
+        assert len(payloads) == 1
+        assert {path.stem for path in payloads} == owned
+
+    def test_overwriting_a_record_leaves_exactly_one_owned_payload(
+        self,
+        store: SecretStore,
+        tmp_path: Path,
+    ) -> None:
+        """An overwrite retires the superseded payload instead of accumulating one.
+
+        Re-putting the same record does NOT reuse its blob: the envelope
+        stamps ``written_at``, so the wire bytes differ and the
+        content-addressed store mints a new blob every time. The overwrite
+        path must therefore retire the previous payload, or every rewrite
+        would leave live secret material behind that no index entry owns.
+        """
+        record = _make_record(key="aeat:test:same", value=b"payload")
+        first = store.put(record)
+        second = store.put(record, overwrite=True)
+
+        assert first.sha256_plaintext_hex != second.sha256_plaintext_hex
+        payloads = _payload_paths(tmp_path / "blobs")
+        assert [path.stem for path in payloads] == [second.sha256_plaintext_hex]
+        assert store.get("aeat:test:same").value == b"payload"
