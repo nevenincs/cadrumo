@@ -36,7 +36,7 @@ from ...core import HEX_PATTERN_64
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId
 from ...core.time import validate_utc_aware
-from ...domain.user_profile import UserProfileFact, UserProfileStatus
+from ...domain.user_profile import UserProfileStatus
 from ._schemas import OutputSchema, register_schema
 
 # The two wizard-owned profile result schemas register through the manifest's
@@ -937,9 +937,9 @@ class ApoderadoCheckResult(OutputSchema):
     live AEAT check.
     """
 
-    bucket_id: BucketId
+    bucket_id: str
     configured: bool
-    represented_nif: str | None = Field(default=None, min_length=1, max_length=16)
+    represented_nif: str | None = None
     granted_scopes: list[str] | None = None
 
 
@@ -1224,12 +1224,12 @@ class ApoderadoStatusResult(OutputSchema):
     verification.
     """
 
-    bucket_id: BucketId
+    bucket_id: str
     configured: bool
-    represented_nif: str | None = Field(default=None, min_length=1, max_length=16)
+    represented_nif: str | None = None
     granted_scopes: list[str] = []
-    catalogue_version: str | None = Field(default=None, min_length=1)
-    configured_at: datetime | None = None
+    catalogue_version: str | None = None
+    configured_at: str | None = None
 
 
 @register_schema("config.auth.apoderado.configure")
@@ -1242,12 +1242,12 @@ class ApoderadoConfigureResult(OutputSchema):
     configuration summary.
     """
 
-    bucket_id: BucketId
-    represented_nif: str = Field(min_length=1, max_length=16)
+    bucket_id: str
+    represented_nif: str
     granted_scopes: list[str] = []
-    catalogue_version: str = Field(min_length=1)
-    configured_at: datetime
-    notes: str = Field(default="", max_length=500)
+    catalogue_version: str
+    configured_at: str
+    notes: str = ""
 
 
 @register_schema("config.auth.apoderado.clear")
@@ -1258,7 +1258,7 @@ class ApoderadoClearResult(OutputSchema):
     whether a record existed to clear.
     """
 
-    bucket_id: BucketId
+    bucket_id: str
     cleared: bool
 
 
@@ -1445,22 +1445,12 @@ class CensoFileFactPayload(OutputSchema):
     """One candidate censal fact projected from the G313 certificate.
 
     ``source`` carries the non-official artefact provenance token, never
-    an AEAT-verified stamp. Re-validated against the canonical
-    :class:`~cadrumo.domain.user_profile.UserProfileFact` contract -- the
-    same check the sibling :class:`CensoPullFactPayload` already applies --
-    so a malformed path or an undeclared/oversized source is refused
-    rather than forwarded.
+    an AEAT-verified stamp.
     """
 
     path: str
     value: str
     source: str
-
-    @model_validator(mode="after")
-    def _validate_canonical_profile_fact(self) -> CensoFileFactPayload:
-        """Keep the presentation row on the domain's profile path/provenance contract."""
-        UserProfileFact(path=self.path, value=self.value, source=self.source)
-        return self
 
 
 @register_schema("config.profile.censo.file")

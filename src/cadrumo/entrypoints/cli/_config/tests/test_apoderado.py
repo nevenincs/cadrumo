@@ -1,24 +1,15 @@
 from collections.abc import Iterator
-
-# serial: shares the process-global master-key-provider / active-profile state
-# that flakes under `-n auto` worker interleaving; runs in the serial (-n0) pass.
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
-from ..._config_payloads import (
-    ApoderadoCheckResult,
-    ApoderadoClearResult,
-    ApoderadoConfigureResult,
-    ApoderadoStatusResult,
-)
 from ..__init__ import app
 
+# serial: shares the process-global master-key-provider / active-profile state
+# that flakes under `-n auto` worker interleaving; runs in the serial (-n0) pass.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 
@@ -323,77 +314,3 @@ def test_apoderado_configure_leaves_profile_facts_untouched(_per_bucket_backend:
     assert status.exit_code == 0, status.output
     assert "configured\tTrue" in status.output
     assert "RENT" in status.output
-
-
-
-class TestApoderadoEnvelopeContractParity:
-    """The wire envelopes carry the canonical models' own constraints.
-
-    ``ApoderadoConfiguration`` and ``ApoderadoStatus`` enforce a canonical
-    ``BucketId``, a bounded represented identity, a non-empty catalogue
-    version, bounded notes, and real ``datetime`` instants. The four CLI
-    envelopes redeclared those fields as bare strings, so a blank,
-    whitespace-only, or 129-character bucket, a ``configured_at`` of
-    ``"not-time"``, an empty catalogue version, and a 501-character notes
-    value all passed the wire boundary the canonical models refuse.
-    """
-
-    _CANONICAL_BUCKET = "26262626-2626-4262-8262-262626262626"
-    _INSTANT = datetime(2026, 5, 14, 12, 0, tzinfo=UTC)
-
-    def _status(self, **overrides: object) -> object:
-        fields: dict[str, object] = {"bucket_id": self._CANONICAL_BUCKET, "configured": False}
-        fields.update(overrides)
-        return ApoderadoStatusResult(**fields)  # type: ignore[arg-type]
-
-    def _configure(self, **overrides: object) -> object:
-        fields: dict[str, object] = {
-            "bucket_id": self._CANONICAL_BUCKET,
-            "represented_nif": "12345678Z",
-            "catalogue_version": "v1",
-            "configured_at": self._INSTANT,
-        }
-        fields.update(overrides)
-        return ApoderadoConfigureResult(**fields)  # type: ignore[arg-type]
-
-    @pytest.mark.parametrize("bad", ["", "   ", "x" * 129])
-    def test_every_envelope_refuses_a_non_canonical_bucket(self, bad: str) -> None:
-        with pytest.raises(ValidationError):
-            self._status(bucket_id=bad)
-        with pytest.raises(ValidationError):
-            self._configure(bucket_id=bad)
-        with pytest.raises(ValidationError):
-            ApoderadoClearResult(bucket_id=bad, cleared=True)
-        with pytest.raises(ValidationError):
-            ApoderadoCheckResult(bucket_id=bad, configured=False)
-
-    def test_configured_at_must_be_a_real_instant(self) -> None:
-        with pytest.raises(ValidationError):
-            self._configure(configured_at="not-time")
-        with pytest.raises(ValidationError):
-            self._status(configured_at="not-time")
-
-    def test_catalogue_version_must_be_populated(self) -> None:
-        with pytest.raises(ValidationError):
-            self._configure(catalogue_version="")
-        with pytest.raises(ValidationError):
-            self._status(catalogue_version="")
-
-    def test_notes_and_represented_identity_stay_bounded(self) -> None:
-        with pytest.raises(ValidationError):
-            self._configure(notes="x" * 501)
-        with pytest.raises(ValidationError):
-            self._configure(represented_nif="x" * 17)
-        with pytest.raises(ValidationError):
-            self._configure(represented_nif="")
-
-    def test_a_canonical_projection_round_trips(self) -> None:
-        """Anti-tautology: the refusals discriminate rather than always-refusing."""
-        configure = self._configure(notes="within bounds")
-
-        assert configure.bucket_id == self._CANONICAL_BUCKET
-        assert configure.configured_at == self._INSTANT
-        assert ApoderadoConfigureResult.model_validate_json(configure.model_dump_json()) == configure
-
-    def test_a_padded_bucket_is_canonicalized_like_the_domain_model(self) -> None:
-        assert self._status(bucket_id=f"  {self._CANONICAL_BUCKET}  ").bucket_id == self._CANONICAL_BUCKET

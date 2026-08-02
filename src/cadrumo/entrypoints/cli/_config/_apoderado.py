@@ -116,6 +116,7 @@ def apoderado_status(
     svc = ApoderadoService()
     result = svc.status(bucket_id=pointer.bucket_id)
 
+    payload = result.model_dump(mode="json")
     lines = [
         f"bucket_id\t{result.bucket_id}",
         f"configured\t{result.configured}",
@@ -124,18 +125,7 @@ def apoderado_status(
         lines.append(f"represented_nif\t{result.represented_nif}")
         lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
 
-    # Project the canonical ApoderadoStatus field-by-field rather than through a
-    # JSON round-trip: the envelope now carries the same typed contract, and a
-    # JSON dump would hand it a stringified instant that the strict schema
-    # correctly refuses.
-    status_result = ApoderadoStatusResult(
-        bucket_id=result.bucket_id,
-        configured=result.configured,
-        represented_nif=result.represented_nif,
-        granted_scopes=list(result.granted_scopes),
-        catalogue_version=result.catalogue_version,
-        configured_at=result.configured_at,
-    )
+    status_result = ApoderadoStatusResult.model_validate(payload)
     _emit_envelope(ctx, command="config.auth.apoderado.status", result=status_result, lines=lines)
 
 
@@ -210,19 +200,13 @@ def apoderado_configure(
 
     from .._config_payloads import ApoderadoConfigureResult
 
+    payload = result.model_dump(mode="json")
     lines = [
         f"bucket_id\t{result.bucket_id}",
         f"represented_nif\t{result.represented_nif}",
         f"granted_scopes\t{','.join(result.granted_scopes)}",
     ]
-    configure_result = ApoderadoConfigureResult(
-        bucket_id=result.bucket_id,
-        represented_nif=result.represented_nif,
-        granted_scopes=list(result.granted_scopes),
-        catalogue_version=result.catalogue_version,
-        configured_at=result.configured_at,
-        notes=result.notes,
-    )
+    configure_result = ApoderadoConfigureResult.model_validate(payload)
     _emit_envelope(ctx, command="config.auth.apoderado.configure", result=configure_result, lines=lines)
 
 

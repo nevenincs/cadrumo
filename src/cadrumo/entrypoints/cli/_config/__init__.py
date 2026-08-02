@@ -91,10 +91,25 @@ def config_root(
 ) -> None:
     """Render config-level workflow help when requested."""
     if help_ or ctx.invoked_subcommand is None:
-        from .._config_payloads import ConfigRootResult
+        from .._config_payloads import ConfigHelpEntryPayload, ConfigHelpSectionPayload, ConfigRootResult
 
         document = _build_help_document("config")
-        result = ConfigRootResult.model_validate(document.model_dump(mode="json"))
+        result = ConfigRootResult(
+            surface=document.surface,
+            heading=document.heading,
+            paragraphs=list(document.paragraphs),
+            sections=[
+                ConfigHelpSectionPayload(
+                    title=section.title,
+                    entries=[
+                        ConfigHelpEntryPayload(command=entry.command, description=entry.description)
+                        for entry in section.entries
+                    ],
+                )
+                for section in document.sections
+            ],
+            footer=document.footer,
+        )
         _emit_envelope(
             ctx,
             command="root.config",

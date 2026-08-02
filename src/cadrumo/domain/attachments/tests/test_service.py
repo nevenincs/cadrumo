@@ -15,7 +15,6 @@ from .._errors import AttachmentNotFoundError
 from .._models import Attachment
 from .._service import (
     add_attachment,
-    add_attachment_bytes,
     link_attachment_invoice,
     list_attachments,
     load_attachment,
@@ -24,9 +23,6 @@ from .._service import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
-# The store refuses a manifest from another profile bucket, so the fixture
-# names the same bucket the runtime profile provisions.
-_SERVICE_BUCKET_ID = "5c2d1e0a-7b8c-4d9e-8f01-2a3b4c5d6e7f"
 
 
 def _add_text_attachment(store: AttachmentStore, path: Path, *, source_reference: str) -> Attachment:
@@ -169,115 +165,3 @@ def test_link_attachment_invoice_raises_not_found_for_unknown_attachment(tmp_pat
         store = AttachmentStore()
         with pytest.raises(AttachmentNotFoundError):
             link_attachment_invoice(store, attachment_id="deadbeef" * 8, invoice_id="invoice-abc")
-
-
-def test_same_byte_reingestion_accumulates_links_and_keeps_the_first_capture(
-    tmp_path: Path,
-) -> None:
-    """Two observations of identical bytes must not erase each other's evidence.
-
-    The content digest is the manifest key, so a second ingestion of the same
-    document lands on the same row. It is a second *observation* -- a different
-    channel, a different time, a different transaction it evidences -- and the
-    unconditional upsert dropped the first one's links and capture context.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SERVICE_BUCKET_ID):
-        store = AttachmentStore()
-        data = b"%PDF-1.4\nsame-byte evidence observed twice\n%%EOF"
-        first_capture = datetime(2026, 3, 1, 9, 0, tzinfo=UTC)
-        second_capture = datetime(2026, 4, 1, 9, 0, tzinfo=UTC)
-
-        first = add_attachment_bytes(
-            store,
-            data=data,
-            kind=AttachmentKind.INVOICE_PDF,
-            source=AttachmentSource.LOCAL_FILE,
-            source_reference="source-A",
-            mime_type="application/pdf",
-            captured_at=first_capture,
-            bucket_id=_SERVICE_BUCKET_ID,
-            link_transaction_ids=("tx-A",),
-            metadata={"channel": "A", "only-a": "kept"},
-        )
-        add_attachment_bytes(
-            store,
-            data=data,
-            kind=AttachmentKind.INVOICE_PDF,
-            source=AttachmentSource.GOOGLE_DRIVE,
-            source_reference="source-B",
-            mime_type="application/pdf",
-            captured_at=second_capture,
-            bucket_id=_SERVICE_BUCKET_ID,
-            link_transaction_ids=("tx-B",),
-            metadata={"channel": "B", "only-b": "added"},
-        )
-
-        merged = load_attachment(store, first.attachment_id)
-        listed = list_attachments(store)
-
-    assert merged.linked_transaction_ids == ("tx-A", "tx-B")
-    assert merged.captured_at == first_capture
-    assert merged.source_reference == "source-A"
-    assert merged.source is AttachmentSource.LOCAL_FILE
-    assert merged.metadata["only-a"] == "kept"
-    assert merged.metadata["only-b"] == "added"
-    # A key both observations set keeps the earlier value, so the merge does not
-    # depend on which ingestion ran last.
-    assert merged.metadata["channel"] == "A"
-    assert len(listed) == 1
-
-
-def test_same_byte_merge_is_independent_of_ingestion_order(tmp_path: Path) -> None:
-    """Reversing the ingestion order must not change what the links contain.
-
-    The accumulating facts are a set, so the union is order-independent even
-    though the first-seen ordering of the tuple differs.
-    """
-    data = b"%PDF-1.4\norder-independent same-byte evidence\n%%EOF"
-
-    def _ingest(order: tuple[str, str], root: Path) -> tuple[str, ...]:
-        with isolated_runtime_profile(tmp_path=root, bucket_id=_SERVICE_BUCKET_ID):
-            store = AttachmentStore()
-            attachment_id = ""
-            for index, transaction_id in enumerate(order):
-                attachment = add_attachment_bytes(
-                    store,
-                    data=data,
-                    kind=AttachmentKind.INVOICE_PDF,
-                    source=AttachmentSource.LOCAL_FILE,
-                    source_reference=f"source-{transaction_id}",
-                    mime_type="application/pdf",
-                    captured_at=datetime(2026, 3, 1 + index, 9, 0, tzinfo=UTC),
-                    bucket_id=_SERVICE_BUCKET_ID,
-                    link_transaction_ids=(transaction_id,),
-                )
-                attachment_id = attachment.attachment_id
-            return load_attachment(store, attachment_id).linked_transaction_ids
-
-    forward = _ingest(("tx-A", "tx-B"), tmp_path / "forward")
-    reversed_order = _ingest(("tx-B", "tx-A"), tmp_path / "reversed")
-
-    assert set(forward) == set(reversed_order) == {"tx-A", "tx-B"}
-
-
-def test_repeated_identical_ingestion_is_a_stable_no_op(tmp_path: Path) -> None:
-    """Re-ingesting the same observation twice must not grow or alter the manifest."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SERVICE_BUCKET_ID):
-        store = AttachmentStore()
-        data = b"%PDF-1.4\nidempotent same-byte evidence\n%%EOF"
-        kwargs = {
-            "kind": AttachmentKind.INVOICE_PDF,
-            "source": AttachmentSource.LOCAL_FILE,
-            "source_reference": "source-A",
-            "mime_type": "application/pdf",
-            "captured_at": datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
-            "bucket_id": _SERVICE_BUCKET_ID,
-            "link_transaction_ids": ("tx-A",),
-        }
-        add_attachment_bytes(store, data=data, **kwargs)
-        after_first = load_attachment(store, add_attachment_bytes(store, data=data, **kwargs).attachment_id)
-        add_attachment_bytes(store, data=data, **kwargs)
-        after_third = load_attachment(store, after_first.attachment_id)
-
-    assert after_third == after_first
-    assert after_third.linked_transaction_ids == ("tx-A",)

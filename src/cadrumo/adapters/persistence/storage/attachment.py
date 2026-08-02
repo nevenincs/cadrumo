@@ -329,57 +329,6 @@ class AttachmentStore(BaseModel):
         if actual != digest:
             raise _attachment_validation_error("blob digest drift", violation="blob_digest_drift")
 
-    def _merge_with_stored_manifest(self, attachment: Attachment) -> Attachment:
-        """Fold ``attachment`` into any manifest already filed under the same bytes.
-
-        Attachments are content-addressed, so two ingestions of byte-identical
-        documents share one manifest key -- but they are two *observations*: an
-        invoice mailed and then also downloaded from Drive evidences two
-        transactions, from two channels, at two times. The unconditional upsert
-        replaced the first manifest, so the earlier links and capture context
-        silently vanished while the shared blob stayed intact, leaving evidence
-        consumers seeing only the most recent observation.
-
-        The merge is deterministic and independent of ingestion order for the
-        facts that accumulate, and stable for the facts that do not:
-
-        * ``linked_transaction_ids`` / ``linked_invoice_ids`` accumulate as a
-          union in first-seen order -- a link is an assertion that this document
-          evidences that row, and a later ingestion never retracts it.
-        * ``captured_at`` keeps the earliest observation: it answers "since when
-          do we hold these bytes".
-        * ``source``, ``source_reference``, ``captured_by``, ``source_command``,
-          and ``notes`` keep the FIRST observation's values. They describe the
-          channel the bytes were obtained through, which the later ingestion did
-          not change; treating them as immutable is what makes the merge
-          order-stable.
-        * ``metadata`` accumulates, with the earlier value winning a key
-          collision for the same reason.
-
-        Known limitation: the later observation's own channel reference is not
-        retained. Recording every observation would need an observation list on
-        :class:`Attachment` and a manifest schema-version bump; this merge stops
-        the *loss* of established links and capture context without that change.
-        """
-        try:
-            stored = self.load_manifest(attachment.attachment_id)
-        except AttachmentNotFoundError:
-            return attachment
-        merged_transactions = (*stored.linked_transaction_ids, *attachment.linked_transaction_ids)
-        merged_invoices = (*stored.linked_invoice_ids, *attachment.linked_invoice_ids)
-        merged_metadata = {**dict(attachment.metadata), **dict(stored.metadata)}
-        return stored.model_copy(
-            update={
-                # The model's own validators deduplicate the link tuples and
-                # freeze the mapping, so the merge states intent and the domain
-                # type enforces the shape.
-                "linked_transaction_ids": merged_transactions,
-                "linked_invoice_ids": merged_invoices,
-                "metadata": merged_metadata,
-                "captured_at": min(stored.captured_at, attachment.captured_at),
-            },
-        )
-
     def _assert_blob_present(self, attachment: Attachment) -> None:
         """Refuse a manifest that references bytes this store does not hold."""
         if not self._objects_repo().exists(_ATTACHMENT_BLOB_NAMESPACE, attachment.sha256):
@@ -420,7 +369,6 @@ class AttachmentStore(BaseModel):
             )
         self._assert_manifest_matches_blob(attachment)
         attachment = self._assert_manifest_bucket(attachment, boundary="write")
-        attachment = self._merge_with_stored_manifest(attachment)
         # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
