@@ -330,6 +330,7 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
             dry_run=False,
             bucket_id=outcome.bucket_id,
             previous_label=outcome.previous_label,
+            occurred_at=outcome.occurred_at,
         )
         _emit_envelope(
             ctx,
@@ -544,7 +545,11 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
                 context={"name": name},
             ) from exc
 
-        result = ConfigProfileSandboxArchiveResult(bucket_id=outcome.bucket_id, label=outcome.label)
+        result = ConfigProfileSandboxArchiveResult(
+            bucket_id=outcome.bucket_id,
+            label=outcome.label,
+            occurred_at=outcome.occurred_at,
+        )
         restore_notice = Notice(
             severity=NoticeSeverity.INFO,
             code="config.profile.sandbox.archive.restorable",
@@ -635,7 +640,11 @@ def _register_sandbox_restore_command(app: typer.Typer) -> None:
                 context={"name": name},
             ) from exc
 
-        result = ConfigProfileSandboxRestoreResult(bucket_id=outcome.bucket_id, label=outcome.label)
+        result = ConfigProfileSandboxRestoreResult(
+            bucket_id=outcome.bucket_id,
+            label=outcome.label,
+            occurred_at=outcome.occurred_at,
+        )
         _emit_envelope(
             ctx,
             command="config.profile.sandbox.restore",

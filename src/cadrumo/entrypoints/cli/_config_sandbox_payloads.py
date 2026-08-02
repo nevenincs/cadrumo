@@ -5,9 +5,12 @@ Every registered result is a strict :class:`OutputSchema`.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from pydantic import Field
 
 from ...application.bucket_maintenance import BucketNamespaceInventoryRow
+from ...core.identity import BucketId
 from ._config_payloads import ProfilePointerPayload
 from ._schemas import OutputSchema, register_schema
 
@@ -21,7 +24,7 @@ class ConfigProfileSandboxCreateResult(OutputSchema):
     copied in, or ``None`` when the sandbox started empty.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     label: str
     seeded_from: str | None = None
 
@@ -43,14 +46,18 @@ class ConfigProfileSandboxDiscardResult(OutputSchema):
     """JSON envelope for ``aeat config profile sandbox discard``.
 
     Covers both the ``--dry-run`` preview branch (``dry_run=True``, no
-    mutation — ``namespaces`` lists what would be removed) and the confirmed
-    erase branch (``dry_run=False`` — ``previous_label`` reports the erased
-    sandbox's prior label; ``namespaces`` stays empty).
+    mutation — ``namespaces`` lists what would be removed, ``occurred_at``
+    stays ``None``) and the confirmed erase branch (``dry_run=False`` —
+    ``previous_label`` reports the erased sandbox's prior label,
+    ``occurred_at`` carries the erase timestamp from
+    :class:`~cadrumo.application.bucket_maintenance.DiscardSandboxResult`,
+    and ``namespaces`` stays empty).
     """
 
     dry_run: bool = False
-    bucket_id: str
+    bucket_id: BucketId
     previous_label: str | None = None
+    occurred_at: datetime | None = None
     namespaces: list[BucketNamespaceInventoryRow] = Field(default_factory=list)
 
 
@@ -78,22 +85,30 @@ class ConfigProfileSandboxArchiveResult(OutputSchema):
     ``discard``, the sandbox bucket, manifest, and encrypted record all
     survive intact — the sandbox merely drops off the live
     ``sandbox list`` surface until ``sandbox restore`` reactivates it.
+    ``occurred_at`` stays ``None`` for the ``--dry-run`` preview and
+    carries the archive timestamp from
+    :class:`~cadrumo.application.bucket_maintenance.ArchiveSandboxResult`
+    for the confirmed branch.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     label: str
+    occurred_at: datetime | None = None
 
 
 @register_schema("config.profile.sandbox.restore")
 class ConfigProfileSandboxRestoreResult(OutputSchema):
     """JSON envelope for ``aeat config profile sandbox restore``.
 
-    Reports the restored sandbox's bucket identity and label. The
-    symmetric inverse of ``sandbox archive``.
+    Reports the restored sandbox's bucket identity and label, plus the
+    restore timestamp from
+    :class:`~cadrumo.application.bucket_maintenance.RestoreSandboxResult`.
+    The symmetric inverse of ``sandbox archive``.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     label: str
+    occurred_at: datetime
 
 
 class SandboxDiskUsageSubdirPayload(OutputSchema):
