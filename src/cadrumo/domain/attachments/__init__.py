@@ -32,7 +32,8 @@ Service helpers :func:`add_attachment` and :func:`add_attachment_bytes` hash
 file or in-memory bytes, write them through the supplied store, build the
 manifest, and persist it; :func:`load_attachment` and
 :func:`list_attachments` read manifests back through the same protocol.
-:func:`link_attachment_invoice` re-persists an already-stored manifest with an
+:func:`link_attachment_invoice` and :func:`link_attachment_transaction`
+re-persist an already-stored manifest with an
 invoice id appended to :attr:`Attachment.linked_invoice_ids`, for the case
 where the invoice is minted only after the evidence is already captured
 (e.g. confirming an extracted invoice draft).
@@ -73,7 +74,14 @@ from ._errors import (
 )
 from ._models import Attachment, AttachmentCatalogue, is_link_only_mime_type, normalize_media_type
 from ._protocols import AttachmentStoreProtocol
-from ._service import add_attachment, add_attachment_bytes, link_attachment_invoice, list_attachments, load_attachment
+from ._service import (
+    add_attachment,
+    add_attachment_bytes,
+    link_attachment_invoice,
+    link_attachment_transaction,
+    list_attachments,
+    load_attachment,
+)
 
 __all__ = [
     "Attachment",
@@ -90,6 +98,7 @@ __all__ = [
     "add_attachment_bytes",
     "is_link_only_mime_type",
     "link_attachment_invoice",
+    "link_attachment_transaction",
     "list_attachments",
     "load_attachment",
     "normalize_media_type",
