@@ -465,9 +465,8 @@ def test_an_explicit_nonexistent_gh_executable_raises_instructively(tmp_path: Pa
 
 def test_gh_absent_from_path_raises_instructively() -> None:
     """With no explicit override, resolution falls back to a real PATH search."""
-    with scoped_env_var("PATH", ""):
-        with pytest.raises(rr.RunResolutionError, match="not found on PATH"):
-            rr.dispatch_workflow(_WORKFLOW, gh_executable=None)
+    with scoped_env_var("PATH", ""), pytest.raises(rr.RunResolutionError, match="not found on PATH"):
+        rr.dispatch_workflow(_WORKFLOW, gh_executable=None)
 
 
 # ---------------------------------------------------------------------------
