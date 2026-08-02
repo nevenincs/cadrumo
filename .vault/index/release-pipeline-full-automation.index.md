@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:941c4afec68e06573fac467c8a215c07d6853de19948aad0315383f9326ae1ef'
+body_hash: 'sha256:b0e04a3191db238ab70a7b883e26b9b797b257d9a7e02eb2d97eda0d446e8d2e'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -40,10 +40,17 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W04-P06-S29]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P06-S30]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P06-S31]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P07-S32]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P07-S33]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P07-S34]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P07-S35]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S36]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S37]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S38]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S41]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S49]]'
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
+  - '[[2026-08-02-release-pipeline-full-automation-audit]]'
   - '[[2026-08-02-release-pipeline-full-automation-plan]]'
 ---
 
@@ -56,6 +63,10 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 ### adr
 
 - `2026-08-02-release-pipeline-full-automation-adr` - `release-pipeline-full-automation` adr: `the release pipeline runs itself: the human approval gate is deleted, one dispatch drives bump through publish, and the mechanical guards are the whole safety net` | (**status:** `accepted`)
+
+### audit
+
+- `2026-08-02-release-pipeline-full-automation-audit` - `release-pipeline-full-automation` audit: `fresh-context honesty review of the full-automation campaign`
 
 ### exec
 
@@ -91,9 +102,15 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W04-P06-S29` - Build the failure-alert emitter reporting a failed or refused release-path run to a channel the operator actually reads, defaulting to opening a labelled repository issue carrying the workflow, the run URL, the stage, and the refusal text so alerting works before OP-10 nominates a channel, with an optional operator-nominated webhook variable overriding the default once set, gate: uv run --no-sync pytest dev/release/tests/test_release_alerting.py -q passes covering the default issue path, the webhook path once the variable is set, and idempotent re-alerting that updates an open alert rather than opening a duplicate per attempt
 - `2026-08-02-release-pipeline-full-automation-W04-P06-S30` - Attach an always-on failure-alert step to the orchestrator, the soak promoter, the publication authority, and the docs publisher, because the click was the only moment a human was structurally guaranteed to look and a silently failed chain is indistinguishable from a release nobody started, gate: uv run --no-sync pytest dev/release/tests/test_release_alerting.py -q passes asserting each of the four workflows carries an if-failure alert step invoking the emitter
 - `2026-08-02-release-pipeline-full-automation-W04-P06-S31` - Add the alert-reachability gate asserting every workflow on the declared release path carries a failure alert, computing the release-path set from the workflows the orchestrator and promoter dispatch rather than a hand-maintained list, so a future release workflow added without an alert reds a test instead of failing silently in production, gate: uv run --no-sync pytest dev/release/tests/test_release_alerting.py -q -k reachability passes and an injectable-root self-test plants a release-path workflow with no alert step and asserts the gate reds
+- `2026-08-02-release-pipeline-full-automation-W04-P07-S32` - Collapse the RELEASING.md release procedure from six part-manual stages to one dispatch followed by a post-publication verification tail, deleting the Stage 0 hand-transcription, the Stage 2 per-lane dispatch instructions, and the Stage 4 Gate 1 description that went with the deleted job, while keeping the reacquisition lanes and the docs tripwire described as verification rather than authorisation, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q and uv run --no-sync pytest dev/docs/tests -m docs -q pass with the runbook conformance assertions updated to the single-dispatch shape
+- `2026-08-02-release-pipeline-full-automation-W04-P07-S33` - Rewrite the RELEASING.md arming section to drop the approval-click prerequisite and the phantom CADRUMO_PUBLISH_ENABLED opt-in variable that no longer exists anywhere in the tree, replacing both with the OP-9 protection-rule removal and the credential prerequisites that genuinely remain, gate: rg -n CADRUMO_PUBLISH_ENABLED over the tree matches only vault records and history, and uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes
+- `2026-08-02-release-pipeline-full-automation-W04-P07-S34` - Rewrite the RELEASING.md release-candidate soak stage to describe the machine-held wait, naming the candidate record, the promoter cadence, and the hotfix carve-out, so the documented soak and the enforced soak describe the same mechanism rather than a human holding a tag, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the release-candidate soak assertions retained and re-pointed at the promoter
+- `2026-08-02-release-pipeline-full-automation-W04-P07-S35` - Sweep every remaining user-facing and developer-facing surface that describes the release flow as part-manual, including the release notes template soak wording and any documented command naming the deleted apply target, gate: uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration -q and uv run --no-sync pytest dev/docs/tests -m docs -q pass
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S36` - Record OP-12 as a named operator settings action deleting the orphaned pypi-data-official environment, which is a live Trusted Publishing trust anchor naming a workflow that no longer exists and therefore standing authority with no owner, and extend the read-only forge inventory probe to report any environment referencing an absent workflow so the orphan class is detectable rather than rediscovered, gate: uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes with a case whose fixture environment names a workflow path absent from the tree and is reported as orphaned
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S37` - Comment on tracking issue 618 with the true split naming the repository half landed 2026-07-27, the two environments already deleted, the third pending OP-12, and the index-side Trusted Publisher registrations that no agent can verify, then close it once its forge half is complete, carrying any surviving index-side registration forward as a named operator item rather than silently absorbing it, gate: gh issue view 618 shows the comment and the closed state, flagged forge-side and non-local, and the carried-forward operator item is named in the runbook operator-actions section which the runbook conformance test asserts is present
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S38` - Narrow the delivery record OP-3 on every operator-facing surface to its one remaining half, the deploy-role variable on the already-created docs environment, and state alongside it that the docs environment required_reviewers removal is the second half of OP-9 rather than a separate obligation, so a reader is not told to create an environment that exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting exactly the outstanding halves
+- `2026-08-02-release-pipeline-full-automation-W04-P09-S41` - Make the promoter selection skip past a non-promotable candidate rather than returning on the first one, and retire a rehearsal candidate out of the selectable namespace once its window closes
+- `2026-08-02-release-pipeline-full-automation-W04-P09-S49` - Add OP-10 and OP-11 to the runbook operator-actions section as named outstanding items, because the section is gated on naming exactly the outstanding halves and the toolchain precondition in particular is stated as unverified by the decision record itself and blocks the very first real dispatch at its very first stage, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions assertions extended to cover the alerting channel and the toolchain precondition
 
 ### plan
 

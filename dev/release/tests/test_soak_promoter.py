@@ -399,3 +399,86 @@ def test_a_dry_run_candidate_completes_its_soak_and_never_publishes() -> None:
     # Selection still ran (the soak was observed) and the refusal happens
     # before the expensive re-verification.
     assert consulted == []
+
+
+def test_a_rehearsal_candidate_does_not_starve_a_real_one() -> None:
+    """The deadlock the honesty review found, pinned so it cannot return.
+
+    A rehearsal seals a REAL draft in the garbage-collector-exempt namespace,
+    which is correct for a real candidate and permanent for a rehearsal one.
+    Refusing it without retiring it left it selectable forever, so every real
+    candidate sealed afterwards sat behind it - and the tick still reported
+    success, so nothing alerted.
+
+    The fixture is deliberately multi-candidate with the rehearsal ELDEST, so
+    it is selected first. A single-element fixture is what let the original
+    bug ship green.
+    """
+    rehearsal = seal_candidate(
+        cohort_id="a" * 64,
+        version="9.9.9-rehearsal",
+        source_commit=_COMMIT,
+        packaging_run_id="100",
+        claimed_channels=("python",),
+        dry_run=True,
+        window=_WINDOW,
+        opened_at=_OPENED,
+    )
+    real = seal_candidate(
+        cohort_id="b" * 64,
+        version="1.0.0",
+        source_commit=_COMMIT,
+        packaging_run_id="200",
+        claimed_channels=("python",),
+        dry_run=False,
+        window=_WINDOW,
+        opened_at=_OPENED + timedelta(hours=1),
+    )
+    assert rehearsal.soak_deadline < real.soak_deadline, "the rehearsal must be selected first for this to bite"
+
+    forge: list[ReleaseCandidate] = [rehearsal, real]
+    dispatched: list[ReleaseCandidate] = []
+
+    decision = promote_once(
+        tuple(forge),
+        now=real.soak_deadline + timedelta(hours=1),
+        readiness_for=lambda _: _clean_report(),
+        dispatch=dispatched.append,
+        consume=forge.remove,
+    )
+
+    assert decision.promotes is True
+    assert decision.candidate == real, "the real candidate must be reached past the rehearsal"
+    assert dispatched == [real]
+    # The rehearsal is retired out of the selectable set, so it cannot block a
+    # later tick either.
+    assert forge == []
+
+
+def test_a_tick_holding_only_a_completed_rehearsal_retires_it_and_says_so() -> None:
+    """A rehearsal is still reported, so a dry_run seal stays distinguishable from no seal."""
+    rehearsal = seal_candidate(
+        cohort_id="a" * 64,
+        version="9.9.9-rehearsal",
+        source_commit=_COMMIT,
+        packaging_run_id="100",
+        claimed_channels=("python",),
+        dry_run=True,
+        window=_WINDOW,
+        opened_at=_OPENED,
+    )
+    forge: list[ReleaseCandidate] = [rehearsal]
+    dispatched: list[ReleaseCandidate] = []
+
+    decision = promote_once(
+        tuple(forge),
+        now=rehearsal.soak_deadline + timedelta(hours=1),
+        readiness_for=lambda _: _clean_report(),
+        dispatch=dispatched.append,
+        consume=forge.remove,
+    )
+
+    assert decision.promotes is False
+    assert dispatched == []
+    assert "dry_run" in decision.reason
+    assert forge == [], "a completed rehearsal must not remain selectable"

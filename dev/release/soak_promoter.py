@@ -59,6 +59,10 @@ class PromotionDecision:
 
     candidate: ReleaseCandidate | None
     reason: str
+    #: True when an elapsed candidate was REFUSED on its re-verification, as
+    #: opposed to a tick that simply had nothing to do. The distinction drives
+    #: the exit status, and therefore whether the failure-guarded alert fires.
+    invalidated: bool = False
 
     @property
     def promotes(self) -> bool:
@@ -95,6 +99,16 @@ def select_promotable(candidates: tuple[ReleaseCandidate, ...], *, now: datetime
     return PromotionDecision(chosen, f"{chosen.version} completed its soak at {chosen.soak_deadline.isoformat()}")
 
 
+def elapsed_candidates(candidates: tuple[ReleaseCandidate, ...], *, now: datetime) -> tuple[ReleaseCandidate, ...]:
+    """Return every candidate whose window has closed, eldest first."""
+    return tuple(
+        sorted(
+            (candidate for candidate in candidates if candidate.window_elapsed(now=now)),
+            key=lambda candidate: (candidate.soak_deadline, candidate.packaging_run_id),
+        ),
+    )
+
+
 def promote_once(
     candidates: tuple[ReleaseCandidate, ...],
     *,
@@ -108,53 +122,65 @@ def promote_once(
 ) -> PromotionDecision:
     """Run one promoter tick: select, RE-VERIFY, then dispatch.
 
+    Iterates the elapsed candidates rather than stopping at the first. Stopping
+    was a deadlock: a rehearsal candidate is refused but is still a real sealed
+    draft in the garbage-collector-exempt namespace, so refusing WITHOUT
+    retiring it left it selectable forever and every real candidate sealed
+    afterwards sat behind it permanently -- silently, since the tick still
+    reported success. A rehearsal is therefore RETIRED once its window closes
+    and the loop moves on.
+
     The readiness gate is re-run against the sealed cohort immediately before
-    the dispatch, and this is the point of the whole function. The gate that
-    ran at seal time proved the cohort sound two or three days ago; the soak
-    policy exists precisely because that is not the same claim as "sound now".
-    A blocking regression discovered during the window invalidates the
-    candidate -- it is never repaired in place, and it must never be promoted
-    on the strength of a green that has since expired.
-
-    The ordering is deliberate: nothing is dispatched before the re-check, so a
-    candidate that regressed is refused with its failures named rather than
-    published and then reported.
+    the dispatch. The gate that ran at seal time proved the cohort sound two or
+    three days ago; the soak policy exists precisely because that is not the
+    same claim as "sound now". A blocking regression invalidates the candidate,
+    and that verdict STOPS the tick deliberately: unlike a rehearsal, it is a
+    real release that needs a human, and S44's non-zero exit makes the
+    failure-guarded alert fire rather than leaving it to a quiet log line.
     """
-    decision = select_promotable(candidates, now=now)
-    if decision.candidate is None:
-        return decision
+    ready = elapsed_candidates(candidates, now=now)
+    if not ready:
+        return select_promotable(candidates, now=now)
 
-    candidate = decision.candidate
-    if candidate.dry_run:
-        # A rehearsal candidate proves the chain end to end and must never
-        # publish. It is refused here rather than filtered out of selection, so
-        # the rehearsal is VISIBLE in the promoter's output: silently skipping
-        # it would make a dry_run seal indistinguishable from no seal at all,
-        # which is the failure the whole rehearsal exists to rule out.
+    retired: list[str] = []
+    for candidate in ready:
+        if candidate.dry_run:
+            # Retire it, then keep looking. The rehearsal is still reported, so
+            # a dry_run seal stays distinguishable from no seal at all, but it
+            # no longer blocks the queue behind it.
+            if consume is not None:
+                consume(candidate)
+            retired.append(candidate.version)
+            continue
+
+        report = readiness_for(candidate)
+        if blocking := report.blocking_failures:
+            named = "; ".join(f"{check.name}: {check.detail}" for check in blocking)
+            return PromotionDecision(
+                None,
+                f"{candidate.version} completed its soak but its readiness gate now reds, "
+                f"so the candidate is invalidated rather than promoted: {named}",
+                invalidated=True,
+            )
+
+        dispatch(candidate)
+        # Consumed only AFTER the dispatch returns. The reverse order would
+        # retire a candidate whose dispatch then failed, stranding a sealed
+        # cohort no later tick can select -- a release that silently never
+        # happens. This ordering can at worst re-dispatch, which the unchanged
+        # version-identity authority refuses for an owned version.
+        if consume is not None:
+            consume(candidate)
+        note = f" (skipped {len(retired)} dry_run rehearsal candidate(s) first)" if retired else ""
+        return PromotionDecision(candidate, f"{candidate.version} promoted after a clean re-verification{note}")
+
+    if retired:
         return PromotionDecision(
             None,
-            f"{candidate.version} is a dry_run rehearsal candidate; its soak completed and it will never publish",
+            f"dry_run rehearsal candidate(s) {', '.join(retired)} completed their soak and will never publish; "
+            "nothing left to promote",
         )
-
-    report = readiness_for(candidate)
-    if blocking := report.blocking_failures:
-        named = "; ".join(f"{check.name}: {check.detail}" for check in blocking)
-        return PromotionDecision(
-            None,
-            f"{candidate.version} completed its soak but its readiness gate now reds, "
-            f"so the candidate is invalidated rather than promoted: {named}",
-        )
-
-    dispatch(candidate)
-    # Consumed only AFTER the dispatch returns. The reverse order would retire
-    # a candidate whose dispatch then failed, stranding a sealed cohort that no
-    # later tick can ever select again -- a release that silently never
-    # happens. This ordering can at worst re-dispatch (the unchanged
-    # version-identity authority refuses an owned version, and the publication
-    # itself converges per destination), which is the recoverable direction.
-    if consume is not None:
-        consume(candidate)
-    return PromotionDecision(candidate, f"{candidate.version} promoted after a clean re-verification")
+    return select_promotable(candidates, now=now)
 
 
 def readiness_for_sealed_cohort(
