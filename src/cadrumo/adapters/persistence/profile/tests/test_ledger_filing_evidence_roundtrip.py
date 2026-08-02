@@ -203,3 +203,40 @@ def test_ledger_evidence_negative_amount_payload_rejected_at_load(objects: Secur
 
     with pytest.raises(ValidationError):
         CalculationRevisionCatalogueRepository(objects=objects).load()
+
+
+def test_ledger_evidence_malformed_identity_payload_rejected_at_load(objects: SecureObjectRepository) -> None:
+    """Persisted evidence cannot rehydrate a non-canonical contributor identity."""
+    import json as _json
+
+    from ...storage import SensitivityClass
+    from ..modelos_calculation import (
+        _CALCULATION_CATALOGUE_VERSION,
+        _CALCULATION_NAMESPACE,
+        _CALCULATION_OBJECT_KEY,
+    )
+
+    original = _revision(_evidence())
+    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    repository.save(CalculationRevisionCatalogue(revisions={original.calculation_revision_id: original}))
+    record = objects.load(
+        _CALCULATION_NAMESPACE,
+        _CALCULATION_OBJECT_KEY,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+    )
+    assert record is not None
+    envelope = _json.loads(record.payload.decode("utf-8"))
+    row = envelope["payload"]["revisions"][original.calculation_revision_id]["ledger_filing_evidence"]["rows"][0]
+    row["transaction_id"] = "not-a-content-address"
+    objects.save(
+        namespace=_CALCULATION_NAMESPACE,
+        object_key=_CALCULATION_OBJECT_KEY,
+        classification=record.classification,
+        schema_version=record.schema_version,
+        written_at=record.written_at,
+        payload=_json.dumps(envelope).encode("utf-8"),
+    )
+
+    with pytest.raises(ValidationError, match="transaction_id"):
+        CalculationRevisionCatalogueRepository(objects=objects).load()

@@ -26,7 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from .....core.config import load_settings
 from .._errors import LLMPdfRasterisationError
 from .._models import LLMProvider
-from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
+from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error, parse_provider_response
 
 _LOG = logging.getLogger(__name__)
 
@@ -172,7 +172,7 @@ class LocalAdapter(_ProviderAdapter):
                 },
             )
         check_http_error(response, provider_name="Local Ollama", model=request.model, logger=_LOG)
-        parsed = _LocalResponse.model_validate_json(response.text)
+        parsed = parse_provider_response(response, provider_name="Local Ollama", response_model=_LocalResponse)
         return ProviderCompletion(
             text=parsed.message.content.strip(),
             model=parsed.model,

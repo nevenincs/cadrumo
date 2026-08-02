@@ -16,6 +16,7 @@ from ._errors import OutboundStorageIntegrityError
 
 _SHA256_PREFIX = "sha256-"
 _SHA256_HEX_LENGTH = 64
+_HEX_DIGITS = frozenset("0123456789abcdef")
 
 
 def strip_sha256_prefix(stored_hash: str) -> str:
@@ -57,3 +58,59 @@ def verify_content_hash(
         return
     if stripped != actual_hash:
         raise OutboundStorageIntegrityError(message, context=context, translated_message=translated_message)
+
+
+def require_full_sha256_content_hash(
+    stored_hash: str,
+    *,
+    message: str,
+    context: dict[str, str],
+    translated_message: str,
+) -> str:
+    """Return a canonical SHA-256 digest or refuse unverified provider metadata."""
+    digest = strip_sha256_prefix(stored_hash)
+    if len(digest) != _SHA256_HEX_LENGTH or not all(character in _HEX_DIGITS for character in digest):
+        raise OutboundStorageIntegrityError(
+            message,
+            context={**context, "stored_hash": stored_hash},
+            translated_message=translated_message,
+        )
+    return digest
+
+
+def verify_payload_byte_length(
+    payload: bytes,
+    stored_byte_length: int,
+    *,
+    message: str,
+    context: dict[str, str],
+    translated_message: str,
+) -> None:
+    """Raise when provider metadata does not describe the returned payload bytes.
+
+    Both local sidecars and Drive file metadata declare the size of opaque
+    stored bytes. The declaration is an integrity assertion, not display-only
+    metadata: callers must never receive payload bytes paired with a different
+    claimed size.
+
+    Args:
+        payload: Downloaded opaque provider bytes.
+        stored_byte_length: Validated byte length declared by the provider.
+        message: Human-readable provider-specific error message.
+        context: Non-sensitive diagnostic context for the error envelope.
+        translated_message: Localisation key for the provider-specific error.
+
+    Raises:
+        OutboundStorageIntegrityError: When the declared and actual lengths differ.
+    """
+    actual_byte_length = len(payload)
+    if stored_byte_length != actual_byte_length:
+        raise OutboundStorageIntegrityError(
+            message,
+            context={
+                **context,
+                "stored_byte_length": str(stored_byte_length),
+                "actual_byte_length": str(actual_byte_length),
+            },
+            translated_message=translated_message,
+        )

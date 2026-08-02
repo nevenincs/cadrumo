@@ -42,9 +42,11 @@ from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now, parse_iso_datetime
+from ._drive_pagination import next_drive_page_token
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
+    OutboundStorageIntegrityError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,
@@ -52,7 +54,7 @@ from ._errors import (
     OutboundStorageUnavailableError,
     OutboundStorageValidationError,
 )
-from ._integrity import verify_content_hash
+from ._integrity import require_full_sha256_content_hash, verify_content_hash, verify_payload_byte_length
 from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
@@ -490,6 +492,14 @@ class GoogleDriveProvider:
         existing = self._find_file(namespace_folder_id, hmac_clean)
 
         media_body = _build_media_body(payload)
+        from ..google._records import DriveAppProperties
+
+        app_properties = DriveAppProperties(
+            cadrumo_vault_app=_OWNERSHIP_VALUE,
+            namespace=namespace_clean,
+            object_key_hmac=hmac_clean,
+            content_hash=content_hash,
+        ).model_dump(by_alias=True)
         # ``dict[str, Any]`` here is the irreducible Google Drive API
         # boundary shape: ``service.files().create(body=body)`` and
         # ``service.files().update(body=body)`` accept arbitrary
@@ -499,12 +509,7 @@ class GoogleDriveProvider:
         body: dict[str, Any] = {
             "name": target_name,
             "parents": [namespace_folder_id] if existing is None else None,
-            "appProperties": {
-                _OWNERSHIP_KEY: _OWNERSHIP_VALUE,
-                "namespace": namespace_clean,
-                "object_key_hmac": hmac_clean,
-                "content_hash": content_hash,
-            },
+            "appProperties": app_properties,
         }
         if existing is None:
             # Drive `files().create` requires `parents`; existing-file
@@ -610,25 +615,36 @@ class GoogleDriveProvider:
                 translated_message="adapters.outbound.storage.google_drive.errors.media_non_bytes",
             )
 
+        stored_hash = _drive_storage_content_hash(entry)
+        require_full_sha256_content_hash(
+            stored_hash,
+            message="drive object metadata does not carry a full SHA-256 content hash",
+            context={"provider_object_id": str(entry.get("id", ""))},
+            translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
+        )
         metadata = _metadata_from_drive_entry(
             entry,
             namespace=namespace_clean,
             object_key_hmac=hmac_clean,
         )
-        app_properties = entry.get("appProperties") or {}
-        stored_hash = str(app_properties.get("content_hash", "") or "")
-        if stored_hash:
-            actual = sha256_hex(bytes(payload))
-            # The Drive policy only verifies a full 64-char digest.
-            verify_content_hash(
-                actual,
-                stored_hash,
-                message="drive content_hash mismatch",
-                context={"stored_hash": stored_hash, "actual_sha256": actual},
-                translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
-                require_full_digest=True,
-            )
-        return bytes(payload), metadata
+        payload_bytes = bytes(payload)
+        verify_payload_byte_length(
+            payload_bytes,
+            metadata.byte_length,
+            message="drive byte_length mismatch",
+            context={"provider_object_id": metadata.provider_object_id},
+            translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
+        )
+        actual = sha256_hex(payload_bytes)
+        verify_content_hash(
+            actual,
+            stored_hash,
+            message="drive content_hash mismatch",
+            context={"stored_hash": stored_hash, "actual_sha256": actual},
+            translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
+            require_full_digest=True,
+        )
+        return payload_bytes, metadata
 
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
         """Permanently delete the Drive file for ``object_key_hmac``.
@@ -687,6 +703,7 @@ class GoogleDriveProvider:
         vault_id = self._resolve_vault_folder()
         query = f"'{vault_id}' in parents and mimeType='{_FOLDER_MIME}' and trashed=false"
         page_token: str | None = None
+        seen_tokens: set[str] = set()
         while True:
             kwargs: dict[str, Any] = {"q": query, "fields": "files(id,name),nextPageToken", "pageSize": 100}
             if page_token is not None:
@@ -698,7 +715,11 @@ class GoogleDriveProvider:
                 if name:
                     self._namespace_folder_ids[name] = str(entry["id"])
                     yield name
-            page_token = response.get("nextPageToken") if isinstance(response, dict) else None
+            page_token = next_drive_page_token(
+                response.get("nextPageToken") if isinstance(response, dict) else None,
+                seen_tokens=seen_tokens,
+                action="iter_namespaces",
+            )
             if not page_token:
                 return
 
@@ -738,6 +759,7 @@ class GoogleDriveProvider:
             )
         query = f"'{namespace_folder_id}' in parents and trashed=false"
         page_token: str | None = None
+        seen_tokens: set[str] = set()
         while True:
             kwargs: dict[str, Any] = {
                 "q": query,
@@ -759,7 +781,11 @@ class GoogleDriveProvider:
                     namespace=namespace_clean,
                     object_key_hmac=str(full_hmac),
                 )
-            page_token = response.get("nextPageToken") if isinstance(response, dict) else None
+            page_token = next_drive_page_token(
+                response.get("nextPageToken") if isinstance(response, dict) else None,
+                seen_tokens=seen_tokens,
+                action="iter_objects",
+            )
             if not page_token:
                 return
 
@@ -935,6 +961,22 @@ def _metadata_from_drive_entry(
         content_hash=content_hash,
         written_at=written_at,
     )
+
+
+def _drive_storage_content_hash(entry: dict[str, Any]) -> str:
+    """Validate the provider-owned ``appProperties`` map before a Drive read."""
+    from pydantic import ValidationError
+
+    from ..google._records import DriveAppProperties
+
+    try:
+        return DriveAppProperties.model_validate(entry.get("appProperties")).content_hash
+    except ValidationError as exc:
+        raise OutboundStorageIntegrityError(
+            "drive object appProperties do not match the storage metadata contract",
+            context={"provider_object_id": str(entry.get("id", ""))},
+            translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
+        ) from exc
 
 
 __all__ = ["GoogleDriveProvider"]

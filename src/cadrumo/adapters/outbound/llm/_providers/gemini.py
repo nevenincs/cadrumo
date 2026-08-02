@@ -18,7 +18,14 @@ from .....core.config import load_settings
 from .....core.logging import get_logger
 from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
-from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
+from .base import (
+    ProviderCompletion,
+    ProviderRequest,
+    _ProviderAdapter,
+    check_http_error,
+    parse_provider_response,
+    require_provider_response_item,
+)
 
 _logger = get_logger(__name__)
 
@@ -136,8 +143,9 @@ class GeminiAdapter(_ProviderAdapter):
             _logger.debug("Gemini connection failure model=%s", request.model, exc_info=True)
             raise LLMProviderError("Gemini connection failure.") from exc
         check_http_error(response, provider_name="Gemini", model=request.model, logger=_logger)
-        parsed = _GeminiResponse.model_validate_json(response.text)
-        text = "".join(part.text or "" for part in parsed.candidates[0].content.parts).strip()
+        parsed = parse_provider_response(response, provider_name="Gemini", response_model=_GeminiResponse)
+        candidate = require_provider_response_item(parsed.candidates, provider_name="Gemini", item_name="candidates")
+        text = "".join(part.text or "" for part in candidate.content.parts).strip()
         return ProviderCompletion(
             text=text,
             model=request.model,

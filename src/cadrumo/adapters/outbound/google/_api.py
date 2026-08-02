@@ -181,7 +181,13 @@ def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiRes
             any other transport or unmapped HTTP failure.
     """
     try:
-        result: GoogleApiResponseBody = request.execute(num_retries=_GOOGLE_API_NUM_RETRIES)
+        result = request.execute(num_retries=_GOOGLE_API_NUM_RETRIES)
+        if not isinstance(result, dict):
+            raise OutboundStorageNetworkError(
+                f"Google {action} returned a non-mapping response body",
+                context={"action": action, "response_type": type(result).__name__},
+                translated_message="adapters.google.calc_sheets.errors.api_call_failed",
+            )
         return result
     except OutboundStorageError:
         raise

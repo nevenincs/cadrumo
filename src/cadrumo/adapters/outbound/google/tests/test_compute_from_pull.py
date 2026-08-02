@@ -271,13 +271,33 @@ def test_compute_from_pull_coerces_string_operator_values_to_decimal() -> None:
     assert casilla_01_obs.value == Decimal("10000.50")
 
 
-def test_compute_from_pull_coerces_malformed_string_to_zero() -> None:
-    """Malformed string values default to Decimal('0') rather than crashing."""
+@pytest.mark.parametrize("raw_value", ("not-a-number", "NaN", "Infinity", "-Infinity"))
+def test_compute_from_pull_refuses_malformed_or_non_finite_string(raw_value: str) -> None:
+    """An explicit malformed spreadsheet edit cannot silently replace a financial input with zero."""
 
     snapshot = modelo_130_2025_1t_snapshot()
     pull = PullResult(
         spreadsheet_id="test-id",
-        operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: "not-a-number"}),
+        operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: raw_value}),
+        binding_edits=_binding_edits_for(snapshot),
+        relation_edits=_relation_edits_for(snapshot),
+        metadata=_matching_metadata(snapshot),
+        metadata_match=MetadataMatchState.MATCHES,
+        cells_read=1,
+    )
+
+    with pytest.raises(OutboundStorageValidationError, match="must be a finite decimal") as raised:
+        compute_from_pull(snapshot, pull)
+
+    assert raised.value.context == {"input_key": _M130_INGRESOS_CASILLA, "value": raw_value}
+
+
+def test_compute_from_pull_normalizes_european_numeric_string() -> None:
+    """A Sheets text cell using Spanish separators preserves the intended amount."""
+    snapshot = modelo_130_2025_1t_snapshot()
+    pull = PullResult(
+        spreadsheet_id="test-id",
+        operator_edits=_operator_edits_for(snapshot, {_M130_INGRESOS_CASILLA: "1.234,56"}),
         binding_edits=_binding_edits_for(snapshot),
         relation_edits=_relation_edits_for(snapshot),
         metadata=_matching_metadata(snapshot),
@@ -288,4 +308,4 @@ def test_compute_from_pull_coerces_malformed_string_to_zero() -> None:
     result = compute_from_pull(snapshot, pull)
 
     casilla_01_obs = next(obs for obs in result.observations if obs.casilla_id == _M130_INGRESOS_CASILLA)
-    assert casilla_01_obs.value == Decimal("0")
+    assert casilla_01_obs.value == Decimal("1234.56")

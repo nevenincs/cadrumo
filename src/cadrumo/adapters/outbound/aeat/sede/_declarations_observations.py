@@ -53,9 +53,14 @@ from .....domain.calculations.registry import (
     resolve_export_layout,
     resolve_previous_filing_binding_values,
     resolve_relation_values_from_observations,
-    validated_casilla_id,
 )
-from .....domain.iva_compensation import derive_303_compensation_available
+from .....domain.iva_compensation import (
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
+    derive_m303_compensation_available_from_casillas,
+)
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from ._browser_constants import SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING
 from ._declarations_schema import Declaracion
@@ -88,17 +93,6 @@ _EXTERNAL = Settings.external_constants()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 
 
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="Sede declaration observation casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"Sede declaration observation casilla constant {value!r} is not a CasillaId") from exc
-
-
-_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
-_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
 # This URL is never requested. Only its HOSTNAME is read, and it is a LOOKUP
 # KEY: _read_guard_policy_from_snapshot below matches it against the registry's
 # declared allowed_hosts for the declarations read surface and requires exactly
@@ -587,7 +581,7 @@ def _with_derived_303_compensation_available_observation(
     observation: FiledDeclaracionObservation,
 ) -> FiledDeclaracionObservation:
     """Add Modelo 303 carry-forward availability derived from canonical filed casillas."""
-    target_id = _M303_DISPONIBLE_CASILLA
+    target_id = M303_COMPENSATION_AVAILABLE_CASILLA
     if observation.modelo != Modelo.M303 or any(casilla.casilla_id == target_id for casilla in observation.casillas):
         return observation
     values: dict[CasillaId, Decimal] = {}
@@ -595,9 +589,9 @@ def _with_derived_303_compensation_available_observation(
         if (
             casilla.casilla_id
             not in {
-                _M303_POSTERIOR_CASILLA,
-                _M303_RESULTADO_CASILLA,
-                _M303_GENERADA_CASILLA,
+                M303_COMPENSATION_POSTERIOR_CASILLA,
+                M303_COMPENSATION_RESULTADO_CASILLA,
+                M303_COMPENSATION_GENERADA_CASILLA,
             }
             or casilla.source_artefact_kind == "justificante_pdf"
         ):
@@ -606,37 +600,33 @@ def _with_derived_303_compensation_available_observation(
             values[casilla.casilla_id] = Decimal(casilla.value)
         except InvalidOperation as exc:
             raise SedeParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
-    posterior = values.get(_M303_POSTERIOR_CASILLA)
-    generated = values.get(_M303_GENERADA_CASILLA)
-    resultado = values.get(_M303_RESULTADO_CASILLA)
-    if posterior is None:
+    derivation = derive_m303_compensation_available_from_casillas(values)
+    if derivation is None:
         return observation
-    if generated is not None:
+    if derivation.basis == "generated":
         snapshot = resources().modelos.authority.snapshot(
             Modelo.M303.value,
             filing_year=observation.ejercicio,
             period=observation.period.registry_token,
         )
         formula = next(item for item in snapshot.revision.formulas if item.target_casilla_id == target_id)
-        operand_refs = (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
         expected_operand_refs = expression_casilla_refs(formula.expression)
-        if operand_refs != expected_operand_refs:
+        if derivation.operand_refs != expected_operand_refs:
             raise SedeParseError(
-                f"Modelo 303 derived compensation available operands {operand_refs!r} do not match "
+                f"Modelo 303 derived compensation available operands {derivation.operand_refs!r} do not match "
                 f"registry formula {formula.id!r} projection {expected_operand_refs!r}",
             )
-        available = posterior + generated
         source_artefact_kind = "derived_registry_formula"
-        source_locator = f"formula:{_M303_POSTERIOR_CASILLA}+{_M303_GENERADA_CASILLA}"
-    elif resultado is not None:
-        available = derive_303_compensation_available(posterior=posterior, resultado=resultado)
-        source_artefact_kind = "derived_carry_policy"
-        source_locator = f"carry-policy:{_M303_POSTERIOR_CASILLA}+max(0,-{_M303_RESULTADO_CASILLA})"
+        source_locator = f"formula:{M303_COMPENSATION_POSTERIOR_CASILLA}+{M303_COMPENSATION_GENERADA_CASILLA}"
     else:
-        return observation
+        source_artefact_kind = "derived_carry_policy"
+        source_locator = (
+            f"carry-policy:{M303_COMPENSATION_POSTERIOR_CASILLA}+"
+            f"max(0,-{M303_COMPENSATION_RESULTADO_CASILLA})"
+        )
     derived = ObservedCasillaValue(
         casilla_id=target_id,
-        value=str(available),
+        value=str(derivation.available),
         source_artefact_kind=source_artefact_kind,
         source_locator=source_locator,
         confidence=1.0,

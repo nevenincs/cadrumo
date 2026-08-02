@@ -23,6 +23,8 @@ extra fields.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -47,6 +49,32 @@ SHEETS_SCOPE: str = _SCOPES.spreadsheets
 REQUIRED_SCOPES: tuple[str, ...] = (OPENID_SCOPE, EMAIL_SCOPE, DRIVE_FILE_SCOPE, SHEETS_SCOPE)
 
 
+def _validate_google_oauth_endpoint(value: str, *, field_name: str, expected_host: str) -> str:
+    """Validate one persisted OAuth endpoint before an upstream library consumes it."""
+    endpoint = value.strip()
+    try:
+        parsed = urlsplit(endpoint)
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError(f"{field_name} must use a valid canonical Google HTTPS endpoint") from exc
+    if (
+        parsed.scheme != "https"
+        or parsed.hostname is None
+        or parsed.username is not None
+        or parsed.password is not None
+        or port is not None
+        or parsed.hostname.lower() != expected_host
+        or not parsed.path
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError(
+            f"{field_name} must be an absolute HTTPS endpoint on {expected_host!r} "
+            "without userinfo, port, query, or fragment",
+        )
+    return endpoint
+
+
 class OAuthClient(BaseModel):
     """Operator-imported Cloud Console Desktop OAuth client metadata.
 
@@ -68,12 +96,24 @@ class OAuthClient(BaseModel):
     auth_provider_x509_cert_url: str = Field(min_length=1)
     redirect_uris: tuple[str, ...] = Field(default=())
 
-    @field_validator("auth_uri", "token_uri", "auth_provider_x509_cert_url")
+    @field_validator("auth_uri")
     @classmethod
-    def _https_only(cls, value: str) -> str:
-        if not value.startswith("https://"):
-            raise ValueError(f"OAuth client URLs must use HTTPS; got {value!r}")
-        return value
+    def _validate_auth_uri(cls, value: str) -> str:
+        return _validate_google_oauth_endpoint(value, field_name="auth_uri", expected_host="accounts.google.com")
+
+    @field_validator("token_uri")
+    @classmethod
+    def _validate_token_uri(cls, value: str) -> str:
+        return _validate_google_oauth_endpoint(value, field_name="token_uri", expected_host="oauth2.googleapis.com")
+
+    @field_validator("auth_provider_x509_cert_url")
+    @classmethod
+    def _validate_cert_uri(cls, value: str) -> str:
+        return _validate_google_oauth_endpoint(
+            value,
+            field_name="auth_provider_x509_cert_url",
+            expected_host="www.googleapis.com",
+        )
 
 
 class OAuthToken(BaseModel):
@@ -91,6 +131,11 @@ class OAuthToken(BaseModel):
 
     refresh_token: str = Field(min_length=1)
     token_uri: str = Field(min_length=1)
+
+    @field_validator("token_uri")
+    @classmethod
+    def _validate_token_uri(cls, value: str) -> str:
+        return _validate_google_oauth_endpoint(value, field_name="token_uri", expected_host="oauth2.googleapis.com")
 
 
 class OAuthMetadata(BaseModel):
@@ -150,25 +195,14 @@ class DriveConfig(BaseModel):
 
 
 class DriveAppProperties(BaseModel):
-    """Typed Drive ``appProperties`` commit-log payload.
-
-    The record validates the richer ``(namespace, object_key_hmac, revision,
-    source_hash, written_at, schema_version)`` tuple at the Google boundary.
-    The current
-    :class:`adapters.outbound.storage._google_drive.GoogleDriveProvider`
-    write path does not instantiate this model; it writes ownership,
-    namespace, full HMAC, and ``content_hash`` keys directly and maps them into
-    :class:`adapters.outbound.storage.ProviderObjectMetadata`.
-    """
+    """Typed ``appProperties`` payload used by the Drive storage provider."""
 
     model_config = STRICT_FROZEN_CONFIG
 
+    ownership_marker: Literal["cadrumo"] = Field(alias="cadrumo_vault_app")
     namespace: str = Field(min_length=1)
     object_key_hmac: str = Field(min_length=1)
-    revision: int = Field(ge=1)
-    source_hash: str = Field(min_length=1)
-    written_at: datetime
-    schema_version: str = Field(default="1", min_length=1)
+    content_hash: str = Field(min_length=1)
 
 
 __all__ = [

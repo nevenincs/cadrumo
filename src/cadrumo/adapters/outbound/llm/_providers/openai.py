@@ -17,7 +17,14 @@ from .....core.config import load_settings
 from .....core.logging import get_logger
 from .._errors import LLMConfigError
 from .._models import LLMProvider
-from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
+from .base import (
+    ProviderCompletion,
+    ProviderRequest,
+    _ProviderAdapter,
+    check_http_error,
+    parse_provider_response,
+    require_provider_response_item,
+)
 
 
 def _openai_chat_url() -> str:
@@ -137,8 +144,9 @@ class OpenAIAdapter(_ProviderAdapter):
                 },
             )
         check_http_error(response, provider_name="OpenAI", model=request.model, logger=_logger)
-        parsed = _OpenAIResponse.model_validate_json(response.text)
-        text = parsed.choices[0].message.content or ""
+        parsed = parse_provider_response(response, provider_name="OpenAI", response_model=_OpenAIResponse)
+        choice = require_provider_response_item(parsed.choices, provider_name="OpenAI", item_name="choices")
+        text = choice.message.content or ""
         return ProviderCompletion(
             text=text.strip(),
             model=parsed.model,

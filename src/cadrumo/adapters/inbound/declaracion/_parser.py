@@ -30,6 +30,7 @@ from typing import Any
 
 from ....core import Period
 from ....core.hashing import sha256_hex
+from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.logging import get_logger
 from ....core.resources import bundled_path
 from ....core.time import now
@@ -411,16 +412,26 @@ def _resolve_period(text: str, *, period_override: str | None) -> str:
 def _extract_tax_id(text: str) -> str:
     match = _TAX_ID_RE.search(text)
     if match is not None:
-        return re.sub(r"\s+", "", match.group("tax_id").strip().rstrip("."))
+        return _validated_tax_id(re.sub(r"\s+", "", match.group("tax_id").strip().rstrip(".")))
     before_match = _TAX_ID_BEFORE_LABEL_RE.search(text)
     if before_match is not None:
-        return before_match.group("tax_id").upper()
+        return _validated_tax_id(before_match.group("tax_id"))
     row_match = _DECLARANT_ROW_RE.search(text)
     if row_match is not None:
-        return row_match.group("tax_id").upper()
+        return _validated_tax_id(row_match.group("tax_id"))
     raise DeclaracionParseError(
         translated_message="adapters.inbound.declaracion.errors.tax_id_unresolved",
     )
+
+
+def _validated_tax_id(candidate: str) -> str:
+    """Return only a checksum-valid filing identity from a matched PDF label."""
+    try:
+        return validate_spanish_tax_id(candidate)
+    except IdentityError as exc:
+        raise DeclaracionParseError(
+            translated_message="adapters.inbound.declaracion.errors.tax_id_unresolved",
+        ) from exc
 
 
 def _load_registry_snapshot(

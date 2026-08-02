@@ -148,6 +148,12 @@ def test_parses_the_english_render_receipt() -> None:
     assert observation.modelo == modelo
 
 
+@pytest.mark.parametrize("tax_id", ("12345678A", "X1234567A", "B12345678"))
+def test_extract_tax_id_refuses_shape_only_identifiers_with_invalid_checksums(tax_id: str) -> None:
+    with pytest.raises(DeclaracionParseError):
+        _extract_tax_id(f"NIF Presentador: {tax_id}")
+
+
 @pytest.mark.parametrize(("modelo", "stem", "year", "period"), _SPANISH_RENDERS)
 def test_spanish_render_receipts_keep_parsing(modelo: str, stem: str, year: int, period: str) -> None:
     """Accepting the English label must not disturb the Spanish render."""

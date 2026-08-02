@@ -101,6 +101,29 @@ def test_oauth_client_rejects_non_https_auth_uri() -> None:
         OAuthClient(**kwargs)
 
 
+@pytest.mark.parametrize(
+    ("field", "endpoint"),
+    (
+        ("auth_uri", "https://"),
+        ("auth_uri", "https://?redirect=x"),
+        ("auth_uri", "https://evil.example/oauth"),
+        ("auth_uri", "https://operator@accounts.google.com/oauth"),
+        ("auth_uri", "https://accounts.google.com:8443/oauth"),
+        ("token_uri", "http://127.0.0.1/token"),
+        ("token_uri", "file:///tmp/token"),
+        ("auth_provider_x509_cert_url", "https://evil.example/certs"),
+    ),
+)
+def test_oauth_client_refuses_malformed_or_untrusted_endpoints(field: str, endpoint: str) -> None:
+    """Persisted client endpoints must remain canonical Google HTTPS origins."""
+
+    kwargs = _valid_client_kwargs()
+    kwargs[field] = endpoint  # type: ignore[literal-required]  # dynamic field selected by parameterized boundary probe
+
+    with pytest.raises(ValidationError):
+        OAuthClient(**kwargs)
+
+
 def test_oauth_client_is_frozen() -> None:
     client = OAuthClient(**_valid_client_kwargs())
     with pytest.raises(ValidationError, match="frozen"):
@@ -123,6 +146,14 @@ def test_oauth_client_rejects_empty_client_secret() -> None:
 def test_oauth_token_minimum_shape() -> None:
     token = OAuthToken(refresh_token="1//deadbeef", token_uri="https://oauth2.googleapis.com/token")
     assert token.refresh_token == "1//deadbeef"
+
+
+@pytest.mark.parametrize("endpoint", ("https://evil.example/token", "https://oauth2.googleapis.com:444/token", "file:///tmp/token"))
+def test_oauth_token_refuses_untrusted_or_malformed_token_endpoint(endpoint: str) -> None:
+    """A refresh token may never persist an endpoint outside Google OAuth's canonical origin."""
+
+    with pytest.raises(ValidationError):
+        OAuthToken(refresh_token="1//deadbeef", token_uri=endpoint)
 
 
 def test_oauth_token_is_frozen() -> None:
@@ -164,26 +195,22 @@ def test_oauth_metadata_reauth_required_round_trips() -> None:
 
 def test_drive_app_properties_round_trip() -> None:
     payload = DriveAppProperties(
+        cadrumo_vault_app="cadrumo",
         namespace="ledger_transaction",
         object_key_hmac="abc123def456",
-        revision=1,
-        source_hash="sha256-deadbeef",
-        written_at=datetime(2026, 5, 14, tzinfo=UTC),
+        content_hash="sha256-deadbeef",
     )
-    reloaded = DriveAppProperties.model_validate_json(payload.model_dump_json())
+    reloaded = DriveAppProperties.model_validate_json(payload.model_dump_json(by_alias=True))
     assert reloaded == payload
-    assert reloaded.schema_version == "1"
+    assert payload.model_dump(by_alias=True)["cadrumo_vault_app"] == "cadrumo"
 
 
-def test_drive_app_properties_rejects_revision_below_one() -> None:
-    invalid_revision: int = 0
-    with pytest.raises(ValidationError, match="greater than or equal to 1"):
+def test_drive_app_properties_rejects_missing_runtime_storage_metadata() -> None:
+    with pytest.raises(ValidationError):
         DriveAppProperties(
             namespace="ledger_transaction",
             object_key_hmac="abc",
-            revision=invalid_revision,
-            source_hash="sha256-x",
-            written_at=datetime(2026, 5, 14, tzinfo=UTC),
+            content_hash="sha256-x",
         )
 
 

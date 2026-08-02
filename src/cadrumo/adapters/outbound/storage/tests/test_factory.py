@@ -23,12 +23,14 @@ from .....core.i18n import tr
 from .....tests.env_scope import scoped_env_var
 from .....tests.secure_sql import isolated_runtime_profile
 from ...google import (
+    DriveConfig,
     GoogleAuthAdcUnavailableError,
     GoogleCredentialSourceSelection,
     GoogleImpersonationConfig,
     OAuthClient,
     save_client,
     save_credential_source_selection,
+    save_drive_config,
 )
 from .. import (
     OutboundStorageValidationError,
@@ -36,6 +38,7 @@ from .. import (
     StorageProvider,
     build_google_credentials,
     get_storage_provider,
+    resolve_drive_root_folder_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -144,6 +147,16 @@ def test_factory_rejects_google_drive_without_root_before_loading_credentials(tm
     assert exc.translated_message == "adapters.outbound.storage.factory.errors.drive_root_missing"
     assert exc.context == {"profile": "factory-drive-missing-root"}
     assert exc.suggestion == "aeat config google folder set <id>"
+
+
+def test_drive_root_whitespace_override_uses_persisted_profile_configuration(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="factory-drive-persisted-root") as profile:
+        save_drive_config(profile.bucket_id, DriveConfig(root_folder_id="persisted-drive-root"))
+
+        with override_settings(cadrumo_google_drive_root_folder_id="   ") as settings:
+            root_folder_id = resolve_drive_root_folder_id(profile=profile.bucket_id, settings=settings)
+
+    assert root_folder_id == "persisted-drive-root"
 
 
 def test_factory_rejects_google_drive_without_registered_client(tmp_path: Path) -> None:

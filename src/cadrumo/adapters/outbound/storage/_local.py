@@ -36,7 +36,7 @@ from ._errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
-from ._integrity import verify_content_hash
+from ._integrity import verify_content_hash, verify_payload_byte_length
 from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
@@ -81,6 +81,31 @@ def _validate_hmac(object_key_hmac: str) -> str:
 
 def _sidecar_filename(object_key_hmac: str, label: str) -> str:
     return build_provider_object_name(object_key_hmac, label, extension=_SIDECAR_EXTENSION)
+
+
+def _parse_sidecar_byte_length(value: object) -> int:
+    """Return a non-negative sidecar byte length or classify metadata corruption."""
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise StorageCorruptionError(
+            f"sidecar byte_length has unexpected type: {type(value)!r}",
+            context={"actual_type": repr(type(value))},
+            translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
+        )
+    try:
+        byte_length = int(value)
+    except ValueError:
+        raise StorageCorruptionError(
+            f"sidecar byte_length is not an integer: {value!r}",
+            context={"actual_value": str(value)},
+            translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
+        ) from None
+    if byte_length < 0:
+        raise StorageCorruptionError(
+            f"sidecar byte_length must not be negative: {byte_length}",
+            context={"actual_value": str(byte_length)},
+            translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
+        )
+    return byte_length
 
 
 class LocalFileSystemProvider:
@@ -361,22 +386,19 @@ class LocalFileSystemProvider:
         except ValueError:
             written_at = now()
 
-        _byte_length_raw = sidecar.get("byte_length", len(payload))
-        if not isinstance(_byte_length_raw, (int, str)):
-            _logger.error(
-                "sidecar byte_length has unexpected type",
-                extra={"type": repr(type(_byte_length_raw))},
-            )
-            raise StorageCorruptionError(
-                f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}",
-                context={"actual_type": repr(type(_byte_length_raw))},
-                translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
-            )
+        byte_length = _parse_sidecar_byte_length(sidecar.get("byte_length"))
+        verify_payload_byte_length(
+            payload,
+            byte_length,
+            message=f"byte_length mismatch for {target_path.name}",
+            context={"path": str(target_path)},
+            translated_message="adapters.outbound.storage.local.errors.content_hash_mismatch",
+        )
         metadata = ProviderObjectMetadata(
             namespace=namespace_clean,
             object_key_hmac=hmac_clean,
             provider_object_id=str(target_path),
-            byte_length=int(_byte_length_raw),
+            byte_length=byte_length,
             content_hash=stored_hash or f"sha256-{actual_hash}",
             written_at=written_at,
         )
@@ -482,22 +504,12 @@ class LocalFileSystemProvider:
                 written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else now()
             except ValueError:
                 written_at = now()
-            _byte_length_raw = sidecar.get("byte_length", 0)
-            if not isinstance(_byte_length_raw, (int, str)):
-                _logger.error(
-                    "sidecar byte_length has unexpected type",
-                    extra={"type": repr(type(_byte_length_raw))},
-                )
-                raise StorageCorruptionError(
-                    f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}",
-                    context={"actual_type": repr(type(_byte_length_raw))},
-                    translated_message="adapters.outbound.storage.local.errors.byte_length_invalid",
-                )
+            byte_length = _parse_sidecar_byte_length(sidecar.get("byte_length"))
             yield ProviderObjectMetadata(
                 namespace=namespace_clean,
                 object_key_hmac=str(sidecar.get("object_key_hmac", "")),
                 provider_object_id=str(entry),
-                byte_length=int(_byte_length_raw),
+                byte_length=byte_length,
                 content_hash=str(sidecar.get("content_hash", "")),
                 written_at=written_at,
             )
