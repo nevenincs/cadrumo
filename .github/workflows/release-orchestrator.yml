@@ -91,6 +91,14 @@ jobs:
     needs: preflight
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 10
+    outputs:
+      # The operator-minted evidence-release TAG this check verified. It is
+      # emitted from the job that VERIFIED it, so the sealed candidate records
+      # exactly what was checked. It must never be sourced from an acquisition
+      # lane: the lane's run id proves the install mechanism works, this tag
+      # names the release holding the four real-client rows that prove a human
+      # actually ran it.
+      claude_evidence_release: ${{ steps.host-extension.outputs.claude_evidence_release }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -103,6 +111,7 @@ jobs:
           enable-cache: true
 
       - name: Require operator-minted evidence for every claimed host-extension channel
+        id: host-extension
         run: |
           # BEFORE the bump, deliberately. The four claude-* rows assert that a
           # REAL client installed real bytes; the emit honesty guard refuses
@@ -296,7 +305,7 @@ jobs:
 
   seal:
     name: Cadrumo / seal the release candidate and stop
-    needs: [preflight, campaign, acquire]
+    needs: [preflight, precondition, campaign, acquire]
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
     permissions:
@@ -325,7 +334,14 @@ jobs:
           # acquisition sources at all.
           SCOOP_RUN_ID: ${{ needs.acquire.outputs.scoop_run_id }}
           HOMEBREW_RUN_ID: ${{ needs.acquire.outputs.homebrew_run_id }}
-          CLAUDE_EVIDENCE_RELEASE: ${{ needs.acquire.outputs.claude_plugin_run_id }}
+          # The evidence-release TAG, from the job that verified it - NOT the
+          # packaging-claude lane's run id. The publication authority consumes
+          # this with `gh release download "$CLAUDE_EVIDENCE_RELEASE"`, so a run
+          # id here fails at the final leg AFTER a full 48-72 hour soak, and
+          # silently replaces the operator-minted evidence with a
+          # machine-produced value. The lane run id is a separate acquisition
+          # proof and is carried under its own name above.
+          CLAUDE_EVIDENCE_RELEASE: ${{ needs.precondition.outputs.claude_evidence_release }}
         run: |
           # THIS JOB IS TERMINAL, and that is the design rather than an
           # omission. The soak runs 48-72 hours; no workflow run spans that, and

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:335639ebb388fa923df3f72071250a68300f40ca8199742337b4bf040d4c199a'
+body_hash: 'sha256:41c7f59d288d22ad8d09a422c1cc29e76c044f2ae047fda587d69d991cb478e7'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -58,6 +58,7 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S49]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S50]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S51]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S52]]'
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
   - '[[2026-08-02-release-pipeline-full-automation-audit]]'
   - '[[2026-08-02-release-pipeline-full-automation-plan]]'
@@ -129,6 +130,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S49` - Add OP-10 and OP-11 to the runbook operator-actions section as named outstanding items, because the section is gated on naming exactly the outstanding halves and the toolchain precondition in particular is stated as unverified by the decision record itself and blocks the very first real dispatch at its very first stage, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions assertions extended to cover the alerting channel and the toolchain precondition
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S50` - Reconcile the plan Verification claim that a tree-wide search for the retired apply target matches only vault records and history, either by rewording the bump module docstrings that reference it or by narrowing the claim to the operator-facing surfaces it actually means, gate: rg -n release-apply over the tree matches only vault records, CHANGELOG history, and the conformance test asserting its absence
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S51` - Extend the alert guards on the multi-job workflows and the promoter to cover cancellation as well as failure
+- `2026-08-02-release-pipeline-full-automation-W04-P09-S52` - Stop feeding the packaging-claude acquisition lane run id into the operator-minted claude evidence-release input, and carry the real evidence-release tag onto the sealed candidate instead
 
 ### plan
 

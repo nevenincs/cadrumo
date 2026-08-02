@@ -4,7 +4,7 @@ tags:
   - '#release-pipeline-full-automation'
 date: '2026-08-02'
 modified: '2026-08-02'
-body_hash: 'sha256:0a50517891077e428ddc6f881b74be8c487b4aa81d236ad9e9ded8f9a0db5553'
+body_hash: 'sha256:f5a3be3ef2c71f709c0ac813e4501d70f4793187121698a4c10cdd9b5b757c32'
 tier: L3
 related:
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
@@ -132,6 +132,7 @@ Close every item the fresh-context honesty review surfaced against the landed ch
 - [x] `W04.P09.S49` - Add OP-10 and OP-11 to the runbook operator-actions section as named outstanding items, because the section is gated on naming exactly the outstanding halves and the toolchain precondition in particular is stated as unverified by the decision record itself and blocks the very first real dispatch at its very first stage, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions assertions extended to cover the alerting channel and the toolchain precondition; `RELEASING.md, src/cadrumo/tests/test_release_config.py`.
 - [x] `W04.P09.S50` - Reconcile the plan Verification claim that a tree-wide search for the retired apply target matches only vault records and history, either by rewording the bump module docstrings that reference it or by narrowing the claim to the operator-facing surfaces it actually means, gate: rg -n release-apply over the tree matches only vault records, CHANGELOG history, and the conformance test asserting its absence; `dev/release/version_bump.py, .vault/plan/`.
 - [x] `W04.P09.S51` - Extend the alert guards on the multi-job workflows and the promoter to cover cancellation as well as failure, so a run cancelled by a runner eviction or a concurrency interaction is not the same silence the campaign exists to remove, gate: uv run --no-sync pytest dev/release/tests/test_release_alerting.py -q passes asserting each release-path alert guard admits a cancelled outcome and a positive control plants a failure-only guard and reds; `.github/workflows/release-orchestrator.yml, .github/workflows/release-soak-promoter.yml, .github/workflows/publish-release.yml, dev/release/tests/test_release_alerting.py`.
+- [x] `W04.P09.S52` - Stop feeding the packaging-claude acquisition lane run id into the operator-minted claude evidence-release input, and carry the real evidence-release tag onto the sealed candidate instead, because the publication authority consumes that input as a release tag while the acquisition stage supplies a workflow run id, and because the lane mapping own contract states the dispatchable lane and the four non-automatable real-client captures must never collapse into one input, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py dev/packaging/tests -q passes with the seal stage asserted NOT to source the evidence-release input from any lane run-id output, plus a case under a descriptor claiming claude-plugin asserting the sealed candidate carries the operator-minted release tag the precondition verified; `.github/workflows/release-orchestrator.yml, dev/packaging/publication_inputs.py, dev/release/seal_candidate.py, dev/release/tests/test_release_orchestrator_workflow.py`.
 
 ## Description
 

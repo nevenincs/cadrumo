@@ -323,6 +323,18 @@ def main(argv: list[str] | None = None) -> int:
         if refusal is not None:
             print(refusal, file=sys.stderr)
             return 1
+        # Emit the VERIFIED tag so the seal stage records exactly what this
+        # check passed on. It must never be sourced from an acquisition lane's
+        # run id: the lane proves the install mechanism works, this tag names
+        # the release holding the four real-client rows that prove a human
+        # actually ran it, and the publication authority consumes it with
+        # `gh release download <tag>`. Collapsing them makes the publication
+        # fail at its last leg after a full soak, and silently discards the
+        # operator-minted evidence this check just verified.
+        verified = os.environ.get("CLAUDE_EVIDENCE_RELEASE", "").strip()
+        if args.github_output is not None:
+            with args.github_output.open("a", encoding=_UTF_8) as handle:
+                handle.write(f"claude_evidence_release={verified}\n")
         print("host-extension precondition satisfied")
         return 0
     provided = {name: os.environ.get(name.upper(), "") for name in SOURCE_INPUT_BY_CHANNEL.values()}

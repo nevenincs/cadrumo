@@ -432,13 +432,22 @@ def test_every_acquisition_run_id_reaches_the_seal_stage() -> None:
     assert acquire_outputs == {"scoop_run_id", "homebrew_run_id", "claude_plugin_run_id"}
 
     seal_env = str(jobs["seal"]["steps"][-1].get("env", {}))
+    # Only the two acquisition RUN IDs are fed from the acquisition stage.
+    # `CLAUDE_EVIDENCE_RELEASE` is deliberately absent from this list: it is a
+    # release TAG, not a run id, and its own tests below pin where it comes
+    # from. This assertion originally included it and thereby encoded the
+    # mis-wiring as correct - a test asserting a belief rather than a property.
     for variable, output in (
         ("SCOOP_RUN_ID", "scoop_run_id"),
         ("HOMEBREW_RUN_ID", "homebrew_run_id"),
-        ("CLAUDE_EVIDENCE_RELEASE", "claude_plugin_run_id"),
     ):
         assert variable in seal_env, f"the seal step does not set {variable}"
         assert f"needs.acquire.outputs.{output}" in seal_env, f"{variable} is not fed from the acquire stage"
+
+    # The claude lane still needs somewhere to put its run id, or the
+    # unmapped-lane refusal fires when that channel is claimed. It simply is
+    # not the evidence release.
+    assert "claude_plugin_run_id" in acquire_outputs
 
 
 def test_the_seal_reads_exactly_the_variables_the_module_consumes() -> None:
@@ -466,3 +475,74 @@ def test_an_unmapped_acquisition_lane_refuses_rather_than_dropping_its_run_id() 
 
     assert "carries no output name" in surface
     assert "--output-name" in surface
+
+
+def test_the_evidence_release_is_never_sourced_from_a_lane_run_id() -> None:
+    """A NEGATIVE assertion, because the positive one sailed over this.
+
+    `CLAUDE_EVIDENCE_RELEASE` is consumed by the publication authority as a
+    release TAG (`gh release download "$CLAUDE_EVIDENCE_RELEASE"`), while an
+    acquisition lane produces a workflow RUN ID. They are different facts, and
+    the lane mapping's own contract states they must never collapse into one
+    input: the lane proves the install mechanism works, the operator-minted
+    release holds the four real-client rows proving a human actually ran it.
+
+    Feeding the lane's run id there fails the publication at its final leg
+    AFTER a full 48-72 hour soak, and silently discards the evidence the
+    precondition job verified - the evidence-integrity violation the decision
+    record's host-extension ruling exists to prevent.
+
+    `test_every_acquisition_run_id_reaches_the_seal_stage` asserts only that
+    ids are not DROPPED; it never asks what a field semantically IS, so it
+    passed throughout. This asks the question it could not.
+    """
+    jobs = _document()["jobs"]
+    seal_env = jobs["seal"]["steps"][-1]["env"]
+    evidence_source = str(seal_env["CLAUDE_EVIDENCE_RELEASE"])
+
+    lane_outputs = set(jobs["acquire"].get("outputs") or {})
+    for lane_output in lane_outputs:
+        assert f"outputs.{lane_output}" not in evidence_source, (
+            f"the evidence-release tag is sourced from the acquisition lane output {lane_output!r}; "
+            "a lane run id is not a release tag"
+        )
+    assert "needs.acquire" not in evidence_source, "the evidence tag must not come from the acquisition stage at all"
+
+
+def test_the_evidence_release_comes_from_the_job_that_verified_it() -> None:
+    """The tag recorded on the candidate is the one the precondition checked.
+
+    Sourcing it anywhere else would let the sealed candidate name a release
+    nobody verified, which is the same integrity gap one step removed.
+    """
+    jobs = _document()["jobs"]
+
+    assert "claude_evidence_release" in (jobs["precondition"].get("outputs") or {})
+    assert "precondition" in jobs["seal"]["needs"], "the seal must depend on the job that verified the evidence"
+    assert "needs.precondition.outputs.claude_evidence_release" in str(
+        jobs["seal"]["steps"][-1]["env"]["CLAUDE_EVIDENCE_RELEASE"]
+    )
+
+
+def test_the_seal_module_refuses_a_run_id_as_an_evidence_release(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Defence in depth at the consuming module, not only in the wiring.
+
+    The workflow assertions above pin today's wiring; this makes the same
+    mistake unrepresentable from any caller, and it fails at seal time rather
+    than after the soak.
+    """
+    from dev.release import seal_candidate as seal_module
+    from dev.release.release_candidate import ReleaseCandidateError
+
+    monkeypatch.setenv("CLAUDE_EVIDENCE_RELEASE", "1234567890")
+
+    with pytest.raises(ReleaseCandidateError, match="run id rather than a release tag"):
+        seal_module.main(["--repository", "nevenincs/cadrumo", "--packaging-run-id", "42"])
+
+    # Control: a genuine tag is not refused by the same guard. Without this the
+    # assertion above would pass just as well against a guard that rejected
+    # every value.
+    monkeypatch.setenv("CLAUDE_EVIDENCE_RELEASE", "claude-evidence-2026-08-02")
+    with pytest.raises(Exception) as caught:
+        seal_module.main(["--repository", "nevenincs/cadrumo", "--packaging-run-id", "42"])
+    assert "run id rather than a release tag" not in str(caught.value)

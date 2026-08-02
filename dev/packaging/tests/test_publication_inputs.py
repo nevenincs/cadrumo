@@ -27,6 +27,7 @@ from dev.packaging.publication_inputs import (
     acquisition_lanes,
     demanded_inputs,
     host_extension_precondition_refusal,
+    lane_output_name,
     main,
     missing_sources,
     refusals,
@@ -201,7 +202,7 @@ def test_a_claimed_channel_absent_from_the_source_mapping_is_never_silently_a_la
 
 
 def test_python_is_never_an_acquisition_lane_even_when_every_channel_is_claimed() -> None:
-    """python's evidence source is the cohort input itself; it must never be mistaken for a lane."""
+    """Python's evidence source is the cohort input itself; it must never be mistaken for a lane."""
     descriptor = load_descriptor()
     fully_claimed = descriptor
     for channel in descriptor.channel:
@@ -390,3 +391,36 @@ def test_main_accepts_a_registry_only_dispatch(tmp_path: Path) -> None:
     ):
         assert main(["--github-output", str(output)]) == 0
     assert "need_scoop_run_id=false" in output.read_text(encoding="utf-8")
+
+
+def test_a_claimed_claude_plugin_channel_keeps_its_lane_and_its_evidence_release_separate() -> None:
+    """The dispatchable lane and the human capture are two facts, never one.
+
+    A claimed `claude-plugin` channel demands BOTH: `packaging-claude.yml`
+    proves the plugin and MCPB install works, and an operator-minted evidence
+    release holds the four real-client rows proving a human actually ran it.
+    The publication authority consumes the second as a release tag.
+
+    Collapsing them fails the publication at its final leg after a full soak
+    and silently replaces operator-minted evidence with a machine-produced
+    value.
+    """
+    claimed = _with_availability(load_descriptor(), "claude-plugin", Availability.AVAILABLE)
+
+    # The lane is dispatched...
+    assert ".github/workflows/packaging-claude.yml" in acquisition_lane_workflows(claimed)
+    # ...and its run id has its own output name, distinct from the evidence input.
+    assert lane_output_name(".github/workflows/packaging-claude.yml") == "claude_plugin_run_id"
+    assert lane_output_name(".github/workflows/packaging-claude.yml") != SOURCE_INPUT_BY_CHANNEL["claude-plugin"]
+
+    # ...while the evidence release remains a SEPARATE demanded input, and its
+    # absence still refuses the whole chain rather than being satisfied by the
+    # lane having run.
+    assert SOURCE_INPUT_BY_CHANNEL["claude-plugin"] == "claude_evidence_release"
+    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="")
+    assert refusal is not None
+    assert "emit_real_client_evidence" in refusal
+
+    # A supplied evidence release satisfies it; a lane run id is not what this
+    # input means, and nothing here derives one from the other.
+    assert host_extension_precondition_refusal(claimed, claude_evidence_release="claude-evidence-2026-08-02") is None
