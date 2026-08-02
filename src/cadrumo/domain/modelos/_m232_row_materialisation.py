@@ -60,16 +60,18 @@ def m232_related_party_row_casilla_values(
     values: dict[CasillaId, str | Decimal] = {}
     for row_index, row in enumerate(rows, start=1):
         row_slot = f"vinculada-{row_index}"
-        for field_name, field_value in _extract_row_fields(row, row_slot).items():
+        for field_name, field_value in _extract_row_fields(row).items():
             values[_resolve_casilla_id_for_field(row_slot, field_name)] = field_value
     return values
 
 
-def _extract_row_fields(row: Modelo232VinculadaRow, row_slot: str) -> dict[str, str | Decimal]:
+def _extract_row_fields(row: Modelo232VinculadaRow) -> dict[str, str | Decimal]:
     """Extract field values from a VinculadaRow in declaration order.
 
     Fields map to the registry binding definitions in order:
-    NIF, tipo_vinculacion, tipo_operacion, metodo, importe.
+    NIF, tipo_vinculacion, tipo_operacion, metodo, importe. The row slot is
+    not a parameter here: it joins the field name into a casilla id one level
+    up, in :func:`_resolve_casilla_id_for_field`.
     """
     return {
         "nif": row.nif,
