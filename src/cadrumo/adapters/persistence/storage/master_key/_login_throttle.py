@@ -38,6 +38,7 @@ from pydantic import BaseModel, Field
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.logging import get_logger
+from .....core.time import UtcInstant
 from .._namespace_registry import LOGIN_THROTTLE_FILENAME
 from ._master_key_io import atomic_write_secure_bytes
 
@@ -59,13 +60,23 @@ class LoginThrottleState(BaseModel):
 
     Carries only a non-negative failure count and the timestamp of the most
     recent failure. It never holds a passphrase, key, or any other secret.
+
+    ``last_failure_at`` is a canonical :data:`~core.time.UtcInstant` because
+    the whole backoff is a comparison against it. A bare ``datetime`` admitted
+    two shapes the sidecar must never carry: a naive stamp, which made
+    :func:`_evaluate_state` raise a raw ``TypeError`` out of the security gate
+    rather than clearing, and an offset stamp, which silently shifted the
+    deadline by that offset -- a ``+01:00`` value read an hour into the past
+    and reported the operator clear to retry while the same instant in UTC was
+    still throttled. Refusing both at the model boundary routes such a sidecar
+    through the documented unreadable-means-cleared path instead.
     """
 
     model_config = _STRICT_FROZEN
 
     schema_version: int = LOGIN_THROTTLE_SCHEMA_VERSION
     consecutive_failures: int = Field(default=0, ge=0)
-    last_failure_at: datetime | None = None
+    last_failure_at: UtcInstant | None = None
 
 
 class ThrottleEvaluation(BaseModel):
@@ -104,6 +115,14 @@ def _read_state(path: Path) -> LoginThrottleState:
     A missing, unreadable, malformed, or version-mismatched sidecar yields
     a cleared state so the throttle can never permanently lock the operator
     out; the next :func:`record_login_failure` rewrites a canonical file.
+
+    A stamp that is naive or carries a non-UTC offset is malformed in exactly
+    this sense: the model refuses it, pydantic reports that as a
+    ``ValidationError`` (a ``ValueError``), and it is caught below like any
+    other unusable file. The clearing is deliberate rather than incidental --
+    a throttle record whose instant cannot be compared is no record at all,
+    and the alternative of crashing the security gate is the failure mode
+    this module's revocable-cache contract exists to avoid.
     """
     if not path.is_file():
         return LoginThrottleState()
