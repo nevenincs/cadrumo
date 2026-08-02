@@ -106,3 +106,28 @@ This should be re-verified against a real successful dry-run once the
 missing release-anchor gap is resolved (a candidate operator item, not
 performed here -- creating a `v0.1.0` tag/release retroactively is a
 forge-mutating action outside this Step's authority).
+
+**Addendum (same day, post-landing):** the coordinator took the tag/release
+question to the operator directly rather than deciding it. Operator's
+answer: manual tag/release pre-creation is exactly the "not automated"
+category being rejected; the executor must handle a repo's genuine first
+release on its own. Researched release-please's own documentation
+(`docs/manifest-releaser.md`) for a genuine bootstrap path and found one:
+the top-level `bootstrap-sha` key in `release-please-config.json`, purpose-
+built for "the first time running... on a repo" -- it bounds the commit
+walk without needing any prior tag or GitHub Release to exist, and
+release-please ignores it once a release PR it generated has merged (self-
+retiring, never legacy configuration to maintain). Added `bootstrap-sha:
+70ca8b18940db8e4a9d465d631df52c02973b011` (the commit that recorded the
+current `0.1.0` manifest floor) to `release-please-config.json`, added the
+matching `Optional[str]` field to the strict `ReleasePleaseConfig` pydantic
+model in `src/cadrumo/tests/test_release_config.py` (which has
+`extra="forbid"`, so the key would otherwise fail that gate), and a
+regression asserting it is present and a full 40-char SHA. This is an
+ordinary committed config change, not a tag/release/forge-mutating action.
+Live verification that it actually avoids the full-history walk needs the
+change reachable via the GitHub API at the queried branch (release-please
+fetches config remotely, not from local disk) -- this worktree is 30+
+commits ahead of `origin/main` from concurrent campaigns, so pushing to
+verify is a bigger, shared-worktree-wide decision outside this Step's
+authority to make unilaterally; deferred back to the coordinator.

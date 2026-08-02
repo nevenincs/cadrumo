@@ -32,11 +32,15 @@ See Also:
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
@@ -88,8 +92,7 @@ def _substitute_single(text: str, pattern: re.Pattern[str], version: str, *, sur
     matches = list(pattern.finditer(text))
     if len(matches) != 1:
         raise VersionBumpError(
-            f"{surface} must declare exactly one version literal matching {pattern.pattern!r}, "
-            f"found {len(matches)}",
+            f"{surface} must declare exactly one version literal matching {pattern.pattern!r}, found {len(matches)}",
         )
     return pattern.sub(lambda m: f'{m.group(1)}"{version}"', text, count=1)
 
@@ -324,15 +327,25 @@ def run_release_please_dry_run(
     `npx`, and whether the self-hosted fleet carries a Node.js toolchain is
     unverified (`2026-08-02-release-pipeline-full-automation-adr`).
 
-    Grounding note: this repository currently carries no `v*` git tag and no
-    matching GitHub Release, so a live invocation of this function against
-    it cannot complete today -- release-please falls back to walking the
-    entire commit history and the walk exceeds GitHub's API timeout before
-    finishing. That is a repository-state gap (a separate, named operator
-    precondition), not a defect in this shell: the function still runs and
+    Grounding note: this repository has no prior release-please-generated
+    release (this is its first automated bump), so release-please finds no
+    GitHub Release matching the manifest's recorded version and, absent a
+    bound, falls back to walking the entire commit history one commit at a
+    time -- a walk that measurably 504s against this repo's real history.
+    release-please's own documented answer to exactly this "first run, no
+    prior release" case is the top-level `bootstrap-sha` config key
+    (`release-please-config.json`; ignored once a release PR it generated
+    has merged, so it is self-retiring and never becomes legacy
+    configuration). It is set here to the commit that recorded the current
+    manifest floor. Live verification that this actually avoids the
+    full-history walk needs the config change reachable at the `--repo-url`
+    / `--target-branch` release-please queries via the GitHub API (it fetches
+    config from the branch, not the local working tree) -- outside this
+    function's authority to arrange; the function itself still runs and
     refuses correctly on every locally observable failure (missing node,
-    missing npx, a non-zero exit, or a timeout), and :func:`parse_computed_version`
-    is written to fail closed rather than guess on an unrecognised log shape.
+    missing npx, a non-zero exit, or a timeout) regardless of that outcome,
+    and :func:`parse_computed_version` is written to fail closed rather than
+    guess on an unrecognised log shape either way.
     """
     if shutil.which("node") is None:
         raise VersionBumpError(
@@ -375,8 +388,9 @@ def parse_computed_version(log: str) -> str:
     UNVERIFIED against a real successful run: see
     :func:`run_release_please_dry_run`'s grounding note -- every live
     invocation made while building this function failed before reaching a
-    success path, so this parser could not be checked against real output.
-    It is deliberately conservative: it tries a small set of known
+    success path (the repository-history gap `bootstrap-sha` now targets),
+    so this parser could not be checked against real output. It is
+    deliberately conservative: it tries a small set of known
     release-please output shapes and refuses outright rather than guessing
     when none match, so a log shape this parser does not recognise fails
     LOUDLY (a refusal) instead of silently returning a wrong version.
@@ -494,3 +508,82 @@ def commit_tag_and_push(
         _run([git, "push", "origin", "main"], cwd=repo_root)
         _run([git, "push", "origin", f"refs/tags/{tag_name}"], cwd=repo_root)
     return commit_sha
+
+
+def _changelog_block_for(version: str, log: str) -> str:
+    """Return the changelog body release-please computed, or a minimal stand-in.
+
+    release-please's dry-run log is the authority for the release notes. When
+    the log carries no recognisable body the block degrades to the version
+    heading alone rather than fabricating entries: an invented changelog is a
+    claim about what shipped, and inventing one is worse than a thin one.
+    """
+    match = re.search(rf"###?\s*\[?{re.escape(version)}\]?.*?(?=\n#{{2,3}}\s|\Z)", log, re.DOTALL)
+    return match.group(0).strip() if match else f"## {version}"
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Execute the version bump as one pipeline stage.
+
+    This is the entry point the release orchestrator invokes. It composes the
+    library functions above in the order the retiring `release-apply` checklist
+    printed for a human: compute the version from conventional-commit history,
+    apply it to all seven declaration surfaces, regenerate and verify the lock,
+    re-check parity, then guard, commit, tag, and push.
+
+    The version stays COMPUTED, never chosen: there is deliberately no
+    `--version` flag, because a hand-supplied version is the transcription
+    error class the whole bump stage exists to remove.
+
+    `--dry-run` stops after the computation and prints what would happen,
+    touching no surface and leaving no ref, so the rehearsal covers this stage
+    rather than skipping it.
+    """
+    parser = argparse.ArgumentParser(description="Bump every release declaration surface and land the release commit.")
+    parser.add_argument("--repository", required=True)
+    parser.add_argument("--token", default=os.environ.get("GH_TOKEN", ""))
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--push", action="store_true")
+    parser.add_argument("--github-output", default=os.environ.get("GITHUB_OUTPUT", ""))
+    args = parser.parse_args(argv)
+
+    repo_root = Path(__file__).resolve().parents[2]
+    if not args.token:
+        raise VersionBumpError("a forge token is required to compute the next version; pass --token or set GH_TOKEN")
+
+    log = run_release_please_dry_run(repo_root, token=args.token, repository=args.repository)
+    version = parse_computed_version(log)
+
+    if args.dry_run:
+        print(f"dry-run: would bump to {version}; no surface written, no ref created")
+        _emit_bump_outputs(args.github_output, version=version, commit="")
+        return 0
+
+    stage_bump(
+        repo_root,
+        version,
+        changelog_block=_changelog_block_for(version, log),
+        release_date=datetime.now(UTC).date().isoformat(),
+    )
+    commit_sha = commit_tag_and_push(repo_root, version, repository=args.repository, push=args.push)
+    print(f"bumped to {version} at {commit_sha}")
+    _emit_bump_outputs(args.github_output, version=version, commit=commit_sha)
+    return 0
+
+
+def _emit_bump_outputs(github_output: str, *, version: str, commit: str) -> None:
+    """Publish the bumped version and commit as workflow outputs.
+
+    Downstream stages READ these rather than re-deriving them. Re-deriving is
+    how a campaign ends up building a different commit than the one the bump
+    landed.
+    """
+    if not github_output:
+        return
+    with Path(github_output).open("a", encoding=_UTF_8) as handle:
+        handle.write(f"version={version}\n")
+        handle.write(f"commit={commit}\n")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

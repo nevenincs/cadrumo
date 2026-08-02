@@ -106,3 +106,40 @@ def test_the_orchestrator_never_publishes_and_never_dispatches_the_publication()
     for name, job in document["jobs"].items():
         assert job.get("permissions", {}).get("id-token") != "write", f"{name} must not mint an OIDC token"
         assert "environment" not in job, f"{name} must not enter a deployment environment"
+
+
+def test_the_bump_stage_runs_the_tested_bump_executor() -> None:
+    """The bump is a module invocation, never shell re-implementing seven surfaces.
+
+    Seven declaration surfaces, a lock, and a changelog block were previously
+    transcribed by hand from a printed checklist. Re-expressing that in YAML
+    would recreate the same error class one layer down, untested.
+    """
+    surface = _run_surface(_document(), "bump")
+
+    assert "dev.release.version_bump" in surface
+    # The version must never be supplied by hand: it is computed from
+    # conventional-commit history inside the module.
+    assert "--version" not in surface, "a hand-supplied version is the error class this stage removes"
+
+
+def test_the_bump_publishes_the_version_and_commit_the_chain_keys_on() -> None:
+    """Downstream stages READ the bump's outputs rather than re-deriving them.
+
+    Re-deriving is how a campaign ends up building a different commit than the
+    one the bump landed - the two would differ only when something else raced,
+    which is exactly when it matters.
+    """
+    bump = _document()["jobs"]["bump"]
+
+    assert set(bump["outputs"]) == {"version", "commit"}
+    assert "steps.bump.outputs.version" in str(bump["outputs"]["version"])
+
+
+def test_only_the_bump_job_may_write_repository_contents() -> None:
+    """Ref-writing authority is confined to the one stage that lands a commit."""
+    for name, job in _document()["jobs"].items():
+        if name == "bump":
+            assert job["permissions"]["contents"] == "write"
+            continue
+        assert job.get("permissions", {}).get("contents") != "write", f"{name} must not write refs"

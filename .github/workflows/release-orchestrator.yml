@@ -84,4 +84,49 @@ jobs:
           else
             echo "Full chain: bump, campaign, acquisition, seal."
           fi
-          echo "dry_run=${DRY_RUN}"
+          echo "rehearsal: dry_run=${DRY_RUN}"
+
+  bump:
+    name: Cadrumo / compute and land the version bump
+    needs: preflight
+    # Skipped entirely on a resume: the version the earlier chain landed is
+    # already on main, and bumping again would burn a second version to
+    # recover from a failure that had nothing to do with the first.
+    if: ${{ needs.preflight.outputs.resume == '' }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+      commit: ${{ steps.bump.outputs.commit }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Compute the version and land the bump
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
+        run: |
+          # The version is COMPUTED from conventional-commit history by
+          # dev.release.version_bump, never supplied here: a hand-typed version
+          # is the transcription error class this stage exists to remove, and
+          # the module carries the identity guard that refuses an owned,
+          # burned, or below-floor version BEFORE any ref leaves the runner.
+          #
+          # --push only outside a rehearsal. A dry_run stops after computing the
+          # version, so the rehearsal proves this stage rather than skipping it.
+          uv run --frozen python -m dev.release.version_bump \
+            --repository "${GITHUB_REPOSITORY}" \
+            $([ "${DRY_RUN}" = "true" ] && echo "--dry-run" || echo "--push")
