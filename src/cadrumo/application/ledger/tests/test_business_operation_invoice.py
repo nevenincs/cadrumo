@@ -229,6 +229,38 @@ class TestBusinessInvoiceCurrencyConversion:
         assert result.record.fx_rate is None
         assert result.record.total_amount_eur is None
 
+    @pytest.mark.parametrize("raw_currency", ["GBP", "gbp", " gbp "])
+    def test_foreign_currency_add_normalises_before_fx_lookup(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+        raw_currency: str,
+    ) -> None:
+        """A padded/lowercase foreign currency resolves the SAME FX rate as its
+        canonical form: the provider is queried with the normalised token."""
+
+        class _CanonicalOnlyRateProvider:
+            def get_eur_rate(self, currency: str, rate_date: object) -> Decimal | None:
+                del rate_date
+                return Decimal("1.2") if currency == "GBP" else None
+
+        svc = _make_payable_svc(isolated_settings, secure_objects)
+
+        result = svc.add(
+            bucket_id=_BUCKET_ID,
+            counterparty_nif="B12345678",
+            invoice_number="GB-2025-003",
+            invoice_date="2025-03-14",
+            currency=raw_currency,
+            taxable_base=Decimal("1000.00"),
+            total_amount=Decimal("1000.00"),
+            rate_provider=_CanonicalOnlyRateProvider(),
+        )
+
+        assert result.record.currency == "GBP"
+        assert result.record.fx_rate == Decimal("1.2")
+        assert result.record.fx_rate_date == "2025-03-14"
+
     def test_euro_add_carries_no_conversion_stamp(
         self,
         isolated_settings: Settings,
