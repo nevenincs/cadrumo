@@ -118,7 +118,7 @@ required_text = [
     "Articulo quinto. Modificacion de la Orden HAP/2118/2015",
     "modelo 280",
     "NUMERO IDENTIFICATIVO DE LA DECLARACION",
-    "TGVI",
+    "El número identificativo que habrá de figurar en el modelo 280",
 ]
 
 [legal."orden-hfp-1192-2022:art-cuarto"]

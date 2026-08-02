@@ -54,8 +54,8 @@ notes = "Orden HFP/1180/2023 articulo primero: modifica los disenos de registro 
 required_text = [
     "Articulo primero. Modificacion de la Orden EHA/3481/2008",
     "modelo 189",
-    "CLAVE DE VALOR",
-    "VALORACION",
+    "declaración informativa anual acerca de valores, seguros y rentas",
+    "Se modifica su artículo 3",
 ]
 
 [legal."orden-hfp-1284-2023:art-11"]
@@ -83,7 +83,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-132-2026.html#a1"
+corpus_ref = "corpus/normatives/html/orden-hac-132-2026.html#articulo-unico"
 document_id = "BOE-A-2026-4521"
 article = "unico"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-4521#a1"

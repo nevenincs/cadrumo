@@ -102,7 +102,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hfp-528-2023.html#a1"
+corpus_ref = "corpus/normatives/html/orden-hfp-528-2023.html#articulo-unico"
 document_id = "BOE-A-2023-12666"
 article = "unico"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-12666#a1"

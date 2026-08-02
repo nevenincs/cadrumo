@@ -22,7 +22,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "instruction"
-corpus_ref = "corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html#unico"
+corpus_ref = "corpus/normatives/html/boe-a-2014-59-modelo-145-amendment.html#apartado-unico"
 document_id = "BOE-A-2014-59"
 article = "unico"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-59"
@@ -42,9 +42,9 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "instruction"
-corpus_ref = "corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html#unico"
+corpus_ref = "corpus/normatives/html/boe-a-2014-13679-modelo-145-amendment.html#apartado-unico"
 document_id = "BOE-A-2014-13679"
-article = "unico"
+article = "apartado unico"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-13679"
 published_at = 2014-12-31
 effective_from = 2014-12-31
@@ -54,8 +54,7 @@ reviewed_by = "agent-review"
 notes = "Resolucion de 18 de diciembre de 2014 que modifica el Modelo 145 con efectos para comunicaciones de datos al pagador desde 2015."
 required_text = [
     "queda modificada como sigue",
-    "sustituir el modelo 145",
-    "efectos en relación con las comunicaciones de datos al pagador",
+    "queda sustituido por el modelo 145",
 ]
 
 [sources."aeat-modelo-145-procedure"]
