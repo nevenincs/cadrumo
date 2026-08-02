@@ -84,6 +84,7 @@ def promote_once(
     now: datetime,
     readiness_for: Callable[[ReleaseCandidate], ReadinessReport],
     dispatch: Callable[[ReleaseCandidate], None],
+    consume: Callable[[ReleaseCandidate], None] | None = None,
 ) -> PromotionDecision:
     """Run one promoter tick: select, RE-VERIFY, then dispatch.
 
@@ -114,6 +115,14 @@ def promote_once(
         )
 
     dispatch(candidate)
+    # Consumed only AFTER the dispatch returns. The reverse order would retire
+    # a candidate whose dispatch then failed, stranding a sealed cohort that no
+    # later tick can ever select again -- a release that silently never
+    # happens. This ordering can at worst re-dispatch (the unchanged
+    # version-identity authority refuses an owned version, and the publication
+    # itself converges per destination), which is the recoverable direction.
+    if consume is not None:
+        consume(candidate)
     return PromotionDecision(candidate, f"{candidate.version} promoted after a clean re-verification")
 
 

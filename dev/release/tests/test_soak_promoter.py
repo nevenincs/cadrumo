@@ -14,7 +14,15 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from dev.release.readiness import ReadinessCheck, ReadinessReport
-from dev.release.release_candidate import ReleaseCandidate, SoakWindow, seal_candidate
+from dev.release.release_candidate import (
+    CANDIDATE_TAG_RE,
+    ReleaseCandidate,
+    SoakWindow,
+    candidate_tag,
+    candidate_tags_in,
+    consumed_tag,
+    seal_candidate,
+)
 from dev.release.soak_promoter import promote_once, select_promotable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -192,3 +200,68 @@ def test_readiness_is_never_consulted_for_a_candidate_still_soaking() -> None:
 
     assert decision.promotes is False
     assert consulted == []
+
+
+def test_two_overlapping_ticks_dispatch_exactly_once() -> None:
+    """Idempotence across ticks: consumption removes the candidate from selection.
+
+    The promoter is scheduled, so a slow tick and its successor can overlap. A
+    second dispatch of the same cohort would attempt a second publication of a
+    version the first already burned.
+    """
+    candidate = _candidate()
+    forge: list[ReleaseCandidate] = [candidate]
+    dispatched: list[ReleaseCandidate] = []
+    now = candidate.soak_deadline + timedelta(hours=1)
+
+    for _ in range(2):
+        promote_once(
+            tuple(forge),
+            now=now,
+            readiness_for=lambda _: _clean_report(),
+            dispatch=dispatched.append,
+            consume=forge.remove,
+        )
+
+    assert dispatched == [candidate]
+    assert forge == []
+
+
+def test_a_candidate_is_consumed_only_after_its_dispatch_returns() -> None:
+    """Ordering: a failed dispatch must leave the candidate selectable.
+
+    Consuming first would retire a candidate whose dispatch then failed,
+    stranding a sealed cohort no later tick can select - a release that
+    silently never happens. Re-dispatch is the recoverable direction, since the
+    identity authority refuses an owned version anyway.
+    """
+    candidate = _candidate()
+    forge: list[ReleaseCandidate] = [candidate]
+
+    def _failing_dispatch(_: ReleaseCandidate) -> None:
+        raise RuntimeError("forge dispatch rejected the request")
+
+    with pytest.raises(RuntimeError, match="forge dispatch rejected"):
+        promote_once(
+            tuple(forge),
+            now=candidate.soak_deadline + timedelta(hours=1),
+            readiness_for=lambda _: _clean_report(),
+            dispatch=_failing_dispatch,
+            consume=forge.remove,
+        )
+
+    assert forge == [candidate], "a failed dispatch must leave the candidate promotable by a later tick"
+
+
+def test_the_consumed_tag_leaves_the_selectable_namespace_but_keeps_the_record() -> None:
+    """Consumption retags rather than deletes, so the promotion stays auditable.
+
+    The record names which runs produced a published version, which is exactly
+    the evidence a later audit needs; deleting it would buy the same idempotence
+    at the cost of the trail.
+    """
+    retired = consumed_tag(candidate_tag("4242"))
+
+    assert retired == "release-candidate-consumed-4242"
+    assert CANDIDATE_TAG_RE.fullmatch(retired) is None
+    assert candidate_tags_in([{"tag_name": retired, "draft": True}]) == ()

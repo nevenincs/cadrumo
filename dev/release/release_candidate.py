@@ -298,6 +298,25 @@ def fetch_candidate(
     return load_candidate(download_directory / CANDIDATE_ASSET_NAME)
 
 
+def consumed_tag(tag: str) -> str:
+    """Return the retired tag a consumed candidate is moved to.
+
+    Consumption RETAGS rather than deletes. Deleting would make the promotion
+    unauditable exactly where the audit matters most -- the record naming which
+    runs produced a published version -- while retagging out of the selectable
+    namespace achieves the same idempotence and keeps the evidence.
+    """
+    return f"release-candidate-consumed-{parse_candidate_tag(tag)}"
+
+
+def mark_candidate_consumed(tag: str, *, repository: str, gh_executable: str | None = None) -> str:
+    """Retag a candidate out of the selectable namespace after its dispatch succeeded."""
+    retired = consumed_tag(tag)
+    gh = resolve_gh(gh_executable)
+    run_gh_with_retry(gh, ["release", "edit", tag, "--repo", repository, "--tag", retired])
+    return retired
+
+
 def list_sealed_candidate_tags(*, repository: str, gh_executable: str | None = None) -> tuple[str, ...]:
     """Return every sealed candidate tag currently on the forge."""
     gh = resolve_gh(gh_executable)
@@ -312,10 +331,12 @@ __all__ = [
     "SoakWindow",
     "candidate_tag",
     "candidate_tags_in",
+    "consumed_tag",
     "fetch_candidate",
     "list_sealed_candidate_tags",
     "load_candidate",
     "load_soak_window",
+    "mark_candidate_consumed",
     "parse_candidate_tag",
     "publish_candidate",
     "seal_candidate",
