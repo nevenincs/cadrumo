@@ -5,45 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:b2d8b13bed71d9971b088c64aa30f5196759c2a57b2f4cccb461db29a145d3ff'
+body_hash: 'sha256:73530baf21b2f7daaa54c0fb95b8a2d5a2482d39db91d2b8ccd88b7b7eea894c'
 step_id: 'S33'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace release-pipeline-full-automation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S33 and 2026-08-02-release-pipeline-full-automation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rewrite the RELEASING.md arming section to drop the approval-click prerequisite and the phantom CADRUMO_PUBLISH_ENABLED opt-in variable that no longer exists anywhere in the tree, replacing both with the OP-9 protection-rule removal and the credential prerequisites that genuinely remain, gate: rg -n CADRUMO_PUBLISH_ENABLED over the tree matches only vault records and history, and uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes and ## Scope
-
-- `RELEASING.md`
-- `src/cadrumo/tests/test_release_config.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Rewrite the RELEASING.md arming section to drop the approval-click prerequisite and the phantom CADRUMO_PUBLISH_ENABLED opt-in variable that no longer exists anywhere in the tree, replacing both with the OP-9 protection-rule removal and the credential prerequisites that genuinely remain, gate: rg -n CADRUMO_PUBLISH_ENABLED over the tree matches only vault records and history, and uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes
 

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:41c7f59d288d22ad8d09a422c1cc29e76c044f2ae047fda587d69d991cb478e7'
+body_hash: 'sha256:721b3d1a2027a1e5229794e0f3b4f4524fca64097dc0a837482c667157e946c8'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -47,6 +47,7 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S36]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S37]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S38]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S39]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S41]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S42]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S43]]'
@@ -119,6 +120,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S36` - Record OP-12 as a named operator settings action deleting the orphaned pypi-data-official environment, which is a live Trusted Publishing trust anchor naming a workflow that no longer exists and therefore standing authority with no owner, and extend the read-only forge inventory probe to report any environment referencing an absent workflow so the orphan class is detectable rather than rediscovered, gate: uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes with a case whose fixture environment names a workflow path absent from the tree and is reported as orphaned
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S37` - Comment on tracking issue 618 with the true split naming the repository half landed 2026-07-27, the two environments already deleted, the third pending OP-12, and the index-side Trusted Publisher registrations that no agent can verify, then close it once its forge half is complete, carrying any surviving index-side registration forward as a named operator item rather than silently absorbing it, gate: gh issue view 618 shows the comment and the closed state, flagged forge-side and non-local, and the carried-forward operator item is named in the runbook operator-actions section which the runbook conformance test asserts is present
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S38` - Narrow the delivery record OP-3 on every operator-facing surface to its one remaining half, the deploy-role variable on the already-created docs environment, and state alongside it that the docs environment required_reviewers removal is the second half of OP-9 rather than a separate obligation, so a reader is not told to create an environment that exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting exactly the outstanding halves
+- `2026-08-02-release-pipeline-full-automation-W04-P08-S39` - Run the fresh-context honesty review against the campaign closure summary before the campaign is declared structurally complete, dispatching an independent reviewer with the ADR, this plan, and the commit range as context, and track every surfaced item as a new Step with a verification gate or formally defer it with a named follow-up, gate: the audit document exists under .vault/audit and uv run --no-sync vaultspec-core vault plan status reports no checked Step without an exec record
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S41` - Make the promoter selection skip past a non-promotable candidate rather than returning on the first one, and retire a rehearsal candidate out of the selectable namespace once its window closes
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S42` - Make the labelled-issue alert path survive a repository carrying no release-alert label
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S43` - Record the release-alert label as a named operator provisioning action alongside OP-10 so the forge state the default alerting path depends on is verifiable rather than assumed, and extend the read-only environment inventory probe to report whether that label exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting the label item, and uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes over a fixture payload with the label absent

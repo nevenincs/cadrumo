@@ -5,45 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:43406bcf79b1caf6cb791130415c3e12305a0bec606dd909d44167f755bc9d26'
+body_hash: 'sha256:42d93c9e812faee22514d21b7aea991d0db39a2aeb477113bce5a16520634bda'
 step_id: 'S35'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace release-pipeline-full-automation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S35 and 2026-08-02-release-pipeline-full-automation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Sweep every remaining user-facing and developer-facing surface that describes the release flow as part-manual, including the release notes template soak wording and any documented command naming the deleted apply target, gate: uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration -q and uv run --no-sync pytest dev/docs/tests -m docs -q pass and ## Scope
-
-- `docs/`
-- `dev/docs/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Sweep every remaining user-facing and developer-facing surface that describes the release flow as part-manual, including the release notes template soak wording and any documented command naming the deleted apply target, gate: uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration -q and uv run --no-sync pytest dev/docs/tests -m docs -q pass
 
