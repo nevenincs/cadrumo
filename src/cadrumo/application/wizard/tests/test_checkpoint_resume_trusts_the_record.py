@@ -19,6 +19,14 @@ positioned too late. Deciding eligibility through the one load that runs
 ``verify_profile_integrity`` moves it before the re-projection rather than
 adding a second authority beside it.
 
+The sibling site that resolves a create-mode profile id still grants on the
+mirror, and is deliberately left alone: with this refusal raising, that grant
+reaches no write on any demonstrated path. If it is ever revisited it must be
+VERIFIED, not dropped -- a genuinely interrupted setup (record and manifest
+agreeing on ``SETUP_INCOMPLETE``, nothing torn) resolves through that grant,
+and the duplicate-label helper refuses the same label, so removing it would
+make an ordinary save-and-exit unresumable.
+
 Two limits, stated because the scenario is a crash window:
 
 * the torn state is produced by writing the manifest directly rather than by
