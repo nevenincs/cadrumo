@@ -112,7 +112,8 @@ def expected_xml_dictionary_root_identity(
 
     Args:
         layout: The ``xml_dictionary`` export layout being rendered or verified.
-        draft: The approved draft supplying modelo and period identity.
+        draft: The approved :class:`ModeloDraft` supplying modelo and period
+            identity.
         schema_provider: Resolves the layout's XSD source and its version.
 
     Returns:
