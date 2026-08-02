@@ -247,6 +247,12 @@ class GoogleSyncPushResult(OutputSchema):
     manifest_pushed_by_namespace: dict[str, int] = {}
     failed_manifests: list[GoogleSyncFailedManifestPayload] = []
     degraded_manifests: list[GoogleSyncDegradedManifestPayload] = []
+    # A namespace whose manifest was withheld for an object failure rolls
+    # back every object it already pushed (see ``_push_mirror_objects``); a
+    # row here means that rollback delete itself failed, so the object is
+    # durable on the remote provider with no manifest that can enumerate or
+    # reconcile it and requires manual operator cleanup.
+    cleanup_failed_objects: list[GoogleSyncFailedObjectPayload] = []
 
 
 # ---------------------------------------------------------------------------

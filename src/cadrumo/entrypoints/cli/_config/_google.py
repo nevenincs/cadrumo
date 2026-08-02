@@ -34,7 +34,7 @@ JSON envelope semantics.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -83,6 +83,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawR
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.i18n import tr
+from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError
 from ._google_credential_source_cli import register_google_credential_source_commands
@@ -523,15 +524,22 @@ class _MirrorPreflightOutcome:
 class _MirrorObjectPushOutcome:
     """Result of uploading each planned row's ciphertext to the provider.
 
-    ``pushed_by_namespace`` counts the rows that uploaded cleanly;
-    ``failed_namespaces`` names every namespace that saw at least one object
-    failure (so its manifest is withheld); ``failed`` carries the
+    ``pushed_by_namespace`` counts the rows that uploaded cleanly AND stayed
+    published -- an object rolled back by a same-namespace failure is not
+    counted. ``failed_namespaces`` names every namespace that saw at least
+    one object failure (so its manifest is withheld); ``failed`` carries the
     `(namespace, hmac, error)` triples for the operator surface.
+    ``cleanup_failed`` carries the `(namespace, hmac, error)` triples for a
+    rollback delete that itself failed: an object this namespace already
+    uploaded, whose namespace later failed, that could not be removed and so
+    remains durable but unmanifested (``ledger-evidence-bytes-not-links`` and
+    ``no-silent-under-declaration`` both bar treating this as ordinary success).
     """
 
     pushed_by_namespace: dict[str, int]
     failed_namespaces: set[str]
     failed: list[tuple[str, str, str]]
+    cleanup_failed: list[tuple[str, str, str]] = field(default_factory=list)
 
 
 def _partition_mirror_rows(
@@ -614,10 +622,20 @@ def _push_mirror_objects(
     :meth:`StorageProvider.put` under its `<hmac>--<label>.bin` name; a
     per-object upload error records the failure and marks the namespace so
     its manifest is later withheld.
+
+    A namespace's manifest is withheld on any object failure within it, so a
+    row this same namespace already uploaded successfully would otherwise be
+    left durable on the remote provider with no manifest that can enumerate
+    or reconcile it (finding: partial failure leaves ciphertext unowned).
+    Every namespace marked failed is therefore rolled back here: every object
+    key that namespace pushed is deleted before the outcome is returned, so a
+    withheld-manifest namespace is either fully absent from the remote or
+    fully manifested, never partially orphaned.
     """
     pushed_by_ns: dict[str, int] = {}
     failed_namespaces: set[str] = set()
     failed: list[tuple[str, str, str]] = []
+    pushed_keys_by_namespace: dict[str, list[str]] = {}
     for namespace, rows in planned_rows_by_namespace.items():
         if namespace in blocked_namespaces:
             continue
@@ -638,10 +656,24 @@ def _push_mirror_objects(
                 failed_namespaces.add(raw_row.namespace)
                 continue
             pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
+            pushed_keys_by_namespace.setdefault(raw_row.namespace, []).append(hmac_hex)
+
+    cleanup_failed: list[tuple[str, str, str]] = []
+    for namespace in failed_namespaces:
+        for hmac_hex in pushed_keys_by_namespace.get(namespace, ()):
+            try:
+                provider.delete(namespace, hmac_hex)
+            except OutboundStorageError as exc:
+                cleanup_failed.append((namespace, hmac_hex, str(exc)))
+        # The manifest for this namespace is withheld regardless of rollback
+        # outcome, so its object count must not be reported as pushed.
+        pushed_by_ns.pop(namespace, None)
+
     return _MirrorObjectPushOutcome(
         pushed_by_namespace=pushed_by_ns,
         failed_namespaces=failed_namespaces,
         failed=failed,
+        cleanup_failed=cleanup_failed,
     )
 
 
@@ -692,6 +724,7 @@ class _MirrorRowsResult(TypedDict):
     manifest_pushed_by_namespace: dict[str, int]
     failed_manifests: list[tuple[str, str]]
     degraded_manifests: list[tuple[str, str]]
+    cleanup_failed_objects: list[tuple[str, str, str]]
 
 
 def _push_secure_object_mirror_rows(
@@ -747,6 +780,7 @@ def _push_secure_object_mirror_rows(
         "manifest_pushed_by_namespace": manifest_pushed_by_ns,
         "failed_manifests": manifest_failed,
         "degraded_manifests": preflight.degraded,
+        "cleanup_failed_objects": object_push.cleanup_failed,
     }
 
 
@@ -864,6 +898,7 @@ def google_sync_push(
     manifest_pushed_by_ns = mirror_result["manifest_pushed_by_namespace"]
     manifest_failed = mirror_result["failed_manifests"]
     manifest_degraded = mirror_result["degraded_manifests"]
+    cleanup_failed = mirror_result["cleanup_failed_objects"]
 
     push_result = GoogleSyncPushResult(
         profile=active,
@@ -884,6 +919,9 @@ def google_sync_push(
         failed_manifests=[GoogleSyncFailedManifestPayload(namespace=ns, error=err) for ns, err in manifest_failed],
         degraded_manifests=[
             GoogleSyncDegradedManifestPayload(namespace=ns, detail=detail) for ns, detail in manifest_degraded
+        ],
+        cleanup_failed_objects=[
+            GoogleSyncFailedObjectPayload(namespace=ns, hmac=h, error=err) for ns, h, err in cleanup_failed
         ],
     )
     lines: list[str] = [
@@ -908,7 +946,28 @@ def google_sync_push(
         lines.append(f"failed\t{ns}\t{h[:16]}\t{err}")
     for ns, detail in manifest_degraded:
         lines.append(f"degraded_manifest\t{ns}\t{detail}")
-    _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines))
+    notices = []
+    if cleanup_failed:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="config.google.sync.push.unmanifested_object",
+                message=tr(
+                    "cli.config.google.sync.push_unmanifested_object_warning",
+                    default=(
+                        "{count} object(s) could not be removed after their namespace's manifest was "
+                        "withheld; they remain durable on the remote provider with no manifest that can "
+                        "enumerate or reconcile them. Investigate and remove them manually, or retry "
+                        "the push once the underlying failure is resolved."
+                    ),
+                    count=str(len(cleanup_failed)),
+                ),
+                context={"namespaces": ",".join(sorted({ns for ns, _h, _err in cleanup_failed}))},
+            ),
+        )
+    for ns, h, err in cleanup_failed:
+        lines.append(f"cleanup_failed\t{ns}\t{h[:16]}\t{err}")
+    _emit_envelope(ctx, command="config.google.sync.push", result=push_result, lines=tuple(lines), notices=notices)
 
 
 register_google_sync_calc_commands(sync_app)

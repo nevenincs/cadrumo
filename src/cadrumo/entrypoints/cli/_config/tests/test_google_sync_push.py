@@ -23,7 +23,7 @@ from .....adapters.outbound.storage._local import LocalFileSystemProvider
 from .....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
-from .._google import _google_refusal, _push_secure_object_mirror_rows
+from .._google import _google_refusal, _label_for, _push_secure_object_mirror_rows
 from .._google_payloads import GoogleSyncProbeResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -390,6 +390,67 @@ def test_google_sync_push_namespace_filter_restricts_pushed_rows(tmp_path: Path)
         with pytest.raises(OutboundStorageNotFoundError):
             next(iter(provider.iter_objects(other_namespace)), None)
         assert len(list(provider.iter_objects(target_namespace))) == 1
+
+
+def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp_path: Path) -> None:
+    """A partial namespace failure leaves no unmanifested ciphertext on the remote.
+
+    Two rows are seeded in one real namespace; the second row's target file
+    is pre-occupied by a real directory, so the real
+    :func:`~cadrumo.core.atomic_write.atomic_write_hardened_bytes` replace
+    genuinely fails for it (no mock/monkeypatch). The first row's object
+    uploads successfully before the second fails -- proving the finding's
+    scenario -- and the rollback must delete it: the namespace's manifest is
+    withheld, and the provider must not retain any orphaned object for it.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-partial-failure") as profile:
+        repository = profile.repository
+        namespace_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        namespace = namespace_definition.namespace
+        for object_key, payload in (
+            ("natural-key-first", b"first-row-plaintext"),
+            ("natural-key-second", b"second-row-plaintext"),
+        ):
+            repository.save(
+                namespace=namespace,
+                object_key=object_key,
+                classification=namespace_definition.sensitivity,
+                schema_version=1,
+                written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+                payload=payload,
+            )
+        raw_rows = sorted(repository.iter_all_records_raw(), key=lambda row: row.row_id)
+        assert len(raw_rows) == 2
+        second_row = raw_rows[-1]  # the row inserted second, by ascending row_id
+
+        provider = LocalFileSystemProvider(tmp_path / "mirror")
+        second_hmac = remote_mirror_object_key_hmac(second_row.namespace, second_row.object_key)
+        second_label = _label_for(second_row.namespace)
+        # Real O_EXCL-then-replace collision: os.replace refuses to swap a
+        # plain file onto an existing directory, so the real atomic-write
+        # commit for the second row's object genuinely fails -- no mock.
+        second_target = provider.root / namespace / f"{second_hmac[:8]}--{second_label}.bin"
+        second_target.mkdir(parents=True)
+
+        result = _push_secure_object_mirror_rows(
+            provider=provider,
+            repository=repository,
+            namespace_filter=None,
+            limit=None,
+            dry_run=False,
+        )
+
+        assert len(result["failed_objects"]) == 1
+        assert result["failed_objects"][0][0] == namespace
+        assert result["cleanup_failed_objects"] == []
+        assert result["manifest_pushed_by_namespace"] == {}
+        assert result["pushed_by_namespace"] == {}
+
+        # The first row's object was genuinely uploaded, then rolled back:
+        # ``iter_objects`` yields only real ``.bin``-plus-sidecar objects, so
+        # this must be empty -- the pre-created directory collision at the
+        # second row's path is not itself a valid object and is excluded.
+        assert list(provider.iter_objects(namespace)) == [], "no unmanifested object may remain after the rollback"
 
 
 def test_google_sync_push_refuses_non_dry_run_limit_because_manifest_would_be_partial(tmp_path: Path) -> None:
