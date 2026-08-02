@@ -294,6 +294,26 @@ the obligation standing.
 Settings → Environments → *(each of `release`, `docs`)* → Deployment protection
 rules → untick **Required reviewers** → Save.
 
+**OP-10 — nominate the alerting channel.** `dev/release/alerting.py` defaults to
+opening a labelled (`release-alert`) repository issue when a release-path workflow
+fails or is refused, so alerting works with no configuration from the moment the
+chain lands. Once you nominate a channel, set the repository variable
+`CADRUMO_ALERT_WEBHOOK` to a webhook URL; when set, it **replaces** the issue path
+rather than supplementing it, so the operator reads exactly one channel instead of
+whichever is quieter. Nominating a channel is optional — the default issue path is
+a real alerting channel, not a placeholder — but a webhook is likely preferable for
+anyone not already watching the repository's issue tracker.
+
+**OP-11 — confirm the self-hosted Linux fleet carries `node`, or provision it.**
+The version-bump stage shells out to `release-please` via `npx`, and whether the
+self-hosted Linux runners carry a Node.js toolchain is unverified — this is stated
+as an open question by the decision record itself, not settled by anything in this
+repository. If `node` is absent, the very first stage of the very first real
+dispatch refuses (naming this item) rather than silently proceeding; there is
+nothing to test locally that would tell you the fleet's answer ahead of time.
+Confirm `node --version` succeeds on the self-hosted Linux runner(s) `.github/workflows/release-orchestrator.yml`
+targets, or install Node.js on them.
+
 **OP-12 — delete the orphaned `pypi-data-official` GitHub environment.** Its
 owning workflow, `pypi-upload.yml`, was deleted 2026-07-27 alongside the retired
 PyPI-publish lane; the environment itself survived as a live Trusted Publishing

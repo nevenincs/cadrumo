@@ -374,6 +374,14 @@ def test_releasing_doc_operator_actions_section_names_the_outstanding_halves() -
     assert "`release`" in section
     assert "`docs`" in section
 
+    assert "OP-10" in section
+    assert "alerting channel" in section
+    assert "release-alert" in section
+
+    assert "OP-11" in section
+    assert "node" in section
+    assert "unverified" in normalized
+
     assert "OP-12" in section
     assert "pypi-data-official" in section
     assert "orphaned" in section.lower()
