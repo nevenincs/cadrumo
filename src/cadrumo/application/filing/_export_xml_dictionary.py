@@ -73,17 +73,9 @@ def render_xml_dictionary_layout(
         UTF-8 XML declaration bytes for the local export artefact.
     """
     entries = xml_dictionary_entries(layout, source_root=schema_provider.source_root, sources=schema_provider.sources)
-    xsd_source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
-    version = _latest_xml_dictionary_xsd_version(xsd_source, source_root=schema_provider.source_root)
     root = ElementTree.Element(
-        "Declaracion",
-        {
-            "modelo": draft.modelo,
-            "ejercicio": str(draft.period.filing_year),
-            "periodo": draft.period.registry_token,
-            "versionxsd": version,
-            f"{{{_XML_SCHEMA_INSTANCE_NS}}}noNamespaceSchemaLocation": xsd_source.source_url,
-        },
+        _XML_DICTIONARY_ROOT_TAG,
+        expected_xml_dictionary_root_identity(layout, draft=draft, schema_provider=schema_provider),
     )
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
@@ -98,6 +90,70 @@ def render_xml_dictionary_layout(
             continue
         _set_xml_dictionary_path(root, entry.path, rendered)
     return ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
+
+
+_XML_DICTIONARY_ROOT_TAG = "Declaracion"
+_XSD_SCHEMA_LOCATION_ATTRIBUTE = f"{{{_XML_SCHEMA_INSTANCE_NS}}}noNamespaceSchemaLocation"
+
+
+def expected_xml_dictionary_root_identity(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    schema_provider: RegistrySchemaAccessor,
+) -> dict[str, str]:
+    """Return the ``Declaracion`` root attributes ``draft`` identifies itself by.
+
+    The sole declaration of the root-attribute contract. The writer builds the
+    element from it and :func:`verify_export` rebuilds the same mapping to
+    compare against what a file on disk actually carries, so the two halves
+    cannot name different attributes — which is how the verifier came to check
+    none of them at all.
+
+    Args:
+        layout: The ``xml_dictionary`` export layout being rendered or verified.
+        draft: The approved draft supplying modelo and period identity.
+        schema_provider: Resolves the layout's XSD source and its version.
+
+    Returns:
+        The root attributes, keyed exactly as they appear on the element.
+    """
+    xsd_source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    version = _latest_xml_dictionary_xsd_version(xsd_source, source_root=schema_provider.source_root)
+    return {
+        "modelo": draft.modelo,
+        "ejercicio": str(draft.period.filing_year),
+        "periodo": draft.period.registry_token,
+        "versionxsd": version,
+        _XSD_SCHEMA_LOCATION_ATTRIBUTE: xsd_source.source_url,
+    }
+
+
+def read_xml_dictionary_root_identity(payload: bytes) -> dict[str, str]:
+    """Return the root identity attributes carried by an exported XML declaration.
+
+    Args:
+        payload: The exported XML declaration bytes.
+
+    Returns:
+        The declared root attributes, keyed as
+        :func:`xml_dictionary_root_identity` writes them. A key is absent when
+        the file omits that attribute, which the caller must treat as a
+        divergence rather than as a match.
+
+    Raises:
+        FilingExportValidationError: The payload is not parseable XML, or its
+            root is not a ``Declaracion`` element.
+    """
+    try:
+        root = DefusedElementTree.fromstring(payload)
+    except DefusedElementTree.ParseError as exc:
+        raise FilingExportValidationError("XML dictionary payload could not be parsed") from exc
+    if root.tag != _XML_DICTIONARY_ROOT_TAG:
+        raise FilingExportValidationError(
+            f"XML dictionary payload root is {root.tag!r}, expected {_XML_DICTIONARY_ROOT_TAG!r}",
+        )
+    return dict(root.attrib)
 
 
 def _xml_dictionary_xsd_source(
