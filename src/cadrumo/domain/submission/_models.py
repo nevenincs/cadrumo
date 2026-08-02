@@ -27,10 +27,10 @@ from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Period
+from ...core import Modelo, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import SubjectTaxId
 from ...core.time import validate_utc_aware
@@ -129,7 +129,7 @@ class ModeloPresentado(BaseModel):
 
     submission_id: str = Field(min_length=1)
     draft_id: str = Field(min_length=1)
-    modelo: str = Field(min_length=1)
+    modelo: Modelo
     period: Period
     profile_tax_id: SubjectTaxId = Field(min_length=1)
     status: SubmissionStatus
@@ -138,6 +138,28 @@ class ModeloPresentado(BaseModel):
     submitted_at: datetime
     acknowledged_at: datetime | None = None
     attempts: tuple[SubmissionAttempt, ...] = Field(min_length=1)
+
+    @field_validator("modelo", mode="before")
+    @classmethod
+    def _coerce_modelo(cls, value: object) -> Modelo:
+        """Resolve the filing's modelo through the canonical closed identity.
+
+        This record is a durable filing identity, and the listing engine
+        filters history by raw equality on this field. A length-only string
+        let an unknown code, or a whitespace-padded spelling of a known one,
+        become a historical filing that no later lookup by canonical code
+        would ever match.
+        """
+        if isinstance(value, Modelo):
+            return value
+        if isinstance(value, str):
+            try:
+                return Modelo(value)
+            except ValueError as exc:
+                raise SubmissionValidationError(
+                    f"modelo {value!r} is not a canonical AEAT modelo identifier",
+                ) from exc
+        raise SubmissionValidationError(f"modelo must be a Modelo or str, got {type(value).__name__}")
 
     @model_validator(mode="after")
     def _check_ack_consistency(self) -> ModeloPresentado:

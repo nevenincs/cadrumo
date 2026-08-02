@@ -305,6 +305,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.persistence.storage.errors.SecureObjectRowIdentityError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_SECURE_OBJECT_ROW_IDENTITY",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_secure_object_row_identity",
+            default_suggestion="aeat config repair integrity objects",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.persistence.storage.errors.EncryptionError",
         ErrorCode(
             code="INTEGRITY_STORAGE_ENCRYPTION",

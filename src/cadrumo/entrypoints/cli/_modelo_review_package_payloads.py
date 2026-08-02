@@ -26,27 +26,39 @@ See Also:
 
 from __future__ import annotations
 
-from ...core import Period
+from datetime import datetime
+
+from pydantic import Field
+
+from ...core import HEX_PATTERN_64, Period
+from ...core.identity import BucketId
+from ...domain.modelos import CalculationRevisionId, WorkUnitId
 from ._schemas import OutputSchema, register_schema
 
 
 @register_schema("modelo.review_package.build")
 class ModeloReviewPackageBuildResult(OutputSchema):
-    """Review-package build result (path reference only — no raw bytes in envelope)."""
+    """Review-package build result (path reference only — no raw bytes in envelope).
+
+    Identity, count, and timestamp fields mirror
+    :class:`~cadrumo.application.modelo.ReviewPackageManifest` /
+    :class:`~cadrumo.application.modelo.ReviewPackageBuildResult` so a
+    malformed manifest field is refused at the CLI boundary too.
+    """
 
     operation: str = "modelo.review_package.build"
-    bucket_id: str
-    work_unit_id: str
-    calculation_revision_id: str
-    modelo: str
-    filing_year: int
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    modelo: str = Field(min_length=1, max_length=8)
+    filing_year: int = Field(ge=1990, le=2200)
     period: Period
-    revision_state: str
+    revision_state: str = Field(min_length=1)
     has_ledger_evidence: bool
     output_path: str
-    member_count: int
-    built_by: str
-    built_at: str
+    member_count: int = Field(ge=1)
+    built_by: str = Field(min_length=1, max_length=128)
+    built_at: datetime
 
 
 @register_schema("modelo.review_package.verify")
@@ -58,6 +70,8 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     it does not assert who built the package; cryptographic signing and
     counter-sign verification are surfaced by the sibling ``sign`` /
     ``verify-signature`` / ``counter-sign`` / ``verify-receipt`` verbs.
+    Identity and timestamp fields mirror
+    :class:`~cadrumo.application.modelo.ReviewPackageManifest`.
     """
 
     operation: str = "modelo.review_package.verify"
@@ -66,16 +80,16 @@ class ModeloReviewPackageVerifyResult(OutputSchema):
     missing: list[str]
     unexpected: list[str]
     mismatched: list[str]
-    bucket_id: str
-    work_unit_id: str
-    calculation_revision_id: str
-    modelo: str
-    filing_year: int
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    modelo: str = Field(min_length=1, max_length=8)
+    filing_year: int = Field(ge=1990, le=2200)
     period: Period
-    revision_state: str
+    revision_state: str = Field(min_length=1)
     has_ledger_evidence: bool
-    built_by: str
-    built_at: str
+    built_by: str = Field(min_length=1, max_length=128)
+    built_at: datetime
 
 
 @register_schema("modelo.review_package.sign")
@@ -86,16 +100,18 @@ class ModeloReviewPackageSignResult(OutputSchema):
     path to the written signature envelope — the private key never appears
     in this payload (it stays inside the encrypted per-bucket keystore; see
     :func:`~application.modelo.ensure_review_package_signing_keypair`).
+    Identity, digest, and timestamp fields mirror
+    :class:`~cadrumo.application.modelo.SignedReviewPackage`.
     """
 
     operation: str = "modelo.review_package.sign"
     package_path: str
     signature_path: str
-    bucket_id: str
-    calculation_revision_id: str
-    manifest_sha256: str
-    signer_public_key_hex: str
-    signed_at: str
+    bucket_id: str = Field(min_length=1)
+    calculation_revision_id: str = Field(min_length=1)
+    manifest_sha256: str = Field(pattern=HEX_PATTERN_64)
+    signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    signed_at: datetime
 
 
 @register_schema("modelo.review_package.verify_signature")
@@ -105,7 +121,7 @@ class ModeloReviewPackageVerifySignatureResult(OutputSchema):
     operation: str = "modelo.review_package.verify_signature"
     package_path: str
     signature_path: str
-    signer_public_key_hex: str
+    signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     is_valid: bool
 
 
@@ -115,17 +131,18 @@ class ModeloReviewPackageCounterSignResult(OutputSchema):
 
     Carries only the exportable public half of the counter-signer's keypair
     and the path to the written receipt envelope — the private key never
-    appears in this payload.
+    appears in this payload. Digest and timestamp fields mirror
+    :class:`~cadrumo.application.modelo.CounterSignedReceipt`.
     """
 
     operation: str = "modelo.review_package.counter_sign"
     package_path: str
     signature_path: str
     receipt_path: str
-    bucket_id: str
-    note: str
-    counter_signer_public_key_hex: str
-    counter_signed_at: str
+    bucket_id: BucketId
+    note: str = Field(default="", max_length=2000)
+    counter_signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    counter_signed_at: datetime
 
 
 @register_schema("modelo.review_package.verify_receipt")
@@ -135,8 +152,8 @@ class ModeloReviewPackageVerifyReceiptResult(OutputSchema):
     operation: str = "modelo.review_package.verify_receipt"
     package_path: str
     receipt_path: str
-    operator_public_key_hex: str
-    counter_signer_public_key_hex: str
+    operator_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    counter_signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     is_valid: bool
 
 
@@ -148,16 +165,18 @@ class ModeloReviewPackageEncryptForRecipientResult(OutputSchema):
     only transiently in process memory for the duration of the call, per
     :func:`~application.modelo.encrypt_review_package_for_recipient`).
     ``valid_until`` is ``None`` when the sealed package never expires.
+    Timestamp fields mirror
+    :class:`~cadrumo.application.modelo.RecipientEncryptedPackage`.
     """
 
     operation: str = "modelo.review_package.encrypt_for_recipient"
     package_path: str
     output_path: str
-    recipient_id: str
-    recipient_public_key_hex: str
+    recipient_id: str = Field(min_length=1)
+    recipient_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     review_only: bool
-    issued_at: str
-    valid_until: str | None = None
+    issued_at: datetime
+    valid_until: datetime | None = None
 
 
 @register_schema("modelo.review_package.decrypt")
@@ -175,7 +194,7 @@ class ModeloReviewPackageDecryptResult(OutputSchema):
     operation: str = "modelo.review_package.decrypt"
     envelope_path: str
     output_path: str
-    bucket_id: str
+    bucket_id: BucketId
     review_only: bool
 
 
@@ -189,18 +208,19 @@ class ModeloReviewPackageEncryptFeedbackResult(OutputSchema):
     :func:`~application.modelo.encrypt_feedback_package_for_originator`).
     Only the exportable originator public key appears here; no private key of
     either party is ever surfaced. ``has_counter_sign`` reports whether a
-    counter-signed receipt was bundled with the note.
+    counter-signed receipt was bundled with the note. Identity and timestamp
+    fields mirror :class:`~cadrumo.application.modelo.RecipientEncryptedPackage`.
     """
 
     operation: str = "modelo.review_package.encrypt_feedback"
     output_path: str
-    originator_id: str
-    originator_public_key_hex: str
-    work_unit_id: str
-    calculation_revision_id: str
+    originator_id: str = Field(min_length=1)
+    originator_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
     has_counter_sign: bool
-    issued_at: str
-    valid_until: str | None = None
+    issued_at: datetime
+    valid_until: datetime | None = None
 
 
 @register_schema("modelo.review_package.import_feedback")
@@ -216,16 +236,17 @@ class ModeloReviewPackageImportFeedbackResult(OutputSchema):
     :func:`~application.modelo.emit_collab_feedback_countersign_attached_event`).
     No private key of either party appears in this payload.
     ``counter_signature_verified`` is ``None`` when the feedback carried no
-    formal sign-off, ``True`` when a bundled receipt verified clean.
+    formal sign-off, ``True`` when a bundled receipt verified clean. Identity
+    fields mirror :class:`~cadrumo.application.modelo.FeedbackPackage`.
     """
 
     operation: str = "modelo.review_package.import_feedback"
     envelope_path: str
-    bucket_id: str
-    work_unit_id: str
-    calculation_revision_id: str
-    note: str
-    submitted_by: str
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    note: str = Field(default="", max_length=4000)
+    submitted_by: str = Field(min_length=1, max_length=128)
     counter_signature_verified: bool | None = None
     attached_to_journal: bool = False
 

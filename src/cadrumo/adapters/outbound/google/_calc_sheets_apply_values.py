@@ -27,6 +27,7 @@ from ....application.storage.calc_sheets import (
     SheetValueCell,
     TabName,
     evidence_table,
+    guide_stamps,
 )
 
 
@@ -118,17 +119,8 @@ def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
     ]
     for index, paragraph in enumerate(plan.guide.paragraphs, start=3):
         data.append({"range": f"'{TabName.GUIDE.value}'!A{index}", "values": [[paragraph]]})
-    metadata = plan.metadata
     base_row = 3 + len(plan.guide.paragraphs) + 2
-    stamps = (
-        ("Modelo", metadata.modelo_id),
-        ("Revisión", metadata.revision_id),
-        ("Período", f"{metadata.period.registry_token} / {metadata.filing_year}"),
-        ("Motor", metadata.engine_version),
-        ("Registry SHA", metadata.registry_sha),
-        ("Exportado", metadata.exported_at.isoformat()),
-    )
-    for offset, (label, value) in enumerate(stamps):
+    for offset, (label, value) in enumerate(guide_stamps(plan)):
         data.append(
             {
                 "range": f"'{TabName.GUIDE.value}'!A{base_row + offset}",

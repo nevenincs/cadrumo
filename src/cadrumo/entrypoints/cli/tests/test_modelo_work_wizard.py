@@ -25,6 +25,7 @@ import json
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ....application.flows import run_scripted_flow
 from ....application.user_profile import profile_storage_session
@@ -35,11 +36,13 @@ from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  
 from .._modelo import _resolve_work_unit_for_cli
 from .._modelo_work_wizard_cli import (
     _ACTIVE_RUNS,
+    _binding_grounding_lookup,
     _definition_from_steps,
     _outstanding_wizard_steps,
     _page_key,
     _WizardStep,
 )
+from .._modelo_work_wizard_payloads import WizardPromptedCasillaPayload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_m130_work_unit
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -256,3 +259,72 @@ def test_wizard_non_interactive_host_with_steps_refuses_with_the_typed_console_e
     assert "Traceback" not in result.output
     error = json.loads(result.output)["error"]
     assert error["code"] == "REFUSED_FLOW_UNSUPPORTED_CONSOLE"
+
+
+def _valid_prompted_casilla_kwargs() -> dict[str, object]:
+    return {
+        "casilla_id": "01",
+        "number": "01",
+        "label": "Ingresos",
+        "channel": "casilla",
+        "key": "01",
+        "value": "0",
+        "legal_refs": ("ley-35-2006:art-27",),
+        "source_refs": ("aeat-modelo-130-instrucciones-2026",),
+        "help_text": None,
+    }
+
+
+def test_wizard_prompted_casilla_payload_round_trips_valid_row() -> None:
+    row = WizardPromptedCasillaPayload(**_valid_prompted_casilla_kwargs())
+
+    assert row.channel == "casilla"
+    assert row.legal_refs == ("ley-35-2006:art-27",)
+
+
+@pytest.mark.parametrize(
+    ("field", "bad_value"),
+    (
+        ("channel", "bogus"),
+        ("label", ""),
+        ("key", ""),
+        ("value", ""),
+        ("legal_refs", ()),
+        ("source_refs", ()),
+    ),
+)
+def test_wizard_prompted_casilla_payload_refuses_malformed_field(field: str, bad_value: object) -> None:
+    """A malformed channel, blank display field, or empty grounding is refused.
+
+    A permissive bare-``str`` shell (the defect this finding reported) would
+    have accepted every one of these.
+    """
+    kwargs = {**_valid_prompted_casilla_kwargs(), field: bad_value}
+
+    with pytest.raises(ValidationError):
+        WizardPromptedCasillaPayload(**kwargs)
+
+
+def test_binding_grounding_lookup_covers_a_real_m130_binding() -> None:
+    """The follow-up-step grounding lookup resolves real registry grounding.
+
+    ``_follow_up_step_for_missing_input`` used to leave ``legal_refs`` /
+    ``source_refs`` empty for a retry-discovered binding/relation step, which
+    the now-required grounding on ``WizardPromptedCasillaPayload`` would
+    refuse. This proves the lookup actually finds non-empty grounding for a
+    real registry binding on a real work unit, not just that it type-checks.
+    """
+    _create_profile()
+    _seed_m130_ledger("wizard-binding-grounding-lookup")
+    work_unit_id = _create_m130_work_unit()
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+
+    with profile_storage_session(bucket_id):
+        unit = _resolve_work_unit_for_cli(work_unit_id=work_unit_id)
+        lookup = _binding_grounding_lookup(unit)
+
+    assert lookup, "expected at least one registry binding for the M130 1T scope"
+    for legal_refs, source_refs in lookup.values():
+        assert legal_refs, "every looked-up binding must carry legal_refs"
+        assert source_refs, "every looked-up binding must carry source_refs"

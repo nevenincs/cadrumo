@@ -24,7 +24,9 @@ from .. import (
     SourceFormat,
     Transaction,
     TransactionDirection,
+    normalize_irpf_category,
 )
+from .._irpf_categories import ledger_irpf_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -428,3 +430,74 @@ def test_invariant_against_native_amount_rejects_eur_split() -> None:
                 "iva_amount": Decimal("19.09"),
             },
         )
+
+
+@pytest.mark.parametrize(
+    "spelling",
+    ["actividad_economica", "ACTIVIDAD_ECONOMICA", "Actividad_Economica", "  actividad_economica  "],
+    ids=["canonical", "upper", "mixed", "padded"],
+)
+def test_activity_relaxation_reads_one_normalized_token(spelling: str) -> None:
+    """Case and whitespace variants of the activity token unlock the same relaxation.
+
+    The gross invariant resolved the raw token against the closed catalogue
+    while the ledger preflight stripped and lowercased before matching, so the
+    two surfaces disagreed on what ``ACTIVIDAD_ECONOMICA`` named: a legitimate
+    activity receipt was refused here while the preflight classified it. Both
+    now normalize through one catalogue resolver.
+    """
+    tx = Transaction.model_validate(
+        {
+            "raw": _raw(amount=Decimal("2120.00")),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "taxable_base": Decimal("2000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("420.00"),
+            "irpf_category": spelling,
+        },
+    )
+
+    assert tx.taxable_base is not None
+    assert tx.iva_amount is not None
+    assert tx.taxable_base + tx.iva_amount == Decimal("2420.00")
+
+
+@pytest.mark.parametrize(
+    "spelling",
+    ["trabajo", "TRABAJO", "Trabajo", "  trabajo  "],
+    ids=["canonical", "upper", "mixed", "padded"],
+)
+def test_employment_token_never_relaxes_the_invariant_in_any_spelling(spelling: str) -> None:
+    """No spelling of the employment token unlocks the withholding relaxation.
+
+    ``trabajo`` carries ``net_paid_invoice=False``: a nómina receipt has no
+    invoice substrate to preserve. Normalising the token must not turn an
+    unrecognised spelling into an accepted one by any route.
+    """
+    with pytest.raises(ValidationError, match="must equal the gross to the cent"):
+        Transaction.model_validate(
+            {
+                "raw": _raw(amount=Decimal("2120.00")),
+                "direction": TransactionDirection.INCOMING,
+                "group_label": None,
+                "source_jurisdiction": "ES",
+                "business_classification": BusinessClassification.BUSINESS,
+                "taxable_base": Decimal("2000.00"),
+                "iva_rate": Decimal("0.21"),
+                "iva_amount": Decimal("420.00"),
+                "irpf_category": spelling,
+            },
+        )
+
+
+def test_normalization_keeps_the_catalogue_closed() -> None:
+    """Normalisation folds case and whitespace only; it never invents a category."""
+    assert normalize_irpf_category("  ACTIVIDAD_ECONOMICA ") == "actividad_economica"
+    assert normalize_irpf_category("actividad economica") == "actividad economica"
+    assert normalize_irpf_category("   ") is None
+    assert normalize_irpf_category(None) is None
+    assert ledger_irpf_category("actividad economica", direction=TransactionDirection.INCOMING) is None
+    assert ledger_irpf_category("bogus", direction=TransactionDirection.INCOMING) is None

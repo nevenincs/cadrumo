@@ -9,10 +9,21 @@ from pydantic import ValidationError
 
 from ....core.config import Settings, override_settings
 from ....core.errors import resolve_error_message
+from ....core.i18n import tr
 from ...user_profile import profile_create_storage_span
 from .. import ReviewSeverity, ReviewState
 from .._errors import ReviewError, ReviewKindReservedError
-from .._operator import ACCEPTED_KINDS, ReviewQueueRow, _resolve_internal_kinds, project_review_item
+from .._models import FindingReviewItem
+from .._operator import (
+    ACCEPTED_KINDS,
+    ReviewQueueRow,
+    _resolve_internal_kinds,
+    _row_matches,
+    _to_row,
+    project_review_item,
+)
+
+_BUCKET_ID = "70707070-7070-4070-8070-707070707070"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -84,3 +95,53 @@ def test_reserved_review_kind_error_omits_raw_operator_value() -> None:
     assert rendered == "Review kind is reserved and is not an emitted review item."
     assert sensitive_kind not in str(error)
     assert sensitive_kind not in repr(error.context)
+
+
+def _finding_item() -> FindingReviewItem:
+    return FindingReviewItem(
+        item_id="finding-1",
+        modelo="303",
+        severity=ReviewSeverity.HIGH,
+        summary=tr("review.operator.tests.finding_summary"),
+        drill_command="aeat app modelo verify",
+        since=datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+        source=None,
+        draft_id="draft-1",
+        draft_path="db://filing/drafts/draft-1",
+    )
+
+
+def test_finding_row_carries_the_advertised_token_on_both_filter_axes() -> None:
+    """``modelo_finding`` is advertised for --kind and --source-kind, so both must match.
+
+    ``_row_matches`` requires a non-None ``source_kind`` for a source filter.
+    Emitting the finding row with ``source_kind=None`` therefore made the same
+    advertised token select the row as ``--kind`` and silently drop it as
+    ``--source-kind`` -- no refusal, no diagnostic, one fewer finding.
+    """
+    row = _to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
+
+    assert row.kind == "modelo_finding"
+    assert row.source_kind == "modelo_finding"
+    assert _row_matches(row, frozenset({"modelo_finding"}), frozenset()) is True
+    assert _row_matches(row, frozenset(), frozenset({"modelo_finding"})) is True
+    assert _row_matches(row, frozenset({"modelo_finding"}), frozenset({"modelo_finding"})) is True
+
+
+def test_finding_row_still_refuses_a_foreign_source_filter() -> None:
+    """The parity fix must not make the row match every source filter."""
+    row = _to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
+
+    assert _row_matches(row, frozenset(), frozenset({"ledger_transaction"})) is False
+
+
+def test_every_advertised_kind_is_selectable_on_both_axes() -> None:
+    """No advertised token may select on one filter axis and not the other.
+
+    Locks the class of defect rather than the one branch: a future row type
+    that advertises a kind but leaves ``source_kind`` unset fails here.
+    """
+    row = _to_row(_finding_item(), state=ReviewState.PENDING, bucket_id=_BUCKET_ID)
+    assert row.kind in ACCEPTED_KINDS
+    assert row.source_kind is not None
+    assert row.source_kind == row.kind

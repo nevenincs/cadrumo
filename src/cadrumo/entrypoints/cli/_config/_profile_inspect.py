@@ -174,7 +174,7 @@ def _register_show_command(
         result = ConfigProfileShowResult(
             profile_id=record.profile_id,
             display_name=record.display_name,
-            status=record.status.value,
+            status=record.status,
             valid=not blocking and not is_tombstoned,
             schema_version=report.schema_version,
             issues=[

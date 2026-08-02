@@ -1463,6 +1463,7 @@ application:
         by this application version.
       censal_read_identity_profile_malformed: 'This profile''s fiscal ID is not a valid Spanish tax identifier, so a census read cannot be confirmed to belong to it. Correct the fiscal ID and pull again.'
       censal_read_identity_read_malformed: 'The census read''s tax identity is not a valid Spanish tax identifier, so it cannot be confirmed to belong to this profile.'
+      repository_profile_bucket_mismatch: 'Profile %{profile_id} does not belong to bucket %{bucket_id}; a profile bucket holds exactly one profile identity.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -5764,6 +5765,8 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
     integrity_apoderado_configuration_identity: 'The stored apoderado configuration does not belong to the profile it was read from.'
+    integrity_storage_secure_object_row_identity: 'A stored secure object does not reconstruct the key it is filed under; the record was substituted or misfiled.'
+    integrity_profile_bucket_mismatch: 'Profile %{profile_id} does not belong to bucket %{bucket_id}; a profile bucket holds exactly one profile identity.'
   internal:
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report
@@ -6188,6 +6191,7 @@ errors:
         sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime
         storage.
+      object_key_grammar_mismatch: 'Secure-object namespace %{namespace} declares object-key grammar %{object_key_grammar}, and the key the caller used does not match it: %{reason}'
     runtime:
       cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
         before an active profile bucket is selected.

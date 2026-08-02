@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
 
-from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
+from pydantic import BaseModel, Field, InstanceOf, TypeAdapter, ValidationError, field_validator, model_validator
 
 from ...core import (
     MODELO_720_FOREIGN_ASSET_CLASS_CODES,
@@ -32,6 +32,7 @@ from ...core import (
     foreign_asset_obligation_group,
 )
 from ...core.aggregation import ForeignAssetClass
+from ...core.identity import TransactionId
 from ...core.parsing import IsoDateString, require_iso8601_date
 from ...domain.calculations.registry import Modelo720RowObservation, resolve_foreign_asset_binding_row_values
 from .._foreign_asset_thresholds import (
@@ -50,6 +51,9 @@ _CANONICAL_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     },
 )
 _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.FOREIGN_ASSET,)
+
+# One reusable validator for the canonical ledger-transaction identity shape.
+_TRANSACTION_ID_ADAPTER: TypeAdapter[TransactionId] = TypeAdapter(TransactionId)
 
 
 def _foreign_asset_source_kind(value: object) -> BindingSourceKind:
@@ -109,6 +113,33 @@ class ForeignAssetIngestObservation(BaseModel):
     @classmethod
     def _country_is_uppercase(cls, value: str) -> str:
         return _validate_country(value)
+
+    @model_validator(mode="after")
+    def _ledger_source_is_a_transaction_identity(self) -> ForeignAssetIngestObservation:
+        """Hold a ledger-sourced observation to the canonical transaction identity.
+
+        The resolver copies ``source_object_id`` verbatim into
+        :attr:`CalculationSourceResolution.source_transaction_ids`, which feeds
+        the strict hex-64 transaction-identity field on
+        :class:`CalculationRevision`. Accepting any non-empty string here let a
+        validly-ingested ledger observation reach calculation persistence with
+        an id the revision contract can never satisfy, so the refusal surfaced
+        at the persistence boundary with no way back to the row that caused it.
+
+        Only the ledger source kind is constrained: an invoice- or
+        evidence-sourced observation legitimately carries an external
+        identifier, and that value rides in typed provenance, never in the
+        transaction-identity tuple.
+        """
+        if self.source_kind is BindingSourceKind.LEDGER_TRANSACTION:
+            try:
+                _TRANSACTION_ID_ADAPTER.validate_python(self.source_object_id)
+            except ValidationError as exc:
+                raise ValueError(
+                    f"source_object_id {self.source_object_id!r} is not a ledger transaction identity "
+                    f"(expected 64 lowercase hex characters); an external identifier belongs in provenance",
+                ) from exc
+        return self
 
 
 class ForeignAssetClassRollup(BaseModel):

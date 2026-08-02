@@ -27,7 +27,12 @@ import shutil
 from pathlib import Path
 
 import pytest
-from dev.deploy.docs_static_site import _localized_languages, _require_search_index, _validate_language_roots
+from dev.deploy.docs_static_site import (
+    _language_site_url,
+    _localized_languages,
+    _require_search_index,
+    _validate_language_roots,
+)
 from dev.docs.pagefind_index import (
     DECIDED_INJECTED_RECORD_KINDS,
     build_search_index,
@@ -176,6 +181,18 @@ def test_a_localized_root_is_refused_and_named(tmp_path: Path, pages_only_site: 
         root = html_root / language
         shutil.copytree(pages_only_site, root)
         (root / "index.html").write_text("<html lang='x'><body>root</body></html>", encoding="utf-8")
+        # The complete required-artifact set is satisfied except for the
+        # record-carrying search index: this test isolates the record-kind
+        # refusal, not the (separately-gated) artifact-presence refusal.
+        (root / "404.html").write_text("<html lang='x'><body>not found</body></html>", encoding="utf-8")
+        canonical_root = f"{_language_site_url(language)}/"
+        (root / "sitemap.xml").write_text(
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            f"  <url><loc>{canonical_root}</loc></url>\n"
+            "</urlset>\n",
+            encoding="utf-8",
+        )
 
     with pytest.raises(SystemExit) as excinfo:
         _validate_language_roots(html_root)

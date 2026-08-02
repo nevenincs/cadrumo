@@ -85,6 +85,33 @@ def ledger_irpf_category_ids() -> tuple[str, ...]:
     return tuple(sorted(_CATALOGUE_BY_ID))
 
 
+def normalize_irpf_category(value: str | None) -> str | None:
+    """Return the canonical catalogue spelling of an ``irpf_category`` token.
+
+    Every surface that reads ``irpf_category`` -- the gross invariant, the
+    ledger preflight, and the Renta aggregators -- must agree on what a token
+    names, so the one normalisation lives here rather than at each reader.
+    The catalogue ids are lowercase, and a token that differs only in case or
+    surrounding whitespace names the same category; resolving that per reader
+    is what let ``TRABAJO`` classify as employment in the preflight while
+    naming no descriptor at all in the gross invariant.
+
+    Normalisation is deliberately narrow: case folding and whitespace only.
+    It never maps one category onto another, so the closed catalogue stays
+    closed and an unknown token stays unknown.
+
+    Args:
+        value: The row's raw ``irpf_category`` token, if any.
+
+    Returns:
+        The normalised token, or ``None`` when there is no token to resolve
+        (absent, or blank after stripping).
+    """
+    if value is None:
+        return None
+    return value.strip().casefold() or None
+
+
 def ledger_irpf_category(
     value: str | None,
     *,
@@ -114,9 +141,10 @@ def ledger_irpf_category(
     Returns:
         The matching descriptor, or ``None``.
     """
-    if value is None:
+    normalized = normalize_irpf_category(value)
+    if normalized is None:
         return None
-    descriptor = _CATALOGUE_BY_ID.get(value)
+    descriptor = _CATALOGUE_BY_ID.get(normalized)
     if descriptor is None:
         return None
     if direction is not None and direction not in descriptor.directions:
@@ -147,6 +175,17 @@ def has_rent_irpf_category(value: str | None, *, direction: TransactionDirection
     """Return whether a row carries an explicit rental withholding axis."""
     descriptor = ledger_irpf_category(value, direction=direction)
     return descriptor is not None and descriptor.purpose == "rent_expense_withholding"
+
+
+def has_employment_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
+    """Return whether a row carries the trabajo (nómina) employment axis.
+
+    Resolved through the closed catalogue so the ledger preflight reads the
+    same token the gross invariant does, rather than comparing the raw string
+    to a local ``"trabajo"`` literal.
+    """
+    descriptor = ledger_irpf_category(value, direction=direction)
+    return descriptor is not None and descriptor.purpose == "employment_income"
 
 
 def format_irpf_category_ids(ids: frozenset[str] | tuple[str, ...]) -> str:

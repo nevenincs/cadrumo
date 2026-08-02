@@ -27,6 +27,7 @@ from .....application.storage.calc_sheets import (
     SheetNumberFormat,
     SheetValueCell,
     TabName,
+    guide_stamps,
     serialize_offline_workbook,
 )
 from .....core import Period
@@ -35,6 +36,7 @@ from .._calc_sheets_apply import (
     _build_emphasis_format_requests,
     _build_evidence_value_data,
     _build_formula_data,
+    _build_guide_value_data,
     _build_number_format_requests,
     _build_value_data,
 )
@@ -153,6 +155,51 @@ def test_apply_adapter_emits_number_format_and_emphasis_requests() -> None:
     emphasis = _build_emphasis_format_requests(plan, sheet_id_by_tab=sheet_id_by_tab)
     assert emphasis, "section headers / anchors must yield bold requests"
     assert emphasis[0]["repeatCell"]["cell"]["userEnteredFormat"]["textFormat"]["bold"] is True
+
+
+def test_guide_stamps_conform_offline_and_online() -> None:
+    """The Guide export stamps render label-for-label across both transports.
+
+    Each transport used to carry its own hand-written copy of the stamp
+    table, and the two had drifted: offline wrote ``Revision`` / ``Periodo``,
+    online wrote ``Revisión`` / ``Período``. The metadata VALUES matched, so
+    nothing surfaced, while two exports of one plan disagreed about the row
+    labels a reader or a label-keyed instruction would look for.
+
+    Comparing the offline cells against the online writes — rather than
+    against a restated expected table — is what makes this catch a future
+    divergence instead of just pinning today's spelling.
+    """
+    plan = _plan()
+    workbook = load_workbook(BytesIO(serialize_offline_workbook(plan)), data_only=False)
+    sheet = workbook[TabName.GUIDE.value]
+    online = {entry["range"]: entry["values"][0] for entry in _build_guide_value_data(plan)}
+
+    tab = TabName.GUIDE.value
+    base_row = 3 + len(plan.guide.paragraphs) + 2
+    stamps = guide_stamps(plan)
+    assert stamps, "the plan must produce stamps or this test proves nothing"
+
+    for offset in range(len(stamps)):
+        row = base_row + offset
+        offline_row = [(sheet.cell(row=row, column=column).value or "") for column in (1, 2)]
+        assert online[f"'{tab}'!A{row}"] == offline_row, f"guide stamp row {row} diverged"
+
+
+def test_the_guide_stamp_labels_are_the_accented_spanish_forms() -> None:
+    """Pin which side of the drift won, so a future edit is a deliberate one.
+
+    The conformance assertion above holds for ANY consistent pair, including
+    a regression to the transliterated labels. These are Spanish
+    operator-facing labels and both transports carry UTF-8, so the accented
+    forms are the ones that stay.
+    """
+    labels = [label for label, _ in guide_stamps(_plan())]
+
+    assert "Revisión" in labels
+    assert "Período" in labels
+    assert "Revision" not in labels
+    assert "Periodo" not in labels
 
 
 def test_evidence_surface_conforms_offline_and_online() -> None:

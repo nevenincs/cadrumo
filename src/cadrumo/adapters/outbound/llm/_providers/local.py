@@ -26,7 +26,14 @@ from pydantic import BaseModel, ConfigDict, Field
 from .....core.config import load_settings
 from .._errors import LLMPdfRasterisationError
 from .._models import LLMProvider
-from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error, parse_provider_response
+from .base import (
+    ProviderCompletion,
+    ProviderRequest,
+    _ProviderAdapter,
+    check_http_error,
+    parse_provider_response,
+    post_provider_request,
+)
 
 _LOG = logging.getLogger(__name__)
 
@@ -155,8 +162,12 @@ class LocalAdapter(_ProviderAdapter):
         messages.append(user_message)
         settings = load_settings()
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:
-            response = await client.post(
+            response = await post_provider_request(
+                client,
                 settings.cadrumo_llm_ollama_chat_url,
+                provider_name="Local Ollama",
+                model=request.model,
+                logger=_LOG,
                 json={
                     "model": request.model,
                     "messages": messages,

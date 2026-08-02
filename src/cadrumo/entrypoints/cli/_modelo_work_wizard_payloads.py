@@ -11,6 +11,8 @@ delegation live in :mod:`_modelo_work_wizard_cli`. Every payload here is an
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import Field
 
 from ...domain.calculations.registry import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
@@ -18,26 +20,32 @@ from ...domain.modelos import CalculationRevisionId, WorkUnitId
 from ._modelo_revision_payload_parts import DetailRowPayload, ObservationPayload, ResultSummaryRowPayload
 from ._schemas import OutputSchema, register_schema
 
+#: Closed set of CLI input channels a wizard step resolves to: a direct
+#: ``--casilla`` override, a registry ``--binding`` override, or a
+#: ``--relation`` override.
+WizardPromptChannel = Literal["casilla", "binding", "relation"]
+
 
 class WizardPromptedCasillaPayload(OutputSchema):
     """One manual-input casilla the wizard prompted for, with the answer given.
 
     Carries the same grounding parity (``legal_refs`` / ``source_refs``) the
-    ``casilla`` discovery command exposes, so a scripted or JSON-mode caller
-    can audit exactly what was asked and what was answered, without needing a
-    live terminal.
+    ``casilla`` discovery command exposes -- required, non-empty, exactly as
+    :class:`~cadrumo.domain.calculations.registry.CasillaDefinition` requires
+    -- so a scripted or JSON-mode caller can audit exactly what was asked and
+    what was answered, without needing a live terminal.
     """
 
     casilla_id: CasillaId
     number: str
-    label: str
-    channel: str
+    label: str = Field(min_length=1)
+    channel: WizardPromptChannel
     """Either ``casilla`` (a direct ``--casilla`` override) or ``binding``/``relation``."""
-    key: str
+    key: str = Field(min_length=1)
     """The ``--casilla`` / ``--binding`` / ``--relation`` key supplied to the calculation."""
-    value: str
-    legal_refs: tuple[LegalRefId, ...] = ()
-    source_refs: tuple[SourceRefId, ...] = ()
+    value: str = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
     help_text: str | None = None
 
 

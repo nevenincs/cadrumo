@@ -48,6 +48,7 @@ from ._nif_iva import (
     normalise_nif_iva,
 )
 from ._profile import ProfileId
+from ._profile_label import ProfileLabel
 from ._snapshot import SnapshotId
 from ._tax_id import nif_check_letter, tax_id_identity_token, validate_spanish_tax_id
 from ._transaction import TransactionId
@@ -94,6 +95,7 @@ __all__ = [
     "NifIvaFormatSpec",
     "NifIvaPrefix",
     "ProfileId",
+    "ProfileLabel",
     "SnapshotId",
     "SubjectTaxId",
     "TaxIdIdentityToken",

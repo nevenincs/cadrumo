@@ -54,6 +54,7 @@ from typing import TYPE_CHECKING
 
 from ._errors import (
     ProfileAlreadyExistsError,
+    ProfileBucketMismatchError,
     ProfileExportError,
     ProfileNotFoundError,
     ProfilePreflightMissingError,
@@ -126,6 +127,7 @@ __all__ = [
     "CarriedSecureObject",
     "CoverageManifest",
     "ProfileAlreadyExistsError",
+    "ProfileBucketMismatchError",
     "ProfileExportError",
     "ProfileFieldDefinition",
     "ProfileFieldType",

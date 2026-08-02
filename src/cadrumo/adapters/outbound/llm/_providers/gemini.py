@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import load_settings
 from .....core.logging import get_logger
-from .._errors import LLMConfigError, LLMProviderError
+from .._errors import LLMConfigError
 from .._models import LLMProvider
 from .base import (
     ProviderCompletion,
@@ -24,6 +24,7 @@ from .base import (
     _ProviderAdapter,
     check_http_error,
     parse_provider_response,
+    post_provider_request,
     require_provider_response_item,
 )
 
@@ -126,22 +127,22 @@ class GeminiAdapter(_ProviderAdapter):
             parts.append({"text": f"System instruction:\n{request.system}"})
         parts.append({"text": request.prompt})
         endpoint = load_settings().cadrumo_llm_gemini_generate_content_template.format(model=request.model)
-        try:
-            async with httpx.AsyncClient(timeout=self._timeout_s) as client:
-                response = await client.post(
-                    endpoint,
-                    headers={"x-goog-api-key": self._api_key},
-                    json={
-                        "contents": [{"role": "user", "parts": parts}],
-                        "generationConfig": {
-                            "temperature": request.temperature,
-                            "maxOutputTokens": request.max_tokens,
-                        },
+        async with httpx.AsyncClient(timeout=self._timeout_s) as client:
+            response = await post_provider_request(
+                client,
+                endpoint,
+                provider_name="Gemini",
+                model=request.model,
+                logger=_logger,
+                headers={"x-goog-api-key": self._api_key},
+                json={
+                    "contents": [{"role": "user", "parts": parts}],
+                    "generationConfig": {
+                        "temperature": request.temperature,
+                        "maxOutputTokens": request.max_tokens,
                     },
-                )
-        except httpx.RequestError as exc:
-            _logger.debug("Gemini connection failure model=%s", request.model, exc_info=True)
-            raise LLMProviderError("Gemini connection failure.") from exc
+                },
+            )
         check_http_error(response, provider_name="Gemini", model=request.model, logger=_logger)
         parsed = parse_provider_response(response, provider_name="Gemini", response_model=_GeminiResponse)
         candidate = require_provider_response_item(parsed.candidates, provider_name="Gemini", item_name="candidates")

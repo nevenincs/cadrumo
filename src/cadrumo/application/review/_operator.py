@@ -223,7 +223,14 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
         return ReviewQueueRow(
             item_id=item.item_id,
             kind="modelo_finding",
-            source_kind=None,
+            # Carries the same token as ``kind``, exactly as the transaction and
+            # invoice branches do. ``modelo_finding`` is advertised in
+            # ``ACCEPTED_KINDS`` for both ``--kind`` and ``--source-kind``, and
+            # ``_row_matches`` requires a non-None ``source_kind`` for a source
+            # filter, so leaving it unset made a valid finding appear under
+            # ``--kind modelo_finding`` and vanish under ``--source-kind
+            # modelo_finding`` with no refusal or diagnostic.
+            source_kind="modelo_finding",
             affected_object_id=item.draft_id,
             bucket_id=bucket_id,
             modelo=item.modelo,

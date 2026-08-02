@@ -21,7 +21,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import PathContainmentError
+from ....adapters.persistence.storage import PathContainmentError, SecureObjectRowIdentityError
+from ....adapters.persistence.storage.crypto import secure_object_key_digest
 from ....core import BindingSourceKind, Period
 from ....core.external_constants import UTF_8_ENCODING
 from ....tests.secure_sql import isolated_runtime_profile
@@ -368,3 +369,60 @@ def test_padded_nif_keys_to_the_canonical_object_key() -> None:
     padded_key = retencion_observation_key("180", 2024, period, " 12345678z ", RetencionScheme.ECONOMIC_ACTIVITY)
     canonical_key = retencion_observation_key("180", 2024, period, "12345678Z", RetencionScheme.ECONOMIC_ACTIVITY)
     assert padded_key == canonical_key
+
+
+def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: Path) -> None:
+    """A payload stored under a different row's key is refused, not projected.
+
+    The object key is derived from the payload's own natural identity, so the
+    two are two encodings of one fact. The window scan used to filter on the
+    decrypted payload alone — trusting the payload to declare its own
+    coordinates — so a record written under another perceptor's key entered the
+    window it was filed into rather than the one it describes, distorting the
+    distinct-perceptor count the annual declaration files.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = RetencionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        row_a = _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100"))
+        row_b = _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200"))
+        repo.replace_observations(
+            modelo="180",
+            filing_year=2024,
+            period=period,
+            observations=(row_a, row_b),
+            source_kind="aggregate_pull",
+        )
+        # Positive control: the untouched window projects both rows.
+        assert len(repo.load_observations("180", period)) == 2
+
+        # Rewrite B's envelope under A's row key, the substitution the scan must catch.
+        key_a = repo.extract_identifier(
+            repo.build_observation_payload(
+                modelo="180",
+                filing_year=2024,
+                period=period,
+                observation=row_a,
+                source_kind="aggregate_pull",
+            ),
+        )
+        write_b = repo.to_secure_object_write(
+            repo.build_observation_payload(
+                modelo="180",
+                filing_year=2024,
+                period=period,
+                observation=row_b,
+                source_kind="aggregate_pull",
+            ),
+        )
+        repo.secure_object_repository.save_with_raw_key(
+            namespace=repo.namespace,
+            hashed_object_key=secure_object_key_digest(key_a),
+            classification=repo.sensitivity,
+            schema_version=repo.schema_version,
+            written_at=write_b.written_at,
+            payload=write_b.payload,
+        )
+
+        with pytest.raises(SecureObjectRowIdentityError):
+            repo.load_observations("180", period)

@@ -300,7 +300,7 @@ def _drive_wizard_calculation(
                 inputs=calculation_inputs,
             )
         except RegistryValidationError as exc:
-            follow_up = _follow_up_step_for_missing_input(exc)
+            follow_up = _follow_up_step_for_missing_input(exc, unit=unit)
             if follow_up is None:
                 raise deps.bad_parameter_from_error(exc) from exc
             answer = _run_wizard_steps((follow_up,), run_token=run_token)
@@ -468,7 +468,25 @@ def _outstanding_wizard_steps(unit: WorkUnit) -> tuple[_WizardStep, ...]:
 _MAX_MISSING_INPUT_RETRIES = 12
 
 
-def _follow_up_step_for_missing_input(error: RegistryValidationError) -> _WizardStep | None:
+def _binding_grounding_lookup(unit: WorkUnit) -> dict[str, tuple[tuple[str, ...], tuple[str, ...]]]:
+    """Return ``binding_id -> (legal_refs, source_refs)``, keyed by relation id too.
+
+    A binding row's grounding is stored once and shared by every relation it
+    feeds (:func:`_outstanding_wizard_steps` already does this for the
+    pre-discovered relation steps), so a relation id resolves to its
+    covering binding's grounding.
+    """
+    bindings_report = registry_bindings_for_scope(str(unit.modelo), period=unit.period)
+    lookup: dict[str, tuple[tuple[str, ...], tuple[str, ...]]] = {}
+    for row in bindings_report.rows:
+        grounding = (tuple(row.legal_refs), tuple(row.source_refs))
+        lookup[str(row.binding_id)] = grounding
+        for relation_id in row.relation_inputs:
+            lookup[str(relation_id)] = grounding
+    return lookup
+
+
+def _follow_up_step_for_missing_input(error: RegistryValidationError, *, unit: WorkUnit) -> _WizardStep | None:
     """Turn a missing-input registry refusal into one more wizard question.
 
     :func:`_outstanding_wizard_steps` pre-discovers every ``manual_input`` /
@@ -481,14 +499,21 @@ def _follow_up_step_for_missing_input(error: RegistryValidationError) -> _Wizard
     that is not a recognised missing-input shape, so the caller re-raises
     the original refusal unchanged rather than looping on an unrelated
     error.
+
+    The follow-up step's grounding is looked up from the same registry
+    bindings report :func:`_outstanding_wizard_steps` reads, rather than left
+    empty, so a wizard retry prompt carries the same ``legal_refs`` /
+    ``source_refs`` parity every pre-discovered step already does.
     """
     if error.translated_message not in MISSING_INPUT_TRANSLATED_MESSAGES:
         return None
     context = error.context or {}
+    grounding_lookup = _binding_grounding_lookup(unit)
     if error.translated_message == "errors.calc.relation_value_missing":
         relation_id = context.get("relation_id")
         if not isinstance(relation_id, str):
             return None
+        legal_refs, source_refs = grounding_lookup.get(relation_id, ((), ()))
         return _WizardStep(
             channel="relation",
             key=relation_id,
@@ -503,12 +528,13 @@ def _follow_up_step_for_missing_input(error: RegistryValidationError) -> _Wizard
                     "or cross-modelo value this relation carries."
                 ),
             ),
-            legal_refs=(),
-            source_refs=(),
+            legal_refs=legal_refs,
+            source_refs=source_refs,
         )
     binding_id = context.get("binding_id")
     if not isinstance(binding_id, str):
         return None
+    legal_refs, source_refs = grounding_lookup.get(binding_id, ((), ()))
     return _WizardStep(
         channel="binding",
         key=binding_id,
@@ -516,8 +542,8 @@ def _follow_up_step_for_missing_input(error: RegistryValidationError) -> _Wizard
         number=binding_id,
         label=binding_id,
         help_text=None,
-        legal_refs=(),
-        source_refs=(),
+        legal_refs=legal_refs,
+        source_refs=source_refs,
     )
 
 

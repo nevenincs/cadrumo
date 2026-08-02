@@ -1520,6 +1520,7 @@ application:
         az alkalmazásverzióban.
       censal_read_identity_profile_malformed: 'Ennek a profilnak az adóazonosítója nem érvényes spanyol adóazonosító, ezért nem erősíthető meg, hogy a nyilvántartási olvasás hozzá tartozik. Javítsa az adóazonosítót, majd futtassa újra a lekérdezést.'
       censal_read_identity_read_malformed: 'A nyilvántartási olvasás adóazonosítója nem érvényes spanyol adóazonosító, ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.'
+      repository_profile_bucket_mismatch: 'A(z) %{profile_id} profil nem tartozik a(z) %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -6077,6 +6078,8 @@ errors:
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
     integrity_apoderado_configuration_identity: 'A tárolt apoderado-beállítás nem ahhoz a profilhoz tartozik, amelyből beolvasták.'
+    integrity_storage_secure_object_row_identity: 'Egy tárolt biztonságos objektum nem állítja helyre azt a kulcsot, amely alatt iktatva van; a rekordot kicserélték vagy tévesen iktatták.'
+    integrity_profile_bucket_mismatch: 'A(z) %{profile_id} profil nem tartozik a(z) %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.'
   internal:
     cli_outbound_payload_boundary: A Cadrumo olyan belső rekordot épített, amely nem
       felelt meg a saját érvényesítésének. A parancsod helyes volt; ez a Cadrumo hibája.
@@ -6509,6 +6512,7 @@ errors:
         érzékenységet tartalmaz: %{classification}.'
       unregistered: A(z) %{namespace} biztonságos objektum névtér nincs regisztrálva
         futásidejű tároláshoz.
+      object_key_grammar_mismatch: 'A(z) %{namespace} biztonságos objektum névtér a(z) %{object_key_grammar} kulcsnyelvtant deklarálja, és a használt kulcs nem felel meg neki: %{reason}'
     runtime:
       cold_bootstrap_active_profile_refused: A hidegindítási tároló csak aktív profil
         bucket kiválasztása előtt érhető el.

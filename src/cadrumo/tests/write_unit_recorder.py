@@ -74,6 +74,30 @@ class WriteUnitRecorder:
         """Return how many secure-object writes were observed."""
         return self.events.count(_WRITE_MARKER)
 
+    def write_groups(self) -> tuple[int, ...]:
+        """Return the number of secure-object writes in each transaction, in order.
+
+        ``commits_between_writes`` answers "was this one unit of work?" and is the
+        right question when every write belongs together. A flow with a
+        DELIBERATE second boundary -- a projection that must run only after the
+        primary state commits -- needs the finer view: the group count says how
+        many transactions there were, and each group's size says which writes
+        shared one. Collapsing four separate saves into one batch changes the
+        group shape even though a commit still legitimately falls between the
+        batch and the projection.
+        """
+        groups: list[int] = []
+        pending = 0
+        for entry in self.events:
+            if entry == _WRITE_MARKER:
+                pending += 1
+            elif pending:
+                groups.append(pending)
+                pending = 0
+        if pending:
+            groups.append(pending)
+        return tuple(groups)
+
     def commits_between_writes(self) -> int:
         """Return how many commits fall between the first and last write.
 

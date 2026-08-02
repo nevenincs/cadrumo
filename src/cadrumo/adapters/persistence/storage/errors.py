@@ -258,6 +258,31 @@ class BlobIntegrityError(PersistenceError):
     """Raised when a blob's on-disk SHA-256 disagrees with its manifest."""
 
 
+class SecureObjectRowIdentityError(PersistenceError):
+    """Raised when a stored row's payload does not reconstruct the key it is filed under.
+
+    Every envelope-bound repository derives its object key from the payload's
+    own natural identity, so the two are two encodings of one fact and must
+    agree. A row whose decrypted payload rebuilds a different key is a
+    substituted or misfiled record: the window it was addressed under is not
+    the window it describes, and projecting it would let a foreign record
+    inherit the addressed row's coordinates.
+
+    Raised by the verifying scan rather than silently skipping the row, because
+    a caller counting records for a declaration must never be handed a quietly
+    shortened set.
+    """
+
+    def __init__(self, namespace: str, *, expected_identifier: str) -> None:
+        """Construct the error, binding the namespace and the identity the payload rebuilds."""
+        super().__init__(
+            context={"namespace": namespace, "expected_identifier": expected_identifier},
+            translated_message="errors.integrity.integrity_storage_secure_object_row_identity",
+        )
+        self.namespace = namespace
+        self.expected_identifier = expected_identifier
+
+
 class SecretNotFoundError(SecretStoreError):
     """Raised when a secret-store ``get`` does not find a record for the requested key."""
 

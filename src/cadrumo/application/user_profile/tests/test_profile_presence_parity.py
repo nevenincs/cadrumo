@@ -59,9 +59,7 @@ def test_overview_and_key_authority_agree_on_whitespace_only(blank: str) -> None
     )
 
     overview = build_profile_overview(record)
-    field = next(
-        view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH
-    )
+    field = next(view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH)
     cli = validate_profile_values({_TAX_ID_PATH: blank})
 
     assert field.present is False
@@ -78,9 +76,7 @@ def test_overview_and_key_authority_agree_on_a_real_value() -> None:
     )
 
     overview = build_profile_overview(record)
-    field = next(
-        view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH
-    )
+    field = next(view for section in overview.sections for view in section.fields if view.path == _TAX_ID_PATH)
 
     assert field.present is True
     assert _TAX_ID_PATH not in overview.missing_required

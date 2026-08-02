@@ -23,6 +23,34 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from .._kdf_bounds import (
+    ARGON2_VERSION as _ARGON2_V13,
+)
+from .._kdf_bounds import (
+    KDF_OUTPUT_BYTES as _OUTPUT_BYTES,
+)
+from .._kdf_bounds import (
+    MAX_MEMORY_COST_KIB as _MAX_MEMORY_COST_KIB,
+)
+from .._kdf_bounds import (
+    MAX_PARALLELISM as _MAX_PARALLELISM,
+)
+from .._kdf_bounds import (
+    MAX_TIME_COST as _MAX_TIME_COST,
+)
+from .._kdf_bounds import (
+    MIN_MEMORY_COST_KIB as _MIN_MEMORY_COST_KIB,
+)
+from .._kdf_bounds import (
+    MIN_PARALLELISM as _MIN_PARALLELISM,
+)
+from .._kdf_bounds import (
+    MIN_TIME_COST as _MIN_TIME_COST,
+)
+from .._kdf_bounds import (
+    Argon2Version,
+    KdfOutputLength,
+)
 from .._kdf_salt import KDF_SALT_BYTES, decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 from ..errors import StorageValidationError
 
@@ -32,14 +60,6 @@ if TYPE_CHECKING:
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 _SALT_BYTES = KDF_SALT_BYTES
-_OUTPUT_BYTES = 32
-_ARGON2_V13 = 19
-_MIN_MEMORY_COST_KIB = 19 * 1024
-_MAX_MEMORY_COST_KIB = 1024 * 1024
-_MIN_TIME_COST = 2
-_MAX_TIME_COST = 16
-_MIN_PARALLELISM = 1
-_MAX_PARALLELISM = 8
 
 
 class KdfParams(BaseModel):
@@ -47,21 +67,23 @@ class KdfParams(BaseModel):
 
     Distinct from the manifest-side
     :class:`adapters.persistence.storage.bucket.ManifestKdfParams`
-    record: that record carries whatever parameter set the bucket was
-    enrolled under (so a future cost-bump is non-breaking); this record
-    pins the parameter window the substrate accepts for new enrolments
-    and rejects anything outside it.
+    record only in ROLE: that record carries whatever parameter set the
+    bucket was enrolled under (so a future cost-bump is non-breaking),
+    this one is the constructor for a new enrolment. They accept the same
+    values, because both read the window from :mod:`.._kdf_bounds` rather
+    than declaring it -- the manifest record used to declare its own, far
+    looser one, and the two disagreed.
     """
 
     model_config = _STRICT_FROZEN
 
     algorithm: Literal["argon2id"]
-    version: Literal[19]
+    version: Argon2Version
     memory_cost: int = Field(ge=_MIN_MEMORY_COST_KIB, le=_MAX_MEMORY_COST_KIB)
     time_cost: int = Field(ge=_MIN_TIME_COST, le=_MAX_TIME_COST)
     parallelism: int = Field(ge=_MIN_PARALLELISM, le=_MAX_PARALLELISM)
     salt: bytes
-    output_length: Literal[32]
+    output_length: KdfOutputLength
 
     @field_validator("salt")
     @classmethod

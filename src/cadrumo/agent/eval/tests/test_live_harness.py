@@ -15,7 +15,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from pydantic import ValidationError
 
 from ....entrypoints.mcp import faithfulness_check
@@ -100,6 +99,7 @@ def test_scripted_session_captures_a_trajectory_the_scorer_scores() -> None:
     # A real stdio session capturing one floor-tool call, then scored against the
     # golden scenario: the capture is non-error and the scorer correctly reports
     # the one-call trajectory does not cover the scenario's expected trajectory.
+    scenario = load_scenario(_SCENARIO_PATH)
     driver = ScriptedPersonaDriver([LiveCallTool(tool_name="cadrumo_harness_load", arguments_json="{}")])
     trajectory = run_live_session(
         ["cadrumo-mcp"],
@@ -107,10 +107,11 @@ def test_scripted_session_captures_a_trajectory_the_scorer_scores() -> None:
         session_id="live-capture",
         driver=driver,
         command_key_by_tool={"cadrumo_harness_load": ""},
+        scenario=scenario.name,
     )
     assert len(trajectory.tool_calls) == 1
     assert trajectory.tool_calls[0].is_error is False
-    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+    score = _score(trajectory, scenario)
     assert score.expected_covered is False
     assert score.passed is False
 
@@ -121,6 +122,7 @@ def test_grounded_trajectory_passes() -> None:
         [LiveNarrationRecord(step="modelo.export", text=f"the quarter result casilla 07 is {_GROUNDED_FIGURE}")],
     )
     score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+    assert score.scenario == trajectory.scenario
     assert score.passed is True
     assert score.invariants.passed is True
 
@@ -214,3 +216,21 @@ def test_export_before_verify_fails_lifecycle() -> None:
     score = _score(_trajectory(calls, []), load_scenario(_SCENARIO_PATH))
     assert score.lifecycle_ordered is False
     assert score.passed is False
+
+
+def test_foreign_trajectory_scenario_is_refused() -> None:
+    trajectory = _trajectory(_complete_calls(), []).model_copy(update={"scenario": "foreign-scenario"})
+
+    with pytest.raises(ValueError, match="one session must score against one scenario"):
+        _score(trajectory, load_scenario(_SCENARIO_PATH))
+
+
+def test_reentered_lifecycle_stage_fails_the_score() -> None:
+    calls = _complete_calls()
+    calls.insert(4, _call("modelo.work.calculate"))
+
+    score = _score(_trajectory(calls, []), load_scenario(_SCENARIO_PATH))
+
+    assert score.lifecycle_ordered is False
+    assert score.passed is False
+    assert any("re-enters lifecycle stage(s): modelo.work.calculate" in failure for failure in score.failures)

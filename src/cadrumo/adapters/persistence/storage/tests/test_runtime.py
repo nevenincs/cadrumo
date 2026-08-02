@@ -429,7 +429,10 @@ def test_runtime_bound_repository_refuses_write_after_session_becomes_unsecured(
 def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_changes(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
-    object_key = "stale-quarantine-row"
+    # The workflow-state namespace is a singleton addressed only by its
+    # declared key; this test is about the session-bucket-change refusal,
+    # not about the key, so it uses the canonical one.
+    object_key = WORKFLOW_STATE_NAMESPACE.object_key_grammar
 
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
@@ -467,7 +470,10 @@ def test_runtime_bound_repository_refuses_quarantine_after_session_bucket_change
 def test_runtime_bound_repository_refuses_diagnostics_after_session_bucket_changes(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, _BUCKET_A_ID)
     namespace = WORKFLOW_STATE_NAMESPACE.namespace
-    object_key = "stale-diagnostic-row"
+    # The workflow-state namespace is a singleton addressed only by its
+    # declared key; this test is about the session-bucket-change refusal,
+    # not about the key, so it uses the canonical one.
+    object_key = WORKFLOW_STATE_NAMESPACE.object_key_grammar
 
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),

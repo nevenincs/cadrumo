@@ -17,7 +17,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 
-from ._errors import BucketsError
+from ._errors import BucketEventValidationError, BucketsError
 from ._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -42,7 +42,31 @@ def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEve
 
     Content-addressed: a re-emission of the same :class:`BucketEvent` collapses
     to the same ``event_id`` and the existing entry is left in place.
+
+    That is what this always claimed and what it now does. It previously
+    assigned unconditionally, which is indistinguishable from collapsing for
+    an identical event -- and that equivalence is exactly why the gap held.
+    ``payload_version`` is the one field :func:`derive_bucket_event_id` does
+    not hash, so two events could share an id while disagreeing about their
+    payload contract, and the later one silently replaced an immutable audit
+    revision. The catalogue afterwards looked like one content-addressed
+    record, so nothing downstream could tell a revision had been erased.
+
+    A colliding id carrying a different version fails closed rather than
+    being folded in. Deriving the id from the version instead would make the
+    two records distinct, but then a caller that merely mis-stated the
+    version would append a duplicate of an event that already exists -- a
+    quieter wrong answer than a refusal naming both versions.
     """
+    existing = catalogue.events.get(event.event_id)
+    if existing is not None:
+        if existing == event:
+            return catalogue
+        raise BucketEventValidationError(
+            f"event_id {event.event_id!r} already records payload_version "
+            f"{existing.payload_version}; refusing to overwrite it with "
+            f"payload_version {event.payload_version}",
+        )
     mapping = dict(catalogue.events)
     mapping[event.event_id] = event
     return BucketEventHistoryCatalogue(events=mapping)

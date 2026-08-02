@@ -133,6 +133,33 @@ def evidence_table(plan: SheetExportPlan) -> tuple[str, tuple[str, ...], tuple[t
     return (plan.evidence.snapshot_fingerprint or "", _EVIDENCE_HEADERS, body)
 
 
+def guide_stamps(plan: SheetExportPlan) -> tuple[tuple[str, str], ...]:
+    """Return the Guide tab's ``(label, value)`` export stamps for ``plan``.
+
+    The sibling of :func:`evidence_table`, and for the same reason: both
+    transports claim to render one :class:`SheetExportPlan`, so anything they
+    both draw has to come from one place. Each kept its own hand-maintained
+    copy of this table and the two had already drifted — the offline XLSX
+    wrote ``Revision`` and ``Periodo`` while the Google Sheets value builder
+    wrote ``Revisión`` and ``Período``. The metadata VALUES matched, so
+    nothing looked wrong, but the two exports of one plan disagreed about the
+    row labels a reader or a label-keyed instruction would look for.
+
+    The accented spellings win: these are Spanish operator-facing labels and
+    both transports carry UTF-8 text, so the unaccented pair was a
+    transliteration with nothing to recommend it.
+    """
+    metadata = plan.metadata
+    return (
+        ("Modelo", metadata.modelo_id),
+        ("Revisión", metadata.revision_id),
+        ("Período", f"{metadata.period.registry_token} / {metadata.filing_year}"),
+        ("Motor", metadata.engine_version),
+        ("Registry SHA", metadata.registry_sha),
+        ("Exportado", metadata.exported_at.isoformat()),
+    )
+
+
 def build_offline_workbook(plan: SheetExportPlan) -> Workbook:
     """Materialise a :class:`~application.storage.calc_sheets.SheetExportPlan` as an offline openpyxl workbook."""
     workbook = Workbook()
@@ -392,17 +419,8 @@ def _write_guide(worksheet: Worksheet, plan: SheetExportPlan) -> None:
     for row, paragraph in enumerate(plan.guide.paragraphs, start=3):
         worksheet.cell(row=row, column=1, value=paragraph)
 
-    metadata = plan.metadata
     base_row = 3 + len(plan.guide.paragraphs) + 2
-    stamps = (
-        ("Modelo", metadata.modelo_id),
-        ("Revision", metadata.revision_id),
-        ("Periodo", f"{metadata.period.registry_token} / {metadata.filing_year}"),
-        ("Motor", metadata.engine_version),
-        ("Registry SHA", metadata.registry_sha),
-        ("Exportado", metadata.exported_at.isoformat()),
-    )
-    for offset, (label, value) in enumerate(stamps):
+    for offset, (label, value) in enumerate(guide_stamps(plan)):
         worksheet.cell(row=base_row + offset, column=1, value=label)
         worksheet.cell(row=base_row + offset, column=2, value=value)
 

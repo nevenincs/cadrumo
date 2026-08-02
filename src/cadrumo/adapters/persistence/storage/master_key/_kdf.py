@@ -11,6 +11,15 @@ dependency.
 The helper is a thin typed wrapper. It does not maintain caches or
 module-global state; the unlock pipeline owns the resulting bytes
 through a `BucketSession`.
+
+The algorithm and output-length guards below are a BACKSTOP, not the
+authority: `ManifestKdfParams` validates both against the shared
+`.._kdf_bounds` window, so a validated record cannot reach them. They stay
+because a caller can bypass validation (`model_construct`) and because a
+library refusal must not escape the storage boundary untyped -- the same
+defence-in-depth split the parameter-cost bounds now follow. They must never
+become the only place a weak parameter set is caught; that is what let the
+manifest window and the enrollment window disagree.
 """
 
 from __future__ import annotations

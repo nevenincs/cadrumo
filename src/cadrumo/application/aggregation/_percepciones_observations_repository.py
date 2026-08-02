@@ -270,20 +270,34 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         validated distinct-count primitive. An empty tuple means no per-perceptor
         records were persisted for the window — the resolver MUST surface a
         no-silent advisory rather than materialising a silent zero.
+
+        The scan verifies each row's identity against the key it is filed under
+        before the window filter runs. Filtering on the decrypted payload alone
+        trusts the payload to declare its own coordinates, so a record written
+        under another row's key would enter this window and distort the distinct
+        percepciones count with a record the declaration never addressed.
+
+        Raises:
+            SecureObjectRowIdentityError: A stored row does not reconstruct the
+                key it is filed under.
         """
         safe_repository_id(modelo, context="modelo")
         return tuple(
             payload.observation
-            for payload in self.iter_records()
+            for payload in self.iter_verified_records()
             if payload.modelo == modelo
             and payload.filing_year == period.filing_year
             and payload.period.registry_token == period.registry_token
         )
 
     def iter_modelo(self, modelo: str) -> Iterator[_PercepcionObservationEnvelopePayload]:
-        """Yield every persisted per-perceptor-clave payload for `modelo` in unspecified order."""
+        """Yield every persisted per-perceptor-clave payload for `modelo` in unspecified order.
+
+        Verifies each row's identity against its stored key before projecting it,
+        for the same reason :meth:`load_observations` does.
+        """
         safe_repository_id(modelo, context="modelo")
-        for payload in self.iter_records():
+        for payload in self.iter_verified_records():
             if payload.modelo == modelo:
                 yield payload
 

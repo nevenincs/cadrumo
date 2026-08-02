@@ -476,16 +476,21 @@ class ConfigProfileShowResult(OutputSchema):
     Covers the missing-record branch, the unreadable-record branch, and
     the success path. Optional fields accommodate each branch. Successful rows
     project :class:`UserProfileRecord` facts through
-    :class:`ProfileFactPayload`;
-    failures report pointer and record readiness
-    without dumping encrypted profile contents.
+    :class:`ProfileFactPayload`, bounded exactly as the canonical record's
+    ``profile_id`` / ``display_name`` / ``schema_version`` / ``status`` --
+    a malformed lifecycle status or a non-positive schema version is
+    refused rather than reported as a valid profile. Failures report
+    pointer and record readiness without dumping encrypted profile
+    contents; ``status`` also carries the readiness-branch
+    ``profile_record_unreadable`` sentinel, which is not itself a
+    :class:`UserProfileStatus` lifecycle state.
     """
 
-    profile_id: str | None = None
-    display_name: str | None = None
-    status: str | None = None
+    profile_id: BucketId | None = None
+    display_name: str | None = Field(default=None, min_length=1, max_length=160)
+    status: UserProfileStatus | Literal["profile_record_unreadable"] | None = None
     valid: bool | None = None
-    schema_version: int | None = None
+    schema_version: int | None = Field(default=None, ge=1)
     issues: list[ProfileIssuePayload] | None = None
     facts: list[ProfileFactPayload] | None = None
     # Error / readiness branches

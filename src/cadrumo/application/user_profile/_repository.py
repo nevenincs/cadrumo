@@ -43,6 +43,7 @@ from ...adapters.persistence.storage.bucket import BucketValidationError
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import (
+    ProfileBucketMismatchError,
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
     StoredProfileDriftError,
@@ -188,6 +189,31 @@ class _BucketBoundRepository:
         # injected — cross-bucket operations must address the named
         # bucket, not whichever profile is currently active.
         self._objects = objects or _secure_objects_for_bucket(trimmed)
+
+    def _assert_owns(self, profile_id: str, *, surface: str) -> None:
+        """Refuse a payload identity that does not belong to the bound bucket.
+
+        Snapshot rows are keyed by the BOUND BUCKET plus the snapshot id, not
+        by the payload's own ``profile_id``, and ``load`` validated the
+        envelope without ever checking whose profile came back. A snapshot for
+        profile B could therefore be written into, found in, and read out of
+        profile A's repository, filed under a key that names only A — so the
+        stored row and its contents disagreed about whose profile it was, and
+        nothing on either path compared them.
+
+        Deliberately NOT applied to the live-profile repository. The lifecycle
+        service's ``duplicate`` holds one bucket-bound repository while it
+        reads the source profile and writes the new one, so a foreign identity
+        is a real exercised shape there rather than a leak. Whether that shape
+        should exist is a design question about duplication, not something to
+        settle with a guard that would simply break it.
+        """
+        trimmed = profile_id.strip()
+        if trimmed != self._bucket_id:
+            raise ProfileBucketMismatchError(
+                translated_message="application.user_profile.errors.repository_profile_bucket_mismatch",
+                context={"profile_id": trimmed, "bucket_id": self._bucket_id, "surface": surface},
+            )
 
 
 class UserProfileLifecycleRepository(_BucketBoundRepository):
@@ -487,6 +513,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
                     "max_supported_version": _USER_PROFILE_SNAPSHOT_VERSION,
                 },
             )
+        self._assert_owns(envelope.payload.profile_id, surface="load")
         return envelope.payload
 
     def save(self, snapshot: UserProfileSnapshot) -> None:
@@ -505,6 +532,7 @@ class UserProfileSnapshotRepository(_BucketBoundRepository):
         Args:
             snapshot: The filing-time profile snapshot to encrypt and store.
         """
+        self._assert_owns(snapshot.profile_id, surface="save")
         envelope = Envelope[UserProfileSnapshot](
             schema_version=_USER_PROFILE_SNAPSHOT_VERSION,
             written_at=now(),

@@ -337,20 +337,16 @@ def persist_calculation_revision(
         created_at=now,
         updated_at=now,
     )
-    calculation_repository.save(upsert_calculation_revision(revisions, revision))
-    work_unit_repository.save(
-        upsert_work_unit(
-            work_units,
-            work_unit.model_copy(
-                update={
-                    "current_calculation_revision_id": revision_id,
-                    "updated_at": now,
-                },
-            ),
+    advanced_work_units = upsert_work_unit(
+        work_units,
+        work_unit.model_copy(
+            update={
+                "current_calculation_revision_id": revision_id,
+                "updated_at": now,
+            },
         ),
     )
-    emit_modelo_bucket_event(
-        repository=bucket_event_repository,
+    created_event = build_modelo_bucket_event(
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_CALCULATION_CREATED,
         occurred_at=now,
@@ -378,6 +374,18 @@ def persist_calculation_revision(
             "source_provenance_count": str(len(source_provenance)),
             "source_provenance_trace_sha256": _source_provenance_trace_sha256(source_provenance),
         },
+    )
+    # One unit of work: the draft revision, the advanced current-calculation
+    # pointer, and MODELO_CALCULATION_CREATED. Emitted through a separate write,
+    # an event-storage failure left the draft durable and pointed-at as current
+    # while the history stayed unchanged, with no recovery marker or retry
+    # contract naming the missing entry.
+    calculation_repository.save_with_secure_object_writes(
+        upsert_calculation_revision(revisions, revision),
+        (
+            work_unit_repository.to_secure_object_write(advanced_work_units),
+            modelo_bucket_event_write(bucket_event_repository, (created_event,)),
+        ),
     )
     return revision
 
@@ -689,66 +697,76 @@ def persist_filed_revision(
         work_unit=work_unit,
         prorrata_register_repository=prorrata_repo,
     )
-    extra_writes = (calculation_repository.to_secure_object_write(revisions), *participation_writes)
-    if prorrata_write is not None:
-        extra_writes = (*extra_writes, prorrata_write)
-
-    # Co-emit the filed revision, filing catalogue, and per-transaction
-    # participation index in the filing repository's save_many call. The
-    # participation rows gain filing_record_id in the same SQL unit of work as
-    # the filing catalogue, so transaction->filing cross-reference cannot drift
-    # from the receipt it names.
-    filing_repository.save_with_secure_object_writes(
-        updated_filing_catalogue,
-        extra_writes,
-    )
-    work_unit_repository.save(
-        upsert_work_unit(
-            work_units,
-            work_unit.model_copy(
-                update={
-                    "filed_calculation_revision_id": calculation_revision_id,
-                    "current_filing_record_id": new_filing_id,
-                    "updated_at": now,
-                },
-            ),
+    advanced_work_units = upsert_work_unit(
+        work_units,
+        work_unit.model_copy(
+            update={
+                "filed_calculation_revision_id": calculation_revision_id,
+                "current_filing_record_id": new_filing_id,
+                "updated_at": now,
+            },
         ),
     )
 
+    filed_events: list[BucketEvent] = []
     if prior_current is not None:
-        emit_modelo_bucket_event(
-            repository=bucket_event_repository,
+        filed_events.append(
+            build_modelo_bucket_event(
+                bucket_id=work_unit.bucket_id,
+                event_type=BucketEventType.MODELO_FILED_SUPERSEDED,
+                occurred_at=now,
+                actor=actor,
+                object_type=BucketEventObjectType.FILING_RECORD,
+                object_id=prior_current.filing_record_id,
+                payload={
+                    "superseded_by_filing_record_id": new_filing_id,
+                    "calculation_revision_id": prior_current.calculation_revision_id,
+                    "modelo": work_unit.modelo,
+                    "filing_year": str(work_unit.filing_year),
+                    "period": work_unit.period.registry_token,
+                },
+            ),
+        )
+    filed_events.append(
+        build_modelo_bucket_event(
             bucket_id=work_unit.bucket_id,
-            event_type=BucketEventType.MODELO_FILED_SUPERSEDED,
+            event_type=BucketEventType.MODELO_FILED,
             occurred_at=now,
             actor=actor,
             object_type=BucketEventObjectType.FILING_RECORD,
-            object_id=prior_current.filing_record_id,
+            object_id=new_filing_id,
             payload={
-                "superseded_by_filing_record_id": new_filing_id,
-                "calculation_revision_id": prior_current.calculation_revision_id,
+                "calculation_revision_id": calculation_revision_id,
+                "work_unit_id": target.work_unit_id,
                 "modelo": work_unit.modelo,
                 "filing_year": str(work_unit.filing_year),
                 "period": work_unit.period.registry_token,
+                "supersedes_filing_record_id": prior_current.filing_record_id if prior_current is not None else "",
             },
-        )
+        ),
+    )
 
-    emit_modelo_bucket_event(
-        repository=bucket_event_repository,
-        bucket_id=work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_FILED,
-        occurred_at=now,
-        actor=actor,
-        object_type=BucketEventObjectType.FILING_RECORD,
-        object_id=new_filing_id,
-        payload={
-            "calculation_revision_id": calculation_revision_id,
-            "work_unit_id": target.work_unit_id,
-            "modelo": work_unit.modelo,
-            "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period.registry_token,
-            "supersedes_filing_record_id": prior_current.filing_record_id if prior_current is not None else "",
-        },
+    extra_writes = (calculation_repository.to_secure_object_write(revisions), *participation_writes)
+    if prorrata_write is not None:
+        extra_writes = (*extra_writes, prorrata_write)
+    extra_writes = (
+        *extra_writes,
+        work_unit_repository.to_secure_object_write(advanced_work_units),
+        modelo_bucket_event_write(bucket_event_repository, tuple(filed_events)),
+    )
+
+    # One unit of work for the whole local filing transition: the filed revision,
+    # the filing catalogue, the per-transaction participation index, any prorrata
+    # settlement writeback, the advanced WorkUnit filing pointer, and the
+    # supersession + mandatory MODELO_FILED events. The participation rows gain
+    # filing_record_id in the same SQL transaction as the filing catalogue, so
+    # transaction->filing cross-reference cannot drift from the receipt it names;
+    # folding the pointer and the events in closes the seam that previously let a
+    # VIGENTE filing and an advanced filed pointer come to rest with no matching
+    # history entry.
+    filing_repository.save_with_secure_object_writes(
+        updated_filing_catalogue,
+        extra_writes,
     )
 
     # Cross-period carry projection (co-emitted with MODELO_FILED above): record
