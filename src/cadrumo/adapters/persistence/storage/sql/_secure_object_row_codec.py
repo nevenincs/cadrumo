@@ -135,7 +135,7 @@ def decode_secure_object_row(
     schema_version: int,
     written_at: datetime,
     payload_wire: bytes,
-    revision_id: object,
+    revision_id: str | None,
     previous_revision_id: str | None,
     payload_hash: str | None,
     ciphertext_hash: str | None,
@@ -173,7 +173,8 @@ def decode_secure_object_row(
             the namespace's expected class.
         EnvelopeVersionError: Schema version unreadable, unregistered for the
             namespace, or an upgrade hop failure.
-        SecureObjectUnreadableError: Revision lineage self-consistency failed.
+        SecureObjectUnreadableError: Revision lineage self-consistency failed,
+            which includes a row carrying no revision metadata at all.
         DecryptionError: The AEAD did not open.
     """
     try:
@@ -206,11 +207,11 @@ def decode_secure_object_row(
         definition=namespace_definition,
     )
     if not verify_revision_self_consistency(
+        revision_id,
         namespace=namespace,
         object_key=object_key,
         schema_version=schema_version,
         written_at=written_at,
-        revision_id=revision_id,
         previous_revision_id=previous_revision_id,
         payload_hash=payload_hash,
         ciphertext_hash=ciphertext_hash,
@@ -240,7 +241,7 @@ def decode_secure_object_row(
         schema_version=max_supported_version,
         written_at=written_at,
         payload=payload_plain,
-        revision_id=str(revision_id),
+        revision_id=revision_id,
     )
 
 
