@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:498f6adcf4566d1f20770ee2e2d48f71c381afc6e10b19f553a7188c46b28f93'
+body_hash: 'sha256:6f2449f7cccb1aaff0e52629aa670bd4c2d6194048ca7c54716e63e0cded27d3'
 related: []
 ---
 
@@ -205,7 +205,6 @@ The original reading that this is not a timing oracle is confirmed with numbers.
 Wrong guesses complete in well under a fifth of a second and a correct one takes
 longer, but only because provisioning and key enrolment run after a successful
 unwrap. Discrimination is by exception, not by clock.
-
 
 ### fleet-burndown | high | a guard can be on the path, raise correctly, and have its refusal discarded downstream
 
@@ -461,6 +460,49 @@ the peer work lost here was already committed. A pathspec commit is only safe if
 your working copy of that file is current, so read the file's most recent commit
 before committing a file you have held for any length of time.
 
+### fleet-burndown | high | an inert mutation and a suite that does not discriminate both present as green
+
+A guard was mutated by inserting a statement ahead of its `raise`. The `raise`
+still fired, every test passed, and the green read initially as a suite failing
+to discriminate. The same edit shape had worked against a sibling guard, where
+the inserted statement short-circuited the function before the refusal; the
+difference between the two cases is one keyword, and nothing in the result
+distinguishes them.
+
+Green under a mutation has two explanations — the tests do not cover the
+property, or the mutation changed no behaviour — and they call for opposite
+responses. Taking the first when the second is true produces a vacuous-test
+report that is false, in the category this campaign was most primed to believe,
+which is the condition under which a finding gets absorbed rather than checked.
+
+The discipline is to verify that the mutation flipped the answer, not that the
+mutation landed. This is the instrument rule one level in: a mutation is itself
+an instrument, so an instrument never shown to produce the outcome it is meant
+to detect is not evidence. Prefer the smallest edit that changes the result
+over the first edit that applies, and confirm the injected failure actually
+fired before drawing anything from a suite that stayed green.
+
+### fleet-burndown | high | a rule does not attach to your own work unless the act itself prompts it
+
+The mutation-window hazard's own escalator produced fourteen unannounced
+instances of it within the hour, on a production file, having watched the rule
+be written. The mechanism is not forgetting. Mutations are held mentally as
+measurement rather than as edits to a shared file, so nothing in the act
+resembles the thing the rule governs, and the restores all verified — from
+inside there was no signal at any point.
+
+The consequence is about the rule's form rather than anyone's diligence: an
+announcement requirement that depends on recall will not hold, because the
+moment it must fire is the moment the actor is thinking about something else. It
+has to attach to the act that creates the window.
+
+Pair it with exposure, which is what makes a disclosure actionable rather than
+alarming. Different instruments have different exposure to the same window: a
+rename inside a mutated file corrupts a lexical scan while leaving a structural
+one untouched. Naming the file and what was changed therefore lets a reader
+determine which of their own results need re-checking, instead of treating all
+of them as suspect or none.
+
 ## Recommendations
 
 Close the passphrase-oracle class properly. A follow-on decision record must
@@ -607,4 +649,3 @@ practical remedy is at the working end rather than the authoring end: re-resolve
 a finding's named subject at the current tree before acting, and treat a subject
 that now resolves to more than one symbol as a signal that the finding predates a
 refactor rather than as a defect in the finding.
-
