@@ -24,6 +24,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import Modelo, Period
+from .....core.identity import ContentDigest
 from .....domain.calculations.registry import CasillaId
 from ._adapter_utils import is_aeat_csv
 from ._errors import SedeValidationError
@@ -32,6 +33,7 @@ from ._errors import SedeValidationError
 # "202310013522456T" (length 16). Observed range: 14-20 characters in
 # the live capture.
 _EXPEDIENTE_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"^[0-9]{4,}[A-Z0-9]+$")
+
 
 class Expediente(BaseModel):
     """One AEAT expediente as listed under *Mis Expedientes*.
@@ -136,7 +138,12 @@ class SedeCapture(BaseModel):
         expediente: The expediente the capture originated from.
         ref: The CSV handle the capture used.
         pdf_bytes: Raw PDF body as served by AEAT.
-        pdf_sha256: Lowercase hex sha-256 of ``pdf_bytes``.
+        pdf_sha256: SHA-256 of ``pdf_bytes``, typed as the canonical
+            :data:`~core.identity.ContentDigest` rather than a locally
+            re-declared hex-64 pattern. The three digest fields in this module
+            each carried their own copy of that regex and so each rejected a
+            whitespace-wrapped digest the canonical alias trims — one shape,
+            three spellings, three answers.
         captured_at: UTC timestamp of the fetch completion.
         mode: Structural read-only marker.
     """
@@ -146,7 +153,7 @@ class SedeCapture(BaseModel):
     expediente: Expediente
     ref: JustificanteRef
     pdf_bytes: bytes
-    pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    pdf_sha256: ContentDigest
     captured_at: datetime
     mode: Literal["read"] = "read"
 
@@ -165,7 +172,7 @@ class FiledDeclaracionArtefact(BaseModel):
     source_url: AnyHttpUrl
     content_type: str = Field(min_length=1, max_length=255)
     byte_count: int = Field(ge=0)
-    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    sha256: ContentDigest
     captured_at: datetime
     storage_ref: str | None = Field(default=None, min_length=1, max_length=4096)
     mode: Literal["read"] = "read"
@@ -236,7 +243,7 @@ class IvaCompensationWalletObservation(BaseModel):
     total_pending: Decimal = Field(ge=Decimal("0"))
     source_url: AnyHttpUrl
     captured_at: datetime
-    raw_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    raw_sha256: ContentDigest | None = None
     mode: Literal["read"] = "read"
 
 
