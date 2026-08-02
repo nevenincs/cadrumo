@@ -157,6 +157,8 @@ def exclusive_file_lock(
             to ``DEFAULT_LOCK_TIMEOUT``. ``0`` requests a single non-
             blocking attempt.
         retry_backoff: Sleep interval between non-blocking attempts.
+            Must be strictly positive, matching the ``gt=0`` bound on the
+            :class:`~core.config.Settings` field that supplies its default.
             Tests may shorten this; defaults to ``0.05``.
 
     Yields:
@@ -164,7 +166,8 @@ def exclusive_file_lock(
 
     Raises:
         LockAcquisitionError: If the lock cannot be acquired within
-            ``timeout`` seconds, or if ``timeout`` is negative. The
+            ``timeout`` seconds, if ``timeout`` is negative, or if
+            ``retry_backoff`` is not strictly positive. The
             error category is ``LOCKED`` and ``retryable`` is ``True``.
             The retryable flag means "another acquirer may release
             shortly and the operation could succeed on retry"; consumers
@@ -179,6 +182,14 @@ def exclusive_file_lock(
         retry_backoff = _default_retry_backoff()
     if timeout < 0:
         raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")
+    # The Settings field that supplies the default is bound `gt=0`, but a
+    # caller-supplied value bypassed settings entirely and reached time.sleep,
+    # which raises a bare ValueError on a negative interval — surfacing as an
+    # unhandled crash instead of this primitive's documented refusal. The bound
+    # is enforced here so both routes carry one contract. Zero is refused too:
+    # a zero interval is a busy-spin the typed field does not permit.
+    if retry_backoff <= 0:
+        raise LockAcquisitionError(f"retry_backoff must be strictly positive; got {retry_backoff}")
     lock_path = _lock_path_for(target)
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     # Add the close-on-exec / no-inherit flag so the lock-file descriptor
