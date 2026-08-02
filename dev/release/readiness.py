@@ -1,4 +1,4 @@
-"""Audit-state readiness gate run before `just release-apply` is trusted.
+"""Audit-state readiness gate run before a release bump is trusted.
 
 Checks a small set of deterministic, release-blocking invariants and reports
 a single machine-readable verdict. This module performs **no outward
@@ -755,7 +755,7 @@ def main(argv: list[str] | None = None) -> int:
         status = "PASS" if check.passed else ("BLOCK" if check.severity == "blocking" else "WARN")
         print(f"[{status}] {check.name}: {check.detail}")
     if report.ok:
-        print("\naudit-state gate: OK — release may proceed to `just release-apply`.")
+        print("\naudit-state gate: OK — release may proceed to the automated bump.")
     else:
         print("\naudit-state gate: BLOCKED — resolve the failures above before releasing.")
     return 0 if report.ok else 1
