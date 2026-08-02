@@ -46,7 +46,7 @@ from ...application.modelo import (
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_work_unit_for_operator_target,
 )
-from ...core import Period, PeriodError
+from ...core import Modelo, Period, PeriodError
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError
@@ -720,15 +720,16 @@ def work_compare_taxation(
 
     result = WorkCompareTaxationResult(
         filing_year=comparison.filing_year,
-        modelo=comparison.modelo,
+        modelo=Modelo(comparison.modelo),
         revision=comparison.revision,
         conjunta_cuota_resultante=str(comparison.conjunta_cuota_resultante),
         individual_cuota_resultante=str(comparison.individual_cuota_resultante),
         conjunta_resultado=str(comparison.conjunta_resultado),
         individual_resultado=str(comparison.individual_resultado),
         delta_resultado=str(comparison.delta_resultado),
-        recommendation=comparison.recommendation.value,
+        recommendation=comparison.recommendation,
         recommendation_reason=comparison.recommendation_reason,
+        individual_branch_single_earner_only=comparison.individual_branch_single_earner_only,
     )
     from ._modelo_rendering import advisory_notice
 
