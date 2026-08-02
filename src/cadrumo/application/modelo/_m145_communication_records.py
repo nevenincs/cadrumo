@@ -61,6 +61,7 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
+    bucket_event_history_write,
 )
 from ...domain.calculations.registry import (
     CasillaDefinition,
@@ -78,6 +79,7 @@ from ._m145_communication import (
     M145_COMMUNICATION_SERVICE_OWNER,
     build_m145_communication_service_contract,
 )
+from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
@@ -461,6 +463,13 @@ def _emit_m145_communication_event(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
     payload: Mapping[str, str] | None = None,
 ) -> BucketEvent:
+    """Emit an event that records no persisted record state of its own.
+
+    Used only by the export path, whose receipt is derived rather than stored:
+    there is no record write for the event to be inconsistent with, so a
+    standalone emit is correct there. Every transition that DOES change record
+    state co-commits instead, through :func:`_build_m145_communication_event`.
+    """
     repository = bucket_event_repository or BucketEventHistoryRepository()
     return _emit_bucket_event(
         repository=repository,
@@ -472,6 +481,47 @@ def _emit_m145_communication_event(
         object_id=record.communication_record_id,
         payload=_m145_communication_event_payload(record, payload),
     )
+
+
+def _build_m145_communication_event(
+    record: M145CommunicationRecord,
+    *,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+    payload: Mapping[str, str] | None = None,
+) -> BucketEvent:
+    """Derive a communication event without persisting it.
+
+    The derive half for transitions that must commit the event in the same unit
+    of work as the record state it records.
+    """
+    return _build_bucket_event(
+        bucket_id=record.bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.COMMUNICATION_RECORD,
+        object_id=record.communication_record_id,
+        payload=_m145_communication_event_payload(record, payload),
+    )
+
+
+def _save_m145_record_with_event(
+    repository,
+    record: M145CommunicationRecord,
+    event: BucketEvent,
+    *,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+) -> None:
+    """Commit a transitioned record and its history event in one transaction.
+
+    Saved first and emitted afterwards, an event-storage failure left the
+    communication record in its new state with the history showing no
+    transition -- an M145 lifecycle change the audit trail cannot account for.
+    """
+    events = bucket_event_repository or BucketEventHistoryRepository()
+    repository.save_with_secure_object_writes(record, (bucket_event_history_write(events, (event,)),))
 
 
 def _issue(
@@ -926,12 +976,17 @@ def mark_m145_communication_record_delivered_to_payer(
         state=M145CommunicationRecordState.DELIVERED_TO_PAYER,
         delivered_to_payer_at=transitioned_at,
     )
-    repository.save(transitioned)
-    _emit_m145_communication_event(
+    # One unit of work: the transitioned record and its history event.
+    transition_event = _build_m145_communication_event(
         transitioned,
         event_type=BucketEventType.MODELO_145_COMMUNICATION_DELIVERED_TO_PAYER,
         occurred_at=transitioned_at,
         actor=actor,
+    )
+    _save_m145_record_with_event(
+        repository,
+        transitioned,
+        transition_event,
         bucket_event_repository=bucket_event_repository,
     )
     _LOGGER.info(
@@ -974,12 +1029,17 @@ def mark_m145_communication_record_locally_completed(
         state=M145CommunicationRecordState.LOCALLY_COMPLETED,
         locally_completed_at=transitioned_at,
     )
-    repository.save(transitioned)
-    _emit_m145_communication_event(
+    # One unit of work: the transitioned record and its history event.
+    transition_event = _build_m145_communication_event(
         transitioned,
         event_type=BucketEventType.MODELO_145_COMMUNICATION_LOCALLY_COMPLETED,
         occurred_at=transitioned_at,
         actor=actor,
+    )
+    _save_m145_record_with_event(
+        repository,
+        transitioned,
+        transition_event,
         bucket_event_repository=bucket_event_repository,
     )
     _LOGGER.info(
@@ -1043,12 +1103,17 @@ def create_m145_communication_record(
         created_at=now(),
         note=command.note,
     )
-    repository.save(record)
-    _emit_m145_communication_event(
+    # One unit of work: the transitioned record and its history event.
+    transition_event = _build_m145_communication_event(
         record,
         event_type=BucketEventType.MODELO_145_COMMUNICATION_CREATED,
         occurred_at=record.created_at,
         actor=actor,
+    )
+    _save_m145_record_with_event(
+        repository,
+        record,
+        transition_event,
         bucket_event_repository=bucket_event_repository,
     )
     _LOGGER.info(
