@@ -6,18 +6,15 @@ triggers_when = "iva.catalogue.triggers_when_142813"
 iva_treatment = "iva.catalogue.iva_treatment_888336"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 90.Uno"
+legal_reference = "ley-37-1992:art-90"
 quoted_text = "iva.catalogue.domestic_general_21.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 4.Uno"
+legal_reference = "ley-37-1992:art-4"
 quoted_text = "iva.catalogue.domestic_general_21.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -29,18 +26,15 @@ triggers_when = "iva.catalogue.triggers_when_029777"
 iva_treatment = "iva.catalogue.iva_treatment_786939"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 91.Uno"
+legal_reference = "ley-37-1992:art-91"
 quoted_text = "iva.catalogue.domestic_reduced_10.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 91.Uno.2.1"
+legal_reference = "ley-37-1992:art-91"
 quoted_text = "iva.catalogue.domestic_reduced_10.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -52,18 +46,15 @@ triggers_when = "iva.catalogue.triggers_when_352485"
 iva_treatment = "iva.catalogue.iva_treatment_774580"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 91.Dos.1"
+legal_reference = "ley-37-1992:art-91"
 quoted_text = "iva.catalogue.domestic_super_reduced_4.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 91.Dos.1.2"
+legal_reference = "ley-37-1992:art-91"
 quoted_text = "iva.catalogue.domestic_super_reduced_4.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -75,18 +66,15 @@ triggers_when = "iva.catalogue.triggers_when_739440"
 iva_treatment = "iva.catalogue.iva_treatment_872035"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 91.Dos.1.1"
+legal_reference = "ley-37-1992:art-91"
 quoted_text = "iva.catalogue.domestic_zero.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 24.Uno"
+legal_reference = "ley-37-1992:art-24"
 quoted_text = "iva.catalogue.domestic_zero.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -98,18 +86,15 @@ triggers_when = "iva.catalogue.triggers_when_049241"
 iva_treatment = "iva.catalogue.iva_treatment_795653"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 20.Uno"
+legal_reference = "ley-37-1992:art-20"
 quoted_text = "iva.catalogue.domestic_exempt.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 20.Uno.22"
+legal_reference = "ley-37-1992:art-20"
 quoted_text = "iva.catalogue.domestic_exempt.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -121,18 +106,15 @@ triggers_when = "iva.catalogue.triggers_when_425274"
 iva_treatment = "iva.catalogue.iva_treatment_078140"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 7.1"
+legal_reference = "ley-37-1992:art-7"
 quoted_text = "iva.catalogue.domestic_not_subject.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 7.5"
+legal_reference = "ley-37-1992:art-7"
 quoted_text = "iva.catalogue.domestic_not_subject.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -144,18 +126,15 @@ triggers_when = "iva.catalogue.triggers_when_234924"
 iva_treatment = "iva.catalogue.iva_treatment_847858"
 requires_reverse_charge = true
 requires_supplier_iva_id = true
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 84.Uno.2.f"
+legal_reference = "ley-37-1992:art-84"
 quoted_text = "iva.catalogue.domestic_reverse_charge.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 84.Uno.2.c"
+legal_reference = "ley-37-1992:art-84"
 quoted_text = "iva.catalogue.domestic_reverse_charge.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -167,18 +146,15 @@ triggers_when = "iva.catalogue.triggers_when_605383"
 iva_treatment = "iva.catalogue.iva_treatment_816799"
 requires_reverse_charge = false
 requires_supplier_iva_id = true
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 25.Uno"
+legal_reference = "ley-37-1992:art-25"
 quoted_text = "iva.catalogue.intra_community_supply.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 164.Uno.3"
+legal_reference = "ley-37-1992:art-164"
 quoted_text = "iva.catalogue.intra_community_supply.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -190,18 +166,15 @@ triggers_when = "iva.catalogue.triggers_when_477522"
 iva_treatment = "iva.catalogue.iva_treatment_373587"
 requires_reverse_charge = true
 requires_supplier_iva_id = true
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 13.1"
+legal_reference = "ley-37-1992:art-13"
 quoted_text = "iva.catalogue.intra_community_acquisition_reverse_charge.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 84.Uno.2"
+legal_reference = "ley-37-1992:art-84"
 quoted_text = "iva.catalogue.intra_community_acquisition_reverse_charge.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -213,18 +186,15 @@ triggers_when = "iva.catalogue.triggers_when_253417"
 iva_treatment = "iva.catalogue.iva_treatment_660394"
 requires_reverse_charge = true
 requires_supplier_iva_id = true
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 26.Tres"
+legal_reference = "ley-37-1992:art-26"
 quoted_text = "iva.catalogue.intra_community_triangulation.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 15.Uno"
+legal_reference = "ley-37-1992:art-15"
 quoted_text = "iva.catalogue.intra_community_triangulation.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -236,18 +206,15 @@ triggers_when = "iva.catalogue.triggers_when_824512"
 iva_treatment = "iva.catalogue.iva_treatment_338490"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 21.1"
+legal_reference = "ley-37-1992:art-21"
 quoted_text = "iva.catalogue.export_third_country_zero_rated.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 21.2"
+legal_reference = "ley-37-1992:art-21"
 quoted_text = "iva.catalogue.export_third_country_zero_rated.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -259,12 +226,10 @@ triggers_when = "iva.catalogue.export_assimilated_zero_rated.triggers_when"
 iva_treatment = "iva.catalogue.export_assimilated_zero_rated.iva_treatment"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 22"
+legal_reference = "ley-37-1992:art-22"
 quoted_text = "iva.catalogue.export_assimilated_zero_rated.citations.0.quoted_text"
 retrieval_date = 2026-06-29
 
@@ -276,18 +241,15 @@ triggers_when = "iva.catalogue.triggers_when_775302"
 iva_treatment = "iva.catalogue.iva_treatment_869170"
 requires_reverse_charge = true
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 17"
+legal_reference = "ley-37-1992:art-17"
 quoted_text = "iva.catalogue.import_third_country.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 18.Uno"
+legal_reference = "ley-37-1992:art-18"
 quoted_text = "iva.catalogue.import_third_country.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -299,18 +261,15 @@ triggers_when = "iva.catalogue.triggers_when_060209"
 iva_treatment = "iva.catalogue.iva_treatment_837679"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 148.Uno"
+legal_reference = "ley-37-1992:art-148"
 quoted_text = "iva.catalogue.recargo_equivalencia.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 154.Dos"
+legal_reference = "ley-37-1992:art-154"
 quoted_text = "iva.catalogue.recargo_equivalencia.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -322,18 +281,15 @@ triggers_when = "iva.catalogue.triggers_when_809073"
 iva_treatment = "iva.catalogue.iva_treatment_720111"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 122.Uno"
+legal_reference = "ley-37-1992:art-122"
 quoted_text = "iva.catalogue.regimen_simplificado.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 123.Uno"
+legal_reference = "ley-37-1992:art-123"
 quoted_text = "iva.catalogue.regimen_simplificado.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -345,18 +301,15 @@ triggers_when = "iva.catalogue.triggers_when_020809"
 iva_treatment = "iva.catalogue.iva_treatment_703895"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 68.Uno"
+legal_reference = "ley-37-1992:art-68"
 quoted_text = "iva.catalogue.operacion_no_sujeta.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 69.Uno.1"
+legal_reference = "ley-37-1992:art-69"
 quoted_text = "iva.catalogue.operacion_no_sujeta.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -368,18 +321,15 @@ triggers_when = "iva.catalogue.triggers_when_035779"
 iva_treatment = "iva.catalogue.iva_treatment_592112"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 89.Uno"
+legal_reference = "ley-37-1992:art-89"
 quoted_text = "iva.catalogue.erroneous_invoice.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 89.Cinco"
+legal_reference = "ley-37-1992:art-89"
 quoted_text = "iva.catalogue.erroneous_invoice.citations.1.quoted_text"
 retrieval_date = 2026-04-13
 
@@ -391,18 +341,15 @@ triggers_when = "iva.catalogue.triggers_when_512869"
 iva_treatment = "iva.catalogue.iva_treatment_732254"
 requires_reverse_charge = false
 requires_supplier_iva_id = false
-boe_references = ["ley-37-1992"]
 manual_references = []
 notes = "Classifier sentinel; cannot be emitted as a filing-grade result."
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 164.Uno"
+legal_reference = "ley-37-1992:art-164"
 quoted_text = "iva.catalogue.unknown.citations.0.quoted_text"
 retrieval_date = 2026-04-13
 
 [[regulations.citations]]
-source = "ley-37-1992"
-article = "Art. 164.Uno.6"
+legal_reference = "ley-37-1992:art-164"
 quoted_text = "iva.catalogue.unknown.citations.1.quoted_text"
 retrieval_date = 2026-04-13
