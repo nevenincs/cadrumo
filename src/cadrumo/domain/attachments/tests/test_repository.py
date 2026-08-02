@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -26,7 +27,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield profile
 
 
-def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str = _BUCKET_ID) -> Attachment:
+def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str | None = _BUCKET_ID) -> Attachment:
     digest = hashlib.sha256(body).hexdigest()
     return Attachment(
         attachment_id=digest,
@@ -136,3 +137,98 @@ def test_missing_blob_and_invalid_digest_fail_closed() -> None:
         store.read_bytes(missing)
     with pytest.raises(AttachmentValidationError, match=r"sha256 must be a 64-character lowercase hex digest"):
         store.read_bytes("../escape")
+
+
+_FOREIGN_BUCKET_ID = "f0f0f0f0-1111-4111-8111-aaaaaaaaaaaa"
+
+
+def test_foreign_bucket_manifest_is_refused_at_write(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Evidence belonging to another taxpayer must not enter this bucket's store."""
+    del runtime_profile
+    store = AttachmentStore()
+    body = b"%PDF-1.4\nforeign bucket evidence\n%%EOF"
+    store.put_bytes(body)
+
+    with pytest.raises(AttachmentValidationError, match="another profile bucket"):
+        store.write_manifest(_attachment(body, bucket_id=_FOREIGN_BUCKET_ID))
+
+
+def test_foreign_bucket_manifest_is_isolated_from_load_and_listing(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """Anti-tautology proof: isolation is durable, not a caller convention.
+
+    Writes the foreign-bucket manifest straight through the secure-object
+    substrate, bypassing the store's write guard, then asserts neither the
+    single-item read nor the listing path returns it as local evidence.
+    """
+    del runtime_profile
+    from datetime import UTC, datetime
+
+    from ....adapters.persistence.storage.attachment import (
+        _ATTACHMENT_MANIFEST_NAMESPACE,
+        _ATTACHMENT_MANIFEST_SENSITIVITY,
+        _ATTACHMENT_MANIFEST_VERSION,
+    )
+    from ....adapters.persistence.storage.envelope import Envelope
+
+    store = AttachmentStore()
+    body = b"%PDF-1.4\nforeign bucket evidence to isolate\n%%EOF"
+    digest = store.put_bytes(body)
+    foreign = _attachment(body, bucket_id=_FOREIGN_BUCKET_ID)
+    envelope = Envelope[Attachment](
+        schema_version=_ATTACHMENT_MANIFEST_VERSION,
+        written_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
+        classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
+        payload=foreign,
+    )
+    envelope_dict = json.loads(envelope.model_dump_json())
+    del envelope_dict["payload"]["attachment_id"]
+    store._objects_repo().save(
+        namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
+        object_key=digest,
+        classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
+        schema_version=_ATTACHMENT_MANIFEST_VERSION,
+        written_at=envelope.written_at,
+        payload=json.dumps(envelope_dict).encode("utf-8"),
+    )
+
+    with pytest.raises(AttachmentValidationError, match="another profile bucket"):
+        store.load_manifest(digest)
+    with pytest.raises(AttachmentValidationError, match="another profile bucket"):
+        list(store.iter_manifests())
+
+
+def test_manifest_without_a_declared_bucket_is_stamped_with_the_store_bucket(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """An unstamped manifest becomes self-describing rather than unattributable.
+
+    The bucket is not part of the content address, so recording the store's own
+    bucket at write time costs nothing and leaves no persisted evidence row
+    whose ownership cannot be answered at read time.
+    """
+    del runtime_profile
+    store = AttachmentStore()
+    body = b"%PDF-1.4\nunstamped evidence\n%%EOF"
+    digest = store.put_bytes(body)
+
+    store.write_manifest(_attachment(body, bucket_id=None))
+
+    assert store.load_manifest(digest).bucket_id == _BUCKET_ID
+
+
+def test_same_bucket_manifest_round_trips(runtime_profile: TestRuntimeProfile) -> None:
+    """Valid parity: a manifest naming this bucket loads and lists normally."""
+    del runtime_profile
+    store = AttachmentStore()
+    body = b"%PDF-1.4\nlocal evidence\n%%EOF"
+    digest = store.put_bytes(body)
+    local = _attachment(body)
+
+    store.write_manifest(local)
+
+    assert store.load_manifest(digest) == local
+    assert tuple(store.iter_manifests()) == (local,)

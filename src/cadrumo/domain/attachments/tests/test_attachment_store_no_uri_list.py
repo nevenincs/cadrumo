@@ -33,6 +33,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _CAPTURED_AT = datetime(2026, 6, 30, 9, 0, 0, tzinfo=UTC)
 
 
+# The store refuses a manifest from another profile bucket, so the fixture
+# names the same bucket the runtime profile provisions.
+_BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
+
+
 def _add_drive_document(
     store: AttachmentStore,
     *,
@@ -59,7 +64,7 @@ def _add_drive_document(
 
 def test_add_attachment_bytes_writes_byte_bearing_manifest_never_uri_list(tmp_path: Path) -> None:
     """A fetched document is stored with its real digest and mime, not as a link."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         data = b"%PDF-1.4\n%fetched-drive-invoice\n" + b"\x00" * 32
         reference = "https://drive.google.com/file/d/ABC123ticket/view"
@@ -68,7 +73,7 @@ def test_add_attachment_bytes_writes_byte_bearing_manifest_never_uri_list(tmp_pa
             store,
             data=data,
             source_reference=reference,
-            bucket_id="b" * 32,
+            bucket_id=_BUCKET_ID,
             link_transaction_ids=("tx-evidence-1",),
             metadata={"source": "GOOGLE_DRIVE", "source_reference": reference},
         )
@@ -92,7 +97,7 @@ def test_add_attachment_bytes_writes_byte_bearing_manifest_never_uri_list(tmp_pa
 
 def test_no_manifest_in_the_store_carries_a_uri_list_mime(tmp_path: Path) -> None:
     """Sweep every manifest the byte path can write: none is a link-only record."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         for index in range(3):
             data = f"document-{index}".encode() + b"\x00payload"
@@ -110,7 +115,7 @@ def test_no_manifest_in_the_store_carries_a_uri_list_mime(tmp_path: Path) -> Non
 
 def test_attachment_store_refuses_link_only_uri_list_manifest(tmp_path: Path) -> None:
     """Even a tampered manifest object cannot write a link-only URI-list record."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         attachment = _add_drive_document(
             store,
@@ -138,7 +143,7 @@ def test_parameterized_uri_list_mime_is_refused_at_both_boundaries(tmp_path: Pat
     check accepted ``text/uri-list; charset=utf-8``. Both the model validator
     and the store write guard must compare the parsed media type.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         attachment = _add_drive_document(
             store,

@@ -214,6 +214,49 @@ class AttachmentStore(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     objects: SecureObjectRepository | None = Field(default=None, exclude=True, repr=False)
+    bucket_id: str | None = Field(default=None)
+
+    def _bound_bucket_id(self) -> str | None:
+        """Return the profile bucket this store serves, when one is resolvable.
+
+        An explicit ``bucket_id`` wins. Otherwise the store reads the active
+        profile pointer, which is the same selection
+        :func:`secure_object_repository_for_active_bucket` makes -- so the
+        binding cannot disagree with the store the manifests land in. A store
+        constructed against an injected secure-object repository with no
+        declared bucket has no binding to enforce.
+        """
+        if self.bucket_id is not None:
+            return self.bucket_id
+        if self.objects is not None:
+            return None
+        from ....core import resolve_active_bucket_id
+
+        return resolve_active_bucket_id()
+
+    def _assert_manifest_bucket(self, attachment: Attachment, *, boundary: str) -> Attachment:
+        """Refuse an evidence manifest that belongs to another profile's bucket.
+
+        Attachment manifests are per-profile FINANCIAL custody records, but the
+        store carried no bucket identity of its own, so nothing compared
+        :attr:`Attachment.bucket_id` with the store the row was written into. A
+        manifest naming bucket B could be written into bucket A and returned by
+        A's load and list paths as local evidence.
+
+        A manifest that names no bucket is stamped with the store's own on the
+        way in: the bucket is not part of the content address, so recording it
+        makes the persisted row self-describing rather than leaving the
+        ownership question unanswerable at read time.
+        """
+        bound = self._bound_bucket_id()
+        if bound is None or attachment.bucket_id == bound:
+            return attachment
+        if attachment.bucket_id is None and boundary == "write":
+            return attachment.model_copy(update={"bucket_id": bound})
+        raise _attachment_validation_error(
+            "attachment manifest belongs to another profile bucket",
+            violation="manifest_foreign_bucket",
+        )
 
     def _objects_repo(self) -> SecureObjectRepository:
         return self.objects or secure_object_repository_for_active_bucket()
@@ -325,6 +368,7 @@ class AttachmentStore(BaseModel):
                 violation="manifest_link_only_mime_type",
             )
         self._assert_manifest_matches_blob(attachment)
+        attachment = self._assert_manifest_bucket(attachment, boundary="write")
         # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
@@ -367,6 +411,7 @@ class AttachmentStore(BaseModel):
             )
         _assert_manifest_bound_to_row(attachment, row_object_key=record.object_key)
         self._assert_manifest_matches_blob(attachment)
+        self._assert_manifest_bucket(attachment, boundary="load")
         return attachment
 
     def iter_manifests(self) -> Iterator[Attachment]:
@@ -400,6 +445,7 @@ class AttachmentStore(BaseModel):
             envelope = _decode_manifest_envelope(record.payload)
             _assert_manifest_bound_to_row(envelope.payload, row_object_key=record.object_key)
             self._assert_blob_present(envelope.payload)
+            self._assert_manifest_bucket(envelope.payload, boundary="iterate")
             manifests.append(envelope.payload)
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)
 

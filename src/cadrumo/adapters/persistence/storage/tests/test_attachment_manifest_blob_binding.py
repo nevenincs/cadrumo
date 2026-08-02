@@ -45,6 +45,7 @@ from ..sql.session import session_scope
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _CAPTURED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+_BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
 _PAYLOAD = b"%PDF-1.4\n%attachment-manifest-blob-binding-canary\n" + b"\x00" * 48
 
 
@@ -62,7 +63,10 @@ def _rewrite_manifest_envelope(
             ),
         ).scalar_one()
         aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-        envelope = cast("dict[str, Any]", json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode(UTF_8_ENCODING)))
+        envelope = cast(
+            "dict[str, Any]",
+            json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode(UTF_8_ENCODING)),
+        )
         mutate(envelope)
         row.payload = encrypt_secure_object_payload(json.dumps(envelope).encode(UTF_8_ENCODING), associated_data=aad)
 
@@ -80,7 +84,7 @@ def _manifest(*, sha256: str, bytes_size: int) -> Attachment:
         captured_at=_CAPTURED_AT,
         linked_transaction_ids=("tx-001", "tx-002"),
         linked_invoice_ids=("inv-2026-001",),
-        bucket_id="b" * 32,
+        bucket_id=_BUCKET_ID,
         captured_by="cli/aeat",
         source_command="aeat app ledger attach",
         metadata={"vendor": "ACME SL", "currency": "EUR"},
@@ -90,7 +94,7 @@ def _manifest(*, sha256: str, bytes_size: int) -> Attachment:
 
 def test_manifest_declaring_a_foreign_bytes_size_is_refused_at_write(tmp_path: Path) -> None:
     """A manifest whose bytes_size contradicts the stored payload must not persist."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         digest = store.put_bytes(_PAYLOAD)
 
@@ -107,7 +111,7 @@ def test_manifest_declaring_a_foreign_bytes_size_is_refused_at_write(tmp_path: P
 
 def test_manifest_for_bytes_the_store_never_received_is_refused(tmp_path: Path) -> None:
     """A manifest referencing an absent blob is not evidence and must fail closed."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         absent_digest = hashlib.sha256(b"bytes that were never stored").hexdigest()
 
@@ -130,7 +134,7 @@ def test_tampered_stored_bytes_size_is_refused_on_load(tmp_path: Path) -> None:
     in the encrypted row. If ``load_manifest`` returned that value, the binding
     would only be a construction-time convention rather than a durable contract.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
         digest = store.put_bytes(_PAYLOAD)
@@ -157,7 +161,7 @@ def test_tampered_stored_bytes_size_is_refused_on_load(tmp_path: Path) -> None:
 
 def test_manifest_bound_to_its_bytes_round_trips_intact(tmp_path: Path) -> None:
     """The valid parity case: a truthful manifest survives write, load, and listing."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         digest = store.put_bytes(_PAYLOAD)
         attachment = _manifest(sha256=digest, bytes_size=len(_PAYLOAD))
