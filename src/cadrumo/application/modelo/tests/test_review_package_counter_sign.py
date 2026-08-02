@@ -35,13 +35,14 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from pydantic import ValidationError
 
 from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, validated_casilla_id
@@ -62,6 +63,7 @@ from ....tests.review_package_adapters import (
 from ....tests.secure_sql import MultiBucketTestRuntime, isolated_two_bucket_runtime
 from .._review_package import build_review_package
 from .._review_package_counter_sign import (
+    CounterSignedReceipt,
     counter_sign_review_package,
     verify_counter_signed_receipt,
 )
@@ -197,12 +199,16 @@ def test_operator_signs_accountant_counter_signs_both_layers_verify(tmp_path: Pa
             signed,
             counter_signer_keypair=accountant_keypair,
             note="reviewed, no changes",
+            counter_signed_at=_NOW,
         )
+        round_tripped = CounterSignedReceipt.model_validate_json(receipt.model_dump_json())
 
-        assert receipt.note == "reviewed, no changes"
-        assert receipt.original_signature == signed
-        assert len(bytes.fromhex(receipt.counter_signature_hex)) == 64
-        assert receipt.counter_public_key_hex == accountant_keypair.public_key_hex
+        assert round_tripped == receipt
+        assert round_tripped.counter_signed_at == _NOW
+        assert round_tripped.note == "reviewed, no changes"
+        assert round_tripped.original_signature == signed
+        assert len(bytes.fromhex(round_tripped.counter_signature_hex)) == 64
+        assert round_tripped.counter_public_key_hex == accountant_keypair.public_key_hex
 
         operator_public_key = review_package_signing_public_key(operator_keypair)
         accountant_public_key = review_package_signing_public_key(accountant_keypair)
@@ -210,12 +216,37 @@ def test_operator_signs_accountant_counter_signs_both_layers_verify(tmp_path: Pa
         assert (
             verify_counter_signed_receipt(
                 package_path,
-                receipt,
+                round_tripped,
                 operator_public_key_hex=operator_public_key.public_key_hex,
                 counter_signer_public_key_hex=accountant_public_key.public_key_hex,
             )
             is True
         )
+
+
+@pytest.mark.parametrize(
+    "counter_signed_at",
+    (
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+    ),
+)
+def test_counter_sign_refuses_a_naive_or_non_utc_envelope_timestamp(
+    tmp_path: Path,
+    counter_signed_at: datetime,
+) -> None:
+    """An accountant receipt must carry one explicit UTC instant."""
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+        package_path = _build_package(tmp_path, bucket_id=runtime.primary.bucket_id)
+        _, signed = _sign_as_operator(runtime, package_path)
+        accountant_keypair = _mint_accountant_keypair(runtime)
+
+        with pytest.raises(ValidationError, match="datetime must be"):
+            counter_sign_review_package(
+                signed,
+                counter_signer_keypair=accountant_keypair,
+                counter_signed_at=counter_signed_at,
+            )
 
 
 def test_verify_fails_when_original_package_tampered_after_counter_sign(tmp_path: Path) -> None:

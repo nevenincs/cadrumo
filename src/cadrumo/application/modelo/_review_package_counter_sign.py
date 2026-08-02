@@ -49,7 +49,7 @@ from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import HEX_PATTERN_128 as _HEX_PATTERN_128
@@ -57,6 +57,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
+from ...core.time import validate_utc_aware as _validate_utc_aware
 from ._review_package_signing import (
     ReviewPackageSigningKeypair,
     SignedReviewPackage,
@@ -93,6 +94,12 @@ class CounterSignedReceipt(BaseModel):
     counter_signature_hex: str = Field(pattern=_HEX_PATTERN_128)
     counter_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     counter_signed_at: datetime
+
+    @field_validator("counter_signed_at")
+    @classmethod
+    def _counter_signed_at_is_utc(cls, value: datetime) -> datetime:
+        """Refuse an ambiguous or non-canonical counter-signature instant."""
+        return _validate_utc_aware(value)
 
     @property
     def counter_signed_message(self) -> bytes:

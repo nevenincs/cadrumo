@@ -33,12 +33,13 @@ from __future__ import annotations
 
 import contextvars
 import threading
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from pydantic import ValidationError
 
 from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, validated_casilla_id
@@ -63,6 +64,7 @@ from .._review_package_signing import (
     ReviewPackageSigningError,
     ReviewPackageSigningKeyNotFoundError,
     ReviewPackageSigningKeypair,
+    SignedReviewPackage,
     _signing_key_object_key,
     ensure_review_package_signing_keypair,
     load_review_package_signing_keypair,
@@ -212,14 +214,34 @@ def test_sign_then_verify_with_correct_public_key_passes(tmp_path: Path) -> None
         package_path = _build_package(tmp_path, bucket_id=profile.bucket_id)
         keypair = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
 
-        signed = sign_review_package(package_path, keypair=keypair)
+        signed = sign_review_package(package_path, keypair=keypair, signed_at=_NOW)
         public_key = review_package_signing_public_key(keypair)
+        round_tripped = SignedReviewPackage.model_validate_json(signed.model_dump_json())
 
-        assert signed.bucket_id == profile.bucket_id
-        assert signed.public_key_hex == public_key.public_key_hex
-        assert len(bytes.fromhex(signed.signature_hex)) == 64
+        assert round_tripped == signed
+        assert round_tripped.signed_at == _NOW
+        assert round_tripped.bucket_id == profile.bucket_id
+        assert round_tripped.public_key_hex == public_key.public_key_hex
+        assert len(bytes.fromhex(round_tripped.signature_hex)) == 64
 
-        assert verify_review_package_signature(package_path, signed, public_key_hex=public_key.public_key_hex) is True
+        assert verify_review_package_signature(package_path, round_tripped, public_key_hex=public_key.public_key_hex) is True
+
+
+@pytest.mark.parametrize(
+    "signed_at",
+    (
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+    ),
+)
+def test_sign_refuses_a_naive_or_non_utc_envelope_timestamp(tmp_path: Path, signed_at: datetime) -> None:
+    """A signature envelope must carry one explicit UTC instant."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="review-pkg-sign-time") as profile:
+        package_path = _build_package(tmp_path, bucket_id=profile.bucket_id)
+        keypair = ensure_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
+
+        with pytest.raises(ValidationError, match="datetime must be"):
+            sign_review_package(package_path, keypair=keypair, signed_at=signed_at)
 
 
 def test_verify_fails_when_package_tampered_after_signing(tmp_path: Path) -> None:
