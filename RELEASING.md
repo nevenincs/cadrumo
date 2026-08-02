@@ -304,6 +304,26 @@ whichever is quieter. Nominating a channel is optional — the default issue pat
 a real alerting channel, not a placeholder — but a webhook is likely preferable for
 anyone not already watching the repository's issue tracker.
 
+**Alongside OP-10 — create the `release-alert` label the default issue path
+depends on.** It does not exist on this repository yet — confirmed live via
+`gh api repos/nevenincs/cadrumo/labels/release-alert`, which returns a 404 — so
+every default-path alert currently degrades to a run-log warning nobody reads
+until it is created:
+
+```bash
+gh label create release-alert --description "Cadrumo release-chain failure alert" --color b60205
+```
+
+This is required only when relying on the default issue path; skip it if OP-10's
+webhook variable is set instead, since the webhook path replaces the label path
+rather than falling back to it. Verify the same way as OP-9/OP-12 — the same
+read-only probe now reports the label's live status alongside the environment
+inventory:
+
+```bash
+uv run --no-sync python -m dev.release.environment_inventory
+```
+
 **OP-11 — confirm the self-hosted Linux fleet carries `node`, or provision it.**
 The version-bump stage shells out to `release-please` via `npx`, and whether the
 self-hosted Linux runners carry a Node.js toolchain is unverified — this is stated

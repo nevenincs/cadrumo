@@ -377,6 +377,12 @@ def test_releasing_doc_operator_actions_section_names_the_outstanding_halves() -
     assert "OP-10" in section
     assert "alerting channel" in section
     assert "release-alert" in section
+    # The label OP-10's default path depends on does not exist on the live
+    # repository (measured via gh api .../labels/release-alert -> 404); the
+    # create command and the verification path must both be named, not just
+    # the label's name in passing.
+    assert "gh label create release-alert" in section
+    assert "dev.release.environment_inventory" in normalized
 
     assert "OP-11" in section
     assert "node" in section
