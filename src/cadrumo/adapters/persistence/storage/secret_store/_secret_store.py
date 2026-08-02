@@ -74,6 +74,24 @@ _HKDF_CONTEXT_SECRET_LOOKUP = b"cadrumo.secret_store.lookup.v1"
 _HKDF_CONTEXT_SECRET_VALUE_WITNESS = b"cadrumo.secret_store.value_witness.v1"
 
 
+#: The only classes a record in this store may carry. The record model and
+#: the index row that describes it both enforce this one set, so an index
+#: cannot name a class no record here can have.
+SECRET_STORE_CLASSES: Final[frozenset[SensitivityClass]] = frozenset(
+    {SensitivityClass.SECRET, SensitivityClass.SESSION},
+)
+
+
+def _validated_secret_class(value: SensitivityClass, *, subject: str) -> SensitivityClass:
+    """Return ``value`` if it is a class this store may persist."""
+    if value not in SECRET_STORE_CLASSES:
+        raise StorageValidationError(
+            f"{subject} must be SECRET or SESSION",
+            translated_message="errors.integrity.integrity_storage_validation",
+        )
+    return value
+
+
 class SecretRecord(BaseModel):
     """Frozen record persisted in the :class:`SecretStore`.
 
@@ -117,12 +135,7 @@ class SecretRecord(BaseModel):
     @field_validator("classification")
     @classmethod
     def _check_class(cls, value: SensitivityClass) -> SensitivityClass:
-        if value not in {SensitivityClass.SECRET, SensitivityClass.SESSION}:
-            raise StorageValidationError(
-                "SecretRecord.classification must be SECRET or SESSION",
-                translated_message="errors.integrity.integrity_storage_validation",
-            )
-        return value
+        return _validated_secret_class(value, subject="SecretRecord.classification")
 
 
 class _SecretIndexEntry(BaseModel):
@@ -147,6 +160,18 @@ class _SecretIndexEntry(BaseModel):
     digest_hex: ContentDigest
     blob_sha256_plaintext_hex: ContentDigest
     classification: SensitivityClass
+
+    @field_validator("classification")
+    @classmethod
+    def _check_class(cls, value: SensitivityClass) -> SensitivityClass:
+        """Hold the index to the same closed set the record itself allows.
+
+        ``SecretRecord`` accepts only SECRET or SESSION, but the index row
+        describing it accepted the whole ``SensitivityClass`` enum -- so the
+        index could name a class no record in this store can ever have, and
+        the blob layout was then routed from that value.
+        """
+        return _validated_secret_class(value, subject="_SecretIndexEntry.classification")
 
 
 SECRET_INDEX_SCHEMA_VERSION: Final[int] = 1
@@ -428,6 +453,8 @@ class SecretStore:
 
         Raises:
             SecretNotFoundError: When no record exists for ``key``.
+            StorageValidationError: When the index, the stored envelope, and
+                the record itself do not all name the same class.
         """
         digest = self._digest(key)
         index = self._read_index()
@@ -440,7 +467,21 @@ class SecretStore:
         )
         wire = self._blob_store.get(blob_ref)
         envelope = Envelope[SecretRecord].model_validate_json(wire.decode(UTF_8_ENCODING))
-        return envelope.payload
+        # The class is stated three times about one record -- on the index row
+        # that located it, on the envelope sealed with it, and on the record
+        # itself -- and only the first two were ever compared, by the blob
+        # store's own manifest gate. Relabelling the index and the manifest
+        # together therefore satisfied every check while the encrypted bytes
+        # still held a SECRET record, and the store returned it. The record's
+        # own statement is the one the writer sealed and the only one an
+        # editor cannot reach without the key, so it is what the other two
+        # must agree with.
+        record = envelope.payload
+        if entry.classification is not record.classification or envelope.classification is not record.classification:
+            raise _storage_validation_error(
+                "secret-store classification disagreement between index, envelope, and record",
+            )
+        return record
 
     def delete(self, key: str) -> None:
         """Remove the record persisted under ``key``.
