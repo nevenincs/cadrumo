@@ -265,3 +265,43 @@ jobs:
               --input "source_run_id=${PACKAGING_RUN_ID}" \
               --input "source_commit=${HEAD_SHA}"
           done <<< "${lanes}"
+
+  seal:
+    name: Cadrumo / seal the release candidate and stop
+    needs: [preflight, campaign, acquire]
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      # contents: write creates the candidate's own DRAFT release. It is not a
+      # publication: the draft lives in a reserved tag namespace the evidence GC
+      # cannot reach, and only the promoter ever reads it.
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Seal the candidate and end the run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGING_RUN_ID: ${{ needs.campaign.outputs.packaging_run_id }}
+          DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
+        run: |
+          # THIS JOB IS TERMINAL, and that is the design rather than an
+          # omission. The soak runs 48-72 hours; no workflow run spans that, and
+          # a job that tried would hold one of four shared self-hosted runners
+          # for days. So the chain records its state durably and STOPS.
+          #
+          # release-soak-promoter.yml resumes it once the window closes. This
+          # workflow therefore never dispatches publish-release.yml: a run that
+          # published would, by definition, not have waited.
+          uv run --frozen python -m dev.release.seal_candidate \
+            --repository "${GITHUB_REPOSITORY}" \
+            --packaging-run-id "${PACKAGING_RUN_ID}" \
+            --dry-run "${DRY_RUN}"

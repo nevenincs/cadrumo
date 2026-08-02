@@ -31,6 +31,24 @@ def _run_surface(document: Any, *job_names: str) -> str:
     return "\n".join(str(step.get("run", "")) for job in selected for step in job.get("steps", []) if "run" in step)
 
 
+def _invocation_surface(document: Any, *job_names: str) -> str:
+    """Return the run surface with whole-line shell comments dropped.
+
+    The property these gates assert is what the workflow INVOKES, not what its
+    prose mentions. This workflow's comments deliberately name
+    `publish-release.yml` to explain that it must never dispatch it, and a
+    naive substring scan reads that explanation as the violation - forcing the
+    prose to go quiet about exactly the constraint it exists to record. The
+    sibling publication gate strips comments for the same reason.
+
+    Only whole-line comments are dropped; a trailing `#` is left in place so a
+    real invocation cannot hide behind one.
+    """
+    return "\n".join(
+        line for line in _run_surface(document, *job_names).splitlines() if not line.lstrip().startswith("#")
+    )
+
+
 def test_the_dispatch_takes_exactly_two_inputs() -> None:
     """One rehearsal flag and one resume handle. Nothing else.
 
@@ -98,7 +116,7 @@ def test_the_orchestrator_never_publishes_and_never_dispatches_the_publication()
     so a run that publishes has not waited.
     """
     document = _document()
-    surface = _run_surface(document)
+    surface = _invocation_surface(document)
 
     assert "publish-release.yml" not in surface, "the orchestrator must not reach the publication authority"
     for verb in ("uv publish", "twine upload", "gh release create"):
@@ -136,13 +154,20 @@ def test_the_bump_publishes_the_version_and_commit_the_chain_keys_on() -> None:
     assert "steps.bump.outputs.version" in str(bump["outputs"]["version"])
 
 
-def test_only_the_bump_job_may_write_repository_contents() -> None:
-    """Ref-writing authority is confined to the one stage that lands a commit."""
-    for name, job in _document()["jobs"].items():
-        if name == "bump":
-            assert job["permissions"]["contents"] == "write"
-            continue
-        assert job.get("permissions", {}).get("contents") != "write", f"{name} must not write refs"
+def test_write_authority_is_confined_to_the_two_stages_that_need_it() -> None:
+    """Exactly two jobs may write, each for a stated and different reason.
+
+    `bump` lands a commit and a tag. `seal` creates the candidate's own DRAFT
+    release, which is not a publication: it lives in a reserved tag namespace
+    the evidence GC cannot reach, and only the promoter ever reads it.
+
+    Pinned as an exact set rather than a per-job exemption, so a third job
+    acquiring write reds here instead of passing unnoticed.
+    """
+    jobs = _document()["jobs"]
+    writers = {name for name, job in jobs.items() if job.get("permissions", {}).get("contents") == "write"}
+
+    assert writers == {"bump", "seal"}
 
 
 def test_the_campaign_resolves_its_own_run_rather_than_the_newest() -> None:
@@ -262,3 +287,51 @@ def test_the_precondition_holds_against_the_live_descriptor() -> None:
     from dev.packaging.publication_inputs import host_extension_precondition_refusal
 
     assert host_extension_precondition_refusal(load_descriptor(), claude_evidence_release="") is None
+
+
+def test_the_seal_job_is_terminal() -> None:
+    """Nothing depends on the seal, because the run ends there.
+
+    The soak runs 48-72 hours. No run spans it, and a job that waited would
+    hold one of four shared self-hosted runners for days - so the chain records
+    its state durably and stops. A job downstream of the seal would either be
+    waiting or publishing, and both are wrong here.
+    """
+    jobs = _document()["jobs"]
+
+    assert "seal" in jobs
+    dependents = [name for name, job in jobs.items() if "seal" in (job.get("needs") or [])]
+    assert dependents == [], f"jobs depending on the terminal seal: {dependents}"
+
+
+def test_no_job_waits_out_the_soak_inside_the_run() -> None:
+    """A held runner is the failure mode this whole design avoids.
+
+    Asserted over the entire workflow rather than the seal alone, because the
+    tempting shortcut is a sleep or poll added anywhere in the chain.
+    """
+    surface = _invocation_surface(_document())
+
+    for held in ("sleep ", "soak_promoter", "select_promotable"):
+        assert held not in surface, f"the orchestrator must not wait out the soak ({held})"
+
+
+def test_the_seal_records_state_through_the_tested_candidate_module() -> None:
+    """The candidate is minted by the module whose roundtrip and window are tested."""
+    surface = _run_surface(_document(), "seal")
+
+    assert "dev.release.seal_candidate" in surface
+    assert "--packaging-run-id" in surface
+
+
+def test_the_seal_module_exists_and_is_runnable() -> None:
+    """The workflow and the module cannot drift apart silently.
+
+    A workflow naming a module path that does not exist fails only when
+    someone dispatches a release, which is the worst possible moment to
+    discover it.
+    """
+    module = _REPO_ROOT / "dev" / "release" / "seal_candidate.py"
+
+    assert module.is_file()
+    assert "def main(" in module.read_text(encoding="utf-8")
