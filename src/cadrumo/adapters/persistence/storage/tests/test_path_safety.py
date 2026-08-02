@@ -9,7 +9,7 @@ import pytest
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
 from .. import PathContainmentError
-from .._path_safety import safe_record_path, safe_repository_id, safe_subpath
+from .._path_safety import safe_repository_id, safe_subpath
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -45,24 +45,6 @@ class TestSafeSubpath:
         ):
             with pytest.raises(PathContainmentError):
                 safe_subpath(tmp_path, unsafe_path, context="test")
-
-
-class TestSafeRecordPath:
-    """``safe_record_path`` enforces the simple-token allow-list."""
-
-    def test_valid_token_resolves(self, tmp_path: Path) -> None:
-        resolved = safe_record_path(tmp_path, "abc123", context="test")
-        assert resolved == (tmp_path / "abc123.json").resolve()
-
-    def test_unsafe_tokens_rejected(self, tmp_path: Path) -> None:
-        for unsafe_token in (
-            "../escape",
-            "alpha/beta",
-            "",
-            "a" * 200,
-        ):
-            with pytest.raises(PathContainmentError):
-                safe_record_path(tmp_path, unsafe_token, context="test")
 
 
 class TestSafeRepositoryId:

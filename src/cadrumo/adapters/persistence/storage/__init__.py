@@ -180,7 +180,7 @@ from ._namespace_registry import (
     secure_object_logical_path,
     secure_object_namespace_logical_path,
 )
-from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
+from ._path_safety import safe_repository_id, safe_subpath
 from ._rotation import (
     RotationPlanEntry,
     RotationSummary,
@@ -560,7 +560,6 @@ __all__ = [
     "refuse_unsecured_with_real_nif",
     "rotate_blob_stores",
     "rotate_master_key",
-    "safe_record_path",
     "safe_repository_id",
     "safe_subpath",
     "save_corpus_manifest",

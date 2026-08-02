@@ -7,12 +7,11 @@ settings with :func:`normalize_project_relative_path`, and safely resolving
 caller-provided sub-paths under a fixed root without allowing path-traversal
 escapes.
 
-The containment helpers (:func:`resolve_relative_subpath` and
-:func:`resolve_record_json_path`) refuse backslashes, parent references,
-absolute components, and any resolved path that escapes the owning root. They
-raise :class:`~cadrumo.core.errors.CoreValidationError` and are the load-bearing
-defence against caller-controlled identifier injection on the on-disk store
-paths.
+The containment helper :func:`resolve_relative_subpath` refuses backslashes,
+parent references, absolute components, and any resolved path that escapes the
+owning root. It raises :class:`~cadrumo.core.errors.CoreValidationError` and is
+the load-bearing defence against caller-controlled identifier injection on the
+on-disk store paths.
 
 These helpers validate and compose paths only. They do not read, write,
 create, or secure files; persistence adapters that need registered storage
@@ -29,7 +28,6 @@ storage layout can produce.
 
 from __future__ import annotations
 
-import re
 import sys
 from pathlib import Path, PurePosixPath
 
@@ -41,8 +39,6 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 Used to anchor repo-relative defaults. It is not the process cwd and not a
 runtime storage root selected from settings.
 """
-
-_SAFE_FILE_TOKEN_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 
 # ── Windows MAX_PATH (260-character) hardening ────────────────────────────
 
@@ -241,41 +237,6 @@ def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) ->
     try:
         resolved.relative_to(resolved_root)
     except ValueError as exc:
-        raise CoreValidationError(f"{context} escapes the owning root") from exc
-    return resolved
-
-
-def resolve_record_json_path(root: Path, record_id: str, *, context: str) -> Path:
-    """Resolve a file-backed record id to ``<root>/<record_id>.json`` safely.
-
-    The token allow-list prevents path separators, dot components, and
-    overlong filename material from becoming a filesystem path. It is not
-    domain-id validation: callers still own UUID/modelo/CSV/hash shape
-    checks before they choose ``record_id``.
-
-    Args:
-        root: The directory that owns the JSON sidecar files.
-        record_id: A simple filename token. Must match a strict
-            ``[A-Za-z0-9][A-Za-z0-9._-]{0,127}`` shape so the
-            resolved path cannot escape ``root`` via path separators
-            or parent references.
-        context: Short human-readable label used in raised error
-            messages.
-
-    Returns:
-        The resolved absolute path of the JSON sidecar.
-
-    Raises:
-        CoreValidationError: When ``record_id`` is not a simple
-            filename token or the resolved path escapes ``root``.
-    """
-    if not _SAFE_FILE_TOKEN_RE.fullmatch(record_id):
-        raise CoreValidationError(f"{context} must be a simple filename token")
-    resolved_root = root.resolve()
-    resolved = (resolved_root / f"{record_id}.json").resolve()
-    try:
-        resolved.relative_to(resolved_root)
-    except ValueError as exc:  # pragma: no cover - defensive
         raise CoreValidationError(f"{context} escapes the owning root") from exc
     return resolved
 
