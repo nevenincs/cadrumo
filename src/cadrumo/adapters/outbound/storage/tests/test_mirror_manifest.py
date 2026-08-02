@@ -14,6 +14,7 @@ from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageRemoteMirrorPolicy
 from .. import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
+    REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
     OutboundStorageIntegrityError,
     RemoteMirrorIssueKind,
     RemoteMirrorNamespaceManifest,
@@ -265,6 +266,33 @@ def test_remote_mirror_manifest_loader_wraps_malformed_payload_in_storage_error(
 
     with pytest.raises(OutboundStorageIntegrityError, match="remote mirror manifest"):
         get_remote_mirror_namespace_manifest(provider, manifest.namespace)
+
+
+def test_remote_mirror_manifest_loader_refuses_unsupported_schema_version(tmp_path: Path) -> None:
+    """A future manifest must not reach mirror comparison before enrollment."""
+    manifest = _single_object_manifest(tmp_path)
+    provider = LocalFileSystemProvider(tmp_path / "mirror")
+    manifest_metadata = put_remote_mirror_namespace_manifest(provider, manifest)
+    unsupported_schema_version = REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION + 1
+    future_payload = json.dumps(
+        json.loads(manifest.model_dump_json()) | {"manifest_schema_version": unsupported_schema_version},
+    ).encode("utf-8")
+    provider.put(
+        REMOTE_MIRROR_MANIFEST_NAMESPACE,
+        manifest_metadata.object_key_hmac,
+        future_payload,
+        content_hash=f"sha256-{hashlib.sha256(future_payload).hexdigest()}",
+        label="future-schema-version",
+    )
+
+    with pytest.raises(OutboundStorageIntegrityError, match="unsupported schema version") as error:
+        get_remote_mirror_namespace_manifest(provider, manifest.namespace)
+
+    assert error.value.context == {
+        "namespace": manifest.namespace,
+        "manifest_schema_version": unsupported_schema_version,
+        "supported_manifest_schema_version": REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
+    }
 
 
 def test_duplicate_object_keys_in_a_remote_manifest_fail_closed_on_load(tmp_path: Path) -> None:
