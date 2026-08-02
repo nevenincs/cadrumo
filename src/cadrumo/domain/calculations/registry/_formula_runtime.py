@@ -40,6 +40,7 @@ from . import _formula_runtime_m131 as _m131
 from . import _formula_runtime_ops as _ops
 from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
+from ._casilla_membership import duplicate_casilla_ids
 from ._convenio import ConvenioAuthority
 from ._errors import CasillaConstraintViolationError, RegistryValidationError
 from ._formula_runtime_ops import (
@@ -171,6 +172,56 @@ class RegistryCalculationResult(BaseModel):
     revision: str
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="after")
+    def _reject_duplicate_casilla_rows(self) -> RegistryCalculationResult:
+        for channel, casilla_ids in (
+            ("observations", tuple(item.casilla_id for item in self.observations)),
+            ("unresolved_outcomes", tuple(item.casilla_id for item in self.unresolved_outcomes)),
+        ):
+            duplicates = duplicate_casilla_ids(casilla_ids)
+            if duplicates:
+                raise RegistryValidationError(
+                    f"registry calculation result for modelo {self.modelo!r} revision {self.revision!r} "
+                    f"carries more than one {channel} row for casilla(s) {duplicates!r}; "
+                    "the derived values mapping cannot represent conflicting rows",
+                    context={
+                        "modelo": self.modelo,
+                        "revision": self.revision,
+                        "channel": channel,
+                        "casilla_ids": ",".join(duplicates),
+                    },
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _reject_resolved_and_unresolved_for_one_casilla(self) -> RegistryCalculationResult:
+        """Keep the value and unresolved channels disjoint per casilla.
+
+        A casilla is either resolved to a Decimal or blocked by a typed
+        unresolved reason; it is never both. Carrying both makes ``values``
+        report a concrete figure while verification separately emits the
+        blocking finding for the same casilla, so two downstream surfaces
+        disagree about the same filing without either being able to detect it.
+        """
+        contradictory = tuple(
+            sorted(
+                {item.casilla_id for item in self.observations}
+                & {item.casilla_id for item in self.unresolved_outcomes},
+            ),
+        )
+        if contradictory:
+            raise RegistryValidationError(
+                f"registry calculation result for modelo {self.modelo!r} revision {self.revision!r} "
+                f"carries both a resolved value and an unresolved outcome for casilla(s) "
+                f"{contradictory!r}; a casilla resolves to exactly one outcome",
+                context={
+                    "modelo": self.modelo,
+                    "revision": self.revision,
+                    "casilla_ids": ",".join(contradictory),
+                },
+            )
+        return self
 
     @model_validator(mode="after")
     def _require_observation_provenance(self) -> RegistryCalculationResult:
