@@ -4,9 +4,45 @@ Every record represents a read-only AEAT filing, document, or
 notification observation. The schema is intentionally narrow so
 malformed or unsupported AEAT response shapes fail during parsing.
 
-Every boundary-crossing record carries ``mode: Literal["read"]`` as
-part of the structural write-guard — the sede module is incapable
-of mutating AEAT state.
+Every boundary-crossing record carries ``mode: Literal["read"]``. That
+field is a DOCUMENTATION AND TEST marker, not a runtime guard: nothing
+in production reads it, so it constrains a record's declared shape and
+nothing else. It was previously described here as "part of the
+structural write-guard", which credited it with protection it does not
+provide.
+
+The package does not mutate AEAT state, but that is a property the
+guards below MAINTAIN rather than one the type system makes impossible.
+Stating it as a structural incapability is what this note exists to
+stop, because a reader asking whether this boundary can write is asking
+the right question and deserves the real answer:
+
+* A forbidden-verb scan over the package's own source text
+  (``_no_write_surface_fixture.txt``, enforced by
+  ``tests/test_no_write_surface.py``) rejects mutation verbs in a call
+  position — ``submit``, ``presentar``, ``firmar``, ``pagar`` and the
+  rest. It deliberately ALLOWS the browser-interaction verbs
+  (``click``, ``fill``, ``press``, ``check``, ``select_option``),
+  because reads here are driven by opening selectors and submitting
+  consulta forms.
+* ``_assert_read_http`` refuses any non-GET method on a
+  FIRST-PARTY HTTP call. A form POST issued by the browser after a
+  ``click`` never reaches it, so it does not bound browser-driven
+  navigation.
+* A landing refusal (``_assert_read_landing``) rejects a
+  write-adjacent page after AEAT has dispatched. It is currently
+  applied in ``_censal_datos`` only, not across every module that
+  fills or clicks.
+* The filing tool itself is guarded separately in
+  ``_renta_web_open_safety``, whose live-simulator proof asserts a
+  *presentar declaración* click is blocked.
+
+The residual, stated plainly so nobody has to rediscover it: a
+``page.click`` on a filing control added to one of the modules without
+a landing refusal would pass the verb scan (``click`` is allowed), pass
+``_assert_read_http`` (never consulted for a browser POST), and
+pass this ``mode`` marker (never read). What prevents it is review, not
+a mechanism.
 
 Public surface: :class:`Expediente`, :class:`JustificanteRef`,
 :class:`SedeCapture`, :class:`FiledDeclaracionArtefact`,
@@ -60,7 +96,8 @@ class Expediente(BaseModel):
         detail_url: Full URL of the expediente's detail page. Per-year
             endpoint for IRPF:
             ``/wlpl/DASR-CORE/AccesoDR<YYYY>RVlt?exp=<id>``.
-        mode: Structural read-only marker.
+        mode: Declared-shape read-only marker (documentation and tests only;
+            no production reader - see the module docstring).
     """
 
     model_config = _STRICT_FROZEN
@@ -107,7 +144,8 @@ class JustificanteRef(BaseModel):
             ``/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=<csv>``.
         pdf_url: Raw PDF URL
             ``/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=<csv>``.
-        mode: Structural read-only marker.
+        mode: Declared-shape read-only marker (documentation and tests only;
+            no production reader - see the module docstring).
     """
 
     model_config = _STRICT_FROZEN
@@ -145,7 +183,8 @@ class SedeCapture(BaseModel):
             whitespace-wrapped digest the canonical alias trims — one shape,
             three spellings, three answers.
         captured_at: UTC timestamp of the fetch completion.
-        mode: Structural read-only marker.
+        mode: Declared-shape read-only marker (documentation and tests only;
+            no production reader - see the module docstring).
     """
 
     model_config = _STRICT_FROZEN

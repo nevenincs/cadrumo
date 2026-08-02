@@ -9,9 +9,13 @@ the real AEAT sede with a Cl@ve-móvil session. It is deselected when:
 
 After live opt-in, unavailable sessions or missing account data are failures.
 
-The test is read-only by construction — every public surface in
-:mod:`cadrumo.adapters.outbound.aeat.sede._declarations` is structurally incapable of
-mutating AEAT state under the outbound write guard.
+The test drives read paths only. Note that this is a property the
+package's guards MAINTAIN, not a structural incapability: the
+forbidden-verb scan allows ``click``/``fill``, and
+``_declarations`` does click
+controls. See the module docstring of
+``_schema`` for what actually
+holds the read-only boundary and what the residual is.
 """
 
 from __future__ import annotations
@@ -82,7 +86,10 @@ async def test_walk_modelo_100_returns_at_least_one_declaration() -> None:
     assert first.ejercicio == 2022
     assert first.expediente_id  # non-empty
     assert first.estado  # non-empty
-    assert first.mode == "read"  # five-layer write guard
+    # The declared-shape marker only; it is not read in production and is
+    # not itself a guard. The count previously claimed here ("five-layer")
+    # was unverifiable, so it is not restated.
+    assert first.mode == "read"
 
 
 @pytest.mark.asyncio
