@@ -889,15 +889,19 @@ class ProfileRepository:
         from ._orchestration import ProfileAlreadyRegisteredError
 
         for summary in self.list():
-            # A tombstoned profile has left the live surface; its tax id
-            # is free to reuse, exactly as its display name is.
-            if summary.status is UserProfileStatus.TOMBSTONED:
-                continue
             try:
                 from ._orchestration import profile_storage_session
 
                 with profile_storage_session(summary.profile_id):
-                    aggregate = self.load(summary.profile_id)
+                    # The RECORD, not the aggregate. ``load`` additionally
+                    # asserts manifest-versus-record integrity and refuses the
+                    # whole profile when they disagree -- and that refusal
+                    # would be caught by the handler below and turned into a
+                    # skip, which is precisely how a drifted profile escapes
+                    # this scan. The scan needs the record's own status and
+                    # facts; it does not need the manifest's label or the
+                    # directory-name check.
+                    record = self._lifecycle_repository(summary.profile_id).load(summary.profile_id)
             except (CadrumoError, OSError, ValidationError) as exc:
                 # One torn / unreadable bucket must not prevent an operator
                 # from registering a completely different taxpayer. Emit an
@@ -911,7 +915,17 @@ class ProfileRepository:
                 )
                 _log.debug("tax-id uniqueness scan skipped unreadable profile", exc_info=True)
                 continue
-            existing_tax_id = _canonical_tax_id(aggregate.record.facts)
+            # A tombstoned profile has left the live surface; its tax id is
+            # free to reuse, exactly as its display name is. The status is
+            # read from the decrypted record and the skip happens AFTER the
+            # load, deliberately. Skipping on the plaintext manifest mirror
+            # decided this on unverified data and, for a profile it skipped,
+            # meant the record was never read at all -- so a manifest saying
+            # tombstoned over an active record hid a live taxpayer from the
+            # scan and admitted the duplicate.
+            if record.status is UserProfileStatus.TOMBSTONED:
+                continue
+            existing_tax_id = _canonical_tax_id(record.facts)
             if existing_tax_id is not None and existing_tax_id == new_tax_id:
                 raise ProfileAlreadyRegisteredError(
                     translated_message="application.user_profile.errors.duplicate_tax_id",
