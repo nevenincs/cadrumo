@@ -38,7 +38,7 @@ import secrets
 from collections.abc import Iterator
 from pathlib import Path
 
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.atomic_write import atomic_write_bytes
@@ -46,6 +46,7 @@ from .....core.classification import AtRestTreatment, SensitivityClass, default_
 from .....core.external_constants import BINARY_MIME_TYPE
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex as _sha256_hex
+from .....core.identity import ContentDigest
 from .....core.logging import get_logger
 from .....core.time import now
 from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION, STORAGE_NAMESPACE_REGISTRY
@@ -81,13 +82,13 @@ _BLOB_MANIFEST_PATH_DEFINITION = STORAGE_NAMESPACE_REGISTRY.path_by_key(_BLOB_MA
 _BLOB_STORE_DIRNAME = _BLOB_MANIFEST_PATH_DEFINITION.grammar.removeprefix("<root>/").split("/", maxsplit=1)[0]
 _BLOB_MANIFEST_SUFFIX = _BLOB_MANIFEST_PATH_DEFINITION.grammar.rsplit("<sha256>", maxsplit=1)[1]
 _BLOB_CIPHERTEXT_SUFFIX = ".enc"
-_HEX_DIGITS = frozenset("0123456789abcdef")
 
-
-def _validate_sha256_hex(value: str) -> str:
-    if len(value) != 64 or any(char not in _HEX_DIGITS for char in value):
-        raise ValueError("value must be a 64-character lowercase SHA-256 hex digest")
-    return value
+# Every digest below is the canonical :data:`~core.identity.ContentDigest`.
+# The module previously restated the lowercase-hex-64 rule in a local helper
+# plus a per-model field validator. The restatement matched the canonical
+# alias on every malformed value -- which is what hid the one place it did
+# not: ContentDigest strips surrounding whitespace, so a valid digest arriving
+# padded normalized everywhere else in the codebase and was refused here.
 
 
 class BlobManifest(BaseModel):
@@ -118,20 +119,13 @@ class BlobManifest(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    sha256_plaintext_hex: str = Field(min_length=64, max_length=64)
-    sha256_ciphertext_hex: str | None = None
+    sha256_plaintext_hex: ContentDigest
+    sha256_ciphertext_hex: ContentDigest | None = None
     size_plaintext: int = Field(ge=0)
     content_type: str = Field(min_length=1)
     classification: SensitivityClass
     wrapped_dek: EncryptionMetadata | None = None
     payload_metadata: EncryptionMetadata | None = None
-
-    @field_validator("sha256_plaintext_hex", "sha256_ciphertext_hex")
-    @classmethod
-    def _validate_digest_fields(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        return _validate_sha256_hex(value)
 
 
 class BlobReference(BaseModel):
@@ -148,13 +142,8 @@ class BlobReference(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    sha256_plaintext_hex: str = Field(min_length=64, max_length=64)
+    sha256_plaintext_hex: ContentDigest
     classification: SensitivityClass
-
-    @field_validator("sha256_plaintext_hex")
-    @classmethod
-    def _validate_plaintext_digest(cls, value: str) -> str:
-        return _validate_sha256_hex(value)
 
 
 def _hex_digest(data: bytes) -> str:
