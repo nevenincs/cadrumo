@@ -34,8 +34,12 @@ import pytest
 from pydantic import AnyUrl
 
 from .....tests.aeat_literal_fixtures import (
+    AEAT_WRITE_VERB_TOKEN_WITNESS_PATH_CANARIES,
     LIVE_PARITY_STATE_CREATING_PATH_CANARIES,
     PUBLIC_OPEN_SIMULATOR_PATH_FIXTURE,
+    WRITE_VERB_WITNESS_CANCELAR_PATH_CANARY,
+    WRITE_VERB_WITNESS_PAGAR_PATH_CANARY,
+    WRITE_VERB_WITNESS_PRESENTACION_PATH_CANARY,
     aeat_host,
     aeat_url,
 )
@@ -113,3 +117,38 @@ def test_each_canary_is_refused_for_a_distinct_stated_reason() -> None:
     assert "tgvi" in reasons["/wlpl/PRET/tgvionline/upload"]
     assert "transmision" in reasons["/wlpl/PRET/transmision-fichero"]
     assert "transmitir" in reasons["/wlpl/PRET/transmitir"]
+
+
+@pytest.mark.parametrize("write_verb_witness_path", AEAT_WRITE_VERB_TOKEN_WITNESS_PATH_CANARIES)
+def test_every_write_verb_witness_path_is_refused_on_get(write_verb_witness_path: str) -> None:
+    """Each token independently witnessed against a real AEAT surface is refused.
+
+    Unlike ``LIVE_PARITY_STATE_CREATING_PATH_CANARIES`` (the TGVI/PRET upload
+    family), these three paths are not project-authored canary shapes: they are
+    the batch-presentation endpoint, the deployed Clave Movil cancellation
+    path, and a debt-payment procedure quoted verbatim from the bundled AEAT
+    Manual Practico de Sociedades -- each a genuine AEAT-published surface, not
+    a synthetic stand-in.
+    """
+    with pytest.raises(RegistryValidationError, match=r"forbidden"):
+        _get(write_verb_witness_path)
+
+
+def test_the_write_verb_witness_set_is_not_empty() -> None:
+    """A parametrized suite over an emptied tuple would collect zero cases and pass."""
+    assert len(AEAT_WRITE_VERB_TOKEN_WITNESS_PATH_CANARIES) == 3
+
+
+def test_each_write_verb_witness_is_refused_for_its_own_token() -> None:
+    """The refusals name the token they fired on, so a lost token is attributable."""
+    with pytest.raises(RegistryValidationError) as presentacion_excinfo:
+        _get(WRITE_VERB_WITNESS_PRESENTACION_PATH_CANARY)
+    assert "presentacion" in str(presentacion_excinfo.value)
+
+    with pytest.raises(RegistryValidationError) as cancelar_excinfo:
+        _get(WRITE_VERB_WITNESS_CANCELAR_PATH_CANARY)
+    assert "cancelar" in str(cancelar_excinfo.value)
+
+    with pytest.raises(RegistryValidationError) as pagar_excinfo:
+        _get(WRITE_VERB_WITNESS_PAGAR_PATH_CANARY)
+    assert "pagar" in str(pagar_excinfo.value)

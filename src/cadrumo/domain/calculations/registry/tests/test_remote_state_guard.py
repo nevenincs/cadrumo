@@ -26,7 +26,6 @@ from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import LiveParityCatalogue, OracleEnvironment
 from .._remote_state_guard import (
     _FORBIDDEN_TOKENS,
-    AEAT_WRITE_FORBIDDEN_VERB_TOKENS,
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
@@ -52,19 +51,40 @@ _PLANNED_OPERATION_EXPECTED_FIXTURES = {
 }
 
 
-def test_url_method_guard_includes_canonical_write_verb_tokens() -> None:
-    """The URL/method denylist MUST cover every canonical write-verb token.
+#: Tokens independently corroborated against a real AEAT write surface --
+#: NOT derived from ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS`` itself, which is what
+#: makes this set usable as a pin. The other 14 members of that frozenset
+#: (``anular``, ``confirmar``, ``confirmacion``, ``domiciliar``, ``enviar``,
+#: ``firmar``, ``guardar``, ``modificar``, ``save``, ``sign``, ``subsanar``,
+#: ``submit``) have no comparable real-surface witness in the bundled AEAT
+#: corpus, the portal catalogue, or this project's deployment configuration
+#: today; that gap is recorded against this task, not silently assumed closed.
+_WITNESSED_AGAINST_A_REAL_AEAT_SURFACE = frozenset(
+    {"presentacion", "cancelar", "tgvi", "transmision", "transmitir", "pagar"},
+)
 
-    Both this guard and the renta-web-open click-time safety adapter
-    derive from ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS``. If a future
-    refactor accidentally drops the canonical core from the URL/method
-    set, the safety net silently weakens — this regression test breaks
-    the build first.
+
+def test_url_method_guard_covers_every_witnessed_write_verb_token() -> None:
+    """The URL/method denylist MUST cover every token proven against a real AEAT surface.
+
+    The prior form of this test asserted
+    ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS - set(_FORBIDDEN_TOKENS) == set()``,
+    which is VACUOUS: ``_FORBIDDEN_TOKENS`` is *built by unpacking*
+    ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS``, so the containment holds by
+    construction at every value of the constant -- dropping ``tgvi`` from the
+    source removes it from both sides and nothing reds (mutation-proven: see
+    ``test_remote_state_guard_write_surface_canaries.py``, which failed three
+    real-path cases on that exact deletion while this assertion stayed green).
+
+    Pinning against ``_WITNESSED_AGAINST_A_REAL_AEAT_SURFACE`` -- a literal set
+    independent of the constant under test -- breaks the circularity: a token
+    dropped from ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS`` is dropped from
+    ``_FORBIDDEN_TOKENS`` too, and this assertion reds.
     """
 
     forbidden = set(_FORBIDDEN_TOKENS)
-    missing = AEAT_WRITE_FORBIDDEN_VERB_TOKENS - forbidden
-    assert not missing, f"_FORBIDDEN_TOKENS is missing canonical write verbs: {sorted(missing)}"
+    missing = _WITNESSED_AGAINST_A_REAL_AEAT_SURFACE - forbidden
+    assert not missing, f"_FORBIDDEN_TOKENS dropped a token witnessed against a real AEAT surface: {sorted(missing)}"
 
 
 def _open_policy() -> RemoteStateGuardPolicy:
