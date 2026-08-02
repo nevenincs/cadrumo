@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.transactions._classification_rule
+   cadrumo.domain.transactions._dates
    cadrumo.domain.transactions._enums
    cadrumo.domain.transactions._errors
    cadrumo.domain.transactions._ids

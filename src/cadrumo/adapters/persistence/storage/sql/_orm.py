@@ -145,8 +145,9 @@ class TransactionDateIndexRow(Base):
 
     The row carries ONLY non-sensitive routing keys: the bucket id, the
     transaction id, its filing date (``value_date`` or ``booked_date`` --
-    the same field every ledger aggregator already filters on), and the
-    filing year the date falls in. No amount, counterparty, description,
+    the same field every ledger aggregator already filters on), the filing
+    year the date falls in, and the inclusive span of every date the row can
+    file an observation under. No amount, counterparty, description,
     NIF, or other financial content may ever be added to this table; it is
     plaintext by design (:class:`~adapters.persistence.storage.SensitivityClass`
     ``CACHE``) and correctness never depends on it being present or fresh --
@@ -162,6 +163,14 @@ class TransactionDateIndexRow(Base):
         filing_year: ``filing_date.year``, indexed separately so a
             year-scoped candidate-id query does not need a date-range
             predicate at all.
+        eligible_from: Earliest date this row can file an observation under,
+            per :func:`~domain.transactions.transaction_eligible_date_span`.
+            Equal to ``filing_date`` unless an IVA criterio-de-caja timing
+            override moves the row's devengo or collection dates off it.
+        eligible_to: Latest such date, inclusive. A period-scoped partition
+            selects on span OVERLAP rather than on ``filing_date``, so a row
+            booked in one quarter that carries a prior-quarter cash-accounting
+            devengo is never dropped from the candidate set.
     """
 
     __tablename__ = "transaction_date_index"
@@ -176,6 +185,12 @@ class TransactionDateIndexRow(Base):
             "bucket_id",
             "filing_date",
         ),
+        Index(
+            "ix_transaction_date_index_bucket_eligible_span",
+            "bucket_id",
+            "eligible_from",
+            "eligible_to",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -183,6 +198,8 @@ class TransactionDateIndexRow(Base):
     transaction_id: Mapped[str] = mapped_column(String(64), nullable=False)
     filing_date: Mapped[date] = mapped_column(Date(), nullable=False)
     filing_year: Mapped[int] = mapped_column(Integer, nullable=False)
+    eligible_from: Mapped[date] = mapped_column(Date(), nullable=False)
+    eligible_to: Mapped[date] = mapped_column(Date(), nullable=False)
 
 
 class SecureObjectRow(Base):
