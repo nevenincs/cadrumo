@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#semantic-search-precompile-boundary'
 date: '2026-08-01'
-modified: '2026-08-01'
+modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:bfc779c84a3c065109ffb75f1792c3292d7c38480f2ada9bfa75ac535decd8bc'
+body_hash: 'sha256:40a481494e82e4a3a7f2da1da2618909585f1f6be87a39b37d07b1636f7f128b'
 step_id: 'S14'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace semantic-search-precompile-boundary with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S14 and 2026-07-31-semantic-search-precompile-boundary-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Run the fresh-context honesty review against the closure summary and persist it as a vault audit before declaring the campaign structurally complete and ## Scope
-
-- `.vault/audit/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Run the fresh-context honesty review against the closure summary and persist it as a vault audit before declaring the campaign structurally complete
 

@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
-modified: '2026-08-01'
+modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:b8652e27526dd25165783a9c2ff156852284c3a40eaf04ac2213c59122c0cad4'
+body_hash: 'sha256:cc804d9a25ec8b7be095b98157bb0c74e0f277018ce8d006c172aa2b7cd0ae98'
 step_id: 'S01'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace semantic-search-precompile-boundary with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S01 and 2026-07-31-semantic-search-precompile-boundary-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Report the collision between this ruling and the in-flight loader-hardening WIP to the coordinator and obtain an explicit handoff of the uncommitted changes before any deletion touches those files and ## Scope
-
-- `src/cadrumo/application/corpus_search/_model_loader.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Report the collision between this ruling and the in-flight loader-hardening WIP to the coordinator and obtain an explicit handoff of the uncommitted changes before any deletion touches those files
 

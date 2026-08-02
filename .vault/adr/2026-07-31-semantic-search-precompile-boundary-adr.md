@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#semantic-search-precompile-boundary'
 date: '2026-07-31'
-modified: '2026-08-01'
+modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:185609a800943d80bb8d2d5050da39617914dbca17f497b227af6539fa93050b'
+body_hash: 'sha256:825dea8093d20289f441105cf94ed71c1d246ad998b96f3e9bcef791859e9acf'
 related:
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -72,7 +72,6 @@ The operator's intent and the corpus's own doctrine coincide: the accepted docs-
 - The command-and-corpus vector-ranking duplication flagged by the 2026-07-31 semantic-code-deduplication campaign audit is resolved by deletion of the shared mechanics.
 - The pathway stays open: because the corpus is static and chunk identifiers are stable, a laundered related-provisions or term-expansion artefact can later restore concept adjacency with zero runtime model, through the same pipeline and licence gate the docs surface already trusts.
 - A future ADR reintroducing any runtime embedding surface must supersede this record explicitly; the boundary is now that the product ships no semantic runtime, not that one is merely optional.
-
 
 ## Update 1 (2026-08-01): execution corrections and one ratification
 

@@ -3,32 +3,13 @@ tags:
   - '#audit'
   - '#semantic-search-precompile-boundary'
 date: '2026-08-01'
-modified: '2026-08-01'
+modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:0551a903adb2951ca310b72ed7fcb9c3d0109fc834e09899e0017962e21ffa65'
+body_hash: 'sha256:c72efa1a96e738429c66b942a8292e7e71598eb1789e242eaa9eca13e3497fd9'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-plan]]"
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace semantic-search-precompile-boundary with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `semantic-search-precompile-boundary` audit: `campaign close honesty review`
 
