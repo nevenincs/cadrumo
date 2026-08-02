@@ -15,7 +15,7 @@ import pytest
 
 from ......domain.transactions import TransactionDirection
 from ......tests import FIXTURES_DIR
-from .. import OfxProvider
+from .. import InvalidFinancialSourceError, OfxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -53,6 +53,35 @@ def test_ofx_provider_prefers_fitid_and_payee() -> None:
     assert debit.raw.amount == Decimal("42.10")
     assert debit.raw.amount >= 0
     assert debit.direction is TransactionDirection.OUTGOING
+
+
+@pytest.mark.parametrize("amount_token", ["NaN", "Infinity"])
+def test_ofx_provider_refuses_non_finite_transaction_amounts(
+    amount_token: str,
+    tmp_path: Path,
+) -> None:
+    """Validation and ingestion refuse the same non-finite real OFX amount."""
+    fixture = _FIXTURES / "synthetic-transactions.ofx"
+    fixture_text = fixture.read_text(encoding="utf-8")
+    assert "<TRNAMT>875.55" in fixture_text
+    source = tmp_path / f"non-finite-{amount_token}.ofx"
+    source.write_text(
+        fixture_text.replace("<TRNAMT>875.55", f"<TRNAMT>{amount_token}", 1),
+        encoding="utf-8",
+    )
+
+    provider = OfxProvider()
+    validation = provider.validate_source(source)
+
+    assert not validation.is_valid
+    assert validation.warnings == (
+        f"OFX transaction 1 could not be parsed: unsupported amount value: {amount_token!r}",
+    )
+    with pytest.raises(
+        InvalidFinancialSourceError,
+        match=rf"OFX transaction 1 could not be parsed: unsupported amount value: '{amount_token}'",
+    ):
+        tuple(provider.ingest(source))
 
 
 def test_ofx_provider_ingests_every_account_statement(tmp_path: Path) -> None:
