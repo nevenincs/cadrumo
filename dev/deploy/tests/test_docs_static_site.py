@@ -239,6 +239,21 @@ def _download_latest_path(repo_root: Path) -> Path:
     return repo_root.joinpath(*_DOWNLOAD_LATEST_STATIC_PATH)
 
 
+def _seed_stale_download_latest(repo_root: Path) -> Path:
+    """Pre-seed a valid-looking prior release payload at the destination.
+
+    Simulates the shape the audit finding names: a previous successful
+    refresh already wrote a real payload, and a LATER refresh attempt fails.
+    """
+    destination = _download_latest_path(repo_root)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(
+        json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "0.1.0-stale", "assets": []}),
+        encoding="utf-8",
+    )
+    return destination
+
+
 def test_refresh_download_latest_writes_a_valid_payload(tmp_path: Path) -> None:
     """A valid latest-release payload is written into docs/_static."""
     body = json.dumps({"schema_name": _DOWNLOAD_LATEST_SCHEMA, "version": "9.9.9", "assets": []}).encode("utf-8")
@@ -271,3 +286,42 @@ def test_refresh_download_latest_degrades_on_write_failure(tmp_path: Path) -> No
     with _serving(body=body) as url:
         _refresh_download_latest(tmp_path, source_url=url)  # must not raise despite the write failure
     assert not _download_latest_path(tmp_path).exists()
+
+
+def test_refresh_download_latest_invalidates_a_preseeded_stale_payload_on_network_error(tmp_path: Path) -> None:
+    """A prior successful refresh's payload must not survive a failed re-run.
+
+    Reproduces the audit finding: every failure branch used to return
+    without touching a payload retained from an earlier successful run, so a
+    later documentation build would publish that prior release's stale
+    download links as though they were current.
+    """
+    stale = _seed_stale_download_latest(tmp_path)
+    assert stale.is_file()
+
+    _refresh_download_latest(tmp_path, source_url=_closed_port_url())
+
+    assert not stale.exists()
+
+
+def test_refresh_download_latest_invalidates_a_preseeded_stale_payload_on_malformed_json(tmp_path: Path) -> None:
+    """A preseeded stale payload is invalidated when the new response is not JSON."""
+    stale = _seed_stale_download_latest(tmp_path)
+    assert stale.is_file()
+
+    with _serving(body=b"<html>not found</html>") as url:
+        _refresh_download_latest(tmp_path, source_url=url)
+
+    assert not stale.exists()
+
+
+def test_refresh_download_latest_invalidates_a_preseeded_stale_payload_on_schema_mismatch(tmp_path: Path) -> None:
+    """A preseeded stale payload is invalidated when the new response is valid JSON but the wrong schema."""
+    stale = _seed_stale_download_latest(tmp_path)
+    assert stale.is_file()
+    body = json.dumps({"schema_name": "cadrumo.some-other-schema.v1", "version": "9.9.9"}).encode("utf-8")
+
+    with _serving(body=body) as url:
+        _refresh_download_latest(tmp_path, source_url=url)
+
+    assert not stale.exists()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -145,15 +146,34 @@ def _site_build_environment(*, base_environment: Mapping[str, str] | None = None
     }
 
 
+def _invalidate_download_latest(destination: Path, reason: str) -> None:
+    """Remove a stale ``download-latest.json`` (if any) and report why.
+
+    A failed refresh must never leave a PRIOR release's payload standing as
+    if it were current: an absent file is the documented safe floor (the
+    offline Tier-1 channel table), while a stale-but-present one silently
+    republishes an old release's download links as the current release. The
+    removal itself must never raise -- an already-broken destination (e.g. a
+    write failure because a path component is not a directory) has no stale
+    file at that exact path to remove, and this function degrades silently
+    like every other branch of the refresh.
+    """
+    with contextlib.suppress(OSError):
+        destination.unlink(missing_ok=True)
+    print(f"{reason}; serving the offline channel table.", flush=True)
+
+
 def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LATEST_URL) -> None:
     """Pull the latest release's ``download-latest.json`` into ``docs/_static``.
 
     Fetches the version-agnostic latest-release asset (attached by
     ``publish-release.yml``), validates it is the expected schema, and writes it
     to ``docs/_static/download-latest.json`` so the built site serves a current
-    payload. Any failure — no release yet, network error, or an unexpected body
-    (e.g. a 404 page) — degrades silently: the offline Tier-1 channel table is the
-    floor and the build proceeds. Never raises.
+    payload. Any failure — no release yet, network error, an unexpected body
+    (e.g. a 404 page), a schema mismatch, or a local write failure — degrades
+    silently (never raises) AND invalidates any payload retained from an
+    earlier successful run, so the offline Tier-1 channel table is the floor
+    rather than a stale prior release's links being served as current.
 
     ``source_url`` defaults to the fixed GitHub release asset URL; tests point it
     at a local HTTP server to exercise the real ``urlopen`` path against a real
@@ -168,21 +188,21 @@ def _refresh_download_latest(repo_root: Path, *, source_url: str = _DOWNLOAD_LAT
         with urllib.request.urlopen(request, timeout=_DOWNLOAD_LATEST_TIMEOUT_SECONDS) as response:  # noqa: S310
             body = response.read()
     except (urllib.error.URLError, HTTPException, TimeoutError, OSError) as exc:
-        print(f"download-latest.json unavailable ({exc}); serving the offline channel table.", flush=True)
+        _invalidate_download_latest(destination, f"download-latest.json unavailable ({exc})")
         return
     try:
         payload = json.loads(body)
     except json.JSONDecodeError:
-        print("download-latest.json response was not JSON; serving the offline channel table.", flush=True)
+        _invalidate_download_latest(destination, "download-latest.json response was not JSON")
         return
     if not isinstance(payload, dict) or payload.get("schema_name") != _DOWNLOAD_LATEST_SCHEMA:
-        print("download-latest.json was not the expected payload; serving the offline channel table.", flush=True)
+        _invalidate_download_latest(destination, "download-latest.json was not the expected payload")
         return
     try:
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_bytes(body)
     except OSError as exc:
-        print(f"download-latest.json could not be written ({exc}); serving the offline channel table.", flush=True)
+        _invalidate_download_latest(destination, f"download-latest.json could not be written ({exc})")
         return
     print(f"Refreshed {destination.relative_to(repo_root)} from the latest release.", flush=True)
 
