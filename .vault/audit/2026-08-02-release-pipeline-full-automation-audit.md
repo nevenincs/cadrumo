@@ -314,3 +314,31 @@ evidence-release input from any lane run-id output - because the test written
 alongside the remediation asserts the collapsed mapping as correct, and a gate
 that only checks the ids arrive would pass over it exactly as the current one
 does.
+
+Third and final confirmation pass, appended. The evidence-release conflation is
+closed and verified against commit `8a4e30c577`, re-running the reproduction
+rather than reading the diff. The seal stage now sources the tag from the
+precondition job that verified it, and the needs graph was checked to confirm the
+reference actually resolves rather than silently rendering empty. The negative
+assertion the correction needed exists and is mutation-sensitive: planting the
+old wiring back into the workflow reds two of the three evidence-release
+assertions, and the file was restored byte-identically afterwards. The seal-time
+refusal rejects a bare run id with an instructive message and, under its positive
+control, admits a genuine tag, so the guard has not rotted into one that refuses
+everything. The lane run id and the evidence release remain distinct facts in the
+claimed-channel authority. The four previously-closed findings whose modules this
+correction touched again were replayed and all hold. The full gate set is 433
+green.
+
+All twelve findings are now closed with verification. None was deferred. Two
+observations are recorded for whoever maintains this next, neither of them
+blocking. First, the acquisition stage still publishes a claude lane run id that
+no downstream consumer reads, because the claimed-channel authority gives that
+lane no publication input of its own; the lane's success is proven by the stage
+that waits on it, so this is unused rather than lost, but a later reader may
+reasonably mistake it for a second dropped id. Second, the guard detectors across
+the alerting tests match guard expressions by containment, so they cannot
+distinguish a status function from its negation; that shape predates this
+campaign and no shipped guard exercises it.
+
+The campaign is structurally complete on the merits of this review.
