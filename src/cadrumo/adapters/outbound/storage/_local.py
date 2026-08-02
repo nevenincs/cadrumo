@@ -108,6 +108,50 @@ def _parse_sidecar_byte_length(value: object) -> int:
     return byte_length
 
 
+def _parse_sidecar_written_at(value: object) -> datetime:
+    """Return the sidecar's persisted write instant, or classify corruption.
+
+    ``get`` and ``iter_objects`` each parsed this field with their own copy of
+    the same three lines, and both substituted ``now()`` when the value was
+    missing or unparseable. That turned immutable storage corruption into
+    apparently fresh metadata, and — because the two surfaces call the clock at
+    different instants — made the SAME object report two different write times
+    depending on which one an operator read it through. The payload stayed
+    intact while its chronology silently did not, so nothing downstream could
+    learn the sidecar had been damaged.
+
+    A tz-naive value is refused rather than assumed UTC. The writer stores an
+    aware instant, so a naive one is damage; reading it as UTC would recover a
+    wrong instant wherever the writer was not on UTC, which is the same silent
+    substitution in a smaller disguise.
+
+    Raises:
+        :class:`StorageCorruptionError`: When the field is absent, is not a
+            string, does not parse, or carries no timezone.
+    """
+    if not isinstance(value, str) or not value.strip():
+        raise StorageCorruptionError(
+            f"sidecar written_at is absent or not a string: {value!r}",
+            context={"actual_value": repr(value)},
+            translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+        )
+    try:
+        written_at = datetime.fromisoformat(value)
+    except ValueError:
+        raise StorageCorruptionError(
+            f"sidecar written_at is not an ISO-8601 instant: {value!r}",
+            context={"actual_value": value},
+            translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+        ) from None
+    if written_at.tzinfo is None or written_at.tzinfo.utcoffset(written_at) is None:
+        raise StorageCorruptionError(
+            f"sidecar written_at carries no timezone: {value!r}",
+            context={"actual_value": value},
+            translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+        )
+    return written_at
+
+
 class LocalFileSystemProvider:
     """Bytes-in / bytes-out provider backed by a :class:`pathlib.Path` tree."""
 
@@ -335,7 +379,8 @@ class LocalFileSystemProvider:
             :class:`OutboundStoragePermissionError`: When the object file
                 cannot be read due to OS permissions.
             :class:`StorageCorruptionError`: When the sidecar ``byte_length``
-                field has an unexpected type.
+                field has an unexpected type, or its ``written_at`` is absent,
+                unparseable, or tz-naive.
             :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` fail format checks.
         """
@@ -380,11 +425,7 @@ class LocalFileSystemProvider:
             translated_message="adapters.outbound.storage.local.errors.content_hash_mismatch",
         )
 
-        written_at_raw = str(sidecar.get("written_at", ""))
-        try:
-            written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else now()
-        except ValueError:
-            written_at = now()
+        written_at = _parse_sidecar_written_at(sidecar.get("written_at"))
 
         byte_length = _parse_sidecar_byte_length(sidecar.get("byte_length"))
         verify_payload_byte_length(
@@ -478,7 +519,8 @@ class LocalFileSystemProvider:
             :class:`OutboundStorageIntegrityError`: When a sidecar file is
                 unreadable or contains non-JSON content.
             :class:`StorageCorruptionError`: When a sidecar ``byte_length``
-                field has an unexpected type.
+                field has an unexpected type, or a ``written_at`` is absent,
+                unparseable, or tz-naive.
             :class:`OutboundStorageValidationError`: When ``namespace`` fails
                 format checks.
         """
@@ -499,11 +541,7 @@ class LocalFileSystemProvider:
                 # classifier surfaces it as an integrity issue elsewhere.
                 continue
             sidecar = self._load_sidecar(sidecar_path)
-            written_at_raw = str(sidecar.get("written_at", ""))
-            try:
-                written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else now()
-            except ValueError:
-                written_at = now()
+            written_at = _parse_sidecar_written_at(sidecar.get("written_at"))
             byte_length = _parse_sidecar_byte_length(sidecar.get("byte_length"))
             yield ProviderObjectMetadata(
                 namespace=namespace_clean,
