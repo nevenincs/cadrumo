@@ -9,6 +9,7 @@ normalisation produces a byte-stable archive for the same content.
 
 from __future__ import annotations
 
+import io
 import tarfile
 from datetime import UTC, datetime
 from pathlib import Path
@@ -25,6 +26,7 @@ from .._sealed_archive_reader import read_sealed_archive
 from .._sealed_archive_writer import (
     HEADER_MEMBER_NAME,
     PAYLOAD_MEMBER_NAME,
+    RECOVERY_WRAP_MEMBER_NAME,
     write_sealed_archive,
 )
 
@@ -337,3 +339,106 @@ def test_successful_write_leaves_only_the_finished_archive(tmp_path: Path) -> No
     assert sorted(path.name for path in tmp_path.iterdir()) == ["export.cadrumo-bucket.tar.gz"]
     recovered = read_sealed_archive(archive_path)
     assert recovered.payload_envelope_bytes == b"payload-envelope-bytes"
+
+
+def _repack_with_extra_recovery_member(source: Path, target: Path) -> None:
+    """Copy a 2-member archive and append an undeclared ``recovery.wrap`` member."""
+    with tarfile.open(source, mode="r:gz") as original:
+        members = [(member, original.extractfile(member).read()) for member in original.getmembers()]  # type: ignore[union-attr]
+    with tarfile.open(target, mode="w:gz") as repacked:
+        for member, data in members:
+            repacked.addfile(member, io.BytesIO(data))
+        extra = tarfile.TarInfo(RECOVERY_WRAP_MEMBER_NAME)
+        extra.size = len(b"undeclared-recovery-material")
+        repacked.addfile(extra, io.BytesIO(b"undeclared-recovery-material"))
+
+
+def test_writer_refuses_an_empty_payload_member(tmp_path: Path) -> None:
+    """An archive with nothing to decrypt is not a valid sealed archive.
+
+    An empty ``payload.envelope`` produced a structurally valid archive that
+    wrote and read back cleanly with ``payload_len=0``: every layout check
+    passed and the result carried no encrypted material at all.
+    """
+    with pytest.raises(SealedArchiveWriteError):
+        write_sealed_archive(
+            tmp_path / "export.cadrumo-bucket.tar.gz",
+            header=_header(),
+            payload_envelope_bytes=b"",
+        )
+
+
+def test_writer_refuses_an_empty_declared_recovery_member(tmp_path: Path) -> None:
+    """Declaring recovery material and supplying none loses it silently."""
+    with pytest.raises(SealedArchiveWriteError):
+        write_sealed_archive(
+            tmp_path / "export.cadrumo-bucket.tar.gz",
+            header=_header(recovery_wrap_present=True),
+            payload_envelope_bytes=b"payload-envelope-bytes",
+            recovery_wrap_bytes=b"",
+        )
+
+
+def test_reader_refuses_an_empty_required_member(tmp_path: Path) -> None:
+    """The reader refuses a zero-byte required member it did not write itself.
+
+    The writer can no longer produce one, so this repacks the archive by hand
+    to prove the READ boundary also refuses it -- an archive from any other
+    producer must not be trusted on the writer's guarantees alone.
+    """
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
+    write_sealed_archive(
+        archive_path,
+        header=_header(),
+        payload_envelope_bytes=b"payload-envelope-bytes",
+    )
+    hollowed = tmp_path / "hollowed.cadrumo-bucket.tar.gz"
+    with tarfile.open(archive_path, mode="r:gz") as original:
+        members = [(member, original.extractfile(member).read()) for member in original.getmembers()]  # type: ignore[union-attr]
+    with tarfile.open(hollowed, mode="w:gz") as repacked:
+        for member, data in members:
+            if member.name == PAYLOAD_MEMBER_NAME:
+                member.size = 0
+                repacked.addfile(member, io.BytesIO(b""))
+                continue
+            repacked.addfile(member, io.BytesIO(data))
+
+    with pytest.raises(SealedArchiveLayoutError):
+        read_sealed_archive(hollowed)
+
+
+def test_reader_refuses_an_undeclared_recovery_member(tmp_path: Path) -> None:
+    """A third member the header does not declare must not ride along unexamined.
+
+    Layout validation permitted the name and the recovery reader consulted
+    only the header, so a repacked archive returned
+    ``recovery_wrap_bytes=None`` while retaining the extra member: undeclared
+    bytes travelled inside an archive that read back as valid.
+    """
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
+    write_sealed_archive(
+        archive_path,
+        header=_header(),
+        payload_envelope_bytes=b"payload-envelope-bytes",
+    )
+    repacked_path = tmp_path / "repacked.cadrumo-bucket.tar.gz"
+    _repack_with_extra_recovery_member(archive_path, repacked_path)
+
+    with pytest.raises(SealedArchiveLayoutError):
+        read_sealed_archive(repacked_path)
+
+
+def test_a_declared_recovery_archive_still_round_trips(tmp_path: Path) -> None:
+    """Positive control: the cardinality rule accepts the declared 3-member shape."""
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
+    write_sealed_archive(
+        archive_path,
+        header=_header(recovery_wrap_present=True),
+        payload_envelope_bytes=b"payload-envelope-bytes",
+        recovery_wrap_bytes=b"recovery-wrap-bytes",
+    )
+
+    recovered = read_sealed_archive(archive_path)
+
+    assert recovered.payload_envelope_bytes == b"payload-envelope-bytes"
+    assert recovered.recovery_wrap_bytes == b"recovery-wrap-bytes"

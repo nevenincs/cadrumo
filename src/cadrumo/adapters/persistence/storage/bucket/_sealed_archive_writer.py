@@ -110,6 +110,18 @@ def write_sealed_archive(
         raise SealedArchiveWriteError(
             "sealed-archive write refused: header.recovery_wrap_present is True but no recovery_wrap_bytes supplied",
         )
+    # Both members carry encrypted material, so zero bytes is never a
+    # legitimate value. An empty payload produced a structurally valid archive
+    # that round-tripped cleanly and carried nothing to decrypt; an empty
+    # declared recovery wrap lost the material the header says is present.
+    if not payload_envelope_bytes:
+        raise SealedArchiveWriteError(
+            "sealed-archive write refused: payload_envelope_bytes is empty; there would be nothing to decrypt",
+        )
+    if recovery_wrap_bytes is not None and not recovery_wrap_bytes:
+        raise SealedArchiveWriteError(
+            "sealed-archive write refused: recovery_wrap_bytes is empty but the header declares recovery material",
+        )
     if target_path.exists():
         raise SealedArchiveWriteError(
             f"sealed-archive write refused: target_path {target_path!s} already exists; "

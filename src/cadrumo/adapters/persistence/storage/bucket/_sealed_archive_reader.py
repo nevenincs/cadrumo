@@ -62,14 +62,27 @@ def _read_member_info(archive: tarfile.TarFile, member: tarfile.TarInfo) -> byte
 
 
 def _read_member(archive: tarfile.TarFile, expected_name: str) -> bytes:
-    """Read one tar member by name; raise layout error if absent or empty."""
+    """Read one required tar member by name, refusing an absent or empty one.
+
+    The docstring already promised the empty case was refused; the check was
+    missing. Both required members carry encrypted material, so zero bytes
+    cannot be a legitimate value: an archive with an empty ``payload.envelope``
+    is structurally valid, round-trips cleanly, and carries nothing to
+    decrypt, while an empty declared ``recovery.wrap`` silently loses the
+    recovery material the header says is present.
+    """
     try:
         member = archive.getmember(expected_name)
     except KeyError as exc:
         raise SealedArchiveLayoutError(
             f"sealed-archive read refused: required member {expected_name!r} is missing",
         ) from exc
-    return _read_member_info(archive, member)
+    member_bytes = _read_member_info(archive, member)
+    if not member_bytes:
+        raise SealedArchiveLayoutError(
+            f"sealed-archive read refused: required member {expected_name!r} is empty",
+        )
+    return member_bytes
 
 
 def _validate_source_suffix(source_path: Path) -> None:
@@ -160,6 +173,7 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
 
             member_names = tuple(member.name for member in archive.getmembers())
             _validate_layout(member_names)
+            _validate_member_cardinality(member_names, header)
 
             payload_bytes = _read_member(archive, PAYLOAD_MEMBER_NAME)
             recovery_wrap_bytes = _read_recovery_wrap(archive, header)
@@ -206,6 +220,25 @@ def _validate_layout(member_names: tuple[str, ...]) -> None:
     if len(member_names) == 3 and member_names[2] != RECOVERY_WRAP_MEMBER_NAME:
         raise SealedArchiveLayoutError(
             f"sealed-archive read refused: third member must be {RECOVERY_WRAP_MEMBER_NAME!r}, got {member_names[2]!r}",
+        )
+
+
+def _validate_member_cardinality(member_names: tuple[str, ...], header: ExportArchiveHeader) -> None:
+    """Bind the member count to the header's own recovery declaration.
+
+    Layout validation permits a third member by NAME, and the recovery reader
+    consults only the header, so an archive repacked with an undeclared
+    ``recovery.wrap`` read back cleanly: the header said no recovery material
+    was present, the reader returned ``None``, and the extra member rode along
+    unexamined. The count and the declaration are two statements about one
+    fact and must agree.
+    """
+    expected_members = 3 if header.recovery_wrap_present else 2
+    if len(member_names) != expected_members:
+        raise SealedArchiveLayoutError(
+            f"sealed-archive read refused: header declares recovery_wrap_present="
+            f"{header.recovery_wrap_present}, which requires exactly {expected_members} members, "
+            f"got {len(member_names)}: {list(member_names)!r}",
         )
 
 
