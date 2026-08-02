@@ -37,6 +37,8 @@ Public surface:
   ``payload_version`` is required: each domain versions its own payload,
   and that field alone is outside the derived id, so it cannot be
   defaulted here without silently misdeclaring some domain's contract.
+* :func:`build_bucket_event` — the derive half alone, for a caller that must
+  commit the event in the same unit of work as the state change it records.
 
 The adapter repository also exposes a ``to_secure_object_write`` method so
 sibling catalogue updates can co-emit the same encrypted event-history write.
@@ -100,6 +102,7 @@ from ._event import (
 from ._event_repository import (
     BucketEventHistoryPersistenceError,
     append_bucket_event,
+    build_bucket_event,
     emit_bucket_event,
 )
 from ._protocols import BucketEventHistoryRepositoryProtocol
@@ -125,6 +128,7 @@ __all__ = [
     "BucketRestoreRefusedError",
     "BucketsError",
     "append_bucket_event",
+    "build_bucket_event",
     "derive_bucket_event_id",
     "emit_bucket_event",
     "payload_value_fits",
