@@ -156,18 +156,23 @@ class M210IncomeClassificationPayload(OutputSchema):
 
 
 class TransactionPayload(OutputSchema):
-    """Nested CLI copy of :class:`LedgerTransactionPayload`."""
+    """Nested CLI copy of :class:`LedgerTransactionPayload`.
 
-    transaction_id: str
-    date: str
-    booked_date: str
+    Field constraints mirror the canonical projection so a malformed
+    identity, date, currency, or blank description that
+    ``LedgerTransactionPayload`` refuses is refused at the CLI boundary too.
+    """
+
+    transaction_id: TransactionId
+    date: str = Field(min_length=10, max_length=10)
+    booked_date: str = Field(min_length=10, max_length=10)
     value_date: str | None = None
-    amount: str
-    currency: str
-    direction: str
+    amount: str = Field(min_length=1)
+    currency: str = Field(min_length=3, max_length=3)
+    direction: str = Field(min_length=1)
     counterparty: str = ""
-    description: str
-    business_classification: str
+    description: str = Field(min_length=1)
+    business_classification: str = Field(min_length=1)
     business_pct: str | None = None
     category_id: str | None = None
     taxable_base: str | None = None
@@ -182,8 +187,8 @@ class TransactionPayload(OutputSchema):
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: list[str] = []
     notes: str = ""
-    lifecycle_state: str
-    classified_by: str
+    lifecycle_state: str = Field(min_length=1)
+    classified_by: str = Field(min_length=1)
     # Decision-provenance fields: the "why" behind the active
     # classification decision. Declared here so the strict single-transaction
     # read surface (ledger view/classify/update/archive/stash) accepts the
