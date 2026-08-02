@@ -32,7 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...agent import iter_personas, operator_rules_text
 from ...application.user_profile import TAX_ID_FACT_PATH
 from ...application.wizard import ensure_profile_keys_registered
-from ...application.workflow import assess_active_profile_health_with_session
+from ...application.workflow import ProfileHealthStatus, assess_active_profile_health_with_session
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
 from ._persona_scope import AgentPersona
@@ -106,13 +106,21 @@ class WhoamiIdentity(BaseModel):
     (its legal identity). ``readiness`` is the active-profile health status
     (``ready`` / ``incomplete`` / ``none`` / a degraded-pointer status), and
     ``next_action`` is the recovery step the health projection recommends.
+
+    ``readiness`` carries the canonical
+    :data:`~application.workflow.ProfileHealthStatus` taxonomy rather than a
+    bare non-empty string. The projection always copies the health verdict, but
+    an identity block built directly or rebuilt from a client's JSON could
+    otherwise admit a value outside the taxonomy — and this block is what an
+    agent reconciles before a mutating command, so an unrecognised readiness
+    is a value the recovery logic has no branch for.
     """
 
     model_config = _STRICT_FROZEN
 
     active_profile: str | None = None
     tax_id_present: bool = False
-    readiness: str = Field(min_length=1)
+    readiness: ProfileHealthStatus
     next_action: str = ""
 
 
