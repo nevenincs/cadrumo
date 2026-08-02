@@ -11,9 +11,10 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.parsing import normalise_iso_4217_currency
 
 
 class CurrencyNormalizationStatus(StrEnum):
@@ -32,6 +33,23 @@ class MonetaryAmount(BaseModel):
 
     amount: Decimal
     currency: str = Field(min_length=3, max_length=3)
+
+    @field_validator("currency", mode="before")
+    @classmethod
+    def _normalise_currency(cls, v: object) -> object:
+        """Normalise through the canonical ISO-4217 owner.
+
+        Runs ``mode="before"`` because the field's own length constraint
+        would otherwise fire on a padded token (``" eur "``) before the
+        normaliser ever runs, and because
+        :meth:`CurrencyNormalizationService.normalize` compares
+        ``currency`` against :data:`~core.external_constants.DEFAULT_CURRENCY`
+        by raw equality: a lowercase or padded native-EUR amount must
+        already be canonical ``"EUR"`` by the time that comparison runs,
+        or it silently misclassifies as a foreign currency with a missing
+        rate instead of the native-EUR identity conversion.
+        """
+        return normalise_iso_4217_currency(v)
 
 
 class NormalizedAmount(BaseModel):
