@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:f45a6a4040824e600ab09c6dc2cdfe54ad64a1c2e6121c066ba44bf02040c0e3'
+body_hash: 'sha256:caefb4a122eeda3adb53dc8786fbfbdf05e36bad7523a7be4f845c868f2b4395'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-adr]]"
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
@@ -254,6 +254,40 @@ new regression introduced by the remediation rather than a survival of the
 original defect, and because a new test now asserts the collapsed mapping as
 correct, which is what keeps the suite green over it.
 
+### workflow-branch-polarity-is-unpinned | medium | The rehearsal-versus-real bump branch is asserted by vocabulary, so an inverted ternary is green across the whole suite.
+
+Raised by the implementing agent as a meta-signal after closure, and confirmed.
+Both defects this review found share one shape rather than being two ordinary
+slips: a control that cannot express the failure it guards. The first was
+cardinality-blind, a set-valued selection tested with a single-element fixture.
+The second was semantics-blind, asserting that a value arrived while never asking
+what that value was. A scan for the same shape across the campaign's other Steps
+found the cross-element properties now correctly carry multi-element fixtures,
+and the regression test for the first defect even asserts its own precondition
+bites before testing it, which is the stronger form. One instance of the second
+shape survives.
+
+The bump stage selects between a rehearsal and a real run with a shell ternary
+that emits the rehearsal flag or the push flag. Its test asserts that both flag
+strings and the comparison fragment appear in the invocation surface, which is a
+vocabulary check rather than a polarity check. Inverting the ternary so that a
+rehearsal pushes and a real run rehearses was measured green across the entire
+release test suite of 385 tests. The consequence of that inversion is the most
+severe available on this pipeline: a rehearsal, which is the default input value,
+would land and push a real bump commit and tag, performing the one irreversible
+act the whole design reserves for a deliberate dispatch, while a real run would
+rehearse and never land its version. The test's own docstring states that the one
+irreversible thing the bump does is gated on the rehearsal flag, which is a
+property it does not verify.
+
+This is a gate weakness rather than a live defect: the ternary is correct today,
+and nothing is currently mis-wired. It is recorded because the campaign has now
+produced three instances of assertions that pass over a subtly wrong property,
+two of which were real defects, and because this one guards the irreversible act.
+The resume-verification equality tests in the same job carry the same shape at
+lower likelihood, since their polarity is pinned only by the presence of the
+compared strings.
+
 ## Recommendations
 
 The campaign is not honestly ready to be declared structurally complete. One
@@ -342,3 +376,31 @@ distinguish a status function from its negation; that shape predates this
 campaign and no shipped guard exercises it.
 
 The campaign is structurally complete on the merits of this review.
+
+Fourth and final confirmation pass, appended. The branch-polarity residual is
+closed and verified against commit `b4f9b219ed`. The ternary was replaced with an
+explicit conditional whose two arms are separately addressable, which is what
+makes a branch-to-flag mapping assertable at all; a vocabulary check was
+unavoidable while both flags lived on one line. The correction was verified by
+re-running the mutation that exposed the weakness rather than by reading it: with
+the branch bodies swapped so a rehearsal pushes and a real run rehearses, two
+assertions red where the identical inversion previously passed all three hundred
+and eighty-five. The resume identity comparisons received the same treatment and
+were checked the same way: flipping the operator on the conclusion pin, the
+workflow-path pin, the repository pin, and the main-ancestry pin each reds, so all
+four polarities are pinned rather than only the one that prompted the change. Every
+mutation was reverted and each file confirmed byte-identical by digest afterwards.
+
+Thirteen findings, all closed with verification, none deferred. The three
+previously-closed findings whose surfaces this correction touched were replayed
+and hold, and the full gate set is 437 green.
+
+The generalisable lesson this campaign produced, recorded because it cost three
+findings to learn: an assertion over a set must vary the set, and an assertion
+over a branch must vary the branch. The presence of the correct vocabulary proves
+neither. Two of the three instances were live defects and the third guarded the
+one irreversible act in the pipeline, so the pattern is worth applying
+deliberately rather than by instinct. The strongest control the campaign now
+carries states the discipline directly: it asserts that its own precondition bites
+before testing the behaviour it guards, so a fixture that quietly stopped
+establishing the condition would fail rather than pass.
