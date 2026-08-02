@@ -228,6 +228,27 @@ class ModeloDraft(BaseModel):
     review_checksum: str | None = None
     approval_basis: ModeloApprovalBasis | None = None
 
+    @model_validator(mode="after")
+    def _enforce_draft_invariants(self) -> ModeloDraft:
+        """Confirm the draft's cross-field identity invariants hold.
+
+        ``profile_tax_id`` and ``subject_tax_id`` are two axes of one taxpayer
+        identity, not two independent parties: the builder copies a single
+        validated profile identity into both, and no consumer distinguishes
+        them. Typing each as :data:`~core.identity.SubjectTaxId` only checks the
+        AEAT checksum of each value in isolation, so two *individually valid*
+        but different NIFs pass — a draft naming one taxpayer in the profile
+        axis and another in the filing-subject axis, preserved intact across the
+        encrypted round-trip. Only ``profile_tax_id`` is hashed into
+        ``draft_id``, so the divergence is not even visible in the identity.
+        """
+        if self.profile_tax_id != self.subject_tax_id:
+            raise FilingValidationError(
+                f"draft taxpayer identity diverges: profile_tax_id {self.profile_tax_id!r} "
+                f"and subject_tax_id {self.subject_tax_id!r} must name one taxpayer",
+            )
+        return self
+
 
 def compute_modelo_draft_id(
     *,
