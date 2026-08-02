@@ -39,13 +39,24 @@ OP-12
     exists is outside this repository and this forge — no agent can check or
     clear it from here, and this module never claims to.
 
+Alongside OP-10 (nominating the alerting channel)
+    The ``release-alert`` label the default failure-alert path
+    (:mod:`dev.release.alerting`) collects every alert issue under must exist
+    on the forge, or every default-path alert silently degrades to a run-log
+    warning nobody reads — measured live on 2026-08-02: the label does not
+    exist on ``nevenincs/cadrumo``. This module reports that state
+    (:func:`fetch_label`) so it is verified rather than assumed, the same
+    discipline OP-9/OP-12 already get.
+
 See Also:
     :func:`protection_rule_types`
         The parse layer, over an already-fetched payload.
     :func:`environments_referenced_by_workflows`
         The repo-tree scan behind orphan detection.
     :func:`fetch_environments`
-        The one subprocess boundary.
+        The environment subprocess boundary.
+    :func:`fetch_label`
+        The label subprocess boundary.
 """
 
 from __future__ import annotations
@@ -64,6 +75,7 @@ import yaml
 
 _GH_TIMEOUT_SECONDS: Final[float] = 30.0
 _DEFAULT_REPO_SLUG: Final[str] = "nevenincs/cadrumo"
+_UTF_8: Final[str] = "utf-8"
 
 #: The protection rule that gates a deployment on a human approval click. This
 #: is the rule OP-9 removes; every other rule type is left alone.
@@ -83,6 +95,16 @@ ORPHAN_CANDIDATE_ENVIRONMENTS: Final[tuple[str, ...]] = ("pypi-data-official",)
 #: candidate. This is what a plain ``python -m dev.release.environment_inventory``
 #: reports on, matching the RELEASING.md verification instruction.
 DEFAULT_INVENTORIED_ENVIRONMENTS: Final[tuple[str, ...]] = (*OP9_ENVIRONMENTS, *ORPHAN_CANDIDATE_ENVIRONMENTS)
+
+#: The label the failure-alert emitter's default path
+#: (``dev.release.alerting.ALERT_LABEL``) collects every release alert issue
+#: under, so an operator can subscribe to one label rather than the whole
+#: tracker. Declared here as a local literal rather than imported from
+#: ``dev.release.alerting`` — the two modules land on independent schedules in
+#: this shared worktree, and importing would make this module's commit order
+#: depend on that one's. It MUST stay byte-identical to
+#: ``dev.release.alerting.ALERT_LABEL``.
+ALERT_LABEL: Final[str] = "release-alert"
 
 
 def _repo_root() -> Path:
@@ -137,6 +159,30 @@ class EnvironmentRecord:
         return len(self.referenced_by) == 0
 
 
+@dataclass(frozen=True, slots=True)
+class LabelRecord:
+    """Whether one repository label exists on the forge, or the reason it is unknown.
+
+    ``exists`` is a three-state fact, matching :class:`EnvironmentRecord`'s own
+    readable/unreadable discipline: ``True`` (confirmed present), ``False`` (a
+    genuine 404 — confirmed absent, real actionable state: create the label),
+    or ``None`` (could not be determined — ``gh`` missing, a timeout, or any
+    other failure). A confirmed-absent label and an undetermined one must
+    never collapse to the same report line: an operator who has not yet
+    created the label needs to see that plainly, distinct from a transient
+    forge-reachability failure that tells them nothing.
+    """
+
+    name: str
+    exists: bool | None
+    detail: str = ""
+
+    @property
+    def readable(self) -> bool:
+        """Whether existence was actually determined (True or False), not merely guessed."""
+        return self.exists is not None
+
+
 def protection_rule_types(payload: Mapping[str, Any]) -> tuple[str, ...]:
     """Return the rule type names declared on one environment payload.
 
@@ -182,7 +228,7 @@ def environments_referenced_by_workflows(repo_root: Path) -> Mapping[str, tuple[
     references: dict[str, list[str]] = {}
     for workflow_path in _workflow_files(repo_root):
         try:
-            document = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+            document = yaml.safe_load(workflow_path.read_text(encoding=_UTF_8))
         except (yaml.YAMLError, UnicodeDecodeError):
             continue
         if not isinstance(document, Mapping):
@@ -265,6 +311,68 @@ def fetch_environments(
     return tuple(records)
 
 
+def fetch_label(
+    name: str = ALERT_LABEL,
+    *,
+    repo_slug: str = _DEFAULT_REPO_SLUG,
+    gh_executable: str | None = None,
+) -> LabelRecord:
+    """Read whether one repository label exists on the forge, one GET.
+
+    Distinguishes a genuine 404 (the label does not exist — real, actionable
+    state) from every other failure (gh absent, a timeout, a non-404 error),
+    which stays unreadable rather than being guessed as absent. The 404 is
+    read from the API's own JSON error body (``{"status": "404", ...}``)
+    rather than from ``gh``'s CLI wrapper text, which is not a contract this
+    module should depend on across ``gh`` versions; the stderr text is only a
+    fallback when the body did not parse.
+    """
+    resolved = gh_executable if gh_executable is not None else shutil.which("gh")
+    if resolved is None:
+        return LabelRecord(name, None, "gh unavailable: not found on PATH")
+    try:
+        result = subprocess.run(
+            [resolved, "api", f"repos/{repo_slug}/labels/{name}"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=_GH_TIMEOUT_SECONDS,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return LabelRecord(name, None, f"gh unavailable: {exc}")
+    if result.returncode == 0:
+        try:
+            payload = json.loads(result.stdout or "null")
+        except json.JSONDecodeError:
+            return LabelRecord(name, None, "could not be read: gh returned non-JSON output")
+        if not isinstance(payload, Mapping):
+            return LabelRecord(name, None, "could not be read: unexpected payload shape")
+        return LabelRecord(name, True)
+    try:
+        error_payload = json.loads(result.stdout or "null")
+    except json.JSONDecodeError:
+        error_payload = None
+    reported_status = str(error_payload.get("status", "")) if isinstance(error_payload, Mapping) else ""
+    if reported_status == "404" or "404" in result.stderr:
+        return LabelRecord(name, False)
+    detail = result.stderr.strip()[:200] or f"exit {result.returncode}"
+    return LabelRecord(name, None, f"could not be read: {detail}")
+
+
+def render_label_line(record: LabelRecord) -> str:
+    """Render one label record as an operator-facing line naming the create command."""
+    if not record.readable:
+        return f"{record.name}: UNKNOWN - {record.detail}"
+    if record.exists:
+        return f"{record.name}: label exists."
+    return (
+        f"{record.name}: MISSING - the failure-alert emitter's default path degrades to a "
+        f"run-log warning nobody reads without this label. Create it: "
+        f'gh label create {record.name} --description "Cadrumo release-chain failure alert" '
+        "--color b60205."
+    )
+
+
 def render_report(records: Sequence[EnvironmentRecord]) -> str:
     """Render the inventory as operator-facing lines naming the outstanding work."""
     lines: list[str] = []
@@ -315,33 +423,49 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Report forge environment protection rules (read-only).")
     parser.add_argument("--repository", default=_DEFAULT_REPO_SLUG)
     parser.add_argument("--environment", action="append", dest="environments")
+    parser.add_argument("--label", action="append", dest="labels")
     parser.add_argument("--json", action="store_true", dest="as_json")
     args = parser.parse_args(argv)
 
     names = tuple(args.environments) if args.environments else DEFAULT_INVENTORIED_ENVIRONMENTS
     records = fetch_environments(names, repo_slug=args.repository, repo_root=_repo_root())
+    label_names = tuple(args.labels) if args.labels else (ALERT_LABEL,)
+    label_records = tuple(fetch_label(name, repo_slug=args.repository) for name in label_names)
 
     if args.as_json:
         print(
             json.dumps(
-                [
-                    {
-                        "name": r.name,
-                        "rule_types": list(r.rule_types) if r.rule_types is not None else None,
-                        "readable": r.readable,
-                        "detail": r.detail,
-                        "referenced_by": list(r.referenced_by) if r.referenced_by is not None else None,
-                        "is_orphaned": r.is_orphaned,
-                    }
-                    for r in records
-                ],
+                {
+                    "environments": [
+                        {
+                            "name": r.name,
+                            "rule_types": list(r.rule_types) if r.rule_types is not None else None,
+                            "readable": r.readable,
+                            "detail": r.detail,
+                            "referenced_by": list(r.referenced_by) if r.referenced_by is not None else None,
+                            "is_orphaned": r.is_orphaned,
+                        }
+                        for r in records
+                    ],
+                    "labels": [
+                        {
+                            "name": r.name,
+                            "exists": r.exists,
+                            "readable": r.readable,
+                            "detail": r.detail,
+                        }
+                        for r in label_records
+                    ],
+                },
                 indent=2,
             )
         )
     else:
         print(render_report(records))
+        for label_record in label_records:
+            print(render_label_line(label_record))
 
-    return 0 if all(record.readable for record in records) else 1
+    return 0 if all(record.readable for record in records) and all(r.readable for r in label_records) else 1
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry

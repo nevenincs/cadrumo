@@ -155,6 +155,7 @@ def _write_workflow(workflows_dir: Path, filename: str, *, environment_yaml: str
 
 
 def test_environments_referenced_by_workflows_reads_the_scalar_form(tmp_path: Path) -> None:
+    """The bare ``environment: name`` scalar form this repo actually uses."""
     _write_workflow(tmp_path / ".github" / "workflows", "publish-release.yml", environment_yaml="release")
     _write_workflow(tmp_path / ".github" / "workflows", "docs-publish.yml", environment_yaml="docs")
 
@@ -166,6 +167,7 @@ def test_environments_referenced_by_workflows_reads_the_scalar_form(tmp_path: Pa
 
 
 def test_environments_referenced_by_workflows_reads_the_mapping_name_form(tmp_path: Path) -> None:
+    """The defensive ``environment: {name, url}`` mapping form."""
     workflows_dir = tmp_path / ".github" / "workflows"
     workflows_dir.mkdir(parents=True)
     (workflows_dir / "deploy.yml").write_text(
@@ -192,6 +194,7 @@ def test_environments_referenced_by_workflows_ignores_a_malformed_workflow_file(
 
 
 def test_environments_referenced_by_workflows_returns_empty_without_a_workflows_dir(tmp_path: Path) -> None:
+    """A tree with no .github/workflows scans cleanly to no references, not an error."""
     assert environment_inventory.environments_referenced_by_workflows(tmp_path) == {}
 
 
@@ -224,6 +227,7 @@ def test_fetch_environments_marks_an_unreferenced_environment_as_orphaned(tmp_pa
 
 
 def test_fetch_environments_marks_a_referenced_environment_as_not_orphaned(tmp_path: Path) -> None:
+    """A live workflow declaring the environment name means it is not orphaned."""
     workflows_dir = tmp_path / ".github" / "workflows"
     _write_workflow(workflows_dir, "publish-release.yml", environment_yaml="release")
     payload = json.dumps({"name": "release", "protection_rules": []})
@@ -267,11 +271,133 @@ def test_is_orphaned_is_never_true_for_an_unreadable_environment(tmp_path: Path)
 
 
 def test_default_inventoried_environments_covers_op9_and_every_orphan_candidate() -> None:
+    """The plain-CLI default set names every environment this module tracks."""
     assert environment_inventory.DEFAULT_INVENTORIED_ENVIRONMENTS == (
         "release",
         "docs",
         "pypi-data-official",
     )
+
+
+def _write_stderr_probe_gh(bin_dir: Path, *, stdout: str, stderr: str, exit_code: int) -> Path:
+    """Write a real executable ``gh`` stub emitting DISTINCT stdout and stderr content."""
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    if sys.platform.startswith("win"):
+        script = bin_dir / "gh.bat"
+        escaped_out = stdout.replace("%", "%%").replace("^", "^^").replace(">", "^>").replace("<", "^<").replace(
+            "|", "^|"
+        )
+        escaped_err = stderr.replace("%", "%%").replace("^", "^^").replace(">", "^>").replace("<", "^<").replace(
+            "|", "^|"
+        )
+        script.write_text(
+            f"@echo off\r\necho {escaped_out}\r\necho {escaped_err} 1>&2\r\nexit /b {exit_code}\r\n",
+            encoding="utf-8",
+        )
+    else:
+        script = bin_dir / "gh"
+        script.write_text(
+            f"#!/usr/bin/env bash\ncat <<'OUT'\n{stdout}\nOUT\ncat <<'ERR' 1>&2\n{stderr}\nERR\nexit {exit_code}\n",
+            encoding="utf-8",
+        )
+        script.chmod(script.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return script
+
+
+# ---------------------------------------------------------------------------
+# fetch_label / LabelRecord — S43: verify the release-alert label, not assume it
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_label_reports_an_existing_label(tmp_path: Path) -> None:
+    """A real, successful gh response reports the label as present."""
+    payload = json.dumps({"name": "release-alert", "color": "b60205"})
+    script = _write_probe_gh(tmp_path / "bin", payload=payload)
+
+    record = environment_inventory.fetch_label("release-alert", gh_executable=str(script))
+
+    assert record.readable is True
+    assert record.exists is True
+    assert environment_inventory.render_label_line(record) == "release-alert: label exists."
+
+
+def test_fetch_label_reports_a_confirmed_absent_label_via_the_api_status_field(tmp_path: Path) -> None:
+    """The gate case: a genuine 404 is a real, actionable fact — the label must be created."""
+    payload = json.dumps({"message": "Not Found", "status": "404"})
+    script = _write_probe_gh(tmp_path / "bin", payload=payload, exit_code=1)
+
+    record = environment_inventory.fetch_label("release-alert", gh_executable=str(script))
+
+    assert record.readable is True
+    assert record.exists is False
+    line = environment_inventory.render_label_line(record)
+    assert "MISSING" in line
+    assert "gh label create release-alert" in line
+
+
+def test_fetch_label_reports_a_confirmed_absent_label_via_stderr_fallback(tmp_path: Path) -> None:
+    """When the body doesn't parse as the expected shape, the stderr 404 text still counts."""
+    script = _write_stderr_probe_gh(
+        tmp_path / "bin",
+        stdout="not json at all",
+        stderr="gh: Not Found (HTTP 404)",
+        exit_code=1,
+    )
+
+    record = environment_inventory.fetch_label("release-alert", gh_executable=str(script))
+
+    assert record.exists is False
+
+
+def test_fetch_label_reports_unknown_on_a_non_404_failure(tmp_path: Path) -> None:
+    """A rate-limit or auth failure must never be reported as though the label were absent."""
+    script = _write_stderr_probe_gh(
+        tmp_path / "bin",
+        stdout="",
+        stderr="gh: API rate limit exceeded (HTTP 403)",
+        exit_code=1,
+    )
+
+    record = environment_inventory.fetch_label("release-alert", gh_executable=str(script))
+
+    assert record.readable is False
+    assert record.exists is None
+    assert "UNKNOWN" in environment_inventory.render_label_line(record)
+
+
+def test_fetch_label_reports_unknown_when_gh_is_missing(tmp_path: Path) -> None:
+    """An explicit but nonexistent gh path is trusted, not searched, and reports unknown."""
+    missing = tmp_path / "bin" / "definitely-not-gh"
+
+    record = environment_inventory.fetch_label("release-alert", gh_executable=str(missing))
+
+    assert record.readable is False
+    assert record.exists is None
+
+
+def test_environment_and_label_reports_compose_into_one_operator_view(tmp_path: Path) -> None:
+    """The composition `main()` performs: an unreadable environment and a missing label together.
+
+    ``main()`` itself has no ``gh`` executable injection point (it always
+    resolves the real ``gh`` on PATH, matching its pre-existing design), so
+    this proves the composition it performs — ``render_report`` plus
+    ``render_label_line`` over the same stub, and the combined readability
+    fold ``main()`` uses for its exit code — directly over the two real,
+    already-covered subprocess boundaries.
+    """
+    payload = json.dumps({"message": "Not Found", "status": "404"})
+    script = _write_probe_gh(tmp_path / "bin", payload=payload, exit_code=1)
+
+    env_records = environment_inventory.fetch_environments(("release",), gh_executable=str(script))
+    label_records = (environment_inventory.fetch_label("release-alert", gh_executable=str(script)),)
+    label_lines = (environment_inventory.render_label_line(r) for r in label_records)
+    report = "\n".join((environment_inventory.render_report(env_records), *label_lines))
+
+    assert "UNKNOWN" in report
+    assert "MISSING" in report
+    assert "gh label create release-alert" in report
+    overall_readable = all(r.readable for r in env_records) and all(r.readable for r in label_records)
+    assert overall_readable is False
 
 
 def test_the_module_exposes_no_mutation_path() -> None:
