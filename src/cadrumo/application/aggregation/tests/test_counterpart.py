@@ -36,7 +36,7 @@ def _obs(
     country: str = "ES",
     source_kind: CounterpartSourceKind = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
-    period: str = "2025",
+    period: str = "0A",
     accrued: str = "2025-03-15",
 ) -> CounterpartObservation:
     return CounterpartObservation(
@@ -64,7 +64,7 @@ class TestObservationContract:
             "counterparty_name": "",
             "counterparty_country": "ES",
             "operation_kind": OperationKind347.DELIVERY.value,
-            "operation_period": "2025",
+            "operation_period": "0A",
             "taxable_base": "100",
             "invoice_total": "100",
             "accrued_on": "2025-03-15",
@@ -254,3 +254,56 @@ class TestInvariants:
         forward = aggregate_counterpart_347(observations, period=_P_2025_ANNUAL)
         reverse = aggregate_counterpart_347(tuple(reversed(observations)), period=_P_2025_ANNUAL)
         assert forward.model_dump_json() == reverse.model_dump_json()
+
+
+class TestObservationBoundaryAuthorities:
+    """The operator boundary admits dates and periods through the shared authorities."""
+
+    @pytest.mark.parametrize("impossible", ["2026-99-99", "2026-02-30", "2025-13-01"])
+    def test_impossible_accrued_dates_are_refused(self, impossible: str) -> None:
+        """An impossible calendar date never reaches a preview rollup.
+
+        ``accrued_on`` was bounded by string length alone, so a ten-character
+        non-date was admitted and produced a rollup exactly as a real date did —
+        while the adjacent registry counterpart binding types the same concept
+        as a real :class:`~datetime.date`.
+        """
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="100", accrued=impossible)
+
+    @pytest.mark.parametrize("malformed", ["20250315", "2025-3-15", "15-03-2025"])
+    def test_non_extended_iso_accrued_dates_are_refused(self, malformed: str) -> None:
+        """Only the extended ``YYYY-MM-DD`` wire form is admitted."""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="100", accrued=malformed)
+
+    @pytest.mark.parametrize("unconstrained", ["2025", "bogus", "Q1", "ANUAL"])
+    def test_non_registry_operation_periods_are_refused(self, unconstrained: str) -> None:
+        """``operation_period`` must be a registry period token, not free text."""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            _obs(nif="A1", op_kind=OperationKind347.DELIVERY.value, base="100", period=unconstrained)
+
+    def test_canonical_observation_is_admitted_and_aggregates(self) -> None:
+        """The positive control: canonical values are admitted and produce a rollup.
+
+        Without this, every refusal above would also hold for a validator that
+        refused every value.
+        """
+        observation = _obs(
+            nif="A1",
+            op_kind=OperationKind347.DELIVERY.value,
+            base="100",
+            period="0A",
+            accrued="2025-03-15",
+        )
+        assert observation.operation_period == "0A"
+        assert observation.accrued_on == "2025-03-15"
+
+        aggregation = aggregate_counterpart_347((observation,), period=_P_2025_ANNUAL)
+        assert aggregation.total_counterparties == 1

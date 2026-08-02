@@ -51,6 +51,7 @@ class _BuildSurfaces(TypedDict):
     casilla_modelos: set[str]
     casilla_targets_by_record_id: dict[str, str]
     permalinks: set[str]
+    cli_targets: set[str]
 
 
 @pytest.fixture(scope="module")
@@ -115,6 +116,7 @@ def build_surfaces() -> _BuildSurfaces:
     # Casilla modelos: every modelo with projected casilla records (read from
     # the same projection the resolver indexes, via the public projection API).
     from dev.docs.terminology._casilla_projection import project_casilla_search_records
+    from dev.docs.terminology._cli_projection import project_cli_search_records
     from dev.docs.terminology._concept_cards import project_concept_cards
     from dev.docs.terminology._unified_record import to_search_record
 
@@ -128,11 +130,19 @@ def build_surfaces() -> _BuildSurfaces:
     permalinks = {
         str(entry.permalink) for entry in authority.catalogues.legal.values() if getattr(entry, "permalink", None)
     }
+    # CLI targets: every live leaf command's real generated page+anchor, from
+    # the same projection (`_cli_projection.py`) that is the sole producer of
+    # committed CLI-kind relevance targets. A family-shaped regular expression
+    # cannot tell a real command anchor from a fabricated one; membership in
+    # this real, live-generated inventory can.
+    cli_commands, _cli_options, _cli_stats = project_cli_search_records()
+    cli_targets = {record.target for record in cli_commands}
     return {
         "concept_targets": concept_targets,
         "casilla_modelos": casilla_modelos,
         "casilla_targets_by_record_id": casilla_targets_by_record_id,
         "permalinks": permalinks,
+        "cli_targets": cli_targets,
     }
 
 
@@ -141,6 +151,7 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     concept_targets = surfaces["concept_targets"]
     casilla_modelos = surfaces["casilla_modelos"]
     permalinks = surfaces["permalinks"]
+    cli_targets = surfaces["cli_targets"]
     # Concept card anchor: generated from the approved glossary headword.
     concept_match = re.fullmatch(r"_generated/glossary\.html#term-[A-Za-z0-9-]+", target)
     if concept_match:
@@ -162,14 +173,13 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     if api_match:
         return _module_exists(api_match.group("dotted"))
 
-    # CLI reference page: the family landing page (cli/<family>.html) for a leaf
-    # mounted directly on the family, or the verb-group page
-    # (cli/<family>/<group>.html) for a grouped command — the two page shapes
-    # cli_reference_page_for_command emits (D4 per-group split), each with an
-    # optional #anchor deep-linking to the command's section.
-    cli_match = re.fullmatch(r"cli/(?P<family>[a-z0-9-]+)(?:/[a-z0-9-]+)?\.html(?:#[a-z0-9-]+)?", target)
-    if cli_match:
-        return cli_match.group("family") in {"app", "config"}
+    # CLI reference page+anchor: must be a real live leaf command's target
+    # exactly as `_cli_projection.py` generates it -- a family-shaped
+    # regular expression cannot tell a real command anchor
+    # (cli/app/ledger.html#aeat-app-ledger-add) from a fabricated one
+    # (cli/app/not-real.html); real membership can.
+    if target.startswith("cli/"):
+        return target in cli_targets
 
     # Doc page: <rel>.html -> the source page must exist under docs/.
     docs_match = re.fullmatch(r"(?P<rel>[a-zA-Z0-9_./-]+)\.html", target)
@@ -265,6 +275,46 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: _BuildSurfac
     # A real one resolves (sanity: the check is not refusing everything).
     real_concept_target = next(iter(build_surfaces["concept_targets"]))
     assert _target_resolves(real_concept_target, build_surfaces)
+
+
+def test_a_fabricated_cli_page_or_anchor_is_rejected(build_surfaces: _BuildSurfaces) -> None:
+    """A CLI deep link that merely matches the family shape but names no real command is refused.
+
+    Reproduces the audit finding: a family-shaped regular expression alone
+    accepted a fabricated page (`cli/app/not-real.html`) and a fabricated
+    anchor on an otherwise-real family page
+    (`cli/config/not-real.html#bogus`). Real membership in the live-generated
+    CLI target inventory refuses both.
+    """
+    assert not _target_resolves("cli/app/not-real.html", build_surfaces)
+    assert not _target_resolves("cli/config/not-real.html#bogus", build_surfaces)
+    # A real page with a fabricated anchor is refused too, not merely a
+    # fabricated page: the anchor half of the check has teeth on its own.
+    real_cli_target = next(iter(build_surfaces["cli_targets"]))
+    real_page = real_cli_target.split("#", 1)[0]
+    assert not _target_resolves(f"{real_page}#this-anchor-does-not-exist", build_surfaces)
+    # A completely fabricated family is refused (never resolves even by
+    # accident of the startswith('cli/') check).
+    assert not _target_resolves("cli/not-a-real-family.html", build_surfaces)
+
+
+def test_a_real_grouped_and_direct_cli_command_target_resolves(build_surfaces: _BuildSurfaces) -> None:
+    """Both CLI page shapes -- a grouped verb page and a direct family leaf -- resolve.
+
+    Sanity companion to the fabrication-refusal test above: the tightened
+    check is not refusing every CLI target, only fabricated ones. Covers
+    both page shapes `cli_reference_page_for_command` emits: a grouped
+    command page (`cli/app/<group>.html#...`) and a leaf mounted directly on
+    a family root (`cli/config.html#...`, no intervening group segment).
+    """
+    cli_targets = build_surfaces["cli_targets"]
+    assert cli_targets, "the live CLI tree must carry at least one command"
+    grouped = [target for target in cli_targets if re.fullmatch(r"cli/[a-z0-9-]+/[a-z0-9-]+\.html#[a-z0-9-]+", target)]
+    direct = [target for target in cli_targets if re.fullmatch(r"cli/[a-z0-9-]+\.html#[a-z0-9-]+", target)]
+    assert grouped, "the live tree must carry at least one grouped command for this gate to bite"
+    assert direct, "the live tree must carry at least one direct family-root command for this gate to bite"
+    assert _target_resolves(grouped[0], build_surfaces)
+    assert _target_resolves(direct[0], build_surfaces)
 
 
 # ---------------------------------------------------------------------------

@@ -284,7 +284,7 @@ def config_list(
                 name=pointer.label,
                 bucket_id=pointer.bucket_id,
                 active=pointer.bucket_id == active,
-                status=pointer.status.value,
+                status=pointer.status,
             )
             for pointer in rows
         ],

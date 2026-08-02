@@ -7,14 +7,18 @@ from datetime import UTC, datetime
 import pytest
 import typer
 
+from pydantic import ValidationError
+
 from .....domain.buckets import (
     BucketEvent,
     BucketEventObjectType,
     BucketEventType,
     derive_bucket_event_id,
 )
+from ..._config_bucket_history_payloads import BucketHistoryEventPayload
 from .._bucket_history import (
     _bucket_history_event_matches,
+    _bucket_history_event_payload,
     _parse_bucket_event_types,
     _parse_bucket_history_instant,
 )
@@ -96,3 +100,31 @@ def test_bucket_history_filter_compares_naive_since_against_aware_events() -> No
         )
         is True
     )
+
+
+def test_bucket_history_event_payload_carries_payload_version() -> None:
+    """The profile-history projection carries the same discriminator LedgerHistoryEventPayload does.
+
+    A consumer cannot select the correct interpretation of the free-form
+    ``payload`` mapping without ``payload_version``; dropping it from the
+    projection while the canonical BucketEvent carries it is the defect this
+    regression pins.
+    """
+    event = _event_at(datetime(2026, 1, 15, tzinfo=UTC))
+
+    payload = _bucket_history_event_payload(event)
+
+    assert payload.payload_version == event.payload_version == 1
+
+
+def test_bucket_history_event_payload_requires_payload_version() -> None:
+    """A row missing the discriminator is refused, not silently defaulted."""
+    with pytest.raises(ValidationError):
+        BucketHistoryEventPayload(
+            event_id="e" * 64,
+            event_type=BucketEventType.PROFILE_SELECTED,
+            occurred_at=datetime(2026, 1, 15, tzinfo=UTC),
+            actor="cadrumo.config.profile.history",
+            object_type=BucketEventObjectType.PROFILE,
+            object_id="profile-1",
+        )

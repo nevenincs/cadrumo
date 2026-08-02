@@ -4,6 +4,16 @@ Carries the wrapped DEK, AES-GCM nonce, AES-GCM tag, the 24-word
 recovery-code word count, the HKDF info string, and the creation
 timestamp. The mnemonic itself is never stored; only the wrap derived
 from the mnemonic-bound KEK travels in this envelope.
+
+``hkdf_info`` is the record's CLAIM about which KDF context wrapped the
+DEK, and it is bound to the context the unwrap actually derives under --
+:data:`~._recovery._HKDF_CONTEXT_RECOVERY`, the one authority. It was
+previously free-form, so the archived claim and the real derivation were two
+independent values: an envelope could be rewritten to name any KDF, its
+operator-visible fingerprint would move, and the recovery would still return
+the same key under the context it always used. A field that describes a
+cryptographic operation while being incapable of affecting or matching it is
+worse than absent, because operators read it.
 """
 
 from __future__ import annotations
@@ -18,6 +28,12 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.hashing import sha256_hex
 from .....core.time import validate_utc_aware
 from ..errors import StorageValidationError
+from ._recovery import _HKDF_CONTEXT_RECOVERY
+
+#: The only KDF context this application derives a recovery KEK under, rendered
+#: as the text form the envelope persists. Read from the derivation constant so
+#: the claim cannot drift from the operation by editing one of the two.
+RECOVERY_HKDF_INFO = _HKDF_CONTEXT_RECOVERY.decode("ascii")
 
 
 def _decode_b64(value: str) -> bytes:
@@ -51,6 +67,23 @@ class RecoveryRecord(BaseModel):
     def _check_b64(cls, value: str) -> str:
         return _validate_b64(value)
 
+    @field_validator("hkdf_info")
+    @classmethod
+    def _check_hkdf_info(cls, value: str) -> str:
+        """Refuse any KDF context other than the one the unwrap derives under.
+
+        Exact match, not a prefix or a version-family check: the value names
+        the HKDF info the recovery KEK is derived with, and there is exactly
+        one. A future context is a new constant plus a new derivation, so it
+        arrives here as a deliberate change rather than as an envelope that
+        merely claims something the code does not do.
+        """
+        if value != RECOVERY_HKDF_INFO:
+            raise StorageValidationError(
+                f"recovery envelope declares KDF context {value!r}, but recovery derives under {RECOVERY_HKDF_INFO!r}",
+            )
+        return value
+
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
@@ -80,4 +113,4 @@ class RecoveryRecord(BaseModel):
         return sha256_hex(material.encode("ascii"))
 
 
-__all__ = ["RecoveryRecord"]
+__all__ = ["RECOVERY_HKDF_INFO", "RecoveryRecord"]

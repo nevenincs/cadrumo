@@ -378,7 +378,9 @@ from ._support_matrix import (
     ModeloPortalCompatibilityRef,
     ModeloRenameRecord,
     ModeloSupportRemovalRecord,
+    RevisionCapabilityProbe,
     build_support_matrix,
+    revision_capability_probe,
 )
 from ._record_design import (
     DerivedDisenoCasilla,
@@ -757,6 +759,7 @@ __all__ = [
     "ResolvedConstruct",
     "ResolvedConstructMember",
     "ResolvedExportLayout",
+    "RevisionCapabilityProbe",
     "RevisionExternalGroundingRow",
     "RevisionId",
     "SourceRefId",
@@ -940,6 +943,7 @@ __all__ = [
     "resolve_revision_constructs",
     "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
+    "revision_capability_probe",
     "revision_casilla_identity_failures",
     "revision_date_binding_ids",
     "revision_reference_identity_failures",

@@ -243,6 +243,39 @@ def read_m036_declaration(declaration_id: str, *, bucket_id: BucketId) -> M036De
     return _m036_declaration_repository(bucket_id).resolve(declaration_id)
 
 
+def _require_profile_owns_bucket(*, profile_id: ProfileId, bucket_id: BucketId) -> None:
+    """Refuse a declaration whose command profile does not name ``bucket_id``.
+
+    A bucket identity is the profile UUID that owns the storage container, so
+    the command's profile and the target bucket are two spellings of one
+    identity. Without this gate the two diverge silently and each downstream
+    consumer picks a different one: ``declaration_id`` and the event payload are
+    derived from ``command.profile_id`` while the stored row and the event scope
+    are keyed by ``bucket_id``. The repository cross-check only compares the
+    result's own ``bucket_id`` against its binding, so it cannot see that the
+    profile identity travelling inside the payload names someone else -- a
+    profile-B declaration lands in bucket A and A's history claims B filed it.
+
+    Both values are compared in their canonical stripped form, matching the
+    :data:`~cadrumo.core.identity.BucketId` and
+    :data:`~cadrumo.core.identity.ProfileId` boundary constraints, so
+    surrounding whitespace cannot manufacture a mismatch or hide one.
+    """
+    from ..live import LiveApplicationInputError
+
+    canonical_profile = str(profile_id).strip()
+    canonical_bucket = str(bucket_id).strip()
+    if canonical_profile != canonical_bucket:
+        raise LiveApplicationInputError(
+            f"m036 declaration profile_id={canonical_profile!r} does not own bucket {canonical_bucket!r}",
+            translated_message="application.modelo.errors.m036_declaration_profile_bucket_mismatch",
+            context={
+                "profile_id": canonical_profile,
+                "bucket_id": canonical_bucket,
+            },
+        )
+
+
 def record_m036_declaration(
     command: M036DeclarationCommand,
     *,
@@ -270,11 +303,18 @@ def record_m036_declaration(
     checked against the repository binding at save time, so a cross-bucket
     payload cannot land silently.
 
+    Raises:
+        LiveApplicationInputError: If ``command.profile_id`` names a different
+            profile than ``bucket_id``. A bucket identity IS the profile UUID
+            that owns it, so the two must agree before anything is derived,
+            stored, or emitted.
+
     See Also:
         :class:`~cadrumo.domain.calculations.registry.CensoModeloEventKind`
         :class:`cadrumo.domain.buckets.BucketEventType`
         :data:`~cadrumo.adapters.persistence.storage.LIVE_M036_DECLARATION_NAMESPACE`
     """
+    _require_profile_owns_bucket(profile_id=command.profile_id, bucket_id=bucket_id)
     declaration_id = derive_m036_declaration_id(
         profile_id=command.profile_id,
         event_kind=command.event_kind,

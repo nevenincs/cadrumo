@@ -76,7 +76,8 @@ from ._action_errors import ExternalModeloImportError, WorkUnitMutationRefusedEr
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
 from ._revision_persistence import _supersede_prior_current_filing
-from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
 
 _JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
     {
@@ -253,25 +254,18 @@ def import_external_filing_evidence[CasillaKey](
     )
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
 
-    cr_repo.save(revisions)
-    fr_repo.save(updated_filing_catalogue)
-
-    wu_repo.save(
-        upsert_work_unit(
-            work_units,
-            work_unit.model_copy(
-                update={
-                    "current_calculation_revision_id": revision_id,
-                    "filed_calculation_revision_id": revision_id,
-                    "current_filing_record_id": new_filing_id,
-                    "updated_at": now,
-                },
-            ),
+    advanced_work_units = upsert_work_unit(
+        work_units,
+        work_unit.model_copy(
+            update={
+                "current_calculation_revision_id": revision_id,
+                "filed_calculation_revision_id": revision_id,
+                "current_filing_record_id": new_filing_id,
+                "updated_at": now,
+            },
         ),
     )
-
-    _emit_bucket_event(
-        repository=bv_repo,
+    imported_event = _build_bucket_event(
         bucket_id=work_unit.bucket_id,
         event_type=BucketEventType.MODELO_FILING_IMPORTED,
         occurred_at=now,
@@ -289,6 +283,20 @@ def import_external_filing_evidence[CasillaKey](
             "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),
             "casilla_count": str(len(outputs)),
         },
+    )
+
+    # One unit of work: the imported revision, the filing catalogue, the advanced
+    # work-unit pointers, and the ``modelo.filing.imported`` event commit
+    # together. Emitted afterwards through a separate save, an event-storage
+    # failure left a durable imported filing and an advanced filed-revision
+    # pointer that no history entry accounted for.
+    fr_repo.save_with_secure_object_writes(
+        updated_filing_catalogue,
+        (
+            cr_repo.to_secure_object_write(revisions),
+            wu_repo.to_secure_object_write(advanced_work_units),
+            _bucket_event_write(bv_repo, (imported_event,)),
+        ),
     )
 
     return new_filing

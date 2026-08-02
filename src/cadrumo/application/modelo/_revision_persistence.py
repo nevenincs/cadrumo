@@ -52,6 +52,8 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.buckets import append_bucket_event as _append_bucket_event
+from ...domain.buckets import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.calculations.registry import (
     BindingId,
@@ -149,6 +151,59 @@ def emit_modelo_bucket_event(
         payload=payload,
         payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
     )
+
+
+def build_modelo_bucket_event(
+    *,
+    bucket_id: str,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+    object_type: BucketEventObjectType,
+    object_id: str,
+    payload: Mapping[str, str],
+) -> BucketEvent:
+    """Derive one modelo :class:`BucketEvent` without persisting it.
+
+    The non-saving counterpart of :func:`emit_modelo_bucket_event`, supplying the
+    same :data:`_BUCKET_EVENT_PAYLOAD_VERSION` so a co-committed event cannot
+    declare a different payload contract than an emitted one. Pair it with
+    :func:`modelo_bucket_event_write` to commit the event in the same unit of
+    work as the catalogues it records.
+    """
+    return _build_domain_bucket_event(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=object_type,
+        object_id=object_id,
+        payload=payload,
+        payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
+    )
+
+
+def modelo_bucket_event_write(
+    repository: BucketEventHistoryRepositoryProtocol,
+    events: tuple[BucketEvent, ...],
+) -> SecureObjectWrite:
+    """Return the event-history write appending ``events``, without committing it.
+
+    A modelo state change that saves its catalogues and emits afterwards can come
+    to rest durable-but-unrecorded: the revision, filing record, and advanced
+    work-unit pointer survive while the history has no matching entry and no
+    retryable marker names the gap. Folding this write into the owning
+    catalogue's ``save_with_secure_object_writes`` puts the state and its
+    promised event in one SQL unit of work, so neither can land without the
+    other.
+
+    Appending is idempotent on content, so re-deriving the same event collapses
+    onto the same ``event_id`` rather than duplicating the entry.
+    """
+    catalogue = repository.load()
+    for event in events:
+        catalogue = _append_bucket_event(catalogue, event)
+    return repository.to_secure_object_write(catalogue)
 
 
 def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRef, ...]) -> str:
@@ -716,7 +771,9 @@ def persist_filed_revision(
 
 
 __all__ = [
+    "build_modelo_bucket_event",
     "emit_modelo_bucket_event",
+    "modelo_bucket_event_write",
     "persist_calculation_revision",
     "persist_filed_revision",
 ]

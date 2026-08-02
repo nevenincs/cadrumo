@@ -35,7 +35,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, TransactionId
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
@@ -197,11 +197,31 @@ class ModeloRecord(BaseModel):
     amends_filing_record_id: FilingRecordId | None = None
     # Denormalised footprint of the filed revision's contributing ledger
     # transactions, so an external audit tool holding only a filing record
-    # resolves its transaction set in one hop. Deliberately EXCLUDED from
+    # resolves its transaction set in one hop. Typed through the canonical
+    # :obj:`TransactionId` so the footprint carries real ledger identities the
+    # audit tool can look up, not arbitrary strings. Deliberately EXCLUDED from
     # ``derive_filing_record_id`` (mirroring the ledger_filing_snapshot exclusion
     # on the revision hash) so the content address is unaffected; defaults to ()
     # for non-ledger filings.
-    source_transaction_ids: tuple[str, ...] = ()
+    source_transaction_ids: tuple[TransactionId, ...] = ()
+
+    @field_validator("source_transaction_ids")
+    @classmethod
+    def _reject_duplicate_source_transactions(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Refuse a repeated transaction in the provenance footprint.
+
+        The footprint is the *set* of ledger rows that contributed to the filed
+        revision. A repeat is not a second contribution -- it is either a
+        double-counted row or a merge of two footprints -- and silently keeping
+        it would make an audit tool reading the record disagree with the ledger
+        about how many rows fed the filing.
+        """
+        duplicates = sorted({entry for entry in value if value.count(entry) > 1})
+        if duplicates:
+            raise ModeloValidationError(
+                f"source_transaction_ids must not repeat a transaction: {duplicates!r}",
+            )
+        return value
 
     @field_validator("modelo", mode="before")
     @classmethod
@@ -294,6 +314,42 @@ class ModeloRecordCatalogue(BaseModel):
                     f"{currents[current_key]!r} and {record.filing_record_id!r}",
                 )
             currents[current_key] = record.filing_record_id
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_amendment_links_resolve(self) -> ModeloRecordCatalogue:
+        """Resolve every ``amends_filing_record_id`` to a real, distinct, same-coordinate record.
+
+        A declaración complementaria corrects one earlier filing for the same
+        (bucket, modelo, filing_year, period) coordinate. The field alone is
+        shape-validated, so without this a record could claim to amend a
+        filing that does not exist, or itself, and the catalogue would accept
+        the claim as a valid audit chain. ``member_nif`` is deliberately not
+        compared: the amendment builder does not currently propagate it, so
+        comparing it here would refuse member-scoped amendments rather than
+        surface that separate gap.
+        """
+        for record in self.records.values():
+            target_id = record.amends_filing_record_id
+            if target_id is None:
+                continue
+            if target_id == record.filing_record_id:
+                raise ModeloValidationError(
+                    f"filing record {record.filing_record_id!r} cannot amend itself",
+                )
+            target = self.records.get(target_id)
+            if target is None:
+                raise ModeloValidationError(
+                    f"filing record {record.filing_record_id!r} amends {target_id!r}, "
+                    "which is not in this catalogue",
+                )
+            coordinates = (record.bucket_id, record.modelo, record.filing_year, record.period)
+            target_coordinates = (target.bucket_id, target.modelo, target.filing_year, target.period)
+            if coordinates != target_coordinates:
+                raise ModeloValidationError(
+                    f"filing record {record.filing_record_id!r} amends {target_id!r} across filing "
+                    f"coordinates: {target_coordinates!r} is not {coordinates!r}",
+                )
         return self
 
     def get(self, filing_record_id: str) -> ModeloRecord | None:

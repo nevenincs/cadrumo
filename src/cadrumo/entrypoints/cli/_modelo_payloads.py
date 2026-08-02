@@ -19,13 +19,18 @@ results stay authoritative while these classes expose JSON-safe
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
+from ...application.aggregation import (
+    PerModeloAggregationContributor,
+    PerModeloAggregationResult,
+)
 from ...application.modelo import validate_modelo_work_deadline_posture
-from ...core import Period
+from ...core import BindingSourceKind, Period
 from ...core.identity import BucketId
 from ...domain.buckets import (
     BucketActorLabel,
@@ -43,6 +48,7 @@ from ...domain.calculations.registry import (
     RevisionId,
     SourceRefId,
     VerificationExpectationId,
+    WithholdingClaveBreakdown,
 )
 from ...domain.modelos import (
     CalculationRevisionId,
@@ -1175,7 +1181,18 @@ class WorkResumeResult(OutputSchema):
 
 @register_schema("modelo.aggregate")
 class ModeloAggregateResult(OutputSchema):
-    """Per-modelo aggregation result.
+    """Per-modelo aggregation result, projected from the canonical service result.
+
+    Every field is typed from the contract
+    :class:`~application.aggregation.PerModeloAggregationResult` already
+    enforces: a bounded non-blank modelo, the closed
+    :class:`~application.aggregation.PerModeloAggregationContributor` provider,
+    closed :class:`~core.BindingSourceKind` source kinds, and non-negative
+    counters. Redeclaring them as bare strings and unbounded integers made this
+    transport shell strictly more permissive than the result it renders, so an
+    empty modelo, an unknown provider, a bogus source kind, or a negative count
+    could be emitted as a valid envelope. Build it through
+    :meth:`from_aggregation_result` rather than field-by-field.
 
     ``clave_breakdown`` carries the Modelo 190 per-clave retención rows (empty
     for every other modelo); it is primary structured result data the command
@@ -1184,13 +1201,93 @@ class ModeloAggregateResult(OutputSchema):
     """
 
     operation: str = "modelo.aggregate"
-    modelo: str
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
-    provider: str
-    observation_count: int
-    source_kinds: list[str]
-    result_row_count: int
+    provider: PerModeloAggregationContributor
+    observation_count: int = Field(ge=0)
+    source_kinds: list[BindingSourceKind] = Field(default_factory=list)
+    result_row_count: int = Field(ge=0)
     clave_breakdown: list[WithholdingClaveBreakdownPayload] = Field(default_factory=list)
+
+    @field_validator("provider", mode="before")
+    @classmethod
+    def _coerce_provider(cls, value: object) -> object:
+        """Hydrate a raw provider token to its closed-enum member.
+
+        The strict schema base does not coerce ``str`` -> ``StrEnum``, so a
+        payload re-validated from its own JSON rendering is lifted here. An
+        unknown token raises rather than passing through as free text.
+        """
+        if isinstance(value, str) and not isinstance(value, PerModeloAggregationContributor):
+            return PerModeloAggregationContributor(value)
+        return value
+
+    @field_validator("source_kinds", mode="before")
+    @classmethod
+    def _coerce_source_kinds(cls, value: object) -> object:
+        """Hydrate raw source-kind tokens to their closed-enum members."""
+        if isinstance(value, list):
+            return [
+                BindingSourceKind(item) if isinstance(item, str) and not isinstance(item, BindingSourceKind) else item
+                for item in value
+            ]
+        return value
+
+    @field_validator("source_kinds")
+    @classmethod
+    def _source_kinds_are_unique(cls, value: list[BindingSourceKind]) -> list[BindingSourceKind]:
+        """Mirror the canonical result's uniqueness invariant."""
+        if len(value) != len(set(value)):
+            raise ValueError("source_kinds must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _counters_agree_with_rows(self) -> ModeloAggregateResult:
+        """Keep the rendered clave rows within the declared observation count."""
+        breakdown_percepciones = sum(row.percepcion_count for row in self.clave_breakdown)
+        if breakdown_percepciones > self.observation_count:
+            raise ValueError(
+                f"clave_breakdown accounts for {breakdown_percepciones} percepciones "
+                f"but observation_count is {self.observation_count}",
+            )
+        return self
+
+    @classmethod
+    def from_aggregation_result(
+        cls,
+        result: PerModeloAggregationResult,
+        *,
+        clave_breakdown: Sequence[WithholdingClaveBreakdown] = (),
+    ) -> ModeloAggregateResult:
+        """Project the canonical service result onto the CLI transport shape.
+
+        The one construction path, so the envelope cannot carry a modelo,
+        period, provider, source-kind set, or counter the service did not
+        produce. Counters come from the result's own
+        :class:`~application.aggregation.PerModeloAggregationLogFields`, which
+        already bounds them.
+
+        Args:
+            result: The canonical per-modelo aggregation result.
+            clave_breakdown: Modelo 190 per-clave rows, empty elsewhere.
+        """
+        return cls(
+            modelo=result.modelo,
+            period=result.period,
+            provider=result.provider,
+            observation_count=result.log_fields.observation_count,
+            source_kinds=list(result.source_kinds),
+            result_row_count=result.log_fields.result_row_count,
+            clave_breakdown=[
+                WithholdingClaveBreakdownPayload(
+                    clave=row.clave,
+                    percepcion_count=row.percepcion_count,
+                    percibido_total=str(row.percibido_total),
+                    retencion_total=str(row.retencion_total),
+                )
+                for row in clave_breakdown
+            ],
+        )
 
 
 @register_schema("modelo.work.preview_maritime_exemption")

@@ -46,7 +46,12 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
-from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.buckets import (
+    BucketEventHistoryRepositoryProtocol,
+    BucketEventObjectType,
+    BucketEventType,
+    bucket_event_order_key,
+)
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -170,7 +175,10 @@ def assemble_work_unit_history(
             ),
         )
 
-    collected.sort(key=lambda event: event.occurred_at)
+    # The merge order of the per-object streams above is not meaningful, so
+    # same-instant events would otherwise inherit it. Ordering on the shared
+    # key keeps this projection identical to every other bucket-event view.
+    collected.sort(key=bucket_event_order_key)
     events = tuple(
         WorkUnitHistoryEvent(
             event_id=event.event_id,

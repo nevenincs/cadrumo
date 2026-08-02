@@ -30,6 +30,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.money import round_to_cents
+from ...core.parsing import normalise_iso_4217_currency
 from ...domain.currency import ExchangeRateProvider
 from ...domain.invoices import (
     Invoice,
@@ -122,6 +123,11 @@ def build_catalogue_invoice(
     """
     from ...domain.invoices import iva_rate_percentage
 
+    # Normalise once, before either the persisted payload or the FX lookup
+    # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
+    # SAME provider rate as its canonical "GBP" form, not silently miss the
+    # rate and leave the invoice unstamped.
+    currency = normalise_iso_4217_currency(currency)
     rate_slot = _resolve_iva_rate_slot(iva_rate)
     # Resolve the cuota with the same default-date the Invoice line validator
     # uses (``iva_rate_percentage(self.iva_rate)``), so the synthesised
@@ -174,6 +180,11 @@ def _stamp_fx_conversion(
     rate_provider: ExchangeRateProvider | None,
 ) -> None:
     """Stamp the euro conversion rate for a foreign-currency invoice.
+
+    ``currency`` must already be the canonical uppercase ISO 4217 token (the
+    caller normalises it once via :func:`core.parsing.normalise_iso_4217_currency`
+    before both the persisted payload and this lookup read it), so the
+    provider is queried with the same token the record stores.
 
     Converts at the invoice's issue date, which is the operation date Spanish
     law binds the official rate to (Ley 46/1998 art. 36), matching the ledger's

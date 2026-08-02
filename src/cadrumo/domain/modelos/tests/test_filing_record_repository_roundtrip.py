@@ -46,7 +46,11 @@ _FILING_NAMESPACE = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace
 _FILING_OBJECT_KEY = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.require_default_object_key()
 _FILING_CATALOGUE_VERSION = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.schema_version
 _BUCKET_ID = "30330300-0000-4000-8000-000000000700"
-_RECORD_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
+# The catalogue is one encrypted object per bucket and the repository refuses
+# records from another bucket, so the fixture's records carry the same bucket
+# the repository is bound to. _FOREIGN_BUCKET_ID is the isolation probe.
+_RECORD_BUCKET_ID = _BUCKET_ID
+_FOREIGN_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
 _P_2024_2T = Period.from_year_and_code(2024, "2T")
 _P_2026_01 = Period.from_year_and_code(2026, "01")
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 55, 0, tzinfo=UTC)
@@ -708,3 +712,266 @@ def test_filing_record_rejects_id_not_matching_outcome() -> None:
             filed_by="operator-A",
             status=ModeloRecordStatus.VIGENTE,
         )
+
+
+def _amendment_pair(
+    *,
+    target_id_override: str | None = None,
+    amendment_period: Period | None = None,
+    amendment_filing_year: int | None = None,
+) -> ModeloRecordCatalogue:
+    """Build a baseline plus an amendment whose link can be steered off target."""
+    bucket_id = _RECORD_BUCKET_ID
+    work_unit_id = _hex("a")
+    baseline_revision = _hex("b")
+    amendment_revision = _hex("c")
+    baseline_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    amendment_filed_at = baseline_filed_at + timedelta(days=45)
+
+    baseline_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=baseline_revision,
+        filed_by="aeat.cli.modelo.file",
+    )
+    amendment_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=amendment_revision,
+        filed_by="aeat.cli.modelo.amend",
+    )
+    baseline = ModeloRecord(
+        filing_record_id=baseline_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=baseline_revision,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=baseline_filed_at,
+        filed_by="aeat.cli.modelo.file",
+        status=ModeloRecordStatus.SUPERSEDIDO,
+        superseded_at=amendment_filed_at,
+        superseded_by_filing_record_id=amendment_id,
+    )
+    period = amendment_period or _P_2024_2T
+    amendment = ModeloRecord(
+        filing_record_id=amendment_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=amendment_revision,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=amendment_filing_year or 2024,
+        period=period,
+        filed_at=amendment_filed_at,
+        filed_by="aeat.cli.modelo.amend",
+        status=ModeloRecordStatus.VIGENTE,
+        amends_filing_record_id=target_id_override or baseline_id,
+    )
+    return ModeloRecordCatalogue(records={baseline_id: baseline, amendment_id: amendment})
+
+
+def test_amendment_link_to_a_record_outside_the_catalogue_is_refused() -> None:
+    """A complementaria must correct a filing that exists, not a claimed one."""
+    with pytest.raises(ValidationError, match="not in this catalogue"):
+        _amendment_pair(target_id_override=_hex("f"))
+
+
+def test_amendment_link_to_itself_is_refused() -> None:
+    """A record cannot be its own amendment baseline."""
+    bucket_id = _RECORD_BUCKET_ID
+    work_unit_id = _hex("a")
+    revision = _hex("b")
+    record_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision,
+        filed_by="aeat.cli.modelo.amend",
+    )
+    self_amending = ModeloRecord(
+        filing_record_id=record_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        filed_by="aeat.cli.modelo.amend",
+        status=ModeloRecordStatus.VIGENTE,
+        amends_filing_record_id=record_id,
+    )
+
+    with pytest.raises(ValidationError, match="cannot amend itself"):
+        ModeloRecordCatalogue(records={record_id: self_amending})
+
+
+def test_amendment_link_across_filing_coordinates_is_refused() -> None:
+    """An amendment corrects the same (bucket, modelo, year, period) coordinate."""
+    with pytest.raises(ValidationError, match="across filing coordinates"):
+        _amendment_pair(
+            amendment_period=Period.from_year_and_code(2024, "3T"),
+        )
+
+
+def test_resolvable_same_coordinate_amendment_survives_encrypted_storage(
+    tmp_path: Path,
+) -> None:
+    """Valid parity: a resolvable, distinct, same-coordinate link round-trips."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        original = _amendment_pair()
+        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
+        loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert loaded == original
+    amendment = loaded.current_for(
+        bucket_id=_RECORD_BUCKET_ID,
+        modelo="303",
+        filing_year=2024,
+        period=_P_2024_2T,
+    )
+    assert amendment is not None
+    assert amendment.amends_filing_record_id is not None
+    baseline = loaded.get(amendment.amends_filing_record_id)
+    assert baseline is not None
+    assert baseline.filing_record_id != amendment.filing_record_id
+    assert (baseline.bucket_id, baseline.modelo, baseline.filing_year, baseline.period) == (
+        amendment.bucket_id,
+        amendment.modelo,
+        amendment.filing_year,
+        amendment.period,
+    )
+
+
+def _record_with_source_transactions(source_transaction_ids: tuple[str, ...]) -> ModeloRecord:
+    """Build a current filing record carrying the given ledger provenance footprint."""
+    work_unit_id = _hex("a")
+    revision_id = _hex("c")
+    return ModeloRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            filed_by="aeat.cli.modelo.file",
+        ),
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_RECORD_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        filed_by="aeat.cli.modelo.file",
+        status=ModeloRecordStatus.VIGENTE,
+        source_transaction_ids=source_transaction_ids,
+    )
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    (
+        ("bad",),
+        (_hex("a").upper(),),
+        (" " + _hex("a")[1:] + "z",),
+        (_hex("a")[:-1] + "g",),
+    ),
+    ids=("too-short", "uppercase-hex", "non-hex-tail", "non-hex-digit"),
+)
+def test_source_transaction_ids_must_be_canonical_transaction_identities(malformed: tuple[str, ...]) -> None:
+    """The provenance footprint holds real ledger identities, not arbitrary strings."""
+    with pytest.raises(ValidationError):
+        _record_with_source_transactions(malformed)
+
+
+def test_source_transaction_ids_reject_a_repeated_transaction() -> None:
+    """A repeat is a double count or a merged footprint, never a second contribution."""
+    with pytest.raises(ValidationError, match="must not repeat a transaction"):
+        _record_with_source_transactions((_hex("7"), _hex("7")))
+
+
+def test_canonical_source_transaction_footprint_survives_encrypted_storage(tmp_path: Path) -> None:
+    """Valid parity: a distinct, canonical footprint round-trips unchanged."""
+    footprint = (_hex("7"), _hex("8"))
+    record = _record_with_source_transactions(footprint)
+    original = ModeloRecordCatalogue(records={record.filing_record_id: record})
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
+        loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert loaded == original
+    assert loaded.get(record.filing_record_id) is not None
+    assert loaded.get(record.filing_record_id).source_transaction_ids == footprint
+
+
+def _foreign_bucket_catalogue() -> ModeloRecordCatalogue:
+    """Build a catalogue whose single record belongs to another taxpayer's bucket."""
+    work_unit_id = _hex("a")
+    revision_id = _hex("c")
+    record = ModeloRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            filed_by="aeat.cli.modelo.file",
+        ),
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_FOREIGN_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        filed_by="aeat.cli.modelo.file",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    return ModeloRecordCatalogue(records={record.filing_record_id: record})
+
+
+def test_foreign_bucket_filing_record_is_refused_at_save(tmp_path: Path) -> None:
+    """A receipt from another taxpayer's bucket must not enter this catalogue."""
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
+        pytest.raises(ModeloRecordPersistenceError) as raised,
+    ):
+        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).save(_foreign_bucket_catalogue())
+
+    assert raised.value.context == {
+        "reason": "foreign_bucket_record",
+        "boundary": "save",
+        "expected_bucket_id": _BUCKET_ID,
+        "record_bucket_ids": [_FOREIGN_BUCKET_ID],
+    }
+
+
+def test_foreign_bucket_filing_record_is_refused_at_load(tmp_path: Path) -> None:
+    """Anti-tautology proof: the isolation is durable, not a caller convention.
+
+    Writes the foreign-bucket catalogue straight through the secure-object
+    substrate, bypassing the repository's write guard, then asserts the read
+    path refuses it. Without this the save-side check would only hold for
+    callers that go through the repository.
+    """
+    from ....adapters.persistence.storage import Envelope
+
+    catalogue = _foreign_bucket_catalogue()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[ModeloRecordCatalogue](
+            schema_version=_FILING_CATALOGUE_VERSION,
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
+            classification=SensitivityClass.FINANCIAL,
+            payload=catalogue,
+        )
+        profile.repository.save(
+            namespace=_FILING_NAMESPACE,
+            object_key=_FILING_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_FILING_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(ModeloRecordPersistenceError) as raised:
+            ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.context == {
+        "reason": "foreign_bucket_record",
+        "boundary": "load",
+        "expected_bucket_id": _BUCKET_ID,
+        "record_bucket_ids": [_FOREIGN_BUCKET_ID],
+    }

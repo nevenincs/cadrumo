@@ -17,11 +17,31 @@ See Also:
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Iterable
 
 from ._errors import RegistryValidationError
 from ._ids import CasillaId
 from ._schema import CasillaDefinition, ModeloRevision
+
+
+def duplicate_casilla_ids(casilla_ids: Iterable[CasillaId]) -> tuple[CasillaId, ...]:
+    """Return the ids appearing more than once in ``casilla_ids``, sorted.
+
+    For a collection that must address each casilla exactly once — a
+    revision's :class:`~domain.calculations.registry.CasillaDefinition`
+    declarations, a calculation result's observation and unresolved rows — a
+    repeated id makes the downstream mapping resolve by position and drop
+    every row but the last. This is the one fold that names the repeats so
+    such a collection can refuse the ambiguity at construction.
+
+    Not every casilla-keyed collection is under that rule: multi-row
+    informativas repeat a casilla once per declared item, and their ordered
+    row tuple is the multiplicity carrier. Callers decide whether repetition
+    is ambiguity or payload; this helper only reports it.
+    """
+    counts = Counter(casilla_ids)
+    return tuple(sorted(casilla_id for casilla_id, count in counts.items() if count > 1))
 
 
 def casillas_by_id(revision: ModeloRevision) -> dict[CasillaId, CasillaDefinition]:
@@ -33,20 +53,14 @@ def casillas_by_id(revision: ModeloRevision) -> dict[CasillaId, CasillaDefinitio
             :class:`~domain.calculations.registry.CasillaDefinition`
             declarations are inspected.
     """
-    casillas: dict[CasillaId, CasillaDefinition] = {}
-    duplicates: set[CasillaId] = set()
-    for casilla in revision.casillas:
-        if casilla.id in casillas:
-            duplicates.add(casilla.id)
-        casillas[casilla.id] = casilla
-    if duplicates:
-        duplicate_ids = tuple(sorted(duplicates))
+    duplicate_ids = duplicate_casilla_ids(casilla.id for casilla in revision.casillas)
+    if duplicate_ids:
         raise RegistryValidationError(
             f"revision {revision.id!r} declares duplicate casilla.id values; "
             f"casilla references are ambiguous: {duplicate_ids!r}",
             context={"revision_id": revision.id, "casilla_ids": ",".join(duplicate_ids)},
         )
-    return casillas
+    return {casilla.id: casilla for casilla in revision.casillas}
 
 
 def declared_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:

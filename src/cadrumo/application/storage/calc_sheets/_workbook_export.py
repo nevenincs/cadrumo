@@ -23,14 +23,15 @@ from typing import TYPE_CHECKING, Literal
 from openpyxl import Workbook
 from openpyxl.cell.cell import Cell
 from openpyxl.comments import Comment
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.styles import Alignment, Font, PatternFill, Protection
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.properties import PageSetupProperties
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
+from ....core.identity import ContentDigest
 from ._records import (
     SheetAutoFilter,
     SheetColumnWidth,
@@ -41,12 +42,13 @@ from ._records import (
     SheetExportPlan,
     SheetFormulaCell,
     SheetFrozenView,
+    SheetProtectedRange,
     SheetRowSet,
     SheetStyledRange,
     SheetValueCell,
     TabName,
 )
-from ._theme import ROLE_STYLES, WORKBOOK_FONT_FAMILY, openpyxl_argb
+from ._theme import ROLE_STYLES, STYLED_RANGE_VERTICAL_ALIGN, WORKBOOK_FONT_FAMILY, openpyxl_argb
 
 if TYPE_CHECKING:
     from openpyxl.worksheet.worksheet import Worksheet
@@ -92,7 +94,7 @@ class OfflineWorkbookEvidenceSidecar(BaseModel):
 
     schema_version: Literal["calc-sheets-evidence-sidecar/v1"] = _EVIDENCE_SIDECAR_SCHEMA_VERSION
     metadata: SheetExportMetadata
-    workbook_sha256: str = Field(min_length=64, max_length=64)
+    workbook_sha256: ContentDigest
     evidence: SheetEvidenceFacet
 
 
@@ -109,11 +111,11 @@ class OfflineWorkbookExportResult(BaseModel):
     workbook_payload: bytes
     workbook_media_type: Literal["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] = _XLSX_MEDIA_TYPE
     workbook_filename_extension: Literal["xlsx"] = "xlsx"
-    workbook_sha256: str = Field(min_length=64, max_length=64)
+    workbook_sha256: ContentDigest
     evidence_sidecar_payload: bytes
     evidence_sidecar_media_type: Literal["application/json"] = _JSON_MEDIA_TYPE
     evidence_sidecar_filename_extension: Literal["evidence.json"] = "evidence.json"
-    evidence_sidecar_sha256: str = Field(min_length=64, max_length=64)
+    evidence_sidecar_sha256: ContentDigest
 
 
 def evidence_table(plan: SheetExportPlan) -> tuple[str, tuple[str, ...], tuple[tuple[str, ...], ...]]:
@@ -170,6 +172,7 @@ def _apply_styling(workbook: Workbook, plan: SheetExportPlan) -> None:
     _apply_column_widths(workbook, plan.column_widths)
     _apply_frozen_views(workbook, plan.frozen_views)
     _apply_auto_filters(workbook, plan.auto_filters)
+    _apply_protected_ranges(workbook, plan.protected_ranges)
     _apply_print_setup(workbook)
 
 
@@ -198,7 +201,11 @@ def _apply_styled_ranges(workbook: Workbook, family: str, styled_ranges: Sequenc
             if style.fill_hex is not None
             else None
         )
-        alignment = Alignment(horizontal=style.align, vertical="top", wrap_text=styled.wrap)
+        alignment = Alignment(
+            horizontal=style.align,
+            vertical=STYLED_RANGE_VERTICAL_ALIGN,
+            wrap_text=styled.wrap,
+        )
         worksheet = workbook[styled.tab.value]
         for row_index in range(styled.start_row, styled.end_row + 1):
             for column_index in range(styled.start_column, styled.end_column + 1):
@@ -232,6 +239,47 @@ def _apply_auto_filters(workbook: Workbook, auto_filters: Sequence[SheetAutoFilt
         worksheet.auto_filter.ref = f"{start}:{end}"
 
 
+def _apply_protected_ranges(
+    workbook: Workbook,
+    protected_ranges: Sequence[SheetProtectedRange],
+) -> None:
+    """Materialise the plan's read-only contract in the offline workbook.
+
+    ``SheetExportPlan.protected_ranges`` is the declared read-only surface and
+    the online adapter emits an ``addProtectedRange`` per entry, but the
+    offline materialiser consumed none of them: every planned range shipped
+    editable in the XLSX while the same plan shipped locked in Sheets. The two
+    transports disagreed in both directions at once, which is why neither
+    looked broken on its own.
+
+    XLSX has no per-range protection primitive -- it has a sheet-level flag
+    plus a per-cell ``locked`` bit that only takes effect once that flag is on.
+    So the range set is expressed the only way the format allows: on a tab the
+    plan protects, every cell is unlocked first and the planned ranges are
+    locked back. That order is what keeps the editable-input policy explicit
+    rather than incidental. Cells default to ``locked=True`` in openpyxl, so
+    turning the sheet flag on without the unlock pass would freeze the entire
+    tab -- protecting far more than the plan asked for, and silently.
+
+    A tab the plan does not name is left alone, so ``Entradas`` stays fully
+    editable, matching the online transport.
+    """
+    by_tab: dict[str, list[SheetProtectedRange]] = {}
+    for protected in protected_ranges:
+        by_tab.setdefault(protected.tab.value, []).append(protected)
+
+    for tab, ranges in by_tab.items():
+        worksheet = workbook[tab]
+        for row in worksheet.iter_rows():
+            for cell in row:
+                cell.protection = Protection(locked=False)
+        for protected in ranges:
+            for row_index in range(protected.start_row, protected.end_row + 1):
+                for column_index in range(protected.start_column, protected.end_column + 1):
+                    worksheet.cell(row=row_index, column=column_index).protection = Protection(locked=True)
+        worksheet.protection.sheet = True
+
+
 def _apply_print_setup(workbook: Workbook) -> None:
     """Landscape, fit all columns to one page width, repeat the header row.
 
@@ -249,7 +297,7 @@ def _apply_print_setup(workbook: Workbook) -> None:
 def build_evidence_sidecar(
     plan: SheetExportPlan,
     *,
-    workbook_sha256: str,
+    workbook_payload: bytes,
 ) -> OfflineWorkbookEvidenceSidecar:
     """Build the machine-readable evidence sidecar for one workbook export.
 
@@ -257,13 +305,21 @@ def build_evidence_sidecar(
     the JSON evidence with the exact XLSX bytes produced by
     :func:`~application.storage.calc_sheets.serialize_offline_workbook`.
 
+    Takes the workbook BYTES rather than a digest of them. Accepting the
+    digest asked the caller to assert the one fact the sidecar exists to
+    carry, and nothing on this side could check it: a sidecar claiming to
+    bind bytes it had never seen validated exactly as well as a correct one.
+    Deriving the digest here makes the binding true by construction, which is
+    what "keyed to the workbook payload" has to mean if a reviewer is to rely
+    on it.
+
     Returns:
         :class:`~application.storage.calc_sheets.OfflineWorkbookEvidenceSidecar`:
             The evidence sidecar.
     """
     return OfflineWorkbookEvidenceSidecar(
         metadata=plan.metadata,
-        workbook_sha256=workbook_sha256,
+        workbook_sha256=sha256_hex(workbook_payload),
         evidence=plan.evidence,
     )
 
@@ -295,12 +351,11 @@ def serialize_offline_export(plan: SheetExportPlan) -> OfflineWorkbookExportResu
             The export result.
     """
     workbook_payload = serialize_offline_workbook(plan)
-    workbook_sha256 = sha256_hex(workbook_payload)
-    sidecar = build_evidence_sidecar(plan, workbook_sha256=workbook_sha256)
+    sidecar = build_evidence_sidecar(plan, workbook_payload=workbook_payload)
     evidence_sidecar_payload = serialize_evidence_sidecar(sidecar)
     return OfflineWorkbookExportResult(
         workbook_payload=workbook_payload,
-        workbook_sha256=workbook_sha256,
+        workbook_sha256=sidecar.workbook_sha256,
         evidence_sidecar_payload=evidence_sidecar_payload,
         evidence_sidecar_sha256=sha256_hex(evidence_sidecar_payload),
     )
@@ -367,7 +422,6 @@ def _write_evidence(worksheet: Worksheet, plan: SheetExportPlan) -> None:
         row_index += 1
 
     worksheet.freeze_panes = "A4"
-    worksheet.protection.sheet = True
 
 
 def _write_evidence_row(worksheet: Worksheet, row_index: int, values: Sequence[str]) -> None:

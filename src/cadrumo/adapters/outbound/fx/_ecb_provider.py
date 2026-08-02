@@ -99,10 +99,15 @@ class EcbReferenceRateProvider:
         if not observations:
             return None
         # The window ends at rate_date, so the latest observation in it is the
-        # operation-date rate or the most recent prior publication.
+        # operation-date rate or the most recent prior publication. Every
+        # observation the parser yields is finite and strictly positive, so
+        # the inversion below cannot divide by zero or by a non-finite value
+        # and no second usability test is needed here. The check that used to
+        # live at this line was the weaker of the two: it ran only on the
+        # LATEST observation, so a single unusable quote at the end of the
+        # window discarded the valid earlier ones behind it and reported no
+        # rate at all.
         _, ecb_rate = max(observations, key=lambda row: row[0])
-        if ecb_rate <= 0:
-            return None
         # ECB quotes EUR-base (1 EUR = ecb_rate CCY); CCY->EUR is the inverse.
         return Decimal("1") / ecb_rate
 
@@ -121,6 +126,24 @@ def _parse_observations(payload: str) -> list[tuple[date, Decimal]]:
     A non-publication window yields an empty body, and the ECB emits rows with a
     blank ``OBS_VALUE`` for series gaps; both produce no observations rather
     than an error, so the caller reports a missing rate.
+
+    This is the single place that decides whether an ``OBS_VALUE`` is a usable
+    quote, and the test is USABILITY rather than convertibility. Only
+    ``InvalidOperation`` used to be caught, so ``Decimal`` conversion success
+    stood in for the question — and ``Decimal`` converts ``NaN`` and the
+    infinities happily. Two failures followed, both downstream of here and
+    neither visible as a parse problem: ``NaN`` reached the caller's ``<= 0``
+    comparison, which raises :exc:`~decimal.InvalidOperation` for a quiet NaN,
+    so a corrupted response escaped as a raw decimal exception instead of the
+    provider's promised typed error; and ``Infinity`` passed that comparison
+    and inverted to an effectively-zero exchange rate, converting every amount
+    to nothing at all.
+
+    A non-finite or non-positive value is therefore treated exactly as a
+    malformed one — no observation — which keeps this function's documented
+    "unusable value is a gap" policy single-valued rather than splitting it
+    into a parse rule and a separate caller-side rule that disagreed about
+    which values count.
     """
     if not payload.strip():
         return []
@@ -134,9 +157,12 @@ def _parse_observations(payload: str) -> list[tuple[date, Decimal]]:
         if day is None:
             continue
         try:
-            observations.append((day, Decimal(value)))
+            quote = Decimal(value)
         except InvalidOperation:
             continue
+        if not quote.is_finite() or quote <= 0:
+            continue
+        observations.append((day, quote))
     return observations
 
 

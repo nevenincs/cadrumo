@@ -8,10 +8,11 @@ malformed digest out of persisted records and wire payloads, where the
 mismatch would otherwise surface only when a later verification pass
 recomputes the hash.
 
-The alias reuses :data:`core.HEX_PATTERN_64`, the one declaration of the
-SHA-256 hex shape, and lives beside :data:`SnapshotId` in
-:mod:`cadrumo.core.identity` because digest-bearing records span the
-application, adapter, and persistence layers with no single owner.
+The alias derives from :data:`core.Hex64Str`, the one canonical hex-64
+constrained primitive every unrelated hex-64 identity concept is defined
+from, and lives beside :data:`SnapshotId` in :mod:`cadrumo.core.identity`
+because digest-bearing records span the application, adapter, and
+persistence layers with no single owner.
 """
 
 from __future__ import annotations
@@ -20,12 +21,9 @@ from typing import Annotated
 
 from pydantic import StringConstraints
 
-from .._hex import HEX_PATTERN_64
+from .._hex import HEX_PATTERN_64, Hex64Str
 
-ContentDigest = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=HEX_PATTERN_64),
-]
+ContentDigest = Hex64Str
 """Lowercase hex-64 SHA-256 digest of a payload's exact bytes."""
 
 #: The digest shape widened to admit the empty string, derived from the same

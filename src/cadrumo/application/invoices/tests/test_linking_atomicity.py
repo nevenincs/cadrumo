@@ -16,15 +16,11 @@ compare-and-swap revision guard production uses.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import event
-from sqlalchemy.engine import Engine
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -49,59 +45,13 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.write_unit_recorder import WriteUnitRecorder
 from .. import link_invoice_transaction_catalogues, link_invoice_transaction_repositories
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "31313131-3131-4131-8131-313131313131"
 _STALE_REVISION_ID = "0" * 64
-_COMMIT_MARKER = "<commit>"
-
-
-class _WriteUnitRecorder:
-    """Interleaved record of secure-object write statements and real commits.
-
-    Attaches to the live :class:`~sqlalchemy.engine.Engine` the repositories
-    already use, so the observed sequence is the production statement stream --
-    no connection is wrapped or replaced. ``before_cursor_execute`` sees every
-    statement; the DBAPI ``commit`` event marks each transaction boundary,
-    which is what distinguishes one unit of work from two.
-    """
-
-    def __init__(self, engine: Engine) -> None:
-        self._engine = engine
-        self.events: list[str] = []
-
-    def _on_statement(self, _conn: object, _cursor: object, statement: str, *_args: object) -> None:
-        collapsed = " ".join(statement.split()).upper()
-        if "SECURE_OBJECTS" in collapsed and collapsed.startswith(("INSERT", "UPDATE")):
-            self.events.append("write")
-
-    def _on_commit(self, _conn: object) -> None:
-        self.events.append(_COMMIT_MARKER)
-
-    @contextmanager
-    def recording(self) -> Iterator[None]:
-        event.listen(self._engine, "before_cursor_execute", self._on_statement)
-        event.listen(self._engine, "commit", self._on_commit)
-        try:
-            yield
-        finally:
-            event.remove(self._engine, "before_cursor_execute", self._on_statement)
-            event.remove(self._engine, "commit", self._on_commit)
-
-    def commits_between_writes(self) -> int:
-        """Return how many commits fall between the first and last write.
-
-        Zero means every secure-object write in the observed window landed in
-        one transaction. Reads before and after the window commit too, so only
-        the span between the first and last write is counted.
-        """
-        write_positions = [index for index, entry in enumerate(self.events) if entry == "write"]
-        if not write_positions:
-            raise AssertionError("no secure-object write was observed")
-        span = self.events[write_positions[0] : write_positions[-1] + 1]
-        return span.count(_COMMIT_MARKER)
 
 
 def test_link_commits_both_catalogues_in_one_write_transaction(tmp_path: Path) -> None:
@@ -112,7 +62,7 @@ def test_link_commits_both_catalogues_in_one_write_transaction(tmp_path: Path) -
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         invoice, transaction = _seed(profile.bucket_id)
-        recorder = _WriteUnitRecorder(profile.repository.engine)
+        recorder = WriteUnitRecorder(profile.repository.engine)
 
         with recorder.recording():
             link_invoice_transaction_repositories(
@@ -146,7 +96,7 @@ def test_split_write_shape_commits_between_the_two_catalogues(tmp_path: Path) ->
             invoice_id=invoice.invoice_id,
             transaction_id=transaction.transaction_id,
         )
-        recorder = _WriteUnitRecorder(profile.repository.engine)
+        recorder = WriteUnitRecorder(profile.repository.engine)
 
         with recorder.recording():
             invoices_repo.save(result.invoices)

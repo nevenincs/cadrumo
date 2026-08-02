@@ -19,17 +19,13 @@ from typing import Annotated, Final, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.hashing import content_hash_hex
+from ...core.time import UtcInstant, validate_utc_aware
 from ..contribuyente import ProfileName as _ProfileName
 from ._errors import BucketEventValidationError
 
-_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
-
-BucketEventId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
+BucketEventId = Hex64Str
 """Lowercase 64-character SHA-256 identifier of a bucket event.
 
 Content-addressed from the full event body, so structurally identical
@@ -329,7 +325,17 @@ def derive_bucket_event_id(
     object_id: str,
     payload: Mapping[str, str],
 ) -> str:
-    """Return the deterministic SHA-256 id for a bucket event."""
+    """Return the deterministic SHA-256 id for a bucket event.
+
+    ``occurred_at`` is held to the canonical UTC contract before it reaches
+    the digest. The instant is hashed as text, so each spelling of one
+    moment -- naive, ``+01:00``, UTC -- produced a different id, and the
+    append path assigns by id: the same event submitted twice under two
+    spellings became two immutable history rows rather than collapsing, and
+    the content-addressing the catalogue documents held only for callers who
+    happened to agree on a timezone.
+    """
+    validate_utc_aware(occurred_at)
     body = {
         "bucket_id": bucket_id.strip(),
         "event_type": event_type.value,
@@ -368,7 +374,7 @@ class BucketEvent(BaseModel):
     event_id: BucketEventId
     bucket_id: _ProfileName
     event_type: BucketEventType
-    occurred_at: datetime
+    occurred_at: UtcInstant
     actor: BucketActorLabel
     object_type: BucketEventObjectType
     object_id: _ObjectId
@@ -389,6 +395,27 @@ class BucketEvent(BaseModel):
         if derived != self.event_id:
             raise BucketEventValidationError(f"event_id {self.event_id!r} does not match the derived id {derived!r}")
         return self
+
+
+def bucket_event_order_key(event: BucketEvent) -> tuple[datetime, str]:
+    """Return the canonical chronological sort key for one bucket event.
+
+    Ordering by ``occurred_at`` alone is not a total order: emissions inside
+    one operation share an instant by design (a rename emits the lifecycle
+    event and the maintenance event at the same ``now()``), so ties fell
+    through to whatever order the catalogue mapping happened to hold. Two
+    processes reading the same persisted events could therefore render the
+    operator different timelines, and the same reader could change its mind
+    after a reload -- with no validation error anywhere, because nothing was
+    wrong with the data.
+
+    ``event_id`` breaks the tie because it is content-addressed: it is
+    derived from the event body, so the tie-break is a property of the events
+    themselves rather than of how they were stored or merged. The
+    reconciliation history already ordered on this pair; this is the same
+    rule, declared once for every projection that reads bucket events.
+    """
+    return (event.occurred_at, event.event_id)
 
 
 class BucketEventHistoryCatalogue(BaseModel):
@@ -417,14 +444,14 @@ class BucketEventHistoryCatalogue(BaseModel):
     ) -> tuple[BucketEvent, ...]:
         """Return every :class:`BucketEvent` recorded against ``bucket_id`` in chronological order.
 
-        Events are sorted by ``occurred_at`` ascending and optionally filtered to one
-        or more event types.
+        Events are ordered by :func:`bucket_event_order_key` and optionally
+        filtered to one or more event types.
         """
         wanted = set(event_types) if event_types is not None else None
         matching = (
             e for e in self.events.values() if e.bucket_id == bucket_id and (wanted is None or e.event_type in wanted)
         )
-        return tuple(sorted(matching, key=lambda e: e.occurred_at))
+        return tuple(sorted(matching, key=bucket_event_order_key))
 
     def for_object(
         self,
@@ -432,13 +459,14 @@ class BucketEventHistoryCatalogue(BaseModel):
         object_type: BucketEventObjectType,
         object_id: str,
     ) -> tuple[BucketEvent, ...]:
-        """Return every event recorded against one object, ordered by ``occurred_at`` ascending.
+        """Return every event recorded against one object, in canonical chronological order.
 
         Returns:
-            Tuple of :class:`BucketEvent` records in chronological order.
+            Tuple of :class:`BucketEvent` records ordered by
+            :func:`bucket_event_order_key`.
         """
         matching = (e for e in self.events.values() if e.object_type is object_type and e.object_id == object_id)
-        return tuple(sorted(matching, key=lambda e: e.occurred_at))
+        return tuple(sorted(matching, key=bucket_event_order_key))
 
     def values(self) -> ValuesView[BucketEvent]:
         """Return a live view over every :class:`BucketEvent` in the catalogue."""
@@ -462,5 +490,6 @@ __all__ = [
     "BucketEventHistoryCatalogue",
     "BucketEventObjectType",
     "BucketEventType",
+    "bucket_event_order_key",
     "derive_bucket_event_id",
 ]

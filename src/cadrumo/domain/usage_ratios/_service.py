@@ -15,6 +15,9 @@ from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
 
+from pydantic import TypeAdapter
+
+from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ..categories import (
     SpendingCategory,
@@ -34,13 +37,40 @@ __all__ = [
 
 _LOGGER = get_logger(__name__)
 
+_BUCKET_ID: TypeAdapter[str] = TypeAdapter(BucketId)
+
+
+def _canonical_bucket_id(bucket_id: str) -> str:
+    """Return ``bucket_id`` under the canonical :data:`~core.identity.BucketId` contract.
+
+    The key and lock helpers stripped and rejected blanks for themselves but
+    never consumed the canonical alias, so they also accepted identifiers past
+    its 128-character cap. A 129-character bucket could therefore own a
+    usage-ratio row and a lock target that no other bucket consumer would
+    address the same way, fragmenting storage ownership for one profile.
+
+    Raises:
+        UsageRatioPersistenceError: When ``bucket_id`` is blank after
+            stripping or violates the canonical bound.
+    """
+    from pydantic import ValidationError
+
+    try:
+        return _BUCKET_ID.validate_python(bucket_id)
+    except ValidationError as exc:
+        raise UsageRatioPersistenceError(
+            "bucket_id must be a canonical bucket identifier: non-blank and at most 128 characters",
+        ) from exc
+
 
 def usage_ratios_object_key(bucket_id: str) -> str:
-    """Return the secure object key for one profile bucket's usage-ratio profile."""
-    trimmed = bucket_id.strip()
-    if not trimmed:
-        raise UsageRatioPersistenceError("bucket_id must not be blank")
-    return f"profile:{trimmed}"
+    """Return the secure object key for one profile bucket's usage-ratio profile.
+
+    Raises:
+        UsageRatioPersistenceError: When ``bucket_id`` is not a canonical
+            :data:`~core.identity.BucketId`.
+    """
+    return f"profile:{_canonical_bucket_id(bucket_id)}"
 
 
 def _usage_ratio_lock_target(bucket_id: str) -> Path:
@@ -60,9 +90,7 @@ def _usage_ratio_lock_target(bucket_id: str) -> Path:
         settings_for_active_profile_bucket,
     )
 
-    trimmed = bucket_id.strip()
-    if not trimmed:
-        raise UsageRatioPersistenceError("bucket_id must not be blank")
+    trimmed = _canonical_bucket_id(bucket_id)
     settings = load_settings()
     if "cadrumo_database_url" in settings.model_fields_set:
         # Explicit-database route (test/bootstrap): the route already names the

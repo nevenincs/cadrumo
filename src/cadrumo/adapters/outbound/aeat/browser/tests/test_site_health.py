@@ -223,11 +223,13 @@ class TestMantenimientoTitleOnlyGuard:
 
     def test_title_only_is_not_classified_as_mantenimiento(self) -> None:
         # Title carries the "interrupcion" marker, body carries none.
-        # Note: _matches_mantenimiento scans the full lowered HTML so
-        # any body-equivalent marker in the title counts as a body hit;
-        # we therefore use "interrupcion" in the title (a title-only
-        # marker per _MANTENIMIENTO_TITLE_MARKERS) rather than
-        # "mantenimiento" (which is also a body marker).
+        # This case used to be the only one the guard could hold, because
+        # _matches_mantenimiento scanned the full lowered HTML and so counted
+        # a marker inside <title> as a body hit as well: "interrupcion" was
+        # chosen precisely because it is title-only per
+        # _MANTENIMIENTO_TITLE_MARKERS and therefore dodged the double count.
+        # The body scan now excludes the title element, so the word that
+        # appears in BOTH marker sets is covered below rather than avoided.
         html = (
             "<html><head><title>Interrupcion</title></head>"
             "<body><p>Welcome to our tax portal. All services are up.</p>"
@@ -258,6 +260,91 @@ class TestMantenimientoTitleOnlyGuard:
             rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
         )
         assert via_evaluate is None
+
+    def test_a_title_marker_that_is_also_a_body_marker_is_still_title_only(self) -> None:
+        """The word ``mantenimiento`` appears in BOTH marker sets, and that mattered.
+
+        Scanning the full lowered document meant the literal inside
+        ``<title>mantenimiento</title>`` scored once as a body hit and once as
+        a title hit — which is exactly the two-source agreement the
+        corroboration rule requires — so a page with an entirely unrelated
+        body classified AEAT as down on its title alone. The body scan now
+        excludes the title element, so the single piece of evidence is
+        counted once.
+        """
+        from .._site_health_parsers import _extract_title, _matches_mantenimiento
+
+        html = "<html><head><title>mantenimiento</title></head><body><p>Welcome</p></body></html>"
+        lowered = html.lower()
+
+        hits = _matches_mantenimiento(lowered, _extract_title(html, lowered))
+
+        assert hits == ("title:mantenimiento",)
+        assert (
+            parse_mantenimiento_banner(
+                _PROBE_URL,
+                200,
+                {},
+                html,
+                rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+            )
+            is None
+        )
+        assert (
+            evaluate_response(
+                _PROBE_URL,
+                200,
+                {},
+                html,
+                rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+            )
+            is None
+        )
+
+    def test_a_body_marker_is_still_found_when_the_title_carries_the_same_word(self) -> None:
+        """Excluding the title must not blind the body scan.
+
+        The narrowing removes one SLICE, not one WORD: a real maintenance page
+        says so in its title and again in its body, and the body occurrence
+        still has to count or the fix would trade a false positive for a false
+        negative on the very page the parser exists to catch.
+        """
+        html = (
+            "<html><head><title>mantenimiento</title></head>"
+            "<body><p>Estamos realizando tareas de mantenimiento.</p>"
+            "<p>Disculpe las molestias.</p></body></html>"
+        )
+
+        status = parse_mantenimiento_banner(
+            _PROBE_URL,
+            503,
+            {},
+            html,
+            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
+        )
+
+        assert status is not None
+        assert status.state is SiteHealthState.MANTENIMIENTO
+        assert "mantenimiento" in status.evidence.detected_markers
+
+    def test_a_marker_in_an_inline_svg_title_is_body_evidence(self) -> None:
+        """Only the FIRST title element is excluded, matching the document title.
+
+        A ``<title>`` inside an inline SVG is ordinary page content, not the
+        document's title, so it is scanned as body — otherwise the exclusion
+        would be a hole a marker could hide in.
+        """
+        from .._site_health_parsers import _body_outside_title
+
+        html = (
+            "<html><head><title>Agencia Tributaria</title></head>"
+            "<body><svg><title>mantenimiento</title></svg></body></html>"
+        )
+
+        outside = _body_outside_title(html.lower())
+
+        assert "agencia tributaria" not in outside
+        assert "mantenimiento" in outside
 
     def test_one_body_marker_plus_title_classifies(self) -> None:
         html = (

@@ -1143,11 +1143,11 @@ class Transaction(BaseModel):
             return self
         if (
             self.direction == TransactionDirection.INCOMING
-            and has_non_work_irpf_category(self.irpf_category)
+            and has_non_work_irpf_category(self.irpf_category, direction=self.direction)
             and reconstituted > expected
         ):
             inferred_withholding = round_to_cents(reconstituted - expected)
-            if has_activity_irpf_category(self.irpf_category):
+            if has_activity_irpf_category(self.irpf_category, direction=self.direction):
                 maximum_supported_withholding = round_to_cents(
                     self.taxable_base * _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE,
                 )
@@ -1160,7 +1160,7 @@ class Transaction(BaseModel):
         if (
             self.direction == TransactionDirection.OUTGOING
             and self.category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING
-            and has_activity_irpf_category(self.irpf_category)
+            and has_activity_irpf_category(self.irpf_category, direction=self.direction)
             and reconstituted > expected
         ):
             inferred_withholding = round_to_cents(reconstituted - expected)
@@ -1176,7 +1176,7 @@ class Transaction(BaseModel):
         if (
             self.direction == TransactionDirection.OUTGOING
             and self.category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
-            and has_rent_irpf_category(self.irpf_category)
+            and has_rent_irpf_category(self.irpf_category, direction=self.direction)
             and reconstituted > expected
         ):
             return self

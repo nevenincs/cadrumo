@@ -705,3 +705,91 @@ def test_import_surfaces_active_profile_switch_info_notice(tmp_path: Path) -> No
         assert "source" in switch["message"]
         assert "active" in switch["message"].lower()
         assert switch["suggestion"] == "aeat config login source"
+
+
+# ---------------------------------------------------------------------------
+# Custody-metadata parity: ``config profile export`` projects the canonical
+# ProfileBundleExportResult (purpose, transport, categories, reconcile
+# failures), not just profile id / display name / out / schema version.
+# ---------------------------------------------------------------------------
+
+
+def test_export_json_envelope_carries_purpose_transport_and_data_categories(tmp_path: Path) -> None:
+    """The plain export envelope reports the same custody metadata SAR does."""
+    r_create = _create_profile("custody", tax_id="87654321X", activity="consulting")
+    assert r_create.exit_code == 0, r_create.output
+
+    cleartext_path = tmp_path / "custody-cleartext.json"
+    r = _export_profile("custody", cleartext_path, json_format=True)
+    assert r.exit_code == 0, r.output
+    payload = json.loads(r.output)["result"]
+
+    assert payload["purpose"] == "portable_transfer"
+    assert payload["transport"] == "cleartext_local"
+    assert payload["data_categories"] != []
+    assert payload["excluded_data_categories"] != []
+    assert set(payload["excluded_data_categories"]).isdisjoint(payload["data_categories"])
+    assert payload["reconcile_failures"] == []
+
+    encrypted_path = tmp_path / "custody-encrypted.json"
+    passphrase = "custody-export-passphrase-448-len"  # noqa: S105 - synthetic test fixture, not a secret
+    r_encrypted = _export_profile(
+        "custody",
+        encrypted_path,
+        json_format=True,
+        passphrase=passphrase,
+        cleartext_local=False,
+    )
+    assert r_encrypted.exit_code == 0, r_encrypted.output
+    encrypted_payload = json.loads(r_encrypted.output)["result"]
+    assert encrypted_payload["transport"] == "passphrase_encrypted"
+    assert encrypted_payload["purpose"] == "portable_transfer"
+
+
+def test_config_profile_export_result_refuses_malformed_transport_and_reconcile_row() -> None:
+    """The canonical result type -- not a permissive shell -- refuses malformed custody rows.
+
+    ``purpose``/``transport`` are typed as the real
+    :class:`~cadrumo.application.user_profile.ProfileBundleExportPurpose` /
+    :class:`~cadrumo.application.user_profile.ProfileBundleExportTransport`
+    enums, so even a bare string equal to a valid member's *value* is refused:
+    only the canonical enum instance the export service already returns
+    satisfies the field. A blank reconcile-failure ``journal_id``/``reason``
+    is also rejected. A permissive ``str``/``dict`` shell -- the defect this
+    finding reported -- would have accepted all of these.
+    """
+    from ....application.user_profile import ProfileBundleExportPurpose, ProfileBundleExportTransport
+    from .._config_payloads import ConfigProfileExportReconcileFailurePayload, ConfigProfileExportResult
+
+    base_kwargs = {
+        "profile_id": "profile-1",
+        "display_name": "Example",
+        "out": "/tmp/bundle.json",
+        "schema_version": 3,
+        "purpose": ProfileBundleExportPurpose.PORTABLE_TRANSFER,
+        "transport": ProfileBundleExportTransport.CLEARTEXT_LOCAL,
+        "data_categories": ["profile_identity_and_facts"],
+        "excluded_data_categories": [],
+        "reconcile_failures": [],
+    }
+    # A valid payload -- built from the real canonical enum members, exactly
+    # as the export handler passes them -- round-trips cleanly.
+    valid = ConfigProfileExportResult(**base_kwargs)
+    assert valid.purpose is ProfileBundleExportPurpose.PORTABLE_TRANSFER
+    assert valid.transport is ProfileBundleExportTransport.CLEARTEXT_LOCAL
+
+    # A bare string equal to a valid member's value is still refused: the
+    # field demands the canonical enum instance, not a permissive str.
+    with pytest.raises(ValidationError):
+        ConfigProfileExportResult(**{**base_kwargs, "purpose": "portable_transfer"})
+    with pytest.raises(ValidationError):
+        ConfigProfileExportResult(**{**base_kwargs, "transport": "cleartext_local"})
+    with pytest.raises(ValidationError):
+        ConfigProfileExportReconcileFailurePayload(journal_id="", destination=None, reason="SomeError")
+    with pytest.raises(ValidationError):
+        ConfigProfileExportReconcileFailurePayload(journal_id="j1", destination=None, reason="")
+
+    # A valid reconcile-failure row round-trips.
+    row = ConfigProfileExportReconcileFailurePayload(journal_id="j1", destination=None, reason="SomeError")
+    assert row.journal_id == "j1"
+    assert row.reason == "SomeError"

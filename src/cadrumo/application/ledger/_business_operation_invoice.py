@@ -557,11 +557,6 @@ class _BusinessOperationInvoiceService:
         rate_provider: ExchangeRateProvider | None = None,
     ) -> BusinessOperationInvoiceResult:
         now = _utc_now()
-        fx_rate, fx_rate_date = _resolve_fx_stamp(
-            currency=currency,
-            invoice_date=invoice_date,
-            rate_provider=rate_provider,
-        )
         # Normalise every field the model normalises to its stored form BEFORE
         # deriving the id, so the content digest is taken over the same values
         # the record persists. A normalising validator that is not mirrored
@@ -569,6 +564,14 @@ class _BusinessOperationInvoiceService:
         # stored "USD"), and the id stops identifying its own record.
         normalised_country_code = country_code.upper() if country_code is not None else None
         currency = normalise_iso_4217_currency(currency)
+        # Resolve the FX stamp AFTER normalising: a padded or lowercase token
+        # ("gbp", " gbp ") must query the provider with the SAME canonical
+        # token the record persists, not the raw operator input.
+        fx_rate, fx_rate_date = _resolve_fx_stamp(
+            currency=currency,
+            invoice_date=invoice_date,
+            rate_provider=rate_provider,
+        )
         records = _load(self._settings, self.source_kind, bucket_id)
         existing_ids = {existing.invoice_id for existing in records}
         for disambiguator in range(_ID_DISAMBIGUATION_CAP):

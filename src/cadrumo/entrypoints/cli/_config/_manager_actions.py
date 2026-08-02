@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from ....adapters.inbound.tui import FormPage, ManagerAction, ManagerActionOutcome
+    from ....application.auth import AuthConfigureResult
     from ....application.user_profile import CensalReconciliation, EffectiveFact
     from ....core import AuthProviderKind
 
@@ -381,9 +382,18 @@ def _run_certificate(present: FormPresenter | None = None) -> ManagerActionOutco
         # operator discover it at the first pull.
         return ManagerActionOutcome(message=refusal)
 
-    chosen_certificate = _commit_auth_choice(collected)
+    chosen_certificate, configure_result = _commit_auth_choice(collected)
+    if not configure_result.complete:
+        message = tr(
+            "flows.manager.action.certificate_incomplete",
+            provider=provider,
+            reason=configure_result.incomplete_reason,
+            next_action=configure_result.next_action,
+        )
+    else:
+        message = tr("flows.manager.action.certificate_done", name=chosen_certificate or "-", provider=provider)
     return ManagerActionOutcome(
-        message=tr("flows.manager.action.certificate_done", name=chosen_certificate or "-", provider=provider),
+        message=message,
         overview=build_active_profile_overview(),
     )
 
@@ -566,7 +576,7 @@ def _clave_refusal(collected: Mapping[str, str]) -> str | None:
     return None
 
 
-def _commit_auth_choice(collected: Mapping[str, str]) -> str:
+def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigureResult]:
     """Persist the auth section, select the certificate, activate the provider.
 
     The four profile fields go through the plural ``set_active_fields``
@@ -596,8 +606,13 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> str:
         collected: The values committed on the page.
 
     Returns:
-        The certificate name selected, or ``""`` when the page offered
-        none to select.
+        A pair of the certificate name selected (``""`` when the page
+        offered none to select) and the typed
+        :class:`~cadrumo.application.auth.AuthConfigureResult` the
+        activation returned, so the caller can tell "configured" from
+        "selected but not yet operationally complete" and route the
+        operator to the same repair command the direct ``auth configure``
+        CLI surfaces.
     """
     from ....application.auth import configure_operator_auth, select_operator_certificate_source
     from ....application.user_profile import set_active_fields
@@ -612,8 +627,8 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> str:
     chosen_certificate = collected.get(_CERTIFICATE_KEY, "").strip()
     if chosen_certificate:
         select_operator_certificate_source(name=chosen_certificate)
-    configure_operator_auth(collected[_AUTH_PROVIDER_PATH])
-    return chosen_certificate
+    configure_result = configure_operator_auth(collected[_AUTH_PROVIDER_PATH])
+    return chosen_certificate, configure_result
 
 
 def _auth_facts_on_record() -> dict[str, str]:

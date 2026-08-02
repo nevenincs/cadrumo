@@ -365,6 +365,108 @@ class TestSecureStorage:
         }
 
 
+class TestListRefusesForeignNaturalKeys:
+    """Enumeration re-addresses every row instead of trusting the key it sits under.
+
+    ``load`` already refuses an observation whose id differs from the one
+    requested. Without the same check on the list path, a valid observation
+    re-encrypted under another observation's key reaches history, ``show``,
+    and ``latest_for_nif`` through enumeration while a targeted ``load`` of
+    that same key refuses it.
+    """
+
+    @staticmethod
+    def _store_under_key(
+        profile: TestRuntimeProfile,
+        observation: VerifyObservation,
+        *,
+        object_key_observation_id: str,
+    ) -> None:
+        envelope = Envelope[VerifyObservation](
+            schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+            written_at=datetime(2025, 3, 15, tzinfo=UTC),
+            classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+            payload=observation,
+        )
+        profile.repository.save(
+            namespace=LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
+            object_key=verify_observation_object_key(profile.bucket_id, object_key_observation_id),
+            classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+            schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+    @staticmethod
+    def _observation(profile: TestRuntimeProfile, observation_id: str) -> VerifyObservation:
+        return VerifyObservation(
+            observation_id=observation_id,
+            bucket_id=profile.bucket_id,
+            surface=VerifySurface.NIF_IVA,
+            nif="DE123456789",
+            verdict="valid",
+            checked_at=datetime(2025, 3, 15, tzinfo=UTC),
+            persisted_at=datetime(2025, 3, 15, tzinfo=UTC),
+        )
+
+    def test_list_returns_an_observation_stored_under_its_own_key(
+        self,
+        secure_engine: TestRuntimeProfile,
+    ) -> None:
+        observation = self._observation(secure_engine, "a" * 64)
+        self._store_under_key(secure_engine, observation, object_key_observation_id="a" * 64)
+        repository = VerifyObservationRepository(bucket_id=secure_engine.bucket_id, objects=secure_engine.repository)
+
+        assert repository.list_observations() == (observation,)
+
+    def test_list_refuses_an_observation_stored_under_a_foreign_key(
+        self,
+        secure_engine: TestRuntimeProfile,
+    ) -> None:
+        foreign = self._observation(secure_engine, "b" * 64)
+        self._store_under_key(secure_engine, foreign, object_key_observation_id="a" * 64)
+        repository = VerifyObservationRepository(bucket_id=secure_engine.bucket_id, objects=secure_engine.repository)
+
+        with pytest.raises(LiveApplicationInputError) as exc_info:
+            repository.list_observations()
+
+        assert exc_info.value.translated_message == "application.live.verify.errors.observation_key_mismatch"
+        assert exc_info.value.context == {"observation_id": "b" * 64}
+
+    def test_targeted_load_of_the_same_row_already_refused_it(
+        self,
+        secure_engine: TestRuntimeProfile,
+    ) -> None:
+        foreign = self._observation(secure_engine, "b" * 64)
+        self._store_under_key(secure_engine, foreign, object_key_observation_id="a" * 64)
+        repository = VerifyObservationRepository(bucket_id=secure_engine.bucket_id, objects=secure_engine.repository)
+
+        with pytest.raises(LiveApplicationInputError) as exc_info:
+            repository.load("a" * 64)
+
+        assert exc_info.value.translated_message == "application.live.verify.errors.observation_id_mismatch"
+
+    def test_service_history_surfaces_cannot_read_past_the_refusal(
+        self,
+        secure_engine: TestRuntimeProfile,
+    ) -> None:
+        foreign = self._observation(secure_engine, "b" * 64)
+        self._store_under_key(secure_engine, foreign, object_key_observation_id="a" * 64)
+        svc = _service(secure_engine)
+
+        for call in (
+            lambda: svc.list_observations(bucket_id=secure_engine.bucket_id),
+            lambda: svc.show(bucket_id=secure_engine.bucket_id, observation_id="b" * 64),
+            lambda: svc.latest_for_nif(
+                bucket_id=secure_engine.bucket_id,
+                surface=VerifySurface.NIF_IVA,
+                nif="DE123456789",
+            ),
+        ):
+            with pytest.raises(LiveApplicationInputError):
+                call()
+
+
 class TestObservationIdentityAndInstantContracts:
     """``observation_id`` is a content digest and both instants are UTC-aware.
 

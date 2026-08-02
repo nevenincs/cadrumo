@@ -102,7 +102,7 @@ from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
-from ._hex import HEX_PATTERN_64, HEX_PATTERN_128
+from ._hex import HEX_PATTERN_64, HEX_PATTERN_128, Hex64Str
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._invoice_link import LinkInconsistencyDirection
 from ._irnr import (
@@ -252,6 +252,7 @@ __all__: list[str] = [
     "GOOGLE_EXTRA",
     "HEX_PATTERN_64",
     "HEX_PATTERN_128",
+    "Hex64Str",
     "IBAN_SHAPE_RE",
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",

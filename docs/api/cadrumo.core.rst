@@ -98,6 +98,7 @@ Submodules
    cadrumo.core.locks
    cadrumo.core.locks_errors
    cadrumo.core.logging
+   cadrumo.core.manual_corpus_sidecar
    cadrumo.core.output_rendering
    cadrumo.core.paths
    cadrumo.core.product_identity

@@ -24,7 +24,7 @@ from ...core.external_constants import RETENCIONES_MODELOS
 from ...core.i18n import tr
 from ...domain.calculations.registry import aggregate_withholding_by_clave
 from ._common import _emit_envelope
-from ._modelo_payloads import ModeloAggregateResult, WithholdingClaveBreakdownPayload
+from ._modelo_payloads import ModeloAggregateResult
 
 ResolveYearPeriod = Callable[..., Period]
 
@@ -130,22 +130,9 @@ def register_aggregate_commands(app: typer.Typer, *, resolve_year_period: Resolv
             if command.modelo == Modelo.M190.value
             else ()
         )
-        aggregate_result = ModeloAggregateResult(
-            modelo=result.modelo,
-            period=result.period,
-            provider=result.provider.value,
-            observation_count=result.log_fields.observation_count,
-            source_kinds=[sk.value for sk in result.source_kinds],
-            result_row_count=result.log_fields.result_row_count,
-            clave_breakdown=[
-                WithholdingClaveBreakdownPayload(
-                    clave=row.clave,
-                    percepcion_count=row.percepcion_count,
-                    percibido_total=str(row.percibido_total),
-                    retencion_total=str(row.retencion_total),
-                )
-                for row in clave_breakdown
-            ],
+        aggregate_result = ModeloAggregateResult.from_aggregation_result(
+            result,
+            clave_breakdown=clave_breakdown,
         )
         lines = [
             "operation\tmodelo.aggregate",

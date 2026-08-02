@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from hmac import compare_digest
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -36,6 +37,7 @@ from ...adapters.persistence.storage import (
     ClassificationError,
     Envelope,
     EnvelopeVersionError,
+    HashedLookup,
     inner_envelope_version_is_current,
     secure_object_repository_for_bucket,
 )
@@ -199,7 +201,22 @@ class VerifyObservationRepository:
         return observation
 
     def list_observations(self) -> tuple[VerifyObservation, ...]:
-        """Return all stored observations as a tuple of :class:`VerifyObservation` sorted by check time."""
+        """Return all stored observations as a tuple of :class:`VerifyObservation` sorted by check time.
+
+        Every row is re-addressed before it is returned: the natural key is
+        recomputed from the decrypted payload and compared with the row key
+        the store actually holds it under. ``load`` already refuses an
+        observation whose id does not match the one requested, so without the
+        same check here enumeration would be the weaker door — a valid
+        observation re-encrypted under another observation's key would reach
+        history, ``show``, and ``latest_for_nif`` while a targeted ``load``
+        of that key refused it.
+
+        Raises:
+            LiveApplicationInputError: When a row's payload bucket differs
+                from the repository's bucket, or when its content address
+                does not agree with the key it is stored under.
+        """
         observations: list[VerifyObservation] = []
         for record in self._objects.list_records(
             LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
@@ -216,8 +233,31 @@ class VerifyObservationRepository:
                         "repository_bucket": self._bucket_id,
                     },
                 )
+            self._assert_addressed_by_its_own_key(record, observation)
             observations.append(observation)
         return tuple(sorted(observations, key=lambda item: (item.checked_at, item.observation_id)))
+
+    def _assert_addressed_by_its_own_key(
+        self,
+        record: SecureObjectRecord,
+        observation: VerifyObservation,
+    ) -> None:
+        """Refuse an observation stored under a key that is not its own.
+
+        The stored ``object_key`` is a :class:`HashedLookup` digest and the
+        plaintext key is not recoverable from it, so the check recomputes the
+        digest of the key this observation *should* occupy and compares the
+        two. ``compare_digest`` keeps the comparison constant-time.
+        """
+        expected_key = HashedLookup.compute(
+            verify_observation_object_key(self._bucket_id, observation.observation_id),
+        )
+        if not compare_digest(expected_key, record.object_key):
+            raise LiveApplicationInputError(
+                "verify observation is stored under a different observation's key",
+                translated_message="application.live.verify.errors.observation_key_mismatch",
+                context={"observation_id": observation.observation_id},
+            )
 
     def save(self, observation: VerifyObservation) -> None:
         """Persist ``observation`` as an encrypted :class:`Envelope` in the object store.

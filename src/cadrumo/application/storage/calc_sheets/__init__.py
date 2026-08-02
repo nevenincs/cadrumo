@@ -83,6 +83,7 @@ from ._records import (
 )
 from ._theme import (
     ROLE_STYLES,
+    STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,
     RoleStyle,
     StyleRole,
@@ -103,6 +104,7 @@ from ._workbook_export import (
 __all__ = [
     "CALC_SHEETS_ENGINE_VERSION",
     "ROLE_STYLES",
+    "STYLED_RANGE_VERTICAL_ALIGN",
     "WORKBOOK_FONT_FAMILY",
     "BracketRanges",
     "CalcSheetsEngineError",

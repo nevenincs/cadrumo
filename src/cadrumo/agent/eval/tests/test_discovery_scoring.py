@@ -295,6 +295,39 @@ def test_comparison_rejects_two_scores_targeting_different_verbs() -> None:
         )
 
 
+def _reached_kwargs(**overrides: object) -> dict[str, object]:
+    kwargs: dict[str, object] = {
+        "persona": "cadrumo-modelo-preparer",
+        "session_id": "s-1",
+        "target_command_key": _TARGET,
+        "reached": True,
+        "rounds_to_correct_verb": 1,
+        "discovery_calls": 0,
+        "misselections": 0,
+    }
+    kwargs.update(overrides)
+    return kwargs
+
+
+def test_reached_score_with_a_zero_ordinal_is_refused() -> None:
+    """Anti-tautology: a reached target must carry a positive rounds_to_correct_verb."""
+    with pytest.raises(ValueError, match="positive rounds_to_correct_verb"):
+        DiscoveryScore(**_reached_kwargs(rounds_to_correct_verb=0))
+
+
+def test_unreached_score_with_a_nonzero_ordinal_is_refused() -> None:
+    with pytest.raises(ValueError, match="rounds_to_correct_verb == 0"):
+        DiscoveryScore(**_reached_kwargs(reached=False, rounds_to_correct_verb=1))
+
+
+def test_direct_construction_with_valid_reached_and_unreached_ordinals_round_trips() -> None:
+    reached = DiscoveryScore(**_reached_kwargs())
+    assert reached.passed
+
+    unreached = DiscoveryScore(**_reached_kwargs(reached=False, rounds_to_correct_verb=0, failures=("never reached",)))
+    assert not unreached.passed
+
+
 def test_discovery_score_is_a_frozen_strict_model() -> None:
     """The verdict is immutable (the eval's strict-frozen contract), so a score cannot be mutated after the fact."""
     score = score_discovery_trajectory(

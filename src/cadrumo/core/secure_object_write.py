@@ -41,7 +41,24 @@ ABSENT_SECURE_OBJECT_REVISION_ID = "0" * 64
 
 
 class SecureObjectWrite(BaseModel):
-    """One encrypted secure-object upsert prepared for a unit of work."""
+    """One encrypted secure-object upsert prepared for a unit of work.
+
+    ``written_at`` must be a UTC-aware instant. That contract is enforced at
+    the storage write funnel rather than declared here as
+    :data:`~core.time.UtcInstant`: this DTO is imported during ``core``
+    package initialisation, and reaching ``core.time`` from here loads
+    ``core.config`` through the clock's logger and closes an import cycle.
+    The funnel is the honest single owner in any case -- the constraint is a
+    storage-substrate fact, not a property of the value. The stored row's
+    revision id hashes the instant, and SQLite drops ``tzinfo`` on write, so
+    an offset-bearing value is persisted as its local wall clock while its
+    revision was derived from the UTC instant: the row commits and then fails
+    its own read-time self-consistency gate permanently.
+
+    See Also:
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.save`
+            Direct write boundary carrying the same UTC-aware contract.
+    """
 
     model_config = _STRICT_FROZEN
 

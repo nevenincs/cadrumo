@@ -30,6 +30,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
+from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
@@ -53,6 +54,7 @@ from ..envelope import Envelope
 from ..errors import (
     BlobIntegrityError,
     BlobNotFoundError,
+    EnvelopeVersionError,
     RetentionPolicyError,
     SecretAlreadyExistsError,
     SecretNotFoundError,
@@ -139,17 +141,36 @@ class _SecretIndexEntry(BaseModel):
     classification: SensitivityClass
 
 
+SECRET_INDEX_SCHEMA_VERSION: Final[int] = 1
+"""The one secret-store index format version this build reads and writes.
+
+The field documented itself as a forward-compatibility marker, but
+``_read_index`` only model-validated it and never compared it with anything,
+so an index claiming any version was accepted and every read and mutation
+proceeded against it. A marker nothing compares is not forward compatibility:
+the first real format change would have been read by a build that could not
+interpret it, and -- because every mutation rewrites the whole index -- the
+misread would have been written back.
+
+The index is enrolled in the persistence compatibility policy as a DURABLE
+format (``secret_index`` in :data:`~core.PERSISTED_FORMATS`), so a future
+version bump is governed by the same upgrade-chain rules as every other
+persisted format rather than by this one constant alone.
+"""
+
+
 class _SecretIndex(BaseModel):
     """JSON-backed manifest mapping lookup digests to blob references.
 
     Attributes:
-        schema_version: Forward-compatibility marker for the index file.
+        schema_version: Format version of the index file, gated against
+            :data:`SECRET_INDEX_SCHEMA_VERSION` on every read.
         entries: Map of digest hex string to :class:`_SecretIndexEntry`.
     """
 
     model_config = ConfigDict(strict=True, extra="forbid")
 
-    schema_version: int = Field(default=1, ge=1)
+    schema_version: int = Field(default=SECRET_INDEX_SCHEMA_VERSION, ge=1)
     entries: dict[str, _SecretIndexEntry] = Field(default_factory=dict)
 
 
@@ -226,14 +247,27 @@ class SecretStore:
         return self._store_dir / _LOCK_FILE_NAME
 
     def _read_index(self) -> _SecretIndex:
-        """Return the on-disk index, or a fresh empty one when absent."""
+        """Return the on-disk index, or a fresh empty one when absent.
+
+        Every read and every mutation of the store passes through here, which
+        is why the format-version gate belongs here rather than at each call
+        site: a mutation rewrites the whole index, so an index this build
+        cannot interpret must be refused before it is read, not after it has
+        been written back in a shape the writer understood differently.
+        """
         index_path = self._index_path()
         if not index_path.exists():
             return _SecretIndex()
         try:
-            return _SecretIndex.model_validate_json(index_path.read_text(encoding=UTF_8_ENCODING))
+            index = _SecretIndex.model_validate_json(index_path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, ValidationError, ValueError) as exc:
             raise _storage_validation_error("secret-store index is malformed or unreadable") from exc
+        if index.schema_version != SECRET_INDEX_SCHEMA_VERSION:
+            raise EnvelopeVersionError(
+                f"secret-store index is at version {index.schema_version}; "
+                f"consumer expects {SECRET_INDEX_SCHEMA_VERSION}",
+            )
+        return index
 
     def _write_index(self, index: _SecretIndex) -> None:
         """Atomically write ``index`` to disk.

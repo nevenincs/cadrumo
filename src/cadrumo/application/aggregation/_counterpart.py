@@ -21,7 +21,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, field_validator, model_validator
 
-from ...core import M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, Modelo, Period
+from ...core import M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, Modelo, Period, RegistryPeriodCode
 from ...core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
     CounterpartSourceKind,
@@ -29,6 +29,7 @@ from ...core.aggregation import (
     OperationKind349,
     counterpart_source_kind,
 )
+from ...core.parsing import IsoDateString
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
 _CANONICAL_SOURCE_KINDS = COUNTERPART_SOURCE_KINDS
@@ -45,7 +46,20 @@ def _validate_country(value: str, *, field_name: str) -> str:
 
 
 class CounterpartObservation(BaseModel):
-    """One typed observation for a 347 or 349 aggregator pass."""
+    """One typed observation for a 347 or 349 aggregator pass.
+
+    This model is the operator boundary: ``aeat app modelo aggregate`` validates
+    each ``--counterpart-observation`` JSON object directly against it, so
+    whatever it admits reaches the preview rollups unchecked.
+
+    ``accrued_on`` and ``operation_period`` are therefore admitted by the same
+    authorities the rest of the system uses. Bounding them by string length
+    alone let an impossible calendar date (``2026-99-99`` and ``2026-02-30`` are
+    both ten characters) and an arbitrary period token into a rollup the
+    operator reads as a preview of a real declaration, while the adjacent
+    registry counterpart binding types the same concepts as a
+    :class:`~datetime.date` and a registry period code.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -55,10 +69,10 @@ class CounterpartObservation(BaseModel):
     counterparty_name: str = Field(default="", max_length=200)
     counterparty_country: str = Field(default="ES", min_length=2, max_length=2)
     operation_kind: str = Field(min_length=1)
-    operation_period: str = Field(min_length=1)  # ISO quarter / year identifier
+    operation_period: RegistryPeriodCode
     taxable_base: Decimal = Field(ge=Decimal("0"))
     invoice_total: Decimal = Field(ge=Decimal("0"))
-    accrued_on: str = Field(min_length=10, max_length=10)
+    accrued_on: IsoDateString = Field(min_length=10, max_length=10)
     groi_verified: bool = False
     nif_iva_verified: bool = False
 

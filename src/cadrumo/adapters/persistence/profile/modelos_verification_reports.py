@@ -95,6 +95,58 @@ class VerificationReportCatalogueRepository:
         """Report whether a stored verification-report catalogue is present."""
         return self._objects.exists(_VERIFICATION_NAMESPACE, _VERIFICATION_OBJECT_KEY)
 
+    def _assert_reports_resolve_to_local_revisions(
+        self,
+        catalogue: VerificationReportCatalogue,
+        *,
+        boundary: str,
+    ) -> None:
+        """Refuse reports whose parent calculation revision is not in this bucket.
+
+        A verification report is a decision *about* one
+        :class:`~domain.modelos.CalculationRevision`; detached from that parent
+        it asserts an audit outcome nothing in the bucket can be checked
+        against. The sibling calculation catalogue is derived from this
+        repository's own secure-object store rather than resolved
+        independently, so the two reads cannot disagree about which bucket they
+        are answering for.
+
+        Args:
+            catalogue: The catalogue being written or read back.
+            boundary: ``"save"`` or ``"load"``, recorded on the refusal context.
+
+        Raises:
+            :class:`VerificationReportPersistenceError`: When any report names a
+                ``calculation_revision_id`` this bucket does not hold.
+        """
+        if not len(catalogue):
+            return
+        from .modelos_calculation import CalculationRevisionCatalogueRepository
+
+        revisions = CalculationRevisionCatalogueRepository(objects=self._objects).load()
+        unresolved = sorted(
+            {
+                report.calculation_revision_id
+                for report in catalogue.values()
+                if revisions.get(report.calculation_revision_id) is None
+            },
+        )
+        if not unresolved:
+            return
+        _LOGGER.error(
+            "verification report references a calculation revision outside this bucket",
+            extra={"boundary": boundary, "unresolved_count": len(unresolved)},
+        )
+        raise VerificationReportPersistenceError(
+            "verification report references a calculation revision outside this bucket",
+            translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+            context={
+                "reason": "foreign_calculation_revision",
+                "boundary": boundary,
+                "calculation_revision_ids": unresolved,
+            },
+        )
+
     def load(self) -> VerificationReportCatalogue:
         """Load and decrypt this bucket's verification-report catalogue.
 
@@ -168,6 +220,7 @@ class VerificationReportCatalogueRepository:
                     "max_supported_version": _VERIFICATION_CATALOGUE_VERSION,
                 },
             )
+        self._assert_reports_resolve_to_local_revisions(envelope.payload, boundary="load")
         return envelope.payload
 
     def save(self, catalogue: VerificationReportCatalogue) -> None:
@@ -179,6 +232,7 @@ class VerificationReportCatalogueRepository:
         """
         from ..storage import Envelope
 
+        self._assert_reports_resolve_to_local_revisions(catalogue, boundary="save")
         envelope = Envelope[VerificationReportCatalogue](
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
             written_at=now(),

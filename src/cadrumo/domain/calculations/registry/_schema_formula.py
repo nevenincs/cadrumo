@@ -199,6 +199,32 @@ def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) 
     return current.lower_bound < prev.upper_bound
 
 
+def _brackets_overlap_across_windows(first: BracketEntry, second: BracketEntry) -> bool:
+    """Return True when two differently-dated brackets are both live and collide.
+
+    ``_brackets_overlap_in_same_window`` only compares rows sharing a
+    ``valid_from``, so two rows declared in different windows could cover the
+    same numeric interval on a date both windows contain. ``resolve_bracket``
+    gathers every date-valid row, sorts by ``lower_bound`` alone, and returns the
+    first base match, so declaration order -- not the registry -- decided the
+    fixed addition and the tax result.
+
+    Overlap requires both axes to collide: the validity windows must share at
+    least one date, and the numeric intervals must intersect. Rows for
+    consecutive filing years reuse the same tranches by design and stay legal
+    because their windows are disjoint. ``None`` is unbounded on both axes.
+    """
+    if first.valid_from == second.valid_from:
+        return False
+    if first.valid_to is not None and first.valid_to < second.valid_from:
+        return False
+    if second.valid_to is not None and second.valid_to < first.valid_from:
+        return False
+    if first.upper_bound is not None and second.lower_bound >= first.upper_bound:
+        return False
+    return not (second.upper_bound is not None and first.lower_bound >= second.upper_bound)
+
+
 class ParameterDefinition(RegistryModel):
     id: ParameterId
     data_type: Literal[
@@ -256,6 +282,17 @@ class ParameterDefinition(RegistryModel):
                     f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
                     f"and {current.lower_bound}-{current.upper_bound} overlap within the same window",
                 )
+        for index, first in enumerate(sorted_brackets):
+            for second in sorted_brackets[index + 1 :]:
+                if _brackets_overlap_across_windows(first, second):
+                    raise RegistryValidationError(
+                        f"parameter {self.id!r} brackets {first.lower_bound}-{first.upper_bound} "
+                        f"(valid from {first.valid_from.isoformat()}) and "
+                        f"{second.lower_bound}-{second.upper_bound} "
+                        f"(valid from {second.valid_from.isoformat()}) have overlapping validity "
+                        f"windows and overlapping bounds, so bracket resolution would depend on "
+                        f"declaration order",
+                    )
 
     def _validate_keyed_bracket_table_shape(self) -> None:
         """Verify a keyed_bracket_table parameter has a valid keyed shape.

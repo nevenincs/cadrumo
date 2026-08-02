@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import cast
 
@@ -50,6 +51,83 @@ def _base_id() -> str:
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
     )
+
+
+@pytest.mark.parametrize(
+    ("field", "state", "state_fields"),
+    (
+        ("created_at", CalculationRevisionState.BORRADOR, {}),
+        ("updated_at", CalculationRevisionState.BORRADOR, {}),
+        (
+            "verified_at",
+            CalculationRevisionState.VERIFICADO_COMPLETO,
+            {"verified_at": datetime(2026, 5, 26, 11, 0, tzinfo=UTC), "verified_by": "operator"},
+        ),
+        (
+            "filed_at",
+            CalculationRevisionState.PRESENTADO,
+            {
+                "verified_at": datetime(2026, 5, 26, 11, 0, tzinfo=UTC),
+                "verified_by": "operator",
+                "filed_at": datetime(2026, 5, 26, 12, 0, tzinfo=UTC),
+                "filed_by": "operator",
+            },
+        ),
+        (
+            "superseded_at",
+            CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
+            {
+                "verified_at": datetime(2026, 5, 26, 11, 0, tzinfo=UTC),
+                "verified_by": "operator",
+                "filed_at": datetime(2026, 5, 26, 12, 0, tzinfo=UTC),
+                "filed_by": "operator",
+                "superseded_at": datetime(2026, 5, 26, 13, 0, tzinfo=UTC),
+            },
+        ),
+        (
+            "discarded_at",
+            CalculationRevisionState.DESCARTADO,
+            {
+                "discarded_at": datetime(2026, 5, 26, 11, 0, tzinfo=UTC),
+                "discarded_by": "operator",
+                "discard_reason": "operator discarded incomplete draft",
+            },
+        ),
+    ),
+    ids=("created", "updated", "verified", "filed", "superseded", "discarded"),
+)
+@pytest.mark.parametrize(
+    "malformed_instant",
+    (
+        datetime(2026, 5, 26, 10, 0),
+        datetime(2026, 5, 26, 11, 0, tzinfo=timezone(timedelta(hours=1))),
+    ),
+    ids=("naive", "non-utc"),
+)
+def test_calculation_revision_refuses_non_utc_lifecycle_instants(
+    field: str,
+    state: CalculationRevisionState,
+    state_fields: dict[str, object],
+    malformed_instant: datetime,
+) -> None:
+    """Every revision lifecycle instant is a UTC-only persistence invariant."""
+
+    utc_created_at = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
+    payload: dict[str, object] = {
+        "calculation_revision_id": _base_id(),
+        "work_unit_id": "a" * 64,
+        "state": state,
+        "input_values_by_casilla_id": {_INPUT_CASILLA_001: "10.00"},
+        "binding_overrides": {},
+        "casilla_values": {_OUTPUT_CASILLA_002: Decimal("15.00")},
+        "created_at": utc_created_at,
+        "updated_at": utc_created_at,
+    }
+    payload.update(state_fields)
+    payload[field] = malformed_instant
+
+    with pytest.raises(ValidationError, match="datetime must be"):
+        CalculationRevision.model_validate(payload)
 
 
 def test_revision_id_is_stable_across_equal_inputs() -> None:

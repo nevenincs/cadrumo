@@ -10,16 +10,23 @@ strict inequality.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE, SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import CasillaId, validated_casilla_id
+from .._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from .._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -61,10 +68,40 @@ _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 15, 0, tzinfo=UTC)
 _FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 20, 0, tzinfo=UTC)
 
 
-def _populated_report() -> VerificationReport:
+_WORK_UNIT_ID = "9" * 64
+_REVISION_CREATED_AT = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
+
+
+def _persist_parent_revision() -> str:
+    """Persist the calculation revision the reports under test assess, and return its id.
+
+    A verification report is a decision about one calculation revision, and
+    the repository refuses reports whose parent is not in the same bucket.
+    The fixture therefore stores a real parent rather than naming a synthetic
+    id, so the roundtrip exercises the production shape.
+    """
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=_WORK_UNIT_ID,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=_WORK_UNIT_ID,
+        state=CalculationRevisionState.BORRADOR,
+        created_at=_REVISION_CREATED_AT,
+        updated_at=_REVISION_CREATED_AT,
+    )
+    CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).save(
+        CalculationRevisionCatalogue(revisions={revision_id: revision}),
+    )
+    return revision_id
+
+
+def _populated_report(revision_id: str) -> VerificationReport:
     """Build a VerificationReport with every defaultable field non-default."""
 
-    revision_id = "a" * 64
     verified_by = "cli/aeat"
     findings = (
         ModeloVerificationFinding(
@@ -113,7 +150,7 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     """A populated VerificationReportCatalogue roundtrips strictly."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        report = _populated_report()
+        report = _populated_report(_persist_parent_revision())
         catalogue = VerificationReportCatalogue(
             reports={report.verification_report_id: report},
         )
@@ -127,6 +164,8 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     # preservation including each finding's nested enum kind +
     # severity + optional fields.
     assert loaded_report.completeness_status is VerificationCompletenessStatus.BLOCKED
+    assert loaded_report.run_at == _REPORT_RUN_AT
+    assert loaded_report.run_at.utcoffset() == UTC.utcoffset(loaded_report.run_at)
     assert len(loaded_report.findings) == 2
     f0 = loaded_report.findings[0]
     assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
@@ -141,6 +180,63 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     assert loaded_report.resolved_casilla_ids == _IVA_RESOLVED_CASILLA_IDS
     assert loaded_report.missing_required_casilla_ids == _IVA_MISSING_REQUIRED_CASILLA_IDS
     assert (profile.paths.db_dir / "cadrumo.db").is_file()
+
+
+@pytest.mark.parametrize(
+    "run_at",
+    (
+        datetime(2026, 5, 28, 11, 5, 0),
+        datetime(2026, 5, 28, 12, 5, 0, tzinfo=timezone(timedelta(hours=1))),
+    ),
+    ids=("naive", "non-utc"),
+)
+def test_verification_report_refuses_non_utc_run_at(run_at: datetime) -> None:
+    """A report cannot be constructed with an ambiguous persisted run instant."""
+
+    # Model-level construction only: no storage boundary is crossed, so this
+    # case needs no persisted parent revision.
+    report = _populated_report("a" * 64)
+    with pytest.raises(ValidationError, match="datetime must be"):
+        VerificationReport.model_validate({**report.model_dump(), "run_at": run_at})
+
+
+@pytest.mark.parametrize(
+    "persisted_run_at",
+    ("2026-05-28T11:05:00", "2026-05-28T12:05:00+01:00"),
+    ids=("naive", "non-utc"),
+)
+def test_verification_report_catalogue_refuses_non_utc_run_at_at_encrypted_load(
+    tmp_path: Path,
+    persisted_run_at: str,
+) -> None:
+    """Encrypted report storage cannot rehydrate an ambiguous run instant."""
+
+    import json as _json
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        report = _populated_report(_persist_parent_revision())
+        repo = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(VerificationReportCatalogue(reports={report.verification_report_id: report}))
+        record = profile.repository.load(
+            _VERIFICATION_NAMESPACE,
+            _VERIFICATION_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_VERIFICATION_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        envelope["payload"]["reports"][report.verification_report_id]["run_at"] = persisted_run_at
+        profile.repository.save(
+            namespace=_VERIFICATION_NAMESPACE,
+            object_key=_VERIFICATION_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(ValidationError, match="datetime must be"):
+            VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
 def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
@@ -318,7 +414,7 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
     import json as _json
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        report = _populated_report()
+        report = _populated_report(_persist_parent_revision())
         catalogue = VerificationReportCatalogue(
             reports={report.verification_report_id: report},
         )
@@ -421,4 +517,68 @@ def test_verification_report_catalogue_unsupported_storage_version_is_localized(
         "reason": "unsupported_envelope_version",
         "stored_schema_version": stored_schema_version,
         "max_supported_version": _VERIFICATION_CATALOGUE_VERSION,
+    }
+
+
+def test_report_for_a_revision_outside_this_bucket_is_refused_at_save(
+    tmp_path: Path,
+) -> None:
+    """A report whose parent revision is not in this bucket is not persistable.
+
+    A verification report asserts an audit outcome *about* one calculation
+    revision. Detached from that parent it claims to have verified something
+    this bucket cannot produce, so the write boundary refuses it rather than
+    storing a decision nothing can be checked against.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        _persist_parent_revision()
+        foreign = _populated_report("f" * 64)
+        catalogue = VerificationReportCatalogue(reports={foreign.verification_report_id: foreign})
+
+        with pytest.raises(VerificationReportPersistenceError) as raised:
+            VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).save(catalogue)
+
+    assert raised.value.context == {
+        "reason": "foreign_calculation_revision",
+        "boundary": "save",
+        "calculation_revision_ids": ["f" * 64],
+    }
+
+
+def test_report_for_a_missing_revision_is_refused_at_load(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology proof: the binding is durable, not construction-time only.
+
+    Persists a report against a real parent, then removes the parent from the
+    calculation catalogue in the same bucket. If the read path still returned
+    the report, the save-side check would only be a convention held by callers
+    that happen to write in order.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        revision_id = _persist_parent_revision()
+        report = _populated_report(revision_id)
+        VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).save(
+            VerificationReportCatalogue(reports={report.verification_report_id: report}),
+        )
+        assert (
+            VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
+            .load()
+            .get(
+                report.verification_report_id,
+            )
+            == report
+        )
+
+        CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).save(CalculationRevisionCatalogue())
+
+        with pytest.raises(VerificationReportPersistenceError) as raised:
+            VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.context == {
+        "reason": "foreign_calculation_revision",
+        "boundary": "load",
+        "calculation_revision_ids": [revision_id],
     }

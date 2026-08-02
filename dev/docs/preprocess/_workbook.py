@@ -32,6 +32,11 @@ import json
 from pathlib import Path
 from typing import Any, Final
 
+from ._parts import (
+    split_units_by_budget,
+    stamp_part_anchors,
+    write_part_sidecars,
+)
 from ._schema import (
     ExtractionStatus,
     PreprocessOutput,
@@ -41,7 +46,6 @@ from ._schema import (
 from ._sidecar import (
     PreprocessSidecarError,
     sha256_of,
-    write_sidecar,
 )
 
 #: Stable id of this extractor, recorded in every sidecar's provenance.
@@ -55,13 +59,6 @@ _UTF_8: Final[str] = "utf-8"
 #: Column separator in the rendered field table. A pipe keeps each row on
 #: one line and survives the text chunker without being mistaken for prose.
 _CELL_SEP = " | "
-
-#: Indexable text sidecars must stay under the walker's 10 MB file cap
-#: (``_MAX_FILE_SIZE``). A workbook whose full rendering would exceed this
-#: budget is split across multiple per-sheet-group sidecars. The budget is
-#: held a comfortable margin below 10 MB so the UTF-8 encoded bytes (which
-#: can exceed the character count for accented Spanish text) never cross it.
-_TEXT_BUDGET_BYTES = 8 * 1024 * 1024
 
 
 def _norm_cell(value: object) -> str:
@@ -183,31 +180,6 @@ def _attribution_for(source: Path) -> str:
     return base
 
 
-def _split_units_by_budget(
-    units: list[PreprocessUnit],
-) -> list[list[PreprocessUnit]]:
-    """Group units so each group's rendered text stays under the byte budget.
-
-    Each group becomes one sidecar pair. A single unit larger than the budget
-    on its own still forms its own group (it is never dropped); the walker's
-    own oversized-file skip is the backstop, reported by the caller.
-    """
-    groups: list[list[PreprocessUnit]] = []
-    current: list[PreprocessUnit] = []
-    current_bytes = 0
-    for unit in units:
-        unit_bytes = len(unit.text.encode(_UTF_8))
-        if current and current_bytes + unit_bytes > _TEXT_BUDGET_BYTES:
-            groups.append(current)
-            current = []
-            current_bytes = 0
-        current.append(unit)
-        current_bytes += unit_bytes
-    if current:
-        groups.append(current)
-    return groups or [[]]
-
-
 def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     """Extract a Diseno de Registro workbook into one or more records.
 
@@ -265,39 +237,20 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
             ),
         ]
 
-    groups = _split_units_by_budget(units)
-    multi = len(groups) > 1
-    outputs: list[PreprocessOutput] = []
-    for index, group in enumerate(groups):
-        if multi:
-            group = [unit.model_copy(update={"anchor": f"part-{index + 1}"}) for unit in group]
-        outputs.append(
-            PreprocessOutput(
-                source_kind=SourceDocumentKind.DISENO_REGISTRO_WORKBOOK,
-                status=ExtractionStatus.OK,
-                source_relpath=relpath,
-                source_sha256=digest,
-                preprocessor_id=WORKBOOK_EXTRACTOR_ID,
-                preprocessor_version=WORKBOOK_EXTRACTOR_VERSION,
-                attribution=attribution,
-                units=tuple(group),
-            ),
+    groups = stamp_part_anchors(split_units_by_budget(units))
+    return [
+        PreprocessOutput(
+            source_kind=SourceDocumentKind.DISENO_REGISTRO_WORKBOOK,
+            status=ExtractionStatus.OK,
+            source_relpath=relpath,
+            source_sha256=digest,
+            preprocessor_id=WORKBOOK_EXTRACTOR_ID,
+            preprocessor_version=WORKBOOK_EXTRACTOR_VERSION,
+            attribution=attribution,
+            units=tuple(group),
         )
-    return outputs
-
-
-def _sidecar_paths_for_part(source: Path, index: int, total: int) -> Path:
-    """Return the source-stand-in path for a part's sidecar pair.
-
-    Single-part workbooks write sidecars named directly from the source
-    (``<file>.extracted.md``). Multi-part workbooks suffix the part so the
-    groups never collide: ``<file>.part-2.extracted.md``. The returned path
-    is a naming stand-in handed to :func:`write_sidecar` (no file is created
-    at the stand-in path itself).
-    """
-    if total == 1:
-        return source
-    return source.with_name(f"{source.name}.part-{index + 1}")
+        for group in groups
+    ]
 
 
 def extract_workbook(source: Path, *, repo_root: Path) -> list[Path]:
@@ -316,10 +269,4 @@ def extract_workbook(source: Path, *, repo_root: Path) -> list[Path]:
             cannot be written.
     """
     outputs = build_outputs(source, repo_root=repo_root)
-    written: list[Path] = []
-    total = len(outputs)
-    for index, output in enumerate(outputs):
-        stand_in = _sidecar_paths_for_part(source, index, total)
-        text_path, _ = write_sidecar(stand_in, output)
-        written.append(text_path)
-    return written
+    return write_part_sidecars(source, outputs)

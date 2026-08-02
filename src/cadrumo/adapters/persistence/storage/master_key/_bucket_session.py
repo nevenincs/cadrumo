@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING
 from sqlalchemy.exc import SQLAlchemyError
 
 from .....core.logging import get_logger
+from .....core.time import validate_utc_aware
 from ..bucket import BucketLockedError
 from ..errors import (
     storage_validation_error as _storage_validation_error,
@@ -167,6 +168,7 @@ class BucketSession:
         if len(dek) != _DEK_BYTES:
             raise _storage_validation_error(f"dek must be exactly {_DEK_BYTES} bytes")
 
+        opened_at = validate_utc_aware(opened_at)
         idle_window = timedelta(minutes=idle_minutes)
         absolute_deadline = opened_at + timedelta(minutes=resolved_absolute_minutes)
         # The idle deadline never outlives the absolute cap: clamp the initial
@@ -235,6 +237,9 @@ class BucketSession:
             raise _storage_validation_error("idle_minutes must be a strict positive integer")
         if len(dek) != _DEK_BYTES:
             raise _storage_validation_error(f"dek must be exactly {_DEK_BYTES} bytes")
+        opened_at = validate_utc_aware(opened_at)
+        idle_deadline = validate_utc_aware(idle_deadline)
+        absolute_deadline = validate_utc_aware(absolute_deadline)
         if idle_deadline > absolute_deadline:
             raise _storage_validation_error("idle_deadline must not exceed absolute_deadline")
         return cls(
@@ -328,12 +333,14 @@ class BucketSession:
         """
         if self._sealed:
             raise BucketLockedError(bucket_id=self._bucket_id)
+        now = validate_utc_aware(now)
         self._idle_deadline = min(now + self._idle_window, self._absolute_deadline)
 
     def is_expired(self, now: datetime) -> bool:
         """Return whether the idle window or the absolute cap has elapsed at `now`."""
         if self._sealed:
             return True
+        now = validate_utc_aware(now)
         return now >= self._idle_deadline or now >= self._absolute_deadline
 
     def acquire_engine(self, settings: Settings) -> Engine:

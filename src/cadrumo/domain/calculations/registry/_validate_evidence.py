@@ -8,7 +8,14 @@ from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
 
-from ....core import normalise_corpus_text
+from pydantic import ValidationError
+
+from ....core import (
+    MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
+    MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
+    ManualCorpusTextSidecar,
+    normalise_corpus_text,
+)
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
@@ -24,64 +31,87 @@ _CORPUS_TEXT_CACHE_FILENAME = "cadrumo_corpus_text_cache.json"
 # Shipped sidecar constants (see dev/corpus/extract_manual_corpus_text.py).
 # Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json
 # where the path is source.corpus_path with the leading "corpus/" prefix stripped.
+# The payload shape itself is the shared ManualCorpusTextSidecar contract in core.
 _MANUAL_CORPUS_TEXT_DIR = "manual_corpus_text"
-_CORPUS_PATH_PREFIX = "corpus/"
-_SIDECAR_SUFFIX = ".corpus_text.json"
+
+
+def _validated_sidecar_text(raw: str, corpus_path: str, actual_sha256: str) -> str | None:
+    """Return the sidecar's text when it satisfies the shared contract, else ``None``.
+
+    The whole admission decision for a manual-PDF sidecar lives here: the
+    payload must validate against :class:`ManualCorpusTextSidecar` (pinned
+    schema version, prefixed corpus path, hex-64 content key, stamped
+    extraction platform, non-empty text), must claim the very
+    ``corpus_path`` it was addressed under, and must carry the content key of
+    the deployed PDF bytes. Any refusal is logged and returns ``None``, which
+    the caller answers by re-extracting from the real bytes -- so a tampered,
+    truncated, foreign, or older-schema sidecar costs a slow path, never a
+    wrong ``required_text`` verdict.
+
+    Args:
+        raw: The sidecar file's decoded JSON text.
+        corpus_path: The :attr:`SourceReference.corpus_path` the sidecar was
+            addressed under.
+        actual_sha256: Hex SHA-256 of the deployed source PDF's bytes.
+    """
+    try:
+        sidecar = ManualCorpusTextSidecar.model_validate_json(raw)
+    except ValidationError:
+        _LOGGER.warning(
+            "Manual PDF sidecar for %s does not satisfy the sidecar contract; falling back to on-demand extraction",
+            corpus_path,
+            exc_info=True,
+        )
+        return None
+    if not sidecar.addresses(corpus_path):
+        _LOGGER.warning(
+            "Manual PDF sidecar for %s claims corpus_path %r; falling back to on-demand extraction",
+            corpus_path,
+            sidecar.corpus_path,
+        )
+        return None
+    if sidecar.source_sha256 != actual_sha256:
+        _LOGGER.warning(
+            "Manual PDF sidecar sha256 mismatch for %s; falling back to on-demand extraction",
+            corpus_path,
+        )
+        return None
+    return sidecar.normalised_text
 
 
 def _read_manual_pdf_sidecar(corpus_path: str, source_path: Path) -> str | None:
     """Return the shipped normalised text for a manual-PDF source, or ``None``.
 
-    Reads the content-keyed sidecar committed under
+    Locates the content-keyed sidecar committed under
     ``_data/manual_corpus_text/`` that was built by
-    ``dev/corpus/extract_manual_corpus_text.py``.  Verifies the
-    sha256 of ``source_path``'s bytes against the sidecar's stored
-    ``source_sha256`` before returning the text, so a modified or
-    replaced PDF never silently serves stale text.
+    ``dev/corpus/extract_manual_corpus_text.py``, then hands the payload to
+    :func:`_validated_sidecar_text`, which owns the whole admission decision
+    against the shared :class:`ManualCorpusTextSidecar` contract the extractor
+    writes through.
 
-    Returns ``None`` when:
-    - the sidecar is absent (not yet generated or path unexpected),
-    - the sidecar cannot be parsed as valid JSON,
-    - the sha256 of ``source_path`` does not match ``source_sha256``.
-
-    The caller falls back to on-demand pypdfium2 extraction on ``None``.
-    End-user machines should never reach that path: the shipped sidecar
-    covers every ``manual_pdf`` source the registry declares.
+    Returns ``None`` when the sidecar is absent (not yet generated or path
+    unexpected), unreadable, or refused by that contract. The caller falls
+    back to on-demand pypdfium2 extraction on ``None``. End-user machines
+    should never reach that path: the shipped sidecar covers every
+    ``manual_pdf`` source the registry declares.
 
     Args:
         corpus_path: The source's :attr:`SourceReference.corpus_path`,
             e.g. ``"corpus/manuals/renta/2020/part1/source.pdf"``.
         source_path: Resolved on-disk path to the source PDF bytes.
     """
-    if not corpus_path.startswith(_CORPUS_PATH_PREFIX):
+    if not corpus_path.startswith(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX):
         return None
-    relative = corpus_path[len(_CORPUS_PATH_PREFIX) :]
+    relative = corpus_path[len(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX) :]
     # Build the sidecar Traversable under the bundled _data tree.
     sidecar_parts = relative.split("/")
-    sidecar_parts[-1] = sidecar_parts[-1] + _SIDECAR_SUFFIX
+    sidecar_parts[-1] = sidecar_parts[-1] + MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX
     try:
         node = packaged_data(_MANUAL_CORPUS_TEXT_DIR, *sidecar_parts)
         raw = node.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return None
-    try:
-        data: dict[str, object] = json.loads(raw)
-    except (json.JSONDecodeError, UnicodeDecodeError):
-        return None
-    stored_sha256 = data.get("source_sha256")
-    if not isinstance(stored_sha256, str):
-        return None
-    actual_sha256 = sha256_hex(source_path.read_bytes())
-    if actual_sha256 != stored_sha256:
-        _LOGGER.warning(
-            "Manual PDF sidecar sha256 mismatch for %s; falling back to on-demand extraction",
-            corpus_path,
-        )
-        return None
-    normalised = data.get("normalised_text")
-    if not isinstance(normalised, str):
-        return None
-    return normalised
+    return _validated_sidecar_text(raw, corpus_path, sha256_hex(source_path.read_bytes()))
 
 
 @lru_cache(maxsize=4096)

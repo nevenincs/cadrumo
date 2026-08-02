@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ..errors import DecryptionError, EncryptionError
+from ._bucket_identity import canonical_bucket_id
 
 _NONCE_BYTES = 12
 _TAG_BYTES = 16
@@ -47,10 +48,18 @@ class WrappedDek(BaseModel):
 
 
 def _associated_data(bucket_id: str) -> bytes:
-    """Compose the AEAD additional-authenticated-data for one bucket."""
-    if not bucket_id:
-        raise _encryption_error("bucket_id must be non-empty")
-    return f"cadrumo.dek-wrap.v1:{bucket_id}".encode(_UTF_8_ENCODING)
+    """Compose the AEAD additional-authenticated-data for one bucket.
+
+    The identity is canonicalized first, so the AAD this composes is the
+    storage layer's spelling of the bucket rather than the caller's. Two
+    spellings of one bucket therefore wrap and unwrap interchangeably, and an
+    identity the storage layer would refuse never reaches AES-GCM at all.
+    """
+    try:
+        canonical = canonical_bucket_id(bucket_id)
+    except ValueError as exc:
+        raise _encryption_error("bucket_id must be a canonical bucket identity") from exc
+    return f"cadrumo.dek-wrap.v1:{canonical}".encode(_UTF_8_ENCODING)
 
 
 def _encryption_error(message: str) -> EncryptionError:
@@ -68,9 +77,9 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
         kek: 32-byte key-encryption key derived from the operator's
             passphrase via Argon2id.
         dek: 32-byte data-encryption key minted afresh at enrollment.
-        bucket_id: Non-empty bucket identifier; bound into the AEAD AAD
-            so the wrapped DEK cannot be re-mounted under a different
-            bucket.
+        bucket_id: Bucket identifier, canonicalized through
+            :data:`~core.identity.BucketId` and bound into the AEAD AAD so
+            the wrapped DEK cannot be re-mounted under a different bucket.
 
     Returns:
         A frozen :class:`WrappedDek` record carrying nonce, ciphertext, and
@@ -78,7 +87,7 @@ def wrap_dek(*, kek: bytes, dek: bytes, bucket_id: str) -> WrappedDek:
 
     Raises:
         EncryptionError: If `kek` or `dek` is not 32 bytes, or `bucket_id`
-            is empty.
+            is not a canonical bucket identity.
     """
     if len(kek) != _KEK_BYTES:
         raise _encryption_error(f"kek must be exactly {_KEK_BYTES} bytes")
@@ -101,14 +110,16 @@ def unwrap_dek(*, kek: bytes, wrapped: WrappedDek, bucket_id: str) -> bytes:
     Args:
         kek: 32-byte key-encryption key.
         wrapped: Typed envelope produced by `wrap_dek`.
-        bucket_id: Non-empty bucket identifier; must match the value
-            bound at wrap time.
+        bucket_id: Bucket identifier; must name the same bucket bound at
+            wrap time, in any spelling the canonical
+            :data:`~core.identity.BucketId` normalizes to that value.
 
     Returns:
         The 32-byte data-encryption key.
 
     Raises:
-        EncryptionError: When ``kek`` is not 32 bytes or ``bucket_id`` is empty.
+        EncryptionError: When ``kek`` is not 32 bytes or ``bucket_id`` is not
+            a canonical bucket identity.
         DecryptionError: When AEAD tag verification fails.
     """
     if len(kek) != _KEK_BYTES:

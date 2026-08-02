@@ -13,16 +13,18 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....core.identity import BucketId
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...categories import SpendingCategory
 from .. import (
     UsageRatioPersistenceError,
     UsageRatioProfile,
+    usage_ratio_bucket_lock,
     usage_ratios_object_key,
 )
 
@@ -210,3 +212,55 @@ def test_save_target_directory_is_ignored_by_secure_backend(tmp_path: Path) -> N
 def test_blank_bucket_id_rejected() -> None:
     with pytest.raises(UsageRatioPersistenceError, match="bucket_id"):
         load_usage_ratios(bucket_id=" ")
+
+
+class TestCanonicalBucketIdentity:
+    """Usage-ratio storage owns the same bucket identity as every other consumer.
+
+    The key and lock helpers stripped and rejected blanks for themselves but
+    never consumed the canonical ``BucketId`` alias, so they also accepted
+    identifiers past its 128-character cap. A 129-character bucket could own a
+    persisted usage-ratio row and a lock target that no other bucket consumer
+    would address the same way.
+    """
+
+    _OVERLENGTH = "b" * 129
+
+    def test_object_key_refuses_an_overlength_bucket(self) -> None:
+        """The canonical alias caps identifiers at 128 characters."""
+        assert TypeAdapter(BucketId).validate_python("b" * 128) == "b" * 128
+        with pytest.raises(ValidationError):
+            TypeAdapter(BucketId).validate_python(self._OVERLENGTH)
+        with pytest.raises(UsageRatioPersistenceError, match="bucket_id"):
+            usage_ratios_object_key(self._OVERLENGTH)
+
+    @pytest.mark.parametrize("bad", ["", "   ", "\t\n", "b" * 129, "b" * 500])
+    def test_persistence_refuses_a_non_canonical_bucket(self, bad: str) -> None:
+        """The refusal reaches both durable paths, not only the key helper."""
+        with pytest.raises(UsageRatioPersistenceError, match="bucket_id"):
+            load_usage_ratios(bucket_id=bad)
+        with pytest.raises(UsageRatioPersistenceError, match="bucket_id"):
+            save_usage_ratios(UsageRatioProfile(), bucket_id=bad)
+
+    def test_lock_target_refuses_a_non_canonical_bucket(self) -> None:
+        with (
+            pytest.raises(UsageRatioPersistenceError, match="bucket_id"),
+            usage_ratio_bucket_lock(self._OVERLENGTH),
+        ):
+            pytest.fail("an uncanonicalizable bucket must not take a lock")
+
+    def test_object_key_uses_the_canonical_spelling(self) -> None:
+        """A padded id addresses the same row as its canonical form."""
+        assert usage_ratios_object_key(f"  {_BUCKET_A_ID}  ") == usage_ratios_object_key(_BUCKET_A_ID)
+        assert usage_ratios_object_key(_BUCKET_A_ID) == f"profile:{_BUCKET_A_ID}"
+
+    def test_canonical_bucket_still_round_trips(self) -> None:
+        """The guard must not refuse a legitimate profile."""
+        profile = UsageRatioProfile()
+        save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
+
+        assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
+
+    def test_distinct_buckets_keep_distinct_keys(self) -> None:
+        """Canonicalisation must not merge two genuinely different buckets."""
+        assert usage_ratios_object_key(_BUCKET_A_ID) != usage_ratios_object_key(_BUCKET_B_ID)

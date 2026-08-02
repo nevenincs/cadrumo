@@ -189,7 +189,7 @@ def test_transaction_tax_fields_are_typed_and_round_trip_through_json() -> None:
             "taxable_base": Decimal("100.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("21.00"),
-            "irpf_category": "professional-services",
+            "irpf_category": "actividad_economica",
             "usage_ratio_id": "ratio-office",
             "prorrata_reference": "prorrata-2026",
             "purchase_invoice_evidence_id": "purchase-evidence-1",
@@ -202,7 +202,7 @@ def test_transaction_tax_fields_are_typed_and_round_trip_through_json() -> None:
     assert restored.taxable_base == Decimal("100.00")
     assert restored.iva_rate == Decimal("0.21")
     assert restored.iva_amount == Decimal("21.00")
-    assert restored.irpf_category == "professional-services"
+    assert restored.irpf_category == "actividad_economica"
     assert restored.usage_ratio_id == "ratio-office"
     assert restored.prorrata_reference == "prorrata-2026"
     assert restored.purchase_invoice_evidence_id == "purchase-evidence-1"

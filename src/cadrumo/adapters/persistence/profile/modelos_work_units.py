@@ -50,7 +50,7 @@ from ..storage import MODELO_WORK_UNIT_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
-    from ..storage import SecureObjectRepository
+    from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
 _WORK_UNIT_NAMESPACE = MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace
@@ -201,6 +201,41 @@ class WorkUnitCatalogueRepository:
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
         _LOGGER.info("saved work-unit catalogue with %d entr(y/ies)", len(catalogue))
+
+    def to_secure_object_write(
+        self,
+        catalogue: WorkUnitCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Return the secure-object upsert for ``catalogue`` without committing it.
+
+        Lets a caller advance the work-unit pointer in the SAME unit of work as
+        the calculation, filing, and event catalogues the pointer names, so a
+        failure cannot leave an advanced pointer standing over state that never
+        committed. The returned
+        :class:`~adapters.persistence.storage.SecureObjectWrite` carries the same
+        :class:`~adapters.persistence.storage.Envelope` and
+        :class:`~adapters.persistence.storage.SensitivityClass` classification
+        :meth:`save` would persist directly.
+        """
+        from ..storage import Envelope, SecureObjectWrite
+
+        envelope = Envelope[WorkUnitCatalogue](
+            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+            written_at=now(),
+            classification=_WORK_UNIT_CATALOGUE_SENSITIVITY,
+            payload=catalogue,
+        )
+        return SecureObjectWrite(
+            namespace=_WORK_UNIT_NAMESPACE,
+            object_key=_WORK_UNIT_OBJECT_KEY,
+            classification=_WORK_UNIT_CATALOGUE_SENSITIVITY,
+            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+            expected_revision_id=expected_revision_id,
+        )
 
 
 __all__ = [

@@ -11,7 +11,7 @@ from pydantic import AnyUrl, BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
-from ....core.decimal import normalize_decimal_separators
+from ....core.decimal import coerce_finite_european_decimal, normalize_decimal_separators
 from ._errors import RegistryValidationError
 from ._ids import CasillaId, OracleId, validated_casilla_id
 from ._live_parity import (
@@ -421,12 +421,34 @@ def validate_renta_web_open_expected_casilla_values[ExpectedKey](
 
 
 def equivalent_renta_web_open_value(expected: str, observed: str) -> bool:
-    """Return true when dot or comma decimal renderings represent the same number."""
+    """Return true when dot or comma decimal renderings represent the same number.
+
+    A non-finite numeric token is never a parity match, even against an identical
+    string. Declaring ``"NaN"`` equal to ``"NaN"`` would certify a corrupt
+    magnitude as verified against the oracle, which is the one thing a parity
+    gate exists to prevent; the plain string comparison stays for genuinely
+    non-numeric captured text.
+    """
+    if _is_non_finite_numeric_text(expected) or _is_non_finite_numeric_text(observed):
+        return False
     if observed == expected:
         return True
     expected_decimal = _parse_decimal_text(expected)
     observed_decimal = _parse_decimal_text(observed)
     return expected_decimal is not None and observed_decimal is not None and expected_decimal == observed_decimal
+
+
+def _is_non_finite_numeric_text(value: str) -> bool:
+    """Whether the text is a numeric token ``Decimal`` accepts but no amount may carry."""
+    text = value.strip().replace("\xa0", "")
+    if not text:
+        return False
+    if "," in text:
+        text = normalize_decimal_separators(text, strip_thousands=True)
+    try:
+        return not Decimal(text).is_finite()
+    except InvalidOperation:
+        return False
 
 
 def _compare_expected_field(casilla_id: CasillaId, expected: object, *, observed: str | None) -> ParityFieldComparison:
@@ -440,15 +462,20 @@ def _compare_expected_field(casilla_id: CasillaId, expected: object, *, observed
 
 
 def _parse_decimal_text(value: str) -> Decimal | None:
+    """Parse a captured Renta WEB amount, refusing non-finite tokens.
+
+    ``Decimal`` accepts ``"NaN"`` and ``"Infinity"``, so calling it directly let
+    those tokens through as if they were amounts: the parity comparison reported
+    ``Infinity == Infinity`` as a match and replay serialization wrote the token
+    back out as an expectation. Delegating to the canonical
+    :func:`coerce_finite_european_decimal` applies the same ``is_finite()`` gate
+    every other amount boundary uses; the local pre-cleaning only strips the
+    non-breaking spaces the AEAT capture embeds.
+    """
     text = value.strip().replace("\xa0", "")
     if not text:
         return None
-    if "," in text:
-        text = normalize_decimal_separators(text, strip_thousands=True)
-    try:
-        return Decimal(text)
-    except InvalidOperation:
-        return None
+    return coerce_finite_european_decimal(text)
 
 
 def serialize_renta_web_open_replay_decimal(value: str) -> str | None:

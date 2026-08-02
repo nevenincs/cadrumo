@@ -13,6 +13,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
+from pydantic import field_validator
+
+from .._errors import ResourceValidationError
 from .._keys import TypedResourceKey
 from .._repository import ResourceCacheRepository
 
@@ -33,11 +36,39 @@ if TYPE_CHECKING:
 
 
 class ManualKey(TypedResourceKey):
-    """Composite key (manual_id, year, part) for a :class:`Manual` record."""
+    """Composite key (manual_id, year, part) for a :class:`Manual` record.
+
+    ``part`` is stored as text because this key lives in :mod:`core`, which
+    must not import :mod:`domain` at module level. Its value set is still the
+    canonical :class:`~domain.manuals.ManualPart` vocabulary: the validator
+    resolves every declaration through that enum, so an unknown part is
+    refused when the key is built rather than silently rewritten later.
+    """
 
     manual_id: str
     year: int
     part: str = "single"
+
+    @field_validator("part")
+    @classmethod
+    def _part_is_a_known_volume(cls, value: str) -> str:
+        """Reject a part the canonical volume vocabulary does not declare.
+
+        The repository used to swallow the enum's ``ValueError`` and fall back
+        to ``SINGLE``, so a typo'd or stale caller key returned a *valid but
+        different* authoritative manual — the aggregate a reader would then
+        quote regulatory text from. Failing closed at key construction keeps a
+        mis-keyed lookup from ever selecting an authority.
+        """
+        from ....domain.manuals import ManualPart
+
+        try:
+            return str(ManualPart(value))
+        except ValueError as exc:
+            accepted = ", ".join(sorted(part.value for part in ManualPart))
+            raise ResourceValidationError(
+                f"unknown manual part {value!r}; accepted values are: {accepted}",
+            ) from exc
 
     @override
     def __hash__(self) -> int:
@@ -69,10 +100,9 @@ class ManualRepository(ResourceCacheRepository["Manual", ManualKey]):
         from ....domain.manuals import ManualId, ManualPart, load_manual
 
         manual_id = ManualId(key.manual_id)
-        try:
-            part = ManualPart(key.part)
-        except ValueError:
-            part = ManualPart.SINGLE
+        # No fallback: ManualKey already refused any part outside the canonical
+        # vocabulary, so this conversion is total for a constructed key.
+        part = ManualPart(key.part)
         return load_manual(
             manual_id=manual_id,
             year=key.year,

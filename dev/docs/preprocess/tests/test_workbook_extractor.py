@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from .._parts import split_units_by_budget
 from .._schema import (
     ExtractionStatus,
     PreprocessOutput,
@@ -36,7 +37,6 @@ from .._sidecar import (
 from .._workbook import (
     WORKBOOK_EXTRACTOR_ID,
     _render_sheet,
-    _split_units_by_budget,
     build_outputs,
     extract_workbook,
 )
@@ -202,18 +202,65 @@ def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
 
 
 def test_budget_splitter_groups_oversized_units() -> None:
-    """The byte-budget splitter groups units into multiple sidecar parts.
+    """The workbook extractor's grouping runs through the canonical splitter.
 
-    Exercises the splitting mechanism directly with synthetic oversized
-    units (no real corpus workbook is large enough to trigger it), proving
-    that a hypothetical over-cap workbook would split rather than ship an
-    oversized, walker-skipped sidecar.
+    Exercises the shared `_parts.split_units_by_budget` splitter directly
+    with synthetic oversized units (no real corpus workbook is large enough
+    to trigger it), proving that a hypothetical over-cap workbook would
+    split rather than ship an oversized, walker-skipped sidecar, and that
+    `build_outputs` groups through this exact shared helper rather than a
+    private duplicate.
     """
     big = PreprocessUnit(text="x" * (5 * 1024 * 1024))
-    groups = _split_units_by_budget([big, big, big])
+    groups = split_units_by_budget([big, big, big])
     # Three 5 MB units cannot share an 8 MB budget: expect three groups.
     assert len(groups) == 3
     assert all(len(g) == 1 for g in groups)
+
+
+def test_workbook_uses_the_canonical_parts_helpers_not_shadow_copies() -> None:
+    """Anti-duplication proof: the workbook module imports `_parts` by identity.
+
+    If the workbook extractor still carried a private budget-splitter or
+    sidecar-naming re-implementation, its module attribute would be a
+    distinct function object rather than the exact `_parts` helper the PDF
+    extractor also shares.
+    """
+    import dev.docs.preprocess._parts as parts
+    import dev.docs.preprocess._workbook as workbook
+
+    assert workbook.split_units_by_budget is parts.split_units_by_budget
+    assert workbook.stamp_part_anchors is parts.stamp_part_anchors
+    assert workbook.write_part_sidecars is parts.write_part_sidecars
+
+
+def test_workbook_and_pdf_extractors_share_one_budget_and_naming_scheme() -> None:
+    """Workbook and PDF extraction split and name parts through one shared contract.
+
+    Both format extractors delegate multi-part grouping and part naming to
+    the same `_parts` helpers, so an oversized workbook and an oversized PDF
+    split identically rather than each carrying its own drifted budget or
+    naming convention.
+    """
+    import dev.docs.preprocess._pdf as pdf
+    import dev.docs.preprocess._workbook as workbook
+
+    from .._parts import TEXT_BUDGET_BYTES, part_stand_in_path
+
+    assert pdf.split_units_by_budget is workbook.split_units_by_budget
+    assert pdf.stamp_part_anchors is workbook.stamp_part_anchors
+    assert pdf.write_part_sidecars is workbook.write_part_sidecars
+
+    source = Path("DR123e24.xlsx")
+    assert part_stand_in_path(source, 0, 1) == source
+    assert part_stand_in_path(source, 0, 3) == source.with_name("DR123e24.xlsx.part-1")
+    assert part_stand_in_path(source, 1, 3) == source.with_name("DR123e24.xlsx.part-2")
+
+    big = PreprocessUnit(text="x" * (5 * 1024 * 1024))
+    workbook_groups = workbook.stamp_part_anchors(workbook.split_units_by_budget([big, big, big]))
+    pdf_groups = pdf.stamp_part_anchors(pdf.split_units_by_budget([big, big, big]))
+    assert len(workbook_groups) == len(pdf_groups) == 3
+    assert TEXT_BUDGET_BYTES == 8 * 1024 * 1024
 
 
 def test_render_sheet_normalises_and_drops_empty_rows() -> None:

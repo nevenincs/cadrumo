@@ -53,6 +53,14 @@ class WorkUnitCatalogueRepositoryProtocol(Protocol):
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
 
+    def to_secure_object_write(self, catalogue: WorkUnitCatalogue) -> SecureObjectWrite:
+        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it.
+
+        Lets a mutation advance the work-unit pointer inside the same unit of
+        work as the catalogues and lifecycle event the pointer names.
+        """
+        ...
+
 
 @runtime_checkable
 class CalculationRevisionCatalogueRepositoryProtocol(Protocol):

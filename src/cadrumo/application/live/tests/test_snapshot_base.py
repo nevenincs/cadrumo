@@ -521,6 +521,112 @@ def test_secure_snapshot_repository_list_rejects_payload_bucket_mismatch(
     }
 
 
+def _probe_secure_repository(secure_objects: SecureObjectRepository) -> SecureSnapshotRepository[ProbeSnapshot]:
+    """Return a :class:`SecureSnapshotRepository` bound to the probe payload and bucket."""
+    return SecureSnapshotRepository(
+        bucket_id=_BUCKET_ID,
+        payload_model=ProbeSnapshot,
+        namespace_definition=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+        object_key=_probe_object_key,
+        not_found_factory=lambda sid: LiveApplicationInputError(f"probe snapshot {sid!r} not found"),
+        ambiguous_prefix_factory=lambda sid, ids: LiveApplicationInputError(
+            f"probe snapshot prefix {sid!r} is ambiguous",
+        ),
+        domain_label="probe",
+        objects=secure_objects,
+    )
+
+
+def _save_probe_under_key(
+    secure_objects: SecureObjectRepository,
+    snapshot: ProbeSnapshot,
+    *,
+    object_key_snapshot_id: str,
+) -> None:
+    """Persist a valid ``snapshot`` envelope under ``object_key_snapshot_id``'s row key."""
+    envelope = Envelope[ProbeSnapshot](
+        schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
+        written_at=_CAPTURED_AT,
+        classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
+        payload=snapshot,
+    )
+    secure_objects.save(
+        namespace=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.namespace,
+        object_key=_probe_object_key(_BUCKET_ID, object_key_snapshot_id),
+        classification=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.sensitivity,
+        schema_version=TEST_SNAPSHOT_BASE_PROBE_NAMESPACE.schema_version,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode("utf-8"),
+    )
+
+
+def _probe_snapshot(snapshot_id: str) -> ProbeSnapshot:
+    return ProbeSnapshot(
+        snapshot_id=snapshot_id,
+        bucket_id=_BUCKET_ID,
+        axis_label="renta-2025",
+        captured_at=_CAPTURED_AT,
+        payload_text="body",
+        state=SnapshotLifecycleState.ACTIVE,
+    )
+
+
+def test_secure_snapshot_repository_list_returns_a_snapshot_under_its_own_key(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    snapshot = _probe_snapshot("snapshot-a")
+    _save_probe_under_key(secure_objects, snapshot, object_key_snapshot_id="snapshot-a")
+
+    assert _probe_secure_repository(secure_objects).list_snapshots() == (snapshot,)
+
+
+def test_secure_snapshot_repository_list_rejects_a_snapshot_under_a_foreign_key(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A valid snapshot re-encrypted under another snapshot's key must not enumerate.
+
+    ``load`` already refused this row; before the list path re-addressed each
+    record, enumeration returned it and every ``latest``/``resolve`` consumer
+    built on enumeration surfaced the foreign snapshot identity.
+    """
+    foreign = _probe_snapshot("snapshot-b")
+    _save_probe_under_key(secure_objects, foreign, object_key_snapshot_id="snapshot-a")
+    repo = _probe_secure_repository(secure_objects)
+
+    with pytest.raises(LiveApplicationInputError) as exc_info:
+        repo.list_snapshots()
+
+    assert exc_info.value.translated_message == "application.live.snapshot_base.errors.snapshot_key_mismatch"
+    assert exc_info.value.context == {
+        "domain_label": "probe",
+        "snapshot_id": "snapshot-b",
+        "repository_bucket": _BUCKET_ID,
+    }
+
+
+def test_secure_snapshot_repository_targeted_load_of_the_same_row_already_refused_it(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    foreign = _probe_snapshot("snapshot-b")
+    _save_probe_under_key(secure_objects, foreign, object_key_snapshot_id="snapshot-a")
+
+    with pytest.raises(LiveApplicationInputError, match="does not match requested snapshot"):
+        _probe_secure_repository(secure_objects).load("snapshot-a")
+
+
+def test_secure_snapshot_repository_resolve_cannot_read_past_the_refusal(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    foreign = _probe_snapshot("snapshot-b")
+    _save_probe_under_key(secure_objects, foreign, object_key_snapshot_id="snapshot-a")
+    repo = _probe_secure_repository(secure_objects)
+
+    with pytest.raises(LiveApplicationInputError) as exc_info:
+        repo.resolve("snapshot-b")
+
+    assert exc_info.value.translated_message == "application.live.snapshot_base.errors.snapshot_key_mismatch"
+
+
 def test_snapshot_repository_protocol_anti_tautology() -> None:
     """Non-conforming object is not accepted; proves isinstance gate is real."""
 

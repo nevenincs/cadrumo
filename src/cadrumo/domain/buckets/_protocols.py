@@ -14,9 +14,12 @@ services to emit :class:`BucketEvent` history without importing the concrete
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ._event import BucketEventHistoryCatalogue
+
+if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
+    from ...adapters.persistence.storage import SecureObjectWrite
 
 
 @runtime_checkable
@@ -45,6 +48,22 @@ class BucketEventHistoryRepositoryProtocol(Protocol):
 
         Args:
             catalogue: The :class:`BucketEventHistoryCatalogue` to persist.
+        """
+        ...
+
+    def to_secure_object_write(
+        self,
+        catalogue: BucketEventHistoryCatalogue,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
+        """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it.
+
+        The port a caller uses to commit an event in the same unit of work as the
+        state change it records: pair it with
+        :func:`~domain.buckets.build_bucket_event` and
+        :func:`~domain.buckets.append_bucket_event`, then pass the returned write
+        to the owning catalogue repository's ``save_with_secure_object_writes``.
         """
         ...
 

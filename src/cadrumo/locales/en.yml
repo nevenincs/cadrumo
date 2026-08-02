@@ -200,6 +200,8 @@ adapters:
           vault_folder_name_blank: Google Drive vault folder name must not be blank.
           write_non_dict_response: Google Drive write response for {action} had an
             unexpected shape.
+          modified_time_invalid: 'Google Drive returned no usable modification time for this object; its metadata cannot be trusted.'
+          size_invalid: 'Google Drive reported no usable size for this object; its metadata cannot be trusted.'
       local:
         errors:
           byte_length_invalid: Local storage sidecar byte_length has invalid type
@@ -235,6 +237,7 @@ adapters:
           sidecar_write_path_too_long: 'Local storage could not write the object sidecar:
             the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
             to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+          written_at_invalid: 'Local storage sidecar written_at is missing, unparseable, or carries no timezone: {actual_value}.'
   persistence:
     profile:
       assets:
@@ -774,6 +777,7 @@ application:
       errors:
         snapshot_bucket_mismatch: Snapshot payload bucket does not match the repository
           bucket.
+        snapshot_key_mismatch: 'The snapshot is stored under a different snapshot''s key.'
     verify:
       errors:
         bucket_id_blank: Verify bucket id must not be blank.
@@ -785,6 +789,7 @@ application:
         observation_not_found: No verify observation matches the requested id.
         observation_prefix_ambiguous: The verify observation prefix matches multiple
           observations.
+        observation_key_mismatch: 'Verify observation is stored under a different observation''s key.'
   modelo:
     borrador_binding:
       errors:
@@ -1060,6 +1065,8 @@ application:
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
       calculate_typed_text_input_invalid: 'The --casilla value is not valid for that casilla''s declared type.'
+      m036_declaration_profile_bucket_mismatch: 'The M036 declaration names a different profile than the bucket it would be recorded in'
+      filed_observation_split_storage_context: 'The IVA compensation history store is a different database than the calculation observation store'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare
@@ -1359,6 +1366,7 @@ application:
           guide: Guide - protected
           provenance: Provenance / audit trail - protected
           tariffs: Tariffs / active parameters - protected
+          evidencia: 'Generated evidence: read-only'
       layout:
         errors:
           undeclared_reference: The spreadsheet layout references an item not declared
@@ -1453,6 +1461,8 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
+      censal_read_identity_profile_malformed: 'This profile''s fiscal ID is not a valid Spanish tax identifier, so a census read cannot be confirmed to belong to it. Correct the fiscal ID and pull again.'
+      censal_read_identity_read_malformed: 'The census read''s tax identity is not a valid Spanish tax identifier, so it cannot be confirmed to belong to this profile.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -5753,6 +5763,7 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    integrity_apoderado_configuration_identity: 'The stored apoderado configuration does not belong to the profile it was read from.'
   internal:
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report
@@ -6148,6 +6159,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_evidence_bundle_ambiguous: 'The evidence-bundle id prefix matches more than one bundle in this bucket.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -6272,6 +6284,7 @@ flows:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      certificate_incomplete: 'Identification: %{provider}; %{reason} Run: %{next_action}'
     actions:
       section: Actions
     column:

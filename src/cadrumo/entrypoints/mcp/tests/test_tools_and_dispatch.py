@@ -24,10 +24,28 @@ from .._input_schema import (
     build_verb_input_schemas,
     cli_argv_for,
 )
-from .._tools import build_tool_descriptors
+from .._tools import _cli_form, build_tool_descriptors
 from .._toolsets import Toolset, build_toolsets
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_cli_form_uses_the_resolved_config_root_not_a_hardcoded_app_root() -> None:
+    # A config.* verb resolves under the ``config`` CLI root
+    # (aeat-architecture-boundaries: config/app are the only two roots); the
+    # description builder must read that root off the resolved cli_path, never
+    # hardcode ``aeat app`` for every command.
+    config_schema = VerbInputSchema(
+        command_key="config.auth.apoderado.check",
+        cli_path=("config", "auth", "apoderado", "check"),
+    )
+    assert _cli_form(config_schema) == "aeat config auth apoderado check"
+
+    app_schema = VerbInputSchema(
+        command_key="modelo.work.calculate",
+        cli_path=("app", "modelo", "work", "calculate"),
+    )
+    assert _cli_form(app_schema) == "aeat app modelo work calculate"
 
 
 def test_every_exposable_command_has_a_descriptor() -> None:
@@ -58,6 +76,23 @@ def test_every_descriptor_carries_a_per_verb_schema_not_the_args_bag() -> None:
         # The rendered schema is exactly the structured verb schema's projection.
         assert descriptor.input_schema == descriptor.verb_schema.json_schema()
         assert descriptor.verb_schema.command_key == descriptor.command_key
+
+
+def test_description_cli_form_matches_the_resolved_cli_path_for_every_descriptor() -> None:
+    # The description's ``Run `aeat ...`.`` prefix must name the SAME root and
+    # path the dispatcher actually resolves (verb_schema.cli_path), never a
+    # hardcoded ``aeat app`` root re-derived from the dotted command key.
+    for descriptor in build_tool_descriptors():
+        expected_cli_form = "aeat " + " ".join(descriptor.verb_schema.cli_path)
+        assert descriptor.description.startswith(f"Run `{expected_cli_form}`.")
+
+
+def test_config_command_descriptors_advertise_the_config_root_not_app() -> None:
+    config_descriptors = [d for d in build_tool_descriptors() if d.verb_schema.cli_path[0] == "config"]
+    assert config_descriptors, "expected at least one resolved config.* descriptor"
+    for descriptor in config_descriptors:
+        assert descriptor.description.startswith("Run `aeat config ")
+        assert "aeat app config" not in descriptor.description
 
 
 def test_mutability_projects_onto_annotations() -> None:

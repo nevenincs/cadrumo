@@ -245,6 +245,42 @@ def test_parse_decimal_text_handles_spanish_locale_and_invalid_inputs() -> None:
         assert _parse_decimal_text(raw) == expected, raw
 
 
+@pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity", "sNaN", "  Infinity  "])
+def test_parse_decimal_text_refuses_non_finite_tokens(token: str) -> None:
+    """``Decimal`` accepts these; no captured tax amount may carry them.
+
+    Calling ``Decimal`` directly let the tokens through as if they were amounts,
+    so the parser now routes through the canonical finite coercion.
+    """
+    assert _parse_decimal_text(token) is None
+
+
+@pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity"])
+def test_non_finite_tokens_are_never_a_parity_match(token: str) -> None:
+    """Identical non-finite strings must not certify a corrupt magnitude."""
+    assert equivalent_renta_web_open_value(token, token) is False
+    assert equivalent_renta_web_open_value("1234.56", token) is False
+    assert equivalent_renta_web_open_value(token, "1234.56") is False
+
+
+@pytest.mark.parametrize("token", ["NaN", "Infinity", "-Infinity"])
+def test_replay_serialization_never_emits_a_non_finite_token(token: str) -> None:
+    """A refused amount must not be written back out as a replay expectation."""
+    assert serialize_renta_web_open_replay_decimal(token) is None
+
+
+def test_finite_locale_controls_survive_the_non_finite_refusal() -> None:
+    """The positive control: the refusal must not narrow ordinary parsing.
+
+    Without this, every refusal above would still pass if the parser had simply
+    stopped accepting amounts altogether.
+    """
+    assert _parse_decimal_text("1.234,56") == Decimal("1234.56")
+    assert _parse_decimal_text("1\xa0234,56") == Decimal("1234.56")
+    assert equivalent_renta_web_open_value("5550.00", "5.550,00") is True
+    assert serialize_renta_web_open_replay_decimal("5.550,00") == "5550.00"
+
+
 def test_replay_decimal_serialization_reuses_production_parser_rules() -> None:
     """Capture expectations retain the same NBSP, blank, and malformed policy as replay."""
     for raw, expected in (

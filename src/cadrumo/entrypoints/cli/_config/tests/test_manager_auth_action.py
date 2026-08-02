@@ -397,9 +397,10 @@ def test_committing_writes_the_auth_section_into_the_encrypted_profile() -> None
         _AUTH_SOPORTE_PATH: "ABC123456",
         _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
     }
-    chosen = _commit_auth_choice(answer)
+    chosen, configure_result = _commit_auth_choice(answer)
 
     assert chosen == "", "no certificate was offered, so none can have been selected"
+    assert configure_result.provider == AuthProviderKind.CLAVE_MOVIL.value
     assert _auth_facts() == {
         _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
         _AUTH_DNI_NIE_PATH: "00000000T",
@@ -622,4 +623,55 @@ def test_the_certificate_is_selected_before_the_provider_is_activated(tmp_path: 
     source = inspect.getsource(_manager_actions._commit_auth_choice)
     assert source.index("select_operator_certificate_source(") < source.index("configure_operator_auth("), (
         "the source order is the second wall behind the event order"
+    )
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_run_certificate_surfaces_the_repair_command_when_no_file_is_configured() -> None:
+    """An incomplete certificate configuration must name the repair command, not just "done".
+
+    ``configure_operator_auth`` already computes ``complete=False``, a
+    missing-file reason, and a concrete ``next_action`` (``aeat config
+    auth configure --provider certificate --file PATH``) for this case;
+    the manager action must surface it rather than rendering the generic
+    "active certificate: -" message the direct CLI uses only for the
+    operationally-complete case.
+    """
+    outcome = _run_certificate(
+        lambda _page: _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CERTIFICATE.value}),
+    )
+
+    assert tr("application.auth.operator.errors.certificate_file_required") in outcome.message
+    assert "aeat config auth configure --provider certificate --file PATH" in outcome.message
+    assert outcome.message != tr(
+        "flows.manager.action.certificate_done",
+        name="-",
+        provider=AuthProviderKind.CERTIFICATE.value,
+    )
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_run_certificate_reports_the_provider_as_done_when_operationally_complete() -> None:
+    """An operationally-complete provider (any non-certificate provider) reaches the "done" message.
+
+    The certificate provider is never operationally complete through this
+    manager door today (the selected certificate *source* is read directly
+    by the credential resolver rather than mirrored into the ``--file``
+    completeness check), so the parity case for "valid" uses the Cl@ve
+    Móvil provider, which ``configure_operator_auth`` reports complete
+    unconditionally.
+    """
+    outcome = _run_certificate(
+        lambda _page: _answer(
+            **{
+                _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+                _AUTH_DNI_NIE_PATH: "00000000T",
+            },
+        ),
+    )
+
+    assert outcome.message == tr(
+        "flows.manager.action.certificate_done",
+        name="-",
+        provider=AuthProviderKind.CLAVE_MOVIL.value,
     )

@@ -108,6 +108,50 @@ def _parse_sidecar_byte_length(value: object) -> int:
     return byte_length
 
 
+def _parse_sidecar_written_at(value: object) -> datetime:
+    """Return the sidecar's persisted write instant, or classify corruption.
+
+    ``get`` and ``iter_objects`` each parsed this field with their own copy of
+    the same three lines, and both substituted ``now()`` when the value was
+    missing or unparseable. That turned immutable storage corruption into
+    apparently fresh metadata, and — because the two surfaces call the clock at
+    different instants — made the SAME object report two different write times
+    depending on which one an operator read it through. The payload stayed
+    intact while its chronology silently did not, so nothing downstream could
+    learn the sidecar had been damaged.
+
+    A tz-naive value is refused rather than assumed UTC. The writer stores an
+    aware instant, so a naive one is damage; reading it as UTC would recover a
+    wrong instant wherever the writer was not on UTC, which is the same silent
+    substitution in a smaller disguise.
+
+    Raises:
+        :class:`StorageCorruptionError`: When the field is absent, is not a
+            string, does not parse, or carries no timezone.
+    """
+    if not isinstance(value, str) or not value.strip():
+        raise StorageCorruptionError(
+            f"sidecar written_at is absent or not a string: {value!r}",
+            context={"actual_value": repr(value)},
+            translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+        )
+    try:
+        written_at = datetime.fromisoformat(value)
+    except ValueError:
+        raise StorageCorruptionError(
+            f"sidecar written_at is not an ISO-8601 instant: {value!r}",
+            context={"actual_value": value},
+            translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+        ) from None
+    if written_at.tzinfo is None or written_at.tzinfo.utcoffset(written_at) is None:
+        raise StorageCorruptionError(
+            f"sidecar written_at carries no timezone: {value!r}",
+            context={"actual_value": value},
+            translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
+        )
+    return written_at
+
+
 class LocalFileSystemProvider:
     """Bytes-in / bytes-out provider backed by a :class:`pathlib.Path` tree."""
 
@@ -335,7 +379,8 @@ class LocalFileSystemProvider:
             :class:`OutboundStoragePermissionError`: When the object file
                 cannot be read due to OS permissions.
             :class:`StorageCorruptionError`: When the sidecar ``byte_length``
-                field has an unexpected type.
+                field has an unexpected type, or its ``written_at`` is absent,
+                unparseable, or tz-naive.
             :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` fail format checks.
         """
@@ -380,11 +425,7 @@ class LocalFileSystemProvider:
             translated_message="adapters.outbound.storage.local.errors.content_hash_mismatch",
         )
 
-        written_at_raw = str(sidecar.get("written_at", ""))
-        try:
-            written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else now()
-        except ValueError:
-            written_at = now()
+        written_at = _parse_sidecar_written_at(sidecar.get("written_at"))
 
         byte_length = _parse_sidecar_byte_length(sidecar.get("byte_length"))
         verify_payload_byte_length(
@@ -405,12 +446,34 @@ class LocalFileSystemProvider:
         return payload, metadata
 
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
-        """Remove the object file and its sidecar from disk.
+        """Remove the object file and its sidecar from disk, or neither.
 
         Returns ``False`` immediately when the object is absent; deleting a
         non-existent object is idempotent.  The sidecar is removed with
         ``missing_ok=True`` so a pre-existing orphaned payload without a
         sidecar is still cleanly deleted.
+
+        A failure leaves the PAIR, never half of it. The payload used to be
+        unlinked first and the sidecar second, so a sidecar cleanup that failed
+        after the payload was already gone raised while leaving nothing to
+        retry: ``iter_objects`` no longer reported the object, ``get`` could
+        not read it, and the orphaned sidecar path then blocked a re-``put``
+        under the same key. The object was un-deletable, un-readable and
+        un-writable at once.
+
+        Two changes make the failure recoverable. The sidecar goes first, so a
+        refusal there removes nothing at all. And its bytes are read before
+        that removal, so a payload unlink that then fails can put the sidecar
+        back — the sidecar is metadata this method already holds, whereas the
+        payload is not something it could restore. Either way the retry that
+        follows sees the same state the caller started from.
+
+        Both unlinks are guarded on ``OSError`` rather than ``PermissionError``
+        alone: the ways a filesystem refuses to remove a path are not one
+        errno, and on some platforms an unlink of a directory-shaped sidecar
+        raises :exc:`IsADirectoryError`, which is not a
+        :exc:`PermissionError`. A narrower catch let exactly the corruption
+        shape above escape untranslated.
 
         Args:
             namespace: Logical bucket name.
@@ -421,8 +484,8 @@ class LocalFileSystemProvider:
             was already absent.
 
         Raises:
-            :class:`OutboundStoragePermissionError`: When the OS refuses the
-                ``unlink`` call.
+            :class:`OutboundStoragePermissionError`: When the OS refuses to
+                read or remove either half of the pair.
             :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` fail format checks.
         """
@@ -433,16 +496,55 @@ class LocalFileSystemProvider:
         if target_path is None:
             return False
         sidecar_path = target_path.with_name(target_path.stem + _SIDECAR_EXTENSION)
+
+        sidecar_backup: str | None = None
+        if sidecar_path.is_file():
+            try:
+                sidecar_backup = sidecar_path.read_text(encoding=UTF_8_ENCODING)
+            except OSError as exc:
+                raise OutboundStoragePermissionError(
+                    f"cannot read sidecar {sidecar_path} before deleting object {target_path}: {exc}",
+                    context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
+                    translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
+                ) from None
+
         try:
-            target_path.unlink()
             sidecar_path.unlink(missing_ok=True)
-        except PermissionError as exc:
+        except OSError as exc:
+            raise OutboundStoragePermissionError(
+                f"cannot delete sidecar {sidecar_path}: {exc}",
+                context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
+                translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
+            ) from None
+
+        try:
+            target_path.unlink(missing_ok=True)
+        except OSError as exc:
+            self._restore_sidecar(sidecar_path, sidecar_backup)
             raise OutboundStoragePermissionError(
                 f"cannot delete object {target_path}: {exc}",
-                context={"path": str(target_path)},
+                context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
             ) from None
         return True
+
+    @staticmethod
+    def _restore_sidecar(sidecar_path: Path, contents: str | None) -> None:
+        """Put a removed sidecar back after its partner's unlink failed.
+
+        Best-effort by necessity: this runs while an error is already on its
+        way out, and a restore that raised would replace the operator's real
+        failure with a second one. A failure here is logged and leaves the
+        payload orphaned — the state ``get`` already reports as corrupt and
+        ``iter_objects`` already skips, which is strictly better than the
+        vanished-object state this whole path exists to avoid.
+        """
+        if contents is None:
+            return
+        try:
+            atomic_write_text(sidecar_path, contents, encoding=UTF_8_ENCODING)
+        except OSError:
+            _logger.exception("delete: could not restore sidecar %s after a failed payload unlink", sidecar_path)
 
     def iter_namespaces(self) -> Iterator[str]:
         """Yield the name of every namespace subdirectory under ``root``.
@@ -478,7 +580,8 @@ class LocalFileSystemProvider:
             :class:`OutboundStorageIntegrityError`: When a sidecar file is
                 unreadable or contains non-JSON content.
             :class:`StorageCorruptionError`: When a sidecar ``byte_length``
-                field has an unexpected type.
+                field has an unexpected type, or a ``written_at`` is absent,
+                unparseable, or tz-naive.
             :class:`OutboundStorageValidationError`: When ``namespace`` fails
                 format checks.
         """
@@ -499,11 +602,7 @@ class LocalFileSystemProvider:
                 # classifier surfaces it as an integrity issue elsewhere.
                 continue
             sidecar = self._load_sidecar(sidecar_path)
-            written_at_raw = str(sidecar.get("written_at", ""))
-            try:
-                written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else now()
-            except ValueError:
-                written_at = now()
+            written_at = _parse_sidecar_written_at(sidecar.get("written_at"))
             byte_length = _parse_sidecar_byte_length(sidecar.get("byte_length"))
             yield ProviderObjectMetadata(
                 namespace=namespace_clean,

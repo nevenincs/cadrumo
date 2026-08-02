@@ -36,9 +36,13 @@ def test_wrap_dek_raises_encryption_error_for_short_dek() -> None:
 
 
 def test_wrap_dek_raises_encryption_error_for_empty_bucket_id() -> None:
-    """_dek_wrap.py:49 (_associated_data) — empty bucket_id raises EncryptionError."""
+    """``_associated_data`` — an empty bucket_id raises EncryptionError.
 
-    with pytest.raises(EncryptionError, match="bucket_id must be non-empty"):
+    Empty is one member of the wider noncanonical set the identity boundary
+    now refuses; the full set is exercised in ``test_dek_wrap_bucket_identity``.
+    """
+
+    with pytest.raises(EncryptionError, match="bucket_id must be a canonical bucket identity"):
         wrap_dek(kek=_VALID_KEK, dek=_VALID_DEK, bucket_id="")
 
 

@@ -46,6 +46,7 @@ import shutil
 import subprocess
 import tomllib
 import zipfile
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
@@ -55,7 +56,12 @@ from pydantic import ValidationError
 from cadrumo.core import PRODUCT_IDENTITY
 from dev.docs.download_matrix import load_descriptor, required_evidence_rows
 from dev.packaging.cohort_manifest import load_release_cohort
-from dev.packaging.evidence import EvidenceStatus, PackagingSmokeManifest, load_distribution_evidence
+from dev.packaging.evidence import (
+    DistributionEvidence,
+    EvidenceStatus,
+    PackagingSmokeManifest,
+    load_distribution_evidence,
+)
 
 _UTF_8: Final = "utf-8"
 _VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
@@ -383,6 +389,60 @@ def _checked_out_commit(repo_root: Path) -> str:
     return commit
 
 
+def _passing_identity(record: DistributionEvidence) -> tuple[object, ...]:
+    """The subset of a passing record's identity that must agree across re-runs.
+
+    Excludes fields expected to legitimately vary across independent re-runs
+    of the identical row (``evidence_id``, ``observed_at``, ``commands``, the
+    ephemeral ``destination.locator``) so a routine re-run is never mistaken
+    for a conflict; keeps the fields that would signal a genuinely different
+    row occupant -- which platform ran it, which client claims it, what kind
+    of destination it targets.
+    """
+    client = record.client
+    return (
+        record.runtime.operating_system,
+        record.runtime.architecture,
+        client.name if client is not None else None,
+        client.version if client is not None else None,
+        client.executable if client is not None else None,
+        record.destination.kind,
+    )
+
+
+def _select_canonical_passing_evidence(
+    records: Sequence[DistributionEvidence],
+) -> tuple[dict[str, DistributionEvidence], tuple[str, ...]]:
+    """Pick one canonical passing record per row_id, or report conflicts.
+
+    The evidence writer intentionally permits distinct immutable files for
+    the same row (a re-run never overwrites a prior capture), so more than
+    one passing record per ``row_id`` is an expected, legitimate shape as
+    long as every record agrees on :func:`_passing_identity`; the most
+    recently observed one is then canonical. Two passing records
+    disagreeing on that identity are a genuine ambiguity -- which platform,
+    which client -- and must block rather than silently collapse into a
+    bare ``row_id`` set.
+    """
+    by_row: dict[str, list[DistributionEvidence]] = {}
+    for record in records:
+        if record.result.status is EvidenceStatus.PASSED:
+            by_row.setdefault(record.row_id, []).append(record)
+
+    canonical: dict[str, DistributionEvidence] = {}
+    conflicts: list[str] = []
+    for row_id, group in sorted(by_row.items()):
+        identities = {_passing_identity(record) for record in group}
+        if len(identities) > 1:
+            conflicting_ids = sorted(record.evidence_id for record in group)
+            conflicts.append(
+                f"{row_id} ({len(group)} passing records, {len(identities)} distinct identities): {conflicting_ids!r}",
+            )
+            continue
+        canonical[row_id] = max(group, key=lambda record: record.observed_at)
+    return canonical, tuple(conflicts)
+
+
 def check_distribution_evidence_set(
     repo_root: Path,
     *,
@@ -453,7 +513,17 @@ def check_distribution_evidence_set(
             f"cohort has failed distribution rows: {failed!r}",
         )
 
-    passed_rows = {record.row_id for record in records if record.result.status is EvidenceStatus.PASSED}
+    canonical_passing, conflicts = _select_canonical_passing_evidence(records)
+    if conflicts:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            "conflicting passing evidence for the same row (runtime/client/destination "
+            f"disagree): {'; '.join(conflicts)}",
+        )
+
+    passed_rows = set(canonical_passing)
     missing = sorted(set(required_rows) - passed_rows)
     if missing:
         return ReadinessCheck(
@@ -464,7 +534,9 @@ def check_distribution_evidence_set(
         )
 
     clients_missing_identity = sorted(
-        record.row_id for record in records if record.row_id in _CLIENT_DISTRIBUTION_ROWS and record.client is None
+        row_id
+        for row_id, record in canonical_passing.items()
+        if row_id in _CLIENT_DISTRIBUTION_ROWS and record.client is None
     )
     if clients_missing_identity:
         return ReadinessCheck(

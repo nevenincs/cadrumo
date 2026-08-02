@@ -35,13 +35,14 @@ from __future__ import annotations
 
 import io
 from collections.abc import Iterator
+from datetime import datetime
 from typing import Any
 
 from ....core.config import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME, load_settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
-from ....core.time import now, parse_iso_datetime
+from ....core.time import parse_iso_datetime
 from ._drive_pagination import next_drive_page_token
 from ._errors import (
     OutboundStorageConflictError,
@@ -929,6 +930,97 @@ def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRI
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-DRIVE-ENTRY: raw Google Drive API file
 # resource (untyped googleapiclient dict); narrowed via explicit key access.
+def _parse_drive_size(value: object, *, provider_object_id: str) -> int:
+    """Return the byte length Drive reported, or refuse the response.
+
+    The coercion here used to catch every ``TypeError``/``ValueError`` and
+    substitute ``0``, so a malformed remote ``size`` asserted a zero-byte
+    contract that nothing downstream re-tested. ``get`` compares the
+    DOWNLOADED payload's length against this value, so the two agreed
+    trivially for an empty object and the malformed response passed clean;
+    ``iter_objects`` downloads nothing at all and so had no second opinion to
+    offer. An operator reading either surface saw a confident ``0``.
+
+    Drive sends ``size`` as a decimal string for binary content, which is the
+    only shape this adapter's own objects take: every object it writes is an
+    uploaded blob, never a native Google document (the file kind whose size
+    Drive genuinely omits). A value that is absent, non-numeric, or negative
+    is therefore a broken response rather than a variation to absorb.
+
+    Raises:
+        :class:`adapters.outbound.storage.OutboundStorageIntegrityError`: When
+            the field is absent, is not an integer or a decimal string, or is
+            negative.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise OutboundStorageIntegrityError(
+            "drive object metadata carries no usable size",
+            context={"provider_object_id": provider_object_id, "actual_value": repr(value)},
+            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+        )
+    try:
+        byte_length = int(value)
+    except ValueError:
+        raise OutboundStorageIntegrityError(
+            "drive object size is not an integer",
+            context={"provider_object_id": provider_object_id, "actual_value": str(value)},
+            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+        ) from None
+    if byte_length < 0:
+        raise OutboundStorageIntegrityError(
+            "drive object size is negative",
+            context={"provider_object_id": provider_object_id, "actual_value": str(value)},
+            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+        )
+    return byte_length
+
+
+def _parse_drive_modified_time(value: object, *, provider_object_id: str) -> datetime:
+    """Return the write instant Drive reported, or refuse the response.
+
+    A missing or unparseable ``modifiedTime`` used to fall back to ``now()``,
+    so an upstream metadata corruption was reported as a freshly written
+    object. ``get`` and ``iter_objects`` are two separate Drive calls made at
+    two different instants, so the same object then exposed two different
+    ``written_at`` values depending on which surface an operator read it
+    through — the remote analogue of the local sidecar-timestamp failure, and
+    just as invisible while the payload itself stayed intact.
+
+    Drive is asked for ``modifiedTime`` on every read that builds metadata and
+    always returns it as an RFC 3339 instant for a real file, so an absent or
+    malformed one is not a variation this adapter should absorb: it is a
+    response that does not meet the storage metadata contract, and the caller
+    is better served by being told than by a plausible wrong answer. A
+    tz-naive value is refused for the same reason rather than assumed UTC.
+
+    Raises:
+        :class:`adapters.outbound.storage.OutboundStorageIntegrityError`: When
+            the field is absent, is not a string, does not parse, or carries
+            no timezone.
+    """
+    if not isinstance(value, str) or not value.strip():
+        raise OutboundStorageIntegrityError(
+            "drive object metadata carries no modifiedTime",
+            context={"provider_object_id": provider_object_id, "actual_value": repr(value)},
+            translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
+        )
+    try:
+        written_at = parse_iso_datetime(value)
+    except ValueError:
+        raise OutboundStorageIntegrityError(
+            "drive object modifiedTime is not an RFC 3339 instant",
+            context={"provider_object_id": provider_object_id, "actual_value": value},
+            translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
+        ) from None
+    if written_at.tzinfo is None or written_at.tzinfo.utcoffset(written_at) is None:
+        raise OutboundStorageIntegrityError(
+            "drive object modifiedTime carries no timezone",
+            context={"provider_object_id": provider_object_id, "actual_value": value},
+            translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
+        )
+    return written_at
+
+
 def _metadata_from_drive_entry(
     entry: dict[str, Any],
     *,
@@ -936,16 +1028,9 @@ def _metadata_from_drive_entry(
     object_key_hmac: str,
 ) -> ProviderObjectMetadata:
     """Convert a Drive ``files().get/list`` response into :class:`ProviderObjectMetadata`."""
-    byte_length_raw = entry.get("size", 0)
-    try:
-        byte_length = int(byte_length_raw) if byte_length_raw is not None else 0
-    except (TypeError, ValueError):
-        byte_length = 0
-    modified = entry.get("modifiedTime", "")
-    try:
-        written_at = parse_iso_datetime(str(modified)) if modified else now()
-    except ValueError:
-        written_at = now()
+    provider_object_id = str(entry.get("id", ""))
+    byte_length = _parse_drive_size(entry.get("size"), provider_object_id=provider_object_id)
+    written_at = _parse_drive_modified_time(entry.get("modifiedTime"), provider_object_id=provider_object_id)
 
     app_properties = entry.get("appProperties") or {}
     content_hash = str(app_properties.get("content_hash", "") or "")
@@ -957,7 +1042,7 @@ def _metadata_from_drive_entry(
         namespace=namespace,
         object_key_hmac=object_key_hmac,
         provider_object_id=str(entry.get("id", "")),
-        byte_length=max(byte_length, 0),
+        byte_length=byte_length,
         content_hash=content_hash,
         written_at=written_at,
     )

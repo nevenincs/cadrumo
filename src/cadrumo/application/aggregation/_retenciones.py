@@ -24,6 +24,8 @@ from pydantic import BaseModel, Field, InstanceOf, field_validator, model_valida
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Modelo, Period
 from ...core.aggregation import RetencionScheme
+from ...core.identity import TaxIdIdentityToken
+from ...core.parsing import IsoDateString
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 
 _CANONICAL_SOURCE_KINDS: tuple[BindingSourceKind, ...] = (
@@ -58,18 +60,33 @@ class RetencionObservation(BaseModel):
     ``invoice`` source bindings are forbidden at the registry domain
     layer; observations originating from invoice records carry one of
     ``payable_invoice`` / ``collectible_invoice`` instead.
+
+    ``perceptor_nif`` is normalised to its canonical identity token on
+    construction, so the identity this aggregator groups by is the identity
+    the encrypted per-perceptor store keys by. Holding the raw declaration
+    here split the two: the repository trimmed and uppercased the NIF before
+    hashing it into the object key, so two canonically-equal declarations
+    produced two rollups and two perceptors in the count while sharing one
+    stored row -- the later write overwriting the earlier evidence for a
+    perceptor the declaration still counts twice.
+
+    ``accrued_on`` is admitted by the canonical date authority. A ten-character
+    length bound is not a date check: ``2026-99-99`` and ``2026-02-30`` both
+    satisfy it, and the aggregators then summed and counted a row whose accrual
+    date does not exist, with the encrypted store persisting it as declared
+    evidence.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     source_kind: BindingSourceKind
     source_object_id: str = Field(min_length=1)
-    perceptor_nif: str = Field(min_length=1, max_length=16)
+    perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
     perceptor_name: str = Field(default="", max_length=200)
     scheme: RetencionScheme
     taxable_base: Decimal = Field(ge=Decimal("0"))
     retencion_amount: Decimal = Field(ge=Decimal("0"))
-    accrued_on: str = Field(min_length=10, max_length=10)  # ISO YYYY-MM-DD
+    accrued_on: IsoDateString = Field(min_length=10, max_length=10)
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -83,7 +100,7 @@ class RetencionPerceptorRollup(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_kind: BindingSourceKind
-    perceptor_nif: str = Field(min_length=1, max_length=16)
+    perceptor_nif: TaxIdIdentityToken = Field(min_length=1, max_length=16)
     perceptor_name: str = Field(default="", max_length=200)
     scheme: RetencionScheme
     observations_count: int = Field(ge=0)

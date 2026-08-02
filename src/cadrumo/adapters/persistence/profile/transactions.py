@@ -56,6 +56,7 @@ from __future__ import annotations
 import json
 import weakref
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
@@ -76,6 +77,8 @@ from ....domain.transactions import (
     StoredTransactionDriftError,
     Transaction,
     TransactionCatalogue,
+    transaction_eligible_date_span,
+    transaction_filing_date,
     transaction_index_object_key,
     transaction_object_key,
 )
@@ -154,15 +157,32 @@ def _decode_persisted_transaction_row(payload: bytes) -> dict[str, object] | Non
     return decoded if isinstance(decoded, dict) else None
 
 
-def _filing_date(transaction: Transaction) -> date:
-    """Return the date every ledger aggregator filters on: ``value_date`` or ``booked_date``.
+@dataclass(frozen=True, slots=True)
+class _IndexedTransactionDates:
+    """The plaintext routing dates one :class:`TransactionDateIndexRow` records.
 
-    Mirrors the convention already applied independently by every
-    period-scoped ledger aggregator (:mod:`~application.aggregation`), so the
-    plaintext date index keys on the SAME date the encrypted-scan aggregation
-    path would have filtered on.
+    Groups the filing date with the inclusive eligible-observation span so a
+    row's index state is compared and written as one value: a change to
+    either axis rewrites the row, and an unchanged row is left untouched.
     """
-    return transaction.raw.value_date or transaction.raw.booked_date
+
+    filing_date: date
+    eligible_from: date
+    eligible_to: date
+
+    @classmethod
+    def for_transaction(cls, transaction: Transaction) -> _IndexedTransactionDates:
+        """Project one transaction's routing dates through the domain date owners."""
+        eligible_from, eligible_to = transaction_eligible_date_span(transaction)
+        return cls(
+            filing_date=transaction_filing_date(transaction),
+            eligible_from=eligible_from,
+            eligible_to=eligible_to,
+        )
+
+    def overlaps(self, start: date, end: date) -> bool:
+        """Return whether this row can file an observation inside ``[start, end]``."""
+        return self.eligible_from <= end and self.eligible_to >= start
 
 
 def _validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> None:
@@ -428,7 +448,9 @@ class TransactionCatalogueRepository:
             # plaintext index being present or fresh.
             full_catalogue = self.load()
             return TransactionCatalogue.from_transactions(
-                transaction for transaction in full_catalogue.values() if start <= _filing_date(transaction) <= end
+                transaction
+                for transaction in full_catalogue.values()
+                if start <= transaction_filing_date(transaction) <= end
             )
 
         transactions = self._load_transactions_by_ids(candidate_ids, read_context="date-range read")
@@ -460,12 +482,18 @@ class TransactionCatalogueRepository:
         (``ledger-participation-index-is-derived-rebuildable``): a stale index
         costs a slower read, never a silent drop from either half.
 
-        Both paths return the identical :class:`~domain.transactions.LedgerDatePartition`
-        shape; ``index_complete`` records which path served the read.
+        Membership in the in-window half is decided by OVERLAP against each
+        row's :func:`~domain.transactions.transaction_eligible_date_span`, not
+        by its filing date. A consuming aggregator applies its own tax-timing
+        gate to the decrypted rows, so this half is a candidate superset: a row
+        booked in one quarter that carries an IVA criterio-de-caja devengo or
+        collection date in another is decrypted and offered to the aggregator
+        rather than reported out-of-window undecrypted, which would drop its
+        observation with no diagnostic. Both halves stay disjoint and total.
 
         Args:
-            start: Inclusive lower bound of the filing-date window.
-            end: Inclusive upper bound of the filing-date window.
+            start: Inclusive lower bound of the observation-date window.
+            end: Inclusive upper bound of the observation-date window.
 
         Returns:
             The :class:`~domain.transactions.LedgerDatePartition` for ``[start, end]``.
@@ -488,14 +516,14 @@ class TransactionCatalogueRepository:
             in_window: list[Transaction] = []
             out_of_window: list[OutOfWindowTransactionIndexEntry] = []
             for transaction in full_catalogue.values():
-                filing_date = _filing_date(transaction)
-                if start <= filing_date <= end:
+                dates = _IndexedTransactionDates.for_transaction(transaction)
+                if dates.overlaps(start, end):
                     in_window.append(transaction)
                 else:
                     out_of_window.append(
                         OutOfWindowTransactionIndexEntry(
                             transaction_id=transaction.transaction_id,
-                            filing_date=filing_date,
+                            filing_date=dates.filing_date,
                         ),
                     )
             _log.debug(
@@ -514,14 +542,12 @@ class TransactionCatalogueRepository:
                 index_complete=False,
             )
 
-        in_window_ids = {
-            transaction_id for transaction_id, filing_date in index_rows.items() if start <= filing_date <= end
-        }
+        in_window_ids = {transaction_id for transaction_id, dates in index_rows.items() if dates.overlaps(start, end)}
         transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
 
         out_of_window_index_entries = tuple(
-            OutOfWindowTransactionIndexEntry(transaction_id=transaction_id, filing_date=filing_date)
-            for transaction_id, filing_date in sorted(index_rows.items())
+            OutOfWindowTransactionIndexEntry(transaction_id=transaction_id, filing_date=dates.filing_date)
+            for transaction_id, dates in sorted(index_rows.items())
             if transaction_id not in in_window_ids
         )
         _log.debug(
@@ -580,16 +606,25 @@ class TransactionCatalogueRepository:
             if transaction_id in transactions_by_id
         ]
 
-    def _all_date_index_rows(self) -> dict[str, date]:
-        """Return every ``{transaction_id: filing_date}`` this bucket's date index records."""
+    def _all_date_index_rows(self) -> dict[str, _IndexedTransactionDates]:
+        """Return every ``{transaction_id: routing dates}`` this bucket's date index records."""
         with session_scope(self._objects.engine) as session:
             rows = session.execute(
                 select(
                     _orm.TransactionDateIndexRow.transaction_id,
                     _orm.TransactionDateIndexRow.filing_date,
+                    _orm.TransactionDateIndexRow.eligible_from,
+                    _orm.TransactionDateIndexRow.eligible_to,
                 ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
             ).all()
-            return {str(transaction_id): filing_date for transaction_id, filing_date in rows}
+            return {
+                str(transaction_id): _IndexedTransactionDates(
+                    filing_date=filing_date,
+                    eligible_from=eligible_from,
+                    eligible_to=eligible_to,
+                )
+                for transaction_id, filing_date, eligible_from, eligible_to in rows
+            }
 
     def rebuild_date_index(self) -> int:
         """Rebuild this bucket's plaintext date index from the encrypted catalogue.
@@ -655,8 +690,9 @@ class TransactionCatalogueRepository:
         filing date, filing year) -- never an amount, counterparty,
         description, or any other financial content.
         """
-        incoming: dict[str, date] = {
-            transaction_id: _filing_date(transaction) for transaction_id, transaction in catalogue.transactions.items()
+        incoming: dict[str, _IndexedTransactionDates] = {
+            transaction_id: _IndexedTransactionDates.for_transaction(transaction)
+            for transaction_id, transaction in catalogue.transactions.items()
         }
 
         with session_scope(self._objects.engine) as session:
@@ -665,10 +701,20 @@ class TransactionCatalogueRepository:
                     _orm.TransactionDateIndexRow.id,
                     _orm.TransactionDateIndexRow.transaction_id,
                     _orm.TransactionDateIndexRow.filing_date,
+                    _orm.TransactionDateIndexRow.eligible_from,
+                    _orm.TransactionDateIndexRow.eligible_to,
                 ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
             ).all()
-            existing: dict[str, tuple[int, date]] = {
-                transaction_id: (row_id, filing_date) for row_id, transaction_id, filing_date in existing_rows
+            existing: dict[str, tuple[int, _IndexedTransactionDates]] = {
+                transaction_id: (
+                    row_id,
+                    _IndexedTransactionDates(
+                        filing_date=filing_date,
+                        eligible_from=eligible_from,
+                        eligible_to=eligible_to,
+                    ),
+                )
+                for row_id, transaction_id, filing_date, eligible_from, eligible_to in existing_rows
             }
 
             stale_ids = set(existing) - set(incoming)
@@ -681,23 +727,30 @@ class TransactionCatalogueRepository:
                 )
 
             new_rows: list[_orm.TransactionDateIndexRow] = []
-            for transaction_id, filing_date in incoming.items():
+            for transaction_id, dates in incoming.items():
                 current = existing.get(transaction_id)
-                if current is not None and current[1] == filing_date:
+                if current is not None and current[1] == dates:
                     continue  # unchanged: leave the existing row untouched
                 if current is not None:
                     session.execute(
                         update(_orm.TransactionDateIndexRow)
                         .where(_orm.TransactionDateIndexRow.id == current[0])
-                        .values(filing_date=filing_date, filing_year=filing_date.year),
+                        .values(
+                            filing_date=dates.filing_date,
+                            filing_year=dates.filing_date.year,
+                            eligible_from=dates.eligible_from,
+                            eligible_to=dates.eligible_to,
+                        ),
                     )
                     continue
                 new_rows.append(
                     _orm.TransactionDateIndexRow(
                         bucket_id=self._bucket_id,
                         transaction_id=transaction_id,
-                        filing_date=filing_date,
-                        filing_year=filing_date.year,
+                        filing_date=dates.filing_date,
+                        filing_year=dates.filing_date.year,
+                        eligible_from=dates.eligible_from,
+                        eligible_to=dates.eligible_to,
                     ),
                 )
             if new_rows:

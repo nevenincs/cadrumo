@@ -21,16 +21,9 @@ family.
 
 from __future__ import annotations
 
-from typing import Annotated
+from .._hex import Hex64Str
 
-from pydantic import StringConstraints
-
-_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
-
-SnapshotId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
+SnapshotId = Hex64Str
 """Hex-64 content-addressed snapshot identity."""
 
 __all__ = ("SnapshotId",)

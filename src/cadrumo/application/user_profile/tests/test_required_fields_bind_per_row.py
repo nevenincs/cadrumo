@@ -134,15 +134,26 @@ def test_the_enforcing_and_displayed_surfaces_agree() -> None:
     )
 
 
-def test_presence_is_not_whitespace_stripped_here() -> None:
-    """Pins the deliberate looseness so a future edit does not tighten it silently.
+def test_presence_is_whitespace_stripped_here() -> None:
+    """Pins the tightening, which is now the decision this test used to demand.
 
-    These surfaces treat a whitespace-only value as present; the censal
-    read strips before comparing and would refuse it. That divergence is
-    real and tracked separately - it fails safe, since the strict surface
-    is the one guarding a live AEAT read. Tightening it here would break
-    the agreement the previous test locks in, so it must be a decision
-    rather than a side effect.
+    An earlier revision of this test locked the opposite assertion, on the
+    ground that these surfaces treated a whitespace-only value as present
+    while the stricter readers (the censal read, and the profile-key
+    authority the CLI status gate consumes) stripped before comparing. The
+    divergence was recorded as tracked-separately and fails-safe, and the
+    test existed so that closing it would have to be a decision rather than
+    a side effect.
+
+    It was neither safe nor merely a display difference. The loose surfaces
+    are the ones that decide a profile is complete enough to persist and to
+    show as ready; the strict one only refuses later. So the fork did not
+    fail safe, it deferred -- an operator could be told a required identity
+    was filled and then be refused by the gate reading the same value.
+
+    Closing it in the strict direction removes the divergence rather than
+    inverting it: every reader now shares one predicate, which is the rule
+    the censal boundary already applied.
 
     The whitespace goes in a field that is still REQUIRED. An optional field
     is absent from the missing set whatever it holds, so asserting on one
@@ -157,7 +168,7 @@ def test_presence_is_not_whitespace_stripped_here() -> None:
     )
     record = build_lifecycle_service(bucket_id=_BUCKET_ID).read(_BUCKET_ID)
 
-    assert f"{_SOCIOS}.0.name" not in build_profile_overview(record).missing_required
+    assert f"{_SOCIOS}.0.name" in build_profile_overview(record).missing_required
 
 
 @pytest.fixture(autouse=True)

@@ -75,6 +75,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ._classification_rule import LedgerClassificationRule
+from ._dates import transaction_eligible_date_span, transaction_filing_date
 from ._enums import (
     CLASSIFIED_STATES,
     BusinessClassification,
@@ -285,6 +286,8 @@ __all__ = [
     "resolve_split_proposer",
     "set_classification",
     "snapshot_classification_state",
+    "transaction_eligible_date_span",
+    "transaction_filing_date",
     "transaction_index_object_key",
     "transaction_object_key",
 ]

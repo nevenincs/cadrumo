@@ -69,6 +69,16 @@ class LiveScenarioScore(BaseModel):
     narration_checks: tuple[NarrationFaithfulness, ...] = ()
     failures: tuple[str, ...] = ()
 
+    @model_validator(mode="after")
+    def _invariant_scenario_matches(self) -> "LiveScenarioScore":
+        """Reject a score whose nested invariant verdict names a different scenario."""
+        if self.invariants.scenario != self.scenario:
+            raise ValueError(
+                f"score scenario is {self.scenario!r}, but its nested invariant verdict names "
+                f"{self.invariants.scenario!r}; one session must score against one scenario",
+            )
+        return self
+
     @property
     def passed(self) -> bool:
         """True when every dimension held, the invariants are clean, and nothing failed."""
@@ -77,6 +87,7 @@ class LiveScenarioScore(BaseModel):
             and self.lifecycle_ordered
             and self.expected_covered
             and self.invariants.passed
+            and not self.tool_errors
             and not self.failures
         )
 
@@ -147,6 +158,8 @@ def score_live_trajectory(
     tool_errors = tuple(
         f"{call.tool_name} ({call.command_key or 'unmapped'})" for call in trajectory.tool_calls if call.is_error
     )
+    if tool_errors:
+        failures.append(f"tool call(s) returned an error: {', '.join(tool_errors)}")
 
     live_submit_attempts = tuple(
         call.tool_name
@@ -272,6 +285,15 @@ class DiscoveryScore(BaseModel):
     discovery_calls: int = Field(ge=0)
     misselections: int = Field(ge=0)
     failures: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _ordinal_matches_reached(self) -> "DiscoveryScore":
+        """Tie the reach verdict to its ordinal: reached implies a positive round, else zero."""
+        if self.reached and self.rounds_to_correct_verb == 0:
+            raise ValueError("a reached discovery score must carry a positive rounds_to_correct_verb")
+        if not self.reached and self.rounds_to_correct_verb != 0:
+            raise ValueError("an unreached discovery score must carry rounds_to_correct_verb == 0")
+        return self
 
     @property
     def passed(self) -> bool:

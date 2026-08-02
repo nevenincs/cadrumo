@@ -346,6 +346,66 @@ def test_legal_corpus_text_cache_is_path_scoped_for_same_size_files(tmp_path: Pa
     verify_legal_catalogue({bravo.id: bravo}, source_root=tmp_path)
 
 
+def test_legal_corpus_text_rereads_same_size_timestamp_restored_sidecar(tmp_path: Path) -> None:
+    """A metadata-preserving sidecar replacement must not serve cached legal text.
+
+    ``st_size`` and ``st_mtime_ns`` are forgeable together, so the extracted
+    sidecar is keyed by a content digest as well. Without it the cache keeps
+    returning the superseded text as the evidence behind a filing.
+    """
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "same-mtime-sidecar.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>article 1 official</p>", encoding="utf-8")
+    _write_extracted_unit(corpus_path, anchor="a1", text="article 1 official")
+    reference = _legal_reference(ref_id="rd-439-2007:art-110-sidecar-digest").model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/same-mtime-sidecar.html#a1",
+            "required_text": ("article 1 official",),
+        },
+    )
+    verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+    sidecar = corpus_path.with_name(corpus_path.name + ".extracted.json")
+    original_stat = sidecar.stat()
+    # Same character count, so the sidecar keeps its byte length exactly.
+    _write_extracted_unit(corpus_path, anchor="a1", text="article 1 tampered")
+    os.utime(sidecar, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+
+    assert sidecar.stat().st_size == original_stat.st_size
+    assert sidecar.stat().st_mtime_ns == original_stat.st_mtime_ns
+
+    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
+def test_legal_corpus_text_accepts_valid_sidecar_after_metadata_preserving_rewrite(tmp_path: Path) -> None:
+    """The digest refuses only changed content, not an unchanged re-write.
+
+    The positive control for the tamper regression above: rewriting the same
+    bytes with the same stat metadata must still verify, so the refusal is
+    attributable to the changed content rather than to the re-write itself.
+    """
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "same-mtime-unchanged.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>article 2 official</p>", encoding="utf-8")
+    _write_extracted_unit(corpus_path, anchor="a2", text="article 2 official")
+    reference = _legal_reference(ref_id="rd-439-2007:art-110-sidecar-unchanged").model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/same-mtime-unchanged.html#a2",
+            "required_text": ("article 2 official",),
+        },
+    )
+    verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+    sidecar = corpus_path.with_name(corpus_path.name + ".extracted.json")
+    original_stat = sidecar.stat()
+    _write_extracted_unit(corpus_path, anchor="a2", text="article 2 official")
+    os.utime(sidecar, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+
+    assert sidecar.stat().st_size == original_stat.st_size
+    assert verify_legal_catalogue({reference.id: reference}, source_root=tmp_path) is None
+
+
 def test_legal_corpus_text_cache_is_anchor_scoped_within_one_sidecar(tmp_path: Path) -> None:
     """Sibling anchors must never reuse the first selected extracted unit."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "two-articles.html"
@@ -376,8 +436,6 @@ def test_legal_corpus_text_cache_is_anchor_scoped_within_one_sidecar(tmp_path: P
     )
 
     verify_legal_catalogue({first.id: first, second.id: second}, source_root=tmp_path)
-
-
 
 
 def test_source_citation_text_cache_is_path_scoped_for_same_size_files(tmp_path: Path) -> None:

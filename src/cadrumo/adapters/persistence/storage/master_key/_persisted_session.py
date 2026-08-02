@@ -67,6 +67,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import ProfileSessionRefusalReason
 from .....core.config import SecretStoreBackend
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from .....core.identity import BucketId
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from .._namespace_registry import PROFILE_SESSION_FILENAME
@@ -76,6 +77,7 @@ from ..errors import (
     KeyringUnavailableError,
     StorageValidationError,
 )
+from ._bucket_identity import canonical_bucket_id
 from ._master_key import KeyringMasterKeyProvider as _KeyringMasterKeyProvider
 from ._master_key_io import _b64decode, _b64encode, atomic_write_secure_bytes
 from ._zeroise import zeroise as _zeroise
@@ -112,6 +114,32 @@ def _decryption_error(message: str) -> DecryptionError:
     return DecryptionError(message, translated_message=_STORAGE_DECRYPTION_MESSAGE_KEY)
 
 
+_NONCANONICAL_BUCKET_MESSAGE: Final[str] = "bucket_id must be a canonical bucket identity"
+
+
+def _crypto_bucket_id(bucket_id: str) -> str:
+    """Canonicalize a bucket identity for the AEAD-binding surfaces."""
+    try:
+        return canonical_bucket_id(bucket_id)
+    except ValueError as exc:
+        raise _encryption_error(_NONCANONICAL_BUCKET_MESSAGE) from exc
+
+
+def _keychain_bucket_id(bucket_id: str) -> str:
+    """Canonicalize a bucket identity used as an OS-keychain account name.
+
+    The keychain account is the bucket id verbatim, so two spellings of one
+    bucket addressed two different keychain entries: a session key stored
+    under one spelling was invisible to a lookup under the other, and the
+    split showed up as an unexplained resume failure rather than as the
+    identity error it is.
+    """
+    try:
+        return canonical_bucket_id(bucket_id)
+    except ValueError as exc:
+        raise StorageValidationError(_NONCANONICAL_BUCKET_MESSAGE) from exc
+
+
 class PersistedProfileSession(BaseModel):
     """Frozen session-wrapped-DEK record for one bucket's profile session.
 
@@ -125,7 +153,7 @@ class PersistedProfileSession(BaseModel):
     model_config = _STRICT_FROZEN
 
     schema_version: int = Field(ge=1)
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     backend_kind: SecretStoreBackend
     authenticated_at: datetime
     idle_deadline: datetime
@@ -147,7 +175,7 @@ class _PersistedSessionDocument(BaseModel):
     model_config = _STRICT_FROZEN
 
     schema_version: int = Field(ge=1)
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     backend_kind: str = Field(min_length=1)
     authenticated_at: str = Field(min_length=1)
     idle_deadline: str = Field(min_length=1)
@@ -227,15 +255,19 @@ def wrap_profile_session_dek(
         A frozen :class:`PersistedProfileSession` carrying the wrap.
 
     Raises:
-        EncryptionError: On a wrong-length key, an empty bucket id, a
+        EncryptionError: On a wrong-length key, a noncanonical bucket id, a
             non-UTC deadline, or an idle deadline past the absolute cap.
     """
     if len(session_key) != _SESSION_KEY_BYTES:
         raise _encryption_error(f"session_key must be exactly {_SESSION_KEY_BYTES} bytes")
     if len(dek) != _DEK_BYTES:
         raise _encryption_error(f"dek must be exactly {_DEK_BYTES} bytes")
-    if not bucket_id:
-        raise _encryption_error("bucket_id must be non-empty")
+    # Canonicalize BEFORE composing the AAD, not merely before storing.
+    # The record's own field is normalized by its BucketId type, and unwrap
+    # recomputes the AAD from that stored field -- so binding the caller's
+    # raw spelling here would make a whitespace-wrapped id produce a record
+    # that could never be unwrapped at all.
+    bucket_id = _crypto_bucket_id(bucket_id)
     authenticated_at = validate_utc_aware(authenticated_at)
     idle_deadline = validate_utc_aware(idle_deadline)
     absolute_deadline = validate_utc_aware(absolute_deadline)
@@ -366,17 +398,17 @@ def store_profile_session_key(*, bucket_id: str, session_key: bytes) -> None:
     the entry is best-effort deleted and the store refuses.
 
     Args:
-        bucket_id: Non-empty bucket identifier (the keychain account).
+        bucket_id: Bucket identifier, canonicalized to form the keychain
+            account so two spellings cannot address two entries.
         session_key: 32-byte session key to custody.
 
     Raises:
-        StorageValidationError: When ``bucket_id`` is empty or the key has
-            the wrong length.
+        StorageValidationError: When ``bucket_id`` is not a canonical bucket
+            identity or the key has the wrong length.
         KeyringUnavailableError: When the keychain is unusable, refuses the
             write, or fails the round-trip verification.
     """
-    if not bucket_id:
-        raise StorageValidationError("bucket_id must be non-empty")
+    bucket_id = _keychain_bucket_id(bucket_id)
     if len(session_key) != _SESSION_KEY_BYTES:
         raise StorageValidationError(f"session_key must be exactly {_SESSION_KEY_BYTES} bytes")
     try:
@@ -412,17 +444,17 @@ def load_profile_session_key(*, bucket_id: str) -> bytes | None:
     absent, so resume treats it as logged out rather than crashing.
 
     Args:
-        bucket_id: Non-empty bucket identifier (the keychain account).
+        bucket_id: Bucket identifier, canonicalized to form the keychain
+            account so two spellings cannot address two entries.
 
     Returns:
         The 32-byte session key, or ``None`` when no usable entry exists.
 
     Raises:
-        StorageValidationError: When ``bucket_id`` is empty.
+        StorageValidationError: When ``bucket_id`` is not a canonical bucket identity.
         KeyringUnavailableError: When the keychain backend is unusable.
     """
-    if not bucket_id:
-        raise StorageValidationError("bucket_id must be non-empty")
+    bucket_id = _keychain_bucket_id(bucket_id)
     try:
         import keyring
         from keyring.errors import KeyringError
@@ -463,13 +495,13 @@ def delete_profile_session_key(*, bucket_id: str) -> None:
     useless (split knowledge).
 
     Args:
-        bucket_id: Non-empty bucket identifier (the keychain account).
+        bucket_id: Bucket identifier, canonicalized to form the keychain
+            account so two spellings cannot address two entries.
 
     Raises:
-        StorageValidationError: When ``bucket_id`` is empty.
+        StorageValidationError: When ``bucket_id`` is not a canonical bucket identity.
     """
-    if not bucket_id:
-        raise StorageValidationError("bucket_id must be non-empty")
+    bucket_id = _keychain_bucket_id(bucket_id)
     try:
         import keyring
         from keyring.errors import PasswordDeleteError

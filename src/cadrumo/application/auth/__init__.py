@@ -190,6 +190,7 @@ from ._acquisition_lock import (
 from ._actions import update_auth
 from ._apoderado import (
     ApoderadoConfiguration,
+    ApoderadoConfigurationIdentityError,
     ApoderadoConfigurationNotSetError,
     ApoderadoLiveCheckUnavailableError,
     ApoderadoRepresentedNifInvalidError,
@@ -233,6 +234,7 @@ from ._diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
     AuthDiagnosticDetail,
     AuthDiagnosticListReport,
+    AuthDiagnosticPhoneState,
     AuthDiagnosticReportResult,
     AuthDiagnosticSummary,
     list_auth_diagnostics,
@@ -311,6 +313,7 @@ __all__ = [
     "ActiveAuthProjectionSnapshot",
     "ActiveCertificateCredentials",
     "ApoderadoConfiguration",
+    "ApoderadoConfigurationIdentityError",
     "ApoderadoConfigurationNotSetError",
     "ApoderadoFlowAnswers",
     "ApoderadoLiveCheckUnavailableError",
@@ -328,6 +331,7 @@ __all__ = [
     "AuthDiagnosticDetail",
     "AuthDiagnosticListReport",
     "AuthDiagnosticPayloadError",
+    "AuthDiagnosticPhoneState",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
     "AuthLoginNotEnabledError",

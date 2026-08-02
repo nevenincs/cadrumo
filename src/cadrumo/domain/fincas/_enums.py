@@ -98,6 +98,12 @@ class ReduccionTier(StrEnum):
     zonas tensionadas where the landlord is a gran tenedor) — that
     forfeits the reducción entirely per Ley 12/2023 disposición
     final segunda apartado uno (closing paragraph).
+
+    The ``NOT_APPLICABLE`` sentinel is emitted for a finca whose
+    ``use_type`` is outside art. 23.2's scope entirely (commercial
+    premises, touristic/temporary lettings) — a scope exclusion, distinct
+    from ``FORFEIT_LAU_17_6``, which applies only to an otherwise-eligible
+    ``VIVIENDA_ARRENDADA`` contract that fails the LAU rent-cap condition.
     """
 
     TIER_50 = "TIER_50"
@@ -107,6 +113,7 @@ class ReduccionTier(StrEnum):
     TIER_70_PUBLIC_ADMIN = "TIER_70_PUBLIC_ADMIN"
     TIER_90 = "TIER_90"
     FORFEIT_LAU_17_6 = "FORFEIT_LAU_17_6"
+    NOT_APPLICABLE = "NOT_APPLICABLE"
 
 
 __all__ = [

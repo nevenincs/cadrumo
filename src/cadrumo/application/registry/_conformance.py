@@ -105,7 +105,6 @@ from pydantic import BaseModel, Field
 from ...core import NON_REGISTRY_MODELOS as _NON_REGISTRY_MODELOS
 from ...core import REVIEWED_REVISION_REVIEW_STATUSES as _REVIEWED_REVISION_REVIEW_STATUSES
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core import ExportLayoutFormat
 from ...core import Modelo as _Modelo
 from ...core import RevisionReviewStatus as _RevisionReviewStatus
 from ...core.access_gate import ModeloAuthorization as _ModeloAuthorization
@@ -140,12 +139,12 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import build_support_matrix as _build_support_matrix
 from ...domain.calculations.registry import (
-    calculation_closure_casilla_ids as _calculation_closure_casilla_ids,
-)
-from ...domain.calculations.registry import (
     load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
 )
 from ...domain.calculations.registry import load_registry_tree as _load_registry_tree
+from ...domain.calculations.registry import (
+    revision_capability_probe as _revision_capability_probe,
+)
 from ...domain.calculations.registry import validate_registry_scope as _validate_registry_scope
 from ._errors import RegistryApplicationInputError
 
@@ -706,14 +705,21 @@ def _governance_stamp(revision: _ModeloRevision) -> RevisionGovernanceStamp:
 
 
 def _capability_facts(revision: _ModeloRevision, *, modelo_id: str) -> RevisionCapabilityFacts:
-    """Fold what THIS revision declares, using the same primitives the support matrix probes with."""
-    export_formats = {layout.format for layout in revision.export_layouts}
+    """Fold what THIS revision declares, through the support authority's own probe.
+
+    The capability predicates come from
+    :func:`~domain.calculations.registry.revision_capability_probe` rather than
+    being recomputed here, so a conformance row and the canonical support row
+    cannot disagree about the same revision. Only the declaration counts below
+    are conformance-local.
+    """
+    capabilities = _revision_capability_probe(revision, modelo_id=modelo_id)
     return RevisionCapabilityFacts(
-        calc_grade=bool(_calculation_closure_casilla_ids(revision, modelo_id)),
-        has_completeness_manifest=revision.completeness_manifest is not None,
-        has_fixed_width_export=ExportLayoutFormat.FIXED_WIDTH in export_formats,
-        has_xml_dictionary_export=ExportLayoutFormat.XML_DICTIONARY in export_formats,
-        extraction_profile_count=len(revision.extraction_profiles),
+        calc_grade=capabilities.calc_grade,
+        has_completeness_manifest=capabilities.has_completeness_manifest,
+        has_fixed_width_export=capabilities.has_fixed_width_export,
+        has_xml_dictionary_export=capabilities.has_xml_dictionary_export,
+        extraction_profile_count=capabilities.extraction_profile_count,
         casilla_count=len(revision.casillas),
         formula_count=len(revision.formulas),
         binding_count=len(revision.bindings),

@@ -29,6 +29,7 @@ Public surface:
   lives in the persistence adapter and stores a ``FINANCIAL``
   :class:`adapters.persistence.storage.Envelope` singleton through
   :class:`adapters.persistence.storage.SecureObjectRepository`.
+* :func:`bucket_event_order_key` — the canonical chronological sort key.
 * :func:`derive_bucket_event_id` — deterministic SHA-256 event id.
 * :func:`append_bucket_event` — pure helper to insert one event
   into a catalogue (idempotent on identical content).
@@ -37,6 +38,8 @@ Public surface:
   ``payload_version`` is required: each domain versions its own payload,
   and that field alone is outside the derived id, so it cannot be
   defaulted here without silently misdeclaring some domain's contract.
+* :func:`build_bucket_event` — the derive half alone, for a caller that must
+  commit the event in the same unit of work as the state change it records.
 
 The adapter repository also exposes a ``to_secure_object_write`` method so
 sibling catalogue updates can co-emit the same encrypted event-history write.
@@ -94,12 +97,14 @@ from ._event import (
     BucketEventId,
     BucketEventObjectType,
     BucketEventType,
+    bucket_event_order_key,
     derive_bucket_event_id,
     payload_value_fits,
 )
 from ._event_repository import (
     BucketEventHistoryPersistenceError,
     append_bucket_event,
+    build_bucket_event,
     emit_bucket_event,
 )
 from ._protocols import BucketEventHistoryRepositoryProtocol
@@ -125,6 +130,8 @@ __all__ = [
     "BucketRestoreRefusedError",
     "BucketsError",
     "append_bucket_event",
+    "bucket_event_order_key",
+    "build_bucket_event",
     "derive_bucket_event_id",
     "emit_bucket_event",
     "payload_value_fits",

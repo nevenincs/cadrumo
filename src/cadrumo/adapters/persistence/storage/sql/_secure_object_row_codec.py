@@ -42,6 +42,7 @@ from .....core.errors import resolve_error_message
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
+from .....core.time import coerce_utc_aware
 from .._namespace_registry import SecureObjectNamespaceDefinition
 from .._schema_lineage import ensure_schema_version_readable, upgrade_secure_object_payload
 from ..crypto import decrypt_secure_object_payload, secure_object_payload_aad
@@ -239,7 +240,12 @@ def decode_secure_object_row(
         object_key=object_key,
         classification=classification,
         schema_version=max_supported_version,
-        written_at=written_at,
+        # The write funnel admits only UTC-aware instants, and SQLite returns
+        # the column with ``tzinfo`` dropped. Re-attaching UTC restores the
+        # exact value that was written, so the record round-trips to an equal
+        # instant instead of a naive look-alike. This is reattachment, not a
+        # guess: the stored wall clock is UTC by write-time construction.
+        written_at=coerce_utc_aware(written_at),
         payload=payload_plain,
         revision_id=revision_id,
     )

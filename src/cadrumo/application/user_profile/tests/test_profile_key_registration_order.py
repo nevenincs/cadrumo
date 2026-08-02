@@ -83,7 +83,7 @@ def test_cold_readers_agree_on_the_registered_key_count() -> None:
 
 def test_the_domain_accessor_still_refuses_an_unregistered_registry() -> None:
     """The guard this fix routes around must stay loud, not become lenient."""
-    result = subprocess.run(  # noqa: S603 - fixed argv, no shell, test-local source
+    result = subprocess.run(
         [
             sys.executable,
             "-c",

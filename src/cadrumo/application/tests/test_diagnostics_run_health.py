@@ -8,10 +8,15 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_run_health import (
+    ErrorsBreakdownReport,
+    LatencyReport,
+    LlmUsageReport,
+    RunHealthReport,
     build_error_breakdown,
     build_latency_report,
     build_llm_usage_report,
@@ -482,3 +487,53 @@ def test_build_llm_usage_report_empty_store_reports_no_run_data(profile: TestRun
     assert report.by_provider == ()
     assert report.total_runs == 0
     assert report.overall_success_rate == Decimal("0")
+
+
+class TestReportWindowInvariant:
+    """No diagnostics report can present a window that cannot contain a run.
+
+    ``--since`` and ``--until`` are parsed independently at the CLI, so neither
+    parse site can see the other's value. A reversed pair matches no record and
+    the report renders a window that never existed while claiming zero
+    observations — indistinguishable from a genuinely quiet period. Every
+    report carries the one canonical invariant.
+    """
+
+    _REPORTS = (
+        RunHealthReport,
+        LatencyReport,
+        ErrorsBreakdownReport,
+        LlmUsageReport,
+    )
+
+    @pytest.mark.parametrize("report", _REPORTS)
+    def test_reversed_window_is_refused(self, report: type) -> None:
+        with pytest.raises(ValidationError):
+            report(since=date(2026, 2, 1), until=date(2026, 1, 1))
+
+    @pytest.mark.parametrize("report", _REPORTS)
+    def test_ordered_window_is_accepted(self, report: type) -> None:
+        built = report(since=date(2026, 1, 1), until=date(2026, 2, 1))
+        assert built.since == date(2026, 1, 1)
+        assert built.until == date(2026, 2, 1)
+
+    @pytest.mark.parametrize("report", _REPORTS)
+    def test_single_day_window_is_accepted(self, report: type) -> None:
+        """Equal bounds are a legitimate one-day query, not an empty interval."""
+        assert report(since=date(2026, 1, 1), until=date(2026, 1, 1)).until == date(2026, 1, 1)
+
+    @pytest.mark.parametrize("report", _REPORTS)
+    def test_open_and_absent_bounds_stay_permitted(self, report: type) -> None:
+        """The invariant must not turn an optional bound into a required one."""
+        assert report().since is None
+        assert report(since=date(2026, 1, 1)).until is None
+        assert report(until=date(2026, 2, 1)).since is None
+
+
+def test_builders_refuse_a_reversed_window(profile: TestRuntimeProfile) -> None:
+    """The refusal reaches the real builders, not only direct construction."""
+    recorder = LLMRunTelemetryRecorder()
+    _seed(recorder)
+    for build in (build_run_health_report, build_latency_report, build_error_breakdown, build_llm_usage_report):
+        with pytest.raises(ValidationError):
+            build(since=date(2026, 2, 1), until=date(2026, 1, 1))

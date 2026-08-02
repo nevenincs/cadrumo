@@ -15,8 +15,15 @@ these split schemas so modelo emitters keep one payload import surface.
 
 from __future__ import annotations
 
+from typing import Annotated
+
+from pydantic import Field
+
+from ...application.modelo import TaxationRecommendation
+from ...core import Modelo
 from ...core.identity import BucketId
 from ...domain.modelos import WorkUnitId
+from ._decimal_wire import DecimalWireText
 from ._schemas import OutputSchema, register_schema
 
 
@@ -83,13 +90,23 @@ class WorkCompareTaxationResult(OutputSchema):
     """
 
     operation: str = "modelo.work.compare_taxation"
-    filing_year: int
-    modelo: str
-    revision: str
-    conjunta_cuota_resultante: str
-    individual_cuota_resultante: str
-    conjunta_resultado: str
-    individual_resultado: str
-    delta_resultado: str
-    recommendation: str
-    recommendation_reason: str
+    # Same bound the canonical :class:`~domain.modelos.WorkUnit` declares, so a
+    # transport row cannot carry a filing year the work unit itself refuses.
+    filing_year: Annotated[int, Field(ge=2000, le=2099)]
+    modelo: Modelo
+    revision: str = Field(min_length=1)
+    conjunta_cuota_resultante: DecimalWireText
+    individual_cuota_resultante: DecimalWireText
+    conjunta_resultado: DecimalWireText
+    individual_resultado: DecimalWireText
+    delta_resultado: DecimalWireText
+    recommendation: TaxationRecommendation
+    recommendation_reason: str = Field(min_length=1)
+
+    # Scope of the individual branch, not an incidental diagnostic: it states
+    # which households the figure above is valid for, so a machine consumer
+    # cannot read the individual result as authoritative without it. The
+    # operator-facing caveat PROSE stays on the envelope ``notices`` channel per
+    # ``cli-notices-are-the-only-diagnostic-channel``; this is the structured
+    # flag that channel's text describes.
+    individual_branch_single_earner_only: bool

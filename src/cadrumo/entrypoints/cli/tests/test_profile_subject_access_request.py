@@ -122,6 +122,24 @@ def test_the_response_states_what_the_archive_omits_alongside_what_it_holds(tmp_
     assert catalogue["context"]["data_categories"] == ",".join(payload["data_categories"])
 
 
+def test_subject_access_request_envelope_carries_purpose_transport_and_reconcile_failures(tmp_path: Path) -> None:
+    """SAR reports its custody purpose/transport and an empty reconcile list, typed."""
+    import json
+
+    assert _create_profile("subject").exit_code == 0
+    out = tmp_path / "sar-custody.json"
+
+    result = _invoke(
+        ["--format", "json", "config", "profile", "subject-access-request", "subject", "--to", str(out)],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)["result"]
+    assert payload["purpose"] == "subject_access"
+    assert payload["transport"] == "cleartext_local"
+    assert payload["reconcile_failures"] == []
+
+
 def test_the_archive_omissions_match_the_bundle_the_command_wrote(tmp_path: Path) -> None:
     # The reported omissions must come from the bundle's own coverage manifest,
     # not from a list the CLI keeps, so the two cannot drift.

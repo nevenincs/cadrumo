@@ -110,6 +110,59 @@ class ModeloRecordCatalogueRepository:
         """
         return self._objects.exists(_FILING_NAMESPACE, _FILING_OBJECT_KEY)
 
+    def _assert_records_belong_to_this_bucket(
+        self,
+        catalogue: ModeloRecordCatalogue,
+        *,
+        boundary: str,
+    ) -> None:
+        """Refuse filing records that do not belong to the bucket this repository serves.
+
+        Every :class:`ModeloRecord` names its owning bucket, and the whole
+        catalogue is one encrypted object per bucket, but nothing compared the
+        two. A foreign receipt written into bucket A was therefore returned by
+        A's ``current``/``history``/``list`` consumers as a local filing.
+
+        When the repository was constructed against an injected secure-object
+        store with no bucket id, there is no binding to compare against; the
+        records are then required to agree on one bucket among themselves, so a
+        catalogue mixing two taxpayers is still refused.
+
+        Args:
+            catalogue: The catalogue being written or read back.
+            boundary: ``"save"`` or ``"load"``, recorded on the refusal context.
+
+        Raises:
+            :class:`ModeloRecordPersistenceError`: When a record names a bucket
+                other than this repository's.
+        """
+        record_buckets = {record.bucket_id for record in catalogue.values()}
+        if not record_buckets:
+            return
+        expected = self._bucket_id
+        if expected is None:
+            if len(record_buckets) == 1:
+                return
+            foreign = sorted(record_buckets)
+        else:
+            foreign = sorted(bucket for bucket in record_buckets if bucket != expected)
+            if not foreign:
+                return
+        _LOGGER.error(
+            "filing-record catalogue carries records from another bucket",
+            extra={"boundary": boundary, "foreign_bucket_count": len(foreign)},
+        )
+        raise ModeloRecordPersistenceError(
+            "filing-record catalogue carries records from another bucket",
+            translated_message=_FILING_PERSISTENCE_MESSAGE,
+            context={
+                "reason": "foreign_bucket_record",
+                "boundary": boundary,
+                "expected_bucket_id": expected,
+                "record_bucket_ids": foreign,
+            },
+        )
+
     def load(self) -> ModeloRecordCatalogue:
         """Load and decrypt the filing-record catalogue from storage.
 
@@ -189,6 +242,7 @@ class ModeloRecordCatalogueRepository:
                     "max_supported_version": _FILING_CATALOGUE_VERSION,
                 },
             )
+        self._assert_records_belong_to_this_bucket(envelope.payload, boundary="load")
         return envelope.payload
 
     def save(self, catalogue: ModeloRecordCatalogue) -> None:
@@ -215,6 +269,7 @@ class ModeloRecordCatalogueRepository:
         """
         from ..storage import Envelope, SecureObjectWrite
 
+        self._assert_records_belong_to_this_bucket(catalogue, boundary="save")
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
             written_at=now(),

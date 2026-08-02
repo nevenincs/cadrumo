@@ -43,7 +43,7 @@ from ...core.classification import SensitivityClass
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
 from ...domain.user_profile import UserProfileStatus, load_user_profile_schema
-from ._completeness import missing_required_field_paths
+from ._completeness import missing_required_field_paths, profile_value_is_present
 from ._projections import record_to_path_values
 
 if TYPE_CHECKING:
@@ -102,8 +102,13 @@ class ProfileFieldView(BaseModel):
 
     @property
     def present(self) -> bool:
-        """Whether the operator has supplied a value for this field."""
-        return self.value is not None and self.value != ""
+        """Whether the operator has supplied a value for this field.
+
+        Reads the shared presence rule rather than restating it, so the
+        count the operator is shown cannot disagree with the gate that
+        decides whether the same profile may file.
+        """
+        return profile_value_is_present(self.value)
 
 
 class ProfileSectionView(BaseModel):
@@ -226,7 +231,7 @@ def build_profile_overview(
                 label=field.description,
                 sensitivity=field.sensitivity,
             )
-            present = raw is not None and raw != ""
+            present = profile_value_is_present(raw)
             field_views.append(
                 ProfileFieldView(
                     path=path,

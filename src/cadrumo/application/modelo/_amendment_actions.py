@@ -82,7 +82,8 @@ from ._calculation_helpers import amendment_observations as _amendment_observati
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
-from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
 
 
 def _load_amendment_baseline[CasillaKey](
@@ -451,24 +452,26 @@ def _persist_amendment_side_effects(
     actor: str,
     now: datetime,
 ) -> None:
-    """Persist amendment catalogues, work-unit pointers, and the bucket event."""
-    calculation_repository.save(revisions)
-    filing_repository.save(filing_catalogue)
-    work_unit_repository.save(
-        upsert_work_unit(
-            work_units,
-            work_unit.model_copy(
-                update={
-                    "current_calculation_revision_id": new_revision_id,
-                    "filed_calculation_revision_id": new_revision_id,
-                    "current_filing_record_id": new_filing_id,
-                    "updated_at": now,
-                },
-            ),
+    """Persist amendment catalogues, work-unit pointers, and the bucket event.
+
+    All four commit in ONE unit of work. Saved separately with the event emitted
+    last, an event-storage failure left the amended filing durable and the
+    work-unit pointers advanced to it while the history carried no
+    ``modelo.amended`` entry and no retryable marker named the gap -- an
+    amendment that, by construction, no audit reader could reconstruct.
+    """
+    advanced_work_units = upsert_work_unit(
+        work_units,
+        work_unit.model_copy(
+            update={
+                "current_calculation_revision_id": new_revision_id,
+                "filed_calculation_revision_id": new_revision_id,
+                "current_filing_record_id": new_filing_id,
+                "updated_at": now,
+            },
         ),
     )
-    _emit_bucket_event(
-        repository=bucket_event_repository,
+    amended_event = _build_bucket_event(
         bucket_id=baseline.bucket_id,
         event_type=BucketEventType.MODELO_AMENDED,
         occurred_at=now,
@@ -485,4 +488,12 @@ def _persist_amendment_side_effects(
             "amendment_kind": amendment_kind.value,
             "override_count": str(override_count),
         },
+    )
+    filing_repository.save_with_secure_object_writes(
+        filing_catalogue,
+        (
+            calculation_repository.to_secure_object_write(revisions),
+            work_unit_repository.to_secure_object_write(advanced_work_units),
+            _bucket_event_write(bucket_event_repository, (amended_event,)),
+        ),
     )

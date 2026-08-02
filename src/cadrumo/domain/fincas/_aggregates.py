@@ -26,7 +26,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.logging import get_logger
 from ...core.money import round_to_cents as _round_to_cents
 from ._amortization_ledger import compute_amortization_for_year
-from ._enums import UseType
+from ._enums import ReduccionTier, UseType
 from ._errors import FincaAggregationError
 from ._expense_rollup import CarryForwardEntry, compute_gastos_for_year
 from ._imputacion_parameters import load_imputacion_parameters
@@ -41,6 +41,19 @@ from ._repository_ports import (
 from ._tier_resolver import TierResolution, resolve_reduccion
 
 _log = get_logger(__name__)
+
+#: art. 23.2 LIRPF reducción applies only to permanent-residence lettings;
+#: a LOCAL_COMERCIAL or VIVIENDA_TURISTICA finca still earns rendimiento
+#: (it is in :data:`_RENDIMIENTO_ELIGIBLE_USE_TYPES` below) but is out of
+#: the reducción article's scope entirely, so it must never reach
+#: :func:`resolve_reduccion` — that function's ``TierResolutionError`` is
+#: reserved for a genuine caller defect, not an expected non-qualifying use.
+_NOT_APPLICABLE_REDUCCION = TierResolution(
+    tier=ReduccionTier.NOT_APPLICABLE,
+    reduccion_pct=Decimal("0"),
+    qualifying_share=Decimal("0"),
+    legal_refs=("ley-35-2006:art-23",),
+)
 
 
 class FincaAttribution(BaseModel):
@@ -308,7 +321,11 @@ def _aggregate_finca(
             Decimal("0"),
         )
         rendimiento = _round_to_cents(rendimiento)
-        tier = resolve_reduccion(contract, finca, period_year=period_year)
+        tier = (
+            resolve_reduccion(contract, finca, period_year=period_year)
+            if finca.use_type is UseType.VIVIENDA_ARRENDADA
+            else _NOT_APPLICABLE_REDUCCION
+        )
         reduccion = _round_to_cents(rendimiento * tier.reduccion_pct * tier.qualifying_share)
         reduccion_total += reduccion
         contract_attribs.append(

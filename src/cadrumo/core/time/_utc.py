@@ -19,6 +19,9 @@ to choose :func:`coerce_utc_aware` or :func:`validate_utc_aware`.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Annotated
+
+from pydantic import AfterValidator
 
 from ..errors import CoreValidationError
 
@@ -73,3 +76,28 @@ def validate_utc_aware(value: datetime) -> datetime:
     if value.utcoffset() != UTC.utcoffset(value):
         raise CoreValidationError("datetime must be in UTC")
     return value
+
+
+UtcInstant = Annotated[datetime, AfterValidator(validate_utc_aware)]
+"""A :class:`~datetime.datetime` field pinned to the canonical UTC contract.
+
+The declarative form of :func:`validate_utc_aware`, for the many models
+whose fields document an instant. Those models each carried their own
+``field_validator`` calling the same helper, which made enrolment a thing an
+author had to remember rather than a thing the type says: a field declared
+as a bare ``datetime`` looks identical to an enrolled one at the point of
+declaration, so the omissions are invisible in review and only surface when
+a naive value has already been hashed or persisted.
+
+It validates rather than coerces, deliberately. A naive instant arriving at
+a model boundary is not a value with a missing offset, it is a value whose
+offset is unknown -- attaching UTC would invent the one fact in doubt, and
+would do it silently. Sources that genuinely produce naive local times (a
+PKCS#12 certificate stamp) belong on :func:`coerce_utc_aware` at the point
+they are read, where the assumption is stated once and visibly.
+
+Refusal also protects derived identity. A content-addressed id that hashes
+an instant's ``isoformat()`` gets a different digest for each spelling of
+the same moment, so admitting several spellings turns one event into
+several records; admitting only UTC leaves exactly one.
+"""

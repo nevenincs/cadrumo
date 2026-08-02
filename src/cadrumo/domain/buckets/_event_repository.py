@@ -48,6 +48,65 @@ def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEve
     return BucketEventHistoryCatalogue(events=mapping)
 
 
+def build_bucket_event(
+    *,
+    bucket_id: str,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+    object_type: BucketEventObjectType,
+    object_id: str,
+    payload: Mapping[str, str],
+    payload_version: int,
+) -> BucketEvent:
+    """Derive one :class:`BucketEvent` without persisting it.
+
+    The derive half of :func:`emit_bucket_event`, split out so a caller that must
+    commit the event in the SAME unit of work as the state change it records can
+    obtain the event, fold it into a catalogue with :func:`append_bucket_event`,
+    and hand the resulting catalogue to
+    :meth:`BucketEventHistoryRepositoryProtocol.to_secure_object_write` for
+    co-emission. A mutation that saves its catalogues first and emits afterwards
+    can come to rest with durable state and no history entry; deriving without
+    saving is what lets the two share one transaction.
+
+    Args:
+        bucket_id: Owning bucket identifier.
+        event_type: The transition being recorded.
+        occurred_at: UTC timestamp of the transition. Callers that need a retry to
+            collapse onto one entry pass a stored timestamp rather than a fresh
+            clock read, since the id is derived from it.
+        actor: Actor label; leading and trailing whitespace is stripped.
+        object_type: Kind of the affected domain object.
+        object_id: Stable identifier of the affected object.
+        payload: Compact structured detail. Never secrets or key material.
+        payload_version: Schema version of ``payload`` for this event family.
+
+    Returns:
+        The derived :class:`BucketEvent`, not yet appended or persisted.
+    """
+    actor_label = actor.strip()
+    return BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor=actor_label,
+            object_type=object_type,
+            object_id=object_id,
+            payload=payload,
+        ),
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor_label,
+        object_type=object_type,
+        object_id=object_id,
+        payload_version=payload_version,
+        payload=dict(payload),
+    )
+
+
 def emit_bucket_event(
     *,
     repository: BucketEventHistoryRepositoryProtocol,
@@ -91,25 +150,15 @@ def emit_bucket_event(
     Returns:
         The appended :class:`BucketEvent`.
     """
-    actor_label = actor.strip()
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
-            bucket_id=bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor_label,
-            object_type=object_type,
-            object_id=object_id,
-            payload=payload,
-        ),
+    event = build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
-        actor=actor_label,
+        actor=actor,
         object_type=object_type,
         object_id=object_id,
+        payload=payload,
         payload_version=payload_version,
-        payload=dict(payload),
     )
     repository.save(append_bucket_event(repository.load(), event))
     return event
@@ -118,5 +167,6 @@ def emit_bucket_event(
 __all__ = [
     "BucketEventHistoryPersistenceError",
     "append_bucket_event",
+    "build_bucket_event",
     "emit_bucket_event",
 ]

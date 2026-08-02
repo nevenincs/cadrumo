@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BaseModel, Field
 
@@ -92,6 +92,14 @@ def _wire_digest(raw: bytes) -> str:
     return f"sha256:{_sha256_hex(raw)[:8]}"
 
 
+#: The negative inline-sign marker, and the complete set of markers the wire
+#: format defines. Declared here so the accept-set and the negative test cannot
+#: drift: reading the sign off ``== b"N"`` alone is precisely how every other
+#: byte came to decode as a positive amount.
+_INLINE_SIGN_NEGATIVE: Final = b"N"
+_INLINE_SIGN_MARKERS: Final = frozenset({_INLINE_SIGN_NEGATIVE, b" "})
+
+
 def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     """Decode a zero-padded cents string into a 2-decimal :class:`Decimal`.
 
@@ -107,13 +115,27 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     ``AeatExportFormatError`` at parse time, instead of silently decoding
     to ``Decimal("0.00")`` and leaving the operator unable to
     distinguish "filed as zero" from "field was blank on the wire".
+
+    The sign marker is checked for MEMBERSHIP in the two-byte set the
+    format defines, not merely compared against ``b"N"``. Testing only
+    for the negative marker makes every other byte — ``X``, ``0``, a
+    NUL — decode the absolute magnitude as a POSITIVE amount, so
+    corrupted or foreign wire data silently changes meaning instead of
+    being refused. An amount that reads back with the wrong sign is the
+    worst shape a parse failure can take here: it is a plausible number,
+    so nothing downstream has a reason to question it.
     """
     if inline_sign:
         if not raw:
             raise AeatExportFormatError("INLINE_SIGN CURRENCY field cannot be empty")
         sign_byte = raw[:1]
         magnitude_bytes = raw[1:]
-        is_negative = sign_byte == b"N"
+        if sign_byte not in _INLINE_SIGN_MARKERS:
+            raise AeatExportFormatError(
+                "INLINE_SIGN CURRENCY sign marker is not one of the two the format defines "
+                f"(ASCII 'N' for negative, ASCII space for non-negative); digest={_wire_digest(raw)}",
+            )
+        is_negative = sign_byte == _INLINE_SIGN_NEGATIVE
         text = magnitude_bytes.decode("ascii").strip()
         if not text:
             raise AeatExportFormatError(

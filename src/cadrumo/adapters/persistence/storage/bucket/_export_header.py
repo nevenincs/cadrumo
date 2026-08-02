@@ -16,22 +16,30 @@ from pydantic import BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.errors import CoreValidationError
-from .....core.identity import BucketId
+from .....core.identity import BucketId, ContentDigest
 from .....core.product_identity import PRODUCT_IDENTITY
 from .....core.time import validate_utc_aware
 
-_SHA256_HEX_LEN = 64
-_LOWER_HEX_DIGITS = frozenset("0123456789abcdef")
-
 
 class ExportArchiveHeader(BaseModel):
-    """Plaintext frontmatter for a sealed bucket-export archive."""
+    """Plaintext frontmatter for a sealed bucket-export archive.
+
+    ``manifest_digest`` is the canonical
+    :data:`~core.identity.ContentDigest` of the archive manifest. It
+    previously carried a locally-restated lowercase-hex-64 rule, which agreed
+    with the canonical alias on every malformed value but disagreed on a valid
+    one: the alias strips surrounding whitespace, so a digest that arrived
+    padded -- as it can from a text transport -- normalized everywhere else in
+    the codebase and was refused here alone. The header sits beside
+    ``bucket_id``, already typed through the same identity module, so routing
+    the digest through it keeps one rule rather than two that happen to match.
+    """
 
     model_config = _STRICT_FROZEN
 
     product: str = Field(min_length=1)
     bucket_id: BucketId
-    manifest_digest: str = Field(min_length=1)
+    manifest_digest: ContentDigest
     recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
     created_at: datetime
@@ -42,16 +50,6 @@ class ExportArchiveHeader(BaseModel):
         """Require the canonical product marker with no former-format alias."""
         if value != PRODUCT_IDENTITY.python_package:
             raise ValueError(f"product must be {PRODUCT_IDENTITY.python_package!r}")
-        return value
-
-    @field_validator("manifest_digest")
-    @classmethod
-    def _check_manifest_digest(cls, value: str) -> str:
-        """Reject anything other than a lowercase hex SHA-256 digest."""
-        if len(value) != _SHA256_HEX_LEN:
-            raise ValueError("manifest_digest must be a 64-char SHA-256 hex string")
-        if any(char not in _LOWER_HEX_DIGITS for char in value):
-            raise ValueError("manifest_digest must be lowercase hex")
         return value
 
     @field_validator("created_at")

@@ -44,6 +44,18 @@ from ._errors import CorpusSearchInputError
 
 _Text = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
+#: Canonical kebab-case shape for a Terminology Handbook ``concept_id``:
+#: an immutable Spanish stem, lowercase, hyphen-separated. Shared with the
+#: dev-only authoring schema (``dev.docs.terminology_handbook._schema``,
+#: which imports these three constants from this package) so a malformed
+#: id is refused identically on both sides of the shipping boundary rather
+#: than passing this lean product reader while failing strict authoring
+#: validation.
+CONCEPT_ID_PATTERN = r"^[a-z][a-z0-9-]*[a-z0-9]$"
+CONCEPT_ID_MIN_LENGTH = 2
+CONCEPT_ID_MAX_LENGTH = 64
+_CONCEPT_ID_RE = re.compile(CONCEPT_ID_PATTERN)
+
 _TERMINOLOGY_PARTS = ("terminology", "concepts")
 _FALLBACK_LOCALE = "es"
 _DEFAULT_LIFECYCLES = (ConceptLifecycle.APPROVED,)
@@ -103,10 +115,41 @@ def _as_str_object_dict(value: object) -> dict[str, object] | None:
     return {str(key): item for key, item in value.items()}
 
 
-def _resolve_language(concept: dict[str, object], locale: str) -> tuple[str, dict[str, object]]:
+def _validated_concept_id(token: str) -> str:
+    """Refuse a ``concept_id`` outside the canonical kebab-case shape.
+
+    Mirrors ``dev.docs.terminology_handbook._schema._ConceptId``, which
+    imports :data:`CONCEPT_ID_PATTERN` from this module: a malformed id
+    (too short, uppercase, non-kebab-case) is refused here rather than
+    silently producing a searchable concept with a garbage identifier.
+
+    Raises:
+        CorpusSearchInputError: If ``token`` does not match the canonical
+            shape.
+    """
+    if not (CONCEPT_ID_MIN_LENGTH <= len(token) <= CONCEPT_ID_MAX_LENGTH) or _CONCEPT_ID_RE.fullmatch(token) is None:
+        raise CorpusSearchInputError(
+            "malformed terminology concept_id",
+            context={"concept_id": token, "pattern": CONCEPT_ID_PATTERN},
+        )
+    return token
+
+
+def _resolve_language(concept: dict[str, object], locale: str, *, concept_id: str) -> tuple[str, dict[str, object]]:
+    """Resolve the ``(locale, language_block)`` a concept renders under.
+
+    Raises:
+        CorpusSearchInputError: If the fragment declares no ``[language.*]``
+            section at all -- a structurally incomplete concept, never
+            silently projected as an empty-text hit carrying its own
+            ``concept_id`` as a fallback label.
+    """
     languages = _as_str_object_dict(concept.get("language"))
-    if languages is None:
-        return _FALLBACK_LOCALE, {}
+    if not languages:
+        raise CorpusSearchInputError(
+            "terminology concept declares no [language.*] sections",
+            context={"concept_id": concept_id},
+        )
     for candidate in (locale, _FALLBACK_LOCALE):
         block = _as_str_object_dict(languages.get(candidate))
         if block is not None:
@@ -171,8 +214,9 @@ def _project_concept(payload: dict[str, object], *, locale: str) -> TerminologyC
     lifecycle = concept.get("lifecycle")
     if not (isinstance(concept_id, str) and isinstance(domain, str) and isinstance(lifecycle, str)):
         return None
+    concept_id = _validated_concept_id(concept_id)
     resolved_lifecycle = _hydrated_lifecycle(lifecycle, concept_id=concept_id)
-    resolved_locale, language_block = _resolve_language(payload, locale)
+    resolved_locale, language_block = _resolve_language(payload, locale, concept_id=concept_id)
     preferred_label, terms = _terms_and_preferred(language_block)
     if not preferred_label:
         preferred_label = concept_id
@@ -300,6 +344,9 @@ def lookup_terminology(concept_id: str, *, locale: str = _FALLBACK_LOCALE) -> Te
 
 
 __all__ = [
+    "CONCEPT_ID_MAX_LENGTH",
+    "CONCEPT_ID_MIN_LENGTH",
+    "CONCEPT_ID_PATTERN",
     "TerminologyConcept",
     "TerminologyHit",
     "load_terminology_concepts",

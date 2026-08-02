@@ -32,6 +32,7 @@ import pytest
 from sqlalchemy import delete, event, select
 from sqlalchemy import inspect as sa_inspect
 
+from .....domain.iva import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -50,7 +51,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 
-_NON_SENSITIVE_COLUMNS = frozenset({"id", "bucket_id", "transaction_id", "filing_date", "filing_year"})
+_NON_SENSITIVE_COLUMNS = frozenset(
+    {
+        "id",
+        "bucket_id",
+        "transaction_id",
+        "filing_date",
+        "filing_year",
+        # Routing dates only, same non-sensitive class as ``filing_date``: the
+        # inclusive span of every date the row can file an observation under,
+        # so a period partition selects on overlap rather than on the filing
+        # date alone. Carries no amount, counterparty, or other financial fact.
+        "eligible_from",
+        "eligible_to",
+    },
+)
 
 
 def _raw(provider_id: str, filing_date: date, amount: Decimal, description: str) -> RawTransaction:
@@ -82,6 +97,41 @@ def _transaction(*, provider_id: str, filing_date: date, amount: Decimal, descri
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "group_label": None,
+        },
+    )
+
+
+def _cash_accounting_transaction(
+    *,
+    provider_id: str,
+    filing_date: date,
+    operation_date: date,
+    payment_date: date,
+) -> Transaction:
+    """Build a real criterio-de-caja row whose devengo date differs from its filing date."""
+    return Transaction.model_validate(
+        {
+            "raw": _raw(provider_id, filing_date, Decimal("1210.00"), "criterio de caja"),
+            "direction": TransactionDirection.INCOMING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "source_jurisdiction": "ES",
+            "group_label": None,
+            "taxable_base": Decimal("1000.00"),
+            "iva_rate": Decimal("0.21"),
+            "iva_amount": Decimal("210.00"),
+            "iva_category": IvaCategory.DOMESTIC_GENERAL_21,
+            "cash_accounting_treatment": IvaCashAccountingTreatment.TAXPAYER_REGIME,
+            "cash_accounting_operation_date": operation_date,
+            "cash_accounting_payment_evidence": (
+                IvaCashAccountingPaymentEvidence(
+                    payment_date=payment_date,
+                    taxable_base=Decimal("1000.00"),
+                    iva_amount=Decimal("210.00"),
+                    recargo_amount=Decimal("0.00"),
+                ),
+            ),
+            "classified_at": datetime(2026, 4, 1, 10, 0, tzinfo=UTC),
+            "classified_by": "manual",
         },
     )
 
@@ -637,3 +687,114 @@ def test_date_index_removes_row_for_deleted_transaction(
             )
 
     assert set(remaining_ids) == {keep.transaction_id}
+
+
+def test_eligible_span_equals_filing_date_for_a_row_without_a_timing_override(
+    tmp_path: Path,
+) -> None:
+    """A plain ledger row's indexed span collapses to its filing date.
+
+    Guards the fast path: widening the partition to span overlap must not
+    widen the candidate set for the overwhelming majority of rows, which
+    carry no tax-timing override.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        plain = _transaction(
+            provider_id="row-plain",
+            filing_date=date(2026, 4, 15),
+            amount=Decimal("100.00"),
+            description="plain expense",
+        )
+        repo.save(TransactionCatalogue.from_transactions([plain]))
+
+        engine = profile.repository.engine
+        with session_scope(engine) as session:
+            row = session.execute(
+                select(
+                    _orm.TransactionDateIndexRow.filing_date,
+                    _orm.TransactionDateIndexRow.eligible_from,
+                    _orm.TransactionDateIndexRow.eligible_to,
+                ).where(_orm.TransactionDateIndexRow.bucket_id == profile.bucket_id),
+            ).one()
+
+    filing_date, eligible_from, eligible_to = row
+    assert filing_date == date(2026, 4, 15)
+    assert eligible_from == date(2026, 4, 15)
+    assert eligible_to == date(2026, 4, 15)
+
+
+def test_partition_keeps_a_cash_accounting_row_whose_devengo_precedes_its_filing_date(
+    tmp_path: Path,
+) -> None:
+    """A Q2-booked criterio-de-caja row with a Q1 devengo stays a Q1 candidate.
+
+    Under LIVA art. 163 *decies* the art. 75 devengo date is independent of
+    the ledger filing date, so partitioning on the filing date alone reports
+    the row out-of-window undecrypted and silently drops its Q1 cuota
+    devengada. The partition must select on the eligible-date span instead.
+    Asserts BOTH partition paths -- the plaintext-index fast path and the
+    full-scan fallback -- because the fallback carried the identical defect.
+    """
+
+    q1_start, q1_end = date(2026, 1, 1), date(2026, 3, 31)
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        cash_sale = _cash_accounting_transaction(
+            provider_id="row-cash",
+            filing_date=date(2026, 4, 15),
+            operation_date=date(2026, 3, 20),
+            payment_date=date(2026, 4, 15),
+        )
+        repo.save(TransactionCatalogue.from_transactions([cash_sale]))
+
+        indexed = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(q1_start, q1_end)
+
+        engine = profile.repository.engine
+        with session_scope(engine) as session:
+            session.execute(
+                delete(_orm.TransactionDateIndexRow).where(
+                    _orm.TransactionDateIndexRow.bucket_id == profile.bucket_id,
+                ),
+            )
+        fallback = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(q1_start, q1_end)
+
+    assert indexed.index_complete is True
+    assert set(indexed.in_window.transactions) == {cash_sale.transaction_id}
+    assert indexed.out_of_window == ()
+
+    assert fallback.index_complete is False
+    assert set(fallback.in_window.transactions) == {cash_sale.transaction_id}
+    assert fallback.out_of_window == ()
+
+
+def test_partition_excludes_a_cash_accounting_row_with_no_date_in_the_window(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology: the widened span still excludes a genuinely absent row.
+
+    Proves the cash-accounting selection above is not simply "always
+    in-window": a criterio-de-caja row whose devengo, collection, and
+    statutory fallback dates all fall after the window is still reported
+    out-of-window without decryption.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        cash_sale = _cash_accounting_transaction(
+            provider_id="row-cash-late",
+            filing_date=date(2026, 4, 15),
+            operation_date=date(2026, 3, 20),
+            payment_date=date(2026, 4, 15),
+        )
+        repo.save(TransactionCatalogue.from_transactions([cash_sale]))
+
+        partition = TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
+            date(2025, 1, 1), date(2025, 12, 31)
+        )
+
+    assert partition.index_complete is True
+    assert partition.in_window.transactions == {}
+    assert {projection.transaction_id for projection in partition.out_of_window} == {cash_sale.transaction_id}

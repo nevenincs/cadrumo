@@ -12,7 +12,7 @@ completeness gate.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.flows import PageStatus
@@ -62,6 +62,29 @@ class ReviewProjection(BaseModel):
     blocking: tuple[ValidationVerdict, ...] = ()
     answered_count: int = Field(ge=0)
     required_remaining: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _derived_state_matches_rows(self) -> ReviewProjection:
+        """Refuse projections whose reported review state contradicts their rows."""
+        if any(verdict.ok for verdict in self.flow_verdicts):
+            raise ValueError("review projection flow_verdicts must contain only failures")
+
+        expected_answered_count = sum(1 for row in self.rows if row.status is PageStatus.ANSWERED)
+        if self.answered_count != expected_answered_count:
+            raise ValueError("review projection answered_count must match answered rows")
+
+        expected_required_remaining = sum(
+            1 for row in self.rows if row.required and row.status is not PageStatus.ANSWERED and row.jumpable
+        )
+        if self.required_remaining != expected_required_remaining:
+            raise ValueError("review projection required_remaining must match outstanding required rows")
+
+        expected_blocking = _blocking_verdicts(list(self.rows), self.flow_verdicts)
+        if self.blocking != expected_blocking:
+            raise ValueError("review projection blocking verdicts must match rows and flow failures")
+        if self.submit_eligible != (not expected_blocking):
+            raise ValueError("review projection submit_eligible must match blocking verdicts")
+        return self
 
 
 def review(definition: FlowDefinition, state: FlowState) -> ReviewProjection:

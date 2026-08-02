@@ -80,10 +80,18 @@ def select_revision(
         # whose canonical registry periods are lowercase.  All other period
         # literal formats are case-invariant, and the shared matcher also lets
         # symbolic EVENT-N selectors cover concrete EVENT-1/EVENT-2 operator
-        # scopes. Downstream consumers receive the caller-supplied period (the
-        # RegistrySnapshot stores it verbatim), not the registry's canonical
-        # form, so no case-sensitive downstream regression is possible from
-        # this comparison.
+        # scopes.
+        #
+        # This function still returns the caller's token unchanged; the
+        # canonical form is resolved once at the snapshot boundary
+        # (_build_validated_snapshot routes through registry_period_for_request).
+        # That normalisation is what keeps a case-insensitive match here from
+        # becoming a downstream regression: consumers such as
+        # relation_source_requirements compare the snapshot's period with exact
+        # membership against each relation's target_periods, so a raw "0a" would
+        # select this revision while activating none of its relations. Do not
+        # drop the snapshot-side normalisation on the strength of this
+        # comparison being case-insensitive.
         if selector_token_for_request(revision.period_selector.periods, period) is None:
             continue
         if on is not None and (revision.valid_from > on or (revision.valid_to is not None and revision.valid_to < on)):

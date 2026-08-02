@@ -26,9 +26,10 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from ...core.telemetry import TelemetryTier
+from ...core.time import validate_inclusive_iso_date_range
 from ._decimal_wire import DecimalWireText, bounded_decimal_wire_text
 from ._schemas import OutputSchema, register_schema
 
@@ -73,6 +74,18 @@ class RunHealthResult(OutputSchema):
     total_runs: int = Field(ge=0)
     total_succeeded: int = Field(ge=0)
     total_failed: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> RunHealthResult:
+        """Carry the canonical window invariant onto the wire boundary.
+
+        The bounds are serialised ``date.isoformat()`` output, so the
+        same closed-interval contract the report enforces applies here;
+        without it a directly-constructed or deserialized envelope can
+        still publish a window the report itself would refuse.
+        """
+        validate_inclusive_iso_date_range(self.since, self.until)
+        return self
     has_run_data: bool
     auth_provider: str
     auth_configured: bool
@@ -113,10 +126,24 @@ class RunsListResult(OutputSchema):
     since: str | None = None
     until: str | None = None
     provider: str | None = None
-    limit: int | None = None
+    # ge=1 mirrors the ``--limit`` option's own ``min=1``: a zero cap is a
+    # listing that can never return a row, which the command itself refuses.
+    limit: int | None = Field(default=None, ge=1)
     runs: list[RunRecordPayload]
     total_runs: int
     has_run_data: bool
+
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> RunsListResult:
+        """Carry the canonical window invariant onto the wire boundary.
+
+        The bounds are serialised ``date.isoformat()`` output, so the
+        same closed-interval contract the report enforces applies here;
+        without it a directly-constructed or deserialized envelope can
+        still publish a window the report itself would refuse.
+        """
+        validate_inclusive_iso_date_range(self.since, self.until)
+        return self
 
 
 class LatencyPercentilesPayload(OutputSchema):
@@ -159,6 +186,18 @@ class LatencyResult(OutputSchema):
     by_provider: list[LatencyProviderRowPayload]
     has_run_data: bool
 
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> LatencyResult:
+        """Carry the canonical window invariant onto the wire boundary.
+
+        The bounds are serialised ``date.isoformat()`` output, so the
+        same closed-interval contract the report enforces applies here;
+        without it a directly-constructed or deserialized envelope can
+        still publish a window the report itself would refuse.
+        """
+        validate_inclusive_iso_date_range(self.since, self.until)
+        return self
+
 
 class ErrorKindCountPayload(OutputSchema):
     """One provider/``error_kind`` failure count.
@@ -191,6 +230,18 @@ class ErrorsBreakdownResult(OutputSchema):
     total_failed: int = Field(ge=0)
     by_error_kind: list[ErrorKindCountPayload]
     has_failures: bool
+
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> ErrorsBreakdownResult:
+        """Carry the canonical window invariant onto the wire boundary.
+
+        The bounds are serialised ``date.isoformat()`` output, so the
+        same closed-interval contract the report enforces applies here;
+        without it a directly-constructed or deserialized envelope can
+        still publish a window the report itself would refuse.
+        """
+        validate_inclusive_iso_date_range(self.since, self.until)
+        return self
 
 
 class LlmUsageModelPayload(OutputSchema):
@@ -249,6 +300,18 @@ class LlmUsageResult(OutputSchema):
     until: str | None = None
     provider: str | None = None
     by_provider: list[LlmUsageProviderPayload]
+
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> LlmUsageResult:
+        """Carry the canonical window invariant onto the wire boundary.
+
+        The bounds are serialised ``date.isoformat()`` output, so the
+        same closed-interval contract the report enforces applies here;
+        without it a directly-constructed or deserialized envelope can
+        still publish a window the report itself would refuse.
+        """
+        validate_inclusive_iso_date_range(self.since, self.until)
+        return self
     total_runs: int
     total_succeeded: int
     total_failed: int

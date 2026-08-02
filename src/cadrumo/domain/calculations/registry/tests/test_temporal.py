@@ -23,9 +23,10 @@ from .._errors import (
     NoRevisionForPeriodError,
     RegistrySnapshotError,
 )
+from .._relations import relation_source_requirements
 from .._schema import ModeloDefinition
 from .._temporal import select_revision
-from ._registry_schema_support import _committed_modelo
+from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,6 +42,55 @@ def test_select_revision_returns_the_matching_year_revision() -> None:
     revision = select_revision(modelo, filing_year=2025, period="0A")
 
     assert revision.id == "2025"
+
+
+def test_snapshot_normalises_a_case_variant_period_to_the_declared_token() -> None:
+    """A valid lower-case token must not survive into the snapshot verbatim.
+
+    ``select_revision`` matches selectors case-insensitively and returns the
+    caller's token unchanged, so the snapshot boundary is where the canonical
+    form is resolved. Without it the snapshot disagreed with itself: its
+    ``filing_period`` normalised through ``Period`` while ``period`` did not.
+    """
+    snapshot = _committed_snapshot("100", 2025, "0a")
+
+    assert snapshot.period == "0A"
+    assert snapshot.filing_period.code == snapshot.period
+    assert snapshot.revision.id == _committed_snapshot("100", 2025, "0A").revision.id
+
+
+def test_case_variant_periods_activate_the_same_relation_requirements() -> None:
+    """Relation activation is exact-membership, so case must not silence it.
+
+    A lower-case ``0a`` selected the same M100 revision as ``0A`` while
+    activating none of its relation declarations -- the caller got a successful
+    snapshot and a clean-looking empty obligation set instead of the required
+    cross-model inputs.
+    """
+    canonical = _committed_snapshot("100", 2025, "0A")
+    variant = _committed_snapshot("100", 2025, "0a")
+
+    canonical_requirements = relation_source_requirements(
+        canonical.revision,
+        filing_year=2025,
+        period=canonical.period,
+    )
+    variant_requirements = relation_source_requirements(
+        variant.revision,
+        filing_year=2025,
+        period=variant.period,
+    )
+
+    assert canonical_requirements, "the M100 2025 revision must declare relation requirements"
+    assert variant_requirements == canonical_requirements
+
+
+def test_case_variant_period_still_refuses_an_undeclared_token() -> None:
+    """Normalisation must not widen the accepted set beyond declared periods."""
+    modelo = _committed_modelo_100()
+
+    with pytest.raises(RegistrySnapshotError, match="no revision for"):
+        select_revision(modelo, filing_year=2025, period="0b")
 
 
 def test_select_revision_raises_when_no_revision_matches_year() -> None:

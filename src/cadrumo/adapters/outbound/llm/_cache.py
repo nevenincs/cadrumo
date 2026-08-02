@@ -100,18 +100,29 @@ class LLMCache:
             provider: Effective :class:`~adapters.outbound.llm.LLMProvider`.
             model: Effective model for the request.
 
+        The decoded entry is bound back to the key that was asked for before
+        it is returned. The object key is derived from the request, but until
+        that check existed nothing tied the DECRYPTED payload's own
+        provider / model / prompt hash / args hash to it: a valid entry
+        re-encrypted under another entry's row was returned verbatim, so a
+        caller asking one provider-and-model could be answered by another's
+        text with ``cache_hit`` set. Successful decryption proves custody of
+        the bucket key, never that the row holds what was requested.
+
         Returns:
             Cached :class:`~adapters.outbound.llm.LLMResponse` when
             present, otherwise ``None``.
 
         Raises:
             :exc:`~adapters.outbound.llm.LLMCacheError`: When the cached
-            payload is present but cannot be parsed.
+            payload is present but cannot be parsed, or when it decodes to
+            an entry belonging to a different cache key.
         """
         key = self.build_key(request, provider, model)
+        requested_object_key = self._object_key_for(key)
         record = secure_object_repository_for_active_bucket().load(
             _CACHE_NAMESPACE,
-            self._object_key_for(key),
+            requested_object_key,
             expected_class=_CACHE_SENSITIVITY,
             max_supported_version=_CACHE_VERSION,
         )
@@ -123,6 +134,7 @@ class LLMCache:
         except (ValueError, ValidationError, KeyError, TypeError) as exc:
             msg = f"Failed to parse LLM cache entry for {provider.value}/{model}"
             raise LLMCacheError(msg) from exc
+        self._assert_entry_bound_to_key(entry, requested_object_key)
         _log.debug("llm_cache hit: provider=%s model=%s", provider.value, model)
         return entry.response.model_copy(
             update={
@@ -181,10 +193,18 @@ class LLMCache:
         # mapping opaquely (only ever serialises to JSON).
         redacted_entry: Mapping[str, object] = {str(k): v for k, v in redacted.items()}
         payload = self._payload_for_entry(redacted_entry)
+        object_key = self._object_key_for(key)
+        # Bind what is about to be STORED, not the in-memory entry: the entry
+        # is built from ``key`` and so agrees with it by construction, while
+        # the payload has been through redaction. A redaction rule that ever
+        # touched a key-bearing field would file a row nothing could read
+        # back, and the failure would surface as a permanent cache miss rather
+        # than as the write fault it is.
+        self._assert_entry_bound_to_key(self._entry_from_payload(payload), object_key)
         try:
             secure_object_repository_for_active_bucket().save(
                 namespace=_CACHE_NAMESPACE,
-                object_key=self._object_key_for(key),
+                object_key=object_key,
                 classification=_CACHE_SENSITIVITY,
                 schema_version=_CACHE_VERSION,
                 written_at=now(),
@@ -279,13 +299,7 @@ class LLMCache:
             except (ValueError, ValidationError, KeyError, TypeError) as exc:
                 msg = "Failed to parse LLM cache entry while pruning"
                 raise LLMCacheError(msg) from exc
-            key = CacheKey(
-                provider=entry.provider,
-                model=entry.model,
-                prompt_hash=entry.prompt_hash,
-                args_hash=entry.args_hash,
-            )
-            rows.append((entry, self._object_key_for(key)))
+            rows.append((entry, self._object_key_for(self._key_of(entry))))
         rows.sort(key=lambda item: item[0].created_at)
         return rows
 
@@ -310,6 +324,39 @@ class LLMCache:
         # token is rejected.
         sanitised_model = self._sanitise_model_for_path(key.model)
         return self.root_dir / key.provider.value.lower() / sanitised_model / f"{key.prompt_hash}-{key.args_hash}.json"
+
+    @staticmethod
+    def _key_of(entry: CachedEntry) -> CacheKey:
+        """Reconstruct the cache key a stored entry claims to be filed under.
+
+        One reconstruction, so the read-side binding check and the prune-side
+        row keying cannot disagree about which row an entry belongs to.
+        """
+        return CacheKey(
+            provider=entry.provider,
+            model=entry.model,
+            prompt_hash=entry.prompt_hash,
+            args_hash=entry.args_hash,
+        )
+
+    def _assert_entry_bound_to_key(self, entry: CachedEntry, object_key: str) -> None:
+        """Refuse an entry whose own identity does not derive the row it sat in.
+
+        The comparison is made on the derived OBJECT KEY rather than field by
+        field, so it is exactly the mapping the writer used — including the
+        model-string sanitisation — and two models that sanitise to one
+        segment cannot be read as a mismatch.
+
+        Raises:
+            :exc:`~adapters.outbound.llm.LLMCacheError`: On any divergence.
+        """
+        stored_object_key = self._object_key_for(self._key_of(entry))
+        if stored_object_key != object_key:
+            msg = (
+                "LLM cache entry does not belong to the requested key: "
+                f"row {object_key!r} decoded to an entry filed under {stored_object_key!r}"
+            )
+            raise LLMCacheError(msg)
 
     def _object_key_for(self, key: CacheKey) -> str:
         """Return the natural secure-object key for a cache key."""

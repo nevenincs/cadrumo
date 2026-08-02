@@ -31,6 +31,16 @@ from .. import (
     create_catalogue_invoice,
 )
 
+
+class _CanonicalOnlyRateProvider:
+    """Real :class:`ExchangeRateProvider` implementation returning a rate ONLY
+    for the exact canonical uppercase token - proves the caller normalises
+    before querying, rather than mocking the lookup itself."""
+
+    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+        del rate_date
+        return Decimal("1.2") if currency == "GBP" else None
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "19191919-1919-4191-8191-191919191919"
@@ -284,6 +294,29 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
     assert rows[("FR", "S")].importe == Decimal("4000.00")
     assert rows[("IT", "I")].nif_comunitario == "IT12345678901"
     assert rows[("IT", "I")].importe == Decimal("3000.00")
+
+
+@pytest.mark.parametrize("raw_currency", ["GBP", "gbp", " gbp "])
+def test_build_catalogue_invoice_normalises_currency_before_fx_lookup(raw_currency: str) -> None:
+    """A padded/lowercase foreign currency must resolve the SAME FX rate as its
+    canonical form: the provider is queried with the normalised token, not the
+    raw operator input."""
+    invoice = build_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.RECEIVED,
+        counterparty_name="Acme Ltd",
+        counterparty_tax_id="GB123456789",
+        counterparty_country="GB",
+        invoice_number="GB-2026-001",
+        issued_at=date(2026, 3, 10),
+        taxable_base=Decimal("100.00"),
+        iva_rate=None,
+        currency=raw_currency,
+        rate_provider=_CanonicalOnlyRateProvider(),
+    )
+    assert invoice.currency == "GBP"
+    assert invoice.fx_rate == Decimal("1.2")
+    assert invoice.fx_rate_date == date(2026, 3, 10)
 
 
 def test_build_catalogue_invoice_rounds_half_cent_cuota_away_from_zero() -> None:

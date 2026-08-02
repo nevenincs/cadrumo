@@ -117,6 +117,13 @@ def test_secure_storage_backend_roundtrips_a_secret(secret_store: SecretStore) -
     assert resolved.get_secret_value() == "correct-horse-battery-staple"
 
 
+def test_public_certificate_secret_backend_imports_and_constructs() -> None:
+    """The public auth surface can construct its certificate-secret backend."""
+    backend = _auth_facade.SecureStorageCertificateSecretBackend(bucket_id=_BUCKET_ID)
+
+    assert isinstance(backend, _auth_facade.CertificateSecretBackend)
+
+
 def test_secure_storage_backend_get_is_none_when_unset(secret_store: SecretStore) -> None:
     """A source with no registered secret resolves to ``None``, not an error."""
     backend = SecureStorageCertificateSecretBackend(bucket_id=_BUCKET_ID, store=secret_store)

@@ -156,18 +156,23 @@ class M210IncomeClassificationPayload(OutputSchema):
 
 
 class TransactionPayload(OutputSchema):
-    """Nested CLI copy of :class:`LedgerTransactionPayload`."""
+    """Nested CLI copy of :class:`LedgerTransactionPayload`.
 
-    transaction_id: str
-    date: str
-    booked_date: str
+    Field constraints mirror the canonical projection so a malformed
+    identity, date, currency, or blank description that
+    ``LedgerTransactionPayload`` refuses is refused at the CLI boundary too.
+    """
+
+    transaction_id: TransactionId
+    date: str = Field(min_length=10, max_length=10)
+    booked_date: str = Field(min_length=10, max_length=10)
     value_date: str | None = None
-    amount: str
-    currency: str
-    direction: str
+    amount: str = Field(min_length=1)
+    currency: str = Field(min_length=3, max_length=3)
+    direction: str = Field(min_length=1)
     counterparty: str = ""
-    description: str
-    business_classification: str
+    description: str = Field(min_length=1)
+    business_classification: str = Field(min_length=1)
     business_pct: str | None = None
     category_id: str | None = None
     taxable_base: str | None = None
@@ -182,8 +187,8 @@ class TransactionPayload(OutputSchema):
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: list[str] = []
     notes: str = ""
-    lifecycle_state: str
-    classified_by: str
+    lifecycle_state: str = Field(min_length=1)
+    classified_by: str = Field(min_length=1)
     # Decision-provenance fields: the "why" behind the active
     # classification decision. Declared here so the strict single-transaction
     # read surface (ledger view/classify/update/archive/stash) accepts the
@@ -301,8 +306,8 @@ class LedgerImportTransactionRefPayload(OutputSchema):
     on the imported / skipped / likely-duplicate ref lists.
     """
 
-    bucket_id: str
-    transaction_id: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
 
 
 class LedgerImportValidationPayload(OutputSchema):
@@ -325,9 +330,9 @@ class LedgerImportSourcePayload(OutputSchema):
 class LedgerImportDiagnosticPayload(OutputSchema):
     """One :class:`LedgerImportDiagnosticReport` entry."""
 
-    kind: str
-    severity: str
-    message: str
+    kind: str = Field(min_length=1, max_length=32)
+    severity: str = Field(min_length=1, max_length=16)
+    message: str = Field(min_length=1, max_length=128)
     source_path: str | None = None
     source_locator: str | None = None
     affected_transaction_ids: list[str] = []
@@ -695,21 +700,21 @@ class LedgerStatusResult(OutputSchema):
     active business/mixed rows, not modelo registry calculations.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     business_income_total: str = "0.00"
     business_expense_total: str = "0.00"
     business_net_total: str = "0.00"
-    total_count: int
-    active_count: int
-    archived_count: int
-    stashed_count: int
-    split_count: int = 0
-    pending_review_count: int
-    reviewed_count: int
-    skipped_count: int
+    total_count: int = Field(ge=0)
+    active_count: int = Field(ge=0)
+    archived_count: int = Field(ge=0)
+    stashed_count: int = Field(ge=0)
+    split_count: int = Field(ge=0, default=0)
+    pending_review_count: int = Field(ge=0)
+    reviewed_count: int = Field(ge=0)
+    skipped_count: int = Field(ge=0)
     period: Period | None = None
-    checked_transaction_count: int = 0
-    readiness_issue_count: int = 0
+    checked_transaction_count: int = Field(default=0, ge=0)
+    readiness_issue_count: int = Field(default=0, ge=0)
     ready: bool | None = None
 
 
@@ -886,14 +891,14 @@ class LedgerImportPayload(OutputSchema):
     appends the optional operator-facing notice strings.
     """
 
-    rows: int
-    imported: int
-    skipped: int
-    likely_duplicates: int = 0
+    rows: int = Field(ge=0)
+    imported: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    likely_duplicates: int = Field(default=0, ge=0)
     dry_run: bool
     verify: bool
     period: Period | None = None
-    bucket_id: str | None = None
+    bucket_id: BucketId | None = None
     import_batch_id: str | None = None
     bucket_event_ids: list[str] = []
     imported_transaction_refs: list[LedgerImportTransactionRefPayload] = []

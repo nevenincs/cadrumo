@@ -31,16 +31,21 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import sys
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core import normalise_corpus_text
+from pydantic import ValidationError
+
+from cadrumo.core import (
+    MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
+    MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
+    MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
+    ManualCorpusTextSidecar,
+    normalise_corpus_text,
+)
 
 _UTF_8: Final[str] = "utf-8"
-_SCHEMA_VERSION: Final[int] = 2
-_SIDECAR_SUFFIX: Final[str] = ".corpus_text.json"
 
 # dev/corpus/extract_manual_corpus_text.py is two levels below the repo root.
 _REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
@@ -65,25 +70,30 @@ def _sidecar_path_for(pdf_path: Path) -> Path:
     → ``manual_corpus_text/manuals/renta/2020/part1/source.pdf.corpus_text.json``
     """
     relative_posix = pdf_path.relative_to(_CORPUS_ROOT).as_posix()
-    return _SIDECAR_ROOT.joinpath(*relative_posix.split("/")).with_name(pdf_path.name + _SIDECAR_SUFFIX)
+    return _SIDECAR_ROOT.joinpath(*relative_posix.split("/")).with_name(
+        pdf_path.name + MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX
+    )
 
 
 def _is_current(pdf_path: Path, sha256: str) -> bool:
     """Return True when an up-to-date sidecar exists for ``pdf_path``.
 
-    A sidecar is current when it exists, parses as valid JSON, carries the
-    current ``schema_version``, and its ``source_sha256`` field equals the
-    supplied ``sha256``.  An older-schema sidecar (e.g. one missing the
-    ``extraction_platform`` stamp) is stale and gets regenerated.
+    A sidecar is current when it exists and satisfies the very
+    :class:`ManualCorpusTextSidecar` contract the runtime evidence validator
+    admits it under -- pinned schema version, prefixed corpus path, hex-64
+    content key, stamped extraction platform, non-empty text -- and its
+    ``source_sha256`` equals the supplied ``sha256``.  Anything the runtime
+    would refuse is stale here and gets regenerated, so the writer cannot
+    leave behind a sidecar the reader silently falls back past.
     """
     sidecar_path = _sidecar_path_for(pdf_path)
     if not sidecar_path.is_file():
         return False
     try:
-        data = json.loads(sidecar_path.read_text(encoding=_UTF_8))
-        return bool(data.get("schema_version") == _SCHEMA_VERSION and data.get("source_sha256") == sha256)
-    except Exception:
+        sidecar = ManualCorpusTextSidecar.model_validate_json(sidecar_path.read_text(encoding=_UTF_8))
+    except (OSError, UnicodeDecodeError, ValidationError):
         return False
+    return sidecar.source_sha256 == sha256
 
 
 def _extract_raw_text(path: Path) -> str:
@@ -121,22 +131,22 @@ def _write_sidecar(pdf_path: Path, sha256: str, normalised_text: str) -> Path:
     """Write the corpus text sidecar and return its path."""
     sidecar_path = _sidecar_path_for(pdf_path)
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
-    corpus_path = "corpus/" + pdf_path.relative_to(_CORPUS_ROOT).as_posix()
-    payload: dict[str, object] = {
-        "schema_version": _SCHEMA_VERSION,
-        "corpus_path": corpus_path,
-        "source_sha256": sha256,
+    corpus_path = MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX + pdf_path.relative_to(_CORPUS_ROOT).as_posix()
+    payload = ManualCorpusTextSidecar(
+        schema_version=MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
+        corpus_path=corpus_path,
+        source_sha256=sha256,
         # pypdfium2 bundles a per-OS native pdfium binary whose text extraction
         # differs subtly across platforms, so the exact re-extraction equality
         # gate only holds on the platform that generated the sidecar.  Runtime
         # reads the committed text directly (keyed by source_sha256) on every
         # platform, so the variance is a build/test-only concern.
-        "extraction_platform": sys.platform,
-        "normalised_text": normalised_text,
-    }
+        extraction_platform=sys.platform,
+        normalised_text=normalised_text,
+    )
     # Compact JSON — this is a machine cache that can be megabytes of text.
     sidecar_path.write_text(
-        json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n",
+        payload.model_dump_json() + "\n",
         encoding=_UTF_8,
         newline="\n",
     )

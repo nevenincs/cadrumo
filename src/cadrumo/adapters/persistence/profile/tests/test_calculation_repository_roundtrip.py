@@ -180,6 +180,13 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert len(loaded.revisions) == 1
     (revision,) = loaded.values()
     assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert revision.created_at == datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    assert revision.updated_at == datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC)
+    assert revision.verified_at == revision.updated_at
+    assert revision.created_at.utcoffset() == UTC.utcoffset(revision.created_at)
+    assert revision.updated_at.utcoffset() == UTC.utcoffset(revision.updated_at)
+    assert revision.verified_at is not None
+    assert revision.verified_at.utcoffset() == UTC.utcoffset(revision.verified_at)
     # The non-decimal ``period_code`` entry must survive verbatim: the string
     # replay channel is where every text-family casilla persists.
     assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == _DECL_PERIODO_CODE
@@ -320,3 +327,55 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
         "stored_schema_version": stored_schema_version,
         "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
     }
+
+
+@pytest.mark.parametrize(
+    "field",
+    ("created_at", "updated_at", "verified_at"),
+)
+@pytest.mark.parametrize(
+    "persisted_instant",
+    ("2024-07-01T09:00:00", "2024-07-01T10:00:00+01:00"),
+    ids=("naive", "offset"),
+)
+def test_calculation_revision_refuses_ambiguous_lifecycle_instants_at_encrypted_load(
+    tmp_path: Path,
+    field: str,
+    persisted_instant: str,
+) -> None:
+    """Ambiguous lifecycle instants must not rehydrate out of durable storage.
+
+    The model refuses naive and non-UTC instants at construction, but the
+    persistence boundary is where a stored value re-enters the process, and
+    chronological consumers mix these instants across revisions. Rewrites one
+    lifecycle field in the encrypted envelope and asserts the read path refuses
+    rather than returning a value whose wall-clock meaning depends on the
+    machine that reads it.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(_populated_catalogue())
+
+        record = profile.repository.load(
+            _CALCULATION_NAMESPACE,
+            _CALCULATION_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        ((_revision_id, persisted_revision),) = envelope["payload"]["revisions"].items()
+        assert persisted_revision.get(field), f"fixture must persist {field} for this proof to be meaningful"
+        persisted_revision[field] = persisted_instant
+        profile.repository.save(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(ValidationError, match="datetime must be"):
+            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()

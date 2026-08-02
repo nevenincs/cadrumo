@@ -24,10 +24,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage import PathContainmentError
 from ....core import Period
 from ....core.aggregation import RetencionClave
 from ....core.external_constants import UTF_8_ENCODING
-from ....domain.calculations.registry import WithholdingObservation
+from ....domain.calculations.registry import WithholdingObservation, aggregate_withholding_by_clave
 from ....tests.secure_sql import isolated_runtime_profile
 from .._percepciones_observations_repository import (
     PercepcionObservationRepository,
@@ -230,3 +231,121 @@ def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
         persist_percepcion_observations(modelo="190", filing_year=2024, period=period, observations=observations)
         loaded = PercepcionObservationRepository().load_observations("190", period)
         assert set(loaded) == set(observations)
+
+
+def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> None:
+    """A replacement that cannot be committed leaves the declared window untouched.
+
+    The set-replace used to commit each stale-row delete before looping through
+    the saves one at a time, so a refusal part-way through destroyed the prior
+    declared set and left only the rows written before the failure. The next
+    calculate then read that partial window as the operator's declared truth —
+    a silent under-count whose own evidence had already been deleted. Nothing
+    may reach storage until the whole replacement is prepared.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = PercepcionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        declared = (
+            _observation(nif="11111111H", clave="A"),
+            _observation(nif="22222222J", clave="A"),
+            _observation(nif="33333333P", clave="B"),
+        )
+        repo.replace_observations(
+            modelo="190",
+            filing_year=2024,
+            period=period,
+            observations=declared,
+            source_kind="aggregate_pull",
+        )
+
+        replacement = repo.build_observation_payload(
+            modelo="190",
+            filing_year=2024,
+            period=period,
+            observation=_observation(nif="44444444A", clave="A"),
+            source_kind="aggregate_pull",
+        )
+        stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
+        with pytest.raises(PathContainmentError):
+            repo.replace_records((replacement,), (*stale_identifiers, "190:2024:0A:../escape:A:-"))
+
+        survived = repo.load_observations("190", period)
+        assert set(survived) == set(declared)
+
+
+def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> None:
+    """A key in both the old and the new set is updated, never deleted.
+
+    Writes and deletions commit in one transaction with writes applied first, so
+    a row whose key is carried across the replacement must be excluded from the
+    stale set — otherwise it is upserted and then removed in the same unit of
+    work and the operator loses a percepción they still declare.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = PercepcionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        repo.replace_observations(
+            modelo="190",
+            filing_year=2024,
+            period=period,
+            observations=(
+                _observation(nif="11111111H", clave="A"),
+                _observation(nif="22222222J", clave="A"),
+            ),
+            source_kind="aggregate_pull",
+        )
+        carried = _observation(nif="11111111H", clave="A", dinerario=Decimal("2500"))
+        repo.replace_observations(
+            modelo="190",
+            filing_year=2024,
+            period=period,
+            observations=(carried,),
+            source_kind="aggregate_pull",
+        )
+
+        assert repo.load_observations("190", period) == (carried,)
+
+
+def test_whitespace_variant_tax_ids_are_one_perceptor_in_store_and_aggregation(tmp_path: Path) -> None:
+    """Canonically-equal perceptor declarations resolve to ONE percepción everywhere.
+
+    The observation model held the tax ID exactly as declared while the
+    repository trimmed and uppercased it before hashing it into the object key.
+    Two declarations of the same perceptor under the same clave, differing only
+    in surrounding whitespace or letter case, were therefore counted as two
+    distinct percepciones while sharing a single stored row whose later write
+    overwrote the earlier evidence — the declared registro-tipo-2 count and the
+    persisted evidence disagreeing.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = PercepcionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        padded = _observation(nif=" 12345678z ", clave="A", dinerario=Decimal("1000"))
+        canonical = _observation(nif="12345678Z", clave="A", dinerario=Decimal("2000"))
+
+        # The model itself canonicalises, so the aggregation identity matches.
+        assert padded.perceptor_tax_id == canonical.perceptor_tax_id == "12345678Z"
+
+        # One distinct (perceptor, clave, subclave) percepcion, not two.
+        breakdown = aggregate_withholding_by_clave((padded, canonical))
+        assert sum(row.percepcion_count for row in breakdown) == 1
+
+        repo.replace_observations(
+            modelo="190",
+            filing_year=2024,
+            period=period,
+            observations=(padded, canonical),
+            source_kind="aggregate_pull",
+        )
+        stored = repo.load_observations("190", period)
+        assert len(stored) == 1
+        assert len({o.perceptor_tax_id for o in stored}) == 1
+
+
+def test_padded_tax_id_keys_to_the_canonical_object_key() -> None:
+    """A padded declaration and its canonical form address the same stored row."""
+    period = Period.from_year_and_code(2024, "0A")
+    padded_key = percepcion_observation_key("190", 2024, period, " 12345678z ", "A", "")
+    canonical_key = percepcion_observation_key("190", 2024, period, "12345678Z", "A", "")
+    assert padded_key == canonical_key

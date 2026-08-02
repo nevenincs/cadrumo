@@ -204,6 +204,7 @@ def _bucket_history_event_payload(event: BucketEvent) -> BucketHistoryEventPaylo
         actor=event.actor,
         object_type=event.object_type,
         object_id=event.object_id,
+        payload_version=event.payload_version,
         payload=dict(event.payload),
     )
 

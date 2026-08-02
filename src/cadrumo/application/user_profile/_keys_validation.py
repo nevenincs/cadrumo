@@ -30,7 +30,12 @@ from ...domain.contribuyente import (
     optional_profile_keys,
 )
 from ...domain.contribuyente import profile_keys as _get_profile_keys
-from ._completeness import IVA_REGIME_PATH, conditional_profile_required_paths, iva_regime_required
+from ._completeness import (
+    IVA_REGIME_PATH,
+    conditional_profile_required_paths,
+    iva_regime_required,
+    profile_value_is_present,
+)
 
 
 class ProfileValidationResult(BaseModel):
@@ -60,8 +65,7 @@ class ProfileValueRow(BaseModel):
 
 
 def _has_value(values: Mapping[str, str], key: str) -> bool:
-    raw = values.get(key)
-    return raw is not None and raw.strip() != ""
+    return profile_value_is_present(values.get(key))
 
 
 def _conditional_requirement_applies(values: Mapping[str, str], entry: ProfileKey) -> bool:
@@ -172,7 +176,7 @@ def list_profile_value_rows(
     rows: list[ProfileValueRow] = []
     for entry in _registered_profile_keys():
         value = values.get(entry.key)
-        is_set = value is not None and value.strip() != ""
+        is_set = profile_value_is_present(value)
         if not is_set and not include_unset:
             continue
         rows.append(

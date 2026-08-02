@@ -350,6 +350,15 @@ def _approved_modelo_100_xml_dictionary_draft() -> ModeloDraft:
     provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
     collection = provider.get_collection("100")
     draft_timestamp = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
+    # A COMPUTED value carries the casilla inputs its registry formula declares,
+    # exactly as ``build_draft`` populates them, so the fixture satisfies the
+    # ``ModeloValue`` provenance matrix instead of asserting a trace-less
+    # COMPUTED shape the builder never emits.
+    declared_trace = {
+        schema.casilla_id: tuple(schema.formula_input_casilla_ids)
+        for schema in collection.all()
+        if schema.formula is not None
+    }
     values = (
         ModeloValue(
             casilla_id="0003",
@@ -368,24 +377,28 @@ def _approved_modelo_100_xml_dictionary_draft() -> ModeloDraft:
             value=Decimal("1520.00"),
             kind=ModeloValueKind.COMPUTED,
             source="Operator-verified Modelo 130 relation fold",
+            formula_trace_casilla_ids=declared_trace["0604"],
         ),
         ModeloValue(
             casilla_id="0609",
             value=Decimal("6020.00"),
             kind=ModeloValueKind.COMPUTED,
             source="Operator-verified total payments",
+            formula_trace_casilla_ids=declared_trace["0609"],
         ),
         ModeloValue(
             casilla_id="0610",
             value=Decimal("2007.50"),
             kind=ModeloValueKind.COMPUTED,
             source="Operator-verified cuota diferencial",
+            formula_trace_casilla_ids=declared_trace["0610"],
         ),
         ModeloValue(
             casilla_id="0670",
             value=Decimal("2007.50"),
             kind=ModeloValueKind.COMPUTED,
             source="Operator-verified resultado declaracion",
+            formula_trace_casilla_ids=declared_trace["0670"],
         ),
     )
     provenance_by_id = {

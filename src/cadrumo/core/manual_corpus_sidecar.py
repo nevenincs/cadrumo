@@ -29,11 +29,15 @@ __all__ = [
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
     "MANUAL_CORPUS_TEXT_SCHEMA_VERSION",
     "MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX",
+    "ManualCorpusTextSchemaVersion",
     "ManualCorpusTextSidecar",
 ]
 
-MANUAL_CORPUS_TEXT_SCHEMA_VERSION: Final[int] = 2
-"""The one accepted sidecar schema version.
+ManualCorpusTextSchemaVersion = Literal[2]
+"""The one accepted sidecar schema version, as a type."""
+
+MANUAL_CORPUS_TEXT_SCHEMA_VERSION: Final[ManualCorpusTextSchemaVersion] = 2
+"""The one accepted sidecar schema version, as a value.
 
 Pinned in lock-step with the :class:`ManualCorpusTextSidecar` field set: any
 change to the fields is a version bump, and the extractor rewrites every
@@ -72,7 +76,7 @@ class ManualCorpusTextSidecar(BaseModel):
 
     model_config = ConfigDict(frozen=True, strict=True, extra="forbid")
 
-    schema_version: Literal[2]
+    schema_version: ManualCorpusTextSchemaVersion
     corpus_path: str = Field(min_length=len(MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX) + 1, max_length=1024)
     source_sha256: str = Field(pattern=HEX_PATTERN_64)
     extraction_platform: str = Field(min_length=1, max_length=64)

@@ -36,7 +36,7 @@ import binascii
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import cast
+from typing import Final, cast
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -268,6 +268,25 @@ def load_envelope[PayloadT: BaseModel](
 _HKDF_CONTEXT_ENVELOPE_PAYLOAD = b"cadrumo.envelope.payload.v1"
 _CIPHER_ENVELOPE_AAD_PREFIX = b"cadrumo.envelope.cipher.v1::"
 
+CIPHER_ENVELOPE_SCHEMA_VERSION: Final[int] = 1
+"""The one outer cipher-envelope wire version this build reads and writes.
+
+The outer version was parsed into a model field and then consulted by nobody:
+:func:`load_encrypted_envelope` gated only the *inner* envelope's version, so a
+cipher envelope claiming any version at all was accepted and decrypted. A
+version marker that no reader compares against anything is not a
+compatibility mechanism, it is a comment -- and the first real format change
+would have been read by a build that had no idea it could not understand the
+bytes.
+
+One declared value, checked before the master key is consulted, is what makes
+the field load-bearing. That check is also why the version is deliberately NOT
+bound into the AEAD associated data: with exactly one accepted value gated
+ahead of key use, rewriting the field can only produce a refusal, so it steers
+nothing an attacker could exploit. Should a second version ever ship, the
+version becomes a real routing input and must be bound then.
+"""
+
 
 class CipherEnvelope(BaseModel):
     """On-disk wire form for ciphertext-at-rest envelopes.
@@ -283,7 +302,9 @@ class CipherEnvelope(BaseModel):
     Attributes:
         cipher_schema_version: Wire-format version of the cipher
             envelope itself (independent of the inner plaintext
-            envelope's :attr:`Envelope.schema_version`).
+            envelope's :attr:`Envelope.schema_version`). Gated against
+            :data:`CIPHER_ENVELOPE_SCHEMA_VERSION` on load, before the
+            master key is consulted.
         written_at: Timezone-aware datetime captured at write time.
         classification: The
             :class:`~adapters.persistence.storage.SensitivityClass` of the inner
@@ -295,7 +316,7 @@ class CipherEnvelope(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    cipher_schema_version: int = Field(default=1, ge=1)
+    cipher_schema_version: int = Field(default=CIPHER_ENVELOPE_SCHEMA_VERSION, ge=1)
     written_at: datetime
     classification: SensitivityClass
     encryption: EncryptionMetadata
@@ -447,6 +468,15 @@ def load_encrypted_envelope[PayloadT: BaseModel](
         raise ClassificationError(
             f"cipher envelope classification {cipher_envelope.classification}; consumer expected {expected_class}",
         )
+    # Beside the classification gate, and for the same reason: an outer-format
+    # version this build cannot interpret is refused before the master key is
+    # consulted, rather than being parsed and then ignored while the payload is
+    # decrypted anyway.
+    if cipher_envelope.cipher_schema_version != CIPHER_ENVELOPE_SCHEMA_VERSION:
+        raise EnvelopeVersionError(
+            f"cipher envelope is at version {cipher_envelope.cipher_schema_version}; "
+            f"consumer expects {CIPHER_ENVELOPE_SCHEMA_VERSION}",
+        )
     blob = cipher_envelope.encryption.to_blob()
     aad = build_aad(cipher_envelope.classification, hkdf_context)
     if cipher_envelope.encryption.associated_data() != aad:
@@ -555,6 +585,7 @@ def reencrypt_envelope_file[PayloadT: BaseModel](
 
 
 __all__ = [
+    "CIPHER_ENVELOPE_SCHEMA_VERSION",
     "CipherEnvelope",
     "EncryptionMetadata",
     "Envelope",

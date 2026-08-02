@@ -24,10 +24,11 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.hashing import content_hash_hex
+from ...core.time import validate_utc_aware
 from ..calculations.registry import CasillaId, LegalRefId, SourceRefId, VerificationExpectationId
 from ._errors import ModeloValidationError
 from ._ids import VerificationReportId
@@ -175,6 +176,12 @@ class VerificationReport(BaseModel):
     run_at: datetime
     verified_by: ModeloActorLabel
     granted_verificado_completo: bool
+
+    @field_validator("run_at")
+    @classmethod
+    def _run_at_is_utc(cls, value: datetime) -> datetime:
+        """Reject naive and non-UTC verification instants at the model boundary."""
+        return validate_utc_aware(value)
 
     @model_validator(mode="after")
     def _enforce_invariants(self) -> VerificationReport:

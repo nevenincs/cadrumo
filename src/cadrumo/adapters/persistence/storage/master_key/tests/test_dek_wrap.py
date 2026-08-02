@@ -150,7 +150,7 @@ def test_wrap_rejects_wrong_size_dek() -> None:
 
 
 def test_wrap_rejects_empty_bucket_id() -> None:
-    with pytest.raises(EncryptionError, match="bucket_id must be non-empty") as exc_info:
+    with pytest.raises(EncryptionError, match="bucket_id must be a canonical bucket identity") as exc_info:
         wrap_dek(kek=_REFERENCE_KEK, dek=_REFERENCE_DEK, bucket_id="")
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_encryption"
 

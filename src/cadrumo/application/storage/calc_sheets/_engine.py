@@ -791,6 +791,20 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
             end_column=4,
             description=tr("application.storage.calc_sheets.engine.protected.guide"),
         ),
+        # Evidencia is generated fact basis, never an operator surface. It was
+        # protected offline by a bespoke whole-sheet call that the plan never
+        # mentioned, so the online transport had nothing to act on and left it
+        # editable. Declaring it here is what makes the two agree: the plan is
+        # the protection contract, and a transport that protects something the
+        # plan does not name is as wrong as one that skips something it does.
+        SheetProtectedRange(
+            tab=TabName.EVIDENCIA,
+            start_row=1,
+            end_row=1000,
+            start_column=1,
+            end_column=16,
+            description=tr("application.storage.calc_sheets.engine.protected.evidencia"),
+        ),
     )
 
 

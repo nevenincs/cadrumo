@@ -10,7 +10,8 @@ bucket event.
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -18,6 +19,7 @@ from pathlib import Path
 
 import pytest
 from pydantic import SecretStr
+from sqlalchemy.engine import Engine
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -45,6 +47,7 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.write_unit_recorder import WriteUnitRecorder
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     AmendmentEvidenceMissingError,
@@ -116,10 +119,17 @@ _M303_RESULT_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _M303_PRINTED_RESULT_TOKEN: CasillaId = _casilla_id("69")
 
 
-@pytest.fixture
-def repos(tmp_path: Path) -> Generator[_Repos]:
-    """Yield the shared ready-profile repository bundle for amend-flow tests."""
+@dataclass(frozen=True, slots=True)
+class _AmendRuntime:
+    """The live engine plus the repository bundle sharing it."""
 
+    engine: Engine
+    repos: _Repos
+
+
+@contextmanager
+def _amend_runtime(tmp_path: Path) -> Iterator[_AmendRuntime]:
+    """Provision the shared ready-profile runtime used by every amend-flow test."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID, label=_PROFILE_LABEL) as profile:
         objects = profile.repository
         UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=objects).save(
@@ -131,13 +141,32 @@ def repos(tmp_path: Path) -> Generator[_Repos]:
                 updated_at=_T0,
             ),
         )
-        yield (
-            WorkUnitCatalogueRepository(objects=objects),
-            CalculationRevisionCatalogueRepository(objects=objects),
-            ModeloRecordCatalogueRepository(objects=objects),
-            VerificationReportCatalogueRepository(objects=objects),
-            BucketEventHistoryRepository(objects=objects),
+        yield _AmendRuntime(
+            engine=objects.engine,
+            repos=(
+                WorkUnitCatalogueRepository(objects=objects),
+                CalculationRevisionCatalogueRepository(objects=objects),
+                ModeloRecordCatalogueRepository(objects=objects),
+                VerificationReportCatalogueRepository(objects=objects),
+                BucketEventHistoryRepository(objects=objects),
+            ),
         )
+
+
+@pytest.fixture
+def repos(tmp_path: Path) -> Generator[_Repos]:
+    """Yield the shared ready-profile repository bundle for amend-flow tests."""
+
+    with _amend_runtime(tmp_path) as runtime:
+        yield runtime.repos
+
+
+@pytest.fixture
+def amend_runtime(tmp_path: Path) -> Generator[_AmendRuntime]:
+    """Yield the same bundle plus the live engine, for write-unit observation."""
+
+    with _amend_runtime(tmp_path) as runtime:
+        yield runtime
 
 
 def _seed_work_unit(
@@ -723,3 +752,118 @@ def test_export_guard_would_refuse_an_amendment_carrying_contributors(repos: _Re
     with_contributors = new_revision.model_copy(update={"source_transaction_ids": ("a" * 64,)})
     with pytest.raises(ModeloExportEvidenceMissingError):
         _raise_if_ledger_export_evidence_missing(with_contributors)
+
+
+def test_amendment_commits_its_catalogues_and_event_in_one_transaction(
+    amend_runtime: _AmendRuntime,
+) -> None:
+    """The amendment's three catalogues and its event share one transaction.
+
+    Saved separately with ``modelo.amended`` emitted last, an event-storage
+    failure left the amended filing durable and the work-unit pointers advanced
+    onto it while the history had no corresponding event and no retryable
+    incomplete-amendment marker named the gap.
+    """
+    repos_tuple = amend_runtime.repos
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos_tuple
+    _, _, baseline = _seed_external_baseline(
+        repos_tuple,
+        casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
+    )
+    recorder = WriteUnitRecorder(amend_runtime.engine)
+
+    with recorder.recording():
+        amend_modelo_revision(
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="under-reported turnover",
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T4,
+        )
+
+    assert recorder.commits_between_writes() == 0
+
+
+def test_split_amendment_write_shape_commits_between_catalogues(
+    amend_runtime: _AmendRuntime,
+) -> None:
+    """Anti-tautology: the recorder does report a seam when one exists.
+
+    Persisting the same catalogues through independent saves -- the shape the
+    amendment path replaced -- must be observed as more than one transaction.
+    """
+    repos_tuple = amend_runtime.repos
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos_tuple
+    _, _, baseline = _seed_external_baseline(
+        repos_tuple,
+        casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
+    )
+    amend_modelo_revision(
+        from_filing_record_id=baseline.filing_record_id,
+        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        reason="under-reported turnover",
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+    revisions = cr_repo.load()
+    filings = fr_repo.load()
+    work_units = wu_repo.load()
+    events = bv_repo.load()
+    recorder = WriteUnitRecorder(amend_runtime.engine)
+
+    with recorder.recording():
+        cr_repo.save(revisions)
+        fr_repo.save(filings)
+        wu_repo.save(work_units)
+        bv_repo.save(events)
+
+    assert recorder.commits_between_writes() >= 1
+
+
+def test_amendment_event_and_state_are_both_present_after_success(
+    amend_runtime: _AmendRuntime,
+) -> None:
+    """Parity: co-committing the event does not change what an amendment records."""
+    repos_tuple = amend_runtime.repos
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos_tuple
+    _, _, baseline = _seed_external_baseline(
+        repos_tuple,
+        casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
+    )
+
+    amended = amend_modelo_revision(
+        from_filing_record_id=baseline.filing_record_id,
+        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        reason="under-reported turnover",
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+
+    refreshed = get_work_unit(baseline.work_unit_id, repository=wu_repo)
+    assert refreshed.current_filing_record_id == amended.filing_record_id
+    assert refreshed.filed_calculation_revision_id == amended.calculation_revision_id
+    assert get_filing_record(baseline.filing_record_id, filing_repository=fr_repo).status is (
+        ModeloRecordStatus.SUPERSEDIDO
+    )
+
+    amended_events = [
+        event for event in bv_repo.load().events.values() if event.event_type is BucketEventType.MODELO_AMENDED
+    ]
+    assert len(amended_events) == 1
+    assert amended_events[0].object_id == amended.filing_record_id
+    assert amended_events[0].payload["amends_filing_record_id"] == baseline.filing_record_id

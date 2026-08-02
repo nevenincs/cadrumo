@@ -40,6 +40,10 @@ class BucketHistoryEventPayload(OutputSchema):
     Mirrors :class:`~cadrumo.domain.buckets.BucketEvent`'s operator-facing
     projection. Enum members and ``datetime`` values render to the same JSON the
     former hand-built mapping emitted, so the wire form is unchanged.
+    ``payload_version`` is the discriminator a consumer needs to interpret the
+    free-form ``payload`` mapping; the adjacent
+    :class:`~cadrumo.entrypoints.cli._ledger_payloads.LedgerHistoryEventPayload`
+    projection already carries it, so this row now stays at parity.
     """
 
     event_id: BucketEventId
@@ -48,6 +52,7 @@ class BucketHistoryEventPayload(OutputSchema):
     actor: BucketActorLabel
     object_type: BucketEventObjectType
     object_id: str = Field(min_length=1, max_length=128)
+    payload_version: int = Field(ge=1)
     payload: dict[str, str] = {}
 
 

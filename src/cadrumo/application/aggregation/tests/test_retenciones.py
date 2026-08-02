@@ -368,3 +368,48 @@ class TestAggregationInvariants:
                 total_taxable_base=row.total_taxable_base,
                 total_retencion=row.total_retencion,
             )
+
+
+ValidationError = __import__("pydantic").ValidationError
+
+
+class TestAccruedDateAuthority:
+    """``accrued_on`` is admitted by the canonical date authority, not a length bound."""
+
+    @pytest.mark.parametrize("impossible", ["2026-99-99", "2026-02-30", "2025-13-01"])
+    def test_impossible_accrued_dates_are_refused(self, impossible: str) -> None:
+        """An impossible calendar date never reaches a rollup or the encrypted store.
+
+        ``accrued_on`` was bounded by string length alone, so a ten-character
+        non-date was summed and counted exactly like a real accrual, and the
+        per-perceptor store persisted it as declared evidence.
+        """
+        with pytest.raises(ValidationError):
+            _obs(
+                nif="11111111H",
+                scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                base="100",
+                retencion="15",
+                accrued=impossible,
+            )
+
+    @pytest.mark.parametrize("malformed", ["20260301", "2026-3-1", "01-03-2026"])
+    def test_non_extended_iso_accrued_dates_are_refused(self, malformed: str) -> None:
+        """Only the extended ``YYYY-MM-DD`` wire form is admitted."""
+        with pytest.raises(ValidationError):
+            _obs(
+                nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, base="100", retencion="15", accrued=malformed
+            )
+
+    def test_valid_accrued_date_is_admitted_and_aggregates(self) -> None:
+        """The positive control: a real accrual date is admitted and rolls up."""
+        observation = _obs(
+            nif="11111111H",
+            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            base="100",
+            retencion="15",
+            accrued="2026-03-01",
+        )
+        assert observation.accrued_on == "2026-03-01"
+        aggregation = aggregate_retenciones_111((observation,), period=Period.from_year_and_code(2026, "1T"))
+        assert aggregation.total_perceptors == 1

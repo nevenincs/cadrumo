@@ -500,3 +500,48 @@ def test_transaction_payload_carries_d6_timestamps() -> None:
     assert payload.modified_at == "2024-06-01T16:45:00+00:00"
     with pytest.raises(ValueError):
         TransactionPayload.model_validate(_transaction_payload(created_at=None, modified_at=None))
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("transaction_id", "bad"),
+        ("date", "not-date"),
+        ("description", ""),
+        ("currency", "X"),
+    ],
+)
+def test_transaction_payload_rejects_malformed_values_the_canonical_model_rejects(field: str, value: object) -> None:
+    """A malformed identity/date/description/currency crosses the same wall LedgerTransactionPayload holds."""
+    with pytest.raises(ValidationError):
+        TransactionPayload.model_validate(_transaction_payload(**{field: value}))
+
+
+def test_ledger_add_result_refuses_a_malformed_nested_transaction() -> None:
+    """Every mutation-quintet result reuses the same nested transaction contract as ``TransactionPayload``."""
+    with pytest.raises(ValidationError):
+        LedgerAddResult.model_validate(
+            {
+                "bucket_id": "default",
+                "transaction_id": "a" * 64,
+                "bucket_event_ids": ["b" * 64],
+                "review_status": "reviewed",
+                "transaction": _transaction_payload(currency="X"),
+            },
+        )
+
+
+def test_ledger_add_result_accepts_a_valid_mutation_quintet_round_trip() -> None:
+    """A genuine mutation-quintet payload carrying a well-formed nested transaction round-trips cleanly."""
+    result = LedgerAddResult.model_validate(
+        {
+            "bucket_id": "default",
+            "transaction_id": "a" * 64,
+            "bucket_event_ids": ["b" * 64],
+            "review_status": "reviewed",
+            "transaction": _transaction_payload(),
+        },
+    )
+
+    assert result.transaction.transaction_id == "a" * 64
+    assert LedgerAddResult.model_validate(result.model_dump(mode="json")) == result

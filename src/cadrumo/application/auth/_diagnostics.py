@@ -17,9 +17,10 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from enum import StrEnum
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage import (
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
@@ -35,12 +36,18 @@ from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
 _DIAGNOSTIC_SENSITIVITY = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity
 _DIAGNOSTIC_SCHEMA_VERSION = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version
-AUTH_DIAGNOSTIC_PHONE_STATES: tuple[str, ...] = (
-    "app_prompted_and_accepted",
-    "app_prompted_not_accepted",
-    "app_did_not_prompt",
-    "operator_did_not_check",
-)
+
+
+class AuthDiagnosticPhoneState(StrEnum):
+    """Closed vocabulary of operator-observed Cl@ve Móvil app states."""
+
+    APP_PROMPTED_AND_ACCEPTED = "app_prompted_and_accepted"
+    APP_PROMPTED_NOT_ACCEPTED = "app_prompted_not_accepted"
+    APP_DID_NOT_PROMPT = "app_did_not_prompt"
+    OPERATOR_DID_NOT_CHECK = "operator_did_not_check"
+
+
+AUTH_DIAGNOSTIC_PHONE_STATES: tuple[str, ...] = tuple(state.value for state in AuthDiagnosticPhoneState)
 
 
 class AuthDiagnosticSummary(BaseModel):
@@ -105,8 +112,8 @@ class AuthDiagnosticReportResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    diagnostic_id: str
-    phone_state: str
+    diagnostic_id: str = Field(min_length=1)
+    phone_state: AuthDiagnosticPhoneState
     reported_at: datetime
 
 
@@ -225,7 +232,7 @@ def record_auth_diagnostic_phone_state(
     )
     return AuthDiagnosticReportResult(
         diagnostic_id=diagnostic_id,
-        phone_state=phone_state,
+        phone_state=AuthDiagnosticPhoneState(phone_state),
         reported_at=reported_at,
     )
 
@@ -383,6 +390,7 @@ __all__ = [
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AuthDiagnosticDetail",
     "AuthDiagnosticListReport",
+    "AuthDiagnosticPhoneState",
     "AuthDiagnosticReportResult",
     "AuthDiagnosticSummary",
     "list_auth_diagnostics",
