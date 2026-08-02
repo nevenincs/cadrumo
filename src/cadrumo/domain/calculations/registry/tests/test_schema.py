@@ -7,6 +7,10 @@ actual production model, not by a standalone enum construction.
 
 from __future__ import annotations
 
+import re
+from dataclasses import fields as dataclass_fields
+from decimal import Decimal
+from pathlib import Path
 from typing import Literal, TypedDict
 
 import pytest
@@ -24,7 +28,12 @@ from .._schema import (
     InputKind,
     RelationDefinition,
 )
-from .._schema_verification import VerificationExpectationDefinition
+from .._schema_verification import (
+    RegistryVerificationPolicy,
+    VerificationDiscrepancyCause,
+    VerificationExpectationDefinition,
+    VerificationRoundingCode,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -513,3 +522,79 @@ def test_export_field_rejects_numeric_kind() -> None:
     """A numeric value is not a valid CasillaFieldKind member."""
     with pytest.raises(ValidationError):
         ExportFieldDefinition.model_validate({**_FIELD_BASE, "kind": 99})
+
+
+
+class TestVerificationVocabulariesAreClosed:
+    """A verification expectation cannot declare a meaningless obligation.
+
+    ``rounding`` was a bare ``str`` and the policy fold dropped both it and
+    ``discrepancy_causes`` entirely, so ``rounding = "bogus"`` was accepted at
+    registry build and produced exactly the same policy and verifier behaviour
+    as the valid declaration. A legal verification obligation could therefore
+    drift from the runtime authority with nothing to notice.
+
+    ``none`` is a real member of the verification axis (compare the raw values
+    before applying the tolerance) even though the FORMULA rounding authority
+    has no such mode -- the two are different axes, which is why the
+    vocabularies are separate rather than shared.
+    """
+
+    def _fields(self, **overrides: object) -> dict[str, object]:
+        fields: dict[str, object] = {
+            "id": "expectation-under-test",
+            "computed_casilla_ids": ("01",),
+            "tolerance": Decimal("0.01"),
+            "rounding": "money-2",
+            "min_coverage": Decimal("1"),
+            "discrepancy_causes": ("rounding",),
+            "legal_refs": ("ley-35-2006:art-1",),
+            "source_refs": ("manual-iva-2025",),
+        }
+        fields.update(overrides)
+        return fields
+
+    @pytest.mark.parametrize("bad", ["bogus", "", "MONEY-2", "money_2", "integer"])
+    def test_an_unknown_rounding_token_is_refused(self, bad: str) -> None:
+        """``integer`` is a FORMULA mode; it is not a verification-comparison mode."""
+        with pytest.raises((ValidationError, ValueError)):
+            VerificationExpectationDefinition(**self._fields(rounding=bad))
+
+    @pytest.mark.parametrize("rounding", [code.value for code in VerificationRoundingCode])
+    def test_every_declared_rounding_mode_is_accepted(self, rounding: str) -> None:
+        expectation = VerificationExpectationDefinition(**self._fields(rounding=rounding))
+
+        assert expectation.rounding is VerificationRoundingCode(rounding)
+
+    def test_the_vocabulary_matches_what_the_registry_actually_declares(self) -> None:
+        """The enum is the registry's real value set, not a guess about it.
+
+        Without this the vocabulary could be narrowed to a subset and every
+        genuine declaration outside it would start failing the build.
+        """
+        declared = {
+            match.group(1)
+            for path in Path("src/cadrumo/_data/registry").rglob("verification_expectations/*.toml")
+            for match in re.finditer(r'rounding = "([^"]+)"', path.read_text(encoding="utf-8"))
+        }
+
+        assert declared, "no verification rounding declarations found; the scan is not measuring anything"
+        assert declared <= {code.value for code in VerificationRoundingCode}
+
+    @pytest.mark.parametrize("bad", ["invented", "", "ROUNDING"])
+    def test_an_unknown_discrepancy_cause_is_refused(self, bad: str) -> None:
+        with pytest.raises((ValidationError, ValueError)):
+            VerificationExpectationDefinition(**self._fields(discrepancy_causes=(bad,)))
+
+    @pytest.mark.parametrize("cause", [cause.value for cause in VerificationDiscrepancyCause])
+    def test_every_declared_cause_is_accepted(self, cause: str) -> None:
+        expectation = VerificationExpectationDefinition(**self._fields(discrepancy_causes=(cause,)))
+
+        assert expectation.discrepancy_causes == (VerificationDiscrepancyCause(cause),)
+
+    def test_the_policy_fold_carries_the_declarations_it_used_to_drop(self) -> None:
+        """The policy is the consumed projection; a dropped field is unreachable."""
+        carried = {field.name for field in dataclass_fields(RegistryVerificationPolicy)}
+
+        assert "rounding_codes" in carried
+        assert "discrepancy_causes" in carried

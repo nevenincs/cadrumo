@@ -49,9 +49,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Literal
+from enum import StrEnum
+from typing import Annotated, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 
 from ._errors import RegistryValidationError
 from ._ids import CasillaId, VerificationExpectationId
@@ -62,8 +63,69 @@ __all__ = [
     "KNOWN_PROFILE_FLAG_ADVISORY_FIELDS",
     "KNOWN_VERIFICATION_PREDICATE_OPERATORS",
     "RegistryVerificationPolicy",
+    "VerificationDiscrepancyCause",
     "VerificationExpectationDefinition",
     "VerificationPredicateDefinition",
+    "VerificationRoundingCode",
+]
+
+
+class VerificationRoundingCode(StrEnum):
+    """Closed rounding vocabulary for a verification expectation's comparison.
+
+    Declared here rather than reusing :class:`RegistryRoundingCode`: that enum
+    is the FORMULA rounding authority and deliberately has no "do not round"
+    mode, because every computed casilla is rounded by some legal rule. A
+    verification expectation is a different axis -- it says how the filed and
+    computed values are brought into comparable form before the tolerance is
+    applied -- and ``none`` (compare the raw values) is a legitimate member
+    there. Widening the formula enum to admit it would let a formula declare a
+    mode the law never grants.
+
+    ``rounding`` was a bare ``str``, so ``rounding = "bogus"`` was accepted at
+    registry build and produced exactly the same policy and verifier behaviour
+    as the valid declaration -- a legal verification obligation could drift
+    from the runtime authority with nothing to notice.
+    """
+
+    MONEY_2 = "money-2"
+    NONE = "none"
+
+
+def _coerce_verification_rounding(value: object) -> object:
+    """Hydrate a raw TOML rounding token into :class:`VerificationRoundingCode`.
+
+    The registry authoring tree stays free-form TOML; the typed vocabulary is
+    applied here, at the one loader boundary, so an unknown token fails the
+    registry build rather than flowing into the policy as opaque text.
+    """
+    if isinstance(value, str) and not isinstance(value, VerificationRoundingCode):
+        return VerificationRoundingCode(value)
+    return value
+
+
+VerificationRoundingCodeValue = Annotated[VerificationRoundingCode, BeforeValidator(_coerce_verification_rounding)]
+
+
+class VerificationDiscrepancyCause(StrEnum):
+    """Closed vocabulary of causes a verification discrepancy may be attributed to."""
+
+    EXTRACTION_UNRELIABLE = "extraction_unreliable"
+    UNMODELLED_RULE = "unmodelled_rule"
+    ROUNDING = "rounding"
+    CORRECTNESS_DIVERGENCE = "correctness_divergence"
+
+
+def _coerce_discrepancy_cause(value: object) -> object:
+    """Hydrate a raw TOML cause token into :class:`VerificationDiscrepancyCause`."""
+    if isinstance(value, str) and not isinstance(value, VerificationDiscrepancyCause):
+        return VerificationDiscrepancyCause(value)
+    return value
+
+
+VerificationDiscrepancyCauseValue = Annotated[
+    VerificationDiscrepancyCause,
+    BeforeValidator(_coerce_discrepancy_cause),
 ]
 
 
@@ -76,12 +138,9 @@ class VerificationExpectationDefinition(RegistryModel):
         default_factory=dict,
     )
     tolerance: DecimalValue
-    rounding: str
+    rounding: VerificationRoundingCodeValue
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
-    discrepancy_causes: tuple[
-        Literal["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"],
-        ...,
-    ] = Field(min_length=1)
+    discrepancy_causes: tuple[VerificationDiscrepancyCauseValue, ...] = Field(min_length=1)
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -161,6 +220,14 @@ class RegistryVerificationPolicy:
     externally_grounded_casilla_ids: frozenset[CasillaId]
     tolerance: Decimal
     min_coverage: Decimal
+    #: The rounding modes the folded expectations declare. Carried rather than
+    #: dropped: the fold previously discarded ``rounding`` entirely, so the
+    #: declaration was unreachable from the surface that consumes the policy
+    #: and no reader could tell a valid declaration from a meaningless one.
+    rounding_codes: frozenset[VerificationRoundingCode] = frozenset()
+    #: The discrepancy causes the folded expectations declare, likewise carried
+    #: rather than dropped.
+    discrepancy_causes: frozenset[VerificationDiscrepancyCause] = frozenset()
 
 
 KNOWN_PROFILE_FLAG_ADVISORY_FIELDS: frozenset[str] = frozenset(

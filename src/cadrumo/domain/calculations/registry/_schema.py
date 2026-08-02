@@ -1082,6 +1082,10 @@ class RegistrySnapshot(RegistryModel):
             ),
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),
+            rounding_codes=frozenset(expectation.rounding for expectation in expectations),
+            discrepancy_causes=frozenset(
+                cause for expectation in expectations for cause in expectation.discrepancy_causes
+            ),
         )
 
 
