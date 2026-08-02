@@ -7,7 +7,8 @@ corpus directory seam into TWO sub-cap companions, each under the cap so no size
 grant is needed:
 
 * ``cadrumo-data-manuals`` ships ``corpus/manuals``.
-* ``cadrumo-data-official`` ships ``corpus/aeat_official`` and ``corpus/normatives``.
+* ``cadrumo-data-official`` ships ``corpus/aeat_official``, ``corpus/eu_official``,
+  and ``corpus/normatives``.
 
 Both ship subtrees of the SAME ``cadrumo_data`` PEP 420 implicit namespace package
 (NEITHER ships ``cadrumo_data/__init__.py``, which would collide on a joint
@@ -86,7 +87,7 @@ _COMPANIONS = (
         dist_name="cadrumo-data-official",
         project_dir="cadrumo_data_official",
         wheel_glob="cadrumo_data_official-*.whl",
-        owned_subdirs=("aeat_official", "normatives"),
+        owned_subdirs=("aeat_official", "eu_official", "normatives"),
     ),
 )
 
