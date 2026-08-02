@@ -1172,9 +1172,10 @@ class BucketMaintenanceService:
                 )
         else:
             # ``--force`` targets an already durable bucket, so it cannot use
-            # the new-bucket rollback owner. Preserve its existing explicit
-            # target session semantics.
-            with profile_storage_session(header.bucket_id):
+            # the new-bucket rollback owner. Its recovery boundary therefore
+            # snapshots the complete existing directory while retaining the
+            # explicit target session the typed repository writers require.
+            with profile_storage_session(header.bucket_id), self._preserve_existing_import_target(header.bucket_id):
                 occurred_at = self._restore_imported_bundle(
                     bundle=bundle,
                     command=command,
@@ -1293,6 +1294,57 @@ class BucketMaintenanceService:
             },
         )
         return occurred_at
+
+    @staticmethod
+    @contextmanager
+    def _preserve_existing_import_target(bucket_id: str) -> Generator[None]:
+        """Restore an existing force-import target exactly when the import fails.
+
+        A sealed archive carries the whole durable bucket, including stores the
+        typed bundle deserialiser delegates to independently committed repository
+        writes. A late refusal (for example, a carried object's registered
+        classification) therefore cannot be recovered by replaying only the
+        typed payload: doing so would leave rows that did not exist before the
+        force import, or omit a namespace the bundle does not enumerate.
+
+        Keep a same-filesystem copy of the already durable bucket directory for
+        the duration of the import. On any failure, the lifecycle cleanup
+        primitive invalidates both cached and active-session SQLite handles,
+        after which a staged copy of the snapshot is atomically renamed into the
+        original path. The normal import continues to use the owning typed
+        writers; this is a recovery owner, not a parallel write path.
+        """
+        import os
+        import shutil
+        from tempfile import TemporaryDirectory
+
+        from ...adapters.persistence.storage.bucket import bucket_paths
+        from ...core.config import load_settings
+
+        root = load_settings().cadrumo_local_storage_root
+        target = bucket_paths(root, bucket_id).bucket_dir
+        with TemporaryDirectory(prefix=f".force-import-{bucket_id}-", dir=target.parent) as snapshot_root:
+            snapshot = Path(snapshot_root) / bucket_id
+            shutil.copytree(target, snapshot)
+            try:
+                yield
+            except BaseException as import_error:
+                try:
+                    # This canonical lifecycle cleanup disposes the target's
+                    # cached and active-session SQLite handles before removing
+                    # the directory, which is essential for Windows rename
+                    # semantics and prevents a stale engine reopening the
+                    # discarded imported database after restoration.
+                    remove_profile_bucket_directory(bucket_id)
+                    restored = Path(snapshot_root) / f"{bucket_id}.restore"
+                    shutil.copytree(snapshot, restored)
+                    os.replace(restored, target)
+                except BaseException as rollback_error:
+                    raise BaseExceptionGroup(
+                        "forced sealed-archive import and target restoration both failed",
+                        [import_error, rollback_error],
+                    ) from None
+                raise
 
     @staticmethod
     @contextmanager

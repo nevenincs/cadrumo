@@ -217,6 +217,11 @@ def _write_unsupported_schema_archive(path: Path) -> None:
 @pytest.fixture
 def registered_profile(runtime: TestRuntimeProfile) -> None:
     """Register a real profile so portable-bundle export has a source record."""
+    _register_profile(runtime)
+
+
+def _register_profile(runtime: TestRuntimeProfile) -> None:
+    """Register the complete real profile record an archive transport needs."""
     from ...user_profile import ProfileLifecycleService, ProfileValidationService, UserProfileLifecycleRepository
 
     schema = resources().user_profile_schema.singleton
@@ -463,6 +468,118 @@ def test_a_refused_carried_object_leaves_no_import_target(
         assert pointer is None, "a refused import must restore the pre-import active-pointer state"
         target_paths = bucket_paths(load_settings().cadrumo_local_storage_root, runtime.bucket_id)
         assert not target_paths.bucket_dir.exists(), "a refused import must remove typed-catalogue residue"
+
+
+def _bucket_file_bytes(bucket_dir: Path) -> dict[str, bytes]:
+    """Capture every durable file in one bucket for exact rollback proof.
+
+    SQLite's ``-shm`` and ``-wal`` companions are connection-local runtime
+    state, recreated when the restored database is opened. The main database
+    remains the durable authority; typed and event-history reads below prove
+    its restored contents.
+    """
+    return {
+        path.relative_to(bucket_dir).as_posix(): path.read_bytes()
+        for path in sorted(bucket_dir.rglob("*"))
+        if path.is_file() and not path.name.endswith(("-shm", "-wal"))
+    }
+
+
+def test_a_refused_carried_object_preserves_existing_force_import_target(
+    runtime: TestRuntimeProfile,
+    registered_profile: None,
+    tmp_path: Path,
+) -> None:
+    """A late force-import refusal restores every prior target artifact exactly.
+
+    The source archive is real AES-GCM payload encrypted under its real
+    Argon2id recovery wrap. Its added carried object is rejected by the
+    production namespace-classification policy only after the typed work-unit
+    save. The target is a distinct, already registered same-id bucket with no
+    work unit, so a surviving source row proves a failed force import
+    contaminated live taxpayer state. File bytes, typed rows, and event history
+    all have to match their pre-import target values after the real refusal.
+    """
+    del registered_profile
+    work_unit = _work_unit(runtime.bucket_id)
+    WorkUnitCatalogueRepository(bucket_id=runtime.bucket_id, objects=runtime.repository).save(
+        WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
+    )
+
+    archive_path = tmp_path / "profile.cadrumo-bucket.tar.gz"
+    BucketMaintenanceService().export(
+        ExportBucketCommand(
+            bucket_id=runtime.bucket_id,
+            output_path=archive_path,
+            recovery_wrap_passphrase=_recovery_phrase(),
+        ),
+    )
+    contents = read_sealed_archive(archive_path)
+    bundle, sealing_key = _decrypt_bundle(contents, recovery_wrap_passphrase=_recovery_phrase())
+    assert bundle.work_units, "the export must genuinely carry the source work unit"
+    poisoned_bundle = bundle.model_copy(
+        update={
+            "carried_objects": (
+                *bundle.carried_objects,
+                CarriedSecureObject(
+                    namespace=_POISON_NAMESPACE,
+                    object_key="force-crash-window-poison",
+                    classification=_POISON_WRONG_CLASS,
+                    schema_version=1,
+                    written_at=_WORK_UNIT_TIMESTAMP,
+                    payload_b64="eyJhIjogMX0=",  # {"a": 1}
+                ),
+            ),
+        },
+    )
+    poisoned_path = tmp_path / "force-poisoned.cadrumo-bucket.tar.gz"
+    _write_poisoned_archive(
+        contents,
+        poisoned_bundle=poisoned_bundle,
+        sealing_key=sealing_key,
+        output_path=poisoned_path,
+    )
+
+    with isolated_runtime_profile(
+        tmp_path=tmp_path / "force-target-root",
+        bucket_id=runtime.bucket_id,
+        label=_LABEL,
+    ) as target:
+        _register_profile(target)
+        target_paths = bucket_paths(load_settings().cadrumo_local_storage_root, target.bucket_id)
+        before_files = _bucket_file_bytes(target_paths.bucket_dir)
+        before_work_units = WorkUnitCatalogueRepository(bucket_id=target.bucket_id, objects=target.repository).load()
+        before_events = BucketEventHistoryRepository(objects=target.repository).load()
+        assert not before_work_units.work_units, "the target must not already contain the source work unit"
+
+        with pytest.raises(ClassificationError):
+            BucketMaintenanceService().import_(
+                ImportBucketCommand(
+                    source_path=poisoned_path,
+                    force_replace=True,
+                    recovery_wrap_passphrase=_recovery_phrase(),
+                ),
+            )
+
+        assert _bucket_file_bytes(target_paths.bucket_dir) == before_files
+        restored_work_units = WorkUnitCatalogueRepository(bucket_id=target.bucket_id, objects=target.repository).load()
+        restored_events = BucketEventHistoryRepository(objects=target.repository).load()
+        assert restored_work_units == before_work_units
+        assert work_unit.work_unit_id not in restored_work_units.work_units
+        assert restored_events == before_events
+
+        imported = BucketMaintenanceService().import_(
+            ImportBucketCommand(
+                source_path=archive_path,
+                force_replace=True,
+                recovery_wrap_passphrase=_recovery_phrase(),
+            ),
+        )
+        assert imported.bucket_id == target.bucket_id
+        completed_work_units = WorkUnitCatalogueRepository(bucket_id=target.bucket_id, objects=target.repository).load()
+        assert work_unit.work_unit_id in completed_work_units.work_units
+        completed_events = BucketEventHistoryRepository(objects=target.repository).load()
+        assert BucketEventType.BUCKET_IMPORTED in {event.event_type for event in completed_events.events.values()}
 
 
 def test_import_refuses_profile_archive_missing_filing_baseline(tmp_path: Path) -> None:
