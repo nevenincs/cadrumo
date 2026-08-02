@@ -408,6 +408,36 @@ def test_remote_mirror_comparison_detects_revision_conflict(tmp_path: Path) -> N
     assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.REVISION_CONFLICT}
 
 
+def test_remote_mirror_comparison_refuses_same_revision_with_contradictory_metadata(tmp_path: Path) -> None:
+    """One revision ID cannot authoritatively describe two different object records."""
+    local_manifest = _single_object_manifest(tmp_path)
+    local_entry = local_manifest.objects[0]
+    assert local_entry.revision_written_at is not None
+    contradictory_entry = type(local_entry).model_validate(
+        local_entry.model_dump()
+        | {
+            "classification": "contradictory-classification",
+            "schema_version": local_entry.schema_version + 1,
+            "byte_length": local_entry.byte_length + 1,
+            "previous_storage_revision_id": "b" * 64,
+            "revision_ancestor_ids": ("c" * 64,),
+            "row_written_at": local_entry.row_written_at + timedelta(seconds=1),
+            "revision_written_at": local_entry.revision_written_at + timedelta(seconds=1),
+        }
+    )
+    contradictory_manifest = local_manifest.model_copy(update={"objects": (contradictory_entry,)})
+
+    inspection = compare_remote_mirror_manifests(local=local_manifest, remote=contradictory_manifest)
+
+    assert inspection.ok is False
+    assert {issue.kind for issue in inspection.issues} == {RemoteMirrorIssueKind.REVISION_CONFLICT}
+    assert inspection.issues[0].detail == (
+        "matching revision ids carry contradictory metadata: "
+        "classification, schema_version, byte_length, previous_storage_revision_id, "
+        "revision_ancestor_ids, row_written_at, revision_written_at"
+    )
+
+
 def _single_object_manifest(tmp_path: Path) -> RemoteMirrorNamespaceManifest:
     manifest, _payload = _single_object_manifest_with_payload(tmp_path)
     return manifest
