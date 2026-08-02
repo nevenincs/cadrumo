@@ -35,6 +35,7 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import BrowserContext, Page, PlaywrightError
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
+from ._adapter_utils import assert_read_landing
 from ._adapter_utils import landed_origin as _landed_origin
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -187,6 +188,42 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 )
 
 
+# The cotejo view a justificante popup is allowed to open on. Taken as the
+# path of the configured cotejo query endpoint, which is the URL this module
+# builds its own document fetch from, so the allow-list and the fetch agree
+# by construction.
+_COTEJO_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(_COTEJO_PATH_PREFIX).path,)
+
+
+def assert_cotejo_read_landing(
+    landing_url: str,
+    *,
+    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> None:
+    """Refuse a justificante popup that did not land on the cotejo view.
+
+    The Ver click opens a NEW page, so the landing is chosen entirely by
+    AEAT and by whatever the row's control points at. The CSV this module
+    then extracts from that URL becomes the identifier it fetches the PDF
+    bytes with, and those bytes are stored as filing evidence -- so a
+    landing that is not the cotejo view produces evidence attributed to a
+    document nobody established.
+
+    Args:
+        landing_url: The URL the popup actually served, read off the page.
+        policy: The read guard policy; defaults to the module's own.
+
+    Raises:
+        SedeNavigationError: When the popup is not on the cotejo view.
+    """
+    assert_read_landing(
+        landing_url,
+        surface="justificante cotejo",
+        policy=policy,
+        allowed_path_prefixes=_COTEJO_READ_PATH_PREFIXES,
+    )
+
+
 async def _capture_row_pdf_artefact(
     *,
     context: BrowserContext,
@@ -215,10 +252,13 @@ async def _capture_row_pdf_artefact(
         ) from exc
 
     cotejo_url = cotejo_page.url
-    if _COTEJO_PATH_PREFIX not in cotejo_url:
-        raise SedeNavigationError(
-            f"PDF artefact for {declaration.expediente_id!r} did not land on a cotejo URL (final URL: {cotejo_url!r})",
-        )
+    # This module already refused an off-cotejo landing here, which was the
+    # right instinct in the wrong shape: a substring test over the whole URL,
+    # with no authority check and no answer for an unreadable landing. Routed
+    # through the package landing rule it becomes a PATH allow-list, gains the
+    # policy's host and write-token refusals, and refuses a popup that opened
+    # with no readable URL instead of tolerating it.
+    assert_cotejo_read_landing(cotejo_url, policy=read_policy)
 
     csv = _extract_csv_from_url(cotejo_url)
     pdf_url = AnyHttpUrl(_cotejo_document_url(_origin_of(cotejo_url), csv))
