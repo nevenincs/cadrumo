@@ -10,6 +10,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy.engine import Engine
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -124,6 +125,7 @@ __all__ = [
     "CalculationRevisionState",
     "CalculationRevisionStateError",
     "Decimal",
+    "FileFlowRuntime",
     "ModeloRecordNotFoundError",
     "ModeloRecordStatus",
     "ModeloVerificationFindingKind",
@@ -260,6 +262,44 @@ def _repos(tmp_path: Path) -> Iterator[_Repos]:
 @pytest.fixture
 def repos(tmp_path: Path) -> Iterator[_Repos]:
     yield from _repos(tmp_path)
+
+
+@dataclass(frozen=True, slots=True)
+class _FileFlowRuntime:
+    """The live engine plus the repository bundle sharing it.
+
+    Exposes the engine the repositories already use so a test can observe how
+    many SQL transactions a composed write spans, which is the only way to tell
+    a single unit of work from a sequence of independent saves.
+    """
+
+    engine: Engine
+    repos: _Repos
+
+
+def _file_flow_runtime(tmp_path: Path) -> Iterator[_FileFlowRuntime]:
+    """Yield the file-flow repository bundle alongside its live engine."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FILE_FLOW_PROFILE_ID) as profile:
+        objects = profile.repository
+        UserProfileLifecycleRepository(bucket_id=profile.bucket_id, objects=objects).save(
+            UserProfileRecord(
+                profile_id=profile.bucket_id,
+                display_name="File-flow ready profile",
+                facts=_READY_PROFILE_FACTS,
+                created_at=_T0,
+                updated_at=_T0,
+            ),
+        )
+        yield _FileFlowRuntime(
+            engine=objects.engine,
+            repos=(
+                WorkUnitCatalogueRepository(objects=objects),
+                CalculationRevisionCatalogueRepository(objects=objects),
+                ModeloRecordCatalogueRepository(objects=objects),
+                VerificationReportCatalogueRepository(objects=objects),
+                BucketEventHistoryRepository(objects=objects),
+            ),
+        )
 
 
 def _seed_work_unit(
@@ -654,3 +694,4 @@ target_filing_records = _target_filing_records
 verify_revision = _verify_revision
 workflow_gate = _workflow_gate
 workflow_profile = _workflow_profile
+FileFlowRuntime = _FileFlowRuntime
