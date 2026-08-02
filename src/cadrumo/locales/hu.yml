@@ -299,6 +299,14 @@ adapters:
       iva_wallet_empty_period_cell: Az IVA kompenzációs tárca időszak cellája üres.
       justificante_column_missing: Az AEAT nyilatkozatválasz hiányzik a justificante
         oszlopból; a táblázat struktúrája megváltozhatott.
+      landing_off_policy: Az AEAT-olvasás elutasítva, mert a betöltött oldal kívül
+        esik a felület engedélyezett kiszolgálóin, vagy írási műveletet nevez meg.
+      landing_off_read_pages: Az AEAT-olvasás elutasítva, mert olyan oldalra érkezett,
+        amelyet ez az olvasó nem olvas; ez az olvasó soha nem jut el AEAT-benyújtási
+        oldalra.
+      landing_unreadable: Az AEAT-olvasás elutasítva, mert a betöltött oldalnak nincs
+        olvasható címe, így nem állapítható meg, hol kötött ki a munkamenet. Jelentkezz
+        be újra, és próbáld meg ismét.
       listbox_missing: Az AEAT nyilatkozatválasz hiányzik a várt listázó tárolóból;
         az oldal struktúrája megváltozhatott.
       listing_nav_failed: Az AEAT nyilatkozatlista navigáció sikertelen volt. Ellenőrizze
@@ -320,9 +328,6 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
         és próbálja újra.
-      landing_unreadable: 'Az AEAT-olvasás elutasítva, mert a betöltött oldalnak nincs olvasható címe, így nem állapítható meg, hol kötött ki a munkamenet. Jelentkezz be újra, és próbáld meg ismét.'
-      landing_off_policy: 'Az AEAT-olvasás elutasítva, mert a betöltött oldal kívül esik a felület engedélyezett kiszolgálóin, vagy írási műveletet nevez meg.'
-      landing_off_read_pages: 'Az AEAT-olvasás elutasítva, mert olyan oldalra érkezett, amelyet ez az olvasó nem olvas; ez az olvasó soha nem jut el AEAT-benyújtási oldalra.'
 aggregation:
   grouping:
     errors:
@@ -666,10 +671,11 @@ application:
         invoice_catalogue_changed: a számlakatalógus megváltozott
         prior_filing_observations_changed: a korábbi bevallási megfigyelések megváltoztak
         profile_activity_changed: az adófizetői profil tevékenysége megváltozott
+        review_checksum_mismatch: A tárolt jóváhagyási ellenőrzőösszeg nem egyezik
+          a jóváhagyási alapjával
         schema_formula_changed: a séma vagy képlet eredete megváltozott
         transaction_catalogue_changed: a tranzakciós katalógus megváltozott
         unknown: '%{reason}'
-        review_checksum_mismatch: 'A tárolt jóváhagyási ellenőrzőösszeg nem egyezik a jóváhagyási alapjával'
     runtime:
       errors:
         active_profile_load_failed: 'Az aktív bevallási profil nem tölthető be: %{reason}.'
@@ -4349,7 +4355,7 @@ cli:
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
       irpf_category_help: 'IRPF-kategória azonosítója. Használja: aeat app ledger
         categories. Nettó szakmai számlákhoz actividad_economica; nettó bérleti díjhoz
-        arrendamiento_local/arrendamiento_vivienda_afecto. Jogdíj/SGAE: a 25.4 cikk
+        arrendamiento_local / arrendamiento_vivienda_afecto. Jogdíj/SGAE: a 25.4 cikk
         szerint capital mobiliario lehet, ha az adózó nem a szerző; actividad_economica
         csak saját számlás tevékenységhez a LIRPF 27. cikk szerint.'
       iva_amount_help: IVA-összeg.
@@ -6655,9 +6661,13 @@ flows:
       value: Érték
     edit:
       cancel: Mégse
+      path: 'Belső azonosító: %{path}'
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.
       save: Mentés
+      write_failed: A mezőt nem sikerült menteni. Próbáld újra.
+      write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
+        majd próbáld újra.
     progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
     section_title: '{title} — {present}/{total}'
     title: 'Profil: {profile}'
@@ -6893,6 +6903,438 @@ profile:
     description: Profilkonfigurációs kulcsok és leírásaik
     tax:
       id: Adóazonosító (NIF/CIF/DNI/NIE)
+  schema:
+    field:
+      activities:
+        cnae:
+          label: CNAE-kód
+        description:
+          label: Tevékenység leírása
+        iae_epigraph:
+          label: IAE-besorolás
+      attribution_entity:
+        legal_form:
+          label: Hozzárendelő entitás jogi formája
+      attribution_entity_socios:
+        base_imponible_assigned:
+          label: Tagra jutó adóalap
+        name:
+          label: Tag neve
+        nif:
+          label: Tag NIF-je
+        role:
+          label: Tagi szerepkör
+        share_pct:
+          label: Részesedés aránya
+      attribution_received:
+        base_imponible_attributed:
+          label: Tagra jutó hozzárendelt adóalap
+        entity_name:
+          label: Hozzárendelő entitás neve
+        entity_nif:
+          label: Hozzárendelő entitás NIF-je
+        filing_year:
+          label: Hozzárendelés adóéve
+        share_pct:
+          label: Hozzárendelt részesedés aránya
+      auth:
+        dni_nie:
+          label: DNI vagy NIE a Cl@ve-hoz
+        fecha_validez:
+          label: Érvényességi dátum
+        numero_soporte:
+          label: Támogatási szám
+        provider:
+          label: Hitelesítési mód
+      capabilities:
+        cloud_evidence_upload:
+          label: Bizonylat feltöltése felhőbe
+        google_export:
+          label: Google-exportálás
+        llm_vision:
+          label: Helyi képfelismerés
+      censo:
+        activity_end_date:
+          label: Tevékenység vége
+        activity_start_date:
+          label: Tevékenység kezdete
+        divergencia:
+          label: Cenzus-eltérések
+        elected_withholding_pct:
+          label: Választott forrásadókulcs
+        establecimiento_type:
+          label: Telephely típusa
+        large_company:
+          label: Nagyvállalati minősítés
+        public_administration_budget_gt_6000000:
+          label: Közigazgatási költségvetés 6.000.000 EUR felett
+        status:
+          label: Cenzus állapota
+      contact:
+        fiscal_address:
+          label: Adóügyi cím
+        fiscal_address_cadastral_reference:
+          label: Az adóügyi cím kataszteri hivatkozása
+        fiscal_address_is_habitual_vivienda:
+          label: Az adóügyi cím az állandó lakóhely
+        postcode:
+          label: Irányítószám
+      filing_export:
+        aeat_seal:
+          label: AEAT-pecsét
+        bank_address:
+          label: Bank címe
+        bank_city:
+          label: Bank városa
+        bank_country_code:
+          label: Bank országkódja
+        bank_name:
+          label: Bank neve
+        declaration_type:
+          label: Bevallás típusa
+        iban:
+          label: IBAN-számlaszám
+        period_end_date:
+          label: Időszak vége
+        period_start_date:
+          label: Időszak kezdete
+        presenter_tax_id:
+          label: Benyújtó NIF/CIF-je
+        previous_receipt:
+          label: Korábbi bizonylat hivatkozása
+        program_version:
+          label: Programverzió
+        rental_reduccion_art_23_2_tier_2024:
+          label: Bérbeadási kedvezmény sávja (23.2. cikk)
+        sepa_marca:
+          label: SEPA-jelölés
+        swift_bic:
+          label: SWIFT-BIC kód
+      identity:
+        email:
+          label: Kapcsolattartó e-mail
+        legal_name:
+          label: Cégnév
+        name:
+          label: Utónév
+        notes:
+          label: Megjegyzések
+        surnames:
+          label: Vezetéknevek
+        tax_id:
+          label: Adóazonosító (NIF/NIE/CIF)
+      irpf:
+        art109_activity_income_withholding_ge_70pct:
+          label: A RIRPF 109. cikke szerinti 70 százalékos fedezet teljesül
+        estimation_regime:
+          label: Jövedelemmegállapítási rendszer
+        objective_estimation_modulos_iae_epigraph:
+          label: Modulos IAE-besorolás
+        objective_estimation_modulos_module_1_units:
+          label: 1. modul bevallott egységei
+        objective_estimation_modulos_module_2_units:
+          label: 2. modul bevallott egységei
+        objective_estimation_modulos_module_3_units:
+          label: 3. modul bevallott egységei
+        objective_estimation_modulos_module_4_units:
+          label: 4. modul bevallott egységei
+        objective_estimation_modulos_module_5_units:
+          label: 5. modul bevallott egységei
+        objective_estimation_modulos_module_6_units:
+          label: 6. modul bevallott egységei
+        objective_estimation_modulos_module_7_units:
+          label: 7. modul bevallott egységei
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur:
+          label: Előző évi mezőgazdasági, állattenyésztési és erdészeti bruttó bevétel
+        objective_estimation_prior_year_gross_income_eur:
+          label: Előző évi bruttó bevétel
+        objective_estimation_prior_year_invoice_gross_income_eur:
+          label: Előző évi számlaköteles bruttó bevétel
+        objective_estimation_prior_year_purchases_eur:
+          label: Előző évi beszerzések
+        pagadores_count:
+          label: Kifizetők száma
+        pagadores_secondary_income:
+          label: Másodlagos kifizetőktől származó jövedelem
+        pagadores_total_work_income:
+          label: Összes munkajövedelem
+        professional_income_withholding_ge_70pct:
+          label: A szakmai jövedelem forrásadója eléri a 70 százalékot
+        special_regime:
+          label: IRPF különleges rendszer
+        special_regime_start_date:
+          label: Különleges rendszer kezdete
+      iva:
+        autoconsumo_promotor_base:
+          label: Beruházói saját felhasználás adóalapja
+        does_intracomunitario:
+          label: Közösségi ügyleteket folytat
+        group_dominant_entity_enrolled:
+          label: IVA-csoport uralkodó vállalata
+        group_member_enrolled:
+          label: IVA-csoport tagvállalata
+        intracommunity_operations_exceed_50000_eur:
+          label: Közösségi ügyletek 50.000 EUR felett
+        oss_enrolled:
+          label: OSS vagy IOSS rendszerben regisztrált
+        redeme_enrolled:
+          label: REDEME-ben nyilvántartott
+        regime:
+          label: IVA-rendszer
+        roi_enrolled:
+          label: ROI-ban nyilvántartott
+        sii_enrolled:
+          label: SII rendszerben regisztrált
+      maritime_worker:
+        pending_eu_clearance:
+          label: EU-jóváhagyásra vár
+        retmar_registered:
+          label: RETMAR-ban nyilvántartott
+        tuna_fleet:
+          label: Tonhalflotta hajója
+        vessel_flag:
+          label: Hajó lobogója
+        vessel_registry:
+          label: Hajólajstrom
+        waters_type:
+          label: Vizek típusa
+        worker_class:
+          label: Tengerészi besorolás osztálya
+      obligations:
+        bienes_extranjero_above_threshold:
+          label: Modelo 720 küszöbérték túllépve
+        monedas_virtuales_extranjero_above_threshold:
+          label: Modelo 721 küszöbérték túllépve
+        third_party_transactions_above_347_threshold:
+          label: Modelo 347 küszöbérték túllépve
+      preferences:
+        output_language:
+          label: Kimeneti nyelv
+      properties:
+        cadastral_reference:
+          label: Kataszteri hivatkozás
+        use_type:
+          label: Ingatlan használati típusa
+      provenance:
+        source:
+          label: Adat forrása
+        valid_from:
+          label: Érvényes ettől
+        valid_to:
+          label: Érvényes eddig
+      renta_family:
+        anualidades_sin_minimo_descendientes_2020:
+          label: Tartásdíj-skála leszármazotti minimum nélkül (2020)
+        anualidades_sin_minimo_descendientes_2021:
+          label: Tartásdíj-skála leszármazotti minimum nélkül (2021)
+        anualidades_sin_minimo_descendientes_2022:
+          label: Tartásdíj-skála leszármazotti minimum nélkül (2022)
+        anualidades_sin_minimo_descendientes_2023:
+          label: Tartásdíj-skála leszármazotti minimum nélkül (2023)
+        anualidades_sin_minimo_descendientes_2024:
+          label: Tartásdíj-skála leszármazotti minimum nélkül (2024)
+        anualidades_sin_minimo_descendientes_2025:
+          label: Tartásdíj-skála leszármazotti minimum nélkül (2025)
+        ascendants:
+          label: Felmenők
+        cotizaciones_ss_madre_2024:
+          label: Az anya társadalombiztosítási járulékai (2024)
+        descendants:
+          label: Leszármazottak
+        descendants_eu_eea_deduction:
+          label: EU/EGT leszármazotti kedvezmény
+        descendiente:
+          label: Leszármazottak adatai
+        descendientes_count:
+          label: Leszármazottak száma
+        descendientes_menores_3_2024:
+          label: Három év alatti leszármazottak (2024)
+        descendientes_minimos_aggregate_2020:
+          label: Leszármazotti minimum, állami rész (2020)
+        descendientes_minimos_aggregate_2021:
+          label: Leszármazotti minimum, állami rész (2021)
+        descendientes_minimos_aggregate_2022:
+          label: Leszármazotti minimum, állami rész (2022)
+        descendientes_minimos_aggregate_2023:
+          label: Leszármazotti minimum, állami rész (2023)
+        descendientes_minimos_aggregate_2024:
+          label: Leszármazotti minimum, állami rész (2024)
+        descendientes_minimos_aggregate_2025:
+          label: Leszármazotti minimum, állami rész (2025)
+        descendientes_minimos_aggregate_autonomico_2020:
+          label: Leszármazotti minimum, autonóm rész (2020)
+        descendientes_minimos_aggregate_autonomico_2021:
+          label: Leszármazotti minimum, autonóm rész (2021)
+        descendientes_minimos_aggregate_autonomico_2022:
+          label: Leszármazotti minimum, autonóm rész (2022)
+        descendientes_minimos_aggregate_autonomico_2023:
+          label: Leszármazotti minimum, autonóm rész (2023)
+        descendientes_minimos_aggregate_autonomico_2024:
+          label: Leszármazotti minimum, autonóm rész (2024)
+        descendientes_minimos_aggregate_autonomico_2025:
+          label: Leszármazotti minimum, autonóm rész (2025)
+        gastos_guarderia_reales_2024:
+          label: Bölcsődei költségek (2024)
+        madrid_nacimiento_adopcion_eligible_count:
+          label: Madridi születési vagy örökbefogadási kedvezményre jogosult leszármazottak
+        minor_children_in_unit:
+          label: Kiskorú gyermekek a családban
+        situacion_familiar:
+          label: Családi helyzet
+        unidad_familiar_otros_miembros_base:
+          label: A család többi tagjának adóalapja
+      renta_spouse:
+        birth_date:
+          label: Házastárs születési dátuma
+        disability_grade:
+          label: Házastárs fogyatékosságának mértéke
+        eu_eea_country:
+          label: Házastárs EU- vagy EGT-országa
+        eu_eea_resident:
+          label: A házastárs EU- vagy EGT-lakos
+        name:
+          label: Házastárs utóneve
+        non_resident_irpf:
+          label: A házastárs nem belföldi illetőségű
+        sex:
+          label: Házastárs neme
+        surnames:
+          label: Házastárs vezetéknevei
+        tax_id:
+          label: Házastárs NIF/NIE-je
+      renta_taxpayer:
+        birth_date:
+          label: Születési dátum
+        death_date:
+          label: Halálozás dátuma
+        disability_grade:
+          label: Fogyatékosság mértéke
+        marital_status:
+          label: Családi állapot
+        marriage_date:
+          label: Házasságkötés dátuma
+        marriage_full_year:
+          label: Egész évben fennálló házasság
+        marriage_month_end:
+          label: A házasság utolsó hónapja az adóévben
+        marriage_month_start:
+          label: A házasság első hónapja az adóévben
+        sex:
+          label: Nem
+      tax_residence:
+        ccaa:
+          label: Lakóhely szerinti autonóm közösség
+        jurisdiction_scope:
+          label: Területi adórendszer
+        state_attribution_ratio:
+          label: Államra jutó arány
+      taxpayer_type:
+        country_of_fiscal_residence:
+          label: Adóügyi illetőség országa
+        entity_type:
+          label: Adózó típusa
+        fiscal_residency:
+          label: Adóügyi illetőség
+        incn_prior_12_months:
+          label: Előző 12 hónap nettó árbevétele
+        irpf_income_categories:
+          label: IRPF-jövedelemkategóriák
+        legal_entity_form:
+          label: Jogi forma
+        ley_49_2002_special_regime_option_date:
+          label: Ley 49/2002 választásának dátuma
+        ley_49_2002_special_regime_option_declared:
+          label: Ley 49/2002 rendszer választva
+        ley_49_2002_special_regime_renunciation_date:
+          label: Ley 49/2002 lemondásának dátuma
+        ley_49_2002_special_regime_renunciation_declared:
+          label: Ley 49/2002 rendszerről lemondva
+        new_entity_first_two_profit_periods:
+          label: Az első két nyereséges időszak egyikében
+        representante_fiscal_nif:
+          label: Adóügyi képviselő NIF-je
+        representante_fiscal_nombre:
+          label: Adóügyi képviselő neve
+        sal_capital_social:
+          label: Jegyzett tőke
+        sal_reserva_especial_dotada:
+          label: Már képzett különleges tartalék
+        sal_socios_trabajadores_count:
+          label: Dolgozó tagok száma
+        tributacion_estado_porcentaje:
+          label: Államnak fizetett adó aránya
+      usage_ratios:
+        business_ratio:
+          label: Üzleti használat aránya
+        category_id:
+          label: Kategória
+      vivienda_office:
+        office_m2:
+          label: Irodai alapterület (m2)
+        total_m2:
+          label: Lakás teljes alapterülete (m2)
+      withholding:
+        has_employees:
+          label: Alkalmazottakat forrásadóval fizet
+        modelo_111_no_retenciones_periods:
+          label: Modelo 111 forrásadó nélküli időszakai
+        pays_capital_income_with_retencion:
+          label: Tőkejövedelmet forrásadóval fizet
+        pays_professionals_with_retencion:
+          label: Szakembereket forrásadóval fizet
+        pays_rent_with_retencion:
+          label: Bérleti díjat forrásadóval fizet
+    section:
+      activities:
+        title: Gazdasági tevékenységek
+      attribution_entity:
+        title: Jövedelem-hozzárendelő entitás jogi formája
+      attribution_entity_socios:
+        title: A hozzárendelő entitás tagjai
+      attribution_received:
+        title: Kapott hozzárendelt jövedelem
+      auth:
+        title: AEAT-hitelesítés
+      capabilities:
+        title: Szolgáltatási képességek
+      censo:
+        title: Cenzus és bejelentkezés
+      contact:
+        title: Kapcsolat és adóügyi cím
+      filing_export:
+        title: Bevallási és exportálási környezet
+      identity:
+        title: Azonosítás
+      irpf:
+        title: IRPF és forrásadó
+      iva:
+        title: IVA-profil
+      maritime_worker:
+        title: Tengerészi besorolás
+      obligations:
+        title: Bevallási kötelezettség küszöbei
+      preferences:
+        title: Kezelői beállítások
+      properties:
+        title: Ingatlanok és bérbeadás
+      provenance:
+        title: Adat eredete és hatálya
+      renta_family:
+        title: Család a Rentában
+      renta_spouse:
+        title: Házastárs a Rentában
+      renta_taxpayer:
+        title: Renta-adózó
+      tax_residence:
+        title: Adóügyi illetőség és joghatóság
+      taxpayer_type:
+        title: Adózó típusa és jövedelemkategóriák
+      usage_ratios:
+        title: Használati arányok és levonhatóság
+      vivienda_office:
+        title: Állandó lakás irodai hasznosítása
+      withholding:
+        title: Kifizetői forrásadó-kötelezettségek
   validation:
     required_field_missing: Hiányzik egy kötelező profilmező.
 review:

@@ -281,6 +281,13 @@ adapters:
       iva_wallet_empty_period_cell: IVA compensation wallet period cell is empty.
       justificante_column_missing: The AEAT declarations response is missing the justificante
         column; the table structure may have changed.
+      landing_off_policy: The AEAT read was refused because the page it landed on
+        is outside this surface's allowed hosts or names a write action.
+      landing_off_read_pages: The AEAT read was refused because it landed on a page
+        this reader does not read; this reader never reaches an AEAT filing page.
+      landing_unreadable: The AEAT read was refused because the page it landed on
+        has no readable address, so where the session ended up cannot be established.
+        Re-authenticate and try again.
       listbox_missing: The AEAT declarations response is missing the expected listing
         container; the page structure may have changed.
       listing_nav_failed: Navigation to the AEAT declarations listing failed. Check
@@ -302,9 +309,6 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
-      landing_unreadable: 'The AEAT read was refused because the page it landed on has no readable address, so where the session ended up cannot be established. Re-authenticate and try again.'
-      landing_off_policy: 'The AEAT read was refused because the page it landed on is outside this surface''s allowed hosts or names a write action.'
-      landing_off_read_pages: 'The AEAT read was refused because it landed on a page this reader does not read; this reader never reaches an AEAT filing page.'
 aggregation:
   grouping:
     errors:
@@ -642,10 +646,11 @@ application:
         invoice_catalogue_changed: invoice catalogue changed
         prior_filing_observations_changed: prior filing observations changed
         profile_activity_changed: taxpayer profile activity changed
+        review_checksum_mismatch: The stored approval checksum does not match its
+          approval basis
         schema_formula_changed: schema or formula provenance changed
         transaction_catalogue_changed: transaction catalogue changed
         unknown: '%{reason}'
-        review_checksum_mismatch: 'The stored approval checksum does not match its approval basis'
     runtime:
       errors:
         active_profile_load_failed: 'The active filing profile could not be loaded:
@@ -4102,10 +4107,10 @@ cli:
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --file is not provided.
       irpf_category_help: 'IRPF category id. Use aeat app ledger categories. Net-paid
-        professional invoices use actividad_economica; net-paid rent uses arrendamiento_local/arrendamiento_vivienda_afecto.
-        Royalties/SGAE: Art. 25.4 can be capital mobiliario when the taxpayer is not
-        the author; use actividad_economica only for own-account activity under LIRPF
-        Art. 27.'
+        professional invoices use actividad_economica; net-paid rent uses arrendamiento_local
+        / arrendamiento_vivienda_afecto. Royalties/SGAE: Art. 25.4 can be capital
+        mobiliario when the taxpayer is not the author; use actividad_economica only
+        for own-account activity under LIRPF Art. 27.'
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -6325,6 +6330,9 @@ flows:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      failed: 'The operation did not finish.'
+      busy: 'Another operation is still running. Wait for it to finish.'
+      working: 'Running {action}...'
     actions:
       section: Actions
     column:
@@ -6333,9 +6341,13 @@ flows:
       value: Value
     edit:
       cancel: Cancel
+      path: 'Internal identifier: %{path}'
       required_blank: '{field} is required, so it cannot be left blank. Enter a value,
         or cancel to leave it unchanged.'
       save: Save
+      write_failed: The field could not be saved. Try again.
+      write_in_flight: Saving the previous field. Wait for it to finish, then try
+        again.
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
     section_title: '{title} — {present}/{total}'
     title: 'Profile: {profile}'
@@ -6563,6 +6575,438 @@ profile:
     description: Profile configuration keys and their descriptions
     tax:
       id: Tax identifier (NIF/CIF/DNI/NIE)
+  schema:
+    field:
+      activities:
+        cnae:
+          label: CNAE code
+        description:
+          label: Activity description
+        iae_epigraph:
+          label: IAE epigraph
+      attribution_entity:
+        legal_form:
+          label: Attribution entity legal form
+      attribution_entity_socios:
+        base_imponible_assigned:
+          label: Assigned taxable base
+        name:
+          label: Member name
+        nif:
+          label: Member NIF
+        role:
+          label: Member role
+        share_pct:
+          label: Participation percentage
+      attribution_received:
+        base_imponible_attributed:
+          label: Attributed taxable base
+        entity_name:
+          label: Attributing entity name
+        entity_nif:
+          label: Attributing entity NIF
+        filing_year:
+          label: Filing year of the attribution
+        share_pct:
+          label: Attributed participation percentage
+      auth:
+        dni_nie:
+          label: DNI or NIE for Cl@ve
+        fecha_validez:
+          label: Validity date
+        numero_soporte:
+          label: Support number
+        provider:
+          label: Authentication method
+      capabilities:
+        cloud_evidence_upload:
+          label: Cloud evidence upload
+        google_export:
+          label: Google export
+        llm_vision:
+          label: On-host image reading
+      censo:
+        activity_end_date:
+          label: Activity end date
+        activity_start_date:
+          label: Activity start date
+        divergencia:
+          label: Censo divergence rows
+        elected_withholding_pct:
+          label: Elected withholding rate
+        establecimiento_type:
+          label: Establishment type
+        large_company:
+          label: Large-company condition
+        public_administration_budget_gt_6000000:
+          label: Public-administration budget over 6.000.000 EUR
+        status:
+          label: Censo status
+      contact:
+        fiscal_address:
+          label: Fiscal address
+        fiscal_address_cadastral_reference:
+          label: Cadastral reference of the fiscal address
+        fiscal_address_is_habitual_vivienda:
+          label: Fiscal address is the habitual residence
+        postcode:
+          label: Postcode
+      filing_export:
+        aeat_seal:
+          label: AEAT seal
+        bank_address:
+          label: Bank address
+        bank_city:
+          label: Bank city
+        bank_country_code:
+          label: Bank country code
+        bank_name:
+          label: Bank name
+        declaration_type:
+          label: Declaration type
+        iban:
+          label: IBAN account
+        period_end_date:
+          label: Period end date
+        period_start_date:
+          label: Period start date
+        presenter_tax_id:
+          label: Presenter NIF/CIF
+        previous_receipt:
+          label: Previous receipt reference
+        program_version:
+          label: Program version
+        rental_reduccion_art_23_2_tier_2024:
+          label: Rental reduction tier (art. 23.2)
+        sepa_marca:
+          label: SEPA marker
+        swift_bic:
+          label: SWIFT-BIC code
+      identity:
+        email:
+          label: Contact email
+        legal_name:
+          label: Legal or company name
+        name:
+          label: Given name
+        notes:
+          label: Notes
+        surnames:
+          label: Surnames
+        tax_id:
+          label: Tax ID (NIF/NIE/CIF)
+      irpf:
+        art109_activity_income_withholding_ge_70pct:
+          label: Art. 109 RIRPF 70 percent coverage met
+        estimation_regime:
+          label: Estimation regime
+        objective_estimation_modulos_iae_epigraph:
+          label: Modulos IAE epigraph
+        objective_estimation_modulos_module_1_units:
+          label: Modulos unit slot 1
+        objective_estimation_modulos_module_2_units:
+          label: Modulos unit slot 2
+        objective_estimation_modulos_module_3_units:
+          label: Modulos unit slot 3
+        objective_estimation_modulos_module_4_units:
+          label: Modulos unit slot 4
+        objective_estimation_modulos_module_5_units:
+          label: Modulos unit slot 5
+        objective_estimation_modulos_module_6_units:
+          label: Modulos unit slot 6
+        objective_estimation_modulos_module_7_units:
+          label: Modulos unit slot 7
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur:
+          label: Prior-year agricultural, livestock and forestry gross income
+        objective_estimation_prior_year_gross_income_eur:
+          label: Prior-year gross income
+        objective_estimation_prior_year_invoice_gross_income_eur:
+          label: Prior-year gross income requiring an invoice
+        objective_estimation_prior_year_purchases_eur:
+          label: Prior-year purchases
+        pagadores_count:
+          label: Number of payers
+        pagadores_secondary_income:
+          label: Income from secondary payers
+        pagadores_total_work_income:
+          label: Total employment income
+        professional_income_withholding_ge_70pct:
+          label: Professional income withholding reaches 70 percent
+        special_regime:
+          label: IRPF special regime
+        special_regime_start_date:
+          label: Special regime start date
+      iva:
+        autoconsumo_promotor_base:
+          label: Promoter self-supply taxable base
+        does_intracomunitario:
+          label: Carries out intracommunity operations
+        group_dominant_entity_enrolled:
+          label: IVA group dominant entity
+        group_member_enrolled:
+          label: IVA group member entity
+        intracommunity_operations_exceed_50000_eur:
+          label: Intracommunity operations over 50.000 EUR
+        oss_enrolled:
+          label: Enrolled in OSS or IOSS
+        redeme_enrolled:
+          label: Registered in REDEME
+        regime:
+          label: IVA regime
+        roi_enrolled:
+          label: Registered in the ROI
+        sii_enrolled:
+          label: Enrolled in the SII
+      maritime_worker:
+        pending_eu_clearance:
+          label: Pending EU clearance
+        retmar_registered:
+          label: Registered in RETMAR
+        tuna_fleet:
+          label: Tuna fleet vessel
+        vessel_flag:
+          label: Vessel flag state
+        vessel_registry:
+          label: Vessel registry
+        waters_type:
+          label: Waters type
+        worker_class:
+          label: Maritime worker class
+      obligations:
+        bienes_extranjero_above_threshold:
+          label: Modelo 720 threshold exceeded
+        monedas_virtuales_extranjero_above_threshold:
+          label: Modelo 721 threshold exceeded
+        third_party_transactions_above_347_threshold:
+          label: Modelo 347 threshold exceeded
+      preferences:
+        output_language:
+          label: Output language
+      properties:
+        cadastral_reference:
+          label: Cadastral reference
+        use_type:
+          label: Property use type
+      provenance:
+        source:
+          label: Fact source
+        valid_from:
+          label: Valid from
+        valid_to:
+          label: Valid to
+      renta_family:
+        anualidades_sin_minimo_descendientes_2020:
+          label: Alimony scale without descendant minimum (2020)
+        anualidades_sin_minimo_descendientes_2021:
+          label: Alimony scale without descendant minimum (2021)
+        anualidades_sin_minimo_descendientes_2022:
+          label: Alimony scale without descendant minimum (2022)
+        anualidades_sin_minimo_descendientes_2023:
+          label: Alimony scale without descendant minimum (2023)
+        anualidades_sin_minimo_descendientes_2024:
+          label: Alimony scale without descendant minimum (2024)
+        anualidades_sin_minimo_descendientes_2025:
+          label: Alimony scale without descendant minimum (2025)
+        ascendants:
+          label: Ascendants
+        cotizaciones_ss_madre_2024:
+          label: Mother's Social Security contributions (2024)
+        descendants:
+          label: Descendants
+        descendants_eu_eea_deduction:
+          label: EU or EEA descendant deduction
+        descendiente:
+          label: Descendant rows
+        descendientes_count:
+          label: Descendant count
+        descendientes_menores_3_2024:
+          label: Descendants under three (2024)
+        descendientes_minimos_aggregate_2020:
+          label: Descendant minimum, state share (2020)
+        descendientes_minimos_aggregate_2021:
+          label: Descendant minimum, state share (2021)
+        descendientes_minimos_aggregate_2022:
+          label: Descendant minimum, state share (2022)
+        descendientes_minimos_aggregate_2023:
+          label: Descendant minimum, state share (2023)
+        descendientes_minimos_aggregate_2024:
+          label: Descendant minimum, state share (2024)
+        descendientes_minimos_aggregate_2025:
+          label: Descendant minimum, state share (2025)
+        descendientes_minimos_aggregate_autonomico_2020:
+          label: Descendant minimum, autonomic share (2020)
+        descendientes_minimos_aggregate_autonomico_2021:
+          label: Descendant minimum, autonomic share (2021)
+        descendientes_minimos_aggregate_autonomico_2022:
+          label: Descendant minimum, autonomic share (2022)
+        descendientes_minimos_aggregate_autonomico_2023:
+          label: Descendant minimum, autonomic share (2023)
+        descendientes_minimos_aggregate_autonomico_2024:
+          label: Descendant minimum, autonomic share (2024)
+        descendientes_minimos_aggregate_autonomico_2025:
+          label: Descendant minimum, autonomic share (2025)
+        gastos_guarderia_reales_2024:
+          label: Nursery expenses (2024)
+        madrid_nacimiento_adopcion_eligible_count:
+          label: Madrid birth or adoption eligible descendants
+        minor_children_in_unit:
+          label: Minor children in the family unit
+        situacion_familiar:
+          label: Family situation
+        unidad_familiar_otros_miembros_base:
+          label: Taxable base of the other family-unit members
+      renta_spouse:
+        birth_date:
+          label: Spouse birth date
+        disability_grade:
+          label: Spouse disability grade
+        eu_eea_country:
+          label: Spouse EU or EEA country
+        eu_eea_resident:
+          label: Spouse resident in the EU or EEA
+        name:
+          label: Spouse given name
+        non_resident_irpf:
+          label: Spouse is a non-resident
+        sex:
+          label: Spouse sex
+        surnames:
+          label: Spouse surnames
+        tax_id:
+          label: Spouse NIF/NIE
+      renta_taxpayer:
+        birth_date:
+          label: Birth date
+        death_date:
+          label: Death date
+        disability_grade:
+          label: Disability grade
+        marital_status:
+          label: Marital status
+        marriage_date:
+          label: Marriage date
+        marriage_full_year:
+          label: Married for the whole year
+        marriage_month_end:
+          label: Last month of marriage in the year
+        marriage_month_start:
+          label: First month of marriage in the year
+        sex:
+          label: Sex
+      tax_residence:
+        ccaa:
+          label: Comunidad autonoma of residence
+        jurisdiction_scope:
+          label: Territorial regime
+        state_attribution_ratio:
+          label: State attribution percentage
+      taxpayer_type:
+        country_of_fiscal_residence:
+          label: Country of fiscal residence
+        entity_type:
+          label: Entity type
+        fiscal_residency:
+          label: Fiscal residency
+        incn_prior_12_months:
+          label: Net turnover of the prior 12 months
+        irpf_income_categories:
+          label: IRPF income categories
+        legal_entity_form:
+          label: Legal form
+        ley_49_2002_special_regime_option_date:
+          label: Ley 49/2002 option date
+        ley_49_2002_special_regime_option_declared:
+          label: Ley 49/2002 regime opted for
+        ley_49_2002_special_regime_renunciation_date:
+          label: Ley 49/2002 renunciation date
+        ley_49_2002_special_regime_renunciation_declared:
+          label: Ley 49/2002 regime renounced
+        new_entity_first_two_profit_periods:
+          label: In one of the first two profit periods
+        representante_fiscal_nif:
+          label: Fiscal representative NIF
+        representante_fiscal_nombre:
+          label: Fiscal representative name
+        sal_capital_social:
+          label: Share capital
+        sal_reserva_especial_dotada:
+          label: Special reserve already provisioned
+        sal_socios_trabajadores_count:
+          label: Worker-shareholder count
+        tributacion_estado_porcentaje:
+          label: State taxation percentage
+      usage_ratios:
+        business_ratio:
+          label: Business-use ratio
+        category_id:
+          label: Category
+      vivienda_office:
+        office_m2:
+          label: Office area (m2)
+        total_m2:
+          label: Total dwelling area (m2)
+      withholding:
+        has_employees:
+          label: Pays employees with withholding
+        modelo_111_no_retenciones_periods:
+          label: Modelo 111 periods without withholding
+        pays_capital_income_with_retencion:
+          label: Pays capital income with withholding
+        pays_professionals_with_retencion:
+          label: Pays professionals with withholding
+        pays_rent_with_retencion:
+          label: Pays rent with withholding
+    section:
+      activities:
+        title: Business activities
+      attribution_entity:
+        title: Attribution entity legal shape
+      attribution_entity_socios:
+        title: Attribution entity socios
+      attribution_received:
+        title: Attribution received from entities
+      auth:
+        title: AEAT authentication
+      capabilities:
+        title: Service capabilities
+      censo:
+        title: Censo and enrollment
+      contact:
+        title: Contact and fiscal address
+      filing_export:
+        title: Filing and export context
+      identity:
+        title: Identity
+      irpf:
+        title: IRPF and withholding
+      iva:
+        title: IVA profile
+      maritime_worker:
+        title: Maritime worker classification
+      obligations:
+        title: Filing obligation thresholds
+      preferences:
+        title: Operator preferences
+      properties:
+        title: Properties and rental
+      provenance:
+        title: Provenance and effective dating
+      renta_family:
+        title: Renta family
+      renta_spouse:
+        title: Renta spouse
+      renta_taxpayer:
+        title: Renta taxpayer
+      tax_residence:
+        title: Tax residence and jurisdiction
+      taxpayer_type:
+        title: Taxpayer entity type and income categories
+      usage_ratios:
+        title: Usage ratios and deductibility
+      vivienda_office:
+        title: Vivienda habitual office afectacion
+      withholding:
+        title: Withholding payer obligations
   validation:
     required_field_missing: Required profile field missing.
 review:

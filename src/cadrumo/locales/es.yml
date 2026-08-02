@@ -317,6 +317,15 @@ adapters:
         de IVA está vacía.
       justificante_column_missing: La respuesta de declaraciones de AEAT no contiene
         la columna de justificante; la estructura de la tabla puede haber cambiado.
+      landing_off_policy: Se rechazó la lectura de la AEAT porque la página en la
+        que aterrizó está fuera de los hosts permitidos de esta superficie o nombra
+        una acción de escritura.
+      landing_off_read_pages: Se rechazó la lectura de la AEAT porque aterrizó en
+        una página que este lector no consulta; este lector nunca llega a una página
+        de presentación de la AEAT.
+      landing_unreadable: Se rechazó la lectura de la AEAT porque la página en la
+        que aterrizó no tiene una dirección legible, así que no se puede determinar
+        dónde acabó la sesión. Vuelve a autenticarte e inténtalo de nuevo.
       listbox_missing: La respuesta de declaraciones de AEAT no contiene el contenedor
         de listado esperado; la estructura de la página puede haber cambiado.
       listing_nav_failed: La navegación al listado de declaraciones de AEAT falló.
@@ -340,9 +349,6 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
-      landing_unreadable: 'Se rechazó la lectura de la AEAT porque la página en la que aterrizó no tiene una dirección legible, así que no se puede determinar dónde acabó la sesión. Vuelve a autenticarte e inténtalo de nuevo.'
-      landing_off_policy: 'Se rechazó la lectura de la AEAT porque la página en la que aterrizó está fuera de los hosts permitidos de esta superficie o nombra una acción de escritura.'
-      landing_off_read_pages: 'Se rechazó la lectura de la AEAT porque aterrizó en una página que este lector no consulta; este lector nunca llega a una página de presentación de la AEAT.'
 aggregation:
   grouping:
     errors:
@@ -714,10 +720,11 @@ application:
         prior_filing_observations_changed: las observaciones de declaraciones anteriores
           han cambiado
         profile_activity_changed: la actividad del perfil del contribuyente ha cambiado
+        review_checksum_mismatch: La suma de verificación de la aprobación no coincide
+          con su base de aprobación
         schema_formula_changed: la procedencia del esquema o la fórmula ha cambiado
         transaction_catalogue_changed: el catálogo de transacciones ha cambiado
         unknown: '%{reason}'
-        review_checksum_mismatch: 'La suma de verificación de la aprobación no coincide con su base de aprobación'
     runtime:
       errors:
         active_profile_load_failed: 'No se pudo cargar el perfil activo de presentación:
@@ -4438,7 +4445,7 @@ cli:
       id_required: Se requiere un id de transacción cuando no se usa --file.
       irpf_category_help: 'Id de categoría de IRPF. Usa aeat app ledger categories.
         Facturas profesionales cobradas netas usan actividad_economica; alquileres
-        pagados netos usan arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE:
+        pagados netos usan arrendamiento_local / arrendamiento_vivienda_afecto. Royalties/SGAE:
         art. 25.4 puede ser capital mobiliario cuando el contribuyente no es el autor;
         usa actividad_economica solo para actividad por cuenta propia bajo LIRPF art.
         27.'
@@ -6806,6 +6813,9 @@ flows:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      working: 'Ejecutando {action}...'
+      failed: 'La operación no se completó.'
+      busy: 'Todavía hay otra operación en curso. Espera a que termine.'
     actions:
       section: Acciones
     column:
@@ -6814,9 +6824,13 @@ flows:
       value: Valor
     edit:
       cancel: Cancelar
+      path: 'Identificador interno: %{path}'
       required_blank: '{field} es obligatorio, así que no puede quedar en blanco.
         Introduce un valor o cancela para dejarlo sin cambios.'
       save: Guardar
+      write_failed: No se ha podido guardar el campo. Vuelve a intentarlo.
+      write_in_flight: Se está guardando el campo anterior. Espera a que termine y
+        vuelve a intentarlo.
     progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
     section_title: '{title} — {present}/{total}'
     title: 'Perfil: {profile}'
@@ -7049,6 +7063,439 @@ profile:
     description: Claves de configuración del perfil y sus descripciones
     tax:
       id: Identificador fiscal (NIF/CIF/DNI/NIE)
+  schema:
+    field:
+      activities:
+        cnae:
+          label: Código CNAE
+        description:
+          label: Descripción de la actividad
+        iae_epigraph:
+          label: Epígrafe IAE
+      attribution_entity:
+        legal_form:
+          label: Forma jurídica de la entidad en atribución
+      attribution_entity_socios:
+        base_imponible_assigned:
+          label: Base imponible atribuida al socio
+        name:
+          label: Nombre del socio
+        nif:
+          label: NIF del socio
+        role:
+          label: Papel del miembro
+        share_pct:
+          label: Porcentaje de participación
+      attribution_received:
+        base_imponible_attributed:
+          label: Base imponible atribuida al miembro
+        entity_name:
+          label: Nombre de la entidad atribuyente
+        entity_nif:
+          label: NIF de la entidad atribuyente
+        filing_year:
+          label: Ejercicio de la atribución
+        share_pct:
+          label: Porcentaje de participación atribuido
+      auth:
+        dni_nie:
+          label: DNI o NIE para Cl@ve
+        fecha_validez:
+          label: Fecha de validez
+        numero_soporte:
+          label: Número de soporte
+        provider:
+          label: Método de autenticación
+      capabilities:
+        cloud_evidence_upload:
+          label: Envío de evidencia a la nube
+        google_export:
+          label: Exportación a Google
+        llm_vision:
+          label: Lectura de imágenes en local
+      censo:
+        activity_end_date:
+          label: Fecha de baja de la actividad
+        activity_start_date:
+          label: Fecha de alta de la actividad
+        divergencia:
+          label: Divergencias del cotejo censal
+        elected_withholding_pct:
+          label: Tipo de retención elegido
+        establecimiento_type:
+          label: Tipo de establecimiento
+        large_company:
+          label: Condición de gran empresa
+        public_administration_budget_gt_6000000:
+          label: Presupuesto de administración pública superior a 6.000.000 EUR
+        status:
+          label: Estado del censo
+      contact:
+        fiscal_address:
+          label: Domicilio fiscal
+        fiscal_address_cadastral_reference:
+          label: Referencia catastral del domicilio fiscal
+        fiscal_address_is_habitual_vivienda:
+          label: El domicilio fiscal es la vivienda habitual
+        postcode:
+          label: Código postal
+      filing_export:
+        aeat_seal:
+          label: Sello de la AEAT
+        bank_address:
+          label: Dirección del banco
+        bank_city:
+          label: Ciudad del banco
+        bank_country_code:
+          label: Código de país del banco
+        bank_name:
+          label: Nombre del banco
+        declaration_type:
+          label: Tipo de declaración
+        iban:
+          label: Cuenta IBAN
+        period_end_date:
+          label: Fecha de fin del periodo
+        period_start_date:
+          label: Fecha de inicio del periodo
+        presenter_tax_id:
+          label: NIF/CIF del presentador
+        previous_receipt:
+          label: Justificante anterior
+        program_version:
+          label: Versión del programa
+        rental_reduccion_art_23_2_tier_2024:
+          label: Tramo de reducción por alquiler (art. 23.2)
+        sepa_marca:
+          label: Marca SEPA
+        swift_bic:
+          label: Código SWIFT-BIC
+      identity:
+        email:
+          label: Correo electrónico de contacto
+        legal_name:
+          label: Razón social
+        name:
+          label: Nombre
+        notes:
+          label: Notas
+        surnames:
+          label: Apellidos
+        tax_id:
+          label: NIF/NIE/CIF de identificación
+      irpf:
+        art109_activity_income_withholding_ge_70pct:
+          label: Se cumple la cobertura del 70 por ciento del art. 109 RIRPF
+        estimation_regime:
+          label: Régimen de estimación
+        objective_estimation_modulos_iae_epigraph:
+          label: Epígrafe IAE de la actividad en módulos
+        objective_estimation_modulos_module_1_units:
+          label: Unidades declaradas del módulo 1
+        objective_estimation_modulos_module_2_units:
+          label: Unidades declaradas del módulo 2
+        objective_estimation_modulos_module_3_units:
+          label: Unidades declaradas del módulo 3
+        objective_estimation_modulos_module_4_units:
+          label: Unidades declaradas del módulo 4
+        objective_estimation_modulos_module_5_units:
+          label: Unidades declaradas del módulo 5
+        objective_estimation_modulos_module_6_units:
+          label: Unidades declaradas del módulo 6
+        objective_estimation_modulos_module_7_units:
+          label: Unidades declaradas del módulo 7
+        objective_estimation_prior_year_agri_livestock_forest_gross_eur:
+          label: Ingresos agrícolas, ganaderos y forestales del año anterior
+        objective_estimation_prior_year_gross_income_eur:
+          label: Ingresos íntegros del año anterior
+        objective_estimation_prior_year_invoice_gross_income_eur:
+          label: Ingresos del año anterior con factura obligatoria
+        objective_estimation_prior_year_purchases_eur:
+          label: Compras del año anterior
+        pagadores_count:
+          label: Número de pagadores
+        pagadores_secondary_income:
+          label: Ingresos de pagadores secundarios
+        pagadores_total_work_income:
+          label: Rendimientos íntegros del trabajo
+        professional_income_withholding_ge_70pct:
+          label: La retención sobre ingresos profesionales alcanza el 70 por ciento
+        special_regime:
+          label: Régimen especial de IRPF
+        special_regime_start_date:
+          label: Fecha de inicio del régimen especial
+      iva:
+        autoconsumo_promotor_base:
+          label: Base imponible del autoconsumo del promotor
+        does_intracomunitario:
+          label: Realiza operaciones intracomunitarias
+        group_dominant_entity_enrolled:
+          label: Entidad dominante del grupo de IVA
+        group_member_enrolled:
+          label: Entidad miembro de un grupo de IVA
+        intracommunity_operations_exceed_50000_eur:
+          label: Operaciones intracomunitarias superiores a 50.000 EUR
+        oss_enrolled:
+          label: Inscrito en OSS o IOSS
+        redeme_enrolled:
+          label: Inscrito en el REDEME
+        regime:
+          label: Régimen de IVA
+        roi_enrolled:
+          label: Inscrito en el ROI
+        sii_enrolled:
+          label: Inscrito en el SII
+      maritime_worker:
+        pending_eu_clearance:
+          label: Pendiente de autorización de la UE
+        retmar_registered:
+          label: Inscrito en el RETMAR
+        tuna_fleet:
+          label: Buque de flota atunera
+        vessel_flag:
+          label: Pabellón del buque
+        vessel_registry:
+          label: Registro del buque
+        waters_type:
+          label: Tipo de aguas
+        worker_class:
+          label: Clasificación como trabajador del mar
+      obligations:
+        bienes_extranjero_above_threshold:
+          label: Supera el umbral del Modelo 720
+        monedas_virtuales_extranjero_above_threshold:
+          label: Supera el umbral del Modelo 721
+        third_party_transactions_above_347_threshold:
+          label: Supera el umbral del Modelo 347
+      preferences:
+        output_language:
+          label: Idioma de salida
+      properties:
+        cadastral_reference:
+          label: Referencia catastral
+        use_type:
+          label: Tipo de uso del inmueble
+      provenance:
+        source:
+          label: Origen del dato
+        valid_from:
+          label: Válido desde
+        valid_to:
+          label: Válido hasta
+      renta_family:
+        anualidades_sin_minimo_descendientes_2020:
+          label: Anualidades por alimentos sin mínimo por descendientes (2020)
+        anualidades_sin_minimo_descendientes_2021:
+          label: Anualidades por alimentos sin mínimo por descendientes (2021)
+        anualidades_sin_minimo_descendientes_2022:
+          label: Anualidades por alimentos sin mínimo por descendientes (2022)
+        anualidades_sin_minimo_descendientes_2023:
+          label: Anualidades por alimentos sin mínimo por descendientes (2023)
+        anualidades_sin_minimo_descendientes_2024:
+          label: Anualidades por alimentos sin mínimo por descendientes (2024)
+        anualidades_sin_minimo_descendientes_2025:
+          label: Anualidades por alimentos sin mínimo por descendientes (2025)
+        ascendants:
+          label: Ascendientes
+        cotizaciones_ss_madre_2024:
+          label: Cotizaciones a la Seguridad Social de la madre (2024)
+        descendants:
+          label: Descendientes
+        descendants_eu_eea_deduction:
+          label: Deducción por descendientes en la UE o el EEE
+        descendiente:
+          label: Datos de cada descendiente
+        descendientes_count:
+          label: Número de descendientes
+        descendientes_menores_3_2024:
+          label: Descendientes menores de tres años (2024)
+        descendientes_minimos_aggregate_2020:
+          label: Mínimo por descendientes, parte estatal (2020)
+        descendientes_minimos_aggregate_2021:
+          label: Mínimo por descendientes, parte estatal (2021)
+        descendientes_minimos_aggregate_2022:
+          label: Mínimo por descendientes, parte estatal (2022)
+        descendientes_minimos_aggregate_2023:
+          label: Mínimo por descendientes, parte estatal (2023)
+        descendientes_minimos_aggregate_2024:
+          label: Mínimo por descendientes, parte estatal (2024)
+        descendientes_minimos_aggregate_2025:
+          label: Mínimo por descendientes, parte estatal (2025)
+        descendientes_minimos_aggregate_autonomico_2020:
+          label: Mínimo por descendientes, parte autonómica (2020)
+        descendientes_minimos_aggregate_autonomico_2021:
+          label: Mínimo por descendientes, parte autonómica (2021)
+        descendientes_minimos_aggregate_autonomico_2022:
+          label: Mínimo por descendientes, parte autonómica (2022)
+        descendientes_minimos_aggregate_autonomico_2023:
+          label: Mínimo por descendientes, parte autonómica (2023)
+        descendientes_minimos_aggregate_autonomico_2024:
+          label: Mínimo por descendientes, parte autonómica (2024)
+        descendientes_minimos_aggregate_autonomico_2025:
+          label: Mínimo por descendientes, parte autonómica (2025)
+        gastos_guarderia_reales_2024:
+          label: Gastos de guardería (2024)
+        madrid_nacimiento_adopcion_eligible_count:
+          label: Descendientes con derecho a la deducción de Madrid por nacimiento
+            o adopción
+        minor_children_in_unit:
+          label: Hijos menores en la unidad familiar
+        situacion_familiar:
+          label: Situación familiar
+        unidad_familiar_otros_miembros_base:
+          label: Base imponible de los demás miembros de la unidad familiar
+      renta_spouse:
+        birth_date:
+          label: Fecha de nacimiento del cónyuge
+        disability_grade:
+          label: Grado de discapacidad del cónyuge
+        eu_eea_country:
+          label: País de la UE o el EEE del cónyuge
+        eu_eea_resident:
+          label: Cónyuge residente en la UE o el EEE
+        name:
+          label: Nombre del cónyuge
+        non_resident_irpf:
+          label: El cónyuge es no residente
+        sex:
+          label: Sexo del cónyuge
+        surnames:
+          label: Apellidos del cónyuge
+        tax_id:
+          label: NIF/NIE del cónyuge
+      renta_taxpayer:
+        birth_date:
+          label: Fecha de nacimiento
+        death_date:
+          label: Fecha de fallecimiento
+        disability_grade:
+          label: Grado de discapacidad
+        marital_status:
+          label: Estado civil
+        marriage_date:
+          label: Fecha de matrimonio
+        marriage_full_year:
+          label: Matrimonio vigente todo el ejercicio
+        marriage_month_end:
+          label: Último mes de matrimonio del ejercicio
+        marriage_month_start:
+          label: Primer mes de matrimonio del ejercicio
+        sex:
+          label: Sexo
+      tax_residence:
+        ccaa:
+          label: Comunidad autónoma de residencia
+        jurisdiction_scope:
+          label: Régimen territorial
+        state_attribution_ratio:
+          label: Porcentaje atribuible al Estado
+      taxpayer_type:
+        country_of_fiscal_residence:
+          label: País de residencia fiscal
+        entity_type:
+          label: Tipo de contribuyente
+        fiscal_residency:
+          label: Residencia fiscal
+        incn_prior_12_months:
+          label: INCN de los 12 meses anteriores
+        irpf_income_categories:
+          label: Categorías de renta IRPF
+        legal_entity_form:
+          label: Forma jurídica
+        ley_49_2002_special_regime_option_date:
+          label: Fecha de opción por la Ley 49/2002
+        ley_49_2002_special_regime_option_declared:
+          label: Opción por el régimen de la Ley 49/2002
+        ley_49_2002_special_regime_renunciation_date:
+          label: Fecha de renuncia a la Ley 49/2002
+        ley_49_2002_special_regime_renunciation_declared:
+          label: Renuncia al régimen de la Ley 49/2002
+        new_entity_first_two_profit_periods:
+          label: En uno de los dos primeros periodos con beneficio
+        representante_fiscal_nif:
+          label: NIF del representante fiscal
+        representante_fiscal_nombre:
+          label: Nombre del representante fiscal
+        sal_capital_social:
+          label: Capital social
+        sal_reserva_especial_dotada:
+          label: Reserva especial ya dotada
+        sal_socios_trabajadores_count:
+          label: Número de socios trabajadores
+        tributacion_estado_porcentaje:
+          label: Porcentaje de tributación al Estado
+      usage_ratios:
+        business_ratio:
+          label: Ratio de uso profesional
+        category_id:
+          label: Categoría de gasto
+      vivienda_office:
+        office_m2:
+          label: Superficie afecta a la actividad (m2)
+        total_m2:
+          label: Superficie total de la vivienda (m2)
+      withholding:
+        has_employees:
+          label: Paga a empleados con retención
+        modelo_111_no_retenciones_periods:
+          label: Periodos del Modelo 111 sin retenciones
+        pays_capital_income_with_retencion:
+          label: Paga rentas del capital con retención
+        pays_professionals_with_retencion:
+          label: Paga a profesionales con retención
+        pays_rent_with_retencion:
+          label: Paga alquileres con retención
+    section:
+      activities:
+        title: Actividades económicas
+      attribution_entity:
+        title: Forma jurídica de la entidad en atribución
+      attribution_entity_socios:
+        title: Socios de la entidad en atribución
+      attribution_received:
+        title: Rentas atribuidas recibidas
+      auth:
+        title: Autenticación con la AEAT
+      capabilities:
+        title: Capacidades del servicio
+      censo:
+        title: Censo y alta
+      contact:
+        title: Contacto y domicilio fiscal
+      filing_export:
+        title: Contexto de presentación y exportación
+      identity:
+        title: Identidad
+      irpf:
+        title: IRPF y retenciones
+      iva:
+        title: Perfil de IVA
+      maritime_worker:
+        title: Clasificación como trabajador del mar
+      obligations:
+        title: Umbrales de obligación de declarar
+      preferences:
+        title: Preferencias del operador
+      properties:
+        title: Inmuebles y alquiler
+      provenance:
+        title: Origen y vigencia del dato
+      renta_family:
+        title: Unidad familiar en Renta
+      renta_spouse:
+        title: Cónyuge en Renta
+      renta_taxpayer:
+        title: Contribuyente de Renta
+      tax_residence:
+        title: Residencia fiscal y jurisdicción
+      taxpayer_type:
+        title: Tipo de contribuyente y categorías de renta
+      usage_ratios:
+        title: Ratios de uso y deducibilidad
+      vivienda_office:
+        title: Afectación de la vivienda habitual
+      withholding:
+        title: Obligaciones como retenedor
   validation:
     required_field_missing: Falta un campo obligatorio del perfil.
 review:
