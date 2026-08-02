@@ -29,10 +29,13 @@
 name: Cadrumo Release Soak Promoter
 
 on:
-  schedule:
-    # Hourly. The soak window is measured in days, so hourly resolution is far
-    # finer than the decision needs, and each tick costs one short job.
-    - cron: "17 * * * *"
+  # The scheduled cron tick is retired by operator ruling: the soak wait itself
+  # is retired (release-orchestrator.yml now dispatches publish-release.yml
+  # immediately after sealing a candidate, per this project's standing no
+  # scheduled-CI policy), so nothing sealed by that path is ever left waiting
+  # for this workflow to notice. workflow_dispatch survives as a manual
+  # escape hatch for a candidate sealed before the change, or any future
+  # reintroduction of a soak.
   workflow_dispatch:
     inputs:
       report_only:

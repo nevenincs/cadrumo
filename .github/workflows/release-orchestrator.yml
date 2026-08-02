@@ -2,9 +2,14 @@
 #
 # One dispatch carries the release decision. Nothing downstream asks a human
 # anything: this workflow bumps the version, runs the packaging campaign, runs
-# whichever acquisition lanes the claimed channels require, and seals a release
-# candidate. The soak is then crossed by release-soak-promoter.yml, and the
-# publication itself by publish-release.yml.
+# whichever acquisition lanes the claimed channels require, seals a release
+# candidate record (the durable evidence trail), and immediately dispatches
+# publish-release.yml with the same run ids. There is no soak wait between a
+# green chain and publication (retired by operator ruling); the mechanical
+# guards already built into publish-release.yml's own Gate 2/Gate 3 - the
+# all-destination version-identity check, the burned-version ledger, and the
+# readiness gate - are the whole safety net, run at dispatch time rather than
+# after a multi-day hold.
 #
 # WHY THERE IS NO CONFIRMATION INPUT. Navigating to a workflow and pressing Run
 # already IS the deliberate act; a phrase to type reproduces the ceremony the
@@ -19,10 +24,10 @@
 # against starting the wrong one: under push-triggering the first release nobody
 # meant to make passes every check in the repository.
 #
-# WHAT THIS WORKFLOW NEVER DOES. It does not publish, and it does not dispatch
-# publish-release.yml. It ends at the sealed candidate, because no run can span
-# a 48-72 hour soak and a job that tried would hold one of four shared
-# self-hosted runners for days.
+# WHAT THIS WORKFLOW NEVER DOES. It never calls a publication verb itself (no
+# `uv publish`, no `twine upload`, no `gh release create`) - it only ever
+# presses the button on publish-release.yml, which carries its own independent
+# Gate 2/Gate 3 checks regardless of who or what dispatched it.
 name: Cadrumo Release Orchestrator
 
 on:
@@ -318,7 +323,7 @@ jobs:
           done <<< "${lanes}"
 
   seal:
-    name: Cadrumo / seal the release candidate and stop
+    name: Cadrumo / seal the release candidate and publish
     needs: [preflight, precondition, campaign, acquire]
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
@@ -338,7 +343,7 @@ jobs:
           python-version: "3.13"
           enable-cache: true
 
-      - name: Seal the candidate and end the run
+      - name: Seal the candidate record
         env:
           GH_TOKEN: ${{ github.token }}
           PACKAGING_RUN_ID: ${{ needs.campaign.outputs.packaging_run_id }}
@@ -351,24 +356,36 @@ jobs:
           # The evidence-release TAG, from the job that verified it - NOT the
           # packaging-claude lane's run id. The publication authority consumes
           # this with `gh release download "$CLAUDE_EVIDENCE_RELEASE"`, so a run
-          # id here fails at the final leg AFTER a full 48-72 hour soak, and
-          # silently replaces the operator-minted evidence with a
-          # machine-produced value. The lane run id is a separate acquisition
-          # proof and is carried under its own name above.
+          # id here fails at the final leg, and silently replaces the
+          # operator-minted evidence with a machine-produced value. The lane run
+          # id is a separate acquisition proof and is carried under its own name
+          # above.
           CLAUDE_EVIDENCE_RELEASE: ${{ needs.precondition.outputs.claude_evidence_release }}
         run: |
-          # THIS JOB IS TERMINAL, and that is the design rather than an
-          # omission. The soak runs 48-72 hours; no workflow run spans that, and
-          # a job that tried would hold one of four shared self-hosted runners
-          # for days. So the chain records its state durably and STOPS.
-          #
-          # release-soak-promoter.yml resumes it once the window closes. This
-          # workflow therefore never dispatches publish-release.yml: a run that
-          # published would, by definition, not have waited.
+          # The soak wait is retired by operator ruling: no multi-day hold
+          # between a green chain and publication. This job still writes the
+          # durable candidate record (the evidence trail proving what ran), then
+          # immediately dispatches the publication authority itself instead of
+          # waiting for release-soak-promoter.yml to notice an elapsed deadline.
           uv run --frozen python -m dev.release.seal_candidate \
             --repository "${GITHUB_REPOSITORY}" \
             --packaging-run-id "${PACKAGING_RUN_ID}" \
             --dry-run "${DRY_RUN}"
+
+      - name: Dispatch the publication authority immediately
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGING_RUN_ID: ${{ needs.campaign.outputs.packaging_run_id }}
+          SCOOP_RUN_ID: ${{ needs.acquire.outputs.scoop_run_id }}
+          HOMEBREW_RUN_ID: ${{ needs.acquire.outputs.homebrew_run_id }}
+          CLAUDE_EVIDENCE_RELEASE: ${{ needs.precondition.outputs.claude_evidence_release }}
+          DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
+        run: |
+          args=(--repo "${GITHUB_REPOSITORY}" -f "packaging_run_id=${PACKAGING_RUN_ID}" -f "dry_run=${DRY_RUN}")
+          [ -n "${SCOOP_RUN_ID}" ] && args+=(-f "scoop_run_id=${SCOOP_RUN_ID}")
+          [ -n "${HOMEBREW_RUN_ID}" ] && args+=(-f "homebrew_run_id=${HOMEBREW_RUN_ID}")
+          [ -n "${CLAUDE_EVIDENCE_RELEASE}" ] && args+=(-f "claude_evidence_release=${CLAUDE_EVIDENCE_RELEASE}")
+          gh workflow run publish-release.yml "${args[@]}"
 
   alert:
     name: Cadrumo / alert the operator on a failed release-path run

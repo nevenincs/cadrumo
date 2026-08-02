@@ -31,15 +31,17 @@ def _run_surface(document: Any) -> str:
     )
 
 
-def test_the_promoter_runs_on_a_schedule_so_no_human_crosses_the_boundary() -> None:
-    """A cron trigger is what makes the wait machine-held rather than remembered."""
+def test_the_promoter_carries_no_schedule_trigger() -> None:
+    """The soak wait is retired.
+
+    The orchestrator dispatches publication immediately
+    after sealing a candidate, so a scheduled tick would have nothing to cross and
+    would violate this project's standing no-scheduled-CI policy.
+    """
     triggers = _document()[True]
 
-    assert "schedule" in triggers, "without a schedule the soak still waits on someone noticing"
-    crons = [entry["cron"] for entry in triggers["schedule"]]
-    assert crons, "the schedule must declare at least one cron expression"
-    for cron in crons:
-        assert re.fullmatch(r"[\d*/,\- ]+", cron), f"unparseable cron {cron!r}"
+    assert "schedule" not in triggers, "the soak wait is retired; no cron trigger should exist"
+    assert "workflow_dispatch" in triggers, "the manual escape hatch must survive"
 
 
 def test_no_input_can_shorten_a_soak_window() -> None:

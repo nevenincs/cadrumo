@@ -15,6 +15,8 @@ from typing import Any, Final
 import pytest
 import yaml
 
+from cadrumo.tests.env_scope import scoped_env_var
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
@@ -108,19 +110,23 @@ def test_every_job_runs_on_the_self_hosted_fleet() -> None:
         assert isinstance(runner, list) and runner[0] == "self-hosted", f"{name} escapes the self-hosted fleet"
 
 
-def test_the_orchestrator_never_publishes_and_never_dispatches_the_publication() -> None:
-    """It ends at the sealed candidate. The promoter alone crosses the soak.
+def test_the_orchestrator_seals_then_dispatches_publication_directly() -> None:
+    """The soak wait is retired by operator ruling.
 
-    Dispatching publish-release.yml from here would bypass the soak entirely -
-    the whole point of sealing a candidate is that no run can span the window,
-    so a run that publishes has not waited.
+    The orchestrator itself
+    seals the candidate record (the evidence trail) then immediately dispatches
+    publish-release.yml with the same run ids, rather than waiting for a
+    scheduled promoter to notice an elapsed deadline. The orchestrator itself
+    still never calls a publication verb directly - it only ever presses the
+    button on the publication authority, which carries its own Gate 2/Gate 3
+    checks (including the dry_run propagation asserted elsewhere in this file).
     """
     document = _document()
     surface = _invocation_surface(document)
 
-    assert "publish-release.yml" not in surface, "the orchestrator must not reach the publication authority"
+    assert "publish-release.yml" in surface, "the orchestrator must dispatch the publication authority itself"
     for verb in ("uv publish", "twine upload", "gh release create"):
-        assert verb not in surface, f"the orchestrator must not {verb}"
+        assert verb not in surface, f"the orchestrator must not {verb} directly - only publish-release.yml may"
     for name, job in document["jobs"].items():
         assert job.get("permissions", {}).get("id-token") != "write", f"{name} must not mint an OIDC token"
         assert "environment" not in job, f"{name} must not enter a deployment environment"
@@ -578,7 +584,7 @@ def test_the_evidence_release_comes_from_the_job_that_verified_it() -> None:
     )
 
 
-def test_the_seal_module_refuses_a_run_id_as_an_evidence_release(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_the_seal_module_refuses_a_run_id_as_an_evidence_release() -> None:
     """Defence in depth at the consuming module, not only in the wiring.
 
     The workflow assertions above pin today's wiring; this makes the same
@@ -589,9 +595,10 @@ def test_the_seal_module_refuses_a_run_id_as_an_evidence_release(monkeypatch: py
     from dev.release import seal_candidate as seal_module
     from dev.release.release_candidate import ReleaseCandidateError
 
-    monkeypatch.setenv("CLAUDE_EVIDENCE_RELEASE", "1234567890")
-
-    with pytest.raises(ReleaseCandidateError, match="run id rather than a release tag"):
+    with (
+        scoped_env_var("CLAUDE_EVIDENCE_RELEASE", "1234567890"),
+        pytest.raises(ReleaseCandidateError, match="run id rather than a release tag"),
+    ):
         seal_module.main(["--repository", "nevenincs/cadrumo", "--packaging-run-id", "42"])
 
     # Control: a genuine tag is not refused by the same guard. Without this the
@@ -600,8 +607,10 @@ def test_the_seal_module_refuses_a_run_id_as_an_evidence_release(monkeypatch: py
     # (`resolve_gh`/`download_release_assets`, both raising
     # EvidenceReleaseError) before any later ReleaseCandidateError site, so
     # the two are the concrete failure modes this sandboxed run can hit.
-    monkeypatch.setenv("CLAUDE_EVIDENCE_RELEASE", "claude-evidence-2026-08-02")
-    with pytest.raises((EvidenceReleaseError, ReleaseCandidateError)) as caught:
+    with (
+        scoped_env_var("CLAUDE_EVIDENCE_RELEASE", "claude-evidence-2026-08-02"),
+        pytest.raises((EvidenceReleaseError, ReleaseCandidateError)) as caught,
+    ):
         seal_module.main(["--repository", "nevenincs/cadrumo", "--packaging-run-id", "42"])
     assert "run id rather than a release tag" not in str(caught.value)
 
