@@ -52,6 +52,7 @@ from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from ._walker import assert_landed_url_readable
 
 if TYPE_CHECKING:
     from ..auth import AeatSession
@@ -500,6 +501,18 @@ async def _fetch_and_parse(
     )
 
 
+def _notifications_landing_url(page: Any, *, requested_url: str) -> str:
+    """Return the URL AEAT actually served, refusing an unreadable landing.
+
+    Mirrors :func:`_walker.assert_landed_url_readable`: an empty or otherwise
+    unreadable ``page.url`` must not be silently substituted with the
+    originally-requested URL -- see that function's own docstring for the
+    fail-open bug this shape used to reproduce (the re-assertion after a
+    ``goto`` skipped entirely when the landed URL was empty).
+    """
+    return assert_landed_url_readable(getattr(page, "url", "") or "", requested_url=requested_url)
+
+
 async def _navigate_and_parse(
     storage_state: Mapping[str, object],
     *,
@@ -541,7 +554,7 @@ async def _navigate_and_parse(
         # capture where AEAT actually landed and re-assert that host through
         # the host-suffix read guard so an off-AEAT redirect fails closed
         # while a ``www{n}`` load-balancer dispatch is tolerated.
-        landing_url = getattr(page, "url", "") or url
+        landing_url = _notifications_landing_url(page, requested_url=url)
         landing = urlsplit(landing_url)
         _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
         html = await page.content()
