@@ -65,7 +65,7 @@ def review_package_build_result_payload(build_result: ReviewPackageBuildResult) 
         output_path=str(build_result.output_path),
         member_count=build_result.member_count,
         built_by=manifest.built_by,
-        built_at=manifest.built_at.isoformat(),
+        built_at=manifest.built_at,
     )
 
 
@@ -112,7 +112,7 @@ def review_package_verify_result(
         revision_state=manifest.revision_state,
         has_ledger_evidence=manifest.has_ledger_evidence,
         built_by=manifest.built_by,
-        built_at=manifest.built_at.isoformat(),
+        built_at=manifest.built_at,
     )
     lines = [
         "operation\tmodelo.review_package.verify",
@@ -144,7 +144,7 @@ def review_package_sign_result(
         calculation_revision_id=signed.calculation_revision_id,
         manifest_sha256=signed.manifest_sha256,
         signer_public_key_hex=signer_public_key_hex,
-        signed_at=signed.signed_at.isoformat(),
+        signed_at=signed.signed_at,
     )
     lines = [
         "operation\tmodelo.review_package.sign",
@@ -197,7 +197,7 @@ def review_package_counter_sign_result(
         bucket_id=bucket_id,
         note=receipt.note,
         counter_signer_public_key_hex=counter_signer_public_key_hex,
-        counter_signed_at=receipt.counter_signed_at.isoformat(),
+        counter_signed_at=receipt.counter_signed_at,
     )
     lines = [
         "operation\tmodelo.review_package.counter_sign",
@@ -249,8 +249,8 @@ def review_package_encrypt_for_recipient_result(
         recipient_id=recipient_id,
         recipient_public_key_hex=recipient_public_key_hex,
         review_only=envelope.review_only,
-        issued_at=envelope.issued_at.isoformat(),
-        valid_until=envelope.valid_until.isoformat() if envelope.valid_until is not None else None,
+        issued_at=envelope.issued_at,
+        valid_until=envelope.valid_until,
     )
     lines = [
         "operation\tmodelo.review_package.encrypt_for_recipient",
@@ -259,7 +259,7 @@ def review_package_encrypt_for_recipient_result(
         f"recipient_id\t{recipient_id}",
         f"recipient_public_key_hex\t{recipient_public_key_hex}",
         f"review_only\t{envelope.review_only}",
-        f"valid_until\t{result.valid_until or 'never'}",
+        f"valid_until\t{envelope.valid_until.isoformat() if envelope.valid_until is not None else 'never'}",
     ]
     return result, lines
 
@@ -306,8 +306,8 @@ def review_package_encrypt_feedback_result(
         work_unit_id=work_unit_id,
         calculation_revision_id=calculation_revision_id,
         has_counter_sign=has_counter_sign,
-        issued_at=envelope.issued_at.isoformat(),
-        valid_until=envelope.valid_until.isoformat() if envelope.valid_until is not None else None,
+        issued_at=envelope.issued_at,
+        valid_until=envelope.valid_until,
     )
     lines = [
         "operation\tmodelo.review_package.encrypt_feedback",
