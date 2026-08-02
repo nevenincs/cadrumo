@@ -14,11 +14,13 @@ import os
 import stat
 import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
+from dev.packaging.evidence import PackagingSmokeManifest
 
 from .. import readiness
 
@@ -270,6 +272,21 @@ def test_changelog_ready_passes_on_real_populated_file(tmp_path: Path) -> None:
     assert check.passed is True
 
 
+def _write_real_manifest(directory: Path, *, ok: bool, lane: str) -> Path:
+    """Write a complete, schema-valid packaging-smoke manifest for a real probe."""
+    manifest = PackagingSmokeManifest(
+        ok=ok,
+        lane=lane,
+        completed_at=datetime.now(UTC),
+        work_dir=str(directory),
+        artifacts={},
+        checks=(),
+    )
+    path = directory / "packaging-smoke-manifest.json"
+    path.write_text(manifest.model_dump_json(indent=2) + "\n", encoding="utf-8")
+    return path
+
+
 def test_packaging_smoke_evidence_is_advisory_when_absent(tmp_path: Path) -> None:
     """A fresh checkout with no packaging-smoke run reports advisory, not blocking."""
     root = _make_repo_root(tmp_path)
@@ -288,19 +305,15 @@ def test_packaging_smoke_evidence_reads_the_most_recent_real_manifest(tmp_path: 
 
     older = smoke_dir / "core-20260101T000000Z"
     older.mkdir(parents=True)
-    (older / "packaging-smoke-manifest.json").write_text(
-        json.dumps({"ok": False, "lane": "core-wheel"}), encoding="utf-8"
-    )
+    older_manifest = _write_real_manifest(older, ok=False, lane="core-wheel")
 
     newer = smoke_dir / "core-20260702T000000Z"
     newer.mkdir(parents=True)
-    (newer / "packaging-smoke-manifest.json").write_text(
-        json.dumps({"ok": True, "lane": "core-wheel"}), encoding="utf-8"
-    )
+    newer_manifest = _write_real_manifest(newer, ok=True, lane="core-wheel")
     # Ensure a real, distinguishable mtime ordering regardless of filesystem
     # timestamp resolution.
-    os.utime(older / "packaging-smoke-manifest.json", (1000, 1000))
-    os.utime(newer / "packaging-smoke-manifest.json", (2000, 2000))
+    os.utime(older_manifest, (1000, 1000))
+    os.utime(newer_manifest, (2000, 2000))
 
     check = readiness.check_latest_packaging_smoke_evidence(root)
 
@@ -313,14 +326,99 @@ def test_packaging_smoke_evidence_reads_a_pruned_checkpoint(tmp_path: Path) -> N
     root = _make_repo_root(tmp_path)
     evidence_dir = root / "var" / "packaging-smoke-evidence"
     evidence_dir.mkdir(parents=True)
+    manifest = PackagingSmokeManifest(
+        ok=True,
+        lane="docker-core",
+        completed_at=datetime.now(UTC),
+        work_dir=str(evidence_dir),
+        artifacts={},
+        checks=(),
+    )
     checkpoint = evidence_dir / "docker-core-20260715T214242Z.json"
-    checkpoint.write_text(json.dumps({"ok": True, "lane": "docker-core"}), encoding="utf-8")
+    checkpoint.write_text(manifest.model_dump_json(indent=2) + "\n", encoding="utf-8")
 
     check = readiness.check_latest_packaging_smoke_evidence(root)
 
     assert check.passed is True
     assert "docker-core-20260715T214242Z" in check.detail
     assert "lane=docker-core" in check.detail
+
+
+@pytest.mark.parametrize("truthy_ok", ["yes", 1, "true", 2])
+def test_packaging_smoke_evidence_refuses_a_truthy_non_boolean_ok(tmp_path: Path, truthy_ok: object) -> None:
+    """A malformed manifest whose `ok` is truthy-but-not-boolean must not read as success."""
+    root = _make_repo_root(tmp_path)
+    smoke_dir = root / "var" / "packaging-smoke" / "core-20260101T000000Z"
+    smoke_dir.mkdir(parents=True)
+    (smoke_dir / "packaging-smoke-manifest.json").write_text(
+        json.dumps({"ok": truthy_ok, "lane": "core-wheel"}), encoding="utf-8"
+    )
+
+    check = readiness.check_latest_packaging_smoke_evidence(root)
+
+    assert check.severity == "advisory"
+    assert check.passed is False
+    assert "not a valid packaging-smoke manifest" in check.detail
+
+
+def test_packaging_smoke_evidence_refuses_a_manifest_missing_required_fields(tmp_path: Path) -> None:
+    """A manifest missing the timestamp/work_dir fields the writer always emits must refuse."""
+    root = _make_repo_root(tmp_path)
+    smoke_dir = root / "var" / "packaging-smoke" / "core-20260101T000000Z"
+    smoke_dir.mkdir(parents=True)
+    (smoke_dir / "packaging-smoke-manifest.json").write_text(
+        json.dumps({"ok": True, "lane": "core-wheel"}), encoding="utf-8"
+    )
+
+    check = readiness.check_latest_packaging_smoke_evidence(root)
+
+    assert check.severity == "advisory"
+    assert check.passed is False
+    assert "not a valid packaging-smoke manifest" in check.detail
+
+
+def test_packaging_smoke_evidence_refuses_an_empty_lane(tmp_path: Path) -> None:
+    """An empty `lane` fails the canonical bound the shared schema enforces."""
+    root = _make_repo_root(tmp_path)
+    smoke_dir = root / "var" / "packaging-smoke" / "core-20260101T000000Z"
+    smoke_dir.mkdir(parents=True)
+    (smoke_dir / "packaging-smoke-manifest.json").write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "lane": "",
+                "completed_at": datetime.now(UTC).isoformat(),
+                "work_dir": str(smoke_dir),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    check = readiness.check_latest_packaging_smoke_evidence(root)
+
+    assert check.severity == "advisory"
+    assert check.passed is False
+    assert "not a valid packaging-smoke manifest" in check.detail
+
+
+def test_packaging_smoke_evidence_end_to_end_through_the_real_smoke_writer(tmp_path: Path) -> None:
+    """A manifest produced by the real production writer passes the readiness reader."""
+    from dev.packaging.smoke_core import _write_smoke_manifest
+
+    root = _make_repo_root(tmp_path)
+    work_dir = root / "var" / "packaging-smoke" / "core-20260101T000000Z"
+    work_dir.mkdir(parents=True)
+    _write_smoke_manifest(
+        work_dir,
+        lane="core-wheel",
+        artifacts={"wheel": "wheel/cadrumo.whl"},
+        checks=("installed CLI config/profile smoke",),
+    )
+
+    check = readiness.check_latest_packaging_smoke_evidence(root)
+
+    assert check.passed is True
+    assert "lane=core-wheel" in check.detail
 
 
 def _write_probe_gh(bin_dir: Path, *, issues_json: str, exit_code: int = 0) -> Path:

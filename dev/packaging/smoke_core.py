@@ -23,6 +23,7 @@ from packaging.requirements import Requirement
 
 from dev.packaging._command import CommandResult, run_command
 from dev.packaging._distribution_names import normalise_distribution_name
+from dev.packaging.evidence import PackagingSmokeManifest
 
 from .installed_tax_oracle import run_installed_tax_oracle
 from .python_cohort import (
@@ -1070,18 +1071,17 @@ def _write_smoke_manifest(
     details: dict[str, Any] | None = None,
 ) -> Path:
     """Write a machine-readable record for one successful packaging smoke run."""
-    payload: dict[str, Any] = {
-        "ok": True,
-        "lane": lane,
-        "completed_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
-        "work_dir": str(work_dir.resolve()),
-        "artifacts": artifacts,
-        "checks": list(checks),
-    }
-    if details:
-        payload["details"] = details
+    manifest = PackagingSmokeManifest(
+        ok=True,
+        lane=lane,
+        completed_at=datetime.now(UTC),
+        work_dir=str(work_dir.resolve()),
+        artifacts=artifacts,
+        checks=tuple(checks),
+        details=details or None,
+    )
     path = work_dir / "packaging-smoke-manifest.json"
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding=_UTF_8)
+    path.write_text(manifest.model_dump_json(indent=2) + "\n", encoding=_UTF_8)
     return path
 
 

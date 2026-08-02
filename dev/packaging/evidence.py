@@ -351,6 +351,36 @@ def load_distribution_evidence(
     return evidence
 
 
+class PackagingSmokeManifest(BaseModel):
+    """One packaging-smoke lane's machine-readable run record.
+
+    The single typed shape shared by every ``smoke_*.py`` writer (via
+    ``dev.packaging.smoke_core._write_smoke_manifest``) and by every reader that
+    decides whether a manifest reports a genuine successful run
+    (:func:`checkpoint_smoke_evidence`,
+    :func:`dev.release.readiness.check_latest_packaging_smoke_evidence`). A
+    manifest that fails this schema — a non-boolean ``ok``, an empty ``lane``, or
+    a naive ``completed_at`` — is not evidence, regardless of what its raw JSON
+    claims.
+    """
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    ok: bool
+    lane: str = Field(min_length=1)
+    completed_at: datetime
+    work_dir: str = Field(min_length=1)
+    artifacts: Mapping[str, str] = Field(default_factory=dict)
+    checks: tuple[str, ...] = Field(default_factory=tuple)
+    details: Mapping[str, JsonValue] | None = None
+
+    @model_validator(mode="after")
+    def _timezone_aware(self) -> Self:
+        if self.completed_at.tzinfo is None or self.completed_at.utcoffset() is None:
+            raise ValueError("packaging smoke manifest completed_at must carry a timezone")
+        return self
+
+
 def checkpoint_smoke_evidence(
     smoke_root: Path,
     evidence_root: Path,
