@@ -82,11 +82,14 @@ def verify_revision_self_consistency(
     same ``revision_id`` and is admitted here. ``revision_ancestor_ids`` is the
     sharp case, because it is the ancestry chain itself: only its head, the
     direct ``previous_revision_id`` link, is mixed, so this gate pins the parent
-    edge and not the chain behind it. The other four are audit attribution and
-    write bookkeeping. Bringing them under the digest would restamp every
-    stored ``revision_id``, which is a persisted-format decision rather than a
-    local fix, so the honest statement of today's guarantee is the eight-input
-    tuple named above.
+    edge and not the chain behind it. ``revision_written_at`` is a second copy
+    of the already-mixed ``written_at``; this gate reads the latter and never
+    the former. What the remaining columns are worth protecting FROM is a
+    question about their consumers, which this module cannot see and does not
+    assert. Bringing any of them under the digest would restamp every stored
+    ``revision_id``, which is a persisted-format decision rather than a local
+    fix, so the honest statement of today's guarantee is the eight-input tuple
+    named above.
 
     The check is purely metadata-internal (it never touches the encrypted
     payload bytes), so it does not interfere with the AEAD payload
