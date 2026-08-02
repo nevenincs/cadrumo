@@ -13,6 +13,10 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
 from ....core.decimal import coerce_finite_european_decimal, normalize_decimal_separators
 from ._errors import RegistryValidationError
+from ._external_grounding import (
+    BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
+    require_bundled_oracle_evidence_locator,
+)
 from ._ids import CasillaId, OracleId, validated_casilla_id
 from ._live_parity import (
     OracleSurfaceKind,
@@ -25,6 +29,7 @@ from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 _RENTA_WEB_OPEN_DEFAULT_YEAR: Final[int] = 2025
 _RENTA_WEB_OPEN_ORACLE_ID: OracleId = "modelo-100-renta-web-open"
+_RENTA_REPLAY_SURFACE_LABEL: Final[str] = "Renta WEB Open replay"
 
 
 class RentaWebOpenModel(BaseModel):
@@ -98,7 +103,14 @@ class RentaWebOpenObservation(RentaWebOpenModel):
     """Observed Renta WEB Open outputs returned by a concrete adapter."""
 
     values: dict[CasillaId, str] = Field(default_factory=dict)
-    raw_evidence_locator: str | None = Field(default=None, max_length=512)
+    # Bound shared with the bundled-oracle grounding contract: this observation
+    # carries the locator straight off a Renta corpus capture that grounding
+    # also reads, so a locator grounding accepts must survive the whole replay
+    # path rather than being refused one model later.
+    raw_evidence_locator: str | None = Field(
+        default=None,
+        max_length=BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
+    )
 
 
 class RentaWebOpenDriver(Protocol):
@@ -221,14 +233,23 @@ class RentaWebOpenReplayDriver:
             RegistryValidationError: If the payload is not decodable as the
                 expected replay JSON document.
         """
-        document = decode_replay_json_payload(payload, surface_label="Renta WEB Open replay")
+        document = decode_replay_json_payload(payload, surface_label=_RENTA_REPLAY_SURFACE_LABEL)
         if not document.observed_by_casilla_id:
             raise RegistryValidationError(
                 "Renta WEB Open replay payload must declare observed_by_casilla_id keyed by canonical casilla.id",
             )
+        # The generic replay envelope makes the evidence locator optional; the
+        # bundled Renta corpus contract requires it. This corpus is read by
+        # both, so the driver re-applies the grounding contract from its one
+        # declaration rather than accepting a Renta capture with no provenance
+        # that grounding would refuse.
+        raw_evidence_locator = require_bundled_oracle_evidence_locator(
+            document.raw_evidence_locator,
+            surface_label=_RENTA_REPLAY_SURFACE_LABEL,
+        )
         return RentaWebOpenObservation(
             values=dict(document.observed_by_casilla_id),
-            raw_evidence_locator=document.raw_evidence_locator,
+            raw_evidence_locator=raw_evidence_locator,
         )
 
 

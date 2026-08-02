@@ -36,6 +36,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_valid
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
+from ._external_grounding import BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH
 from ._ids import CasillaId, CrossReferenceId, OracleId, RevisionId
 from ._remote_state_guard import (
     RemoteOperation,
@@ -150,7 +151,15 @@ class ParityResult(_ParityModel):
     verdict: ParityVerdict
     narrative: str = Field(min_length=1, max_length=2048)
     fields: tuple[ParityFieldComparison, ...] = ()
-    raw_evidence_locator: str | None = Field(default=None, max_length=512)
+    # Bound shared with the bundled-oracle grounding contract rather than
+    # restated: the same corpus is read by both, so a locator grounding
+    # accepts must not be refused here. It stays OPTIONAL because not every
+    # checker surface carries bundled-corpus evidence; surfaces that do
+    # require it apply ``require_bundled_oracle_evidence_locator``.
+    raw_evidence_locator: str | None = Field(
+        default=None,
+        max_length=BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
+    )
 
     @field_validator("fields")
     @classmethod
@@ -731,7 +740,15 @@ class ReplayPayload(_ParityModel):
     """
 
     observed: Mapping[str, str]
-    raw_evidence_locator: str | None = Field(default=None, max_length=512)
+    # Bound shared with the bundled-oracle grounding contract rather than
+    # restated: the same corpus is read by both, so a locator grounding
+    # accepts must not be refused here. It stays OPTIONAL because not every
+    # checker surface carries bundled-corpus evidence; surfaces that do
+    # require it apply ``require_bundled_oracle_evidence_locator``.
+    raw_evidence_locator: str | None = Field(
+        default=None,
+        max_length=BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
+    )
     scenario_id: str | None = Field(default=None, max_length=256)
     profile_overrides: Mapping[str, str] = Field(default_factory=dict)
     expected: Mapping[str, str] = Field(default_factory=dict)
