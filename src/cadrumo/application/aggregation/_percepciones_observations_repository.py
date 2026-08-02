@@ -296,7 +296,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         safe_repository_id(modelo, context="modelo")
         return tuple(
             payload.observation
-            for payload in self.iter_verified_records()
+            for payload in self.iter_records()
             if payload.modelo == modelo
             and payload.filing_year == period.filing_year
             and payload.period.registry_token == period.registry_token
@@ -309,7 +309,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         for the same reason :meth:`load_observations` does.
         """
         safe_repository_id(modelo, context="modelo")
-        for payload in self.iter_verified_records():
+        for payload in self.iter_records():
             if payload.modelo == modelo:
                 yield payload
 

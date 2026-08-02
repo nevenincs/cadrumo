@@ -36,9 +36,9 @@ def test_both_read_paths_route_through_the_one_envelope_gate() -> None:
     can see it. This is what notices.
     """
     load_source = inspect.getsource(SecureBoundRepository.load)
-    iter_source = inspect.getsource(SecureBoundRepository._iter_validated_envelopes)
+    iter_source = inspect.getsource(SecureBoundRepository._iter_validated_rows)
 
-    for name, source in (("load", load_source), ("_iter_validated_envelopes", iter_source)):
+    for name, source in (("load", load_source), ("_iter_validated_rows", iter_source)):
         assert "_validate_envelope(" in source, f"{name} does not route through the shared envelope gate"
         assert "model_validate_json(" not in source, f"{name} parses the envelope itself instead of delegating"
         assert "classification is not" not in source, f"{name} re-implements the classification gate"
@@ -78,7 +78,7 @@ def test_each_read_path_labels_its_own_row() -> None:
     make an iterator refusal read as a single-load refusal.
     """
     load_source = inspect.getsource(SecureBoundRepository.load)
-    iter_source = inspect.getsource(SecureBoundRepository._iter_validated_envelopes)
+    iter_source = inspect.getsource(SecureBoundRepository._iter_validated_rows)
 
     assert "subject=" in load_source, "load does not pass a row label to the gate"
     assert "subject=" in iter_source, "the iterator does not pass a row label to the gate"
@@ -105,7 +105,7 @@ def test_the_gate_is_reachable_from_every_production_subclass() -> None:
             pending.append(child)
 
     for subclass in subclasses:
-        for attribute in ("_validate_envelope", "load", "_iter_validated_envelopes"):
+        for attribute in ("_validate_envelope", "load", "_iter_validated_rows"):
             assert attribute not in vars(subclass), (
                 f"{subclass.__name__} overrides {attribute}, bypassing the shared envelope gate"
             )

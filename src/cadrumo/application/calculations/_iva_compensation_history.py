@@ -224,7 +224,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         def _sort_key(item: IvaCompensationPeriodState) -> tuple[int, tuple[int, str]]:
             return (item.filing_year, iva_compensation_period_sort_key(item.period))
 
-        return tuple(sorted(self.iter_verified_records(), key=_sort_key))
+        return tuple(sorted(self.iter_records(), key=_sort_key))
 
 
 _SEED_STATUS = "seeded"

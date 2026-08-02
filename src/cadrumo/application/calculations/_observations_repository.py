@@ -424,9 +424,8 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         Used by grouped previous-filing and clean-state readers to enumerate all
         known source rows for a modelo, including member-widened keys.
 
-        Scans through
-        :meth:`~adapters.persistence.storage.SecureBoundRepository.iter_verified_records`
-        rather than the unverified counterpart: the ``modelo`` filter below
+        The base scan verifies each row's key before yielding it, which this
+        filter depends on: the ``modelo`` test below
         reads the payload's own coordinates, so a row filed under another
         ``(modelo, filing_year, period, member)`` key would enter the window it
         describes rather than the one it is stored in, and carry-forward and
@@ -435,7 +434,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         and refuses a mismatch instead of yielding it.
         """
         safe_repository_id(modelo, context="modelo")
-        for payload in self.iter_verified_records():
+        for payload in self.iter_records():
             if payload.observation.modelo == modelo:
                 yield payload
 
@@ -514,9 +513,8 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         Each element is an :class:`IvaCompensationReconciliationDecision` sorted
         by ``(target_year, target_period, taxpayer_nif, decided_at)``.
 
-        Scans through
-        :meth:`~adapters.persistence.storage.SecureBoundRepository.iter_verified_records`
-        rather than the unverified counterpart. The latest-decision key is a
+        The base scan verifies each row's key before yielding it, which this
+        listing depends on. The latest-decision key is a
         hash of the taxpayer and target period, so a decision filed under
         another taxpayer's or period's key is invisible to any check that reads
         the decrypted decision alone; it would then sort into this list as that
@@ -526,7 +524,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         """
         return tuple(
             sorted(
-                (payload.decision for payload in self.iter_verified_records()),
+                (payload.decision for payload in self.iter_records()),
                 key=lambda decision: (
                     decision.target_year,
                     decision.target_period.registry_token,
