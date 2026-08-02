@@ -31,6 +31,24 @@ fail to match against the operation it was meant to continue.
 """
 
 
+CertificateSourceName = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=160),
+]
+"""Canonical spelling of a named certificate source.
+
+The name is the natural key three separate surfaces derive an identity from:
+the ``certificate_sources`` registry dict, the active-source selector, and the
+secret-store key. Each of those used to strip independently, so a record
+persisted as ``" personal "`` kept its padding in durable state while the
+secret backend filed its passphrase under ``"personal"`` — one nominal source
+addressed under two spellings, with exact-dict selection unable to resolve the
+padded record from the canonical selector. Stripping at the boundary makes the
+persisted spelling the canonical one, and ``min_length`` applies *after* the
+strip, so a blank-after-strip name is refused rather than stored.
+"""
+
+
 def _require_utc(*values: datetime | None) -> None:
     """Reject any populated timestamp that is not UTC-aware.
 
@@ -47,7 +65,7 @@ class CertificateSourceRecord(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    name: str = Field(min_length=1, max_length=160)
+    name: CertificateSourceName
     certificate_path: str = Field(min_length=1)
     friendly_name: str | None = None
     registered_at: datetime
@@ -71,7 +89,7 @@ class AuthCleanupCertificateSource(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    name: str = Field(min_length=1, max_length=160)
+    name: CertificateSourceName
     registered_at: datetime
 
     @model_validator(mode="after")
@@ -97,12 +115,12 @@ class AuthCleanupIntent(BaseModel):
     authenticated_at_at_start: datetime | None = None
     had_session_state: bool = False
     certificate_path_at_start: str | None = None
-    active_certificate_source_at_start: str | None = None
+    active_certificate_source_at_start: CertificateSourceName | None = None
     certificate_sources: tuple[AuthCleanupCertificateSource, ...] = ()
     provider_configuration_ids: tuple[str, ...] = ()
     session_provider_ids: tuple[str, ...] = ()
     lock_provider_ids: tuple[str, ...] = ()
-    secret_source_names: tuple[str, ...] = ()
+    secret_source_names: tuple[CertificateSourceName, ...] = ()
 
     @model_validator(mode="after")
     def _timestamps_are_utc(self) -> AuthCleanupIntent:
@@ -126,7 +144,7 @@ class CertificateSecretMutationIntent(BaseModel):
 
     operation_id: _AuthOperationId
     bucket_id: BucketId
-    source_name: str = Field(min_length=1, max_length=160)
+    source_name: CertificateSourceName
     event_kind: CertificateSecretMutationEventKind
     started_at: datetime
     prior_present: bool
@@ -150,8 +168,8 @@ class AuthState(BaseModel):
     configured_at: datetime | None = None
     authenticated_at: datetime | None = None
     subject: str | None = None
-    certificate_sources: dict[str, CertificateSourceRecord] = Field(default_factory=dict)
-    active_certificate_source: str | None = None
+    certificate_sources: dict[CertificateSourceName, CertificateSourceRecord] = Field(default_factory=dict)
+    active_certificate_source: CertificateSourceName | None = None
     cleanup_intent: AuthCleanupIntent | None = None
     certificate_secret_mutation_intent: CertificateSecretMutationIntent | None = None
 

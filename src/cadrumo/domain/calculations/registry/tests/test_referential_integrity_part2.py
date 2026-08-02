@@ -5,9 +5,11 @@ from __future__ import annotations
 import pytest
 
 from .. import CasillaId, validated_casilla_id
+from .._record_design_coverage import calculation_closure_casilla_ids
 from .._schema import CasillaContinuidadEvolutionDefinition, ModeloDefinition, RegistryCatalogues
 from .._schema_input_kind import InputKind
 from .._validate import RegistryValidator
+from ._record_design_support import _committed_registry_tree
 from ._referential_integrity_support import (
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
@@ -245,6 +247,79 @@ def test_calculation_bearing_revision_without_manifest_fails_closed() -> None:
         match="calculation-bearing revision declares no calculation-completeness manifest",
     ):
         RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+
+
+def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None:
+    """A bundled-corpus manifest cannot omit one of its non-internal closure casillas."""
+    modelos, catalogues = _committed_registry_tree()
+    modelo = next(item for item in modelos if item.id == "200")
+    revision = next(iter(modelo.revisions.values()))
+    manifest = revision.completeness_manifest
+    assert manifest is not None
+
+    closure = calculation_closure_casilla_ids(revision, modelo.id)
+    omittable = tuple(
+        casilla
+        for casilla in sorted(revision.casillas, key=lambda item: item.id)
+        if casilla.id in closure and not casilla.internal_only
+    )
+    assert omittable, "bundled Modelo 200 must expose a non-internal calculation-closure casilla"
+    omitted = omittable[0]
+    malformed_manifest = manifest.model_copy(
+        update={
+            "casillas": tuple(casilla for casilla in manifest.casillas if casilla.casilla_id != omitted.id),
+        },
+    )
+    malformed_revision = revision.model_copy(update={"completeness_manifest": malformed_manifest})
+    malformed_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, malformed_revision.id: malformed_revision}},
+    )
+
+    with pytest.raises(RegistryValidationError) as caught:
+        RegistryValidator(catalogues).validate_modelo(malformed_modelo)
+
+    assert (
+        f"calculation-completeness manifest omits non-internal calculation-closure casilla ids: {omitted.id!r}"
+        in str(caught.value)
+    )
+
+
+def test_bundled_manifest_allows_omitted_internal_only_closure_casilla() -> None:
+    """An internal-only Modelo 200 ceiling remains optional manifest authoring evidence."""
+    modelos, catalogues = _committed_registry_tree()
+    modelo = next(item for item in modelos if item.id == "200")
+    revision = next(iter(modelo.revisions.values()))
+    manifest = revision.completeness_manifest
+    assert manifest is not None
+
+    closure = calculation_closure_casilla_ids(revision, modelo.id)
+    internal_manifest_casillas = tuple(
+        casilla
+        for casilla in revision.casillas
+        if casilla.id in closure
+        and casilla.internal_only
+        and casilla.id in {manifest_casilla.casilla_id for manifest_casilla in manifest.casillas}
+    )
+    assert internal_manifest_casillas, "bundled Modelo 200 must expose its internal-only ceiling in the manifest"
+    omitted = internal_manifest_casillas[0]
+    manifest_without_internal_ceiling = manifest.model_copy(
+        update={
+            "casillas": tuple(casilla for casilla in manifest.casillas if casilla.casilla_id != omitted.id),
+        },
+    )
+    revision_without_internal_ceiling = revision.model_copy(
+        update={"completeness_manifest": manifest_without_internal_ceiling},
+    )
+    modelo_without_internal_ceiling = modelo.model_copy(
+        update={
+            "revisions": {
+                **modelo.revisions,
+                revision_without_internal_ceiling.id: revision_without_internal_ceiling,
+            },
+        },
+    )
+
+    RegistryValidator(catalogues).validate_modelo(modelo_without_internal_ceiling)
 
 
 def test_completeness_gate_passes_when_manifest_required_subset_of_declared() -> None:

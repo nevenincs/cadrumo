@@ -177,6 +177,10 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     }
     return {
         "$defs": {**definitions, **error_definitions},
+        # MCP's tools/list descriptor requires an object-shaped output schema at
+        # the top level. The branches below retain the canonical success/error
+        # envelope distinction within that required serializable shape.
+        "type": "object",
         "oneOf": [
             {
                 "type": "object",

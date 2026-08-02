@@ -29,7 +29,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.persistence.storage import (
     LIVE_VERIFY_OBSERVATION_NAMESPACE,
@@ -44,8 +44,8 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.errors import CadrumoError
 from ...core.hashing import sha256_hex
-from ...core.identity import BucketId
-from ...core.time import now
+from ...core.identity import BucketId, ContentDigest
+from ...core.time import now, validate_utc_aware
 from ._errors import LiveApplicationInputError
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
@@ -67,12 +67,22 @@ class VerifyObservation(BaseModel):
 
     The ``observation_id`` is content-addressed (SHA-256 of canonical
     fields) so two identical checks against the same NIF on the same
-    timestamp deduplicate without separate id management.
+    timestamp deduplicate without separate id management. It is typed as
+    :data:`~cadrumo.core.identity.ContentDigest` so the persisted identity
+    carries the canonical lowercase hex-64 digest shape rather than any
+    64-character string: a malformed id would otherwise reach the
+    secure-object key, the ``load`` round-trip, and the ``show``
+    projection unchallenged.
+
+    Both instants are UTC-aware. ``checked_at`` feeds
+    :func:`_derive_observation_id` through ``isoformat()``, so an
+    ambiguous offset would silently fork the content address of the same
+    check; ``persisted_at`` orders encrypted history.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    observation_id: str = Field(min_length=64, max_length=64)
+    observation_id: ContentDigest
     bucket_id: BucketId
     surface: VerifySurface
     nif: str = Field(min_length=1, max_length=32)
@@ -82,6 +92,12 @@ class VerifyObservation(BaseModel):
     checked_at: datetime
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
     persisted_at: datetime
+
+    @field_validator("checked_at", "persisted_at")
+    @classmethod
+    def _instant_is_utc(cls, value: datetime) -> datetime:
+        """Reject a naive or non-UTC instant; see :func:`~cadrumo.core.time.validate_utc_aware`."""
+        return validate_utc_aware(value)
 
 
 def verify_observation_object_key(bucket_id: str, observation_id: str) -> str:

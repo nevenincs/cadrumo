@@ -13,6 +13,13 @@ from pydantic import BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass
+from .....core.identity import ContentDigest
+
+# Every digest-shaped column below is written by ``core.hashing.sha256_hex``
+# (directly, or via ``derive_revision_id``), so the canonical
+# :data:`~core.identity.ContentDigest` alias is the shape they already carry.
+# A length-only constraint additionally admitted uppercase and non-hex
+# 64-character strings, which the canonical alias refuses.
 
 
 class SecureObjectRecord(BaseModel):
@@ -26,7 +33,7 @@ class SecureObjectRecord(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     payload: bytes
-    revision_id: str = Field(min_length=64, max_length=64)
+    revision_id: ContentDigest
 
 
 class SecureObjectMetadata(BaseModel):
@@ -94,12 +101,12 @@ class SecureObjectRawRow(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     payload: bytes
-    revision_id: str | None = Field(default=None, min_length=64, max_length=64)
-    previous_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
-    revision_ancestor_ids: tuple[str, ...] = ()
-    previous_payload_hash: str | None = Field(default=None, min_length=64, max_length=64)
-    payload_hash: str | None = Field(default=None, min_length=64, max_length=64)
-    ciphertext_hash: str | None = Field(default=None, min_length=64, max_length=64)
+    revision_id: ContentDigest | None = None
+    previous_revision_id: ContentDigest | None = None
+    revision_ancestor_ids: tuple[ContentDigest, ...] = ()
+    previous_payload_hash: ContentDigest | None = None
+    payload_hash: ContentDigest | None = None
+    ciphertext_hash: ContentDigest | None = None
     revision_written_at: datetime | None = None
 
 

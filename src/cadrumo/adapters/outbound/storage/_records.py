@@ -23,28 +23,25 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated
 
 from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
+from ....core.identity import ContentDigest
 
-_OBJECT_KEY_HMAC_LENGTH = 64
-_CIPHERTEXT_HASH_LENGTH = 64
-_STORAGE_REVISION_ID_LENGTH = 64
+# Every identifier below is a SHA-256 hex digest produced by
+# ``core.hashing.sha256_hex``, so each is the canonical
+# :data:`~core.identity.ContentDigest` shape under a distinct semantic name.
+# A length-only constraint accepted uppercase and non-hex 64-character
+# strings that the canonical alias refuses, letting a malformed digest reach
+# a persisted manifest and surface only when a later pass recomputes it.
 
-_ObjectKeyHmac = Annotated[
-    str,
-    Field(min_length=_OBJECT_KEY_HMAC_LENGTH, max_length=_OBJECT_KEY_HMAC_LENGTH),
-]
-_CiphertextHash = Annotated[
-    str,
-    Field(min_length=_CIPHERTEXT_HASH_LENGTH, max_length=_CIPHERTEXT_HASH_LENGTH),
-]
-_StorageRevisionId = Annotated[
-    str,
-    Field(min_length=_STORAGE_REVISION_ID_LENGTH, max_length=_STORAGE_REVISION_ID_LENGTH),
-]
+#: HMAC-SHA-256 hex digest naming one object at the remote provider boundary.
+_ObjectKeyHmac = ContentDigest
+#: SHA-256 hex digest of the mirrored ciphertext bytes.
+_CiphertextHash = ContentDigest
+#: SHA-256 hex digest identifying one secure-object storage revision.
+_StorageRevisionId = ContentDigest
 
 
 class ProviderKind(StrEnum):

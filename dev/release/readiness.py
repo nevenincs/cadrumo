@@ -50,10 +50,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
+from pydantic import ValidationError
+
 from cadrumo.core import PRODUCT_IDENTITY
 from dev.docs.download_matrix import load_descriptor, required_evidence_rows
 from dev.packaging.cohort_manifest import load_release_cohort
-from dev.packaging.evidence import EvidenceStatus, load_distribution_evidence
+from dev.packaging.evidence import EvidenceStatus, PackagingSmokeManifest, load_distribution_evidence
 
 _UTF_8: Final = "utf-8"
 _VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
@@ -344,22 +346,20 @@ def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
         )
     latest = manifests[-1]
     try:
-        payload = json.loads(latest.read_text(encoding=_UTF_8))
-    except json.JSONDecodeError:
+        manifest = PackagingSmokeManifest.model_validate_json(latest.read_text(encoding=_UTF_8))
+    except (json.JSONDecodeError, ValidationError, UnicodeDecodeError) as exc:
         return ReadinessCheck(
             "packaging-smoke-evidence",
             "advisory",
             False,
-            f"{latest} is not valid JSON",
+            f"{latest} is not a valid packaging-smoke manifest: {exc}",
         )
-    ok = bool(payload.get("ok"))
-    lane = payload.get("lane", "<unknown>")
     run_label = latest.stem if latest.parent == evidence_dir else latest.parent.name
     return ReadinessCheck(
         "packaging-smoke-evidence",
         "advisory",
-        ok,
-        f"most recent manifest ({run_label}, lane={lane}) ok={ok}",
+        manifest.ok,
+        f"most recent manifest ({run_label}, lane={manifest.lane}) ok={manifest.ok}",
     )
 
 

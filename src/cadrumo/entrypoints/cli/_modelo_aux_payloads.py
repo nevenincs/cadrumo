@@ -15,11 +15,13 @@ catalogue metadata; this module only pins CLI transport shapes.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
+from typing import Annotated
 
 from pydantic import Field
 
 from ...application.evidence import BundleId, BundleVerificationState
+from ...core import Period
 from ...core.aggregation import RetencionClave
 from ...core.identity import BucketId, ContentDigest
 from ...domain.buckets import (
@@ -28,6 +30,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.calculations.registry import LegalRefId, ModeloDescribeReport, SourceRefId
 from ...domain.modelos import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ._decimal_wire import NonNegativeDecimalWireText
 from ._schemas import OutputSchema, register_schema
@@ -197,7 +200,18 @@ class ModeloListResult(OutputSchema):
 
 @register_schema("modelo.describe")
 class ModeloDescribeResult(OutputSchema):
-    """Describe modelo result."""
+    """Describe modelo result.
+
+    Complete JSON projection of
+    :class:`ModeloDescribeReport`. The
+    payload carries every field of the canonical report -- including the
+    ``jurisdiction``, the revision validity bounds, the per-input-kind casilla
+    counts, and the ``legal_refs`` / ``source_refs`` grounding -- because an
+    operator justifying a revision selection needs the same evidence the domain
+    report holds. Build instances through :meth:`from_report` rather than
+    field-by-field, so a field added to the report cannot silently stop at this
+    boundary.
+    """
 
     operation: str = "modelo.describe"
     code: str
@@ -205,11 +219,55 @@ class ModeloDescribeResult(OutputSchema):
     official_name: str
     tax_domain: str
     cadence: str
+    jurisdiction: str
     revision: str
-    filing_year: int | None = None
+    filing_year: Annotated[int, Field(ge=1980, le=2200)] | None = None
+    filing_period: Period | None = None
     period: str | None = None
     revision_ids: list[str]
     periods: list[str]
-    casilla_count: int
-    binding_count: int
-    formula_count: int
+    valid_from: date
+    valid_to: date | None = None
+    casilla_count: int = Field(ge=0)
+    manual_casilla_count: int = Field(ge=0)
+    bound_casilla_count: int = Field(ge=0)
+    computed_casilla_count: int = Field(ge=0)
+    binding_count: int = Field(ge=0)
+    formula_count: int = Field(ge=0)
+    legal_refs: list[LegalRefId] = Field(default_factory=list)
+    source_refs: list[SourceRefId] = Field(default_factory=list)
+
+    @classmethod
+    def from_report(cls, report: ModeloDescribeReport) -> ModeloDescribeResult:
+        """Project every field of a canonical describe report into the envelope.
+
+        Args:
+            report: The domain-layer describe report to render.
+
+        Returns:
+            The strict CLI payload carrying the report's full field set.
+        """
+        return cls(
+            code=report.code,
+            title=report.title,
+            official_name=report.official_name,
+            tax_domain=report.tax_domain,
+            cadence=report.cadence,
+            jurisdiction=report.jurisdiction,
+            revision=report.revision,
+            filing_year=report.filing_year,
+            filing_period=report.filing_period,
+            period=report.period,
+            revision_ids=list(report.revision_ids),
+            periods=list(report.periods),
+            valid_from=report.valid_from,
+            valid_to=report.valid_to,
+            casilla_count=report.casilla_count,
+            manual_casilla_count=report.manual_casilla_count,
+            bound_casilla_count=report.bound_casilla_count,
+            computed_casilla_count=report.computed_casilla_count,
+            binding_count=report.binding_count,
+            formula_count=report.formula_count,
+            legal_refs=list(report.legal_refs),
+            source_refs=list(report.source_refs),
+        )

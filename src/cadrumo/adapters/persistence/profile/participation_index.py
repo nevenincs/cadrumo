@@ -33,6 +33,8 @@ from ..storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from collections.abc import Iterable
+
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
@@ -147,6 +149,49 @@ class TransactionParticipationIndexRepository:
     def save(self, index: TransactionRevisionParticipationIndex) -> None:
         """Persist one transaction's participation index to encrypted storage."""
         self._objects.save_many((self.to_secure_object_write(index),))
+
+    def replace_all(self, indexes: Iterable[TransactionRevisionParticipationIndex]) -> int:
+        """Atomically make ``indexes`` the complete persisted participation index.
+
+        The participation index is a derived cache whose authority is the
+        calculation-revision catalogue, so a regeneration must be a *replace*,
+        not an upsert: a transaction whose last finalized revision was discarded
+        or removed has no entry in the regenerated set, and its stale secure
+        object must disappear with it. Upserting only the regenerated rows would
+        leave that object readable through
+        :meth:`load` / :meth:`exists`, letting the derived cache surface
+        participations the authoritative catalogue no longer records.
+
+        Every upsert and every stale-row removal commits in one
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.apply_batch`
+        unit of work, so a crash mid-replace rolls back to the previous complete
+        index rather than a half-pruned one.
+
+        Stale rows are addressed by their stored HMAC digest: natural object keys
+        are unrecoverable from the index (see
+        :meth:`~adapters.persistence.storage.SecureObjectRepository.list_keys`),
+        so the retained set is digested with the same
+        ``secure_object_key_digest`` the storage column binds with and the
+        difference is deleted by digest. This keeps the prune decryption-free.
+
+        Returns:
+            The number of stale participation objects removed.
+        """
+        from ..storage import SecureObjectDeletion
+        from ..storage.crypto import secure_object_key_digest
+
+        writes = tuple(self.to_secure_object_write(index) for index in indexes)
+        retained = {secure_object_key_digest(write.object_key).hex() for write in writes}
+        deletions = tuple(
+            SecureObjectDeletion(
+                namespace=_PARTICIPATION_INDEX_NAMESPACE,
+                hashed_object_key=bytes.fromhex(stored_key),
+            )
+            for stored_key in self._objects.list_keys(_PARTICIPATION_INDEX_NAMESPACE)
+            if stored_key not in retained
+        )
+        self._objects.apply_batch(writes, deletions)
+        return len(deletions)
 
     def to_secure_object_write(self, index: TransactionRevisionParticipationIndex) -> SecureObjectWrite:
         """Return the :class:`SecureObjectWrite` upsert for ``index`` without committing it.

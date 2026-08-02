@@ -187,12 +187,14 @@ def _register_rebuild_command(participation: typer.Typer) -> None:
                     "transaction_count": stats.transaction_count,
                     "participation_count": stats.participation_count,
                     "revision_count": stats.revision_count,
+                    "stale_removed_count": stats.stale_removed_count,
                 },
             ),
             lines=[
                 f"transaction_count\t{stats.transaction_count}",
                 f"participation_count\t{stats.participation_count}",
                 f"revision_count\t{stats.revision_count}",
+                f"stale_removed_count\t{stats.stale_removed_count}",
             ],
         )
 

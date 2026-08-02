@@ -64,6 +64,34 @@ def test_in_process_client_initializes_lists_and_round_trips_a_read_only_call() 
     assert result.content
 
 
+async def _list_memory_session_output_schemas() -> dict[str, dict[str, object] | None]:
+    server = build_server(build_tool_descriptors())
+    async with connect(server) as session:
+        listed = await session.list_tools()
+        return {tool.name: tool.output_schema for tool in listed.tools}
+
+
+def test_memory_session_tools_list_preserves_object_shaped_response_envelopes() -> None:
+    # Drive the SDK's actual initialized in-memory client/server session. This
+    # proves the advertised descriptor serializes through tools/list, not just
+    # that the SDK-independent descriptor happens to contain the right keys.
+    output_schemas = _run(_list_memory_session_output_schemas())
+    schema = output_schemas[tool_name_for_command("contract")]
+    assert isinstance(schema, dict)
+    assert schema["type"] == "object"
+    branches = schema["oneOf"]
+    assert isinstance(branches, list) and len(branches) == 2
+    success_branch, error_branch = branches
+    assert isinstance(success_branch, dict)
+    assert isinstance(error_branch, dict)
+    success_properties = success_branch["properties"]
+    error_properties = error_branch["properties"]
+    assert isinstance(success_properties, dict)
+    assert isinstance(error_properties, dict)
+    assert success_properties["command"] == {"const": "contract", "type": "string"}
+    assert error_properties["status"] == {"const": "error", "type": "string"}
+
+
 async def _stdio_handshake() -> _HandshakeObservation:
     params = StdioServerParameters(
         command="cadrumo-mcp",

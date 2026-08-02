@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TypeGuard
 
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
@@ -51,17 +52,17 @@ def derive_revision_id(
 
 
 def verify_revision_self_consistency(
+    revision_id: str | None,
     *,
     namespace: str,
     object_key: bytes,
     schema_version: int,
     written_at: datetime,
-    revision_id: str | None,
     previous_revision_id: str | None,
     payload_hash: str | None,
     ciphertext_hash: str | None,
     previous_payload_hash: str | None,
-) -> bool:
+) -> TypeGuard[str]:
     """Return whether a stored ``revision_id`` recomputes from its lineage columns.
 
     The revision id is a content address over the whole revision-lineage
@@ -76,12 +77,26 @@ def verify_revision_self_consistency(
     authentication or with corruption probes that re-encrypt a mutated payload
     without restamping the metadata.
 
-    A row written without revision metadata (``revision_id is None``) carries
-    nothing to verify and is reported consistent. A row whose ``revision_id``
-    is present but whose required hash inputs are absent is inconsistent.
+    A row carrying no ``revision_id`` is REFUSED, not tolerated. Every write
+    stamps revision metadata inside the same transaction that inserts the
+    ciphertext, so a committed row without one is corruption *now* rather than
+    an older shape this application ever wrote; the pre-release compatibility
+    regime carries no read path for shapes nothing released produced. Refusing
+    here is also what keeps this gate the single authority on the question:
+    :class:`~._secure_object_records.SecureObjectRecord` types ``revision_id``
+    as an exactly-64-character digest, so a row this function admitted with no
+    revision id could only ever fail again — untyped, and past the gate — while
+    the record was being built. A row whose ``revision_id`` is present but
+    whose required hash inputs are absent is likewise inconsistent.
+
+    Returning ``True`` narrows ``revision_id`` to :class:`str` for the caller,
+    which is precisely the guarantee the record contract needs. The narrowing
+    is a :class:`~typing.TypeGuard` rather than a :class:`~typing.TypeIs`
+    because ``False`` carries no type claim at all: a genuine ``str`` whose
+    lineage fails to recompute is refused too.
     """
     if revision_id is None:
-        return True
+        return False
     if payload_hash is None or ciphertext_hash is None:
         return False
     recomputed = derive_revision_id(

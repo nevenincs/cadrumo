@@ -11,10 +11,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .._errors import CorpusSearchInputError
 from .._lexical_index import build_lexical_index, iter_corpus_chunks
-from .._models import RetrievalMode
+from .._models import CitationResolution, RetrievalHit, RetrievalMode, RetrievalResponse
 from .._retrieval import run_retrieval
 from ._corpus_fixture import build_sample_corpus
 
@@ -80,3 +81,59 @@ def test_nonpositive_limit_refused(tmp_path: Path) -> None:
     database_path, _ids = _index_and_chunks(tmp_path)
     with pytest.raises(CorpusSearchInputError):
         run_retrieval("recargo", database_path=database_path, limit=0)
+
+
+def _citation() -> CitationResolution:
+    return CitationResolution(
+        citation_id="ley-58-2003:art-27.2",
+        document_id="BOE-A-2003-23186",
+        kind="ley",
+        corpus_ref="corpus/normatives/html/ley-58-2003-art-27.html#a27-2",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a27",
+        anchor="a27-2",
+        verbatim_text="Los recargos por declaración extemporánea…",
+    )
+
+
+def _hit() -> RetrievalHit:
+    return RetrievalHit(
+        chunk_id="a",
+        corpus_ref="corpus/normatives/html/a.html#a1",
+        doc_title="Artículo de prueba",
+        text="texto de prueba",
+        score=0.5,
+        rank=0,
+        lexical_rank=0,
+    )
+
+
+def test_citation_response_without_citation_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        RetrievalResponse(query="ley-58-2003:art-27.2", mode=RetrievalMode.CITATION, citation=None)
+
+
+def test_citation_response_carrying_lexical_hits_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        RetrievalResponse(
+            query="ley-58-2003:art-27.2",
+            mode=RetrievalMode.CITATION,
+            citation=_citation(),
+            hits=(_hit(),),
+        )
+
+
+def test_lexical_only_response_carrying_a_citation_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        RetrievalResponse(query="recargo", mode=RetrievalMode.LEXICAL_ONLY, citation=_citation())
+
+
+def test_valid_citation_and_lexical_responses_round_trip() -> None:
+    citation_response = RetrievalResponse(
+        query="ley-58-2003:art-27.2", mode=RetrievalMode.CITATION, citation=_citation()
+    )
+    assert citation_response.citation is not None
+    assert citation_response.hits == ()
+
+    lexical_response = RetrievalResponse(query="recargo", mode=RetrievalMode.LEXICAL_ONLY, hits=(_hit(),))
+    assert lexical_response.citation is None
+    assert lexical_response.hits == (_hit(),)
