@@ -69,10 +69,13 @@ from ...domain.transactions import (
 from ...domain.user_profile import ProfileNotFoundError, UserProfileRecord
 from ..user_profile import UserProfileLifecycleRepository, fact_value
 from . import _shared_issue_reasons
-from ._business_proportion import business_proportion
 from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance
+from ._renta_business_eligibility import (
+    relies_on_activity_marker,
+    renta_expense_business_proportion,
+)
 
 _LEDGER_CATALOGUE_ID = "ledger"
 
@@ -103,6 +106,15 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
     UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
     UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
+    ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW = "activity_marked_pending_annual_review"
+    """An actividad-marked expense the quarterly M130 accepts but the annual declaration holds for review.
+
+    Narrower than ``UNCLASSIFIED_BUSINESS_STATE``: the row carries an explicit
+    ``actividad_economica`` IRPF category, so it is not unclassified -- it is
+    awaiting the business-classification review the filing-grade annual
+    projection requires. Naming it separately tells the operator that the same
+    row already fed a pago fraccionado and what action clears it.
+    """
     PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
     MISSING_CATEGORY = "missing_category"
     UNKNOWN_CATEGORY = "unknown_category"
@@ -437,8 +449,23 @@ def _classify_renta_transaction(
     # their value_in_eur is None and effective_eur_amount falls back to
     # raw.amount.
     eur_amount = effective_eur_amount(transaction)
-    proportion = business_proportion(transaction.business_classification, transaction.business_pct)
+    # The annual declaration is the filing-grade projection, so it refuses the
+    # explicit actividad marker the quarterly M130 pago fraccionado accepts --
+    # through the SAME predicate, with the policy declared here rather than as
+    # a second implementation that could drift.
+    proportion = renta_expense_business_proportion(transaction, accept_activity_marker=False)
     if proportion is None:
+        if relies_on_activity_marker(transaction):
+            # Distinct from a row carrying no classification signal at all: this
+            # row IS activity-marked and needs only the business-classification
+            # review, which is what the operator has to act on. Reporting it as
+            # a generic unclassified state hid that the quarterly pipeline had
+            # already accepted the same row.
+            return _renta_transaction_issue(
+                transaction,
+                RentaLedgerAggregationIssueReason.ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW,
+                "actividad-marked expense needs business-classification review before the annual declaration",
+            )
         reason = (
             RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
             if transaction.business_classification is BusinessClassification.PERSONAL

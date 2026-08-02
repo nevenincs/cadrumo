@@ -32,6 +32,7 @@ from ....domain.calculations.registry import (
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     validated_casilla_id,
 )
+from ....domain.invoices import InvoiceCatalogue
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -49,6 +50,7 @@ from .._renta_gasto_ledger import (
     aggregate_renta_gasto_ledger,
     aggregate_renta_gasto_ledger_from_repositories,
 )
+from .._renta_ledger import RentaLedgerAggregationIssueReason, aggregate_renta_ledger_expenses
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -538,3 +540,107 @@ def test_domain_resolver_folds_gasto_observations_into_the_m130_casilla_02_bindi
 
     # Both rows fall in the 2T cumulative window; expected = the input bases summed.
     assert resolved[binding.id] == sum((feb_base, apr_base), Decimal("0"))
+
+
+def test_actividad_marked_row_accepted_by_m130_is_visibly_held_by_m100() -> None:
+    """The same row cannot be accepted quarterly and dropped annually without a reason.
+
+    The two Renta expense projections decided business eligibility with separate
+    implementations: M130 honoured an explicit ``actividad_economica`` IRPF
+    category as full business attribution, while the annual M100 first-slice
+    projection consulted the business classification alone. An activity-marked
+    row not yet swept by the classification review therefore fed a pago
+    fraccionado while the annual declaration built from the same ledger reported
+    it only as a generic unclassified state -- indistinguishable from a row
+    carrying no classification signal at all.
+
+    Both now consume one predicate, and the annual gate is a declared argument
+    of it. The annual refusal names the actual state, so the operator can see
+    that the quarterly pipeline already accepted the row and what clears it.
+    """
+    actividad_base = Decimal("100.00")
+    transaction = _gasto_transaction(
+        "actividad-pending-review",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("121.00"),
+        taxable_base=actividad_base,
+        irpf_category="actividad_economica",
+        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+    )
+    catalogue = TransactionCatalogue.from_transactions((transaction,))
+
+    quarterly = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    annual = aggregate_renta_ledger_expenses(
+        catalogue,
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_period(2024, "0A"),
+        profile_year=2024,
+    )
+
+    # The quarterly pago fraccionado accepts the row.
+    assert {observation.transaction_id for observation in quarterly.observations} == {transaction.transaction_id}
+
+    # The annual declaration holds it, and says so specifically.
+    assert not annual.observations
+    assert [issue.reason for issue in annual.issues] == [
+        RentaLedgerAggregationIssueReason.ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW,
+    ]
+    assert annual.issues[0].transaction_id == transaction.transaction_id
+
+
+def test_reviewed_business_row_is_accepted_by_both_projections() -> None:
+    """The positive control: once reviewed, the same row feeds quarterly and annual alike.
+
+    Without this, the held-row assertion above would also hold for an annual
+    projection that refused every activity-marked row unconditionally.
+    """
+    transaction = _gasto_transaction(
+        "actividad-reviewed",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        irpf_category="actividad_economica",
+        business_classification=BusinessClassification.BUSINESS,
+    )
+    catalogue = TransactionCatalogue.from_transactions((transaction,))
+
+    quarterly = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
+    annual = aggregate_renta_ledger_expenses(
+        catalogue,
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_period(2024, "0A"),
+        profile_year=2024,
+    )
+
+    assert {observation.transaction_id for observation in quarterly.observations} == {transaction.transaction_id}
+    assert {observation.transaction_id for observation in annual.observations} == {transaction.transaction_id}
+
+
+def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
+    """A row with no activity marker keeps the generic unclassified reason.
+
+    The new reason is narrower, not a rename: it must not absorb rows that
+    carry no classification signal at all.
+    """
+    transaction = _gasto_transaction(
+        "no-marker",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+    )
+    catalogue = TransactionCatalogue.from_transactions((transaction,))
+
+    annual = aggregate_renta_ledger_expenses(
+        catalogue,
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period=_period(2024, "0A"),
+        profile_year=2024,
+    )
+
+    assert [issue.reason for issue in annual.issues] == [
+        RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE,
+    ]

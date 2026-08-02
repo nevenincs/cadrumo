@@ -30,6 +30,7 @@ Submodules
    cadrumo.application.aggregation._observation_window
    cadrumo.application.aggregation._oss_ioss
    cadrumo.application.aggregation._percepciones_observations_repository
+   cadrumo.application.aggregation._renta_business_eligibility
    cadrumo.application.aggregation._renta_gasto_ledger
    cadrumo.application.aggregation._renta_income_ledger
    cadrumo.application.aggregation._renta_ledger

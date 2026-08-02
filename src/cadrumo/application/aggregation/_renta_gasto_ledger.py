@@ -53,14 +53,13 @@ from ...domain.transactions import (
     TransactionCatalogueRepositoryProtocol,
     TransactionDirection,
     TransactionLifecycleState,
-    has_activity_irpf_category,
 )
 from . import _shared_issue_reasons
-from ._business_proportion import business_proportion
 from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._grouping import fold_casilla_observations
 from ._models import CasillaAggregation
+from ._renta_business_eligibility import renta_expense_business_proportion
 
 # The only casilla M130 deductible-expense aggregation feeds: official box 02
 # ("Gastos"), bound to the ledger renta gasto aggregation. Operator-supplied
@@ -355,15 +354,17 @@ def _classify_gasto_transaction(
 def _gasto_business_proportion(transaction: Transaction) -> Decimal | None:
     """Return the business-attributed gasto proportion, or None if not eligible.
 
-    ``irpf_category=actividad_economica`` is the explicit M130 activity marker
-    and may be present before the broader business-classification sweep has
-    resolved the row. Treat it as the full business proportion, mirroring the
-    income-side category gate, while reviewed exclusions are short-circuited by
-    the caller before reaching this helper.
+    Thin adapter over the shared
+    :func:`~._renta_business_eligibility.renta_expense_business_proportion`
+    predicate, requested with ``accept_activity_marker=True``: the M130 pago
+    fraccionado is a provisional self-assessment, so an explicit
+    ``actividad_economica`` IRPF category establishes full business attribution
+    before the broader business-classification sweep has resolved the row. The
+    annual Modelo 100 projection consumes the SAME predicate with the marker
+    refused, so the two pipelines can no longer drift apart. Reviewed
+    exclusions are short-circuited by the caller before reaching this helper.
     """
-    if has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
-        return Decimal("1")
-    return business_proportion(transaction.business_classification, transaction.business_pct)
+    return renta_expense_business_proportion(transaction, accept_activity_marker=True)
 
 
 def _gasto_casilla_aggregation(
