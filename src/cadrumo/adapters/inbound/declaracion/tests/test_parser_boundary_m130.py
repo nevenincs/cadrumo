@@ -27,6 +27,7 @@ def test_parser_extracts_modelo_130_registry_profile_targets_from_pdf() -> None:
     snapshot = _modelo_130_snapshot()
     profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
     assert tuple(target.casilla_id for target in profile.target_casillas) == _MODELO_130_EXPECTED_TARGETS
+    assert profile.min_coverage == Decimal("0.1052")
     for target in profile.target_casillas:
         assert target.match_strategy == "bbox_anchored", (
             f"casilla {target.casilla_id}: expected match_strategy='bbox_anchored', got {target.match_strategy!r}"

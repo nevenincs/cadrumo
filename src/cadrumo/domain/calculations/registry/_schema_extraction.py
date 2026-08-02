@@ -149,7 +149,7 @@ class ExtractionProfileDefinition(RegistryModel):
         ]
         | None
     ) = None
-    min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
+    min_coverage: DecimalValue = Field(gt=Decimal("0"), le=Decimal("1"))
     failure_semantics: Literal["fail_hard"]
     legal_refs: LegalRefs
     source_refs: SourceRefs

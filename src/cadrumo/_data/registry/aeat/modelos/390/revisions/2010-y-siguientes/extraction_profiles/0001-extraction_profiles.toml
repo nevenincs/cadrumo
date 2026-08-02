@@ -7,7 +7,9 @@ parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 # M390 layout: box numbers sit in the right cuota column at x0≈413–414 (page 3) and
 # x0≈412–413 (page 4).  Values appear to the right on the same y-row.  The leaf
 # sub-total casillas (boxes 02/04/06/26/49) are often blank — a zero/not-applicable
-# rate is a legitimate filing; min_coverage is 0 so partial coverage is accepted.
+# rate is a legitimate filing.  The generated annual corpus covers 4/10 targets
+# in 2021 and 8/10 in 2022-2023, so the floor preserves the sparse shape while
+# rejecting no hits.
 # The three summary-total targets (boxes 47/64/65) are always present in a valid
 # M390 filing; the verification chain test asserts their presence independently.
 target_casillas = [
@@ -41,8 +43,7 @@ target_casillas = [
 confidence = "strict"
 corpus_round_trip_verified = true
 verification_source = "synthetic_from_aeat_published_text"
-min_coverage = "0"
+min_coverage = "0.4"
 failure_semantics = "fail_hard"
 legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-92", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
-

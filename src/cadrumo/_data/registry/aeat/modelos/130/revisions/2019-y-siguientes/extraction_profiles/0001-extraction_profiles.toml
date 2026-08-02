@@ -10,7 +10,8 @@ parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 # then the monetary value at x0~533-545 on the same y-row.  Box numbers also appear inline
 # in formula text at x0~109-200, so anchor_x_min/anchor_x_max constrain the search to the
 # right-column zone only.  Casillas not filled in a given filing are absent (zero or
-# not-applicable); min_coverage is 0 to accept partial filings.
+# not-applicable).  Every generated 2021-2024 quarterly corpus filing covers 2/19
+# targets, so the floor preserves that shape while rejecting no hits.
 target_casillas = [
     {casilla_id = "01", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^01$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 480.0}},
     {casilla_id = "02", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^02$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 480.0}},
@@ -33,7 +34,7 @@ target_casillas = [
     {casilla_id = "19", match_strategy = "bbox_anchored", value_kind = "amount", bbox_anchor = {box_number_pattern = "^19$", value_offset = "right_of_number", anchor_x_min = 450.0, anchor_x_max = 480.0}},
 ]
 confidence = "strict"
-min_coverage = "0"
+min_coverage = "0.1052"
 failure_semantics = "fail_hard"
 legal_refs = [
     "ley-35-2006:art-27",

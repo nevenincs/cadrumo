@@ -96,6 +96,31 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
         )
 
 
+def test_extraction_profile_rejects_zero_minimum_coverage() -> None:
+    """An extraction profile must reject a zero-hit coverage floor."""
+
+    with pytest.raises(ValidationError, match="min_coverage"):
+        ExtractionProfileDefinition(
+            id="test.profile",
+            surface="declaracion_pdf",
+            artefact_kind="declaration_pdf",
+            accepted_artefact_kinds=("declaration_pdf",),
+            parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
+            target_casillas=(
+                ExtractionTargetDefinition(
+                    casilla_id=_NUMERIC_CASILLA_01,
+                    match_strategy="numeric_casilla",
+                    value_kind="amount",
+                ),
+            ),
+            confidence="strict",
+            min_coverage=Decimal("0"),
+            failure_semantics="fail_hard",
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=("aeat-dr-130-2019-v12",),
+        )
+
+
 def test_calculation_completeness_manifest_rejects_duplicate_casilla_id() -> None:
     """A completeness manifest cannot reuse the same canonical casilla id."""
 
