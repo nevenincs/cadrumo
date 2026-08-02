@@ -25,15 +25,38 @@ persistence contract.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import Field, model_validator
+from pydantic import AfterValidator, Field, model_validator
 
-from ...application.live import LiveIvaAcquisitionFailureMode, LiveIvaReadStatus, LiveIvaReadSurface
-from ...core import Period
-from ...core.identity import BucketId, SnapshotId
+from ...application.calculations import ObservationSourceKind
+from ...application.live import (
+    LiveIvaAcquisitionFailureMode,
+    LiveIvaReadStatus,
+    LiveIvaReadSurface,
+    SnapshotLifecycleState,
+)
+from ...core import Modelo, Period
+from ...core.identity import BucketId, ContentDigest, SnapshotId
 from ...domain.calculations.registry import BindingId
 from ._schemas import OutputSchema, register_schema
+
+
+def _is_a_registry_period_token(value: str) -> str:
+    """Return ``value`` when it is a bare registry period code, else refuse.
+
+    The justificante wire carries the bare token (``"1T"``, ``"0A"``) rather
+    than a structured :class:`~core.Period`, so the JSON contract stays a
+    string -- but a string is not a free-form label. Parsing it back through
+    the canonical period grammar is what stops ``period='bogus'`` from being
+    emitted as a capture's filing period.
+    """
+    Period.from_year_and_code(2000, value)
+    return value
+
+
+JustificantePeriodToken = Annotated[str, AfterValidator(_is_a_registry_period_token)]
+"""A bare registry period code, validated through the canonical period grammar."""
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -705,17 +728,17 @@ class JustificanteCaptureResult(OutputSchema):
     evidence once metadata parses.
     """
 
-    bucket_id: str
-    snapshot_id: str
-    modelo: str
-    filing_year: int
-    period: str
-    expediente_id: str
-    csv: str
-    pdf_sha256: str
-    source_kind: str
-    state: str
-    captured_at: str
+    bucket_id: BucketId
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    modelo: Modelo
+    filing_year: int = Field(ge=1900, le=9999)
+    period: JustificantePeriodToken
+    expediente_id: str = Field(min_length=12, max_length=32)
+    csv: str = Field(min_length=8, max_length=32)
+    pdf_sha256: ContentDigest
+    source_kind: ObservationSourceKind
+    state: SnapshotLifecycleState
+    captured_at: datetime
     justificante_metadata_registered: bool
     calendar_evidence_available: bool
     modelo_filing_record_required: bool
@@ -730,13 +753,13 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
     :class:`JustificanteCaptureSnapshotService`.
     """
 
-    snapshot_id: str
-    modelo: str
-    filing_year: int
-    period: str
-    pdf_sha256: str
-    state: str
-    captured_at: str
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    modelo: Modelo
+    filing_year: int = Field(ge=1900, le=9999)
+    period: JustificantePeriodToken
+    pdf_sha256: ContentDigest
+    state: SnapshotLifecycleState
+    captured_at: datetime
 
 
 @register_schema("app.live.justificante.list")
@@ -765,17 +788,17 @@ class JustificanteViewResult(OutputSchema):
     reconcile the local evidence chain without printing the stored receipt body.
     """
 
-    bucket_id: str
-    snapshot_id: str
-    modelo: str
-    filing_year: int
-    period: str
-    expediente_id: str
-    csv: str
-    pdf_sha256: str
-    source_kind: str
-    state: str
-    captured_at: str
+    bucket_id: BucketId
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    modelo: Modelo
+    filing_year: int = Field(ge=1900, le=9999)
+    period: JustificantePeriodToken
+    expediente_id: str = Field(min_length=12, max_length=32)
+    csv: str = Field(min_length=8, max_length=32)
+    pdf_sha256: ContentDigest
+    source_kind: ObservationSourceKind
+    state: SnapshotLifecycleState
+    captured_at: datetime
 
 
 class VerifyObservationSummaryPayload(OutputSchema):
