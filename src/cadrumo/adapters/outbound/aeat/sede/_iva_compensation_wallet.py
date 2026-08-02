@@ -220,6 +220,20 @@ async def fetch_iva_compensation_wallet(
                     "read-only wallet capture."
                 ),
             )
+        # The terminal read, and the one that had no landing rule. The two
+        # rules above sit on branches -- after the representation gate, and
+        # after the ejecutar submit -- so a wallet that was ALREADY executed
+        # takes neither, and this parse ran with only the 4033 auth-gate
+        # check between it and whatever AEAT served.
+        #
+        # It matters more here than on either branch, because
+        # _landed_wallet_url CONSTRUCTS the recorded source_url as
+        # origin + the wallet path. It refuses an unreadable origin but
+        # never checks the path, so a readable landing on the wrong page
+        # produced evidence asserting the wallet path for a page that was
+        # not the wallet. Asserting the landing first is what makes that
+        # construction truthful.
+        _assert_read_landing(page)
         html = await page.content()
         final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
         if final_dump_dir is not None:
