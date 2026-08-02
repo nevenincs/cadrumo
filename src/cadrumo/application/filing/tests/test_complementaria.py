@@ -223,7 +223,7 @@ class TestBuildComplementaria:
             },
         )
         _persist_original_draft(original_draft)
-        original = _submitted_filing(original_draft, justificante_csv="")
+        original = _submitted_filing(original_draft, justificante_csv=None)
 
         with pytest.raises(ModeloBuilderError, match="official justificante CSV"):
             build_complementaria(
