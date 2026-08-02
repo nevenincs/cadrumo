@@ -6653,6 +6653,9 @@ flows:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      failed: 'A művelet nem fejeződött be.'
+      busy: 'Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.'
+      working: '{action} folyamatban...'
     actions:
       section: Műveletek
     column:

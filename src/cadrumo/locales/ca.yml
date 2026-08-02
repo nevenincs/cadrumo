@@ -6748,6 +6748,7 @@ flows:
         per exemple 1990-01-31.
       auth_numero_soporte: Número de suport del document
       auth_provider: Forma d'identificació davant l'AEAT
+      busy: Encara hi ha una altra operació en curs. Espera que acabi.
       censal_pull: Emplenar amb les dades censals de l'AEAT
       censal_pull_auth_incomplete: La vostra identificació és incompleta, així que
         encara no es pot llegir l'AEAT. Completeu-la primer.
@@ -6767,10 +6768,12 @@ flows:
       export_destination: Ruta del fitxer de destinació
       export_done: Còpia xifrada escrita a %{destination}.
       export_passphrase: Contrasenya que protegirà la còpia
+      failed: L'operació no s'ha completat.
       provider:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
         clave_permanente: Cl@ve Permanent
+      working: S'està executant {action}...
     actions:
       section: Accions
     column:
