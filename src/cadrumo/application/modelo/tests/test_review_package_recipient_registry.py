@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+from pydantic import ValidationError
 
 from ....tests.review_package_adapters import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
@@ -283,3 +284,52 @@ def test_known_vector_fingerprint_survives_the_encrypted_registry_roundtrip(tmp_
 
 
 __all__: list[str] = []
+
+
+def test_register_refuses_two_records_under_one_recipient_id() -> None:
+    """A register carrying a duplicated recipient_id is not a valid register.
+
+    ``add`` refuses a duplicate against the register it just loaded, which guards
+    only the write path. A persisted register with two records for one id was
+    accepted on load and ``get`` silently returned whichever came first, making
+    recipient encryption depend on row order rather than on one canonical
+    trusted key.
+    """
+    first = RecipientFingerprintRecord(
+        recipient_id="acct",
+        label="first key",
+        public_key_hex=_fresh_public_key_hex(),
+        added_at=_NOW,
+    )
+    second = first.model_copy(
+        update={
+            "label": "second key",
+            "public_key_hex": _fresh_public_key_hex(),
+        },
+    )
+    assert first.public_key_hex != second.public_key_hex
+
+    with pytest.raises(ValidationError, match="recipient_id must be unique"):
+        RecipientFingerprintRegister(records=(first, second))
+
+
+def test_register_accepts_distinct_recipient_ids() -> None:
+    """Positive control: two genuinely different recipients still register.
+
+    Without it the refusal above could hold because the register refuses every
+    multi-record value, which would break the real multi-recipient case.
+    """
+    first = RecipientFingerprintRecord(
+        recipient_id="acct",
+        public_key_hex=_fresh_public_key_hex(),
+        added_at=_NOW,
+    )
+    second = RecipientFingerprintRecord(
+        recipient_id="gestor",
+        public_key_hex=_fresh_public_key_hex(),
+        added_at=_NOW,
+    )
+
+    register = RecipientFingerprintRegister(records=(first, second))
+
+    assert {record.recipient_id for record in register.records} == {"acct", "gestor"}
