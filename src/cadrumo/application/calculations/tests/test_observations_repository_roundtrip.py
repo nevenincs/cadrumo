@@ -13,7 +13,7 @@ loaded observation tuple.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -36,6 +36,8 @@ from .._errors import ObservationCasillaReferenceError
 from .._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
+    ObservationEnvelopePayload,
+    ObservationSourceKind,
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
 )
@@ -591,3 +593,44 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
         database_bytes = (profile.paths.db_dir / "cadrumo.db").read_bytes()
         assert b"12345678Z" not in database_bytes
         assert b"operator-note:iva-wallet-review-2026-2T" not in database_bytes
+
+
+class TestCaptureInstantContract:
+    """Every persisted observation envelope carries a UTC-aware capture instant."""
+
+    @staticmethod
+    def _canonical_fields() -> dict[str, object]:
+        return {
+            "observation": _populated_observation(),
+            "captured_at": datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
+            "source_kind": ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+            "stamped_revision_id": "2023-y-siguientes",
+        }
+
+    def test_utc_aware_capture_instant_is_accepted(self) -> None:
+        """The positive control for the refusals below."""
+        payload = ObservationEnvelopePayload.model_validate(self._canonical_fields())
+
+        assert payload.captured_at.tzinfo is not None
+        assert payload.captured_at.utcoffset() == timedelta(0)
+
+    @pytest.mark.parametrize(
+        "captured_at",
+        [
+            datetime(2024, 4, 15, 10, 30),
+            datetime(2024, 4, 15, 10, 30, tzinfo=timezone(timedelta(hours=2))),
+        ],
+    )
+    def test_naive_and_offset_capture_instants_are_refused(self, captured_at: datetime) -> None:
+        """A capture instant with no zone, or a non-UTC zone, never reaches persistence.
+
+        ``captured_at`` was a bare ``datetime``, so a naive value was persisted
+        as if it were an instant. Every later comparison against a UTC-aware
+        instant then silently answered a different question than it appeared to,
+        and the stored evidence could not say which zone it meant.
+        """
+        fields = self._canonical_fields()
+        fields["captured_at"] = captured_at
+
+        with pytest.raises(ValidationError):
+            ObservationEnvelopePayload.model_validate(fields)

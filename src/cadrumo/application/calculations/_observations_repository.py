@@ -55,7 +55,7 @@ from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.resources import resources
-from ...core.time import now
+from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ._errors import ObservationCasillaReferenceError, ObservationKeyError
@@ -110,6 +110,11 @@ class ObservationEnvelopePayload(BaseModel):
     ``stamped_revision_id``, and source-specific ``source_metadata``. The model
     does not encrypt that metadata; the secure repository envelope does.
 
+    ``captured_at`` is the canonical :data:`~core.time.UtcInstant`. A bare
+    ``datetime`` field admitted a naive value, so a capture instant with no
+    zone reached persistence and every later comparison against a UTC-aware
+    instant was answering a different question than it appeared to.
+
     Every persisted observation carries its source registry revision stamp so
     carry reads can reconfirm the value against the law-determined revision.
     A missing or structurally invalid stamp refuses at load; a valid but
@@ -119,7 +124,7 @@ class ObservationEnvelopePayload(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     observation: RegistryModeloObservation
-    captured_at: datetime
+    captured_at: UtcInstant
     source_kind: ObservationSourceKind = Field(
         description="Typed provenance of this calculation observation.",
     )
