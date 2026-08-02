@@ -141,6 +141,33 @@ def _extract_title(html: str, lowered: str | None = None) -> str:
     return lowered[gt + 1 : end].strip()
 
 
+def _body_outside_title(lowered: str) -> str:
+    """Return the lowercased document with its first ``<title>`` element removed.
+
+    The title is counted as its own kind of evidence and must not also count
+    as body evidence. Scanning the whole document for body markers made the
+    literal ``mantenimiento`` inside ``<title>mantenimiento</title>`` score
+    once as a body hit and once as a title hit, which is exactly the
+    two-source agreement the corroboration rule exists to require — so a
+    title-only page satisfied a guard written to reject it.
+
+    Only the FIRST title element is removed, matching what
+    :func:`_extract_title` reads as the document title. A later ``<title>``
+    inside an inline SVG is ordinary body content and is left to be scanned as
+    such.
+    """
+    start = lowered.find("<title")
+    if start == -1:
+        return lowered
+    gt = lowered.find(">", start)
+    if gt == -1:
+        return lowered
+    end = lowered.find("</title>", gt)
+    if end == -1:
+        return lowered
+    return lowered[:start] + lowered[end + len("</title>") :]
+
+
 def _matches_mantenimiento(lowered_body: str, title: str) -> tuple[str, ...]:
     """Return the ordered tuple of mantenimiento markers detected.
 
@@ -152,9 +179,10 @@ def _matches_mantenimiento(lowered_body: str, title: str) -> tuple[str, ...]:
         A frozen tuple of the markers that matched. Empty when no
         marker fires.
     """
+    outside_title = _body_outside_title(lowered_body)
     hits: list[str] = []
     for marker in _MANTENIMIENTO_MARKERS:
-        if marker in lowered_body:
+        if marker in outside_title:
             hits.append(marker)
     title_hits: list[str] = []
     for marker in _MANTENIMIENTO_TITLE_MARKERS:
