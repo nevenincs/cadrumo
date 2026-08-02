@@ -320,8 +320,6 @@ def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[Bind
 
 
 def _decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:
-    if isinstance(value, Decimal):
-        return value
     return decimal_from_string(
         binding_id,
         value,

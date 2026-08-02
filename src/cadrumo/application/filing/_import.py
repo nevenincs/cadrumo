@@ -46,7 +46,6 @@ from typing import TYPE_CHECKING, Protocol
 
 from ...adapters.inbound.justificante import parse_justificante
 from ...core import Period, PeriodError
-from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
 from ...core.time import MADRID_TZ
 from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
@@ -249,16 +248,21 @@ def _build_submission_record(
 ) -> ModeloPresentado:
     """Build the companion :class:`~domain.submission.ModeloPresentado` for an import.
 
-    The ``submission_id`` hashes the CSV and the draft id together so it
-    stays stable across re-imports of the same PDF and remains distinct
-    from locally-created attempt ids.
+    The imported receipt is the first attempt for its draft, so identity comes
+    from the submission domain's canonical ``(draft_id, attempt_ordinal)``
+    coordinate. Naive receipt times retain the importer contract of Madrid
+    civil time; aware receipt times retain their supplied instant.
     """
-    from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus
+    from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 
-    submitted_at = justificante.presented_at.replace(tzinfo=MADRID_TZ).astimezone(UTC)
-    submission_id = sha256_hex(f"{justificante.csv}:{draft.draft_id}".encode())[:16]
+    presented_at = justificante.presented_at
+    if presented_at.tzinfo is None:
+        presented_at = presented_at.replace(tzinfo=MADRID_TZ)
+    submitted_at = presented_at.astimezone(UTC)
+    attempt_ordinal = 1
+    submission_id = make_submission_id(draft.draft_id, attempt_ordinal)
     attempt = SubmissionAttempt(
-        attempt_id=f"{submission_id}.1",
+        attempt_id=f"{submission_id}.{attempt_ordinal}",
         started_at=submitted_at,
         ended_at=submitted_at,
         status=SubmissionStatus.PRESENTADA,

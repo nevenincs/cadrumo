@@ -26,11 +26,10 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from pathlib import Path
 
-from ...core.external_constants import UTF_8_ENCODING
+from ...core import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
 from ...domain.calculations.registry import LegalReference, bundled_authority
 from ._errors import CorpusSearchInputError
 from ._models import CitationResolution
@@ -113,7 +112,7 @@ class CitationLookup:
         return text
 
     def _verbatim_text(self, reference: LegalReference, *, path_part: str, anchor: str | None) -> str:
-        text = self._read_corpus_text(path_part, anchor=anchor)
+        text = self._read_corpus_text(path_part, anchor=anchor, required_text=reference.required_text)
         if text is None:
             raise CorpusSearchInputError(
                 "citation has no readable extracted corpus text",
@@ -121,7 +120,13 @@ class CitationLookup:
             )
         return text
 
-    def _read_corpus_text(self, path_part: str, *, anchor: str | None) -> str | None:
+    def _read_corpus_text(
+        self,
+        path_part: str,
+        *,
+        anchor: str | None,
+        required_text: tuple[str, ...] = (),
+    ) -> str | None:
         source_path = (self._source_root / path_part).resolve()
         if self._source_root not in source_path.parents:
             raise CorpusSearchInputError(
@@ -129,59 +134,19 @@ class CitationLookup:
                 context={"path": path_part},
             )
         extracted_json = source_path.with_name(source_path.name + ".extracted.json")
-        if extracted_json.is_file():
-            text = _text_from_units(extracted_json, anchor=anchor)
-            if text:
-                return text
-        extracted_md = source_path.with_name(source_path.name + ".extracted.md")
-        if extracted_md.is_file():
-            text = extracted_md.read_text(encoding=UTF_8_ENCODING).strip()
-            if text:
-                return text
-        if source_path.is_file():
-            text = _text_from_html(source_path)
-            if text:
-                return text
-        return None
-
-
-def _text_from_units(extracted_json: Path, *, anchor: str | None) -> str:
-    payload = json.loads(extracted_json.read_text(encoding=UTF_8_ENCODING))
-    units = payload.get("units") or ()
-    texts = [(unit.get("anchor"), (unit.get("text") or "").strip()) for unit in units]
-    texts = [(_clean_anchor(item_anchor), text) for item_anchor, text in texts if text]
-    if not texts:
-        return ""
-    if anchor is not None:
-        matched = [text for unit_anchor, text in texts if unit_anchor == anchor]
-        if matched:
-            return "\n\n".join(matched).strip()
-    if len(texts) == 1:
-        return texts[0][1]
-    return "\n\n".join(text for _anchor, text in texts).strip()
-
-
-def _text_from_html(html_path: Path) -> str:
-    """Strip a light BOE HTML excerpt to verbatim, case-preserving text.
-
-    A minority of corpus refs point at per-article HTML files that carry
-    no ``*.extracted`` sidecar. These are clean BOE excerpts with light
-    ``<h5>``/``<p>`` markup and an HTML-comment provenance header;
-    BeautifulSoup's ``get_text`` drops the comment and the tags while
-    preserving the case and accents the extracted sidecars also preserve.
-    """
-    from bs4 import BeautifulSoup
-
-    soup = BeautifulSoup(html_path.read_text(encoding=UTF_8_ENCODING), "html.parser")
-    lines = [line.strip() for line in soup.get_text(separator="\n").splitlines()]
-    return "\n".join(line for line in lines if line).strip()
-
-
-def _clean_anchor(value: object) -> str | None:
-    if not isinstance(value, str):
-        return None
-    cleaned = value.strip().lstrip("#")
-    return cleaned or None
+        if not extracted_json.is_file():
+            return None
+        try:
+            return resolve_anchored_extracted_unit(
+                extracted_json,
+                anchor=anchor or "",
+                required_text=required_text,
+            )
+        except CorpusAnchorResolutionError as exc:
+            raise CorpusSearchInputError(
+                "corpus_ref does not resolve to one extracted unit",
+                context={"path": path_part, "anchor": anchor or ""},
+            ) from exc
 
 
 def bundled_citation_lookup() -> CitationLookup:

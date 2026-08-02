@@ -252,7 +252,6 @@ from ._operator import (
 )
 from ._operator_probes import (
     ProviderConfigurationProbe,
-    ProviderProbeResult,
     probe_provider_configuration,
     probe_provider_credentials,
 )
@@ -282,6 +281,7 @@ from ._operator_results import (
     CertificateSourceSecretMutationResult,
     LiveAuthPreflightReport,
 )
+from ._probe_result import ProviderProbeResult
 from ._sessions import (
     AuthenticatedAeatSessionResult,
     AuthProfileIdentityMismatchError,

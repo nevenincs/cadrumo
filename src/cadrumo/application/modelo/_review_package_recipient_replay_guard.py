@@ -48,9 +48,11 @@ from ...adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
 )
 from ...adapters.persistence.storage import (
+    SecureObjectRevisionConflictError,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
+from ...core import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
@@ -59,6 +61,9 @@ from ...core.time import now as _utc_now
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectRepository
+
+
+_CONSUME_RETRY_LIMIT = 64
 
 
 class RecipientReplayGuardError(CadrumoError):
@@ -142,6 +147,11 @@ class RecipientReplayGuardRepository:
                 plausible-looking empty ledger (which would re-open every
                 previously-consumed nonce to replay).
         """
+        ledger, _revision_id = self._load_revisioned()
+        return ledger
+
+    def _load_revisioned(self) -> tuple[ConsumedNonceLedger, str]:
+        """Load the ledger with the secure-object revision backing that snapshot."""
         try:
             record = self._objects.load(
                 _NAMESPACE.namespace,
@@ -150,8 +160,9 @@ class RecipientReplayGuardRepository:
                 max_supported_version=_NAMESPACE.schema_version,
             )
             if record is None:
-                return ConsumedNonceLedger()
-            return ConsumedNonceLedger.model_validate_json(record.payload.decode(_UTF_8_ENCODING))
+                return ConsumedNonceLedger(), ABSENT_SECURE_OBJECT_REVISION_ID
+            ledger = ConsumedNonceLedger.model_validate_json(record.payload.decode(_UTF_8_ENCODING))
+            return ledger, record.revision_id
         except OSError as exc:
             raise RecipientReplayGuardError(
                 f"unable to load recipient replay-guard ledger: {self._object_key}",
@@ -181,19 +192,26 @@ class RecipientReplayGuardRepository:
             RecipientPackageReplayedError: When ``nonce_hex`` is already on
                 file -- the package has been presented for decryption before.
         """
-        current = self.load()
-        if any(existing.nonce_hex == nonce_hex for existing in current.records):
-            raise RecipientPackageReplayedError(
-                "recipient-encrypted package nonce has already been consumed; refusing replay",
-                context={"nonce_hex": nonce_hex},
-                translated_message="application.modelo.errors.recipient_decryption_failed",
-            )
         record = ConsumedNonceRecord(nonce_hex=nonce_hex, consumed_at=consumed_at or _utc_now())
-        updated = ConsumedNonceLedger(records=(*current.records, record))
-        self._save_unlocked(updated)
-        return updated
+        for attempt in range(_CONSUME_RETRY_LIMIT):
+            current, revision_id = self._load_revisioned()
+            if any(existing.nonce_hex == nonce_hex for existing in current.records):
+                raise RecipientPackageReplayedError(
+                    "recipient-encrypted package nonce has already been consumed; refusing replay",
+                    context={"nonce_hex": nonce_hex},
+                    translated_message="application.modelo.errors.recipient_decryption_failed",
+                )
+            updated = ConsumedNonceLedger(records=(*current.records, record))
+            try:
+                self._save_revisioned(updated, expected_revision_id=revision_id)
+            except SecureObjectRevisionConflictError:
+                if attempt + 1 == _CONSUME_RETRY_LIMIT:
+                    raise
+                continue
+            return updated
+        raise AssertionError("bounded recipient replay consumption retry loop exhausted")
 
-    def _save_unlocked(self, ledger: ConsumedNonceLedger) -> None:
+    def _save_revisioned(self, ledger: ConsumedNonceLedger, *, expected_revision_id: str) -> None:
         self._objects.save(
             namespace=_NAMESPACE.namespace,
             object_key=self._object_key,
@@ -202,6 +220,7 @@ class RecipientReplayGuardRepository:
             written_at=_utc_now(),
             payload=ledger.model_dump_json().encode(_UTF_8_ENCODING),
             write_provenance="application.modelo.review_package_recipient_replay_guard",
+            expected_revision_id=expected_revision_id,
         )
 
     @property

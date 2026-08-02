@@ -123,3 +123,23 @@ def test_parse_accepts_quoted_comma_decimal_separator(tmp_path: Path) -> None:
     values = parse_casilla_value_spreadsheet(path)
 
     assert values == {"01": Decimal("1234.56")}
+
+
+def test_parse_accepts_european_thousands_and_decimal_separators(tmp_path: Path) -> None:
+    """A Spanish-formatted amount remains its full amount, not a malformed Decimal."""
+    path = tmp_path / "sheet.csv"
+    path.write_text('casilla_code,value\n01,"1.234,56"\n', encoding="utf-8")
+
+    values = parse_casilla_value_spreadsheet(path)
+
+    assert values == {"01": Decimal("1234.56")}
+
+
+@pytest.mark.parametrize("raw_value", ("NaN", "Infinity", "-Infinity"))
+def test_parse_rejects_non_finite_value(tmp_path: Path, raw_value: str) -> None:
+    """Decimal spellings that evade numeric parsing cannot enter a casilla observation."""
+    path = tmp_path / "sheet.csv"
+    path.write_text(f"casilla_code,value\n01,{raw_value}\n", encoding="utf-8")
+
+    with pytest.raises(ModeloLocalObservationError, match="must be finite"):
+        parse_casilla_value_spreadsheet(path)

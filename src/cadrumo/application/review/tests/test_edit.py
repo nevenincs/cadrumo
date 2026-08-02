@@ -190,6 +190,22 @@ def test_invoice_spec_rejects_invalid_keys_and_values(clauses: list[str], expect
     assert exc.value.reason == expected_reason
 
 
+@pytest.mark.parametrize("raw_value", ("1.234", "1.000"))
+def test_invoice_base_rejects_values_that_bare_decimal_would_misread(raw_value: str) -> None:
+    """Review editing cannot bypass the creation wizard's euro-cent precision boundary."""
+    assert isinstance(Decimal(raw_value.replace(",", ".")), Decimal)
+
+    with pytest.raises(EditParseError, match="invalid-value-invoice-base") as exc:
+        InvoiceEditSpec.from_strings([f"base={raw_value}"])
+
+    assert exc.value.reason == "invalid-value-invoice-base"
+
+
+def test_invoice_base_rejects_european_thousands_text() -> None:
+    with pytest.raises(EditParseError, match="invalid-value-invoice-base"):
+        InvoiceEditSpec.from_strings(["base=1.234,56"])
+
+
 def test_empty_specs_return_empty_instances() -> None:
     ledger_spec = LedgerEditSpec.from_strings([])
     assert ledger_spec.clauses == ()

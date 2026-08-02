@@ -17,8 +17,8 @@ evidence. The cross-period clean-state guard
 ``source_kind`` outside its official set as the
 ``LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`` blocker, so this carry feeds
 calculate/draft but never satisfies the filing gate for a dependent period —
-filing still requires real external evidence. ``app_filing`` MUST NOT be added
-to ``_OFFICIAL_SOURCE_KINDS``.
+filing still requires real external evidence. ``app_filing`` MUST NOT gain the
+official-AEAT capability.
 
 Non-goal (grupo ``per_grupo_member`` fan-in): this helper persists the
 single-filer ``(modelo, filing_year, period)`` row only. It does not stamp a
@@ -64,17 +64,16 @@ from ...domain.modelos import CalculationRevision, WorkUnit
 from ..calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
+    ObservationSourceKind,
     iva_compensation_state_from_registry_observation,
     observation_key,
 )
 
-APP_FILING_SOURCE_KIND: Final = "app_filing"
+APP_FILING_SOURCE_KIND: Final = ObservationSourceKind.APP_FILING
 """Non-official ``source_kind`` stamped on locally-filed observations.
 
-Deliberately NOT a member of
-``cadrumo.application.calculations._cross_period_clean_state._OFFICIAL_SOURCE_KINDS``:
-a locally-filed value is not external AEAT evidence and must never satisfy the
-cross-period clean-state filing gate.
+Deliberately not official AEAT evidence: a locally-filed value must never
+satisfy the cross-period clean-state filing gate.
 """
 
 

@@ -37,9 +37,10 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from datetime import datetime
+from enum import StrEnum
 from typing import ClassVar, override
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.persistence.storage import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -58,6 +59,44 @@ from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ._errors import ObservationCasillaReferenceError, ObservationKeyError
+
+
+class ObservationSourceKind(StrEnum):
+    """Origin of a persisted calculation observation.
+
+    This classifies the observation provenance before a filing's separate
+    :class:`~domain.modelos.ExternalEvidenceKind` is materialised. Only the
+    three AEAT origins are official filing evidence; local app and operator
+    rows may support calculation prefill but cannot establish filing-grade
+    cross-period readiness.
+    """
+
+    APP_FILING = "app_filing"
+    OPERATOR_MANUAL = "operator_manual"
+    AEAT_SEDE_JUSTIFICANTE = "aeat_sede_justificante"
+    AEAT_SEDE_LIVE_CAPTURE = "aeat_sede_live_capture"
+    AEAT_CSV_REGISTER = "aeat_csv_register"
+
+    @property
+    def is_official_aeat(self) -> bool:
+        """Whether this provenance was observed from an AEAT source."""
+        return self in (
+            self.AEAT_SEDE_JUSTIFICANTE,
+            self.AEAT_SEDE_LIVE_CAPTURE,
+            self.AEAT_CSV_REGISTER,
+        )
+
+
+def is_official_aeat_observation_source(source_kind: ObservationSourceKind | str) -> bool:
+    """Return whether an observation provenance is official AEAT evidence.
+
+    Unknown and aggregate values (for example ``"mixed"`` group evidence)
+    fail closed as non-official rather than silently gaining filing authority.
+    """
+    try:
+        return ObservationSourceKind(source_kind).is_official_aeat
+    except ValueError:
+        return False
 
 
 class ObservationEnvelopePayload(BaseModel):
@@ -81,10 +120,8 @@ class ObservationEnvelopePayload(BaseModel):
 
     observation: RegistryModeloObservation
     captured_at: datetime
-    source_kind: str = Field(
-        min_length=1,
-        max_length=64,
-        description="Where this observation came from: app_filing | aeat_sede_justificante | operator_manual",
+    source_kind: ObservationSourceKind = Field(
+        description="Typed provenance of this calculation observation.",
     )
     member_nif: str | None = Field(
         default=None,
@@ -116,6 +153,12 @@ class ObservationEnvelopePayload(BaseModel):
             "register row produced the calculation history."
         ),
     )
+
+    @field_validator("source_kind", mode="before")
+    @classmethod
+    def _parse_source_kind(cls, value: object) -> ObservationSourceKind:
+        """Parse encrypted JSON provenance into the closed source taxonomy."""
+        return ObservationSourceKind(value)
 
 
 class IvaWalletDecisionEnvelopePayload(BaseModel):
@@ -329,7 +372,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         self,
         observation: RegistryModeloObservation,
         *,
-        source_kind: str,
+        source_kind: ObservationSourceKind,
         captured_at: datetime | None = None,
         member_nif: str | None = None,
         stamped_revision_id: str | None = None,

@@ -37,9 +37,10 @@ from ...calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenanceKind,
+    ObservationSourceKind,
     cross_period_dependency_requirements,
+    is_official_aeat_observation_source,
 )
-from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
@@ -740,24 +741,25 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
     assert "missing_expected_group_member_roster" not in message
 
 
-def test_no_prior_obligation_provenance_never_enters_official_source_kinds() -> None:
+def test_no_prior_obligation_provenance_never_has_official_source_capability() -> None:
     """Honesty: pre-activity suppression provenance is never official.
 
     The no-prior-obligation facet records a SUPPRESSION (no obligation existed),
     not a filing's AEAT evidence. None of its enum values - the facet
     discriminator, the operator-declared provenance, or the censo-corroborated
-    provenance - may ever be a member of ``_OFFICIAL_SOURCE_KINDS``. Were any
+    provenance - may ever gain official-AEAT source capability. Were any
     admitted, an unevidenced pre-activity scoping could masquerade as official
     AEAT evidence and launder a dependent filing past the evidence gate.
     """
     for kind in NoPriorObligationProvenanceKind:
-        assert kind.value not in _OFFICIAL_SOURCE_KINDS
-    assert (
-        frozenset(
-            {"aeat_sede_justificante", "aeat_sede_live_capture", "aeat_csv_register"},
-        )
-        == _OFFICIAL_SOURCE_KINDS
-    )
+        assert not is_official_aeat_observation_source(kind.value)
+    assert {kind for kind in ObservationSourceKind if kind.is_official_aeat} == {
+        ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+        ObservationSourceKind.AEAT_SEDE_LIVE_CAPTURE,
+        ObservationSourceKind.AEAT_CSV_REGISTER,
+    }
+    assert not is_official_aeat_observation_source("mixed")
+    assert not is_official_aeat_observation_source("unknown_source")
 
 
 def test_first_local_filing_still_persists_under_non_official_app_filing() -> None:
@@ -770,4 +772,4 @@ def test_first_local_filing_still_persists_under_non_official_app_filing() -> No
     ``local-filed-observations-are-non-official-evidence`` invariant is unchanged.
     """
     assert APP_FILING_SOURCE_KIND == "app_filing"
-    assert APP_FILING_SOURCE_KIND not in _OFFICIAL_SOURCE_KINDS
+    assert not APP_FILING_SOURCE_KIND.is_official_aeat

@@ -24,7 +24,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.hashing import sha256_hex
-from ...domain.attachments import AttachmentStoreProtocol
+from ...domain.attachments import AttachmentStoreProtocol, normalize_media_type
 from ._evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceInputError
 
 __all__ = [
@@ -148,9 +148,10 @@ class EvidenceInput(BaseModel):
 
 def _media_kind_from_mime(mime_type: str) -> MediaKind:
     """Map a stored attachment MIME type to the reader's ``MediaKind``."""
-    if mime_type == PDF_MIME_TYPE:
+    normalized_mime_type = normalize_media_type(mime_type)
+    if normalized_mime_type == PDF_MIME_TYPE:
         return MediaKind.PDF
-    if mime_type.startswith("image/"):
+    if normalized_mime_type.startswith("image/"):
         return MediaKind.IMAGE
     raise PurchaseInvoiceEvidenceInputError(
         f"evidence media type {mime_type!r} cannot be read; only PDF and image evidence is supported",

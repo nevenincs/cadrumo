@@ -54,7 +54,6 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
-from ...calculations._cross_period_clean_state import _OFFICIAL_SOURCE_KINDS
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     APP_FILING_SOURCE_KIND,
@@ -368,7 +367,7 @@ def test_app_filing_source_kind_is_not_official_evidence() -> None:
     unevidenced local chain would launder past the filing gate.
     """
     assert APP_FILING_SOURCE_KIND == "app_filing"
-    assert APP_FILING_SOURCE_KIND not in _OFFICIAL_SOURCE_KINDS
+    assert not APP_FILING_SOURCE_KIND.is_official_aeat
 
 
 def test_same_year_locally_filed_upstream_admitted_with_advisory(repos: _Repos) -> None:

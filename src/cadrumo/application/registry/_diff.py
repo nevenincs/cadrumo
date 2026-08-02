@@ -22,14 +22,12 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
 from ...core.resources import bundled_path as _bundled_path
-from ...domain.calculations.registry import (
-    AmbiguousRevisionSelectionError as _AmbiguousRevisionSelectionError,
-)
 from ...domain.calculations.registry import (
     CasillaDefinition as _CasillaDefinition,
 )
@@ -39,12 +37,15 @@ from ...domain.calculations.registry import (
 )
 from ...domain.calculations.registry import FormulaId as _FormulaId
 from ...domain.calculations.registry import LegalRefId as _LegalRefId
+from ...domain.calculations.registry import ModeloDefinition as _ModeloDefinition
 from ...domain.calculations.registry import ModeloRevision as _ModeloRevision
+from ...domain.calculations.registry import NoRevisionForPeriodError as _NoRevisionForPeriodError
 from ...domain.calculations.registry import ParameterId as _ParameterId
 from ...domain.calculations.registry import RevisionId as _RevisionId
 from ...domain.calculations.registry import (
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
 )
+from ...domain.calculations.registry import select_revision_for_year as _select_revision_for_year
 from ._errors import RegistryApplicationInputError
 
 __all__ = [
@@ -151,36 +152,29 @@ class RegistryRevisionDiffReport(BaseModel):
 
 
 def _revision_for_year(
-    modelo_id: str,
-    revisions: dict[_RevisionId, _ModeloRevision],
+    definition: _ModeloDefinition,
     *,
     filing_year: int,
+    on: date | None = None,
 ) -> _ModeloRevision:
-    """Resolve the one revision covering ``filing_year``.
+    """Resolve the one revision covering ``filing_year`` through the temporal authority.
 
-    Mirrors :meth:`~domain.calculations.registry.RegistryQueryService.bindings_for_year`:
-    a bare filing year must resolve to exactly one revision via
-    ``period_selector.includes_year``, independent of any particular filing
-    period. Refuses with the modelo's declared revision ids when no revision
-    (or more than one) covers the year.
+    Diffing retains its actionable no-match message, while the domain temporal
+    selector owns candidate discovery, effective-date filtering, and ambiguous
+    candidate errors.
     """
-    covering = [revision for revision in revisions.values() if revision.period_selector.includes_year(filing_year)]
-    if not covering:
-        available = ", ".join(sorted(revisions))
+    try:
+        return _select_revision_for_year(definition, filing_year=filing_year, on=on)
+    except _NoRevisionForPeriodError as exc:
+        available = ", ".join(sorted(definition.revisions))
         raise RegistryApplicationInputError(
             translated_message="application.registry.errors.no_revision_for_diff_year",
             context={
-                "modelo": modelo_id,
+                "modelo": str(definition.id),
                 "filing_year": filing_year,
                 "available_revisions": available,
             },
-        )
-    if len(covering) > 1:
-        raise _AmbiguousRevisionSelectionError(
-            modelo_id=modelo_id,
-            candidate_ids=tuple(revision.id for revision in covering),
-        )
-    return covering[0]
+        ) from exc
 
 
 def _casilla_legal_refs_changed(from_casilla: _CasillaDefinition, to_casilla: _CasillaDefinition) -> bool:
@@ -340,15 +334,15 @@ def diff_registry_revisions(
     to_year: int,
     registry_root: Path | None = None,
     source_root: Path | None = None,
+    as_of: date | None = None,
 ) -> RegistryRevisionDiffReport:
     """Diff the two registry revisions covering ``from_year`` and ``to_year``.
 
-    Each bare filing year resolves to exactly one covering
-    :class:`~domain.calculations.registry.ModeloRevision` via
-    ``period_selector.includes_year`` (the same primitive
-    :meth:`~domain.calculations.registry.RegistryQueryService.bindings_for_year`
-    uses); a year with no covering revision, or with more than one, is refused
-    naming the modelo's declared revision ids.
+    Each bare filing year resolves through the canonical temporal selector.
+    When ``as_of`` is supplied, both revisions must also be valid on that date.
+    A year with no covering revision is adapted to the diff command's
+    actionable error, while an ambiguous selection retains the domain's typed
+    candidate error.
 
     Returns:
         A :class:`~application.registry.RegistryRevisionDiffReport` enumerating casilla adds,
@@ -363,8 +357,8 @@ def diff_registry_revisions(
         source_root=source_root or _bundled_path(),
     )
     definition = authority.validate_modelo(modelo.strip())
-    from_revision = _revision_for_year(str(definition.id), dict(definition.revisions), filing_year=from_year)
-    to_revision = _revision_for_year(str(definition.id), dict(definition.revisions), filing_year=to_year)
+    from_revision = _revision_for_year(definition, filing_year=from_year, on=as_of)
+    to_revision = _revision_for_year(definition, filing_year=to_year, on=as_of)
 
     if from_revision.id == to_revision.id:
         return RegistryRevisionDiffReport(

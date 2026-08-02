@@ -40,6 +40,7 @@ from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue
 from ...domain.calculations.registry import (
     LegalReference,
     LegalRefId,
+    RegistryExternalLink,
     RegistryValidationError,
     ValidatedRegistryAuthority,
     bundled_authority,
@@ -117,7 +118,7 @@ class RegistryCitationReferenceProjection(BaseModel):
     title: _ProjectionText
     published_at: _ProjectionDateText
     boe_id: _ProjectionText
-    boe_url: _ProjectionText
+    boe_url: RegistryExternalLink
     tags: tuple[_ProjectionText, ...] = ()
     articulo_count: int = Field(ge=0)
     short_title: _ProjectionText
@@ -136,7 +137,7 @@ class RegistryCitationArticleProjection(BaseModel):
     numero: _ProjectionText
     titulo: _ProjectionText
     summary: _ProjectionText
-    permalink: _ProjectionText
+    permalink: RegistryExternalLink
     cite: _ProjectionText
 
 
@@ -953,7 +954,7 @@ def _legal_cite(reference: LegalReference) -> str:
     return f"{cite} ({reference.document_id})"
 
 
-def _base_permalink(reference: LegalReference) -> str:
+def _base_permalink(reference: LegalReference) -> RegistryExternalLink:
     return reference.permalink.split("#", 1)[0]
 
 

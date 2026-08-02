@@ -36,6 +36,7 @@ from typing import Final
 
 from openpyxl import load_workbook
 
+from ...core.decimal import normalize_decimal_separators
 from ...core.external_constants import CSV_ENCODING_FALLBACK_CHAIN, XLSX_EXTENSION
 from ._action_errors import ModeloLocalObservationError
 
@@ -103,9 +104,15 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
             malformed.append(f"row {row_number}: incomplete (casilla_code={code!r}, value={raw_value!r})")
             continue
         try:
-            values[code] = Decimal(raw_value.replace(",", "."))
+            normalized = normalize_decimal_separators(raw_value, strip_thousands="," in raw_value)
+            value = Decimal(normalized)
         except InvalidOperation:
             malformed.append(f"row {row_number}: value {raw_value!r} for casilla {code!r} is not numeric")
+            continue
+        if not value.is_finite():
+            malformed.append(f"row {row_number}: value {raw_value!r} for casilla {code!r} must be finite")
+            continue
+        values[code] = value
     if malformed:
         raise ModeloLocalObservationError(
             f"casilla-value spreadsheet {path} has malformed rows: {'; '.join(malformed)}",

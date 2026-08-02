@@ -709,30 +709,11 @@ def is_detail_casilla_override_key(key: str) -> bool:
 
 
 def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
-    from ._action_errors import WorkUnitRevisionDivergenceError
+    from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
     from ._work_lifecycle import get_work_unit
 
     unit = get_work_unit(work_unit_id)
-    snapshot = resources().modelos.authority.snapshot(
-        str(unit.modelo),
-        filing_year=unit.filing_year,
-        period=unit.period.registry_token,
-    )
-    # Calc-time assertion (defense-in-depth): the
-    # law-determined revision must equal the revision the work unit was created
-    # against.  The work unit's revision_id is an identity claim, not a
-    # resolution input — it is only compared against resolution's answer.
-    if snapshot.revision.id != unit.revision_id:
-        raise WorkUnitRevisionDivergenceError(
-            f"work unit {unit.work_unit_id!r} was created against registry revision "
-            f"{unit.revision_id!r}, but the law-determined revision for "
-            f"modelo {unit.modelo!r} {unit.filing_year} {unit.period.registry_token!r} "
-            f"is now {snapshot.revision.id!r}. "
-            f"The registry's law-mapping was corrected after this work unit was created. "
-            f"Re-create the work unit (discard this one and run `aeat app modelo work create`) "
-            f"to bind it to the current law-determined revision.",
-        )
-    return snapshot.revision
+    return resolve_registry_snapshot_for_work_unit(unit).revision
 
 
 def _validated_binding_input_channel(

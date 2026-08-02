@@ -39,7 +39,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.decimal import coerce_decimal
+from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...domain.invoices import numeric_iva_rate_percentages
 from ._errors import EditParseError
 
@@ -134,6 +134,17 @@ def _coerce_decimal(clause: EditClause, *, scope: str) -> Decimal:
         raise EditParseError(
             f"--set {clause.key}={clause.raw_value}",
             reason=f"invalid-value-{scope}",
+        )
+    return result
+
+
+def _coerce_invoice_taxable_base(clause: EditClause) -> Decimal:
+    """Parse the invoice taxable base with the same euro-cent contract as creation."""
+    result = try_parse_canonical_decimal(clause.raw_value, max_fraction_digits=2)
+    if result is None:
+        raise EditParseError(
+            f"--set {clause.key}={clause.raw_value}",
+            reason="invalid-value-invoice-base",
         )
     return result
 
@@ -426,7 +437,7 @@ class InvoiceEditSpec(BaseModel):
         document_path: Path | None = None
         for clause in clauses:
             if clause.key == InvoiceEditKey.BASE:
-                base = _coerce_decimal(clause, scope="invoice-base")
+                base = _coerce_invoice_taxable_base(clause)
             elif clause.key == InvoiceEditKey.IVA_RATE:
                 iva_rate = _coerce_invoice_iva_rate(clause)
             elif clause.key == InvoiceEditKey.IVA_AMOUNT:

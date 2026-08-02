@@ -27,6 +27,7 @@ from pydantic import BaseModel
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ._catalogue import AuthProviderListing
+from ._probe_result import ProviderProbeResult
 
 
 class AuthProviderReservedError(CadrumoError, ValueError):
@@ -143,8 +144,8 @@ class AuthTestResult(AuthStatusResult):
         probe_result: A typed verdict of the per-provider probe. Values
             include ``ok``, ``expired``, ``expiring``, ``corrupt``,
             ``unreadable``, ``invalid_identity``, ``identity_unset``,
-            ``no_path_set``, ``file_missing``, ``no_provider``. Empty
-            only when no provider could be resolved.
+            ``no_path_set``, ``file_missing``, ``no_provider``. ``None``
+            means no provider probe ran.
     """
 
     model_config = _STRICT_FROZEN
@@ -153,7 +154,7 @@ class AuthTestResult(AuthStatusResult):
     persisted_session_expired: bool | None = None
     persisted_session_state: str = ""
     probe_summary: str = ""
-    probe_result: str = ""
+    probe_result: ProviderProbeResult | None = None
 
 
 class LiveAuthPreflightReport(BaseModel):
@@ -188,7 +189,7 @@ class LiveAuthPreflightReport(BaseModel):
     persisted_session_present: bool = False
     persisted_session_expired: bool | None = None
     persisted_session_state: str = ""
-    probe_result: str = ""
+    probe_result: ProviderProbeResult | None = None
 
 
 class AuthLoginResult(BaseModel):
@@ -311,9 +312,7 @@ class CertificateSourceCheckEntry(BaseModel):
         certificate_path: Filesystem path of the source's PKCS#12 bundle.
         friendly_name: Optional human-readable label.
         active: Whether this source is the currently selected one.
-        result: Typed :class:`application.auth.ProviderProbeResult` verdict
-            (as its string value, matching the sibling ``AuthTestResult``
-            convention).
+        result: Typed :class:`application.auth.ProviderProbeResult` verdict.
         summary: Localised one-line operator-facing verdict.
         days_until_expiry: Whole days until ``not_after``, when the
             certificate could be parsed; negative when already expired;
@@ -327,7 +326,7 @@ class CertificateSourceCheckEntry(BaseModel):
     certificate_path: str
     friendly_name: str = ""
     active: bool = False
-    result: str = ""
+    result: ProviderProbeResult
     summary: str = ""
     days_until_expiry: int | None = None
 

@@ -22,7 +22,9 @@ See Also:
 
 from __future__ import annotations
 
+import contextvars
 import secrets
+import threading
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -46,6 +48,7 @@ from .._review_package_recipient_replay_guard import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 7, 4, 12, 0, tzinfo=UTC)
+_JOIN_TIMEOUT_S = 60.0
 
 
 def _fresh_nonce_hex() -> str:
@@ -114,6 +117,74 @@ def test_mark_consumed_twice_refuses_as_replay(tmp_path: Path) -> None:
         # The ledger still carries exactly one record -- the refused replay
         # attempt did not silently append a duplicate.
         assert len(repository.load().records) == 1
+
+
+def test_concurrent_same_nonce_consumption_allows_exactly_one_success(tmp_path: Path) -> None:
+    """Concurrent presentations of one genuine nonce yield one consume and replay refusals."""
+    writer_count = 8
+    nonce_hex = _fresh_nonce_hex()
+    successes: list[ConsumedNonceLedger] = []
+    replay_refusals: list[RecipientPackageReplayedError] = []
+    unexpected: list[BaseException] = []
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-same-race") as profile:
+        repository = RecipientReplayGuardRepository(objects=profile.repository)
+        gate = threading.Barrier(writer_count)
+
+        def consume() -> None:
+            try:
+                gate.wait()
+                successes.append(repository.mark_consumed(nonce_hex, consumed_at=_NOW))
+            except RecipientPackageReplayedError as exc:
+                replay_refusals.append(exc)
+            except BaseException as exc:
+                unexpected.append(exc)
+
+        threads = [
+            threading.Thread(target=contextvars.copy_context().run, args=(consume,)) for _ in range(writer_count)
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=_JOIN_TIMEOUT_S)
+
+        assert not [thread for thread in threads if thread.is_alive()], "a replay consumer deadlocked"
+        assert unexpected == []
+        assert len(successes) == 1
+        assert len(replay_refusals) == writer_count - 1
+        persisted = repository.load()
+        assert [record.nonce_hex for record in persisted.records] == [nonce_hex]
+
+
+def test_concurrent_distinct_nonce_consumption_preserves_every_record(tmp_path: Path) -> None:
+    """Concurrent distinct nonce consumes survive revision conflicts without lost updates."""
+    nonces = tuple(_fresh_nonce_hex() for _ in range(8))
+    unexpected: list[BaseException] = []
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-distinct-race") as profile:
+        repository = RecipientReplayGuardRepository(objects=profile.repository)
+        gate = threading.Barrier(len(nonces))
+
+        def consume(nonce_hex: str) -> None:
+            try:
+                gate.wait()
+                repository.mark_consumed(nonce_hex, consumed_at=_NOW)
+            except BaseException as exc:
+                unexpected.append(exc)
+
+        threads = [
+            threading.Thread(target=contextvars.copy_context().run, args=(consume, nonce_hex)) for nonce_hex in nonces
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=_JOIN_TIMEOUT_S)
+
+        assert not [thread for thread in threads if thread.is_alive()], "a replay consumer deadlocked"
+        assert unexpected == []
+        persisted = repository.load()
+        assert len(persisted.records) == len(nonces)
+        assert {record.nonce_hex for record in persisted.records} == set(nonces)
 
 
 def test_two_buckets_maintain_independent_ledgers(tmp_path: Path) -> None:

@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
+from ....domain.attachments import AttachmentKind, AttachmentSource, add_attachment_bytes
 from .._evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
@@ -115,6 +116,39 @@ def test_resolve_attachment_evidence_input_round_trips_bytes(
 
     assert resolved.data == _PDF_BYTES
     assert resolved.attachment_id == record.attachment_id
+
+
+@pytest.mark.parametrize(
+    ("mime_type", "kind", "expected_kind"),
+    (
+        ("Application/PDF; charset=binary", AttachmentKind.INVOICE_PDF, MediaKind.PDF),
+        ("IMAGE/PNG; profile=receipt", AttachmentKind.RECEIPT_IMAGE, MediaKind.IMAGE),
+    ),
+)
+def test_attachment_evidence_normalizes_media_type_for_classification_but_preserves_provenance(
+    isolated_settings: Settings,
+    secure_objects: SecureObjectRepository,
+    mime_type: str,
+    kind: AttachmentKind,
+    expected_kind: MediaKind,
+) -> None:
+    """Parameterized MIME values classify by token while the stored display value remains intact."""
+
+    attachment = add_attachment_bytes(
+        AttachmentStore(objects=secure_objects),
+        data=_PDF_BYTES,
+        kind=kind,
+        source=AttachmentSource.LOCAL_FILE,
+        source_reference="operator-evidence",
+        mime_type=mime_type,
+        captured_at=datetime(2026, 8, 1, tzinfo=UTC),
+        bucket_id=_BUCKET_ID,
+    )
+
+    resolved = resolve_attachment_evidence_input(attachment.attachment_id, store=AttachmentStore(objects=secure_objects))
+
+    assert resolved.media_kind is expected_kind
+    assert resolved.mime_type == mime_type
 
 
 def test_record_without_in_store_attachment_is_unconstructable() -> None:

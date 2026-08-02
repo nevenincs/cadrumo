@@ -763,6 +763,20 @@ def test_iva_history_strict_persist_ignores_non_alta_only_period(tmp_path: Path)
         assert CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T")) is None
 
 
+def test_iva_history_strict_persist_refuses_non_303_before_writing(tmp_path: Path) -> None:
+    non_303 = _prior_303_observation(pending_compensation=Decimal("900.00")).model_copy(
+        update={"modelo": "130"},
+    )
+
+    with _secure_backend(tmp_path):
+        with pytest.raises(LiveApplicationInputError) as error:
+            persist_iva_compensation_history_observations_strict((non_303,))
+
+        assert error.value.translated_message == "live.errors.iva_history_modelo_303_only"
+        assert error.value.context == {"modelo": "130"}
+        assert IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T")) is None
+
+
 def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()

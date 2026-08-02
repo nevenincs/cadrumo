@@ -52,7 +52,7 @@ def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
 ) -> None:
     repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = Borrador100Snapshot(
-        snapshot_id="borrador-100-2025-active",
+        snapshot_id="a" * 64,
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
@@ -68,12 +68,28 @@ def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
     assert repository.load(snapshot.snapshot_id) == snapshot
 
 
+@pytest.mark.parametrize("snapshot_id", ("bad-id", "A" * 64, "a" * 63))
+def test_borrador_snapshot_refuses_noncanonical_snapshot_identity(snapshot_id: str) -> None:
+    with pytest.raises(ValidationError):
+        Borrador100Snapshot(
+            snapshot_id=snapshot_id,
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=_PERIOD,
+            captured_at=_CAPTURED_AT,
+            source_url=_SOURCE,
+            state=SnapshotLifecycleState.ACTIVE,
+            binding_values={},
+        )
+
+
 def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
     secure_objects: SecureObjectRepository,
 ) -> None:
     repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     payload = Borrador100Snapshot(
-        snapshot_id="payload-id",
+        snapshot_id="b" * 64,
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
@@ -107,7 +123,7 @@ def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
 ) -> None:
     first = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     first_snapshot = Borrador100Snapshot(
-        snapshot_id="first",
+        snapshot_id="c" * 64,
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,
@@ -127,7 +143,7 @@ def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
     # contract refuses it loudly (rather than silently filtering), and the
     # bucket-scoped facade inherits that guarantee.
     second = Borrador100SnapshotRepository(bucket_id="other-bucket", objects=secure_objects)
-    second_snapshot = first_snapshot.model_copy(update={"snapshot_id": "second", "bucket_id": "other-bucket"})
+    second_snapshot = first_snapshot.model_copy(update={"snapshot_id": "d" * 64, "bucket_id": "other-bucket"})
     second.save(second_snapshot)
     with pytest.raises(LiveApplicationInputError, match="does not match repository bucket"):
         first.list_snapshots()
@@ -138,7 +154,7 @@ def test_borrador_100_snapshot_repository_resolves_unambiguous_prefix(
 ) -> None:
     repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = Borrador100Snapshot(
-        snapshot_id="abcdef123456",
+        snapshot_id="abcdef" + "1" * 58,
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=2025,

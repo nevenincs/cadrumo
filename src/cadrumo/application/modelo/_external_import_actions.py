@@ -426,9 +426,9 @@ def _justificante_matches_import_target(
     expected_tax_id: str,
 ) -> bool:
     """Return whether ``justificante`` matches the external-import target axis."""
-    return (
-        justificante.modelo.strip() == modelo
-        and str(justificante.ejercicio or "").strip() == str(filing_year)
-        and justificante.period == period
-        and justificante.tax_id.strip().upper() == expected_tax_id.strip().upper()
+    return justificante.matches_filing_target(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        tax_id=expected_tax_id,
     )

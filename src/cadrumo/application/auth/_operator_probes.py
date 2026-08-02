@@ -7,7 +7,6 @@ The local probe path classifies :class:`AuthProviderKind` configuration with
 
 from __future__ import annotations
 
-from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -26,6 +25,7 @@ from ..auth_credentials import (
     unnamed_certificate_credentials,
 )
 from ._operator_scope import active_profile_storage_span
+from ._probe_result import ProviderProbeResult
 from ._sessions import (
     ClaveCredentials,
     clave_auth_facts_from_profile_values,
@@ -212,27 +212,12 @@ def _probe_local_session(provider: str, *, settings: Settings | None = None) -> 
     )
 
 
-class ProviderProbeResult(StrEnum):
-    """Canonical result codes returned by the per-provider local probe."""
-
-    NO_PROVIDER = "no_provider"
-    NO_PATH_SET = "no_path_set"
-    FILE_MISSING = "file_missing"
-    UNREADABLE = "unreadable"
-    CORRUPT = "corrupt"
-    EXPIRED = "expired"
-    EXPIRING = "expiring"
-    OK = "ok"
-    IDENTITY_UNSET = "identity_unset"
-    INVALID_IDENTITY = "invalid_identity"
-
-
 class _ProviderProbeOutcome(BaseModel):
     """Verdict of the per-provider local probe run by ``auth test``."""
 
     model_config = _STRICT_FROZEN
 
-    result: ProviderProbeResult | str = ""
+    result: ProviderProbeResult
     summary: str = ""
     days_until_expiry: int | None = None
 
@@ -252,7 +237,7 @@ class ProviderConfigurationProbe(BaseModel):
     model_config = _STRICT_FROZEN
 
     provider: str
-    result: ProviderProbeResult | str = ""
+    result: ProviderProbeResult
     summary: str = ""
 
 
@@ -341,7 +326,10 @@ def _probe_configured_provider(
         )
     if kind is AuthProviderKind.CLAVE_MOVIL:
         return _probe_clave_movil_identity(settings=settings)
-    return _ProviderProbeOutcome()
+    return _ProviderProbeOutcome(
+        result=ProviderProbeResult.NO_PROVIDER,
+        summary=tr("application.auth.operator.probe.no_provider"),
+    )
 
 
 def _resolved_probe_certificate_path(

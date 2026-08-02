@@ -42,6 +42,7 @@ from .. import (
     create_work_unit,
     resolve_modelo_100_borrador_bindings,
 )
+from .._borrador_binding import _decimal_value
 from .._registry_helpers import validate_casilla_input_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -641,6 +642,41 @@ def test_borrador_resolution_rejects_non_decimal_value_for_numeric_binding(
             registry_snapshot=_modelo_100_registry_snapshot(),
             snapshot_repository=snapshot_repository,
         )
+
+    assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
+    assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected"),
+    [
+        ("125.50", Decimal("125.50")),
+        (Decimal("125.50"), Decimal("125.50")),
+    ],
+)
+def test_borrador_resolution_accepts_finite_string_and_decimal_values(
+    raw_value: Decimal | str,
+    expected: Decimal,
+) -> None:
+    assert _decimal_value(_DECIMAL_BINDING, raw_value) == expected
+
+
+@pytest.mark.parametrize(
+    "raw_value",
+    [
+        "NaN",
+        "Infinity",
+        "-Infinity",
+        Decimal("NaN"),
+        Decimal("Infinity"),
+        Decimal("-Infinity"),
+    ],
+)
+def test_borrador_resolution_rejects_non_finite_string_and_decimal_values(
+    raw_value: Decimal | str,
+) -> None:
+    with pytest.raises(Modelo100BorradorBindingError) as exc_info:
+        _decimal_value(_DECIMAL_BINDING, raw_value)
 
     assert exc_info.value.translated_message == "application.modelo.borrador_binding.errors.decimal_value_invalid"
     assert exc_info.value.context == {"binding_id": _DECIMAL_BINDING}

@@ -22,6 +22,7 @@ from .auth import (
     project_active_certificate_credentials,
     select_provider,
 )
+from .auth._probe_result import ProviderProbeResult
 from .auth_credentials import ActiveCertificateCredentials
 from .workflow import WorkflowState
 
@@ -47,7 +48,7 @@ class ProjectionAuthReadiness(BaseModel):
     health_summary: str = ""
     health_severity: str = ""
     certificate_path: str = ""
-    probe_result: str = ""
+    probe_result: ProviderProbeResult | None = None
     probe_summary: str = ""
 
 
@@ -226,7 +227,7 @@ def _probe_credentials(
     effective_certificate_path: str,
     backend_settings: Settings | None,
     certificate_credentials: ActiveCertificateCredentials | None,
-) -> tuple[str, str]:
+) -> tuple[ProviderProbeResult, str]:
     """Probe provider credentials, returning ``(probe_result, probe_summary)``."""
     provider_probe = probe_provider_credentials(
         provider,
@@ -234,7 +235,7 @@ def _probe_credentials(
         settings=backend_settings,
         certificate_credentials=certificate_credentials,
     )
-    return str(provider_probe.result), provider_probe.summary
+    return provider_probe.result, provider_probe.summary
 
 
 def build_auth_readiness(
@@ -280,7 +281,7 @@ def build_auth_readiness(
     available = configured and bool(auth.authenticated_at)
     health_summary = ""
     health_severity = ""
-    probe_result = ""
+    probe_result: ProviderProbeResult | None = None
     probe_summary = ""
     if probe_live_backend:
         probe = _probe_backend_readiness(

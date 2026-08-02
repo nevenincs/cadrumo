@@ -46,6 +46,7 @@ from pydantic import BaseModel, Field, field_validator
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core.identity import BucketId
 from ..core.time import now as utc_now
+from ..core.time import validate_utc_aware
 from ..domain.contribuyente import normalise_key
 
 
@@ -66,6 +67,16 @@ class WorkflowEvent(BaseModel):
     bucket_id: BucketId | None = None
     object_id: str | None = None
     at: datetime = Field(default_factory=utc_now)
+
+    @field_validator("at")
+    @classmethod
+    def _instant_is_utc(cls, value: datetime) -> datetime:
+        """Reject an event instant that is naive or not UTC.
+
+        These records serialise as JSON, which preserves the offset, so the
+        canonical contract is enforceable at the model boundary.
+        """
+        return validate_utc_aware(value)
 
     @field_validator("action", "reason")
     @classmethod
@@ -96,6 +107,16 @@ class LedgerReviewRecord(BaseModel):
     history: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
 
+    @field_validator("updated_at")
+    @classmethod
+    def _instant_is_utc(cls, value: datetime) -> datetime:
+        """Reject a review-update instant that is naive or not UTC.
+
+        These records serialise as JSON, which preserves the offset, so the
+        canonical contract is enforceable at the model boundary.
+        """
+        return validate_utc_aware(value)
+
 
 class InvoiceReviewRecord(BaseModel):
     """Workflow annotations for one persisted invoice."""
@@ -106,6 +127,16 @@ class InvoiceReviewRecord(BaseModel):
     fields: dict[str, str] = Field(default_factory=dict)
     history: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
+
+    @field_validator("updated_at")
+    @classmethod
+    def _instant_is_utc(cls, value: datetime) -> datetime:
+        """Reject a review-update instant that is naive or not UTC.
+
+        These records serialise as JSON, which preserves the offset, so the
+        canonical contract is enforceable at the model boundary.
+        """
+        return validate_utc_aware(value)
 
     @field_validator("fields")
     @classmethod

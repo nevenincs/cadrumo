@@ -26,6 +26,7 @@ from ...core import STRICT_FROZEN_CONFIG
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import DEFER_TOKEN, FlowWidgetKind
 from ...core.parsing import parse_date
+from ...core.redaction import redact_validation_context
 from ._definition import FlowPage
 from ._errors import FlowValidatorRegistryError
 
@@ -110,20 +111,8 @@ def _resolve[ValidatorT](registry: Mapping[str, ValidatorT], validator_id: str) 
 
 
 def redact_answer_context(context: dict[str, object]) -> dict[str, object]:
-    """Strip raw operator answers from diagnostic context.
-
-    Mirrors the wizard's redaction discipline: a ``raw`` value is
-    replaced by its length, a ``detail`` value by a presence marker.
-    """
-    redacted = dict(context)
-    raw = redacted.pop("raw", None)
-    if raw is not None:
-        redacted["raw_redacted"] = True
-        redacted["raw_length"] = len(str(raw))
-    detail = redacted.pop("detail", None)
-    if detail is not None:
-        redacted["detail_redacted"] = True
-    return redacted
+    """Strip raw operator answers through the canonical diagnostic policy."""
+    return redact_validation_context(context)
 
 
 def validate_widget_shape(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]:

@@ -25,6 +25,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal
 
 from ...core import Period
@@ -33,6 +34,7 @@ from ...domain.calculations.registry import (
     InputKind,
     ModeloRevision,
     RegistrySnapshot,
+    RegistrySnapshotError,
     RegistryValidationError,
     VerificationPredicateDefinition,
     casilla_noncanonical_reference_targets,
@@ -59,6 +61,52 @@ from ._registry_resources import (
 )
 
 _NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
+
+
+@dataclass(frozen=True)
+class _ResolvedRegistryCasillaInputs:
+    """One snapshot-backed normalisation result for a caller's casilla map."""
+
+    snapshot: RegistrySnapshot
+    canonical_values: dict[CasillaId, Decimal]
+    malformed: tuple[str, ...]
+    unknown: tuple[CasillaId, ...]
+    noncanonical: dict[CasillaId, tuple[CasillaId, ...]]
+    unknown_only: tuple[CasillaId, ...]
+
+
+def _resolve_registry_snapshot(*, modelo: str, filing_year: int, period: Period) -> RegistrySnapshot:
+    """Resolve the law-selected registry snapshot for one filing target."""
+    return authority_via_resources().snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+
+
+def _normalise_registry_casilla_inputs[CasillaKey](
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    casilla_values: Mapping[CasillaKey, Decimal],
+    surface: str,
+) -> _ResolvedRegistryCasillaInputs:
+    """Resolve a snapshot and classify a casilla map against its declared ids."""
+    snapshot = _resolve_registry_snapshot(modelo=modelo, filing_year=filing_year, period=period)
+    malformed: list[str] = []
+    canonical_values: dict[CasillaId, Decimal] = {}
+    for casilla_id, value in casilla_values.items():
+        try:
+            canonical_values[validated_casilla_id(casilla_id, surface=surface)] = value
+        except ValueError:
+            malformed.append(repr(casilla_id))
+    unknown = undeclared_casilla_ids(snapshot.revision, canonical_values)
+    noncanonical, unknown_only = _noncanonical_casilla_reference_details(snapshot.revision, unknown)
+    return _ResolvedRegistryCasillaInputs(
+        snapshot=snapshot,
+        canonical_values=canonical_values,
+        malformed=tuple(sorted(malformed)),
+        unknown=unknown,
+        noncanonical=noncanonical,
+        unknown_only=unknown_only,
+    )
 
 
 def reject_incomplete_amendment_casillas(
@@ -213,48 +261,40 @@ def reject_unknown_override_casillas[CasillaKey](
     if not overrides:
         return {}
 
-    from ...domain.calculations.registry import RegistrySnapshotError
-
     try:
-        authority = authority_via_resources()
+        resolved = _normalise_registry_casilla_inputs(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            casilla_values=overrides,
+            surface="amendment override casilla",
+        )
     except FileNotFoundError as exc:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_registry_root_missing",
             context={"registry_root": registry_root()},
         ) from exc
-
-    try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError as exc:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_registry_snapshot_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         ) from exc
 
-    malformed: list[str] = []
-    canonical_overrides: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in overrides.items():
-        try:
-            canonical_overrides[validated_casilla_id(casilla_id, surface="amendment override casilla")] = value
-        except ValueError:
-            malformed.append(repr(casilla_id))
-    if malformed:
+    if resolved.malformed:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_unknown_casillas",
             context={
                 "modelo": modelo,
                 "filing_year": filing_year,
                 "period": period.registry_token,
-                "casillas": sorted(malformed),
+                "casillas": list(resolved.malformed),
             },
         )
-    unknown = undeclared_casilla_ids(snapshot.revision, canonical_overrides)
-    if unknown:
-        noncanonical, unknown_only = _noncanonical_casilla_reference_details(snapshot.revision, unknown)
-        if noncanonical:
+    if resolved.unknown:
+        if resolved.noncanonical:
             details = "; ".join(
                 format_noncanonical_casilla_reference(casilla_id, targets)
-                for casilla_id, targets in sorted(noncanonical.items())
+                for casilla_id, targets in sorted(resolved.noncanonical.items())
             )
             raise AmendmentOverrideCasillaError(
                 f"amendment override casillas must use canonical casilla.id values; "
@@ -264,7 +304,7 @@ def reject_unknown_override_casillas[CasillaKey](
                     "modelo": modelo,
                     "filing_year": filing_year,
                     "period": period.registry_token,
-                    "casillas": sorted(noncanonical),
+                    "casillas": sorted(resolved.noncanonical),
                 },
             )
         raise AmendmentOverrideCasillaError(
@@ -273,10 +313,10 @@ def reject_unknown_override_casillas[CasillaKey](
                 "modelo": modelo,
                 "filing_year": filing_year,
                 "period": period.registry_token,
-                "casillas": unknown_only,
+                "casillas": resolved.unknown_only,
             },
         )
-    return canonical_overrides
+    return resolved.canonical_values
 
 
 def reject_unknown_import_casillas[CasillaKey](
@@ -297,48 +337,40 @@ def reject_unknown_import_casillas[CasillaKey](
     :class:`~cadrumo.application.modelo.ExternalModeloImportError` so imported AEAT
     values enter observation projection only under registry ids.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError
-
     try:
-        authority = authority_via_resources()
+        resolved = _normalise_registry_casilla_inputs(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            casilla_values=casilla_values,
+            surface="external import casilla",
+        )
     except FileNotFoundError as exc:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_root_missing",
             context={"registry_root": registry_root()},
         ) from exc
-
-    try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_snapshot_unresolved",
             context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
         ) from exc
 
-    malformed: list[str] = []
-    canonical_values: dict[CasillaId, Decimal] = {}
-    for casilla_id, value in casilla_values.items():
-        try:
-            canonical_values[validated_casilla_id(casilla_id, surface="external import casilla")] = value
-        except ValueError:
-            malformed.append(repr(casilla_id))
-    if malformed:
+    if resolved.malformed:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_unknown_casillas",
             context={
                 "modelo": modelo,
                 "filing_year": filing_year,
                 "period": period.registry_token,
-                "casillas": sorted(malformed),
+                "casillas": list(resolved.malformed),
             },
         )
-    unknown = undeclared_casilla_ids(snapshot.revision, canonical_values)
-    if unknown:
-        noncanonical, unknown_only = _noncanonical_casilla_reference_details(snapshot.revision, unknown)
-        if noncanonical:
+    if resolved.unknown:
+        if resolved.noncanonical:
             details = "; ".join(
                 format_noncanonical_casilla_reference(casilla_id, targets)
-                for casilla_id, targets in sorted(noncanonical.items())
+                for casilla_id, targets in sorted(resolved.noncanonical.items())
             )
             raise ExternalModeloImportError(
                 f"external import casillas must use canonical casilla.id values; "
@@ -348,7 +380,7 @@ def reject_unknown_import_casillas[CasillaKey](
                     "modelo": modelo,
                     "filing_year": filing_year,
                     "period": period.registry_token,
-                    "casillas": sorted(noncanonical),
+                    "casillas": sorted(resolved.noncanonical),
                 },
             )
         raise ExternalModeloImportError(
@@ -357,10 +389,10 @@ def reject_unknown_import_casillas[CasillaKey](
                 "modelo": modelo,
                 "filing_year": filing_year,
                 "period": period.registry_token,
-                "casillas": unknown_only,
+                "casillas": resolved.unknown_only,
             },
         )
-    return snapshot, canonical_values
+    return resolved.snapshot, resolved.canonical_values
 
 
 def required_input_casilla_ids_for_revision(
@@ -379,16 +411,9 @@ def required_input_casilla_ids_for_revision(
     :class:`~cadrumo.domain.calculations.registry.CasillaId` values that
     amendment/import paths may need to carry through replay.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError
-
     try:
-        authority = authority_via_resources()
-    except FileNotFoundError:
-        return None
-
-    try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
-    except RegistrySnapshotError:
+        snapshot = _resolve_registry_snapshot(modelo=modelo, filing_year=filing_year, period=period)
+    except (FileNotFoundError, RegistrySnapshotError):
         return None
 
     required: list[CasillaId] = []
@@ -417,16 +442,9 @@ def verification_predicates_for_revision(
     produce an empty tuple so callers can degrade to their existing verification
     paths.
     """
-    from ...domain.calculations.registry import RegistrySnapshotError
-
     try:
-        authority = authority_via_resources()
-    except FileNotFoundError:
-        return ()
-
-    try:
-        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
-    except RegistrySnapshotError:
+        snapshot = _resolve_registry_snapshot(modelo=modelo, filing_year=filing_year, period=period)
+    except (FileNotFoundError, RegistrySnapshotError):
         return ()
 
     return snapshot.revision.verification_predicates

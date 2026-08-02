@@ -76,6 +76,33 @@ class ModeloWorkDeadlinePosture:
     days_overdue: int | None = None
     conditional_recargo_preview: ModeloWorkConditionalRecargoPreview | None = None
 
+    def __post_init__(self) -> None:
+        """Reject a deadline summary that cannot describe one calendar posture."""
+        validate_modelo_work_deadline_posture(
+            closes_on=self.closes_on,
+            days_remaining=self.days_remaining,
+            days_overdue=self.days_overdue,
+        )
+
+
+def validate_modelo_work_deadline_posture(
+    *,
+    closes_on: date,
+    days_remaining: int | None,
+    days_overdue: int | None,
+) -> None:
+    """Enforce the canonical one-sided voluntary-deadline state contract."""
+    if type(closes_on) is not date:
+        raise ValueError("closes_on must be a date")
+
+    day_counts = (days_remaining, days_overdue)
+    if sum(value is not None for value in day_counts) != 1:
+        raise ValueError("exactly one of days_remaining or days_overdue must be populated")
+
+    for field_name, value in zip(("days_remaining", "days_overdue"), day_counts, strict=True):
+        if value is not None and (type(value) is not int or value < 0):
+            raise ValueError(f"{field_name} must be a non-negative integer when populated")
+
 
 def modelo_work_deadline_posture(
     work_unit: WorkUnit,
@@ -137,9 +164,6 @@ def modelo_work_deadline_posture(
         )
 
     days_overdue = (resolved_reference_on - closes_on).days
-    if days_overdue < 1:
-        return ModeloWorkDeadlinePosture(closes_on=closes_on)
-
     try:
         recovery = build_recovery_for_overdue(
             closes_on=closes_on,
@@ -177,4 +201,5 @@ __all__ = [
     "ModeloWorkConditionalRecargoPreview",
     "ModeloWorkDeadlinePosture",
     "modelo_work_deadline_posture",
+    "validate_modelo_work_deadline_posture",
 ]

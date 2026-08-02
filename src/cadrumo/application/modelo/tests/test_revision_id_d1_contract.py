@@ -304,12 +304,12 @@ class TestS02CalcTimeAssertion:
 
 
 class TestS02RevisionForWorkUnitAssertion:
-    """``_calculate_input._revision_for_work_unit`` must also assert revision identity.
+    """``_calculate_input._revision_for_work_unit`` projects the shared assertion.
 
     ``_revision_for_work_unit`` is the operator-input-normalisation calc entry
-    named alongside ``calculate_modelo_revision`` (D1 ruling 2).  It loads a
-    WorkUnit and resolves a snapshot from its year + period, so it must carry the
-    same equality assertion (closing ruling 2 "both ends").
+    named alongside ``calculate_modelo_revision`` (D1 ruling 2). It loads a
+    work unit, then projects the revision from the canonical snapshot resolver,
+    so both calculate paths enforce one equality assertion.
 
     This path uses the default ``get_work_unit`` repository, so the stale unit is
     seeded through the default ``WorkUnitCatalogueRepository`` (which resolves to
