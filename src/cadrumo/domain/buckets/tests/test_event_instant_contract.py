@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _BUCKET = "operator-a"
 _OBJECT_ID = "b" * 64
 _UTC_INSTANT = datetime(2026, 4, 1, 10, 0, 0, tzinfo=UTC)
-_NAIVE_INSTANT = datetime(2026, 4, 1, 10, 0, 0)  # noqa: DTZ001 - the refused shape under test
+_NAIVE_INSTANT = datetime(2026, 4, 1, 10, 0, 0)  # the refused shape under test
 _OFFSET_INSTANT = datetime(2026, 4, 1, 11, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 
 _REFUSED_INSTANTS = (_NAIVE_INSTANT, _OFFSET_INSTANT)
