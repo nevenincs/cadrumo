@@ -27,6 +27,20 @@ hooks = [
   { id = "check-added-large-files", args = ["--maxkb=500"] },
   { id = "check-merge-conflict" },
   { id = "detect-private-key" },
+  # --fix=no is REQUIRED, not decorative: this hook's default is "auto", which
+  # rewrites files in place and would violate the verify-only policy above.
+  # Measured behaviour at v5.0.0 with --fix=no: a file carrying BOTH terminators
+  # is flagged; pure-LF, pure-CRLF and pure-CR files all pass, and no file is
+  # mutated. That is why this is safe here -- the repo's large pure-CRLF
+  # working-tree population is untouched and only genuinely mixed files red.
+  #
+  # The exclude mirrors .gitattributes. `_data/corpus/aeat_official/**` is
+  # declared `-text` because it is byte-exact official AEAT evidence whose
+  # stored digests are computed over the exact bytes; 27 of those captures
+  # legitimately carry mixed terminators and must never be "fixed". PDFs are
+  # binary too, but this hook's text heuristic misclassifies six of them.
+  # Without this exclude the hook reds permanently on committed evidence.
+  { id = "mixed-line-ending", args = ["--fix=no"], exclude = '^src/cadrumo/_data/corpus/aeat_official/|\.pdf$' },
 ]
 # NOTE: trailing-whitespace and end-of-file-fixer are autofixers and are
 # excluded from this config. Run `ruff format` manually if whitespace
