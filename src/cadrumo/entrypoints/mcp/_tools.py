@@ -21,6 +21,7 @@ from ...application.operator_surface import (
     OperatorMutability,
     build_operator_surface_manifest,
 )
+from ...core.errors import ErrorEnvelope
 from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY
 from ._annotations import McpAnnotations, annotations_for_command
 from ._dispatch import is_exposable_command, tool_name_for_command
@@ -144,56 +145,64 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     # identical while preserving the CLI's command/status/notices contract.
     result_schema = thin_output_schema(command_key, schema.model_json_schema())
     definitions = result_schema.pop("$defs", {})
-    return {
-        "$defs": definitions,
-        "type": "object",
-        "properties": {
-            "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
-            "command": {"const": command_key, "type": "string"},
-            "active_profile": {
-                "anyOf": [{"type": "string"}, {"type": "null"}],
-            },
-            "status": {
-                "enum": ["success", "warning"],
-                "type": "string",
-            },
-            "result": result_schema,
-            "notices": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "severity": {
-                            "enum": ["info", "warning"],
-                            "type": "string",
+    error_schema = ErrorEnvelope.model_json_schema()
+    error_definitions = error_schema.pop("$defs", {})
+    notices_schema = {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "severity": {
+                    "enum": ["info", "warning"],
+                    "type": "string",
+                },
+                "code": {"minLength": 1, "type": "string"},
+                "message": {"minLength": 1, "type": "string"},
+                "suggestion": {
+                    "anyOf": [{"type": "string"}, {"type": "null"}],
+                },
+                "context": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "additionalProperties": {"type": "string"},
                         },
-                        "code": {"minLength": 1, "type": "string"},
-                        "message": {"minLength": 1, "type": "string"},
-                        "suggestion": {
-                            "anyOf": [{"type": "string"}, {"type": "null"}],
-                        },
-                        "context": {
-                            "anyOf": [
-                                {
-                                    "type": "object",
-                                    "additionalProperties": {"type": "string"},
-                                },
-                                {"type": "null"},
-                            ],
-                        },
-                    },
-                    "required": ["severity", "code", "message", "suggestion", "context"],
-                    "additionalProperties": False,
+                        {"type": "null"},
+                    ],
                 },
             },
+            "required": ["severity", "code", "message", "suggestion", "context"],
+            "additionalProperties": False,
         },
-        "required": [
-            "schema_version",
-            "command",
-            "active_profile",
-            "status",
-            "result",
-            "notices",
+    }
+    return {
+        "$defs": {**definitions, **error_definitions},
+        "oneOf": [
+            {
+                "type": "object",
+                "properties": {
+                    "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
+                    "command": {"const": command_key, "type": "string"},
+                    "active_profile": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                    "status": {"enum": ["success", "warning"], "type": "string"},
+                    "result": result_schema,
+                    "notices": notices_schema,
+                },
+                "required": ["schema_version", "command", "active_profile", "status", "result", "notices"],
+                "additionalProperties": False,
+            },
+            {
+                "type": "object",
+                "properties": {
+                    "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
+                    "command": {"anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}]},
+                    "active_profile": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+                    "status": {"const": "error", "type": "string"},
+                    "error": error_schema,
+                    "notices": notices_schema,
+                },
+                "required": ["schema_version", "command", "active_profile", "status", "error", "notices"],
+                "additionalProperties": False,
+            },
         ],
-        "additionalProperties": False,
     }

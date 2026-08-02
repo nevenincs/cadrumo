@@ -210,11 +210,12 @@ def thin_envelope(
 def thin_output_schema(command_key: str, schema: dict[str, object]) -> dict[str, object]:
     """Thin a command's declared output schema in lock-step with :func:`thin_envelope`.
 
-    The output schema is the command's result-model JSON Schema; for a thinned
-    verb the bulk-array property is removed and the two summary markers
-    (``<key>_resource`` string, ``<key>_count`` integer) are declared instead, so
-    the thinned ``structuredContent`` still validates against the advertised schema
-    and the static size-budget gate measures the thinned shape.
+    The output schema is the command's result-model JSON Schema. A thinned verb
+    advertises two disjoint shapes: a zero-row result keeps its bulk array inline
+    as ``[]``; a non-empty result removes the array and requires the two summary
+    markers (``<key>_resource`` string, ``<key>_count`` positive integer). The
+    empty branch deliberately drops the array's item schema because no item can
+    occur there, retaining the static size-budget benefit of thinning.
 
     Returns:
         A thinned copy of the schema, or the input unchanged for a non-thinned verb.
@@ -225,24 +226,39 @@ def thin_output_schema(command_key: str, schema: dict[str, object]) -> dict[str,
     properties = schema.get("properties")
     if not isinstance(properties, Mapping):
         return schema
-    new_properties = dict(properties)
+    inline_properties = dict(properties)
+    linked_properties = dict(properties)
     thinned_keys = {spec.result_key for spec in specs}
     for spec in specs:
-        new_properties.pop(spec.result_key, None)
-        new_properties[spec.ref_key] = {
+        if spec.result_key in inline_properties:
+            inline_properties[spec.result_key] = {"type": "array", "maxItems": 0}
+        linked_properties.pop(spec.result_key, None)
+        linked_properties[spec.ref_key] = {
             "type": "string",
+            "minLength": 1,
             "description": f"Resource URI resolving the full {spec.result_key} rows (result thinning).",
         }
-        new_properties[spec.count_key] = {
+        linked_properties[spec.count_key] = {
             "type": "integer",
+            "minimum": 1,
             "description": f"Number of {spec.result_key} rows available at the resource URI.",
         }
-    new_schema = dict(schema)
-    new_schema["properties"] = new_properties
+    inline_schema = dict(schema)
+    inline_schema["properties"] = inline_properties
+    linked_schema = dict(schema)
+    linked_schema["properties"] = linked_properties
     required = schema.get("required")
-    if isinstance(required, list):
-        new_schema["required"] = [name for name in required if name not in thinned_keys]
-    return _prune_orphan_defs(new_schema)
+    linked_required = [name for name in required if name not in thinned_keys] if isinstance(required, list) else []
+    for spec in specs:
+        linked_required.extend((spec.ref_key, spec.count_key))
+    linked_schema["required"] = linked_required
+    definitions = schema.get("$defs")
+    inline_schema.pop("$defs", None)
+    linked_schema.pop("$defs", None)
+    union_schema: dict[str, object] = {"oneOf": [inline_schema, linked_schema]}
+    if isinstance(definitions, Mapping):
+        union_schema["$defs"] = dict(definitions)
+    return _prune_orphan_defs(union_schema)
 
 
 def _prune_orphan_defs(schema: dict[str, object]) -> dict[str, object]:

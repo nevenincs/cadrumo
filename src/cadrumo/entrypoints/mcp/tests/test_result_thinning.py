@@ -8,10 +8,10 @@ rather than silently shipping a link that resolves nothing.
 
 from __future__ import annotations
 
-import json
 from typing import cast
 
 import pytest
+from jsonschema import Draft202012Validator
 
 from ....core.json_contract import SCHEMA_REGISTRY
 from .._resources import BUCKET_SCOPED_RESOURCE_KINDS, parse_resource_uri
@@ -104,25 +104,76 @@ def test_thin_envelope_ignores_an_error_envelope_without_a_result_mapping() -> N
     assert thinned == env
 
 
-def test_thin_output_schema_drops_the_property_and_declares_summary_markers() -> None:
-    schema = SCHEMA_REGISTRY["modelo.work.calculate"].model_json_schema()
+def test_thin_output_schema_models_inline_and_linked_result_branches() -> None:
+    schema = {
+        "type": "object",
+        "properties": {
+            "observations": {"type": "array"},
+            "calculation_revision_id": {"type": "string"},
+        },
+        "required": ["observations", "calculation_revision_id"],
+        "additionalProperties": False,
+    }
     thinned = thin_output_schema("modelo.work.calculate", schema)
-    props = _object_mapping(thinned["properties"])
+    branches = thinned["oneOf"]
+    assert isinstance(branches, list) and len(branches) == 2
+    inline_branch, linked_branch = branches
+    assert isinstance(inline_branch, dict)
+    assert isinstance(linked_branch, dict)
+    props = _object_mapping(linked_branch["properties"])
     assert "observations" not in props
     assert _object_mapping(props["observations_resource"])["type"] == "string"
     assert _object_mapping(props["observations_count"])["type"] == "integer"
+    validator = Draft202012Validator(thinned)
+    empty_runtime, empty_links = thin_envelope(
+        "modelo.work.calculate",
+        {"result": {"observations": [], "calculation_revision_id": "rev-abc123"}},
+    )
+    assert empty_links == ()
+    assert list(validator.iter_errors(_object_mapping(empty_runtime["result"]))) == []
+    assert list(
+        validator.iter_errors(
+            {
+                "observations": [{"casilla": "0001"}],
+                "calculation_revision_id": "rev-abc123",
+            },
+        ),
+    ), "nonempty bulk arrays must be represented by resource markers"
+    linked_runtime, linked_refs = thin_envelope(
+        "modelo.work.calculate",
+        {
+            "result": {
+                "observations": [{"casilla": "0001"}, {"casilla": "0002"}],
+                "calculation_revision_id": "rev-abc123",
+            },
+        },
+    )
+    assert len(linked_refs) == 1
+    assert list(validator.iter_errors(_object_mapping(linked_runtime["result"]))) == []
+    assert list(
+        validator.iter_errors(
+            {
+                "observations_resource": "cadrumo://observations/rev-abc123",
+                "calculation_revision_id": "rev-abc123",
+            },
+        ),
+    ), "a linked result must declare its positive row count"
 
 
-def test_thin_output_schema_strictly_shrinks_the_schema() -> None:
-    # Anti-tautology: thinning must REDUCE the schema (orphaned $defs pruned),
-    # else the size-budget gate would be measuring an unthinned shape.
+def test_thin_output_schema_retains_only_the_empty_inline_array_shape() -> None:
     for command_key in THINNED_VERBS:
         base = SCHEMA_REGISTRY[command_key].model_json_schema()
         thinned = thin_output_schema(command_key, base)
-        assert len(json.dumps(thinned)) < len(json.dumps(base)), command_key
+        branches = thinned["oneOf"]
+        assert isinstance(branches, list) and len(branches) == 2
+        inline_branch = branches[0]
+        assert isinstance(inline_branch, dict)
+        inline_properties = _object_mapping(inline_branch["properties"])
+        for spec in THINNED_VERBS[command_key]:
+            assert inline_properties[spec.result_key] == {"type": "array", "maxItems": 0}, command_key
 
 
-def test_thin_output_schema_prunes_the_orphaned_observation_def() -> None:
+def test_thin_output_schema_prunes_defs_not_needed_by_the_empty_inline_branch() -> None:
     schema = SCHEMA_REGISTRY["modelo.work.observations"].model_json_schema()
     thinned = thin_output_schema("modelo.work.observations", schema)
     definitions = thinned.get("$defs", {})
@@ -137,7 +188,11 @@ def test_thin_output_schema_drops_the_property_from_required() -> None:
         "required": ["observations", "calculation_revision_id"],
     }
     thinned = thin_output_schema("modelo.work.calculate", unthinned_schema)
-    required = thinned["required"]
+    branches = thinned["oneOf"]
+    assert isinstance(branches, list)
+    linked_branch = branches[1]
+    assert isinstance(linked_branch, dict)
+    required = linked_branch["required"]
     assert isinstance(required, list)
     assert "observations" not in required
     assert "calculation_revision_id" in required
