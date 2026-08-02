@@ -17,6 +17,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.env_scope import scoped_env_var
+
 from .. import readiness, version_bump, version_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -454,3 +456,48 @@ def test_commit_tag_and_push_refuses_when_git_is_unresolvable(tmp_path: Path) ->
             git_executable=str(missing),
             skip_network=True,
         )
+
+
+def test_run_release_please_dry_run_refuses_instructively_when_node_is_absent(tmp_path: Path) -> None:
+    """OP-11: a real environment with no resolvable `node` refuses before touching npx.
+
+    Blanks `PATH` (mirroring `test_readiness.py`'s `gh`-unresolvable case) so
+    `shutil.which("node")` genuinely returns `None`, rather than mocking the
+    resolver -- the refusal must fire from a real absence, not a stand-in for
+    one.
+    """
+    empty_path = tmp_path / "empty-path"
+    empty_path.mkdir()
+    root = tmp_path / "repo"
+    root.mkdir()
+
+    with scoped_env_var("PATH", str(empty_path)), pytest.raises(version_bump.VersionBumpError) as excinfo:
+        version_bump.run_release_please_dry_run(root, token="x", repository="nevenincs/cadrumo")  # noqa: S106
+
+    message = str(excinfo.value)
+    assert "node is not on PATH" in message
+    # Names the provisioning action, not just the bare fact of absence.
+    assert "OP-11" in message
+    assert "provision" in message
+
+
+def test_parse_computed_version_extracts_a_json_version_field() -> None:
+    """A `"version": "X.Y.Z"` announcement in the debug log is extracted."""
+    log = 'some debug noise\n{\n  "version": "2.4.0",\n  "notes": "..."\n}\nmore noise'
+
+    assert version_bump.parse_computed_version(log) == "2.4.0"
+
+
+def test_parse_computed_version_extracts_a_conventional_release_commit_line() -> None:
+    """A `chore(main): release X.Y.Z` announcement in the debug log is extracted."""
+    log = "√ Building pull requests\nWould create: chore(main): release 3.1.0\n"
+
+    assert version_bump.parse_computed_version(log) == "3.1.0"
+
+
+def test_parse_computed_version_refuses_on_an_unrecognised_log_shape() -> None:
+    """A log carrying neither known announcement shape refuses rather than guessing."""
+    log = "this log carries no version announcement release-please pattern recognises"
+
+    with pytest.raises(version_bump.VersionBumpError, match="could not determine the computed version"):
+        version_bump.parse_computed_version(log)

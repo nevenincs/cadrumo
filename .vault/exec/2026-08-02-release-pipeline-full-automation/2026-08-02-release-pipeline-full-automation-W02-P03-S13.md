@@ -1,0 +1,108 @@
+---
+tags:
+  - '#exec'
+  - '#release-pipeline-full-automation'
+date: '2026-08-02'
+modified: '2026-08-02'
+body_schema: 'body-v1'
+body_hash: 'sha256:81d3999993bb6acdb089a3ff2b3651606ab3a8db351d2c0b033542ed9ba15739'
+step_id: 'S13'
+related:
+  - "[[2026-08-02-release-pipeline-full-automation-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace release-pipeline-full-automation with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S13 and 2026-08-02-release-pipeline-full-automation-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The Add the OP-11 toolchain precondition refusing the bump stage instructively when node is absent from the runner, because release-please shells out through npx and whether the self-hosted Linux fleet carries node is unverified and named by the ADR as a plan precondition, gate: uv run --no-sync pytest dev/release/tests/test_version_bump.py -q passes with a case asserting the refusal names the provisioning action when the probe reports node missing and ## Scope
+
+- `dev/release/version_bump.py`
+- `dev/release/tests/test_version_bump.py` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# Add the OP-11 toolchain precondition refusing the bump stage instructively when node is absent from the runner, because release-please shells out through npx and whether the self-hosted Linux fleet carries node is unverified and named by the ADR as a plan precondition, gate: uv run --no-sync pytest dev/release/tests/test_version_bump.py -q passes with a case asserting the refusal names the provisioning action when the probe reports node missing
+
+## Scope
+
+- `dev/release/version_bump.py`
+- `dev/release/tests/test_version_bump.py`
+
+## Description
+
+- Add `run_release_please_dry_run(repo_root, *, token, repository,
+  npx_executable=None, target_branch="main", config_file=None,
+  manifest_file=None, timeout=...)`, shelling out to the exact
+  `release-please@16 release-pr --dry-run --debug` invocation `just release`
+  already runs. Checks `shutil.which("node")` FIRST, before ever attempting
+  `npx`, and refuses naming OP-11 and the provisioning action when node is
+  absent -- release-please shells out through `npx`.
+- Add `parse_computed_version(log)`, a pure function trying a small,
+  deliberately conservative set of known release-please output shapes (a
+  `"version": "X.Y.Z"` JSON field, a `chore(main): release X.Y.Z` line) and
+  refusing outright when neither matches, so an unrecognised log shape fails
+  loudly rather than silently returning a wrong version.
+- This closes the `See Also` cross-references the S09 module docstring
+  already named but had not yet implemented.
+- Extend `dev/release/tests/test_version_bump.py`: a real environment with
+  `PATH` blanked (mirroring `test_readiness.py`'s `gh`-unresolvable pattern,
+  not a mocked resolver) proves the node refusal fires and names both OP-11
+  and "provision"; two `parse_computed_version` cases exercise each
+  recognised shape against a synthetic fixture log; one exercises the
+  refusal on an unrecognised shape.
+
+## Outcome
+
+Gate green: `uv run --no-sync pytest dev/release/tests/test_version_bump.py -q`
+passes 23/23 (19 from S09-S11 plus 4 new), including the node-absent case
+asserting the refusal names the provisioning action.
+
+## Notes
+
+**Honesty note, carried from S09's grounding and now load-bearing here:**
+`parse_computed_version`'s two recognised shapes are UNVERIFIED against a
+real successful release-please run. Grounding this Phase live-tested the
+real `npx release-please@16 release-pr --dry-run --debug` invocation three
+times (reported to the coordinator as a standalone finding before S09
+landed): this repository carries no `v*` git tag and no matching GitHub
+Release, so release-please cannot anchor its commit walk, falls back to
+walking the entire history commit-by-commit, and every live attempt either
+timed out or died on a genuine GitHub API 504/503 before reaching a success
+path. No real "computed version" log text was ever observed. The two
+patterns in `_VERSION_ANNOUNCEMENT_PATTERNS` are the best-grounded guess
+available (a JSON `version` field is how release-please's manifest-mode
+internals represent a `ReleasePullRequest`, and `chore(<component>): release
+X.Y.Z` is release-please's own well-documented commit-message convention,
+visible in this repository's own `.release-please-manifest.json`-adjacent
+history) but are NOT proven against this tool's actual dry-run debug output.
+The design is fail-closed specifically because of this: an unrecognised log
+shape refuses rather than silently returning a wrong version, so a wrong
+guess here cannot corrupt a release, only block one with a named refusal.
+This should be re-verified against a real successful dry-run once the
+missing release-anchor gap is resolved (a candidate operator item, not
+performed here -- creating a `v0.1.0` tag/release retroactively is a
+forge-mutating action outside this Step's authority).

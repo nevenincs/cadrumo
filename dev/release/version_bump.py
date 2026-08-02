@@ -293,6 +293,107 @@ _STAGED_RELATIVE_PATHS: Final[tuple[Path, ...]] = (
 )
 
 
+#: Known shapes a release-please `release-pr --dry-run --debug` log can
+#: announce its computed version in. Deliberately conservative: an
+#: unrecognised shape refuses (:func:`parse_computed_version`) rather than
+#: guessing.
+_VERSION_ANNOUNCEMENT_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(r'"version"\s*:\s*"(?P<version>[0-9][^"]*)"'),
+    re.compile(r"chore\(?[\w.-]*\)?!?:\s*release\s+(?P<version>[0-9][^\s\"]*)", re.IGNORECASE),
+)
+
+
+def run_release_please_dry_run(
+    repo_root: Path,
+    *,
+    token: str,
+    repository: str,
+    npx_executable: str | None = None,
+    target_branch: str = "main",
+    config_file: Path | None = None,
+    manifest_file: Path | None = None,
+    timeout: int = _SUBPROCESS_TIMEOUT_S,
+) -> str:
+    """Run release-please in dry-run/debug mode and return its raw output log.
+
+    Shells out to the same `release-please@16 release-pr --dry-run --debug`
+    invocation `just release` already runs.
+
+    **OP-11:** refuses instructively, before ever attempting `npx`, when
+    `node` is absent from the runner -- release-please shells out through
+    `npx`, and whether the self-hosted fleet carries a Node.js toolchain is
+    unverified (`2026-08-02-release-pipeline-full-automation-adr`).
+
+    Grounding note: this repository currently carries no `v*` git tag and no
+    matching GitHub Release, so a live invocation of this function against
+    it cannot complete today -- release-please falls back to walking the
+    entire commit history and the walk exceeds GitHub's API timeout before
+    finishing. That is a repository-state gap (a separate, named operator
+    precondition), not a defect in this shell: the function still runs and
+    refuses correctly on every locally observable failure (missing node,
+    missing npx, a non-zero exit, or a timeout), and :func:`parse_computed_version`
+    is written to fail closed rather than guess on an unrecognised log shape.
+    """
+    if shutil.which("node") is None:
+        raise VersionBumpError(
+            "node is not on PATH; release-please shells out through npx and needs a Node.js "
+            "runtime -- provision node on this runner (OP-11) before retrying",
+        )
+    npx = npx_executable or shutil.which("npx")
+    if npx is None:
+        raise VersionBumpError("npx is not on PATH; cannot invoke release-please")
+    config = config_file or (repo_root / "release-please-config.json")
+    manifest = manifest_file or (repo_root / MANIFEST_RELATIVE)
+    completed = _run(
+        [
+            npx,
+            "--yes",
+            "release-please@16",
+            "release-pr",
+            "--token",
+            token,
+            "--repo-url",
+            repository,
+            "--target-branch",
+            target_branch,
+            "--config-file",
+            str(config),
+            "--manifest-file",
+            str(manifest),
+            "--dry-run",
+            "--debug",
+        ],
+        cwd=repo_root,
+        timeout=timeout,
+    )
+    return f"{completed.stdout}\n{completed.stderr}"
+
+
+def parse_computed_version(log: str) -> str:
+    """Extract the version release-please decided on from its dry-run log.
+
+    UNVERIFIED against a real successful run: see
+    :func:`run_release_please_dry_run`'s grounding note -- every live
+    invocation made while building this function failed before reaching a
+    success path, so this parser could not be checked against real output.
+    It is deliberately conservative: it tries a small set of known
+    release-please output shapes and refuses outright rather than guessing
+    when none match, so a log shape this parser does not recognise fails
+    LOUDLY (a refusal) instead of silently returning a wrong version.
+
+    Raises:
+        VersionBumpError: If no recognised version announcement is found.
+    """
+    for pattern in _VERSION_ANNOUNCEMENT_PATTERNS:
+        match = pattern.search(log)
+        if match:
+            return match.group("version")
+    raise VersionBumpError(
+        "could not determine the computed version from the release-please dry-run output; "
+        "no recognised version announcement was found in the log",
+    )
+
+
 def _manifest_floor_at_head(repo_root: Path, *, git_executable: str) -> str:
     """Return the manifest floor as committed at HEAD, before this bump.
 
