@@ -43,6 +43,7 @@ from ....persistence.storage import (
     inner_envelope_version_is_current,
     secure_object_repository_for_active_bucket,
 )
+from ....persistence.storage.crypto import secure_object_key_digest
 from ._errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
@@ -125,6 +126,26 @@ class FiledDeclaracionObservationStore:
 
         The reference resolves into
         :data:`adapters.persistence.storage.AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE`.
+
+        The returned bytes are re-hashed and compared with the requested
+        digest. A content address is a claim ABOUT bytes, and a claim nothing
+        re-checks is only a lookup key: :meth:`persist_artefact` verifies the
+        digest on the way in, but the row could be overwritten afterwards
+        under the same key, and the read then returned content that did not
+        match the reference it was asked for. Decrypting proves custody of the
+        bucket key; it says nothing about whether these are the bytes the
+        reference names.
+
+        This is AEAT filing evidence, so a silent substitution is the failure
+        that matters: the artefact is what a taxpayer would produce to defend
+        a filed figure, and bytes that do not hash to their own reference
+        cannot do that whatever they contain.
+
+        Raises:
+            ExpedienteNotFoundError: When no artefact is stored under the
+                reference.
+            SedeValidationError: When the stored bytes do not hash to the
+                requested digest.
         """
         digest = _parse_storage_ref(storage_ref)
         with self._crypto_scope():
@@ -136,6 +157,12 @@ class FiledDeclaracionObservationStore:
             )
         if record is None:
             raise ExpedienteNotFoundError(f"filed-declaration artefact not found: {digest}")
+        actual = sha256_hex(record.payload)
+        if actual != digest:
+            raise SedeValidationError(
+                "filed-declaration artefact does not match its content address: "
+                f"requested {digest}, stored bytes hash to {actual}",
+            )
         return record.payload
 
     def persist_observation(self, observation: FiledDeclaracionObservation) -> Path:
@@ -195,6 +222,11 @@ class FiledDeclaracionObservationStore:
                 f"filed-declaration observation {object_key} is at version {envelope.schema_version}; "
                 f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
             )
+        _assert_payload_is_the_requested_row(
+            self._key_of_observation(envelope.payload),
+            object_key,
+            "filed-declaration observation",
+        )
         return envelope.payload
 
     def list_observations(self) -> tuple[FiledDeclaracionObservation, ...]:
@@ -222,6 +254,11 @@ class FiledDeclaracionObservationStore:
                     f"filed-declaration observation {record.object_key!r} is at version "
                     f"{envelope.schema_version}; consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
                 )
+            _assert_payload_is_its_own_row(
+                self._key_of_observation(envelope.payload),
+                record.object_key,
+                "filed-declaration observation",
+            )
             observations.append(envelope.payload)
         return tuple(
             sorted(
@@ -294,6 +331,11 @@ class FiledDeclaracionObservationStore:
                 f"IVA wallet observation {object_key} is at version {envelope.schema_version}; "
                 f"consumer supports up to {_IVA_WALLET_ENVELOPE_VERSION}",
             )
+        _assert_payload_is_the_requested_row(
+            self._key_of_iva_wallet_observation(envelope.payload),
+            object_key,
+            "IVA wallet observation",
+        )
         return envelope.payload
 
     def list_iva_wallet_observations(self) -> tuple[IvaCompensationWalletObservation, ...]:
@@ -323,6 +365,11 @@ class FiledDeclaracionObservationStore:
                     f"IVA wallet observation {record.object_key!r} is at version {envelope.schema_version}; "
                     f"consumer supports up to {_IVA_WALLET_ENVELOPE_VERSION}",
                 )
+            _assert_payload_is_its_own_row(
+                self._key_of_iva_wallet_observation(envelope.payload),
+                record.object_key,
+                "IVA wallet observation",
+            )
             observations.append(envelope.payload)
         return tuple(
             sorted(
@@ -340,6 +387,24 @@ class FiledDeclaracionObservationStore:
     ) -> str:
         return filed_declaracion_observation_object_key(modelo, ejercicio, period, expediente_id)
 
+    def _key_of_observation(self, observation: FiledDeclaracionObservation) -> str:
+        """Return the natural key a decrypted filed observation claims to be filed under."""
+        return self._observation_key(
+            observation.modelo,
+            observation.ejercicio,
+            observation.period,
+            observation.expediente_id,
+        )
+
+    def _key_of_iva_wallet_observation(self, observation: IvaCompensationWalletObservation) -> str:
+        """Return the natural key a decrypted wallet observation claims to be filed under."""
+        return self._iva_wallet_observation_key(
+            observation.taxpayer_nif,
+            observation.target_year,
+            observation.target_period,
+            observation.captured_at.isoformat(),
+        )
+
     def _crypto_scope(self):
         return nullcontext()
 
@@ -355,6 +420,47 @@ class FiledDeclaracionObservationStore:
             target_year,
             target_period,
             captured_at,
+        )
+
+
+def _assert_payload_is_the_requested_row(derived_key: str, requested_key: str, subject: str) -> None:
+    """Refuse a decrypted payload whose own identity is not the row asked for.
+
+    Both observation families derive their natural key from identity fields
+    the payload itself carries, but nothing re-derived it after decryption:
+    ``load_*`` validated only the envelope's class and version, so a valid
+    payload re-encrypted under another row's key was returned as that row.
+    Custody consumers would then associate filing evidence with the wrong
+    declaration, or a wallet balance with the wrong period — with no error
+    anywhere, because every layer beneath answered correctly about the row it
+    was handed.
+
+    Raises:
+        SedeValidationError: When the payload belongs to a different row.
+    """
+    if derived_key != requested_key:
+        raise SedeValidationError(
+            f"{subject} does not belong to the requested row: "
+            f"asked for {requested_key!r}, decrypted payload is filed under {derived_key!r}",
+        )
+
+
+def _assert_payload_is_its_own_row(derived_key: str, stored_key: bytes, subject: str) -> None:
+    """Refuse an enumerated payload whose identity does not derive its stored row.
+
+    The enumeration counterpart of :func:`_assert_payload_is_the_requested_row`.
+    Listing has no requested key to compare against, so the comparison is made
+    against the row's stored key digest — the same digest the write path
+    produced from the natural key. Without it, a substituted row is carried
+    into every consumer that enumerates instead of looking up, which is the
+    wider of the two doors.
+
+    Raises:
+        SedeValidationError: When the payload does not derive its own row key.
+    """
+    if secure_object_key_digest(derived_key) != stored_key:
+        raise SedeValidationError(
+            f"{subject} does not derive the row it is stored in; decrypted payload is filed under {derived_key!r}",
         )
 
 
