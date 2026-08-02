@@ -25,78 +25,120 @@ from pydantic import Field
 
 from ...domain.calculations.registry import (
     CrossReferenceApplicabilityDeclaracion,
+    ExportLayoutId,
+    LegalRefId,
     ParityScenario,
     ParityTape,
     ParityTapeStatus,
     RegistryFiledStateComparison,
+    RelationId,
+    SourceRefId,
     WorkbookArtefactReport,
+    WorkbookParityRefId,
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
 )
 from ._schemas import OutputSchema, register_schema
 
 
+class RegistryWorkbookParityDetailPayload(OutputSchema):
+    """One workbook-parity coverage row, mirroring :class:`RegistryWorkbookParityDetailReport`."""
+
+    id: WorkbookParityRefId
+    workbook_source: SourceRefId
+    formula_coverage: str
+    runner_required: bool
+    output_cell_count: int = Field(ge=0)
+
+
+class RegistryRevisionDetailPayload(OutputSchema):
+    """One modelo revision's registry inventory, mirroring :class:`RegistryRevisionDetailReport`."""
+
+    modelo: str = Field(min_length=1)
+    revision: str = Field(min_length=1)
+    legal_refs: list[LegalRefId] = []
+    source_refs: list[SourceRefId] = []
+    export_layout_ids: list[ExportLayoutId] = []
+    export_layout_count: int = Field(ge=0)
+    export_record_count: int = Field(ge=0)
+    export_field_count: int = Field(ge=0)
+    deadline_window_count: int = Field(ge=0)
+    deadline_periods: list[str] = []
+    relation_ids: list[RelationId] = []
+    relation_count: int = Field(ge=0)
+    relation_dependency_roles: list[str] = []
+    filing_schedule_ids: list[str] = []
+    filing_schedule_count: int = Field(ge=0)
+    portal_guard_policy_ids: list[str] = []
+    workbook_parity: list[RegistryWorkbookParityDetailPayload] = []
+    support_removal_decision_count: int = Field(ge=0)
+
+
 @register_schema("registry.inspect")
 class RegistryInspectResult(OutputSchema):
     """JSON envelope for ``aeat app registry inspect``.
 
-    Mirrors the inventory half of
-    :class:`RegistryTreeReport` returned by
-    :func:`inspect_registry_tree`. Extra fields carry
-    per-revision detail rows such as
-    :class:`RegistryRevisionDetailReport`.
+    Projects :class:`RegistryTreeReport` returned by
+    :func:`inspect_registry_tree` in full: the registry/source roots, every
+    inventory count (bounded non-negative -- a count can never be negative,
+    even though the canonical report does not itself declare that bound),
+    and the typed :class:`RegistryRevisionDetailPayload` rows. A malformed or
+    missing detail row, or an unrecognised top-level key, is refused rather
+    than forwarded.
     """
 
-    modelo_count: int
-    revision_count: int
-    legal_reference_count: int
-    source_reference_count: int
-    casilla_count: int
-    formula_count: int
-    extraction_profile_count: int
-    cross_reference_count: int
-    workbook_parity_ref_count: int
-    verification_expectation_count: int
-    application_link_count: int
+    registry_root: str
+    source_root: str | None = None
+    modelo_count: int = Field(ge=0)
+    revision_count: int = Field(ge=0)
+    legal_reference_count: int = Field(ge=0)
+    source_reference_count: int = Field(ge=0)
+    casilla_count: int = Field(ge=0)
+    formula_count: int = Field(ge=0)
+    extraction_profile_count: int = Field(ge=0)
+    cross_reference_count: int = Field(ge=0)
+    workbook_parity_ref_count: int = Field(ge=0)
+    verification_expectation_count: int = Field(ge=0)
+    application_link_count: int = Field(ge=0)
     application_link_surfaces: list[str] = []
+    relation_count: int = Field(ge=0)
+    relation_dependency_roles: list[str] = []
+    filing_schedule_count: int = Field(ge=0)
     modelos: list[str] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class-variable assignment triggers mypy
-    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    revision_details: list[RegistryRevisionDetailPayload] = []
+    verified: bool
 
 
 @register_schema("registry.verify")
 class RegistryVerifyResult(OutputSchema):
     """JSON envelope for ``aeat app registry verify``.
 
-    Mirrors the validated :class:`RegistryTreeReport`
-    returned by :func:`verify_registry_tree`.
-    ``verified`` marks the fail-fast registry/corpus validation branch, while
-    extra fields preserve the same
-    :class:`RegistryRevisionDetailReport` inventory
-    available from
-    :class:`RegistryInspectResult`.
+    Projects the validated :class:`RegistryTreeReport` returned by
+    :func:`verify_registry_tree` in full, at parity with
+    :class:`RegistryInspectResult`. ``verified`` marks the fail-fast
+    registry/corpus validation branch.
     """
 
-    verified: bool
-    modelo_count: int
-    revision_count: int
-    legal_reference_count: int
-    source_reference_count: int
-    casilla_count: int
-    formula_count: int
-    extraction_profile_count: int
-    cross_reference_count: int
-    workbook_parity_ref_count: int
-    verification_expectation_count: int
-    application_link_count: int
+    registry_root: str
+    source_root: str | None = None
+    modelo_count: int = Field(ge=0)
+    revision_count: int = Field(ge=0)
+    legal_reference_count: int = Field(ge=0)
+    source_reference_count: int = Field(ge=0)
+    casilla_count: int = Field(ge=0)
+    formula_count: int = Field(ge=0)
+    extraction_profile_count: int = Field(ge=0)
+    cross_reference_count: int = Field(ge=0)
+    workbook_parity_ref_count: int = Field(ge=0)
+    verification_expectation_count: int = Field(ge=0)
+    application_link_count: int = Field(ge=0)
     application_link_surfaces: list[str] = []
+    relation_count: int = Field(ge=0)
+    relation_dependency_roles: list[str] = []
+    filing_schedule_count: int = Field(ge=0)
     modelos: list[str] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class-variable assignment triggers mypy
-    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    revision_details: list[RegistryRevisionDetailPayload] = []
+    verified: bool
 
 
 @register_schema("registry.audit_oracles")
