@@ -94,18 +94,21 @@ PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
 # transit, not rest, and admitting either would let a traversal that
 # stalled on it pass as a completed read.
 #
-# What sits in front of the two landing rules is NOT the same guarantee,
-# so do not read them as one. The own-name continuation's rule follows a
-# ``wait_for_url`` that has already required the traversal to reach the
-# target path, so a stall raises before the rule is reached. The wallet
-# execute rule follows a load-state wait only, and runs solely on the
-# branch where the execute control was present: when the page carries no
-# wallet form at all, this read returns having run NO landing rule, and
-# what refuses is the parser, which demands a wallet table and is called
-# with ``allow_empty_wallet_shell`` false on that path. That is a
-# backstop of a different shape -- it answers "is this a wallet?", never
-# "did AEAT serve a page we declared?" -- so it reports a changed
-# external shape where a landing rule would name the undeclared landing.
+# What sits in front of each landing rule is NOT the same guarantee, so do
+# not read them as one. Four run on this module. The own-name
+# continuation's follows a ``wait_for_url`` that has already required the
+# traversal to reach the target path, so a stall raises before the rule is
+# reached. The execute read carries two, neither behind a URL wait: one
+# runs as soon as the page's shape is known and before that shape is
+# judged, so every exit from the execute read has passed a rule; the other
+# runs after the ``ejecutar`` POST and is the only wall that sees where
+# AEAT served it. The fourth runs at the terminal parse, where the
+# recorded ``source_url`` is CONSTRUCTED from the landed origin plus the
+# wallet path rather than observed.
+#
+# The parser is not a fifth. It demands a wallet table, so it answers "is
+# this a wallet?" and never "did AEAT serve a page we declared?" -- it
+# backstops the shape, not the landing.
 #
 # The acting-capacity gate additionally CANNOT be admitted through the
 # shared rule, and the reason is worth stating where someone would
@@ -589,6 +592,19 @@ async def _submit_wallet_execute_gate_if_present(
             "AEAT IVA wallet execute gate could not be inspected",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         ) from exc
+    # Every exit from here is a landing this read rests on, so the rule runs
+    # before the shape is judged rather than inside one branch. It used to sit
+    # only in the ``wallet-execute-submit-present`` arm below, which left the
+    # other statuses -- ``no-wallet-form`` above all, what a page carrying no
+    # wallet form yields, including AEAT's acting-capacity gate -- returning
+    # with no landing rule run at all. The parser refused those pages anyway,
+    # for want of a wallet table, but it answers "is this a wallet?" and so
+    # reported a changed external shape where the truth was an undeclared
+    # landing -- sending the next reader to widen the parser rather than to ask
+    # why AEAT served that page. Asserting here also orders the diagnostics
+    # correctly: an undeclared landing is named as one before a wallet-shaped
+    # page is judged for its form action.
+    _assert_read_landing(page)
     if result == "unexpected-wallet-form":
         raise SedeNavigationError(
             "AEAT IVA wallet form action did not match the expected wallet surface",
