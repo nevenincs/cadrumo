@@ -13,8 +13,9 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from dev.release.readiness import ReadinessCheck, ReadinessReport
 from dev.release.release_candidate import ReleaseCandidate, SoakWindow, seal_candidate
-from dev.release.soak_promoter import select_promotable
+from dev.release.soak_promoter import promote_once, select_promotable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -113,3 +114,81 @@ def test_a_mixed_set_promotes_only_the_elapsed_one() -> None:
     # Control: the second candidate really is still soaking at this instant, so
     # the assertion above is a selection result rather than a coincidence.
     assert soaking.window_elapsed(now=_OPENED + timedelta(hours=49)) is False
+
+
+def _clean_report() -> ReadinessReport:
+    return ReadinessReport(checks=(ReadinessCheck("version-surfaces-agree", "blocking", True, "all seven agree"),))
+
+
+def _red_report() -> ReadinessReport:
+    return ReadinessReport(
+        checks=(ReadinessCheck("distribution-evidence-set", "blocking", False, "scoop row missing for 1.0.0"),)
+    )
+
+
+def test_a_regressed_candidate_is_invalidated_rather_than_promoted() -> None:
+    """The re-verification is the point of re-running the gate at promotion time.
+
+    The seal-time gate proved the cohort sound two or three days ago, which is
+    not the same claim as "sound now" - that gap is exactly why the soak
+    exists. A blocking regression discovered during the window invalidates the
+    candidate; it is never repaired in place and never promoted on an expired
+    green.
+    """
+    candidate = _candidate()
+    dispatched: list[ReleaseCandidate] = []
+
+    decision = promote_once(
+        (candidate,),
+        now=candidate.soak_deadline + timedelta(hours=1),
+        readiness_for=lambda _: _red_report(),
+        dispatch=dispatched.append,
+    )
+
+    assert decision.promotes is False
+    assert dispatched == [], "a regressed candidate must not reach the dispatch at all"
+    assert "invalidated" in decision.reason
+    # The refusal names WHICH check reds, so the operator is not left to guess.
+    assert "distribution-evidence-set" in decision.reason
+    assert "scoop row missing" in decision.reason
+
+
+def test_a_clean_candidate_is_dispatched_after_re_verification() -> None:
+    """Positive control: the refusal above is a verdict, not a promoter that never fires."""
+    candidate = _candidate()
+    dispatched: list[ReleaseCandidate] = []
+
+    decision = promote_once(
+        (candidate,),
+        now=candidate.soak_deadline + timedelta(hours=1),
+        readiness_for=lambda _: _clean_report(),
+        dispatch=dispatched.append,
+    )
+
+    assert decision.promotes is True
+    assert dispatched == [candidate]
+
+
+def test_readiness_is_never_consulted_for_a_candidate_still_soaking() -> None:
+    """Ordering: the cheap clock check precedes the expensive gate.
+
+    Also a correctness statement rather than only an efficiency one - a gate
+    run against a candidate that cannot promote produces a verdict nobody acts
+    on, and a red one would be reported as though it mattered now.
+    """
+    candidate = _candidate()
+    consulted: list[ReleaseCandidate] = []
+
+    def _record(subject: ReleaseCandidate) -> ReadinessReport:
+        consulted.append(subject)
+        return _clean_report()
+
+    decision = promote_once(
+        (candidate,),
+        now=candidate.soak_deadline - timedelta(hours=1),
+        readiness_for=_record,
+        dispatch=lambda _: None,
+    )
+
+    assert decision.promotes is False
+    assert consulted == []

@@ -22,9 +22,11 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
+from dev.release.readiness import ReadinessReport
 from dev.release.release_candidate import ReleaseCandidate
 
 
@@ -76,4 +78,43 @@ def select_promotable(candidates: tuple[ReleaseCandidate, ...], *, now: datetime
     return PromotionDecision(chosen, f"{chosen.version} completed its soak at {chosen.soak_deadline.isoformat()}")
 
 
-__all__ = ["PromotionDecision", "select_promotable"]
+def promote_once(
+    candidates: tuple[ReleaseCandidate, ...],
+    *,
+    now: datetime,
+    readiness_for: Callable[[ReleaseCandidate], ReadinessReport],
+    dispatch: Callable[[ReleaseCandidate], None],
+) -> PromotionDecision:
+    """Run one promoter tick: select, RE-VERIFY, then dispatch.
+
+    The readiness gate is re-run against the sealed cohort immediately before
+    the dispatch, and this is the point of the whole function. The gate that
+    ran at seal time proved the cohort sound two or three days ago; the soak
+    policy exists precisely because that is not the same claim as "sound now".
+    A blocking regression discovered during the window invalidates the
+    candidate -- it is never repaired in place, and it must never be promoted
+    on the strength of a green that has since expired.
+
+    The ordering is deliberate: nothing is dispatched before the re-check, so a
+    candidate that regressed is refused with its failures named rather than
+    published and then reported.
+    """
+    decision = select_promotable(candidates, now=now)
+    if decision.candidate is None:
+        return decision
+
+    candidate = decision.candidate
+    report = readiness_for(candidate)
+    if blocking := report.blocking_failures:
+        named = "; ".join(f"{check.name}: {check.detail}" for check in blocking)
+        return PromotionDecision(
+            None,
+            f"{candidate.version} completed its soak but its readiness gate now reds, "
+            f"so the candidate is invalidated rather than promoted: {named}",
+        )
+
+    dispatch(candidate)
+    return PromotionDecision(candidate, f"{candidate.version} promoted after a clean re-verification")
+
+
+__all__ = ["PromotionDecision", "promote_once", "select_promotable"]

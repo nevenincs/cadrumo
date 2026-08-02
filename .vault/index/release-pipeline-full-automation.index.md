@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:57c498a529b1e3c3df55e0ea23399e76a284dea19a7aece62c51dcd1f88f6534'
+body_hash: 'sha256:78212dce843af265a369a5926f9e7fe6d8af4c5d88d1abf81a7434e662b7a238'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -15,7 +15,9 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S14]]'
   - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S15]]'
   - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S16]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S17]]'
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
+  - '[[2026-08-02-release-pipeline-full-automation-exec]]'
   - '[[2026-08-02-release-pipeline-full-automation-plan]]'
 ---
 
@@ -38,6 +40,8 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W02-P04-S14` - Declare the release-candidate record as a strict typed model carrying the cohort id, the version, the source commit, the smoke run id, every acquisition run id, the claimed channel set, the dry_run flag, the soak opened_at, and the computed soak deadline, with the window read from the release checklist soak hours rather than a new literal so one authority still owns the duration, gate: uv run --no-sync pytest dev/release/tests/test_release_candidate.py -q passes with a strict save-load-equality roundtrip populating every defaultable field non-default plus an anti-tautology proof deleting the deadline from the serialized payload and asserting the load refuses
 - `2026-08-02-release-pipeline-full-automation-W02-P04-S15` - Publish the sealed candidate record through the existing evidence-release draft transport under a release-candidate tag keyed on the smoke run id, so the durable state lives outside every running job and outside the working tree exactly as the evidence rows already do, gate: uv run --no-sync pytest dev/release/tests/test_release_candidate.py -q passes over the writer and reader against injected release payloads, with live draft creation flagged non-local and CI-only
 - `2026-08-02-release-pipeline-full-automation-W02-P04-S16` - Build the promoter selection logic that lists sealed candidates, selects the eldest whose soak deadline has elapsed against a real clock, and refuses every candidate whose window is still open, because publishing early is the one failure this mechanism exists to prevent and a wrong comparison publishes early silently, gate: uv run --no-sync pytest dev/release/tests/test_soak_promoter.py -q passes covering an elapsed candidate selected, a not-yet-elapsed candidate refused, a boundary candidate at exactly the minimum window, and an empty candidate set returning no promotion rather than an error
+- `2026-08-02-release-pipeline-full-automation-W02-P04-S17` - Require the promoter to re-run the readiness gate against the sealed cohort and its bound evidence rows immediately before dispatching, so a candidate whose blocking evidence regressed during its window is invalidated with a named refusal instead of promoted on a stale green, honouring the soak policy that a blocking regression invalidates a cohort and is never repaired in place, gate: uv run --no-sync pytest dev/release/tests/test_soak_promoter.py -q passes with a case that reds the readiness report for an elapsed candidate and asserts no dispatch is attempted
+- `2026-08-02-release-pipeline-full-automation-exec` - dispatch-and-resolve module: MY-run resolution
 
 ### plan
 
