@@ -68,6 +68,7 @@ from ..calculations import (
     iva_compensation_state_from_registry_observation,
     observation_key,
 )
+from ._action_errors import ModeloLocalObservationError
 
 APP_FILING_SOURCE_KIND: Final = ObservationSourceKind.APP_FILING
 """Non-official ``source_kind`` stamped on locally-filed observations.
@@ -140,6 +141,51 @@ def _refunded_303_observations(
 def _local_iva_history_expediente_id(filing_ref: str) -> str:
     """Derive the non-AEAT expediente marker stored for local IVA history rows."""
     return f"local-{filing_ref[:26]}"
+
+
+def _history_repository_in_observation_context(
+    override: IvaCompensationHistoryRepository | None,
+    *,
+    observation_repository: CalculationObservationRepository,
+) -> IvaCompensationHistoryRepository:
+    """Return the IVA history repository bound to the observation's own store.
+
+    One filed Modelo 303 period produces two rows that describe the same event:
+    the cross-period carry observation and the IVA compensation history state.
+    They are only coherent if they land in the same encrypted store, because the
+    readers resolve each through the active bucket independently -- a split
+    leaves the carry row discoverable while the history lookup returns ``None``,
+    with nothing reporting the divergence.
+
+    Nothing previously tied the two together. With no override the history
+    repository resolved the ACTIVE bucket while ``observation_repository`` was
+    whatever the caller threaded in, so even the default path could split; with
+    an override the caller could pass an unrelated database outright.
+
+    Deriving the default from ``observation_repository``'s own secure-object
+    backend makes the shared context structural rather than coincidental. An
+    override is still honoured -- the filing path and its tests legitimately
+    supply one -- but only when it is backed by the same database; a foreign
+    pairing is refused before either row is written, never half-persisted.
+    """
+    context = observation_repository.secure_object_repository
+    if override is None:
+        return IvaCompensationHistoryRepository(objects=context)
+    override_context = override.secure_object_repository
+    if override_context is context:
+        return override
+    if override_context.engine.url != context.engine.url:
+        raise ModeloLocalObservationError(
+            "iva compensation history repository is backed by a different database "
+            f"({override_context.engine.url!r}) than the calculation observation repository "
+            f"({context.engine.url!r})",
+            translated_message="application.modelo.errors.filed_observation_split_storage_context",
+            context={
+                "history_backend": str(override_context.engine.url),
+                "observation_backend": str(context.engine.url),
+            },
+        )
+    return override
 
 
 def persist_filed_revision_observation(
@@ -227,19 +273,28 @@ def persist_filed_revision_observation(
         observations=observations,
     )
     key = observation_key(work_unit.modelo, work_unit.period)
+    projects_iva_history = (
+        work_unit.modelo == Modelo.M303.value and taxpayer_nif is not None and bool(taxpayer_nif.strip())
+    )
+    # Resolve the history repository BEFORE the carry write: both rows describe
+    # the one filed period, so a mismatched pair must refuse with neither
+    # written rather than leave the carry half behind for a reader to find.
+    history_repo = (
+        _history_repository_in_observation_context(
+            iva_compensation_history_repository,
+            observation_repository=repository,
+        )
+        if projects_iva_history
+        else None
+    )
     repository.save_observation(
         observation,
         source_kind=APP_FILING_SOURCE_KIND,
         captured_at=captured_at,
         stamped_revision_id=work_unit.revision_id,
     )
-    if work_unit.modelo == Modelo.M303.value and taxpayer_nif is not None and taxpayer_nif.strip():
+    if history_repo is not None and taxpayer_nif is not None:
         filing_ref = filing_record_id or key
-        history_repo = (
-            iva_compensation_history_repository
-            if iva_compensation_history_repository is not None
-            else IvaCompensationHistoryRepository()
-        )
         history_repo.save_period(
             iva_compensation_state_from_registry_observation(
                 observation,
