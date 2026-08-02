@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:60d357864d86c887b843d373762e82790b3447a29f66b3f478e825829237d7aa'
+body_hash: 'sha256:ef9c7b7682a8179accf3c79e3196fd8b215132b0026c23e58ee18f84d5ddb8f4'
 related: []
 ---
 
@@ -330,4 +330,27 @@ was meant to pin, so raising that constant moved both goalposts together and the
 test passed at any value. A previously value-pinning test had been made vacuous
 while staying green, during a cleanup. The bound is now pinned to the count of
 slots the official form actually provides.
+
+### Sharpening the materializer correction: the ambiguity was created, not written
+
+The correction above attributes the split verdict to a finding that named its
+subject by description rather than by exact symbol. That is true and it
+understates the mechanism.
+
+The two functions were one function when the finding was written. The shared
+row-value authority was split out of the observation materializer by a refactor
+that landed the same morning the finding was worked, giving replay a shared
+authority. Before that commit the description resolved to a single function that
+both materialised observations and mapped identifiers. So the finding was
+unambiguous when authored and became ambiguous while queued.
+
+That is a different and more common failure than imprecise wording, and it is
+not fixable by writing findings more carefully. In a tree where refactors land
+hourly, any finding that names a subject rather than pinning a commit is
+resolving against a moving target, and the longer it sits in a queue the more
+likely its subject has been split, merged, or renamed underneath it. The
+practical remedy is at the working end rather than the authoring end: re-resolve
+a finding's named subject at the current tree before acting, and treat a subject
+that now resolves to more than one symbol as a signal that the finding predates a
+refactor rather than as a defect in the finding.
 
