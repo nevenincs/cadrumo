@@ -26,6 +26,7 @@ authority to create plaintext sidecar files.
 from __future__ import annotations
 
 from ._envelope import (
+    CIPHER_ENVELOPE_SCHEMA_VERSION,
     AeadAlgorithm,
     CipherEnvelope,
     EncryptionMetadata,
@@ -41,6 +42,7 @@ from ._envelope import (
 from ._secure_repository import SecureBoundRepository
 
 __all__ = [
+    "CIPHER_ENVELOPE_SCHEMA_VERSION",
     "AeadAlgorithm",
     "CipherEnvelope",
     "EncryptionMetadata",
