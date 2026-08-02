@@ -6,6 +6,15 @@ path so :func:`os.replace` genuinely refuses it, or a wrongly-typed payload
 so the underlying ``write``/``os.write`` call genuinely raises) rather than
 patching or mocking any part of the write sequence, per the project's
 real-behaviour testing discipline.
+
+The directory-occupies-the-target obstructions below are written inline
+DELIBERATELY, and are not an oversight left behind by the sweep that routed
+every other such obstruction in this codebase through the shared owner in
+``cadrumo.tests.path_obstruction``. That helper's own tests assert that the
+functions under test here refuse an obstructed path, so using it here would
+make the atomic writer's unit tests depend on a helper that depends on the
+atomic writer: a bug in the helper could then mask a bug in the thing under
+test. A primitive's own tests do not import a helper built on that primitive.
 """
 
 from __future__ import annotations
