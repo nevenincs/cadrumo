@@ -40,7 +40,7 @@ from ...application.overview import (
 )
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ...core.logging import get_logger
 from ...core.time import today_madrid
 from ...domain.modelos import WorkUnit
@@ -190,7 +190,7 @@ def overview_status(
     profile_record = current.active_profile_record() if current is not None else None
     raw_values = record_to_values(profile_record) if profile_record is not None else None
     report = _overview_application.build_overview_status_report(state=current, raw_values=raw_values)
-    typed_status = OverviewStatusResult.model_validate(report.model_dump(mode="json"))
+    typed_status = strict_round_trip(OverviewStatusResult, report)
     status_notices = list(overview_next_step_notices(report))
     coverage_lines: list[str] = []
     # ``status`` is a "what must I file" surface too: reconcile the active
@@ -949,6 +949,6 @@ def overview_pipeline(
 
     typed_result, lines, notices = overview_pipeline_output(
         report,
-        ledger=LedgerStatusResult.model_validate(report.ledger.model_dump(mode="json")),
+        ledger=strict_round_trip(LedgerStatusResult, report.ledger),
     )
     _emit_envelope(ctx, command="overview.pipeline", result=typed_result, lines=lines, notices=notices)

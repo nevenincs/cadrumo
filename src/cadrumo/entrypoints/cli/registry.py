@@ -24,6 +24,7 @@ from ...application.registry import (
 from ...core import NON_REGISTRY_MODELOS, Modelo
 from ...core.config import load_settings
 from ...core.i18n import tr
+from ...core.json_contract import strict_round_trip
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import OracleEnvironment as _OracleEnvironment
 from ._common import _emit_envelope
@@ -170,7 +171,7 @@ def inspect_registry_cmd(
     _emit_envelope(
         ctx,
         command="registry.inspect",
-        result=RegistryInspectResult.model_validate(report.model_dump(mode="json")),
+        result=strict_round_trip(RegistryInspectResult, report),
         lines=_registry_tree_metric_lines(report),
     )
 
@@ -188,7 +189,7 @@ def verify_registry_cmd(
     _emit_envelope(
         ctx,
         command="registry.verify",
-        result=RegistryVerifyResult.model_validate(report.model_dump(mode="json")),
+        result=strict_round_trip(RegistryVerifyResult, report),
         lines=(
             _metric_line("verified", report.verified),
             *_registry_tree_metric_lines(report),
@@ -350,7 +351,7 @@ def diff_revisions_cmd(
     _emit_envelope(
         ctx,
         command="registry.diff_revisions",
-        result=RegistryDiffRevisionsResult.model_validate(report.model_dump(mode="json")),
+        result=strict_round_trip(RegistryDiffRevisionsResult, report),
         lines=_diff_revisions_lines(report),
     )
 

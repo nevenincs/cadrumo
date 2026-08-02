@@ -37,7 +37,7 @@ from ...application.ledger import (
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ...core.time import now
 from ...domain.attachments import AttachmentSource, DocumentLinkSource
 from ...domain.transactions import (
@@ -699,7 +699,7 @@ def ledger_remove(
     _emit_envelope(
         ctx,
         command="ledger.remove",
-        result=LedgerRemoveResult.model_validate(report.model_dump(mode="json")),
+        result=strict_round_trip(LedgerRemoveResult, report),
         lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
             f"{tr('cli.ledger.labels.id')}\t{report.transaction_id}",
@@ -734,7 +734,7 @@ def ledger_reset(
     _emit_envelope(
         ctx,
         command="ledger.reset",
-        result=LedgerResetResult.model_validate(report.model_dump(mode="json")),
+        result=strict_round_trip(LedgerResetResult, report),
         lines=[
             f"{tr('cli.ledger.labels.bucket')}\t{report.bucket_id}",
             f"{tr('cli.ledger.labels.rows')}\t{len(report.removed_transaction_ids)}",

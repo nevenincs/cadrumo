@@ -250,7 +250,7 @@ def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
     assert row.direction == "OUTGOING"
     assert row.created_at == "2024-04-10T09:30:00+00:00"
     assert row.group_label == "Proyecto Acme"
-    assert LedgerListRowPayload.model_validate(row.model_dump(mode="json")) == row
+    assert LedgerListRowPayload.model_validate_json(row.model_dump_json()) == row
 
 
 def test_history_events_are_typed_not_bare_dicts() -> None:
@@ -271,7 +271,7 @@ def test_history_events_are_typed_not_bare_dicts() -> None:
     )
     assert isinstance(result.events[0], LedgerHistoryEventPayload)
     assert result.events[0].payload == {"source_command": "aeat app ledger add"}
-    assert LedgerHistoryResult.model_validate(result.model_dump(mode="json")) == result
+    assert LedgerHistoryResult.model_validate_json(result.model_dump_json()) == result
 
 
 def test_import_transaction_refs_are_typed() -> None:
@@ -281,7 +281,7 @@ def test_import_transaction_refs_are_typed() -> None:
     )
     assert ref.bucket_id == "default"
     assert ref.transaction_id == "a" * 64
-    assert LedgerImportTransactionRefPayload.model_validate(ref.model_dump(mode="json")) == ref
+    assert LedgerImportTransactionRefPayload.model_validate_json(ref.model_dump_json()) == ref
 
 
 def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
@@ -337,7 +337,7 @@ def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
     )
     assert isinstance(preflight.period, LedgerPeriodPayload)
     assert isinstance(preflight.issues[0], LedgerPreflightIssuePayload)
-    assert LedgerPreflightResult.model_validate(preflight.model_dump(mode="json")) == preflight
+    assert LedgerPreflightResult.model_validate_json(preflight.model_dump_json()) == preflight
 
 
 def test_export_payload_accepts_application_intracommunity_rows() -> None:
@@ -563,4 +563,4 @@ def test_ledger_add_result_accepts_a_valid_mutation_quintet_round_trip() -> None
     )
 
     assert result.transaction.transaction_id == "a" * 64
-    assert LedgerAddResult.model_validate(result.model_dump(mode="json")) == result
+    assert LedgerAddResult.model_validate_json(result.model_dump_json()) == result

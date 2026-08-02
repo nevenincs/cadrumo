@@ -31,6 +31,7 @@ from ...application.registry import (
     verify_registry_manual,
 )
 from ...core.i18n import tr
+from ...core.json_contract import strict_round_trip
 from ...domain.manuals import ManualPart
 from ._common import _emit_envelope
 from ._registry_corpus_payloads import (
@@ -115,7 +116,7 @@ def list_manuals_cmd(
 ) -> None:
     """List AEAT Manual práctico records available on disk."""
     report = list_registry_manuals(RegistryManualsListCommand(manual=manual, year=year))
-    typed = ManualListResult.model_validate(report.model_dump(mode="json"))
+    typed = strict_round_trip(ManualListResult, report)
     _emit_envelope(ctx, command="registry.manuals.list", result=typed, lines=_manuals_list_lines(report))
 
 
@@ -141,7 +142,7 @@ def show_manual_cmd(
 ) -> None:
     """View one manual's metadata and, optionally, one section by id."""
     report = show_registry_manual(RegistryManualShowCommand(manual=manual, year=year, part=part, section=section))
-    typed = ManualShowResult.model_validate(report.model_dump(mode="json"))
+    typed = strict_round_trip(ManualShowResult, report)
     _emit_envelope(ctx, command="registry.manuals.view", result=typed, lines=_manual_show_lines(report))
 
 
@@ -167,7 +168,7 @@ def list_manual_rules_cmd(
 ) -> None:
     """List AEAT rule decisions for one manual / year / part."""
     report = list_registry_manual_rules(RegistryManualRulesCommand(manual=manual, year=year, part=part, kind=kind))
-    typed = ManualRulesListResult.model_validate(report.model_dump(mode="json"))
+    typed = strict_round_trip(ManualRulesListResult, report)
     _emit_envelope(ctx, command="registry.manuals.rules", result=typed, lines=_manual_rules_lines(report))
 
 
@@ -189,7 +190,7 @@ def verify_manual_cmd(
 ) -> None:
     """Verify one manual part against its schema and cross-reference contracts."""
     report = verify_registry_manual(RegistryManualVerifyCommand(manual=manual, year=year, part=part))
-    typed = ManualVerifyResult.model_validate(report.model_dump(mode="json"))
+    typed = strict_round_trip(ManualVerifyResult, report)
     _emit_envelope(ctx, command="registry.manuals.verify", result=typed, lines=_manual_verification_lines(report))
     if not report.passed:
         raise typer.Exit(code=1)

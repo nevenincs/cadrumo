@@ -35,6 +35,7 @@ from ...core.json_contract import (
     derive_status,
     emit_json_document,
     register_schema,
+    strict_round_trip,
 )
 
 __all__ = [
@@ -50,4 +51,5 @@ __all__ = [
     "derive_status",
     "emit_json_document",
     "register_schema",
+    "strict_round_trip",
 ]

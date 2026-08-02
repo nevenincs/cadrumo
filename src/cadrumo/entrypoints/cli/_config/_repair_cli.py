@@ -30,6 +30,7 @@ from ....application.diagnostics import (
 )
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....core.i18n import tr
+from ....core.json_contract import strict_round_trip
 from ....core.logging import default_log_file_path as _default_log_file_path
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -71,7 +72,7 @@ def _register_repair_root_callback(repair_app: typer.Typer) -> None:
         from .._config_payloads import ConfigRepairResult
 
         report = _build_config_repair_report()
-        result = ConfigRepairResult.model_validate(report.model_dump(mode="json"))
+        result = strict_round_trip(ConfigRepairResult, report)
         _emit_envelope(
             ctx,
             command="config.repair",
@@ -319,7 +320,7 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
         from .._config_payloads import RepairIntegrityRegistryResult
 
         report = _build_registry_integrity_report()
-        result = RepairIntegrityRegistryResult.model_validate(report.model_dump(mode="json"))
+        result = strict_round_trip(RepairIntegrityRegistryResult, report)
         issue_lines = tuple(f"issue\t{finding.summary}" for finding in report.check.findings)
         _emit_envelope(
             ctx,
