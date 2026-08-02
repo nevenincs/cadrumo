@@ -70,7 +70,7 @@ class LiveScenarioScore(BaseModel):
     failures: tuple[str, ...] = ()
 
     @model_validator(mode="after")
-    def _invariant_scenario_matches(self) -> "LiveScenarioScore":
+    def _invariant_scenario_matches(self) -> LiveScenarioScore:
         """Reject a score whose nested invariant verdict names a different scenario."""
         if self.invariants.scenario != self.scenario:
             raise ValueError(
@@ -131,7 +131,17 @@ def score_live_trajectory(
         The :class:`LiveScenarioScore` with per-dimension verdicts, the two
         hard invariants, and per-narration faithfulness checks run against the
         session's own preceding tool results.
+
+    Raises:
+        ValueError: When the captured trajectory names a different scenario
+            from the supplied golden scenario.
     """
+    if trajectory.scenario != scenario.name:
+        raise ValueError(
+            f"trajectory scenario is {trajectory.scenario!r}, but the supplied golden scenario is "
+            f"{scenario.name!r}; one session must score against one scenario",
+        )
+
     failures: list[str] = []
     observed = trajectory.observed_command_keys
 
@@ -141,12 +151,24 @@ def score_live_trajectory(
         failures.append(f"observed command keys do not resolve: {', '.join(unresolved)}")
 
     positions: dict[str, int] = {}
+    reentered_stages: list[str] = []
     for index, key in enumerate(observed):
-        positions.setdefault(key, index)
+        if key in LIFECYCLE_STAGE_ORDER:
+            if key in positions:
+                reentered_stages.append(key)
+                continue
+            positions[key] = index
     present = [stage for stage in LIFECYCLE_STAGE_ORDER if stage in positions]
-    lifecycle_ordered = all(positions[earlier] < positions[later] for earlier, later in pairwise(present))
+    lifecycle_ordered = not reentered_stages and all(
+        positions[earlier] < positions[later] for earlier, later in pairwise(present)
+    )
     if not lifecycle_ordered:
-        failures.append("observed trajectory violates the create -> calculate -> verify -> export lifecycle order")
+        if reentered_stages:
+            failures.append(
+                "observed trajectory re-enters lifecycle stage(s): " + ", ".join(reentered_stages),
+            )
+        else:
+            failures.append("observed trajectory violates the create -> calculate -> verify -> export lifecycle order")
 
     expected_covered = _is_subsequence(scenario.expected_trajectory, observed)
     if not expected_covered:
@@ -287,7 +309,7 @@ class DiscoveryScore(BaseModel):
     failures: tuple[str, ...] = ()
 
     @model_validator(mode="after")
-    def _ordinal_matches_reached(self) -> "DiscoveryScore":
+    def _ordinal_matches_reached(self) -> DiscoveryScore:
         """Tie the reach verdict to its ordinal: reached implies a positive round, else zero."""
         if self.reached and self.rounds_to_correct_verb == 0:
             raise ValueError("a reached discovery score must carry a positive rounds_to_correct_verb")
