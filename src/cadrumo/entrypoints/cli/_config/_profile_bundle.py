@@ -149,7 +149,10 @@ def _register_profile_sar_command(profile_app: typer.Typer) -> None:
         )
         from ....application.workflow import ProfileLabelAmbiguousError
         from ....domain.user_profile import ProfileNotFoundError
-        from .._config_payloads import ConfigProfileSubjectAccessRequestResult
+        from .._config_payloads import (
+            ConfigProfileExportReconcileFailurePayload,
+            ConfigProfileSubjectAccessRequestResult,
+        )
 
         _activate_subcommand_output_language(ctx, output_language)
         try:
@@ -178,8 +181,18 @@ def _register_profile_sar_command(profile_app: typer.Typer) -> None:
             display_name=export.display_name,
             out=str(export.destination),
             schema_version=export.bundle_schema_version,
+            purpose=export.purpose,
+            transport=export.transport,
             data_categories=list(export.data_categories),
             excluded_data_categories=list(export.excluded_data_categories),
+            reconcile_failures=[
+                ConfigProfileExportReconcileFailurePayload(
+                    journal_id=failure.journal_id,
+                    destination=failure.destination,
+                    reason=failure.reason,
+                )
+                for failure in export.reconcile_failures
+            ],
         )
         sensitivity_notice = _build_export_sensitivity_notice(out)
         catalogue_notice = _build_sar_catalogue_notice(
@@ -310,16 +323,27 @@ def _emit_export_envelope(
     carries its own. Both are repeated as text lines because the envelope
     renders notices only in JSON mode.
     """
-    from .._config_payloads import ConfigProfileExportResult
+    from .._config_payloads import ConfigProfileExportReconcileFailurePayload, ConfigProfileExportResult
 
     transport_notice = _build_encrypted_export_notice(out) if encrypted else _build_export_sensitivity_notice(out)
     notices = (transport_notice, *_reconcile_failure_notices(export.reconcile_failures))
-    transport = "passphrase-encrypted" if encrypted else "cleartext-local"
     export_result = ConfigProfileExportResult(
         profile_id=export.profile_id,
         display_name=export.display_name,
         out=str(export.destination),
         schema_version=export.bundle_schema_version,
+        purpose=export.purpose,
+        transport=export.transport,
+        data_categories=list(export.data_categories),
+        excluded_data_categories=list(export.excluded_data_categories),
+        reconcile_failures=[
+            ConfigProfileExportReconcileFailurePayload(
+                journal_id=failure.journal_id,
+                destination=failure.destination,
+                reason=failure.reason,
+            )
+            for failure in export.reconcile_failures
+        ],
     )
     _emit_envelope(
         ctx,
@@ -329,8 +353,11 @@ def _emit_export_envelope(
             f"profile_id\t{export_result.profile_id}",
             f"display_name\t{export_result.display_name}",
             f"out\t{out}",
-            f"transport\t{transport}",
+            f"purpose\t{export_result.purpose.value}",
+            f"transport\t{export_result.transport.value}",
             f"schema_version\t{export_result.schema_version}",
+            f"data_categories\t{','.join(export_result.data_categories)}",
+            f"excluded_data_categories\t{','.join(export_result.excluded_data_categories)}",
             *(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices),
         ),
         notices=notices,

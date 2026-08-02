@@ -198,7 +198,7 @@ def _register_sandbox_list_command(app: typer.Typer) -> None:
                     name=pointer.label,
                     bucket_id=pointer.bucket_id,
                     active=pointer.bucket_id == active,
-                    status=pointer.status.value,
+                    status=pointer.status,
                 )
                 for pointer in rows
             ],

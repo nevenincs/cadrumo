@@ -29,6 +29,7 @@ from ...application.user_profile import (
     ProfileBundleExportPurpose,
     ProfileBundleExportTransport,
 )
+from ...application.workflow import ProfileHealthStatus, ProfileSource
 from ...core import HEX_PATTERN_64
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId
@@ -67,18 +68,20 @@ class QuarantineNamespacePayload(OutputSchema):
 class WorkflowFingerprintPayload(OutputSchema):
     """Metadata fingerprint for encrypted workflow progress state.
 
-    Mirrors :class:`WorkflowStateResetFingerprint`
-    for ``config repair reset-progress``.  The fingerprint identifies the
-    stored envelope's schema, write time, byte length, read-status reason, and
-    recoverable bucket context without serialising the
-    :class:`WorkflowState` plaintext.
+    Projects :class:`WorkflowStateResetFingerprint`
+    for ``config repair reset-progress`` at the same bounds the canonical
+    record enforces: a schema version of at least 1, a non-negative byte
+    length, an aware ``written_at`` timestamp, and a non-empty, length-bounded
+    ``reason_class``. Identifies the stored envelope's schema, write time,
+    byte length, read-status reason, and recoverable bucket context without
+    serialising the :class:`WorkflowState` plaintext.
     """
 
-    schema_version: int | None = None
-    written_at: str | None = None
-    byte_length: int | None = None
-    reason_class: str
-    recovered_bucket_id: str | None = None
+    schema_version: int | None = Field(default=None, ge=1)
+    written_at: datetime | None = None
+    byte_length: int | None = Field(default=None, ge=0)
+    reason_class: str = Field(min_length=1, max_length=64)
+    recovered_bucket_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
 class ProfilePointerPayload(OutputSchema):
@@ -92,16 +95,18 @@ class ProfilePointerPayload(OutputSchema):
     profile-show envelope.
 
     ``status`` mirrors the manifest lifecycle marker
-    (:class:`~cadrumo.domain.user_profile.UserProfileStatus` value) so the
+    (:class:`~cadrumo.domain.user_profile.UserProfileStatus`) so the
     listing distinguishes a workable ``active`` profile from a
     ``setup_incomplete`` one still completing its interactive setup — the
-    latter is listed and resumable but not yet workable.
+    latter is listed and resumable but not yet workable. ``name`` and
+    ``bucket_id`` carry the same bounds :class:`ProfileBucketPointer`
+    enforces, so a blank label or bucket id is refused rather than listed.
     """
 
-    name: str
-    bucket_id: str
+    name: str = Field(min_length=1, max_length=160)
+    bucket_id: BucketId
     active: bool
-    status: str
+    status: UserProfileStatus
 
 
 class ProfileIssuePayload(OutputSchema):
@@ -335,10 +340,13 @@ class ConfigListResult(OutputSchema):
     the list verb). Each
     :class:`ProfilePointerPayload` row
     identifies a
-    registered bucket, while ``active_profile`` names the current pointer.
+    registered bucket, while ``active_profile`` names the current pointer's
+    operator-facing label -- bounded exactly as
+    :class:`ProfileBucketPointer` bounds ``label`` -- so an empty-but-present
+    active label is refused rather than silently listed as active.
     """
 
-    active_profile: str | None = None
+    active_profile: str | None = Field(default=None, min_length=1, max_length=160)
     profiles: list[ProfilePointerPayload]
 
 
@@ -1076,39 +1084,90 @@ class ConfigProfileArchiveInspectResult(OutputSchema):
 # Repair verb result schemas (profile / integrity sub-app)
 
 
+class ActiveProfileHealthPayload(OutputSchema):
+    """JSON-mode projection of :class:`~cadrumo.application.workflow.ActiveProfileHealth`.
+
+    Mirrors the canonical health verdict field-for-field so a malformed
+    ``status`` or ``source`` is refused rather than forwarded as an arbitrary
+    key. ``missing_required`` projects the canonical ``tuple`` as a ``list``
+    per this module's JSON-mode sequence-field convention.
+    """
+
+    active_profile: str | None
+    source: ProfileSource
+    status: ProfileHealthStatus
+    registered_bucket: bool = False
+    profile_record_present: bool = False
+    profile_record_error: str = ""
+    profile_present_keys: int = Field(default=0, ge=0)
+    profile_total_keys: int = Field(default=0, ge=0)
+    missing_required: list[str] = []
+    repairable_by_clearing_pointer: bool = False
+    next_action: str = ""
+
+
 @register_schema("config.repair.profile")
 class RepairProfileResult(OutputSchema):
     """JSON envelope for ``aeat config repair profile``.
 
-    Covers the inspection branch (operator-readable profile-record status),
-    and the ``--clear-active`` pointer-repair branch. The application layer
-    model evolves independently across these branches; ``extra="allow"`` keeps
-    the envelope shape stable without re-declaring every field. The payload is
-    a pointer/record repair projection and does not dump encrypted profile
+    Covers the inspection branch (operator-readable profile-record status)
+    and the ``--clear-active`` pointer-repair branch. The pointer-repair
+    branch projects the canonical
+    :class:`~cadrumo.application.workflow.ActiveProfileHealth` verdict (the
+    same typed model :class:`ActiveProfileRepairResult` carries as
+    ``before``/``after``) through :class:`ActiveProfileHealthPayload`, so a
+    malformed ``status`` or ``source`` is refused rather than forwarded as an
+    arbitrary extra key. The two branches populate disjoint field sets; each
+    branch's fields default to ``None`` on the other. The payload is a
+    pointer/record repair projection and does not dump encrypted profile
     contents.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+    # Pointer-repair branch (from ActiveProfileRepairResult)
+    dry_run: bool | None = None
+    cleared_pointer: bool | None = None
+    before: ActiveProfileHealthPayload | None = None
+    after: ActiveProfileHealthPayload | None = None
+    # Profile-record-status branch
+    profile_id: str | None = None
+    bucket_id: str | None = None
+    display_name: str | None = None
+    registered_bucket: bool | None = None
+    profile_record_present: bool | None = None
+    status: str | None = None
+    error: str | None = None
+    next_action: str | None = None
+
+
+class RepairIntegrityCheckPayload(OutputSchema):
+    """The pass/fail verdict ``repair integrity objects`` emits for its sweep.
+
+    Narrower than the full :class:`~cadrumo.application.diagnostics.DiagnosticCheck`
+    used by ``config repair`` (which requires a check ``name`` and a
+    next-action/dead-end contract): this command reports only the aggregate
+    unreadable-row verdict and its summary.
+    """
+
+    status: Literal["ok", "fail"]
+    summary: str
 
 
 @register_schema("config.repair.integrity.objects")
 class RepairIntegrityObjectsResult(OutputSchema):
     """JSON envelope for ``aeat config repair integrity objects``.
 
-    Covers the no-active-profile guard branch (``readable``/``unreadable``
-    counts with ``reason``) and the live-probe branch (full report with
-    nested namespace breakdown). ``extra="allow"`` forwards the
-    :class:`RepairIntegrityReport` payload
-    without re-declaring every sub-model.
+    Projects the per-namespace
+    :class:`~cadrumo.application.diagnostics.SecureObjectIntegrityReport`
+    (via the shared :class:`ConfigRepairNamespacePayload` rows, bounded
+    exactly as the canonical
+    :class:`~cadrumo.adapters.persistence.storage.SecureObjectNamespaceIntegrity`
+    row) plus the aggregate pass/fail verdict for the unreadable-row count.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+    namespaces: list[ConfigRepairNamespacePayload]
+    readable_total: int = Field(ge=0)
+    unreadable_total: int = Field(ge=0)
+    check: RepairIntegrityCheckPayload
 
 
 @register_schema("config.repair.integrity.registry")

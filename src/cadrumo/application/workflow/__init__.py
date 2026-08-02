@@ -156,6 +156,8 @@ from ._profile_bucket_scan import (
 from ._profile_health import (
     ActiveProfileHealth,
     ActiveProfileRepairResult,
+    ProfileHealthStatus,
+    ProfileSource,
     assess_active_profile_health,
     assess_active_profile_health_with_session,
     repair_active_profile_pointer,
@@ -213,7 +215,9 @@ __all__ = [
     "ModeloInputs",
     "ModeloInputsProviderProtocol",
     "ProfileBucketPointer",
+    "ProfileHealthStatus",
     "ProfileLabelAmbiguousError",
+    "ProfileSource",
     "RegistryModeloDraftProtocol",
     "SiteHealthAlert",
     "SubmissionEngineAdapter",

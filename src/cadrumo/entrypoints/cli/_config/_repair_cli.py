@@ -45,7 +45,7 @@ def _workflow_fingerprint_payload(fingerprint: WorkflowStateResetFingerprint) ->
 
     return WorkflowFingerprintPayload(
         schema_version=fingerprint.schema_version,
-        written_at=fingerprint.written_at.isoformat() if fingerprint.written_at is not None else None,
+        written_at=fingerprint.written_at,
         byte_length=fingerprint.byte_length,
         reason_class=fingerprint.reason_class,
         recovered_bucket_id=fingerprint.recovered_bucket_id or None,
