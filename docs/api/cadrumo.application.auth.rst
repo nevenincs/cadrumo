@@ -29,6 +29,7 @@ Submodules
    cadrumo.application.auth._operator_probes
    cadrumo.application.auth._operator_results
    cadrumo.application.auth._operator_scope
+   cadrumo.application.auth._probe_result
    cadrumo.application.auth._protocols
    cadrumo.application.auth._sessions
    cadrumo.application.auth._workflow_repository
