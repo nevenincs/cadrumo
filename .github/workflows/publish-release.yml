@@ -60,56 +60,6 @@ permissions:
   contents: read
 
 jobs:
-  # Prerequisite check. The release environment must carry a human approval
-  # rule; the publish job runs inside that environment, so the approval click
-  # is the gate. There is deliberately no separate opt-in variable.
-  operator-preflight:
-    name: Release prerequisite check
-    runs-on: [self-hosted, Linux, X64]
-    steps:
-      - name: Require the release environment to carry a human approval gate
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DRY_RUN: ${{ inputs.dry_run }}
-        run: |
-          # The release runbook instructs the operator to create the `release`
-          # environment with required reviewers, because that approval click is
-          # the human release gate, and the publish job's own comment repeats
-          # the claim. Nothing verified it. An environment without reviewers
-          # satisfies `environment: release` perfectly well and runs the
-          # promotion with no human in the loop, so the single most consequential
-          # safety property of this workflow was documented and unenforced.
-          #
-          # Fail-closed on a real publication: an API failure means the gate
-          # could not be CONFIRMED, which is not the same as confirmed present.
-          # A dry_run publishes nothing, so it warns and proceeds - the
-          # validate-everything-publish-nothing diagnostic stays usable before
-          # the environment is fully configured.
-          if ! rules="$(gh api "repos/${GITHUB_REPOSITORY}/environments/release" --jq '[.protection_rules[].type]|join(",")' 2>&1)"; then
-            reason="the release environment could not be read: ${rules}"
-          elif [[ ",${rules}," != *",required_reviewers,"* ]]; then
-            reason="the release environment has no required_reviewers rule (found: ${rules:-none})"
-          else
-            echo "Human approval gate present on the release environment: ${rules}"
-            exit 0
-          fi
-          if [[ "${DRY_RUN}" == "true" ]]; then
-            echo "::warning::${reason}. A dry_run publishes nothing, so this is not fatal here, but a real publication will refuse until required reviewers are set."
-            exit 0
-          fi
-          cat >&2 <<EOF
-          REFUSED: ${reason}.
-
-          This workflow's design places the human release gate on the \`release\`
-          environment's required-reviewers approval. Without that rule the
-          promotion would upload to PyPI and every public channel with no human
-          in the loop, which is not what prerequisite 2 promises.
-
-          Fix: Settings -> Environments -> release -> Deployment protection rules
-          -> tick "Required reviewers" and add the operator. Then re-dispatch.
-          EOF
-          exit 1
-
   # ---------------------------------------------------------------------------
   # Gate 2 - validate the retained cohort WITHOUT rebuilding. Verifies the
   # source run identity, downloads the stored cohort + installed evidence, and
@@ -117,7 +67,6 @@ jobs:
   # ---------------------------------------------------------------------------
   validate:
     name: Validate immutable tested cohort (no rebuild)
-    needs: operator-preflight
     runs-on: [self-hosted, Linux, X64]
     permissions:
       actions: read

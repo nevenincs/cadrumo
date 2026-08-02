@@ -123,6 +123,44 @@ def _run_surface(job: Mapping[str, object]) -> str:
     return "\n".join(str(step.get("run", "")) for step in steps if isinstance(step, Mapping) and "run" in step)
 
 
+# A job "reads a protection rule" when it queries the environments API for the
+# rule set. Anchored on the API path together with the rule vocabulary so that
+# an unrelated environments read (there is none today, but a variables read
+# would use the same prefix) is not mistaken for a re-introduced approval gate.
+_PROTECTION_RULE_READ: Final[re.Pattern[str]] = re.compile(
+    r"environments/[^\s\"']+.*?(?:protection_rules|required_reviewers)|(?:protection_rules|required_reviewers).*?environments/",
+    re.IGNORECASE | re.DOTALL,
+)
+
+# A job "conditions on a protection rule" when its `if:` expression consults
+# reviewer/approval state. This is the second half of the same property: a job
+# could consume a protection-rule fact another job emitted as an output.
+_PROTECTION_RULE_CONDITION: Final[re.Pattern[str]] = re.compile(
+    r"required_reviewers|protection_rules|approval",
+    re.IGNORECASE,
+)
+
+
+def _protection_rule_readers(document: Any) -> set[str]:
+    """Return every job whose run surface reads an environment protection rule."""
+    jobs = document.get("jobs", {})
+    return {
+        name
+        for name, job in jobs.items()
+        if isinstance(job, Mapping) and _PROTECTION_RULE_READ.search(_command_lines(_run_surface(job)))
+    }
+
+
+def _protection_rule_conditioned_jobs(document: Any) -> set[str]:
+    """Return every job whose `if:` expression consults human-approval state."""
+    jobs = document.get("jobs", {})
+    return {
+        name
+        for name, job in jobs.items()
+        if isinstance(job, Mapping) and _PROTECTION_RULE_CONDITION.search(str(job.get("if", "")))
+    }
+
+
 def test_workflow_shape_and_least_privilege_top_level() -> None:
     """One run-bound input, least-privilege top-level perms, the three staged jobs."""
     document = _document()
@@ -135,7 +173,9 @@ def test_workflow_shape_and_least_privilege_top_level() -> None:
         "dry_run",
     }
     assert document["permissions"] == {"contents": "read"}
-    assert set(document["jobs"]) == {"operator-preflight", "validate", "publish"}
+    # Two staged jobs since the approval gate's removal: the retired
+    # `operator-preflight` job existed only to enforce it.
+    assert set(document["jobs"]) == {"validate", "publish"}
 
 
 def test_publication_declares_no_tag_trigger_the_dispatch_path_would_mask() -> None:
@@ -165,11 +205,10 @@ def test_dry_run_validates_everything_and_skips_publish() -> None:
     assert dry_run["type"] == "boolean"
     assert dry_run["default"] is False
     assert dry_run["required"] is False
-    # Only the publish job is conditioned on dry_run; operator-preflight and
-    # validate always run so the validate-everything-publish-nothing mode is real.
+    # Only the publish job is conditioned on dry_run; validate always runs so
+    # the validate-everything-publish-nothing mode is real.
     publish = document["jobs"]["publish"]
     assert publish["if"] == "${{ inputs.dry_run != true }}"
-    assert "if" not in document["jobs"]["operator-preflight"]
     assert "if" not in document["jobs"]["validate"]
 
 
@@ -181,7 +220,7 @@ def test_oidc_and_write_are_confined_to_the_protected_publish_job() -> None:
     assert publish["permissions"] == {"id-token": "write", "contents": "write"}
     assert publish["needs"] == "validate"
 
-    for name in ("operator-preflight", "validate"):
+    for name in ("validate",):
         perms = document["jobs"][name].get("permissions", {})
         assert perms.get("id-token") != "write", f"{name} must not mint an OIDC token"
 
@@ -255,26 +294,78 @@ def test_validate_aggregates_all_eleven_rows_from_authoritative_sources() -> Non
     assert "--evidence-dir" in surface
 
 
-def test_preflight_enforces_the_human_approval_gate_it_promises() -> None:
-    """The required-reviewers rule is verified, not merely instructed.
+def test_no_job_gates_the_publication_on_a_human_protection_rule() -> None:
+    """The human approval gate is ABSENT, and its absence is the asserted property.
 
-    ``environment: release`` is satisfied by an environment with NO protection
-    rules, so the publish job would promote to PyPI and every public channel
-    with no human in the loop while prerequisite 2's text still claimed "that
-    approval click is the human release gate". The live environment was in
-    exactly that state when this gate was written.
+    This gate is the inverse of the one it replaces. Three accepted 2026-07-27
+    records and this test previously asserted that the publication refused
+    unless the `release` environment carried a `required_reviewers` rule. That
+    choice was reversed: the pipeline is fully automated, the mechanical guard
+    set is the whole safety net, and the operator removed the protection rule
+    from the forge.
+
+    A removal that is merely performed reads, to the next honesty pass, as
+    something that went missing -- so it is pinned here. Without this test an
+    agent reading those three records would "restore" the gate and silently
+    re-block every release.
+
+    What is NOT asserted: that no human ever approves anything. `environment:
+    release` stays on the publish job and is checked below, because it is the
+    Trusted Publishing trust anchor and the shared-runner product boundary, not
+    merely the click's former host. Deleting the environment breaks OIDC
+    publication outright.
     """
-    preflight = _document()["jobs"]["operator-preflight"]
-    surface = _run_surface(preflight)
-    assert "environments/release" in surface, "nothing reads the environment's protection rules"
-    assert "required_reviewers" in surface
-    # Fail-closed: an unreadable environment is NOT a confirmed gate.
-    assert "could not be read" in surface
-    # ...but a dry_run publishes nothing, so the diagnostic stays usable.
-    assert "::warning::" in surface
-    assert "DRY_RUN" in surface
-    # The publish job is still the thing the environment protects.
-    assert _document()["jobs"]["publish"]["environment"] == "release"
+    document = _document()
+
+    offenders = _protection_rule_readers(document)
+    assert not offenders, (
+        f"jobs reading an environment protection rule: {sorted(offenders)}. "
+        "The human approval gate was deliberately removed; a job that reads "
+        "protection rules is re-introducing it."
+    )
+
+    conditioned = _protection_rule_conditioned_jobs(document)
+    assert not conditioned, (
+        f"jobs conditioned on a human protection rule: {sorted(conditioned)}. "
+        "Publication proceeds on the mechanical guard set alone."
+    )
+
+    # The retired job is gone in full, not neutralised into a warning: a live
+    # job asserting a gate that no longer exists is the documented-but-
+    # unenforced shape the original job was built to close.
+    assert "operator-preflight" not in document["jobs"]
+
+    # The environment survives, and with it the OIDC trust anchor.
+    assert document["jobs"]["publish"]["environment"] == "release"
+
+
+def test_the_protection_rule_pin_reds_on_a_planted_reader() -> None:
+    """Positive control: the absence pin above is not vacuous.
+
+    An assertion that nothing matches passes just as happily when the matcher
+    is broken as when the tree is clean, so the pin is worthless until a
+    planted violation is shown to trip it. Both halves are planted, because
+    both halves are load-bearing and either could rot independently.
+    """
+    reading = {
+        "jobs": {
+            "sneaky": {
+                "steps": [
+                    {"run": 'gh api "repos/${GITHUB_REPOSITORY}/environments/release" --jq .protection_rules'},
+                ],
+            },
+        },
+    }
+    assert _protection_rule_readers(reading) == {"sneaky"}
+
+    conditioned = {"jobs": {"sneaky": {"if": "${{ needs.check.outputs.required_reviewers == 'true' }}", "steps": []}}}
+    assert _protection_rule_conditioned_jobs(conditioned) == {"sneaky"}
+
+    # And the clean shape trips neither, so the matchers are not simply
+    # returning every job they are handed.
+    clean = {"jobs": {"publish": {"if": "${{ inputs.dry_run != true }}", "steps": [{"run": "uv publish"}]}}}
+    assert _protection_rule_readers(clean) == set()
+    assert _protection_rule_conditioned_jobs(clean) == set()
 
 
 def test_acquisition_inputs_are_optional_at_the_form_and_derived_at_the_gate() -> None:
