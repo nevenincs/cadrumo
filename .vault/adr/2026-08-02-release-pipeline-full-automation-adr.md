@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:d2bab0045ab5ac973fe655562b5f786622fc8c5d0b00c53413b05501d55ef451'
+body_hash: 'sha256:448527659bf00cdcca9aee9920c3a34c62c3386eda72d85ea93cb197f5780de4'
 related:
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
   - "[[2026-07-27-publication-lane-consolidation-adr]]"
