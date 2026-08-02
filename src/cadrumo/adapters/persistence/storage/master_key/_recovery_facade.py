@@ -51,14 +51,13 @@ from ._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
-from ._recovery_record import RecoveryRecord
+from ._recovery_record import RECOVERY_HKDF_INFO, RecoveryRecord
 from ._zeroise import zeroise as _zeroise
 
 if TYPE_CHECKING:
     from ._master_key import FileFallbackMasterKeyProvider, MasterKeyProvider
 
 _GCM_TAG_BYTES = 16
-_HKDF_INFO = "cadrumo.recovery-key.master-wrap.v1"
 
 
 class MintedRecovery:
@@ -110,7 +109,7 @@ def _envelope_from_blob(blob: EncryptedBlob, created_at: datetime) -> RecoveryRe
         nonce_b64=base64.b64encode(blob.nonce).decode("ascii"),
         tag_b64=base64.b64encode(tag).decode("ascii"),
         mnemonic_word_count=24,
-        hkdf_info=_HKDF_INFO,
+        hkdf_info=RECOVERY_HKDF_INFO,
         created_at=created_at,
     )
 

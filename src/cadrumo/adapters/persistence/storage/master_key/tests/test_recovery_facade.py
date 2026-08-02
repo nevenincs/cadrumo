@@ -42,6 +42,7 @@ from .._recovery_facade import (
     recovery_rotate,
     recovery_status,
     recovery_verify,
+    save_recovery_envelope,
     unwrap_recovery_envelope,
     verify_recovery_mnemonic,
 )
@@ -108,6 +109,49 @@ def test_minted_envelope_is_strict_recovery_record() -> None:
     assert minted.envelope.created_at == _NOW
     # 24-word BIP-39 English mnemonic
     assert len(minted.mnemonic.split()) == 24
+
+
+def test_persisted_envelope_with_a_rewritten_kdf_claim_is_refused(tmp_path: Path) -> None:
+    """An archived envelope cannot name a KDF the recovery does not derive under.
+
+    Real mint, real save, real load. Only the ``hkdf_info`` text is rewritten
+    on disk; the wrap material is left byte-identical and still unwraps under
+    the genuine mnemonic, so the refusal is attributable to the rewritten claim
+    alone.
+
+    Before the field was bound this file loaded cleanly, reported a DIFFERENT
+    operator-visible ``recovery_fingerprint``, and recovered the same DEK --
+    the fingerprint operators are told to correlate across verify and recover
+    moved while nothing about the operation had.
+    """
+    minted = mint_recovery_envelope(dek=bytes(range(32)), created_at=_NOW)
+    path = tmp_path / "master.recovery.key"
+    save_recovery_envelope(minted.envelope, path)
+
+    genuine = path.read_text(encoding="utf-8")
+    assert minted.envelope.hkdf_info in genuine
+    path.write_text(genuine.replace(minted.envelope.hkdf_info, "bogus-kdf-v99"), encoding="utf-8")
+
+    with pytest.raises(RecoveryVerificationError):
+        load_recovery_envelope(path)
+
+
+def test_untampered_envelope_still_recovers_the_key_from_disk(tmp_path: Path) -> None:
+    """POSITIVE CONTROL for the refusal above: the ordinary path is unaffected.
+
+    Without this, the tamper refusal is equally satisfied by a loader that
+    refuses every envelope. Round-trips through the real save/load and unwraps
+    the actual DEK, and pins that the fingerprint survives the file round-trip.
+    """
+    dek = bytes(range(32))
+    minted = mint_recovery_envelope(dek=dek, created_at=_NOW)
+    path = tmp_path / "master.recovery.key"
+    save_recovery_envelope(minted.envelope, path)
+
+    reloaded = load_recovery_envelope(path)
+    assert reloaded == minted.envelope
+    assert reloaded.recovery_fingerprint == minted.envelope.recovery_fingerprint
+    assert unwrap_recovery_envelope(envelope=reloaded, mnemonic=minted.mnemonic) == dek
 
 
 def test_unwrap_with_wrong_mnemonic_raises_recovery_verification_error() -> None:

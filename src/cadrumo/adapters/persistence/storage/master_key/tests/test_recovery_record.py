@@ -11,7 +11,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .._recovery_record import RecoveryRecord
+from .._recovery import _HKDF_CONTEXT_RECOVERY
+from .._recovery_record import RECOVERY_HKDF_INFO, RecoveryRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -28,7 +29,7 @@ def _record(**overrides: object) -> RecoveryRecord:
         "nonce_b64": _b64(12),
         "tag_b64": _b64(16),
         "mnemonic_word_count": 24,
-        "hkdf_info": "aeat-recovery-v1",
+        "hkdf_info": RECOVERY_HKDF_INFO,
         "created_at": _CREATED_AT,
     }
     defaults.update(overrides)
@@ -78,6 +79,58 @@ def test_rejects_empty_hkdf_info() -> None:
         _record(hkdf_info="")
 
 
+def test_declared_hkdf_info_is_the_context_the_unwrap_derives_under() -> None:
+    """The persisted claim is READ FROM the derivation constant, not restated.
+
+    This is the property the tamper refusal below rests on: if the two were
+    independent values, an edit to either one would leave the record claiming
+    a KDF the recovery does not use, and every other assertion here would keep
+    passing.
+    """
+    assert _HKDF_CONTEXT_RECOVERY.decode("ascii") == RECOVERY_HKDF_INFO
+    assert _record().hkdf_info == RECOVERY_HKDF_INFO
+
+
+def test_rejects_a_foreign_hkdf_info() -> None:
+    """A record naming any other KDF context is refused at construction."""
+    with pytest.raises(ValidationError):
+        _record(hkdf_info="bogus-kdf-v99")
+
+
+def test_rejects_a_near_miss_hkdf_info() -> None:
+    """The match is exact -- a version bump is not silently absorbed.
+
+    DISCRIMINATING against a prefix or family check: this value differs from
+    the canonical context only in its trailing version, which is exactly the
+    shape a claim/derivation drift would take.
+    """
+    with pytest.raises(ValidationError):
+        _record(hkdf_info=f"{RECOVERY_HKDF_INFO[:-1]}2")
+
+
+def test_hkdf_info_tampered_on_disk_is_refused_at_reload() -> None:
+    """The archived KDF claim cannot be rewritten under a valid wrap.
+
+    The rest of the envelope is left byte-identical and genuinely unwrappable,
+    so the refusal is attributable to the rewritten claim alone. Before the
+    field was bound, this blob reloaded cleanly, reported a DIFFERENT operator-
+    visible fingerprint, and recovered the same key -- archived metadata
+    asserting a KDF the operation never used.
+    """
+    record = _record()
+    document = json.loads(record.model_dump_json())
+    document["hkdf_info"] = "bogus-kdf-v99"
+
+    with pytest.raises(ValidationError):
+        RecoveryRecord.model_validate_json(json.dumps(document))
+
+    # Positive control: the same blob with the claim untouched still reloads,
+    # so the refusal above is not an artefact of a document this path rejects
+    # for some unrelated reason.
+    document["hkdf_info"] = RECOVERY_HKDF_INFO
+    assert RecoveryRecord.model_validate_json(json.dumps(document)) == record
+
+
 def test_dropped_base64_field_in_serialized_blob_surfaces_at_reload() -> None:
     """Anti-tautology proof for the RecoveryRecord serialization boundary.
 
@@ -122,7 +175,7 @@ def test_rejects_unknown_keys() -> None:
                 "nonce_b64": _b64(12),
                 "tag_b64": _b64(16),
                 "mnemonic_word_count": 24,
-                "hkdf_info": "aeat-recovery-v1",
+                "hkdf_info": RECOVERY_HKDF_INFO,
                 "created_at": _CREATED_AT,
                 "unexpected": "nope",
             },
