@@ -177,10 +177,38 @@ class TestMovementBounds:
         with pytest.raises(ValidationError):
             _movement(kind="bogus")
 
-    @pytest.mark.parametrize("bad_date", ["not-a-date", "2026-13-45", "01/03/2026", ""])
+    @pytest.mark.parametrize("bad_date", ["not-a-date", "2026-13-45", "01/03/2026", "20260301", ""])
     def test_malformed_movement_date_is_refused(self, bad_date: str) -> None:
+        """The compact ``YYYYMMDD`` form is refused alongside every other malformed shape.
+
+        :meth:`datetime.date.fromisoformat` alone accepts ``20260301`` (Python
+        3.11+ extended it to the compact ISO form), but that shape cannot
+        round-trip through :class:`~domain.contribuyente.inventory.MovementRecord`,
+        which only accepts the extended ``YYYY-MM-DD`` form. Accepting it here
+        would create a payload/canonical-schema split.
+        """
         with pytest.raises(ValidationError):
             _movement(movement_date=bad_date)
+
+    def test_compact_movement_date_refused_by_payload_and_by_canonical_record_alike(self) -> None:
+        """The wire payload and the canonical domain record agree: compact form is refused."""
+        with pytest.raises(ValidationError):
+            _movement(movement_date="20260301")
+
+        canonical_kwargs = {
+            "movement_id": "mv-1",
+            "movement_date": "20260301",
+            "kind": MovementKind.PURCHASE,
+            "sku": "widget",
+            "quantity": Decimal("5"),
+            "unit_cost": Decimal("12.00"),
+            "taxable_base": Decimal("60.00"),
+            "iva_rate": Decimal("21"),
+            "iva_amount": Decimal("12.60"),
+            "deductible_iva_ratio": Decimal("1.00"),
+        }
+        with pytest.raises(ValidationError):
+            MovementRecord(**canonical_kwargs)  # type: ignore[arg-type]
 
     def test_zero_quantity_is_refused(self) -> None:
         with pytest.raises(ValidationError):

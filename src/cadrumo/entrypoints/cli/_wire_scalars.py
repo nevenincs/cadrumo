@@ -21,11 +21,12 @@ Decimal magnitudes have the same problem and are handled by the sibling
 
 from __future__ import annotations
 
-from datetime import date
 from enum import StrEnum
 from typing import Annotated
 
 from pydantic import AfterValidator
+
+from ...core.parsing import require_iso8601_date
 
 
 def enum_value_text(enum_cls: type[StrEnum]) -> object:
@@ -50,13 +51,15 @@ def enum_value_text(enum_cls: type[StrEnum]) -> object:
 
 
 def _validate_iso_date(value: str) -> str:
-    """Return ``value`` when it is a real ISO-8601 calendar day."""
-    try:
-        date.fromisoformat(value)
-    except ValueError:
-        raise ValueError(
-            f"{value!r} is not an ISO-8601 calendar date; the accepted form is zero-padded YYYY-MM-DD"
-        ) from None
+    """Return ``value`` when it is a real, extended-form ISO-8601 calendar day.
+
+    Delegates to the canonical :func:`~cadrumo.core.parsing.require_iso8601_date`
+    rather than :meth:`datetime.date.fromisoformat` directly: the latter also
+    accepts the compact ``YYYYMMDD`` form, which cannot round-trip through the
+    domain records (e.g. :class:`~cadrumo.domain.contribuyente.inventory.MovementRecord`)
+    that parse this same field with the canonical helper.
+    """
+    require_iso8601_date(value)
     return value
 
 
