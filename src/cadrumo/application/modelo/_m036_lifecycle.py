@@ -41,11 +41,10 @@ from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, ProfileId
 from ...core.time import now
 from ...domain.buckets import (
-    BucketEvent,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
+    bucket_event_history_write,
+    build_bucket_event,
 )
 from ...domain.calculations.registry import CensoModeloEventKind
 
@@ -160,6 +159,11 @@ class M036DeclarationResult(BaseModel):
     def snapshot_id(self) -> str:
         return self.declaration_id
 
+
+#: Payload version this declaration's audit event has always persisted. Held at
+#: 1 deliberately: the modelo-wide builder supplies 2, and re-versioning a
+#: persisted audit contract is a separate decision from co-committing the event.
+_M036_BUCKET_EVENT_PAYLOAD_VERSION = 1
 
 _EVENT_KIND_TO_BUCKET_EVENT: dict[CensoModeloEventKind, BucketEventType] = {
     CensoModeloEventKind.ALTA: BucketEventType.CENSO_DECLARATION_ALTA,
@@ -333,8 +337,6 @@ def record_m036_declaration(
         recorded_at=occurred_at,
     )
 
-    _m036_declaration_repository(bucket_id).save(result)
-
     event_type = _EVENT_KIND_TO_BUCKET_EVENT[command.event_kind]
     payload: dict[str, str] = {
         "profile_id": str(command.profile_id),
@@ -344,7 +346,13 @@ def record_m036_declaration(
         payload["sede_justificante"] = command.sede_justificante
     if command.note is not None:
         payload["note"] = command.note
-    event_id = derive_bucket_event_id(
+    # Built through the shared derive helper rather than a local
+    # derive_bucket_event_id + BucketEvent construction, which was a fourth copy
+    # of that shape. The domain-level builder is used rather than the modelo
+    # wrapper because this event persists payload_version=1: the wrapper
+    # supplies the modelo-wide version 2, and silently re-versioning a persisted
+    # audit contract is not part of closing this finding.
+    declaration_event = build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
@@ -352,23 +360,15 @@ def record_m036_declaration(
         object_type=BucketEventObjectType.PROFILE,
         object_id=declaration_id,
         payload=payload,
+        payload_version=_M036_BUCKET_EVENT_PAYLOAD_VERSION,
     )
-    catalogue_repo = BucketEventHistoryRepository()
-    next_catalogue = append_bucket_event(
-        catalogue_repo.load(),
-        BucketEvent(
-            event_id=event_id,
-            bucket_id=bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor="operator",
-            object_type=BucketEventObjectType.PROFILE,
-            object_id=declaration_id,
-            payload_version=1,
-            payload=payload,
-        ),
+    # One unit of work: the declaration snapshot and its audit event. Saved
+    # first and emitted afterwards, an event-storage failure left the M036
+    # declaration durable with nothing in the history accounting for it.
+    _m036_declaration_repository(bucket_id).save_with_secure_object_writes(
+        result,
+        (bucket_event_history_write(BucketEventHistoryRepository(), (declaration_event,)),),
     )
-    catalogue_repo.save(next_catalogue)
 
     return result
 
