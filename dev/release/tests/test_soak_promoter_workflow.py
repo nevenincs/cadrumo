@@ -124,3 +124,31 @@ def test_the_dispatch_target_is_the_module_the_unit_tests_cover() -> None:
 
     assert invoked.is_file()
     assert "def main(" in invoked.read_text(encoding="utf-8"), "the workflow invokes this module as a CLI"
+
+
+def test_the_report_only_guard_tests_truth_not_emptiness() -> None:
+    """`${VAR:+flag}` expands for the string "false", which is non-empty.
+
+    A boolean dispatch input renders as the literal `false`, so the
+    emptiness-test form passed `--report-only` on EVERY manual dispatch and a
+    manual promoter run could therefore never promote anything. A scheduled
+    tick leaves the input unset, so the schedule was unaffected - which is
+    precisely why the defect was invisible in the path anyone would watch.
+    """
+    surface = _run_surface(_document())
+
+    assert "${REPORT_ONLY:+" not in surface, "the emptiness-test form treats the string 'false' as true"
+    assert '"${REPORT_ONLY}" == "true"' in surface, "the flag must be gated on the value being true"
+
+
+def test_the_report_only_input_is_a_boolean_defaulting_to_false() -> None:
+    """A dispatch that accepts the defaults must be able to promote.
+
+    Pinned together with the guard above: the two only make sense as a pair,
+    since a default of true would reproduce the same never-promotes outcome
+    through configuration rather than through shell semantics.
+    """
+    report_only = _document()[True]["workflow_dispatch"]["inputs"]["report_only"]
+
+    assert report_only["type"] == "boolean"
+    assert report_only["default"] is False

@@ -307,11 +307,7 @@ def test_the_seal_job_is_terminal() -> None:
     # seal. Excluding it keeps this assertion about the property that matters -
     # that no stage waits on or continues after the seal - rather than about
     # the shape of the needs graph.
-    stages = [
-        name
-        for name in dependents
-        if "failure()" not in str(jobs[name].get("if", ""))
-    ]
+    stages = [name for name in dependents if "failure()" not in str(jobs[name].get("if", ""))]
     assert stages == [], f"release stages depending on the terminal seal: {stages}"
 
 
@@ -418,3 +414,55 @@ def test_the_campaign_is_skipped_on_resume_without_skipping_the_chain() -> None:
 
     assert "always()" in campaign["if"], "a skipped bump must not skip the campaign job on the resume path"
     assert "needs.bump.result != 'failure'" in campaign["if"], "a genuinely failed bump must still stop the chain"
+
+
+def test_every_acquisition_run_id_reaches_the_seal_stage() -> None:
+    """The ids were computed and then dropped at the job boundary.
+
+    `seal_candidate` reads three acquisition environment variables; the stage
+    declared no outputs and the seal step set none, so a sealed candidate
+    recorded empty acquisition sources and the promoter would dispatch the
+    publication without its acquisition proofs. Vacuous only while the
+    descriptor claims python alone - it arms the moment a channel is claimed,
+    which is exactly when nobody is looking for it.
+    """
+    jobs = _document()["jobs"]
+    acquire_outputs = set(jobs["acquire"].get("outputs") or {})
+
+    assert acquire_outputs == {"scoop_run_id", "homebrew_run_id", "claude_plugin_run_id"}
+
+    seal_env = str(jobs["seal"]["steps"][-1].get("env", {}))
+    for variable, output in (
+        ("SCOOP_RUN_ID", "scoop_run_id"),
+        ("HOMEBREW_RUN_ID", "homebrew_run_id"),
+        ("CLAUDE_EVIDENCE_RELEASE", "claude_plugin_run_id"),
+    ):
+        assert variable in seal_env, f"the seal step does not set {variable}"
+        assert f"needs.acquire.outputs.{output}" in seal_env, f"{variable} is not fed from the acquire stage"
+
+
+def test_the_seal_reads_exactly_the_variables_the_module_consumes() -> None:
+    """Bind the workflow's env names to the module's own reads.
+
+    The original defect was a silent mismatch between two files that never
+    reference each other, so this asserts against the module source rather
+    than restating the names a second time.
+    """
+    module = (_REPO_ROOT / "dev" / "release" / "seal_candidate.py").read_text(encoding="utf-8")
+    seal_env = str(_document()["jobs"]["seal"]["steps"][-1].get("env", {}))
+
+    for variable in ("SCOOP_RUN_ID", "HOMEBREW_RUN_ID", "CLAUDE_EVIDENCE_RELEASE"):
+        assert f'"{variable}"' in module, f"{variable} is no longer read by the seal module"
+        assert variable in seal_env, f"{variable} is read by the module but never set by the workflow"
+
+
+def test_an_unmapped_acquisition_lane_refuses_rather_than_dropping_its_run_id() -> None:
+    """A future lane with no output name must fail loudly, not silently vanish.
+
+    This is the same defect class one step later: adding a lane without
+    plumbing its id would otherwise reproduce exactly the drop this Step fixes.
+    """
+    surface = _invocation_surface(_document(), "acquire")
+
+    assert "carries no output name" in surface
+    assert "--output-name" in surface

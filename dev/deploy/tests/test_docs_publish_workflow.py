@@ -112,7 +112,12 @@ def test_the_publish_step_exports_the_role_under_the_publisher_own_name() -> Non
 def test_a_documentation_failure_cannot_unwind_the_release() -> None:
     """It alerts and stops. Anything more would be the coupling this avoids."""
     steps = _job()["steps"]
-    alert = next(step for step in steps if step.get("if") == "failure()")
+    # Matched by containment rather than exact equality: the guard now also
+    # admits a cancelled run, because a cancellation (runner eviction, a
+    # concurrency interaction) leaves the same silence a failure would and
+    # `failure()` alone does not fire for it. An exact-equality match pinned the
+    # guard's spelling rather than its meaning.
+    alert = next(step for step in steps if "failure()" in str(step.get("if", "")))
     body = str(alert["run"])
     assert "::error::" in body
     assert "remains published" in body

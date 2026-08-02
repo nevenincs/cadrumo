@@ -156,6 +156,20 @@ def acquisition_lane_workflows(descriptor: DownloadDescriptor) -> tuple[str, ...
     )
 
 
+def lane_output_name(workflow_path: str) -> str:
+    """Return the workflow-output name one acquisition lane's run id is carried under.
+
+    Derived from the same mapping that chose the lane, so a lane can never be
+    dispatched without somewhere to put its run id. A lane whose id is dropped
+    reaches the publication without its acquisition proof, and does so silently
+    because the descriptor claiming that channel is what arms the path.
+    """
+    for channel_id, path in LANE_WORKFLOW_BY_CHANNEL.items():
+        if path == workflow_path:
+            return f"{channel_id.replace('-', '_')}_run_id"
+    raise ValueError(f"acquisition lane {workflow_path!r} has no declared output name")
+
+
 def unmapped_claimed_channels(descriptor: DownloadDescriptor) -> tuple[str, ...]:
     """Return claimed channel ids this module cannot source evidence for.
 
@@ -288,8 +302,12 @@ def main(argv: list[str] | None = None) -> int:
     descriptor = load_descriptor()
 
     if args.emit_lane_workflows:
+        # Each line is `<workflow path>	<output name>`. The output name rides
+        # along so the orchestrator needs no lane names of its own: a lane whose
+        # id had nowhere to go was silently dropped, and re-deriving the mapping
+        # in shell would fork this module's authority over the lane set.
         for workflow_path in acquisition_lane_workflows(descriptor):
-            print(workflow_path)
+            print(f"{workflow_path}	{lane_output_name(workflow_path)}")
         return 0
 
     if args.check_host_extension_precondition:

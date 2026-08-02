@@ -699,7 +699,7 @@ jobs:
     # every job and running under `failure()` is what makes this cover the
     # whole chain.
     needs: [validate, publish]
-    if: ${{ failure() }}
+    if: ${{ failure() || cancelled() }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 10
     permissions:
@@ -729,4 +729,10 @@ jobs:
           #
           # Never fatal: the run is already red and its FIRST error is the one
           # that matters, so a refused alert warns and exits 0.
-          uv run --frozen python -m dev.release.alerting --stage "publication"
+          # The captured refusal text, so the alert body carries WHY the run
+          # failed rather than the no-detail placeholder. An alert saying only
+          # "something failed, here is a link" spends the operator's attention
+          # on navigation, which is the cost this channel exists to avoid.
+          jq_filter='[.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | .name + ": " + .conclusion] | join("; ")'
+          detail="$(gh run view "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --json jobs --jq "${jq_filter}" 2>/dev/null || true)"
+          uv run --frozen python -m dev.release.alerting --stage "publication" --detail "${detail:-no per-job detail available}"

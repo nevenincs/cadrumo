@@ -240,6 +240,17 @@ jobs:
     permissions:
       actions: write
       contents: read
+    outputs:
+      # One output per acquisition lane, carried to the seal stage. Without
+      # these the ids were computed and DROPPED: the seal module reads three
+      # acquisition environment variables, the stage declared no outputs, and
+      # the seal step set none - so a sealed candidate recorded empty
+      # acquisition sources and the promoter would have dispatched the
+      # publication without its acquisition proofs. Vacuous only while the
+      # descriptor claims python alone; it arms the moment a channel is claimed.
+      scoop_run_id: ${{ steps.lanes.outputs.scoop_run_id }}
+      homebrew_run_id: ${{ steps.lanes.outputs.homebrew_run_id }}
+      claude_plugin_run_id: ${{ steps.lanes.outputs.claude_plugin_run_id }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -252,6 +263,7 @@ jobs:
           enable-cache: true
 
       - name: Dispatch every lane the claimed channels require
+        id: lanes
         env:
           GH_TOKEN: ${{ github.token }}
           PACKAGING_RUN_ID: ${{ needs.campaign.outputs.packaging_run_id }}
@@ -268,15 +280,18 @@ jobs:
             echo "No acquisition lane is claimed by the current channel descriptor; nothing to dispatch."
             exit 0
           fi
-          while IFS= read -r lane; do
+          while IFS=$'	' read -r lane output_name; do
             [[ -z "${lane}" ]] && continue
-            echo "Dispatching acquisition lane ${lane}"
-            uv run --frozen python -m dev.release.run_resolution \
-              --workflow "${lane}" \
-              --head-sha "${HEAD_SHA}" \
-              --repository "${GITHUB_REPOSITORY}" \
-              --input "source_run_id=${PACKAGING_RUN_ID}" \
-              --input "source_commit=${HEAD_SHA}"
+            if [[ -z "${output_name}" ]]; then
+              echo "REFUSED: acquisition lane ${lane} carries no output name; its run id would be dropped" >&2
+              exit 1
+            fi
+            # The output name is DERIVED alongside the lane by the same module,
+            # so this workflow names no lane at all. A lane whose run id had
+            # nowhere to go was previously dropped at the job boundary, and the
+            # publication would then run without its acquisition proof.
+            echo "Dispatching acquisition lane ${lane} (-> ${output_name})"
+            uv run --frozen python -m dev.release.run_resolution               --workflow "${lane}"               --head-sha "${HEAD_SHA}"               --repository "${GITHUB_REPOSITORY}"               --input "source_run_id=${PACKAGING_RUN_ID}"               --input "source_commit=${HEAD_SHA}"               --output-name "${output_name}"
           done <<< "${lanes}"
 
   seal:
@@ -305,6 +320,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PACKAGING_RUN_ID: ${{ needs.campaign.outputs.packaging_run_id }}
           DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
+          # The acquisition proofs this release produced. `seal_candidate` reads
+          # these three names; leaving them unset recorded a candidate with no
+          # acquisition sources at all.
+          SCOOP_RUN_ID: ${{ needs.acquire.outputs.scoop_run_id }}
+          HOMEBREW_RUN_ID: ${{ needs.acquire.outputs.homebrew_run_id }}
+          CLAUDE_EVIDENCE_RELEASE: ${{ needs.acquire.outputs.claude_plugin_run_id }}
         run: |
           # THIS JOB IS TERMINAL, and that is the design rather than an
           # omission. The soak runs 48-72 hours; no workflow run spans that, and
@@ -327,7 +348,7 @@ jobs:
     # every job and running under `failure()` is what makes this cover the
     # whole chain.
     needs: [preflight, precondition, bump, campaign, acquire, seal]
-    if: ${{ failure() }}
+    if: ${{ failure() || cancelled() }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 10
     permissions:
@@ -357,4 +378,10 @@ jobs:
           #
           # Never fatal: the run is already red and its FIRST error is the one
           # that matters, so a refused alert warns and exits 0.
-          uv run --frozen python -m dev.release.alerting --stage "orchestration"
+          # The captured refusal text, so the alert body carries WHY the run
+          # failed rather than the no-detail placeholder. An alert saying only
+          # "something failed, here is a link" spends the operator's attention
+          # on navigation, which is the cost this channel exists to avoid.
+          jq_filter='[.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | .name + ": " + .conclusion] | join("; ")'
+          detail="$(gh run view "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --json jobs --jq "${jq_filter}" 2>/dev/null || true)"
+          uv run --frozen python -m dev.release.alerting --stage "orchestration" --detail "${detail:-no per-job detail available}"

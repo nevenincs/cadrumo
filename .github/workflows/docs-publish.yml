@@ -109,7 +109,7 @@ jobs:
             --confirm publish-cadrumo-docs
 
       - name: Alert on failure without touching the release
-        if: failure()
+        if: ${{ failure() || cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
           CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}

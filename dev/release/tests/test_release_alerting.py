@@ -410,3 +410,80 @@ def test_a_waited_on_acquisition_lane_is_deliberately_excluded() -> None:
         "publish-release.yml",
         "docs-publish.yml",
     }
+
+
+def test_every_alert_invocation_supplies_the_refusal_detail() -> None:
+    """An alert must say WHY, not only that something failed.
+
+    Without a detail argument the emitter rendered its `(no detail captured)`
+    placeholder on every alert, so the operator got a link and nothing else -
+    spending their attention on navigation, which is the cost this channel
+    exists to avoid.
+    """
+    for name in ("release-orchestrator.yml", "release-soak-promoter.yml", "publish-release.yml", "docs-publish.yml"):
+        document = _load(_WORKFLOW_DIR / name)
+        invocations = [
+            str(step.get("run", ""))
+            for job in document["jobs"].values()
+            for step in job.get("steps", []) or []
+            if "dev.release.alerting" in str(step.get("run", ""))
+        ]
+        assert invocations, f"{name} carries no alert invocation"
+        for invocation in invocations:
+            assert "--detail" in invocation, f"{name} alerts without supplying the refusal detail"
+
+
+def test_the_rendered_payload_carries_the_supplied_detail() -> None:
+    """The emitter must actually surface what the workflow captured.
+
+    Paired with the assertion above deliberately: passing `--detail` and
+    dropping it in the payload would satisfy the workflow-side check while
+    delivering the same empty alert.
+    """
+    body = alert_payload(_alert())
+
+    assert "REFUSED: version 1.2.3 is burned" in body
+    assert "(no detail captured)" not in body
+
+    # ...and the placeholder still appears when there genuinely is no detail,
+    # so an empty alert is visibly empty rather than silently blank.
+    empty = alert_payload(ReleaseAlert(workflow="w", run_id="1", run_url="u", stage="s", detail="  "))
+    assert "(no detail captured)" in empty
+
+
+def test_every_release_path_alert_guard_admits_a_cancelled_run() -> None:
+    """A cancelled run is the same silence as a failed one.
+
+    A runner eviction or a concurrency interaction cancels rather than fails,
+    and `failure()` alone does not fire for a cancellation - so the release
+    would end with no result and no alert, which is exactly the state this
+    campaign exists to remove.
+    """
+    for name in ("release-orchestrator.yml", "release-soak-promoter.yml", "publish-release.yml", "docs-publish.yml"):
+        document = _load(_WORKFLOW_DIR / name)
+        guards = [
+            str(job.get("if", "")) + str(step.get("if", ""))
+            for job in document["jobs"].values()
+            for step in job.get("steps", []) or []
+            if "dev.release.alerting" in str(step.get("run", ""))
+        ]
+        assert guards, f"{name} carries no alert invocation"
+        for guard in guards:
+            assert "cancelled()" in guard, f"{name} alert guard does not admit a cancelled run: {guard!r}"
+
+
+def test_a_failure_only_guard_is_caught_by_the_cancellation_assertion() -> None:
+    """Positive control for the guard scan above.
+
+    Without it, a scan that looked at the wrong field would pass on a tree
+    where every guard was still `failure()` alone.
+    """
+    failure_only = {"jobs": {"j": {"if": "${{ failure() }}", "steps": [{"run": "dev.release.alerting"}]}}}
+
+    guards = [
+        str(job.get("if", "")) + str(step.get("if", ""))
+        for job in failure_only["jobs"].values()
+        for step in job.get("steps", [])
+        if "dev.release.alerting" in str(step.get("run", ""))
+    ]
+    assert guards and all("cancelled()" not in guard for guard in guards)

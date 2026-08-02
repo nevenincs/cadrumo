@@ -83,12 +83,22 @@ jobs:
           # The decision, the readiness re-verification, and the dispatch all
           # live in dev.release.soak_promoter, so they are unit-tested against a
           # real clock rather than expressed as shell arithmetic on dates.
+          # Tested for TRUTH, not for emptiness. `${VAR:+flag}` expands whenever
+          # VAR is non-empty, and a boolean dispatch input renders as the
+          # literal string "false" - which is non-empty. The flag was therefore
+          # passed on every manual dispatch, so a manual promoter run could
+          # never actually promote anything. A scheduled tick was unaffected
+          # (the input is unset there), which is exactly why it went unnoticed.
+          flags=()
+          if [[ "${REPORT_ONLY}" == "true" ]]; then
+            flags+=(--report-only)
+          fi
           uv run --frozen python -m dev.release.soak_promoter \
             --repository "${GITHUB_REPOSITORY}" \
-            ${REPORT_ONLY:+--report-only}
+            "${flags[@]}"
 
       - name: Alert the operator that this release-path run failed
-        if: failure()
+        if: ${{ failure() || cancelled() }}
         env:
           GH_TOKEN: ${{ github.token }}
           CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}
@@ -98,4 +108,10 @@ jobs:
           # workflows use a dedicated alert job for exactly that reason.
           #
           # Never fatal: the run is already red and its FIRST error matters most.
-          uv run --frozen python -m dev.release.alerting --stage "soak-promotion"
+          # The captured refusal text, so the alert body carries WHY the run
+          # failed rather than the no-detail placeholder. An alert saying only
+          # "something failed, here is a link" spends the operator's attention
+          # on navigation, which is the cost this channel exists to avoid.
+          jq_filter='[.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | .name + ": " + .conclusion] | join("; ")'
+          detail="$(gh run view "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --json jobs --jq "${jq_filter}" 2>/dev/null || true)"
+          uv run --frozen python -m dev.release.alerting --stage "soak-promotion" --detail "${detail:-no per-job detail available}"
