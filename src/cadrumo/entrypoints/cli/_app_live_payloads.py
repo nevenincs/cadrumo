@@ -24,10 +24,10 @@ persistence contract.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Annotated, Any, Literal
 
-from pydantic import AfterValidator, Field, model_validator
+from pydantic import AfterValidator, Field, field_validator, model_validator
 
 from ...application.calculations import ObservationSourceKind
 from ...application.live import (
@@ -886,6 +886,22 @@ class VerifyTgviResult(VerifyObservationPayload):
 # ---------------------------------------------------------------------------
 
 
+def _canonical_borrador_period(value: str) -> str:
+    """Validate and normalise the canonical string transport for a filing period."""
+    return str(Period.from_string(value))
+
+
+def _canonical_borrador_utc_timestamp(value: str) -> str:
+    """Require an ISO-8601 UTC timestamp while retaining its JSON string form."""
+    try:
+        timestamp = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError("must be an ISO-8601 timestamp") from exc
+    if timestamp.tzinfo is None or timestamp.utcoffset() != timedelta(0):
+        raise ValueError("must be a UTC timestamp")
+    return value
+
+
 class Borrador100SnapshotSummaryPayload(OutputSchema):
     """Summary row for one persisted Modelo 100 borrador snapshot.
 
@@ -895,13 +911,23 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
     superseded, discarded, or only through an explicit ``--state all`` listing.
     """
 
-    snapshot_id: str
-    filing_year: int
+    snapshot_id: SnapshotId
+    filing_year: int = Field(ge=1900, le=9999)
     period: str
     captured_at: str
-    source_url: str
-    binding_count: int
-    state: str
+    source_url: str = Field(min_length=1, max_length=2048)
+    binding_count: int = Field(ge=0)
+    state: Literal["active", "superseded", "discarded"]
+
+    @field_validator("period")
+    @classmethod
+    def _validate_period(cls, value: str) -> str:
+        return _canonical_borrador_period(value)
+
+    @field_validator("captured_at")
+    @classmethod
+    def _validate_captured_at(cls, value: str) -> str:
+        return _canonical_borrador_utc_timestamp(value)
 
 
 @register_schema("app.live.borrador.100.list")
@@ -913,13 +939,19 @@ class Borrador100ListResult(OutputSchema):
     :class:`Borrador100SnapshotService`.
     """
 
-    bucket_id: str
-    count: int
+    bucket_id: BucketId
+    count: int = Field(ge=0)
     rows: list[Borrador100SnapshotSummaryPayload]
+
+    @model_validator(mode="after")
+    def _require_count_to_match_rows(self) -> Borrador100ListResult:
+        if self.count != len(self.rows):
+            raise ValueError("count must equal the number of Borrador snapshot rows")
+        return self
 
 
 @register_schema("app.live.borrador.100.view")
-class Borrador100ViewResult(OutputSchema):
+class Borrador100ViewResult(Borrador100SnapshotSummaryPayload):
     """Typed detail view for one Modelo 100 borrador snapshot.
 
     ``binding_values`` is a ``{BindingId: string_value}`` mapping keyed by
@@ -930,14 +962,7 @@ class Borrador100ViewResult(OutputSchema):
     validation time.
     """
 
-    bucket_id: str
-    snapshot_id: str
-    filing_year: int
-    period: str
-    captured_at: str
-    source_url: str
-    binding_count: int
-    state: str
+    bucket_id: BucketId
     binding_values: dict[BindingId, str]
 
 
@@ -952,11 +977,32 @@ class Borrador100LatestResult(OutputSchema):
     shape stable while still identifying the queried ``filing_year``.
     """
 
-    bucket_id: str
-    filing_year: int
-    snapshot_id: str | None
+    bucket_id: BucketId
+    filing_year: int = Field(ge=1900, le=9999)
+    snapshot_id: SnapshotId | None
     captured_at: str | None = None
     period: str | None = None
-    source_url: str | None = None
-    binding_count: int | None = None
-    state: str | None = None
+    source_url: str | None = Field(default=None, min_length=1, max_length=2048)
+    binding_count: int | None = Field(default=None, ge=0)
+    state: Literal["active"] | None = None
+
+    @field_validator("period")
+    @classmethod
+    def _validate_optional_period(cls, value: str | None) -> str | None:
+        return _canonical_borrador_period(value) if value is not None else None
+
+    @field_validator("captured_at")
+    @classmethod
+    def _validate_optional_captured_at(cls, value: str | None) -> str | None:
+        return _canonical_borrador_utc_timestamp(value) if value is not None else None
+
+    @model_validator(mode="after")
+    def _enforce_latest_empty_or_active_shape(self) -> Borrador100LatestResult:
+        snapshot_fields = (self.captured_at, self.period, self.source_url, self.binding_count, self.state)
+        if self.snapshot_id is None:
+            if any(value is not None for value in snapshot_fields):
+                raise ValueError("empty latest results cannot carry snapshot-derived fields")
+            return self
+        if any(value is None for value in snapshot_fields):
+            raise ValueError("latest results with a snapshot_id require every snapshot-derived field")
+        return self
