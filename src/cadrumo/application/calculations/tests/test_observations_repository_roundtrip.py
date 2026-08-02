@@ -20,7 +20,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period
+from ....adapters.persistence.storage import EnvelopeVersionError
+from ....core import (
+    Period,
+    SecureObjectWrite,
+)
 from ....domain.calculations.registry import (
     CasillaId,
     CasillaObservation,
@@ -35,6 +39,7 @@ from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import ObservationCasillaReferenceError
 from .._observations_repository import (
     CalculationObservationRepository,
+    IvaWalletDecisionEnvelopePayload,
     IvaWalletDecisionRepository,
     ObservationEnvelopePayload,
     ObservationSourceKind,
@@ -634,3 +639,77 @@ class TestCaptureInstantContract:
 
         with pytest.raises(ValidationError):
             ObservationEnvelopePayload.model_validate(fields)
+
+
+def _wallet_decision(*, reason: str) -> IvaCompensationReconciliationDecision:
+    decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif="12345678Z",
+        target_year=2026,
+        target_period=Period.from_year_and_code(2026, "2T"),
+        selected_authority="aeat_wallet",
+        selected_amount=Decimal("1200"),
+        wallet_amount=Decimal("1200"),
+        local_recurrence_amount=Decimal("1200"),
+        override_amount=None,
+        divergence="match",
+        blocked=False,
+        stale_wallet=False,
+        reason=reason,
+        wallet_captured_at=decided_at,
+        decided_at=decided_at,
+    )
+
+
+def test_wallet_decision_latest_and_history_commit_together(tmp_path: Path) -> None:
+    """A failed decision write leaves neither a latest row nor an audit event.
+
+    The latest state and the immutable audit event used to be two independent
+    writes, so a failure between them persisted a decision the history has no
+    record of. The history exists precisely to explain how the latest state was
+    reached, so a latest row with no event is a decision that cannot be audited.
+
+    The refusal here is the substrate's own registered write policy: an event
+    payload addressed at a schema version the namespace does not accept is
+    refused, and because both rows now ride one transaction the latest row must
+    not survive it either.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = IvaWalletDecisionRepository()
+        decision = _wallet_decision(reason="Committed together with its audit event.")
+        latest_key = iva_wallet_decision_key("12345678Z", Period.from_year_and_code(2026, "2T"))
+
+        # Positive control: the real save persists both rows.
+        repo.save_decision(decision)
+        assert repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T")) is not None
+        assert len(repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T"))) == 1
+
+        # A second decision whose history write is refused must not land its latest row.
+        replacement = _wallet_decision(reason="This decision must not survive a refused audit event.")
+        latest_write = repo.to_secure_object_write(IvaWalletDecisionEnvelopePayload(decision=replacement))
+        refused_history_write = SecureObjectWrite(
+            namespace=repo.history_namespace,
+            object_key=iva_wallet_decision_event_key(replacement),
+            classification=repo.sensitivity,
+            # A version the namespace's registered write policy does not accept.
+            schema_version=repo.schema_version + 99,
+            written_at=latest_write.written_at,
+            payload=latest_write.payload,
+        )
+        with pytest.raises(EnvelopeVersionError):
+            repo.secure_object_repository.apply_batch((latest_write, refused_history_write))
+
+        # The prior decision is intact and the replacement never landed.
+        surviving = repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T"))
+        assert surviving is not None
+        assert surviving.reason == decision.reason
+        assert (
+            repo.secure_object_repository.load(
+                repo.namespace,
+                latest_key,
+                expected_class=repo.sensitivity,
+                max_supported_version=repo.schema_version,
+            )
+            is not None
+        )
+        assert len(repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T"))) == 1

@@ -51,7 +51,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, Period, SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.resources import resources
@@ -461,23 +461,33 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_period)
 
     def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:
-        """Persist ``decision`` to latest lookup and immutable audit history."""
+        """Persist ``decision`` to latest lookup and immutable audit history.
+
+        Both rows commit in ONE transaction. Writing the latest state and then
+        appending the audit event as a second, independent write left a window
+        in which a failure between them persisted a decision the immutable
+        history has no record of -- the history exists precisely to explain how
+        the latest state was reached, so a latest row with no event is a
+        decision that cannot be audited. The substrate already owns the
+        transaction boundary; this composes both writes into it.
+        """
         payload = IvaWalletDecisionEnvelopePayload(decision=decision)
-        super().save(payload)
-        envelope = Envelope[IvaWalletDecisionEnvelopePayload](
+        latest_write = self.to_secure_object_write(payload)
+        history_envelope = Envelope[IvaWalletDecisionEnvelopePayload](
             schema_version=self.schema_version,
-            written_at=now(),
+            written_at=latest_write.written_at,
             classification=self.sensitivity,
             payload=payload,
         )
-        self._objects.save(
+        history_write = SecureObjectWrite(
             namespace=self.history_namespace,
             object_key=iva_wallet_decision_event_key(decision),
             classification=self.sensitivity,
             schema_version=self.schema_version,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+            written_at=history_envelope.written_at,
+            payload=history_envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
+        self._objects.apply_batch((latest_write, history_write))
 
     def load_decision(
         self,
