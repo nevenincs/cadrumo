@@ -1,0 +1,4 @@
+# Articulo 11. Intereses.
+
+1. Los intereses procedentes de un Estado contratante cuyo beneficiario efectivo sea un residente del otro Estado contratante solo pueden someterse a imposicion en ese otro Estado.
+2. El termino intereses en el sentido de este articulo significa los rendimientos de creditos de cualquier naturaleza, con o sin garantia hipotecaria o clausula de participacion en los beneficios del deudor, y en particular, los rendimientos de valores publicos y los rendimientos de bonos u obligaciones, incluidas las primas y lotes unidos a esos titulos. A efectos del presente articulo, las penalizaciones por mora en el pago no se consideran intereses.

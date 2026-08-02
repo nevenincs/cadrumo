@@ -24,7 +24,9 @@ Siete. Se suprime el anexo II de la Orden EHA/769/2010, de 18 de marzo, por l
 
 La presente orden entrará en vigor el día siguiente a su publicación en el «Boletín Oficial del Estado», y será aplicable, por primera vez, a las declaraciones recapitulativas de operaciones intracomunitarias correspondientes a 2020 que se presenten a partir del 1 de marzo.
 Madrid, 4 de febrero de 2020.–La Ministra de Hacienda, María Jesús Montero Cuadrado.
-ANEXO
+
+# ANEXO
+
 Diseños lógicos a los que deben ajustarse los archivos que se generen para la presentación telemática del modelo 349
 Diseños lógicos
 Descripción de los registros

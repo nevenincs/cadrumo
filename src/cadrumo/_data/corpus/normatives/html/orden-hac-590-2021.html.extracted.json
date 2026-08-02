@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-590-2021.html",
+  "source_sha256": "04f7991d3eafbf9d5596d3b1f0884b2d50dbfec7bea9b03a141d1d31cc6a1ea7",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/590/2021, de 9 de junio, por la que se aprueba el modelo 490 (BOE-A-2021-9721) - Modelo 490\nOrden HAC/590/2021, de 9 de junio, por la que se aprueba el modelo 490.\nArticulo 1. Aprobacion del modelo 490.\nSe aprueba el modelo 490 «Impuesto sobre Determinados Servicios Digitales. Autoliquidación», que figura en el anexo de esta orden.\nArticulo 3. Plazo de presentacion.\nEl modelo 490 deberá presentarse e ingresarse durante el mes siguiente al correspondiente periodo trimestral natural.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2021-9721) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

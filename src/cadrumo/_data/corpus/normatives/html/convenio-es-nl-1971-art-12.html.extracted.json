@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-nl-1971-art-12.html",
+  "source_sha256": "dbddd6b2ba8e06b1306c396f48e7700197ffff0b4f25614b969c5255092285dd",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los cánones procedentes de uno de los Estados y pagados a un residente del otro Estado pueden someterse a imposición en este último Estado.\n2. Sin embargo, estos cánones pueden someterse a imposición en el Estado del que procedan, y de acuerdo con la legislación de este Estado, pero el impuesto así exigido no puede exceder del 6 por 100 del importe bruto de los cánones.",
+      "title": "Artículo 12. Cánones.",
+      "section": "Artículo 12. Cánones.",
+      "anchor": "#a12"
+    }
+  ]
+}

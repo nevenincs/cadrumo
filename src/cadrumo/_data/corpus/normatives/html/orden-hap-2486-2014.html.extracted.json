@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hap-2486-2014.html",
+  "source_sha256": "888b178d775325ea6025435716887699542b7b2acbf7fa584984a3a0502184c3",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAP/2486/2014, de 29 de diciembre, por la que se aprueba el modelo 143 (BOE-A-2014-13675) - Modelo 143\nOrden HAP/2486/2014, de 29 de diciembre, por la que se aprueba el modelo 143.\nArticulo 1. Aprobacion del modelo 143.\nSe aprueba el modelo 143 «Impuesto sobre la Renta de las Personas Físicas. Deducciones por familia numerosa, por ascendiente con dos hijos o por personas con discapacidad a cargo. Solicitud de abono anticipado» que figura en el anexo de la presente Orden.\nArticulo 5. Plazo de presentacion.\nLa solicitud del abono mensual anticipado de las deducciones por familia numerosa o por personas con discapacidad a cargo en el Impuesto sobre la Renta de las Personas Físicas, ajustada al modelo 143, podrá realizarse a partir del momento en que, cumpliéndose los requisitos y condiciones establecidos para el derecho a su percepción, el contribuyente opte por la modalidad de abono anticipado de la misma.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2014-13675) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

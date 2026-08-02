@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hap-2368-2013.html",
+  "source_sha256": "624811727a1832c92a796d8465e25b26b5fe7e9fabe5eab0b91b84b781a5abe9",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAP/2368/2013, de 13 de diciembre, por la que se aprueba el modelo 270 (BOE-A-2013-13228) - Modelo 270\nOrden HAP/2368/2013, de 13 de diciembre, por la que se aprueba el modelo 270.\nArticulo 1. Aprobacion del modelo 270.\nSe aprueba el modelo 270 «Resumen anual de retenciones e ingresos a cuenta. Gravamen especial sobre los premios de determinadas loterías y apuestas».\nArticulo 3. Plazo de presentacion.\nLa presentación de esta declaración informativa se realizará en el mes de enero de cada año en relación con los premios satisfechos en el año inmediato anterior.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2013-13228) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

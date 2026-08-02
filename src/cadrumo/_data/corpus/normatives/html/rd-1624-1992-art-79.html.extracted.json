@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1624-1992-art-79.html",
+  "source_sha256": "bee07a030c3009e76f28afb4a6bdccfae2c35c85c52dc22101bbbd8ee30ceca5",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Estaran obligados a presentar la declaracion recapitulativa los empresarios y profesionales que realicen cualquiera de las siguientes operaciones:\n1.º Las entregas de bienes destinados a otro Estado miembro que se encuentren exentas en virtud de lo dispuesto en el articulo 25 de la Ley del Impuesto.\n2.º Las adquisiciones intracomunitarias de bienes sujetas al Impuesto realizadas por personas o entidades identificadas a efectos del mismo en el territorio de aplicacion del Impuesto.\n3.º Las prestaciones intracomunitarias de servicios.\n4.º Las adquisiciones intracomunitarias de servicios.\n5.º Las entregas subsiguientes a las adquisiciones intracomunitarias de bienes a que se refiere el apartado tres del articulo 26 de la Ley del Impuesto.\nAsimismo, deberan presentar la declaracion recapitulativa los empresarios o profesionales que envien o transporten bienes desde el territorio de aplicacion del Impuesto con destino a otro Estado miembro en el marco de un acuerdo de ventas de bienes en consigna.",
+      "title": "Articulo 79. Obligacion de presentar la declaracion recapitulativa.",
+      "section": "Articulo 79. Obligacion de presentar la declaracion recapitulativa.",
+      "anchor": "#a79"
+    }
+  ]
+}

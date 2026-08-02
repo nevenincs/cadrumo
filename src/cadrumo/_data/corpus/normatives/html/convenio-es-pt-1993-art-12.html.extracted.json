@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-pt-1993-art-12.html",
+  "source_sha256": "dde29cf8560dc69bb07adf1be1ccb40075837ba2cd02f71d573fae2b5e8f340f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los cánones procedentes de un Estado contratante y pagados a un residente del otro Estado contratante pueden someterse a imposición en este otro Estado.\n2. Sin embargo, estos cánones pueden también someterse a imposición en el Estado contratante del que procedan y de acuerdo con la legislación de este Estado, pero si el perceptor de los cánones es el beneficiario efectivo, el impuesto así exigido no podrá exceder del 5 por 100 del importe bruto de los cánones.",
+      "title": "Artículo 12. Cánones.",
+      "section": "Artículo 12. Cánones.",
+      "anchor": "#a12"
+    }
+  ]
+}

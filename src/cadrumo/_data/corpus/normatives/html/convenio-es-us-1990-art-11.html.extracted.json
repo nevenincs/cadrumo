@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-us-1990-art-11.html",
+  "source_sha256": "d77256012394fb07fe41f40b3bd94dd6065f4f5a2624b8cef2ba2efb31fec887",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los intereses procedentes de un Estado contratante cuyo beneficiario efectivo sea un residente del otro Estado contratante sólo pueden someterse a imposición en ese otro Estado.\n2. No obstante lo dispuesto en el apartado 1 de este artículo: (a) los intereses procedentes de los Estados Unidos que sean intereses contingentes que no puedan considerarse intereses de cartera conforme a la normativa interna de los Estados Unidos, pueden someterse a imposición en los Estados Unidos pero, si su beneficiario efectivo es un residente de España, la imposición sobre dichos intereses estará limitada al 10 por ciento de su importe bruto; y (b) los intereses que constituyan un interés excedente correspondiente a una participación residual en un canal de inversión en valores respaldados por hipotecas sobre bienes inmuebles («REMIC») pueden someterse a imposición en los Estados Unidos conforme a su normativa interna.",
+      "title": "Artículo 11. Intereses.",
+      "section": "Artículo 11. Intereses.",
+      "anchor": "#a11"
+    }
+  ]
+}

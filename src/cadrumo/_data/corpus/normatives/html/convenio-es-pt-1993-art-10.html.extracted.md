@@ -1,0 +1,4 @@
+# Artículo 10. Dividendos.
+
+1. Los dividendos pagados por una sociedad residente de un Estado contratante a un residente del otro Estado contratante pueden someterse a imposición en ese otro Estado.
+2. Sin embargo, estos dividendos pueden también someterse a imposición en el Estado contratante en que resida la sociedad que paga los dividendos y según la legislación de ese Estado, pero si el perceptor de los dividendos es su beneficiario efectivo, el impuesto así exigido no podrá exceder del: a) 10 por 100 del importe bruto de los dividendos si el beneficiario efectivo es una sociedad que posea directamente al menos el 25 por 100 del capital de la sociedad que paga los dividendos; b) 15 por 100 del importe bruto de los dividendos en los demás casos.

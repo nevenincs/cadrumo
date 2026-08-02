@@ -159,7 +159,9 @@ Sólo para claves de percepción "1" o "2" (posiciones 100- 101 del tipo de regi
 Se consignará el Código LEI, Identificador de Entidad Jurídica (Legal Entity Identifier) del perceptor declarado, que se utiliza para identificar a las entidades que son parte en las transacciones financieras y para cumplir con los requisitos de información en los mercados financieros.
 Será obligatorio si el campo PERCEPTOR MEDIADOR (posición 134) tiene valor 2 "El perceptor declarado es un mediador situado en el extranjero".»
 Siete. Se crean dos anexos al registro de tipo 2, registro de perceptor, de los diseños de registro del modelo 296, contenido en el anexo III de la Orden EHA/3290/2008, de 6 de noviembre, denominados «Valores negociables. Relación de pago a contribuyentes» y «Valores negociables. Relación de certificados de pago» con los campos que se indican a continuación:
-«ANEXO "VALORES NEGOCIABLES. RELACIÓN DE PAGO A CONTRIBUYENTES" (Tipo de Hoja "A")
+
+# «ANEXO "VALORES NEGOCIABLES. RELACIÓN DE PAGO A CONTRIBUYENTES" (Tipo de Hoja "A")
+
 Sólo para claves de percepción "1" o "2" (posiciones 100-101 del tipo de registro 2) y siempre que en el campo "PERCEPTOR MEDIADOR" (posición 134 del tipo de registro 2) conste el valor "2: El perceptor declarado es un mediador situado en el extranjero")
 Posiciones
 Naturaleza
@@ -308,7 +310,9 @@ BLANCOS
 Alfabético
 TIPO DE HOJA
 Constante "A"
-ANEXO "VALORES NEGOCIABLES. RELACIÓN DE CERTIFICADOS DE PAGO" (Tipo de Hoja "B")
+
+# ANEXO "VALORES NEGOCIABLES. RELACIÓN DE CERTIFICADOS DE PAGO" (Tipo de Hoja "B")
+
 (Sólo para claves de percepción "1" o "2" (posiciones 100-101 del tipo de registro 2) y siempre que en el campo "PERCEPTOR MEDIADOR" (posición 134 del tipo de registro 2) conste el valor "2: El perceptor declarado es un mediador situado en el extranjero")
 Posiciones
 Naturaleza
@@ -560,11 +564,17 @@ No obstante, en cuanto a las autoliquidaciones y declaraciones modificadas en la
 − En cuanto a la autoliquidación modelo 210, la agrupación anual de rentas derivadas del arrendamiento o subarrendamiento de inmuebles será aplicable, por primera vez, respecto de los devengos correspondientes a 2024.
 − En relación con la modificación de los apartados 2 y 3 del artículo 7 de la Orden EHA/3316/2010, de 17 de diciembre, por la que se aprueban los modelos de autoliquidación 210, 211 y 213 del Impuesto sobre la Renta de no Residentes, que deben utilizarse para declarar las rentas obtenidas sin mediación de establecimiento permanente, la retención practicada en la adquisición de bienes inmuebles a no residentes sin establecimiento permanente y el gravamen especial sobre bienes inmuebles de entidades no residentes, y se establecen las condiciones generales y el procedimiento para su presentación y otras normas referentes a la tributación de no residentes, la obligación de presentar los anexos al tipo de registro 2 del modelo 296 denominados «Valores negociables. Relación de pago a contribuyentes» (Tipo de Hoja «A») y «Valores negociables. Relación de certificados de pago» (Tipo de Hoja «B») se aplicará por primera vez en relación con los devengos correspondientes a 2024.
 Madrid, 25 de enero de 2024.–La Vicepresidenta Primera del Gobierno y Ministra de Hacienda, María Jesús Montero Cuadrado.
-ANEXO I
+
+# ANEXO I
+
 Autoliquidación periódica-Modelo 123
-ANEXO II
+
+# ANEXO II
+
 Declaración-documento de ingreso-Modelo 216
-ANEXO III
+
+# ANEXO III
+
 Documento de ingreso y devolución-Modelo 210
 Análisis
 ANÁLISIS

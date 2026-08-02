@@ -22,7 +22,9 @@ Seis. El modelo 145 que figura en el anexo queda sustituido por el modelo 145 qu
 
 La presente resolución entrará en vigor el día de su publicación en el «Boletín Oficial del Estado» y surtirá efectos en relación con las comunicaciones de datos al pagador, o de variación de los datos previamente comunicados, efectuadas o que deban efectuarse a partir del 1 de enero de 2014.
 Madrid, 17 de diciembre de 2013.–El Director del Departamento de Gestión Tributaria de la Agencia Estatal de Administración Tributaria, Rufino de la Rosa Cordón.
-ANEXO
+
+# ANEXO
+
 Análisis
 ANÁLISIS
 Rango: Resolución

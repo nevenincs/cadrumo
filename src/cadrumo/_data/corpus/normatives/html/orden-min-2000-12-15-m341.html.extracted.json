@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-min-2000-12-15-m341.html",
+  "source_sha256": "c9ad6a1966b333a2b147423299df8acd4f3595c57cc3be94f33f1302cceb01f8",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden de 15 de diciembre de 2000, por la que se aprueba el modelo 341 (BOE-A-2000-22794) - Modelo 341\nOrden de 15 de diciembre de 2000, por la que se aprueba el modelo 341.\nArticulo 1. Aprobacion del modelo 341.\nSe aprueban los modelos 341 en pesetas y en euros «Solicitud de reintegro de compensaciones en el régimen especial de la agricultura, ganadería y pesca».\nArticulo 2. Plazo de presentacion.\nLas solicitudes de reintegro de compensaciones deberán presentarse durante los veinte primeros días naturales posteriores a cada trimestre natural. No obstante, la solicitud correspondiente al último trimestre natural del año podrá presentarse durante los treinta primeros días naturales del mes de enero inmediatamente posterior.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2000-22794) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

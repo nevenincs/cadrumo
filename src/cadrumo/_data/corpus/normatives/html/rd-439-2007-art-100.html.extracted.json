@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-100.html",
+  "source_sha256": "6b99f65c3f711b96cca6c8e0e5f7357261ad670061c7430e8b22e58eb2d105da",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La retención a practicar sobre los rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos, cualquiera que sea su calificación, será el resultado de aplicar el porcentaje del 19 por ciento sobre todos los conceptos que se satisfagan al arrendador, excluido el Impuesto sobre el Valor Añadido.\nEste porcentaje se reducirá en el 60 por ciento cuando el inmueble urbano esté situado en Ceuta o Melilla, en los términos previstos en el artículo 68.4 de la Ley del Impuesto.",
+      "title": "Artículo 100. Importe de las retenciones sobre arrendamientos y subarrendamientos de inmuebles.",
+      "section": "Artículo 100. Importe de las retenciones sobre arrendamientos y subarrendamientos de inmuebles.",
+      "anchor": "#a100"
+    }
+  ]
+}

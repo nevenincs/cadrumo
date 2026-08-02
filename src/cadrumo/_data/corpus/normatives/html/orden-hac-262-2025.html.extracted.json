@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-262-2025.html",
+  "source_sha256": "aba2815c04843d892cceea488b81643f614fddaa0f524e4c7fbdf1e7784b9b41",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5407",
+  "units": [
+    {
+      "text": "Se introducen las siguientes modificaciones en la Orden HFP/227/2017, de 13 de marzo, por la que se aprueba el modelo 202 para efectuar los pagos fraccionados a cuenta del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español, y el modelo 222 para efectuar los pagos fraccionados a cuenta del Impuesto sobre Sociedades en régimen de consolidación fiscal y se establecen las condiciones generales y el procedimiento para su presentación electrónica:\nUno. Se sustituye el anexo I de la Orden HFP/227/2017, de 13 de marzo, por el que figura como anexo I de esta orden.\nDos. Se sustituye el anexo II de la Orden HFP/227/2017, de 13 de marzo, por el que figura como anexo II de esta orden.",
+      "title": "Artículo único. Modificación de la Orden HFP/227/2017, de 13 de marzo, por la que se aprueba el modelo 202 para efectuar los pagos fraccionados a cuenta del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español, y el modelo 222 para efectuar los pagos fraccionados a cuenta del Impuesto sobre Sociedades en régimen de consolidación fiscal y se establecen las condiciones generales y el procedimiento para su presentación electrónica.",
+      "section": "Artículo único. Modificación de la Orden HFP/227/2017, de 13 de marzo, por la que se aprueba el modelo 202 para efectuar los pagos fraccionados a cuenta del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes correspondiente a establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español, y el modelo 222 para efectuar los pagos fraccionados a cuenta del Impuesto sobre Sociedades en régimen de consolidación fiscal y se establecen las condiciones generales y el procedimiento para su presentación electrónica.",
+      "anchor": null
+    },
+    {
+      "text": "La presente orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado» y será aplicable por primera vez para las autoliquidaciones de pagos fraccionados, modelo 202 y 222, cuyo plazo de presentación comienza en abril de 2025.\nMadrid, 12 de marzo de 2025.–La Vicepresidenta Primera del Gobierno y Ministra de Hacienda, María Jesús Montero Cuadrado.",
+      "title": "Disposición final única. Entrada en vigor.",
+      "section": "Disposición final única. Entrada en vigor.",
+      "anchor": null
+    },
+    {
+      "text": "ANEXO I",
+      "title": "ANEXO I",
+      "section": "ANEXO I",
+      "anchor": null
+    },
+    {
+      "text": "Análisis\nANÁLISIS\nRango: Orden\nFecha de disposición: 12/03/2025\nFecha de publicación: 19/03/2025\nFecha de entrada en vigor: 20/03/2025\nAplicable en la forma indicada en la disposición final única.\nReferencias anteriores\nSUSTITUYE los anexos I y II de la Orden HFP/227/2017, de 13 de marzo (Ref. BOE-A-2017-2778).\nDE CONFORMIDAD con:\nel art. 5 y disposición final 2 del Real Decreto 829/2023,de 20 de noviembre (Ref. BOE-A-2023-23537).\nel art. 98.4 de la Ley 58/2003, de 17 de diciembre (Ref. BOE-A-2003-23186).\nMaterias\nAdministración electrónica\nAgencia Estatal de la Administración Tributaria\nFormularios administrativos\nImpuesto sobre la Renta de los no Residentes\nImpuesto sobre Sociedades\nPago fraccionado\nRecaudación",
+      "title": "ANEXO II",
+      "section": "ANEXO II",
+      "anchor": null
+    }
+  ]
+}

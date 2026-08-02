@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-de-2011-art-11.html",
+  "source_sha256": "139185a2426101b16c502fbcea0c0b43e4664077895fdce0efcb5dc2e62a99f7",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los intereses procedentes de un Estado contratante cuyo beneficiario efectivo sea un residente del otro Estado contratante solo pueden someterse a imposicion en ese otro Estado.\n2. El termino intereses en el sentido de este articulo significa los rendimientos de creditos de cualquier naturaleza, con o sin garantia hipotecaria o clausula de participacion en los beneficios del deudor, y en particular, los rendimientos de valores publicos y los rendimientos de bonos u obligaciones, incluidas las primas y lotes unidos a esos titulos. A efectos del presente articulo, las penalizaciones por mora en el pago no se consideran intereses.",
+      "title": "Articulo 11. Intereses.",
+      "section": "Articulo 11. Intereses.",
+      "anchor": "#a11"
+    }
+  ]
+}

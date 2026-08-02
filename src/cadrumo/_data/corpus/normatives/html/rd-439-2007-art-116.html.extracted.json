@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-439-2007-art-116.html",
+  "source_sha256": "2509f71018ad4b716327c0a29a4c72828fb01ddc98312e4c58290ed44861747b",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "RD 439/2007 Art. 116 - Ejercicio de la opción del régimen especial de impatriados\nArtículo 116. Ejercicio de la opción.\n1. El ejercicio de la opción de tributar por este régimen especial deberá realizarse mediante una comunicación individual de cada contribuyente dirigida a la Administración tributaria.\nEn el caso del contribuyente a que se refiere el apartado 1 del artículo 93 de la Ley del Impuesto, la comunicación deberá realizarse en el plazo máximo de seis meses desde la fecha de inicio de la actividad que conste en el alta en la Seguridad Social en España o en la documentación que le permita, en su caso, el mantenimiento de la legislación de Seguridad Social de origen o, en caso de que no fuera obligatoria el alta en la Seguridad Social, en el documento justificativo de la fecha de inicio de la actividad.\n2. La opción se ejercitará mediante la presentación del modelo de comunicación a que se refiere el artículo 119 de este reglamento.\nTexto consolidado BOE-A-2007-6820, artículo 116, redacción vigente tras Real Decreto 1008/2023.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

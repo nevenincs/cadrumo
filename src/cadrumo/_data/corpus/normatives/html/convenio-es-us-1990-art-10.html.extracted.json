@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-us-1990-art-10.html",
+  "source_sha256": "a79425061f4199c98758107bee95901302f9af499ca9c5e4b7038e6e44cab019",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los dividendos pagados por una sociedad residente de un Estado contratante a un residente del otro Estado contratante pueden someterse a imposición en ese otro Estado.\n2. Sin embargo, dichos dividendos pueden someterse también a imposición en el Estado contratante en que resida la sociedad que paga los dividendos, y conforme a la legislación de ese Estado, pero si el beneficiario efectivo de los dividendos es un residente del otro Estado contratante, salvo que se disponga de otro modo, el impuesto así exigido no podrá exceder del: (a) 5 por ciento del importe bruto de los dividendos si el beneficiario efectivo es una sociedad que posea directamente al menos el 10 por ciento de las acciones con derecho de voto de la sociedad que paga los dividendos; (b) 15 por ciento del importe bruto de los dividendos en los demás casos.\n3. No obstante lo dispuesto en el apartado 2, dichos dividendos no se someterán a imposición en el Estado contratante en el que reside la sociedad que paga los dividendos si el beneficiario efectivo es una sociedad residente del otro Estado contratante que haya poseído, directa o indirectamente a través de uno o más residentes de cualquiera de los Estados contratantes, acciones que representen el 80 por ciento o más del capital con derecho de voto de la sociedad que paga los dividendos, durante un período determinado, en las condiciones fijadas por este apartado.",
+      "title": "Artículo 10. Dividendos.",
+      "section": "Artículo 10. Dividendos.",
+      "anchor": "#a10"
+    }
+  ]
+}

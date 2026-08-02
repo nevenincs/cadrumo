@@ -1,0 +1,4 @@
+# Artículo 12. Cánones.
+
+1. Los cánones procedentes de un Estado contratante cuyo beneficiario efectivo sea un residente del otro Estado contratante sólo pueden someterse a imposición en ese otro Estado.
+2. El término «cánones» empleado en este Convenio significa las cantidades de cualquier clase pagadas por el uso, o la concesión de uso, de un derecho de autor sobre una obra literaria, artística, científica u otra (incluidas las películas cinematográficas), de una patente, marca de fábrica o de comercio, dibujo o modelo, plano, fórmula o procedimiento secreto, u otro derecho o propiedad similar, o por informaciones relativas a experiencias industriales, comerciales o científicas. El término «cánones» comprende también las ganancias derivadas de la enajenación de dichos derechos o bienes en la medida en que dichas ganancias dependan de la productividad, uso o disposición de los mismos.

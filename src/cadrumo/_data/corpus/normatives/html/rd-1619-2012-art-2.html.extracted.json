@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1619-2012-art-2.html",
+  "source_sha256": "ae4599587cbfff282a2d7f74bc52bb3c488a50cf68edd2ab252a5b16ecd9d593",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. De acuerdo con el artículo 164.Uno.3.º de la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido, los empresarios o profesionales están obligados a expedir factura y copia de esta por las entregas de bienes y prestaciones de servicios que realicen en el desarrollo de su actividad, incluidas las no sujetas y las sujetas pero exentas del Impuesto, en los términos establecidos en este Reglamento y sin más excepciones que las previstas en él. Esta obligación incumbe asimismo a los empresarios o profesionales acogidos a los regímenes especiales del Impuesto sobre el Valor Añadido.\nTambién deberá expedirse factura y copia de esta por los pagos recibidos con anterioridad a la realización de las entregas de bienes o prestaciones de servicios por las que deba asimismo cumplirse esta obligación conforme al párrafo anterior, a excepción de las entregas de bienes exentas del Impuesto sobre el Valor Añadido por aplicación de lo dispuesto en el artículo 25 de la Ley del Impuesto.\n2. Deberá expedirse factura y copia de esta en todo caso en las siguientes operaciones:\na) Aquellas en las que el destinatario sea un empresario o profesional que actúe como tal, con independencia del régimen de tributación al que se encuentre acogido el empresario o profesional que realice la operación, así como cualesquiera otras en las que el destinatario así lo exija para el ejercicio de cualquier derecho de naturaleza tributaria.",
+      "title": "Artículo 2. Obligación de expedir factura.",
+      "section": "Artículo 2. Obligación de expedir factura.",
+      "anchor": "#a2-2"
+    }
+  ]
+}

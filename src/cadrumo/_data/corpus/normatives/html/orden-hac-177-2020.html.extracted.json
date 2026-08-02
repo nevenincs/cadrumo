@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-177-2020.html",
+  "source_sha256": "a50a1a3e49f4b45045037dcc584367d27077755de3bb26e31bd3d294b763b897",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/177/2020, de 27 de febrero, por la que se aprueba el modelo 140 (BOE-A-2020-2901) - Modelo 140\nOrden HAC/177/2020, de 27 de febrero, por la que se aprueba el modelo 140.\nArticulo 1. Aprobacion del modelo 140.\nSe aprueba el modelo 140 «Impuesto sobre la Renta de las Personas Físicas. Deducción por maternidad. Solicitud de abono anticipado».\nArticulo 5. Plazo de presentacion.\nLa solicitud de abono anticipado podrá presentarse a partir del momento en que, cumpliéndose los requisitos y condiciones establecidos para el derecho a su percepción, el contribuyente opte por la modalidad de abono anticipado de la misma.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2020-2901) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

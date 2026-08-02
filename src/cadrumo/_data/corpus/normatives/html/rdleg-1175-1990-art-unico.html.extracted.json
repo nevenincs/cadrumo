@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rdleg-1175-1990-art-unico.html",
+  "source_sha256": "ab9edb33d015d5069b84cd308855c51530083740ebbda3e068f4875839662408",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Se aprueban las tarifas del Impuesto sobre Actividades Económicas, que se incluyen en el anexo I del presente Real Decreto Legislativo, así como la instrucción para la aplicación de aquéllas, la cual se incluye en el anexo II del mismo.",
+      "title": "Artículo único.",
+      "section": "Artículo único.",
+      "anchor": "#aunico"
+    },
+    {
+      "text": "Tarifas\nAgrupación 04. Avicultura",
+      "title": "ANEXO I",
+      "section": "ANEXO I",
+      "anchor": "#ani"
+    },
+    {
+      "text": "Epígrafe 041.1. Reproductoras de puesta. Cuota de 4 pesetas por cabeza. (0,024040 euro)",
+      "title": "Grupo 041. Avicultura de puesta",
+      "section": "Grupo 041. Avicultura de puesta",
+      "anchor": "#agrupacion04-2"
+    }
+  ]
+}

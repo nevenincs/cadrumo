@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1624-1992-art-80.html",
+  "source_sha256": "5981d9437f1724e54f3707d61d27bda94dc3780e9372641bcb0da1dd3326a7c0",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. En la declaracion recapitulativa se consignaran los datos de identificacion de los proveedores y adquirentes de los bienes y los prestadores y destinatarios de los servicios, asi como la base imponible total correspondiente a las operaciones efectuadas con cada uno de ellos.\nTambien deberan consignarse los datos de identificacion del empresario o profesional al que vayan destinados los bienes expedidos o transportados en el marco de un acuerdo de ventas de bienes en consigna.\nLos datos contenidos en las declaraciones recapitulativas deberan rectificarse cuando se haya incurrido en errores o se hayan producido alteraciones derivadas de las circunstancias a que se refiere el articulo 80 de la Ley del Impuesto.",
+      "title": "Articulo 80. Contenido de la declaracion recapitulativa.",
+      "section": "Articulo 80. Contenido de la declaracion recapitulativa.",
+      "anchor": "#a80"
+    }
+  ]
+}

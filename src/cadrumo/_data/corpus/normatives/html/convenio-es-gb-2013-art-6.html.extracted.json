@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-gb-2013-art-6.html",
+  "source_sha256": "83a94a613cb787afc56445bbd0f6d3618488236491e40c2572c5060b24309b98",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Las rentas que un residente de un Estado contratante obtenga de bienes inmuebles, incluidas las rentas de explotaciones agricolas o forestales, situados en el otro Estado contratante pueden someterse a imposicion en ese otro Estado.\n3. Las disposiciones del apartado 1 son aplicables a los rendimientos derivados de la utilizacion directa, el arrendamiento o aparceria, asi como de cualquier otra forma de explotacion de los bienes inmuebles.",
+      "title": "Articulo 6. Rentas inmobiliarias.",
+      "section": "Articulo 6. Rentas inmobiliarias.",
+      "anchor": "#a6"
+    }
+  ]
+}

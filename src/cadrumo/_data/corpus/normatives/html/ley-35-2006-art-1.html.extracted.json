@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-1.html",
+  "source_sha256": "1d4e26a25fb43b2a1223ee2960147ad7dc4c412da482308986a8fbcd959e915d",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "El Impuesto sobre la Renta de las Personas Físicas es un tributo de carácter personal y directo que grava, según los principios de igualdad, generalidad y progresividad, la renta de las personas físicas de acuerdo con su naturaleza y sus circunstancias personales y familiares.",
+      "title": "Artículo 1. Naturaleza del Impuesto.",
+      "section": "Artículo 1. Naturaleza del Impuesto.",
+      "anchor": "#a1"
+    }
+  ]
+}

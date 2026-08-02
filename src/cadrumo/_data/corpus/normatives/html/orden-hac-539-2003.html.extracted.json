@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-539-2003.html",
+  "source_sha256": "30af0e1d0358d744027a7c550d4b3cfedaa91574f61e9cdd51a19f64741136c3",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/539/2003, de 10 de marzo, por la que se aprueba el modelo 186 (BOE-A-2003-5304) - Modelo 186\nOrden HAC/539/2003, de 10 de marzo, por la que se aprueba el modelo 186.\nArticulo 1. Aprobacion del modelo 186.\nSe aprueban los diseños físicos y lógicos, modelo 186, Declaración informativa de nacimientos y defunciones, que figuran en los Anexos I y II.\nArticulo 4. Plazo de presentacion.\nEl plazo para la presentación de la declaración informativa modelo 186 será el del mes natural siguiente a aquel al que la declaración esté referida, con una periodicidad mensual.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2003-5304) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

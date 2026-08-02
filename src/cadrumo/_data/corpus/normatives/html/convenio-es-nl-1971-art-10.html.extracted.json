@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-nl-1971-art-10.html",
+  "source_sha256": "069a460cca75ed4116c6ec4612babd1deb0b9e754567f13bcf82e328957c78a5",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los dividendos pagados por una Sociedad residente de un Estado a un residente del otro Estado pueden someterse a imposición en este último Estado.\n2. Sin embargo, estos dividendos pueden someterse a imposición en el Estado en que resida la Sociedad que pague los dividendos y de acuerdo con la legislación de este Estado, pero el impuesto así exigido no puede exceder del 15 por 100 del importe bruto de los dividendos.",
+      "title": "Artículo 10. Dividendos.",
+      "section": "Artículo 10. Dividendos.",
+      "anchor": "#a10"
+    }
+  ]
+}

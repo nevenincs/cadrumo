@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-nl-1971-art-11.html",
+  "source_sha256": "70c380e98df2dd436f18de3835ca4513dc408f8f100202359376e6645377bac9",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los intereses procedentes de un Estado pagados a un residente del otro Estado pueden someterse a imposición en este último Estado.\n2. Sin embargo, estos intereses pueden someterse a imposición en el Estado del que procedan y de acuerdo con la legislación de este Estado, pero el impuesto así exigido no puede exceder del 10 por 100 del importe de los intereses.",
+      "title": "Artículo 11. Intereses.",
+      "section": "Artículo 11. Intereses.",
+      "anchor": "#a11"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3851-2007.html",
+  "source_sha256": "67573ebf484f8428a7275d9dc2ba6c95f1f85a82c9ddafd4a715df22ea479d28",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden EHA/3851/2007, por la que se aprueba el modelo 576 (BOE-A-2007-22442) - Modelo 576\nOrden EHA/3851/2007, de 26 de diciembre, por la que se aprueba el modelo 576 de autoliquidación del Impuesto Especial sobre Determinados Medios de Transporte.\nArticulo 1. Aprobacion del modelo 576.\nSe aprueba el modelo 576 «Impuesto Especial sobre Determinados Medios de Transporte. Autoliquidación». El lugar, plazo y forma de presentación del modelo 576, así como su ingreso, se regirán por lo dispuesto en la Orden EHA/1981/2005, de 21 de junio.\nProvenance: excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2007-22442) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

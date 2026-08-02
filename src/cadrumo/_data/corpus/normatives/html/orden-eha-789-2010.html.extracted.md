@@ -143,9 +143,13 @@ Quedan derogadas las siguientes disposiciones:
 
 La presente Orden entrará en vigor el día siguiente al de su publicación en el Boletín Oficial del Estado, y será aplicable a las solicitudes de devolución presentadas después del 31 de diciembre de 2009.
 Madrid, 16 de marzo de 2010.–La Vicepresidenta Segunda del Gobierno y Ministra de Economía y Hacienda, Elena Salgado Méndez.
-ANEXO I
+
+# ANEXO I
+
 Formulario 360
-ANEXO II
+
+# ANEXO II
+
 Modelo 361
 Se sustituye por el que figura como Anexo de la Orden HAC/498/2024, de 21 de mayo, según establece su art. único.2. Ref. BOE-A-2024-10681
 Este documento es de carácter informativo y no tiene valor jurídico.

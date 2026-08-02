@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-85-2003.html",
+  "source_sha256": "0cab52bb033a73eb592acecbcf9df8abf4ca31c736e8db09020edf5582e9657f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/85/2003, de 23 de enero, por la que se aprueba el modelo de comunicacion del importe neto de la cifra de negocios del IAE (BOE-A-2003-1686) - Modelo 848\nOrden HAC/85/2003, de 23 de enero, por la que se aprueba el modelo de comunicacion del importe neto de la cifra de negocios del IAE.\nArticulo 1. Aprobacion del modelo 848.\nSe aprueba el modelo de comunicación del importe neto de la cifra de negocios que deben presentar los sujetos pasivos del Impuesto sobre Actividades Económicas (modelo 848).\nArticulo 3. Plazo de presentacion.\nLa presentación de la comunicación del importe neto de la cifra de negocios regulada en la presente Orden se efectuará en el plazo comprendido entre el día 1 de enero y el día 14 de febrero, ambos incluidos, del ejercicio en que deba surtir efectos dicha comunicación en el Impuesto sobre Actividades Económicas.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2003-1686) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

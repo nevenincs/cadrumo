@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3290-2008.html",
+  "source_sha256": "35fab6e774afcd2bde4ec22d19cc052b884b22ef5414be9c1f0f15aa02696b27",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden EHA/3290/2008 - Articulo 1. Aprobacion del modelo 216\nArticulo 1. Aprobacion del modelo 216.\nSe aprueba el modelo 216 «Impuesto sobre la Renta de no Residentes. Rentas obtenidas sin mediacion de establecimiento permanente. Retenciones e ingresos a cuenta. Declaracion-documento de ingreso», que figura en el anexo I de esta Orden.\nOrden EHA/3290/2008 - Articulo 4. Plazo de presentacion del modelo 216\nArticulo 4. Plazo de presentacion del modelo 216.\nCon caracter general, la presentacion del modelo 216, asi como, en su caso, el ingreso de su importe en el Tesoro Publico, se efectuara en los veinte primeros dias naturales de los meses de abril, julio, octubre y enero, en relacion con las cantidades retenidas y los ingresos a cuenta que correspondan por el trimestre natural inmediato anterior.\nNo obstante, cuando se trate de retenedores u obligados a ingresar a cuenta que tengan la consideracion de grandes empresas, la declaracion e ingreso a que se refiere el parrafo anterior se efectuara en los veinte primeros dias naturales de cada mes, en relacion con las cantidades retenidas y los ingresos a cuenta que correspondan por el mes inmediato anterior.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

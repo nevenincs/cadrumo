@@ -182,13 +182,21 @@ De acuerdo con lo dispuesto en el segundo párrafo de la mencionada disposición
 
 La presente orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado».
 Madrid, 18 de marzo de 2024.–La Vicepresidenta Primera del Gobierno y Ministra de Hacienda, María Jesús Montero Cuadrado.
-ANEXO I
+
+# ANEXO I
+
 Declaración del Impuesto sobre la Renta de las Personas Físicas
-ANEXO II
+
+# ANEXO II
+
 Documento de ingreso o devolución
-ANEXO III
+
+# ANEXO III
+
 Impuesto sobre el Patrimonio. Declaración
-ANEXO IV
+
+# ANEXO IV
+
 Impuesto sobre el Patrimonio 2023. Documento de ingreso
 Este documento es de carácter informativo y no tiene valor jurídico.
 Ayúdenos a mejorar: puede dirigir sus comentarios y sugerencias a nuestro Servicio de atención al ciudadano

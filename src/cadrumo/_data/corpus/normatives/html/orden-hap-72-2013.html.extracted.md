@@ -66,7 +66,9 @@ De acuerdo con la disposición adicional única del Real Decreto 1715/2012, de�
 
 La presente Orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado», y será de aplicación, por primera vez, para la presentación de la declaración informativa correspondiente al ejercicio 2012.
 Madrid, 30 de enero de 2013.–El Ministro de Hacienda y Administraciones Públicas, Cristóbal Montoro Romero.
-ANEXO
+
+# ANEXO
+
 Diseños físicos y lógicos a los que deben ajustarse los archivos que se generen para la presentación telemática del modelo 720
 B) Diseños lógicos
 Descripción de los registros
