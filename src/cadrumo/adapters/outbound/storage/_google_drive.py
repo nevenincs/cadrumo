@@ -263,22 +263,35 @@ class GoogleDriveProvider:
             f"and mimeType='{_FOLDER_MIME}' "
             f"and trashed=false"
         )
-        response = self._execute(
-            service.files().list(q=query, fields="files(id,name,mimeType,appProperties)", pageSize=10),
-            action="resolve_vault_folder",
-        )
-        files = response.get("files", []) if isinstance(response, dict) else []
-        if files:
-            entry = files[0]
-            if entry.get("mimeType") != _FOLDER_MIME:
-                raise OutboundStorageValidationError(
-                    "configured Drive root contains a vault-name entry that is not a folder",
-                    context={"root_folder_id": self._root_folder_id, "vault_folder_name": self._vault_folder_name},
-                    translated_message="adapters.outbound.storage.google_drive.errors.vault_entry_not_folder",
-                )
-            self._verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
-            self._vault_folder_id = str(entry["id"])
-            return self._vault_folder_id
+        page_token: str | None = None
+        seen_tokens: set[str] = set()
+        while True:
+            kwargs: dict[str, Any] = {
+                "q": query,
+                "fields": "files(id,name,mimeType,appProperties),nextPageToken",
+                "pageSize": 10,
+            }
+            if page_token is not None:
+                kwargs["pageToken"] = page_token
+            response = self._execute(service.files().list(**kwargs), action="resolve_vault_folder")
+            files = response.get("files", []) if isinstance(response, dict) else []
+            for entry in files:
+                if entry.get("mimeType") != _FOLDER_MIME:
+                    raise OutboundStorageValidationError(
+                        "configured Drive root contains a vault-name entry that is not a folder",
+                        context={"root_folder_id": self._root_folder_id, "vault_folder_name": self._vault_folder_name},
+                        translated_message="adapters.outbound.storage.google_drive.errors.vault_entry_not_folder",
+                    )
+                self._verify_ownership_or_adopt(entry, kind=self._vault_folder_name)
+                self._vault_folder_id = str(entry["id"])
+                return self._vault_folder_id
+            page_token = next_drive_page_token(
+                response.get("nextPageToken") if isinstance(response, dict) else None,
+                seen_tokens=seen_tokens,
+                action="resolve_vault_folder",
+            )
+            if page_token is None:
+                break
         # Create the folder with the ownership marker.
         body = {
             "name": self._vault_folder_name,
@@ -356,17 +369,31 @@ class GoogleDriveProvider:
         service = self._get_service()
         vault_id = self._resolve_vault_folder()
         query = f"'{vault_id}' in parents and name='{namespace}' and mimeType='{_FOLDER_MIME}' and trashed=false"
-        response = self._execute(
-            service.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
-            action=f"resolve_namespace_{namespace}",
-        )
-        files = response.get("files", []) if isinstance(response, dict) else []
-        if files:
-            entry = files[0]
-            self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
-            folder_id = str(entry["id"])
-            self._namespace_folder_ids[namespace] = folder_id
-            return folder_id
+        action = f"resolve_namespace_{namespace}"
+        page_token: str | None = None
+        seen_tokens: set[str] = set()
+        while True:
+            kwargs: dict[str, Any] = {
+                "q": query,
+                "fields": "files(id,name,appProperties),nextPageToken",
+                "pageSize": 10,
+            }
+            if page_token is not None:
+                kwargs["pageToken"] = page_token
+            response = self._execute(service.files().list(**kwargs), action=action)
+            files = response.get("files", []) if isinstance(response, dict) else []
+            for entry in files:
+                self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
+                folder_id = str(entry["id"])
+                self._namespace_folder_ids[namespace] = folder_id
+                return folder_id
+            page_token = next_drive_page_token(
+                response.get("nextPageToken") if isinstance(response, dict) else None,
+                seen_tokens=seen_tokens,
+                action=action,
+            )
+            if page_token is None:
+                break
         if not create:
             return None
         body = {
@@ -406,30 +433,39 @@ class GoogleDriveProvider:
         service = self._get_service()
         prefix = provider_object_hmac_prefix(object_key_hmac)
         query = f"'{namespace_folder_id}' in parents and name contains '{prefix}--' and trashed=false"
-        response = self._execute(
-            service.files().list(
-                q=query,
-                fields="files(id,name,size,md5Checksum,modifiedTime,appProperties)",
-                pageSize=10,
-            ),
-            action="find_file",
-        )
-        files = response.get("files", []) if isinstance(response, dict) else []
-        for entry in files:
-            name = str(entry.get("name", ""))
-            if not (name.startswith(f"{prefix}--") and name.endswith(_FILE_EXTENSION)):
-                continue
-            app_properties = entry.get("appProperties") or {}
-            if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
-                # Foreign file: operator-placed content that happens to
-                # share the 8-hex prefix. Refuse to touch it.
-                continue
-            if app_properties.get("object_key_hmac") != object_key_hmac:
-                # Different Cadrumo object that shares the prefix (extremely
-                # rare HMAC collision). Refuse to touch it.
-                continue
-            return entry
-        return None
+        page_token: str | None = None
+        seen_tokens: set[str] = set()
+        while True:
+            kwargs: dict[str, Any] = {
+                "q": query,
+                "fields": "files(id,name,size,md5Checksum,modifiedTime,appProperties),nextPageToken",
+                "pageSize": 10,
+            }
+            if page_token is not None:
+                kwargs["pageToken"] = page_token
+            response = self._execute(service.files().list(**kwargs), action="find_file")
+            files = response.get("files", []) if isinstance(response, dict) else []
+            for entry in files:
+                name = str(entry.get("name", ""))
+                if not (name.startswith(f"{prefix}--") and name.endswith(_FILE_EXTENSION)):
+                    continue
+                app_properties = entry.get("appProperties") or {}
+                if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
+                    # Foreign file: operator-placed content that happens to
+                    # share the 8-hex prefix. Refuse to touch it.
+                    continue
+                if app_properties.get("object_key_hmac") != object_key_hmac:
+                    # Different Cadrumo object that shares the prefix (extremely
+                    # rare HMAC collision). Refuse to touch it.
+                    continue
+                return entry
+            page_token = next_drive_page_token(
+                response.get("nextPageToken") if isinstance(response, dict) else None,
+                seen_tokens=seen_tokens,
+                action="find_file",
+            )
+            if page_token is None:
+                return None
 
     def put(
         self,

@@ -11,11 +11,13 @@ import subprocess
 import sys
 import textwrap
 from typing import Any
+from urllib.parse import parse_qs
 
 import pytest
 
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
+from ...google.tests._drive_media_server import drive_files_list_endpoint
 from .. import OutboundStorageIntegrityError, OutboundStorageNetworkError, OutboundStorageValidationError
 from .._google_drive import GoogleDriveProvider, _drive_storage_content_hash
 
@@ -111,6 +113,98 @@ def test_google_drive_provider_refuses_the_former_product_vault_before_service_c
 def test_google_drive_read_metadata_requires_the_same_typed_app_properties_contract() -> None:
     with pytest.raises(OutboundStorageIntegrityError, match="appProperties"):
         _drive_storage_content_hash({"id": "drive-file", "appProperties": {"content_hash": "sha256-x"}})
+
+
+def test_vault_resolution_follows_page_token_to_an_owned_folder() -> None:
+    """A generated Drive client reaches an owned vault folder on page two."""
+    with drive_files_list_endpoint(
+        pages=(
+            {"files": [], "nextPageToken": "vault-page-two"},
+            {
+                "files": [
+                    {
+                        "id": "vault-id",
+                        "name": "cadrumo-vault",
+                        "mimeType": "application/vnd.google-apps.folder",
+                        "appProperties": {"cadrumo_vault_app": "cadrumo"},
+                    }
+                ]
+            },
+        )
+    ) as endpoint:
+        provider = _provider()
+        provider._service = endpoint.service
+
+        assert provider._resolve_vault_folder() == "vault-id"
+
+    assert len(endpoint.requested_queries) == 2
+    assert parse_qs(endpoint.requested_queries[1])["pageToken"] == ["vault-page-two"]
+
+
+def test_namespace_resolution_follows_page_token_to_an_owned_folder() -> None:
+    """A generated Drive client reaches an owned namespace folder on page two."""
+    with drive_files_list_endpoint(
+        pages=(
+            {
+                "files": [
+                    {
+                        "id": "vault-id",
+                        "name": "cadrumo-vault",
+                        "mimeType": "application/vnd.google-apps.folder",
+                        "appProperties": {"cadrumo_vault_app": "cadrumo"},
+                    }
+                ]
+            },
+            {"files": [], "nextPageToken": "namespace-page-two"},
+            {
+                "files": [
+                    {
+                        "id": "namespace-id",
+                        "name": "ledger_transaction",
+                        "appProperties": {"cadrumo_vault_app": "cadrumo"},
+                    }
+                ]
+            },
+        )
+    ) as endpoint:
+        provider = _provider()
+        provider._service = endpoint.service
+
+        assert provider._resolve_namespace_folder("ledger_transaction", create=False) == "namespace-id"
+
+    assert len(endpoint.requested_queries) == 3
+    assert parse_qs(endpoint.requested_queries[2])["pageToken"] == ["namespace-page-two"]
+
+
+def test_file_resolution_follows_page_token_to_a_matching_owned_object() -> None:
+    """A generated Drive client reaches the full-HMAC match on page two."""
+    object_key_hmac = "a" * 64
+    with drive_files_list_endpoint(
+        pages=(
+            {"files": [], "nextPageToken": "object-page-two"},
+            {
+                "files": [
+                    {
+                        "id": "object-id",
+                        "name": "aaaaaaaa--payload.bin",
+                        "appProperties": {
+                            "cadrumo_vault_app": "cadrumo",
+                            "object_key_hmac": object_key_hmac,
+                        },
+                    }
+                ]
+            },
+        )
+    ) as endpoint:
+        provider = _provider()
+        provider._service = endpoint.service
+
+        entry = provider._find_file("namespace-id", object_key_hmac)
+
+    assert entry is not None
+    assert entry["id"] == "object-id"
+    assert len(endpoint.requested_queries) == 2
+    assert parse_qs(endpoint.requested_queries[1])["pageToken"] == ["object-page-two"]
 
 
 @pytest.mark.parametrize(
