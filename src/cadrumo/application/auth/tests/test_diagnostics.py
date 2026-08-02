@@ -8,7 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, SensitivityClass
+from ....adapters.outbound.aeat.auth._clave_movil_page_flow import _mint_diagnostic_id
+from ....adapters.persistence.storage import (
+    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+    SecureObjectRepository,
+    SensitivityClass,
+)
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -228,9 +233,36 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
         _payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))
 
 
-def _store_diagnostic(repo: object, *, key: str, payload: dict[str, object]) -> None:
+def test_rapid_encrypted_diagnostic_captures_list_and_load_individually(tmp_path: Path) -> None:
+    """Same-moment captures remain independently addressable after encrypted persistence."""
+
+    captured_at = datetime(2026, 8, 2, 9, 0, tzinfo=UTC)
+    diagnostic_ids = tuple(_mint_diagnostic_id(captured_at) for _ in range(8))
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        for sequence, diagnostic_id in enumerate(diagnostic_ids):
+            _store_diagnostic(
+                profile.repository,
+                key=diagnostic_id,
+                payload=_diagnostic_payload(
+                    diagnostic_id=diagnostic_id,
+                    reason=f"rapid-capture-{sequence}",
+                    captured_at=captured_at.isoformat(),
+                    html=f"<main>local diagnostic capture {sequence}</main>",
+                ),
+            )
+        listed = list_auth_diagnostics()
+        details = tuple(load_auth_diagnostic(diagnostic_id) for diagnostic_id in diagnostic_ids)
+
+    assert len(set(diagnostic_ids)) == len(diagnostic_ids)
+    assert listed.row_count == len(diagnostic_ids)
+    assert {row.diagnostic_id for row in listed.rows} == set(diagnostic_ids)
+    assert all(detail is not None for detail in details)
+    assert {detail.diagnostic_id for detail in details if detail is not None} == set(diagnostic_ids)
+
+
+def _store_diagnostic(repo: SecureObjectRepository, *, key: str, payload: dict[str, object]) -> None:
     """Persist one genuine encrypted diagnostic row through the real repository."""
-    repo.save(  # type: ignore[attr-defined]
+    repo.save(
         namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
         object_key=key,
         classification=SensitivityClass.SESSION,
