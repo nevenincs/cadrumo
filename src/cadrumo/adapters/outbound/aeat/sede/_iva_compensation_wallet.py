@@ -34,7 +34,7 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import PlaywrightError
 from ..browser import DefaultBrowserSession, default_browser_session_factory
-from ._adapter_utils import is_aeat_auth_gate_redirect, landed_origin
+from ._adapter_utils import assert_read_landing, is_aeat_auth_gate_redirect, landed_origin
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -81,6 +81,32 @@ _WALLET_DISCOVERED_ENTRYPOINT_ACTION = _PRE303.wallet_discovered_entrypoint_acti
 _WALLET_EXECUTE_READ_ACTION = _PRE303.wallet_execute_read_action_label
 IVA_COMPENSATION_WALLET_URL = _WALLET_URL
 PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
+
+# The pages a wallet READ legitimately rests on: the Pre303 presentation
+# service the wallet link is discovered from, and the wallet itself. Both
+# are already-declared constants reduced to their PATH, so the allow-list
+# asserts nothing this module did not already navigate to on purpose, and
+# the Pre303 entry's query (``?forigen=pre303``) is dropped because a path
+# comparison must not see it.
+#
+# The two Cl@ve surfaces this read passes THROUGH -- the access selector
+# and AEAT's acting-capacity gate -- are deliberately absent. They are
+# transit, not rest: every landing rule below sits after a
+# ``wait_for_url`` that has already required the traversal to have left
+# them, so admitting them would only let a stalled traversal pass.
+#
+# The acting-capacity gate additionally CANNOT be admitted through the
+# shared rule, and the reason is worth stating where someone would
+# otherwise try: the canonical AEAT write-verb scan matches its substrings,
+# and ``DialogoRepresentacion`` contains ``presentacion``. Any code that
+# routes that URL through a remote-state guard is refused with a message
+# naming a write token the page does not carry. Do not "fix" that by
+# narrowing the canonical token set -- it exists to catch real presentation
+# surfaces; give the gate its own predicate if a rule for it is ever needed.
+_WALLET_READ_PATH_PREFIXES: tuple[str, ...] = (
+    urlsplit(_PRE303.presentation_service_path).path,
+    urlsplit(_WALLET_PATH).path,
+)
 
 
 async def fetch_iva_compensation_wallet(
@@ -352,6 +378,10 @@ async def _continue_own_name_representation(
             timeout=settings.cadrumo_browser_navigation_timeout_ms,
         )
         await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
+        # The wait predicate admits the 4033 auth gate on purpose, so the
+        # caller can raise its own diagnostic; it is not a landing rule.
+        # This is.
+        _assert_read_landing(page)
     except PlaywrightError as exc:
         raise SedeNavigationError(
             "AEAT representation gate did not expose the own-name continuation expected for the "
@@ -583,6 +613,11 @@ async def _submit_wallet_execute_gate_if_present(
                     getattr(page, "url", None),
                     exc_info=True,
                 )
+            # The ``ejecutar`` click above issued a browser form POST. This
+            # is the only wall that sees where AEAT served it: the shape
+            # check below reads the returned HTML's own form action, which
+            # is a DOM AEAT controls and is not evidence of the URL served.
+            _assert_read_landing(page)
             post_execute_html = await _wait_for_wallet_execute_terminal_shape(
                 page,
                 content=content,
@@ -800,6 +835,47 @@ def _landed_wallet_url(page: Page) -> str:
             "can be recorded for this observation",
         )
     return f"{origin}{_WALLET_PATH}"
+
+
+def assert_wallet_read_landing(landing_url: str) -> None:
+    """Refuse a landing outside the four pages this wallet read traverses.
+
+    This is the most write-adjacent driver in the package: it fills an
+    ejercicio and periodo and then clicks AEAT's ``ejecutar`` SUBMIT input.
+    That click issues a browser form POST which the first-party HTTP guard
+    never sees and which the package's forbidden-verb source scan permits
+    by design, so before this rule nothing established where the POST had
+    landed. The post-execute shape check reads the returned HTML's form
+    action, which is a DOM AEAT controls and says nothing about the URL
+    actually served.
+
+    The allow-list is the traversal itself, and every entry is an existing
+    declared constant rather than a new claim: the Cl@ve access selector,
+    AEAT's representation gate, the Pre303 presentation service, and the
+    wallet path. The wallet path is additionally the surface's only
+    declared read-POST path on the guard policy, so a POST landing there
+    is admitted by the policy while a POST landing anywhere else is not.
+
+    Public so the wallet's proof exercises this exact rule rather than a
+    mirrored copy that would keep agreeing with itself.
+
+    Args:
+        landing_url: The URL AEAT actually served, read off the page.
+
+    Raises:
+        SedeNavigationError: When the landing is not a declared read page.
+    """
+    assert_read_landing(
+        landing_url,
+        surface="IVA compensation wallet",
+        policy=IVA_COMPENSATION_WALLET_READ_POLICY,
+        allowed_path_prefixes=_WALLET_READ_PATH_PREFIXES,
+    )
+
+
+def _assert_read_landing(page: Page) -> None:
+    """Read the landed URL off ``page`` and route it through the wallet landing rule."""
+    assert_wallet_read_landing(getattr(page, "url", "") or "")
 
 
 def _assert_read_http(method: str, url: str) -> None:
