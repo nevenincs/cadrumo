@@ -145,6 +145,23 @@ class TestVacuityGuards:
 
         assert (target / "keep").is_file()
 
+    def test_a_block_that_dissolves_the_obstruction_is_refused(self, tmp_path: Path) -> None:
+        """An entry-only check would let a vacuous block exit green.
+
+        If the code under test removes the obstruction and then writes
+        successfully, every assertion inside describes an ordinary success
+        path while the test claims to describe a failure. Checking the fault
+        only when it is planted cannot see that; checking it again at the end
+        can.
+        """
+        target = tmp_path / "target.json"
+
+        with pytest.raises(PathObstructionError, match="did not survive"), obstructed_path(target):
+            (target / "blocker").unlink()
+            target.rmdir()
+
+        assert not target.exists()
+
     def test_the_obstruction_is_not_empty(self, tmp_path: Path) -> None:
         """An empty directory is removable, so a writer could dissolve the fault."""
         target = tmp_path / "target.json"
