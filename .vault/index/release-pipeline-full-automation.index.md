@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:b7053344235195d908b679aa6033fabb4cc996d6bdbb9c3e8fc2f5096070ab1c'
+body_hash: 'sha256:57c498a529b1e3c3df55e0ea23399e76a284dea19a7aece62c51dcd1f88f6534'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S04]]'
   - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S14]]'
   - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S15]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S16]]'
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
   - '[[2026-08-02-release-pipeline-full-automation-plan]]'
 ---
@@ -36,6 +37,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W01-P01-S04` - Record OP-9 as a named operator settings action removing the required_reviewers protection rule from BOTH the release and docs environments while keeping each environment and its branch_policy, and add a read-only forge inventory probe that reports each environment protection-rule set without mutating anything so the operator half is verifiable rather than assumed, gate: uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes over fixture payloads covering a rule-present, a rule-absent, and an unreadable-environment response
 - `2026-08-02-release-pipeline-full-automation-W02-P04-S14` - Declare the release-candidate record as a strict typed model carrying the cohort id, the version, the source commit, the smoke run id, every acquisition run id, the claimed channel set, the dry_run flag, the soak opened_at, and the computed soak deadline, with the window read from the release checklist soak hours rather than a new literal so one authority still owns the duration, gate: uv run --no-sync pytest dev/release/tests/test_release_candidate.py -q passes with a strict save-load-equality roundtrip populating every defaultable field non-default plus an anti-tautology proof deleting the deadline from the serialized payload and asserting the load refuses
 - `2026-08-02-release-pipeline-full-automation-W02-P04-S15` - Publish the sealed candidate record through the existing evidence-release draft transport under a release-candidate tag keyed on the smoke run id, so the durable state lives outside every running job and outside the working tree exactly as the evidence rows already do, gate: uv run --no-sync pytest dev/release/tests/test_release_candidate.py -q passes over the writer and reader against injected release payloads, with live draft creation flagged non-local and CI-only
+- `2026-08-02-release-pipeline-full-automation-W02-P04-S16` - Build the promoter selection logic that lists sealed candidates, selects the eldest whose soak deadline has elapsed against a real clock, and refuses every candidate whose window is still open, because publishing early is the one failure this mechanism exists to prevent and a wrong comparison publishes early silently, gate: uv run --no-sync pytest dev/release/tests/test_soak_promoter.py -q passes covering an elapsed candidate selected, a not-yet-elapsed candidate refused, a boundary candidate at exactly the minimum window, and an empty candidate set returning no promotion rather than an error
 
 ### plan
 
