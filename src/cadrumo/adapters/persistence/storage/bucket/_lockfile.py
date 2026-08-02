@@ -216,6 +216,7 @@ def _ensure_bucket_dir_lockable(paths: BucketPaths) -> None:
 
 
 def _acquire_local_slot(
+    target: Path,
     ownership_key: Path,
     paths: BucketPaths,
     *,
@@ -228,6 +229,13 @@ def _acquire_local_slot(
     Returns ``True`` when a fresh slot (depth 0) was created and the caller must
     proceed to the filesystem claim; ``False`` when an existing same-thread lock
     was re-entered (depth incremented) and the caller must return immediately.
+
+    Same-thread re-entry revalidates the on-disk record before honouring the
+    in-process slot. The slot is a cache of a filesystem fact, and the two can
+    diverge: if a foreign process replaced the lockfile while this thread held
+    it, re-entering on the strength of the local record alone would hand the
+    caller a lock this process does not hold, silently, with the foreign lock
+    still on disk. A definite foreign PID therefore refuses the re-entry.
     """
     while True:
         with _LOCAL_LOCKS_CONDITION:
@@ -247,6 +255,12 @@ def _acquire_local_slot(
                 if ownership.depth == 0:
                     raise RuntimeError(
                         "bucket lock cannot re-enter while initial acquisition is incomplete",
+                    )
+                recorded_pid = _read_pid(target)
+                if isinstance(recorded_pid, int) and recorded_pid != pid:
+                    raise BucketBusyError(
+                        bucket_id=paths.bucket_id,
+                        holding_pid=recorded_pid,
                     )
                 ownership.depth += 1
                 return False

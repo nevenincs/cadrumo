@@ -82,6 +82,7 @@ from .....domain.filing import (
     ModeloValue,
     ModeloValueKind,
     make_amendment_id,
+    registry_schema_version,
 )
 from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus, derive_invoice_id
 from .....domain.iva import InvoiceKind
@@ -444,7 +445,7 @@ def _modelo_draft(label: str) -> ModeloDraft:
         findings=(),
         created_at=now,
         updated_at=now,
-        schema_version="schema-2026-1",
+        schema_version=registry_schema_version(modelo="303", revision_id="2026-y-siguientes"),
     )
 
 

@@ -22,6 +22,7 @@ addressed substrate and its sensitivity class is irreducibly FINANCIAL.
 
 from __future__ import annotations
 
+import hmac
 import json
 from collections.abc import Iterator
 from io import BytesIO
@@ -48,6 +49,7 @@ from ._namespace_registry import (
     ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
 )
 from ._namespace_registry import secure_object_namespace_logical_path
+from .crypto import HashedLookup
 from .envelope import Envelope
 from .runtime_repository import secure_object_repository_for_active_bucket
 from .sql import SecureObjectRepository
@@ -98,6 +100,27 @@ def _validate_manifest_envelope(envelope: Envelope[Attachment]) -> None:
         raise _attachment_validation_error(
             "invalid attachment manifest",
             violation="manifest_schema_version",
+        )
+
+
+def _assert_manifest_bound_to_row(attachment: Attachment, *, row_object_key: bytes) -> None:
+    """Refuse a manifest whose identity is not the row key it is filed under.
+
+    The row key is stored as a :class:`HashedLookup` digest, so the natural
+    key cannot be read back off the row -- but it can be recomputed from the
+    identity the manifest claims and compared. That makes the binding checkable
+    from the listing path, which holds no natural key, at the cost of one HMAC
+    rather than the blob decryption iteration deliberately avoids.
+
+    Both read surfaces route through here so they cannot diverge again:
+    :meth:`AttachmentStore.load_manifest` also compares the claimed identity
+    with the natural key it was called with, and this states the same
+    invariant against the row itself.
+    """
+    if not hmac.compare_digest(HashedLookup.compute(attachment.attachment_id), row_object_key):
+        raise _attachment_validation_error(
+            "manifest key does not match stored attachment_id",
+            violation="manifest_key",
         )
 
 
@@ -342,19 +365,30 @@ class AttachmentStore(BaseModel):
                 "manifest key does not match stored attachment_id",
                 violation="manifest_key",
             )
+        _assert_manifest_bound_to_row(attachment, row_object_key=record.object_key)
         self._assert_manifest_matches_blob(attachment)
         return attachment
 
     def iter_manifests(self) -> Iterator[Attachment]:
         """Iterate over every :class:`Attachment` manifest in sorted attachment-id order.
 
-        Each manifest is checked to reference bytes this store actually holds.
-        The presence check is a key lookup rather than the full length/digest
-        reproduction :meth:`load_manifest` performs: iteration is the listing
-        path, and re-reading every blob would decrypt the whole evidence corpus
-        to render a list. The declared size is bound to the payload at
+        Each manifest is bound to the row it was stored under and checked to
+        reference bytes this store actually holds. The presence check is a key
+        lookup rather than the full length/digest reproduction
+        :meth:`load_manifest` performs: iteration is the listing path, and
+        re-reading every blob would decrypt the whole evidence corpus to
+        render a list. The declared size is bound to the payload at
         :meth:`write_manifest`, so a listed size cannot have been admitted
         unverified.
+
+        The key binding is what iteration previously lacked. ``load_manifest``
+        passes the row key into the decoder, so a manifest whose embedded
+        ``sha256`` drifted from the key it is filed under is refused there.
+        Iteration had no key to pass and derived the identity from that same
+        embedded field instead, which is self-consistent by construction --
+        so the one surface that could not detect the drift was the one that
+        enumerates the whole corpus, and a tampered manifest ``load_manifest``
+        rejected was listed as though it were sound.
         """
         manifests: list[Attachment] = []
         for record in self._objects_repo().list_records(
@@ -364,6 +398,7 @@ class AttachmentStore(BaseModel):
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         ):
             envelope = _decode_manifest_envelope(record.payload)
+            _assert_manifest_bound_to_row(envelope.payload, row_object_key=record.object_key)
             self._assert_blob_present(envelope.payload)
             manifests.append(envelope.payload)
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)
