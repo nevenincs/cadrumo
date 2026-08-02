@@ -4,6 +4,7 @@ tags:
   - '#open-work-consolidation'
 date: '2026-07-30'
 modified: '2026-07-31'
+body_hash: 'sha256:af16ba04139a0f6084ad46240153558c0dbc2a488466671c8f970665edf2ff92'
 tier: L2
 related:
   - '[[2026-07-30-open-work-consolidation-adr]]'

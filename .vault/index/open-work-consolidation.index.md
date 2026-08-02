@@ -6,6 +6,7 @@ tags:
 date: '2026-07-31'
 modified: '2026-07-31'
 body_schema: 'body-v1'
+body_hash: 'sha256:cc67118b3a587e4842d5e5a35ac542624519ba652761c2166cdbecbeeb5274b2'
 related:
   - '[[2026-07-30-open-work-consolidation-P05-S28]]'
   - '[[2026-07-30-open-work-consolidation-P05-S30]]'

@@ -5,44 +5,11 @@ tags:
 date: '2026-07-31'
 modified: '2026-07-31'
 body_schema: 'body-v1'
+body_hash: 'sha256:a01389cad501472ab5da50fdef027c32cd553477ecd85c6b0a76a3f351d69d3e'
 step_id: 'S30'
 related:
   - "[[2026-07-30-open-work-consolidation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace open-work-consolidation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S30 and 2026-07-30-open-work-consolidation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rerun the twelve semantic duplication probes and record the delta against the baseline they check for recurrence of, closing the residue of a row that was superseded rather than satisfied and ## Scope
-
-- `src/cadrumo/`
-- `dev/audit/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Rerun the twelve semantic duplication probes and record the delta against the baseline they check for recurrence of, closing the residue of a row that was superseded rather than satisfied
 
@@ -56,9 +23,6 @@ related:
 - Rerun the probes whose original results were recorded as concrete misses.
 - Rerun the removal check, where a hit would mean a retired concept had returned.
 - Confirm each canonical owner with an exact search rather than resting on the semantic hit.
-
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 ## Outcome
 
@@ -104,6 +68,3 @@ Partial by design: four probes were run, chosen because each had a recorded prio
 result to compare against, which is what makes a rerun meaningful. The remaining
 eight had no recorded miss and no removal expectation, so rerunning them would
 produce a first observation rather than a delta and would not close anything.
-
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
