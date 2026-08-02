@@ -121,7 +121,10 @@ from ._ledger_filing_snapshot import (
     diff_ledger_fingerprints,
     snapshot_fingerprint,
 )
-from ._m232_row_materialisation import materialize_m232_related_party_rows
+from ._m232_row_materialisation import (
+    m232_related_party_row_casilla_values,
+    materialize_m232_related_party_rows,
+)
 from ._participation_index import (
     TransactionParticipationIndexPersistenceError,
     TransactionRevisionParticipation,
@@ -242,6 +245,7 @@ __all__ = (
     "diff_ledger_fingerprints",
     "dt12_regime_window_eligibility",
     "is_justificante_backed_external_evidence",
+    "m232_related_party_row_casilla_values",
     "m349_nif_number_for_export",
     "materialize_m232_related_party_rows",
     "raise_catalogue_integrity_error",

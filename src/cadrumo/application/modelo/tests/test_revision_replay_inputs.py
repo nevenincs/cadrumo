@@ -13,6 +13,7 @@ from ....domain.deadlines import EntityType, IrpfEstimationRegime, IrpfIncomeCat
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    Modelo232VinculadaRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     ModeloCode,
@@ -319,3 +320,85 @@ def test_revision_replay_inputs_project_m720_row_binding_values_into_draft_rows(
     assert draft_rows[("modelo-720-asset-row-identifier", 1)] == "AD-ACCOUNT-001"
     assert draft_rows[("modelo-720-asset-row-acquisition-date", 1)] == "2020-01-15"
     assert draft_rows[("modelo-720-asset-row-valuation", 1)] == Decimal("40000")
+
+
+def _m232_row(index: int) -> Modelo232VinculadaRow:
+    return Modelo232VinculadaRow(
+        nif=f"A1234567{index}",
+        nombre=f"Vinculada {index}",
+        pais="ES",
+        tipo_vinculacion="1",
+        tipo_operacion="01",
+        metodo="PCNC",
+        importe=Decimal(f"{index}25000"),
+    )
+
+
+def test_persisted_m232_rows_produce_no_replay_inputs_when_absent() -> None:
+    """An M232 revision with no related-party rows contributes no vinculada keys.
+
+    The empty case the finding asks for: without it the one-row assertion below
+    could pass on a projection that emitted the slots unconditionally.
+    """
+    work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
+    revision = _revision(work_unit)
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert not [key for key in replay_inputs if str(key).startswith("vinculada-")]
+
+
+def test_persisted_m232_row_reaches_filing_replay() -> None:
+    """A persisted related-party row is projected into its positional casillas.
+
+    A valid M232 revision could retain operator-supplied rows in encrypted
+    storage while replay produced nothing for them, silently losing the rows
+    during export or filing reconstruction.
+    """
+    work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
+    row = _m232_row(1)
+    revision = _revision(work_unit, detail_rows=(row,))
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    assert replay_inputs["vinculada-1-nif"] == row.nif
+    assert replay_inputs["vinculada-1-tipo-vinculacion"] == row.tipo_vinculacion
+    assert replay_inputs["vinculada-1-tipo-operacion"] == row.tipo_operacion
+    assert replay_inputs["vinculada-1-metodo-valoracion"] == row.metodo
+    assert replay_inputs["vinculada-1-importe"] == "125000"
+
+
+def test_persisted_m232_rows_fill_every_declared_row_slot() -> None:
+    """Five rows populate all five slots, each in its own positional casilla.
+
+    Row order is the slot order, so a projection that collapsed rows onto one
+    slot or dropped the tail would surface here rather than in an export diff.
+    """
+    work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
+    rows = tuple(_m232_row(index) for index in range(1, 6))
+    revision = _revision(work_unit, detail_rows=rows)
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    for index, row in enumerate(rows, start=1):
+        assert replay_inputs[f"vinculada-{index}-nif"] == row.nif
+        assert replay_inputs[f"vinculada-{index}-importe"] == str(row.importe)
+    assert len([key for key in replay_inputs if str(key).endswith("-nif") and str(key).startswith("vinculada-")]) == 5
+
+
+def test_m232_replay_keys_are_declared_casillas_of_the_resolved_revision() -> None:
+    """Every projected key names a casilla the law-resolved revision declares.
+
+    Guards against the projection inventing coordinates: an id that no casilla
+    declares would be dropped downstream exactly as silently as no id at all.
+    """
+    work_unit = _work_unit(modelo="232", filing_year=2025, period_code="0A")
+    revision = _revision(work_unit, detail_rows=(_m232_row(1),))
+    snapshot = resources().modelos.authority.snapshot("232", filing_year=2025, period="0A")
+    declared = {casilla.id for casilla in snapshot.revision.casillas}
+
+    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+
+    projected = {key for key in replay_inputs if str(key).startswith("vinculada-")}
+    assert projected
+    assert projected <= declared

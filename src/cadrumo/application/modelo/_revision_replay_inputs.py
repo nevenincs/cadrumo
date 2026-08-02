@@ -45,9 +45,11 @@ from ...domain.calculations.registry import (
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevision,
+    Modelo232VinculadaRow,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
     WorkUnit,
+    m232_related_party_row_casilla_values,
     m349_nif_number_for_export,
 )
 
@@ -104,6 +106,7 @@ def revision_filing_replay_inputs(
         **dict(revision.binding_overrides),
         **dict(revision.row_binding_values),
         **_m349_detail_row_replay_inputs(revision=revision, work_unit=work_unit),
+        **_m232_detail_row_replay_inputs(revision=revision, work_unit=work_unit),
         **_not_applicable_relation_zero_inputs(
             snapshot=snapshot,
             workflow_profile=workflow_profile,
@@ -278,6 +281,40 @@ def _m349_detail_row_replay_inputs(
         if values:
             replay_inputs[binding_id] = values
     return replay_inputs
+
+
+def _m232_detail_row_replay_inputs(
+    *,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
+) -> dict[CasillaId, filing_domain.ModeloInputScalar]:
+    """Project persisted Modelo 232 related-party rows into positional casillas.
+
+    M232 declares its related parties as five positional row slots rather than a
+    repeating-record binding family, so replay rehydrates them as ordinary
+    casilla inputs (``vinculada-1-nif`` … ``vinculada-5-importe``) instead of the
+    indexed ``binding_id -> row-index`` maps Modelo 349 uses.
+
+    The row-to-casilla mapping comes from the domain authority
+    :func:`~domain.modelos.m232_related_party_row_casilla_values`, the same one
+    the observation materialiser reads, so a persisted row cannot reach one
+    surface and silently vanish from the other -- which is exactly what happened
+    while replay had no M232 branch at all: valid operator-supplied rows stayed
+    in encrypted storage and produced no replay inputs, losing them during export
+    or filing reconstruction.
+
+    Money values are rendered through the canonical decimal string so the
+    replayed scalar matches what every other numeric replay input carries.
+    """
+    if str(work_unit.modelo) != Modelo.M232.value:
+        return {}
+    rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo232VinculadaRow))
+    if not rows:
+        return {}
+    return {
+        casilla_id: canonical_decimal_string(value) if isinstance(value, Decimal) else value
+        for casilla_id, value in m232_related_party_row_casilla_values(rows).items()
+    }
 
 
 def _snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnapshot | None:
