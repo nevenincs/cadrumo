@@ -18,15 +18,25 @@ payload rejected everything.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry import CrossReferenceApplicabilityDeclaracion
+from ....domain.calculations.registry import (
+    CrossReferenceApplicabilityDeclaracion,
+    WorkbookArtefactReport,
+    WorkbookKind,
+    WorkbookModeloCoverage,
+    WorkbookRunnerAvailability,
+    WorkbookScanStatus,
+)
 from .._registry_payloads import (
     RegistryAuditOraclesResult,
     RegistryParityReplayResult,
     RegistryParityRunResult,
     RegistryVerifyFiledStateResult,
+    RegistryWorkbooksVerifyResult,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -120,6 +130,98 @@ def test_verify_filed_state_refuses_a_malformed_comparison() -> None:
                 },
             },
         )
+
+
+# ---------------------------------------------------------------------------
+# registry.workbooks.verify
+# ---------------------------------------------------------------------------
+
+
+def _workbook_verification_models() -> tuple[
+    WorkbookRunnerAvailability,
+    WorkbookArtefactReport,
+    WorkbookModeloCoverage,
+]:
+    runner = WorkbookRunnerAvailability(
+        status="available",
+        engine="libreoffice-headless",
+        executable="soffice",
+        detail="LibreOffice runner available.",
+    )
+    report = WorkbookArtefactReport(
+        path="modelo-303/2025.xlsx",
+        modelo="303",
+        extension=".xlsx",
+        bytes=1,
+        sha256="0" * 64,
+        sheets=("Liquidacion",),
+        formula_cells=1,
+        workbook_kind=WorkbookKind.FORMULA_FORM,
+        evidence_tier=None,
+        scan_status=WorkbookScanStatus.SCANNED,
+        elapsed_seconds=Decimal("0.1"),
+    )
+    coverage = WorkbookModeloCoverage(
+        modelo="303",
+        workbook_count=1,
+        formula_workbook_count=1,
+        unsupported_xls_count=0,
+        failed_count=0,
+    )
+    return runner, report, coverage
+
+
+def _workbooks_verify_result() -> RegistryWorkbooksVerifyResult:
+    runner, report, coverage = _workbook_verification_models()
+    return RegistryWorkbooksVerifyResult(
+        root="registry-workbooks",
+        workbook_count=1,
+        scanned_count=1,
+        formula_workbook_count=1,
+        unsupported_xls_count=0,
+        failed_count=0,
+        runner=runner,
+        reports=[report],
+        modelo_coverage=[coverage],
+    )
+
+
+def test_workbooks_verify_accepts_the_canonical_verification_models() -> None:
+    """The transport payload carries the domain models without dictionary weakening."""
+    runner, report, coverage = _workbook_verification_models()
+
+    result = _workbooks_verify_result()
+
+    assert result.runner == runner
+    assert result.reports == [report]
+    assert result.modelo_coverage == [coverage]
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        {"runner": {"status": "available", "engine": "unsupported", "detail": "invalid runner"}},
+        {"reports": [{}]},
+        {
+            "modelo_coverage": [
+                {
+                    "modelo": "303",
+                    "workbook_count": -1,
+                    "formula_workbook_count": 0,
+                    "unsupported_xls_count": 0,
+                    "failed_count": 0,
+                },
+            ],
+        },
+        {"unknown_extra_key": "x"},
+    ),
+)
+def test_workbooks_verify_refuses_malformed_canonical_models(mutation: dict[str, object]) -> None:
+    payload = _workbooks_verify_result().model_dump(mode="python")
+    payload.update(mutation)
+
+    with pytest.raises(ValidationError):
+        RegistryWorkbooksVerifyResult.model_validate(payload)
 
 
 # ---------------------------------------------------------------------------
