@@ -27,12 +27,15 @@ from ....domain.modelos import (
     ModeloCode,
     ModeloRecord,
     ModeloRecordStatus,
+    TransactionRevisionParticipation,
+    TransactionRevisionParticipationIndex,
     WorkUnit,
     derive_calculation_revision_id,
     derive_filing_record_id,
     derive_work_unit_id,
     upsert_calculation_revision,
     upsert_filing_record,
+    upsert_transaction_participation,
     upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
@@ -207,3 +210,83 @@ def test_rebuild_on_empty_catalogue_writes_nothing(tmp_path: Path) -> None:
     assert stats.revision_count == 0
     assert stats.transaction_count == 0
     assert stats.participation_count == 0
+    assert stats.stale_removed_count == 0
+
+
+def test_rebuild_prunes_participation_absent_from_the_regenerated_catalogue(tmp_path: Path) -> None:
+    """A persisted entry the catalogue no longer records is removed, not left readable.
+
+    The index is a derived cache over the finalized-revision catalogue, so a
+    rebuild must REPLACE rather than upsert: an entry whose revision has since
+    been discarded has no regenerated row, and leaving its secure object in place
+    would keep surfacing a participation the authority dropped.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        participation_repo = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
+
+        # A genuine persisted participation whose revision is absent from the
+        # (empty) catalogue the rebuild will read.
+        stale_wu = _work_unit(modelo="303", period="4T", revision_seed="303stale")
+        stale_rev = _revision(
+            work_unit=stale_wu,
+            state=CalculationRevisionState.PRESENTADO,
+            txids=(_TX_BORRADOR,),
+        )
+        participation_repo.save(
+            upsert_transaction_participation(
+                TransactionRevisionParticipationIndex(transaction_id=_TX_BORRADOR),
+                TransactionRevisionParticipation(
+                    calculation_revision_id=stale_rev.calculation_revision_id,
+                    work_unit_id=stale_wu.work_unit_id,
+                    modelo=stale_wu.modelo,
+                    filing_year=stale_wu.filing_year,
+                    period=stale_wu.period,
+                    revision_state=CalculationRevisionState.PRESENTADO.value,
+                ),
+            ),
+        )
+        assert participation_repo.exists(_TX_BORRADOR)
+
+        stats = rebuild_participation_index(bucket_id=_BUCKET_ID)
+
+        pruned_exists = participation_repo.exists(_TX_BORRADOR)
+        pruned_index = participation_repo.load(_TX_BORRADOR)
+
+    assert stats.stale_removed_count == 1
+    assert pruned_exists is False
+    assert pruned_index.participations == ()
+
+
+def test_rebuild_prunes_only_transactions_the_catalogue_dropped(tmp_path: Path) -> None:
+    """Pruning is scoped to absent keys: a still-finalized transaction round-trips intact."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        cr_repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
+        participation_repo = TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID)
+
+        kept_wu = _work_unit(modelo="130", period="2T", revision_seed="130keep")
+        kept_rev = _revision(
+            work_unit=kept_wu,
+            state=CalculationRevisionState.VERIFICADO_COMPLETO,
+            txids=(_TX_VERIFIED,),
+        )
+        wu_repo.save(upsert_work_unit(wu_repo.load(), kept_wu))
+        cr_repo.save(upsert_calculation_revision(cr_repo.load(), kept_rev))
+
+        # A stale object for a transaction no revision references any more.
+        participation_repo.save(TransactionRevisionParticipationIndex(transaction_id=_TX_BORRADOR))
+
+        stats = rebuild_participation_index(bucket_id=_BUCKET_ID)
+
+        kept_index = participation_repo.load(_TX_VERIFIED)
+        dropped_exists = participation_repo.exists(_TX_BORRADOR)
+
+    assert stats.stale_removed_count == 1
+    assert dropped_exists is False
+
+    # The retained transaction survives the replace with its real participation.
+    (kept_entry,) = kept_index.participations
+    assert kept_entry.calculation_revision_id == kept_rev.calculation_revision_id
+    assert kept_entry.work_unit_id == kept_wu.work_unit_id
+    assert kept_entry.revision_state == CalculationRevisionState.VERIFICADO_COMPLETO.value
+    assert kept_entry.filing_record_id is None
