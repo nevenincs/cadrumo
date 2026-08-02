@@ -246,19 +246,9 @@ class InventoryLedger(BaseModel):
 class InventoryLedgerDocument(BaseModel):
     """JSON document containing inventory ledgers.
 
-    ``(actividad_id, year)`` is the natural key: creation, movement recording,
-    and lookup all assume one canonical ledger per activity per year. The
-    uniqueness invariant lives here, on the document, because the repository
-    had two competing versions of it -- ``create`` and the application service
-    refused a second ledger for a pair, while the public
-    ``save``/``save_inventory`` path accepted any document and wrote it without
-    validating, so a replacement could persist two ledgers for one pair while
-    every reader still assumed one.
-
     Attributes:
         schema_version: Forward-compatible schema version. ``"1"``.
-        ledgers: Tuple of :class:`InventoryLedger` rows, each with a distinct
-            ``(actividad_id, year)`` pair.
+        ledgers: Tuple of :class:`InventoryLedger` rows.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -273,25 +263,6 @@ class InventoryLedgerDocument(BaseModel):
         if value != INVENTORY_SCHEMA_VERSION:
             raise InventoryValidationError(f"unsupported InventoryLedgerDocument schema_version {value!r}")
         return value
-
-    @model_validator(mode="after")
-    def _reject_duplicate_actividad_year(self) -> InventoryLedgerDocument:
-        """Refuse a document carrying two ledgers for one activity and year.
-
-        Enforced on the document rather than at a write method so creation,
-        bulk replacement, and the read boundary answer the same way. Applying
-        at the read boundary is deliberate: a stored document that already
-        holds a duplicate pair has no canonical ledger for it, and surfacing it
-        silently is what the repository used to do.
-        """
-        keys = [(ledger.actividad_id, ledger.year) for ledger in self.ledgers]
-        duplicates = sorted({key for key in keys if keys.count(key) > 1})
-        if duplicates:
-            rendered = ", ".join(f"{actividad_id}/{year}" for actividad_id, year in duplicates)
-            raise InventoryValidationError(
-                f"InventoryLedgerDocument carries duplicate actividad/year ledgers: {rendered}",
-            )
-        return self
 
 
 def parse_valuation_method(raw: str) -> ValuationMethod:
