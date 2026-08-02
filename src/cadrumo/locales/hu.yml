@@ -208,6 +208,7 @@ adapters:
           vault_folder_name_blank: A Google Drive vault mappa neve nem lehet üres.
           write_non_dict_response: A Google Drive {action} írási válasza váratlan
             alakú volt.
+          modified_time_invalid: 'A Google Drive nem adott vissza használható módosítási időpontot ehhez az objektumhoz; a metaadatai nem megbízhatók.'
       local:
         errors:
           byte_length_invalid: 'A helyi sidecar byte_length mezőjének típusa érvénytelen:
@@ -1423,6 +1424,7 @@ application:
           guide: Útmutató - védett
           provenance: Eredet / audit trail - védett
           tariffs: Tarifák / aktív paraméterek - védett
+          evidencia: 'Generált bizonyíték: csak olvasható'
       layout:
         errors:
           undeclared_reference: A táblázatelrendezés olyan elemre hivatkozik, amelyet

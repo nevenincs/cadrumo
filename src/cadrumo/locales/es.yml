@@ -224,6 +224,7 @@ adapters:
             estar vacío.
           write_non_dict_response: La respuesta de escritura de Google Drive para
             {action} tuvo una forma inesperada.
+          modified_time_invalid: 'Google Drive no ha devuelto una fecha de modificación utilizable para este objeto; no se puede confiar en sus metadatos.'
       local:
         errors:
           byte_length_invalid: El byte_length del sidecar local tiene tipo inválido
@@ -1494,6 +1495,7 @@ application:
           guide: Guía - protegido
           provenance: Procedencia / pista de auditoría - protegido
           tariffs: Tarifas / parámetros vigentes - protegido
+          evidencia: 'Evidencia generada: solo lectura'
       layout:
         errors:
           undeclared_reference: El diseño de la hoja de cálculo referencia un elemento
