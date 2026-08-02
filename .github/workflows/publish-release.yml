@@ -1,19 +1,42 @@
 # Sole publication authority for the immutable, tested Cadrumo cohort.
 #
 # This workflow PROMOTES already-built, already-tested bytes; it NEVER builds,
-# regenerates, or restamps an artifact (per 2026-07-15-distribution-installation
-# -readiness-adr). It is inert until the operator opts in and configures the
-# protected `release` environment plus the channel credentials: absent those it
-# refuses instructively.
+# regenerates, or restamps an artifact. The cohort it uploads was sealed by the
+# packaging campaign and is verified here by hash, never reproduced.
 #
-# A `dry_run` dispatch input runs Gate 1 (opt-in) and Gate 2 (validate) fully but
-# skips Gate 3 (publish), so the pre-arming validate-everything-publish-nothing
-# diagnostic lives here on the single authority — the retired publish.yml stub is
-# gone (superseded, and it carried the per-OS-cohort publication defect class).
+# WHAT GATES THIS RUN. No human does. There is no approval click and no opt-in
+# variable; both were removed when the pipeline became fully automated, and the
+# absence of the approval gate is pinned by the conformance suite so it cannot
+# be restored by accident. What stands in their place is mechanical and runs on
+# every dispatch:
 #
-# Operator prerequisites (none of which an agent can create) are enumerated in
-# the "operator-preflight" job below and must all be satisfied before a real
-# publication can occur.
+#   * the all-destination version-identity authority, which refuses a version
+#     already owned by any of the three indexes, the tag or release namespaces
+#     including drafts, the monotonic manifest floor, or the burned-version
+#     ledger - checked at cohort seal and again here in Gate 2;
+#   * per-run identity verification of every supplied run (conclusion, workflow
+#     path, repository, and main-ancestry for a dispatch event);
+#   * per-asset sha256 verification of every downloaded byte against its sealed
+#     manifest;
+#   * the complete blocking evidence set, derived from the channels this release
+#     claims and re-run here rather than trusted from a local aggregation;
+#   * the fail-closed leak sweep over every byte about to be attached;
+#   * the marketplace supersession preflight;
+#   * reversible destination writes first, with the sole irreversible index
+#     upload last, and idempotent convergence on re-dispatch.
+#
+# `environment: release` REMAINS on the publish job and is load-bearing: it is
+# the Trusted Publishing trust anchor (the OIDC policy pins repository plus
+# environment NAME) and the shared-runner product boundary. It is not the
+# former click's host and must not be removed with it.
+#
+# Each external channel push still refuses instructively when its operator-
+# provided credential is absent, so an unconfigured channel fails loudly rather
+# than silently skipping.
+#
+# A `dry_run` dispatch input runs the validate gate fully but skips the publish
+# job, so the validate-everything-publish-nothing rehearsal lives here on the
+# single authority.
 name: Publish Cadrumo release
 
 on:
@@ -251,10 +274,11 @@ jobs:
             --evidence-dir "$EVIDENCE_DOWNLOAD/rows"
 
   # ---------------------------------------------------------------------------
-  # Gate 3 - promote the exact bytes. Protected by the `release` environment
-  # (operator required-reviewers = the human approval gate). Uploads only; it
-  # never builds. Each external push is guarded on its operator-provided
-  # credential and refuses instructively when absent.
+  # Gate 3 - promote the exact bytes. Runs in the `release` environment for its
+  # OIDC trust anchor and runner boundary, NOT for an approval rule: the
+  # environment carries no human gate. Uploads only; it never builds. Each
+  # external push is guarded on its operator-provided credential and refuses
+  # instructively when absent.
   # ---------------------------------------------------------------------------
   publish:
     name: Promote immutable cohort to public channels

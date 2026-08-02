@@ -45,9 +45,12 @@ _PUBLISHING_JOBS: Final[frozenset[str]] = frozenset({"publish"})
 # so unlike the build set this one is scanned per job rather than workflow-wide.
 #
 # These patterns are anchored to a shell COMMAND POSITION -- line start, or after
-# `;`, `&`, `|`, or `$(` -- because the operator-preflight refusal text quotes
-# `gh release create` as prose inside an echoed instruction. An unanchored scan
-# flags that documentation and reds the gate on a false positive. A backtick is
+# `;`, `&`, `|`, or `$(` -- because workflow prose quotes publish verbs such as
+# `gh release create` inside comments and echoed instructions. An unanchored scan
+# flags that documentation and reds the gate on a false positive. (The original
+# instance was the retired operator-preflight refusal heredoc; the anchoring
+# outlives it, because the hazard is prose quoting a verb, not that one job.)
+# A backtick is
 # deliberately NOT treated as a command position for the same reason: the only
 # three backticks in the workflow are documentation prose, and it uses `$( )`
 # rather than legacy backtick substitution for real command expansion.
@@ -149,6 +152,48 @@ def _protection_rule_readers(document: Any) -> set[str]:
         for name, job in jobs.items()
         if isinstance(job, Mapping) and _PROTECTION_RULE_READ.search(_command_lines(_run_surface(job)))
     }
+
+
+# Vocabulary that names a human approval gate, and the negation vocabulary that
+# turns a mention of it into a statement of its ABSENCE. The pairing is the
+# whole point: this header must be free to say "there is no approval click".
+_HUMAN_GATE_TOKENS: Final[tuple[str, ...]] = (
+    "approval click",
+    "approval gate",
+    "required-reviewers",
+    "required_reviewers",
+    "opts in",
+    "opt-in",
+    "human release gate",
+)
+_NEGATION_TOKENS: Final[tuple[str, ...]] = ("no ", "not ", "never", "removed", "without", "absence", "nobody")
+
+
+def _workflow_header() -> str:
+    """Return the workflow's leading comment block, lowercased."""
+    lines: list[str] = []
+    for line in _WORKFLOW.read_text(encoding="utf-8").splitlines():
+        if not line.startswith("#"):
+            break
+        lines.append(line.lstrip("# ").strip())
+    return "\n".join(lines).lower()
+
+
+def _sentences_affirming_a_human_gate(text: str) -> list[str]:
+    """Return each sentence naming a human gate WITHOUT negating it.
+
+    Scoping to the sentence is what lets the header state the truthful
+    negation. A bare substring ban cannot tell "the approval click is the gate"
+    from "there is no approval click", and banning the vocabulary outright
+    would push the header into silence about the change it exists to explain.
+    """
+    sentences = re.split(r"(?<=[.;:])\s+|\n", text.lower())
+    return [
+        sentence.strip()
+        for sentence in sentences
+        if any(token in sentence for token in _HUMAN_GATE_TOKENS)
+        and not any(negation in sentence for negation in _NEGATION_TOKENS)
+    ]
 
 
 def _protection_rule_conditioned_jobs(document: Any) -> set[str]:
@@ -337,6 +382,62 @@ def test_no_job_gates_the_publication_on_a_human_protection_rule() -> None:
 
     # The environment survives, and with it the OIDC trust anchor.
     assert document["jobs"]["publish"]["environment"] == "release"
+
+
+def test_the_header_describes_the_gate_that_actually_runs() -> None:
+    """The workflow's own prose may not promise a gate the workflow does not run.
+
+    This is the drift class the retired job was itself built to close, one layer
+    up. Before the automation change the header claimed the run was "inert until
+    the operator opts in" via a `CADRUMO_PUBLISH_ENABLED` variable that had
+    already been deleted from the entire tree, and described an approval click
+    as the gate. Prose that describes a safety property the code does not have
+    is worse than no prose: it is what stops the next reader from checking.
+    """
+    header = _workflow_header()
+
+    # The variable is gone from the entire tree, so any mention is stale by
+    # construction and needs no sentence analysis.
+    assert "cadrumo_publish_enabled" not in header
+
+    # Every other check is sentence-scoped rather than a vocabulary ban,
+    # because the CLEAREST statement this header can make is the negation
+    # ("there is no approval click"), and a substring ban would forbid exactly
+    # the sentence the reader most needs while permitting a paraphrase that
+    # affirms the gate. The property is not "these words are absent"; it is
+    # "this header does not CLAIM a human gates the run".
+    affirming = _sentences_affirming_a_human_gate(header)
+    assert not affirming, f"header sentences claiming a human gate: {affirming}"
+
+    # It must describe what DOES gate the run, so the reader is left with the
+    # real answer rather than merely the absence of a wrong one.
+    for guard in ("version-identity", "sha256", "leak sweep", "evidence"):
+        assert guard in header, f"the header does not name the {guard} guard that actually gates the run"
+
+    # And it must say why the environment is still here, since that is the one
+    # piece a naive "remove the gate" sweep would delete and break publication.
+    assert "trusted publishing" in header
+
+
+def test_the_header_pin_reds_on_a_restored_gate_claim() -> None:
+    """Positive control for the sentence-scoped matcher.
+
+    Without this, a matcher that never fires and a header that never lies are
+    indistinguishable - and the negation-awareness that makes the matcher
+    usable is also what could make it silently permissive.
+    """
+    restored = "it is inert until the operator opts in, and the approval click is the gate."
+    assert _sentences_affirming_a_human_gate(restored)
+
+    # The honest negation must NOT trip it, or the gate would force the header
+    # to go quiet about the very change it is documenting.
+    honest = "there is no approval click and no opt-in variable; both were removed."
+    assert not _sentences_affirming_a_human_gate(honest)
+
+    # A sentence that merely explains why the environment survives is not a
+    # gate claim either.
+    survives = "environment: release remains for its trusted publishing anchor, not for an approval rule."
+    assert not _sentences_affirming_a_human_gate(survives)
 
 
 def test_the_protection_rule_pin_reds_on_a_planted_reader() -> None:
