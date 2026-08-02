@@ -22,6 +22,7 @@ from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENAN
 from ...core.hashing import sha256_hex
 from ...core.identity import ProfileId as _ProfileId
 from ...core.parsing import parse_bool, parse_iso8601_date
+from ...core.time import UtcInstant
 from ...core.time import now as utc_now
 from ._errors import UserProfileValidationError
 from ._loader import load_user_profile_schema
@@ -212,9 +213,15 @@ class UserProfileRecord(BaseModel):
     display_name: _DisplayName
     status: UserProfileStatus = UserProfileStatus.ACTIVE
     facts: tuple[UserProfileFact, ...] = Field(default=())
-    created_at: datetime = Field(default_factory=utc_now)
-    updated_at: datetime = Field(default_factory=utc_now)
-    removed_at: datetime | None = None
+    # Lifecycle instants, held to the canonical UTC contract. The ordering and
+    # tombstone validators below compare these values, and a naive one compares
+    # against an aware one by raising rather than by being wrong -- so the
+    # invariants they enforce were only as sound as the timezone discipline of
+    # whoever constructed the record. Encrypted hydration could carry a naive
+    # value straight back into live profile state.
+    created_at: UtcInstant = Field(default_factory=utc_now)
+    updated_at: UtcInstant = Field(default_factory=utc_now)
+    removed_at: UtcInstant | None = None
 
     @field_validator("status", mode="before")
     @classmethod
@@ -293,7 +300,7 @@ class UserProfileSnapshot(BaseModel):
     profile_id: _ProfileId
     schema_id: str = "cadrumo.user_profile"
     schema_version: int = Field(ge=1)
-    created_at: datetime = Field(default_factory=utc_now)
+    created_at: UtcInstant = Field(default_factory=utc_now)
     facts: tuple[UserProfileFact, ...]
     canonical_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
 
