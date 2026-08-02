@@ -98,6 +98,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 
 from pydantic import BaseModel, Field
@@ -512,6 +513,118 @@ class RegistryConformanceProfile(ConformanceModel):
         return sum(row.grounding_finding_count for row in self.rows)
 
 
+@dataclass(frozen=True, slots=True)
+class _AxisIndex:
+    """The per-axis lookup maps the row fold reads, keyed for O(1) joins.
+
+    An axis the caller could not build is an EMPTY map rather than a sentinel,
+    so a missing entry means the same thing everywhere: absent, reported as
+    :data:`None` on the row. The two axes that must be complete
+    (classification, external grounding) are read through the ``require_*``
+    accessors, which refuse instead of returning ``None``.
+    """
+
+    grounding_rows: Mapping[tuple[_ModeloId, _RevisionId], _RevisionExternalGroundingRow]
+    classification_rows: Mapping[_ModeloId, _ModeloClassificationRow]
+    coverage_ledgers: Mapping[tuple[_ModeloId, _RevisionId], _ModelLawCoverageLedger]
+    support_entries: Mapping[_ModeloId, _ModeloEntry]
+
+    @classmethod
+    def build(
+        cls,
+        *,
+        external_grounding: _RegistryExternalGroundingAudit,
+        classification: _RegistryClassificationAudit,
+        model_law_coverage: _RegistryCoverageAudit | None,
+        support_matrix: Sequence[_ModeloEntry] | None,
+    ) -> _AxisIndex:
+        """Key each supplied axis by the identity the row fold joins on."""
+        return cls(
+            grounding_rows={(row.modelo, row.revision): row for row in external_grounding.rows},
+            classification_rows={row.modelo: row for row in classification.rows},
+            coverage_ledgers=(
+                {}
+                if model_law_coverage is None
+                else {(ledger.modelo, ledger.revision): ledger for ledger in model_law_coverage.ledgers}
+            ),
+            support_entries={} if support_matrix is None else {entry.modelo_id: entry for entry in support_matrix},
+        )
+
+    def require_classification_row(self, modelo_id: _ModeloId) -> _ModeloClassificationRow:
+        """Return the modelo's classification row, refusing when the axis omits it.
+
+        Raises:
+            RegistryApplicationInputError: When the audit carries no row for
+                ``modelo_id``. Dropping the modelo would hide it from the
+                census that exists to count it.
+        """
+        row = self.classification_rows.get(modelo_id)
+        if row is None:
+            raise RegistryApplicationInputError(
+                f"registry conformance: classification audit carries no row for modelo {modelo_id!r}",
+                context={"modelo": modelo_id},
+            )
+        return row
+
+    def require_grounding_row(
+        self,
+        modelo_id: _ModeloId,
+        revision_id: _RevisionId,
+    ) -> _RevisionExternalGroundingRow:
+        """Return the revision's external-grounding row, refusing when absent.
+
+        Raises:
+            RegistryApplicationInputError: When the audit carries no row for
+                this revision.
+        """
+        row = self.grounding_rows.get((modelo_id, revision_id))
+        if row is None:
+            raise RegistryApplicationInputError(
+                f"registry conformance: external-grounding audit carries no row for modelo "
+                f"{modelo_id!r} revision {revision_id!r}",
+                context={"modelo": modelo_id, "revision_id": revision_id},
+            )
+        return row
+
+
+def _revision_conformance_row(
+    revision: _ModeloRevision,
+    *,
+    modelo_id: _ModeloId,
+    index: _AxisIndex,
+    classification_row: _ModeloClassificationRow,
+    support_entry: _ModeloEntry | None,
+    authorization: _ModeloAuthorization | None,
+    registry_validated: bool,
+    scope_diagnostics: Sequence[str],
+) -> RevisionConformanceRow:
+    """Compose one revision's row from every axis.
+
+    An axis the caller could not supply lands as :data:`None` rather than a
+    zeroed value, so a row distinguishes "measured absent" from "not measured".
+
+    The grounding row is resolved FIRST so a revision the audit omits is
+    refused before any other axis is computed for it.
+    """
+    grounding_row = index.require_grounding_row(modelo_id, revision.id)
+    ledger = index.coverage_ledgers.get((modelo_id, revision.id))
+    return RevisionConformanceRow(
+        modelo=modelo_id,
+        revision=revision.id,
+        registry_validated=registry_validated,
+        governance=_governance_stamp(revision),
+        capabilities=_capability_facts(revision, modelo_id=modelo_id),
+        latest_revision_support=(
+            None if support_entry is None else _support_probe(support_entry, revision_id=revision.id)
+        ),
+        model_law_coverage=None if ledger is None else _model_law_coverage(ledger),
+        external_grounding=grounding_row,
+        modelo_classification=classification_row,
+        modelo_authorization=authorization,
+        scope_diagnostics=_diagnostics_for(scope_diagnostics, modelo=modelo_id, revision=revision.id),
+    )
+
+
 def build_registry_conformance_profile(
     modelos: Iterable[_ModeloDefinition],
     *,
@@ -559,54 +672,32 @@ def build_registry_conformance_profile(
             instead would hide it from the census that exists to count it.
     """
     modelo_tuple = tuple(sorted(modelos, key=lambda item: item.id))
-    grounding_rows = {(row.modelo, row.revision): row for row in external_grounding.rows}
-    classification_rows = {row.modelo: row for row in classification.rows}
-    coverage_ledgers = (
-        {}
-        if model_law_coverage is None
-        else {(ledger.modelo, ledger.revision): ledger for ledger in model_law_coverage.ledgers}
+    index = _AxisIndex.build(
+        external_grounding=external_grounding,
+        classification=classification,
+        model_law_coverage=model_law_coverage,
+        support_matrix=support_matrix,
     )
-    support_entries = {} if support_matrix is None else {entry.modelo_id: entry for entry in support_matrix}
 
     rows: list[RevisionConformanceRow] = []
     attributed_diagnostics: set[str] = set()
     for modelo in modelo_tuple:
-        classification_row = classification_rows.get(modelo.id)
-        if classification_row is None:
-            raise RegistryApplicationInputError(
-                f"registry conformance: classification audit carries no row for modelo {modelo.id!r}",
-                context={"modelo": modelo.id},
-            )
-        support_entry = support_entries.get(modelo.id)
+        classification_row = index.require_classification_row(modelo.id)
+        support_entry = index.support_entries.get(modelo.id)
         authorization = None if authorizations is None else authorizations.get(modelo.id)
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            grounding_row = grounding_rows.get((modelo.id, revision.id))
-            if grounding_row is None:
-                raise RegistryApplicationInputError(
-                    f"registry conformance: external-grounding audit carries no row for modelo "
-                    f"{modelo.id!r} revision {revision.id!r}",
-                    context={"modelo": modelo.id, "revision_id": revision.id},
-                )
-            row_diagnostics = _diagnostics_for(scope_diagnostics, modelo=modelo.id, revision=revision.id)
-            attributed_diagnostics.update(row_diagnostics)
-            ledger = coverage_ledgers.get((modelo.id, revision.id))
-            rows.append(
-                RevisionConformanceRow(
-                    modelo=modelo.id,
-                    revision=revision.id,
-                    registry_validated=registry_validated,
-                    governance=_governance_stamp(revision),
-                    capabilities=_capability_facts(revision, modelo_id=modelo.id),
-                    latest_revision_support=(
-                        None if support_entry is None else _support_probe(support_entry, revision_id=revision.id)
-                    ),
-                    model_law_coverage=None if ledger is None else _model_law_coverage(ledger),
-                    external_grounding=grounding_row,
-                    modelo_classification=classification_row,
-                    modelo_authorization=authorization,
-                    scope_diagnostics=row_diagnostics,
-                ),
+            row = _revision_conformance_row(
+                revision,
+                modelo_id=modelo.id,
+                index=index,
+                classification_row=classification_row,
+                support_entry=support_entry,
+                authorization=authorization,
+                registry_validated=registry_validated,
+                scope_diagnostics=scope_diagnostics,
             )
+            attributed_diagnostics.update(row.scope_diagnostics)
+            rows.append(row)
 
     return RegistryConformanceProfile(
         rows=tuple(rows),

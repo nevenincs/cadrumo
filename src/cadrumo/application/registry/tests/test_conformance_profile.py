@@ -444,3 +444,32 @@ def test_declared_axis_census_reaches_the_profile(degraded_profile: RegistryConf
     for usage in degraded_profile.declared_axis_usage:
         assert usage.declaration_count <= usage.population
         assert usage.status in {"exercised", "unused"}
+
+
+def test_a_modelo_absent_from_the_classification_audit_is_refused(
+    tree_modelos: tuple[ModeloDefinition, ...],
+) -> None:
+    """A modelo the classification audit omits must refuse before any row is built."""
+    modelos = (_modelo(tree_modelos, _GROUNDED_MODELO),)
+    grounding = build_external_grounding_audit(
+        modelos,
+        inventory=load_bundled_external_oracle_inventory(),
+        registry_validated=False,
+    )
+    classification = build_classification_coherence_audit(
+        modelos,
+        non_registry_modelo_codes=frozenset(item.value for item in NON_REGISTRY_MODELOS),
+        known_modelo_codes=frozenset(item.value for item in Modelo),
+        registry_validated=False,
+    )
+    assert classification.rows, "the classification fold must produce a row to drop"
+    emptied = classification.model_copy(update={"rows": ()})
+
+    with pytest.raises(RegistryApplicationInputError, match="classification audit carries no row for modelo"):
+        build_registry_conformance_profile(
+            modelos,
+            external_grounding=grounding,
+            classification=emptied,
+            scope_diagnostics=(),
+            registry_validated=False,
+        )
