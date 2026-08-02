@@ -231,3 +231,88 @@ def test_the_decode_core_checks_lineage_before_it_decrypts() -> None:
     lineage_branch = source[lineage_at:decrypt_at]
     assert "raise SecureObjectUnreadableError(" in lineage_branch
     assert "return " not in lineage_branch, "the pre-decrypt lineage check has a non-refusing exit"
+
+
+def _seed_second_row(db_path: Path, *, object_key: str) -> None:
+    with _repo_at(db_path) as repo:
+        repo.save(
+            namespace=_NAMESPACE,
+            object_key=object_key,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"second-row-payload",
+        )
+
+
+@pytest.mark.parametrize(
+    ("column", "value"),
+    [("schema_version", "bogus"), ("classification", "")],
+)
+def test_malformed_row_metadata_is_isolated_to_its_own_row(
+    tmp_path: Path,
+    column: str,
+    value: str,
+) -> None:
+    """A row whose metadata columns are unusable must not abort the scan.
+
+    The batch surface promises one outcome per row so a caller can attribute a
+    failure and keep inspecting the rest. The raw-row coercions -- ``int(id)``,
+    ``int(schema_version)``, the bytes conversions -- ran ABOVE the
+    fault-isolating boundary, so a tampered ``schema_version = 'bogus'`` raised
+    a bare ValueError out of ``int()`` and took every remaining row with it.
+    The shared decode core was never even reached.
+    """
+    provider = EphemeralMasterKeyProvider()
+    db_path = tmp_path / f"malformed-{column}.db"
+    with provider:
+        _seed(db_path)
+        _seed_second_row(db_path, object_key="decode-order-sibling")
+    with sqlite3.connect(db_path) as con:
+        target_id = con.execute(
+            "SELECT id FROM secure_objects WHERE namespace = ? ORDER BY id LIMIT 1",
+            (_NAMESPACE,),
+        ).fetchone()[0]
+        # The column name is a test-local literal from the parametrisation,
+        # never operator input, so the interpolation carries no injection risk.
+        con.execute(
+            f"UPDATE secure_objects SET {column} = ? WHERE id = ?",  # noqa: S608
+            (value, target_id),
+        )
+
+    with provider, _repo_at(db_path) as repo:
+        outcomes = tuple(
+            repo.iter_records_with_failures(
+                _NAMESPACE,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=1,
+            ),
+        )
+
+    # Both rows are accounted for: the tampered one as a typed failure naming
+    # the column, the sibling as a readable record.
+    assert len(outcomes) == 2
+    unreadable = [item for item in outcomes if isinstance(item, SecureObjectUnreadable)]
+    assert len(unreadable) == 1
+    assert column in unreadable[0].reason
+
+
+def test_an_untampered_namespace_still_scans_clean(tmp_path: Path) -> None:
+    """Positive control: the normalisation guard reports nothing on healthy rows."""
+    provider = EphemeralMasterKeyProvider()
+    db_path = tmp_path / "clean-scan.db"
+    with provider:
+        _seed(db_path)
+        _seed_second_row(db_path, object_key="decode-order-sibling")
+
+    with provider, _repo_at(db_path) as repo:
+        outcomes = tuple(
+            repo.iter_records_with_failures(
+                _NAMESPACE,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=1,
+            ),
+        )
+
+    assert len(outcomes) == 2
+    assert [item for item in outcomes if isinstance(item, SecureObjectUnreadable)] == []
