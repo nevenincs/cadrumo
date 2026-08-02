@@ -16,9 +16,12 @@ from pathlib import Path
 
 import pytest
 
+from pydantic import ValidationError
+
 from ....entrypoints.mcp import faithfulness_check
 from .. import (
     GoldenScenario,
+    LiveInvariantVerdict,
     LiveNarrationRecord,
     LiveScenarioScore,
     LiveToolCallRecord,
@@ -157,6 +160,44 @@ def test_live_submit_attempt_fails() -> None:
     score = _score(trajectory, load_scenario(_SCENARIO_PATH))
     assert score.passed is False
     assert score.invariants.live_submit_attempts
+
+
+def test_errored_tool_call_fails_the_score() -> None:
+    # An is_error=True tool call must not be silently absorbed: it fails the
+    # score even when every other dimension (keys, lifecycle, coverage,
+    # invariants) holds clean.
+    calls = [*_complete_calls(), _call("modelo.work.create", result="")]
+    errored = LiveToolCallRecord(
+        tool_name="cadrumo_modelo_work_create",
+        command_key="modelo.work.create",
+        is_error=True,
+    )
+    trajectory = _trajectory([*calls[:2], errored, *calls[2:]], [])
+    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+    assert score.tool_errors == ("cadrumo_modelo_work_create (modelo.work.create)",)
+    assert score.passed is False
+    assert any("tool call(s) returned an error" in failure for failure in score.failures)
+
+
+def test_score_scenario_must_match_its_nested_invariant_scenario() -> None:
+    # Anti-tautology: a score naming one scenario while its hard-invariant
+    # evidence names another must be refused, not silently accepted as passed.
+    trajectory = _trajectory(_complete_calls(), [])
+    scenario = load_scenario(_SCENARIO_PATH)
+    real_score = _score(trajectory, scenario)
+    with pytest.raises(ValidationError, match="one session must score against one scenario"):
+        LiveScenarioScore(
+            scenario=real_score.scenario,
+            persona=real_score.persona,
+            session_id=real_score.session_id,
+            keys_resolve=real_score.keys_resolve,
+            lifecycle_ordered=real_score.lifecycle_ordered,
+            expected_covered=real_score.expected_covered,
+            tool_errors=real_score.tool_errors,
+            invariants=LiveInvariantVerdict(scenario="a-different-scenario"),
+            narration_checks=real_score.narration_checks,
+            failures=real_score.failures,
+        )
 
 
 def test_export_before_verify_fails_lifecycle() -> None:
