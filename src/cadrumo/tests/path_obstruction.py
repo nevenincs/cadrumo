@@ -22,11 +22,30 @@ so a writer that tries to clear an unexpected path could dissolve the fault
 and turn the test green for the wrong reason.
 
 Reachability. This instrument discriminates between two operations only when
-the second targets a path DISTINCT from the first. A sequence whose read and
-write share one path cannot be split by it: obstructing that path makes the
-earlier read fail, so the first operation never commits and the window under
-test is never entered. Those windows are not closable here, and a test author
-who finds one should record why rather than reach for a double.
+the second targets a path DISTINCT from the first, and that path exists as a
+file (or not at all) before the call. A sequence whose read and write share
+one path cannot be split by it: obstructing that path makes the earlier read
+fail, so the first operation never commits and the window under test is never
+entered.
+
+Two other real faults reach windows this one cannot, and between them they
+decide whether a given crash window is testable at all. Neither is a double
+either -- each makes production refuse for a reason production already has.
+
+- A secure-object write the caller can stamp takes ``expected_revision_id``,
+  the substrate's own optimistic-concurrency guard. A stale value placed on
+  the write at position N of a real batch makes that write refuse and the
+  transaction roll back. This reaches SQL-backed sequences, which have no
+  filesystem artefact to obstruct. It does not reach deletes, which carry no
+  such guard.
+- A caller-supplied sequence can carry a genuinely invalid element at
+  position N -- one the real validator rejects. This reaches anything whose
+  failing item comes from the caller rather than from the code under test.
+
+A window that clears none of the three is not closable by any of them. Say so,
+and say which condition it fails; that is a bounded result. Reaching for a
+double instead produces a test that asserts its own scaffolding and passes
+against the unfixed code.
 
 See Also:
     :mod:`~cadrumo.core.atomic_write`
