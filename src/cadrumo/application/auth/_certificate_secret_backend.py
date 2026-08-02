@@ -53,7 +53,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
-from .._workflow_auth_models import CertificateSourceName
+from ..workflow import CertificateSourceName
 
 if TYPE_CHECKING:
     from ...core.config import Settings
