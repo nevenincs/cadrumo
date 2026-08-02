@@ -78,22 +78,24 @@ def test_duplicate_identifiers_are_refused_by_the_document() -> None:
 
 
 def test_bulk_save_cannot_persist_two_assets_under_one_identifier() -> None:
-    """The bulk path now agrees with ``add``.
+    """The public bulk persistence boundary revalidates a pre-built document.
 
-    Before, ``repo.save(...)`` accepted the duplicate document and a reload
-    returned two rows both claiming ``dup``.
+    ``model_construct`` is Pydantic's documented no-validation constructor;
+    callers receiving an already-constructed document can therefore not rely
+    on its construction boundary having run.  This uses the real document and
+    encrypted repository to prove ``save`` itself restores the identifier
+    invariant before any ciphertext is written.
     """
     repo = AssetsLedgerRepository()
+    duplicate_document = AssetsLedgerDocument.model_construct(
+        assets=(
+            _asset(_DUPLICATE_ID, description="first", cost="1000.00"),
+            _asset(_DUPLICATE_ID, description="second", cost="2000.00"),
+        ),
+    )
 
     with pytest.raises(ValidationError):
-        repo.save(
-            AssetsLedgerDocument(
-                assets=(
-                    _asset(_DUPLICATE_ID, description="first", cost="1000.00"),
-                    _asset(_DUPLICATE_ID, description="second", cost="2000.00"),
-                ),
-            ),
-        )
+        repo.save(duplicate_document)
 
     assert AssetsLedgerRepository().load().assets == ()
 
