@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f4831c34c54fba4ce8dd1b109441061b60a272f253b92bd2a68ed36f6c9dff0'
+body_hash: 'sha256:60d357864d86c887b843d373762e82790b3447a29f66b3f478e825829237d7aa'
 related: []
 ---
 
@@ -162,6 +162,50 @@ parameter block that existed in neither change alone. Both agents followed the
 shared-file drive correctly and neither could have seen it from inside its own
 diff. Every instrument this campaign built measures one change against the tree,
 and a seam defect is a property of two.
+
+### fleet-burndown | high | correction: the login door is unthrottled too, and per-bucket is the wrong scope everywhere
+
+The passphrase finding above records the login door as correctly throttled and
+the remaining exposure as a per-bucket counter guarding a store-wide secret,
+with the bucket identifier supplied by the caller. Both halves are wrong and
+the correction makes the finding larger rather than smaller.
+
+The login door resolves the master key through a bucket-less provider while
+recording failures against the target bucket. Measured: six failures against one
+bucket throttle that bucket, and a second bucket testing the same store-wide
+secret is not throttled and has recorded no failures. An operator with several
+profiles therefore hands an attacker that many times the budget, at the door
+this document recorded as sound. The defect is not that one door was missed. It
+is that the counter is keyed per bucket while the secret it guards is store-wide,
+so every door inherits the same scope error and the door that appeared correct
+was correct only for a single-profile operator.
+
+The reasoning about a caller-supplied bucket identifier was also wrong. Six
+consecutive wrong guesses reusing one fixed identifier are equally unmetered:
+no failures recorded, no sidecar written, and a correct passphrase accepted
+immediately afterwards with no backoff. That door consults no counter at all, so
+identifier freshness was never the mechanism. Store-scoping the budget is
+necessary but not sufficient; the door must also be wired to consult it.
+
+The surface is not dead. Seven production call sites reach it, one of them
+threading an operator-chosen passphrase from the registration screen.
+
+The governing decision record adopts a store-scoped budget keyed to the secret
+rather than the bucket, and keys all three doors to it. It prices the cost
+rather than dismissing it: the backoff is capped at sixty seconds, there is no
+permanent lockout, and any success clears it, so the worst case is a rolling
+delay across buckets rather than a lockout, and raising that ceiling would
+reopen the decision. It also ranks itself as hardening rather than urgent
+remediation, on the ground that against an attacker with local code execution
+this buys nothing, since the key material is readable by the same user and
+offline attack beats any interface path. Its constituency is the walk-up
+attacker at an unlocked terminal.
+
+The original reading that this is not a timing oracle is confirmed with numbers.
+Wrong guesses complete in well under a fifth of a second and a correct one takes
+longer, but only because provisioning and key enrolment run after a successful
+unwrap. Discrimination is by exception, not by clock.
+
 
 ## Recommendations
 
