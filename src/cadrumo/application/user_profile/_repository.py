@@ -386,6 +386,10 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         :meth:`save` performs. That is a post-commit side effect on in-process
         state, and running it here would invalidate the cache for a write the
         caller may still abandon.
+
+        Args:
+            record: The live :class:`UserProfileRecord` aggregate to prepare
+                for write without committing it yet.
         """
         envelope = Envelope[UserProfileRecord](
             schema_version=_USER_PROFILE_VALUE_VERSION,
@@ -421,6 +425,10 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         the same reason it is absent from :meth:`to_secure_object_write` -- a
         refresh for a write that raised would leave the cache describing state
         that never existed.
+
+        Args:
+            record: The live :class:`UserProfileRecord` aggregate to persist
+                alongside ``events`` in the same secure-object batch.
         """
         self._objects.save_many(
             (
@@ -437,6 +445,10 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         reproduce :meth:`save`'s full behaviour: prepare, commit alongside its
         siblings, then refresh. Separating them is what keeps the cache from
         being invalidated for a write that never lands.
+
+        Args:
+            record: The live :class:`UserProfileRecord` aggregate whose
+                output-language preference the cache should now reflect.
         """
         _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
         _clear_output_language_cache()
