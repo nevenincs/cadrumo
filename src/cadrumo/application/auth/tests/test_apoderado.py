@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.config import Settings, override_settings
 from ....core.flows import FlowMode
@@ -16,6 +17,7 @@ from .._apoderado import (
     ApoderadoLiveCheckUnavailableError,
     ApoderadoRepresentedNifInvalidError,
     ApoderadoService,
+    _canonical_bucket_id,
 )
 from .._apoderado_flow import (
     REPRESENTED_NIF_PAGE_ID,
@@ -312,3 +314,87 @@ class TestSettingsRouting:
         assert config.bucket_id == isolated_profile.bucket_id
         assert svc.status(bucket_id=isolated_profile.bucket_id).represented_nif == "12345678Z"
         assert not (wrong_root / "buckets" / isolated_profile.bucket_id / "db" / "cadrumo.db").exists()
+
+
+class TestCanonicalBucketEquivalence:
+    """One bucket has one apoderado record, whatever spelling the caller uses.
+
+    ``ApoderadoConfiguration.bucket_id`` is the canonical ``BucketId``, so
+    ``configure`` persisted under the *normalised* value while ``status`` and
+    ``clear`` keyed on the caller's raw input. A whitespace-wrapped bucket
+    therefore configured successfully and read back as unconfigured, and
+    ``clear`` reported nothing to remove while the record was still stored.
+    """
+
+    _WRAPPED = f"  {_PROFILE_BUCKET_ID}  "
+
+    def test_status_resolves_a_configuration_written_under_a_wrapped_id(
+        self,
+        isolated_settings: Settings,
+    ) -> None:
+        svc = ApoderadoService(settings=isolated_settings)
+        svc.configure(bucket_id=self._WRAPPED, represented_nif="12345678Z", scope_tokens=("IVA",))
+
+        assert svc.status(bucket_id=_PROFILE_BUCKET_ID).configured is True
+        assert svc.status(bucket_id=self._WRAPPED).configured is True
+
+    def test_status_projects_the_canonical_identity(self, isolated_settings: Settings) -> None:
+        """The returned status names the stored bucket, not the caller's spelling."""
+        svc = ApoderadoService(settings=isolated_settings)
+        svc.configure(bucket_id=_PROFILE_BUCKET_ID, represented_nif="12345678Z", scope_tokens=("IVA",))
+
+        assert svc.status(bucket_id=self._WRAPPED).bucket_id == _PROFILE_BUCKET_ID
+        assert svc.status(bucket_id=self._WRAPPED).represented_nif == "12345678Z"
+
+    def test_unconfigured_status_also_projects_the_canonical_identity(
+        self,
+        isolated_settings: Settings,
+    ) -> None:
+        status = ApoderadoService(settings=isolated_settings).status(bucket_id=self._WRAPPED)
+
+        assert status.configured is False
+        assert status.bucket_id == _PROFILE_BUCKET_ID
+
+    def test_clear_removes_a_record_addressed_by_either_spelling(
+        self,
+        isolated_settings: Settings,
+    ) -> None:
+        svc = ApoderadoService(settings=isolated_settings)
+        svc.configure(bucket_id=_PROFILE_BUCKET_ID, represented_nif="12345678Z", scope_tokens=("IVA",))
+
+        assert svc.clear(bucket_id=self._WRAPPED) is True
+        assert svc.status(bucket_id=_PROFILE_BUCKET_ID).configured is False
+        assert svc.clear(bucket_id=_PROFILE_BUCKET_ID) is False
+
+    def test_repository_cache_is_keyed_canonically(self, isolated_settings: Settings) -> None:
+        """Two spellings must not open two repositories over one bucket's storage."""
+        svc = ApoderadoService(settings=isolated_settings)
+
+        first = svc._repository_for(_PROFILE_BUCKET_ID)
+        second = svc._repository_for(self._WRAPPED)
+
+        assert first is second
+
+    @pytest.mark.parametrize("bad", ["", "   ", "x" * 129])
+    def test_uncanonicalizable_bucket_input_is_refused(
+        self,
+        isolated_settings: Settings,
+        bad: str,
+    ) -> None:
+        """A blank or overlength bucket cannot silently address a repository."""
+        svc = ApoderadoService(settings=isolated_settings)
+
+        with pytest.raises(ValidationError):
+            svc.status(bucket_id=bad)
+        with pytest.raises(ValidationError):
+            svc.clear(bucket_id=bad)
+
+    def test_distinct_buckets_stay_distinct(self) -> None:
+        """Canonicalisation must not merge two genuinely different buckets.
+
+        Trimming is only safe if it collapses spellings of ONE identity; a
+        normaliser that also collapsed two identities would route bucket B's
+        represented NIF into bucket A's repository.
+        """
+        assert _canonical_bucket_id(self._WRAPPED) == _canonical_bucket_id(_PROFILE_BUCKET_ID)
+        assert _canonical_bucket_id(_SECONDARY_PROFILE_BUCKET_ID) != _canonical_bucket_id(_PROFILE_BUCKET_ID)

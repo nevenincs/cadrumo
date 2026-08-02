@@ -32,7 +32,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import ClassVar, override
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -69,6 +69,27 @@ class ApoderadoRepresentedNifInvalidError(CadrumoError):
 
 class ApoderadoLiveCheckUnavailableError(CadrumoError):
     """Raised when the live-read path is not yet wired or AEAT contact fails."""
+
+
+_BUCKET_ID: TypeAdapter[str] = TypeAdapter(BucketId)
+
+
+def _canonical_bucket_id(bucket_id: str) -> str:
+    """Return ``bucket_id`` in the one spelling the persisted record carries.
+
+    :class:`~application.auth.ApoderadoConfiguration` types its ``bucket_id``
+    as the canonical :data:`~core.identity.BucketId`, so ``configure`` saves
+    under the *normalised* value while the lookup paths used the caller's raw
+    input. A whitespace-wrapped bucket therefore configured successfully and
+    then read back as unconfigured, and ``clear`` reported nothing to remove
+    while the record was still there. Normalising here makes every entry point
+    address the same key the writer used.
+
+    Raises:
+        pydantic.ValidationError: When ``bucket_id`` is blank after stripping
+            or exceeds the canonical length bound.
+    """
+    return _BUCKET_ID.validate_python(bucket_id)
 
 
 class ApoderadoConfiguration(BaseModel):
@@ -151,7 +172,7 @@ class ApoderadoService:
         self._repository_instances: dict[str, _ApoderadoConfigRepository] = {}
 
     def _repository_for(self, bucket_id: str) -> _ApoderadoConfigRepository:
-        safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
+        safe_bucket_id = safe_repository_id(_canonical_bucket_id(bucket_id), context="bucket_id")
         repository = self._repository_instances.get(safe_bucket_id)
         if repository is None:
             repository = _ApoderadoConfigRepository(bucket_id=safe_bucket_id, settings=self._settings)
@@ -172,12 +193,13 @@ class ApoderadoService:
         Args:
             bucket_id: The profile bucket's UUIDv4 identifier.
         """
-        safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
-        config = self._repository_for(safe_bucket_id).load(safe_bucket_id)
+        canonical_bucket_id = _canonical_bucket_id(bucket_id)
+        safe_bucket_id = safe_repository_id(canonical_bucket_id, context="bucket_id")
+        config = self._repository_for(canonical_bucket_id).load(safe_bucket_id)
         if config is None:
-            return ApoderadoStatus(bucket_id=bucket_id, configured=False)
+            return ApoderadoStatus(bucket_id=canonical_bucket_id, configured=False)
         return ApoderadoStatus(
-            bucket_id=bucket_id,
+            bucket_id=canonical_bucket_id,
             configured=True,
             represented_nif=config.represented_nif,
             granted_scopes=config.granted_scopes,
@@ -226,8 +248,9 @@ class ApoderadoService:
 
     def clear(self, *, bucket_id: str) -> bool:
         """Retire the configuration. Returns True iff a record was removed."""
-        safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
-        return self._repository_for(safe_bucket_id).delete(safe_bucket_id)
+        canonical_bucket_id = _canonical_bucket_id(bucket_id)
+        safe_bucket_id = safe_repository_id(canonical_bucket_id, context="bucket_id")
+        return self._repository_for(canonical_bucket_id).delete(safe_bucket_id)
 
     def check(self, *, bucket_id: str) -> ApoderadoStatus:
         """Read-only live verification (sealed pending live-read wiring).
