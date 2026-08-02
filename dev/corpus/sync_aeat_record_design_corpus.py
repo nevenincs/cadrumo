@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import re
+import sys
 import unicodedata
 from dataclasses import dataclass
 from html.parser import HTMLParser
@@ -17,6 +18,11 @@ import httpx
 
 _UTF_8: Final[str] = "utf-8"
 _ROOT = Path(__file__).resolve().parents[2]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from dev.packaging._hashing import sha256_path  # noqa: E402
+
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"
 _RETRIEVED_AT = "2026-07-21"
@@ -221,14 +227,6 @@ def _sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _slug(value: str) -> str:
     value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode()
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")[:110].rstrip("-")
@@ -376,7 +374,7 @@ def _pull() -> None:
                 (
                     candidate
                     for candidate in files_dir.glob(f"*{extension}")
-                    if candidate.stat().st_size == len(data) and _sha256_file(candidate) == digest
+                    if candidate.stat().st_size == len(data) and sha256_path(candidate) == digest
                 ),
                 None,
             )
@@ -424,7 +422,7 @@ def check() -> None:
                 continue
             if path.stat().st_size != artifact["bytes"]:
                 failures.append(f"byte mismatch: {path}")
-            if _sha256_file(path) != artifact["sha256"]:
+            if sha256_path(path) != artifact["sha256"]:
                 failures.append(f"sha256 mismatch: {path}")
     root = json.loads((_CORPUS / "manifest.json").read_text(encoding=_UTF_8))
     expected_models = sorted(manifests)
