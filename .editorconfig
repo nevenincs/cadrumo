@@ -1,0 +1,48 @@
+; Contributor-tooling counterpart to .gitattributes.
+;
+; .gitattributes already declares `* text=auto eol=lf`, so git writes LF on
+; checkout on every platform and normalises to LF in the index on commit. That
+; governs git. It does NOT govern the editors and generators that rewrite a file
+; after checkout: on Windows a text-mode write translates "\n" to os.linesep, so
+; a file checked out as LF comes back as CRLF and git stays silent about it
+; (the index side normalises, so `git diff` shows nothing). `just
+; audit-checkout-drift` measures the resulting population.
+;
+; This file closes the editor half of that gap. The generator half is closed per
+; writer, by passing an explicit LF newline at the write call.
+
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+; Windows shell entry points are launched by cmd.exe, which requires CRLF.
+; Mirrors the `*.bat text eol=crlf` / `*.cmd text eol=crlf` rules in
+; .gitattributes -- keep the two files in step.
+[*.{bat,cmd}]
+end_of_line = crlf
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[*.{toml,yml,yaml,json}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+; Markdown assigns meaning to trailing double-space; never strip it.
+trim_trailing_whitespace = false
+
+; Byte-exact official AEAT evidence. .gitattributes marks this tree `-text` so
+; git never translates it; editors must not either. Digests are computed over
+; these bytes, so a terminator rewrite or a stripped trailing newline
+; invalidates the stored evidence.
+[src/cadrumo/_data/corpus/aeat_official/**]
+end_of_line = unset
+charset = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
