@@ -279,6 +279,7 @@ jobs:
             -Destination (Join-Path $packaging "__init__.py")
           foreach ($file in @(
             "smoke_scoop.ps1",
+            "_command.py",
             "constraint_effect.py",
             "installed_tax_oracle.py",
             "installed_mcp_oracle.py"

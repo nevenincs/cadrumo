@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import platform
-import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -12,13 +12,14 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from dev.packaging._command import run_command
+from dev.packaging._hashing import sha256_path
 from dev.packaging.cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
     SourceIdentity,
     create_manifest,
     load_release_cohort,
-    sha256_file,
     write_manifest,
 )
 from dev.packaging.evidence import (
@@ -71,26 +72,29 @@ def _release_cohort(root: Path):
 
 
 def _executed_transcript(tmp_path: Path) -> CommandTranscript:
-    started_at = datetime.now(UTC)
     command = (sys.executable, "-c", "print('DP200014:00562=23000.00')")
-    completed = subprocess.run(  # noqa: S603 - sys.executable is the current trusted interpreter
-        command,
-        cwd=tmp_path,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    completed_at = datetime.now(UTC)
-    return CommandTranscript.from_output(
-        argv=command,
-        cwd=str(tmp_path),
-        started_at=started_at,
-        completed_at=completed_at,
-        exit_status=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
+    completed = run_command(command, cwd=tmp_path)
+    return CommandTranscript.from_result(
+        completed,
         relevant_output=(completed.stdout.strip(),),
     )
+
+
+def test_command_transcript_projects_canonical_result_with_independent_stream_oracles(tmp_path: Path) -> None:
+    """The durable projection hashes the real shared-runner streams without retiming them."""
+    result = run_command(
+        (sys.executable, "-c", "import sys; print('stdout'); print('stderr', file=sys.stderr)"),
+        cwd=tmp_path,
+    )
+    transcript = CommandTranscript.from_result(result, relevant_output=("command completed",))
+
+    assert transcript.argv == result.argv
+    assert transcript.cwd == result.cwd
+    assert transcript.started_at == result.started_at
+    assert transcript.completed_at == result.completed_at
+    assert transcript.exit_status == result.returncode
+    assert transcript.stdout_sha256 == hashlib.sha256(result.stdout.encode("utf-8")).hexdigest()
+    assert transcript.stderr_sha256 == hashlib.sha256(result.stderr.encode("utf-8")).hexdigest()
 
 
 def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
@@ -118,7 +122,7 @@ def _passing_evidence(tmp_path: Path) -> DistributionEvidence:
                 InstalledExecutableIdentity(
                     name="cadrumo-mcp",
                     path=sys.executable,
-                    sha256=sha256_file(Path(sys.executable)),
+                    sha256=sha256_path(Path(sys.executable)),
                 ),
             ),
         ),

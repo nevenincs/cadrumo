@@ -16,7 +16,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 import tempfile
 from datetime import UTC, datetime
@@ -33,6 +32,7 @@ from dev.packaging._acquire_common import (  # noqa: E402
     capture_owned_server_launch,
     require_command_succeeded,
 )
+from dev.packaging._command import CommandResult, run_command  # noqa: E402
 from dev.packaging.cohort_manifest import load_release_cohort  # noqa: E402
 from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
 from dev.packaging.evidence import (  # noqa: E402
@@ -71,25 +71,21 @@ def _resolve_claude(override: Path | None) -> Path:
     return Path(found).resolve(strict=True)
 
 
-def _run(argv: list[str], *, cwd: Path, environment: dict[str, str], log: Path, timeout: float) -> int:
+def _run(argv: list[str], *, cwd: Path, environment: dict[str, str], log: Path, timeout: float) -> CommandResult:
     """Run one Claude Code subprocess, retaining full output to a log file."""
-    completed = subprocess.run(  # noqa: S603 - resolved claude executable and declarative argv
+    completed = run_command(
         argv,
         cwd=cwd,
-        env=environment,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
+        environment=environment,
+        timeout_seconds=timeout,
         errors="replace",
-        check=False,
-        timeout=timeout,
     )
     log.write_text(
         f"argv={json.dumps(argv)}\nexit_code={completed.returncode}\n"
         f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
         encoding=_UTF_8,
     )
-    return completed.returncode
+    return completed
 
 
 def run_claude_plugin_acquisition(
@@ -153,8 +149,8 @@ def run_claude_plugin_acquisition(
         timeout=timeout_seconds,
     )
     require_command_succeeded(
-        returncode=add,
-        stderr="",
+        returncode=add.returncode,
+        stderr=add.stderr,
         mechanism="claude plugin marketplace add",
         endpoint=marketplace_source,
         version=cohort.version,
@@ -168,8 +164,8 @@ def run_claude_plugin_acquisition(
         timeout=timeout_seconds,
     )
     require_command_succeeded(
-        returncode=install,
-        stderr="",
+        returncode=install.returncode,
+        stderr=install.stderr,
         mechanism="claude plugin install",
         endpoint=f"{marketplace_source}::{plugin_id}",
         version=cohort.version,

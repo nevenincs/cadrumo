@@ -14,7 +14,6 @@ import argparse
 import json
 import platform
 import shutil
-import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Final
@@ -24,6 +23,7 @@ from dev.packaging._acquire_common import (
     require_command_succeeded,
     run_installed_behavior_oracles,
 )
+from dev.packaging._command import CommandResult, run_command
 from dev.packaging.cohort_manifest import load_release_cohort
 from dev.packaging.distribution_evidence_emit import emit_installed_oracle_evidence
 from dev.packaging.evidence import AcquisitionIdentity, DestinationIdentity
@@ -104,18 +104,9 @@ def _resolve_brew(override: Path | None) -> Path:
     return Path(found).resolve(strict=True)
 
 
-def _run(brew: Path, arguments: list[str], *, cwd: Path, log: Path, timeout: float) -> subprocess.CompletedProcess[str]:
+def _run(brew: Path, arguments: list[str], *, cwd: Path, log: Path, timeout: float) -> CommandResult:
     """Run one brew subprocess, retaining its full output to a log file."""
-    completed = subprocess.run(  # noqa: S603 - resolved brew executable and declarative argv
-        [str(brew), *arguments],
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-        errors="replace",
-        check=False,
-        timeout=timeout,
-    )
+    completed = run_command([str(brew), *arguments], cwd=cwd, timeout_seconds=timeout, errors="replace")
     log.write_text(
         f"argv={json.dumps([str(brew), *arguments])}\nexit_code={completed.returncode}\n"
         f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",

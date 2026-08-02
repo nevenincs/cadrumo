@@ -9,7 +9,6 @@ import os
 import re
 import secrets
 import shutil
-import subprocess
 import sys
 import tomllib
 import zipfile
@@ -22,6 +21,7 @@ from typing import Any, Final
 
 from packaging.requirements import Requirement
 
+from dev.packaging._command import CommandResult, run_command
 from dev.packaging._distribution_names import normalise_distribution_name
 
 from .installed_tax_oracle import run_installed_tax_oracle
@@ -102,16 +102,6 @@ _DEV_PRESENT_NAMES = {
     "sphinx",
     "torch",
 }
-
-
-@dataclass(frozen=True)
-class CommandResult:
-    """Captured subprocess result with decoded output."""
-
-    argv: tuple[str, ...]
-    returncode: int
-    stdout: str
-    stderr: str
 
 
 @dataclass(frozen=True)
@@ -242,21 +232,13 @@ def _run(
 ) -> CommandResult:
     """Run a subprocess and replay output only when the return code is unexpected."""
     expected_codes = {0} if expected is None else expected
-    result = subprocess.run(
-        argv,
-        cwd=cwd,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    completed = CommandResult(tuple(argv), result.returncode, result.stdout, result.stderr)
-    if result.returncode not in expected_codes:
+    completed = run_command(argv, cwd=cwd, environment=env)
+    if completed.returncode not in expected_codes:
         command = " ".join(argv)
-        sys.stderr.write(f"\ncommand failed ({result.returncode}): {command}\n")
-        sys.stdout.write(result.stdout)
-        sys.stderr.write(result.stderr)
-        raise SystemExit(result.returncode or 1)
+        sys.stderr.write(f"\ncommand failed ({completed.returncode}): {command}\n")
+        sys.stdout.write(completed.stdout)
+        sys.stderr.write(completed.stderr)
+        raise SystemExit(completed.returncode or 1)
     return completed
 
 

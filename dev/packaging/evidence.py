@@ -15,12 +15,13 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
+from dev.packaging._command import CommandResult
+from dev.packaging._hashing import sha256_path
 from dev.packaging.cohort_manifest import (
     ArtifactRecord,
     LoadedReleaseCohort,
     SourceIdentity,
     load_release_cohort,
-    sha256_file,
 )
 
 _MANIFEST_NAME: Final[str] = "packaging-smoke-manifest.json"
@@ -155,6 +156,25 @@ class CommandTranscript(BaseModel):
             relevant_output=relevant_output,
         )
 
+    @classmethod
+    def from_result(
+        cls,
+        result: CommandResult,
+        *,
+        relevant_output: tuple[str, ...],
+    ) -> Self:
+        """Project one owned subprocess result into durable evidence."""
+        return cls.from_output(
+            argv=result.argv,
+            cwd=result.cwd,
+            started_at=result.started_at,
+            completed_at=result.completed_at,
+            exit_status=result.returncode,
+            stdout=result.stdout,
+            stderr=result.stderr,
+            relevant_output=relevant_output,
+        )
+
     @model_validator(mode="after")
     def _chronological_and_timezone_aware(self) -> Self:
         for field_name, value in (
@@ -254,7 +274,7 @@ def bind_cohort(cohort: LoadedReleaseCohort) -> CohortBinding:
         version=manifest.version,
         source=manifest.source,
         created_at=manifest.created_at,
-        manifest_sha256=sha256_file(cohort.manifest_path),
+        manifest_sha256=sha256_path(cohort.manifest_path),
         artifacts=manifest.artifacts,
     )
 

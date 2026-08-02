@@ -14,7 +14,6 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
@@ -24,6 +23,7 @@ from dev.packaging._acquire_common import (
     require_command_succeeded,
     verify_release_download,
 )
+from dev.packaging._command import run_command
 from dev.packaging.cohort_manifest import load_release_cohort
 
 _UTF_8: Final[str] = "utf-8"
@@ -79,7 +79,7 @@ def run_github_release_acquisition(
     download_dir = run_root / "assets"
     download_dir.mkdir()
 
-    completed = subprocess.run(  # noqa: S603 - resolved gh executable and declarative argv
+    completed = run_command(
         [
             str(gh),
             "release",
@@ -94,12 +94,8 @@ def run_github_release_acquisition(
             "--skip-existing",
         ],
         cwd=run_root,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
+        timeout_seconds=timeout_seconds,
         errors="replace",
-        check=False,
-        timeout=timeout_seconds,
     )
     (logs / "gh-release-download.log").write_text(
         f"exit_code={completed.returncode}\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",

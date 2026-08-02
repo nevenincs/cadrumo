@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pytest
 
+from dev.packaging._command import CommandResult, run_command
 from dev.packaging.cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
@@ -42,7 +43,7 @@ from dev.packaging.evidence import (
     EvidenceStatus,
 )
 from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
-from dev.packaging.installed_tax_oracle import CommandEvidence, InstalledTaxEvidence
+from dev.packaging.installed_tax_oracle import InstalledTaxEvidence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -85,27 +86,9 @@ def _release_cohort(root: Path) -> LoadedReleaseCohort:
     return load_release_cohort(root)
 
 
-def _captured_command(argv: tuple[str, ...], cwd: Path) -> CommandEvidence:
-    """Run a real subprocess and retain it as enriched command evidence."""
-    started_at = datetime.now(UTC)
-    completed = subprocess.run(  # noqa: S603 - sys.executable is the trusted current interpreter
-        argv,
-        cwd=cwd,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    completed_at = datetime.now(UTC)
-    return CommandEvidence(
-        argv=argv,
-        duration_seconds=round((completed_at - started_at).total_seconds(), 3),
-        returncode=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
-        started_at=started_at.isoformat(),
-        completed_at=completed_at.isoformat(),
-        cwd=str(cwd),
-    )
+def _captured_command(argv: tuple[str, ...], cwd: Path) -> CommandResult:
+    """Run a real subprocess through the shared packaging command boundary."""
+    return run_command(argv, cwd=cwd)
 
 
 def _tax_evidence(cwd: Path, *, version: str = _COHORT_VERSION) -> InstalledTaxEvidence:

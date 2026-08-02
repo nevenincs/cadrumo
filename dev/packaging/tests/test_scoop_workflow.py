@@ -124,6 +124,7 @@ def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> N
     # Every first-party module the harness executes must be staged: the smoke
     # asserts the installed venv landed on the manifest's pinned closure before
     # the tax oracle runs, so a missing constraint_effect fails the lane there.
+    assert "_command.py" in stage["run"]
     assert "constraint_effect.py" in stage["run"]
     assert "installed_tax_oracle.py" in stage["run"]
     assert "installed_mcp_oracle.py" in stage["run"]
