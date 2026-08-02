@@ -408,7 +408,7 @@ class TestObservationIdentityAndInstantContracts:
     @pytest.mark.parametrize(
         "instant",
         [
-            datetime(2025, 3, 15, 10, 0),  # noqa: DTZ001 -- the naive shape under test
+            datetime(2025, 3, 15, 10, 0),
             datetime(2025, 3, 15, 10, 0, tzinfo=timezone(timedelta(hours=1))),
         ],
         ids=["naive", "offset-plus-one"],
@@ -420,7 +420,7 @@ class TestObservationIdentityAndInstantContracts:
     def test_mixed_awareness_pair_is_refused(self) -> None:
         with pytest.raises(ValidationError):
             VerifyObservation(
-                **self._fields(persisted_at=datetime(2025, 3, 15, 11, 0)),  # noqa: DTZ001 -- naive half of the pair
+                **self._fields(persisted_at=datetime(2025, 3, 15, 11, 0)),
             )
 
     def test_derived_identity_round_trips_through_the_encrypted_store(
