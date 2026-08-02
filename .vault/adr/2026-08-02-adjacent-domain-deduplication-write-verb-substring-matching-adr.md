@@ -5,12 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:f383a9af1e46e945d786553dbb7e273595f6e5c40bc01cd9cdaffad887f9d96d'
+body_hash: 'sha256:f5bb5f7c1cd84a364b6340cbe2cd6fe53a6f55da907f409a1fd776ce085937d9'
 related:
   - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"
   - '[[2026-08-01-adjacent-domain-deduplication-wave-two-audit]]'
 ---
-
 # `adjacent-domain-deduplication` adr: `AEAT write-verb scan keeps substring matching` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -84,16 +83,29 @@ not an error.
 
 Direction only; no code lands with this record.
 
-The matcher and the token set stay as they are. The `DialogoRepresentacion`
-gate is admitted by an explicit read-only allow-list entry on the IVA
-compensation wallet's read policy, scoped to that surface, carrying the reason
-inline: the page is AEAT's acting-capacity selector and is required, read-only
-traversal.
+The matcher and the token set stay as they are. A benign collision is admitted
+by an explicit read-only allow-list entry rather than by weakening the scan.
 
-Whichever author lands the guard call at that gate lands the allow-list entry in
-the same change, so the tree never holds a guard that refuses a required page.
-Coverage must be added with it, because the existing state-creating canary tuple
-is dead and proves nothing.
+That remedy is SURFACE-SPECIFIC, and the author applying it must first establish
+what the surface's allow-list actually gates. An allow-list named for one guard
+may be shared by another, and an entry added to quiet a URL-scan false positive
+then silently widens the second guard.
+
+The IVA compensation wallet is the worked counterexample, and on that surface the
+entry MUST NOT be written. Its read-path prefix tuple is consumed by the landing
+refusal, so adding the gate path there would make a page still sitting on the
+acting-capacity gate pass as a completed read. The module already excludes both
+Cl@ve transit surfaces in writing, on the grounds that they are transit rather
+than rest, and it records that its landing rules do not share one guarantee: the
+own-name continuation's rule follows a URL wait that has already required the
+traversal to reach the target, while the wallet execute rule follows a load-state
+wait only. The rule with no URL wait in front of it is exactly where admitting
+the gate would open a hole.
+
+So on the wallet the collision stays documented and unadmitted. Any surface that
+does take an entry lands it in the same change as the guard call it unblocks, and
+brings coverage with it, because the existing state-creating canary tuple is dead
+and proves nothing.
 
 ## Rationale
 
@@ -129,10 +141,12 @@ would have put a false claim in this record.
 The scan keeps its known false positive, and this record is what stops the next
 author repairing it in the direction that looks obvious and measures worse.
 
-The allow-list entry moves one decision from implicit to explicit: someone must
-state that this gate is read-only. That is a fact worth writing down, and the
-allow-list is the right place, since the landing refusal already establishes
-allow-listing as the pattern the package trusts over denylisting.
+Allow-listing as the general remedy carries a trap this record now names: the
+package trusts allow-lists over denylists, which makes adding an entry feel like
+the safe move, and on a surface whose allow-list is shared with a landing
+refusal it is the opposite. "Admit the benign collision" and "widen a page-
+landing guard" can be the same edit. The check is cheap -- read what consumes
+the list before adding to it -- but nothing prompts it.
 
 Two gaps stay open and are not closed here. The wallet still reaches that gate
 without routing the URL through its read assertion, so the guard is absent from
