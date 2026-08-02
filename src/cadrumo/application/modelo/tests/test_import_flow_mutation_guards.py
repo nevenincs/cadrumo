@@ -14,21 +14,27 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
 from ....domain.modelos import (
+    CalculationRevision,
     CalculationRevisionAmendmentKind,
+    CalculationRevisionState,
     ExternalEvidenceKind,
     WorkUnit,
+    derive_calculation_revision_id,
     derive_work_unit_id,
+    upsert_calculation_revision,
     upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AmendmentEvidenceMissingError,
+    CalculationRevisionNotFoundError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
     calculate_modelo_revision,
     create_work_unit,
     discard_work_unit,
+    get_calculation_revision,
     import_external_filing_evidence,
     mark_revision_verificado_completo,
 )
@@ -219,6 +225,47 @@ def test_the_foreign_import_target_is_genuinely_present(tmp_path: Path) -> None:
 
     assert stored is not None
     assert stored.bucket_id == _GUARD_BUCKET_B
+
+
+def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path) -> None:
+    """A foreign revision already present in A's stores is not addressable by A."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_A) as profile:
+        wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
+        cr_repo = CalculationRevisionCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
+        foreign = _guard_work_unit(_GUARD_BUCKET_B)
+        wu_repo.save(upsert_work_unit(wu_repo.load(), foreign))
+        revision = CalculationRevision(
+            calculation_revision_id=derive_calculation_revision_id(
+                work_unit_id=foreign.work_unit_id,
+                input_values_by_casilla_id={},
+                binding_overrides={},
+                casilla_values={},
+            ),
+            work_unit_id=foreign.work_unit_id,
+            state=CalculationRevisionState.BORRADOR,
+            input_values_by_casilla_id={},
+            casilla_values={},
+            created_at=_GUARD_CLOCK,
+            updated_at=_GUARD_CLOCK,
+        )
+        cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
+
+        with pytest.raises(CalculationRevisionNotFoundError):
+            get_calculation_revision(
+                revision.calculation_revision_id,
+                calculation_repository=cr_repo,
+                work_unit_repository=wu_repo,
+            )
+        with pytest.raises(CalculationRevisionNotFoundError):
+            mark_revision_verificado_completo(
+                revision.calculation_revision_id,
+                actor="operator-A",
+                calculation_repository=cr_repo,
+                work_unit_repository=wu_repo,
+                clock=_GUARD_CLOCK,
+            )
+
+        assert cr_repo.load().get(revision.calculation_revision_id) == revision
 
 
 _GUARD_BUCKET_A = "6aa00000-0000-4000-8000-0000000000aa"

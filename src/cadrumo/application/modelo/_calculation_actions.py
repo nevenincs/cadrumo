@@ -69,6 +69,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     CalculationSourceIssue,
@@ -87,7 +88,6 @@ from ._action_errors import (
     CalculationRevisionStateError,
     ModeloAggregationBindingError,
     ModeloCrossPeriodCleanStateError,
-    WorkUnitNotFoundError,
 )
 from ._binding_resolution import resolve_available_bound_inputs_by_casilla_id
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
@@ -1384,6 +1384,7 @@ def get_calculation_revision(
     calculation_revision_id: str,
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
 ) -> CalculationRevision:
     """Return one calculation revision by id, or raise.
 
@@ -1391,14 +1392,42 @@ def get_calculation_revision(
     ``calculation_revision_id``.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    catalogue = cr_repo.load()
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    revision, _ = _calculation_revision_in_repository_bucket(
+        calculation_revision_id,
+        catalogue=cr_repo.load(),
+        calculation_repository=cr_repo,
+        work_unit_repository=wu_repo,
+    )
+    return revision
+
+
+def _calculation_revision_in_repository_bucket(
+    calculation_revision_id: str,
+    *,
+    catalogue: CalculationRevisionCatalogue,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+) -> tuple[CalculationRevision, WorkUnit]:
+    """Resolve a revision only when its work unit belongs to both repositories' bucket."""
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
         raise CalculationRevisionNotFoundError(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
-    return revision
+    work_unit = work_unit_repository.load().get(revision.work_unit_id)
+    expected_buckets = {
+        bucket_id
+        for bucket_id in (calculation_repository.bucket_id, work_unit_repository.bucket_id)
+        if bucket_id is not None
+    }
+    if work_unit is None or any(work_unit.bucket_id != bucket_id for bucket_id in expected_buckets):
+        raise CalculationRevisionNotFoundError(
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={"calculation_revision_id": calculation_revision_id},
+        )
+    return revision, work_unit
 
 
 def mark_revision_verificado_completo(
@@ -1435,13 +1464,14 @@ def mark_revision_verificado_completo(
             currently in ``BORRADOR`` state.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     catalogue = cr_repo.load()
-    existing = catalogue.get(calculation_revision_id)
-    if existing is None:
-        raise CalculationRevisionNotFoundError(
-            translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
+    existing, work_unit = _calculation_revision_in_repository_bucket(
+        calculation_revision_id,
+        catalogue=catalogue,
+        calculation_repository=cr_repo,
+        work_unit_repository=wu_repo,
+    )
     if existing.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -1461,17 +1491,10 @@ def mark_revision_verificado_completo(
             "a ledger-derived revision must be promoted through verification so its evidence "
             "bundle is captured. Run the verify path instead of marking it verified-complete.",
         )
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    work_unit = wu_repo.load().get(existing.work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": existing.work_unit_id},
-        )
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)
-    _refuse_direct_cross_period_verification(existing, work_unit_repository=wu_repo)
+    _refuse_direct_cross_period_verification(existing, work_unit=work_unit)
     now = clock or _utc_now()
     verified = existing.model_copy(
         update={
@@ -1488,16 +1511,9 @@ def mark_revision_verificado_completo(
 def _refuse_direct_cross_period_verification(
     revision: CalculationRevision,
     *,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    work_unit: WorkUnit,
 ) -> None:
     """Require the full verification pipeline for cross-period dependency revisions."""
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    work_unit = wu_repo.load().get(revision.work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": revision.work_unit_id},
-        )
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
     if tuple(_cross_period_dependency_requirements(snapshot)):
         raise ModeloCrossPeriodCleanStateError(
