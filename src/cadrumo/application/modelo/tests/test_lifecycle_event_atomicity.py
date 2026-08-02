@@ -44,7 +44,13 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
 from ...user_profile import UserProfileLifecycleRepository
-from .. import create_work_unit, get_work_unit, import_external_filing_evidence
+from .. import (
+    create_work_unit,
+    discard_work_unit,
+    get_work_unit,
+    import_external_filing_evidence,
+    rename_work_unit,
+)
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -247,3 +253,103 @@ def test_event_write_failure_rolls_back_every_import_catalogue(fixture: _Fixture
     assert fixture.filings.load() == baseline_filings
     assert fixture.work_units.load() == baseline_work_units
     assert fixture.events.load() == baseline_events
+
+
+def test_work_unit_creation_commits_state_and_event_in_one_transaction(fixture: _Fixture) -> None:
+    """Creating a work unit commits the unit and its CREATED event together.
+
+    The lifecycle transitions saved the work-unit catalogue and emitted the
+    event through a separate write, so an event-storage failure left the unit
+    durable while the history had no record it was ever created — the same
+    durable-but-unrecorded shape as the import path, on the transition that
+    brings the work unit into existence.
+    """
+    recorder = WriteUnitRecorder(fixture.engine)
+
+    with recorder.recording():
+        create_work_unit(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2019-y-siguientes",
+            repository=fixture.work_units,
+            clock=_T0,
+        )
+
+    assert recorder.commits_between_writes() == 0
+
+
+def test_split_work_unit_creation_write_shape_commits_between_catalogues(fixture: _Fixture) -> None:
+    """Anti-tautology: the recorder reports a seam on the shape this replaced.
+
+    Persisting the same two catalogues through independent saves — the pre-fix
+    shape — must be observed as more than one transaction, or the assertion
+    above could not fail.
+    """
+    _seed_work_unit(fixture)
+    work_units = fixture.work_units.load()
+    events = fixture.events.load()
+    recorder = WriteUnitRecorder(fixture.engine)
+
+    with recorder.recording():
+        fixture.work_units.save(work_units)
+        fixture.events.save(events)
+
+    assert recorder.commits_between_writes() >= 1
+
+
+def test_work_unit_creation_persists_its_created_event(fixture: _Fixture) -> None:
+    """The positive control: the event is really written, not merely co-committed.
+
+    A single-transaction assertion says nothing about whether the event exists;
+    without this, dropping the event write entirely would still report zero
+    commits between writes.
+    """
+    work_unit = _seed_work_unit(fixture)
+
+    events = fixture.events.load()
+    created = [
+        event
+        for event in events
+        if event.event_type is BucketEventType.MODELO_WORK_UNIT_CREATED and event.object_id == work_unit.work_unit_id
+    ]
+
+    assert len(created) == 1
+    assert created[0].object_type is BucketEventObjectType.WORK_UNIT
+
+
+def test_work_unit_rename_and_discard_commit_their_events_in_one_transaction(fixture: _Fixture) -> None:
+    """Rename and discard each commit their state and event together.
+
+    Both carried the same separate-write shape as creation, so each is pinned
+    here rather than assuming the creation fix covers the whole module.
+    """
+    work_unit = _seed_work_unit(fixture)
+
+    rename_recorder = WriteUnitRecorder(fixture.engine)
+    with rename_recorder.recording():
+        rename_work_unit(
+            work_unit_id=work_unit.work_unit_id,
+            new_name="Renamed unit",
+            actor="operator",
+            repository=fixture.work_units,
+            clock=_T1,
+        )
+    assert rename_recorder.commits_between_writes() == 0
+
+    discard_recorder = WriteUnitRecorder(fixture.engine)
+    with discard_recorder.recording():
+        discard_work_unit(
+            work_unit_id=work_unit.work_unit_id,
+            actor="operator",
+            reason="superseded",
+            repository=fixture.work_units,
+            clock=_T1,
+        )
+    assert discard_recorder.commits_between_writes() == 0
+
+    events = fixture.events.load()
+    emitted = {event.event_type for event in events if event.object_id == work_unit.work_unit_id}
+    assert BucketEventType.MODELO_WORK_UNIT_RENAMED in emitted
+    assert BucketEventType.MODELO_WORK_UNIT_DISCARDED in emitted

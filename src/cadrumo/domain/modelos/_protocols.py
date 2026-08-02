@@ -53,6 +53,14 @@ class WorkUnitCatalogueRepositoryProtocol(Protocol):
         """Persist ``catalogue`` as the encrypted singleton object."""
         ...
 
+    def save_with_secure_object_writes(
+        self,
+        catalogue: WorkUnitCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist ``catalogue`` plus co-emitted secure-object writes atomically."""
+        ...
+
     def to_secure_object_write(self, catalogue: WorkUnitCatalogue) -> SecureObjectWrite:
         """Return the :class:`SecureObjectWrite` for ``catalogue`` without committing it.
 
