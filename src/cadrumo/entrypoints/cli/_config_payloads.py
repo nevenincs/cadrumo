@@ -19,7 +19,10 @@ from ...application.auth import (
     AuthDiagnosticDetail,
     AuthDiagnosticPhoneState,
     AuthDiagnosticSummary,
+    AuthLoginResult,
     AuthProviderListing,
+    AuthStatusResult,
+    AuthTestResult,
 )
 from ...application.config_reset import (
     ConfigResetOperationStatus,
@@ -870,51 +873,33 @@ class AuthConfigurePayload(OutputSchema):
 
 
 @register_schema("config.auth.status")
-class AuthStatusPayload(OutputSchema):
+class AuthStatusPayload(OutputSchema, AuthStatusResult):
     """JSON envelope for ``aeat config auth status``.
 
-    The application :class:`AuthStatusResult` model
-    evolves independently; ``extra="allow"`` ensures any additional fields pass
-    through without re-declaring every provider-specific key here. The payload is
-    a local readiness projection and never performs live AEAT contact.
+    Reuses the application-owned :class:`AuthStatusResult` field set and strict
+    validation directly. The payload is a local readiness projection and never
+    performs live AEAT contact.
     """
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
 @register_schema("config.auth.test")
-class AuthTestPayload(OutputSchema):
+class AuthTestPayload(OutputSchema, AuthTestResult):
     """JSON envelope for ``aeat config auth test``.
 
-    Thin envelope over :class:`AuthTestResult`; the
-    application model carries all provider-specific probe fields.
-    ``extra="allow"`` forwards them without re-declaration. The command tests
-    local readiness and persisted-session metadata; it does not submit to AEAT.
+    Reuses the application-owned :class:`AuthTestResult` field set and strict
+    validation directly. The command tests local readiness and persisted-session
+    metadata; it does not submit to AEAT.
     """
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
 @register_schema("config.auth.login")
-class AuthLoginPayload(OutputSchema):
+class AuthLoginPayload(OutputSchema, AuthLoginResult):
     """JSON envelope for ``aeat config auth login``.
 
-    Thin envelope over :class:`AuthLoginResult`; the
-    application model carries provider-specific live-login fields.
-    ``extra="allow"`` forwards them without re-declaration. Session cookies,
-    tokens, QR payloads, and certificate material stay outside the JSON result.
+    Reuses the application-owned :class:`AuthLoginResult` field set and strict
+    validation directly. Session cookies, tokens, QR payloads, and certificate
+    material stay outside the JSON result.
     """
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
 @register_schema("config.auth.logout")
