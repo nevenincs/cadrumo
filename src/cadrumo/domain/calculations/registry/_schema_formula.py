@@ -324,6 +324,8 @@ class ParameterDefinition(RegistryModel):
 
     def _validate_non_bracket_table_shape(self) -> None:
         """Reject brackets / keyed_brackets / bracket_axis on a non-bracket-table parameter."""
+        if not self.values:
+            raise RegistryValidationError(f"parameter {self.id!r} has no dated values")
         if self.brackets:
             raise RegistryValidationError(
                 f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'",
