@@ -6214,6 +6214,7 @@ errors:
     integrity_apoderado_configuration_identity: 'La configuración de apoderado almacenada no pertenece al perfil desde el que se ha leído.'
     integrity_storage_secure_object_row_identity: 'Un objeto seguro almacenado no reconstruye la clave con la que está archivado; el registro fue sustituido o archivado incorrectamente.'
     integrity_profile_bucket_mismatch: 'El perfil %{profile_id} no pertenece al bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad de perfil.'
+    integrity_corpus_anchor_resolution: 'Un ancla del corpus incluido no se resuelve exactamente en una unidad extraída.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no
       ha superado su propia validación. Tu comando era correcto; esto es un defecto

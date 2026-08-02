@@ -6081,6 +6081,7 @@ errors:
     integrity_apoderado_configuration_identity: 'A tárolt apoderado-beállítás nem ahhoz a profilhoz tartozik, amelyből beolvasták.'
     integrity_storage_secure_object_row_identity: 'Egy tárolt biztonságos objektum nem állítja helyre azt a kulcsot, amely alatt iktatva van; a rekordot kicserélték vagy tévesen iktatták.'
     integrity_profile_bucket_mismatch: 'A(z) %{profile_id} profil nem tartozik a(z) %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.'
+    integrity_corpus_anchor_resolution: 'Egy csomagolt korpuszhorgony nem pontosan egy kinyert egységre oldódik fel.'
   internal:
     cli_outbound_payload_boundary: A Cadrumo olyan belső rekordot épített, amely nem
       felelt meg a saját érvényesítésének. A parancsod helyes volt; ez a Cadrumo hibája.

@@ -6175,6 +6175,7 @@ errors:
     integrity_apoderado_configuration_identity: 'La configuració d''apoderat emmagatzemada no pertany al perfil des del qual s''ha llegit.'
     integrity_storage_secure_object_row_identity: 'Un objecte segur emmagatzemat no reconstrueix la clau amb què està arxivat; el registre va ser substituït o arxivat incorrectament.'
     integrity_profile_bucket_mismatch: 'El perfil %{profile_id} no pertany al bucket %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.'
+    integrity_corpus_anchor_resolution: 'Una àncora del corpus inclòs no es resol exactament en una unitat extreta.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construït un registre intern que no
       ha superat la seva pròpia validació. La teva ordre era correcta; això és un

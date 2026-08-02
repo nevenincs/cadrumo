@@ -5768,6 +5768,7 @@ errors:
     integrity_apoderado_configuration_identity: 'The stored apoderado configuration does not belong to the profile it was read from.'
     integrity_storage_secure_object_row_identity: 'A stored secure object does not reconstruct the key it is filed under; the record was substituted or misfiled.'
     integrity_profile_bucket_mismatch: 'Profile %{profile_id} does not belong to bucket %{bucket_id}; a profile bucket holds exactly one profile identity.'
+    integrity_corpus_anchor_resolution: 'A bundled corpus anchor does not resolve to exactly one extracted unit.'
   internal:
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report
