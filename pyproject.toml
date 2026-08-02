@@ -516,6 +516,11 @@ convention = "google"
 # the caller supplies. It must read the object store rather than the working
 # tree, so the subprocess call is the point of the module, not an incidental.
 "dev/facade_export_scan.py" = ["S603", "S607"]
+# The newline-pinning gate enumerates its scan corpus with a read-only
+# `git ls-files` under a fixed argv; the only interpolated values are this
+# module's own SCAN_ROOTS constants. It must read the TRACKED set rather than
+# the filesystem so a peer's untracked scratch module cannot red the gate.
+"src/cadrumo/tests/test_text_writer_newline_pinning.py" = ["S603", "S607"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]

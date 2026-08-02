@@ -138,7 +138,7 @@ def _copy_committed_modelo(path: Path) -> None:
     )
     text = _MODELO_130_DIR.joinpath("manifest.toml").read_text(encoding="utf-8")
     text += "".join(fragment.read_text(encoding="utf-8") for fragment in fragments)
-    path.write_text(text, encoding="utf-8")
+    path.write_text(text, encoding="utf-8", newline="\n")
 
 
 @pytest.fixture(scope="module")

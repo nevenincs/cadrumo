@@ -53,6 +53,7 @@ def _create_profile_and_import(tmp_path: Path) -> str:
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
         "2026-04-15,Client SL,Invoice 1,-50.00,EUR,n26-001\n",
         encoding="utf-8",
+        newline="\n",
     )
     imported = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0, imported.output
