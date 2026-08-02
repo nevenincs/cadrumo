@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -98,7 +99,29 @@ def verify_legal_catalogue(
         raise RegistryValidationError("legal catalogue validation failed:\n" + "\n".join(f" - {f}" for f in failures))
 
 
-_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int, str, tuple[str, ...]], str] = {}
+_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int, str, str, tuple[str, ...]], str] = {}
+
+
+def _sidecar_content_digest(sidecar: Path, reference: LegalReference) -> str:
+    """Return the trusted content discriminator for an extracted corpus sidecar.
+
+    Args:
+        sidecar: Path to the ``.extracted.json`` artefact backing the reference.
+        reference: The legal reference being verified, named in the failure.
+
+    Returns:
+        The hex blake2b digest of the sidecar's bytes.
+
+    Raises:
+        RegistryValidationError: If the sidecar cannot be read.
+    """
+    try:
+        data = sidecar.read_bytes()
+    except OSError as exc:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} extracted corpus sidecar could not be fingerprinted: {exc}",
+        ) from exc
+    return hashlib.blake2b(data, digest_size=16).hexdigest()
 
 
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
@@ -116,7 +139,21 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     # A sidecar holds many extracted units.  The selected unit is therefore
     # part of the cache identity; caching only by sidecar would let the first
     # legal reference read from a document satisfy later sibling anchors.
-    cache_key = (str(sidecar), stat.st_size, stat.st_mtime_ns, anchor, reference.required_text)
+    #
+    # The content digest is load-bearing, not belt-and-braces: size and mtime
+    # are forgeable together, so a same-length replacement whose mtime is
+    # restored is invisible to a metadata-only key and the cache would keep
+    # serving the superseded text as the legal evidence behind a filing.  The
+    # stat fields stay as the cheap first-order discriminator, mirroring the
+    # registry loader's TOML fingerprint.
+    cache_key = (
+        str(sidecar),
+        stat.st_size,
+        stat.st_mtime_ns,
+        _sidecar_content_digest(sidecar, reference),
+        anchor,
+        reference.required_text,
+    )
     if cache_key in _LEGAL_CORPUS_CACHE:
         return _LEGAL_CORPUS_CACHE[cache_key]
 
