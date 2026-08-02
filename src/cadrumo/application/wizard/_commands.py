@@ -1498,8 +1498,14 @@ def _emit_wizard_success(
     from ...core.click_context import json_output_requested
     from ...domain.contribuyente import CCAA
     from ..operator_output import emit_operator_json_success
-    from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
+    from ._results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
+    # Two distinct values, deliberately: ``status_token`` is the closed
+    # machine-readable vocabulary the JSON envelope carries, and ``verb`` is
+    # the localized word the operator reads on the text line. Collapsing them
+    # is what let the wizard publish ``creado`` as a contract token while the
+    # profile manager published ``created`` for the same command.
+    status_token = ProfileWizardStatus.CREATED if mode == "create" else ProfileWizardStatus.UPDATED
     verb = tr("wizard.commands.status.created" if mode == "create" else "wizard.commands.status.updated")
     resolved_modify_no_resume_message = (
         modify_no_resume_message
@@ -1534,9 +1540,13 @@ def _emit_wizard_success(
     # spine stays null (the label is not the wizard's to assert there).
     active_profile = profile_name if mode == "create" else None
     result: ConfigProfileCreateResult | ConfigProfileEditResult = (
-        ConfigProfileCreateResult(profile_name=profile_name, status=verb, active_profile=active_profile)
+        ConfigProfileCreateResult(
+            profile_name=profile_name,
+            status=status_token,
+            active_profile=active_profile,
+        )
         if mode == "create"
-        else ConfigProfileEditResult(profile_name=profile_name, status=verb)
+        else ConfigProfileEditResult(profile_name=profile_name, status=status_token)
     )
     if json_output_requested():
         command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
@@ -1677,7 +1687,7 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
     from ...core.click_context import json_output_requested
     from ...core.json_contract import Notice, NoticeSeverity
     from ..operator_output import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
-    from ._results import ConfigProfileCreateResult
+    from ._results import ConfigProfileCreateResult, ProfileWizardStatus
 
     resume_command = f"aeat config profile create {profile_name}"
     if message is None:
@@ -1696,7 +1706,7 @@ def _emit_save_exit_notice(profile_name: str, *, message: str | None = None) -> 
         # active_profile — never a bespoke dict.
         result = ConfigProfileCreateResult(
             profile_name=profile_name,
-            status=tr("wizard.commands.status.saved"),
+            status=ProfileWizardStatus.SAVED,
             active_profile=None,
         )
         # emit_operator_json_success is the one sanctioned direct route to

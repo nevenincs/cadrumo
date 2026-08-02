@@ -23,9 +23,28 @@ every emit rather than only by a structural CLI-tree-vs-registry test.
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from ...core.json_contract import OutputSchema, register_schema
 
-__all__ = ["ConfigProfileCreateResult", "ConfigProfileEditResult"]
+__all__ = ["ConfigProfileCreateResult", "ConfigProfileEditResult", "ProfileWizardStatus"]
+
+
+class ProfileWizardStatus(StrEnum):
+    """Closed outcome vocabulary for the profile create / edit envelopes.
+
+    ``status`` is a machine-readable contract token, not display prose. The
+    interactive wizard resolved it through the active locale while the
+    profile-manager close path wrote literal English, so the two commands
+    emitted the same envelope shape with different ``status`` values for any
+    non-English operator -- an automation branch on ``status`` was correct in
+    exactly one locale. The localized verb belongs on the envelope's text
+    lines and notices, which is where both surfaces already render it.
+    """
+
+    CREATED = "created"
+    UPDATED = "updated"
+    SAVED = "saved"
 
 
 @register_schema("config.profile.create")
@@ -41,7 +60,7 @@ class ConfigProfileCreateResult(OutputSchema):
     """
 
     profile_name: str
-    status: str
+    status: ProfileWizardStatus
     active_profile: str | None = None
 
 
@@ -56,4 +75,4 @@ class ConfigProfileEditResult(OutputSchema):
     """
 
     profile_name: str
-    status: str
+    status: ProfileWizardStatus
