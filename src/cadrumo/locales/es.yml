@@ -1570,7 +1570,6 @@ application:
       lifecycle_profile_already_exists: Ya existe un perfil en el bucket activo.
       lifecycle_profile_not_tombstoned: El perfil no está dado de baja; la reactivación
         rechaza un perfil activo.
-      lifecycle_profile_tombstoned_duplicate: No se puede duplicar un perfil eliminado.
       lifecycle_profile_tombstoned_rename: No se puede renombrar un perfil eliminado.
       lifecycle_schema_validation_failed: Los datos del perfil no coinciden con el
         esquema de perfil de usuario.

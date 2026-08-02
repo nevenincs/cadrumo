@@ -1438,7 +1438,6 @@ application:
       lifecycle_profile_already_exists: A profile already exists in the active bucket.
       lifecycle_profile_not_tombstoned: The profile is not tombstoned; reactivate
         refuses a live profile.
-      lifecycle_profile_tombstoned_duplicate: A removed profile cannot be duplicated.
       lifecycle_profile_tombstoned_rename: A removed profile cannot be renamed.
       lifecycle_schema_validation_failed: The profile data does not match the user-profile
         schema.

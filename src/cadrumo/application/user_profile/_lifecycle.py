@@ -52,7 +52,6 @@ _PROFILE_EVENT_PAYLOAD_VERSION = 1
 """Schema version for the payload dict on this service's profile-lifecycle events."""
 _PROFILE_ALREADY_EXISTS_MESSAGE = "profile already exists in the active bucket"
 _PROFILE_TOMBSTONED_RENAME_MESSAGE = "tombstoned profile cannot be renamed"
-_PROFILE_TOMBSTONED_DUPLICATE_MESSAGE = "tombstoned profile cannot be duplicated"
 _PROFILE_NOT_TOMBSTONED_MESSAGE = "profile is not tombstoned; reactivate refuses a live profile"
 _PROFILE_SCHEMA_VALIDATION_MESSAGE = "profile facts failed schema validation"
 
@@ -429,18 +428,11 @@ def _profile_already_exists_error(*, profile_id: str, bucket_id: str) -> Profile
 
 
 def _profile_tombstoned_error(profile_id: str, *, action: Literal["rename"]) -> ProfileNotFoundError:
-    if action == "rename":
-        return ProfileNotFoundError(
-            _PROFILE_TOMBSTONED_RENAME_MESSAGE,
-            context={"profile_id": profile_id, "action": action},
-            translated_message="application.user_profile.errors.lifecycle_profile_tombstoned_rename",
-        )
-    if action == "duplicate":
-        return ProfileNotFoundError(
-            _PROFILE_TOMBSTONED_DUPLICATE_MESSAGE,
-            context={"profile_id": profile_id, "action": action},
-            translated_message="application.user_profile.errors.lifecycle_profile_tombstoned_duplicate",
-        )
+    return ProfileNotFoundError(
+        _PROFILE_TOMBSTONED_RENAME_MESSAGE,
+        context={"profile_id": profile_id, "action": action},
+        translated_message="application.user_profile.errors.lifecycle_profile_tombstoned_rename",
+    )
 
 
 def _profile_not_tombstoned_error(profile_id: str) -> ProfileNotFoundError:

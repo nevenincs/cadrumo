@@ -69,8 +69,9 @@ See Also:
         Domain schema, value records, registry-selector contract, and lazy
         portable-export payload consumed by this facade.
     :class:`ProfileLifecycleService`
-        Application service for register, edit, rename, duplicate, snapshot, and
-        remove operations over :class:`domain.user_profile.UserProfileRecord`.
+        Application service for register, read, edit, rename, remove,
+        reactivate, and setup-completion operations over
+        :class:`domain.user_profile.UserProfileRecord`.
     :class:`CensoSyncService`
         Read-only censo-derived home-office afectación ratio for the ledger
         proportional-deduction path.

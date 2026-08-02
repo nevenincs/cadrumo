@@ -1495,7 +1495,6 @@ application:
       lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
       lifecycle_profile_not_tombstoned: A profil nincs törölve; az újraaktiválás elutasítja
         az élő profilt.
-      lifecycle_profile_tombstoned_duplicate: Törölt profil nem duplikálható.
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.
