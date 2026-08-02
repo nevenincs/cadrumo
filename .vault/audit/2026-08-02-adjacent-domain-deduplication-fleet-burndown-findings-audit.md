@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f2449f7cccb1aaff0e52629aa670bd4c2d6194048ca7c54716e63e0cded27d3'
+body_hash: 'sha256:55668c6104e0edbd93fd83447294bb35fccf036112f1215f879b9bc2f0d04a6b'
 related: []
 ---
 
@@ -237,6 +237,22 @@ greppable form, a broad `except` whose body is `continue` inside an iteration
 that constitutes a guard, remains a useful finder and currently has one
 occurrence, deliberate and no longer able to swallow a status disagreement. It
 is a search heuristic, not the predicate.
+
+The axis generalises past exception handling. Any surface that hands a value to
+a caller can collide with the healthy negative, and the same question settles
+it. Twenty-nine production sites render a bare `str(exc)` rather than routing
+through the canonical error resolver, and that surface cannot separate three
+states: no caller-supplied override, an override that is a translation key, and
+an override that is operator-facing prose. The first renders empty while the
+registry holds correct text for the same error; the second renders a dotted
+internal identifier. Both are the colliding-default shape one layer out from
+the handlers this finding is written about.
+
+The reach of the axis is wider than the reach of the instrument that found it,
+and conflating the two would misread this document. The sweep keys on `except`
+handlers, so it structurally cannot see a rendering surface, and its result is
+evidence about nothing outside that key. A predicate that generalises does not
+carry its scan with it.
 
 ### fleet-burndown | medium | subclassing a family root is sound; subclassing a specific condition is impersonation
 
