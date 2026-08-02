@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import contextlib
 import json
+import re
 import time
 from pathlib import Path
 
@@ -42,6 +43,7 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 
 _TELEMETRY_DIRNAME = "telemetry"
 _SECONDS_PER_DAY = 86_400
+_SESSION_ID_PATTERN = re.compile(r"[A-Za-z0-9_-][A-Za-z0-9._-]*")
 
 
 class ToolCallTelemetryRecord(BaseModel):
@@ -94,6 +96,19 @@ def content_sha256(text: str) -> str:
 def telemetry_dir() -> Path:
     """The workspace-scoped telemetry directory under the local storage root."""
     return load_settings().cadrumo_local_storage_root / _TELEMETRY_DIRNAME
+
+
+def _session_telemetry_path(directory: Path, *, session_id: str) -> Path:
+    """Return the resolved telemetry path for one safe session identifier."""
+    if not isinstance(session_id, str) or _SESSION_ID_PATTERN.fullmatch(session_id) is None:
+        raise ValueError("session_id must be a safe telemetry filename identifier")
+    root = directory.resolve()
+    path = (root / f"{session_id}.jsonl").resolve()
+    try:
+        path.relative_to(root)
+    except ValueError as exc:
+        raise ValueError("session_id must resolve within the telemetry directory") from exc
+    return path
 
 
 class TelemetryRetention(BaseModel):
@@ -180,7 +195,8 @@ class SessionTelemetryWriter:
         retention: TelemetryRetention | None = None,
     ) -> None:
         self._session_id = session_id
-        self._directory = directory if directory is not None else telemetry_dir()
+        self._directory = (directory if directory is not None else telemetry_dir()).resolve()
+        self._path = _session_telemetry_path(self._directory, session_id=session_id)
         self._retention = retention if retention is not None else TelemetryRetention()
         self._sequence = 0
         # Best-effort retention: a locked/racing peer file on a shared host must
@@ -202,7 +218,7 @@ class SessionTelemetryWriter:
     @property
     def path(self) -> Path:
         """The JSONL file this session appends to."""
-        return self._directory / f"{self._session_id}.jsonl"
+        return self._path
 
     def record(
         self,

@@ -123,6 +123,37 @@ def test_writer_retention_default_preserves_a_small_directory(tmp_path: Path) ->
     assert _names(tmp_path) == {"recent0.jsonl", "recent1.jsonl", "recent2.jsonl"}
 
 
+@pytest.mark.parametrize("session_id", ("../escaped", r"..\escaped", "nested/session", r"nested\session"))
+def test_writer_refuses_session_ids_with_path_segments(tmp_path: Path, session_id: str) -> None:
+    """Path-like session identifiers may never select a telemetry file."""
+
+    with pytest.raises(ValueError, match="safe telemetry filename"):
+        SessionTelemetryWriter(session_id=session_id, directory=tmp_path)
+
+    assert tuple(tmp_path.rglob("*.jsonl")) == ()
+
+
+def test_writer_refuses_an_absolute_session_id_without_creating_an_outside_file(tmp_path: Path) -> None:
+    """An absolute identifier is refused before the writer can select an external path."""
+
+    outside_file = tmp_path.parent / "outside-session.jsonl"
+    with pytest.raises(ValueError, match="safe telemetry filename"):
+        SessionTelemetryWriter(session_id=str(outside_file), directory=tmp_path)
+
+    assert outside_file.exists() is False
+
+
+def test_writer_persists_a_safe_session_only_beneath_its_telemetry_directory(tmp_path: Path) -> None:
+    """A safe opaque identifier writes a real JSONL row only under the configured root."""
+
+    writer = SessionTelemetryWriter(session_id="mcp-safe_session.01", directory=tmp_path)
+    written = writer.record(tool_name="contract")
+
+    assert writer.path == tmp_path / "mcp-safe_session.01.jsonl"
+    assert writer.path.resolve().parent == tmp_path.resolve()
+    assert read_session_records(writer.path) == (written,)
+
+
 def test_content_sha256_matches_the_nist_abc_vector() -> None:
     """``content_sha256`` reproduces the published NIST FIPS 180-4 example vector.
 
