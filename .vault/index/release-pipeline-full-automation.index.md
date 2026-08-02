@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a52d0fc10221d512bc8a1081840056b46e6793302cd64c6dd771561a462c5d1'
+body_hash: 'sha256:335639ebb388fa923df3f72071250a68300f40ca8199742337b4bf040d4c199a'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -48,6 +48,7 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S37]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S38]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S41]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S42]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S43]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S44]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S45]]'
@@ -118,6 +119,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S37` - Comment on tracking issue 618 with the true split naming the repository half landed 2026-07-27, the two environments already deleted, the third pending OP-12, and the index-side Trusted Publisher registrations that no agent can verify, then close it once its forge half is complete, carrying any surviving index-side registration forward as a named operator item rather than silently absorbing it, gate: gh issue view 618 shows the comment and the closed state, flagged forge-side and non-local, and the carried-forward operator item is named in the runbook operator-actions section which the runbook conformance test asserts is present
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S38` - Narrow the delivery record OP-3 on every operator-facing surface to its one remaining half, the deploy-role variable on the already-created docs environment, and state alongside it that the docs environment required_reviewers removal is the second half of OP-9 rather than a separate obligation, so a reader is not told to create an environment that exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting exactly the outstanding halves
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S41` - Make the promoter selection skip past a non-promotable candidate rather than returning on the first one, and retire a rehearsal candidate out of the selectable namespace once its window closes
+- `2026-08-02-release-pipeline-full-automation-W04-P09-S42` - Make the labelled-issue alert path survive a repository carrying no release-alert label
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S43` - Record the release-alert label as a named operator provisioning action alongside OP-10 so the forge state the default alerting path depends on is verifiable rather than assumed, and extend the read-only environment inventory probe to report whether that label exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting the label item, and uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes over a fixture payload with the label absent
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S44` - Make the promoter exit status distinguish an ordinary quiet tick from an invalidated candidate so a cohort whose readiness gate reds during its soak reaches the failure-guarded alert instead of reporting to nobody
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S45` - Carry every acquisition run id from the acquisition stage onto the sealed candidate record

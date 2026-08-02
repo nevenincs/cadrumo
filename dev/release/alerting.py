@@ -37,10 +37,12 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
 _UTF_8: Final[str] = "utf-8"
@@ -149,18 +151,63 @@ def find_open_alert(alert: ReleaseAlert, *, repository: str, gh_executable: str 
     THIS run's.
     """
     gh = _resolve_gh(gh_executable)
-    raw = _run_gh(
-        gh,
-        ["issue", "list", "--repo", repository, "--label", ALERT_LABEL, "--state", "open", "--json", "number,title"],
-    )
+    base = ["issue", "list", "--repo", repository, "--state", "open", "--json", "number,title"]
+    try:
+        raw = _run_gh(gh, [*base, "--label", ALERT_LABEL])
+    except AlertError:
+        # The label may not exist on this repository. Falling back to an
+        # unlabelled query keeps DEDUPLICATION working there; failing here
+        # instead would abort the whole alert over a filing convenience.
+        try:
+            raw = _run_gh(gh, base)
+        except AlertError:
+            # Cannot determine whether an alert already exists. Returning None
+            # means the caller opens a new one: a duplicate alert is a far
+            # better outcome than no alert, which is the silence this module
+            # exists to remove.
+            return None
     try:
         issues = json.loads(raw or "[]")
-    except json.JSONDecodeError as error:
-        raise AlertError(f"gh issue list returned non-JSON output: {error}") from error
+    except json.JSONDecodeError:
+        return None
     for issue in issues:
         if alert.fingerprint in str(issue.get("title", "")):
             return str(issue.get("number"))
     return None
+
+
+def ensure_alert_label(*, repository: str, gh_executable: str | None = None) -> bool:
+    """Create the alert label when the repository lacks it; report whether it exists.
+
+    Measured, not assumed: the live repository carried no ``release-alert``
+    label, so every default-path alert was refused by the forge and degraded to
+    a run-log warning. The alerting deliverable that pays for the removed
+    approval click was therefore delivering nothing at all.
+
+    Never raises. A repository that already has the label, and a token that
+    cannot create one, both return without disturbing the caller -- the
+    subsequent issue creation is what actually has to succeed.
+    """
+    gh = _resolve_gh(gh_executable)
+    try:
+        _run_gh(
+            gh,
+            [
+                "label",
+                "create",
+                ALERT_LABEL,
+                "--repo",
+                repository,
+                "--description",
+                "Automated release-pipeline failure alert",
+                "--color",
+                "B60205",
+            ],
+        )
+    except AlertError:
+        # Already present, or not creatable with this token. Both are fine here.
+        return False
+    return True
 
 
 def post_webhook(url: str, alert: ReleaseAlert) -> None:
@@ -199,24 +246,39 @@ def emit_alert(
 
     gh = _resolve_gh(gh_executable)
     if (existing := find_open_alert(alert, repository=repository, gh_executable=gh)) is not None:
-        _run_gh(gh, ["issue", "comment", existing, "--repo", repository, "--body", alert_payload(alert)])
+        with tempfile.TemporaryDirectory() as scratch:
+            body_path = Path(scratch) / "alert-body.md"
+            body_path.write_text(alert_payload(alert), encoding=_UTF_8)
+            _run_gh(gh, ["issue", "comment", existing, "--repo", repository, "--body-file", str(body_path)])
         return f"updated open alert #{existing}: {alert.fingerprint}"
 
-    _run_gh(
-        gh,
-        [
-            "issue",
-            "create",
-            "--repo",
-            repository,
-            "--title",
-            alert.title,
-            "--label",
-            ALERT_LABEL,
-            "--body",
-            alert_payload(alert),
-        ],
-    )
+    ensure_alert_label(repository=repository, gh_executable=gh)
+
+    # The body rides a FILE rather than an argv element. It is multi-line and
+    # unbounded, and a command line is neither: Windows caps one at ~8k
+    # characters, and embedded newlines are quoted differently by every shell
+    # in the chain. `--body-file` sidesteps both.
+    with tempfile.TemporaryDirectory() as scratch:
+        body_path = Path(scratch) / "alert-body.md"
+        body_path.write_text(alert_payload(alert), encoding=_UTF_8)
+        base = ["issue", "create", "--repo", repository, "--title", alert.title, "--body-file", str(body_path)]
+        return _create_alert_issue(gh, base, alert)
+
+
+def _create_alert_issue(gh: str, base: list[str], alert: ReleaseAlert) -> str:
+    """Create the alert issue, dropping the label rather than the alert."""
+    try:
+        _run_gh(gh, [*base, "--label", ALERT_LABEL])
+    except AlertError:
+        # DELIVERY OUTRANKS FILING. The label is how an operator subscribes to
+        # one stream instead of the whole tracker, which is a convenience; the
+        # alert itself is the deliverable that pays for the removed approval
+        # click. A repository whose label is absent or whose token cannot
+        # create one must still receive the alert, so this falls back to an
+        # unlabelled issue rather than raising and degrading to a run-log
+        # warning nobody reads.
+        _run_gh(gh, base)
+        return f"opened alert (unlabelled - {ALERT_LABEL} unavailable): {alert.fingerprint}"
     return f"opened alert: {alert.fingerprint}"
 
 
@@ -261,6 +323,7 @@ __all__ = [
     "ReleaseAlert",
     "alert_payload",
     "emit_alert",
+    "ensure_alert_label",
     "find_open_alert",
     "main",
     "post_webhook",

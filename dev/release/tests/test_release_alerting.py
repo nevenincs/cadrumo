@@ -487,3 +487,77 @@ def test_a_failure_only_guard_is_caught_by_the_cancellation_assertion() -> None:
         if "dev.release.alerting" in str(step.get("run", ""))
     ]
     assert guards and all("cancelled()" not in guard for guard in guards)
+
+
+def _write_label_refusing_gh(bin_dir: Path, log: Path) -> Path:
+    """Write a real `gh` stub that refuses anything naming the alert label.
+
+    Deliberately STRICTER than the live forge: it refuses every call naming
+    the label, where the forge refuses only the labelled issue creation. If
+    the emitter delivers under this stub it delivers under the real thing, and
+    the strictness also covers the lookup path, which passes the same label
+    and would otherwise abort the alert before it ever reached creation.
+    """
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    if sys.platform.startswith("win"):
+        script = bin_dir / "gh.bat"
+        script.write_text(
+            "@echo off\r\n"
+            f'echo %1 %2 %3 %4 %5 >> "{log}"\r\n'
+            'echo %* | findstr /C:"release-alert" >nul\r\n'
+            "if %errorlevel%==0 (echo could not add label >&2 & exit /b 1)\r\n"
+            "echo []\r\n",
+            encoding="utf-8",
+        )
+    else:
+        script = bin_dir / "gh"
+        script.write_text(
+            "#!/usr/bin/env bash\n"
+            f'echo "$1 $2 $3 $4 $5" >> "{log}"\n'
+            'if [[ "$*" == *release-alert* ]]; then echo "could not add label" >&2; exit 1; fi\n'
+            "echo '[]'\n",
+            encoding="utf-8",
+        )
+        script.chmod(script.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return script
+
+
+def test_the_alert_is_still_delivered_when_the_repository_has_no_alert_label(tmp_path: Path) -> None:
+    """Delivery outranks filing.
+
+    Measured on the live forge: the repository carries no `release-alert`
+    label, so the labelled issue creation was refused, the emitter raised, the
+    entry point caught it, and the alert degraded to a run-log warning nobody
+    reads. The deliverable that pays for the removed approval click was
+    delivering nothing.
+
+    The label is how an operator subscribes to one stream rather than the whole
+    tracker - a convenience. The alert is the deliverable. So a repository
+    without the label must still receive the alert.
+    """
+    log = tmp_path / "argv.log"
+    script = _write_label_refusing_gh(tmp_path / "bin", log)
+
+    result = emit_alert(_alert(), repository="nevenincs/cadrumo", gh_executable=str(script))
+
+    recorded = log.read_text(encoding="utf-8")
+    assert "issue create" in recorded, "the alert must still be filed"
+    assert "unlabelled" in result
+    # It tried to label first, and only fell back after the forge refused - so
+    # a repository that DOES carry the label still gets a labelled alert.
+    assert "label create" in recorded
+
+
+def test_a_repository_with_the_label_still_gets_a_labelled_alert(tmp_path: Path) -> None:
+    """Control: the fallback must not become the only path.
+
+    Without this, an emitter that had quietly stopped passing the label at all
+    would satisfy the test above perfectly.
+    """
+    log = tmp_path / "argv.log"
+    script = _write_recording_gh(tmp_path / "bin", stdout="[]", log=log)
+
+    result = emit_alert(_alert(), repository="nevenincs/cadrumo", gh_executable=str(script))
+
+    assert "unlabelled" not in result
+    assert "opened alert" in result
