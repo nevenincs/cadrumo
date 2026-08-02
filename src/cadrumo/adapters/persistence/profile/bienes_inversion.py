@@ -43,6 +43,7 @@ _log = get_logger(__name__)
 
 BIENES_INVERSION_REGISTER_FILENAME = "bienes-inversion-iva-register.secure-object"
 
+
 def load_bienes_inversion_register() -> BienesInversionIvaRegister:
     """Load the register, returning an empty register when absent.
 
@@ -163,6 +164,19 @@ class BienesInversionIvaRegisterRepository:
     def add(self, record: BienInversionIvaRecord) -> BienesInversionIvaRegister:
         """Atomically add ``record`` and refuse duplicate identifiers.
 
+        The register is a singleton row, so adding one record rewrites the whole
+        document. Read, duplicate-check, rebuild, and write ran unguarded, so
+        two callers adding DIFFERENT capital goods both read the same register
+        and the later write silently discarded the earlier record -- a lost
+        update the duplicate check could never notice, because the two records
+        never met in one document.
+
+        The mutation now runs through the shared revision-guarded unit of work:
+        the write carries the revision the register was read at, and a
+        concurrent write makes it re-read and re-apply rather than overwrite.
+        The duplicate check lives inside the mutation so it is re-evaluated
+        against the newly-current register on every attempt.
+
         Args:
             record: Capital-good record to insert.
 
@@ -172,18 +186,21 @@ class BienesInversionIvaRegisterRepository:
         Raises:
             BienInversionRecordError: When a record with the same identifier
                 already exists.
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
         """
-        current = self.load()
-        if any(existing.identifier == record.identifier for existing in current.records):
-            raise BienInversionRecordError(
-                f"bien de inversion {record.identifier!r} already exists",
-                context={"record_id": record.identifier},
-                suggestion=None,
-                translated_message="adapters.persistence.profile.bienes_inversion.errors.record_already_exists",
-            )
-        updated = BienesInversionIvaRegister(records=(*current.records, record))
-        self._save_unlocked(updated)
-        return updated
+
+        def _insert(current: BienesInversionIvaRegister) -> BienesInversionIvaRegister:
+            if any(existing.identifier == record.identifier for existing in current.records):
+                raise BienInversionRecordError(
+                    f"bien de inversion {record.identifier!r} already exists",
+                    context={"record_id": record.identifier},
+                    suggestion=None,
+                    translated_message="adapters.persistence.profile.bienes_inversion.errors.record_already_exists",
+                )
+            return BienesInversionIvaRegister(records=(*current.records, record))
+
+        return self._storage.mutate(_insert)
 
     def _save_unlocked(self, register: BienesInversionIvaRegister) -> None:
         self._storage.save(register)
