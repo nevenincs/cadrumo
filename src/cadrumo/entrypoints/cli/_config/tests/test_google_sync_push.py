@@ -389,7 +389,16 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
         assert result["failed_objects"] == []
         failed_by_namespace = dict(result["failed_manifests"])
         assert tampered_namespace in failed_by_namespace
-        assert "revision_lineage_inconsistent" in failed_by_namespace[tampered_namespace]
+        diagnostic = failed_by_namespace[tampered_namespace]
+        assert "revision_lineage_inconsistent" in diagnostic
+        # The diagnostic names the surface that caught it (there are now two
+        # call sites on the shared lineage check: the decrypt path and this
+        # mirror preflight) and states WHY a lineage failure is a block, not
+        # a degradation -- the causal reason, not a bare severity label, so a
+        # later reader cannot "helpfully" weaken it back to a degradation on
+        # the true-but-irrelevant grounds that the ciphertext stays safe.
+        assert "mirror_preflight" in diagnostic
+        assert "remote manifest" in diagnostic
 
         tampered_raw_row = next(
             row for row in repository.iter_all_records_raw() if row.namespace == tampered_namespace

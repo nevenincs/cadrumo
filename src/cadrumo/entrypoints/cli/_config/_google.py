@@ -572,6 +572,25 @@ def _partition_mirror_rows(
     return _MirrorRowPartition(planned_rows_by_namespace=planned_rows_by_ns, skipped_by_namespace=skipped_by_ns)
 
 
+#: Named once so the refusal text and the code that enforces it cannot drift
+#: apart: WHY a lineage failure blocks the namespace rather than merely
+#: degrading it. A degraded push still writes ``manifest_by_ns[namespace]`` to
+#: the remote provider (``put_remote_mirror_namespace_manifest``), carrying
+#: the row's (forged) ``revision_ancestor_ids`` verbatim into
+#: ``RemoteMirrorNamespaceManifest.model_dump_json()``. The NEXT sync then
+#: reads that manifest back as the remote side of its comparison -- so a
+#: degraded push does not merely tolerate today's forgery, it replicates it
+#: into the state every future run trusts as authoritative. Ciphertext
+#: confidentiality is not what is at risk here (the AEAD already authenticates
+#: the payload bytes); it is the lineage metadata the manifest carries that a
+#: degraded push would launder into remote authority.
+_LINEAGE_FAILURE_BLOCKS_NOT_DEGRADES = (
+    "namespace blocked rather than degraded: a degraded push would persist "
+    "this forged lineage metadata into the remote manifest, which the next "
+    "sync would then trust as the remote comparison state"
+)
+
+
 def _first_lineage_inconsistent_row(rows: list[SecureObjectRawRow]) -> str | None:
     """Return a diagnostic for the first row whose revision lineage fails to recompute.
 
@@ -583,13 +602,17 @@ def _first_lineage_inconsistent_row(rows: list[SecureObjectRawRow]) -> str | Non
     :func:`~adapters.persistence.storage.sql.verify_revision_self_consistency`
     call — which the decode core runs before every decrypt
     (:func:`~adapters.persistence.storage.sql._secure_object_row_codec.decode_secure_object_row`)
-    — never otherwise runs on these raw rows at all. Recomputing it here,
-    before a row's stored lineage metadata seeds a manifest or reaches the
-    remote provider, closes that gap for the same tampered-covered-column
-    class the decrypting read path already refuses (``revision_id``,
-    ``payload_hash``, ``ciphertext_hash``, and the previous-revision links).
+    — never otherwise runs on these raw rows at all. Recomputing it here, in
+    this raw-read/mirror-preflight boundary, before a row's stored lineage
+    metadata seeds a manifest or reaches the remote provider, closes that gap
+    for the same tampered-covered-column class the decrypting read path
+    already refuses (``revision_id``, ``payload_hash``, ``ciphertext_hash``,
+    and the previous-revision links).
 
-    Returns ``None`` when every row's lineage recomputes cleanly.
+    Returns ``None`` when every row's lineage recomputes cleanly. The
+    returned diagnostic names both the surface (mirror preflight, over the
+    raw row) and, via :data:`_LINEAGE_FAILURE_BLOCKS_NOT_DEGRADES`, why the
+    caller must block the namespace rather than degrade the push.
     """
     for row in rows:
         if not verify_revision_self_consistency(
@@ -603,7 +626,11 @@ def _first_lineage_inconsistent_row(rows: list[SecureObjectRawRow]) -> str | Non
             ciphertext_hash=row.ciphertext_hash,
             previous_payload_hash=row.previous_payload_hash,
         ):
-            return f"revision_lineage_inconsistent:{_object_key_hmac(row.namespace, row.object_key)[:16]}"
+            hmac_hex = _object_key_hmac(row.namespace, row.object_key)
+            return (
+                f"revision_lineage_inconsistent:mirror_preflight:{hmac_hex[:16]}:"
+                f"{_LINEAGE_FAILURE_BLOCKS_NOT_DEGRADES}"
+            )
     return None
 
 
@@ -627,6 +654,16 @@ def _preflight_mirror_namespaces(
     genuine is unaffected by a tampered row elsewhere, and a namespace with
     even one tampered covered column is blocked before its raw metadata ever
     seeds a manifest or reaches the remote provider.
+
+    A lineage failure is deliberately a BLOCK, never a degradation, and that
+    is a load-bearing distinction rather than a severity preference: a
+    degraded namespace still enters ``manifest_by_ns`` and is pushed to the
+    remote provider later in this pass, carrying the row's (forged)
+    ``revision_ancestor_ids`` verbatim — and the next sync then reads that
+    manifest back as the remote side of ITS comparison. Degrading here would
+    not merely tolerate a local forgery once; it would replicate it into the
+    remote state every future run trusts as authoritative. See
+    :data:`_LINEAGE_FAILURE_BLOCKS_NOT_DEGRADES`.
     """
     manifest_by_ns: dict[str, RemoteMirrorNamespaceManifest] = {}
     blocked: set[str] = set()
