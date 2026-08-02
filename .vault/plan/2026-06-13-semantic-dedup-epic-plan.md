@@ -4,7 +4,7 @@ tags:
   - '#semantic-dedup-epic'
 date: '2026-06-13'
 modified: '2026-08-02'
-body_hash: 'sha256:a058b72dc7e53d6874b060aac3ac5b34f546f5b02f2ffa64cf906f62df2e5a59'
+body_hash: 'sha256:a628ceec8227d0b7237de97f3efed5ef3f6a0b99bf3107b10a7182d1c727e8a5'
 tier: L3
 related:
   - '[[2026-06-13-semantic-dedup-epic-audit]]'
@@ -903,13 +903,13 @@ Address verified critical and high-severity findings appended after Wave 7, with
 
 Repair the critical tools/list output-schema contract without changing the success/error semantic branches.
 
-- [ ] `W08.P140.S169` - Adapt MCP output schemas to the SDK top-level serialization contract while retaining canonical result branches.; `src/cadrumo/entrypoints/mcp; MCP memory-session tests`.
+- [x] `W08.P140.S169` - Adapt MCP output schemas to the SDK top-level serialization contract while retaining canonical result branches.; `src/cadrumo/entrypoints/mcp; MCP memory-session tests`.
 
 ### Phase `W08.P141` - Make recipient replay consumption atomic
 
 Replace the verified non-atomic read-modify-write replay path with a durable concurrent-consumption contract.
 
-- [ ] `W08.P141.S170` - Make recipient replay consumption atomic under concurrent access and preserve durable replay refusal semantics.; `recipient replay persistence and focused concurrent-consumption tests`.
+- [x] `W08.P141.S170` - Make recipient replay consumption atomic under concurrent access and preserve durable replay refusal semantics.; `recipient replay persistence and focused concurrent-consumption tests`.
 
 ### Phase `W08.P142` - Enforce UTC timestamp boundaries
 
@@ -927,13 +927,73 @@ Reject contradictory score/row aggregate fields and preserve valid measurement-r
 
 Refuse contradictory discovery and live-evaluation state before it is reported as a passing result.
 
-- [ ] `W08.P144.S173` - Validate discovery and live-score reached, scenario, and tool-error invariants before computing pass state.; `src/cadrumo/agent/eval/_live_scoring.py; agent evaluation scoring tests`.
+- [x] `W08.P144.S173` - Validate discovery and live-score reached, scenario, and tool-error invariants before computing pass state.; `src/cadrumo/agent/eval/_live_scoring.py; agent evaluation scoring tests`.
 
 ### Phase `W08.P145` - Validate supplied registry completeness manifests
 
 Ensure an explicit completeness manifest cannot omit a required non-internal calculation-closure member.
 
-- [ ] `W08.P145.S174` - Compare a supplied manifest against the derived non-internal calculation closure and refuse omissions.; `src/cadrumo/domain/calculations/registry; registry completeness tests`.
+- [x] `W08.P145.S174` - Compare a supplied manifest against the derived non-internal calculation closure and refuse omissions.; `src/cadrumo/domain/calculations/registry; registry completeness tests`.
+
+### Phase `W08.P146` - Restore certificate-secret backend importability
+
+Repair the auth import-time NameError blocking MCP memory-session verification.
+
+- [x] `W08.P146.S175` - Restore the canonical certificate-source name import so auth and MCP test collection is importable.; `src/cadrumo/application/auth; focused auth import regressions`.
+
+### Phase `W08.P147` - Bind IVA reconciliation decisions to the canonical bucket
+
+Prevent reconciliation from persisting a decision through a repository unrelated to the observation bucket.
+
+- [x] `W08.P147.S176` - Derive or verify the IVA decision repository against the canonical observation bucket before persistence.; `src/cadrumo/application/calculations/_iva_wallet_reconciliation.py; IVA wallet reconciliation tests`.
+
+### Phase `W08.P148` - Enforce UTC bucket-session instants
+
+Reject naive and non-UTC session lifecycle instants before timeout arithmetic or persistence.
+
+- [x] `W08.P148.S177` - Validate bucket-session lifecycle instants through the canonical UTC-aware contract.; `src/cadrumo/adapters/persistence/storage/master_key/_bucket_session.py; bucket-session tests`.
+
+### Phase `W08.P149` - Bind recipient encryption keypairs to their bucket
+
+Refuse foreign recipient keypair payloads and make first-use minting concurrency-safe.
+
+- [x] `W08.P149.S178` - Refuse foreign recipient keypair bucket identities and make first-use keypair minting race-safe.; `src/cadrumo/application/modelo/_review_package_recipient_encryption.py; recipient encryption tests`.
+
+### Phase `W08.P150` - Constrain ReviewProjection aggregate contracts
+
+Reject direct construction whose aggregate counts or pass state contradict the review rows.
+
+- [x] `W08.P150.S179` - Enforce ReviewProjection row, aggregate-count, and pass-state consistency at model construction.; `src/cadrumo/application/flows/_review.py; review flow tests`.
+
+### Phase `W08.P151` - Validate live-score trajectory identity and lifecycle
+
+Refuse a supplied scenario that differs from the trajectory and reject lifecycle-stage re-entry.
+
+- [x] `W08.P151.S180` - Require live-score scenarios to match their trajectories and reject repeated lifecycle-stage observations.; `src/cadrumo/agent/eval/_live_scoring.py; live harness and lifecycle tests`.
+
+### Phase `W08.P152` - Bind review-package signing keys to their bucket
+
+Refuse foreign signing-key payloads and make first-use signing-key minting concurrency-safe.
+
+- [x] `W08.P152.S181` - Refuse foreign signing-key bucket identities and make first-use signing-key minting race-safe.; `src/cadrumo/application/modelo/_review_package_signing.py; signing tests`.
+
+### Phase `W08.P153` - Type review-package CLI contracts
+
+Replace primitive review-package transport fields with the canonical manifest, identity, count, and timestamp contracts.
+
+- [ ] `W08.P153.S182` - Validate review-package CLI transport fields through the canonical manifest, identity, count, and timestamp contracts.; `src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py; review-package CLI tests`.
+
+### Phase `W08.P154` - Type ledger status transport
+
+Project ledger status bucket identity and counts through canonical domain constraints at the CLI boundary.
+
+- [x] `W08.P154.S183` - Validate ledger-status bucket identity and non-negative counts through canonical contracts.; `src/cadrumo/entrypoints/cli/_ledger_payloads.py; ledger status payload tests`.
+
+### Phase `W08.P155` - Make flywheel evidence identity collision-safe
+
+Ensure promoted scenarios cannot overwrite distinct failure, tool-error, or narration evidence sharing a coarse signature.
+
+- [ ] `W08.P155.S184` - Include failure, tool-error, and narration evidence in flywheel promotion identity and refuse distinct-content overwrites.; `src/cadrumo/agent/eval/_flywheel.py; report and flywheel tests`.
 
 ## Parallelization
 
