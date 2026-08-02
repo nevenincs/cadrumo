@@ -82,6 +82,13 @@ class ReleasePleaseConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     schema_url: str | None = Field(default=None, alias="$schema")
+    #: Caps how far back release-please walks commit history on its very
+    #: FIRST run against this repo (no release PR it generated has ever
+    #: merged): full 40-char commit SHA only, top-level-only per
+    #: release-please's own docs. Release-please ignores this key once a
+    #: release PR it generated has merged, so it is safe to remove after
+    #: that point rather than something this schema must keep forever.
+    bootstrap_sha: str | None = Field(default=None, alias="bootstrap-sha")
     release_type: str = Field(alias="release-type")
     include_component_in_tag: bool = Field(alias="include-component-in-tag")
     separate_pull_requests: bool = Field(alias="separate-pull-requests")
@@ -230,6 +237,18 @@ def test_release_please_config_is_well_formed() -> None:
         "flipping it lets a breaking commit cut 1.0.0, which the compatibility tripwire "
         "treats as a released-data durability commitment"
     )
+    # No release-please-generated release has ever merged on this repo (its
+    # very first automated bump has not run yet), so bootstrap-sha must be
+    # present and a full 40-char commit SHA -- without it, release-please
+    # finds no GitHub Release matching the manifest's recorded version and
+    # falls back to walking the ENTIRE commit history one commit at a time,
+    # which measurably 504s against this repo's real history
+    # (`2026-08-02-release-pipeline-full-automation` W02.P03 grounding).
+    assert config.bootstrap_sha is not None, (
+        "bootstrap-sha must stay set until release-please's first generated release PR merges"
+    )
+    assert re.fullmatch(r"[0-9a-f]{40}", config.bootstrap_sha), "bootstrap-sha must be a full 40-char commit SHA"
+
     assert "." in config.packages
     root_pkg = config.packages["."]
     assert root_pkg.package_name == "cadrumo"
@@ -319,6 +338,45 @@ def test_release_notes_template_exists_and_is_referenced(release_checklist: Rele
     assert text.strip()
 
     assert release_checklist.changelog.template == "docs/_release_notes_template.md"
+
+
+def _operator_actions_section(text: str) -> str:
+    """Return the ``### Operator actions`` section body, bounded to the next H2/H3 heading.
+
+    Bounding matters: an unbounded ``text[start:]`` slice would let an
+    unrelated mention anywhere later in the document satisfy these
+    assertions by accident, which is exactly the drift class this test
+    exists to catch.
+    """
+    start = text.index("### Operator actions")
+    rest = text[start:]
+    next_heading = re.search(r"\n#{2,3} ", rest[1:])
+    return rest[: next_heading.start() + 1] if next_heading is not None else rest
+
+
+def test_releasing_doc_operator_actions_section_names_the_outstanding_halves() -> None:
+    """RELEASING.md's Operator actions section names exactly the outstanding operator work.
+
+    Prevents the operator-facing obligation inventory from silently drifting:
+    OP-9 (the required_reviewers removal on release AND docs), OP-12 (delete
+    the orphaned pypi-data-official environment) plus its carried-forward
+    index-side PyPI Trusted Publisher check from issue #618 -- an item no
+    agent can verify or clear, named rather than silently absorbed.
+    """
+    section = _operator_actions_section(RELEASING_PATH.read_text(encoding="utf-8"))
+
+    assert "OP-9" in section
+    assert "required_reviewers" in section
+    assert "`release`" in section
+    assert "`docs`" in section
+
+    assert "OP-12" in section
+    assert "pypi-data-official" in section
+    assert "orphaned" in section.lower()
+
+    assert "#618" in section
+    assert "Trusted Publisher" in section
+    assert "index-account" in section.lower() or "index-side" in section.lower()
 
 
 def test_releasing_doc_documents_rc_soak_and_rollback() -> None:

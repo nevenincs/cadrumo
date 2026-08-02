@@ -290,13 +290,18 @@ owner. Two of the three retired-lane environments (`pypi`,
 
 Settings → Environments → `pypi-data-official` → Delete environment.
 
-Then, separately, verify whether an index-side PyPI Trusted Publisher
-registration still names `pypi-data-official` for the retired `cadrumo-data-official`
-package under **Publishing** at <https://pypi.org/manage/account/publishing/>. That
-check is outside this repository and this forge — no agent can perform or confirm
-it — so it is carried forward as a standing operator item rather than assumed
-clear. If a registration survives, remove it there directly; nothing in this
-repository can do so.
+**Carried-forward item (from [issue #618](https://github.com/nevenincs/cadrumo/issues/618),
+closed on its repository-actionable half): verify the index-side PyPI Trusted
+Publisher registrations for all three retired projects.** Deleting a GitHub
+environment does not delete the separate PyPI-side registration that names it —
+they are two different systems. Check, for each of `cadrumo`, `cadrumo-data-manuals`,
+and `cadrumo-data-official`, whether a Trusted Publisher entry naming workflow
+`pypi-upload.yml` and its respective retired environment (`pypi`,
+`pypi-data-manuals`, `pypi-data-official`) still exists under **Publishing** at
+<https://pypi.org/manage/account/publishing/>. That check is an index-account
+fact outside this repository and this forge — no agent can perform or confirm
+it — so it stays a standing operator item rather than assumed clear. Remove any
+surviving registration there directly; nothing in this repository can do so.
 
 Verify both actions afterwards, rather than assuming — a settings change leaves no
 commit, so nothing in the tree records whether it happened:
