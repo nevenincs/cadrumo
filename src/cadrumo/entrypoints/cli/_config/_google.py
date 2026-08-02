@@ -79,6 +79,7 @@ from ....adapters.outbound.storage import (
     remote_mirror_object_key_hmac,
 )
 from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage.sql import verify_revision_self_consistency
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....core.config import load_settings
 from ....core.hashing import sha256_hex
@@ -571,6 +572,41 @@ def _partition_mirror_rows(
     return _MirrorRowPartition(planned_rows_by_namespace=planned_rows_by_ns, skipped_by_namespace=skipped_by_ns)
 
 
+def _first_lineage_inconsistent_row(rows: list[SecureObjectRawRow]) -> str | None:
+    """Return a diagnostic for the first row whose revision lineage fails to recompute.
+
+    :meth:`SecureObjectRepository.iter_all_records_raw` bypasses the
+    encrypted-column type decorators by design, so rows sealed under a
+    rotated master key still surface for mirroring
+    (:func:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.iter_all_records_raw`).
+    That means the decrypting read path's
+    :func:`~adapters.persistence.storage.sql.verify_revision_self_consistency`
+    call — which the decode core runs before every decrypt
+    (:func:`~adapters.persistence.storage.sql._secure_object_row_codec.decode_secure_object_row`)
+    — never otherwise runs on these raw rows at all. Recomputing it here,
+    before a row's stored lineage metadata seeds a manifest or reaches the
+    remote provider, closes that gap for the same tampered-covered-column
+    class the decrypting read path already refuses (``revision_id``,
+    ``payload_hash``, ``ciphertext_hash``, and the previous-revision links).
+
+    Returns ``None`` when every row's lineage recomputes cleanly.
+    """
+    for row in rows:
+        if not verify_revision_self_consistency(
+            row.revision_id,
+            namespace=row.namespace,
+            object_key=row.object_key,
+            schema_version=row.schema_version,
+            written_at=row.written_at,
+            previous_revision_id=row.previous_revision_id,
+            payload_hash=row.payload_hash,
+            ciphertext_hash=row.ciphertext_hash,
+            previous_payload_hash=row.previous_payload_hash,
+        ):
+            return f"revision_lineage_inconsistent:{_object_key_hmac(row.namespace, row.object_key)[:16]}"
+    return None
+
+
 def _preflight_mirror_namespaces(
     *,
     provider: StorageProvider,
@@ -580,14 +616,28 @@ def _preflight_mirror_namespaces(
 
     Builds the local :class:`RemoteMirrorNamespaceManifest` per namespace and
     compares it against the remote state. A namespace is blocked (and its
-    manifest withheld) on a remote inspection error or a blocking revision
-    conflict; degradations are recorded without blocking.
+    manifest withheld, and none of its ciphertext pushed) on a raw-row
+    revision-lineage failure, a remote inspection error, or a blocking
+    revision conflict; degradations are recorded without blocking.
+
+    The lineage check runs first and per namespace, not once across every
+    planned row: it is the raw-read counterpart of the pre-decrypt lineage
+    gate the decode core always runs (see
+    :func:`_first_lineage_inconsistent_row`), so a namespace whose rows are
+    genuine is unaffected by a tampered row elsewhere, and a namespace with
+    even one tampered covered column is blocked before its raw metadata ever
+    seeds a manifest or reaches the remote provider.
     """
     manifest_by_ns: dict[str, RemoteMirrorNamespaceManifest] = {}
     blocked: set[str] = set()
     failed: list[tuple[str, str]] = []
     degraded: list[tuple[str, str]] = []
     for namespace, rows in planned_rows_by_namespace.items():
+        lineage_failure = _first_lineage_inconsistent_row(rows)
+        if lineage_failure is not None:
+            failed.append((namespace, lineage_failure))
+            blocked.add(namespace)
+            continue
         manifest = build_remote_mirror_namespace_manifest(namespace, rows)
         try:
             blocking_failures, degradations = _inspect_existing_remote_mirror(provider=provider, manifest=manifest)

@@ -13,7 +13,12 @@ Re-exports the engine factory (:func:`create_engine_from_settings`,
 The secure-object surface also exports :class:`SecureObjectRecord`,
 :class:`SecureObjectWrite`, :class:`SecureObjectDeletion`,
 :class:`SecureObjectMetadata`, :class:`SecureObjectNamespaceIntegrity`,
-and :class:`SecureObjectDecryptabilityRow`. The repository stores payloads as
+:class:`SecureObjectDecryptabilityRow`, and
+:func:`verify_revision_self_consistency` — the revision-lineage
+self-consistency gate the decrypting read path applies before decryption, for
+callers that need the same check against rows read through a path that
+bypasses column decryption (e.g. :meth:`SecureObjectRepository.iter_all_records_raw`).
+The repository stores payloads as
 AES-GCM encrypted bytes, stores natural keys through
 :class:`adapters.persistence.storage.HashedLookup`, binds row identity
 into AEAD associated data, and gates reads by sensitivity class and schema
@@ -28,6 +33,7 @@ this package facade only re-exports the SQL storage API.
 from __future__ import annotations
 
 from ._orm import Base, FincaRow, SecureObjectRow, TransactionDateIndexRow
+from ._secure_object_crypto import verify_revision_self_consistency
 from ._secure_object_schema import ensure_quarantine_table
 from .engine import (
     create_engine_from_settings,
@@ -84,4 +90,5 @@ __all__ = [
     "get_engine",
     "get_sessionmaker",
     "session_scope",
+    "verify_revision_self_consistency",
 ]
