@@ -53,6 +53,7 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE, secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage.crypto import secure_object_key_digest
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
@@ -205,7 +206,21 @@ class LLMRunTelemetryRecorder:
             except KeyError as exc:
                 msg = "LLM run-telemetry payload is missing its object_key_uuid; cannot reconstruct its save-time key."
                 raise LLMCacheError(msg) from exc
-            rows.append((record, self._object_key_for(record, object_key_uuid)))
+            reconstructed = self._object_key_for(record, object_key_uuid)
+            # The key was already being rebuilt from the record's own fields
+            # plus the persisted UUID, but never checked against the row
+            # holding it. A valid record substituted under another row's key
+            # was therefore returned as that row AND made pruning miss: the
+            # prune issues a delete for the key reconstructed from the foreign
+            # payload, so the stored row survives every retention pass and the
+            # record the operator reads is not the record on disk.
+            if secure_object_key_digest(reconstructed) != stored.object_key:
+                msg = (
+                    "LLM run-telemetry record does not derive the row it is stored in; "
+                    f"decrypted payload reconstructs the key {reconstructed!r}."
+                )
+                raise LLMCacheError(msg)
+            rows.append((record, reconstructed))
         return tuple(sorted(rows, key=lambda item: (item[0].started_at, item[0].run_id)))
 
     def summarize(
