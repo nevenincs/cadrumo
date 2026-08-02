@@ -361,7 +361,7 @@ def test_export_journal_directory_is_owner_only_on_posix(tmp_path: Path) -> None
         display_name="Example Filer",
         target_identity="portable.json",
         destination="portable.json",
-        staged_path="portable.json.staged",
+        staged_path="portable.json.1.abcdef12.export-tmp",
         content_sha256="b" * 64,
         purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
         transport=ProfileBundleExportTransport.CLEARTEXT_LOCAL,
