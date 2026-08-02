@@ -54,10 +54,34 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Add `regenerate_and_verify_lock(repo_root, *, uv_executable=None)` shelling
+  out to `uv lock` then `uv lock --check`, refusing instructively when `uv`
+  is unresolvable or either leg exits non-zero, mirroring `release-apply`
+  checklist step 8.
+- Add `verify_bump(repo_root)` re-running
+  `dev.release.readiness.check_version_surfaces_agree` and raising
+  `VersionBumpError` on a failed check, so the transcription-error class that
+  check exists to catch cannot survive an automated bump either.
+- Add `stage_bump(repo_root, version, *, changelog_block, release_date,
+  uv_executable=None)` composing `apply_version` + `regenerate_and_verify_lock`
+  + `verify_bump`; nothing in it touches git, so a raise anywhere in the
+  chain leaves the working tree mutated but never staged or committed.
+- Extend `dev/release/tests/test_version_bump.py` with a real, explicit-path
+  stub `uv` executable (mirroring `test_readiness.py`'s `_write_probe_gh`
+  pattern for `gh`) covering both lock legs succeeding, either leg failing,
+  and `uv` being unresolvable; a `verify_bump` case plants one stale surface
+  directly (not through `apply_version`) to prove the re-check catches
+  staleness regardless of cause; `stage_bump` cases cover the clean compose
+  and a lock-check failure refusing before any downstream stage could run.
 
 ## Outcome
 
+Gate green: `uv run --no-sync pytest dev/release/tests/test_version_bump.py -q`
+passes 15/15 (7 from S09 plus 8 new), including the planted-stale-surface
+case asserting the executor refuses before anything is committed.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+None beyond the S09 record's grounding note (release-please's live
+non-functional state against this repo's tag-less history), which this
+Step's scope does not touch.

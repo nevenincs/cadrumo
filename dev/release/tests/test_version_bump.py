@@ -9,11 +9,13 @@ checks its output must agree on what those surfaces are.
 from __future__ import annotations
 
 import json
+import stat
+import sys
 from pathlib import Path
 
 import pytest
 
-from .. import version_bump
+from .. import readiness, version_bump
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -190,3 +192,150 @@ def test_apply_version_refuses_a_duplicate_changelog_section(tmp_path: Path) -> 
 
     with pytest.raises(version_bump.VersionBumpError, match="already carries a section"):
         version_bump.apply_version(root, "1.2.3", changelog_block=_CHANGELOG_BLOCK, release_date="2026-08-02")
+
+
+def _write_stub_uv(bin_dir: Path, *, fail_on: str | None = None) -> Path:
+    """Write a real executable `uv` script that no-ops `lock`/`lock --check`.
+
+    Mirrors the `_write_probe_gh` pattern `test_readiness.py` already uses for
+    a real, explicit-path stub executable exercised via real subprocess calls
+    (no PATH/PATHEXT resolution games, no Python-level mock standing in for
+    the process boundary under test). ``fail_on`` names a subcommand
+    (``"lock"`` or ``"check"``) that exits non-zero; every other invocation
+    exits 0.
+    """
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    lock_exit = 1 if fail_on == "lock" else 0
+    check_exit = 1 if fail_on == "check" else 0
+    if sys.platform.startswith("win"):
+        script = bin_dir / "uv.bat"
+        script.write_text(
+            "@echo off\r\n"
+            'if "%2"=="--check" (\r\n'
+            f"  exit /b {check_exit}\r\n"
+            ") else (\r\n"
+            f"  exit /b {lock_exit}\r\n"
+            ")\r\n",
+            encoding="utf-8",
+        )
+    else:
+        script = bin_dir / "uv"
+        script.write_text(
+            "#!/usr/bin/env bash\n"
+            'if [ "$2" = "--check" ]; then\n'
+            f"  exit {check_exit}\n"
+            "else\n"
+            f"  exit {lock_exit}\n"
+            "fi\n",
+            encoding="utf-8",
+        )
+        script.chmod(script.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return script
+
+
+def test_regenerate_and_verify_lock_runs_both_real_legs(tmp_path: Path) -> None:
+    """A clean stub `uv` satisfies both `lock` and `lock --check` legs."""
+    root = tmp_path / "repo"
+    root.mkdir()
+    stub = _write_stub_uv(tmp_path / "bin")
+
+    version_bump.regenerate_and_verify_lock(root, uv_executable=str(stub))
+
+
+def test_regenerate_and_verify_lock_refuses_when_lock_generation_fails(tmp_path: Path) -> None:
+    """A real non-zero `uv lock` exit refuses with its captured output."""
+    root = tmp_path / "repo"
+    root.mkdir()
+    stub = _write_stub_uv(tmp_path / "bin", fail_on="lock")
+
+    with pytest.raises(version_bump.VersionBumpError, match="lock"):
+        version_bump.regenerate_and_verify_lock(root, uv_executable=str(stub))
+
+
+def test_regenerate_and_verify_lock_refuses_when_the_lock_check_fails(tmp_path: Path) -> None:
+    """A real non-zero `uv lock --check` exit refuses -- a drifted lock is caught."""
+    root = tmp_path / "repo"
+    root.mkdir()
+    stub = _write_stub_uv(tmp_path / "bin", fail_on="check")
+
+    with pytest.raises(version_bump.VersionBumpError, match="check"):
+        version_bump.regenerate_and_verify_lock(root, uv_executable=str(stub))
+
+
+def test_regenerate_and_verify_lock_refuses_when_uv_is_unresolvable(tmp_path: Path) -> None:
+    """A real environment with no resolvable `uv` binary refuses instructively."""
+    root = tmp_path / "repo"
+    root.mkdir()
+    missing = tmp_path / "definitely-not-uv"
+
+    with pytest.raises(version_bump.VersionBumpError, match="uv is not on PATH"):
+        version_bump.regenerate_and_verify_lock(root, uv_executable=str(missing))
+
+
+def test_verify_bump_passes_when_every_surface_agrees(tmp_path: Path) -> None:
+    """A repo already bumped correctly on every surface passes the re-check."""
+    root = _make_repo_root(tmp_path, version="2.0.0")
+
+    version_bump.verify_bump(root)  # must not raise
+
+
+def test_verify_bump_refuses_a_stale_surface(tmp_path: Path) -> None:
+    """One surface left at the old version -- the transcription-error class -- refuses.
+
+    Built directly against `check_version_surfaces_agree`'s own fixture shape
+    (not through `apply_version`), so this proves the re-check catches a
+    stale surface regardless of what produced it: a future `apply_version`
+    defect, an interrupted partial write, or a hand edit.
+    """
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    # Corrupt exactly one of the seven surfaces back to the old version.
+    stale = (root / "packaging" / "cadrumo_data_official" / "pyproject.toml").read_text(encoding="utf-8")
+    (root / "packaging" / "cadrumo_data_official" / "pyproject.toml").write_text(
+        stale.replace('version = "2.0.0"', 'version = "1.9.0"'),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(version_bump.VersionBumpError, match="post-bump readiness re-check failed"):
+        version_bump.verify_bump(root)
+
+    # Same fact, read straight from the readiness module this delegates to.
+    check = readiness.check_version_surfaces_agree(root)
+    assert check.passed is False
+
+
+def test_stage_bump_composes_apply_lock_and_reverify(tmp_path: Path) -> None:
+    """A clean stage_bump call updates every surface and leaves the lock verified."""
+    root = _make_repo_root(tmp_path, version="1.2.3")
+    stub = _write_stub_uv(tmp_path / "bin")
+
+    updates = version_bump.stage_bump(
+        root,
+        "2.0.0",
+        changelog_block=_CHANGELOG_BLOCK,
+        release_date="2026-08-02",
+        uv_executable=str(stub),
+    )
+
+    assert len(updates) == 7
+    check = readiness.check_version_surfaces_agree(root)
+    assert check.passed is True
+
+
+def test_stage_bump_refuses_before_any_commit_when_the_lock_check_fails(tmp_path: Path) -> None:
+    """A lock-check failure refuses `stage_bump` outright -- nothing downstream ever runs.
+
+    `stage_bump` never touches git, so a raise here is itself the proof that
+    no commit stage can follow: the caller's commit/tag/push code, which only
+    runs after `stage_bump` RETURNS, never executes.
+    """
+    root = _make_repo_root(tmp_path, version="1.2.3")
+    stub = _write_stub_uv(tmp_path / "bin", fail_on="check")
+
+    with pytest.raises(version_bump.VersionBumpError, match="check"):
+        version_bump.stage_bump(
+            root,
+            "2.0.0",
+            changelog_block=_CHANGELOG_BLOCK,
+            release_date="2026-08-02",
+            uv_executable=str(stub),
+        )

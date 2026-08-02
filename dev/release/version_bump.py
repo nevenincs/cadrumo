@@ -34,12 +34,14 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
 from cadrumo.core import PRODUCT_IDENTITY
+from dev.release import readiness
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -225,3 +227,52 @@ def _run(argv: list[str], *, cwd: Path, timeout: int = _SUBPROCESS_TIMEOUT_S) ->
         tail = (completed.stderr or completed.stdout or "")[-4000:]
         raise VersionBumpError(f"{' '.join(argv)} failed (rc={completed.returncode}):\n{tail}")
     return completed
+
+
+def regenerate_and_verify_lock(repo_root: Path, *, uv_executable: str | None = None) -> None:
+    """Regenerate `uv.lock`, then verify it via `uv lock --check`.
+
+    Mirrors the retiring `release-apply` checklist's step 8: the pins
+    :func:`apply_version` just rewrote must resolve into a lock the fail-closed
+    `uv lock --check` gate accepts, catching a resolution failure or a drifted
+    lock before anything is staged or committed.
+    """
+    uv = uv_executable or shutil.which("uv")
+    if uv is None:
+        raise VersionBumpError("uv is not on PATH; cannot regenerate or verify the lock")
+    _run([uv, "lock"], cwd=repo_root)
+    _run([uv, "lock", "--check"], cwd=repo_root)
+
+
+def verify_bump(repo_root: Path) -> None:
+    """Re-run the version-surfaces-agree readiness check after a bump.
+
+    The transcription-error class :func:`dev.release.readiness.check_version_surfaces_agree`
+    exists to catch cannot survive an automated bump either -- whatever the
+    cause (a future :func:`apply_version` defect, an interrupted partial
+    write, or a hand edit landing between the bump and this check).
+    """
+    check = readiness.check_version_surfaces_agree(repo_root)
+    if not check.passed:
+        raise VersionBumpError(f"post-bump readiness re-check failed: {check.detail}")
+
+
+def stage_bump(
+    repo_root: Path,
+    version: str,
+    *,
+    changelog_block: str,
+    release_date: str,
+    uv_executable: str | None = None,
+) -> tuple[SurfaceUpdate, ...]:
+    """Apply *version*, regenerate and verify the lock, then re-verify parity.
+
+    Composes steps 1-8 of the retiring `release-apply` checklist. Nothing
+    here touches git: a failure at any stage leaves the working tree mutated
+    but never staged or committed, because the commit/tag/push stage only
+    runs after this returns successfully.
+    """
+    updates = apply_version(repo_root, version, changelog_block=changelog_block, release_date=release_date)
+    regenerate_and_verify_lock(repo_root, uv_executable=uv_executable)
+    verify_bump(repo_root)
+    return updates
