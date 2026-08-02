@@ -38,6 +38,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.identity import ContentDigest
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from .....core.time import now, validate_utc_aware
@@ -128,7 +129,14 @@ class _SecretIndexEntry(BaseModel):
     """One row in the JSON-backed secret index.
 
     Attributes:
-        digest_hex: HMAC-SHA256 digest of the natural key as 64 hex chars.
+        digest_hex: HMAC-SHA256 digest of the natural key. This restates the
+            mapping key the entry is filed under, and every lookup uses that
+            key rather than this field -- so on its own the field was purely
+            advisory and could disagree with its own key indefinitely without
+            any surface noticing. It is retained as a checked cross-reference,
+            not deleted: :meth:`SecretStore._read_index` now requires it to
+            equal the key, which turns a duplicate that could lie into a
+            self-check that catches a torn or hand-edited index.
         blob_sha256_plaintext_hex: SHA-256 of the plaintext envelope
             payload, used to address the underlying blob.
         classification: The record's sensitivity class.
@@ -136,8 +144,8 @@ class _SecretIndexEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    digest_hex: str = Field(min_length=64, max_length=64)
-    blob_sha256_plaintext_hex: str = Field(min_length=64, max_length=64)
+    digest_hex: ContentDigest
+    blob_sha256_plaintext_hex: ContentDigest
     classification: SensitivityClass
 
 
@@ -254,6 +262,22 @@ class SecretStore:
         site: a mutation rewrites the whole index, so an index this build
         cannot interpret must be refused before it is read, not after it has
         been written back in a shape the writer understood differently.
+
+        The same argument places the key/value digest agreement here. Each
+        entry restates, in ``digest_hex``, the mapping key it is filed under,
+        and every lookup uses the key -- so the restatement was advisory and
+        could disagree with its own key indefinitely. Requiring agreement in
+        the one loader converts a duplicate that could lie into a self-check
+        on a torn or hand-edited index, and it applies to mutations too, which
+        would otherwise rewrite the disagreement back to disk.
+
+        The mapping keys need no separate shape check, and adding one would be
+        unreachable code rather than defence in depth. A ``dict`` key carries
+        no pydantic annotation, but ``digest_hex`` does: it is a canonical
+        :data:`~core.identity.ContentDigest`, so once the equality above holds
+        the key is that same validated value. A malformed key either differs
+        from its entry's digest -- caught here -- or matches it, in which case
+        the entry itself failed validation above.
         """
         index_path = self._index_path()
         if not index_path.exists():
@@ -266,6 +290,11 @@ class SecretStore:
             raise EnvelopeVersionError(
                 f"secret-store index is at version {index.schema_version}; "
                 f"consumer expects {SECRET_INDEX_SCHEMA_VERSION}",
+            )
+        drifted = sorted(key for key, entry in index.entries.items() if entry.digest_hex != key)
+        if drifted:
+            raise _storage_validation_error(
+                f"secret-store index entries disagree with their own lookup digest: {drifted}",
             )
         return index
 
