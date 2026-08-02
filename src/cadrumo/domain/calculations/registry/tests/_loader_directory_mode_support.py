@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from functools import cache
 from pathlib import Path
@@ -152,6 +153,29 @@ def _build_directory_layout(
     revisions_dir.mkdir(exist_ok=True)
     for filename, content in revision_files.items():
         (revisions_dir / filename).write_text(content, encoding="utf-8")
+
+
+def write_extracted_corpus_sidecar(corpus_path: Path, *, anchor: str, text: str) -> None:
+    """Materialise the ``.extracted.json`` sidecar a legal reference resolves against.
+
+    Legal verification does not read the raw corpus HTML: it resolves ONE
+    anchored unit out of the sidecar and matches ``required_text`` against that
+    unit alone, so a fixture that writes only the ``.html`` is refused with
+    ``missing extracted corpus sidecar``. Any test whose registry tree declares
+    a legal reference with ``required_text`` therefore has to write this
+    alongside the corpus file.
+
+    Args:
+        corpus_path: The corpus file the legal reference's ``corpus_ref``
+            points at; the sidecar is written beside it.
+        anchor: The anchor segment of the ``corpus_ref`` (the part after ``#``).
+        text: Provision text for that unit; must contain the reference's
+            ``required_text`` for verification to pass.
+    """
+    corpus_path.with_name(corpus_path.name + ".extracted.json").write_text(
+        json.dumps({"units": [{"anchor": anchor, "text": text}]}),
+        encoding="utf-8",
+    )
 
 
 def write_fragmented_revision(revision_dir: Path, revision_text: str) -> None:

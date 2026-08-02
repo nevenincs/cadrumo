@@ -268,6 +268,35 @@ def test_verify_legal_catalogue_checks_required_text_for_treaty_refs(tmp_path: P
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+def test_verify_legal_catalogue_refuses_a_corpus_file_with_no_extracted_sidecar(tmp_path: Path) -> None:
+    """A raw corpus file is not evidence; the anchored extraction is.
+
+    Legal verification resolves ONE anchored unit out of the sidecar and matches
+    ``required_text`` against that unit alone, rather than against the whole
+    document. The refusal is what stops a reference falling back to a
+    document-wide substring match, which would ground a provision on text from
+    an unrelated article of the same law.
+
+    This is the negative control for that guard: without it the refusal could be
+    deleted and every fixture that writes a sidecar would still pass.
+    """
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "no-sidecar.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>20 por ciento del rendimiento neto</p>", encoding="utf-8")
+    reference = _legal_reference(ref_id="rd-439-2007:art-110-no-sidecar").model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/no-sidecar.html#a110",
+            "required_text": ("20 por ciento del rendimiento neto",),
+        },
+    )
+
+    assert corpus_path.exists(), "the corpus file itself must exist, so only the sidecar is missing"
+    assert not corpus_path.with_name(corpus_path.name + ".extracted.json").exists()
+
+    with pytest.raises(RegistryValidationError, match="missing extracted corpus sidecar"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
 def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)

@@ -22,7 +22,7 @@ from .. import (
 )
 from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
 from .._loader_cache import registry_disk_cache_dir
-from ._loader_directory_mode_support import write_fragmented_revision
+from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -223,7 +223,9 @@ def test_authority_cache_invalidates_when_fragmented_revision_changes(tmp_path: 
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
     (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
+    legal_corpus = corpus_file.parent / "test-ley-001.html"
+    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
+    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
@@ -254,7 +256,9 @@ def test_authority_uses_fingerprint_backed_process_cache_and_invalidates(tmp_pat
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
     (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
+    legal_corpus = corpus_file.parent / "test-ley-001.html"
+    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
+    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
@@ -293,7 +297,9 @@ def test_authority_cache_invalidates_when_source_evidence_changes(tmp_path: Path
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
     (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
+    legal_corpus = corpus_file.parent / "test-ley-001.html"
+    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
+    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
@@ -322,7 +328,9 @@ def test_authority_ignores_legacy_validated_marker_and_revalidates_ambiguity(tmp
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
     (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
+    legal_corpus = corpus_file.parent / "test-ley-001.html"
+    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
+    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
@@ -380,7 +388,9 @@ def test_authority_load_rejects_reused_number_with_bare_casilla_owner(tmp_path: 
     corpus_file.parent.mkdir(parents=True)
     corpus_file.write_bytes(b"x" * 1000)
     (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
+    legal_corpus = corpus_file.parent / "test-ley-001.html"
+    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
+    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (registry_root / "modelos" / "999" / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")
