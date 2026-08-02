@@ -1,7 +1,7 @@
 """Calculation-completeness manifest validation helpers.
 
-Checks that every casilla named in the completeness manifest of a
-:class:`ModeloRevision` is declared with legal and source grounding.
+Checks that each supplied manifest covers the derived non-internal calculation
+closure, and that every manifest casilla has legal and source grounding.
 """
 
 from __future__ import annotations
@@ -30,6 +30,22 @@ def _emit_completeness_gate_failures(
             )
         return
     declared_by_id = casillas_by_id(revision)
+    manifest_casilla_ids = {casilla.casilla_id for casilla in manifest.casillas}
+    missing_closure_ids = sorted(
+        casilla_id
+        for casilla_id in calculation_closure_casilla_ids(revision, modelo_id)
+        if casilla_id not in manifest_casilla_ids
+        and (
+            (declared := declared_by_id.get(casilla_id)) is None
+            or not declared.internal_only
+        )
+    )
+    if missing_closure_ids:
+        failures.append(
+            f"{prefix}: calculation-completeness manifest omits non-internal "
+            "calculation-closure casilla ids: "
+            f"{', '.join(repr(casilla_id) for casilla_id in missing_closure_ids)}",
+        )
     for manifest_casilla in sorted(manifest.casillas, key=lambda item: item.casilla_id):
         declared = declared_by_id.get(manifest_casilla.casilla_id)
         if declared is None:
