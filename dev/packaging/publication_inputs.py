@@ -74,6 +74,24 @@ SOURCE_INPUT_BY_CHANNEL: Final[Mapping[str, str]] = {
 #: the source of the published bytes for every channel, not evidence for one.
 COHORT_INPUT: Final[str] = "packaging_run_id"
 
+#: Claimed channel id -> the acquisition workflow the orchestrator dispatches
+#: to prove that channel. Kept SEPARATE from :data:`SOURCE_INPUT_BY_CHANNEL`:
+#: a claude host-extension channel carries BOTH a dispatchable acquisition lane
+#: (this mapping — ``packaging-claude.yml`` proves the plugin/MCPB install and
+#: protocol) AND a human evidence-release precondition (the four required
+#: claude-* real-client rows, routed through ``claude_evidence_release`` and
+#: :func:`host_extension_precondition_refusal`). The two must never collapse
+#: into one input: the workflow proves the acquisition mechanism works, the
+#: human capture proves a real Claude client actually used it. ``python``
+#: carries no entry — its evidence rides the packaging-smoke run itself, so it
+#: is never in :func:`acquisition_lanes` and therefore never looked up here.
+LANE_WORKFLOW_BY_CHANNEL: Final[Mapping[str, str]] = {
+    "scoop": ".github/workflows/packaging-scoop.yml",
+    "homebrew": ".github/workflows/packaging-homebrew.yml",
+    "claude-plugin": ".github/workflows/packaging-claude.yml",
+    "mcpb": ".github/workflows/packaging-claude.yml",
+}
+
 
 def acquisition_lanes(descriptor: DownloadDescriptor) -> tuple[str, ...]:
     """Return claimed channel ids requiring a separate acquisition-workflow dispatch, sorted.
@@ -98,6 +116,40 @@ def acquisition_lanes(descriptor: DownloadDescriptor) -> tuple[str, ...]:
             channel.id
             for channel in claimed_channels(descriptor)
             if SOURCE_INPUT_BY_CHANNEL.get(channel.id) not in (None, COHORT_INPUT)
+        ),
+    )
+
+
+def unmapped_acquisition_lanes(descriptor: DownloadDescriptor) -> tuple[str, ...]:
+    """Return lane channel ids from :func:`acquisition_lanes` with no declared workflow, sorted.
+
+    Fail-closed companion to :data:`LANE_WORKFLOW_BY_CHANNEL`: every channel
+    :func:`acquisition_lanes` names as needing a dispatch must resolve to a
+    workflow here, or the orchestrator would have nothing to dispatch for a
+    claim it is supposed to prove. A non-empty result is a hole in the
+    mapping, not a reason to proceed silently.
+    """
+    return tuple(sorted(channel_id for channel_id in acquisition_lanes(descriptor) if channel_id not in LANE_WORKFLOW_BY_CHANNEL))
+
+
+def acquisition_lane_workflows(descriptor: DownloadDescriptor) -> tuple[str, ...]:
+    """Return the distinct acquisition workflow paths the claimed lanes require, sorted.
+
+    Built from :func:`acquisition_lanes`: every claimed channel needing a
+    separate acquisition dispatch is resolved to its workflow path here,
+    deduplicated because two channels (``claude-plugin``, ``mcpb``) share one
+    dispatch — ``packaging-claude.yml`` proves both plugin and MCPB installs in
+    one run. A lane channel absent from :data:`LANE_WORKFLOW_BY_CHANNEL` is
+    silently excluded here rather than raised; callers that need the fail-closed
+    behaviour check :func:`unmapped_acquisition_lanes` first.
+    """
+    return tuple(
+        sorted(
+            {
+                LANE_WORKFLOW_BY_CHANNEL[channel_id]
+                for channel_id in acquisition_lanes(descriptor)
+                if channel_id in LANE_WORKFLOW_BY_CHANNEL
+            },
         ),
     )
 

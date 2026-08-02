@@ -20,19 +20,23 @@ from dev.docs.download_matrix import Availability, DownloadDescriptor, claimed_c
 from dev.packaging.publication_inputs import (
     COHORT_INPUT,
     EMIT_REAL_CLIENT_EVIDENCE_COMMAND,
+    LANE_WORKFLOW_BY_CHANNEL,
     SOURCE_INPUT_BY_CHANNEL,
     _emit_outputs,
+    acquisition_lane_workflows,
     acquisition_lanes,
     demanded_inputs,
     host_extension_precondition_refusal,
     main,
     missing_sources,
     refusals,
+    unmapped_acquisition_lanes,
     unmapped_claimed_channels,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
 _SCOOP: Final[str] = "scoop"
 _HOMEBREW: Final[str] = "homebrew"
 
@@ -259,6 +263,76 @@ def test_host_extension_precondition_never_fires_for_a_non_host_extension_claim(
     descriptor = load_descriptor()
     claimed = _with_availability(descriptor, "scoop", Availability.AVAILABLE)
     assert host_extension_precondition_refusal(claimed, claude_evidence_release="") is None
+
+
+def test_every_mapped_lane_channel_resolves_to_an_existing_workflow_path_on_disk() -> None:
+    for channel_id, workflow_path in LANE_WORKFLOW_BY_CHANNEL.items():
+        resolved = _REPO_ROOT / workflow_path
+        assert resolved.is_file(), f"{channel_id!r} maps to {workflow_path!r}, which does not exist on disk"
+
+
+def test_the_claude_channels_carry_both_a_dispatchable_lane_and_a_human_evidence_precondition() -> None:
+    """The two must never collapse into one input: the workflow proves the mechanism, the human proves use."""
+    for channel_id in ("claude-plugin", "mcpb"):
+        assert channel_id in LANE_WORKFLOW_BY_CHANNEL
+        assert LANE_WORKFLOW_BY_CHANNEL[channel_id] == ".github/workflows/packaging-claude.yml"
+        assert SOURCE_INPUT_BY_CHANNEL[channel_id] == "claude_evidence_release"
+
+
+def test_todays_descriptor_needs_no_acquisition_lane_workflow() -> None:
+    descriptor = load_descriptor()
+    assert acquisition_lane_workflows(descriptor) == ()
+    assert unmapped_acquisition_lanes(descriptor) == ()
+
+
+def test_claiming_scoop_and_homebrew_resolves_to_their_distinct_workflows() -> None:
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, _SCOOP, Availability.AVAILABLE),
+        _HOMEBREW,
+        Availability.AVAILABLE,
+    )
+    assert acquisition_lane_workflows(both) == (
+        ".github/workflows/packaging-homebrew.yml",
+        ".github/workflows/packaging-scoop.yml",
+    )
+
+
+def test_claiming_both_claude_channels_dedupes_to_one_workflow() -> None:
+    """claude-plugin and mcpb are two channels but one acquisition run."""
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
+        "mcpb",
+        Availability.AVAILABLE,
+    )
+    assert acquisition_lane_workflows(both) == (".github/workflows/packaging-claude.yml",)
+
+
+def test_every_source_mapped_non_cohort_channel_has_a_declared_lane_workflow() -> None:
+    """Structural completeness: nothing ``acquisition_lanes()`` could ever return lacks a workflow.
+
+    ``acquisition_lanes()`` can only return a channel id present in
+    ``SOURCE_INPUT_BY_CHANNEL`` with a non-cohort source, so this is the exact
+    universe ``LANE_WORKFLOW_BY_CHANNEL`` must cover for
+    ``unmapped_acquisition_lanes()`` to stay permanently empty. A future channel
+    added to ``SOURCE_INPUT_BY_CHANNEL`` without a matching lane workflow fails
+    this test immediately, rather than surfacing as a silent orchestration gap.
+    """
+    potential_lane_channels = {
+        channel_id for channel_id, source in SOURCE_INPUT_BY_CHANNEL.items() if source != COHORT_INPUT
+    }
+    missing = potential_lane_channels - set(LANE_WORKFLOW_BY_CHANNEL)
+    assert not missing, f"channel(s) {sorted(missing)} could appear in acquisition_lanes() but have no workflow"
+
+
+def test_unmapped_acquisition_lanes_stays_empty_even_when_every_channel_is_claimed() -> None:
+    """Dynamic confirmation of the structural completeness above, over the real descriptor."""
+    descriptor = load_descriptor()
+    fully_claimed = descriptor
+    for channel in descriptor.channel:
+        fully_claimed = _with_availability(fully_claimed, channel.id, Availability.AVAILABLE)
+    assert unmapped_acquisition_lanes(fully_claimed) == ()
 
 
 def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) -> None:
