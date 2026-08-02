@@ -59,7 +59,7 @@ def _populated_filing() -> ModeloPresentado:
         status=SubmissionStatus.ACEPTADA,
         justificante_csv="ABCD12345678EFGH",
         justificante_pdf_path=Path("justificantes/303-2025Q1-ABCD.pdf"),
-        submitted_at=now - timedelta(minutes=5),
+        submitted_at=now - timedelta(minutes=10),
         acknowledged_at=now,
         attempts=(
             SubmissionAttempt(

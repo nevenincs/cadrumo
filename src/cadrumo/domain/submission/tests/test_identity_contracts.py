@@ -92,3 +92,189 @@ def test_canonical_modelo_identity_survives_encrypted_storage(tmp_path: Path) ->
     assert loaded is not None
     assert loaded == original
     assert loaded.modelo is Modelo.M130
+
+
+@pytest.mark.parametrize(
+    "malformed_submission_id",
+    ("not-a-submission-id", " ", "ABCDEF0123456789", "0123456789abcde", "0123456789abcdef0"),
+    ids=("free-text", "blank", "uppercase-hex", "fifteen-chars", "seventeen-chars"),
+)
+def test_submission_id_must_be_the_derived_content_coordinate(malformed_submission_id: str) -> None:
+    """The stored identity must be a value ``make_submission_id`` could have produced."""
+    with pytest.raises(ValidationError):
+        _filing(submission_id=malformed_submission_id, attempt_id=f"{malformed_submission_id}.1")
+
+
+@pytest.mark.parametrize(
+    "malformed_attempt_id",
+    ("junk", "wrong.99", "0123456789abcdef.0", "0123456789abcdef.01", "0123456789abcdef"),
+    ids=("free-text", "foreign-parent", "zero-ordinal", "padded-ordinal", "no-ordinal"),
+)
+def test_attempt_id_must_be_the_parent_plus_ordinal_coordinate(malformed_attempt_id: str) -> None:
+    """An attempt coordinate names its own parent submission and its own position."""
+    with pytest.raises(ValidationError):
+        _filing(attempt_id=malformed_attempt_id)
+
+
+def test_attempt_ordinals_must_follow_their_tuple_position() -> None:
+    """The tuple index and the identifier ordinal are two spellings of one fact."""
+    submission_id = make_submission_id(_DRAFT_ID, 1)
+
+    def _attempt(ordinal: int, started_at: datetime) -> SubmissionAttempt:
+        return SubmissionAttempt(
+            attempt_id=f"{submission_id}.{ordinal}",
+            started_at=started_at,
+            ended_at=started_at + timedelta(seconds=30),
+            status=SubmissionStatus.FALLIDA,
+        )
+
+    with pytest.raises(ValidationError, match="attempt 2 is"):
+        ModeloPresentado(
+            submission_id=submission_id,
+            draft_id=_DRAFT_ID,
+            modelo=Modelo.M303,
+            period=_PERIOD,
+            profile_tax_id="12345678Z",
+            status=SubmissionStatus.FALLIDA,
+            submitted_at=_SUBMITTED_AT,
+            attempts=(
+                _attempt(1, _SUBMITTED_AT),
+                _attempt(3, _SUBMITTED_AT + timedelta(minutes=5)),
+            ),
+        )
+
+
+def _aggregate(
+    *,
+    status: SubmissionStatus,
+    attempt_statuses: tuple[SubmissionStatus, ...],
+    starts: tuple[datetime, ...] | None = None,
+    submitted_at: datetime | None = None,
+    justificante_csv: str | None = None,
+    justificante_pdf_path: Path | None = None,
+    acknowledged_at: datetime | None = None,
+) -> ModeloPresentado:
+    """Build a multi-attempt filing whose aggregate coherence axes are steerable."""
+    submission_id = make_submission_id(_DRAFT_ID, 1)
+    resolved_starts = starts or tuple(
+        _SUBMITTED_AT + timedelta(minutes=5 * index) for index in range(len(attempt_statuses))
+    )
+    attempts = tuple(
+        SubmissionAttempt(
+            attempt_id=f"{submission_id}.{index}",
+            started_at=start,
+            ended_at=start + timedelta(seconds=30),
+            status=attempt_status,
+        )
+        for index, (attempt_status, start) in enumerate(zip(attempt_statuses, resolved_starts, strict=True), start=1)
+    )
+    return ModeloPresentado(
+        submission_id=submission_id,
+        draft_id=_DRAFT_ID,
+        modelo=Modelo.M303,
+        period=_PERIOD,
+        profile_tax_id="12345678Z",
+        status=status,
+        justificante_csv=justificante_csv,
+        justificante_pdf_path=justificante_pdf_path,
+        submitted_at=submitted_at if submitted_at is not None else resolved_starts[0],
+        acknowledged_at=acknowledged_at,
+        attempts=attempts,
+    )
+
+
+def test_accepted_filing_whose_only_attempt_failed_is_refused() -> None:
+    """AEAT cannot have accepted a filing that was never presented."""
+    with pytest.raises(ValidationError, match="not coherent with a terminal"):
+        _aggregate(
+            status=SubmissionStatus.ACEPTADA,
+            attempt_statuses=(SubmissionStatus.FALLIDA,),
+            justificante_csv="ABCD12345678EFGH",
+            justificante_pdf_path=Path("justificantes/303-2025Q1-ABCD.pdf"),
+            acknowledged_at=_SUBMITTED_AT + timedelta(minutes=1),
+        )
+
+
+def test_presented_filing_whose_only_attempt_was_accepted_is_refused() -> None:
+    """An attempt that already recorded AEAT acceptance fixes the filing verdict."""
+    with pytest.raises(ValidationError, match="not coherent with a terminal"):
+        _aggregate(
+            status=SubmissionStatus.PRESENTADA,
+            attempt_statuses=(SubmissionStatus.ACEPTADA,),
+        )
+
+
+def test_out_of_order_attempt_chronology_is_refused() -> None:
+    """The attempts tuple is the filing history, so it reads forwards."""
+    later = _SUBMITTED_AT + timedelta(minutes=30)
+    with pytest.raises(ValidationError, match="before the preceding attempt"):
+        _aggregate(
+            status=SubmissionStatus.FALLIDA,
+            attempt_statuses=(SubmissionStatus.FALLIDA, SubmissionStatus.FALLIDA),
+            starts=(later, _SUBMITTED_AT),
+        )
+
+
+def test_submitted_at_must_be_the_first_attempt_start() -> None:
+    """``submitted_at`` is documented as the first attempt start, not a free field."""
+    with pytest.raises(ValidationError, match="must be the first attempt"):
+        _aggregate(
+            status=SubmissionStatus.FALLIDA,
+            attempt_statuses=(SubmissionStatus.FALLIDA,),
+            submitted_at=_SUBMITTED_AT - timedelta(hours=1),
+        )
+
+
+def test_coherent_presentation_then_acceptance_is_accepted() -> None:
+    """Valid parity: an AEAT verdict landing after a completed presentation."""
+    acknowledged_at = _SUBMITTED_AT + timedelta(minutes=20)
+    filing = _aggregate(
+        status=SubmissionStatus.ACEPTADA,
+        attempt_statuses=(SubmissionStatus.FALLIDA, SubmissionStatus.PRESENTADA),
+        justificante_csv="ABCD12345678EFGH",
+        justificante_pdf_path=Path("justificantes/303-2025Q1-ABCD.pdf"),
+        acknowledged_at=acknowledged_at,
+    )
+
+    assert filing.status is SubmissionStatus.ACEPTADA
+    assert filing.attempts[-1].status is SubmissionStatus.PRESENTADA
+    assert filing.submitted_at == filing.attempts[0].started_at
+
+
+@pytest.mark.parametrize(
+    "malformed_csv",
+    ("A", "ABC", "X" * 65),
+    ids=("one-char", "three-chars", "sixty-five-chars"),
+)
+def test_justificante_csv_outside_the_receipt_domain_bounds_is_refused(malformed_csv: str) -> None:
+    """A submission record cannot hold a CSV the receipt domain would reject."""
+    with pytest.raises(ValidationError):
+        _aggregate(
+            status=SubmissionStatus.PRESENTADA,
+            attempt_statuses=(SubmissionStatus.PRESENTADA,),
+            justificante_csv=malformed_csv,
+        )
+
+
+def test_justificante_csv_within_the_receipt_domain_bounds_is_accepted() -> None:
+    """Valid parity: the shared bound admits exactly what Justificante admits."""
+    from pydantic import TypeAdapter
+
+    from ....domain.justificante import JustificanteCsv
+
+    receipt_bound = TypeAdapter(JustificanteCsv)
+
+    for csv in ("ABCD", "Z" * 64):
+        filing = _aggregate(
+            status=SubmissionStatus.PRESENTADA,
+            attempt_statuses=(SubmissionStatus.PRESENTADA,),
+            justificante_csv=csv,
+        )
+        assert filing.justificante_csv == csv
+        # Behavioural parity, not shape comparison: the same value the receipt
+        # domain admits is the value the submission record stores.
+        assert receipt_bound.validate_python(csv) == csv
+
+    for rejected in ("ABC", "X" * 65):
+        with pytest.raises(ValidationError):
+            receipt_bound.validate_python(rejected)

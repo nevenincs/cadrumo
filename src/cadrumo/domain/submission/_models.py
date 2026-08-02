@@ -26,15 +26,47 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import SubjectTaxId
 from ...core.time import validate_utc_aware
+from ..justificante import JustificanteCsv
 from ._errors import SubmissionValidationError
+
+_SUBMISSION_ID_LENGTH = 16
+
+SubmissionId = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=_SUBMISSION_ID_LENGTH,
+        max_length=_SUBMISSION_ID_LENGTH,
+        pattern=r"^[0-9a-f]{16}$",
+    ),
+]
+"""Content-derived identity of one filing submission.
+
+The lowercase 16-character SHA-256 prefix :func:`make_submission_id` returns for
+a ``(draft_id, attempt_ordinal)`` pair. Declaring the shape here keeps the
+producer and the persisted record on one contract, so a record cannot carry an
+identifier no derivation could have produced.
+"""
+
+SubmissionAttemptId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, pattern=r"^[0-9a-f]{16}\.[1-9][0-9]*$"),
+]
+"""Coordinate of one attempt within its submission: ``<submission_id>.<ordinal>``.
+
+The ordinal is strictly positive and unpadded. The pattern fixes the *shape*;
+:class:`ModeloPresentado` binds each attempt to its own parent submission and
+ordinal position.
+"""
 
 
 class SubmissionStatus(StrEnum):
@@ -79,7 +111,7 @@ class SubmissionAttempt(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    attempt_id: str = Field(min_length=1)
+    attempt_id: SubmissionAttemptId
     started_at: datetime
     ended_at: datetime
     status: SubmissionStatus
@@ -98,6 +130,32 @@ class SubmissionAttempt(BaseModel):
         if self.ended_at and self.ended_at < self.started_at:
             raise SubmissionValidationError(f"ended_at ({self.ended_at}) is before started_at ({self.started_at})")
         return self
+
+
+_AGGREGATE_STATUS_BY_TERMINAL_ATTEMPT: dict[SubmissionStatus, frozenset[SubmissionStatus]] = {
+    # A presentation that completed may still be awaiting AEAT's answer, or may
+    # already have received it -- the acknowledgement arrives after the attempt.
+    SubmissionStatus.PRESENTADA: frozenset(
+        {SubmissionStatus.PRESENTADA, SubmissionStatus.ACEPTADA, SubmissionStatus.RECHAZADA},
+    ),
+    # An attempt that itself recorded AEAT's verdict fixes the filing's verdict.
+    SubmissionStatus.ACEPTADA: frozenset({SubmissionStatus.ACEPTADA}),
+    SubmissionStatus.RECHAZADA: frozenset({SubmissionStatus.RECHAZADA}),
+    # A failed attempt never presented anything, so the filing is either
+    # recorded as failed or still awaiting a presentation.
+    SubmissionStatus.FALLIDA: frozenset(
+        {SubmissionStatus.FALLIDA, SubmissionStatus.PENDIENTE_DE_PRESENTAR},
+    ),
+    SubmissionStatus.EN_TRAMITACION: frozenset({SubmissionStatus.EN_TRAMITACION}),
+    SubmissionStatus.PENDIENTE_DE_PRESENTAR: frozenset({SubmissionStatus.PENDIENTE_DE_PRESENTAR}),
+}
+"""Aggregate statuses each terminal-attempt outcome can support.
+
+The filing's status and its last attempt's status answer different questions --
+"where does this filing stand" versus "how did the last try end" -- so they are
+not required to be equal. They are required to be *compatible*: AEAT's verdict
+may land after a completed presentation, but it cannot exist without one.
+"""
 
 
 class ModeloPresentado(BaseModel):
@@ -127,13 +185,13 @@ class ModeloPresentado(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    submission_id: str = Field(min_length=1)
+    submission_id: SubmissionId
     draft_id: str = Field(min_length=1)
     modelo: Modelo
     period: Period
     profile_tax_id: SubjectTaxId = Field(min_length=1)
     status: SubmissionStatus
-    justificante_csv: str | None = None
+    justificante_csv: JustificanteCsv | None = None
     justificante_pdf_path: Path | None = None
     submitted_at: datetime
     acknowledged_at: datetime | None = None
@@ -180,6 +238,58 @@ class ModeloPresentado(BaseModel):
         if self.acknowledged_at and self.acknowledged_at < self.submitted_at:
             raise SubmissionValidationError(
                 f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _check_attempt_coordinates(self) -> ModeloPresentado:
+        """Bind every attempt to this submission at its own ordinal position.
+
+        ``attempt_id`` is documented as ``<submission_id>.<ordinal>``, so the
+        tuple index and the identifier are two spellings of one fact. Checking
+        them against each other makes parent binding, ordinal positivity,
+        uniqueness, and tuple ordering a single enforced coordinate rather than
+        four conventions the producer happens to honour.
+        """
+        for index, attempt in enumerate(self.attempts, start=1):
+            expected = f"{self.submission_id}.{index}"
+            if attempt.attempt_id != expected:
+                raise SubmissionValidationError(
+                    f"attempt {index} carries attempt_id {attempt.attempt_id!r}; "
+                    f"this submission's attempt {index} is {expected!r}",
+                )
+        return self
+
+    @model_validator(mode="after")
+    def _check_attempt_chronology_and_status(self) -> ModeloPresentado:
+        """Enforce the documented aggregate contract over the attempt history.
+
+        Three separate claims the record makes about itself were unchecked: the
+        attempts are in chronological order, ``submitted_at`` is the first
+        attempt's start, and the aggregate status is coherent with how the last
+        attempt ended. Without them the record could report an ACEPTADA filing
+        whose only attempt FAILED -- an audit trail that contradicts its own
+        evidence.
+        """
+        previous_start = self.attempts[0].started_at
+        for attempt in self.attempts[1:]:
+            if attempt.started_at < previous_start:
+                raise SubmissionValidationError(
+                    f"attempt {attempt.attempt_id!r} starts at {attempt.started_at} "
+                    f"before the preceding attempt at {previous_start}",
+                )
+            previous_start = attempt.started_at
+        if self.submitted_at != self.attempts[0].started_at:
+            raise SubmissionValidationError(
+                f"submitted_at ({self.submitted_at}) must be the first attempt's start ({self.attempts[0].started_at})",
+            )
+        terminal = self.attempts[-1].status
+        permitted = _AGGREGATE_STATUS_BY_TERMINAL_ATTEMPT[terminal]
+        if self.status not in permitted:
+            accepted = ", ".join(sorted(status.value for status in permitted))
+            raise SubmissionValidationError(
+                f"status {self.status.value} is not coherent with a terminal "
+                f"{terminal.value} attempt; accepted: {accepted}",
             )
         return self
 

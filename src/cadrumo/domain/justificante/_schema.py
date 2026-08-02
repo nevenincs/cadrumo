@@ -13,10 +13,20 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
+from typing import Annotated
 
-from pydantic import AnyHttpUrl, BaseModel, Field, ValidationInfo, field_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, StringConstraints, ValidationInfo, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period, PeriodError
+
+JustificanteCsv = Annotated[str, StringConstraints(min_length=4, max_length=64)]
+"""AEAT Código Seguro de Verificación printed on a justificante de presentación.
+
+The receipt domain owns the bound because it owns the artefact the value is
+read from. Every record that claims to hold an AEAT-issued CSV consumes this
+alias, so a submission audit record cannot persist a receipt string the
+receipt domain would refuse to parse.
+"""
 
 
 class JustificanteParserBackend(StrEnum):
@@ -63,7 +73,7 @@ class Justificante(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    csv: str = Field(..., min_length=4, max_length=64)
+    csv: JustificanteCsv
     modelo: str = Field(..., min_length=1, max_length=16)
     ejercicio: str | None = Field(default=None, max_length=8)
     period: Period
