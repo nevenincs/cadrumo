@@ -123,22 +123,22 @@ def _render_reconciliation_report(
     result = ModeloReconcileResult(
         work_unit_id=report.work_unit_id,
         bucket_id=report.bucket_id,
-        source_kind=report.source_kind.value,
+        source_kind=report.source_kind,
         source_path=report.source_path,
-        verdict=report.verdict.value,
+        verdict=report.verdict,
         diffs=tuple(
             ModeloReconciliationDiffPayload(
                 field_name=diff.field_name,
                 work_unit_value=diff.work_unit_value,
                 evidence_value=diff.evidence_value,
                 kind=diff.kind,
-                diff_kind=diff.diff_kind.value,
+                diff_kind=diff.diff_kind,
                 legal_refs=diff.legal_refs,
                 source_refs=diff.source_refs,
             )
             for diff in report.diffs
         ),
-        reconciled_at=report.reconciled_at.isoformat(),
+        reconciled_at=report.reconciled_at,
         narrative=report.narrative,
     )
     notices = [

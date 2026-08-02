@@ -15,11 +15,17 @@ these split schemas so modelo emitters keep one payload import surface.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import Field
 
-from ...application.modelo import TaxationRecommendation
+from ...application.modelo import (
+    ModeloReconciliationDiffKind,
+    ModeloReconciliationEvidenceKind,
+    ModeloReconciliationVerdict,
+    TaxationRecommendation,
+)
 from ...core import Modelo
 from ...core.identity import BucketId
 from ...domain.modelos import WorkUnitId
@@ -30,22 +36,24 @@ from ._schemas import OutputSchema, register_schema
 class ModeloReconciliationDiffPayload(OutputSchema):
     """One disagreement surfaced in a reconciliation report.
 
-    Nested in :class:`ModeloReconcileResult` and mirrors
+    Nested in :class:`ModeloReconcileResult` and projects
     :class:`ModeloReconciliationDiff`. Justificante
     reconciliation compares header evidence (modelo, period, ejercicio, tax id)
     and, where the revision declares ``reconciliation_total_casilla_ids``, the
     filed total against the canonical computed result casilla. ``diff_kind`` is
-    the closed category (``header_field`` / ``total``); a ``total`` diff carries
-    the reconciling expectation's ``legal_refs`` / ``source_refs``. Individual
-    casilla declaration diffs require the modelo-specific declaration parser
-    (``diff_kind = casilla`` is reserved).
+    the closed :class:`ModeloReconciliationDiffKind` category; a ``total`` diff
+    carries the reconciling expectation's ``legal_refs`` / ``source_refs``.
+    Individual casilla declaration diffs require the modelo-specific
+    declaration parser (``diff_kind = casilla`` is reserved). ``legal_refs`` /
+    ``source_refs`` stay unconstrained tuples, exactly as the canonical diff
+    declares: a ``header_field`` diff carries none by design.
     """
 
-    field_name: str
+    field_name: str = Field(min_length=1)
     work_unit_value: str = ""
     evidence_value: str = ""
-    kind: str
-    diff_kind: str = "header_field"
+    kind: str = Field(min_length=1)
+    diff_kind: ModeloReconciliationDiffKind = ModeloReconciliationDiffKind.HEADER_FIELD
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
 
@@ -60,20 +68,20 @@ class ModeloReconcileResult(OutputSchema):
     :func:`modelo_reconcile` or :func:`modelo_reconcile_bytes`: a work-unit-level
     :obj:`WorkUnitId`, :obj:`BucketId` scope, :class:`ModeloReconciliationVerdict`,
     :class:`ModeloReconciliationEvidenceKind`, evidence path/reference,
-    :class:`ModeloReconciliationDiffPayload` list, reconciliation timestamp,
-    and optional narrative. Non-blocking reconciliation advisories ride the
-    shared envelope ``notices`` channel exclusively
+    :class:`ModeloReconciliationDiffPayload` list, an aware ``reconciled_at``
+    timestamp, and optional narrative. Non-blocking reconciliation advisories
+    ride the shared envelope ``notices`` channel exclusively
     (``cli-notices-are-the-only-diagnostic-channel``); this result carries no
     bespoke advisory field.
     """
 
     work_unit_id: WorkUnitId
     bucket_id: BucketId
-    source_kind: str
+    source_kind: ModeloReconciliationEvidenceKind
     source_path: str
-    verdict: str
+    verdict: ModeloReconciliationVerdict
     diffs: tuple[ModeloReconciliationDiffPayload, ...] = ()
-    reconciled_at: str
+    reconciled_at: datetime
     narrative: str = ""
 
 
