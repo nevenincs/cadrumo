@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...domain.user_profile import UserProfileFact
 from ._censo_errors import CensoSyncError
@@ -116,9 +117,33 @@ def _assert_read_belongs_to_this_profile(
     is nothing to be gained by pulling before stating who you are, and the ID
     is required to complete the profile in any case.
 
+    Both sides are compared in the CANONICAL form
+    :func:`~core.identity.validate_spanish_tax_id` returns, rather than by an
+    ad-hoc strip-and-upper. That single change closes the guard's two ways of
+    being wrong at once, and they fail in opposite directions:
+
+    * A malformed identity — wrong length, or a checksum that does not hold —
+      used to confirm ownership as long as both sides carried the same
+      malformed string. "These two strings are equal" is not the question this
+      guard answers; whether they name a taxpayer at all is prior to it, and a
+      profile identity that names nobody cannot confirm that a read describes
+      the profile's taxpayer.
+    * Two spellings of ONE identity — ``12345678-Z`` against ``12345678Z`` —
+      used to refuse as a different taxpayer. AEAT prints the identity the way
+      it prints it, and an operator types it the way they hold it; the
+      canonical form is what decides whether they are the same person, so the
+      punctuation is removed on both sides before they are compared rather
+      than on neither.
+
+    The canonicalisation is applied HERE and not on the parsed read: the
+    adapter's ``nif`` is documented as AEAT's verbatim rendering and other
+    readers depend on that, so this normalises for its own decision instead of
+    rewriting the evidence.
+
     Raises:
         CensalIdentityMismatchError: When the profile records no fiscal
-            identity, when the read carries none, or when the two differ.
+            identity, when either side's identity is malformed, when the read
+            carries none, or when the two name different taxpayers.
     """
     if recorded_identity is None:
         raise CensalIdentityMismatchError(
@@ -130,13 +155,27 @@ def _assert_read_belongs_to_this_profile(
             "this profile's fiscal identity was cleared, so a censal read cannot be confirmed to belong to it",
             translated_message="application.user_profile.errors.censal_read_identity_cleared",
         )
-    existing = recorded_identity.value.strip().upper()
-    incoming = (incoming_tax_id or "").strip().upper()
-    if not incoming:
+    if not (incoming_tax_id or "").strip():
         raise CensalIdentityMismatchError(
             "censal read carries no fiscal identity; it cannot be confirmed to belong to this profile",
             translated_message="application.user_profile.errors.censal_read_identity_absent",
         )
+    try:
+        existing = validate_spanish_tax_id(recorded_identity.value)
+    except IdentityError as exc:
+        raise CensalIdentityMismatchError(
+            "this profile's fiscal identity is not a valid Spanish tax identifier, "
+            "so a censal read cannot be confirmed to belong to it",
+            translated_message="application.user_profile.errors.censal_read_identity_profile_malformed",
+        ) from exc
+    try:
+        incoming = validate_spanish_tax_id(incoming_tax_id or "")
+    except IdentityError as exc:
+        raise CensalIdentityMismatchError(
+            "the censal read's fiscal identity is not a valid Spanish tax identifier, "
+            "so it cannot be confirmed to belong to this profile",
+            translated_message="application.user_profile.errors.censal_read_identity_read_malformed",
+        ) from exc
     if incoming != existing:
         raise CensalIdentityMismatchError(
             "censal read belongs to a different taxpayer than this profile; refusing to apply it",
