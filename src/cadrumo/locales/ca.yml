@@ -339,6 +339,9 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
+      landing_unreadable: 'S''ha rebutjat la lectura de l''AEAT perquè la pàgina on ha aterrat no té una adreça llegible, de manera que no es pot determinar on ha acabat la sessió. Torna a autenticar-te i prova-ho de nou.'
+      landing_off_policy: 'S''ha rebutjat la lectura de l''AEAT perquè la pàgina on ha aterrat és fora dels amfitrions permesos d''aquesta superfície o anomena una acció d''escriptura.'
+      landing_off_read_pages: 'S''ha rebutjat la lectura de l''AEAT perquè ha aterrat en una pàgina que aquest lector no consulta; aquest lector mai no arriba a una pàgina de presentació de l''AEAT.'
 aggregation:
   grouping:
     errors:

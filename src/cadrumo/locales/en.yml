@@ -302,6 +302,9 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
+      landing_unreadable: 'The AEAT read was refused because the page it landed on has no readable address, so where the session ended up cannot be established. Re-authenticate and try again.'
+      landing_off_policy: 'The AEAT read was refused because the page it landed on is outside this surface''s allowed hosts or names a write action.'
+      landing_off_read_pages: 'The AEAT read was refused because it landed on a page this reader does not read; this reader never reaches an AEAT filing page.'
 aggregation:
   grouping:
     errors:

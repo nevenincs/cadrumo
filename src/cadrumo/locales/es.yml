@@ -340,6 +340,9 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
+      landing_unreadable: 'Se rechazó la lectura de la AEAT porque la página en la que aterrizó no tiene una dirección legible, así que no se puede determinar dónde acabó la sesión. Vuelve a autenticarte e inténtalo de nuevo.'
+      landing_off_policy: 'Se rechazó la lectura de la AEAT porque la página en la que aterrizó está fuera de los hosts permitidos de esta superficie o nombra una acción de escritura.'
+      landing_off_read_pages: 'Se rechazó la lectura de la AEAT porque aterrizó en una página que este lector no consulta; este lector nunca llega a una página de presentación de la AEAT.'
 aggregation:
   grouping:
     errors:

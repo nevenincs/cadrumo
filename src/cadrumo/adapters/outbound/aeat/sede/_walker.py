@@ -48,6 +48,7 @@ from ._browser_constants import (
 )
 from ._errors import (
     ExpedienteNotFoundError,
+    SedeFailureMode,
     SedeNavigationError,
 )
 from ._parse import parse_expediente_detail, parse_resumen_tree
@@ -166,6 +167,8 @@ def assert_landed_url_readable(landed_url: str, *, requested_url: str) -> str:
             "sede walker navigation produced no readable landing URL, so where the "
             "authenticated session ended up cannot be established; the read is refused "
             f"rather than continued blind. requested_url={requested_url!r}",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.landing_unreadable"),
             context={"requested_url": requested_url, "landing_url": landed_url or "<empty>"},
         )
     return landed_url

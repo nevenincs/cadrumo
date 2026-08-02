@@ -28,6 +28,7 @@ from .....core import STRICT_FROZEN_CONFIG
 from .....core import is_aeat_csv as _core_is_aeat_csv
 from .....core.config import Settings
 from .....core.external_constants import PDF_MIME_TYPE
+from .....core.i18n import tr
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
@@ -284,6 +285,7 @@ def assert_read_landing(
             f"{surface} landed on no usable origin, so where AEAT dispatched this read cannot be "
             "established; the read is refused rather than assumed to have stayed on a read page",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.landing_unreadable"),
             context={"surface": surface, "landing_url": landing_url or "<empty>"},
             suggestion=(
                 "Re-authenticate and retry. A landing with no scheme and host usually means the "
@@ -306,6 +308,7 @@ def assert_read_landing(
         raise SedeNavigationError(
             f"{surface} landing was refused by its own read guard policy: {exc}",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.landing_off_policy"),
             context={"surface": surface, "landing_url": raw_landing, "policy_id": policy.id},
             suggestion=(
                 "This landing is off the surface's allowed hosts or carries an AEAT write-action "
@@ -319,6 +322,7 @@ def assert_read_landing(
             f"{surface} landed outside its declared read pages and was refused; this driver reads "
             f"only and never reaches an AEAT write path. landed_path={landed_path!r}",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.landing_off_read_pages"),
             context={
                 "surface": surface,
                 "landing_url": raw_landing,
