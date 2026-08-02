@@ -22,7 +22,9 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from typing import Final, Literal, overload
+from typing import Annotated, Final, Literal, overload
+
+from pydantic import AfterValidator
 
 from ..logging import get_logger
 
@@ -30,6 +32,9 @@ _log = get_logger(__name__)
 
 # Matches the Spanish day-first wire format: dd-mm-yyyy or dd/mm/yyyy.
 _DATE_DDMMYYYY_RE: Final = re.compile(r"^\s*(\d{2}[-/]\d{2}[-/]\d{4})\s*$")
+
+# Extended-form ISO 8601 (``YYYY-MM-DD``); the compact form is deliberately refused.
+_ISO_8601_EXTENDED_LENGTH: Final[int] = 10
 
 
 def _parse_iso8601_date(raw: str | None) -> date | None:
@@ -62,6 +67,65 @@ def _parse_iso8601_date(raw: str | None) -> date | None:
         raise ValueError(
             f"date value {cleaned!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)",
         ) from exc  # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY
+
+
+def require_iso8601_date(raw: str) -> date:
+    """Parse a required extended-form ISO-8601 date, refusing every other shape.
+
+    The strict counterpart of :func:`_parse_iso8601_date` for values that must
+    be present and must be a real calendar date. Absence is a refusal rather
+    than ``None``, and the compact ``YYYYMMDD`` form
+    :meth:`~datetime.date.fromisoformat` also accepts is refused, so the one
+    admitted shape is the extended ``YYYY-MM-DD`` the AEAT wire formats use.
+
+    A model that declares a date as a length-bounded string admits an
+    impossible calendar date -- ``2026-99-99`` and ``2026-02-30`` are both ten
+    characters -- and every consumer downstream of it inherits that value as
+    if a date authority had approved it.
+
+    Args:
+        raw: The declared date string.
+
+    Returns:
+        The parsed calendar date.
+
+    Raises:
+        ValueError: When ``raw`` is absent, is not extended-form ``YYYY-MM-DD``,
+            or names a date that does not exist. Callers wrap this in the
+            domain-appropriate exception; inside a pydantic validator it
+            propagates into the ``ValidationError`` chain.
+    """
+    cleaned = raw.strip() if raw else ""
+    if len(cleaned) != _ISO_8601_EXTENDED_LENGTH:
+        raise ValueError(
+            f"date value {raw!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)",
+        )
+    parsed = _parse_iso8601_date(cleaned)
+    if parsed is None:  # pragma: no cover - a length-10 non-empty string always parses or raises.
+        raise ValueError(
+            f"date value {raw!r} is not a valid ISO-8601 date (expected YYYY-MM-DD)",
+        )
+    return parsed
+
+
+def _iso_date_string(value: str) -> str:
+    """Validate ``value`` as an extended-form ISO-8601 date and return it unchanged."""
+    require_iso8601_date(value)
+    return value
+
+
+type IsoDateString = Annotated[str, AfterValidator(_iso_date_string)]
+"""A wire date that stays a string but must name a real calendar date.
+
+The field annotation behind every observation and payload whose declared date
+crosses a boundary as ``YYYY-MM-DD``. It keeps the serialised shape a string
+while making :func:`require_iso8601_date` the single admission authority, so a
+length bound can no longer stand in for a date check.
+
+Use a real :class:`~datetime.date` field where the value is only ever handled
+as a date; use this where the string form itself is the persisted or
+transported contract.
+"""
 
 
 def _parse_ddmmyyyy_date(raw: str | None) -> date | None:

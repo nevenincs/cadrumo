@@ -32,7 +32,7 @@ from ...core import (
     foreign_asset_obligation_group,
 )
 from ...core.aggregation import ForeignAssetClass
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing import IsoDateString, require_iso8601_date
 from ...domain.calculations.registry import Modelo720RowObservation, resolve_foreign_asset_binding_row_values
 from .._foreign_asset_thresholds import (
     ForeignAssetDeclarationThreshold,
@@ -77,7 +77,16 @@ def _validate_country(value: str) -> str:
 
 
 class ForeignAssetIngestObservation(BaseModel):
-    """One asset observation for a Modelo 720 aggregator pass."""
+    """One asset observation for a Modelo 720 aggregator pass.
+
+    ``acquisition_date`` is admitted by the canonical date authority at
+    ingestion, before aggregation. Bounding its length alone let an impossible
+    calendar date through -- ``2026-99-99`` and ``2026-02-30`` are both ten
+    characters -- so the aggregate totals, the declarability decision, and the
+    operator's rollups were all computed from a row no date authority had ever
+    approved, and the refusal only surfaced later at the registry adapter that
+    finally parses it.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -88,7 +97,7 @@ class ForeignAssetIngestObservation(BaseModel):
     country: str = Field(min_length=2, max_length=2)
     issuer_or_institution: str = Field(default="", max_length=200)
     valuation_eur: Decimal = Field(ge=Decimal("0"))
-    acquisition_date: str = Field(min_length=10, max_length=10)
+    acquisition_date: IsoDateString = Field(min_length=10, max_length=10)
     held_at_year_end: bool = True
 
     @field_validator("source_kind", mode="before")
@@ -189,9 +198,7 @@ def declarable_asset_classes_720(
     unsupported_groups = set(group_totals) - set(resolved_thresholds)
     if unsupported_groups:
         classes = sorted(
-            asset_class.value
-            for group in unsupported_groups
-            for asset_class in asset_classes_by_group[group]
+            asset_class.value for group in unsupported_groups for asset_class in asset_classes_by_group[group]
         )
         raise ValueError(f"asset classes {classes!r}: not a Modelo 720 foreign-asset class")
     return frozenset(
@@ -349,9 +356,9 @@ def _selected_foreign_asset_observations(
 def _registry_observation_from_foreign_asset(
     observation: ForeignAssetIngestObservation,
 ) -> Modelo720RowObservation:
-    acquisition_date = parse_iso8601_date(observation.acquisition_date)
-    if acquisition_date is None:
-        raise ValueError(f"acquisition_date {observation.acquisition_date!r} is not a valid ISO-8601 date")
+    # Already admitted by the same authority at observation construction; this
+    # is the string -> date lift the registry row shape needs, not a second gate.
+    acquisition_date = require_iso8601_date(observation.acquisition_date)
     return Modelo720RowObservation(
         source_id=f"{observation.source_kind.value}:{observation.source_object_id}",
         asset_class_code=_asset_class_code(observation.asset_class),

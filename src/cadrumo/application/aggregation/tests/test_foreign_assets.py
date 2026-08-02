@@ -23,6 +23,7 @@ from .._foreign_assets import (
     ForeignAssetIngestObservation,
     ForeignAssetsAggregation,
     ForeignAssetsAggregationSourceResolver,
+    _registry_observation_from_foreign_asset,
     _registry_observations_from_foreign_assets_aggregation,
     aggregate_foreign_assets_720,
     declarable_asset_classes_720,
@@ -73,11 +74,13 @@ def _m720_revision() -> ModeloRevision:
         period_selector=PeriodSelector(year_from=2013, periods=("0A",)),
         legal_refs=_M720_LEGAL_REFS,
         source_refs=_M720_SOURCE_REFS,
-        parameters=resources().modelos.authority.snapshot(
+        parameters=resources()
+        .modelos.authority.snapshot(
             "720",
             filing_year=2025,
             period="0A",
-        ).revision.parameters,
+        )
+        .revision.parameters,
         bindings=tuple(_m720_row_binding(binding_id, row_field) for binding_id, row_field in _M720_ROW_BINDINGS),
     )
 
@@ -516,3 +519,46 @@ class TestInvariants:
                     "total_valuation_eur": Decimal("0"),
                 },
             )
+
+
+ValidationError = __import__("pydantic").ValidationError
+
+
+@pytest.mark.parametrize("impossible", ["2026-99-99", "2026-02-30", "2025-13-01", "0000-00-00"])
+def test_impossible_acquisition_dates_are_refused_at_ingestion(impossible: str) -> None:
+    """An impossible calendar date is refused before it can reach aggregation.
+
+    ``acquisition_date`` was bounded only by string length, so a ten-character
+    non-date passed construction and ``aggregate_foreign_assets_720`` returned
+    totals for it exactly as it did for a real date. The refusal only arrived
+    later, at the registry adapter that finally parses the value — after the
+    declarability decision had already been made from it.
+    """
+    with pytest.raises(ValidationError):
+        _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", acquisition=impossible)
+
+
+@pytest.mark.parametrize("malformed", ["20260301", "2026-3-1", "01-03-2026", "2026-03-01T00:00:00"])
+def test_non_extended_iso_acquisition_dates_are_refused(malformed: str) -> None:
+    """Only the extended ``YYYY-MM-DD`` wire form is admitted."""
+    with pytest.raises(ValidationError):
+        _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", acquisition=malformed)
+
+
+def test_valid_acquisition_date_aggregates_and_reaches_the_registry_row() -> None:
+    """The positive control: a real date is admitted and survives to the registry row shape.
+
+    Without this, the refusal assertions above would also hold for a validator
+    that refused every value.
+    """
+    observation = _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", acquisition="2026-03-01")
+    assert observation.acquisition_date == "2026-03-01"
+
+    aggregation = aggregate_foreign_assets_720(
+        (observation,),
+        period=Period.from_year_and_code(2026, "0A"),
+    )
+    assert aggregation.total_assets == 1
+
+    row = _registry_observation_from_foreign_asset(observation)
+    assert row.acquisition_date == date(2026, 3, 1)

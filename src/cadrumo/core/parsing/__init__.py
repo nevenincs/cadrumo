@@ -7,6 +7,8 @@ Public surface
   or ``None`` (absent / unrecognised).
 * :func:`parse_date` — unified date parser with format and error-policy axes.
 * :func:`parse_iso8601_date` — parse an ISO-8601 date string (``YYYY-MM-DD``).
+* :func:`require_iso8601_date` and :data:`IsoDateString` — the strict admission
+  authority for a required wire date that must name a real calendar date.
 * :func:`parse_ddmmyyyy_date` — parse a Spanish day-first date string
   (``DD-MM-YYYY`` or ``DD/MM/YYYY``).
 * :func:`normalise_iso_4217_currency` — normalise a raw currency token to its
@@ -28,13 +30,13 @@ from ._codes import (
     normalise_iso_3166_alpha2_jurisdiction,
     normalise_iso_4217_currency,
 )
+from ._dates import IsoDateString, parse_date, require_iso8601_date
 from ._dates import (
     _parse_ddmmyyyy_date as _parse_ddmmyyyy_date_impl,
 )
 from ._dates import (
     _parse_iso8601_date as _parse_iso8601_date_impl,
 )
-from ._dates import parse_date
 from ._utils import parse_bool
 
 
@@ -49,10 +51,12 @@ def parse_ddmmyyyy_date(raw: str | None) -> date | None:
 
 
 __all__ = [
+    "IsoDateString",
     "normalise_iso_3166_alpha2_jurisdiction",
     "normalise_iso_4217_currency",
     "parse_bool",
     "parse_date",
     "parse_ddmmyyyy_date",
     "parse_iso8601_date",
+    "require_iso8601_date",
 ]
