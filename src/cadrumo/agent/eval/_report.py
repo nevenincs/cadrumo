@@ -92,13 +92,41 @@ def build_measurement_report(
 ) -> MeasurementReport:
     """Aggregate one run's scores and trajectories into the measurement report.
 
+    Raises:
+        ValueError: Two trajectories share a session id (a row could then
+            silently borrow the wrong one's evidence), or a score's matched
+            trajectory names a different scenario or persona than the score
+            itself claims.
+
     Returns:
         A :class:`MeasurementReport`.
     """
-    by_session = {trajectory.session_id: trajectory for trajectory in trajectories}
+    by_session: dict[str, LiveTrajectory] = {}
+    for trajectory in trajectories:
+        if trajectory.session_id in by_session:
+            raise ValueError(
+                f"duplicate trajectory session_id {trajectory.session_id!r}: each captured "
+                "session must be unique, or a report row could silently borrow the wrong evidence",
+            )
+        by_session[trajectory.session_id] = trajectory
+
     rows: list[ScenarioOutcomeRow] = []
     for score in scores:
         trajectory = by_session.get(score.session_id)
+        if trajectory is not None:
+            if trajectory.persona != score.persona:
+                raise ValueError(
+                    f"score for session {score.session_id!r} claims persona {score.persona!r}, "
+                    f"but its matched trajectory recorded persona {trajectory.persona!r}",
+                )
+            # trajectory.scenario is optional (empty for free-exploration
+            # captures never tagged with a scenario at capture time); only a
+            # trajectory that DOES declare a scenario can disagree.
+            if trajectory.scenario and trajectory.scenario != score.scenario:
+                raise ValueError(
+                    f"score for session {score.session_id!r} claims scenario {score.scenario!r}, "
+                    f"but its matched trajectory recorded scenario {trajectory.scenario!r}",
+                )
         rows.append(
             ScenarioOutcomeRow(
                 scenario=score.scenario,

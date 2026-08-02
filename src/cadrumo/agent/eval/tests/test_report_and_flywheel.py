@@ -107,6 +107,30 @@ def test_build_measurement_report_all_passed_when_clean() -> None:
     assert report.all_passed is True
 
 
+def test_build_measurement_report_refuses_a_scenario_mismatched_trajectory() -> None:
+    # The score claims "cierre-trimestre" but its matched trajectory (same
+    # session id) recorded a different scenario; this must not silently mix
+    # one session's tool/narration counts into another scenario's row.
+    score = _passing_score("s-1")
+    mismatched_trajectory = _trajectory("s-1", command_keys=()).model_copy(update={"scenario": "otra-tarea"})
+    with pytest.raises(ValueError, match="claims scenario"):
+        build_measurement_report(scores=(score,), trajectories=(mismatched_trajectory,))
+
+
+def test_build_measurement_report_refuses_a_persona_mismatched_trajectory() -> None:
+    score = _passing_score("s-1")
+    mismatched_trajectory = _trajectory("s-1", command_keys=()).model_copy(update={"persona": "cadrumo-verifier"})
+    with pytest.raises(ValueError, match="claims persona"):
+        build_measurement_report(scores=(score,), trajectories=(mismatched_trajectory,))
+
+
+def test_build_measurement_report_refuses_duplicate_trajectory_session_ids() -> None:
+    score = _passing_score("s-1")
+    trajectory = _trajectory("s-1", command_keys=())
+    with pytest.raises(ValueError, match="duplicate trajectory session_id"):
+        build_measurement_report(scores=(score,), trajectories=(trajectory, trajectory))
+
+
 def test_measurement_report_refuses_aggregate_counts_that_conflict_with_rows() -> None:
     failed_row = ScenarioOutcomeRow(
         scenario="cierre-trimestre",
