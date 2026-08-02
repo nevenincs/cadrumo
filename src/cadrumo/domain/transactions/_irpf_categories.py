@@ -70,24 +70,83 @@ _LEDGER_IRPF_CATEGORY_CATALOGUE = (
 )
 
 
+_CATALOGUE_BY_ID: dict[str, LedgerIrpfCategoryDescriptor] = {
+    descriptor.id: descriptor for descriptor in _LEDGER_IRPF_CATEGORY_CATALOGUE
+}
+
+
 def ledger_irpf_category_catalogue() -> tuple[LedgerIrpfCategoryDescriptor, ...]:
     """Return public :class:`LedgerIrpfCategoryDescriptor` rows for ledger IRPF categories."""
     return _LEDGER_IRPF_CATEGORY_CATALOGUE
 
 
-def has_non_work_irpf_category(value: str | None) -> bool:
-    """Return whether a row carries an explicit non-salary withholding axis."""
-    return value not in {None, "", IRPF_CATEGORY_TRABAJO}
+def ledger_irpf_category_ids() -> tuple[str, ...]:
+    """Return every public ledger IRPF category id in stable sorted order."""
+    return tuple(sorted(_CATALOGUE_BY_ID))
 
 
-def has_activity_irpf_category(value: str | None) -> bool:
+def ledger_irpf_category(
+    value: str | None,
+    *,
+    direction: TransactionDirection | None = None,
+) -> LedgerIrpfCategoryDescriptor | None:
+    """Return the withholding descriptor ``value`` names for ``direction``, or ``None``.
+
+    ``None`` is returned for three distinct situations that are all "this row
+    declares no ledger withholding treatment": no token at all, a token that
+    names no catalogue row, and a token whose descriptor does not admit
+    ``direction``.
+
+    The last case is the one worth stating. ``irpf_category`` is not a
+    single-taxonomy field: alongside the ledger withholding ids it also carries
+    the Renta income-type tags that classify which LIRPF branch a row's income
+    or expense belongs to. Those tags are a different axis with no withholding
+    treatment attached, so resolving them here to ``None`` is correct rather
+    than an error — refusing them would refuse a legitimate classification.
+    What must not happen is the inverse: an unrecognised or wrong-direction
+    token silently unlocking the withholding relaxation on the gross invariant.
+
+    Args:
+        value: The row's ``irpf_category`` token, if any.
+        direction: When given, the row's :class:`TransactionDirection`; the
+            descriptor is returned only if it declares that direction.
+
+    Returns:
+        The matching descriptor, or ``None``.
+    """
+    if value is None:
+        return None
+    descriptor = _CATALOGUE_BY_ID.get(value)
+    if descriptor is None:
+        return None
+    if direction is not None and direction not in descriptor.directions:
+        return None
+    return descriptor
+
+
+def has_non_work_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
+    """Return whether a row carries an explicit non-salary withholding axis.
+
+    Resolved through the closed catalogue rather than "anything that is not
+    ``trabajo``": ``net_paid_invoice`` is the descriptor's own statement that
+    the declared invoice substrate may legitimately exceed the cash movement,
+    and ``directions`` is its statement of which flow the treatment is defined
+    for -- rent withholding is paid, never received.
+    """
+    descriptor = ledger_irpf_category(value, direction=direction)
+    return descriptor is not None and descriptor.net_paid_invoice
+
+
+def has_activity_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
     """Return whether a row carries the actividad-economica withholding axis."""
-    return value == IRPF_CATEGORY_ACTIVIDAD_ECONOMICA
+    descriptor = ledger_irpf_category(value, direction=direction)
+    return descriptor is not None and descriptor.purpose == "activity_income_withholding"
 
 
-def has_rent_irpf_category(value: str | None) -> bool:
+def has_rent_irpf_category(value: str | None, *, direction: TransactionDirection) -> bool:
     """Return whether a row carries an explicit rental withholding axis."""
-    return value in RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING
+    descriptor = ledger_irpf_category(value, direction=direction)
+    return descriptor is not None and descriptor.purpose == "rent_expense_withholding"
 
 
 def format_irpf_category_ids(ids: frozenset[str] | tuple[str, ...]) -> str:
