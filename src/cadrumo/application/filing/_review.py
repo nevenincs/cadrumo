@@ -122,6 +122,12 @@ class ModeloApprovalStaleReason(StrEnum):
             has been edited since approval.
         SCHEMA_FORMULA_CHANGED: The registry-backed casilla schema or formula set
             has changed since approval.
+        REVIEW_CHECKSUM_MISMATCH: The stored ``review_checksum`` is not the
+            checksum of the stored basis. Unlike every other reason here, this
+            does not mean an upstream source moved -- it means the persisted
+            approval metadata is internally inconsistent, so the aggregate
+            claim over the basis is false and the approval cannot be trusted
+            even when every basis field still matches.
     """
 
     APPROVAL_BASIS_VERSION_CHANGED = "BASE_APROBACION_VERSION_CAMBIADA"
@@ -133,6 +139,7 @@ class ModeloApprovalStaleReason(StrEnum):
     PROFILE_ACTIVITY_CHANGED = "ACTIVIDAD_PERFIL_CAMBIADA"
     CATEGORY_PROFILES_CHANGED = "PERFILES_CATEGORIA_CAMBIADOS"
     SCHEMA_FORMULA_CHANGED = "ESQUEMA_FORMULA_CAMBIADO"
+    REVIEW_CHECKSUM_MISMATCH = "SUMA_VERIFICACION_REVISION_NO_COINCIDE"
 
 
 def compute_current_approval_basis(
@@ -277,6 +284,15 @@ def approval_stale_reasons(
     if draft.approval_basis is None:
         return ()
 
+    stored_basis = draft.approval_basis
+    # The checksum is an aggregate claim OVER the basis, so it is verified
+    # against the basis itself before any field-by-field comparison. Checking
+    # only that it is present (which is all refresh_review_status did) let a
+    # persisted draft keep APROBADO with a replaced checksum while every basis
+    # field still matched -- the tamper survived the reload unchallenged.
+    if draft.review_checksum is not None and draft.review_checksum != compute_review_checksum(stored_basis):
+        return (ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH,)
+
     current_basis = compute_current_approval_basis(
         draft,
         bucket_id=bucket_id,
@@ -288,7 +304,6 @@ def approval_stale_reasons(
         category_profiles=category_profiles,
     )
     reasons: list[ModeloApprovalStaleReason] = []
-    stored_basis = draft.approval_basis
     if stored_basis.version != current_basis.version:
         reasons.append(ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED)
     if stored_basis.draft_payload_fingerprint != current_basis.draft_payload_fingerprint:
@@ -550,6 +565,8 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
         A localized phrase suitable for inline UI display.
     """
     match reason:
+        case ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH:
+            return tr("application.filing.review.stale_reasons.review_checksum_mismatch")
         case ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED:
             return tr("application.filing.review.stale_reasons.approval_basis_version_changed")
         case ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED:

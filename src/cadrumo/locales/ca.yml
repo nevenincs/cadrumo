@@ -708,6 +708,7 @@ application:
         schema_formula_changed: la procedència de l'esquema o la fórmula ha canviat
         transaction_catalogue_changed: el catàleg de transaccions ha canviat
         unknown: '%{reason}'
+        review_checksum_mismatch: 'La suma de verificació de l''aprovació no coincideix amb la seva base d''aprovació'
     runtime:
       errors:
         active_profile_load_failed: 'No s ha pogut carregar el perfil actiu de presentació:

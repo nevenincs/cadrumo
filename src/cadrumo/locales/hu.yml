@@ -666,6 +666,7 @@ application:
         schema_formula_changed: a séma vagy képlet eredete megváltozott
         transaction_catalogue_changed: a tranzakciós katalógus megváltozott
         unknown: '%{reason}'
+        review_checksum_mismatch: 'A tárolt jóváhagyási ellenőrzőösszeg nem egyezik a jóváhagyási alapjával'
     runtime:
       errors:
         active_profile_load_failed: 'Az aktív bevallási profil nem tölthető be: %{reason}.'

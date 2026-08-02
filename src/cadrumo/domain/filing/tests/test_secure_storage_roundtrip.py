@@ -122,7 +122,7 @@ def _populated_draft() -> ModeloDraft:
         approved_by="operator-reviewer-1",
         review_checksum="a" * 64,
         approval_basis=ModeloApprovalBasis(
-            draft_payload_fingerprint="b" * 64,
+            draft_payload_fingerprint="b" * 16,
             draft_review_fingerprint="c" * 64,
             transaction_catalogue_fingerprint="d" * 64,
             invoice_catalogue_fingerprint="1" * 64,

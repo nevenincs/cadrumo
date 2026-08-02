@@ -642,6 +642,7 @@ application:
         schema_formula_changed: schema or formula provenance changed
         transaction_catalogue_changed: transaction catalogue changed
         unknown: '%{reason}'
+        review_checksum_mismatch: 'The stored approval checksum does not match its approval basis'
     runtime:
       errors:
         active_profile_load_failed: 'The active filing profile could not be loaded:

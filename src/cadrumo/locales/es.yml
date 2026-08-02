@@ -714,6 +714,7 @@ application:
         schema_formula_changed: la procedencia del esquema o la fórmula ha cambiado
         transaction_catalogue_changed: el catálogo de transacciones ha cambiado
         unknown: '%{reason}'
+        review_checksum_mismatch: 'La suma de verificación de la aprobación no coincide con su base de aprobación'
     runtime:
       errors:
         active_profile_load_failed: 'No se pudo cargar el perfil activo de presentación:
