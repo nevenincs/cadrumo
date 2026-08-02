@@ -37,7 +37,7 @@ from __future__ import annotations
 import secrets
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -85,11 +85,12 @@ from . import (
     RenameProfileCommand,
 )
 from ._aggregate import ProfileAggregate
-from ._integrity import verify_profile_integrity
+from ._integrity import ProfileIntegrityError, verify_profile_integrity
 from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
 from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
 
 if TYPE_CHECKING:
+    from ...adapters.persistence.storage.bucket import BucketPaths
     from ...domain.buckets import BucketEvent
     from ._lifecycle import ProfileLifecycleService
 
@@ -308,10 +309,7 @@ class ProfileRepository:
             # manifest, is a refusal. No store was written, so there is
             # nothing to roll back.
             if manifest_path(paths).is_file():
-                raise ProfileNotFoundError(
-                    translated_message="application.user_profile.errors.profile_manifest_already_registered",
-                    context={"profile": resolved_id, "bucket_dir": paths.bucket_dir},
-                )
+                self._refuse_create_onto_registered_bucket(resolved_id, paths)
             self._refuse_duplicate_label(label)
             if enforce_unique_tax_id:
                 self._refuse_duplicate_tax_id(facts)
@@ -851,6 +849,49 @@ class ProfileRepository:
         return tuple(summaries)
 
     # ── helpers ────────────────────────────────────────────────────
+
+    def _refuse_create_onto_registered_bucket(self, resolved_id: str, paths: BucketPaths) -> NoReturn:
+        """Refuse a create onto an existing bucket, naming the real condition.
+
+        The refusal itself is not in question -- a bucket that already carries
+        a manifest is never created over. What this decides is WHICH refusal
+        the operator sees, and "already registered" is the wrong answer when
+        the two stores disagree about the profile.
+
+        That case is reachable without tampering. ``complete_setup`` writes the
+        encrypted record first and the plaintext manifest second, so an
+        interruption between them leaves the mirror saying ``setup_incomplete``
+        over an ``ACTIVE`` record. The wizard's create-mode resolver reads that
+        mirror, resolves to the existing bucket, and arrives here -- where the
+        operator was told their profile was not found, about a profile that
+        demonstrably exists, with nothing naming the divergence. The resume
+        path already reports this honestly; this makes the create path agree.
+
+        ``load`` is the one caller of
+        :func:`~cadrumo.application.user_profile._integrity.verify_profile_integrity`,
+        so consulting it here reuses the existing authority rather than adding
+        a second comparison beside it. When it cannot answer -- a locked
+        bucket, absent key material -- the refusal below still stands and only
+        its precision is lost, so nothing is admitted that would otherwise
+        have been refused.
+        """
+        try:
+            self.load(resolved_id)
+        except ProfileIntegrityError:
+            # Ordered first: this subclasses ProfileNotFoundError, which the
+            # broader arm below also catches. Reversed, the divergence would
+            # be reported as the generic refusal it exists to replace.
+            raise
+        except (CadrumoError, OSError, ValidationError):
+            _log.debug(
+                "create refusal could not determine store agreement for bucket profile_id=%s",
+                redact_for_cli_output(resolved_id),
+                exc_info=True,
+            )
+        raise ProfileNotFoundError(
+            translated_message="application.user_profile.errors.profile_manifest_already_registered",
+            context={"profile": resolved_id, "bucket_dir": paths.bucket_dir},
+        )
 
     def _refuse_duplicate_label(self, label: str) -> None:
         """Refuse a create whose label is already carried by a live profile.
