@@ -18,6 +18,7 @@ from ....adapters.outbound.google import (
     CalcSheetsApplyResult,
     GoogleAuthError,
     apply_export_plan,
+    relation_edit_payload,
     resolve_active_profile,
 )
 from ....adapters.outbound.storage import (
@@ -50,6 +51,7 @@ from ._google_payloads import (
     GoogleSyncCalcComputeCasillaPayload,
     GoogleSyncCalcComputeResult,
     GoogleSyncCalcExportResult,
+    GoogleSyncCalcPullRelationEditPayload,
     GoogleSyncCalcPullResult,
     GoogleSyncCalcVerifyDivergencePayload,
     GoogleSyncCalcVerifyResult,
@@ -472,8 +474,7 @@ def google_sync_calc_pull(
             {"binding": e.binding, "value": str(e.value) if e.value is not None else None} for e in populated_bindings
         ],
         "relation_edits": [
-            {"relation": e.relation, "value": str(e.value) if e.value is not None else None}
-            for e in populated_relations
+            GoogleSyncCalcPullRelationEditPayload.model_validate(relation_edit_payload(e)) for e in populated_relations
         ],
         "row_set_edits_populated": len(populated_row_sets),
         "row_set_cells_populated": row_set_cells_total,
