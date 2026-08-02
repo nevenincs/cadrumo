@@ -14,4 +14,5 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core.time._clock
+   cadrumo.core.time._range
    cadrumo.core.time._utc

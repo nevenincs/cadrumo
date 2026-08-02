@@ -66,9 +66,10 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
+from ..core.time import validate_inclusive_date_range
 from .auth import test_operator_auth
 
 __all__ = [
@@ -135,6 +136,18 @@ class RunHealthReport(BaseModel):
     persisted_session_expired: bool | None = None
     persisted_session_state: str = ""
     probe_summary: str = ""
+
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> RunHealthReport:
+        """Reject a reported window whose ``until`` precedes its ``since``.
+
+        The two bounds are parsed independently at the CLI, so neither
+        parse site can see the other. A reversed pair renders a window
+        that never existed while reporting zero observations, which reads
+        exactly like a real quiet period.
+        """
+        validate_inclusive_date_range(self.since, self.until)
+        return self
 
     @property
     def has_run_data(self) -> bool:
@@ -304,6 +317,18 @@ class LatencyReport(BaseModel):
     overall: LatencyPercentiles = Field(default_factory=LatencyPercentiles)
     by_provider: tuple[tuple[str, LatencyPercentiles], ...] = ()
 
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> LatencyReport:
+        """Reject a reported window whose ``until`` precedes its ``since``.
+
+        The two bounds are parsed independently at the CLI, so neither
+        parse site can see the other. A reversed pair renders a window
+        that never existed while reporting zero observations, which reads
+        exactly like a real quiet period.
+        """
+        validate_inclusive_date_range(self.since, self.until)
+        return self
+
     @property
     def has_run_data(self) -> bool:
         """Return ``True`` when at least one run duration was aggregated."""
@@ -336,6 +361,18 @@ class ErrorsBreakdownReport(BaseModel):
     total_runs: int = Field(default=0, ge=0)
     total_failed: int = Field(default=0, ge=0)
     by_error_kind: tuple[ErrorKindCount, ...] = ()
+
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> ErrorsBreakdownReport:
+        """Reject a reported window whose ``until`` precedes its ``since``.
+
+        The two bounds are parsed independently at the CLI, so neither
+        parse site can see the other. A reversed pair renders a window
+        that never existed while reporting zero observations, which reads
+        exactly like a real quiet period.
+        """
+        validate_inclusive_date_range(self.since, self.until)
+        return self
 
     @property
     def has_failures(self) -> bool:
@@ -550,6 +587,18 @@ class LlmUsageReport(BaseModel):
     total_runs: int = Field(default=0, ge=0)
     total_succeeded: int = Field(default=0, ge=0)
     total_failed: int = Field(default=0, ge=0)
+
+    @model_validator(mode="after")
+    def _window_is_not_empty(self) -> LlmUsageReport:
+        """Reject a reported window whose ``until`` precedes its ``since``.
+
+        The two bounds are parsed independently at the CLI, so neither
+        parse site can see the other. A reversed pair renders a window
+        that never existed while reporting zero observations, which reads
+        exactly like a real quiet period.
+        """
+        validate_inclusive_date_range(self.since, self.until)
+        return self
 
     @property
     def has_run_data(self) -> bool:
