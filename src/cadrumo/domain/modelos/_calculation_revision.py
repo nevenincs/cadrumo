@@ -61,7 +61,7 @@ from ..calculations.registry import (
     validated_casilla_id,
 )
 from ._errors import ModeloError, ModeloValidationError
-from ._ids import CalculationRevisionId, WorkUnitId
+from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ._row_models import ModeloDetailRow
 
@@ -602,7 +602,7 @@ class CalculationRevision(BaseModel):
     discarded_by: ModeloActorLabel | None = None
     discard_reason: _DiscardReason | None = None
     amendment_kind: CalculationRevisionAmendmentKind | None = None
-    amends_filing_record_id: CalculationRevisionId | None = None
+    amends_filing_record_id: FilingRecordId | None = None
     amendment_reason: _DiscardReason | None = None
 
     @field_validator(

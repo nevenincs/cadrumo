@@ -296,6 +296,42 @@ class ModeloRecordCatalogue(BaseModel):
             currents[current_key] = record.filing_record_id
         return self
 
+    @model_validator(mode="after")
+    def _enforce_amendment_links_resolve(self) -> ModeloRecordCatalogue:
+        """Resolve every ``amends_filing_record_id`` to a real, distinct, same-coordinate record.
+
+        A declaración complementaria corrects one earlier filing for the same
+        (bucket, modelo, filing_year, period) coordinate. The field alone is
+        shape-validated, so without this a record could claim to amend a
+        filing that does not exist, or itself, and the catalogue would accept
+        the claim as a valid audit chain. ``member_nif`` is deliberately not
+        compared: the amendment builder does not currently propagate it, so
+        comparing it here would refuse member-scoped amendments rather than
+        surface that separate gap.
+        """
+        for record in self.records.values():
+            target_id = record.amends_filing_record_id
+            if target_id is None:
+                continue
+            if target_id == record.filing_record_id:
+                raise ModeloValidationError(
+                    f"filing record {record.filing_record_id!r} cannot amend itself",
+                )
+            target = self.records.get(target_id)
+            if target is None:
+                raise ModeloValidationError(
+                    f"filing record {record.filing_record_id!r} amends {target_id!r}, "
+                    "which is not in this catalogue",
+                )
+            coordinates = (record.bucket_id, record.modelo, record.filing_year, record.period)
+            target_coordinates = (target.bucket_id, target.modelo, target.filing_year, target.period)
+            if coordinates != target_coordinates:
+                raise ModeloValidationError(
+                    f"filing record {record.filing_record_id!r} amends {target_id!r} across filing "
+                    f"coordinates: {target_coordinates!r} is not {coordinates!r}",
+                )
+        return self
+
     def get(self, filing_record_id: str) -> ModeloRecord | None:
         """Return the :class:`ModeloRecord` for ``filing_record_id``, or ``None``."""
         return self.records.get(filing_record_id)
