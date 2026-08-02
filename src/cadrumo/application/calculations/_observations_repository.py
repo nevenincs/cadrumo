@@ -423,9 +423,19 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
 
         Used by grouped previous-filing and clean-state readers to enumerate all
         known source rows for a modelo, including member-widened keys.
+
+        Scans through
+        :meth:`~adapters.persistence.storage.SecureBoundRepository.iter_verified_records`
+        rather than the unverified counterpart: the ``modelo`` filter below
+        reads the payload's own coordinates, so a row filed under another
+        ``(modelo, filing_year, period, member)`` key would enter the window it
+        describes rather than the one it is stored in, and carry-forward and
+        aggregation readers would fold a foreign period's figures into this
+        modelo. The verified scan recomputes the natural key from each payload
+        and refuses a mismatch instead of yielding it.
         """
         safe_repository_id(modelo, context="modelo")
-        for payload in self.iter_records():
+        for payload in self.iter_verified_records():
             if payload.observation.modelo == modelo:
                 yield payload
 
@@ -503,10 +513,20 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
 
         Each element is an :class:`IvaCompensationReconciliationDecision` sorted
         by ``(target_year, target_period, taxpayer_nif, decided_at)``.
+
+        Scans through
+        :meth:`~adapters.persistence.storage.SecureBoundRepository.iter_verified_records`
+        rather than the unverified counterpart. The latest-decision key is a
+        hash of the taxpayer and target period, so a decision filed under
+        another taxpayer's or period's key is invisible to any check that reads
+        the decrypted decision alone; it would then sort into this list as that
+        other subject's latest decision and enter reconciliation. The verified
+        scan recomputes the hashed key from each payload and refuses a
+        mismatch.
         """
         return tuple(
             sorted(
-                (payload.decision for payload in self.iter_records()),
+                (payload.decision for payload in self.iter_verified_records()),
                 key=lambda decision: (
                     decision.target_year,
                     decision.target_period.registry_token,
