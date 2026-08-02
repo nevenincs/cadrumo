@@ -1236,6 +1236,22 @@ class BucketTransactionRef(BaseModel):
         return trimmed
 
 
+def existing_transaction_import_fingerprints(transaction: Transaction) -> frozenset[str]:
+    """Return every canonical re-import fingerprint for a stored transaction.
+
+    Imported rows carry their parse-boundary, direction-qualified fingerprint
+    verbatim. Older or hand-entered rows may not have that stamp, so their
+    current raw payload is projected once with the stored direction as a
+    deterministic fallback. Preview diagnostics and the persisting import path
+    must use this exact projection: a directionless fallback would incorrectly
+    collapse otherwise distinct incoming and outgoing movements.
+    """
+    fingerprints = {derive_import_fingerprint(transaction.raw, direction=transaction.direction)}
+    if transaction.import_fingerprint:
+        fingerprints.add(transaction.import_fingerprint)
+    return frozenset(fingerprints)
+
+
 class TransactionCatalogue(BaseModel):
     """Immutable catalogue keyed by ``transaction_id``.
 

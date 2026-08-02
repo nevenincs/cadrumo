@@ -178,7 +178,13 @@ def test_import_duplicate_against_catalogue_emits_duplicate_info() -> None:
     duplicate."""
     raw = _raw_transaction("tx-1")
     transaction = Transaction.model_validate(
-        {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
+        {
+            "raw": raw,
+            "direction": TransactionDirection.OUTGOING,
+            "import_fingerprint": derive_import_fingerprint(raw),
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        },
     )
     catalogue = TransactionCatalogue.model_validate({transaction.transaction_id: transaction})
 
@@ -224,6 +230,31 @@ def test_import_duplicate_against_catalogue_uses_supplied_direction_fingerprint(
     duplicate_diagnostics = [d for d in result.diagnostics if d.kind is LedgerImportDiagnosticKind.DUPLICATE]
     assert len(duplicate_diagnostics) == 1
     assert duplicate_diagnostics[0].severity is BaseSeverity.INFO
+
+
+def test_import_preview_keeps_opposite_direction_movement() -> None:
+    """Preview and persistence retain movements that differ only by direction."""
+    raw = _raw_transaction("mirror")
+    existing = Transaction.model_validate(
+        {
+            "raw": raw,
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+        },
+    )
+    outgoing_fingerprint = derive_import_fingerprint(raw, direction=TransactionDirection.OUTGOING)
+
+    result = import_ledger_with_diagnostics(
+        source_path=_SOURCE_PATH,
+        raw_transactions=(raw,),
+        existing_catalogue=TransactionCatalogue.model_validate({existing.transaction_id: existing}),
+        import_fingerprints=(outgoing_fingerprint,),
+    )
+
+    assert result.imported_count == 1
+    assert result.skipped_count == 0
+    assert not any(diagnostic.kind is LedgerImportDiagnosticKind.DUPLICATE for diagnostic in result.diagnostics)
 
 
 def test_import_duplicate_diagnostic_carries_affected_transaction_id() -> None:

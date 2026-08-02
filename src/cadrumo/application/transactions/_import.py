@@ -29,6 +29,7 @@ from ...domain.transactions import (
     TransactionCatalogue,
     derive_import_fingerprint,
     derive_transaction_id,
+    existing_transaction_import_fingerprints,
 )
 from ._diagnostics import (
     LedgerImportDiagnostic,
@@ -99,12 +100,7 @@ def import_ledger_with_diagnostics(
     existing_fingerprints = {
         fingerprint
         for transaction in existing_catalogue.values()
-        for fingerprint in (
-            transaction.import_fingerprint,
-            derive_import_fingerprint(transaction.raw, direction=transaction.direction),
-            derive_import_fingerprint(transaction.raw),
-        )
-        if fingerprint is not None
+        for fingerprint in existing_transaction_import_fingerprints(transaction)
     }
 
     if not rows:

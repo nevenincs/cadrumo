@@ -158,6 +158,7 @@ from ._models import (
     derive_movement_day_key,
     derive_split_group_id,
     derive_transaction_id,
+    existing_transaction_import_fingerprints,
     normalise_movement_reference,
 )
 from ._protocols import (
@@ -274,6 +275,7 @@ __all__ = [
     "derive_movement_day_key",
     "derive_split_group_id",
     "derive_transaction_id",
+    "existing_transaction_import_fingerprints",
     "find_transaction",
     "has_activity_irpf_category",
     "has_employment_irpf_category",
