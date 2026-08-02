@@ -4,10 +4,14 @@ These exercise :func:`project_registered_values` against the real setup
 catalogue and hand-built :class:`UserProfileRecord`s (no mocks): every
 profile-bound page of a populated record appears, closed-set tokens
 resolve to their catalogue-declared choice LABEL, booleans render as the
-localized yes/no pair, a SECRET value passes through UNMASKED (the review
-screen owns masking), and the non-official-evidence suffix is appended
-exactly when the underlying fact carries the ``censo_artefact_g313``
-provenance token.
+localized yes/no pair, a SECRET value passes through UNMASKED at this
+layer (the review screen owns masking, through its widget-kind lookup —
+that ownership is proven, not merely asserted, by
+``test_secret_answer_is_masked_in_the_echo_and_the_review_table`` in
+``adapters/inbound/tui/tests/test_flow_tui_app.py``, which drives a real
+SECRET page with a non-empty registered value through the rendered
+table), and the non-official-evidence suffix is appended exactly when the
+underlying fact carries the ``censo_artefact_g313`` provenance token.
 
 Assertions read expected labels from the catalogue's declared label copy
 and the localized yes/no keys — key identity, never hardcoded prose.
@@ -146,7 +150,14 @@ def _secret_only_flow() -> WizardFlow:
 
 
 def test_secret_value_is_not_pre_masked() -> None:
-    """The projection passes a SECRET value through unmasked; the screen masks."""
+    """The projection passes a SECRET value through unmasked; the screen masks.
+
+    This layer must NOT pre-mask: a second masking authority here could
+    only drift from the review screen's widget-kind lookup. That the
+    screen genuinely does mask the registered column (not merely that
+    this layer refrains) is the separate claim proven by
+    ``test_secret_answer_is_masked_in_the_echo_and_the_review_table``.
+    """
     flow = _secret_only_flow()
     record = _record(UserProfileFact(path="preferences.api_token", value="s3cr3t-token"))
 
