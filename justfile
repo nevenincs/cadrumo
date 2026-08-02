@@ -640,8 +640,9 @@ db-upgrade:
 # most recent packaging-smoke evidence, and (best-effort, via `gh`) no open
 # priority:P0-blocker issue. Read-only — no outward action, ever. Exits 1 on
 # a blocking failure; advisory failures (e.g. no packaging-smoke run yet,
-# `gh` unavailable) are reported but do not fail the gate. Run this before
-# trusting `just release-apply`. See docs/_release_checklist.yaml.
+# `gh` unavailable) are reported but do not fail the gate. Re-run
+# automatically by the release orchestrator's bump stage after every
+# automated bump. See docs/_release_checklist.yaml.
 release-readiness:
     uv run --no-sync python -m dev.release.readiness
 
@@ -731,7 +732,7 @@ release:
         --dry-run \
         --debug \
         2>&1 | tee "$LOG"
-    echo "✔ dry-run complete — review $LOG, then run 'just release-apply' if the proposal is correct."
+    echo "✔ dry-run complete — review $LOG. The release orchestrator (dispatched in CI) applies the bump; this recipe is preview-only and mutates nothing."
 
 [windows]
 release:
@@ -762,102 +763,7 @@ release:
         --dry-run `
         --debug 2>&1 | Tee-Object -FilePath $log
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ dry-run complete - review $log, then run 'just release-apply' if the proposal is correct."
-
-# Apply the release changes locally.
-[unix]
-release-apply:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! uv run --no-sync python -m dev.release.readiness; then
-        echo "audit-state gate blocked — resolve the failures above before 'just release-apply'." >&2
-        exit 1
-    fi
-    if [ ! -f var/release/release-please.log ]; then
-        echo "var/release/release-please.log missing — run 'just release' first." >&2
-        exit 1
-    fi
-    BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    if [ "$BRANCH" != "main" ]; then
-        echo "release-apply must run on main (current: $BRANCH)." >&2
-        exit 1
-    fi
-    if [ -n "$(git status --porcelain)" ]; then
-        echo "working tree is not clean — commit or stash first." >&2
-        exit 1
-    fi
-    echo "Review var/release/release-please.log for the proposed next version."
-    echo "Then, in this order:"
-    echo "  1. Update .release-please-manifest.json to the new version."
-    echo "  2. Update pyproject.toml [project].version to the new version."
-    echo "  3. Update packaging/cadrumo_data_manuals/pyproject.toml [project].version."
-    echo "  4. Update packaging/cadrumo_data_official/pyproject.toml [project].version."
-    echo "  5. Update src/cadrumo/__init__.py __version__ to the new version."
-    echo "  6. Update both mandatory base dependency pins in pyproject.toml:"
-    echo "       cadrumo-data-manuals==X.Y.Z"
-    echo "       cadrumo-data-official==X.Y.Z"
-    echo "  7. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
-    echo "  8. Regenerate and verify the lock, then rerun the fail-closed version gate:"
-    echo "       uv lock"
-    echo "       uv lock --check"
-    echo "       just release-readiness"
-    echo "  9. Stage all seven release authorities (NOT packaging/mcpb/manifest.json -- its tracked version is the build-stamped sentinel):"
-    echo "       git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py CHANGELOG.md uv.lock"
-    echo "  10. Commit:"
-    echo '       git commit -m "chore(release): vX.Y.Z"'
-    echo "  11. Tag:"
-    echo '       git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"'
-    echo "When ready (human decision only), push with:"
-    echo "  git push origin main"
-    echo "  git push origin refs/tags/vX.Y.Z"
-
-[windows]
-release-apply:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    & uv run --no-sync python -m dev.release.readiness
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "audit-state gate blocked - resolve the failures above before 'just release-apply'."
-        exit 1
-    }
-    if (-not (Test-Path 'var/release/release-please.log')) {
-        Write-Error "var/release/release-please.log missing - run 'just release' first."
-        exit 1
-    }
-    $branch = (& git rev-parse --abbrev-ref HEAD).Trim()
-    if ($branch -ne 'main') {
-        Write-Error "release-apply must run on main (current: $branch)."
-        exit 1
-    }
-    $dirty = & git status --porcelain
-    if ($dirty) {
-        Write-Error "working tree is not clean - commit or stash first."
-        exit 1
-    }
-    Write-Host "Review var/release/release-please.log for the proposed next version."
-    Write-Host "Then, in this order:"
-    Write-Host "  1. Update .release-please-manifest.json to the new version."
-    Write-Host "  2. Update pyproject.toml [project].version to the new version."
-    Write-Host "  3. Update packaging/cadrumo_data_manuals/pyproject.toml [project].version."
-    Write-Host "  4. Update packaging/cadrumo_data_official/pyproject.toml [project].version."
-    Write-Host "  5. Update src/cadrumo/__init__.py __version__ to the new version."
-    Write-Host "  6. Update both mandatory base dependency pins in pyproject.toml:"
-    Write-Host "       cadrumo-data-manuals==X.Y.Z"
-    Write-Host "       cadrumo-data-official==X.Y.Z"
-    Write-Host "  7. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
-    Write-Host "  8. Regenerate and verify the lock, then rerun the fail-closed version gate:"
-    Write-Host "       uv lock"
-    Write-Host "       uv lock --check"
-    Write-Host "       just release-readiness"
-    Write-Host "  9. Stage all seven release authorities (NOT packaging/mcpb/manifest.json -- its tracked version is the build-stamped sentinel):"
-    Write-Host "       git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py CHANGELOG.md uv.lock"
-    Write-Host "  10. Commit:"
-    Write-Host '       git commit -m "chore(release): vX.Y.Z"'
-    Write-Host "  11. Tag:"
-    Write-Host '       git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"'
-    Write-Host "When ready (human decision only), push with:"
-    Write-Host "  git push origin main"
-    Write-Host "  git push origin refs/tags/vX.Y.Z"
+    Write-Host "✔ dry-run complete - review $log. The release orchestrator (dispatched in CI) applies the bump; this recipe is preview-only and mutates nothing."
 
 # Aggregate every distribution-evidence row from the given CI run(s)' evidence
 # drafts into var/distribution-install-readiness/ so `just release-readiness`

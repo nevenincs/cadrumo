@@ -19,17 +19,25 @@ from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.download_matrix import Availability, DownloadDescriptor, claimed_channels, load_descriptor
 from dev.packaging.publication_inputs import (
     COHORT_INPUT,
+    EMIT_REAL_CLIENT_EVIDENCE_COMMAND,
+    LANE_WORKFLOW_BY_CHANNEL,
     SOURCE_INPUT_BY_CHANNEL,
     _emit_outputs,
+    acquisition_lane_workflows,
+    acquisition_lanes,
     demanded_inputs,
+    host_extension_precondition_refusal,
+    lane_output_name,
     main,
     missing_sources,
     refusals,
+    unmapped_acquisition_lanes,
     unmapped_claimed_channels,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
 _SCOOP: Final[str] = "scoop"
 _HOMEBREW: Final[str] = "homebrew"
 
@@ -135,6 +143,199 @@ def test_a_claimed_channel_with_no_known_source_refuses_rather_than_passing() ->
     assert any("unknown-channel" in line for line in refusals(widened, {COHORT_INPUT: "1"}))
 
 
+def test_todays_descriptor_needs_no_acquisition_lane_because_only_python_is_claimed() -> None:
+    """The bootstrap case restated for lanes: python's evidence rides the smoke run itself."""
+    descriptor = load_descriptor()
+    assert acquisition_lanes(descriptor) == ()
+
+
+@pytest.mark.parametrize("channel_id", [_SCOOP, _HOMEBREW])
+def test_claiming_scoop_or_homebrew_arms_its_acquisition_lane(channel_id: str) -> None:
+    """The negative control: an unclaimed channel is never a lane, a claimed one always is."""
+    descriptor = load_descriptor()
+    assert channel_id not in acquisition_lanes(descriptor)
+
+    claimed = _with_availability(descriptor, channel_id, Availability.AVAILABLE)
+    assert channel_id in acquisition_lanes(claimed)
+
+
+def test_claiming_scoop_and_homebrew_together_arms_both_lanes() -> None:
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, _SCOOP, Availability.AVAILABLE),
+        _HOMEBREW,
+        Availability.AVAILABLE,
+    )
+    assert acquisition_lanes(both) == (_HOMEBREW, _SCOOP)
+
+
+def test_flipping_availability_back_to_public_launch_disarms_the_lane() -> None:
+    """No workflow edit either way: the lane set tracks the claim, not a separate switch."""
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, _SCOOP, Availability.AVAILABLE)
+    assert _SCOOP in acquisition_lanes(claimed)
+    reverted = _with_availability(claimed, _SCOOP, Availability.PUBLIC_LAUNCH)
+    assert _SCOOP not in acquisition_lanes(reverted)
+
+
+def test_a_claimed_channel_absent_from_the_source_mapping_is_never_silently_a_lane() -> None:
+    """Fail-closed composition: an unmapped claim must not pass unproven through this derivation either.
+
+    ``acquisition_lanes`` excludes it (it cannot resolve a lane for a channel
+    with no known evidence source at all), and the pre-existing
+    ``unmapped_claimed_channels`` / ``refusals`` still catch it at the CLI
+    boundary — so nothing about adding this derivation weakens that refusal.
+    """
+    descriptor = load_descriptor()
+    orphan = descriptor.channel[0].model_copy(
+        update={
+            "id": "unknown-channel",
+            "availability": Availability.AVAILABLE,
+            "artifact_kinds": (),
+            "evidence_rows": ("unknown-row",),
+        },
+    )
+    widened = descriptor.model_copy(update={"channel": (*descriptor.channel, orphan)})
+    assert "unknown-channel" not in acquisition_lanes(widened)
+    assert unmapped_claimed_channels(widened) == ("unknown-channel",)
+    assert any("unknown-channel" in line for line in refusals(widened, {COHORT_INPUT: "1"}))
+
+
+def test_python_is_never_an_acquisition_lane_even_when_every_channel_is_claimed() -> None:
+    """Python's evidence source is the cohort input itself; it must never be mistaken for a lane."""
+    descriptor = load_descriptor()
+    fully_claimed = descriptor
+    for channel in descriptor.channel:
+        fully_claimed = _with_availability(fully_claimed, channel.id, Availability.AVAILABLE)
+    assert "python" not in acquisition_lanes(fully_claimed)
+
+
+def test_unclaimed_host_extension_precondition_passes_regardless_of_evidence_release() -> None:
+    """No host-extension channel claimed: the precondition holds even with an empty release tag."""
+    descriptor = load_descriptor()
+    assert host_extension_precondition_refusal(descriptor, claude_evidence_release="") is None
+    assert host_extension_precondition_refusal(descriptor, claude_evidence_release="   ") is None
+
+
+def test_claimed_and_supplied_host_extension_precondition_passes() -> None:
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE)
+    assert host_extension_precondition_refusal(claimed, claude_evidence_release="evidence-claude-123") is None
+
+
+def test_claimed_and_absent_host_extension_precondition_refuses_naming_the_capture_command() -> None:
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE)
+
+    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="")
+
+    assert refusal is not None
+    assert refusal.startswith("REFUSED:")
+    assert EMIT_REAL_CLIENT_EVIDENCE_COMMAND in refusal
+    assert "claude-plugin" in refusal
+    # Never a step this module performs itself.
+    assert "capture them locally" in refusal
+
+
+def test_host_extension_precondition_treats_whitespace_only_evidence_release_as_absent() -> None:
+    """A blank/whitespace tag is not a supplied release; it must not satisfy the precondition."""
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, "mcpb", Availability.AVAILABLE)
+    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="   ")
+    assert refusal is not None
+    assert "mcpb" in refusal
+
+
+def test_host_extension_precondition_names_every_claimed_host_channel() -> None:
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
+        "mcpb",
+        Availability.AVAILABLE,
+    )
+    refusal = host_extension_precondition_refusal(both, claude_evidence_release="")
+    assert refusal is not None
+    assert "claude-plugin" in refusal
+    assert "mcpb" in refusal
+
+
+def test_host_extension_precondition_never_fires_for_a_non_host_extension_claim() -> None:
+    """Claiming scoop/homebrew must not trip the claude-specific precondition."""
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, "scoop", Availability.AVAILABLE)
+    assert host_extension_precondition_refusal(claimed, claude_evidence_release="") is None
+
+
+def test_every_mapped_lane_channel_resolves_to_an_existing_workflow_path_on_disk() -> None:
+    for channel_id, workflow_path in LANE_WORKFLOW_BY_CHANNEL.items():
+        resolved = _REPO_ROOT / workflow_path
+        assert resolved.is_file(), f"{channel_id!r} maps to {workflow_path!r}, which does not exist on disk"
+
+
+def test_the_claude_channels_carry_both_a_dispatchable_lane_and_a_human_evidence_precondition() -> None:
+    """The two must never collapse into one input: the workflow proves the mechanism, the human proves use."""
+    for channel_id in ("claude-plugin", "mcpb"):
+        assert channel_id in LANE_WORKFLOW_BY_CHANNEL
+        assert LANE_WORKFLOW_BY_CHANNEL[channel_id] == ".github/workflows/packaging-claude.yml"
+        assert SOURCE_INPUT_BY_CHANNEL[channel_id] == "claude_evidence_release"
+
+
+def test_todays_descriptor_needs_no_acquisition_lane_workflow() -> None:
+    descriptor = load_descriptor()
+    assert acquisition_lane_workflows(descriptor) == ()
+    assert unmapped_acquisition_lanes(descriptor) == ()
+
+
+def test_claiming_scoop_and_homebrew_resolves_to_their_distinct_workflows() -> None:
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, _SCOOP, Availability.AVAILABLE),
+        _HOMEBREW,
+        Availability.AVAILABLE,
+    )
+    assert acquisition_lane_workflows(both) == (
+        ".github/workflows/packaging-homebrew.yml",
+        ".github/workflows/packaging-scoop.yml",
+    )
+
+
+def test_claiming_both_claude_channels_dedupes_to_one_workflow() -> None:
+    """claude-plugin and mcpb are two channels but one acquisition run."""
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
+        "mcpb",
+        Availability.AVAILABLE,
+    )
+    assert acquisition_lane_workflows(both) == (".github/workflows/packaging-claude.yml",)
+
+
+def test_every_source_mapped_non_cohort_channel_has_a_declared_lane_workflow() -> None:
+    """Structural completeness: nothing ``acquisition_lanes()`` could ever return lacks a workflow.
+
+    ``acquisition_lanes()`` can only return a channel id present in
+    ``SOURCE_INPUT_BY_CHANNEL`` with a non-cohort source, so this is the exact
+    universe ``LANE_WORKFLOW_BY_CHANNEL`` must cover for
+    ``unmapped_acquisition_lanes()`` to stay permanently empty. A future channel
+    added to ``SOURCE_INPUT_BY_CHANNEL`` without a matching lane workflow fails
+    this test immediately, rather than surfacing as a silent orchestration gap.
+    """
+    potential_lane_channels = {
+        channel_id for channel_id, source in SOURCE_INPUT_BY_CHANNEL.items() if source != COHORT_INPUT
+    }
+    missing = potential_lane_channels - set(LANE_WORKFLOW_BY_CHANNEL)
+    assert not missing, f"channel(s) {sorted(missing)} could appear in acquisition_lanes() but have no workflow"
+
+
+def test_unmapped_acquisition_lanes_stays_empty_even_when_every_channel_is_claimed() -> None:
+    """Dynamic confirmation of the structural completeness above, over the real descriptor."""
+    descriptor = load_descriptor()
+    fully_claimed = descriptor
+    for channel in descriptor.channel:
+        fully_claimed = _with_availability(fully_claimed, channel.id, Availability.AVAILABLE)
+    assert unmapped_acquisition_lanes(fully_claimed) == ()
+
+
 def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) -> None:
     """The workflow guards on these booleans, so every input needs one."""
     output = tmp_path / "github_output"
@@ -190,3 +391,36 @@ def test_main_accepts_a_registry_only_dispatch(tmp_path: Path) -> None:
     ):
         assert main(["--github-output", str(output)]) == 0
     assert "need_scoop_run_id=false" in output.read_text(encoding="utf-8")
+
+
+def test_a_claimed_claude_plugin_channel_keeps_its_lane_and_its_evidence_release_separate() -> None:
+    """The dispatchable lane and the human capture are two facts, never one.
+
+    A claimed `claude-plugin` channel demands BOTH: `packaging-claude.yml`
+    proves the plugin and MCPB install works, and an operator-minted evidence
+    release holds the four real-client rows proving a human actually ran it.
+    The publication authority consumes the second as a release tag.
+
+    Collapsing them fails the publication at its final leg after a full soak
+    and silently replaces operator-minted evidence with a machine-produced
+    value.
+    """
+    claimed = _with_availability(load_descriptor(), "claude-plugin", Availability.AVAILABLE)
+
+    # The lane is dispatched...
+    assert ".github/workflows/packaging-claude.yml" in acquisition_lane_workflows(claimed)
+    # ...and its run id has its own output name, distinct from the evidence input.
+    assert lane_output_name(".github/workflows/packaging-claude.yml") == "claude_plugin_run_id"
+    assert lane_output_name(".github/workflows/packaging-claude.yml") != SOURCE_INPUT_BY_CHANNEL["claude-plugin"]
+
+    # ...while the evidence release remains a SEPARATE demanded input, and its
+    # absence still refuses the whole chain rather than being satisfied by the
+    # lane having run.
+    assert SOURCE_INPUT_BY_CHANNEL["claude-plugin"] == "claude_evidence_release"
+    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="")
+    assert refusal is not None
+    assert "emit_real_client_evidence" in refusal
+
+    # A supplied evidence release satisfies it; a lane run id is not what this
+    # input means, and nothing here derives one from the other.
+    assert host_extension_precondition_refusal(claimed, claude_evidence_release="claude-evidence-2026-08-02") is None

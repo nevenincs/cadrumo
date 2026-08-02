@@ -3,8 +3,8 @@
 The command-bearing ``cadrumo`` wheel excludes large corpus source binaries,
 while two exact-version mandatory dependencies carry them:
 ``cadrumo-data-manuals`` owns ``corpus/manuals`` and
-``cadrumo-data-official`` owns ``corpus/aeat_official`` plus
-``corpus/normatives``. Both contribute to the same ``cadrumo_data`` implicit
+``cadrumo-data-official`` owns ``corpus/aeat_official``, ``corpus/eu_official``,
+and ``corpus/normatives``. Both contribute to the same ``cadrumo_data`` implicit
 namespace package.
 
 This lane builds all three wheels from one pristine source snapshot, installs

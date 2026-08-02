@@ -319,7 +319,14 @@ def _run_gh(gh: str, arguments: list[str]) -> str:
     return completed.stdout
 
 
-def _resolve_gh(explicit: str | None) -> str:
+def resolve_gh(explicit: str | None) -> str:
+    """Resolve the `gh` executable, honouring an explicit path for tests.
+
+    Public because the release-candidate transport shares this exact boundary:
+    the draft-release mechanism carries both evidence rows and sealed
+    candidates, so promoting the primitive keeps ONE gh boundary rather than a
+    second copy in the release package.
+    """
     if explicit is not None:
         return explicit
     resolved = shutil.which("gh")
@@ -328,7 +335,7 @@ def _resolve_gh(explicit: str | None) -> str:
     return resolved
 
 
-def _run_gh_with_retry(gh: str, arguments: list[str]) -> str:
+def run_gh_with_retry(gh: str, arguments: list[str]) -> str:
     """Run ``gh`` with a short bounded retry for transient API failures."""
     last_error: EvidenceReleaseError | None = None
     for attempt in range(1, _DOWNLOAD_ATTEMPTS + 1):
@@ -341,18 +348,18 @@ def _run_gh_with_retry(gh: str, arguments: list[str]) -> str:
     raise EvidenceReleaseError(f"gh failed after {_DOWNLOAD_ATTEMPTS} attempts: {last_error}")
 
 
-def _download_release_assets(gh: str, *, repository: str, tag: str, patterns: list[str], directory: Path) -> None:
+def download_release_assets(gh: str, *, repository: str, tag: str, patterns: list[str], directory: Path) -> None:
     """Download the tag's assets (all, or per pattern) into ``directory``."""
     directory.mkdir(parents=True, exist_ok=True)
     base = ["release", "download", tag, "--repo", repository, "--dir", str(directory), "--clobber"]
     if patterns:
         for pattern in patterns:
-            _run_gh_with_retry(gh, [*base, "--pattern", pattern])
+            run_gh_with_retry(gh, [*base, "--pattern", pattern])
     else:
-        _run_gh_with_retry(gh, base)
+        run_gh_with_retry(gh, base)
 
 
-def _list_releases(gh: str, repository: str) -> list[dict[str, object]]:
+def list_releases(gh: str, repository: str) -> list[dict[str, object]]:
     """Return every release record (drafts included), paginated past 100.
 
     Pagination matters: softprops/action-gh-release#602 documents duplicate
@@ -378,7 +385,7 @@ def _assert_exactly_one_draft(gh: str, repository: str, tag: str) -> None:
     one tag (cli/cli#4270 et al.); with two drafts, which assets ``gh release
     download`` resolves is undefined — never trust bytes from that state.
     """
-    matches = [record for record in _list_releases(gh, repository) if record.get("tag_name") == tag]
+    matches = [record for record in list_releases(gh, repository) if record.get("tag_name") == tag]
     drafts = [record for record in matches if record.get("draft") is True]
     if len(drafts) != 1 or len(matches) != len(drafts):
         raise EvidenceReleaseError(
@@ -412,7 +419,7 @@ def _required(value: str | None, name: str) -> str:
 
 
 def _emit_manifest(args: argparse.Namespace) -> int:
-    gh = _resolve_gh(args.gh)
+    gh = resolve_gh(args.gh)
     environ = dict(os.environ)
     repository = _required(args.repo or environ.get("GITHUB_REPOSITORY"), "--repo")
     parse_evidence_tag(args.tag)
@@ -426,7 +433,7 @@ def _emit_manifest(args: argparse.Namespace) -> int:
     }
     with tempfile.TemporaryDirectory(prefix="cadrumo-evidence-seal-") as scratch:
         directory = Path(scratch)
-        _download_release_assets(gh, repository=repository, tag=args.tag, patterns=[], directory=directory)
+        download_release_assets(gh, repository=repository, tag=args.tag, patterns=[], directory=directory)
         manifest = build_manifest(assets=_downloaded_files(directory), **manifest_inputs)
         write_manifest(manifest, args.output)
     print(f"sealed {len(manifest.assets)} asset(s) of {args.tag} into {args.output}")
@@ -434,7 +441,7 @@ def _emit_manifest(args: argparse.Namespace) -> int:
 
 
 def _verify(args: argparse.Namespace) -> int:
-    gh = _resolve_gh(args.gh)
+    gh = resolve_gh(args.gh)
     repository = _required(args.repo or os.environ.get("GITHUB_REPOSITORY"), "--repo")
     parse_evidence_tag(args.tag)
     _assert_exactly_one_draft(gh, repository, args.tag)
@@ -450,7 +457,7 @@ def _verify(args: argparse.Namespace) -> int:
     # A narrowing --pattern still always downloads the manifest; no pattern
     # downloads (and later requires) the complete sealed asset set.
     patterns = [MANIFEST_ASSET_NAME, *requested_patterns] if requested_patterns else []
-    _download_release_assets(gh, repository=repository, tag=args.tag, patterns=patterns, directory=download_dir)
+    download_release_assets(gh, repository=repository, tag=args.tag, patterns=patterns, directory=download_dir)
     manifest_path = download_dir / MANIFEST_ASSET_NAME
     if not manifest_path.is_file():
         raise EvidenceReleaseError(f"evidence draft {args.tag} carries no sealed {MANIFEST_ASSET_NAME}")
@@ -527,9 +534,9 @@ def _leak_sweep(args: argparse.Namespace) -> int:
 
 
 def _gc(args: argparse.Namespace) -> int:
-    gh = _resolve_gh(args.gh)
+    gh = resolve_gh(args.gh)
     repository = _required(args.repo or os.environ.get("GITHUB_REPOSITORY"), "--repo")
-    releases = _list_releases(gh, repository)
+    releases = list_releases(gh, repository)
     plan = plan_evidence_gc(
         releases,
         keep_per_lane=args.keep,
@@ -638,11 +645,15 @@ __all__ = [
     "EvidenceReleaseManifest",
     "GcPlan",
     "build_manifest",
+    "download_release_assets",
     "evidence_tag",
+    "list_releases",
     "load_manifest",
     "main",
     "parse_evidence_tag",
     "plan_evidence_gc",
+    "resolve_gh",
+    "run_gh_with_retry",
     "sweep_directory_for_leaks",
     "verify_downloaded_assets",
     "write_manifest",

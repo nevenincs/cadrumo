@@ -45,36 +45,35 @@ def _recipe_summary() -> set[str]:
     return set(result.stdout.split())
 
 
-def test_release_apply_names_every_version_authority_and_only_the_named_tag() -> None:
-    """The rendered apply guide covers the cohort, lock, and explicit final tag."""
-    rendered = _render_recipe("release-apply")
+def test_release_apply_is_absent_from_the_justfile() -> None:
+    """The retired local-apply recipe is gone in full, not merely deprecated.
 
-    assert "packaging/cadrumo_data_manuals/pyproject.toml" in rendered
-    assert "packaging/cadrumo_data_official/pyproject.toml" in rendered
-    # The .mcpb manifest is NOT a bumped surface. Its tracked "version" is a
-    # synthetic sentinel that `check_version_surfaces_agree` requires to stay
-    # put (`dev/release/readiness.py`), because a real-looking literal there
-    # would masquerade as an authority; `packaging/mcpb/build.py` stamps the
-    # real cohort version over it at build time. Instructing a bump there fails
-    # the blocking version gate, so the checklist names SEVEN authorities and
-    # must not stage the manifest.
-    #
-    # Asserted on the instruction and the staged set, not on the bare path:
-    # the checklist mentions the manifest precisely to say "do not touch it",
-    # so a substring check for the path alone would pass either way.
-    assert "seven release authorities" in rendered
-    assert "Update packaging/mcpb/manifest.json" not in rendered
-    assert "src/cadrumo/__init__.py CHANGELOG.md uv.lock" in rendered
-    assert "mandatory base dependency pins" in rendered
-    assert "cadrumo-data-manuals==X.Y.Z" in rendered
-    assert "cadrumo-data-official==X.Y.Z" in rendered
-    assert "corpus-sources" not in rendered
-    assert "uv lock" in rendered
-    assert "uv lock --check" in rendered
-    assert "just release-readiness" in rendered
-    assert "git push origin main" in rendered
-    assert "git push origin refs/tags/vX.Y.Z" in rendered
-    assert "git push origin main --tags" not in rendered
+    `dev.release.version_bump` is the sole authority for advancing a version
+    now (`W02.P03`): a deleted local path cannot be mis-invoked instead of
+    the automated bump. Read directly off the tracked file rather than
+    `just --summary` (which lists recipe NAMES only and would not catch a
+    stray reference inside another recipe's body).
+    """
+    justfile_text = (_REPO_ROOT / "justfile").read_text(encoding="utf-8")
+
+    assert "release-apply" not in justfile_text
+
+    recipes = _recipe_summary()
+    assert "release-apply" not in recipes
+
+
+def test_release_survives_as_the_read_only_dry_run_preview() -> None:
+    """`just release` still runs, previews only, and points at nothing deleted."""
+    recipes = _recipe_summary()
+    assert "release" in recipes
+
+    rendered = _render_recipe("release")
+
+    assert "--dry-run" in rendered
+    assert "release-apply" not in rendered
+    # Preview-only: the recipe body must not contain a real (non---dry-run)
+    # mutating git push, since nothing downstream of the preview may act.
+    assert "git push" not in rendered
 
 
 def test_release_collect_evidence_aggregates_rows_from_evidence_drafts() -> None:

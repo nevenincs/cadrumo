@@ -5,9 +5,9 @@ under ``_data/corpus/manuals`` — the AEAT/BOE práctico manuals (``*.pdf``) �
 from the ONE source tree at ``src/cadrumo/_data/corpus`` and mapped to the mirrored
 ``cadrumo_data/_data/corpus`` layout the runtime corpus-locator seam resolves. It is
 one of two disjoint sub-cap companions (the other, ``cadrumo-data-official``, ships
-``corpus/aeat_official`` and ``corpus/normatives``); together they cover every
-corpus source binary the compact ``cadrumo`` wheel excludes, each staying under PyPI's
-100 MB per-file cap so no size grant is needed.
+``corpus/aeat_official``, ``corpus/eu_official``, and ``corpus/normatives``); together
+they cover every corpus source binary the compact ``cadrumo`` wheel excludes, each
+staying under PyPI's 100 MB per-file cap so no size grant is needed.
 
 Both companions ship subtrees of the SAME ``cadrumo_data`` PEP 420 implicit
 namespace package (NEITHER ships ``cadrumo_data/__init__.py``, which would collide
@@ -52,7 +52,8 @@ _CORPUS_BINARY_SUFFIXES = frozenset({".pdf", ".xls", ".xlsm", ".xlsx"})
 _TARGET_PREFIX = "cadrumo_data/_data/corpus"
 
 # The corpus top-level subtrees this companion owns. The sibling
-# ``cadrumo-data-official`` owns ``aeat_official`` and ``normatives``; the two sets
+# ``cadrumo-data-official`` owns ``aeat_official``, ``eu_official``, and ``normatives``;
+# the two sets
 # are disjoint and their union is every corpus subtree carrying source binaries.
 _OWNED_SUBDIRS = frozenset({"manuals"})
 

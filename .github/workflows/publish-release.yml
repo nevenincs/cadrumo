@@ -1,19 +1,42 @@
 # Sole publication authority for the immutable, tested Cadrumo cohort.
 #
 # This workflow PROMOTES already-built, already-tested bytes; it NEVER builds,
-# regenerates, or restamps an artifact (per 2026-07-15-distribution-installation
-# -readiness-adr). It is inert until the operator opts in and configures the
-# protected `release` environment plus the channel credentials: absent those it
-# refuses instructively.
+# regenerates, or restamps an artifact. The cohort it uploads was sealed by the
+# packaging campaign and is verified here by hash, never reproduced.
 #
-# A `dry_run` dispatch input runs Gate 1 (opt-in) and Gate 2 (validate) fully but
-# skips Gate 3 (publish), so the pre-arming validate-everything-publish-nothing
-# diagnostic lives here on the single authority — the retired publish.yml stub is
-# gone (superseded, and it carried the per-OS-cohort publication defect class).
+# WHAT GATES THIS RUN. No human does. There is no approval click and no opt-in
+# variable; both were removed when the pipeline became fully automated, and the
+# absence of the approval gate is pinned by the conformance suite so it cannot
+# be restored by accident. What stands in their place is mechanical and runs on
+# every dispatch:
 #
-# Operator prerequisites (none of which an agent can create) are enumerated in
-# the "operator-preflight" job below and must all be satisfied before a real
-# publication can occur.
+#   * the all-destination version-identity authority, which refuses a version
+#     already owned by any of the three indexes, the tag or release namespaces
+#     including drafts, the monotonic manifest floor, or the burned-version
+#     ledger - checked at cohort seal and again here in Gate 2;
+#   * per-run identity verification of every supplied run (conclusion, workflow
+#     path, repository, and main-ancestry for a dispatch event);
+#   * per-asset sha256 verification of every downloaded byte against its sealed
+#     manifest;
+#   * the complete blocking evidence set, derived from the channels this release
+#     claims and re-run here rather than trusted from a local aggregation;
+#   * the fail-closed leak sweep over every byte about to be attached;
+#   * the marketplace supersession preflight;
+#   * reversible destination writes first, with the sole irreversible index
+#     upload last, and idempotent convergence on re-dispatch.
+#
+# `environment: release` REMAINS on the publish job and is load-bearing: it is
+# the Trusted Publishing trust anchor (the OIDC policy pins repository plus
+# environment NAME) and the shared-runner product boundary. It is not the
+# former click's host and must not be removed with it.
+#
+# Each external channel push still refuses instructively when its operator-
+# provided credential is absent, so an unconfigured channel fails loudly rather
+# than silently skipping.
+#
+# A `dry_run` dispatch input runs the validate gate fully but skips the publish
+# job, so the validate-everything-publish-nothing rehearsal lives here on the
+# single authority.
 name: Publish Cadrumo release
 
 on:
@@ -60,56 +83,6 @@ permissions:
   contents: read
 
 jobs:
-  # Prerequisite check. The release environment must carry a human approval
-  # rule; the publish job runs inside that environment, so the approval click
-  # is the gate. There is deliberately no separate opt-in variable.
-  operator-preflight:
-    name: Release prerequisite check
-    runs-on: [self-hosted, Linux, X64]
-    steps:
-      - name: Require the release environment to carry a human approval gate
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DRY_RUN: ${{ inputs.dry_run }}
-        run: |
-          # The release runbook instructs the operator to create the `release`
-          # environment with required reviewers, because that approval click is
-          # the human release gate, and the publish job's own comment repeats
-          # the claim. Nothing verified it. An environment without reviewers
-          # satisfies `environment: release` perfectly well and runs the
-          # promotion with no human in the loop, so the single most consequential
-          # safety property of this workflow was documented and unenforced.
-          #
-          # Fail-closed on a real publication: an API failure means the gate
-          # could not be CONFIRMED, which is not the same as confirmed present.
-          # A dry_run publishes nothing, so it warns and proceeds - the
-          # validate-everything-publish-nothing diagnostic stays usable before
-          # the environment is fully configured.
-          if ! rules="$(gh api "repos/${GITHUB_REPOSITORY}/environments/release" --jq '[.protection_rules[].type]|join(",")' 2>&1)"; then
-            reason="the release environment could not be read: ${rules}"
-          elif [[ ",${rules}," != *",required_reviewers,"* ]]; then
-            reason="the release environment has no required_reviewers rule (found: ${rules:-none})"
-          else
-            echo "Human approval gate present on the release environment: ${rules}"
-            exit 0
-          fi
-          if [[ "${DRY_RUN}" == "true" ]]; then
-            echo "::warning::${reason}. A dry_run publishes nothing, so this is not fatal here, but a real publication will refuse until required reviewers are set."
-            exit 0
-          fi
-          cat >&2 <<EOF
-          REFUSED: ${reason}.
-
-          This workflow's design places the human release gate on the \`release\`
-          environment's required-reviewers approval. Without that rule the
-          promotion would upload to PyPI and every public channel with no human
-          in the loop, which is not what prerequisite 2 promises.
-
-          Fix: Settings -> Environments -> release -> Deployment protection rules
-          -> tick "Required reviewers" and add the operator. Then re-dispatch.
-          EOF
-          exit 1
-
   # ---------------------------------------------------------------------------
   # Gate 2 - validate the retained cohort WITHOUT rebuilding. Verifies the
   # source run identity, downloads the stored cohort + installed evidence, and
@@ -117,7 +90,6 @@ jobs:
   # ---------------------------------------------------------------------------
   validate:
     name: Validate immutable tested cohort (no rebuild)
-    needs: operator-preflight
     runs-on: [self-hosted, Linux, X64]
     permissions:
       actions: read
@@ -302,10 +274,11 @@ jobs:
             --evidence-dir "$EVIDENCE_DOWNLOAD/rows"
 
   # ---------------------------------------------------------------------------
-  # Gate 3 - promote the exact bytes. Protected by the `release` environment
-  # (operator required-reviewers = the human approval gate). Uploads only; it
-  # never builds. Each external push is guarded on its operator-provided
-  # credential and refuses instructively when absent.
+  # Gate 3 - promote the exact bytes. Runs in the `release` environment for its
+  # OIDC trust anchor and runner boundary, NOT for an approval rule: the
+  # environment carries no human gate. Uploads only; it never builds. Each
+  # external push is guarded on its operator-provided credential and refuses
+  # instructively when absent.
   # ---------------------------------------------------------------------------
   publish:
     name: Promote immutable cohort to public channels
@@ -717,3 +690,49 @@ jobs:
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION".tar.gz \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION"-py3-none-any.whl \
             "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION".tar.gz
+
+  alert:
+    name: Cadrumo / alert the operator on a failed release-path run
+    # A JOB, not a step. `if: failure()` inside a job only fires when a step in
+    # THAT job failed - and a job whose dependency failed never runs at all, so
+    # a step appended to the last job would alert on almost nothing. Needing
+    # every job and running under `failure()` is what makes this cover the
+    # whole chain.
+    needs: [validate, publish]
+    if: ${{ failure() || cancelled() }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Alert the operator that this release-path run failed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}
+        run: |
+          # The approval click was the only moment a human was STRUCTURALLY
+          # guaranteed to look at a release. With it gone, a silently failed run
+          # is indistinguishable from a release nobody started, so this reaches
+          # the operator where they already look rather than annotating a log
+          # only someone already watching would read.
+          #
+          # Never fatal: the run is already red and its FIRST error is the one
+          # that matters, so a refused alert warns and exits 0.
+          # The captured refusal text, so the alert body carries WHY the run
+          # failed rather than the no-detail placeholder. An alert saying only
+          # "something failed, here is a link" spends the operator's attention
+          # on navigation, which is the cost this channel exists to avoid.
+          jq_filter='[.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled") | .name + ": " + .conclusion] | join("; ")'
+          detail="$(gh run view "${GITHUB_RUN_ID}" --repo "${GITHUB_REPOSITORY}" --json jobs --jq "${jq_filter}" 2>/dev/null || true)"
+          uv run --frozen python -m dev.release.alerting --stage "publication" --detail "${detail:-no per-job detail available}"

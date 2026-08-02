@@ -1,9 +1,10 @@
 """Hatchling build hook: force-include the ``official`` corpus source binaries.
 
 The ``cadrumo-data-official`` companion ships exactly the corpus source binaries
-under ``_data/corpus/aeat_official`` and ``_data/corpus/normatives`` — the
-official AEAT diseños de registro / workbooks (``*.pdf``/``*.xls``/``*.xlsx``)
-and the normative PDFs — read from the ONE source tree at
+under ``_data/corpus/aeat_official``, ``_data/corpus/eu_official``, and
+``_data/corpus/normatives`` — the official AEAT diseños de registro / workbooks
+(``*.pdf``/``*.xls``/``*.xlsx``), the EU/EC VAT-rate source binaries, and the
+normative PDFs — read from the ONE source tree at
 ``src/cadrumo/_data/corpus`` and mapped to the mirrored ``cadrumo_data/_data/corpus``
 layout the runtime corpus-locator seam resolves. It is one of two disjoint
 sub-cap companions (the other, ``cadrumo-data-manuals``, ships ``corpus/manuals``);
@@ -55,7 +56,7 @@ _TARGET_PREFIX = "cadrumo_data/_data/corpus"
 # The corpus top-level subtrees this companion owns. The sibling
 # ``cadrumo-data-manuals`` owns ``manuals``; the two sets are disjoint and their
 # union is every corpus subtree carrying source binaries.
-_OWNED_SUBDIRS = frozenset({"aeat_official", "normatives"})
+_OWNED_SUBDIRS = frozenset({"aeat_official", "eu_official", "normatives"})
 
 
 def _corpus_root(hook_root: Path) -> Path | None:

@@ -3,12 +3,13 @@ orphan: true
 ---
 
 <!--
-Release notes template for Cadrumo. Copy this block, fill it in from the
-`just release` dry-run log (conventional-commit groups since the last tag),
-and paste it as the GitHub Release body when the tag is pushed. This is a
-hand-filled template, not generated automatically — release-please writes
-CHANGELOG.md; this template is the longer-form human-readable companion for
-the GitHub Release page.
+Release notes template for Cadrumo. Copy this block, fill it in from
+CHANGELOG.md's entry for the version and the sealed release-candidate
+record's `opened_at`/deadline (the soak window the promoter actually
+enforced), and paste it into the auto-created GitHub Release body after
+publication. This is a hand-filled template, not generated automatically —
+release-please writes CHANGELOG.md and Gate 3 creates the bare GitHub
+Release; this template is the longer-form human-readable companion.
 -->
 
 # Cadrumo vX.Y.Z
