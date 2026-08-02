@@ -49,6 +49,9 @@ from ._runtime import (
     search_corpus,
 )
 from ._terminology import (
+    CONCEPT_ID_MAX_LENGTH,
+    CONCEPT_ID_MIN_LENGTH,
+    CONCEPT_ID_PATTERN,
     TerminologyConcept,
     TerminologyHit,
     load_terminology_concepts,
@@ -57,6 +60,9 @@ from ._terminology import (
 )
 
 __all__ = [
+    "CONCEPT_ID_MAX_LENGTH",
+    "CONCEPT_ID_MIN_LENGTH",
+    "CONCEPT_ID_PATTERN",
     "CitationLookup",
     "CitationResolution",
     "CorpusChunk",

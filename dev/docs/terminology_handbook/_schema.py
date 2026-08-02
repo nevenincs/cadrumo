@@ -35,6 +35,11 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
+from cadrumo.application.corpus_search import (
+    CONCEPT_ID_MAX_LENGTH,
+    CONCEPT_ID_MIN_LENGTH,
+    CONCEPT_ID_PATTERN,
+)
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
@@ -50,10 +55,19 @@ __all__ = [
     "TermSection",
 ]
 
-# Spanish-stem concept identifier: kebab-case, immutable, never reused.
+# Spanish-stem concept identifier: kebab-case, immutable, never reused. The
+# shape is imported from the shipped product reader
+# (cadrumo.application.corpus_search) rather than redeclared, so this
+# authoring-side schema and the lean product-side reader can never drift on
+# what a malformed concept_id looks like.
 _ConceptId = Annotated[
     str,
-    StringConstraints(strip_whitespace=True, min_length=2, max_length=64, pattern=r"^[a-z][a-z0-9-]*[a-z0-9]$"),
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=CONCEPT_ID_MIN_LENGTH,
+        max_length=CONCEPT_ID_MAX_LENGTH,
+        pattern=CONCEPT_ID_PATTERN,
+    ),
 ]
 # Typed reference into a source entity, e.g. ``modelo:303`` or
 # ``iva-category:domestic_general_21``. Casilla references are deliberately not
