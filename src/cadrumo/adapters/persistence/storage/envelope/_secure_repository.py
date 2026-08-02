@@ -23,7 +23,7 @@ composes one.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import ClassVar, cast
 
@@ -35,12 +35,13 @@ from .....core.config import Settings
 from .....core.logging import get_logger
 from .....core.time import now
 from .._path_safety import safe_repository_id
+from ..crypto import secure_object_key_digest
 from ..errors import ClassificationError, EnvelopeVersionError, RepositorySetupError
 from ..runtime_repository import (
     secure_object_repository_for_active_bucket_or_default_route,
     secure_object_repository_for_bucket,
 )
-from ..sql import SecureObjectRepository
+from ..sql import SecureObjectDeletion, SecureObjectRepository
 from ._envelope import Envelope
 
 _log = get_logger(__name__)
@@ -279,6 +280,56 @@ class SecureBoundRepository[T: BaseModel]:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
             expected_revision_id=expected_revision_id,
+        )
+
+    def to_secure_object_deletion(self, identifier: str) -> SecureObjectDeletion:
+        """Return the prepared removal for ``identifier`` without committing it.
+
+        The deletion counterpart of :meth:`to_secure_object_write`, so a caller
+        that must remove some rows and write others can hand both to
+        :meth:`adapters.persistence.storage.SecureObjectRepository.apply_batch`
+        and land the whole change in ONE SQL unit of work.
+        :class:`adapters.persistence.storage.SecureObjectDeletion` addresses a
+        row by its stored HMAC digest, so the natural id is bound here with the
+        same digest the storage column uses.
+        """
+        safe_repository_id(identifier, context="identifier")
+        return SecureObjectDeletion(
+            namespace=self.namespace,
+            hashed_object_key=secure_object_key_digest(identifier),
+        )
+
+    def replace_records(self, replacements: Sequence[T], stale_identifiers: Iterable[str]) -> None:
+        """Commit ``replacements`` and remove ``stale_identifiers`` in one transaction.
+
+        The atomic set-replace primitive: a caller that must clear a window of
+        rows and write its successor set gets all-or-nothing semantics instead
+        of a delete loop followed by a save loop, where a failure part-way
+        through leaves the store holding neither the old set nor the new one.
+
+        An identifier that is BOTH stale and replaced is written, not deleted:
+        :meth:`adapters.persistence.storage.SecureObjectRepository.apply_batch`
+        applies writes before deletions, so a row carried across the replacement
+        would otherwise be upserted and then removed in the same transaction.
+
+        Args:
+            replacements: The payloads that constitute the new set.
+            stale_identifiers: Natural ids of rows to remove. Ids also carried
+                by ``replacements`` are ignored.
+        """
+        writes = tuple(self.to_secure_object_write(payload) for payload in replacements)
+        retained = {write.object_key for write in writes}
+        deletions = tuple(
+            self.to_secure_object_deletion(identifier)
+            for identifier in dict.fromkeys(stale_identifiers)
+            if identifier not in retained
+        )
+        self._objects.apply_batch(writes, deletions)
+        _log.debug(
+            "secure-bound: replaced %d row(s) in %s, removed %d stale",
+            len(writes),
+            self.namespace,
+            len(deletions),
         )
 
     def _identified_envelope(self, payload: T) -> tuple[str, Envelope[BaseModel]]:

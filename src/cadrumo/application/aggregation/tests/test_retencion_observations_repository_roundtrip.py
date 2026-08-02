@@ -24,6 +24,7 @@ from pydantic import ValidationError
 from ....core import BindingSourceKind, Period
 from ....core.external_constants import UTF_8_ENCODING
 from ....tests.secure_sql import isolated_runtime_profile
+from .._errors import AggregationValidationError
 from .._retencion_observations_repository import (
     RetencionObservationRepository,
     persist_retencion_observations,
@@ -206,3 +207,113 @@ def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
         persist_retencion_observations(modelo="180", filing_year=2024, period=period, observations=observations)
         loaded = RetencionObservationRepository().load_observations("180", period)
         assert set(loaded) == set(observations)
+
+
+def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> None:
+    """A replacement that cannot be persisted leaves the declared window untouched.
+
+    The set-replace used to commit each stale-row delete before looping through
+    the saves one at a time, so a refusal part-way through destroyed the prior
+    declared set and left only the rows written before the failure. The next
+    calculate then read that partial window as the operator's declared truth —
+    a silent under-count whose own evidence had already been deleted.
+
+    The refusal here is production-reachable: a perceptor NIF that is
+    whitespace-only satisfies the observation model's length bound but has no
+    canonical hashed token, so keying the row raises before it can be stored.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = RetencionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        declared = (
+            _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
+            _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
+            _observation(nif="33333333P", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("300")),
+        )
+        repo.replace_observations(
+            modelo="180",
+            filing_year=2024,
+            period=period,
+            observations=declared,
+            source_kind="aggregate_pull",
+        )
+
+        unstorable = (
+            _observation(nif="44444444A", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("400")),
+            _observation(nif=" ", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("500")),
+        )
+        with pytest.raises(AggregationValidationError):
+            repo.replace_observations(
+                modelo="180",
+                filing_year=2024,
+                period=period,
+                observations=unstorable,
+                source_kind="aggregate_pull",
+            )
+
+        survived = repo.load_observations("180", period)
+        assert set(survived) == set(declared)
+
+
+def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> None:
+    """A key in both the old and the new set is updated, never deleted.
+
+    Writes and deletions commit in one transaction with writes applied first, so
+    a row whose key is carried across the replacement must be excluded from the
+    stale set — otherwise it is upserted and then removed in the same unit of
+    work and the operator loses a perceptor they still declare.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = RetencionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        repo.replace_observations(
+            modelo="180",
+            filing_year=2024,
+            period=period,
+            observations=(
+                _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
+                _observation(nif="22222222J", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("200")),
+            ),
+            source_kind="aggregate_pull",
+        )
+        carried = _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("175"))
+        repo.replace_observations(
+            modelo="180",
+            filing_year=2024,
+            period=period,
+            observations=(carried,),
+            source_kind="aggregate_pull",
+        )
+
+        assert repo.load_observations("180", period) == (carried,)
+
+
+def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
+    """Only the addressed (modelo, filing_year, period) window is replaced."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = RetencionObservationRepository()
+        target = Period.from_year_and_code(2024, "0A")
+        neighbour = Period.from_year_and_code(2023, "0A")
+        neighbour_row = _observation(
+            nif="99999999R",
+            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            retencion=Decimal("900"),
+        )
+        repo.replace_observations(
+            modelo="180",
+            filing_year=2023,
+            period=neighbour,
+            observations=(neighbour_row,),
+            source_kind="aggregate_pull",
+        )
+        repo.replace_observations(
+            modelo="180",
+            filing_year=2024,
+            period=target,
+            observations=(
+                _observation(nif="11111111H", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("100")),
+            ),
+            source_kind="aggregate_pull",
+        )
+
+        assert repo.load_observations("180", neighbour) == (neighbour_row,)

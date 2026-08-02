@@ -145,6 +145,33 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
             payload.observation.scheme,
         )
 
+    def build_observation_payload(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observation: RetencionObservation,
+        source_kind: str,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> _RetencionObservationEnvelopePayload:
+        """Return the validated envelope payload for one per-perceptor retención row.
+
+        Construction is separated from persistence so the set-replace path can
+        build and validate the whole replacement set before committing any of
+        it, and then commit the clear and the write as one transaction.
+        """
+        return _RetencionObservationEnvelopePayload(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            observation=observation,
+            captured_at=captured_at if captured_at is not None else now(),
+            source_kind=source_kind,
+            source_metadata=dict(source_metadata or {}),
+        )
+
     def save_observation(
         self,
         *,
@@ -157,16 +184,17 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
         """Persist one per-perceptor retención row keyed by (modelo, filing_year, period, NIF, scheme)."""
-        payload = _RetencionObservationEnvelopePayload(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            observation=observation,
-            captured_at=captured_at if captured_at is not None else now(),
-            source_kind=source_kind,
-            source_metadata=dict(source_metadata or {}),
+        self.save(
+            self.build_observation_payload(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                observation=observation,
+                source_kind=source_kind,
+                captured_at=captured_at,
+                source_metadata=source_metadata,
+            )
         )
-        self.save(payload)
 
     def replace_observations(
         self,
@@ -182,12 +210,13 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         """Replace the FULL per-perceptor set for one (modelo, filing_year, period).
 
         SET-REPLACE, not additive upsert: clears any prior rows for the exact
-        key-tuple, then writes the supplied set. A re-pull where the operator
-        DROPPED a perceptor must not leave the stale row behind — otherwise the
-        next calculate's distinct count is inflated by a perceptor no longer
-        declared (a silent over-count, the inverse of the pull≠calculate
-        divergence this store closes). An empty ``observations`` clears the
-        window (the operator declared none); the resolver raises a no-silent
+        key-tuple, then writes the supplied set, both in ONE transaction. A
+        re-pull where the operator DROPPED a perceptor must not leave the stale
+        row behind — otherwise the next calculate's distinct count is inflated
+        by a perceptor no longer declared (a silent over-count, the inverse of
+        the pull≠calculate divergence this store closes). An empty
+        ``observations`` clears the window (the operator declared none); the
+        resolver raises a no-silent
         :class:`~._errors.AggregationValidationError` when a declaring revision
         then reads an empty store, before a zero perceptor count can be filed.
         """
@@ -198,7 +227,7 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
             period=period,
             observations=observations,
             source_kind=source_kind,
-            save_observation=self.save_observation,
+            build_payload=self.build_observation_payload,
             captured_at=captured_at,
             source_metadata=source_metadata,
         )

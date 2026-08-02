@@ -163,6 +163,33 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
             payload.observation.subclave,
         )
 
+    def build_observation_payload(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        observation: WithholdingObservation,
+        source_kind: str,
+        captured_at: datetime | None = None,
+        source_metadata: Mapping[str, str] | None = None,
+    ) -> _PercepcionObservationEnvelopePayload:
+        """Return the validated envelope payload for one per-perceptor-clave row.
+
+        Construction is separated from persistence so the set-replace path can
+        build and validate the whole replacement set before committing any of
+        it, and then commit the clear and the write as one transaction.
+        """
+        return _PercepcionObservationEnvelopePayload(
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            observation=observation,
+            captured_at=captured_at if captured_at is not None else now(),
+            source_kind=source_kind,
+            source_metadata=dict(source_metadata or {}),
+        )
+
     def save_observation(
         self,
         *,
@@ -175,16 +202,17 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         source_metadata: Mapping[str, str] | None = None,
     ) -> None:
         """Persist one per-perceptor-clave row keyed by (modelo, year, period, NIF, clave, subclave)."""
-        payload = _PercepcionObservationEnvelopePayload(
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            observation=observation,
-            captured_at=captured_at if captured_at is not None else now(),
-            source_kind=source_kind,
-            source_metadata=dict(source_metadata or {}),
+        self.save(
+            self.build_observation_payload(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                observation=observation,
+                source_kind=source_kind,
+                captured_at=captured_at,
+                source_metadata=source_metadata,
+            )
         )
-        self.save(payload)
 
     def replace_observations(
         self,
@@ -200,12 +228,12 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         """Replace the FULL per-perceptor-clave set for one (modelo, filing_year, period).
 
         SET-REPLACE, not additive upsert: clears any prior rows for the exact
-        key-tuple, then writes the supplied set. A re-pull where the operator
-        DROPPED a percepción must not leave the stale row behind — otherwise the
-        next calculate's distinct count is inflated by a percepción no longer
-        declared (a silent over-count). An empty ``observations`` clears the
-        window (the operator declared none); the resolver surfaces a
-        no-silent advisory when it then reads empty.
+        key-tuple, then writes the supplied set, both in ONE transaction. A
+        re-pull where the operator DROPPED a percepción must not leave the stale
+        row behind — otherwise the next calculate's distinct count is inflated
+        by a percepción no longer declared (a silent over-count). An empty
+        ``observations`` clears the window (the operator declared none); the
+        resolver surfaces a no-silent advisory when it then reads empty.
         """
         replace_observation_window(
             self,
@@ -214,7 +242,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
             period=period,
             observations=observations,
             source_kind=source_kind,
-            save_observation=self.save_observation,
+            build_payload=self.build_observation_payload,
             captured_at=captured_at,
             source_metadata=source_metadata,
         )
