@@ -165,7 +165,9 @@ def reconcile_modelo_303_iva_compensation(
             used to read prior local recurrence.
         decision_repository: Optional
             :class:`~application.calculations._observations_repository.IvaWalletDecisionRepository`
-            used to persist the resulting wallet authority.
+            used to persist the resulting wallet authority. When persistence is
+            enabled, an explicitly supplied repository must use the same
+            encrypted storage backend as ``repository``.
         override: Optional
             :class:`~domain.iva_compensation._reconciliation.IvaCompensationOverride`
             evidence when the operator has resolved a divergence.
@@ -217,6 +219,15 @@ def reconcile_modelo_303_iva_compensation(
         if decision_repository is not None
         else IvaWalletDecisionRepository(objects=repo.secure_object_repository)
     )
+    if (
+        persist
+        and decision_repository is not None
+        and decision_repo.secure_object_repository.engine is not repo.secure_object_repository.engine
+    ):
+        raise IvaCompensationReconciliationInputError(
+            "IVA wallet decision repository must use the same encrypted storage backend "
+            "as the calculation observation repository",
+        )
     recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
         snapshot,
         repository=repo,

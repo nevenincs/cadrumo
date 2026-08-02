@@ -25,7 +25,7 @@ from ....domain.iva_compensation import (
     IvaCompensationWalletObservationProtocol,
     IvaWalletReconciliationError,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_history import IvaCompensationHistoryRepository
 from .._iva_wallet_reconciliation import (
@@ -33,7 +33,7 @@ from .._iva_wallet_reconciliation import (
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
-from .._observations_repository import CalculationObservationRepository
+from .._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -299,6 +299,69 @@ def test_modelo_303_reconciliation_auto_zeroes_from_positive_prior_local_filing(
         "local_recurrence",
         "filed_history_observation",
     }
+
+
+def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_foreign_encrypted_bucket(
+    tmp_path: Path,
+) -> None:
+    """A wallet decision cannot leave the observation repository's encrypted bucket."""
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+        observation_repository = CalculationObservationRepository(objects=runtime.primary.repository)
+        foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
+
+        with pytest.raises(IvaCompensationReconciliationInputError, match="same encrypted storage backend"):
+            reconcile_modelo_303_iva_compensation(
+                snapshot,
+                taxpayer_nif=_TAXPAYER_REF,
+                wallet=_wallet(Decimal("1200")),
+                repository=observation_repository,
+                decision_repository=foreign_decision_repository,
+                decided_at=_NOW,
+            )
+
+        assert (
+            IvaWalletDecisionRepository(objects=runtime.primary.repository).load_decision(
+                _TAXPAYER_REF,
+                Period.from_year_and_code(2026, "2T"),
+            )
+            is None
+        )
+        with runtime.switch_to_secondary():
+            assert (
+                foreign_decision_repository.load_decision(
+                    _TAXPAYER_REF,
+                    Period.from_year_and_code(2026, "2T"),
+                )
+                is None
+            )
+
+
+def test_modelo_303_reconciliation_persists_explicit_same_bucket_decision_repository_round_trip(
+    tmp_path: Path,
+) -> None:
+    """An explicit repository sharing the active encrypted bucket keeps the decision readable."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        observation_repository = CalculationObservationRepository(objects=profile.repository)
+        decision_repository = IvaWalletDecisionRepository(objects=profile.repository)
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_REF,
+            wallet=_wallet(Decimal("1200")),
+            repository=observation_repository,
+            decision_repository=decision_repository,
+            decided_at=_NOW,
+        )
+
+        assert (
+            decision_repository.load_decision(
+                _TAXPAYER_REF,
+                Period.from_year_and_code(2026, "2T"),
+            )
+            == report.decision
+        )
 
 
 def test_stale_wallet_records_local_recurrence_but_blocks_automatic_output() -> None:
