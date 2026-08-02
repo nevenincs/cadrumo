@@ -299,8 +299,18 @@ _STAGED_RELATIVE_PATHS: Final[tuple[Path, ...]] = (
 #: Known shapes a release-please `release-pr --dry-run --debug` log can
 #: announce its computed version in. Deliberately conservative: an
 #: unrecognised shape refuses (:func:`parse_computed_version`) rather than
-#: guessing.
+#: guessing. The first two are VERIFIED against a real successful dry-run
+#: (2026-08-02, `nevenincs/cadrumo` @ `ac6305809d`, computed `0.2.0` from
+#: `v0.1.0`): the collapsible PR-body summary tag and the changelog
+#: comparison heading it renders. The PR title itself carries no version in
+#: this repo's config (`pullRequestTitlePattern miss the part of
+#: '${version}'` -- a `pull-request-title-pattern` gap worth tidying
+#: separately, not required for this to work), so the trailing two patterns
+#: -- retained as a defensive fallback for a differently-configured
+#: release-please run -- are unverified against real output.
 _VERSION_ANNOUNCEMENT_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(r"<summary>(?P<version>[0-9][^<]*)</summary>"),
+    re.compile(r"##\s*\[(?P<version>[0-9][^\]]*)\]\(https://[^)]*/compare/[^)]*\)\s*\(\d{4}-\d{2}-\d{2}\)"),
     re.compile(r'"version"\s*:\s*"(?P<version>[0-9][^"]*)"'),
     re.compile(r"chore\(?[\w.-]*\)?!?:\s*release\s+(?P<version>[0-9][^\s\"]*)", re.IGNORECASE),
 )
@@ -327,25 +337,28 @@ def run_release_please_dry_run(
     `npx`, and whether the self-hosted fleet carries a Node.js toolchain is
     unverified (`2026-08-02-release-pipeline-full-automation-adr`).
 
-    Grounding note: this repository has no prior release-please-generated
+    Grounding note, VERIFIED LIVE (2026-08-02, `nevenincs/cadrumo` @
+    `ac6305809d`): this repository has no prior release-please-generated
     release (this is its first automated bump), so release-please finds no
-    GitHub Release matching the manifest's recorded version and, absent a
-    bound, falls back to walking the entire commit history one commit at a
-    time -- a walk that measurably 504s against this repo's real history.
-    release-please's own documented answer to exactly this "first run, no
-    prior release" case is the top-level `bootstrap-sha` config key
-    (`release-please-config.json`; ignored once a release PR it generated
-    has merged, so it is self-retiring and never becomes legacy
-    configuration). It is set here to the commit that recorded the current
-    manifest floor. Live verification that this actually avoids the
-    full-history walk needs the config change reachable at the `--repo-url`
-    / `--target-branch` release-please queries via the GitHub API (it fetches
-    config from the branch, not the local working tree) -- outside this
-    function's authority to arrange; the function itself still runs and
+    GitHub Release matching the manifest's recorded version and falls back
+    to walking commit history one commit at a time. Early grounding runs
+    against a shorter (~700-commit) history died on genuine GitHub API
+    504/503s before completing; against this repo's current, longer history
+    a live run completed cleanly (`rc=0`) in under five minutes, computing
+    `0.2.0` from `v0.1.0`. The walk is bounded by release-please's own
+    `commit-search-depth` (default 500, confirmed by the live log: exactly
+    500 commits backfilled, well short of the top-level `bootstrap-sha`
+    config key's target commit) -- so on the run that actually succeeded,
+    the earlier `bootstrap-sha` addition was not what bounded the walk;
+    `commit-search-depth`'s own default was. `bootstrap-sha` stays set
+    (release-please's own documented answer to a first run with no prior
+    release, and self-retiring once a release PR it generated merges) since
+    it can only help, not hurt, and the one live run available is not
+    sufficient evidence to rule out the earlier failures having been
+    ordinary transient GitHub API instability rather than something
+    `bootstrap-sha` specifically fixed. The function itself still runs and
     refuses correctly on every locally observable failure (missing node,
-    missing npx, a non-zero exit, or a timeout) regardless of that outcome,
-    and :func:`parse_computed_version` is written to fail closed rather than
-    guess on an unrecognised log shape either way.
+    missing npx, a non-zero exit, or a timeout) regardless of the cause.
     """
     if shutil.which("node") is None:
         raise VersionBumpError(
@@ -385,15 +398,14 @@ def run_release_please_dry_run(
 def parse_computed_version(log: str) -> str:
     """Extract the version release-please decided on from its dry-run log.
 
-    UNVERIFIED against a real successful run: see
-    :func:`run_release_please_dry_run`'s grounding note -- every live
-    invocation made while building this function failed before reaching a
-    success path (the repository-history gap `bootstrap-sha` now targets),
-    so this parser could not be checked against real output. It is
-    deliberately conservative: it tries a small set of known
-    release-please output shapes and refuses outright rather than guessing
-    when none match, so a log shape this parser does not recognise fails
-    LOUDLY (a refusal) instead of silently returning a wrong version.
+    The first two entries in `_VERSION_ANNOUNCEMENT_PATTERNS` are VERIFIED
+    against a real successful run (see :func:`run_release_please_dry_run`'s
+    grounding note); this function correctly extracts `0.2.0` from that run's
+    real log. It is deliberately conservative regardless: it tries a small
+    set of known release-please output shapes and refuses outright rather
+    than guessing when none match, so a log shape this parser does not
+    recognise fails LOUDLY (a refusal) instead of silently returning a wrong
+    version.
 
     Raises:
         VersionBumpError: If no recognised version announcement is found.

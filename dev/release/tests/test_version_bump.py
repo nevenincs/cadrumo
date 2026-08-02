@@ -378,7 +378,7 @@ def _make_git_repo_root(tmp_path: Path, *, version: str = "1.2.3", manifest_floo
     if manifest_floor is not None:
         (root / ".release-please-manifest.json").write_text(json.dumps({".": manifest_floor}), encoding="utf-8")
     # `commit_tag_and_push` stages `uv.lock` (release-apply checklist step 9);
-    # in real orchestration `stage_bump` (S10) has already regenerated it by
+    # in real orchestration `stage_bump` has already regenerated it by
     # the time this stage runs, so the fixture seeds a placeholder.
     (root / "uv.lock").write_text("# stub lock\n", encoding="utf-8")
     _git(root, "init", "-q", "-b", "main")
@@ -390,7 +390,7 @@ def _make_git_repo_root(tmp_path: Path, *, version: str = "1.2.3", manifest_floo
 def test_commit_tag_and_push_creates_a_local_commit_and_tag_without_pushing(tmp_path: Path) -> None:
     """A clean, non-burned, above-floor version commits and tags locally; push defaults off."""
     root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="1.0.0")
-    # A real diff to commit -- in real orchestration `stage_bump` (S10) has
+    # A real diff to commit -- in real orchestration `stage_bump` has
     # already run and produced exactly this kind of change by the time this
     # stage runs.
     version_bump.apply_version(root, "2.0.0", changelog_block=_CHANGELOG_BLOCK, release_date="2026-08-02")
@@ -501,3 +501,43 @@ def test_parse_computed_version_refuses_on_an_unrecognised_log_shape() -> None:
 
     with pytest.raises(version_bump.VersionBumpError, match="could not determine the computed version"):
         version_bump.parse_computed_version(log)
+
+
+#: An excerpt of the REAL output from a live `release-please@16 release-pr
+#: --dry-run --debug` run against `nevenincs/cadrumo` @ `ac6305809d`
+#: (2026-08-02), trimmed to the summary/changelog-heading region. Captured
+#: while verifying the `bootstrap-sha` addition; this is the log shape
+#: `_VERSION_ANNOUNCEMENT_PATTERNS`'s first two entries are grounded against.
+_REAL_DRY_RUN_LOG_EXCERPT = """\
+Would open 1 pull requests
+fork: false
+title: chore: release main
+branch: release-please--branches--main
+draft: false
+body: :robot: I have created a release *beep* *boop*
+---
+
+
+<details><summary>0.2.0</summary>
+
+## [0.2.0](https://github.com/nevenincs/cadrumo/compare/v0.1.0...v0.2.0) (2026-08-02)
+
+
+### Features
+
+* **adapters:** extend external integration boundaries ([f547b5c](https://github.com/nevenincs/cadrumo/commit/f547b5c6ca6d593ea02e3ea748fcde35e1e41462))
+"""
+
+
+def test_parse_computed_version_extracts_from_a_real_captured_dry_run_log() -> None:
+    """The parser correctly reads a real release-please success-path log.
+
+    Unlike the synthetic-fixture cases above, this is not a guess at the
+    output shape -- it is the shape a real live run actually produced. The
+    PR title itself carries no version in this repo's current config
+    (`pullRequestTitlePattern miss the part of '${version}'`, present
+    verbatim in the real log though not asserted here), which is why the
+    `<summary>`/changelog-heading patterns, not a title pattern, are what
+    make this real log parseable at all.
+    """
+    assert version_bump.parse_computed_version(_REAL_DRY_RUN_LOG_EXCERPT) == "0.2.0"

@@ -131,3 +131,36 @@ fetches config remotely, not from local disk) -- this worktree is 30+
 commits ahead of `origin/main` from concurrent campaigns, so pushing to
 verify is a bigger, shared-worktree-wide decision outside this Step's
 authority to make unilaterally; deferred back to the coordinator.
+
+**Second addendum (same day): live verification landed.** The coordinator
+pushed local `main` to `origin` (a decision made explicitly by them, not by
+this Step). Re-ran the real `npx release-please@16 release-pr --dry-run
+--debug` against `nevenincs/cadrumo` @ `ac6305809d`: it completed cleanly,
+`rc=0`, in under five minutes, computing `0.2.0` from `v0.1.0`. Honest
+reading of the log: the walk was bounded at exactly 500 commits --
+release-please's own `commit-search-depth` DEFAULT, confirmed by the debug
+line `√ Considering: 500 commits` -- and never reached the `bootstrap-sha`
+target commit at all. So on the run that actually succeeded,
+`commit-search-depth`'s default is what bounded the walk, not
+`bootstrap-sha`; whether the earlier 504/503 failures were caused by the
+absence of a bound (which `bootstrap-sha` targets) or were ordinary
+transient GitHub API instability under sustained sequential-call load
+remains genuinely unresolved with one data point. `bootstrap-sha` stays
+configured regardless -- it is release-please's own documented answer to
+this exact scenario, is self-retiring, and can only help.
+
+`parse_computed_version`'s patterns were WRONG for the real output shape and
+have been corrected using the real captured log: release-please renders the
+version inside a `<details><summary>0.2.0</summary>` tag and a `##
+[0.2.0](.../compare/v0.1.0...v0.2.0) (DATE)` changelog heading, NOT in the
+PR title (a `pullRequestTitlePattern miss the part of '${version}'` warning
+in this repo's config means the title carries no version at all -- a minor,
+separately-fixable config gap, not blocking). The two original guessed
+patterns (a bare JSON `"version"` field, a `chore: release X.Y.Z` title)
+never matched real output and are retained only as a defensive fallback for
+a differently-configured release-please invocation. Added
+`test_parse_computed_version_extracts_from_a_real_captured_dry_run_log`
+using a trimmed excerpt of the actual captured log (not a synthetic guess)
+asserting `0.2.0` is extracted correctly. Docstrings updated from
+"UNVERIFIED" to citing the specific verified run. 24/24
+`test_version_bump.py` cases pass; ruff clean.
