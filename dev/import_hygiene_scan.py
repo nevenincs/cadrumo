@@ -1395,7 +1395,7 @@ def main() -> int:
                 {"package": v.package, "path": v.path, "name": v.name} for v in underscore_in_all
             ],
         }
-        args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8)
+        args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8, newline="\n")
         print(f"Wrote full JSON inventory to {args.json}")
 
     return 0

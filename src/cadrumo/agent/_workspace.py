@@ -244,7 +244,7 @@ class _PluginPythonCohort(Protocol):
 
 def _write_json(dest_dir: Path, name: str, document: object) -> None:
     dest_dir.mkdir(parents=True, exist_ok=True)
-    (dest_dir / name).write_text(json.dumps(document, indent=2) + "\n", encoding=_UTF_8)
+    (dest_dir / name).write_text(json.dumps(document, indent=2) + "\n", encoding=_UTF_8, newline="\n")
 
 
 _PERSONA_CONFIG_KEY = "persona"
@@ -650,7 +650,7 @@ class WorkspaceManifest(BaseModel):
 
 def _write(dest_dir: Path, name: str, text: str) -> None:
     dest_dir.mkdir(parents=True, exist_ok=True)
-    (dest_dir / name).write_text(text, encoding=_UTF_8)
+    (dest_dir / name).write_text(text, encoding=_UTF_8, newline="\n")
 
 
 def _claude_memory(rule_names: Sequence[str]) -> str:

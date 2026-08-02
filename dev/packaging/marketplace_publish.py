@@ -314,6 +314,7 @@ def publish_cohort_plugins(*, marketplace: Path, cohort: Path) -> tuple[str, ...
     published_index_path.write_text(
         json.dumps(merged, indent=2, ensure_ascii=False) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return tuple(sorted(str(entry["name"]) for entry in declared))
 

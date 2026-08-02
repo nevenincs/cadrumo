@@ -125,7 +125,7 @@ def load_parity_scenario(path: Path) -> ParityScenario:
 def save_parity_scenario(scenario: ParityScenario, path: Path) -> Path:
     """Persist one parity scenario to JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(scenario.model_dump_json(indent=2), encoding="utf-8")
+    path.write_text(scenario.model_dump_json(indent=2), encoding="utf-8", newline="\n")
     return path
 
 
@@ -137,7 +137,7 @@ def load_parity_tape(path: Path) -> ParityTape:
 def save_parity_tape(tape: ParityTape, path: Path) -> Path:
     """Persist one parity tape to JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(tape.model_dump_json(indent=2), encoding="utf-8")
+    path.write_text(tape.model_dump_json(indent=2), encoding="utf-8", newline="\n")
     return path
 
 

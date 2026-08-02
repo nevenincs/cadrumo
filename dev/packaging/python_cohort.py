@@ -410,6 +410,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         )
         + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return load_python_cohort(output)
 

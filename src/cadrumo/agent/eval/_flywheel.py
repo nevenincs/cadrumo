@@ -112,7 +112,7 @@ def write_promoted_scenario(
             return path
         raise ValueError(f"promotion identity collision at {path.name}; refusing to overwrite existing evidence")
     scenarios_dir.mkdir(parents=True, exist_ok=True)
-    path.write_text(text, encoding=_UTF_8)
+    path.write_text(text, encoding=_UTF_8, newline="\n")
     return path
 
 

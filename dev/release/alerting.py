@@ -248,7 +248,7 @@ def emit_alert(
     if (existing := find_open_alert(alert, repository=repository, gh_executable=gh)) is not None:
         with tempfile.TemporaryDirectory() as scratch:
             body_path = Path(scratch) / "alert-body.md"
-            body_path.write_text(alert_payload(alert), encoding=_UTF_8)
+            body_path.write_text(alert_payload(alert), encoding=_UTF_8, newline="\n")
             _run_gh(gh, ["issue", "comment", existing, "--repo", repository, "--body-file", str(body_path)])
         return f"updated open alert #{existing}: {alert.fingerprint}"
 
@@ -260,7 +260,7 @@ def emit_alert(
     # in the chain. `--body-file` sidesteps both.
     with tempfile.TemporaryDirectory() as scratch:
         body_path = Path(scratch) / "alert-body.md"
-        body_path.write_text(alert_payload(alert), encoding=_UTF_8)
+        body_path.write_text(alert_payload(alert), encoding=_UTF_8, newline="\n")
         base = ["issue", "create", "--repo", repository, "--title", alert.title, "--body-file", str(body_path)]
         return _create_alert_issue(gh, base, alert)
 

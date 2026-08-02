@@ -164,7 +164,7 @@ def build_manifest(
 def write_manifest(manifest: EvidenceReleaseManifest, output: Path) -> Path:
     """Persist the manifest as canonical, human-diffable JSON."""
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(manifest.model_dump_json(indent=2) + "\n", encoding=_UTF_8)
+    output.write_text(manifest.model_dump_json(indent=2) + "\n", encoding=_UTF_8, newline="\n")
     return output
 
 

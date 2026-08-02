@@ -445,7 +445,7 @@ def review_package_sign(
         raise bad_parameter_from_error(exc) from exc
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(signed.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
+    output.write_text(signed.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
 
     public_key = review_package_signing_public_key(keypair)
     result, lines = review_package_sign_result(
@@ -614,7 +614,7 @@ def review_package_counter_sign(
         raise bad_parameter_from_error(exc) from exc
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(receipt.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
+    output.write_text(receipt.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
 
     counter_public_key = review_package_signing_public_key(counter_signer_keypair)
     result, lines = review_package_counter_sign_result(
@@ -827,7 +827,7 @@ def review_package_encrypt_for_recipient(
         raise bad_parameter_from_error(exc) from exc
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
+    output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
 
     result, lines = review_package_encrypt_for_recipient_result(
         package,
@@ -1058,7 +1058,7 @@ def review_package_encrypt_feedback(
         raise bad_parameter_from_error(exc) from exc
 
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
+    output.write_text(envelope.model_dump_json(indent=2), encoding=UTF_8_ENCODING, newline="\n")
 
     result, lines = review_package_encrypt_feedback_result(
         output,

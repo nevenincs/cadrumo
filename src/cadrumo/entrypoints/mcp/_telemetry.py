@@ -258,7 +258,7 @@ class SessionTelemetryWriter:
         # returned so the caller's in-memory view stays coherent.
         with contextlib.suppress(OSError):
             self._directory.mkdir(parents=True, exist_ok=True)
-            with self.path.open("a", encoding=_UTF_8) as sink:
+            with self.path.open("a", encoding=_UTF_8, newline="\n") as sink:
                 sink.write(json.dumps(row.model_dump(mode="json"), ensure_ascii=False, sort_keys=True))
                 sink.write("\n")
         return row

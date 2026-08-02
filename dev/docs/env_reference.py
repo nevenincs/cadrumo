@@ -140,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
             return 1
         print(f"OK: {path} is fresh.")
         return 0
-    path.write_text(fresh, encoding=_UTF_8)
+    path.write_text(fresh, encoding=_UTF_8, newline="\n")
     print(f"Wrote {path}")
     return 0
 

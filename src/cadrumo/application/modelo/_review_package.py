@@ -273,11 +273,13 @@ def build_review_package(
         (staging_root / _REVISION_MEMBER).write_text(
             revision.model_dump_json(indent=2),
             encoding=UTF_8_ENCODING,
+            newline="\n",
         )
-        (staging_root / _EVIDENCE_MEMBER).write_text(evidence_payload, encoding=UTF_8_ENCODING)
+        (staging_root / _EVIDENCE_MEMBER).write_text(evidence_payload, encoding=UTF_8_ENCODING, newline="\n")
         (staging_root / _PACKAGE_INFO_MEMBER).write_text(
             manifest.model_dump_json(indent=2),
             encoding=UTF_8_ENCODING,
+            newline="\n",
         )
         corpus_root_name = f"review-package:{revision.calculation_revision_id[:16]}"
         corpus_manifest = build_corpus_bundle(

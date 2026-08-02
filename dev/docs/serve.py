@@ -241,7 +241,7 @@ def write_state(path: Path, state: ServeState) -> None:
     """Persist the running-server identity so a later start can find it."""
     path.parent.mkdir(parents=True, exist_ok=True)
     payload = {"pid": state.pid, "host": state.host, "port": state.port}
-    path.write_text(json.dumps(payload, indent=2) + "\n", encoding=_UTF_8)
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding=_UTF_8, newline="\n")
 
 
 def clear_state(path: Path, *, only_pid: int | None = None) -> None:

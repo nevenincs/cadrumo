@@ -100,6 +100,7 @@ def run_github_release_acquisition(
     (logs / "gh-release-download.log").write_text(
         f"exit_code={completed.returncode}\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     require_command_succeeded(
         returncode=completed.returncode,
@@ -131,6 +132,7 @@ def run_github_release_acquisition(
     evidence_path.write_text(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return evidence_path
 

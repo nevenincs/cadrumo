@@ -587,7 +587,7 @@ def main() -> int:
     rendered = json.dumps(evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True)
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(f"{rendered}\n", encoding=_UTF_8)
+        args.output.write_text(f"{rendered}\n", encoding=_UTF_8, newline="\n")
     print(rendered)
     return 0
 

@@ -694,7 +694,7 @@ def _commit_seeded_concept(
     candidate = TerminologyHandbook(concepts=tuple(by_id.values()))
     _validate_or_refuse(candidate)
     path = concepts_dir / f"{revalidated.concept_id}.toml"
-    path.write_text(serialise_concept(revalidated), encoding=UTF_8_ENCODING)
+    path.write_text(serialise_concept(revalidated), encoding=UTF_8_ENCODING, newline="\n")
     return path
 
 

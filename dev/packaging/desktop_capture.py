@@ -221,7 +221,7 @@ def seed_extension(target_user_data_dir: Path, source_extension_dir: Path, *, se
     settings_root.mkdir(parents=True, exist_ok=True)
     destination = extensions_root / extension_id
     shutil.copytree(source_extension_dir, destination, dirs_exist_ok=True)
-    (settings_root / f"{extension_id}.json").write_text(settings_json, encoding=_UTF_8)
+    (settings_root / f"{extension_id}.json").write_text(settings_json, encoding=_UTF_8, newline="\n")
     return destination
 
 

@@ -276,7 +276,7 @@ def _emit_outputs(descriptor: DownloadDescriptor, output_path: Path) -> None:
         f"need_{name}={'true' if name in demanded else 'false'}\n"
         for name in sorted(set(SOURCE_INPUT_BY_CHANNEL.values()) | {COHORT_INPUT})
     )
-    with output_path.open("a", encoding=_UTF_8) as handle:
+    with output_path.open("a", encoding=_UTF_8, newline="\n") as handle:
         handle.write(lines)
 
 
@@ -333,7 +333,7 @@ def main(argv: list[str] | None = None) -> int:
         # operator-minted evidence this check just verified.
         verified = os.environ.get("CLAUDE_EVIDENCE_RELEASE", "").strip()
         if args.github_output is not None:
-            with args.github_output.open("a", encoding=_UTF_8) as handle:
+            with args.github_output.open("a", encoding=_UTF_8, newline="\n") as handle:
                 handle.write(f"claude_evidence_release={verified}\n")
         print("host-extension precondition satisfied")
         return 0

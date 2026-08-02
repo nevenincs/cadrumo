@@ -84,6 +84,7 @@ def _run(
         f"stdout:\n{completed.stdout}\n"
         f"stderr:\n{completed.stderr}\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     if completed.returncode != 0:
         raise SystemExit(
@@ -179,6 +180,7 @@ def _write_json(path: Path, document: object) -> None:
     path.write_text(
         json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
 
 
@@ -243,7 +245,7 @@ def run_homebrew_smoke(
     formula_dir.mkdir(parents=True)
     staged_formula = formula_dir / "cadrumo.rb"
     original_formula = formula_source.read_text(encoding=_UTF_8)
-    staged_formula.write_text(original_formula, encoding=_UTF_8)
+    staged_formula.write_text(original_formula, encoding=_UTF_8, newline="\n")
 
     preexisting_formulae = set(
         _brew_lines(brew, ["list", "--formula"], cwd=run_root, log_dir=logs, label="brew-list-before"),
@@ -322,7 +324,7 @@ def run_homebrew_smoke(
             label="brew-audit",
         )
 
-        staged_formula.write_text(localized_formula, encoding=_UTF_8)
+        staged_formula.write_text(localized_formula, encoding=_UTF_8, newline="\n")
         _run(
             ["git", "add", "Formula/cadrumo.rb"],
             cwd=tap_repo,
@@ -615,6 +617,7 @@ def _run_brew_cleanup(
         (logs / f"{label}.log").write_text(
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
             encoding=_UTF_8,
+            newline="\n",
         )
         if completed.returncode != 0:
             cleanup_errors.append(
@@ -641,6 +644,7 @@ def _run_brew_cleanup(
         (logs / "brew-uninstall-cadrumo.log").write_text(
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
             encoding=_UTF_8,
+            newline="\n",
         )
         if completed.returncode != 0:
             cleanup_errors.append("failed to uninstall staged cadrumo formula")
@@ -664,6 +668,7 @@ def _run_brew_cleanup(
         (logs / f"brew-uninstall-{formula.replace('@', '_')}.log").write_text(
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
             encoding=_UTF_8,
+            newline="\n",
         )
         if completed.returncode != 0:
             cleanup_errors.append(f"failed to uninstall smoke dependency {formula}")
@@ -685,6 +690,7 @@ def _run_brew_cleanup(
         (logs / "brew-untap.log").write_text(
             f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
             encoding=_UTF_8,
+            newline="\n",
         )
         if completed.returncode != 0:
             cleanup_errors.append(f"failed to remove staged tap {tap_name}")

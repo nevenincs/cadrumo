@@ -262,7 +262,7 @@ def seal_candidate(
 def write_candidate(candidate: ReleaseCandidate, output: Path) -> Path:
     """Serialize a candidate to its asset file."""
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(candidate.model_dump_json(indent=2), encoding=_UTF_8)
+    output.write_text(candidate.model_dump_json(indent=2), encoding=_UTF_8, newline="\n")
     return output
 
 

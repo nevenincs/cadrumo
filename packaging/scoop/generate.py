@@ -215,6 +215,7 @@ def main() -> int:
     args.output.write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     sys.stdout.write(f"{args.output.resolve()}\n")
     return 0

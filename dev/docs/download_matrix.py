@@ -528,7 +528,7 @@ def _run_emit_latest(args: argparse.Namespace) -> int:
     )
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(payload.model_dump_json(indent=2) + "\n", encoding=_UTF_8)
+    output.write_text(payload.model_dump_json(indent=2) + "\n", encoding=_UTF_8, newline="\n")
     print(f"Wrote {output.resolve()}")
     return 0
 

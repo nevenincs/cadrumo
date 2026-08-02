@@ -141,6 +141,7 @@ def main(argv: list[str] | None = None) -> int:
     (run_root / "protocol-oracle.json").write_text(
         json.dumps(protocol_oracle.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
 
     # 2. Clean isolated profile: session auth seeded, one extension provisioned.
@@ -297,6 +298,7 @@ def _retain_attempts(logs: Path, capture: dc.CaptureResult) -> None:
     (logs / "attempts.json").write_text(
         json.dumps({"ok": capture.ok, "attempts": [vars(a) for a in capture.attempts]}, indent=2),
         encoding=_UTF_8,
+        newline="\n",
     )
 
 

@@ -113,7 +113,7 @@ def _bump_manifest(repo_root: Path, version: str) -> SurfaceUpdate:
         raise VersionBumpError(f"{MANIFEST_RELATIVE} does not carry a root '.' entry")
     payload["."] = version
     after = json.dumps(payload, indent=2) + "\n"
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(MANIFEST_RELATIVE, before, after)
 
 
@@ -121,7 +121,7 @@ def _bump_pyproject_version(repo_root: Path, relative: Path, version: str) -> Su
     path = repo_root / relative
     before = path.read_text(encoding=_UTF_8)
     after = _substitute_single(before, _PYPROJECT_VERSION_RE, version, surface=str(relative))
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(relative, before, after)
 
 
@@ -129,7 +129,7 @@ def _bump_init(repo_root: Path, version: str) -> SurfaceUpdate:
     path = repo_root / INIT_RELATIVE
     before = path.read_text(encoding=_UTF_8)
     after = _substitute_single(before, _INIT_VERSION_RE, version, surface=str(INIT_RELATIVE))
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(INIT_RELATIVE, before, after)
 
 
@@ -151,7 +151,7 @@ def _bump_dependency_pins(repo_root: Path, version: str) -> SurfaceUpdate:
                 f"{ROOT_PYPROJECT_RELATIVE} must pin {distribution} exactly once, found {len(matches)}",
             )
         after = pattern.sub(f'"{distribution}=={version}"', after, count=1)
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(ROOT_PYPROJECT_RELATIVE, before, after)
 
 
@@ -167,7 +167,7 @@ def _bump_changelog(repo_root: Path, version: str, block: str, *, release_date: 
     normalized_block = block if block.endswith("\n") else f"{block}\n"
     insertion = f"\n{heading}\n{normalized_block}"
     after = before.replace(_UNRELEASED_HEADING, _UNRELEASED_HEADING + insertion, 1)
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(CHANGELOG_RELATIVE, before, after)
 
 
@@ -740,7 +740,7 @@ def _emit_bump_outputs(github_output: str, *, version: str, commit: str) -> None
     """
     if not github_output:
         return
-    with Path(github_output).open("a", encoding=_UTF_8) as handle:
+    with Path(github_output).open("a", encoding=_UTF_8, newline="\n") as handle:
         handle.write(f"version={version}\n")
         handle.write(f"commit={commit}\n")
 

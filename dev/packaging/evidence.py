@@ -331,7 +331,7 @@ def write_distribution_evidence(directory: Path, evidence: DistributionEvidence)
     if destination.exists():
         raise FileExistsError(f"distribution evidence already exists: {destination}")
     temporary = destination.with_suffix(".json.tmp")
-    temporary.write_text(evidence.model_dump_json(indent=2) + "\n", encoding=_UTF_8)
+    temporary.write_text(evidence.model_dump_json(indent=2) + "\n", encoding=_UTF_8, newline="\n")
     temporary.replace(destination)
     return destination
 

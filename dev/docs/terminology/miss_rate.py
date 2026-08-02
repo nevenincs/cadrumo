@@ -55,6 +55,7 @@ def write_miss_rate_report(
     output.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
 
 

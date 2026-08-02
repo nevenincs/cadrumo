@@ -559,7 +559,7 @@ def verify_registry_workbooks(
     )
     if output is not None:
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(report.model_dump_json(indent=2), encoding=_UTF_8_ENCODING)
+        output.write_text(report.model_dump_json(indent=2), encoding=_UTF_8_ENCODING, newline="\n")
     return report
 
 
