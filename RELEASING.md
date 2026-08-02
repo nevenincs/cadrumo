@@ -218,8 +218,10 @@ Arm `publish-release.yml` before the first publication, in this order:
    project: publisher = GitHub Actions, owner/repository = `nevenincs/cadrumo`,
    workflow filename = `publish-release.yml`, environment = `release`.
 
-2. Create the `release` GitHub Environment with yourself as a required reviewer. The
-   approval click on each dispatched run is the human publication gate.
+2. Create the `release` GitHub Environment. Do **not** add a required reviewer, and
+   remove the rule if one is already present — see **OP-9** below. The environment
+   itself is mandatory and load-bearing: Trusted Publishing pins the workflow run's
+   repository *and the environment name*, so publication fails outright without it.
 
 There are **no per-product distribution repositories**. The account carries exactly
 **one** shared distribution repository serving both Homebrew and Scoop, plus the
@@ -251,8 +253,45 @@ restructuring. No publication writes to any product repository's default branch.
    - Repository secret `CLAUDE_MARKETPLACE_TOKEN` to a PAT with write access
 
 The workflow is armed as soon as these prerequisites exist; there is no separate
-opt-in variable. The `release` environment's required-reviewer approval is the
-human gate on a real publication.
+opt-in variable, and there is no approval click. Publication is gated by the
+mechanical guard set alone — the all-destination version-identity authority, per-run
+and per-asset verification, the complete blocking evidence set, the leak sweep, the
+supersession preflight, and the reversible-first destination ordering.
+
+### Operator actions (OP-9)
+
+**OP-9 — remove the `required_reviewers` protection rule from BOTH the `release`
+and the `docs` environments.** This is a GitHub settings action; no agent can
+perform it, and nothing in the repository can perform it on your behalf.
+
+Remove **only** that rule. Keep both environments, and keep each environment's
+`branch_policy` rule:
+
+- The environment **name** is the Trusted Publishing trust anchor and the
+  shared-runner product boundary. Deleting either environment breaks OIDC
+  publication outright — this is the naive-sweep failure this note exists to
+  prevent.
+- `branch_policy` pins which refs may deploy. It is not a human gate and it stays.
+
+`docs` is included because it carries the same rule class. The automated
+documentation consequence would stop at an approval click the moment its
+deploy-role variable lands, so removing the rule from `release` alone leaves half
+the obligation standing.
+
+Settings → Environments → *(each of `release`, `docs`)* → Deployment protection
+rules → untick **Required reviewers** → Save.
+
+Verify afterwards, rather than assuming — a settings change leaves no commit, so
+nothing in the tree records whether it happened:
+
+```bash
+uv run --no-sync python -m dev.release.environment_inventory
+```
+
+It reads the live environments and reports each one's rule set. It is read-only and
+carries no mutation path. An environment it cannot read is reported `UNKNOWN`, never
+as satisfied, and the command exits non-zero in that case so an unreachable forge is
+never mistaken for a discharged obligation.
 
 ### Self-hosted runner fleet
 
