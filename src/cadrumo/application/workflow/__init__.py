@@ -86,6 +86,7 @@ from .._workflow_auth_models import (
     AuthState,
     CertificateSecretMutationEventKind,
     CertificateSecretMutationIntent,
+    CertificateSourceName,
     CertificateSourceRecord,
 )
 
@@ -200,6 +201,7 @@ __all__ = [
     "CertificateBundleProtocol",
     "CertificateSecretMutationEventKind",
     "CertificateSecretMutationIntent",
+    "CertificateSourceName",
     "CertificateSourceRecord",
     "DeadlineEngineAdapter",
     "DeadlineEngineProtocol",

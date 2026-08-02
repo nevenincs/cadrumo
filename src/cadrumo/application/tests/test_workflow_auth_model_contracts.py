@@ -27,6 +27,7 @@ import pytest
 from pydantic import ValidationError
 
 from .._workflow_auth_models import (
+    AuthCleanupCertificateSource,
     AuthCleanupIntent,
     AuthCleanupOperationKind,
     AuthState,
@@ -141,3 +142,78 @@ class TestInstantContracts:
     def test_empty_auth_state_remains_valid(self) -> None:
         """A state carrying no instants is still constructible."""
         assert AuthState().configured_at is None
+
+
+class TestCertificateSourceName:
+    """One nominal certificate source has exactly one persisted spelling.
+
+    The name is the natural key of three surfaces — the registry dict, the
+    active selector, and the secret-store key — each of which used to strip
+    for itself. A record persisted as ``" personal "`` therefore kept its
+    padding in durable state while the secret backend filed the passphrase
+    under ``"personal"``, and exact-dict selection could not resolve the
+    padded record from the canonical selector.
+    """
+
+    _PADDED = "  personal  "
+    _CANONICAL = "personal"
+
+    def test_registered_record_stores_the_canonical_spelling(self) -> None:
+        record = CertificateSourceRecord(
+            name=self._PADDED,
+            certificate_path="p",
+            registered_at=_AWARE,
+        )
+        assert record.name == self._CANONICAL
+
+    def test_blank_after_strip_is_refused(self) -> None:
+        """A whitespace-only name is not a name; it must not reach durable state."""
+        for blank in ("", "   ", "\t\n"):
+            with pytest.raises(ValidationError):
+                CertificateSourceRecord(name=blank, certificate_path="p", registered_at=_AWARE)
+
+    def test_overlength_name_is_refused(self) -> None:
+        with pytest.raises(ValidationError):
+            CertificateSourceRecord(name="x" * 161, certificate_path="p", registered_at=_AWARE)
+        assert (
+            CertificateSourceRecord(name="x" * 160, certificate_path="p", registered_at=_AWARE).name
+            == "x" * 160
+        )
+
+    def test_cleanup_witness_carries_the_same_contract(self) -> None:
+        witness = AuthCleanupCertificateSource(name=self._PADDED, registered_at=_AWARE)
+        assert witness.name == self._CANONICAL
+        with pytest.raises(ValidationError):
+            AuthCleanupCertificateSource(name="   ", registered_at=_AWARE)
+
+    def test_secret_mutation_intent_carries_the_same_contract(self) -> None:
+        assert _mutation(source_name=self._PADDED).source_name == self._CANONICAL
+        with pytest.raises(ValidationError):
+            _mutation(source_name="   ")
+
+    def test_active_selector_is_canonical_so_dict_lookup_resolves(self) -> None:
+        """The selector and the registry key must be the same string.
+
+        ``active_certificate_source`` is resolved by exact dict lookup against
+        ``certificate_sources``. If the two normalise differently, a hydrated
+        padded record is unreachable from a canonical selector.
+        """
+        state = AuthState(
+            certificate_sources={self._PADDED: CertificateSourceRecord(
+                name=self._PADDED,
+                certificate_path="p",
+                registered_at=_AWARE,
+            )},
+            active_certificate_source=self._PADDED,
+        )
+        assert state.active_certificate_source == self._CANONICAL
+        assert set(state.certificate_sources) == {self._CANONICAL}
+        assert state.certificate_sources[state.active_certificate_source].name == self._CANONICAL
+
+    def test_cleanup_intent_source_name_collections_are_canonical(self) -> None:
+        intent = _cleanup(
+            active_certificate_source_at_start=self._PADDED,
+            secret_source_names=(self._PADDED, "other"),
+        )
+        assert intent.active_certificate_source_at_start == self._CANONICAL
+        assert intent.secret_source_names == (self._CANONICAL, "other")

@@ -42,7 +42,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from pydantic import SecretStr
+from pydantic import SecretStr, TypeAdapter
 
 from ...adapters.persistence.storage import (
     SecretNotFoundError,
@@ -53,9 +53,12 @@ from ...adapters.persistence.storage import (
 )
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now
+from .._workflow_auth_models import CertificateSourceName
 
 if TYPE_CHECKING:
     from ...core.config import Settings
+
+_CERTIFICATE_SOURCE_NAME: TypeAdapter[str] = TypeAdapter(CertificateSourceName)
 
 _SECRET_ROTATION_HORIZON = timedelta(days=365 * 10)
 """Effectively unbounded expiry for a rotation-driven, operator-managed secret.
@@ -123,9 +126,18 @@ def _secret_store_key(*, bucket_id: str, name: str) -> str:
     """Return the :class:`~adapters.persistence.storage.SecretStore` natural key for ``name``.
 
     Bucket-scoped so two profiles' certificate secrets never collide in
-    the shared digest-keyed index.
+    the shared digest-keyed index. The name is canonicalized through the same
+    :data:`~application.workflow.CertificateSourceName` contract the durable
+    registry record carries, so the key cannot address a spelling the registry
+    would refuse — a locally-stripping key would otherwise file two distinct
+    persisted spellings under one secret.
+
+    Raises:
+        pydantic.ValidationError: When ``name`` is blank after stripping or
+            exceeds the canonical length bound.
     """
-    return f"aeat:certificate-secret:{bucket_id}:{name.strip()}"
+    canonical = _CERTIFICATE_SOURCE_NAME.validate_python(name)
+    return f"aeat:certificate-secret:{bucket_id}:{canonical}"
 
 
 class SecureStorageCertificateSecretBackend:

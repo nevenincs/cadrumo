@@ -36,7 +36,7 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore
 from ....tests.master_key import EphemeralMasterKeyProvider
@@ -315,3 +315,42 @@ def test_secure_storage_backend_is_the_only_public_backend() -> None:
         "SecureStorageCertificateSecretBackend",
     }
     assert not hasattr(_backend_module, "SECURE_STORAGE_BACKEND_LABEL")
+
+
+class TestSecretStoreNaturalKey:
+    """The secret key addresses exactly the spellings the registry can persist.
+
+    The key helper used to strip for itself while the durable
+    :class:`~application.workflow.CertificateSourceRecord` preserved padding.
+    A source persisted as ``" personal "`` therefore had its passphrase filed
+    under ``"personal"``, so two distinct persisted names aliased onto one
+    secret. Both sides now share the canonical name contract, so the key can
+    only address a name the registry would itself accept.
+    """
+
+    def test_padded_and_canonical_names_address_one_secret(self) -> None:
+        canonical = _backend_module._secret_store_key(bucket_id="bucket", name="personal")
+        assert _backend_module._secret_store_key(bucket_id="bucket", name="  personal  ") == canonical
+        assert canonical.endswith(":personal")
+
+    def test_blank_after_strip_name_is_refused(self) -> None:
+        """A key the registry could never hold a record for must not be mintable."""
+        for blank in ("", "   ", "\t"):
+            with pytest.raises(ValidationError):
+                _backend_module._secret_store_key(bucket_id="bucket", name=blank)
+
+    def test_overlength_name_is_refused(self) -> None:
+        with pytest.raises(ValidationError):
+            _backend_module._secret_store_key(bucket_id="bucket", name="x" * 161)
+        assert _backend_module._secret_store_key(bucket_id="bucket", name="x" * 160)
+
+    def test_distinct_names_stay_distinct(self) -> None:
+        """Canonicalisation must not collapse genuinely different sources."""
+        assert _backend_module._secret_store_key(
+            bucket_id="bucket", name="personal"
+        ) != _backend_module._secret_store_key(bucket_id="bucket", name="apoderado")
+
+    def test_bucket_scoping_survives(self) -> None:
+        assert _backend_module._secret_store_key(
+            bucket_id="a", name="personal"
+        ) != _backend_module._secret_store_key(bucket_id="b", name="personal")
