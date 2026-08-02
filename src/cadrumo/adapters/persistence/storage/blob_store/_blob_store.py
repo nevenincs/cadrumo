@@ -208,9 +208,43 @@ def _assert_declared_plaintext_size(plaintext: bytes, manifest: BlobManifest) ->
         )
 
 
-def _load_blob_manifest_envelope(path: Path, *, expected_class: SensitivityClass) -> Envelope[BlobManifest]:
+def _coherent_blob_manifest(envelope: Envelope[BlobManifest]) -> BlobManifest:
+    """Return the payload of ``envelope``, refusing a self-contradicting manifest.
+
+    A manifest states its classification twice -- once on the envelope that
+    wraps it, once on the payload inside -- and the two steer different
+    decisions. Retrieval routes the on-disk layout from the *payload* value,
+    the envelope loader gates the *outer* one against the caller's expectation,
+    and key rotation reconstructs the outer value from the nested one when it
+    rewrites. Nothing compared them, so editing one field alone made those
+    surfaces disagree about the same blob: iteration reported a CORPUS blob
+    that carried a wrapped DEK, retrieval of a still-valid reference followed
+    the plaintext layout and failed, and rotating the manifest propagated the
+    tampered value outward, leaving the blob unreadable afterwards.
+
+    Every surface that opens a manifest passes through here, so the
+    disagreement is refused once, before any layout routing or rewrite, rather
+    than being caught differently -- or not at all -- by each consumer.
+    """
+    if envelope.classification is not envelope.payload.classification:
+        raise _blob_integrity_error(
+            "blob manifest envelope and payload classifications disagree",
+            violation="manifest_classification_coherence",
+            object_kind="manifest",
+        )
+    return envelope.payload
+
+
+def _load_blob_manifest(path: Path, *, expected_class: SensitivityClass) -> BlobManifest:
+    """Load one manifest for a direct read, gated on classification coherence.
+
+    Returns the payload rather than the envelope so no caller can reach the
+    nested classification without having passed :func:`_coherent_blob_manifest`
+    first -- the outer/payload disagreement is unrepresentable downstream of
+    this function rather than merely checked by convention.
+    """
     try:
-        return load_envelope(
+        envelope = load_envelope(
             path,
             Envelope[BlobManifest],
             expected_class=expected_class,
@@ -234,6 +268,7 @@ def _load_blob_manifest_envelope(path: Path, *, expected_class: SensitivityClass
             violation="manifest_payload",
             object_kind="manifest",
         ) from exc
+    return _coherent_blob_manifest(envelope)
 
 
 class EncryptedBlobStore:
@@ -371,12 +406,15 @@ class EncryptedBlobStore:
 
         Raises:
             BlobNotFoundError: When the manifest or payload file is missing.
+            BlobIntegrityError: When the manifest is unusable, including when
+                its envelope and payload classifications disagree -- the
+                layout is routed from the payload value, so an unchecked
+                disagreement would send the read to the wrong layout.
         """
         manifest_path = self._manifest_path_for(reference.sha256_plaintext_hex)
         if not manifest_path.exists():
             raise _blob_not_found_error("blob manifest not found", object_kind="manifest")
-        envelope = _load_blob_manifest_envelope(manifest_path, expected_class=reference.classification)
-        manifest = envelope.payload
+        manifest = _load_blob_manifest(manifest_path, expected_class=reference.classification)
         if manifest.classification is SensitivityClass.CORPUS:
             return self._read_plaintext_blob(manifest)
         return self._read_ciphertext_blob(manifest)
@@ -437,6 +475,12 @@ class EncryptedBlobStore:
         Internal helper used by :meth:`iter_manifests` and by the
         blob-store rotation path (which needs the path to atomically
         rewrite the manifest under the new master key).
+
+        Rotation reaches the coherence gate through this helper, which is
+        why the gate lives here rather than in the rotation loop: rotation
+        rebuilds the outer classification from the nested value, so a
+        manifest whose two classifications disagree would have that
+        disagreement written outward and made permanent.
         """
         blobs_dir = self._root_dir / _BLOB_STORE_DIRNAME
         if not blobs_dir.exists():
@@ -446,8 +490,11 @@ class EncryptedBlobStore:
                 continue
             for manifest_path in sorted(shard_dir.glob("*.manifest.json")):
                 # Single read + inline gate: iter_manifests is
-                # classification-class-agnostic at the API surface, so
-                # the schema-version contract is the only gate here.
+                # classification-class-agnostic at the API surface, so the
+                # schema-version contract is the only *expectation* gate here.
+                # The outer/payload coherence check below is not an
+                # expectation -- it is an invariant of the manifest itself --
+                # so it applies to this surface exactly as to a direct read.
                 try:
                     envelope = Envelope[BlobManifest].model_validate_json(
                         manifest_path.read_text(encoding=_UTF_8_ENCODING),
@@ -468,7 +515,7 @@ class EncryptedBlobStore:
                         f"blob manifest is at version {envelope.schema_version}; "
                         f"consumer expects {BLOB_MANIFEST_SCHEMA_VERSION}",
                     )
-                yield manifest_path, envelope.payload
+                yield manifest_path, _coherent_blob_manifest(envelope)
 
     def rotate_master_key(
         self,
