@@ -32,7 +32,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Protocol
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.atomic_write import atomic_write_text
@@ -41,6 +41,7 @@ from ....core.hashing import sha256_hex
 from ....core.locks import exclusive_file_lock
 from ....core.logging import get_logger
 from ....core.time import now
+from ._path_safety import safe_repository_id, safe_subpath
 from .blob_store import EncryptedBlobStore
 from .crypto import (
     decrypt_record,
@@ -54,6 +55,9 @@ from .envelope import (
 )
 from .errors import DecryptionError, EncryptionError
 from .master_key import MasterKeyProvider
+
+#: Label carried on every containment refusal raised for a plan target.
+_TARGET_FILENAME_CONTEXT = "rotation_target_filename"
 
 _log = get_logger(__name__)
 
@@ -107,7 +111,13 @@ class RotationPlanEntry(BaseModel):
             ``usage-ratios.json`` written by the usage-ratios
             service). When set, the rotation
             visits exactly ``store_dir / target_filename`` and ignores
-            every other file in the directory.
+            every other file in the directory. "Exact filename inside
+            ``store_dir``" is enforced, not merely documented: a value
+            carrying a path separator, a parent reference, or an
+            absolute path is refused here. It used to be concatenated
+            straight onto ``store_dir``, so a plan naming
+            ``../outside.envelope.json`` pointed the rotation WRITER at
+            a sibling directory's ciphertext.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -116,6 +126,21 @@ class RotationPlanEntry(BaseModel):
     hkdf_context: bytes
     envelope_suffix: str = ".envelope.json"
     target_filename: str | None = None
+
+    @field_validator("target_filename")
+    @classmethod
+    def _check_target_filename(cls, value: str | None) -> str | None:
+        """Refuse a target that is not a bare filename.
+
+        The early-rejection half of the substrate's two-layer path
+        contract: this rejects the token's SHAPE at construction, and
+        :func:`._path_safety.safe_subpath` re-resolves it against the real
+        filesystem at enumeration, which is the only layer that can catch a
+        symlinked ``store_dir``. Neither subsumes the other.
+        """
+        if value is None:
+            return None
+        return safe_repository_id(value, context=_TARGET_FILENAME_CONTEXT)
 
     def lock_path_for(self, envelope_path: Path) -> Path:
         """Return the writer-canonical lock target for ``envelope_path``.
@@ -175,8 +200,12 @@ def _iter_envelope_files(
         if entry.target_filename is not None:
             # Single-file mode: visit exactly this filename inside the
             # directory. Used by consumers whose on-disk filename does
-            # not end in ``.envelope.json`` (usage_ratios).
-            target = entry.store_dir / entry.target_filename
+            # not end in ``.envelope.json`` (usage_ratios). Resolved
+            # rather than concatenated, so the path handed to the
+            # rotation WRITER is one the substrate has confirmed lives
+            # under the declared store_dir even when that directory or
+            # the target itself is a symlink.
+            target = safe_subpath(entry.store_dir, entry.target_filename, context=_TARGET_FILENAME_CONTEXT)
             if target.is_file():
                 yield target, entry
             continue
