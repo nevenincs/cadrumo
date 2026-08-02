@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:ef9c7b7682a8179accf3c79e3196fd8b215132b0026c23e58ee18f84d5ddb8f4'
+body_hash: 'sha256:498f6adcf4566d1f20770ee2e2d48f71c381afc6e10b19f553a7188c46b28f93'
 related: []
 ---
 
@@ -206,6 +206,260 @@ Wrong guesses complete in well under a fifth of a second and a correct one takes
 longer, but only because provisioning and key enrolment run after a successful
 unwrap. Discrimination is by exception, not by clock.
 
+
+### fleet-burndown | high | a guard can be on the path, raise correctly, and have its refusal discarded downstream
+
+The coverage finding above concerns guards absent from a path. A third form is
+harder to see, because every instrument built for the absent-guard family
+reports it as present and working. The duplicate-tax-identifier guard in
+`application/user_profile/_profile_repository.py` loaded each candidate through
+the verifying load, which raises `ProfileIntegrityError`; that inherits
+`ProfileNotFoundError`, which is a `CadrumoError`, which the surrounding
+unreadable-profile handler caught and converted into `continue`. The duplicate
+was admitted with a warning. Call-site scans, enrollment gates and coverage of
+the guard itself all pass on that arrangement. Only following the exception's
+fate reveals it. The general form: a broad `except` that cannot distinguish
+"this input is unavailable" from "this input is inconsistent" converts a refusal
+into a skip, and the two are indistinguishable at the catch site by
+construction.
+
+The predicate that matters is not syntactic. An abstract-syntax sweep found
+eleven sites carrying a broad handler downstream of a verifying call and exactly
+one defect. Ten returned a named unknown the caller can branch on; one used
+`continue`. That split is the symptom rather than the axis, and stating it as
+the axis is actively misleading, because it licenses the wrong disposition. The
+rule is that the handler must hand back a value the caller can distinguish from
+the healthy negative. A `None` colliding with the legitimate "nothing here"
+answer is not a named unknown whatever its syntax: in a resume path, `None`
+meaning "this profile has nothing to resume" is the same value a legitimately
+ineligible profile produces, so the caller cannot separate *ineligible* from
+*could not tell* — a return-default in shape and a `continue` in effect. The
+greppable form, a broad `except` whose body is `continue` inside an iteration
+that constitutes a guard, remains a useful finder and currently has one
+occurrence, deliberate and no longer able to swallow a status disagreement. It
+is a search heuristic, not the predicate.
+
+### fleet-burndown | medium | subclassing a family root is sound; subclassing a specific condition is impersonation
+
+The exception hierarchy carries the same hazard latently, independent of whether
+any handler catches the parent today. A child can impersonate its parent only
+where some handler catches the parent, which makes the absorbing-parent set the
+bound: 650 error classes, 611 subclass edges among them, 392 edges whose parent
+is caught in production, and 47 distinct absorbing parents. Forty-three of those
+are unmistakable domain family roots, where subclassing is sound because every
+child means the parent condition with a reason. Four are specific conditions,
+and those are the whole risk surface. `ProfileNotFoundError` means one thing —
+this profile does not exist — so an integrity child impersonates it at every
+handler. `MasterKeyUnavailableError`, `DecryptionError` and
+`AeatLoginAssertionError` read as candidates by name and are sound on their own
+declarations: a wrong passphrase genuinely is one way the key could not be
+obtained, and a session that cannot be trusted is literally the second clause of
+the login assertion error's own docstring.
+
+Two consequences. The subclass relation is not a mechanical discriminator — it
+over-selects, and in the eleven-site sample it separated nothing. And the
+judgement is per class rather than greppable, so the useful output is the
+enumerated parent list rather than a rule.
+
+### fleet-burndown | high | find the smallest edit that should break the property, not the first edit that does
+
+A partial net does not merely fail to catch; it certifies. Demonstrated from
+both directions. A vacuous assertion inside the live AEAT write guard
+(`test_url_method_guard_includes_canonical_write_verb_tokens`) compares the
+forbidden-token constant against a set built by unpacking that same constant, so
+containment holds at every value; deleting a canonical write verb left the test
+green. The obvious mutation against a neighbouring gate *was* caught — by a
+companion assertion checking fixture presence — and that partial coverage is
+exactly what hid the real hole, because a caught mutation reads as a covered
+property.
+
+The shapes are enumerable and worth checking directly. A filter feeding an
+assertion vacates it while the surrounding assertions still constrain the arm; a
+filter feeding `parametrize` deletes the case outright, because nothing
+downstream constrains what no longer exists — measured at twenty-two collected
+cases falling to three with zero failures. A bound derived from the value under
+test moves both goalposts together. A count pinning a total but not its
+partition stays green while one partition collapses. The review question on
+landing any guard is what the smallest edit is that should break it, and whether
+it does.
+
+### fleet-burndown | high | an instrument that has never detected a known instance is not evidence
+
+Four confident zeros in one session, none caught by tooling. A multiline pattern
+search returned zero where the searcher's own known site had to match; a
+several-hundred-file shell glob passed to a search tool rather than letting it
+walk produced what read as a clean corpus-wide negative, twice; a probe aimed at
+a module path where the entry did not live reported the entry missing. A
+wrong-path negative is indistinguishable from a real one, and in every case the
+only thing that caught it was the result being implausible against something
+already known.
+
+The transferable remedy is mechanical rather than attentional: carry a positive
+control that aborts unless the instrument rediscovers an instance already known
+to carry the shape. An instrument that cannot find the one case you know exists
+cannot be trusted to report zero others. Where a filter is meant to clear as
+well as detect, the control must be two-sided — a negative arm requiring a
+known-sound case to be excluded, without which a filter passing everything
+through still shows the positive arm green.
+
+Applied to a predicate rather than a scan, the same check is one question: would
+this pattern separate the known good from the known bad? A greppable proxy for a
+semantic property gets adopted because greppable feels rigorous, and a mechanical
+tell that does not discriminate selects a confidently wrong set — worse than
+admitting the judgement is manual.
+
+### fleet-burndown | medium | two kinds of all-clear, and only one survives a re-run
+
+The constructive counterpart to the preceding finding. *These files did not
+appear in my results* depends on what a run happened to return and must be
+re-established whenever anything changes. *My scans key on class definitions and
+`except` handlers, and these files contain zero of each* is a property of the
+instrument and the subject, so it holds regardless of run: the files could not
+have appeared rather than did not.
+
+Prefer the structural form wherever the instrument's keys are enumerable. It is
+usually one command more expensive and it converts a result that decays into one
+that does not. Two constraints on its use. Name which kind is being claimed,
+because a structural claim hedged like an incidental one teaches the reader the
+author cannot distinguish them. And it does not rescue a bad instrument: if the
+keys are wrong for the question, "the subject has none of my keys" is true and
+useless, so it strengthens a sound instrument's negative rather than replacing
+the control that proves the instrument works at all.
+
+### fleet-burndown | high | a mutation is an artificial instance of exactly the defect being hunted
+
+Restoring a mutation correctly protects the tree and does nothing for peers
+reading during the window. That is a different failure and it is the one that
+fires. It burns readers symmetrically: a peer sampling during the window reports
+a defect that does not exist, and a peer sampling afterwards sees clean and
+concludes the reporter was careless. The mutation runner never notices, because
+their own restore verified fine. Eleven windows occurred in one session against
+a fleet sampling continuously, so "seconds" is not short at that ratio.
+
+There is no test-file exemption. The discriminator is not production-versus-test
+but whether the mutated state resembles what a peer is currently looking for.
+Two test-file windows presented, mid-window, as a vacuous gate — an emptied
+refusal tuple feeding a parametrized contract, and renamed discriminator
+literals in a filter — which was that period's highest-priority category. A peer
+would have reported either in good faith, and it would have read as a
+confirmation of the prevailing thesis, which is far worse to unwind than a false
+production defect, because a finding that fits gets absorbed rather than
+checked.
+
+The rule has two halves. Announce the file and rough duration before any
+mutation window. Name the files afterwards if the announcement was missed,
+because prospective disclosure helps nobody who has already sampled, and
+retroactive disclosure is the only route by which a peer holding an observation
+can settle it. Two reader-side discriminators make most cases resolvable without
+interrupting anyone: read the committed state by content rather than by a line
+offset measured in the working tree, since offsets are not portable between the
+two and a range slice will silently return a different region; and re-read once
+after a short interval, since a mutation window closes while a defect persists.
+
+### fleet-burndown | medium | a sweep that finds nothing new can be the reason a later fix is correct
+
+A hierarchy sweep's headline result was one defect, already known. Its actual
+output was preventing a subsequent fix from silently recreating that defect: the
+fix's author ordered its `except` arms as it did because the sweep had published
+the shape, and the coarser guidance then in circulation would not have caught
+it. The obvious handler for that site would have swallowed an integrity refusal
+and restored the hole with every other test passing.
+
+The triage consequence is that a null-result sweep's value is not measured by
+its findings count. It is measured by whether its predicate reaches anyone
+before they need it.
+
+### fleet-burndown | medium | accidental coverage reads as defence in depth
+
+The inverse of the coverage findings above: not a gap that looks covered, but a
+coverage that is genuinely accidental. A wizard manifest grant reaches no write
+on either path — one stopped by a resume-eligibility fix, the other by an
+already-registered check in `ProfileRepository.create`. Neither guard's tests,
+comments or docstrings mention the other, so whoever refactors either has no
+signal that they are load-bearing together, and the configuration looks safe
+until one is changed for an unrelated reason.
+
+Worth noting how it surfaced: an initial claim that the non-interactive path was
+ungated reasoned from the absence of a checkpoint store without checking whether
+anything further down refused. An unchecked "nothing gates this" is the same
+shape as an unchecked "something gates this".
+
+### fleet-burndown | medium | check for a prior refutation, and measure the shipped corpus, before enforcing an invariant
+
+A refutation of a proposed invariant usually lives as a guard test rather than a
+decision record, so a search of the decision corpus misses it. One finding asked
+that a schedule year be bound to a period's filing year; the tree already
+carried a negation-named test written specifically to stop that being
+re-proposed, after an earlier attempt found it refuses twenty-two real engine
+schedules. Implementing it broke twenty-three tests for no net change.
+
+Two cheap pre-flight checks, both before writing code: grep the owning package's
+tests for the negation of the invariant, and count how many shipped records
+would violate the rule. A nonzero violation count on legitimate data means the
+rule is wrong rather than the data — which is what scoped one source-reference
+rule to revision level after finding zero violations there against 212 at modelo
+level, and what refused a legal-reference window rule outright after finding it
+would reject thirty-six legitimate citations.
+
+### fleet-burndown | high | correction: the claim that this class of defect concentrates in newly-landed guards does not survive its own evidence
+
+Recorded because how it failed is more useful than the claim. It was
+generalised from one sweep, then a second was cited as corroboration without
+checking its direction, and a third contradicted it outright.
+
+The first sweep, over four vacuity signatures, found the pre-existing corpus
+clean with every live instance in campaign-landed instruments, and supports the
+claim. A mutation pass found a live vacuity in a pre-existing gate, reached by a
+fifth signature neither sweep enumerated, and contradicts it. A swallowed-refusal
+sweep found all eleven candidates including the sole defect predating the
+campaign — last-touch dates spanning three months against a single campaign day,
+and zero campaign-landed instances against a denominator of 373 commits and
+roughly 15,900 production insertions that day — and contradicts it.
+
+Two shapes pointing opposite ways is a reason not to generalise from either. The
+claim also required a distinction that was elided: a defect in pre-existing code
+that a campaign *finds* is not a defect the campaign *authored*, and only the
+second supports a claim about authorship. What survives independently is that
+instruments carry the defect they hunt, true regardless of who landed them, and
+the review question on landing a guard, which stands on its own merits.
+
+### fleet-burndown | medium | correction: three git measurements that answered a different question than the one asked
+
+Each was run correctly, returned real output, and was about something other than
+the subject.
+
+`git status --short` is not a working-tree change check in this repository. With
+`core.autocrlf=true` a file touched by any tool shows as modified with zero
+content change; measured at 48 phantoms in 104 modified entries, a 46% false
+rate. Findings were skipped as blocked by peer work that was never blocked. Use
+`git diff --numstat -- <file>`, and note that it answers whether you would
+overwrite someone, never whether the work has already been done — that second
+question needs the file's history.
+
+File history is not symbol history. A finding was twice reported as fixed before
+the campaign, once by taking a commit that merely touched the file as the commit
+that introduced the symbol. `git log -S <symbol> -- <paths>` is the only
+instrument for when something entered the tree; the finding was genuinely open.
+
+Blame co-occurrence is not common authorship. Three sites including a defect
+blamed to one commit, which was a 196-file bulk landing of accumulated
+working-tree changes. That nearly became a mechanism finding — the same commit
+produced both dispositions, so the disposition is situational rather than policy
+— and is worthless. The sound half of the same measurement survives: blame gives
+last-touch, an upper bound on introduction, so "last touched before a given
+date" proves pre-existence even though it attributes nothing about authorship.
+
+### fleet-burndown | medium | correction: a pathspec commit takes working-tree content, so a stale working copy reverts landed work
+
+A commit whose subject concerned an unrelated transport change silently reverted
+a landed typing fix across four result classes in
+`entrypoints/cli/_config/_config_payloads.py`, restoring `str` where `BucketId`
+had been landed. The author committed from a stale working copy and used a
+pathspec commit, whose pathspec captured their stale content for the whole file.
+This is distinct from the working-tree hazards the shared rules already cover:
+the peer work lost here was already committed. A pathspec commit is only safe if
+your working copy of that file is current, so read the file's most recent commit
+before committing a file you have held for any length of time.
 
 ## Recommendations
 
