@@ -35,6 +35,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
+from hmac import compare_digest
 from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel
@@ -43,6 +44,7 @@ from ...adapters.persistence.storage import (
     ClassificationError,
     Envelope,
     EnvelopeVersionError,
+    HashedLookup,
     SecureObjectNamespaceDefinition,
     inner_envelope_version_is_current,
     secure_object_repository_for_bucket,
@@ -392,6 +394,20 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         return snapshot
 
     def list_snapshots(self) -> tuple[TPayload, ...]:
+        """Return every stored snapshot, refusing any row that is not its own.
+
+        ``load`` verifies the decrypted snapshot id against the id that was
+        requested. Enumeration reached the same rows without that check, so a
+        valid snapshot re-encrypted under another snapshot's key was returned
+        by ``list_snapshots``/``latest``/``resolve`` -- and by every shared
+        consumer built on them -- while a targeted ``load`` of that key
+        refused it. Both doors now re-address the row.
+
+        Raises:
+            LiveApplicationInputError: When a row's payload bucket differs
+                from the repository's bucket, or when its snapshot id does
+                not agree with the key it is stored under.
+        """
         snapshots: list[TPayload] = []
         for record in self._objects.list_records(
             self._namespace_definition.namespace,
@@ -411,8 +427,30 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
                         "repository_bucket": self._bucket_id,
                     },
                 )
+            self._assert_addressed_by_its_own_key(record, snapshot)
             snapshots.append(snapshot)
         return tuple(sorted(snapshots, key=lambda item: _snapshot_id_of(item)))
+
+    def _assert_addressed_by_its_own_key(self, record: SecureObjectRecord, snapshot: TPayload) -> None:
+        """Refuse a snapshot stored under a different snapshot's key.
+
+        The stored ``object_key`` is a :class:`HashedLookup` digest from which
+        the plaintext key cannot be recovered, so the check recomputes the
+        digest of the key this snapshot *should* occupy and compares the two
+        in constant time.
+        """
+        snapshot_id = _snapshot_id_of(snapshot)
+        expected_key = HashedLookup.compute(self._object_key(self._bucket_id, snapshot_id))
+        if not compare_digest(expected_key, record.object_key):
+            raise LiveApplicationInputError(
+                f"{self._domain_label} snapshot id={snapshot_id!r} is stored under a different snapshot's key",
+                translated_message="application.live.snapshot_base.errors.snapshot_key_mismatch",
+                context={
+                    "domain_label": self._domain_label,
+                    "snapshot_id": snapshot_id,
+                    "repository_bucket": self._bucket_id,
+                },
+            )
 
     def resolve(self, snapshot_id: str) -> TPayload:
         trimmed_snapshot_id = snapshot_id.strip()
