@@ -54,44 +54,72 @@ _CREATED_AT = datetime(2026, 5, 28, 11, 55, 0, tzinfo=UTC)
 _EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
 
 #: The closed set as this module expects it, written out rather than derived.
-#: The two foreign-class tests below parametrize over the *complement* of
-#: ``SECRET_STORE_CLASSES``, so admitting a class to that set does not make
-#: them fail -- it deletes their cases. Pinning the set independently is what
-#: turns a widening into a red instead of a smaller collection count.
+#: Every other check here reads ``SECRET_STORE_CLASSES`` and so moves with it;
+#: this literal is what makes a widening fail rather than propagate. Do not
+#: replace it with anything derived from the production constant.
 _EXPECTED_STORE_CLASSES = frozenset({SensitivityClass.SECRET, SensitivityClass.SESSION})
 
+#: Named one by one, NOT derived as the complement of ``SECRET_STORE_CLASSES``.
+#: Deriving it meant admitting a class to the closed set did not fail the two
+#: refusal tests below -- it deleted their cases, so the assertions stopped
+#: existing rather than stopping passing.
 _FOREIGN_CLASSES = tuple(
-    pytest.param(member, id=member.value) for member in SensitivityClass if member not in SECRET_STORE_CLASSES
+    pytest.param(member, id=member.value)
+    for member in (
+        SensitivityClass.AUDIT,
+        SensitivityClass.CACHE,
+        SensitivityClass.CORPUS,
+        SensitivityClass.DIAGNOSTIC,
+        SensitivityClass.FINANCIAL,
+        SensitivityClass.IDENTITY,
+        SensitivityClass.OPERATIONAL,
+    )
 )
 
 
 def test_the_closed_set_is_exactly_secret_and_session() -> None:
     """Widening the closed set must fail here, not vanish from the parametrize.
 
-    Six of the seven foreign classes were pinned by nothing at all. Only
-    ``FINANCIAL`` was named literally anywhere in this package (as one case of
-    ``test_secret_record_validation_rejects_invalid_fields``), so admitting it
-    reddened a test while admitting ``IDENTITY``, ``CACHE``, ``AUDIT``,
-    ``CORPUS``, ``DIAGNOSTIC`` or ``OPERATIONAL`` was a green-suite change --
-    the store accepted the class and the only trace was this module collecting
-    one case fewer. That single red is what made the net look complete.
+    Measured per class, by admitting each foreign class on its own and running
+    this package. Three were caught by nothing at all:
 
-    Assert the set, not a consequence of it: every other check here reads
-    ``SECRET_STORE_CLASSES`` and so moves with it. Do not replace this literal
-    with anything derived from the production constant.
+    ==============  ==========================================================
+    class           what caught admitting it
+    ==============  ==========================================================
+    AUDIT           nothing
+    CORPUS          nothing
+    IDENTITY        nothing
+    FINANCIAL       named literally in ``test_secret_store.py``
+    CACHE           ``ClassificationError`` from the blob store's at-rest rule
+    DIAGNOSTIC      ``ClassificationError`` from the blob store's at-rest rule
+    OPERATIONAL     ``ClassificationError`` from the blob store's at-rest rule
+    ==============  ==========================================================
+
+    Only the ``FINANCIAL`` row is a deliberate pin. The three
+    ``ClassificationError`` rows are collateral: they fail
+    ``test_an_untampered_record_round_trips``, which is a *positive* control
+    parametrized over ``SECRET_STORE_CLASSES``, so a widened class gains a
+    round-trip case that dies at ``put`` for an unrelated reason. The refusal
+    property was therefore proved by coincidence for three classes, not at all
+    for three others, and on purpose for one -- and ``IDENTITY`` is among the
+    unguarded, which is the class carrying taxpayer identity data.
     """
     assert SECRET_STORE_CLASSES == _EXPECTED_STORE_CLASSES
 
 
-def test_every_class_outside_the_closed_set_is_actually_parametrized() -> None:
-    """The foreign-class cases exist, and there is one per foreign class.
+def test_the_foreign_set_is_the_complement_of_the_closed_set() -> None:
+    """The two lists partition ``SensitivityClass`` with nothing left over.
 
-    Guards the collapse directly: if ``SECRET_STORE_CLASSES`` ever absorbs the
-    whole enum, ``_FOREIGN_CLASSES`` empties and both parametrized tests below
-    silently stop existing rather than failing.
+    ``_FOREIGN_CLASSES`` is written out by hand so that widening the closed set
+    cannot delete a case. That hand-written list is only trustworthy while it
+    stays exhaustive, so this reconciles the two literals against the enum: a
+    new ``SensitivityClass`` member fails here rather than silently going
+    untested by either side.
     """
-    assert len(_FOREIGN_CLASSES) == len(SensitivityClass) - len(_EXPECTED_STORE_CLASSES)
-    assert _FOREIGN_CLASSES
+    named_foreign = {param.values[0] for param in _FOREIGN_CLASSES}
+
+    assert named_foreign | _EXPECTED_STORE_CLASSES == set(SensitivityClass)
+    assert not named_foreign & _EXPECTED_STORE_CLASSES
 
 
 @pytest.fixture
