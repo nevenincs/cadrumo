@@ -10,7 +10,7 @@ strict inequality.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -127,6 +127,8 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     # preservation including each finding's nested enum kind +
     # severity + optional fields.
     assert loaded_report.completeness_status is VerificationCompletenessStatus.BLOCKED
+    assert loaded_report.run_at == _REPORT_RUN_AT
+    assert loaded_report.run_at.utcoffset() == UTC.utcoffset(loaded_report.run_at)
     assert len(loaded_report.findings) == 2
     f0 = loaded_report.findings[0]
     assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
@@ -141,6 +143,61 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     assert loaded_report.resolved_casilla_ids == _IVA_RESOLVED_CASILLA_IDS
     assert loaded_report.missing_required_casilla_ids == _IVA_MISSING_REQUIRED_CASILLA_IDS
     assert (profile.paths.db_dir / "cadrumo.db").is_file()
+
+
+@pytest.mark.parametrize(
+    "run_at",
+    (
+        datetime(2026, 5, 28, 11, 5, 0),
+        datetime(2026, 5, 28, 12, 5, 0, tzinfo=timezone(timedelta(hours=1))),
+    ),
+    ids=("naive", "non-utc"),
+)
+def test_verification_report_refuses_non_utc_run_at(run_at: datetime) -> None:
+    """A report cannot be constructed with an ambiguous persisted run instant."""
+
+    report = _populated_report()
+    with pytest.raises(ValidationError, match="datetime must be"):
+        VerificationReport.model_validate({**report.model_dump(), "run_at": run_at})
+
+
+@pytest.mark.parametrize(
+    "persisted_run_at",
+    ("2026-05-28T11:05:00", "2026-05-28T12:05:00+01:00"),
+    ids=("naive", "non-utc"),
+)
+def test_verification_report_catalogue_refuses_non_utc_run_at_at_encrypted_load(
+    tmp_path: Path,
+    persisted_run_at: str,
+) -> None:
+    """Encrypted report storage cannot rehydrate an ambiguous run instant."""
+
+    import json as _json
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        report = _populated_report()
+        repo = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(VerificationReportCatalogue(reports={report.verification_report_id: report}))
+        record = profile.repository.load(
+            _VERIFICATION_NAMESPACE,
+            _VERIFICATION_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_VERIFICATION_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        envelope["payload"]["reports"][report.verification_report_id]["run_at"] = persisted_run_at
+        profile.repository.save(
+            namespace=_VERIFICATION_NAMESPACE,
+            object_key=_VERIFICATION_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(ValidationError, match="datetime must be"):
+            VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
 def test_verification_report_rejects_legacy_casilla_list_keys() -> None:

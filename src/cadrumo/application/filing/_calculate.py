@@ -37,11 +37,12 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.errors import BaseSeverity
+from ...core.time import validate_utc_aware
 from ...domain.filing import ModeloDraft
 from ...domain.submission import ModeloDraftStatus
 from .errors import ModeloCalculateError
@@ -120,6 +121,12 @@ class DeclaracionCalculateSummary(BaseModel):
     repair_hints: tuple[str, ...] = ()
     narrative: str
     calculated_at: datetime
+
+    @field_validator("calculated_at")
+    @classmethod
+    def _calculated_at_is_utc(cls, value: datetime) -> datetime:
+        """Reject naive and non-UTC summary timestamps at the application boundary."""
+        return validate_utc_aware(value)
 
     @model_validator(mode="after")
     def _enforce_repair_hint_invariant(self) -> DeclaracionCalculateSummary:

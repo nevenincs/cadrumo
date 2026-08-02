@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
@@ -182,3 +182,20 @@ def test_calculated_at_defaults_to_draft_updated_at() -> None:
     draft = _make_draft(status=ModeloDraftStatus.VALIDADO)
     summary = summarise_calculation(draft)
     assert summary.calculated_at == draft.updated_at
+    assert summary.calculated_at.tzinfo is UTC
+
+
+@pytest.mark.parametrize(
+    "calculated_at",
+    (
+        datetime(2026, 5, 3),
+        datetime(2026, 5, 3, 1, tzinfo=timezone(timedelta(hours=1))),
+    ),
+    ids=("naive", "non-utc"),
+)
+def test_summary_refuses_non_utc_calculated_at(calculated_at: datetime) -> None:
+    """Calculation summaries cannot carry an ambiguous rendering timestamp."""
+
+    draft = _make_draft(status=ModeloDraftStatus.VALIDADO)
+    with pytest.raises(ValidationError, match="datetime must be"):
+        summarise_calculation(draft, calculated_at=calculated_at)

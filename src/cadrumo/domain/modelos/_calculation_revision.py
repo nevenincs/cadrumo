@@ -50,6 +50,7 @@ from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, Validatio
 from ...core import M210_TIPO_RENTA_CODE_PROJECTION, STRICT_FROZEN_CONFIG, M210GrossIncomeSourceMode
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
+from ...core.time import validate_utc_aware
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
     BindingId,
@@ -603,6 +604,21 @@ class CalculationRevision(BaseModel):
     amendment_kind: CalculationRevisionAmendmentKind | None = None
     amends_filing_record_id: CalculationRevisionId | None = None
     amendment_reason: _DiscardReason | None = None
+
+    @field_validator(
+        "created_at",
+        "updated_at",
+        "verified_at",
+        "filed_at",
+        "superseded_at",
+        "discarded_at",
+    )
+    @classmethod
+    def _lifecycle_instants_are_utc(cls, value: datetime | None) -> datetime | None:
+        """Reject naive and non-UTC lifecycle instants before persistence or ordering."""
+        if value is None:
+            return None
+        return validate_utc_aware(value)
 
     @model_validator(mode="after")
     def _enforce_invariants(self) -> CalculationRevision:

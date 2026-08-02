@@ -180,6 +180,13 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert len(loaded.revisions) == 1
     (revision,) = loaded.values()
     assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    assert revision.created_at == datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    assert revision.updated_at == datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC)
+    assert revision.verified_at == revision.updated_at
+    assert revision.created_at.utcoffset() == UTC.utcoffset(revision.created_at)
+    assert revision.updated_at.utcoffset() == UTC.utcoffset(revision.updated_at)
+    assert revision.verified_at is not None
+    assert revision.verified_at.utcoffset() == UTC.utcoffset(revision.verified_at)
     # The non-decimal ``period_code`` entry must survive verbatim: the string
     # replay channel is where every text-family casilla persists.
     assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == _DECL_PERIODO_CODE
