@@ -301,8 +301,8 @@ class LedgerImportTransactionRefPayload(OutputSchema):
     on the imported / skipped / likely-duplicate ref lists.
     """
 
-    bucket_id: str
-    transaction_id: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
 
 
 class LedgerImportValidationPayload(OutputSchema):
@@ -325,9 +325,9 @@ class LedgerImportSourcePayload(OutputSchema):
 class LedgerImportDiagnosticPayload(OutputSchema):
     """One :class:`LedgerImportDiagnosticReport` entry."""
 
-    kind: str
-    severity: str
-    message: str
+    kind: str = Field(min_length=1, max_length=32)
+    severity: str = Field(min_length=1, max_length=16)
+    message: str = Field(min_length=1, max_length=128)
     source_path: str | None = None
     source_locator: str | None = None
     affected_transaction_ids: list[str] = []
@@ -695,21 +695,21 @@ class LedgerStatusResult(OutputSchema):
     active business/mixed rows, not modelo registry calculations.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     business_income_total: str = "0.00"
     business_expense_total: str = "0.00"
     business_net_total: str = "0.00"
-    total_count: int
-    active_count: int
-    archived_count: int
-    stashed_count: int
-    split_count: int = 0
-    pending_review_count: int
-    reviewed_count: int
-    skipped_count: int
+    total_count: int = Field(ge=0)
+    active_count: int = Field(ge=0)
+    archived_count: int = Field(ge=0)
+    stashed_count: int = Field(ge=0)
+    split_count: int = Field(ge=0, default=0)
+    pending_review_count: int = Field(ge=0)
+    reviewed_count: int = Field(ge=0)
+    skipped_count: int = Field(ge=0)
     period: Period | None = None
-    checked_transaction_count: int = 0
-    readiness_issue_count: int = 0
+    checked_transaction_count: int = Field(default=0, ge=0)
+    readiness_issue_count: int = Field(default=0, ge=0)
     ready: bool | None = None
 
 
@@ -886,14 +886,14 @@ class LedgerImportPayload(OutputSchema):
     appends the optional operator-facing notice strings.
     """
 
-    rows: int
-    imported: int
-    skipped: int
-    likely_duplicates: int = 0
+    rows: int = Field(ge=0)
+    imported: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    likely_duplicates: int = Field(default=0, ge=0)
     dry_run: bool
     verify: bool
     period: Period | None = None
-    bucket_id: str | None = None
+    bucket_id: BucketId | None = None
     import_batch_id: str | None = None
     bucket_event_ids: list[str] = []
     imported_transaction_refs: list[LedgerImportTransactionRefPayload] = []
