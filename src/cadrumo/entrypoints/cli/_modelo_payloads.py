@@ -343,7 +343,7 @@ class ModeloRecordPayload(OutputSchema):
     period: Period
     filed_at: datetime
     filed_by: str = Field(min_length=1, max_length=500)
-    notes: str | None = None
+    notes: str | None = Field(default=None, min_length=1, max_length=500)
     aeat_accepted: bool = False
     status: ModeloRecordStatus
     superseded_at: datetime | None = None

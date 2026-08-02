@@ -11,11 +11,11 @@ delegation live in :mod:`~entrypoints.cli._modelo_amend_wizard_cli`. Every paylo
 
 from __future__ import annotations
 
-from ...core import Period
-from ...core.identity import BucketId
+from pydantic import Field
+
 from ...domain.calculations.registry import CasillaId, LegalRefId, SourceRefId
-from ...domain.modelos import CalculationRevisionId, FilingRecordId, WorkUnitId
-from ._modelo_payloads import ExternalEvidencePayload
+from ...domain.modelos import CalculationRevisionAmendmentKind, FilingRecordId
+from ._modelo_payloads import ModeloRecordPayload
 from ._schemas import OutputSchema, register_schema
 
 
@@ -38,40 +38,27 @@ class AmendWizardCorrectedCasillaPayload(OutputSchema):
 
 
 @register_schema("modelo.work.amend_wizard")
-class WorkAmendWizardResult(OutputSchema):
+class WorkAmendWizardResult(ModeloRecordPayload):
     """Successful ``aeat app modelo work amend-wizard`` result payload.
 
-    Mirrors the shape of ``WorkAmendResult`` (the wizard composes the exact
-    same :func:`~application.modelo.amend_modelo_revision` path) plus the
-    ``corrected_casillas`` audit trail of what the wizard asked and what the
-    operator (or the scripted answer queue) supplied, and an
-    ``export_next_action`` pointer to the existing ``modelo export`` verb —
-    the amendment wizard never writes a fichero-BOE itself.
+    Derives from the canonical :class:`ModeloRecordPayload` (the same
+    projection ``work amend`` and every other filing-record surface use)
+    instead of redeclaring its identity, timestamp, and lifecycle fields as
+    bare strings: an out-of-range filing year, a malformed timestamp, an
+    unknown status/kind, or an oversized notes string is refused rather than
+    accepted. Adds the wizard-specific ``corrected_casillas`` audit trail and
+    an ``export_next_action`` pointer to the existing ``modelo export``
+    verb — the amendment wizard never writes a fichero-BOE itself.
+    ``amends_filing_record_id`` is narrowed to required: every amendment
+    wizard result amends a prior filing record by definition.
     """
 
     operation: str = "modelo.work.amend_wizard"
-    amendment_kind: str
-    amendment_reason: str
+    amendment_kind: CalculationRevisionAmendmentKind
+    amendment_reason: str = Field(min_length=1, max_length=500)
     amends_filing_record_id: FilingRecordId
-    filing_record_id: FilingRecordId
-    work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
-    bucket_id: BucketId
-    modelo: str
-    filing_year: int
-    period: Period
-    filed_at: str
-    filed_by: str
-    notes: str | None = None
-    aeat_accepted: bool | None = None
-    status: str
-    superseded_at: str | None = None
-    superseded_by_filing_record_id: FilingRecordId | None = None
-    external_evidence: ExternalEvidencePayload | None = None
-    kind: str = "internal_filing"
-    live_submission: bool = False
     corrected_casillas: tuple[AmendWizardCorrectedCasillaPayload, ...] = ()
-    export_next_action: str
+    export_next_action: str = Field(min_length=1)
 
 
 __all__ = ["AmendWizardCorrectedCasillaPayload", "WorkAmendWizardResult"]
