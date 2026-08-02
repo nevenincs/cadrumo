@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 from .....core.hashing import sha256_hex
+from .....tests.path_obstruction import obstructed_path
 from .._errors import OutboundStorageError
 from .._local import LocalFileSystemProvider, _sidecar_filename
 from .._records import ProviderKind
@@ -58,13 +59,13 @@ class TestLabelDriftReplacement:
         assert _stored_files(tmp_path), "fixture did not store the original object"
 
         # Induce a real sidecar write failure for the new label by occupying
-        # its exact sidecar path with a directory, which no file write can
-        # replace. The name comes from the production helper so the test
-        # cannot drift from the provider's naming scheme.
-        blocker = tmp_path / _NAMESPACE / _sidecar_filename(_HMAC, "new")
-        blocker.mkdir(parents=True, exist_ok=True)
+        # its exact sidecar path, which no file write can replace. The name
+        # comes from the production helper so the test cannot drift from the
+        # provider's naming scheme.
+        sidecar = tmp_path / _NAMESPACE / _sidecar_filename(_HMAC, "new")
+        sidecar.parent.mkdir(parents=True, exist_ok=True)
 
-        with pytest.raises(OutboundStorageError):
+        with obstructed_path(sidecar), pytest.raises(OutboundStorageError):
             provider.put(_NAMESPACE, _HMAC, b"replacement-bytes", content_hash=_hash(b"replacement-bytes"), label="new")
 
         payload, metadata = provider.get(_NAMESPACE, _HMAC)

@@ -19,10 +19,11 @@ from .._schema import (
     DeadlineWindowDefinition,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
+    KeyedBracketEntry,
     ModeloRevision,
     ParameterDefinition,
 )
-from .._schema_verification import VerificationPredicateDefinition
+from .._schema_verification import VerificationExpectationDefinition, VerificationPredicateDefinition
 from .._validate import RegistryValidator
 from ._registry_schema_support import (
     _as_communication_revision,
@@ -36,6 +37,35 @@ from ._registry_schema_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
+
+
+def test_verification_expectation_rejects_negative_tolerance() -> None:
+    with pytest.raises(ValidationError, match="tolerance"):
+        VerificationExpectationDefinition(
+            id="test.negative-tolerance",
+            computed_casilla_ids=(_NUMERIC_CASILLA_01,),
+            tolerance=Decimal("-0.01"),
+            rounding="money-2",
+            min_coverage=Decimal("1"),
+            discrepancy_causes=("rounding",),
+            legal_refs=("ley-35-2006:art-1",),
+            source_refs=("aeat-dr-130-2019-v12",),
+        )
+
+
+def test_verification_expectation_accepts_zero_tolerance() -> None:
+    expectation = VerificationExpectationDefinition(
+        id="test.zero-tolerance",
+        computed_casilla_ids=(_NUMERIC_CASILLA_01,),
+        tolerance=Decimal("0"),
+        rounding="money-2",
+        min_coverage=Decimal("1"),
+        discrepancy_causes=("rounding",),
+        legal_refs=("ley-35-2006:art-1",),
+        source_refs=("aeat-dr-130-2019-v12",),
+    )
+
+    assert expectation.tolerance == Decimal("0")
 
 
 def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() -> None:
@@ -90,6 +120,31 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
             ),
             confidence="strict",
             min_coverage=Decimal("1"),
+            failure_semantics="fail_hard",
+            legal_refs=("rd-439-2007:art-110",),
+            source_refs=("aeat-dr-130-2019-v12",),
+        )
+
+
+def test_extraction_profile_rejects_zero_minimum_coverage() -> None:
+    """An extraction profile must reject a zero-hit coverage floor."""
+
+    with pytest.raises(ValidationError, match="min_coverage"):
+        ExtractionProfileDefinition(
+            id="test.profile",
+            surface="declaracion_pdf",
+            artefact_kind="declaration_pdf",
+            accepted_artefact_kinds=("declaration_pdf",),
+            parser="cadrumo.adapters.inbound.declaracion.parse_declaracion",
+            target_casillas=(
+                ExtractionTargetDefinition(
+                    casilla_id=_NUMERIC_CASILLA_01,
+                    match_strategy="numeric_casilla",
+                    value_kind="amount",
+                ),
+            ),
+            confidence="strict",
+            min_coverage=Decimal("0"),
             failure_semantics="fail_hard",
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-dr-130-2019-v12",),
@@ -1026,6 +1081,87 @@ def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
             legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
             source_refs=("aeat-modelo-210-procedure",),
         )
+
+
+@pytest.mark.parametrize(
+    "rows",
+    [
+        pytest.param(
+            (
+                KeyedBracketEntry(
+                    key="general",
+                    value=Decimal("0.24"),
+                    valid_from=date(2020, 1, 1),
+                    valid_to=date(2025, 12, 31),
+                ),
+                KeyedBracketEntry(
+                    key="general",
+                    value=Decimal("0.30"),
+                    valid_from=date(2023, 1, 1),
+                    valid_to=date(2024, 12, 31),
+                ),
+            ),
+            id="wide-then-narrow",
+        ),
+        pytest.param(
+            (
+                KeyedBracketEntry(
+                    key="general",
+                    value=Decimal("0.30"),
+                    valid_from=date(2023, 1, 1),
+                    valid_to=date(2024, 12, 31),
+                ),
+                KeyedBracketEntry(
+                    key="general",
+                    value=Decimal("0.24"),
+                    valid_from=date(2020, 1, 1),
+                    valid_to=date(2025, 12, 31),
+                ),
+            ),
+            id="narrow-then-wide",
+        ),
+    ],
+)
+def test_keyed_bracket_table_rejects_overlapping_windows_in_either_order(
+    rows: tuple[KeyedBracketEntry, KeyedBracketEntry],
+) -> None:
+    """One key cannot select two simultaneous rates, regardless of row order."""
+    with pytest.raises(ValidationError, match="overlapping validity windows"):
+        ParameterDefinition(
+            id="test-keyed-rate-table-overlap",
+            data_type="keyed_bracket_table",
+            unit="percent",
+            keyed_brackets=rows,
+            legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+            source_refs=("aeat-modelo-210-procedure",),
+        )
+
+
+def test_keyed_bracket_table_allows_disjoint_windows_for_the_same_key() -> None:
+    """Annual replacement rows for the same categorical key remain valid."""
+    parameter = ParameterDefinition(
+        id="test-keyed-rate-table-disjoint",
+        data_type="keyed_bracket_table",
+        unit="percent",
+        keyed_brackets=(
+            KeyedBracketEntry(
+                key="general",
+                value=Decimal("0.24"),
+                valid_from=date(2024, 1, 1),
+                valid_to=date(2024, 12, 31),
+            ),
+            KeyedBracketEntry(
+                key="general",
+                value=Decimal("0.30"),
+                valid_from=date(2025, 1, 1),
+                valid_to=date(2025, 12, 31),
+            ),
+        ),
+        legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+        source_refs=("aeat-modelo-210-procedure",),
+    )
+
+    assert len(parameter.keyed_brackets) == 2
 
 
 def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None:

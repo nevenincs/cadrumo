@@ -50,6 +50,7 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_bucket,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
+from ...core import SecureObjectWrite
 from ...core.errors import CadrumoError
 from ...core.time import now
 from ._errors import LiveApplicationInputError
@@ -470,6 +471,29 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         return matches[0]
 
     def save(self, snapshot: TPayload) -> None:
+        write = self.to_secure_object_write(snapshot)
+        self._objects.save(
+            namespace=write.namespace,
+            object_key=write.object_key,
+            classification=write.classification,
+            schema_version=write.schema_version,
+            written_at=write.written_at,
+            payload=write.payload,
+        )
+
+    def to_secure_object_write(self, snapshot: TPayload) -> SecureObjectWrite:
+        """Return the secure-object upsert for ``snapshot`` without committing it.
+
+        Lets a caller commit a snapshot in the SAME unit of work as the bucket
+        event that records it. A snapshot saved first and its event emitted
+        afterwards can come to rest durable-but-unrecorded: the declaration
+        survives while the history has no matching entry and no retryable
+        marker names the gap.
+
+        Carries the identical envelope, classification and schema version
+        :meth:`save` would persist directly — both build it here, so the
+        committed and the prepared forms cannot drift apart.
+        """
         snapshot_bucket = _bucket_id_of(snapshot)
         if snapshot_bucket != self._bucket_id:
             raise LiveApplicationInputError(
@@ -482,7 +506,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
             classification=self._namespace_definition.sensitivity,
             payload=snapshot,
         )
-        self._objects.save(
+        return SecureObjectWrite(
             namespace=self._namespace_definition.namespace,
             object_key=self._object_key(self._bucket_id, _snapshot_id_of(snapshot)),
             classification=self._namespace_definition.sensitivity,
@@ -490,6 +514,25 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+
+    def save_with_secure_object_writes(
+        self,
+        snapshot: TPayload,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist ``snapshot`` plus related secure objects in one unit of work.
+
+        The snapshot save and every extra write land or fail together in a
+        single SQL transaction, so a lifecycle event co-emitted here can never
+        drift from the snapshot it records.
+
+        Args:
+            snapshot: The snapshot payload to persist.
+            extra_writes: Additional
+                :class:`~adapters.persistence.storage.SecureObjectWrite`
+                objects to commit atomically with the snapshot.
+        """
+        self._objects.save_many((self.to_secure_object_write(snapshot), *extra_writes))
 
     def _snapshot_from_record(
         self,

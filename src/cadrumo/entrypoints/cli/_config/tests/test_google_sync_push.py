@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import text
 
 from .....adapters.outbound.storage import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
@@ -21,7 +22,9 @@ from .....adapters.outbound.storage import (
 )
 from .....adapters.outbound.storage._local import LocalFileSystemProvider
 from .....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
+from .....adapters.persistence.storage.sql import SecureObjectRepository
 from .....core.i18n import tr
+from .....tests.path_obstruction import obstructed_path
 from .....tests.secure_sql import isolated_runtime_profile
 from .._google import _google_refusal, _label_for, _push_secure_object_mirror_rows
 from .._google_payloads import GoogleSyncProbeResult
@@ -309,6 +312,106 @@ def test_google_sync_push_refuses_remote_revision_conflict_before_overwriting_ob
         assert persisted_payload == remote_payload
 
 
+def _tamper_stored_column(repository: SecureObjectRepository, *, namespace: str, column: str, value: str) -> None:
+    """Overwrite one stored ``secure_objects`` column, asserting the write actually changed it.
+
+    Mirrors the pattern in
+    ``storage/sql/tests/test_secure_object_revision_lineage_coverage.py``: a
+    tamper that silently no-ops would leave the row genuine, and every
+    "blocked" verdict below would then be satisfied by an untouched row
+    rather than by a forged one.
+    """
+    engine = repository._engine
+    select = text(f"SELECT {column} FROM secure_objects WHERE namespace = :ns")  # noqa: S608 - column is a module constant
+    update = text(f"UPDATE secure_objects SET {column} = :value WHERE namespace = :ns")  # noqa: S608
+    with engine.begin() as connection:
+        before = connection.execute(select, {"ns": namespace}).scalar_one()
+        connection.execute(update, {"value": value, "ns": namespace})
+        after = connection.execute(select, {"ns": namespace}).scalar_one()
+    assert before != after, f"{column}: tamper was a no-op, stored value stayed {before!r}"
+
+
+def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wrong(tmp_path: Path) -> None:
+    """A tampered covered column on the RAW row must block that namespace's push.
+
+    :meth:`SecureObjectRepository.iter_all_records_raw` bypasses the
+    encrypted-column type decorators by design (rows sealed under a rotated
+    master key must still surface for mirroring), so the decrypting read
+    path's revision-lineage self-consistency gate never otherwise runs on
+    these rows. Tampering ``payload_hash`` -- one of the eight
+    ``derive_revision_id`` inputs -- directly at the SQL layer after a
+    genuine write is the only way to reach that gap: the raw iterator has no
+    decrypt step of its own to catch it.
+
+    POSITIVE CONTROL, both directions: the tampered namespace's ciphertext
+    must never reach the remote provider at all (not merely have its
+    manifest withheld), while an untouched sibling namespace must still push
+    cleanly -- proving the block is scoped to the compromised namespace, not
+    the whole preflight.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-tampered-lineage") as profile:
+        repository = profile.repository
+        tampered_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_metadata")
+        tampered_namespace = tampered_definition.namespace
+        repository.save(
+            namespace=tampered_namespace,
+            object_key="natural-key",
+            classification=tampered_definition.sensitivity,
+            schema_version=1,
+            written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+            payload=b"tampered-lineage-plaintext",
+        )
+        clean_definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("google_oauth_client")
+        clean_namespace = clean_definition.namespace
+        repository.save(
+            namespace=clean_namespace,
+            object_key="natural-key",
+            classification=clean_definition.sensitivity,
+            schema_version=1,
+            written_at=datetime(2026, 5, 28, 12, 0, tzinfo=UTC),
+            payload=b"untouched-sibling-plaintext",
+        )
+        _tamper_stored_column(repository, namespace=tampered_namespace, column="payload_hash", value="f" * 64)
+
+        provider = LocalFileSystemProvider(tmp_path / "mirror")
+        result = _push_secure_object_mirror_rows(
+            provider=provider,
+            repository=repository,
+            namespace_filter=None,
+            limit=None,
+            dry_run=False,
+        )
+
+        # The tampered namespace is blocked before anything is pushed: no
+        # ciphertext object, no manifest, one failed-manifest diagnostic
+        # naming the lineage failure.
+        assert tampered_namespace not in result["pushed_by_namespace"]
+        assert tampered_namespace not in result["manifest_pushed_by_namespace"]
+        assert result["failed_objects"] == []
+        failed_by_namespace = dict(result["failed_manifests"])
+        assert tampered_namespace in failed_by_namespace
+        diagnostic = failed_by_namespace[tampered_namespace]
+        assert "revision_lineage_inconsistent" in diagnostic
+        # The diagnostic names the surface that caught it (there are now two
+        # call sites on the shared lineage check: the decrypt path and this
+        # mirror preflight) and states WHY a lineage failure is a block, not
+        # a degradation -- the causal reason, not a bare severity label, so a
+        # later reader cannot "helpfully" weaken it back to a degradation on
+        # the true-but-irrelevant grounds that the ciphertext stays safe.
+        assert "mirror_preflight" in diagnostic
+        assert "remote manifest" in diagnostic
+
+        tampered_raw_row = next(row for row in repository.iter_all_records_raw() if row.namespace == tampered_namespace)
+        tampered_hmac = remote_mirror_object_key_hmac(tampered_namespace, tampered_raw_row.object_key)
+        with pytest.raises(OutboundStorageNotFoundError):
+            provider.get(tampered_namespace, tampered_hmac)
+
+        # The untouched sibling namespace still pushes cleanly: the block is
+        # scoped to the compromised namespace, not the whole preflight.
+        assert result["pushed_by_namespace"].get(clean_namespace) == 1
+        assert result["manifest_pushed_by_namespace"].get(clean_namespace) == 1
+
+
 def test_google_sync_push_dry_run_counts_every_row_as_skipped_without_writing(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="google-sync-dry-run") as profile:
         repository = profile.repository
@@ -430,15 +533,15 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
         # plain file onto an existing directory, so the real atomic-write
         # commit for the second row's object genuinely fails -- no mock.
         second_target = provider.root / namespace / f"{second_hmac[:8]}--{second_label}.bin"
-        second_target.mkdir(parents=True)
 
-        result = _push_secure_object_mirror_rows(
-            provider=provider,
-            repository=repository,
-            namespace_filter=None,
-            limit=None,
-            dry_run=False,
-        )
+        with obstructed_path(second_target):
+            result = _push_secure_object_mirror_rows(
+                provider=provider,
+                repository=repository,
+                namespace_filter=None,
+                limit=None,
+                dry_run=False,
+            )
 
         assert len(result["failed_objects"]) == 1
         assert result["failed_objects"][0][0] == namespace
@@ -446,10 +549,11 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
         assert result["manifest_pushed_by_namespace"] == {}
         assert result["pushed_by_namespace"] == {}
 
-        # The first row's object was genuinely uploaded, then rolled back:
-        # ``iter_objects`` yields only real ``.bin``-plus-sidecar objects, so
-        # this must be empty -- the pre-created directory collision at the
-        # second row's path is not itself a valid object and is excluded.
+        # The first row's object was genuinely uploaded, then rolled back. The
+        # obstruction is cleared by now, so nothing stands at the second row's
+        # path either: an empty listing here means the rollback removed what it
+        # published, rather than meaning the collision directory was filtered
+        # out of the listing.
         assert list(provider.iter_objects(namespace)) == [], "no unmanifested object may remain after the rollback"
 
 

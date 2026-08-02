@@ -94,6 +94,7 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
 
     code_index, value_index, data_rows = _locate_columns(rows)
     values: dict[str, Decimal] = {}
+    first_row_by_code: dict[str, int] = {}
     malformed: list[str] = []
     for row_number, row in enumerate(data_rows, start=1):
         code = _cell(row, code_index)
@@ -103,6 +104,13 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
         if not code or not raw_value:
             malformed.append(f"row {row_number}: incomplete (casilla_code={code!r}, value={raw_value!r})")
             continue
+        first_row = first_row_by_code.get(code)
+        if first_row is not None:
+            malformed.append(
+                f"row {row_number}: duplicate casilla_code {code!r} (first declared on row {first_row})",
+            )
+            continue
+        first_row_by_code[code] = row_number
         try:
             normalized = normalize_decimal_separators(raw_value, strip_thousands="," in raw_value)
             value = Decimal(normalized)
@@ -170,7 +178,7 @@ def _decode_bytes(source_bytes: bytes, *, path: Path) -> str:
 
 def _read_xlsx_rows(path: Path) -> list[list[str]]:
     try:
-        workbook = load_workbook(filename=path, read_only=True, data_only=True)
+        workbook = load_workbook(filename=path, read_only=True, data_only=False)
     except Exception as exc:  # openpyxl raises multiple unrelated types (OSError/KeyError/...) on a bad workbook
         raise ModeloLocalObservationError(
             f"casilla-value spreadsheet {path} could not be opened as an XLSX workbook",
@@ -178,7 +186,20 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
         ) from exc
     try:
         worksheet = workbook.worksheets[0]
-        rows = [[_coerce_cell_text(cell) for cell in row] for row in worksheet.iter_rows(values_only=True)]
+        rows: list[list[str]] = []
+        for row_index, cells in enumerate(worksheet.iter_rows(), start=1):
+            for column_index, cell in enumerate(cells, start=1):
+                if cell.data_type == "f":
+                    raise ModeloLocalObservationError(
+                        f"casilla-value spreadsheet {path} contains formula cell at row {row_index}, "
+                        f"column {column_index}; formula cached values are not accepted",
+                        context={
+                            "path": str(path),
+                            "row": str(row_index),
+                            "column": str(column_index),
+                        },
+                    )
+            rows.append([_coerce_cell_text(cell.value) for cell in cells])
         return [row for row in rows if any(cell for cell in row)]
     finally:
         workbook.close()

@@ -10,6 +10,7 @@ emit sites build.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 
 import pytest
@@ -87,9 +88,22 @@ def test_show_result_accepts_a_real_detail_projection() -> None:
 
 
 def test_show_result_rejects_an_unknown_field() -> None:
-    """An unrecognised field is refused, matching the detail model's ``extra='forbid'``."""
+    """An unrecognised field is refused, matching the detail model's ``extra='forbid'``.
+
+    Round-trips through the JSON-text path (``model_dump_json`` /
+    ``model_validate_json``), not ``model_validate(x.model_dump(mode="json"))``: the
+    detail model carries strict-typed fields (``captured_at: datetime``,
+    ``operator_report_commands: tuple[str, ...]``, ``phone_state`` an enum) whose
+    JSON-mode dict projection (isoformat string, list, bare string) does not
+    re-validate under ``model_validate`` on a plain dict — only genuine JSON text
+    gets that leniency. Feeding the dict form here would raise on those fields
+    regardless of the injected unknown key, masking the assertion this test claims.
+    """
+    payload = json.loads(_detail().model_dump_json())
+    payload["unexpected"] = "value"
+
     with pytest.raises(ValidationError):
-        AuthDiagnosticsShowResult.model_validate({**_detail().model_dump(mode="json"), "unexpected": "value"})
+        AuthDiagnosticsShowResult.model_validate_json(json.dumps(payload))
 
 
 def test_report_result_accepts_a_real_phone_state() -> None:

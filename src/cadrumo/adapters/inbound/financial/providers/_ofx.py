@@ -38,7 +38,6 @@ from pathlib import Path
 from typing import Protocol, override, runtime_checkable
 
 from .....core import OFX_EXTRA, MissingOptionalExtraError, optional_extra_available, require_optional_extra
-from .....core.decimal import coerce_decimal
 from .....core.errors import CoreValidationError
 from .....core.logging import get_logger
 from .....core.parsing import normalise_iso_4217_currency
@@ -51,6 +50,7 @@ from ._base import (
     ProviderValidation,
     build_raw_transaction,
     default_currency,
+    parse_amount_value,
     parse_date_value,
     synthesize_transaction_id,
 )
@@ -194,9 +194,20 @@ class OfxProvider(FinancialProvider):
             )
         try:
             statements = self._load_statements(path)
+            source_sha256 = self._compute_sha256(self._read_source_bytes(path))
+            transaction_count = 0
+            for statement in statements:
+                _, account_id = _resolve_statement_context(statement)
+                for transaction in statement.transactions:
+                    transaction_count += 1
+                    self._parse_ofx_row(
+                        transaction,
+                        account_id=account_id,
+                        source_sha256=source_sha256,
+                        source_row_index=transaction_count,
+                    )
         except InvalidFinancialSourceError as exc:
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
-        transaction_count = sum(len(tuple(statement.transactions)) for statement in statements)
         if transaction_count == 0:
             return ProviderValidation(
                 is_valid=False,
@@ -276,7 +287,8 @@ class OfxProvider(FinancialProvider):
             trntype = _stripped_attr(transaction, "trntype").upper()
             description = memo or counterparty or trntype or "OFX transaction"
             posted_at = getattr(transaction, "dtposted", None)
-            amount = coerce_decimal(getattr(transaction, "trnamt", None), default=Decimal("0")) or Decimal("0")
+            raw_amount = getattr(transaction, "trnamt", None)
+            amount = parse_amount_value(str(raw_amount), decimal_separator=".")
             booked_date = parse_date_value(posted_at, day_first=False)
         except (ValueError, FinancialValidationError) as exc:
             _logger.warning(

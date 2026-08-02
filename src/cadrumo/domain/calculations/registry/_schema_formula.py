@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from ._errors import RegistryValidationError
+from ._formula_operator_contracts import require_formula_operator_arity
 from ._ids import BindingId, CasillaId, ParameterId, RelationId
 from ._schema_base import DateAxis, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
 from ._schema_scalars import DecimalValue
@@ -103,8 +104,7 @@ class FormulaExpression(RegistryModel):
             return self
         if sum(populated_leaves):
             raise RegistryValidationError("formula operator must not declare leaf sources")
-        if not self.args:
-            raise RegistryValidationError("formula operator must declare args")
+        require_formula_operator_arity(self.op, len(self.args))
         return self
 
 
@@ -225,6 +225,20 @@ def _brackets_overlap_across_windows(first: BracketEntry, second: BracketEntry) 
     return not (second.upper_bound is not None and first.lower_bound >= second.upper_bound)
 
 
+def _keyed_bracket_windows_overlap(first: KeyedBracketEntry, second: KeyedBracketEntry) -> bool:
+    """Return whether two rows for one key are simultaneously applicable.
+
+    Keyed-bracket resolution selects by categorical key and filing year.  Two
+    rows with the same key therefore cannot share even one validity date: the
+    resolver would find two values and fail only after the registry had loaded.
+    """
+    if first.key != second.key:
+        return False
+    if first.valid_to is not None and first.valid_to < second.valid_from:
+        return False
+    return second.valid_to is None or second.valid_to >= first.valid_from
+
+
 class ParameterDefinition(RegistryModel):
     id: ParameterId
     data_type: Literal[
@@ -297,13 +311,14 @@ class ParameterDefinition(RegistryModel):
     def _validate_keyed_bracket_table_shape(self) -> None:
         """Verify a keyed_bracket_table parameter has a valid keyed shape.
 
-        Four contracts mirror the numeric ``bracket_table`` shape:
+        Five contracts mirror the numeric ``bracket_table`` shape:
         * non-empty ``keyed_brackets`` tuple
         * no ``values`` (dated scalar map is mutually exclusive)
         * no ``brackets`` (numeric-interval table is mutually exclusive)
         * no two ``keyed_brackets`` share the same ``(key, valid_from)``
           pair (exact-match lookup requires a unique row per key per
           window; duplicates would make the lookup non-deterministic)
+        * no two rows for one key have overlapping validity windows
         """
         if not self.keyed_brackets:
             raise RegistryValidationError(
@@ -321,9 +336,21 @@ class ParameterDefinition(RegistryModel):
                     f"parameter {self.id!r} keyed_brackets contains duplicate (key, valid_from) pair {pair!r}",
                 )
             seen.add(pair)
+        ordered_rows = sorted(self.keyed_brackets, key=lambda row: (row.key, row.valid_from))
+        for index, first in enumerate(ordered_rows):
+            for second in ordered_rows[index + 1 :]:
+                if _keyed_bracket_windows_overlap(first, second):
+                    raise RegistryValidationError(
+                        f"parameter {self.id!r} keyed_brackets key {first.key!r} has overlapping validity "
+                        f"windows [{first.valid_from.isoformat()}, {first.valid_to}] and "
+                        f"[{second.valid_from.isoformat()}, {second.valid_to}], so keyed bracket resolution "
+                        "would be ambiguous",
+                    )
 
     def _validate_non_bracket_table_shape(self) -> None:
         """Reject brackets / keyed_brackets / bracket_axis on a non-bracket-table parameter."""
+        if not self.values:
+            raise RegistryValidationError(f"parameter {self.id!r} has no dated values")
         if self.brackets:
             raise RegistryValidationError(
                 f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'",

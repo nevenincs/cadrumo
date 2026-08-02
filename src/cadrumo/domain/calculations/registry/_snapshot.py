@@ -30,7 +30,7 @@ from ._schema import (
 )
 from ._temporal import select_revision
 from ._validate import RegistryValidator
-from ._validate_orden_aplicabilidad import validate_orden_aplicabilidad
+from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from ._validate_references import check_all_id_references
 from ._validate_revision_identity import revision_reference_identity_failures
 
@@ -186,6 +186,7 @@ def _build_validated_snapshot(
     period = registry_period_for_request(revision.period_selector.periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
+    _check_revision_scoped_legal_windows(modelo, revision, catalogues)
     _check_revision_scoped_source_windows(modelo, revision, catalogues)
     snapshot = RegistrySnapshot(
         modelo=modelo,
@@ -249,6 +250,46 @@ def build_validated_snapshot(
         on=on,
         revision_id=revision_id,
     )
+
+
+def _check_revision_scoped_legal_windows(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+) -> None:
+    """Refuse legal authority outside the revision's applicability window.
+
+    Modelo-level legal refs describe the modelo's cross-year authority corpus and
+    remain exempt. A ref collected only because the selected revision or one of
+    its nested records cites it is a filing-specific grounding claim, so its
+    effective window must overlap the revision's tax-period-to-presentation
+    applicability window.
+    """
+    revision_legal_ids, _revision_source_ids = _collect_snapshot_ref_ids(modelo, revision)
+    scoped_legal_ids = revision_legal_ids - set(modelo.legal_refs)
+    applicability_window = RevisionLegalApplicabilityWindow.from_revision(revision)
+    failures: list[str] = []
+    for legal_id in sorted(scoped_legal_ids):
+        reference = catalogues.legal.get(legal_id)
+        if reference is None:
+            continue
+        if applicability_window.overlaps(reference):
+            continue
+        if reference.effective_to is not None and reference.effective_to < applicability_window.starts_on:
+            failures.append(
+                f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
+                f"revision applicability starts_on {applicability_window.starts_on.isoformat()}",
+            )
+        elif applicability_window.closes_on is not None:
+            failures.append(
+                f"legal reference {legal_id!r} effective_from {reference.effective_from.isoformat()} is after "
+                f"revision applicability closes_on {applicability_window.closes_on.isoformat()}",
+            )
+    if failures:
+        raise RegistryValidationError(
+            f"modelo {modelo.id} revision {revision.id} cites legal references outside their effective window:\n"
+            + "\n".join(f" - {failure}" for failure in failures),
+        )
 
 
 def _check_revision_scoped_source_windows(

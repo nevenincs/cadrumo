@@ -13,6 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from .....core.json_contract import strict_round_trip
 from .....domain.auth.apoderamientos import load_default_catalogue
 from ..._config_payloads import ApoderadoScopePayload, ApoderadoScopesListResult
 
@@ -23,7 +24,7 @@ def test_apoderado_scopes_list_result_projects_real_catalogue() -> None:
     """The real shipped catalogue round-trips through the typed payload."""
     catalogue = load_default_catalogue()
 
-    result = ApoderadoScopesListResult.model_validate(catalogue.model_dump(mode="json"))
+    result = strict_round_trip(ApoderadoScopesListResult, catalogue)
 
     assert result.catalogue_version == catalogue.catalogue_version
     assert len(result.scopes) == len(catalogue.scopes)

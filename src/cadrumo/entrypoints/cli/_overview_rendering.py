@@ -27,7 +27,7 @@ from ...application.overview import (
 )
 from ...core import Modelo
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
@@ -152,7 +152,7 @@ def overview_calendar_output(
     evidence_notices: Sequence[Notice],
 ) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
     """Project one active-profile calendar into payload, text lines, and notices."""
-    typed_cal = OverviewCalendarResult.model_validate(cal.model_dump(mode="json"))
+    typed_cal = strict_round_trip(OverviewCalendarResult, cal)
     lines: list[str] = [
         f"from\t{rng.from_date.isoformat()}",
         f"to\t{rng.to_date.isoformat()}",
@@ -255,7 +255,7 @@ def overview_calendar_profile_output(
 
 def overview_agenda_output(agenda) -> tuple[OverviewAgendaResult, list[str], list[Notice]]:
     """Project an overview agenda into payload, text lines, and notices."""
-    typed_agenda = OverviewAgendaResult.model_validate(agenda.model_dump(mode="json"))
+    typed_agenda = strict_round_trip(OverviewAgendaResult, agenda)
     lines: list[str] = [
         f"as_of\t{agenda.as_of.isoformat()}",
         f"horizon_days\t{agenda.horizon_days}",
@@ -290,7 +290,7 @@ def overview_backlog_output(
     work_units_notice: Notice | None,
 ) -> tuple[OverviewBacklogResult, list[str], list[Notice]]:
     """Project an overview backlog into payload, text lines, and notices."""
-    typed_backlog = OverviewBacklogResult.model_validate(backlog.model_dump(mode="json"))
+    typed_backlog = strict_round_trip(OverviewBacklogResult, backlog)
     lines: list[str] = [
         f"from\t{backlog.range.from_date.isoformat()}",
         f"to\t{backlog.range.to_date.isoformat()}",
@@ -316,7 +316,7 @@ def overview_backlog_output(
 
 def overview_explain_output(result) -> tuple[OverviewExplainResult, list[str]]:
     """Project an overview applicability explanation into payload and text lines."""
-    typed_explain = OverviewExplainResult.model_validate(result.model_dump(mode="json"))
+    typed_explain = strict_round_trip(OverviewExplainResult, result)
     lines: list[str] = [
         f"modelo\t{result.modelo}",
         f"year\t{result.year}",

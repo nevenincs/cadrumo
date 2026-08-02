@@ -13,6 +13,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.ledger import ExportSerializationFormat, LedgerExportResult, LedgerExportRow
+from ....domain.categories import ProportionalityKind, SpendingCategory
+from ....domain.transactions import BusinessClassification
 from .._ledger_llm_payloads import (
     LedgerClassifyLlmRejectResult,
     LedgerClassifyLlmSaturateResult,
@@ -248,7 +250,7 @@ def test_list_row_payload_carries_full_contract_and_round_trips() -> None:
     assert row.direction == "OUTGOING"
     assert row.created_at == "2024-04-10T09:30:00+00:00"
     assert row.group_label == "Proyecto Acme"
-    assert LedgerListRowPayload.model_validate(row.model_dump(mode="json")) == row
+    assert LedgerListRowPayload.model_validate_json(row.model_dump_json()) == row
 
 
 def test_history_events_are_typed_not_bare_dicts() -> None:
@@ -269,7 +271,7 @@ def test_history_events_are_typed_not_bare_dicts() -> None:
     )
     assert isinstance(result.events[0], LedgerHistoryEventPayload)
     assert result.events[0].payload == {"source_command": "aeat app ledger add"}
-    assert LedgerHistoryResult.model_validate(result.model_dump(mode="json")) == result
+    assert LedgerHistoryResult.model_validate_json(result.model_dump_json()) == result
 
 
 def test_import_transaction_refs_are_typed() -> None:
@@ -279,7 +281,7 @@ def test_import_transaction_refs_are_typed() -> None:
     )
     assert ref.bucket_id == "default"
     assert ref.transaction_id == "a" * 64
-    assert LedgerImportTransactionRefPayload.model_validate(ref.model_dump(mode="json")) == ref
+    assert LedgerImportTransactionRefPayload.model_validate_json(ref.model_dump_json()) == ref
 
 
 def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
@@ -335,7 +337,7 @@ def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
     )
     assert isinstance(preflight.period, LedgerPeriodPayload)
     assert isinstance(preflight.issues[0], LedgerPreflightIssuePayload)
-    assert LedgerPreflightResult.model_validate(preflight.model_dump(mode="json")) == preflight
+    assert LedgerPreflightResult.model_validate_json(preflight.model_dump_json()) == preflight
 
 
 def test_export_payload_accepts_application_intracommunity_rows() -> None:
@@ -345,10 +347,10 @@ def test_export_payload_accepts_application_intracommunity_rows() -> None:
         export_id="e" * 64,
         export_format=ExportSerializationFormat.JSONL,
         media_type="application/x-ndjson",
-        filename_extension=".jsonl",
+        filename_extension="jsonl",
         row_count=1,
-        byte_size=256,
-        sha256="f" * 64,
+        byte_size=86,
+        sha256="8be63b9a5518ec747a470d0a2a8bb79cdd2892f2aa99c87376991d801dc43477",
         fieldnames=("transaction_id", "iva_category", "counterparty_eu_member_state"),
         rows=(
             LedgerExportRow(
@@ -382,8 +384,8 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "bucket_id": "default",
             "rows": [
                 {
-                    "category": "USAGE_RATIO_VEHICLE",
-                    "proportionality_kind": "operator_ratio",
+                    "category": SpendingCategory.VEHICULO_COMBUSTIBLE,
+                    "proportionality_kind": ProportionalityKind.USAGE_RATIO_PERSONAL,
                     "default_ratio": None,
                     "override_present": False,
                 },
@@ -399,12 +401,25 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "profile_present": True,
             "eligible_count": 1,
             "overrides_count": 1,
-            "missing_overrides": ["USAGE_RATIO_VEHICLE"],
-            "findings": [{"category": "USAGE_RATIO_VEHICLE", "kind": "missing_override", "detail": "required"}],
+            "missing_overrides": [SpendingCategory.VEHICULO_COMBUSTIBLE],
+            "findings": [
+                {
+                    "category": SpendingCategory.VEHICULO_COMBUSTIBLE,
+                    "kind": "missing_override",
+                    "detail": "required",
+                },
+            ],
         },
     )
     assert isinstance(validate.findings[0], RatiosValidateFindingPayload)
-    assert RatiosValidateResult.model_validate(validate.model_dump(mode="json")) == validate
+    # model_validate(x.model_dump(mode="json")) round-trips a plain-string
+    # payload but not a strict enum-typed one: mode="json" dumps the StrEnum
+    # to its bare string value, and strict validation on an already-Python
+    # dict refuses to coerce that string back into the enum instance (only
+    # model_validate_json's genuine JSON-text parse gets that leniency). The
+    # wire format is JSON text, so this is the round-trip that actually
+    # matters.
+    assert RatiosValidateResult.model_validate_json(validate.model_dump_json()) == validate
 
 
 def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> None:
@@ -482,15 +497,19 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
             "applied": [
                 {
                     "transaction_id": "a" * 64,
-                    "matched_rule_id": "rule-1",
-                    "classification": "BUSINESS",
+                    "matched_rule_id": "r" * 64,
+                    "classification": BusinessClassification.BUSINESS,
                 },
             ],
         },
     )
     assert rule_apply.applied is not None
     assert isinstance(rule_apply.applied[0], RuleApplyAppliedPayload)
-    assert RuleApplyResult.model_validate(rule_apply.model_dump(mode="json")) == rule_apply
+    # See the matching comment in test_ratios_payloads_use_typed_rows_and_findings:
+    # a strict enum-typed field (classification) does not survive
+    # model_validate(model_dump(mode="json")); model_validate_json is the
+    # round-trip that reflects the actual wire format.
+    assert RuleApplyResult.model_validate_json(rule_apply.model_dump_json()) == rule_apply
 
 
 def test_transaction_payload_carries_d6_timestamps() -> None:
@@ -544,4 +563,4 @@ def test_ledger_add_result_accepts_a_valid_mutation_quintet_round_trip() -> None
     )
 
     assert result.transaction.transaction_id == "a" * 64
-    assert LedgerAddResult.model_validate(result.model_dump(mode="json")) == result
+    assert LedgerAddResult.model_validate_json(result.model_dump_json()) == result

@@ -32,10 +32,6 @@ _READER_PROBES: tuple[tuple[str, str], ...] = (
         "print(validate_profile_values({}).total_keys)",
     ),
     (
-        "list_profile_value_rows",
-        "print(len(list_profile_value_rows({}, include_unset=True)))",
-    ),
-    (
         "list_profile_key_records",
         "print(len(list_profile_key_records()))",
     ),
@@ -46,7 +42,7 @@ def _run_cold(body: str) -> subprocess.CompletedProcess[str]:
     """Execute ``body`` in a fresh interpreter with no prior wizard import."""
     source = (
         "from cadrumo.application.user_profile._keys_validation import ("
-        "list_profile_key_records, list_profile_value_rows, validate_profile_values)\n" + body + "\n"
+        "list_profile_key_records, validate_profile_values)\n" + body + "\n"
     )
     return subprocess.run(  # noqa: S603 - fixed argv, no shell, test-local source
         [sys.executable, "-c", source],
@@ -69,14 +65,12 @@ def test_reader_succeeds_in_a_cold_interpreter(reader: str, body: str) -> None:
 
 def test_cold_readers_agree_on_the_registered_key_count() -> None:
     result = _run_cold(
-        "print(validate_profile_values({}).total_keys, "
-        "len(list_profile_value_rows({}, include_unset=True)), "
-        "len(list_profile_key_records()))",
+        "print(validate_profile_values({}).total_keys, len(list_profile_key_records()))",
     )
 
     assert result.returncode == 0, result.stderr
     counts = [int(token) for token in result.stdout.split()]
-    assert len(counts) == 3
+    assert len(counts) == 2
     assert counts[0] > 0
     assert len(set(counts)) == 1
 

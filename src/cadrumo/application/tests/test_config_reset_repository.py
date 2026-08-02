@@ -13,9 +13,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .._bucket_deletion_contracts import BucketDeletionFingerprint
 from .._config_reset_models import (
+    ConfigResetDeletionMarker,
     ConfigResetOperation,
     ConfigResetOperationStatus,
+    ConfigResetPauseReason,
     ConfigResetPointerSnapshot,
     ConfigResetRetentionDecision,
     ConfigResetSummary,
@@ -84,6 +87,65 @@ def test_create_refuses_existing_operation_identity(
     with pytest.raises(ConfigResetJournalAlreadyExistsError):
         repository.create(operation.model_copy(update={"updated_at": operation.updated_at + timedelta(seconds=1)}))
 
+    assert repository.load(operation.operation_id) == operation
+
+
+def test_create_persists_canonical_bucket_identities(
+    tmp_path: Path,
+) -> None:
+    """Every persisted reset identity uses the storage-wide canonical spelling."""
+    from ...domain.user_profile import UserProfileStatus
+
+    repository = ConfigResetJournalRepository(storage_root=tmp_path)
+    started_at = datetime(2026, 7, 16, 8, 0, tzinfo=UTC)
+    wrapped_bucket_id = f" {_BUCKET_ID} "
+    operation = ConfigResetOperation(
+        operation_id=_OPERATION_ID,
+        status=ConfigResetOperationStatus.PAUSED,
+        started_at=started_at,
+        updated_at=started_at,
+        pointer_snapshot=ConfigResetPointerSnapshot(
+            present=True,
+            bucket_id=wrapped_bucket_id,
+            content_sha256="a" * 64,
+        ),
+        targets=(
+            ConfigResetTarget(
+                bucket_id=wrapped_bucket_id,
+                label="Canonical operator",
+                status_at_snapshot=UserProfileStatus.ACTIVE,
+                exists_at_snapshot=True,
+                fingerprint=BucketDeletionFingerprint(
+                    digest="b" * 64,
+                    manifest_digest="c" * 64,
+                    file_count=1,
+                    total_bytes=1,
+                ),
+                phase=ConfigResetTargetPhase.DELETING,
+                retention=ConfigResetRetentionDecision(
+                    assessed_at=started_at,
+                    blocks_erase=False,
+                    retained_record_count=0,
+                ),
+                deletion_marker=ConfigResetDeletionMarker(
+                    operation_id=_OPERATION_ID,
+                    bucket_id=wrapped_bucket_id,
+                    fingerprint="b" * 64,
+                    marked_at=started_at,
+                ),
+            ),
+        ),
+        pause_reason=ConfigResetPauseReason.TARGET_STATE_CHANGED,
+        paused_target_ids=(wrapped_bucket_id,),
+    )
+
+    repository.create(operation)
+
+    document = json.loads(repository.path_for(operation.operation_id).read_text(encoding="utf-8"))
+    assert document["pointer_snapshot"]["bucket_id"] == _BUCKET_ID
+    assert document["targets"][0]["bucket_id"] == _BUCKET_ID
+    assert document["targets"][0]["deletion_marker"]["bucket_id"] == _BUCKET_ID
+    assert document["paused_target_ids"] == [_BUCKET_ID]
     assert repository.load(operation.operation_id) == operation
 
 

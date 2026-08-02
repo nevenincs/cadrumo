@@ -21,11 +21,14 @@ See Also:
 
 from __future__ import annotations
 
+import json
 from typing import Any, cast
 
 import pytest
+from pydantic import ValidationError
 
-from ....core import Period
+from ....core import Modelo, Period
+from ....domain.submission import ModeloDraftStatus
 from .. import WorkflowState, _engine, _models, declaration_key, update_declaration_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,3 +68,26 @@ def test_update_declaration_pointer_uses_typed_period_key() -> None:
     pointer = state.declarations["130:2025:1T"]
     assert pointer.period == period
     assert pointer.draft_id == "d" * 64
+
+
+def test_workflow_state_serialization_rejects_unknown_declaration_identity_and_status() -> None:
+    """Persisted declaration pointers retain closed Modelo and draft-status identities."""
+    period = Period.from_year_and_code(2025, "1T")
+    state = update_declaration_pointer(
+        WorkflowState(),
+        modelo="130",
+        period=period,
+        draft_id="d" * 64,
+        status="BORRADOR",
+    )
+    pointer = state.declarations["130:2025:1T"]
+    assert pointer.modelo is Modelo.M130
+    assert pointer.status is ModeloDraftStatus.BORRADOR
+
+    persisted = json.loads(state.model_dump_json())
+    for field, invalid_value in (("modelo", "999"), ("status", "NOT_A_DRAFT_STATUS")):
+        invalid = json.loads(json.dumps(persisted))
+        invalid["declarations"]["130:2025:1T"][field] = invalid_value
+
+        with pytest.raises(ValidationError, match=field):
+            WorkflowState.model_validate_json(json.dumps(invalid))

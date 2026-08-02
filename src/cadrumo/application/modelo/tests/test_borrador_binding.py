@@ -186,7 +186,7 @@ def _save_snapshot(
     discarded_by: str = "",
 ) -> str:
     snapshot = Borrador100Snapshot(
-        snapshot_id="borrador-100-2025-active",
+        snapshot_id="a" * 64,
         bucket_id=_BUCKET_ID,
         modelo="100",
         filing_year=_YEAR,
@@ -393,7 +393,7 @@ def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
     )
 
     assert result.borrador_provenance is not None
-    assert result.borrador_provenance.snapshot_id == "borrador-100-2025-active"
+    assert result.borrador_provenance.snapshot_id == snapshot_id
     assert result.binding_values == {_DECIMAL_BINDING: Decimal("125.50")}
     assert result.enum_binding_values == {_ENUM_BINDING: "madrid"}
     assert result.borrador_provenance.bindings_sourced == (_DECIMAL_BINDING, _ENUM_BINDING)
@@ -743,7 +743,7 @@ def test_borrador_resolution_rejects_superseded_snapshot_with_list_pointer(
         snapshot_repository,
         {_DECIMAL_BINDING: Decimal("1")},
         state=SnapshotLifecycleState.SUPERSEDED,
-        superseded_by_snapshot_id="borrador-100-2025-newer",
+        superseded_by_snapshot_id="b" * 64,
     )
 
     with pytest.raises(Modelo100BorradorBindingError) as exc_info:

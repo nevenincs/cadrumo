@@ -55,6 +55,7 @@ from .....domain.calculations.registry import (
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
+from ._adapter_utils import assert_read_landing
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -134,10 +135,47 @@ _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
 
 _DECLARATIONS_LISTING_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.declarations_listing.removesuffix("/index.zul")
 
+# The register application directory. Buscar is a ZK AJAX RPC, so the page is
+# expected not to move across the search -- the same prefix the pre-search
+# navigation check already requires is therefore the post-search read surface
+# too, rather than a new claim about where AEAT may serve results.
+_DECLARATIONS_READ_PATH_PREFIXES: tuple[str, ...] = (_DECLARATIONS_LISTING_PATH_PREFIX,)
+
 DEFAULT_NAVIGATION_TIMEOUT_MS: int = 30_000
 DEFAULT_FORM_INTERACTION_TIMEOUT_MS: int = 10_000
 DEFAULT_BUSCAR_SETTLE_MS: int = 2_000
 DEFAULT_VER_CLICK_TIMEOUT_MS: int = 5_000
+
+
+def assert_declarations_read_landing(
+    landing_url: str,
+    *,
+    policy: RemoteStateGuardPolicy = _READ_GUARD_POLICY,
+) -> None:
+    """Refuse a landing that is not the declaraciones register.
+
+    The navigation INTO the register already refused a landing outside
+    this prefix, which is why the rule is that same prefix rather than a
+    wider one. What was missing is the other side of the search: Buscar
+    is a real submit control, and its landing was LOGGED and never
+    checked, so a search that left the register was recorded and then
+    scraped. That failure is silent -- the row parser finds no rows, and
+    an empty listing is indistinguishable from a taxpayer who filed
+    nothing that ejercicio.
+
+    Args:
+        landing_url: The URL AEAT actually served, read off the page.
+        policy: The read guard policy; defaults to the module's own.
+
+    Raises:
+        SedeNavigationError: When the landing is not the register.
+    """
+    assert_read_landing(
+        landing_url,
+        surface="declaraciones register",
+        policy=policy,
+        allowed_path_prefixes=_DECLARATIONS_READ_PATH_PREFIXES,
+    )
 
 
 @asynccontextmanager
@@ -504,6 +542,11 @@ async def _drive_search(
             ),
         ) from exc
     await page.wait_for_timeout(_get_buscar_settle_ms())
+    # Buscar is a real submit control. Its landing was previously LOGGED and
+    # never checked, so a search that left the register was recorded and then
+    # scraped: the row parser would find no rows, and an empty listing is
+    # indistinguishable from a taxpayer who filed nothing that ejercicio.
+    assert_declarations_read_landing(getattr(page, "url", "") or "", policy=read_policy)
     log.info(
         "declarations register search completed modelo=%s ejercicio=%d shape=%s",
         modelo,

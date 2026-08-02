@@ -1,9 +1,8 @@
 """Typed path-containment helpers for the persistence substrate.
 
-The wider project ships :func:`core.paths.resolve_relative_subpath` and
-:func:`core.paths.resolve_record_json_path` which raise plain
-:class:`ValueError` on traversal violations. New persistence code uses
-the typed wrappers in this module instead so:
+The wider project ships :func:`core.paths.resolve_relative_subpath`, which
+raises a plain :class:`ValueError` on traversal violations. New persistence
+code uses the typed wrappers in this module instead so:
 
 - the failure carries the registered ``PathContainmentError`` code
   (``INTEGRITY_STORAGE_PATH_CONTAINMENT``) and lands in the standard
@@ -18,7 +17,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.paths import resolve_record_json_path, resolve_relative_subpath
+from ....core.paths import resolve_relative_subpath
 from .errors import PathContainmentError
 
 
@@ -62,45 +61,24 @@ def safe_subpath(root: Path, relative_path: str, *, context: str) -> Path:
         ) from exc
 
 
-def safe_record_path(root: Path, record_id: str, *, context: str) -> Path:
-    """Resolve a record-id-keyed JSON file under ``root``.
-
-    Wraps :func:`core.paths.resolve_record_json_path` and re-raises
-    its :class:`ValueError` as a localized :class:`PathContainmentError`.
-
-    Args:
-        root: Configured root directory.
-        record_id: Simple filename token; the helper enforces a strict
-            allow-list of characters so traversal sequences cannot
-            slip through.
-        context: Stable label embedded in the error message.
-
-    Returns:
-        The resolved absolute :class:`Path` of ``<root>/<record_id>.json``.
-
-    Raises:
-        PathContainmentError: When ``record_id`` is not a safe token
-            or when the resolved path escapes ``root``.
-    """
-    try:
-        return resolve_record_json_path(root, record_id, context=context)
-    except ValueError as exc:
-        raise _containment_error(
-            str(exc),
-            context=context,
-            violation="record_json_path",
-        ) from exc
-
-
 def safe_repository_id(token: str, *, context: str) -> str:
     """Reject repository-id tokens that would compose into an unsafe filename.
 
-    Repositories store records as ``<store_dir>/<token>.envelope.json``.
     A token containing a path separator, a dot-prefix, or one of the
-    relative-path tokens (``"."`` / ``".."``) would either escape the
-    store dir or collide with a hidden file. This helper is the early-rejection
-    layer at the public-method boundary; the substrate's
-    :func:`safe_record_path` enforces containment downstream.
+    relative-path tokens (``"."`` / ``".."``) would either escape a store
+    directory or collide with a hidden file, so this helper rejects the
+    token's SHAPE at the public-method boundary.
+
+    It is the early-rejection half of the substrate's two-layer path
+    contract, and which layer follows depends on the backend. The
+    secure-object substrate is SQL-backed: it keys rows by
+    ``(namespace, identifier)`` and composes only ``db://`` logical markers
+    for diagnostics, so no filesystem path is derived from the token and
+    shape rejection is the whole of it. Where a token does become a real
+    filename -- the rotation entry's ``target_filename`` -- the second layer
+    is :func:`safe_subpath`, which re-resolves it against the real
+    filesystem at enumeration and is the only layer that can catch a
+    symlinked store directory. Neither layer subsumes the other.
 
     The validation is intentionally minimal — non-empty, no path
     separator, no dot-token. It does not claim knowledge of any
@@ -146,7 +124,6 @@ def safe_repository_id(token: str, *, context: str) -> str:
 
 
 __all__ = [
-    "safe_record_path",
     "safe_repository_id",
     "safe_subpath",
 ]

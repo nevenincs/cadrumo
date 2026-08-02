@@ -248,8 +248,13 @@ class SecureBoundRepository[T: BaseModel]:
         # ClassVar[type[BaseModel]] fallback with explicit payload_model() overrides
         # to eliminate this cast entirely (see: CAST-RATIONALE-SECURE-REPOSITORY-LOAD).
         payload = cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-LOAD
-        if self.extract_identifier(payload) != identifier:
-            raise SecureObjectRowIdentityError(self.namespace, expected_identifier=identifier)
+        payload_identifier = self.extract_identifier(payload)
+        if payload_identifier != identifier:
+            raise SecureObjectRowIdentityError(
+                self.namespace,
+                expected_identifier=identifier,
+                payload_identifier=payload_identifier,
+            )
         return payload
 
     def save(self, payload: T) -> None:
@@ -391,41 +396,33 @@ class SecureBoundRepository[T: BaseModel]:
         ):
             yield record, self._validate_envelope(record.payload, subject=f"{self.namespace} iterator row")
 
-    def _iter_validated_envelopes(self) -> Iterator[Envelope[BaseModel]]:
-        """Yield each row's classification/version-validated envelope in storage order.
+    def _iter_identified_payloads(self) -> Iterator[tuple[str, T]]:
+        """Yield each row's natural id beside its payload, refusing a misfiled row.
 
-        Shared scan behind :meth:`iter_ids` and :meth:`iter_records`:
+        The one scan behind :meth:`iter_ids` and :meth:`iter_records`:
         ``list_records`` → ``model_validate_json`` → classification check →
-        version check. Fail-closed:
+        version check → row-identity check.
+
+        Each repository derives its object key from the payload's own natural
+        identity, so the stored key and the decrypted payload are two encodings
+        of one fact. Recomputing the key from the payload and comparing it with
+        the key the row is actually filed under is what makes enumeration as
+        strict as :meth:`load`; without it enumeration is the weaker door, and a
+        record written under another row's key enters the window it was filed
+        into rather than the one it describes. The comparison decrypts nothing
+        extra: the stored key is already an HMAC digest of the natural id.
+
+        Fail-closed twice over.
         :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
         scans the whole namespace and raises ``SecureObjectUnreadableError`` if
         any row is unreadable, so a full consumption never yields a readable
-        subset past a corrupt row.
-        """
-        for _record, envelope in self._iter_validated_rows():
-            yield envelope
-
-    def iter_verified_records(self) -> Iterator[T]:
-        """Yield every persisted payload whose identity matches the key it is filed under.
-
-        The verifying counterpart of :meth:`iter_records`. Each repository
-        derives its object key from the payload's own natural identity, so the
-        stored key and the decrypted payload are two encodings of one fact; this
-        scan recomputes the key from the payload and compares it against the
-        key the row is actually stored under.
-
-        A window scan that filters only on payload fields trusts the payload to
-        describe its own coordinates. A record written under another row's key
-        then enters the window it was filed into rather than the one it
-        describes, silently distorting whatever the window is counted for. The
-        digest comparison closes that gap without decrypting anything extra: the
-        stored key is already an HMAC digest of the natural id.
+        subset past a corrupt row; and a misfiled row raises rather than being
+        skipped, so a caller counting rows for a declaration is never handed a
+        quietly shortened set.
 
         Raises:
             SecureObjectRowIdentityError: A row's payload rebuilds a different
-                natural id than the key it is filed under. Raised rather than
-                skipped, so a caller counting rows for a declaration is never
-                handed a quietly shortened set.
+                natural id than the key it is filed under.
         """
         for record, envelope in self._iter_validated_rows():
             # Safe: same rationale as the load() path — the envelope was validated
@@ -434,7 +431,7 @@ class SecureBoundRepository[T: BaseModel]:
             identifier = self.extract_identifier(payload)
             if secure_object_key_digest(identifier) != record.object_key:
                 raise SecureObjectRowIdentityError(self.namespace, expected_identifier=identifier)
-            yield payload
+            yield identifier, payload
 
     def iter_ids(self) -> Iterator[str]:
         """Yield every persisted identifier in storage order.
@@ -444,22 +441,19 @@ class SecureBoundRepository[T: BaseModel]:
         order sorts the result itself. Streams one identifier at a time
         rather than buffering and sorting the whole namespace in memory.
 
-        Fail-closed:
-        :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
-        scans the
-        whole namespace and raises ``SecureObjectUnreadableError`` if any row
-        is unreadable, so a full consumption (``tuple(...)``) never yields a
-        readable subset past a corrupt row.
+        Every id is the one its own row is filed under: the scan refuses a row
+        whose payload rebuilds a different key rather than reporting an id the
+        store does not actually hold that record at.
+
+        Raises:
+            SecureObjectRowIdentityError: A row's payload rebuilds a different
+                natural id than the key it is filed under.
         """
-        for envelope in self._iter_validated_envelopes():
-            # Safe: same rationale as the load() path — envelope was validated by
-            # model_validate_json against Envelope[self.payload_type] == Envelope[T].
-            # Future improvement: eliminate via generic ClassVar alias
-            # (see: CAST-RATIONALE-SECURE-REPOSITORY-ITER).
-            yield self.extract_identifier(cast(T, envelope.payload))  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+        for identifier, _payload in self._iter_identified_payloads():
+            yield identifier
 
     def iter_records(self) -> Iterator[T]:
-        """Yield every persisted payload in storage order.
+        """Yield every persisted payload whose identity matches the key it is filed under.
 
         Streams each payload straight from
         :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
@@ -477,12 +471,19 @@ class SecureBoundRepository[T: BaseModel]:
         every time).  Iterating directly over the decrypted rows is the
         correct pattern for full-scan enumeration.
 
-        Fail-closed: ``list_records`` scans the whole namespace and raises
-        ``SecureObjectUnreadableError`` if any row is unreadable before this
-        generator yields a readable subset on full consumption.
+        Verification is the DEFAULT, not an opt-in a caller must remember: a
+        scan that filters on payload fields trusts each record to describe the
+        key it is stored under, and the callers most exposed to that -- window
+        counts, carry-forward reads, reconciliation history -- are the ones
+        least able to notice a foreign row. An opt-in variant only protects the
+        callers that already suspected the problem.
+
+        Raises:
+            SecureObjectRowIdentityError: A row's payload rebuilds a different
+                natural id than the key it is filed under.
         """
-        for envelope in self._iter_validated_envelopes():
-            yield cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+        for _identifier, payload in self._iter_identified_payloads():
+            yield payload
 
     # ------------------------------------------------------------------
     # Internals

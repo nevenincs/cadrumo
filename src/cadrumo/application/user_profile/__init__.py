@@ -69,8 +69,9 @@ See Also:
         Domain schema, value records, registry-selector contract, and lazy
         portable-export payload consumed by this facade.
     :class:`ProfileLifecycleService`
-        Application service for register, edit, rename, duplicate, snapshot, and
-        remove operations over :class:`domain.user_profile.UserProfileRecord`.
+        Application service for register, read, edit, rename, remove,
+        reactivate, and setup-completion operations over
+        :class:`domain.user_profile.UserProfileRecord`.
     :class:`CensoSyncService`
         Read-only censo-derived home-office afectación ratio for the ledger
         proportional-deduction path.
@@ -162,8 +163,6 @@ if TYPE_CHECKING:
         EditProfileSectionCommand,
         ProfileImportResult,
         ProfileLifecycleResult,
-        ProfileListing,
-        ProfileListResult,
         ProfilePreflightReport,
         ProfilePreflightRequirement,
         ProfileSnapshot,
@@ -293,8 +292,6 @@ _COMMAND_NAMES: frozenset[str] = frozenset(
         "EditProfileSectionCommand",
         "ProfileImportResult",
         "ProfileLifecycleResult",
-        "ProfileListResult",
-        "ProfileListing",
         "ProfilePreflightReport",
         "ProfilePreflightRequirement",
         "ProfileSnapshot",
@@ -579,8 +576,6 @@ __all__ = [
     "ProfileIntegrityError",
     "ProfileLifecycleResult",
     "ProfileLifecycleService",
-    "ProfileListResult",
-    "ProfileListing",
     "ProfileLoginOutcome",
     "ProfileLoginThrottledError",
     "ProfileLogoutOverrideError",

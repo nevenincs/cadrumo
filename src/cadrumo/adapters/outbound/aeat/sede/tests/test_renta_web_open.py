@@ -25,6 +25,7 @@ from .._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .._renta_web_open import (
     RentaWebOpenSedeDriver,
     _playwright_stage,
+    assert_renta_web_open_app_url,
     assert_renta_web_open_read_landing,
     extract_renta_web_open_summary_value,
 )
@@ -166,3 +167,48 @@ class TestRentaWebOpenLandingRefusal:
     def test_an_unreadable_landing_is_refused(self) -> None:
         with pytest.raises(SedeNavigationError):
             assert_renta_web_open_read_landing("")
+
+
+class TestPayloadAppUrlIsRefusedBeforeNavigation:
+    """The page REQUESTED, not just the page filled.
+
+    ``app_url`` is a field on the caller-supplied live payload, validated
+    upstream only as a well-formed URL -- ``AnyUrl`` with a registry
+    template default and no host constraint. The landing rule refuses the
+    page being filled, but it runs after the browser has already issued
+    the GET, so on its own it would let an off-AEAT ``app_url`` be
+    fetched and only then refuse.
+
+    No production path reaches this today: the only oracles registered in
+    production are the NIF-IVA and GROI checkers, and nothing outside
+    tests constructs this driver. This is the guard that makes the
+    request itself impossible if one ever does, and it brings the one
+    unchecked ``navigate`` in the package into line with its siblings.
+    """
+
+    def test_the_configured_simulator_url_is_admitted(self) -> None:
+        assert_renta_web_open_app_url(_APP_TEMPLATE.format(year=2025))
+
+    def test_the_payload_default_is_admitted(self) -> None:
+        """The default must survive its own guard, or every run refuses."""
+        assert_renta_web_open_app_url(str(RentaWebOpenLivePayload().app_url))
+
+    def test_an_off_aeat_host_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_renta_web_open_app_url(f"https://attacker.example{urlsplit(_APP_TEMPLATE).path}")
+
+    def test_a_host_merely_ending_in_the_aeat_apex_is_refused(self) -> None:
+        """A suffix match where a domain match was meant is trivially satisfied."""
+        with pytest.raises(SedeNavigationError):
+            assert_renta_web_open_app_url(
+                f"https://{AEAT_SUFFIX_LOOKALIKE_HOST_CANARY}{urlsplit(_APP_TEMPLATE).path}",
+            )
+
+    def test_a_non_https_scheme_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_renta_web_open_app_url(f"http://{urlsplit(_APP_TEMPLATE).netloc}{urlsplit(_APP_TEMPLATE).path}")
+
+    def test_a_malformed_url_is_refused_rather_than_leaking_a_pydantic_error(self) -> None:
+        """The adapter boundary raises its own typed error, never a validation error."""
+        with pytest.raises(SedeNavigationError):
+            assert_renta_web_open_app_url(urlsplit(_APP_TEMPLATE).path)

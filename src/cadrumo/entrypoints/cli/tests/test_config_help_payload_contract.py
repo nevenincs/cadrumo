@@ -9,6 +9,8 @@ and empty-collection shapes the canonical ``HelpDocument`` / ``HelpSection``
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from pydantic import ValidationError
 
@@ -48,12 +50,25 @@ def test_config_root_result_accepts_a_real_help_document() -> None:
 
 
 def test_config_root_result_rejects_an_unknown_surface() -> None:
-    """A surface outside the closed ``HelpSurface`` vocabulary is refused."""
+    """A surface outside the closed ``HelpSurface`` vocabulary is refused.
+
+    Round-trips through the JSON-text path (``model_dump_json`` /
+    ``model_validate_json``), not ``model_validate(x.model_dump(mode="json"))``:
+    ``surface`` is a strict ``HelpSurface`` enum field, and its JSON-mode dict
+    projection is a bare string that ``model_validate`` on a plain dict does not
+    coerce back to the enum (only genuine JSON text gets that leniency). Feeding
+    the dict form here raised on *any* string value, including a real member's
+    own value, so it never actually exercised the closed-vocabulary rejection this
+    test claims.
+    """
     document = build_help_document("config")
     valid = _project(document)
 
+    payload = json.loads(valid.model_dump_json())
+    payload["surface"] = "bogus"
+
     with pytest.raises(ValidationError):
-        ConfigRootResult.model_validate({**valid.model_dump(mode="json"), "surface": "bogus"})
+        ConfigRootResult.model_validate_json(json.dumps(payload))
 
 
 def test_config_root_result_rejects_empty_paragraphs_and_sections() -> None:

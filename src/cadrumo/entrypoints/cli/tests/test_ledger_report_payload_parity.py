@@ -1,8 +1,9 @@
 """Parity gate: domain report fields must be a subset of their CLI payload.
 
 The ledger lifecycle handlers emit their JSON envelope by validating a domain
-report's ``model_dump(mode="json")`` against the registered ``OutputSchema``
-payload (``Payload.model_validate(report.model_dump(mode="json"))``). Because
+report through a genuine JSON-text round trip against the registered
+``OutputSchema`` payload (``strict_round_trip(Payload, report)``, i.e.
+``Payload.model_validate_json(report.model_dump_json())``). Because
 :class:`OutputSchema` is ``extra="forbid"``, a field added to the domain report
 but not mirrored onto the payload makes that validation raise at runtime — the
 exact regression that broke ``aeat app ledger remove`` when
@@ -24,6 +25,7 @@ from ....application.ledger import (
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
 )
+from ....core.json_contract import strict_round_trip
 from .._ledger_payloads import LedgerRemoveResult, LedgerResetResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -109,14 +111,14 @@ def test_reset_report_fields_are_subset_of_payload() -> None:
 
 
 def test_remove_report_dump_validates_against_payload_and_round_trips() -> None:
-    """The handler's validate(report.model_dump(json)) path must not raise.
+    """The handler's strict_round_trip(Payload, report) path must not raise.
 
     Mirrors ``_ledger_lifecycle_cli.ledger_remove`` exactly and asserts the
     non-blocking ``stale_draft_revision_references`` advisory survives the
     boundary populated, not silently dropped.
     """
     report = _populated_removal_report()
-    payload = LedgerRemoveResult.model_validate(report.model_dump(mode="json"))
+    payload = strict_round_trip(LedgerRemoveResult, report)
 
     assert payload.transaction_id == _HEX_64_C
     assert len(payload.stale_draft_revision_references) == 1
@@ -132,9 +134,9 @@ def test_remove_report_dump_validates_against_payload_and_round_trips() -> None:
 
 
 def test_reset_report_dump_validates_against_payload_and_round_trips() -> None:
-    """The reset handler's validate(report.model_dump(json)) path must not raise."""
+    """The reset handler's strict_round_trip(Payload, report) path must not raise."""
     report = _populated_reset_report()
-    payload = LedgerResetResult.model_validate(report.model_dump(mode="json"))
+    payload = strict_round_trip(LedgerResetResult, report)
 
     assert payload.removed_transaction_ids == [_HEX_64_C]
     assert len(payload.stale_draft_revision_references) == 1

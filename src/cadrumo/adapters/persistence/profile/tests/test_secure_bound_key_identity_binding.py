@@ -23,6 +23,7 @@ genuinely well-formed row that differs only in the key it is filed under.
 
 from __future__ import annotations
 
+import inspect
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -34,7 +35,7 @@ from .....core import Period
 from .....domain.justificante import Justificante
 from .....tests.aeat_literal_fixtures import justificante_wlpl_cotejo_url
 from .....tests.secure_sql import isolated_runtime_profile
-from ....persistence.storage import SecureObjectRowIdentityError
+from ....persistence.storage import SecureBoundRepository, SecureObjectRowIdentityError
 from ..justificante import JustificanteRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -141,7 +142,7 @@ def test_verified_iteration_refuses_the_same_row(tmp_path: Path) -> None:
         _save_under_foreign_key(repository, record, object_key=_CSV_B)
 
         with pytest.raises(SecureObjectRowIdentityError):
-            list(repository.iter_verified_records())
+            list(repository.iter_records())
 
 
 def test_a_correctly_keyed_row_survives_verified_iteration(tmp_path: Path) -> None:
@@ -151,4 +152,76 @@ def test_a_correctly_keyed_row_survives_verified_iteration(tmp_path: Path) -> No
         repository = JustificanteRepository()
         repository.save(record)
 
-        assert list(repository.iter_verified_records()) == [record]
+        assert list(repository.iter_records()) == [record]
+
+
+def test_id_enumeration_refuses_the_same_row(tmp_path: Path) -> None:
+    """``iter_ids`` reaches the same verdict as lookup and record enumeration.
+
+    The id scan derived each id from the payload alone, so a row filed under
+    B reported ``CSV-A`` -- an id the store does not hold that record at. A
+    caller listing ids and then loading each one got a refusal on a key the
+    same repository had just published, with nothing tying the two together.
+    """
+    record = _justificante(_CSV_A)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = JustificanteRepository()
+        _save_under_foreign_key(repository, record, object_key=_CSV_B)
+
+        with pytest.raises(SecureObjectRowIdentityError):
+            list(repository.iter_ids())
+
+
+def test_the_load_refusal_names_both_the_key_asked_for_and_the_identity_found(
+    tmp_path: Path,
+) -> None:
+    """A mismatch refusal is only actionable if it names both sides.
+
+    Naming one identity leaves the reader unable to tell which it reported --
+    the key they asked for, or the one the row actually describes -- and those
+    are the two facts needed to find the misfiled row.
+    """
+    record = _justificante(_CSV_A)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = JustificanteRepository()
+        _save_under_foreign_key(repository, record, object_key=_CSV_B)
+
+        with pytest.raises(SecureObjectRowIdentityError) as refusal:
+            repository.load(_CSV_B)
+
+    assert refusal.value.expected_identifier == _CSV_B
+    assert refusal.value.payload_identifier == _CSV_A
+    assert refusal.value.context is not None
+    assert refusal.value.context["expected_identifier"] == _CSV_B
+    assert refusal.value.context["payload_identifier"] == _CSV_A
+
+
+def test_no_unverified_full_scan_survives_on_the_base() -> None:
+    """Both scans route through the one identity-checking helper.
+
+    STRUCTURAL, and deliberately so. Verification used to be reachable only
+    through an opt-in ``iter_verified_records`` while ``iter_records`` and
+    ``iter_ids`` stayed unchecked, which is fail-open by construction: the
+    callers least likely to opt in are the ones that filter on payload fields
+    and so are most exposed to a foreign row. No input can distinguish "the
+    default verifies" from "a second unverified scan was reintroduced beside
+    it" -- a new unchecked method is invisible to every behavioural test until
+    something starts calling it. This is what notices.
+    """
+    scan_sources = {
+        name: inspect.getsource(getattr(SecureBoundRepository, name)) for name in ("iter_records", "iter_ids")
+    }
+    for name, source in scan_sources.items():
+        assert "_iter_identified_payloads()" in source, f"{name} does not route through the verifying scan"
+
+    verifier = inspect.getsource(SecureBoundRepository._iter_identified_payloads)
+    assert "secure_object_key_digest(" in verifier, "the scan no longer recomputes the row key"
+    assert "raise SecureObjectRowIdentityError(" in verifier, "the scan no longer refuses a misfiled row"
+
+    public_scans = {
+        name for name in vars(SecureBoundRepository) if not name.startswith("_") and name.startswith("iter")
+    }
+    assert public_scans == {"iter_records", "iter_ids"}, (
+        f"an additional public scan surface exists: {sorted(public_scans)}; "
+        "a second scan beside the verifying one re-opens the fail-open gap"
+    )

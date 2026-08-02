@@ -8,11 +8,11 @@ pins that invariant so a future edit cannot silently regress it to raw scan
 order.
 
 The sibling output-ordering site — the profile inventory scan in
-``ProfileRepository.list`` — is deliberately NOT sorted at the scan: its
-operator-facing listing is sorted by its consumer (``list_profiles``, gated by
-``test_list_profiles_returns_sorted_listings``) and its other consumer is an
-order-independent uniqueness guard, so sorting the scan would be the misleading
-noise Decision 3 rejects.
+``ProfileRepository.list`` — is deliberately NOT sorted at the scan: it feeds
+no ordered output. Its consumer is the order-independent duplicate-tax-id
+uniqueness guard, and the operator-facing profile listing is a separate
+bucket-directory scan (``list_profile_buckets``) that never reads it. Sorting
+this scan would be the misleading noise Decision 3 rejects.
 """
 
 from __future__ import annotations

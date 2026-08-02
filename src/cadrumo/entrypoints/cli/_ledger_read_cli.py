@@ -38,7 +38,7 @@ from ...application.review import FilterParseError
 from ...core import LedgerSortField, LedgerSortOrder, Period, resolve_active_bucket_id
 from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice, NoticeSeverity, strict_round_trip
 from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories import (
     CATEGORY_FAMILY_MEMBERS,
@@ -939,7 +939,7 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
         _emit_envelope(
             ctx,
             command="ledger.view",
-            result=LedgerViewResult.model_validate(result_payload.model_dump(mode="json")),
+            result=strict_round_trip(LedgerViewResult, result_payload),
             lines=lines,
             notices=notices,
         )
@@ -1029,7 +1029,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         _emit_envelope(
             ctx,
             command="ledger.status",
-            result=LedgerStatusResult.model_validate(report.model_dump(mode="json")),
+            result=strict_round_trip(LedgerStatusResult, report),
             lines=lines,
         )
 

@@ -42,6 +42,49 @@ from .._journal_repository import JournalRepositoryBase
 from ._bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 
 PROFILE_EXPORT_JOURNAL_DIRNAME = "profile-export-operations"
+PROFILE_EXPORT_STAGED_TEMP_SUFFIX = ".export-tmp"
+_PROFILE_EXPORT_STAGED_NONCE_LENGTH = 8
+_ASCII_HEX_LOWER = frozenset("0123456789abcdef")
+
+
+def profile_export_staged_path(
+    destination: Path,
+    *,
+    process_id: int,
+    nonce: str,
+) -> Path:
+    """Derive the one staged sibling path an export operation may own."""
+    return destination.with_name(
+        f"{destination.name}.{process_id}.{nonce}{PROFILE_EXPORT_STAGED_TEMP_SUFFIX}",
+    )
+
+
+def is_canonical_profile_export_staged_path(
+    destination: Path,
+    staged_path: Path,
+) -> bool:
+    """Return whether staged_path is this destination's generated staging sibling."""
+    prefix = f"{destination.name}."
+    if staged_path.parent != destination.parent or not staged_path.name.startswith(prefix):
+        return False
+    remainder = staged_path.name.removeprefix(prefix)
+    if not remainder.endswith(PROFILE_EXPORT_STAGED_TEMP_SUFFIX):
+        return False
+    process_id, separator, nonce = remainder.removesuffix(PROFILE_EXPORT_STAGED_TEMP_SUFFIX).partition(".")
+    if (
+        not separator
+        or not process_id.isascii()
+        or not process_id.isdecimal()
+        or int(process_id) < 1
+        or len(nonce) != _PROFILE_EXPORT_STAGED_NONCE_LENGTH
+        or not set(nonce).issubset(_ASCII_HEX_LOWER)
+    ):
+        return False
+    return staged_path == profile_export_staged_path(
+        destination,
+        process_id=int(process_id),
+        nonce=nonce,
+    )
 
 
 class ProfileBundleExportOperationStatus(StrEnum):
@@ -84,12 +127,19 @@ class ProfileBundleExportOperation(BaseModel):
     event_occurred_at: datetime
 
     @model_validator(mode="after")
-    def _validate_timestamps(self) -> ProfileBundleExportOperation:
+    def _validate_journal_invariants(self) -> ProfileBundleExportOperation:
         validate_utc_aware(self.started_at)
         validate_utc_aware(self.updated_at)
         validate_utc_aware(self.event_occurred_at)
         if self.updated_at < self.started_at:
             raise ValueError("profile export journal updated_at precedes started_at")
+        if not is_canonical_profile_export_staged_path(
+            Path(self.destination),
+            Path(self.staged_path),
+        ):
+            raise ValueError(
+                "profile export journal staged_path must be the canonical staging sibling of destination",
+            )
         return self
 
 
@@ -232,6 +282,7 @@ class ProfileBundleExportJournalRepository(JournalRepositoryBase[ProfileBundleEx
 
 __all__ = [
     "PROFILE_EXPORT_JOURNAL_DIRNAME",
+    "PROFILE_EXPORT_STAGED_TEMP_SUFFIX",
     "ProfileBundleExportJournalCorruptError",
     "ProfileBundleExportJournalError",
     "ProfileBundleExportJournalNotFoundError",
@@ -241,4 +292,6 @@ __all__ = [
     "ProfileBundleExportOperationStatus",
     "UnreadableExportJournal",
     "derive_export_operation_id",
+    "is_canonical_profile_export_staged_path",
+    "profile_export_staged_path",
 ]

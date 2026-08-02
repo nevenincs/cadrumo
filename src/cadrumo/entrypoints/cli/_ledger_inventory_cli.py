@@ -7,6 +7,8 @@ from :mod:`._ledger_payloads`.
 
 from __future__ import annotations
 
+import json
+
 import typer
 
 from ...application.inventory import InventoryMovementCommand, InventoryService
@@ -141,12 +143,12 @@ def inventory_create(
         opening_stock=parse_decimal_amount(opening_stock, label="opening-stock"),
     )
     ledger = result.ledger
-    payload = ledger.model_dump(mode="json")
+    payload = json.loads(ledger.model_dump_json())
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
     _emit_envelope(
         ctx,
         command="ledger.inventory.create",
-        result=InventoryCreateResult.model_validate(payload),
+        result=InventoryCreateResult.model_validate_json(json.dumps(payload)),
         lines=(
             f"bucket\t{bucket_id}",
             f"actividad_id\t{ledger.actividad_id}",

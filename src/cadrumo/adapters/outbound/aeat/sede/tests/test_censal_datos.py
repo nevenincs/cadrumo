@@ -31,6 +31,7 @@ from .._censal_datos import (
     CensalDatosResult,
     _assert_read_http,
     _assert_read_landing,
+    _censal_landing_url,
     _resolve_dispatched_origin,
     censal_datos_url,
     forbidden_censal_landing_marker,
@@ -345,3 +346,46 @@ class TestNoWriteSurface:
         offenders = [name for name in _censal_datos.__all__ if any(token in name.casefold() for token in forbidden)]
 
         assert offenders == []
+
+
+class _LandedPage:
+    """Carries a landed URL, the one attribute ``_censal_landing_url`` reads off a page."""
+
+    def __init__(self, url: str) -> None:
+        self.url = url
+
+
+class TestCensalLandingIsRefusedWhenUnreadable:
+    """An empty or otherwise unreadable landing must be refused, not silently substituted.
+
+    ``_censal_landing_url`` used to fall back to the originally-requested
+    URL whenever ``page.url`` was empty (``getattr(page, "url", "") or url``),
+    reproducing the exact fail-open bug ``_walker.assert_landed_url_readable``
+    already documents fixing: the one case where the navigation outcome
+    could not be established was the one case that was not checked.
+    """
+
+    def test_a_readable_landing_is_returned_unchanged(self) -> None:
+        landed = f"{_AEAT.domains.www12}{_AEAT.sede_paths.censal_datos}"
+        assert _censal_landing_url(_LandedPage(landed), requested_url=_CENSAL_URL) == landed
+
+    @pytest.mark.parametrize("landed", ["", "about:blank"])
+    def test_an_unreadable_landing_is_refused_not_substituted(self, landed: str) -> None:
+        """DISCRIMINATING: reverting the fix produces the requested URL instead of a refusal."""
+        page = _LandedPage(landed)
+        produced: str | None = None
+        try:
+            produced = _censal_landing_url(page, requested_url=_CENSAL_URL)
+        except SedeNavigationError:
+            produced = None
+        assert produced != _CENSAL_URL, (
+            f"FABRICATED censal landing {produced!r} substituted for an unreadable landing {landed!r}"
+        )
+        assert produced is None
+        with pytest.raises(SedeNavigationError):
+            _censal_landing_url(page, requested_url=_CENSAL_URL)
+
+    def test_the_refusal_names_the_requested_url(self) -> None:
+        with pytest.raises(SedeNavigationError) as excinfo:
+            _censal_landing_url(_LandedPage(""), requested_url=_CENSAL_URL)
+        assert excinfo.value.context["requested_url"] == _CENSAL_URL

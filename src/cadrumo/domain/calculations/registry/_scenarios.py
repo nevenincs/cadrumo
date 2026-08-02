@@ -122,6 +122,18 @@ class RegistryScenarioRunReport(RegistryScenarioModel):
     comparisons: tuple[RegistryScenarioComparison, ...]
     calculation: RegistryCalculationResult
 
+    @model_validator(mode="after")
+    def _status_matches_comparisons(self) -> RegistryScenarioRunReport:
+        expected_status: ScenarioStatus = (
+            "match" if all(comparison.status == "match" for comparison in self.comparisons) else "mismatch"
+        )
+        if self.status != expected_status:
+            raise RegistryValidationError(
+                f"registry scenario report {self.scenario_id!r} status {self.status!r} "
+                f"does not match comparison statuses; expected {expected_status!r}",
+            )
+        return self
+
 
 def run_registry_calculation_scenario(
     scenario: RegistryCalculationScenario,

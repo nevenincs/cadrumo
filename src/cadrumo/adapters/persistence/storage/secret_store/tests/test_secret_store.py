@@ -21,6 +21,7 @@ from pydantic import ValidationError
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
+from ......tests.path_obstruction import obstructed_path
 from ...blob_store import EncryptedBlobStore
 from ...crypto import KEY_SIZE
 from ...errors import (
@@ -324,19 +325,6 @@ def _payload_paths(blob_root: Path) -> list[Path]:
     return sorted(path for path in blob_root.rglob("*.enc") if path.is_file())
 
 
-def _block_path_with_a_directory(target: Path) -> None:
-    """Replace ``target`` with a non-empty directory so unlinking it really fails.
-
-    A genuine filesystem condition rather than a test double: the production
-    delete path runs unmodified and meets an ``OSError`` from the real
-    ``Path.unlink`` (``PermissionError`` on Windows, ``IsADirectoryError`` on
-    POSIX -- both ``OSError``).
-    """
-    target.unlink()
-    target.mkdir()
-    (target / "blocker").write_text("blocker", encoding=UTF_8_ENCODING)
-
-
 class TestNaturalKeyBinding:
     """The encrypted record must answer for the key it was addressed by."""
 
@@ -395,21 +383,15 @@ class TestDeleteOwnershipOrdering:
         payloads = _payload_paths(tmp_path / "blobs")
         assert len(payloads) == 1
         payload_path = payloads[0]
-        payload_bytes = payload_path.read_bytes()
-        _block_path_with_a_directory(payload_path)
+        with obstructed_path(payload_path):
+            with pytest.raises(OSError):
+                store.delete("aeat:test:ordering")
 
-        with pytest.raises(OSError):
-            store.delete("aeat:test:ordering")
+            # Ownership survived the failure rather than being dropped ahead of it.
+            assert list(store.list_digests()) != []
 
-        # Ownership survived the failure rather than being dropped ahead of it.
-        assert list(store.list_digests()) != []
-
-        # Clearing the fault makes the same delete succeed, so the failure left
-        # a retryable state rather than a half-deleted one.
-        (payload_path / "blocker").unlink()
-        payload_path.rmdir()
-        payload_path.write_bytes(payload_bytes)
-
+        # The obstruction restored the payload on exit, so the same delete now
+        # succeeds: the failure left a retryable state, not a half-deleted one.
         store.delete("aeat:test:ordering")
 
         assert list(store.list_digests()) == []

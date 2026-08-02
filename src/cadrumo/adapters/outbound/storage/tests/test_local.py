@@ -21,6 +21,7 @@ import pytest
 from .....core.atomic_write import atomic_write_text
 from .....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from .....core.i18n import tr
+from .....tests.path_obstruction import obstructed_path
 from .. import (
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
@@ -510,9 +511,8 @@ def test_put_still_raises_conflict_for_a_real_non_long_path_oserror(
     provider.put("ledger_transaction", "ffffffffffffffff", b"seed", content_hash=_hash(b"seed"), label="seed")
     namespace_dir = tmp_path / "vault" / "ledger_transaction"
     sidecar_collision = namespace_dir / f"{hmac[:8]}--{label}.meta.json"
-    sidecar_collision.mkdir()
 
-    with pytest.raises(OutboundStoragePermissionError) as raised:
+    with obstructed_path(sidecar_collision), pytest.raises(OutboundStoragePermissionError) as raised:
         provider.put("ledger_transaction", hmac, payload, content_hash=_hash(payload), label=label)
     assert not isinstance(raised.value, OutboundStoragePathTooLongError)
     assert raised.value.translated_message == "adapters.outbound.storage.local.errors.sidecar_write_failed"

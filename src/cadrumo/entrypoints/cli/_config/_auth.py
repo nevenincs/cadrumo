@@ -10,6 +10,7 @@ import typer
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
+from ....core.json_contract import strict_round_trip
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -326,7 +327,7 @@ def auth_logout(
     )
     from .._config_payloads import AuthLogoutPayload
 
-    payload = AuthLogoutPayload.model_validate(result.model_dump(mode="json"))
+    payload = strict_round_trip(AuthLogoutPayload, result)
     _emit_envelope(
         ctx,
         command="config.auth.logout",
@@ -372,7 +373,7 @@ def auth_reset(
     )
     from .._config_payloads import AuthResetPayload
 
-    payload = AuthResetPayload.model_validate(result.model_dump(mode="json"))
+    payload = strict_round_trip(AuthResetPayload, result)
     _emit_envelope(
         ctx,
         command="config.auth.reset",

@@ -25,7 +25,7 @@ from ....application.user_profile import (
     ProfileBundleExportTransport,
     prepare_profile_export,
 )
-from ....application.user_profile._bundle_export import _STAGED_TEMP_SUFFIX
+from ....application.user_profile._bundle_export_operation import PROFILE_EXPORT_STAGED_TEMP_SUFFIX
 from ....domain.user_profile import UserProfilePortableExport
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -122,7 +122,7 @@ def test_the_verb_clears_an_abandoned_crash_orphan_and_its_cleartext_staged_file
         # The cleartext bundle bytes are gone from disk, and no export ran.
         assert not staged.exists()
         assert not destination.exists()
-        assert list(tmp_path.glob(f"*{_STAGED_TEMP_SUFFIX}")) == []
+        assert list(tmp_path.glob(f"*{PROFILE_EXPORT_STAGED_TEMP_SUFFIX}")) == []
         assert ProfileBundleExportJournalRepository().list() == ()
 
 

@@ -27,6 +27,7 @@ from pathlib import Path
 
 import pytest
 
+from .....tests.path_obstruction import obstructed_path
 from .._errors import OutboundStoragePermissionError
 from .._local import LocalFileSystemProvider
 
@@ -59,37 +60,21 @@ def _store(provider: LocalFileSystemProvider) -> tuple[Path, Path]:
     return target, target.with_name(target.stem + ".meta.json")
 
 
-def _obstruct_sidecar(sidecar: Path) -> str:
-    """Make the sidecar path unremovable, returning its original contents.
-
-    A directory standing where the sidecar file was is refused by ``unlink``
-    on every platform this ships to — as :exc:`PermissionError` on Windows and
-    :exc:`IsADirectoryError` on Linux. That the two differ is the reason the
-    provider guards on :exc:`OSError`: the narrower catch let the Linux shape
-    escape untranslated.
-    """
-    contents = sidecar.read_text(encoding="utf-8")
-    sidecar.unlink()
-    sidecar.mkdir()
-    return contents
-
-
-def _clear_obstruction(sidecar: Path, contents: str) -> None:
-    sidecar.rmdir()
-    sidecar.write_text(contents, encoding="utf-8")
-
-
 def test_a_failed_sidecar_removal_leaves_the_payload_on_disk(provider: LocalFileSystemProvider) -> None:
     """The regression: the payload used to be gone before the sidecar was tried.
 
     This is the whole finding in one assertion. Removing the payload first
     meant a sidecar failure destroyed the only half that could not be
     reconstructed, so the operator was left with a raised error and no object.
+
+    The obstruction is refused by ``unlink`` on every platform this ships to --
+    as :exc:`PermissionError` on Windows and :exc:`IsADirectoryError` on Linux.
+    That the two differ is the reason the provider guards on :exc:`OSError`:
+    the narrower catch let the Linux shape escape untranslated.
     """
     target, sidecar = _store(provider)
-    _obstruct_sidecar(sidecar)
 
-    with pytest.raises(OutboundStoragePermissionError):
+    with obstructed_path(sidecar), pytest.raises(OutboundStoragePermissionError):
         provider.delete(_NAMESPACE, _HMAC)
 
     assert target.is_file()
@@ -104,11 +89,9 @@ def test_the_object_is_still_deletable_after_the_obstruction_clears(provider: Lo
     sidecar path stayed behind forever.
     """
     target, sidecar = _store(provider)
-    contents = _obstruct_sidecar(sidecar)
 
-    with pytest.raises(OutboundStoragePermissionError):
+    with obstructed_path(sidecar), pytest.raises(OutboundStoragePermissionError):
         provider.delete(_NAMESPACE, _HMAC)
-    _clear_obstruction(sidecar, contents)
 
     assert provider.delete(_NAMESPACE, _HMAC) is True
     assert not target.exists()
@@ -118,11 +101,9 @@ def test_the_object_is_still_deletable_after_the_obstruction_clears(provider: Lo
 def test_the_object_is_still_readable_after_the_obstruction_clears(provider: LocalFileSystemProvider) -> None:
     """The pair survives intact, so the object is not merely present but usable."""
     _, sidecar = _store(provider)
-    contents = _obstruct_sidecar(sidecar)
 
-    with pytest.raises(OutboundStoragePermissionError):
+    with obstructed_path(sidecar), pytest.raises(OutboundStoragePermissionError):
         provider.delete(_NAMESPACE, _HMAC)
-    _clear_obstruction(sidecar, contents)
 
     payload, metadata = provider.get(_NAMESPACE, _HMAC)
 
@@ -133,11 +114,9 @@ def test_the_object_is_still_readable_after_the_obstruction_clears(provider: Loc
 def test_the_object_can_be_re_put_after_the_obstruction_clears(provider: LocalFileSystemProvider) -> None:
     """A same-key write is not blocked by the wreckage of a failed delete."""
     _, sidecar = _store(provider)
-    contents = _obstruct_sidecar(sidecar)
 
-    with pytest.raises(OutboundStoragePermissionError):
+    with obstructed_path(sidecar), pytest.raises(OutboundStoragePermissionError):
         provider.delete(_NAMESPACE, _HMAC)
-    _clear_obstruction(sidecar, contents)
 
     replacement = b"written after a failed delete"
     provider.put(

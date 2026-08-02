@@ -826,8 +826,8 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
         Frozen mapping of parameter-id → :class:`LegalParameter`.
 
     Raises:
-        RegistryLoadError: When duplicate parameter ids are found across
-            multiple TOML files in ``root/legal/``.
+        RegistryLoadError: When duplicate legal or parameter ids are found
+            across multiple TOML files in ``root/legal/``.
     """
     resolved = root.resolve()
     legal_dir = resolved / "legal"
@@ -835,9 +835,13 @@ def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
     parameters: dict[str, LegalParameter] = {}
     for path in sorted(legal_dir.glob("*.toml")):
         catalogue = load_catalogue_file(path)
-        overlap = set(parameters).intersection(catalogue.parameters)
-        if overlap:
-            raise RegistryLoadError(f"{path}: duplicate parameter ids {sorted(overlap)!r}")
+        overlap_legal = set(legal).intersection(catalogue.legal)
+        overlap_parameters = set(parameters).intersection(catalogue.parameters)
+        if overlap_legal or overlap_parameters:
+            raise RegistryLoadError(
+                f"{path}: duplicate catalogue ids legal={sorted(overlap_legal)!r} "
+                f"sources=[] parameters={sorted(overlap_parameters)!r}",
+            )
         legal.update(catalogue.legal)
         parameters.update(catalogue.parameters)
     _validate_legal_parameter_refs(legal_dir, parameters=parameters, legal=legal)

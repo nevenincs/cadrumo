@@ -43,8 +43,8 @@ from .. import (
     profile_storage_session,
     reconcile_prepared_exports,
 )
-from .._bundle_export import _STAGED_TEMP_SUFFIX
 from .._bundle_export_operation import (
+    PROFILE_EXPORT_STAGED_TEMP_SUFFIX,
     ProfileBundleExportJournalRepository,
     ProfileBundleExportOperationStatus,
 )
@@ -298,7 +298,7 @@ def test_digest_matched_reconcile_leaves_no_cleartext_staged_temp(tmp_path: Path
         assert destination.exists()
         # The cleartext staged temp must be gone.
         assert not staged.exists()
-        assert list(tmp_path.glob(f"*{_STAGED_TEMP_SUFFIX}")) == []
+        assert list(tmp_path.glob(f"*{PROFILE_EXPORT_STAGED_TEMP_SUFFIX}")) == []
 
 
 def test_completed_export_leaves_no_journal_and_one_event(tmp_path: Path) -> None:
@@ -382,7 +382,7 @@ def test_a_later_export_clears_a_crashed_run_orphan_journal_and_cleartext_temp(t
         assert not staged.exists()
         assert not abandoned.exists()
         assert repository.list() == ()
-        assert list(tmp_path.glob(f"*{_STAGED_TEMP_SUFFIX}")) == []
+        assert list(tmp_path.glob(f"*{PROFILE_EXPORT_STAGED_TEMP_SUFFIX}")) == []
         # The orphan never published, so only the new export owns an event.
         assert len(_export_events(bucket_id)) == 1
 
@@ -413,7 +413,7 @@ def test_re_exporting_to_the_crashed_target_clears_its_orphan_before_reusing_the
         assert destination.is_file()
         assert not abandoned_temp.exists()
         assert repository.list() == ()
-        assert list(tmp_path.glob(f"*{_STAGED_TEMP_SUFFIX}")) == []
+        assert list(tmp_path.glob(f"*{PROFILE_EXPORT_STAGED_TEMP_SUFFIX}")) == []
         assert len(_export_events(bucket_id)) == 1
 
 
@@ -479,6 +479,34 @@ def test_a_corrupt_journal_does_not_starve_the_healthy_operation_behind_it(tmp_p
         assert corrupt_path.is_file()
 
 
+def test_reconcile_preserves_unrelated_staged_file_from_corrupt_journal(tmp_path: Path) -> None:
+    """A journal can clean only its destination's canonical staging sibling."""
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _create_profile()
+        destination = tmp_path / "portable.json"
+        prepared = prepare_profile_export(_request(destination))
+        original_staged = Path(prepared.staged_path)
+        repository = ProfileBundleExportJournalRepository()
+        unrelated = tmp_path / f"unrelated{PROFILE_EXPORT_STAGED_TEMP_SUFFIX}"
+        unrelated_bytes = b"must-survive-corrupt-profile-export-journal"
+        unrelated.write_bytes(unrelated_bytes)
+
+        corrupt = prepared.operation.model_copy(update={"staged_path": str(unrelated)})
+        repository.save(corrupt)
+        corrupt_path = repository.path_for(corrupt.operation_id)
+
+        outcome = reconcile_prepared_exports()
+
+        assert outcome.reconciled == ()
+        assert len(outcome.failures) == 1
+        assert outcome.failures[0].journal_id == corrupt.operation_id
+        assert outcome.failures[0].destination is None
+        assert outcome.failures[0].reason == "ProfileBundleExportJournalCorruptError"
+        assert corrupt_path.is_file()
+        assert original_staged.is_file()
+        assert unrelated.read_bytes() == unrelated_bytes
+
+
 def test_an_unfinalisable_operation_does_not_starve_the_one_behind_it(tmp_path: Path) -> None:
     # The other isolation half, and the realistic one: a profile deleted after
     # its export crashed leaves a COMPLETED journal whose owed audit event can
@@ -497,7 +525,9 @@ def test_an_unfinalisable_operation_does_not_starve_the_one_behind_it(tmp_path: 
                 "status": ProfileBundleExportOperationStatus.COMPLETED,
                 "profile_id": "00000000-0000-4000-8000-000000000000",
                 "destination": str(tmp_path / "stranded.json"),
-                "staged_path": str(tmp_path / f"stranded.json.1.abcdef12{_STAGED_TEMP_SUFFIX}"),
+                "staged_path": str(
+                    tmp_path / f"stranded.json.1.abcdef12{PROFILE_EXPORT_STAGED_TEMP_SUFFIX}",
+                ),
                 "started_at": prepared.operation.started_at - timedelta(minutes=5),
                 "updated_at": prepared.operation.updated_at - timedelta(minutes=5),
             },
@@ -616,7 +646,7 @@ def _cleartext_temps(directory: Path) -> list[Path]:
     ``*.export-tmp`` sweep is blind to it -- the exact blindness this helper
     exists to remove from the assertions below.
     """
-    return sorted(path for path in directory.iterdir() if _STAGED_TEMP_SUFFIX in path.name)
+    return sorted(path for path in directory.iterdir() if PROFILE_EXPORT_STAGED_TEMP_SUFFIX in path.name)
 
 
 def test_the_prepare_child_really_reaches_staging_when_nothing_blocks_it(tmp_path: Path) -> None:

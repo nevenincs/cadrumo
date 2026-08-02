@@ -33,6 +33,7 @@ from pathlib import Path
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
+from ....core.errors import resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -123,7 +124,7 @@ def certificate_register(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
+        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     from .._config_payloads import CertificateSourceMutationPayload
 
@@ -221,7 +222,7 @@ def certificate_select(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
+        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
     except CertificateSourceNotFoundError as exc:
         raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
@@ -280,7 +281,7 @@ def certificate_remove(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
+        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     from .._config_payloads import CertificateSourceMutationPayload
 
@@ -453,7 +454,7 @@ def certificate_secret_set(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
+        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
     except CertificateSourceNotFoundError as exc:
         raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
@@ -514,7 +515,7 @@ def certificate_secret_remove(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
+        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     from .._config_payloads import CertificateSourceSecretMutationPayload
 

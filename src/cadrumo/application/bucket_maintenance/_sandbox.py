@@ -74,11 +74,12 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
+from ...core import STRICT_FROZEN_CONFIG, SecureObjectWrite, resolve_active_bucket_id
 from ...core.external_constants import SANDBOX_LABEL_PREFIX as _SANDBOX_LABEL_PREFIX
 from ...core.identity import BucketId
 from ...core.time import UtcInstant, now
@@ -90,7 +91,14 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.modelos import upsert_calculation_revision, upsert_filing_record, upsert_work_unit
+from ...domain.modelos import (
+    CalculationRevision,
+    ModeloRecord,
+    WorkUnit,
+    upsert_calculation_revision,
+    upsert_filing_record,
+    upsert_work_unit,
+)
 from ...domain.transactions import Transaction, TransactionCatalogue
 from ...domain.user_profile import ProfileNotFoundError, UserProfileFact, UserProfileStatus, new_profile_id
 from ..user_profile import (
@@ -637,18 +645,14 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
         raise SandboxNotFoundError(command.target_bucket_id)
 
     merged_counts: dict[str, int] = {}
+    source_transactions: tuple[Transaction, ...] = ()
+    source_work_units: tuple[WorkUnit, ...] = ()
+    source_revisions: tuple[CalculationRevision, ...] = ()
+    source_filing_records: tuple[ModeloRecord, ...] = ()
 
     if command.scope in (SandboxMergeScope.LEDGER, SandboxMergeScope.ALL):
         with profile_storage_session(command.source_bucket_id):
             source_transactions = tuple(TransactionCatalogueRepository(bucket_id=command.source_bucket_id).load())
-        if source_transactions:
-            with profile_storage_session(command.target_bucket_id):
-                target_repo = TransactionCatalogueRepository(bucket_id=command.target_bucket_id)
-                existing = target_repo.load()
-                merged: dict[str, Transaction] = dict(existing.transactions)
-                for transaction in source_transactions:
-                    merged[transaction.transaction_id] = transaction
-                target_repo.save(TransactionCatalogue(transactions=merged))
         merged_counts["ledger_transactions"] = len(source_transactions)
 
     if command.scope in (SandboxMergeScope.MODELO, SandboxMergeScope.ALL):
@@ -659,59 +663,85 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
             )
             source_filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=command.source_bucket_id).load())
 
-        with profile_storage_session(command.target_bucket_id):
-            if source_work_units:
-                work_unit_repo = WorkUnitCatalogueRepository(bucket_id=command.target_bucket_id)
-                catalogue = work_unit_repo.load()
-                for unit in source_work_units:
-                    catalogue = upsert_work_unit(catalogue, unit)
-                work_unit_repo.save(catalogue)
-            if source_revisions:
-                revision_repo = CalculationRevisionCatalogueRepository(bucket_id=command.target_bucket_id)
-                revision_catalogue = revision_repo.load()
-                for revision in source_revisions:
-                    revision_catalogue = upsert_calculation_revision(revision_catalogue, revision)
-                revision_repo.save(revision_catalogue)
-            if source_filing_records:
-                filing_repo = ModeloRecordCatalogueRepository(bucket_id=command.target_bucket_id)
-                filing_catalogue = filing_repo.load()
-                for record in source_filing_records:
-                    filing_catalogue = upsert_filing_record(filing_catalogue, record)
-                filing_repo.save(filing_catalogue)
-
         merged_counts["work_units"] = len(source_work_units)
         merged_counts["calculation_revisions"] = len(source_revisions)
         merged_counts["filing_records"] = len(source_filing_records)
 
-    occurred_at = now()
-    payload = {
-        "source_bucket_id": command.source_bucket_id,
-        "source_label": source_pointer.label,
-        "scope": command.scope.value,
-        **{f"merged.{category}": str(count) for category, count in merged_counts.items()},
-    }
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
+    with profile_storage_session(command.target_bucket_id):
+        writes: list[SecureObjectWrite] = []
+        transaction_repository: TransactionCatalogueRepository | None = None
+        merged_transactions: TransactionCatalogue | None = None
+
+        if source_transactions:
+            transaction_repository = TransactionCatalogueRepository(bucket_id=command.target_bucket_id)
+            existing_transactions = transaction_repository.load()
+            merged_transaction_rows: dict[str, Transaction] = dict(existing_transactions.transactions)
+            for transaction in source_transactions:
+                merged_transaction_rows[transaction.transaction_id] = transaction
+            merged_transactions = TransactionCatalogue(transactions=merged_transaction_rows)
+
+        if source_work_units:
+            work_unit_repository = WorkUnitCatalogueRepository(bucket_id=command.target_bucket_id)
+            work_unit_catalogue = work_unit_repository.load()
+            for unit in source_work_units:
+                work_unit_catalogue = upsert_work_unit(work_unit_catalogue, unit)
+            writes.append(work_unit_repository.to_secure_object_write(work_unit_catalogue))
+
+        if source_revisions:
+            revision_repository = CalculationRevisionCatalogueRepository(bucket_id=command.target_bucket_id)
+            revision_catalogue = revision_repository.load()
+            for revision in source_revisions:
+                revision_catalogue = upsert_calculation_revision(revision_catalogue, revision)
+            writes.append(revision_repository.to_secure_object_write(revision_catalogue))
+
+        if source_filing_records:
+            filing_repository = ModeloRecordCatalogueRepository(bucket_id=command.target_bucket_id)
+            filing_catalogue = filing_repository.load()
+            for record in source_filing_records:
+                filing_catalogue = upsert_filing_record(filing_catalogue, record)
+            # ``to_secure_object_write`` performs the target-bucket ownership
+            # check before any write is submitted. A sandbox filing record is
+            # intentionally foreign to its promotion target, so this refusal
+            # leaves every prepared sibling catalogue untouched.
+            writes.append(filing_repository.to_secure_object_write(filing_catalogue))
+
+        occurred_at = now()
+        payload = {
+            "source_bucket_id": command.source_bucket_id,
+            "source_label": source_pointer.label,
+            "scope": command.scope.value,
+            **{f"merged.{category}": str(count) for category, count in merged_counts.items()},
+        }
+        event = BucketEvent(
+            event_id=derive_bucket_event_id(
+                bucket_id=command.target_bucket_id,
+                event_type=BucketEventType.BUCKET_MERGED,
+                occurred_at=occurred_at,
+                actor="bucket-maintenance",
+                object_type=BucketEventObjectType.BUCKET,
+                object_id=command.target_bucket_id,
+                payload=payload,
+            ),
             bucket_id=command.target_bucket_id,
             event_type=BucketEventType.BUCKET_MERGED,
             occurred_at=occurred_at,
             actor="bucket-maintenance",
             object_type=BucketEventObjectType.BUCKET,
             object_id=command.target_bucket_id,
+            payload_version=1,
             payload=payload,
-        ),
-        bucket_id=command.target_bucket_id,
-        event_type=BucketEventType.BUCKET_MERGED,
-        occurred_at=occurred_at,
-        actor="bucket-maintenance",
-        object_type=BucketEventObjectType.BUCKET,
-        object_id=command.target_bucket_id,
-        payload_version=1,
-        payload=payload,
-    )
-    with profile_storage_session(command.target_bucket_id):
-        event_repository = BucketMaintenanceService._event_repository_for_bucket(command.target_bucket_id)
-        event_repository.save(append_bucket_event(event_repository.load(), event))
+        )
+        event_repository = BucketEventHistoryRepository()
+        writes.append(event_repository.to_secure_object_write(append_bucket_event(event_repository.load(), event)))
+
+        # Preparation above validates every affected target catalogue before
+        # this one commit. In particular, a foreign sandbox filing cannot
+        # leave a work unit, calculation revision, ledger row, or merge event
+        # durable after the command refuses.
+        if transaction_repository is not None and merged_transactions is not None:
+            transaction_repository.save_with_secure_object_writes(merged_transactions, tuple(writes))
+        else:
+            event_repository.secure_object_repository.save_many(tuple(writes))
 
     return MergeSandboxResult(
         source_bucket_id=command.source_bucket_id,

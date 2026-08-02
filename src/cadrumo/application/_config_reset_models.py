@@ -15,6 +15,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ..core import STRICT_FROZEN_CONFIG
+from ..core.identity import BucketId
 from ..core.time import validate_utc_aware
 from ..domain.user_profile import UserProfileStatus
 from ._bucket_deletion_contracts import BucketDeletionFingerprint
@@ -58,7 +59,7 @@ class ConfigResetPointerSnapshot(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     present: bool
-    bucket_id: str | None = Field(default=None, min_length=1)
+    bucket_id: BucketId | None = None
     content_sha256: str | None = Field(
         default=None,
         min_length=64,
@@ -112,7 +113,7 @@ class ConfigResetDeletionMarker(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     operation_id: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     fingerprint: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
     marked_at: datetime
 
@@ -130,7 +131,7 @@ class ConfigResetTarget(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     label: str | None = Field(default=None, min_length=1, max_length=160)
     status_at_snapshot: UserProfileStatus | None = None
     exists_at_snapshot: bool
@@ -213,7 +214,7 @@ class ConfigResetOperation(BaseModel):
     pointer_snapshot: ConfigResetPointerSnapshot
     targets: tuple[ConfigResetTarget, ...]
     pause_reason: ConfigResetPauseReason | None = None
-    paused_target_ids: tuple[str, ...] = ()
+    paused_target_ids: tuple[BucketId, ...] = ()
     summary: ConfigResetSummary | None = None
 
     @model_validator(mode="after")

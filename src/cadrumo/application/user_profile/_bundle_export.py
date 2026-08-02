@@ -59,13 +59,13 @@ from ._bundle_export_operation import (
     ProfileBundleExportOperation,
     ProfileBundleExportOperationStatus,
     derive_export_operation_id,
+    is_canonical_profile_export_staged_path,
+    profile_export_staged_path,
 )
 
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfilePortableExport
     from ..workflow import ProfileBucketPointer
-
-_STAGED_TEMP_SUFFIX = ".export-tmp"
 
 # The hardened writer stages through its own inner sibling before the rename;
 # see :func:`_orphan_staged_paths` for why recovery must reach it too.
@@ -506,7 +506,11 @@ def _staged_temp_path(destination: Path) -> Path:
     journal be recorded BEFORE any cleartext exists, naming the exact path the
     staging is about to create.
     """
-    return destination.with_name(f"{destination.name}.{os.getpid()}.{secrets.token_hex(4)}{_STAGED_TEMP_SUFFIX}")
+    return profile_export_staged_path(
+        destination,
+        process_id=os.getpid(),
+        nonce=secrets.token_hex(4),
+    )
 
 
 def _stage_export_tempfile(staged_path: Path, data: bytes) -> None:
@@ -561,8 +565,9 @@ def _orphan_staged_paths(operation: ProfileBundleExportOperation) -> tuple[Path,
     name and a literal ``[`` in it would otherwise be read as a glob character
     class and silently match nothing.
     """
+    destination = Path(operation.destination)
     staged = Path(operation.staged_path)
-    if str(staged) == operation.destination or not staged.name.endswith(_STAGED_TEMP_SUFFIX):
+    if not is_canonical_profile_export_staged_path(destination, staged):
         return ()
     candidates = [staged]
     parent = staged.parent

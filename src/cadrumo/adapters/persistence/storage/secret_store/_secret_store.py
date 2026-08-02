@@ -2,9 +2,10 @@
 
 Layered on top of :class:`adapters.persistence.storage.blob_store.EncryptedBlobStore`
 and :func:`core.locks.exclusive_file_lock`, the store persists
-short-lived bearer state (:class:`SensitivityClass` SESSION) and long-lived
-authentication material (:class:`SensitivityClass` SECRET) under a stable
-string key. Each record is wrapped in an
+short-lived bearer state and long-lived authentication material under a
+stable string key. ``SECRET_STORE_CLASSES`` below is the one statement of
+which sensitivity classes those are; every refusal and docstring here reads
+it rather than restating it. Each record is wrapped in an
 :class:`adapters.persistence.storage.envelope.Envelope` of
 :class:`SecretRecord`, encrypted via the blob store's per-record DEK wrapped
 by the active :class:`MasterKeyProvider` using AES-256-GCM, and indexed by
@@ -83,10 +84,18 @@ SECRET_STORE_CLASSES: Final[frozenset[SensitivityClass]] = frozenset(
 
 
 def _validated_secret_class(value: SensitivityClass, *, subject: str) -> SensitivityClass:
-    """Return ``value`` if it is a class this store may persist."""
+    """Return ``value`` if it is a class this store may persist.
+
+    The refusal names the accepted set by reading it, rather than restating it
+    as prose. The message previously read "must be SECRET or SESSION" while the
+    test above it was ``value not in SECRET_STORE_CLASSES`` -- two statements of
+    one closed set, so widening the set would have left the operator holding a
+    refusal that contradicted the code raising it.
+    """
     if value not in SECRET_STORE_CLASSES:
+        accepted = ", ".join(sorted(member.name for member in SECRET_STORE_CLASSES))
         raise StorageValidationError(
-            f"{subject} must be SECRET or SESSION",
+            f"{subject} must be one of {accepted}",
             translated_message="errors.integrity.integrity_storage_validation",
         )
     return value
@@ -99,11 +108,10 @@ class SecretRecord(BaseModel):
         key: Operator-facing natural key (e.g. ``aeat:google:oauth-token``).
         value: Secret payload as raw bytes. Plaintext on the API surface
             only; the blob store encrypts before write.
-        classification: Sensitivity class. Must be
-            :attr:`core.classification.SensitivityClass.SECRET` or
-            :attr:`core.classification.SensitivityClass.SESSION`;
-            other classes are rejected by the field validator at
-            construction time.
+        classification: Sensitivity class. Must be a member of
+            ``SECRET_STORE_CLASSES``, which is the one statement of that
+            closed set; other classes are rejected by the field validator
+            at construction time.
         metadata: Operator-supplied non-secret tags (e.g. operator
             email, issued_by, scope). Stringified key/value entries
             only.
@@ -166,10 +174,10 @@ class _SecretIndexEntry(BaseModel):
     def _check_class(cls, value: SensitivityClass) -> SensitivityClass:
         """Hold the index to the same closed set the record itself allows.
 
-        ``SecretRecord`` accepts only SECRET or SESSION, but the index row
-        describing it accepted the whole ``SensitivityClass`` enum -- so the
-        index could name a class no record in this store can ever have, and
-        the blob layout was then routed from that value.
+        ``SecretRecord`` accepts only ``SECRET_STORE_CLASSES``, but the index
+        row describing it accepted the whole ``SensitivityClass`` enum -- so
+        the index could name a class no record in this store can ever have,
+        and the blob layout was then routed from that value.
         """
         return _validated_secret_class(value, subject="_SecretIndexEntry.classification")
 

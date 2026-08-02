@@ -104,6 +104,21 @@ class CadrumoError(Exception):
     ) -> None:
         """Construct a domain error with optional structured metadata.
 
+        A ``translated_message``-only construction still carries readable text:
+        without the fallback below ``super().__init__()`` is called with zero
+        args, so ``str(exc)`` is the empty string — not untranslated, empty.
+        Most operator-facing surfaces route through
+        :func:`resolve_error_message`, which resolves the translation key and is
+        unaffected either way, but a bare ``str(exc)`` reaches operators at
+        several CLI boundaries and reaches everyone in tracebacks and logs, and
+        an error with no readable text gives whoever meets it nothing to act on.
+
+        The fallback stores the translation KEY rather than its translation on
+        purpose. Calling ``tr`` here would bind the text to the locale in force
+        at RAISE time, while :func:`resolve_error_message` deliberately
+        translates at RENDER time; the key is also a stable, greppable
+        identifier in a log where prose would vary by locale.
+
         Args:
             message: Optional human-readable message override.
             context: Optional structured context that can be redacted and
@@ -111,10 +126,7 @@ class CadrumoError(Exception):
             suggestion: Optional copy-paste recovery command override.
             translated_message: Optional multilingual message override.
         """
-        if message is None:
-            super().__init__()
-        else:
-            super().__init__(message)
+        super().__init__(message or translated_message or "")
         self.context: dict[str, object] | None = dict(context) if context is not None else None
         self.suggestion: str | None = suggestion
         self.translated_message: str | None = translated_message

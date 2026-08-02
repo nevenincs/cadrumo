@@ -103,12 +103,23 @@ def get_remote_mirror_namespace_manifest(
     except OutboundStorageNotFoundError:
         return None
     try:
-        return RemoteMirrorNamespaceManifest.model_validate_json(payload)
+        manifest = RemoteMirrorNamespaceManifest.model_validate_json(payload)
     except ValidationError as exc:
         raise OutboundStorageIntegrityError(
             f"remote mirror manifest for namespace {namespace!r} is malformed",
             context={"namespace": namespace},
         ) from exc
+    if manifest.manifest_schema_version != REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION:
+        raise OutboundStorageIntegrityError(
+            f"remote mirror manifest for namespace {namespace!r} uses unsupported schema version "
+            f"{manifest.manifest_schema_version}",
+            context={
+                "namespace": namespace,
+                "manifest_schema_version": manifest.manifest_schema_version,
+                "supported_manifest_schema_version": REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
+            },
+        )
+    return manifest
 
 
 def inspect_remote_mirror_upload(

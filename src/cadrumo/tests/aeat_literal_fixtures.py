@@ -46,6 +46,26 @@ LIVE_PARITY_STATE_CREATING_PATH_CANARIES = (
     "/wlpl/PRET/transmision-fichero",
     "/wlpl/PRET/transmitir",
 )
+# Real AEAT write surfaces independently corroborating a specific
+# AEAT_WRITE_FORBIDDEN_VERB_TOKENS entry, beyond the TGVI/PRET family above.
+# Each path is a genuine AEAT-published surface, not a synthetic canary shape:
+# ``RealizarPresentacionLotes`` is the batch-presentation endpoint named in
+# ``2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr``;
+# the cancellation path is this project's own deployed Clave Movil
+# configuration (``core/external_constants.toml``); the payment path is quoted
+# verbatim from the bundled AEAT Manual Practico de Sociedades 2024 PDF. Most
+# tokens in AEAT_WRITE_FORBIDDEN_VERB_TOKENS have NO comparable witness today
+# -- see the token-witness split recorded against this task.
+WRITE_VERB_WITNESS_PRESENTACION_PATH_CANARY = "/wlpl/OVPT-NTGV/RealizarPresentacionLotes"
+WRITE_VERB_WITNESS_CANCELAR_PATH_CANARY = _AEAT.clave_movil.cancelar_clave_movil_path
+WRITE_VERB_WITNESS_PAGAR_PATH_CANARY = (
+    "/Sede/deudas-apremios-embargos-subastas/pagar-aplazar-consultar/pagos-transferencias-especial-extranjero.html"
+)
+AEAT_WRITE_VERB_TOKEN_WITNESS_PATH_CANARIES = (
+    WRITE_VERB_WITNESS_PRESENTACION_PATH_CANARY,
+    WRITE_VERB_WITNESS_CANCELAR_PATH_CANARY,
+    WRITE_VERB_WITNESS_PAGAR_PATH_CANARY,
+)
 # The censal consulta page reaches these three write surfaces through its own
 # buttons and links. They are declared here so the censal reader's no-write
 # proof can assert the landing guard refuses the paths that genuinely exist.
@@ -156,6 +176,7 @@ __all__ = [
     "AEAT_LEGACY_APEX_CANARY",
     "AEAT_LEGACY_SEDE_CANARY",
     "AEAT_LITERAL_SCAN_TOKENS",
+    "AEAT_WRITE_VERB_TOKEN_WITNESS_PATH_CANARIES",
     "AUTH_DIAGNOSTIC_PATH_FIXTURE",
     "BORRADOR_STORAGE_PATH_FIXTURE",
     "CENSAL_M036_FILING_TOOL_PATH_CANARY",
@@ -190,6 +211,9 @@ __all__ = [
     "UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY",
     "UNCLASSIFIED_WWW2_READ_PATH_CANARY",
     "UNKNOWN_AEAT_STATE_SURFACE_URL_CANARY",
+    "WRITE_VERB_WITNESS_CANCELAR_PATH_CANARY",
+    "WRITE_VERB_WITNESS_PAGAR_PATH_CANARY",
+    "WRITE_VERB_WITNESS_PRESENTACION_PATH_CANARY",
     "aeat_host",
     "aeat_url",
     "configured_path",

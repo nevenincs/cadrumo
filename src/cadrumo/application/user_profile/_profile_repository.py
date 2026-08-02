@@ -37,7 +37,7 @@ from __future__ import annotations
 import secrets
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -85,11 +85,12 @@ from . import (
     RenameProfileCommand,
 )
 from ._aggregate import ProfileAggregate
-from ._integrity import verify_profile_integrity
+from ._integrity import ProfileIntegrityError, verify_profile_integrity
 from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
 from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
 
 if TYPE_CHECKING:
+    from ...adapters.persistence.storage.bucket import BucketPaths
     from ...domain.buckets import BucketEvent
     from ._lifecycle import ProfileLifecycleService
 
@@ -308,10 +309,7 @@ class ProfileRepository:
             # manifest, is a refusal. No store was written, so there is
             # nothing to roll back.
             if manifest_path(paths).is_file():
-                raise ProfileNotFoundError(
-                    translated_message="application.user_profile.errors.profile_manifest_already_registered",
-                    context={"profile": resolved_id, "bucket_dir": paths.bucket_dir},
-                )
+                self._refuse_create_onto_registered_bucket(resolved_id, paths)
             self._refuse_duplicate_label(label)
             if enforce_unique_tax_id:
                 self._refuse_duplicate_tax_id(facts)
@@ -852,6 +850,49 @@ class ProfileRepository:
 
     # ── helpers ────────────────────────────────────────────────────
 
+    def _refuse_create_onto_registered_bucket(self, resolved_id: str, paths: BucketPaths) -> NoReturn:
+        """Refuse a create onto an existing bucket, naming the real condition.
+
+        The refusal itself is not in question -- a bucket that already carries
+        a manifest is never created over. What this decides is WHICH refusal
+        the operator sees, and "already registered" is the wrong answer when
+        the two stores disagree about the profile.
+
+        That case is reachable without tampering. ``complete_setup`` writes the
+        encrypted record first and the plaintext manifest second, so an
+        interruption between them leaves the mirror saying ``setup_incomplete``
+        over an ``ACTIVE`` record. The wizard's create-mode resolver reads that
+        mirror, resolves to the existing bucket, and arrives here -- where the
+        operator was told their profile was not found, about a profile that
+        demonstrably exists, with nothing naming the divergence. The resume
+        path already reports this honestly; this makes the create path agree.
+
+        ``load`` is the one caller of
+        :func:`~cadrumo.application.user_profile._integrity.verify_profile_integrity`,
+        so consulting it here reuses the existing authority rather than adding
+        a second comparison beside it. When it cannot answer -- a locked
+        bucket, absent key material -- the refusal below still stands and only
+        its precision is lost, so nothing is admitted that would otherwise
+        have been refused.
+        """
+        try:
+            self.load(resolved_id)
+        except ProfileIntegrityError:
+            # Ordered first: this subclasses ProfileNotFoundError, which the
+            # broader arm below also catches. Reversed, the divergence would
+            # be reported as the generic refusal it exists to replace.
+            raise
+        except (CadrumoError, OSError, ValidationError):
+            _log.debug(
+                "create refusal could not determine store agreement for bucket profile_id=%s",
+                redact_for_cli_output(resolved_id),
+                exc_info=True,
+            )
+        raise ProfileNotFoundError(
+            translated_message="application.user_profile.errors.profile_manifest_already_registered",
+            context={"profile": resolved_id, "bucket_dir": paths.bucket_dir},
+        )
+
     def _refuse_duplicate_label(self, label: str) -> None:
         """Refuse a create whose label is already carried by a live profile.
 
@@ -889,15 +930,19 @@ class ProfileRepository:
         from ._orchestration import ProfileAlreadyRegisteredError
 
         for summary in self.list():
-            # A tombstoned profile has left the live surface; its tax id
-            # is free to reuse, exactly as its display name is.
-            if summary.status is UserProfileStatus.TOMBSTONED:
-                continue
             try:
                 from ._orchestration import profile_storage_session
 
                 with profile_storage_session(summary.profile_id):
-                    aggregate = self.load(summary.profile_id)
+                    # The RECORD, not the aggregate. ``load`` additionally
+                    # asserts manifest-versus-record integrity and refuses the
+                    # whole profile when they disagree -- and that refusal
+                    # would be caught by the handler below and turned into a
+                    # skip, which is precisely how a drifted profile escapes
+                    # this scan. The scan needs the record's own status and
+                    # facts; it does not need the manifest's label or the
+                    # directory-name check.
+                    record = self._lifecycle_repository(summary.profile_id).load(summary.profile_id)
             except (CadrumoError, OSError, ValidationError) as exc:
                 # One torn / unreadable bucket must not prevent an operator
                 # from registering a completely different taxpayer. Emit an
@@ -911,7 +956,17 @@ class ProfileRepository:
                 )
                 _log.debug("tax-id uniqueness scan skipped unreadable profile", exc_info=True)
                 continue
-            existing_tax_id = _canonical_tax_id(aggregate.record.facts)
+            # A tombstoned profile has left the live surface; its tax id is
+            # free to reuse, exactly as its display name is. The status is
+            # read from the decrypted record and the skip happens AFTER the
+            # load, deliberately. Skipping on the plaintext manifest mirror
+            # decided this on unverified data and, for a profile it skipped,
+            # meant the record was never read at all -- so a manifest saying
+            # tombstoned over an active record hid a live taxpayer from the
+            # scan and admitted the duplicate.
+            if record.status is UserProfileStatus.TOMBSTONED:
+                continue
+            existing_tax_id = _canonical_tax_id(record.facts)
             if existing_tax_id is not None and existing_tax_id == new_tax_id:
                 raise ProfileAlreadyRegisteredError(
                     translated_message="application.user_profile.errors.duplicate_tax_id",

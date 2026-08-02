@@ -11,6 +11,7 @@ import pytest
 from ......core.classification import SensitivityClass
 from ......core.config import Settings
 from ......tests.master_key import EphemeralMasterKeyProvider
+from ......tests.path_obstruction import obstructed_path
 from ...errors import SecretNotFoundError, StorageValidationError
 from ...secret_store import SecretRecord, SecretStore
 from .. import EncryptedBlobStore
@@ -226,14 +227,13 @@ class TestExportToTempPath:
     def test_cleanup_retries_after_unlink_failure(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:cleanup-retry", b"payload")
         path, cleanup = export_to_temp_path("aeat:test:cleanup-retry", store=secret_store)
-        path.unlink()
-        path.mkdir()
 
-        with pytest.raises(OSError):
+        with obstructed_path(path), pytest.raises(OSError):
             cleanup()
 
-        assert path.is_dir()
-        path.rmdir()
+        # The obstruction restored the exported file it displaced, so the
+        # retry has something real to remove rather than succeeding because
+        # the path happened to be empty.
         cleanup()
         cleanup()
         assert not path.exists()

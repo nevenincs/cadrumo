@@ -320,6 +320,9 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
         és próbálja újra.
+      landing_unreadable: 'Az AEAT-olvasás elutasítva, mert a betöltött oldalnak nincs olvasható címe, így nem állapítható meg, hol kötött ki a munkamenet. Jelentkezz be újra, és próbáld meg ismét.'
+      landing_off_policy: 'Az AEAT-olvasás elutasítva, mert a betöltött oldal kívül esik a felület engedélyezett kiszolgálóin, vagy írási műveletet nevez meg.'
+      landing_off_read_pages: 'Az AEAT-olvasás elutasítva, mert olyan oldalra érkezett, amelyet ez az olvasó nem olvas; ez az olvasó soha nem jut el AEAT-benyújtási oldalra.'
 aggregation:
   grouping:
     errors:
@@ -1495,7 +1498,6 @@ application:
       lifecycle_profile_already_exists: Már létezik profil az aktív bucketben.
       lifecycle_profile_not_tombstoned: A profil nincs törölve; az újraaktiválás elutasítja
         az élő profilt.
-      lifecycle_profile_tombstoned_duplicate: Törölt profil nem duplikálható.
       lifecycle_profile_tombstoned_rename: Törölt profil nem nevezhető át.
       lifecycle_schema_validation_failed: A profiladatok nem felelnek meg a felhasználóiprofil-sémának.
       no_active_profile_selected: Nincs kiválasztva aktív profil.

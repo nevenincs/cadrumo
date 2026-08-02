@@ -60,7 +60,7 @@ from ...core import (
 )
 from ...core.atomic_write import atomic_write_bytes
 from ...core.decimal import coerce_decimal
-from ...core.hashing import sha256_file, sha256_hex
+from ...core.hashing import hash_file, sha256_file, sha256_hex
 from ...core.logging import get_logger
 from ...core.money import round_to_cents
 from ...core.time import now
@@ -153,11 +153,12 @@ class DeclaracionExportResult(BaseModel):
         format: The on-disk wire format (closed
             :class:`DeclaracionExportFormat`).
         output_path: Absolute path the file was written to.
-        byte_size: Size of the written content in bytes; matches
-            ``output_path.stat().st_size`` at write time.
-        file_sha256: Hex-encoded SHA-256 digest of the written bytes.
-            Used by :class:`DeclaracionVerifyResult` to anchor the
-            file-vs-draft comparison.
+        byte_size: Size of the written content in bytes. Bound to the
+            artefact by :func:`assert_export_artifact_matches_receipt`, not
+            merely asserted about it.
+        file_sha256: Hex-encoded SHA-256 digest of the written bytes, bound
+            to the artefact by the same check. Anchors the operator's later
+            file-vs-draft comparison and the durable export bucket event.
         exported_at: UTC timestamp of when the file was written.
         narrative: Translation key for operator-facing summary.
         casilla_provenance: Regulatory grounding for the draft casillas
@@ -347,7 +348,7 @@ def export_draft(
         )
     atomic_write_bytes(output_path, payload)
     digest = sha256_hex(payload)
-    return DeclaracionExportResult(
+    receipt = DeclaracionExportResult(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
@@ -359,6 +360,63 @@ def export_draft(
         narrative="filing.export.written",
         casilla_provenance=casilla_provenance,
     )
+    assert_export_artifact_matches_receipt(receipt, artifact_path=output_path)
+    return receipt
+
+
+def assert_export_artifact_matches_receipt(
+    receipt: DeclaracionExportResult,
+    *,
+    artifact_path: Path,
+) -> None:
+    """Refuse an artefact whose bytes do not reproduce ``receipt``'s metadata.
+
+    ``byte_size`` and ``file_sha256`` are measured from the payload the
+    renderer holds, but they are *published* as facts about a file. Those are
+    two different things, and nothing compared them: every field was
+    individually well-formed -- a real digest over real bytes, a non-negative
+    length -- so a receipt could truthfully describe a payload that is not the
+    file it points at, and no shape constraint could see it. The pair is also
+    copied into the durable ``MODELO_EXPORTED`` bucket event, where a wrong
+    number outlives the artefact it describes.
+
+    :class:`~application.export.TabularExportResult` answers the same question
+    inside a model validator because that result *carries* its payload. A
+    filing receipt carries a :class:`~pathlib.Path` instead, so the binding has
+    to read the artefact -- which a frozen transport model must not do on every
+    construction, including when one is rehydrated from JSON long after the
+    file moved or was consumed by an atomic rename. Hence a check the writers
+    call, not a validator the model runs.
+
+    Both export writers route through here, each supplying the path it
+    legitimately knows -- the draft renderer the file it just wrote, the
+    work-unit service the destination it renamed into place -- so the binding
+    is one invariant rather than two conventions.
+
+    Args:
+        receipt: The receipt whose declared metadata is being bound.
+        artifact_path: The file the caller claims ``receipt`` describes.
+
+    Raises:
+        FilingExportError: The artefact is absent or unreadable, or its byte
+            count or digest does not reproduce the receipt's declared values.
+    """
+    try:
+        digest, byte_size = hash_file(artifact_path)
+    except OSError as exc:
+        raise FilingExportError(
+            f"declaration export receipt names an unreadable artefact {str(artifact_path)!r}: {exc}",
+        ) from exc
+    if byte_size != receipt.byte_size:
+        raise FilingExportError(
+            f"declaration export receipt declares byte size {receipt.byte_size} "
+            f"but artefact {str(artifact_path)!r} holds {byte_size} bytes",
+        )
+    if digest != receipt.file_sha256:
+        raise FilingExportError(
+            f"declaration export receipt declares sha256 {receipt.file_sha256} "
+            f"but artefact {str(artifact_path)!r} hashes to {digest}",
+        )
 
 
 def export_layout_renderability_reason(
@@ -976,6 +1034,7 @@ __all__ = [
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
+    "assert_export_artifact_matches_receipt",
     "export_draft",
     "render_layout",
     "verify_export",

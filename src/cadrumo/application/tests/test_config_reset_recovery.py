@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -255,3 +256,60 @@ def test_every_durable_boundary_rolls_forward_in_a_fresh_process(
         assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
         assert pointer_path(root).exists() is False
         assert repository.load(interrupted.operation_id) == resumed
+
+
+def test_fresh_resume_canonicalizes_journal_bucket_identity_before_target_lock(
+    tmp_path: Path,
+) -> None:
+    """A whitespace-bearing durable identity resumes under its canonical lock key."""
+    from ...adapters.persistence.storage.bucket import bucket_paths
+    from .._config_reset_models import ConfigResetOperation, ConfigResetOperationStatus
+    from .._config_reset_repository import ConfigResetJournalRepository
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+        crashed = _run_crashing_start(root, "retention_approved")
+        assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
+
+        repository = ConfigResetJournalRepository()
+        interrupted = repository.latest()
+        assert interrupted is not None
+        journal_path = repository.path_for(interrupted.operation_id)
+        document = json.loads(journal_path.read_text(encoding="utf-8"))
+        document["targets"][0]["bucket_id"] = f" {_PROFILE_A_ID} "
+        journal_path.write_text(json.dumps(document), encoding="utf-8")
+
+        resumed_process = _run_fresh_resume(root, interrupted.operation_id)
+        resumed = ConfigResetOperation.model_validate_json(resumed_process.stdout)
+
+        assert resumed.status is ConfigResetOperationStatus.COMPLETE
+        assert resumed.targets[0].bucket_id == _PROFILE_A_ID
+        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.exists() is False
+
+
+def test_resume_refuses_malformed_journal_identity_before_target_lock(
+    tmp_path: Path,
+) -> None:
+    """An invalid journal target is an application error before deletion can start."""
+    from ...adapters.persistence.storage.bucket import bucket_paths
+    from .._config_reset_repository import ConfigResetJournalRepository
+    from ..config_reset import ConfigResetError, resume_config_reset
+
+    with _isolated_reset_root(tmp_path) as root:
+        _create_profile(_PROFILE_A_ID, label="Recovery operator", tax_id="00000000T")
+        crashed = _run_crashing_start(root, "retention_approved")
+        assert crashed.returncode == _CRASH_EXIT_CODE, (crashed.stdout, crashed.stderr)
+
+        repository = ConfigResetJournalRepository()
+        interrupted = repository.latest()
+        assert interrupted is not None
+        journal_path = repository.path_for(interrupted.operation_id)
+        document = json.loads(journal_path.read_text(encoding="utf-8"))
+        document["targets"][0]["bucket_id"] = "x" * 129
+        journal_path.write_text(json.dumps(document), encoding="utf-8")
+
+        with pytest.raises(ConfigResetError, match="configuration reset journal is corrupt") as raised:
+            resume_config_reset(interrupted.operation_id, confirmed=True)
+
+        assert raised.value.context == {"operation_id": interrupted.operation_id}
+        assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()

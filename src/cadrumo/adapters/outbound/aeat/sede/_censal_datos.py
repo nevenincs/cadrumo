@@ -65,6 +65,7 @@ from ..browser import BrowserSession, DefaultBrowserSession, default_browser_ses
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from ._walker import assert_landed_url_readable
 
 if TYPE_CHECKING:
     from ..auth import AeatSession
@@ -559,6 +560,18 @@ def censal_datos_url(taxpayer_nif: str, *, origin: str) -> str:
     return f"{origin}{_CENSAL_PATH}?nifRepresentado={quote(taxpayer_nif, safe='')}&E_HNR=&EJERCICIO=0"
 
 
+def _censal_landing_url(page: Page, *, requested_url: str) -> str:
+    """Return the URL AEAT actually served, refusing an unreadable landing.
+
+    Mirrors :func:`_walker.assert_landed_url_readable`: an empty or otherwise
+    unreadable ``page.url`` must not be silently substituted with the
+    originally-requested URL -- see that function's own docstring for the
+    fail-open bug this shape used to reproduce (the re-assertion after a
+    ``goto`` skipped entirely when the landed URL was empty).
+    """
+    return assert_landed_url_readable(getattr(page, "url", "") or "", requested_url=requested_url)
+
+
 async def _navigate_and_parse(
     storage_state: Mapping[str, object],
     *,
@@ -583,7 +596,7 @@ async def _navigate_and_parse(
         # Follow the redirect chain rather than trusting the requested URL:
         # re-assert the host AEAT actually served, then refuse outright if
         # that landing is a censal modification surface.
-        landing_url = getattr(page, "url", "") or url
+        landing_url = _censal_landing_url(page, requested_url=url)
         landing = urlsplit(landing_url)
         _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
         _assert_read_landing(landing_url)

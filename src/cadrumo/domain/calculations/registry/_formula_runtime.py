@@ -43,6 +43,7 @@ from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._casilla_membership import duplicate_casilla_ids
 from ._convenio import ConvenioAuthority
 from ._errors import CasillaConstraintViolationError, RegistryValidationError
+from ._formula_operator_contracts import require_formula_operator_arity
 from ._formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
 )
@@ -618,6 +619,7 @@ def _evaluate_expression(
     if expression.op is None:
         return _evaluate_leaf(expression, ctx)
     op = expression.op
+    require_formula_operator_arity(op, len(expression.args))
     if op == "lookup_bracket":
         return _evaluate_lookup_bracket(expression, ctx)
     if op == "lookup_bracket_by_ccaa":

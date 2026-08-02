@@ -378,24 +378,20 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
             assert plaintext.encode("utf-8") not in database_bytes
 
 
-def test_list_profiles_returns_the_bucket_s_own_profile(
+def test_register_refuses_a_second_foreign_profile_in_one_bucket(
     secure_objects: SecureObjectRepository,
     schema: ProfileSchemaDefinition,
 ) -> None:
-    """A bucket holds one live profile, and the listing reports exactly it.
+    """A bucket holds one live profile; the ownership guard refuses a second.
 
     This previously registered TWO profiles into one bucket and asserted they
-    came back sorted. That shape is not reachable: a bucket holds exactly one
-    live profile-value record by the storage contract this module documents,
-    each profile is provisioned into its own bucket, and the ownership guard
-    now refuses the second registration outright -- which is what the second
-    half of this test pins.
-
-    The multi-row sorting it used to exercise had no production caller to
-    serve. ``ProfileLifecycleService.list_profiles`` has none at all: the
-    operator's profile listing scans bucket directories rather than calling
-    it. Left in place rather than deleted, because removing a public service
-    method is a wider decision than this guard.
+    came back sorted from a listing. That shape is not reachable: a bucket
+    holds exactly one live profile-value record by the storage contract this
+    module documents, each profile is provisioned into its own bucket, and the
+    ownership guard refuses the second registration outright -- which is what
+    survives here. The listing half went with
+    ``ProfileLifecycleService.list_profiles``, which had no production caller:
+    the operator's profile listing scans bucket directories instead.
     """
     svc = _service(secure_objects, schema)
     svc.register(
@@ -405,10 +401,6 @@ def test_list_profiles_returns_the_bucket_s_own_profile(
             facts=_all_required_facts(schema),
         ),
     )
-
-    listing = svc.list_profiles()
-
-    assert tuple(row.profile_id for row in listing.profiles) == (_PROFILE_BUCKET_ID,)
 
     with pytest.raises(ProfileBucketMismatchError):
         svc.register(
@@ -483,8 +475,6 @@ def test_register_setup_incomplete_persists_the_status(
     )
     record = service.read(_PROFILE_BUCKET_ID)
     assert record.status is UserProfileStatus.SETUP_INCOMPLETE
-    listed = service.list_profiles().profiles
-    assert [row.status for row in listed] == [UserProfileStatus.SETUP_INCOMPLETE]
 
 
 def test_register_refuses_a_tombstoned_birth() -> None:

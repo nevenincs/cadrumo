@@ -193,6 +193,31 @@ class OutputRootSchema[RootT](RootModel[RootT]):
     model_config = _STRICT_ROOT_CONFIG
 
 
+def strict_round_trip[ModelT: BaseModel](cls: type[ModelT], obj: BaseModel) -> ModelT:
+    """Project *obj* into *cls* through a genuine JSON-text round trip.
+
+    ``cls.model_validate(obj.model_dump(mode="json"))`` reads as a round trip
+    but is not one under strict pydantic v2 validation: ``model_dump(mode="json")``
+    projects a ``StrEnum`` to its bare string, a ``datetime`` to its isoformat
+    string, and a ``tuple`` to a JSON array, and ``model_validate`` on the
+    resulting plain ``dict`` does not coerce any of those back to their native
+    type -- only ``model_validate_json``'s genuine JSON-text parse gets that
+    leniency. A model that gains one of those field types after its call sites
+    were written breaks silently at the two-step dict form with no local signal
+    at the call site itself.
+
+    Use this helper (or call ``cls.model_validate_json(obj.model_dump_json())``
+    directly) at every typed cross-model projection boundary. It is the
+    migration target the ``model_dump(mode="json")``-into-``model_validate``
+    inventory gate enforces, not a substitute for the gate: the codebase already
+    had ``model_dump_json``/``model_validate_json`` one method-name swap away
+    and around forty call sites independently reached for the unsafe two-step
+    form anyway, so a convenience helper alone would only add a second
+    available idiom rather than retiring the first.
+    """
+    return cls.model_validate_json(obj.model_dump_json())
+
+
 class SchemaEnvelope[ResultT: OutputSchema](BaseModel):
     """Stable outer envelope wrapping a successful command's payload.
 
@@ -559,6 +584,7 @@ __all__ = [
     "emit_json_document",
     "emit_json_success",
     "register_schema",
+    "strict_round_trip",
     "validate_registered_envelope_document",
     "validate_registered_result",
 ]

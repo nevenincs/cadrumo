@@ -18,6 +18,7 @@ from .._errors import SedeNavigationError
 from .._notifications import (
     _RESUMEN_URL,
     _navigate_and_parse,
+    _notifications_landing_url,
     _recorded_landing_url,
     parse_notifications_query,
     parse_notifications_summary,
@@ -189,3 +190,47 @@ class TestNavigateAndParseLandingGuard:
         assert context["marker_present"] is False
         assert context["row_count"] == 0
         assert context["landing_path"] == urlsplit(_QUERY_URL).path
+
+
+class _LandedPage:
+    """Carries a landed URL, the one attribute ``_notifications_landing_url`` reads off a page."""
+
+    def __init__(self, url: str) -> None:
+        self.url = url
+
+
+class TestNotificationsLandingIsRefusedWhenUnreadable:
+    """An empty or otherwise unreadable landing must be refused, not silently substituted.
+
+    ``_notifications_landing_url`` used to fall back to the originally-
+    requested URL whenever ``page.url`` was empty
+    (``getattr(page, "url", "") or url``), reproducing the exact fail-open
+    bug ``_walker.assert_landed_url_readable`` already documents fixing: the
+    one case where the navigation outcome could not be established was the
+    one case that was not checked.
+    """
+
+    def test_a_readable_landing_is_returned_unchanged(self) -> None:
+        landed = f"{_AEAT.domains.www12}{_AEAT.sede_paths.notifications_summary}"
+        assert _notifications_landing_url(_LandedPage(landed), requested_url=_SUMMARY_URL) == landed
+
+    @pytest.mark.parametrize("landed", ["", "about:blank"])
+    def test_an_unreadable_landing_is_refused_not_substituted(self, landed: str) -> None:
+        """DISCRIMINATING: reverting the fix produces the requested URL instead of a refusal."""
+        page = _LandedPage(landed)
+        produced: str | None = None
+        try:
+            produced = _notifications_landing_url(page, requested_url=_SUMMARY_URL)
+        except SedeNavigationError:
+            produced = None
+        assert produced != _SUMMARY_URL, (
+            f"FABRICATED notifications landing {produced!r} substituted for an unreadable landing {landed!r}"
+        )
+        assert produced is None
+        with pytest.raises(SedeNavigationError):
+            _notifications_landing_url(page, requested_url=_SUMMARY_URL)
+
+    def test_the_refusal_names_the_requested_url(self) -> None:
+        with pytest.raises(SedeNavigationError) as excinfo:
+            _notifications_landing_url(_LandedPage(""), requested_url=_SUMMARY_URL)
+        assert excinfo.value.context["requested_url"] == _SUMMARY_URL

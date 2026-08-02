@@ -31,6 +31,8 @@ from re import compile
 from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
+from pydantic import ValidationError as PydanticValidationError
+
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Locator, Page
 
@@ -48,6 +50,7 @@ from .....domain.calculations.registry import (
     RentaWebOpenLivePayload,
     RentaWebOpenObservation,
     RentaWebOpenSyntheticProfile,
+    assert_remote_operation_allowed,
     parse_renta_web_open_live_payload,
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -127,6 +130,49 @@ def assert_renta_web_open_read_landing(landing_url: str) -> None:
         policy=_READ_GUARD_POLICY,
         allowed_path_prefixes=_RENTA_WEB_OPEN_READ_PATH_PREFIXES,
     )
+
+
+def assert_renta_web_open_app_url(app_url: str) -> None:
+    """Refuse a payload ``app_url`` this driver is not allowed to request.
+
+    The landing rule below refuses the page being FILLED. This refuses the
+    page being REQUESTED, and the two are not the same moment: a landing
+    check runs after the browser has already issued the GET, so on its own
+    it would let an off-AEAT ``app_url`` be fetched and only then refuse.
+
+    That gap is narrow here and worth stating rather than overselling. The
+    context is anonymous (``storage_state={}``), so no AEAT session travels
+    with the request, and the simulator needs no credential. What this adds
+    is that the request is not made at all, which also makes this the only
+    ``navigate`` in the package whose target was unchecked while its seven
+    siblings pre-flight theirs.
+
+    The policy it checks against is this module's own, introduced with the
+    landing rule and wired to nothing else, so the refusal cannot narrow or
+    widen any other surface's allow-list.
+
+    Args:
+        app_url: The ``app_url`` carried on the live payload.
+
+    Raises:
+        SedeNavigationError: When the URL is not one this driver may request.
+    """
+    try:
+        assert_remote_operation_allowed(
+            _READ_GUARD_POLICY,
+            RemoteOperation(kind="http", method="GET", url=app_url),
+        )
+    except (RegistryValidationError, PydanticValidationError) as exc:
+        raise SedeNavigationError(
+            f"Renta WEB Open payload app_url was refused before navigation: {exc}",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.landing_off_policy"),
+            context={"app_url": app_url, "policy_id": _READ_GUARD_POLICY.id},
+            suggestion=(
+                "The live payload names a simulator URL this driver may not request. "
+                "Correct the payload rather than widening the driver's policy."
+            ),
+        ) from exc
 
 
 def _assert_read_landing(page: Page) -> None:
@@ -309,6 +355,7 @@ async def _open_renta_web_open_session(
         description="Renta WEB Open viewport",
         timeout_ms=live_payload.timeout_ms,
     )
+    assert_renta_web_open_app_url(str(live_payload.app_url))
     await browser_session.navigate(page, str(live_payload.app_url))
     await _playwright_stage(
         page.wait_for_load_state(PLAYWRIGHT_WAIT_NETWORKIDLE, timeout=live_payload.timeout_ms),

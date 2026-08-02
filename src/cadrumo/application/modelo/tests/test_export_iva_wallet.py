@@ -57,7 +57,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "taxpayerbeta"
+    taxpayer_nif = "12345678Z"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -85,7 +85,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "taxpayeralpha"
+    taxpayer_nif = "87654321X"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -113,7 +113,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "taxpayerbeta"
+    taxpayer_nif = "12345678Z"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -146,7 +146,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
 def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocking_readiness(
     isolated_backend: None,
 ) -> None:
-    taxpayer_nif = "taxpayeralpha"
+    taxpayer_nif = "87654321X"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -177,7 +177,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "taxpayerbeta"
+    taxpayer_nif = "12345678Z"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -214,7 +214,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "taxpayerbeta"
+    taxpayer_nif = "12345678Z"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     work_unit_id, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,

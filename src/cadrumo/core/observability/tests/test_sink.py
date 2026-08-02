@@ -28,6 +28,7 @@ from pathlib import Path
 
 import pytest
 
+from ....tests.path_obstruction import obstructed_path
 from ...config import Settings, override_settings
 from .. import (
     NavigationPayload,
@@ -269,10 +270,9 @@ class TestStorePersistenceErrors:
         run_id = "abcdef0123456789"
         runs_root = tmp_path / "runs"
         trace_path = runs_root / run_id / "trace.json"
-        trace_path.mkdir(parents=True)
         settings = Settings(cadrumo_runs_dir=runs_root)
 
-        with pytest.raises(RunTracePersistenceError) as excinfo:
+        with obstructed_path(trace_path), pytest.raises(RunTracePersistenceError) as excinfo:
             load_trace(run_id, settings=settings)
 
         error = excinfo.value
@@ -443,25 +443,25 @@ class TestSinkEmitFailureWarningIsScrubbed:
         """
         run_id = "0123456789abcdef"
         target = tmp_path / run_id / "events.jsonl"
-        target.mkdir(parents=True)
 
-        sink = JsonlRunSink(target, run_id=run_id)
-        try:
-            record = logging.LogRecord(
-                name="aeat-test",
-                level=logging.INFO,
-                pathname=__file__,
-                lineno=0,
-                msg="run event",
-                args=None,
-                exc_info=None,
-            )
-            record.run_event = self._event(run_id)
+        with obstructed_path(target):
+            sink = JsonlRunSink(target, run_id=run_id)
+            try:
+                record = logging.LogRecord(
+                    name="aeat-test",
+                    level=logging.INFO,
+                    pathname=__file__,
+                    lineno=0,
+                    msg="run event",
+                    args=None,
+                    exc_info=None,
+                )
+                record.run_event = self._event(run_id)
 
-            with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability._sink"):
-                sink.emit(record)
-        finally:
-            sink.close()
+                with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability._sink"):
+                    sink.emit(record)
+            finally:
+                sink.close()
 
         warning_records = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert warning_records, "sink must emit a WARNING when the write fails"

@@ -137,7 +137,7 @@ class VerificationExpectationDefinition(RegistryModel):
     reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
         default_factory=dict,
     )
-    tolerance: DecimalValue
+    tolerance: DecimalValue = Field(ge=Decimal("0"))
     rounding: VerificationRoundingCodeValue
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
     discrepancy_causes: tuple[VerificationDiscrepancyCauseValue, ...] = Field(min_length=1)

@@ -172,26 +172,6 @@ class ProfileLifecycleResult(BaseModel):
     applied_at: datetime
 
 
-class ProfileListing(BaseModel):
-    """One row of a profile-listing result."""
-
-    model_config = _STRICT_FROZEN
-
-    profile_id: ProfileId
-    display_name: str = Field(min_length=1, max_length=160)
-    status: UserProfileStatus
-    created_at: datetime
-    updated_at: datetime
-
-
-class ProfileListResult(BaseModel):
-    """Frozen tuple of profile listings returned by `list_profiles`."""
-
-    model_config = _STRICT_FROZEN
-
-    profiles: tuple[ProfileListing, ...] = ()
-
-
 # ---------------------------------------------------------------------------
 # Validation and preflight
 # ---------------------------------------------------------------------------

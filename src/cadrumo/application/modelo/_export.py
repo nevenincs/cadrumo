@@ -92,6 +92,7 @@ from ..filing import (
     DeclaracionExportResult,
     ModeloDraft,
     approve_draft,
+    assert_export_artifact_matches_receipt,
     build_draft,
     build_runtime_schema_provider,
     export_draft,
@@ -825,6 +826,14 @@ def _persist_exported_draft(
             translated_message="application.modelo.errors.export_output_path_invalid",
             context={"output_path": str(command.output_path), "reason": str(exc)},
         ) from exc
+
+    # The receipt below was measured against ``tmp_output``, and the result and
+    # the durable MODELO_EXPORTED event both publish those numbers against
+    # ``command.output_path`` instead. Re-bind them to the artefact that
+    # actually landed, through the same check the draft writer used, so the
+    # published size and digest are proven of the operator-visible file rather
+    # than transplanted from the staging path the rename has just consumed.
+    assert_export_artifact_matches_receipt(receipt, artifact_path=command.output_path)
 
     # Coverage honesty: a fixed-width fichero-BOE whose revision declares no
     # completeness manifest cannot be structural-parity-verified (the pre-write

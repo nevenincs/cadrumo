@@ -273,14 +273,33 @@ class SecureObjectRowIdentityError(PersistenceError):
     shortened set.
     """
 
-    def __init__(self, namespace: str, *, expected_identifier: str) -> None:
-        """Construct the error, binding the namespace and the identity the payload rebuilds."""
+    def __init__(
+        self,
+        namespace: str,
+        *,
+        expected_identifier: str,
+        payload_identifier: str | None = None,
+    ) -> None:
+        """Construct the error, naming the key addressed and the identity found.
+
+        ``expected_identifier`` is the natural key the row was addressed under.
+        ``payload_identifier`` is the identity the decrypted payload rebuilds,
+        supplied where the two are separately known so the refusal names both
+        sides of the mismatch rather than leaving the reader to guess which one
+        it reported. It is omitted by the enumeration path, where the stored key
+        is an HMAC digest and no natural key is recoverable from it -- there the
+        rebuilt identity IS the only nameable one.
+        """
+        context = {"namespace": namespace, "expected_identifier": expected_identifier}
+        if payload_identifier is not None:
+            context["payload_identifier"] = payload_identifier
         super().__init__(
-            context={"namespace": namespace, "expected_identifier": expected_identifier},
+            context=context,
             translated_message="errors.integrity.integrity_storage_secure_object_row_identity",
         )
         self.namespace = namespace
         self.expected_identifier = expected_identifier
+        self.payload_identifier = payload_identifier
 
 
 class SecretNotFoundError(SecretStoreError):

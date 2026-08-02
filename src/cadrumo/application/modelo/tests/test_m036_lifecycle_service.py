@@ -22,10 +22,12 @@ from ....adapters.persistence.storage import LIVE_M036_DECLARATION_NAMESPACE
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import CensoModeloEventKind
 from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.write_unit_recorder import WriteUnitRecorder
 from ...live import LiveApplicationInputError
 from .._m036_lifecycle import (
     M036DeclarationCommand,
     M036DeclarationResult,
+    _m036_declaration_repository,
     derive_m036_declaration_id,
     list_m036_declarations,
     record_m036_declaration,
@@ -243,3 +245,57 @@ def test_record_accepts_the_owning_profile_and_reads_back(tmp_path: Path) -> Non
 
     assert result.profile_id == result.bucket_id == _PROFILE_ID
     assert recorded == (result,)
+
+
+def test_record_commits_declaration_and_audit_event_in_one_transaction(tmp_path: Path) -> None:
+    """The declaration snapshot and its audit event share one transaction.
+
+    Recording saved the declaration and emitted the event through a separate
+    write, so an event-storage failure left the M036 declaration durable with
+    nothing in the history accounting for it — a censal state change the audit
+    trail cannot explain.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        recorder = WriteUnitRecorder(runtime.repository.engine)
+
+        with recorder.recording():
+            record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
+
+        assert recorder.commits_between_writes() == 0
+
+
+def test_split_record_write_shape_commits_between_stores(tmp_path: Path) -> None:
+    """Anti-tautology: the recorder reports a seam on the shape this replaced.
+
+    Persisting the declaration and the event catalogue through independent
+    saves — the pre-fix sequence — must be observed as more than one
+    transaction, or the assertion above could not fail.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        result = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
+        events = BucketEventHistoryRepository()
+        catalogue = events.load()
+        declarations = _m036_declaration_repository(runtime.bucket_id)
+        recorder = WriteUnitRecorder(runtime.repository.engine)
+
+        with recorder.recording():
+            declarations.save(result)
+            events.save(catalogue)
+
+        assert recorder.commits_between_writes() >= 1
+
+
+def test_record_preserves_its_persisted_audit_payload_version(tmp_path: Path) -> None:
+    """The co-committed event still persists payload_version 1.
+
+    The modelo-wide builder supplies version 2. Routing this event through the
+    shared derive helper must not re-version a persisted audit contract, so the
+    version is pinned here rather than left to whichever builder is used.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_PROFILE_ID) as runtime:
+        result = record_m036_declaration(_alta_command(), bucket_id=runtime.bucket_id)
+        catalogue = BucketEventHistoryRepository().load()
+
+    matching = [event for event in catalogue.events.values() if event.object_id == result.declaration_id]
+    assert len(matching) == 1
+    assert matching[0].payload_version == 1

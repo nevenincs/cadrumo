@@ -13,6 +13,7 @@ from .._errors import RegistrySnapshotError, RegistryValidationError
 from .._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
+    RegistryScenarioRunReport,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
@@ -33,6 +34,40 @@ from ._registry_scenarios_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module")
+def matching_registry_scenario_report() -> RegistryScenarioRunReport:
+    return run_registry_calculation_scenario(
+        _simplified_direct_estimation_cap_scenario(),
+        registry_root=_REGISTRY_ROOT,
+        source_root=bundled_path(),
+    )
+
+
+def test_registry_scenario_report_accepts_a_consistent_match(
+    matching_registry_scenario_report: RegistryScenarioRunReport,
+) -> None:
+    assert matching_registry_scenario_report.status == "match"
+    assert all(comparison.status == "match" for comparison in matching_registry_scenario_report.comparisons)
+    assert_registry_scenario_matches(matching_registry_scenario_report)
+
+
+@pytest.mark.parametrize(
+    ("report_status", "comparison_status"),
+    (("match", "mismatch"), ("mismatch", "match")),
+)
+def test_registry_scenario_report_rejects_a_status_that_contradicts_its_comparisons(
+    matching_registry_scenario_report: RegistryScenarioRunReport,
+    report_status: str,
+    comparison_status: str,
+) -> None:
+    payload = matching_registry_scenario_report.model_dump()
+    payload["status"] = report_status
+    payload["comparisons"][0]["status"] = comparison_status
+
+    with pytest.raises(ValidationError, match="does not match comparison statuses"):
+        RegistryScenarioRunReport.model_validate(payload)
 
 
 def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payments() -> None:

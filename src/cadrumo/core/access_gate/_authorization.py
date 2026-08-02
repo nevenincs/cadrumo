@@ -179,7 +179,13 @@ class AuthorizationManifest(BaseModel):
     entries: tuple[ModeloAuthorizationEntry, ...] = ()
 
     @model_validator(mode="after")
-    def _reject_duplicate_modelos(self) -> AuthorizationManifest:
+    def _reject_unenrollable_or_duplicate_modelos(self) -> AuthorizationManifest:
+        unknown = sorted(entry.modelo for entry in self.entries if entry.modelo not in CANONICAL_MODELO_FLEET)
+        if unknown:
+            raise ValueError(
+                f"authorization manifest declares non-enrollable modelo identifiers: {unknown!r}; "
+                "enroll only canonical registry-backed modelos",
+            )
         seen: set[str] = set()
         for entry in self.entries:
             if entry.modelo in seen:
