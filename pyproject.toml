@@ -541,6 +541,10 @@ convention = "google"
 # name. It is read-only by construction (one GET per environment, no mutation
 # path, pinned by its own test).
 "dev/release/environment_inventory.py" = ["S603"]
+# The release-alert emitter carries the identical contract: `gh` resolved via
+# `shutil.which` or an explicit path, then a fixed argv whose interpolations are
+# the repository slug and the alert text. It only ever reads or files issues.
+"dev/release/alerting.py" = ["S603"]
 # The evidence-release transport helper resolves `gh` the same way as
 # readiness.py (shutil.which or an explicit test-stub path) and builds a fixed
 # argv; its tests drive a real explicit-path stub executable.

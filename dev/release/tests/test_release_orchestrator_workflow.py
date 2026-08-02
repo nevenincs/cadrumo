@@ -301,7 +301,18 @@ def test_the_seal_job_is_terminal() -> None:
 
     assert "seal" in jobs
     dependents = [name for name, job in jobs.items() if "seal" in (job.get("needs") or [])]
-    assert dependents == [], f"jobs depending on the terminal seal: {dependents}"
+
+    # The failure-only alert job is not a chain STAGE: it runs solely under
+    # `failure()`, produces nothing, and cannot extend the release past the
+    # seal. Excluding it keeps this assertion about the property that matters -
+    # that no stage waits on or continues after the seal - rather than about
+    # the shape of the needs graph.
+    stages = [
+        name
+        for name in dependents
+        if "failure()" not in str(jobs[name].get("if", ""))
+    ]
+    assert stages == [], f"release stages depending on the terminal seal: {stages}"
 
 
 def test_no_job_waits_out_the_soak_inside_the_run() -> None:

@@ -110,10 +110,20 @@ jobs:
 
       - name: Alert on failure without touching the release
         if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}
         run: |
           # Loud, and only that. The release is already published and every
           # channel already serves it; unwinding a release because its
           # documentation failed to build would convert a bounded staleness into
           # an unbounded outage.
+          #
+          # The annotation below is NOT the alert. `::error::` is visible only
+          # to someone already reading this run, which is exactly the person the
+          # removed approval click used to summon and no longer does. The
+          # emitter is what actually reaches the operator.
           echo "::error::Documentation publication failed. The release is unaffected and remains published." >&2
           echo "The download page falls back to its offline channel table until the next successful publish." >&2
+          uv run --frozen python -m dev.release.alerting --stage "docs-publication" \
+            --detail "Documentation publication failed. The release is unaffected and remains published."

@@ -318,3 +318,43 @@ jobs:
             --repository "${GITHUB_REPOSITORY}" \
             --packaging-run-id "${PACKAGING_RUN_ID}" \
             --dry-run "${DRY_RUN}"
+
+  alert:
+    name: Cadrumo / alert the operator on a failed release-path run
+    # A JOB, not a step. `if: failure()` inside a job only fires when a step in
+    # THAT job failed - and a job whose dependency failed never runs at all, so
+    # a step appended to the last job would alert on almost nothing. Needing
+    # every job and running under `failure()` is what makes this cover the
+    # whole chain.
+    needs: [preflight, precondition, bump, campaign, acquire, seal]
+    if: ${{ failure() }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Alert the operator that this release-path run failed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}
+        run: |
+          # The approval click was the only moment a human was STRUCTURALLY
+          # guaranteed to look at a release. With it gone, a silently failed run
+          # is indistinguishable from a release nobody started, so this reaches
+          # the operator where they already look rather than annotating a log
+          # only someone already watching would read.
+          #
+          # Never fatal: the run is already red and its FIRST error is the one
+          # that matters, so a refused alert warns and exits 0.
+          uv run --frozen python -m dev.release.alerting --stage "orchestration"

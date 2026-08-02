@@ -86,3 +86,16 @@ jobs:
           uv run --frozen python -m dev.release.soak_promoter \
             --repository "${GITHUB_REPOSITORY}" \
             ${REPORT_ONLY:+--report-only}
+
+      - name: Alert the operator that this release-path run failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CADRUMO_ALERT_WEBHOOK: ${{ vars.CADRUMO_ALERT_WEBHOOK }}
+        run: |
+          # A step suffices here because this workflow is ONE job: there is no
+          # earlier job whose failure could skip this one. The multi-job
+          # workflows use a dedicated alert job for exactly that reason.
+          #
+          # Never fatal: the run is already red and its FIRST error matters most.
+          uv run --frozen python -m dev.release.alerting --stage "soak-promotion"

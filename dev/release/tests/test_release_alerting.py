@@ -1,0 +1,412 @@
+"""Behavioural proof for the alerting that pays for the removed approval click.
+
+The click was the only moment a human was structurally guaranteed to look at a
+release. Every test here defends one consequence of removing it: an alert must
+reach somewhere the operator sees without being told to look, it must not flood,
+and it must never replace the failure it is reporting with a failure of its own.
+"""
+
+from __future__ import annotations
+
+import json
+import re
+import stat
+import sys
+from pathlib import Path
+from typing import Any, Final
+
+import pytest
+import yaml
+
+from dev.release import alerting
+from dev.release.alerting import AlertError, ReleaseAlert, alert_payload, emit_alert
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_WORKFLOW_DIR: Final[Path] = _REPO_ROOT / ".github" / "workflows"
+
+
+def _alert(*, workflow: str = "Cadrumo Release Orchestrator", run_id: str = "4242") -> ReleaseAlert:
+    return ReleaseAlert(
+        workflow=workflow,
+        run_id=run_id,
+        run_url=f"https://github.com/nevenincs/cadrumo/actions/runs/{run_id}",
+        stage="bump",
+        detail="REFUSED: version 1.2.3 is burned",
+    )
+
+
+def _write_recording_gh(bin_dir: Path, *, stdout: str = "[]", log: Path | None = None) -> Path:
+    """Write a real `gh` stub that records argv and emits fixed output."""
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    if sys.platform.startswith("win"):
+        script = bin_dir / "gh.bat"
+        lines = ["@echo off"]
+        if log is not None:
+            # Leading args only. The alert body is deliberately multi-line, and
+            # echoing a multi-line argv breaks both shells - which is a fact
+            # about the stub, not about the code under test. The subcommand and
+            # its target live in the first three arguments.
+            lines.append(f'echo %1 %2 %3 %4 %5 >> "{log}"')
+        for line in stdout.splitlines() or [""]:
+            lines.append(f"echo {line}" if line else "echo.")
+        script.write_text("\r\n".join(lines) + "\r\n", encoding="utf-8")
+    else:
+        script = bin_dir / "gh"
+        body = ["#!/usr/bin/env bash"]
+        if log is not None:
+            body.append(f'echo "$1 $2 $3 $4 $5" >> "{log}"')
+        body.append(f"cat <<'OUT'\n{stdout}\nOUT")
+        script.write_text("\n".join(body) + "\n", encoding="utf-8")
+        script.chmod(script.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return script
+
+
+def test_the_default_path_opens_a_labelled_issue(tmp_path: Path) -> None:
+    """Alerting works before any channel is nominated.
+
+    The default needs no secret, no variable, and no operator decision, which
+    is the whole point: alerting that waits on provisioning is absent for
+    exactly the period between removing the click and finishing the setup.
+    """
+    log = tmp_path / "argv.log"
+    script = _write_recording_gh(tmp_path / "bin", stdout="[]", log=log)
+
+    result = emit_alert(_alert(), repository="nevenincs/cadrumo", gh_executable=str(script))
+
+    recorded = log.read_text(encoding="utf-8")
+    assert "issue create" in recorded
+    assert alerting.ALERT_LABEL == "release-alert"
+    assert "opened alert" in result
+
+
+def test_a_second_alert_for_the_same_run_updates_rather_than_duplicates(tmp_path: Path) -> None:
+    """A flooding channel is one the operator learns to filter.
+
+    Which returns us to nobody looking, by a slower route. A re-run, or several
+    failing jobs in one run, must land on one thread.
+    """
+    existing = json.dumps(
+        [
+            {
+                "number": 77,
+                "title": "Release alert: Cadrumo Release Orchestrator failed (Cadrumo Release Orchestrator#4242)",
+            }
+        ]
+    )
+    log = tmp_path / "argv.log"
+    script = _write_recording_gh(tmp_path / "bin", stdout=existing, log=log)
+
+    result = emit_alert(_alert(), repository="nevenincs/cadrumo", gh_executable=str(script))
+
+    recorded = log.read_text(encoding="utf-8")
+    assert "issue comment 77" in recorded
+    assert "issue create" not in recorded
+    assert "updated open alert #77" in result
+
+
+def test_a_different_run_gets_its_own_alert(tmp_path: Path) -> None:
+    """Control for the deduplication: two real failures are two alerts.
+
+    Without this, a deduplicator keyed too broadly - by workflow rather than by
+    run - would silently collapse every future failure into one stale thread
+    and look identical to correct behaviour in the test above.
+    """
+    existing = json.dumps(
+        [
+            {
+                "number": 77,
+                "title": "Release alert: Cadrumo Release Orchestrator failed (Cadrumo Release Orchestrator#4242)",
+            }
+        ]
+    )
+    log = tmp_path / "argv.log"
+    script = _write_recording_gh(tmp_path / "bin", stdout=existing, log=log)
+
+    emit_alert(_alert(run_id="9999"), repository="nevenincs/cadrumo", gh_executable=str(script))
+
+    assert "issue create" in log.read_text(encoding="utf-8")
+
+
+def test_a_nominated_webhook_replaces_the_issue_path(tmp_path: Path) -> None:
+    """One event, one channel. Two would train the operator to read the quieter."""
+    log = tmp_path / "argv.log"
+    script = _write_recording_gh(tmp_path / "bin", log=log)
+    delivered: list[tuple[str, ReleaseAlert]] = []
+
+    result = emit_alert(
+        _alert(),
+        repository="nevenincs/cadrumo",
+        webhook_url="https://alerts.example/hook",
+        gh_executable=str(script),
+        webhook_sender=lambda url, alert: delivered.append((url, alert)),
+    )
+
+    assert [url for url, _ in delivered] == ["https://alerts.example/hook"]
+    assert "alerted via webhook" in result
+    assert not log.exists() or "issue create" not in log.read_text(encoding="utf-8")
+
+
+def test_the_payload_leads_with_the_run_url() -> None:
+    """The operator's next action is always to open the run."""
+    body = alert_payload(_alert())
+
+    assert "actions/runs/4242" in body
+    assert "bump" in body
+    assert "version 1.2.3 is burned" in body
+
+
+def test_a_failing_alert_transport_never_replaces_the_original_failure(tmp_path: Path) -> None:
+    """The run is already red; the operator needs the FIRST error, not the second.
+
+    An alerting handler that raised would overwrite the failure it was
+    reporting, which is worse than not alerting at all - the release still
+    failed, and now its cause is gone too.
+    """
+    missing = tmp_path / "bin" / "definitely-not-gh"
+
+    with pytest.raises(AlertError):
+        emit_alert(_alert(), repository="nevenincs/cadrumo", gh_executable=str(missing))
+
+    # ...but the CLI entry point swallows it into a warning and exits 0.
+    exit_code = alerting.main(
+        [
+            "--repository",
+            "nevenincs/cadrumo",
+            "--workflow",
+            "Cadrumo Release Orchestrator",
+            "--run-id",
+            "4242",
+            "--stage",
+            "bump",
+            "--detail",
+            "boom",
+            "--webhook",
+            "",
+            # Explicit, so this never reaches a real `gh` on the developer's
+            # PATH and can never file an issue against the live repository.
+            "--gh",
+            str(missing),
+        ],
+    )
+    assert exit_code == 0
+
+
+# --------------------------------------------------------------------------
+# Reachability: every workflow on the release path must carry a failure alert.
+# --------------------------------------------------------------------------
+
+
+def _load(path: Path) -> Any:
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def _needs_own_alert(workflow_dir: Path, *, module_root: Path | None = None) -> set[str]:
+    """Return the workflows that must carry their OWN failure alert.
+
+    Derived, never hand-listed, but narrower than "everything the release path
+    touches" - and the narrowing is the substance of this gate.
+
+    A workflow whose dispatcher WAITS for its conclusion is already covered: an
+    acquisition lane that fails makes the orchestrator's acquire stage fail,
+    which fails the orchestrator, which alerts. Adding an alert to the lane too
+    would deliver two alerts for one event, which is the same
+    train-the-operator-to-filter failure that alerting-plus-webhook was
+    rejected for.
+
+    A workflow dispatched FIRE-AND-FORGET has no such parent. The promoter
+    dispatches the publication authority and exits without waiting, so a failed
+    publication is observed by nobody unless that workflow alerts for itself.
+    Likewise a workflow triggered by an event rather than by a dispatcher - the
+    documentation publisher runs on `release: published` and has no parent run
+    at all.
+
+    So: the roots, plus anything a root reaches without waiting, plus anything
+    event-triggered off the release. Waiting is detected by the presence of
+    `dev.release.run_resolution` - the module whose entire purpose is to
+    dispatch and then wait - in the same step that reaches the workflow.
+    """
+    roots = [
+        name for name in ("release-orchestrator.yml", "release-soak-promoter.yml") if (workflow_dir / name).is_file()
+    ]
+    needs: set[str] = set(roots)
+    candidates = [candidate.name for candidate in workflow_dir.glob("*.yml")]
+
+    for name in roots:
+        document = yaml.safe_load((workflow_dir / name).read_text(encoding="utf-8"))
+        for job in document.get("jobs", {}).values():
+            for step in job.get("steps", []) or []:
+                # Comments are dropped: the orchestrator's prose deliberately
+                # names workflows it must never dispatch.
+                body = "\n".join(
+                    line for line in str(step.get("run", "")).splitlines() if not line.lstrip().startswith("#")
+                )
+                if not body:
+                    continue
+                waits = "dev.release.run_resolution" in body
+                reached = {candidate for candidate in candidates if candidate in body}
+                if module_root is not None:
+                    for module in re.findall(r"dev\.[a-z_]+\.[a-z_]+", body):
+                        module_path = module_root / Path(*module.split(".")).with_suffix(".py")
+                        if not module_path.is_file():
+                            continue
+                        module_text = module_path.read_text(encoding="utf-8")
+                        # NAMING a workflow is not DISPATCHING it. The
+                        # host-extension precondition reads the same lane
+                        # mapping the acquisition stage uses, and dispatches
+                        # nothing; counting its mapping as a dispatch would
+                        # demand alerts on lanes this step never starts.
+                        if '"workflow",' not in module_text and "dispatch_and_resolve" not in module_text:
+                            continue
+                        reached.update(c for c in candidates if c in module_text)
+                if not waits:
+                    needs.update(reached)
+
+    # Event-triggered off a release: no dispatcher exists to observe a failure.
+    for candidate in candidates:
+        triggers = yaml.safe_load((workflow_dir / candidate).read_text(encoding="utf-8")) or {}
+        on = triggers.get(True, {}) if isinstance(triggers, dict) else {}
+        if isinstance(on, dict) and "release" in on:
+            needs.add(candidate)
+
+    return needs
+
+
+def _has_failure_alert(document: Any) -> bool:
+    """Whether the workflow alerts on failure, by step-level OR job-level guard.
+
+    Both shapes are legitimate and each is correct in its place: a single-job
+    workflow guards the step, a multi-job workflow needs a dedicated job (a
+    step in the last job never runs when an earlier job fails). A detector that
+    saw only one shape would report the other as unalerted.
+    """
+    for job in document.get("jobs", {}).values():
+        job_guarded = "failure()" in str(job.get("if", ""))
+        for step in job.get("steps", []) or []:
+            guarded = job_guarded or "failure()" in str(step.get("if", ""))
+            if guarded and "dev.release.alerting" in str(step.get("run", "")):
+                return True
+    return False
+
+
+def test_reachability_every_release_path_workflow_carries_a_failure_alert() -> None:
+    """The declared release path is computed, and every member alerts."""
+    release_path = _needs_own_alert(_WORKFLOW_DIR, module_root=_REPO_ROOT)
+
+    # The four the plan names must all be discovered, so the derivation is
+    # proven to actually reach them rather than returning a convenient subset.
+    for expected in (
+        "release-orchestrator.yml",
+        "release-soak-promoter.yml",
+        "publish-release.yml",
+        "docs-publish.yml",
+    ):
+        assert expected in release_path, f"{expected} is not reachable from the orchestrator/promoter dispatch set"
+
+    unalerted = [name for name in sorted(release_path) if not _has_failure_alert(_load(_WORKFLOW_DIR / name))]
+    assert unalerted == [], f"release-path workflows with no failure alert: {unalerted}"
+
+
+def test_reachability_gate_reds_on_a_planted_unalerted_workflow(tmp_path: Path) -> None:
+    """Positive control against an injectable root.
+
+    Without it, a derivation that returned an empty set and a tree that is
+    fully alerted are indistinguishable - both make the assertion above pass.
+    """
+    planted = tmp_path / "workflows"
+    planted.mkdir()
+    (planted / "release-orchestrator.yml").write_text(
+        "name: o\non:\n  workflow_dispatch:\njobs:\n"
+        "  go:\n    runs-on: [self-hosted]\n    steps:\n      - run: gh workflow run new-lane.yml\n",
+        encoding="utf-8",
+    )
+    (planted / "new-lane.yml").write_text(
+        "name: n\non:\n  workflow_dispatch:\njobs:\n"
+        "  go:\n    runs-on: [self-hosted]\n    steps:\n      - run: echo hi\n",
+        encoding="utf-8",
+    )
+
+    release_path = _needs_own_alert(planted)
+    assert "new-lane.yml" in release_path, "the derivation must discover a newly dispatched lane"
+
+    unalerted = [name for name in sorted(release_path) if not _has_failure_alert(_load(planted / name))]
+    assert "new-lane.yml" in unalerted, "the gate must red on a release-path workflow with no alert"
+
+
+def test_multi_job_workflows_alert_from_a_dedicated_job_not_a_trailing_step() -> None:
+    """The subtle way alerting silently covers almost nothing.
+
+    `if: failure()` inside a job fires only when a step in THAT job failed, and
+    a job whose dependency failed never runs at all. So an alert step appended
+    to the last job of a chain would stay silent for every failure except one
+    in the final stage - which looks correct in review and in a green suite.
+
+    A dedicated job needing every other job, gated on `failure()`, is what
+    makes the coverage real.
+    """
+    for name in ("release-orchestrator.yml", "publish-release.yml"):
+        document = _load(_WORKFLOW_DIR / name)
+        jobs = document["jobs"]
+        assert "alert" in jobs, f"{name} has no dedicated alert job"
+
+        alert = jobs["alert"]
+        assert "failure()" in str(alert["if"])
+        covered = set(alert["needs"])
+        expected = set(jobs) - {"alert"}
+        assert covered == expected, f"{name} alert job does not need every stage: missing {expected - covered}"
+
+
+def test_the_single_job_promoter_alerts_from_a_step() -> None:
+    """One job has no earlier job to be skipped by, so a step is correct there."""
+    document = _load(_WORKFLOW_DIR / "release-soak-promoter.yml")
+
+    assert set(document["jobs"]) == {"promote"}
+    assert _has_failure_alert(document)
+
+
+def test_the_docs_publisher_alert_reaches_a_human_not_only_the_run_log() -> None:
+    """An `::error::` annotation notifies nobody who is not already looking.
+
+    The docs publisher carried a failure step that only echoed a workflow
+    annotation. That is prose asserting a property the code did not have: it
+    reads as alerting while reaching exactly the person the removed approval
+    click used to summon, and no longer does.
+    """
+    document = _load(_WORKFLOW_DIR / "docs-publish.yml")
+    steps = [step for job in document["jobs"].values() for step in job.get("steps", [])]
+    failure_steps = [step for step in steps if "failure()" in str(step.get("if", ""))]
+
+    assert failure_steps, "the docs publisher must still alert on failure"
+    assert any("dev.release.alerting" in str(step.get("run", "")) for step in failure_steps), (
+        "the docs failure step only annotates the run log; it must also reach the operator"
+    )
+
+
+def test_a_waited_on_acquisition_lane_is_deliberately_excluded() -> None:
+    """The narrowing is the substance of this gate, so it is pinned explicitly.
+
+    The acquisition lanes are on the release path and are NOT in the
+    must-alert set, because the orchestrator waits for each one: a failed lane
+    fails the acquire stage, which fails the orchestrator, which alerts. Giving
+    the lane its own alert would deliver two alerts for one event - the same
+    train-the-operator-to-filter failure that ruled out sending both an issue
+    and a webhook.
+
+    Without this assertion, a derivation that quietly stopped discovering
+    anything would still satisfy the coverage test above.
+    """
+    needs = _needs_own_alert(_WORKFLOW_DIR, module_root=_REPO_ROOT)
+
+    for waited in ("packaging-scoop.yml", "packaging-homebrew.yml", "packaging-claude.yml", "packaging-smoke.yml"):
+        present = {path.name for path in _WORKFLOW_DIR.glob("*.yml")}
+        assert waited in present, f"{waited} should exist to be excluded"
+        assert waited not in needs, f"{waited} is waited on by its dispatcher and must not alert separately"
+
+    # ...and the set is exactly the four with no watching parent.
+    assert needs == {
+        "release-orchestrator.yml",
+        "release-soak-promoter.yml",
+        "publish-release.yml",
+        "docs-publish.yml",
+    }

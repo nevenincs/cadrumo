@@ -218,9 +218,11 @@ def test_workflow_shape_and_least_privilege_top_level() -> None:
         "dry_run",
     }
     assert document["permissions"] == {"contents": "read"}
-    # Two staged jobs since the approval gate's removal: the retired
-    # `operator-preflight` job existed only to enforce it.
-    assert set(document["jobs"]) == {"validate", "publish"}
+    # Two staged jobs since the approval gate's removal (the retired
+    # `operator-preflight` job existed only to enforce it), plus the
+    # failure-only alert job that pays for that removal by guaranteeing
+    # somebody is told when a publication fails.
+    assert set(document["jobs"]) == {"validate", "publish", "alert"}
 
 
 def test_publication_declares_no_tag_trigger_the_dispatch_path_would_mask() -> None:
