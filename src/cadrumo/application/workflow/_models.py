@@ -57,6 +57,7 @@ from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
 )
 from ...core import (
+    Modelo,
     Period,
 )
 from ...core import (
@@ -68,6 +69,7 @@ from ...core import (
 from ...core.config import override_settings
 from ...core.hashing import sha256_hex
 from ...core.logging import get_logger
+from ...domain.submission import ModeloDraftStatus
 from .._workflow_auth_models import AuthState
 from .._workflow_review_models import (
     InvoiceReviewRecord,
@@ -126,6 +128,30 @@ class WorkflowPurpose(StrEnum):
     VERIFY = "VERIFY"
 
 
+def _parse_declaration_modelo(value: object) -> Modelo:
+    """Resolve a persisted declaration pointer through the canonical Modelo enum."""
+    if isinstance(value, Modelo):
+        return value
+    if isinstance(value, str):
+        try:
+            return Modelo(value)
+        except ValueError as exc:
+            raise ValueError(f"declaration pointer modelo {value!r} is not a canonical AEAT modelo") from exc
+    raise ValueError(f"declaration pointer modelo must be a Modelo or str, got {type(value).__name__}")
+
+
+def _parse_declaration_status(value: object) -> ModeloDraftStatus:
+    """Resolve a persisted declaration pointer through the closed draft-status enum."""
+    if isinstance(value, ModeloDraftStatus):
+        return value
+    if isinstance(value, str):
+        try:
+            return ModeloDraftStatus(value)
+        except ValueError as exc:
+            raise ValueError(f"declaration pointer status {value!r} is not a ModeloDraftStatus") from exc
+    raise ValueError(f"declaration pointer status must be a ModeloDraftStatus or str, got {type(value).__name__}")
+
+
 class DeclaracionPointer(BaseModel):
     """Lightweight pointer to a persisted filing draft stored in :class:`WorkflowState`.
 
@@ -138,10 +164,10 @@ class DeclaracionPointer(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str
+    modelo: Annotated[Modelo, BeforeValidator(_parse_declaration_modelo)]
     period: Period
     draft_id: str | None = None
-    status: str | None = None
+    status: Annotated[ModeloDraftStatus, BeforeValidator(_parse_declaration_status)] | None = None
     exported_path: str | None = None
     verified: bool | None = None
     updated_at: datetime = Field(default_factory=utc_now)
