@@ -125,7 +125,7 @@ def test_concurrent_same_nonce_consumption_allows_exactly_one_success(tmp_path: 
     nonce_hex = _fresh_nonce_hex()
     successes: list[ConsumedNonceLedger] = []
     replay_refusals: list[RecipientPackageReplayedError] = []
-    unexpected: list[BaseException] = []
+    unexpected: list[Exception] = []
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-same-race") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
@@ -137,7 +137,7 @@ def test_concurrent_same_nonce_consumption_allows_exactly_one_success(tmp_path: 
                 successes.append(repository.mark_consumed(nonce_hex, consumed_at=_NOW))
             except RecipientPackageReplayedError as exc:
                 replay_refusals.append(exc)
-            except BaseException as exc:
+            except Exception as exc:
                 unexpected.append(exc)
 
         threads = [
@@ -159,7 +159,7 @@ def test_concurrent_same_nonce_consumption_allows_exactly_one_success(tmp_path: 
 def test_concurrent_distinct_nonce_consumption_preserves_every_record(tmp_path: Path) -> None:
     """Concurrent distinct nonce consumes survive revision conflicts without lost updates."""
     nonces = tuple(_fresh_nonce_hex() for _ in range(8))
-    unexpected: list[BaseException] = []
+    unexpected: list[Exception] = []
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-distinct-race") as profile:
         repository = RecipientReplayGuardRepository(objects=profile.repository)
@@ -169,7 +169,7 @@ def test_concurrent_distinct_nonce_consumption_preserves_every_record(tmp_path: 
             try:
                 gate.wait()
                 repository.mark_consumed(nonce_hex, consumed_at=_NOW)
-            except BaseException as exc:
+            except Exception as exc:
                 unexpected.append(exc)
 
         threads = [

@@ -63,6 +63,9 @@ if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectRepository
 
 
+# A stale writer always fails closed at the secure-object CAS boundary. This
+# generous bound lets a hot burst make progress without turning unbounded
+# contention into an infinite loop.
 _CONSUME_RETRY_LIMIT = 64
 
 
