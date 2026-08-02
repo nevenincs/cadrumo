@@ -220,21 +220,51 @@ def list_work_units(
     )
 
 
-def get_work_unit(
+def _work_unit_in_repository_bucket(
     work_unit_id: str,
     *,
-    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    repository: WorkUnitCatalogueRepositoryProtocol,
 ) -> WorkUnit:
-    """Return one :class:`WorkUnit` by id or raise :class:`WorkUnitNotFoundError`."""
-    repo = repository or WorkUnitCatalogueRepository()
-    catalogue = repo.load()
+    """Return the work unit addressed by ``work_unit_id`` within this bucket.
+
+    :class:`WorkUnitCatalogue` may hold rows for more than one bucket -- which is
+    why :func:`list_work_units` takes a bucket filter -- but the single-subject
+    surfaces looked units up by id alone. A caller bound to bucket A could
+    therefore read, rename, or discard a valid bucket-B unit and emit a
+    lifecycle event scoped to B, bypassing the bucket authority at the command
+    boundary entirely.
+
+    A unit belonging to another bucket is reported as NOT FOUND rather than as a
+    refusal: from this repository's scope it genuinely is not addressable, and a
+    distinct refusal would confirm the existence of a work unit in a bucket the
+    caller has no claim on.
+
+    The check is skipped only when the repository resolved no bucket of its own,
+    where there is no scope to compare against.
+    """
+    catalogue = repository.load()
     unit = catalogue.get(work_unit_id)
-    if unit is None:
+    repository_bucket = repository.bucket_id
+    if unit is None or (repository_bucket is not None and unit.bucket_id != repository_bucket):
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": work_unit_id},
         )
     return unit
+
+
+def get_work_unit(
+    work_unit_id: str,
+    *,
+    repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+) -> WorkUnit:
+    """Return one :class:`WorkUnit` by id or raise :class:`WorkUnitNotFoundError`.
+
+    Scoped to the repository's own bucket: a unit belonging to another bucket is
+    not addressable here and reads as not found.
+    """
+    repo = repository or WorkUnitCatalogueRepository()
+    return _work_unit_in_repository_bucket(work_unit_id, repository=repo)
 
 
 def rename_work_unit(
@@ -252,16 +282,15 @@ def rename_work_unit(
     must create a fresh work unit for renewed work on the same filing target.
     Successful renames preserve the content-addressed work-unit id and update
     only display metadata plus ``updated_at``.
+
+    Scoped to the repository's own bucket: a unit belonging to another bucket is
+    not addressable here, so an A-bound caller cannot rename a B unit and emit a
+    B-scoped rename event.
     """
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
     catalogue: WorkUnitCatalogue = repo.load()
-    existing = catalogue.get(work_unit_id)
-    if existing is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(
             f"work unit {work_unit_id!r} is discarded, and re-creating the same "
@@ -308,16 +337,15 @@ def discard_work_unit(
     record remains available for history/audit reads, repeated discards refuse
     with :class:`WorkUnitAlreadyDiscardedError`, and active-listing callers must
     opt in with ``include_discarded=True`` to see the abandoned root.
+
+    Scoped to the repository's own bucket: a unit belonging to another bucket is
+    not addressable here, so an A-bound caller cannot discard a B unit and emit a
+    B-scoped discard event.
     """
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    existing = _work_unit_in_repository_bucket(work_unit_id, repository=repo)
     catalogue: WorkUnitCatalogue = repo.load()
-    existing = catalogue.get(work_unit_id)
-    if existing is None:
-        raise WorkUnitNotFoundError(
-            translated_message="application.modelo.errors.work_unit_not_found",
-            context={"work_unit_id": work_unit_id},
-        )
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitAlreadyDiscardedError(
             f"work unit {work_unit_id!r} is already discarded "
