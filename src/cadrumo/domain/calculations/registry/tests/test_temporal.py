@@ -26,6 +26,7 @@ from .._errors import (
 from .._relations import relation_source_requirements
 from .._schema import ModeloDefinition
 from .._temporal import select_revision
+from .._validate_revision_rules import validate_revision_windows
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -187,6 +188,50 @@ def test_ambiguous_selection_raises_typed_subclass_with_candidate_ids() -> None:
     assert err.modelo_id == "100"
     # Sorted tuple of every matching revision id, read from the typed field.
     assert err.candidate_ids == ("2025", "2025-twin")
+
+
+def test_revision_validation_reports_non_adjacent_overlap_before_runtime_ambiguity() -> None:
+    """A long revision cannot hide its overlap behind a shorter middle revision."""
+
+    modelo = _committed_modelo_100()
+    template = modelo.revisions["2025"]
+    revision_a = template.model_copy(
+        update={"id": "window-a", "valid_from": date(2020, 1, 1), "valid_to": date(2030, 12, 31)},
+    )
+    revision_b = template.model_copy(
+        update={"id": "window-b", "valid_from": date(2021, 1, 1), "valid_to": date(2022, 12, 31)},
+    )
+    revision_c = template.model_copy(
+        update={"id": "window-c", "valid_from": date(2025, 1, 1), "valid_to": date(2026, 12, 31)},
+    )
+    mutated = modelo.model_copy(
+        update={"revisions": {revision.id: revision for revision in (revision_a, revision_b, revision_c)}},
+    )
+
+    failures = validate_revision_windows(mutated)
+
+    assert "modelo 100: revisions 'window-a' and 'window-c' overlap on period selector" in failures
+    with pytest.raises(AmbiguousRevisionSelectionError) as excinfo:
+        select_revision(mutated, filing_year=2025, period="0A", on=date(2025, 6, 1))
+    assert excinfo.value.candidate_ids == ("window-a", "window-c")
+
+
+def test_revision_validation_accepts_disjoint_windows_with_shared_period_selector() -> None:
+    """Period-selector reuse remains valid when every date window is disjoint."""
+
+    modelo = _committed_modelo_100()
+    template = modelo.revisions["2025"]
+    revisions = tuple(
+        template.model_copy(update={"id": revision_id, "valid_from": valid_from, "valid_to": valid_to})
+        for revision_id, valid_from, valid_to in (
+            ("window-a", date(2020, 1, 1), date(2022, 12, 31)),
+            ("window-b", date(2023, 1, 1), date(2024, 12, 31)),
+            ("window-c", date(2025, 1, 1), date(2026, 12, 31)),
+        )
+    )
+    mutated = modelo.model_copy(update={"revisions": {revision.id: revision for revision in revisions}})
+
+    assert validate_revision_windows(mutated) == []
 
 
 _CADRUMO_ROOT = Path(__file__).resolve().parents[4]
