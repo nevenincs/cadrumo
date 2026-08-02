@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import threading
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -41,6 +42,12 @@ _logger = get_logger(__name__)
 _TRACE_FILENAME = "trace.json"
 _EVENTS_FILENAME = "events.jsonl"
 _ENVELOPE_FILENAME = "envelope.json"
+
+# Both the public direct append path and JsonlRunSink write the same per-run
+# JSONL artefacts.  One process-wide lock keeps their independent file handles
+# from interleaving or losing lines under concurrent worker activity.
+_EVENTS_APPEND_LOCK = threading.Lock()
+
 
 # Run ids are minted by :func:`core.observability._context._mint_run_id`
 # as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
@@ -317,7 +324,7 @@ def save_events_append(
     redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
     line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
     try:
-        with target.open("a", encoding="utf-8", newline="") as handle:
+        with _EVENTS_APPEND_LOCK, target.open("a", encoding="utf-8", newline="") as handle:
             handle.write(line)
             handle.flush()
     except OSError as exc:

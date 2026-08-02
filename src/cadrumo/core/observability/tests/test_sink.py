@@ -21,6 +21,7 @@ Covers:
 from __future__ import annotations
 
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -92,6 +93,26 @@ class TestJsonlStoreRoundTrip:
                 handle.write('{"not_a": "valid_run_event"}\n')
             with pytest.raises(RunTraceValidationError, match=r"failed strict validation"):
                 load_events(evt.run_id)
+
+    def test_concurrent_direct_appends_preserve_every_event(self, tmp_path: Path) -> None:
+        """Concurrent real writers retain every independently addressable event."""
+
+        event_count = 1_000
+        with override_settings(cadrumo_runs_dir=str(tmp_path)) as settings:
+            events = tuple(self._make_event(ordinal % 60) for ordinal in range(event_count))
+            events = tuple(
+                event.model_copy(update={"step_id": f"concurrent-{ordinal}"}) for ordinal, event in enumerate(events)
+            )
+            run_id = events[0].run_id
+            with ThreadPoolExecutor(max_workers=64) as executor:
+                written = tuple(
+                    executor.map(lambda event: save_events_append(run_id, event, settings=settings), events)
+                )
+            loaded = load_events(run_id)
+
+        assert len(set(written)) == 1
+        assert len(loaded) == len(events)
+        assert {event.step_id for event in loaded} == {event.step_id for event in events}
 
 
 class TestJsonlRunSinkRunIdFilter:

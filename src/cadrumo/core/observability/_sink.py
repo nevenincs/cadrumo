@@ -35,6 +35,7 @@ from typing import TextIO, override
 from ..logging import get_logger
 from ._models import RunEvent
 from ._redaction_rules import diagnostic_rules
+from ._store import _EVENTS_APPEND_LOCK
 
 logger = get_logger(__name__)
 
@@ -50,8 +51,9 @@ class JsonlRunSink(logging.Handler):
 
     Concurrency: the sink is bound to a single ``run_id`` and rejects
     events carrying a different ``run_id``. File-handle mutations are
-    guarded by an internal :class:`threading.Lock` so multiple worker
-    threads may emit concurrently without interleaving bytes on disk.
+    guarded by the shared event-store lock plus an internal
+    :class:`threading.Lock`, so direct appends and sink emissions cannot
+    interleave bytes on disk.
     """
 
     def __init__(self, target: Path, *, run_id: str) -> None:
@@ -113,7 +115,7 @@ class JsonlRunSink(logging.Handler):
 
             redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
             line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
-            with self._lock:
+            with _EVENTS_APPEND_LOCK, self._lock:
                 handle = self._open()
                 handle.write(line)
                 handle.flush()
@@ -145,7 +147,7 @@ class JsonlRunSink(logging.Handler):
         flush or fsync raises.
         """
         try:
-            with self._lock:
+            with _EVENTS_APPEND_LOCK, self._lock:
                 handle = self._handle
                 if handle is not None:
                     try:
