@@ -24,6 +24,7 @@ from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, XLSX_MIM
 from ....core.hashing import sha256_hex
 from .. import ExportSerializationFormat, TabularExportResult, serialize_tabular_rows
 from .._errors import ExportFieldError
+from .._tabular import verify_export_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,7 +49,9 @@ def _refusal_reason(exc_info: pytest.ExceptionInfo[ValidationError]) -> str:
     the reason back proves the refusal is the intended one rather than any
     incidental validation failure.
     """
-    cause = exc_info.value.errors()[0]["ctx"]["error"]
+    context = exc_info.value.errors()[0].get("ctx")
+    assert isinstance(context, dict)
+    cause = context["error"]
     assert isinstance(cause, ExportFieldError)
     assert cause.context is not None
     return str(cause.context["reason"])
@@ -184,3 +187,59 @@ def test_a_csv_field_containing_a_newline_counts_as_one_row() -> None:
     assert result.row_count == 1
     assert b"\n" in result.payload
     assert _rebuilt(result) == result
+
+
+@pytest.mark.parametrize(
+    ("export_format", "payload", "media_type", "filename_extension"),
+    (
+        (ExportSerializationFormat.CSV, b"\xff", CSV_MIME_TYPE, "csv"),
+        (ExportSerializationFormat.JSONL, b"\xff", JSONL_MIME_TYPE, "jsonl"),
+        (ExportSerializationFormat.XLSX, b"not-a-zip", XLSX_MIME_TYPE, "xlsx"),
+    ),
+)
+def test_malformed_serialized_payloads_raise_typed_export_field_errors(
+    export_format: ExportSerializationFormat,
+    payload: bytes,
+    media_type: str,
+    filename_extension: str,
+) -> None:
+    """Real decoder failures stay inside the export field-error boundary."""
+
+    with pytest.raises(ExportFieldError) as exc_info:
+        verify_export_metadata(
+            payload=payload,
+            export_format=export_format,
+            byte_size=len(payload),
+            sha256=sha256_hex(payload),
+            media_type=media_type,
+            filename_extension=filename_extension,
+            row_count=0,
+        )
+
+    assert exc_info.value.context == {"reason": "payload_decode_invalid", "export_format": export_format.value}
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_reason"),
+    (
+        (b"not-json\n", "payload_decode_invalid"),
+        (b"[]\n", "jsonl_record_invalid"),
+        (b'"scalar"\n', "jsonl_record_invalid"),
+    ),
+)
+def test_jsonl_verification_refuses_invalid_or_non_object_lines(payload: bytes, expected_reason: str) -> None:
+    """JSON Lines exports must contain parseable object records, never arbitrary text."""
+
+    with pytest.raises(ExportFieldError) as exc_info:
+        verify_export_metadata(
+            payload=payload,
+            export_format=ExportSerializationFormat.JSONL,
+            byte_size=len(payload),
+            sha256=sha256_hex(payload),
+            media_type=JSONL_MIME_TYPE,
+            filename_extension="jsonl",
+            row_count=1,
+        )
+
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["reason"] == expected_reason
