@@ -13,7 +13,7 @@ the persisted variant is the LGT Art. 122.2 ``ModeloComplementaria``
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -44,6 +44,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _BUCKET_ID = "filing-runtime"
 _DRAFT_TIMESTAMP = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 _AMENDMENT_CREATED_AT = datetime(2026, 5, 25, 15, 0, 0, tzinfo=UTC)
+_NAIVE_AMENDMENT_CREATED_AT = datetime(2026, 5, 25, 15, 0, 0)
+_OFFSET_AMENDMENT_CREATED_AT = datetime(2026, 5, 25, 16, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -150,6 +152,17 @@ def test_casilla_change_rejects_noncanonical_casilla_reference() -> None:
         )
 
 
+@pytest.mark.parametrize("created_at", (_NAIVE_AMENDMENT_CREATED_AT, _OFFSET_AMENDMENT_CREATED_AT))
+def test_filing_amendment_refuses_ambiguous_created_at(created_at: datetime) -> None:
+    """The persisted amendment audit instant must be explicitly UTC."""
+
+    payload = _populated_amendment().model_dump()
+    payload["created_at"] = created_at
+
+    with pytest.raises(ValidationError, match=r"datetime must be in UTC|datetime must be timezone-aware"):
+        ModeloComplementaria.model_validate(payload)
+
+
 def test_filing_amendment_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
 ) -> None:
@@ -176,6 +189,9 @@ def test_filing_amendment_survives_encrypted_storage_roundtrip(
     assert loaded.amendment_kind is AmendmentKind.COMPLEMENTARIA
     assert loaded.amended_draft.snapshot_ref is not None
     assert loaded.amended_draft.snapshot_ref.revision_id == "2025-y-siguientes"
+    assert loaded.created_at == _AMENDMENT_CREATED_AT
+    assert loaded.created_at.utcoffset() == timedelta()
+    assert loaded.model_dump(mode="json")["created_at"] == "2026-05-25T15:00:00Z"
 
 
 def test_filing_amendment_emptied_delta_surfaces_at_load(
