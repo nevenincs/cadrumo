@@ -1,0 +1,87 @@
+# The single operator-facing surface of a Cadrumo release.
+#
+# One dispatch carries the release decision. Nothing downstream asks a human
+# anything: this workflow bumps the version, runs the packaging campaign, runs
+# whichever acquisition lanes the claimed channels require, and seals a release
+# candidate. The soak is then crossed by release-soak-promoter.yml, and the
+# publication itself by publish-release.yml.
+#
+# WHY THERE IS NO CONFIRMATION INPUT. Navigating to a workflow and pressing Run
+# already IS the deliberate act; a phrase to type reproduces the ceremony the
+# automation removed while protecting against nothing the guard set does not.
+# The dispatch is the intent signal, and it is the only human judgement left in
+# the loop.
+#
+# WHY THIS IS NOT PUSH-TRIGGERED. A push trigger removes no human act, it
+# disguises one - someone still authors the commit - while making the project's
+# one irreversible act a side effect. The identity guard refuses a version some
+# destination already OWNS, so it guards against repeating a release, not
+# against starting the wrong one: under push-triggering the first release nobody
+# meant to make passes every check in the repository.
+#
+# WHAT THIS WORKFLOW NEVER DOES. It does not publish, and it does not dispatch
+# publish-release.yml. It ends at the sealed candidate, because no run can span
+# a 48-72 hour soak and a job that tried would hold one of four shared
+# self-hosted runners for days.
+name: Cadrumo Release Orchestrator
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Validate and rehearse the whole chain, advancing no version and publishing nothing
+        required: false
+        default: true
+        type: boolean
+      resume_packaging_run_id:
+        description: Re-enter at an existing successful packaging-smoke run instead of bumping and rebuilding
+        required: false
+        default: ""
+        type: string
+
+# Product-scoped, and never cancelled. Two dispatches interleaving would race
+# two versions through one manifest: the second bump would compute its version
+# from a tree the first had already advanced.
+concurrency:
+  group: release-orchestrator-cadrumo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Cadrumo / resolve the dispatch into a plan
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    outputs:
+      resume: ${{ steps.plan.outputs.resume }}
+      dry_run: ${{ steps.plan.outputs.dry_run }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Resolve the dispatch into a plan
+        id: plan
+        env:
+          RESUME: ${{ inputs.resume_packaging_run_id }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          # Echoed rather than inferred later: every downstream stage keys on
+          # these two outputs, so the decision is made once and read many times
+          # instead of each job re-reading the raw inputs and drifting.
+          echo "resume=${RESUME}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${DRY_RUN}" >> "$GITHUB_OUTPUT"
+          if [[ -n "${RESUME}" ]]; then
+            echo "Resuming from packaging-smoke run ${RESUME}; the bump and campaign stages are skipped."
+          else
+            echo "Full chain: bump, campaign, acquisition, seal."
+          fi
+          echo "dry_run=${DRY_RUN}"

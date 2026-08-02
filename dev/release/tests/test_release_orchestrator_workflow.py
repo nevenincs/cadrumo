@@ -1,0 +1,108 @@
+"""Structural proof for the single operator-facing surface of a release.
+
+This workflow is the one place a human still makes a release decision, so its
+SHAPE carries the safety properties the removed approval click used to imply.
+Two absences are asserted as hard as any presence: no input may re-add human
+ceremony, and no job may reach the publication authority directly.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+from typing import Any, Final
+
+import pytest
+import yaml
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[3]
+_WORKFLOW: Final[Path] = _REPO_ROOT / ".github" / "workflows" / "release-orchestrator.yml"
+
+
+def _document() -> Any:
+    return yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+
+
+def _run_surface(document: Any, *job_names: str) -> str:
+    jobs = document["jobs"]
+    selected = [jobs[name] for name in job_names] if job_names else list(jobs.values())
+    return "\n".join(str(step.get("run", "")) for job in selected for step in job.get("steps", []) if "run" in step)
+
+
+def test_the_dispatch_takes_exactly_two_inputs() -> None:
+    """One rehearsal flag and one resume handle. Nothing else.
+
+    The input set is pinned as an exact equality rather than a subset, because
+    every additional input is a decision moved out of the code and onto a form
+    where it is neither validated nor recorded.
+    """
+    triggers = _document()[True]
+
+    assert set(triggers) == {"workflow_dispatch"}, "the orchestrator is dispatched, never triggered by a push"
+    assert set(triggers["workflow_dispatch"]["inputs"]) == {"dry_run", "resume_packaging_run_id"}
+
+
+def test_no_input_reintroduces_a_human_confirmation() -> None:
+    """The dispatch IS the intent act; a phrase to type would be ceremony.
+
+    Matched by pattern over input names rather than an allowlist, so a future
+    `confirm_publish` or `type_yes_to_continue` reds without anyone remembering
+    to extend a list.
+    """
+    inputs = _document()[True]["workflow_dispatch"]["inputs"]
+
+    ceremony = re.compile(r"confirm|acknowledg|i_understand|type_|yes|approve|proceed", re.IGNORECASE)
+    offenders = [name for name in inputs if ceremony.search(name)]
+    assert not offenders, f"inputs re-adding the removed human ceremony: {offenders}"
+
+
+def test_dry_run_defaults_to_the_safe_value() -> None:
+    """A dispatch that accepts every default must rehearse, never release.
+
+    The costly direction is asymmetric: defaulting to a real release makes an
+    accidental Run-button press irreversible, while defaulting to a rehearsal
+    costs one extra dispatch.
+    """
+    dry_run = _document()[True]["workflow_dispatch"]["inputs"]["dry_run"]
+
+    assert dry_run["type"] == "boolean"
+    assert dry_run["default"] is True
+
+
+def test_two_dispatches_cannot_interleave_two_versions() -> None:
+    """Serialised and never cancelled.
+
+    Interleaving races two versions through one manifest: the second bump
+    would compute its version from a tree the first had already advanced.
+    """
+    concurrency = _document()["concurrency"]
+
+    assert concurrency["cancel-in-progress"] is False
+    assert "cadrumo" in concurrency["group"], "the group must be product-scoped on a shared account"
+
+
+def test_every_job_runs_on_the_self_hosted_fleet() -> None:
+    """No hosted runner, ever - the standing operator mandate on cost."""
+    for name, job in _document()["jobs"].items():
+        runner = job["runs-on"]
+        assert isinstance(runner, list) and runner[0] == "self-hosted", f"{name} escapes the self-hosted fleet"
+
+
+def test_the_orchestrator_never_publishes_and_never_dispatches_the_publication() -> None:
+    """It ends at the sealed candidate. The promoter alone crosses the soak.
+
+    Dispatching publish-release.yml from here would bypass the soak entirely -
+    the whole point of sealing a candidate is that no run can span the window,
+    so a run that publishes has not waited.
+    """
+    document = _document()
+    surface = _run_surface(document)
+
+    assert "publish-release.yml" not in surface, "the orchestrator must not reach the publication authority"
+    for verb in ("uv publish", "twine upload", "gh release create"):
+        assert verb not in surface, f"the orchestrator must not {verb}"
+    for name, job in document["jobs"].items():
+        assert job.get("permissions", {}).get("id-token") != "write", f"{name} must not mint an OIDC token"
+        assert "environment" not in job, f"{name} must not enter a deployment environment"
