@@ -49,7 +49,11 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
 
         assert _session_store.load_client(profile) == client
         assert _session_store.load_token(profile) == token
-        assert _session_store.load_metadata(profile) == metadata
+        loaded_metadata = _session_store.load_metadata(profile)
+        assert loaded_metadata == metadata
+        assert loaded_metadata is not None
+        assert loaded_metadata.issued_at.isoformat() == "2026-05-26T09:00:00+00:00"
+        assert loaded_metadata.last_refresh_at.isoformat() == "2026-05-26T09:00:00+00:00"
         assert _session_store.load_drive_config(profile) == drive_config
 
         assert _session_store.delete_session(profile) == (True, True)

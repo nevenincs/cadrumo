@@ -10,7 +10,7 @@ or the import would raise at module load.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from typing import TypedDict
 
 import pytest
@@ -148,7 +148,9 @@ def test_oauth_token_minimum_shape() -> None:
     assert token.refresh_token == "1//deadbeef"
 
 
-@pytest.mark.parametrize("endpoint", ("https://evil.example/token", "https://oauth2.googleapis.com:444/token", "file:///tmp/token"))
+@pytest.mark.parametrize(
+    "endpoint", ("https://evil.example/token", "https://oauth2.googleapis.com:444/token", "file:///tmp/token")
+)
 def test_oauth_token_refuses_untrusted_or_malformed_token_endpoint(endpoint: str) -> None:
     """A refresh token may never persist an endpoint outside Google OAuth's canonical origin."""
 
@@ -169,8 +171,32 @@ def test_oauth_token_rejects_empty_refresh() -> None:
 
 def test_oauth_metadata_round_trip() -> None:
     metadata = OAuthMetadata(**_valid_metadata_kwargs())
+    reloaded = OAuthMetadata.model_validate_json(metadata.model_dump_json())
+
+    assert reloaded == metadata
     assert metadata.reauth_required is False
     assert SHEETS_SCOPE in metadata.granted_scopes
+    assert metadata.issued_at.isoformat() == "2026-05-14T09:00:00+00:00"
+    assert metadata.last_refresh_at.isoformat() == "2026-05-14T12:00:00+00:00"
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid_instant"),
+    (
+        ("issued_at", datetime(2026, 5, 14, 9, 0)),
+        ("issued_at", datetime(2026, 5, 14, 10, 0, tzinfo=timezone(timedelta(hours=1)))),
+        ("last_refresh_at", datetime(2026, 5, 14, 9, 0)),
+        ("last_refresh_at", datetime(2026, 5, 14, 10, 0, tzinfo=timezone(timedelta(hours=1)))),
+    ),
+)
+def test_oauth_metadata_refuses_ambiguous_audit_instants(field: str, invalid_instant: datetime) -> None:
+    """Both persisted OAuth audit instants must be explicitly UTC."""
+
+    payload: dict[str, object] = dict(_valid_metadata_kwargs())
+    payload[field] = invalid_instant
+
+    with pytest.raises(ValidationError, match=r"datetime must be in UTC|datetime must be timezone-aware"):
+        OAuthMetadata.model_validate(payload)
 
 
 def test_oauth_metadata_requires_drive_and_sheets_scopes() -> None:
@@ -207,10 +233,12 @@ def test_drive_app_properties_round_trip() -> None:
 
 def test_drive_app_properties_rejects_missing_runtime_storage_metadata() -> None:
     with pytest.raises(ValidationError):
-        DriveAppProperties(
-            namespace="ledger_transaction",
-            object_key_hmac="abc",
-            content_hash="sha256-x",
+        DriveAppProperties.model_validate(
+            {
+                "namespace": "ledger_transaction",
+                "object_key_hmac": "abc",
+                "content_hash": "sha256-x",
+            },
         )
 
 

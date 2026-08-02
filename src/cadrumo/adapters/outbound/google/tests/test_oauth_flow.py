@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import textwrap
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -20,11 +21,12 @@ from .._errors import (
 )
 from .._oauth_flow import (
     _raise_local_server_error,
+    credentials_to_records,
     require_interactive_terminal,
     resolve_active_tax_id,
     run_login_flow,
 )
-from .._records import OAuthClient
+from .._records import REQUIRED_SCOPES, OAuthClient
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -39,6 +41,24 @@ def _valid_oauth_client() -> OAuthClient:
         auth_provider_x509_cert_url="https://www.googleapis.com/oauth2/v1/certs",
         redirect_uris=("http://localhost",),
     )
+
+
+def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
+    """The direct OAuth-flow handoff preserves canonical metadata instants."""
+
+    issued_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    _token, metadata = credentials_to_records(
+        refresh_token="1//refresh-token",
+        token_uri="https://oauth2.googleapis.com/token",
+        account_email="operator@example.com",
+        granted_scopes=REQUIRED_SCOPES,
+        issued_at=issued_at,
+    )
+
+    assert metadata.issued_at == issued_at
+    assert metadata.last_refresh_at == issued_at
+    assert metadata.model_dump(mode="json")["issued_at"] == "2026-05-26T09:00:00Z"
+    assert metadata.model_dump(mode="json")["last_refresh_at"] == "2026-05-26T09:00:00Z"
 
 
 def test_local_server_error_classifier_routes_browser_failures() -> None:

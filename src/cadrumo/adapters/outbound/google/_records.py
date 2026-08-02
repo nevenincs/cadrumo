@@ -22,7 +22,6 @@ extra fields.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Literal
 from urllib.parse import urlsplit
 
@@ -30,6 +29,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import Settings
+from ....core.time import UtcInstant
 
 # Scopes the desktop app requests at first login. Per Google's
 # Identity Platform "Sign in with Google" guidance, an OAuth flow that
@@ -155,8 +155,11 @@ class OAuthMetadata(BaseModel):
 
     account_email: str = Field(min_length=1)
     granted_scopes: tuple[str, ...] = Field(min_length=1)
-    issued_at: datetime
-    last_refresh_at: datetime
+    # These audit instants survive encrypted persistence and the operator's
+    # status projection, so their timezone policy belongs to the shared core
+    # contract rather than to each producer and renderer.
+    issued_at: UtcInstant
+    last_refresh_at: UtcInstant
     reauth_required: bool = False
 
     @field_validator("granted_scopes")
