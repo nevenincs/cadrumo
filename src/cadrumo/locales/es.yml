@@ -205,6 +205,8 @@ adapters:
             se puede importar; ejecuta `uv sync` y reinténtalo.
           media_non_bytes: La descarga de medios de Google Drive devolvió {payload_type}
             en vez de bytes.
+          modified_time_invalid: Google Drive no ha devuelto una fecha de modificación
+            utilizable para este objeto; no se puede confiar en sus metadatos.
           namespace_blank: El espacio de nombres de almacenamiento de Google Drive
             no puede estar vacío.
           namespace_forbidden_characters: El espacio de nombres de Google Drive {namespace}
@@ -218,14 +220,14 @@ adapters:
           request_failed: La petición de Google Drive {action} falló con estado {status}.
           root_folder_id_blank: El id de carpeta raíz de Google Drive no puede estar
             vacío.
+          size_invalid: Google Drive no ha indicado un tamaño utilizable para este
+            objeto; no se puede confiar en sus metadatos.
           vault_entry_not_folder: La raíz configurada de Drive contiene {vault_folder_name},
             pero esa entrada no es una carpeta.
           vault_folder_name_blank: El nombre de carpeta vault de Google Drive no puede
             estar vacío.
           write_non_dict_response: La respuesta de escritura de Google Drive para
             {action} tuvo una forma inesperada.
-          modified_time_invalid: 'Google Drive no ha devuelto una fecha de modificación utilizable para este objeto; no se puede confiar en sus metadatos.'
-          size_invalid: 'Google Drive no ha indicado un tamaño utilizable para este objeto; no se puede confiar en sus metadatos.'
       local:
         errors:
           byte_length_invalid: El byte_length del sidecar local tiene tipo inválido
@@ -271,7 +273,8 @@ adapters:
             sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
             Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
             (véase `aeat config check`).'
-          written_at_invalid: 'El campo written_at del sidecar local falta, no se puede interpretar o no indica zona horaria: {actual_value}.'
+          written_at_invalid: 'El campo written_at del sidecar local falta, no se
+            puede interpretar o no indica zona horaria: {actual_value}.'
   persistence:
     profile:
       assets:
@@ -606,6 +609,8 @@ application:
           impreso en tu documento. Registra auth.numero_soporte en el perfil activo
           si es un NIE, o auth.fecha_validez si es un DNI, antes de usar cualquier
           sesión AEAT.
+        clave_identity_malformed: La identidad de Cl@ve no es un NIF, NIE o CIF válido,
+          por lo que no se puede confirmar que pertenezca a este perfil.
         clave_identity_missing: La autenticación Cl@ve en directo requiere un DNI/NIE.
           Regístralo en el perfil activo como auth.dni_nie, o configúralo para el
           proveedor con `aeat config auth configure`, antes de usar cualquier sesión
@@ -620,6 +625,9 @@ application:
         profile_identity_cleared: La autenticación en directo con la AEAT necesita
           el NIF del perfil activo, y este perfil no lo tiene. Restaure identity.tax_id
           en el perfil y vuelva a autenticarse.
+        profile_identity_malformed: La identidad fiscal de este perfil no es un NIF,
+          NIE o CIF válido, por lo que no se puede confirmar que la sesión Cl@ve le
+          pertenezca.
         profile_tax_id_missing: La autenticación Cl@ve Móvil en directo requiere que
           el perfil activo tenga identity.tax_id.
         provider_close_failed: No se pudo cerrar de forma segura la sesión del navegador
@@ -866,7 +874,8 @@ application:
       errors:
         snapshot_bucket_mismatch: El bucket de la carga de la instantánea no coincide
           con el bucket del repositorio.
-        snapshot_key_mismatch: 'La instantánea está almacenada bajo la clave de otra instantánea.'
+        snapshot_key_mismatch: La instantánea está almacenada bajo la clave de otra
+          instantánea.
     verify:
       errors:
         bucket_id_blank: El identificador del bucket de verificación no puede estar
@@ -877,11 +886,12 @@ application:
           puede estar vacío.
         observation_id_mismatch: El identificador de la observación de verificación
           no coincide con la observación solicitada.
+        observation_key_mismatch: La observación de verificación está almacenada bajo
+          la clave de otra observación.
         observation_not_found: No hay ninguna observación de verificación que coincida
           con el identificador solicitado.
         observation_prefix_ambiguous: El prefijo de la observación de verificación
           coincide con varias observaciones.
-        observation_key_mismatch: 'La observación de verificación está almacenada bajo la clave de otra observación.'
   modelo:
     borrador_binding:
       errors:
@@ -1056,6 +1066,8 @@ application:
       external_import_unknown_casillas: 'La importación de la declaración externa
         contiene ids de casilla no declarados en el registro para el modelo {modelo},
         ejercicio {filing_year}, periodo {period}: {casillas}.'
+      filed_observation_split_storage_context: El almacén del historial de compensación
+        de IVA es una base de datos distinta de la de observaciones de cálculo
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
       iva_wallet_backend_casilla_conflict: El valor de casilla del backend para la
         compensación previa del Modelo 303 entra en conflicto con la decisión de conciliación
@@ -1087,6 +1099,8 @@ application:
       ledger_preflight_blocked: 'la comprobación previa del libro bloquea el cálculo
         del modelo: transacción %{transaction_id} %{reason}: %{detail}. Ejecuta `aeat
         app ledger preflight --period %{period}` antes de calcular.'
+      m036_declaration_profile_bucket_mismatch: La declaración del modelo 036 indica
+        un perfil distinto del bucket en el que se registraría
       m210_ledger_manual_agrupacion_rows: El modo de fuente de libro mayor del Modelo
         210 deriva las filas anuales de agrupación de rentas de las clasificaciones
         del libro; no proporcione filas manuales de agrupación de rentas.
@@ -1180,8 +1194,6 @@ application:
         abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
-      m036_declaration_profile_bucket_mismatch: 'La declaración del modelo 036 indica un perfil distinto del bucket en el que se registraría'
-      filed_observation_split_storage_context: 'El almacén del historial de compensación de IVA es una base de datos distinta de la de observaciones de cálculo'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -1493,10 +1505,10 @@ application:
           value: Valor
         protected:
           calculos: Cálculos derivados - protegido para preservar paridad
+          evidencia: 'Evidencia generada: solo lectura'
           guide: Guía - protegido
           provenance: Procedencia / pista de auditoría - protegido
           tariffs: Tarifas / parámetros vigentes - protegido
-          evidencia: 'Evidencia generada: solo lectura'
       layout:
         errors:
           undeclared_reference: El diseño de la hoja de cálculo referencia un elemento
@@ -1542,6 +1554,12 @@ application:
         y vuelva a ejecutar la consulta.
       censal_read_identity_mismatch: La lectura censal corresponde a un contribuyente
         distinto al de este perfil; no se ha aplicado.
+      censal_read_identity_profile_malformed: El NIF de este perfil no es un identificador
+        fiscal español válido, por lo que no puede confirmarse que la lectura censal
+        le corresponda. Corrija el NIF y vuelva a ejecutar la consulta.
+      censal_read_identity_read_malformed: El NIF de la lectura censal no es un identificador
+        fiscal español válido, por lo que no puede confirmarse que corresponda a este
+        perfil.
       censal_read_identity_unset: 'Registre su NIF antes de consultar su censo: este
         perfil todavía no tiene ninguno, por lo que la consulta no puede confirmar
         que el registro que devuelve la AEAT sea suyo. Ejecute aeat config profile
@@ -1580,6 +1598,9 @@ application:
       registration_label_blank: El nombre del perfil no puede estar vacío.
       registration_passphrase_too_short: La contraseña debe tener al menos {minimum_length}
         caracteres.
+      repository_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al
+        bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad
+        de perfil.
       repository_profile_record_classification_mismatch: La clasificación del registro
         de perfil no coincide con el contrato del repositorio.
       repository_profile_record_missing: No se encontró el registro de perfil en el
@@ -1594,9 +1615,6 @@ application:
         instantánea de perfil es más reciente de lo que admite esta aplicación.
       unsupported_bundle_schema_version: La versión del esquema del paquete no es
         compatible con esta versión de la aplicación.
-      censal_read_identity_profile_malformed: 'El NIF de este perfil no es un identificador fiscal español válido, por lo que no puede confirmarse que la lectura censal le corresponda. Corrija el NIF y vuelva a ejecutar la consulta.'
-      censal_read_identity_read_malformed: 'El NIF de la lectura censal no es un identificador fiscal español válido, por lo que no puede confirmarse que corresponda a este perfil.'
-      repository_profile_bucket_mismatch: 'El perfil %{profile_id} no pertenece al bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad de perfil.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'
@@ -1699,11 +1717,12 @@ application:
       run_id_invalid_blank: El identificador de ejecución no debe estar en blanco.
       run_id_invalid_separators: El identificador de ejecución no debe contener separadores
         de ruta.
+      run_identity_mismatch: La ejecución almacenada no coincide con el identificador
+        con el que se ha leído.
       run_not_found: 'Ejecución de flujo de trabajo no encontrada: {run_id}.'
       state_unreadable: No se pudo leer el estado de configuración local.
       state_write_invalid_payload: 'No se pudo guardar el estado del flujo de trabajo:
         carga útil no válida.'
-      run_identity_mismatch: 'La ejecución almacenada no coincide con el identificador con el que se ha leído.'
 auth:
   catalogue:
     certificate_description: Autenticación basada en un certificado X.509 (FNMT-RCM
@@ -3601,9 +3620,9 @@ cli:
           de este equipo.
         help: Copia de seguridad y restauración de un perfil como archivo sellado
           y cifrado AEAD (el transporte de recuperación de custodia completa).
-        import_active_switch_info: El perfil restaurado es ahora el perfil ACTIVO;
-          los siguientes comandos operan sobre él. Ejecuta 'aeat config login <nombre>'
-          para cambiar el perfil activo.
+        import_active_switch_info: El perfil restaurado {name} es ahora el perfil
+          ACTIVO; las órdenes siguientes operan sobre él. Ejecuta 'aeat config login
+          <name>' para cambiar el perfil activo.
         import_force_help: Sobrescribe un perfil existente que comparta el identificador
           de bucket del archivo.
         import_help: Restaura un perfil desde un archivo sellado y cifrado en RUTA.
@@ -5269,6 +5288,7 @@ cli:
       environment: Entorno
       extraction_profile_count: Nº perfiles de extracción
       failed_count: Nº fallidos
+      failed_declaration_count: Número de declaraciones fallidas
       failure_count: Nº fallos
       formula_count: Nº fórmulas
       formula_workbook_count: Nº libros de fórmulas
@@ -5298,7 +5318,6 @@ cli:
       workbook_count: Nº libros (workbooks)
       workbook_parity_ref_count: Nº referencias de paridad de libro
       workbook_path: Ruta del libro
-      failed_declaration_count: 'Número de declaraciones fallidas'
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
     parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
@@ -6117,10 +6136,14 @@ errors:
   integrity:
     integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
       el perfil seleccionado antes de continuar.
+    integrity_apoderado_configuration_identity: La configuración de apoderado almacenada
+      no pertenece al perfil desde el que se ha leído.
     integrity_cadrumo_core_validation: Una comprobación interna de integridad de datos
       no se superó.
     integrity_cli_output_schema: El registro de esquemas de salida de la CLI está
       mal configurado.
+    integrity_corpus_anchor_resolution: Un ancla del corpus incluido no se resuelve
+      exactamente en una unidad extraída.
     integrity_filing_amendment_validation: La declaración complementaria infringe
       una invariante legal o de estructura.
     integrity_filing_validation: La validación de la declaración detectó un problema
@@ -6147,6 +6170,8 @@ errors:
       una invariante estructural.
     integrity_profile_answer_type: Un campo de respuesta de perfil recibió un tipo
       inesperado.
+    integrity_profile_bucket_mismatch: El perfil %{profile_id} no pertenece al bucket
+      %{bucket_id}; un bucket de perfil contiene exactamente una identidad de perfil.
     integrity_profile_snapshot_hash_mismatch: El hash del snapshot del perfil no coincide
       con la proyección actual.
     integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
@@ -6204,6 +6229,8 @@ errors:
     integrity_storage_secure_object_revision_ancestry_shape: El campo de ascendencia
       de revisión de un objeto seguro almacenado tiene una forma de identificador
       no válida.
+    integrity_storage_secure_object_row_identity: Un objeto seguro almacenado no reconstruye
+      la clave con la que está archivado; el registro fue sustituido o archivado incorrectamente.
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
@@ -6211,10 +6238,6 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
-    integrity_apoderado_configuration_identity: 'La configuración de apoderado almacenada no pertenece al perfil desde el que se ha leído.'
-    integrity_storage_secure_object_row_identity: 'Un objeto seguro almacenado no reconstruye la clave con la que está archivado; el registro fue sustituido o archivado incorrectamente.'
-    integrity_profile_bucket_mismatch: 'El perfil %{profile_id} no pertenece al bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad de perfil.'
-    integrity_corpus_anchor_resolution: 'Un ancla del corpus incluido no se resuelve exactamente en una unidad extraída.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no
       ha superado su propia validación. Tu comando era correcto; esto es un defecto
@@ -6415,6 +6438,8 @@ errors:
       el corpus.
     refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnóstico
       incumplida.'
+    refused_evidence_bundle_ambiguous: El prefijo del identificador del paquete de
+      evidencias coincide con más de un paquete en este bucket.
     refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con
       el identificador indicado.
     refused_evidence_bundle_verification: La verificación del paquete de evidencias
@@ -6639,7 +6664,6 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_evidence_bundle_ambiguous: 'El prefijo del identificador del paquete de evidencias coincide con más de un paquete en este bucket.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6655,6 +6679,9 @@ errors:
     namespace:
       classification_mismatch: El espacio de nombres de objeto seguro %{namespace}
         está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
+      object_key_grammar_mismatch: 'El espacio de nombres de objeto seguro %{namespace}
+        declara la gramática de clave %{object_key_grammar}, y la clave utilizada
+        no la cumple: %{reason}'
       schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
       schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el
@@ -6669,7 +6696,6 @@ errors:
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
         para almacenamiento runtime.
-      object_key_grammar_mismatch: 'El espacio de nombres de objeto seguro %{namespace} declara la gramática de clave %{object_key_grammar}, y la clave utilizada no la cumple: %{reason}'
     runtime:
       cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
         solo está disponible antes de seleccionar un bucket de perfil activo.
@@ -6763,6 +6789,7 @@ flows:
       certificate: Certificado
       certificate_active: Certificado activo
       certificate_done: 'Identificación: %{provider}; certificado activo: %{name}.'
+      certificate_incomplete: 'Identificación: %{provider}; %{reason} Ejecuta: %{next_action}'
       export: Exportar copia
       export_destination: Ruta del archivo de destino
       export_done: Copia cifrada escrita en %{destination}.
@@ -6771,7 +6798,6 @@ flows:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      certificate_incomplete: 'Identificación: %{provider}; %{reason} Ejecuta: %{next_action}'
     actions:
       section: Acciones
     column:

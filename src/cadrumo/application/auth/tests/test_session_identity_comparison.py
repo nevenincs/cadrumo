@@ -298,3 +298,94 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         profile_create_storage_span(_BUCKET_ID),
     ):
         yield
+
+
+
+class TestClaveIdentityIsComparedCanonically:
+    """The Cl@ve ownership guard compares taxpayers, not strings.
+
+    ``profile_tax_id`` and ``dni_nie`` are unconstrained ``str`` fields, and the
+    guard compared them with a bare ``!=``. That was wrong in two opposite
+    directions at once, and an accepted decision record
+    (``2026-07-25-censal-profile-autofill-adr`` D1b) rests its safety argument
+    on this guard holding.
+
+    Both sides now go through :func:`validate_spanish_tax_id`, the same
+    authority the censal-read ownership guard uses for the same question.
+    """
+
+    _CANONICAL = "12345678Z"
+
+    def _credentials(self, *, profile_tax_id: str, dni_nie: str):
+        from .._sessions import ClaveCredentials
+
+        return ClaveCredentials(
+            provider_kind=AuthProviderKind.CLAVE_MOVIL,
+            dni_nie=dni_nie,
+            profile_tax_id=profile_tax_id,
+        )
+
+    def _assert_guard(self, *, profile_tax_id: str, dni_nie: str):
+        from .._sessions import _assert_active_profile_identity_matches_provider
+
+        return _assert_active_profile_identity_matches_provider(
+            self._credentials(profile_tax_id=profile_tax_id, dni_nie=dni_nie),
+        )
+
+    @pytest.mark.parametrize(
+        "spelling",
+        ["12345678-Z", "12345678 Z", "12345678z", " 12345678Z ", "12345678.Z", "ES12345678Z"],
+    )
+    def test_punctuation_variants_of_one_identity_are_accepted(self, spelling: str) -> None:
+        """The false-REFUSE direction: one taxpayer written two ways is one taxpayer.
+
+        A bare ``!=`` locked a legitimate operator out of their own Cl@ve
+        session purely over formatting.
+        """
+        assert self._assert_guard(profile_tax_id=self._CANONICAL, dni_nie=spelling) == spelling
+        assert self._assert_guard(profile_tax_id=spelling, dni_nie=self._CANONICAL) == self._CANONICAL
+
+    @pytest.mark.parametrize("malformed", ["not-a-nif", "12345678A", "99999999", "AAAAAAAAA"])
+    def test_equal_but_malformed_values_are_refused(self, malformed: str) -> None:
+        """The false-CONFIRM direction, and the one that matters for safety.
+
+        Two equal non-empty junk values passed the bare ``!=`` and CONFIRMED
+        ownership that was never established. A value that is not a valid
+        identifier cannot be shown to belong to the profile at all.
+        """
+        with pytest.raises(AuthProfileIdentityMismatchError):
+            self._assert_guard(profile_tax_id=malformed, dni_nie=malformed)
+
+    def test_a_genuine_mismatch_is_still_refused(self) -> None:
+        """Anti-tautology: normalisation must not make the guard permissive."""
+        with pytest.raises(AuthProfileIdentityMismatchError):
+            self._assert_guard(profile_tax_id=self._CANONICAL, dni_nie="00000001R")
+
+    def test_a_matching_canonical_pair_is_accepted(self) -> None:
+        """Anti-tautology: the guard must not simply refuse everything."""
+        assert self._assert_guard(
+            profile_tax_id=self._CANONICAL,
+            dni_nie=self._CANONICAL,
+        ) == self._CANONICAL
+
+    def test_absent_credentials_and_blank_profile_identity_keep_their_behaviour(self) -> None:
+        """The pre-existing empty-value contract is unchanged by the normalisation."""
+        from .._sessions import _assert_active_profile_identity_matches_provider
+
+        assert _assert_active_profile_identity_matches_provider(None) is None
+        with pytest.raises(AuthProfileIdentityMismatchError):
+            self._assert_guard(profile_tax_id="", dni_nie=self._CANONICAL)
+
+    def test_the_guard_reaches_the_canonical_authority(self) -> None:
+        """One authority for this question, not a second local normaliser.
+
+        A hand-rolled strip-and-upper would pass the punctuation cases above
+        while silently re-admitting the malformed-pair hole, so the source is
+        pinned to the shared validator.
+        """
+        from .. import _sessions
+
+        source = inspect.getsource(_sessions._assert_active_profile_identity_matches_provider)
+
+        assert "validate_spanish_tax_id" in source
+        assert ".upper()" not in source, "a local normaliser would diverge from the canonical form"

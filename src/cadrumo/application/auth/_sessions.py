@@ -33,6 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Va
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from ...core.errors import CadrumoError
+from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
 from ...domain.user_profile import UserProfileStatus
@@ -783,6 +784,20 @@ def _assert_active_profile_identity_matches_provider(
     compare here - its identity exists only once the certificate is
     read at session bind - so it is checked there rather than exempted,
     and the caller supplies the profile identity as the expectation.
+
+    Both sides are compared in the CANONICAL form
+    :func:`~core.identity.validate_spanish_tax_id` returns, not as raw
+    strings. Both fields are unconstrained ``str``, so a bare ``!=`` was wrong
+    in two opposite directions at once: ``12345678-Z`` against ``12345678Z``
+    REFUSED a session the operator legitimately owns, while two equal-but-
+    malformed non-empty values CONFIRMED ownership that was never established.
+    Normalising answers the question the guard actually asks - is this the same
+    taxpayer - and a value that is not a valid identifier cannot be shown to
+    belong to the profile at all, so it refuses rather than comparing.
+
+    This mirrors the censal-read ownership guard in
+    :mod:`application.user_profile._censo_sync`, which resolves the same
+    question against the same authority.
     """
     if credentials is None:
         return None
@@ -790,7 +805,19 @@ def _assert_active_profile_identity_matches_provider(
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.profile_tax_id_missing",
         )
-    if credentials.profile_tax_id != credentials.dni_nie:
+    try:
+        profile_identity = validate_spanish_tax_id(credentials.profile_tax_id)
+    except IdentityError as exc:
+        raise AuthProfileIdentityMismatchError(
+            translated_message="application.auth.sessions.errors.profile_identity_malformed",
+        ) from exc
+    try:
+        clave_identity = validate_spanish_tax_id(credentials.dni_nie)
+    except IdentityError as exc:
+        raise AuthProfileIdentityMismatchError(
+            translated_message="application.auth.sessions.errors.clave_identity_malformed",
+        ) from exc
+    if profile_identity != clave_identity:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.clave_identity_profile_mismatch",
         )

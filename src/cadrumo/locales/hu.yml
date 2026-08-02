@@ -194,6 +194,8 @@ adapters:
             importálható; futtassa: `uv sync`, majd próbálja újra.'
           media_non_bytes: A Google Drive medialetöltés {payload_type} típust adott
             vissza bytes helyett.
+          modified_time_invalid: A Google Drive nem adott vissza használható módosítási
+            időpontot ehhez az objektumhoz; a metaadatai nem megbízhatók.
           namespace_blank: A Google Drive tárhely névtere nem lehet üres.
           namespace_forbidden_characters: A Google Drive névtér {namespace} tiltott
             útvonal-karaktereket tartalmaz.
@@ -203,13 +205,13 @@ adapters:
             ebben a névtérben: {namespace}.'
           request_failed: A Google Drive {action} kérés {status} állapottal sikertelen.
           root_folder_id_blank: A Google Drive gyökérmappa azonosító nem lehet üres.
+          size_invalid: A Google Drive nem adott meg használható méretet ehhez az
+            objektumhoz; a metaadatai nem megbízhatók.
           vault_entry_not_folder: 'A beállított Drive gyökér tartalmazza ezt: {vault_folder_name},
             de ez nem mappa.'
           vault_folder_name_blank: A Google Drive vault mappa neve nem lehet üres.
           write_non_dict_response: A Google Drive {action} írási válasza váratlan
             alakú volt.
-          modified_time_invalid: 'A Google Drive nem adott vissza használható módosítási időpontot ehhez az objektumhoz; a metaadatai nem megbízhatók.'
-          size_invalid: 'A Google Drive nem adott meg használható méretet ehhez az objektumhoz; a metaadatai nem megbízhatók.'
       local:
         errors:
           byte_length_invalid: 'A helyi sidecar byte_length mezőjének típusa érvénytelen:
@@ -251,7 +253,8 @@ adapters:
             sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
             Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
             vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
-          written_at_invalid: 'A helyi sidecar written_at mezője hiányzik, nem értelmezhető, vagy nem tartalmaz időzónát: {actual_value}.'
+          written_at_invalid: 'A helyi sidecar written_at mezője hiányzik, nem értelmezhető,
+            vagy nem tartalmaz időzónát: {actual_value}.'
   persistence:
     profile:
       assets:
@@ -565,6 +568,8 @@ application:
           dokumentumon nyomtatott contraste értékre. NIE esetén rögzítsd az auth.numero_soporte,
           DNI esetén az auth.fecha_validez mezőt az aktív profilban, mielőtt bármelyik
           AEAT-munkamenetet használnád.
+        clave_identity_malformed: A Cl@ve azonosító nem érvényes spanyol NIF, NIE
+          vagy CIF, ezért nem igazolható, hogy ehhez a profilhoz tartozik.
         clave_identity_missing: A Cl@ve élő hitelesítéshez DNI/NIE szükséges. Rögzítsd
           az aktív profilban auth.dni_nie néven, vagy állítsd be a szolgáltatóhoz
           az `aeat config auth configure` paranccsal, mielőtt bármelyik AEAT-munkamenetet
@@ -579,6 +584,8 @@ application:
         profile_identity_cleared: Az élő AEAT-hitelesítéshez szükséges az aktív profil
           adóazonosítója, ez a profil pedig nem tartalmaz ilyet. Állítsa vissza az
           identity.tax_id mezőt a profilban, majd hitelesítsen újra.
+        profile_identity_malformed: A profil adóazonosítója nem érvényes spanyol NIF,
+          NIE vagy CIF, ezért nem igazolható, hogy a Cl@ve munkamenet hozzá tartozik.
         profile_tax_id_missing: A Cl@ve Móvil élő hitelesítés megköveteli, hogy az
           aktív profil rendelkezzen identity.tax_id-val.
         provider_close_failed: Az AEAT böngészőmunkamenetet nem sikerült biztonságosan
@@ -803,7 +810,8 @@ application:
       errors:
         snapshot_bucket_mismatch: A pillanatkép payload bucketje nem egyezik a repository
           bucketjével.
-        snapshot_key_mismatch: 'A pillanatkép egy másik pillanatkép kulcsa alatt van tárolva.'
+        snapshot_key_mismatch: A pillanatkép egy másik pillanatkép kulcsa alatt van
+          tárolva.
     verify:
       errors:
         bucket_id_blank: A verify bucket azonosítója nem lehet üres.
@@ -812,10 +820,11 @@ application:
         observation_id_blank: A verify megfigyelés azonosítója nem lehet üres.
         observation_id_mismatch: A verify megfigyelés azonosítója nem egyezik a kért
           megfigyeléssel.
+        observation_key_mismatch: A verify megfigyelés egy másik megfigyelés kulcsa
+          alatt van tárolva.
         observation_not_found: Nem található verify megfigyelés a kért azonosítóhoz.
         observation_prefix_ambiguous: A verify megfigyelés előtagja több megfigyeléssel
           egyezik.
-        observation_key_mismatch: 'A verify megfigyelés egy másik megfigyelés kulcsa alatt van tárolva.'
   modelo:
     borrador_binding:
       errors:
@@ -988,6 +997,8 @@ application:
       external_import_unknown_casillas: 'A külső bevallás importja olyan casilla-azonosítókat
         tartalmaz, amelyek nincsenek deklarálva a(z) %{modelo} registry modellben,
         %{filing_year} bevallási évben, %{period} időszakban: %{casillas}.'
+      filed_observation_split_storage_context: Az áfakompenzációs előzmények tárolója
+        más adatbázis, mint a számítási megfigyeléseké
       filing_record_not_found: Nem található benyújtási rekord id=%{filing_record_id}
         azonosítóval.
       iva_wallet_backend_casilla_conflict: A Modelo 303 előző kompenzációjának backend
@@ -1016,6 +1027,8 @@ application:
       ledger_preflight_blocked: 'a főkönyvi előellenőrzés blokkolja a modell számítást:
         %{transaction_id} tranzakció, %{reason}: %{detail}. Futtassa a `aeat app ledger
         preflight --period %{period}` parancsot számítás előtt.'
+      m036_declaration_profile_bucket_mismatch: A 036-os modell bevallása más profilt
+        nevez meg, mint az a tároló, amelybe rögzülne
       m210_ledger_manual_agrupacion_rows: Az M210-es modell főkönyvi forrásmódja a
         főkönyvi besorolásokból származtatja az éves csoportosított jövedelemsorokat;
         ne adjon meg kézi agrupacion-renta sorokat.
@@ -1107,8 +1120,6 @@ application:
         benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
-      m036_declaration_profile_bucket_mismatch: 'A 036-os modell bevallása más profilt nevez meg, mint az a tároló, amelybe rögzülne'
-      filed_observation_split_storage_context: 'Az áfakompenzációs előzmények tárolója más adatbázis, mint a számítási megfigyeléseké'
     findings:
       art20_reduccion_next_action: Ellenőrizze, hogy a nem munkából származó egyéb
         jövedelme a mentes jövedelem nélkül az adóévben nem haladja-e meg a 6500 EUR-t;
@@ -1422,10 +1433,10 @@ application:
           value: Érték
         protected:
           calculos: Származtatott számítások - védett a paritás megőrzéséhez
+          evidencia: 'Generált bizonyíték: csak olvasható'
           guide: Útmutató - védett
           provenance: Eredet / audit trail - védett
           tariffs: Tarifák / aktív paraméterek - védett
-          evidencia: 'Generált bizonyíték: csak olvasható'
       layout:
         errors:
           undeclared_reference: A táblázatelrendezés olyan elemre hivatkozik, amelyet
@@ -1468,6 +1479,12 @@ application:
         vissza az adóazonosítót, majd futtassa újra a lekérdezést.
       censal_read_identity_mismatch: A nyilvántartási olvasás egy másik adózóhoz tartozik,
         nem ehhez a profilhoz; nem került alkalmazásra.
+      censal_read_identity_profile_malformed: Ennek a profilnak az adóazonosítója
+        nem érvényes spanyol adóazonosító, ezért nem erősíthető meg, hogy a nyilvántartási
+        olvasás hozzá tartozik. Javítsa az adóazonosítót, majd futtassa újra a lekérdezést.
+      censal_read_identity_read_malformed: A nyilvántartási olvasás adóazonosítója
+        nem érvényes spanyol adóazonosító, ezért nem erősíthető meg, hogy ehhez a
+        profilhoz tartozik.
       censal_read_identity_unset: 'Rögzítse az adóazonosítóját, mielőtt lekérdezi
         a nyilvántartását: ennek a profilnak még nincs, ezért a lekérdezés nem tudja
         megerősíteni, hogy az AEAT által visszaadott rekord az Öné. Futtassa az aeat
@@ -1506,6 +1523,8 @@ application:
       registration_label_blank: A profil neve nem lehet üres.
       registration_passphrase_too_short: A jelszónak legalább {minimum_length} karakter
         hosszúnak kell lennie.
+      repository_profile_bucket_mismatch: A(z) %{profile_id} profil nem tartozik a(z)
+        %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.
       repository_profile_record_classification_mismatch: A profilrekord besorolása
         nem egyezik a repository szerződésével.
       repository_profile_record_missing: Az aktív bucketben nem található profilrekord.
@@ -1518,9 +1537,6 @@ application:
         ez az alkalmazás nem támogatja.
       unsupported_bundle_schema_version: A csomag sémaverziója nem támogatott ebben
         az alkalmazásverzióban.
-      censal_read_identity_profile_malformed: 'Ennek a profilnak az adóazonosítója nem érvényes spanyol adóazonosító, ezért nem erősíthető meg, hogy a nyilvántartási olvasás hozzá tartozik. Javítsa az adóazonosítót, majd futtassa újra a lekérdezést.'
-      censal_read_identity_read_malformed: 'A nyilvántartási olvasás adóazonosítója nem érvényes spanyol adóazonosító, ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.'
-      repository_profile_bucket_mismatch: 'A(z) %{profile_id} profil nem tartozik a(z) %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.'
     notices:
       censo_divergences_open: '{count} profiladat továbbra is eltér a Certificado
         de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
@@ -1622,11 +1638,12 @@ application:
         period={period}.'
       run_id_invalid_blank: A futásazonosító nem lehet üres.
       run_id_invalid_separators: A futásazonosító nem tartalmazhat elérési út elválasztókat.
+      run_identity_mismatch: A tárolt futás nem egyezik azzal az azonosítóval, amellyel
+        beolvasták.
       run_not_found: 'Munkafolyamat-futás nem található: {run_id}.'
       state_unreadable: A helyi konfigurációs állapot nem olvasható.
       state_write_invalid_payload: 'A munkafolyamat-állapot nem menthető: érvénytelen
         adattartalom.'
-      run_identity_mismatch: 'A tárolt futás nem egyezik azzal az azonosítóval, amellyel beolvasták.'
 auth:
   catalogue:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
@@ -3523,9 +3540,9 @@ cli:
           aktív bucket-kulcs helyett; kötelező, ha az archívum elhagyja ezt a gépet.
         help: Profil biztonsági mentése és visszaállítása lezárt, AEAD-titkosított
           archívumként (a teljes körű helyreállítási átvitel).
-        import_active_switch_info: A visszaállított profil most az AKTÍV profil; a
-          következő parancsok ezen dolgoznak. Futtassa az 'aeat config login <name>'
-          parancsot az aktív profil módosításához.
+        import_active_switch_info: 'A visszaállított {name} profil mostantól az AKTÍV
+          profil; a további parancsok ezen működnek. Az aktív profil módosításához
+          futtassa: ''aeat config login <name>''.'
         import_force_help: Felülírja a meglévő profilt, amely megosztja az archívum
           bucket-azonosítóját.
         import_help: Profil visszaállítása egy lezárt, titkosított archívumból az
@@ -5179,6 +5196,7 @@ cli:
       environment: Környezet
       extraction_profile_count: Kinyerési profilok száma
       failed_count: Sikertelenek száma
+      failed_declaration_count: Sikertelen bevallások száma
       failure_count: Hibák száma
       formula_count: Képletek száma
       formula_workbook_count: Képlet-munkafüzetek száma
@@ -5208,7 +5226,6 @@ cli:
       workbook_count: Munkafüzetek száma
       workbook_parity_ref_count: Munkafüzet paritás-hivatkozások száma
       workbook_path: Munkafüzet elérési útja
-      failed_declaration_count: 'Sikertelen bevallások száma'
     observation_help: A titkosított benyújtott bevallás megfigyelési manifesztje az
       ellenőrzéshez.
     parity_app_help: Forgatókönyv- és szalag-paritásfuttató a kézi számítások ellenőrzéséhez.
@@ -5991,9 +6008,13 @@ errors:
   integrity:
     integrity_active_profile_pointer: Az aktívprofil-mutató érvénytelen; javítsa a
       kiválasztott profilt a folytatás előtt.
+    integrity_apoderado_configuration_identity: A tárolt apoderado-beállítás nem ahhoz
+      a profilhoz tartozik, amelyből beolvasták.
     integrity_cadrumo_core_validation: Belső adatintegritás-ellenőrzés meghiúsult.
     integrity_cli_output_schema: A CLI kimeneti séma nyilvántartása helytelenül van
       konfigurálva.
+    integrity_corpus_anchor_resolution: Egy csomagolt korpuszhorgony nem pontosan
+      egy kinyert egységre oldódik fel.
     integrity_filing_amendment_validation: A módosítás sérti a jogi vagy strukturális
       invariánst.
     integrity_filing_validation: A benyújtás-érvényesítés blokkoló eredményt talált.
@@ -6017,6 +6038,8 @@ errors:
     integrity_portals_portal_integrity: Az AEAT portál-nyilvántartás sérti a strukturális
       invariánst.
     integrity_profile_answer_type: Egy profilválasz-mező váratlan típust kapott.
+    integrity_profile_bucket_mismatch: A(z) %{profile_id} profil nem tartozik a(z)
+      %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.
     integrity_profile_snapshot_hash_mismatch: A profil-pillanatkép hashje nem egyezik
       az aktuális vetítéssel.
     integrity_profile_snapshot_not_found: Nem létezik profil-pillanatkép a megadott
@@ -6071,6 +6094,9 @@ errors:
       objektum revíziós ősmezője nem érvényes JSON.
     integrity_storage_secure_object_revision_ancestry_shape: Egy tárolt biztonságos
       objektum revíziós ősmezője érvénytelen revízióazonosító-alakú.
+    integrity_storage_secure_object_row_identity: Egy tárolt biztonságos objektum
+      nem állítja helyre azt a kulcsot, amely alatt iktatva van; a rekordot kicserélték
+      vagy tévesen iktatták.
     integrity_storage_secure_object_unreadable: Egy tárolt biztonságos objektum nem
       fejthető vissza az aktuális főkulccsal.
     integrity_storage_validation: Egy tárolási paraméter nem ment át az érvényesítésen.
@@ -6078,10 +6104,6 @@ errors:
       vagy a számítási motor sérült lehet.
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
-    integrity_apoderado_configuration_identity: 'A tárolt apoderado-beállítás nem ahhoz a profilhoz tartozik, amelyből beolvasták.'
-    integrity_storage_secure_object_row_identity: 'Egy tárolt biztonságos objektum nem állítja helyre azt a kulcsot, amely alatt iktatva van; a rekordot kicserélték vagy tévesen iktatták.'
-    integrity_profile_bucket_mismatch: 'A(z) %{profile_id} profil nem tartozik a(z) %{bucket_id} tárolóhoz; egy profiltároló pontosan egy profilazonosítót tartalmaz.'
-    integrity_corpus_anchor_resolution: 'Egy csomagolt korpuszhorgony nem pontosan egy kinyert egységre oldódik fel.'
   internal:
     cli_outbound_payload_boundary: A Cadrumo olyan belső rekordot épített, amely nem
       felelt meg a saját érvényesítésének. A parancsod helyes volt; ez a Cadrumo hibája.
@@ -6275,6 +6297,8 @@ errors:
     refused_diagnostic_model_invariant: A DiagnosticCheck konstrukciós invariánsa
       sérült; ellenőrizze, hogy az elmaradás/figyelmeztetés sorokban pontosan az egyik
       next_action vagy dead_end van-e beállítva, az ok sorokban pedig egyik sem.
+    refused_evidence_bundle_ambiguous: A bizonyítékcsomag azonosítójának előtagja
+      a tárolóban több csomagra is illik.
     refused_evidence_bundle_not_found: Nem létezik igazoláscsomag a megadott azonosítóval.
     refused_evidence_bundle_verification: Az igazoláscsomag-ellenőrzés meghiúsult,
       és a művelet nem volt kikényszerítve.
@@ -6484,7 +6508,6 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
-    refused_evidence_bundle_ambiguous: 'A bizonyítékcsomag azonosítójának előtagja a tárolóban több csomagra is illik.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6501,6 +6524,9 @@ errors:
       classification_mismatch: A(z) %{namespace} biztonságos objektum névtér a(z)
         %{expected} érzékenységhez van regisztrálva, de a hívó %{classification} osztályozást
         használt.
+      object_key_grammar_mismatch: 'A(z) %{namespace} biztonságos objektum névtér
+        a(z) %{object_key_grammar} kulcsnyelvtant deklarálja, és a használt kulcs
+        nem felel meg neki: %{reason}'
       schema_mismatch: A(z) %{namespace} biztonságos objektum névtér a(z) %{expected}
         sémához van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.
       schema_upgrade_path_missing: 'Nincs sémafrissítési útvonal a(z) {namespace}
@@ -6514,7 +6540,6 @@ errors:
         érzékenységet tartalmaz: %{classification}.'
       unregistered: A(z) %{namespace} biztonságos objektum névtér nincs regisztrálva
         futásidejű tároláshoz.
-      object_key_grammar_mismatch: 'A(z) %{namespace} biztonságos objektum névtér a(z) %{object_key_grammar} kulcsnyelvtant deklarálja, és a használt kulcs nem felel meg neki: %{reason}'
     runtime:
       cold_bootstrap_active_profile_refused: A hidegindítási tároló csak aktív profil
         bucket kiválasztása előtt érhető el.
@@ -6605,6 +6630,7 @@ flows:
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
+      certificate_incomplete: 'Azonosítás: %{provider}; %{reason} Futtasd: %{next_action}'
       export: Másolat exportálása
       export_destination: A célfájl elérési útja
       export_done: 'A titkosított másolat ide került: %{destination}.'
@@ -6613,7 +6639,6 @@ flows:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      certificate_incomplete: 'Azonosítás: %{provider}; %{reason} Futtasd: %{next_action}'
     actions:
       section: Műveletek
     column:

@@ -186,6 +186,8 @@ adapters:
             not importable; run `uv sync` and retry.
           media_non_bytes: Google Drive media download returned {payload_type} instead
             of bytes.
+          modified_time_invalid: Google Drive returned no usable modification time
+            for this object; its metadata cannot be trusted.
           namespace_blank: Google Drive storage namespace must not be blank.
           namespace_forbidden_characters: Google Drive storage namespace {namespace}
             contains forbidden path characters.
@@ -195,13 +197,13 @@ adapters:
             namespace {namespace}.
           request_failed: Google Drive request {action} failed with status {status}.
           root_folder_id_blank: Google Drive root folder id must not be blank.
+          size_invalid: Google Drive reported no usable size for this object; its
+            metadata cannot be trusted.
           vault_entry_not_folder: The configured Drive root contains {vault_folder_name},
             but that entry is not a folder.
           vault_folder_name_blank: Google Drive vault folder name must not be blank.
           write_non_dict_response: Google Drive write response for {action} had an
             unexpected shape.
-          modified_time_invalid: 'Google Drive returned no usable modification time for this object; its metadata cannot be trusted.'
-          size_invalid: 'Google Drive reported no usable size for this object; its metadata cannot be trusted.'
       local:
         errors:
           byte_length_invalid: Local storage sidecar byte_length has invalid type
@@ -237,7 +239,8 @@ adapters:
           sidecar_write_path_too_long: 'Local storage could not write the object sidecar:
             the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
             to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
-          written_at_invalid: 'Local storage sidecar written_at is missing, unparseable, or carries no timezone: {actual_value}.'
+          written_at_invalid: 'Local storage sidecar written_at is missing, unparseable,
+            or carries no timezone: {actual_value}.'
   persistence:
     profile:
       assets:
@@ -543,6 +546,8 @@ application:
           printed on your document. Record auth.numero_soporte on the active profile
           for a NIE, or auth.fecha_validez for a DNI, before any AEAT session can
           be used.
+        clave_identity_malformed: The Cl@ve identity is not a valid Spanish tax identifier,
+          so it cannot be confirmed to belong to this profile.
         clave_identity_missing: Cl@ve live auth requires a DNI/NIE. Record it on the
           active profile as auth.dni_nie, or configure it for the provider with `aeat
           config auth configure`, before any AEAT session can be used.
@@ -556,6 +561,9 @@ application:
         profile_identity_cleared: Live AEAT authentication needs the active profile's
           fiscal ID, and this profile has none. Restore identity.tax_id on the profile,
           then authenticate again.
+        profile_identity_malformed: This profile's fiscal identity is not a valid
+          Spanish tax identifier, so a Cl@ve session cannot be confirmed to belong
+          to it.
         profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
           to carry identity.tax_id.
         provider_close_failed: AEAT browser session could not be closed safely; retry
@@ -777,7 +785,8 @@ application:
       errors:
         snapshot_bucket_mismatch: Snapshot payload bucket does not match the repository
           bucket.
-        snapshot_key_mismatch: 'The snapshot is stored under a different snapshot''s key.'
+        snapshot_key_mismatch: The snapshot is stored under a different snapshot's
+          key.
     verify:
       errors:
         bucket_id_blank: Verify bucket id must not be blank.
@@ -786,10 +795,11 @@ application:
         observation_id_blank: Verify observation id must not be blank.
         observation_id_mismatch: Verify observation id does not match the requested
           observation.
+        observation_key_mismatch: Verify observation is stored under a different observation's
+          key.
         observation_not_found: No verify observation matches the requested id.
         observation_prefix_ambiguous: The verify observation prefix matches multiple
           observations.
-        observation_key_mismatch: 'Verify observation is stored under a different observation''s key.'
   modelo:
     borrador_binding:
       errors:
@@ -892,6 +902,8 @@ application:
         in its own numeric casilla and reserve this casilla for the member selector.
       calculate_text_input_empty: The --casilla value targets a text casilla and must
         be a non-empty string.
+      calculate_typed_text_input_invalid: The --casilla value is not valid for that
+        casilla's declared type.
       calculation_registry_root_missing: Registry root %{registry_root} is missing;
         modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -954,6 +966,8 @@ application:
       external_import_unknown_casillas: 'External-filing import carries casilla ids
         that are not declared in registry modelo %{modelo}, filing year %{filing_year},
         period %{period}: %{casillas}.'
+      filed_observation_split_storage_context: The IVA compensation history store
+        is a different database than the calculation observation store
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
       iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
         compensation conflicts with the IVA wallet reconciliation decision.
@@ -982,6 +996,8 @@ application:
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
+      m036_declaration_profile_bucket_mismatch: The M036 declaration names a different
+        profile than the bucket it would be recorded in
       m210_ledger_manual_agrupacion_rows: Modelo 210 ledger source mode derives annual
         grouped-renta rows from ledger classifications; do not provide manual agrupacion-renta
         rows.
@@ -1064,9 +1080,6 @@ application:
         window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
-      calculate_typed_text_input_invalid: 'The --casilla value is not valid for that casilla''s declared type.'
-      m036_declaration_profile_bucket_mismatch: 'The M036 declaration names a different profile than the bucket it would be recorded in'
-      filed_observation_split_storage_context: 'The IVA compensation history store is a different database than the calculation observation store'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare
@@ -1363,10 +1376,10 @@ application:
           value: Value
         protected:
           calculos: Derived calculations - protected to preserve parity
+          evidencia: 'Generated evidence: read-only'
           guide: Guide - protected
           provenance: Provenance / audit trail - protected
           tariffs: Tariffs / active parameters - protected
-          evidencia: 'Generated evidence: read-only'
       layout:
         errors:
           undeclared_reference: The spreadsheet layout references an item not declared
@@ -1410,6 +1423,12 @@ application:
         read cannot be confirmed to belong to it. Restore the fiscal ID and pull again.
       censal_read_identity_mismatch: The censal read belongs to a different taxpayer
         than this profile; it was not applied.
+      censal_read_identity_profile_malformed: This profile's fiscal ID is not a valid
+        Spanish tax identifier, so a census read cannot be confirmed to belong to
+        it. Correct the fiscal ID and pull again.
+      censal_read_identity_read_malformed: The census read's tax identity is not a
+        valid Spanish tax identifier, so it cannot be confirmed to belong to this
+        profile.
       censal_read_identity_unset: 'Record your fiscal ID before pulling your census:
         this profile has none yet, so the pull cannot confirm the record AEAT returns
         is yours. Run aeat config profile edit to add it.'
@@ -1447,6 +1466,8 @@ application:
       registration_label_blank: The profile name cannot be empty.
       registration_passphrase_too_short: The password must be at least {minimum_length}
         characters long.
+      repository_profile_bucket_mismatch: Profile %{profile_id} does not belong to
+        bucket %{bucket_id}; a profile bucket holds exactly one profile identity.
       repository_profile_record_classification_mismatch: Profile record classification
         does not match the repository contract.
       repository_profile_record_missing: Profile record was not found in the active
@@ -1461,9 +1482,6 @@ application:
         is newer than this application supports.
       unsupported_bundle_schema_version: The bundle schema version is not supported
         by this application version.
-      censal_read_identity_profile_malformed: 'This profile''s fiscal ID is not a valid Spanish tax identifier, so a census read cannot be confirmed to belong to it. Correct the fiscal ID and pull again.'
-      censal_read_identity_read_malformed: 'The census read''s tax identity is not a valid Spanish tax identifier, so it cannot be confirmed to belong to this profile.'
-      repository_profile_bucket_mismatch: 'Profile %{profile_id} does not belong to bucket %{bucket_id}; a profile bucket holds exactly one profile identity.'
     notices:
       censo_divergences_open: '{count} profile field(s) still diverge from the Certificado
         de Situación Censal and remain unresolved: {axes}.'
@@ -1558,10 +1576,11 @@ application:
         and --period together; got modelo={modelo}, year={year}, period={period}.
       run_id_invalid_blank: Run identifier must not be blank.
       run_id_invalid_separators: Run identifier must not contain path separators.
+      run_identity_mismatch: The stored workflow run does not match the run identifier
+        it was read under.
       run_not_found: 'Workflow run not found: {run_id}.'
       state_unreadable: Local configuration state could not be read.
       state_write_invalid_payload: 'Workflow state could not be saved: invalid payload.'
-      run_identity_mismatch: 'The stored workflow run does not match the run identifier it was read under.'
 auth:
   catalogue:
     certificate_description: X.509 client certificate authentication (FNMT-RCM or
@@ -3326,7 +3345,7 @@ cli:
           host.
         help: Back up and restore a profile as a sealed, AEAD-encrypted archive (the
           full-custody recovery transport).
-        import_active_switch_info: The restored profile is now the ACTIVE profile;
+        import_active_switch_info: The restored profile {name} is now the ACTIVE profile;
           subsequent commands operate on it. Run 'aeat config login <name>' to change
           the active profile.
         import_force_help: Overwrite an existing profile that shares the archive's
@@ -4881,6 +4900,7 @@ cli:
       environment: Environment
       extraction_profile_count: Extraction profile count
       failed_count: Failed count
+      failed_declaration_count: Failed declaration count
       failure_count: Failure count
       formula_count: Formula count
       formula_workbook_count: Formula workbook count
@@ -4910,7 +4930,6 @@ cli:
       workbook_count: Workbook count
       workbook_parity_ref_count: Workbook parity ref count
       workbook_path: Workbook path
-      failed_declaration_count: 'Failed declaration count'
     observation_help: Encrypted filed-declaration observation manifest to verify
     parity_app_help: Scenario and tape parity runner for manual calculation checks
     parity_output_help: Destination JSON file for the generated parity tape
@@ -5680,8 +5699,12 @@ errors:
   integrity:
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair
       the selected profile before continuing.
+    integrity_apoderado_configuration_identity: The stored apoderado configuration
+      does not belong to the profile it was read from.
     integrity_cadrumo_core_validation: An internal data-integrity check failed.
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
+    integrity_corpus_anchor_resolution: A bundled corpus anchor does not resolve to
+      exactly one extracted unit.
     integrity_filing_amendment_validation: The amendment violates a legal or structural
       invariant.
     integrity_filing_validation: Filing validation surfaced a blocking finding.
@@ -5705,6 +5728,8 @@ errors:
     integrity_portals_portal_integrity: The AEAT portal registry violates a structural
       invariant.
     integrity_profile_answer_type: A profile-answer field received an unexpected type.
+    integrity_profile_bucket_mismatch: Profile %{profile_id} does not belong to bucket
+      %{bucket_id}; a profile bucket holds exactly one profile identity.
     integrity_profile_snapshot_hash_mismatch: The profile snapshot hash does not match
       the current projection.
     integrity_profile_snapshot_not_found: No profile snapshot exists with the identifier
@@ -5758,6 +5783,8 @@ errors:
       ancestry metadata is malformed JSON.
     integrity_storage_secure_object_revision_ancestry_shape: Secure-object revision
       ancestry metadata must be a list of 64-character revision ids.
+    integrity_storage_secure_object_row_identity: A stored secure object does not
+      reconstruct the key it is filed under; the record was substituted or misfiled.
     integrity_storage_secure_object_unreadable: A stored secure object could not be
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
@@ -5765,10 +5792,6 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
-    integrity_apoderado_configuration_identity: 'The stored apoderado configuration does not belong to the profile it was read from.'
-    integrity_storage_secure_object_row_identity: 'A stored secure object does not reconstruct the key it is filed under; the record was substituted or misfiled.'
-    integrity_profile_bucket_mismatch: 'Profile %{profile_id} does not belong to bucket %{bucket_id}; a profile bucket holds exactly one profile identity.'
-    integrity_corpus_anchor_resolution: 'A bundled corpus anchor does not resolve to exactly one extracted unit.'
   internal:
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report
@@ -5957,6 +5980,8 @@ errors:
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
       rows, and neither is set for ok rows.
+    refused_evidence_bundle_ambiguous: The evidence-bundle id prefix matches more
+      than one bundle in this bucket.
     refused_evidence_bundle_not_found: No evidence bundle exists with the identifier
       provided.
     refused_evidence_bundle_verification: Evidence-bundle verification failed and
@@ -6164,7 +6189,6 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
-    refused_evidence_bundle_ambiguous: 'The evidence-bundle id prefix matches more than one bundle in this bucket.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -6180,6 +6204,9 @@ errors:
     namespace:
       classification_mismatch: Secure-object namespace %{namespace} is registered
         for sensitivity %{expected}, but the caller used %{classification}.
+      object_key_grammar_mismatch: 'Secure-object namespace %{namespace} declares
+        object-key grammar %{object_key_grammar}, and the key the caller used does
+        not match it: %{reason}'
       schema_mismatch: Secure-object namespace %{namespace} is registered for schema
         %{expected}, but the caller used schema %{schema_version}.
       schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}:
@@ -6193,7 +6220,6 @@ errors:
         sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime
         storage.
-      object_key_grammar_mismatch: 'Secure-object namespace %{namespace} declares object-key grammar %{object_key_grammar}, and the key the caller used does not match it: %{reason}'
     runtime:
       cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
         before an active profile bucket is selected.
@@ -6282,6 +6308,7 @@ flows:
       certificate: Certificate
       certificate_active: Active certificate
       certificate_done: 'Identification: %{provider}; active certificate: %{name}.'
+      certificate_incomplete: 'Identification: %{provider}; %{reason} Run: %{next_action}'
       export: Export a copy
       export_destination: Destination file path
       export_done: Encrypted copy written to %{destination}.
@@ -6290,7 +6317,6 @@ flows:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      certificate_incomplete: 'Identification: %{provider}; %{reason} Run: %{next_action}'
     actions:
       section: Actions
     column:
