@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import ConfigDict, Field, model_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from ...application.auth import (
     AuthDiagnosticDetail,
@@ -1238,18 +1238,41 @@ class ApoderadoClearResult(OutputSchema):
     cleared: bool
 
 
+class ApoderadoScopePayload(OutputSchema):
+    """One representative-scope row, mirroring :class:`ApoderadoScope`.
+
+    Carries the same bounds and the same uppercase/alphanumeric ``code``
+    invariant the domain catalogue enforces, so a malformed scope entry is
+    refused rather than forwarded.
+    """
+
+    code: str = Field(min_length=1, max_length=32)
+    name_es: str = Field(min_length=1, max_length=200)
+    name_en: str = Field(min_length=1, max_length=200)
+    modelo_codes: list[str] = []
+
+    @field_validator("code")
+    @classmethod
+    def _code_is_uppercase_alnum(cls, value: str) -> str:
+        if not value.isupper():
+            raise ValueError(f"scope code must be uppercase, got {value!r}")
+        if not value.replace("_", "").isalnum():
+            raise ValueError(f"scope code must be alphanumeric (underscores allowed), got {value!r}")
+        return value
+
+
 @register_schema("config.auth.apoderado.scopes.list")
 class ApoderadoScopesListResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado scopes list``.
 
-    Mirrors the apoderado scope catalogue payload from
-    :class:`ApoderamientosCatalogue`.
+    Projects the apoderado scope catalogue payload from
+    :class:`ApoderamientosCatalogue` -- the non-blank ``catalogue_version``
+    and every :class:`ApoderadoScopePayload` row -- instead of forwarding an
+    arbitrary dumped shape.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
+    catalogue_version: str = Field(min_length=1)
+    scopes: list[ApoderadoScopePayload]
 
 
 # Certificate source registry verb result schemas
