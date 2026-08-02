@@ -6307,6 +6307,7 @@ flows:
         1990-01-31.
       auth_numero_soporte: Support number printed on the document
       auth_provider: How you identify to AEAT
+      busy: Another operation is still running. Wait for it to finish.
       censal_pull: Fill in from AEAT censal data
       censal_pull_auth_incomplete: Your identification is incomplete, so AEAT cannot
         be read yet. Complete it first.
@@ -6326,13 +6327,12 @@ flows:
       export_destination: Destination file path
       export_done: Encrypted copy written to %{destination}.
       export_passphrase: Passphrase that will protect the copy
+      failed: The operation did not finish.
       provider:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      failed: 'The operation did not finish.'
-      busy: 'Another operation is still running. Wait for it to finish.'
-      working: 'Running {action}...'
+      working: Running {action}...
     actions:
       section: Actions
     column:
@@ -6348,6 +6348,7 @@ flows:
       write_failed: The field could not be saved. Try again.
       write_in_flight: Saving the previous field. Wait for it to finish, then try
         again.
+    language: {}
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
     section_title: '{title} — {present}/{total}'
     title: 'Profile: {profile}'
@@ -6606,7 +6607,7 @@ profile:
         entity_nif:
           label: Attributing entity NIF
         filing_year:
-          label: Filing year of the attribution
+          label: Attribution filing year
         share_pct:
           label: Attributed participation percentage
       auth:
@@ -6665,23 +6666,23 @@ profile:
         declaration_type:
           label: Declaration type
         iban:
-          label: IBAN account
+          label: IBAN
         period_end_date:
-          label: Period end date
+          label: Filing period end date
         period_start_date:
-          label: Period start date
+          label: Filing period start date
         presenter_tax_id:
-          label: Presenter NIF/CIF
+          label: Presenter tax ID
         previous_receipt:
-          label: Previous receipt reference
+          label: Previous justificante reference
         program_version:
           label: Program version
         rental_reduccion_art_23_2_tier_2024:
-          label: Rental reduction tier (art. 23.2)
+          label: Rental reduction tier (Art. 23.2, 2024)
         sepa_marca:
           label: SEPA marker
         swift_bic:
-          label: SWIFT-BIC code
+          label: SWIFT-BIC
       identity:
         email:
           label: Contact email
@@ -6697,73 +6698,73 @@ profile:
           label: Tax ID (NIF/NIE/CIF)
       irpf:
         art109_activity_income_withholding_ge_70pct:
-          label: Art. 109 RIRPF 70 percent coverage met
+          label: Meets Art. 109 RIRPF 70% exception
         estimation_regime:
           label: Estimation regime
         objective_estimation_modulos_iae_epigraph:
-          label: Modulos IAE epigraph
+          label: IAE epigraph (modules)
         objective_estimation_modulos_module_1_units:
-          label: Modulos unit slot 1
+          label: Module 1 units
         objective_estimation_modulos_module_2_units:
-          label: Modulos unit slot 2
+          label: Module 2 units
         objective_estimation_modulos_module_3_units:
-          label: Modulos unit slot 3
+          label: Module 3 units
         objective_estimation_modulos_module_4_units:
-          label: Modulos unit slot 4
+          label: Module 4 units
         objective_estimation_modulos_module_5_units:
-          label: Modulos unit slot 5
+          label: Module 5 units
         objective_estimation_modulos_module_6_units:
-          label: Modulos unit slot 6
+          label: Module 6 units
         objective_estimation_modulos_module_7_units:
-          label: Modulos unit slot 7
+          label: Module 7 units
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
-          label: Prior-year agricultural, livestock and forestry gross income
+          label: Prior-year agricultural, livestock and forestry income
         objective_estimation_prior_year_gross_income_eur:
-          label: Prior-year gross income
+          label: Prior-year gross income (modules)
         objective_estimation_prior_year_invoice_gross_income_eur:
-          label: Prior-year gross income requiring an invoice
+          label: Prior-year invoiced income (modules)
         objective_estimation_prior_year_purchases_eur:
-          label: Prior-year purchases
+          label: Prior-year purchases (modules)
         pagadores_count:
           label: Number of payers
         pagadores_secondary_income:
           label: Income from secondary payers
         pagadores_total_work_income:
-          label: Total employment income
+          label: Total work income
         professional_income_withholding_ge_70pct:
-          label: Professional income withholding reaches 70 percent
+          label: Professional withholding reaches 70%
         special_regime:
-          label: IRPF special regime
+          label: Special regime
         special_regime_start_date:
           label: Special regime start date
       iva:
         autoconsumo_promotor_base:
-          label: Promoter self-supply taxable base
+          label: Self-supply taxable base (developer)
         does_intracomunitario:
-          label: Carries out intracommunity operations
+          label: Intracommunity operations
         group_dominant_entity_enrolled:
-          label: IVA group dominant entity
+          label: IVA group dominant entity (Modelo 353)
         group_member_enrolled:
-          label: IVA group member entity
+          label: IVA group member (Modelo 322)
         intracommunity_operations_exceed_50000_eur:
-          label: Intracommunity operations over 50.000 EUR
+          label: Intracommunity operations over 50,000 EUR
         oss_enrolled:
-          label: Enrolled in OSS or IOSS
+          label: OSS/IOSS enrolment
         redeme_enrolled:
-          label: Registered in REDEME
+          label: REDEME enrolment
         regime:
           label: IVA regime
         roi_enrolled:
-          label: Registered in the ROI
+          label: ROI/VIES enrolment
         sii_enrolled:
-          label: Enrolled in the SII
+          label: SII enrolment
       maritime_worker:
         pending_eu_clearance:
-          label: Pending EU clearance
+          label: Pending EU state-aid clearance
         retmar_registered:
-          label: Registered in RETMAR
+          label: RETMAR registration
         tuna_fleet:
-          label: Tuna fleet vessel
+          label: Tuna fleet
         vessel_flag:
           label: Vessel flag state
         vessel_registry:
@@ -6771,7 +6772,7 @@ profile:
         waters_type:
           label: Waters type
         worker_class:
-          label: Maritime worker class
+          label: Maritime worker classification
       obligations:
         bienes_extranjero_above_threshold:
           label: Modelo 720 threshold exceeded
@@ -6786,27 +6787,27 @@ profile:
         cadastral_reference:
           label: Cadastral reference
         use_type:
-          label: Property use type
+          label: Property use
       provenance:
         source:
-          label: Fact source
+          label: Data source
         valid_from:
           label: Valid from
         valid_to:
           label: Valid to
       renta_family:
         anualidades_sin_minimo_descendientes_2020:
-          label: Alimony scale without descendant minimum (2020)
+          label: Alimony annuities without descendant minimum (2020)
         anualidades_sin_minimo_descendientes_2021:
-          label: Alimony scale without descendant minimum (2021)
+          label: Alimony annuities without descendant minimum (2021)
         anualidades_sin_minimo_descendientes_2022:
-          label: Alimony scale without descendant minimum (2022)
+          label: Alimony annuities without descendant minimum (2022)
         anualidades_sin_minimo_descendientes_2023:
-          label: Alimony scale without descendant minimum (2023)
+          label: Alimony annuities without descendant minimum (2023)
         anualidades_sin_minimo_descendientes_2024:
-          label: Alimony scale without descendant minimum (2024)
+          label: Alimony annuities without descendant minimum (2024)
         anualidades_sin_minimo_descendientes_2025:
-          label: Alimony scale without descendant minimum (2025)
+          label: Alimony annuities without descendant minimum (2025)
         ascendants:
           label: Ascendants
         cotizaciones_ss_madre_2024:
@@ -6814,13 +6815,13 @@ profile:
         descendants:
           label: Descendants
         descendants_eu_eea_deduction:
-          label: EU or EEA descendant deduction
+          label: EU/EEA descendant deduction
         descendiente:
-          label: Descendant rows
+          label: Descendant
         descendientes_count:
           label: Descendant count
         descendientes_menores_3_2024:
-          label: Descendants under three (2024)
+          label: Descendants under 3 (2024)
         descendientes_minimos_aggregate_2020:
           label: Descendant minimum, state share (2020)
         descendientes_minimos_aggregate_2021:
@@ -6834,46 +6835,46 @@ profile:
         descendientes_minimos_aggregate_2025:
           label: Descendant minimum, state share (2025)
         descendientes_minimos_aggregate_autonomico_2020:
-          label: Descendant minimum, autonomic share (2020)
+          label: Descendant minimum, regional share (2020)
         descendientes_minimos_aggregate_autonomico_2021:
-          label: Descendant minimum, autonomic share (2021)
+          label: Descendant minimum, regional share (2021)
         descendientes_minimos_aggregate_autonomico_2022:
-          label: Descendant minimum, autonomic share (2022)
+          label: Descendant minimum, regional share (2022)
         descendientes_minimos_aggregate_autonomico_2023:
-          label: Descendant minimum, autonomic share (2023)
+          label: Descendant minimum, regional share (2023)
         descendientes_minimos_aggregate_autonomico_2024:
-          label: Descendant minimum, autonomic share (2024)
+          label: Descendant minimum, regional share (2024)
         descendientes_minimos_aggregate_autonomico_2025:
-          label: Descendant minimum, autonomic share (2025)
+          label: Descendant minimum, regional share (2025)
         gastos_guarderia_reales_2024:
-          label: Nursery expenses (2024)
+          label: Childcare expenses (2024)
         madrid_nacimiento_adopcion_eligible_count:
-          label: Madrid birth or adoption eligible descendants
+          label: Madrid birth/adoption deduction count
         minor_children_in_unit:
-          label: Minor children in the family unit
+          label: Minor children in the household
         situacion_familiar:
           label: Family situation
         unidad_familiar_otros_miembros_base:
-          label: Taxable base of the other family-unit members
+          label: Other household members' taxable base (Madrid)
       renta_spouse:
         birth_date:
           label: Spouse birth date
         disability_grade:
           label: Spouse disability grade
         eu_eea_country:
-          label: Spouse EU or EEA country
+          label: Spouse EU/EEA country
         eu_eea_resident:
-          label: Spouse resident in the EU or EEA
+          label: Spouse EU/EEA resident
         name:
           label: Spouse given name
         non_resident_irpf:
-          label: Spouse is a non-resident
+          label: Spouse non-resident (not IRPF taxpayer)
         sex:
           label: Spouse sex
         surnames:
           label: Spouse surnames
         tax_id:
-          label: Spouse NIF/NIE
+          label: Spouse tax ID (NIF/NIE)
       renta_taxpayer:
         birth_date:
           label: Birth date
@@ -6884,18 +6885,18 @@ profile:
         marital_status:
           label: Marital status
         marriage_date:
-          label: Marriage date
+          label: Marriage start date
         marriage_full_year:
-          label: Married for the whole year
+          label: Married full year (derived)
         marriage_month_end:
-          label: Last month of marriage in the year
+          label: Marriage end month (derived)
         marriage_month_start:
-          label: First month of marriage in the year
+          label: Marriage start month (derived)
         sex:
           label: Sex
       tax_residence:
         ccaa:
-          label: Comunidad autonoma of residence
+          label: Autonomous community of residence (CCAA)
         jurisdiction_scope:
           label: Territorial regime
         state_attribution_ratio:
@@ -6942,14 +6943,14 @@ profile:
           label: Category
       vivienda_office:
         office_m2:
-          label: Office area (m2)
+          label: Office floor area (m2)
         total_m2:
-          label: Total dwelling area (m2)
+          label: Total floor area (m2)
       withholding:
         has_employees:
-          label: Pays employees with withholding
+          label: Has employees
         modelo_111_no_retenciones_periods:
-          label: Modelo 111 periods without withholding
+          label: Modelo 111 no-withholding periods
         pays_capital_income_with_retencion:
           label: Pays capital income with withholding
         pays_professionals_with_retencion:
@@ -6992,11 +6993,11 @@ profile:
       provenance:
         title: Provenance and effective dating
       renta_family:
-        title: Renta family
+        title: Family (Renta)
       renta_spouse:
-        title: Renta spouse
+        title: Spouse (Renta)
       renta_taxpayer:
-        title: Renta taxpayer
+        title: Taxpayer (Renta)
       tax_residence:
         title: Tax residence and jurisdiction
       taxpayer_type:
@@ -7004,7 +7005,7 @@ profile:
       usage_ratios:
         title: Usage ratios and deductibility
       vivienda_office:
-        title: Vivienda habitual office afectacion
+        title: Home-office use of the habitual residence
       withholding:
         title: Withholding payer obligations
   validation:

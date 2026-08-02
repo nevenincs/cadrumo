@@ -6630,6 +6630,7 @@ flows:
         meg, például 1990-01-31.
       auth_numero_soporte: A dokumentumon szereplő támogatási szám
       auth_provider: Azonosítás módja az AEAT felé
+      busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
       censal_pull: Kitöltés az AEAT censusadataiból
       censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
         Előbb egészítse ki.
@@ -6649,12 +6650,11 @@ flows:
       export_destination: A célfájl elérési útja
       export_done: 'A titkosított másolat ide került: %{destination}.'
       export_passphrase: A másolatot védő jelszó
+      failed: A művelet nem fejeződött be.
       provider:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
-      failed: 'A művelet nem fejeződött be.'
-      busy: 'Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.'
       working: '{action} folyamatban...'
     actions:
       section: Műveletek
@@ -6671,6 +6671,7 @@ flows:
       write_failed: A mezőt nem sikerült menteni. Próbáld újra.
       write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
         majd próbáld újra.
+    language: {}
     progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
     section_title: '{title} — {present}/{total}'
     title: 'Profil: {profile}'
@@ -6914,7 +6915,7 @@ profile:
         description:
           label: Tevékenység leírása
         iae_epigraph:
-          label: IAE-besorolás
+          label: IAE-epigrafus
       attribution_entity:
         legal_form:
           label: Hozzárendelő entitás jogi formája
@@ -6962,7 +6963,7 @@ profile:
         activity_start_date:
           label: Tevékenység kezdete
         divergencia:
-          label: Cenzus-eltérések
+          label: Censo-eltérések
         elected_withholding_pct:
           label: Választott forrásadókulcs
         establecimiento_type:
@@ -6972,7 +6973,7 @@ profile:
         public_administration_budget_gt_6000000:
           label: Közigazgatási költségvetés 6.000.000 EUR felett
         status:
-          label: Cenzus állapota
+          label: Censo állapota
       contact:
         fiscal_address:
           label: Adóügyi cím
@@ -6996,23 +6997,23 @@ profile:
         declaration_type:
           label: Bevallás típusa
         iban:
-          label: IBAN-számlaszám
+          label: IBAN
         period_end_date:
-          label: Időszak vége
+          label: Bevallási időszak vége
         period_start_date:
-          label: Időszak kezdete
+          label: Bevallási időszak kezdete
         presenter_tax_id:
-          label: Benyújtó NIF/CIF-je
+          label: Benyújtó adóazonosítója
         previous_receipt:
-          label: Korábbi bizonylat hivatkozása
+          label: Korábbi justificante hivatkozása
         program_version:
           label: Programverzió
         rental_reduccion_art_23_2_tier_2024:
-          label: Bérbeadási kedvezmény sávja (23.2. cikk)
+          label: Bérbeadási kedvezmény sávja (23.2. cikk, 2024)
         sepa_marca:
           label: SEPA-jelölés
         swift_bic:
-          label: SWIFT-BIC kód
+          label: SWIFT-BIC
       identity:
         email:
           label: Kapcsolattartó e-mail
@@ -7028,81 +7029,81 @@ profile:
           label: Adóazonosító (NIF/NIE/CIF)
       irpf:
         art109_activity_income_withholding_ge_70pct:
-          label: A RIRPF 109. cikke szerinti 70 százalékos fedezet teljesül
+          label: Megfelel a RIRPF 109. cikk 70%-os kivételének
         estimation_regime:
-          label: Jövedelemmegállapítási rendszer
+          label: Becslési rendszer
         objective_estimation_modulos_iae_epigraph:
-          label: Modulos IAE-besorolás
+          label: IAE-epigrafus (modulok)
         objective_estimation_modulos_module_1_units:
-          label: 1. modul bevallott egységei
+          label: 1. modul egységei
         objective_estimation_modulos_module_2_units:
-          label: 2. modul bevallott egységei
+          label: 2. modul egységei
         objective_estimation_modulos_module_3_units:
-          label: 3. modul bevallott egységei
+          label: 3. modul egységei
         objective_estimation_modulos_module_4_units:
-          label: 4. modul bevallott egységei
+          label: 4. modul egységei
         objective_estimation_modulos_module_5_units:
-          label: 5. modul bevallott egységei
+          label: 5. modul egységei
         objective_estimation_modulos_module_6_units:
-          label: 6. modul bevallott egységei
+          label: 6. modul egységei
         objective_estimation_modulos_module_7_units:
-          label: 7. modul bevallott egységei
+          label: 7. modul egységei
         objective_estimation_prior_year_agri_livestock_forest_gross_eur:
-          label: Előző évi mezőgazdasági, állattenyésztési és erdészeti bruttó bevétel
+          label: Előző évi mezőgazdasági, állattenyésztési és erdészeti bevétel
         objective_estimation_prior_year_gross_income_eur:
-          label: Előző évi bruttó bevétel
+          label: Előző évi bruttó bevétel (modulok)
         objective_estimation_prior_year_invoice_gross_income_eur:
-          label: Előző évi számlaköteles bruttó bevétel
+          label: Előző évi számlázott bevétel (modulok)
         objective_estimation_prior_year_purchases_eur:
-          label: Előző évi beszerzések
+          label: Előző évi beszerzések (modulok)
         pagadores_count:
           label: Kifizetők száma
         pagadores_secondary_income:
           label: Másodlagos kifizetőktől származó jövedelem
         pagadores_total_work_income:
-          label: Összes munkajövedelem
+          label: Munkajövedelem összesen
         professional_income_withholding_ge_70pct:
-          label: A szakmai jövedelem forrásadója eléri a 70 százalékot
+          label: Szakmai forrásadó eléri a 70%-ot
         special_regime:
-          label: IRPF különleges rendszer
+          label: Különleges adózási rend
         special_regime_start_date:
-          label: Különleges rendszer kezdete
+          label: Különleges rendszer kezdő dátuma
       iva:
         autoconsumo_promotor_base:
-          label: Beruházói saját felhasználás adóalapja
+          label: Ingatlanfejlesztői önadóztatás adóalapja
         does_intracomunitario:
-          label: Közösségi ügyleteket folytat
+          label: Közösségen belüli ügyletek
         group_dominant_entity_enrolled:
-          label: IVA-csoport uralkodó vállalata
+          label: IVA-csoport domináns tagja (353-as nyomtatvány)
         group_member_enrolled:
-          label: IVA-csoport tagvállalata
+          label: IVA-csoporttag (322-es nyomtatvány)
         intracommunity_operations_exceed_50000_eur:
-          label: Közösségi ügyletek 50.000 EUR felett
+          label: Közösségen belüli ügyletek 50.000 EUR felett
         oss_enrolled:
-          label: OSS vagy IOSS rendszerben regisztrált
+          label: OSS/IOSS-regisztráció
         redeme_enrolled:
-          label: REDEME-ben nyilvántartott
+          label: REDEME-regisztráció
         regime:
           label: IVA-rendszer
         roi_enrolled:
-          label: ROI-ban nyilvántartott
+          label: ROI/VIES-regisztráció
         sii_enrolled:
-          label: SII rendszerben regisztrált
+          label: SII-regisztráció
       maritime_worker:
         pending_eu_clearance:
-          label: EU-jóváhagyásra vár
+          label: EU állami támogatási jóváhagyásra vár
         retmar_registered:
-          label: RETMAR-ban nyilvántartott
+          label: RETMAR-regisztráció
         tuna_fleet:
-          label: Tonhalflotta hajója
+          label: Tonhalflotta
         vessel_flag:
           label: Hajó lobogója
         vessel_registry:
           label: Hajólajstrom
         waters_type:
-          label: Vizek típusa
+          label: Vízterület típusa
         worker_class:
-          label: Tengerészi besorolás osztálya
+          label: Trabajador del mar (besorolás)
       obligations:
         bienes_extranjero_above_threshold:
           label: Modelo 720 küszöbérték túllépve
@@ -7117,99 +7118,99 @@ profile:
         cadastral_reference:
           label: Kataszteri hivatkozás
         use_type:
-          label: Ingatlan használati típusa
+          label: Ingatlan hasznosítása
       provenance:
         source:
-          label: Adat forrása
+          label: Adat eredete
         valid_from:
           label: Érvényes ettől
         valid_to:
           label: Érvényes eddig
       renta_family:
         anualidades_sin_minimo_descendientes_2020:
-          label: Tartásdíj-skála leszármazotti minimum nélkül (2020)
+          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2020)
         anualidades_sin_minimo_descendientes_2021:
-          label: Tartásdíj-skála leszármazotti minimum nélkül (2021)
+          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2021)
         anualidades_sin_minimo_descendientes_2022:
-          label: Tartásdíj-skála leszármazotti minimum nélkül (2022)
+          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2022)
         anualidades_sin_minimo_descendientes_2023:
-          label: Tartásdíj-skála leszármazotti minimum nélkül (2023)
+          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2023)
         anualidades_sin_minimo_descendientes_2024:
-          label: Tartásdíj-skála leszármazotti minimum nélkül (2024)
+          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2024)
         anualidades_sin_minimo_descendientes_2025:
-          label: Tartásdíj-skála leszármazotti minimum nélkül (2025)
+          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2025)
         ascendants:
           label: Felmenők
         cotizaciones_ss_madre_2024:
-          label: Az anya társadalombiztosítási járulékai (2024)
+          label: Anya társadalombiztosítási járulékai (2024)
         descendants:
           label: Leszármazottak
         descendants_eu_eea_deduction:
-          label: EU/EGT leszármazotti kedvezmény
+          label: EU/EGT-leszármazott kedvezmény
         descendiente:
-          label: Leszármazottak adatai
+          label: Leszármazott
         descendientes_count:
           label: Leszármazottak száma
         descendientes_menores_3_2024:
-          label: Három év alatti leszármazottak (2024)
+          label: 3 év alatti leszármazottak (2024)
         descendientes_minimos_aggregate_2020:
-          label: Leszármazotti minimum, állami rész (2020)
+          label: Leszármazottak utáni minimum, állami rész (2020)
         descendientes_minimos_aggregate_2021:
-          label: Leszármazotti minimum, állami rész (2021)
+          label: Leszármazottak utáni minimum, állami rész (2021)
         descendientes_minimos_aggregate_2022:
-          label: Leszármazotti minimum, állami rész (2022)
+          label: Leszármazottak utáni minimum, állami rész (2022)
         descendientes_minimos_aggregate_2023:
-          label: Leszármazotti minimum, állami rész (2023)
+          label: Leszármazottak utáni minimum, állami rész (2023)
         descendientes_minimos_aggregate_2024:
-          label: Leszármazotti minimum, állami rész (2024)
+          label: Leszármazottak utáni minimum, állami rész (2024)
         descendientes_minimos_aggregate_2025:
-          label: Leszármazotti minimum, állami rész (2025)
+          label: Leszármazottak utáni minimum, állami rész (2025)
         descendientes_minimos_aggregate_autonomico_2020:
-          label: Leszármazotti minimum, autonóm rész (2020)
+          label: Leszármazottak utáni minimum, regionális rész (2020)
         descendientes_minimos_aggregate_autonomico_2021:
-          label: Leszármazotti minimum, autonóm rész (2021)
+          label: Leszármazottak utáni minimum, regionális rész (2021)
         descendientes_minimos_aggregate_autonomico_2022:
-          label: Leszármazotti minimum, autonóm rész (2022)
+          label: Leszármazottak utáni minimum, regionális rész (2022)
         descendientes_minimos_aggregate_autonomico_2023:
-          label: Leszármazotti minimum, autonóm rész (2023)
+          label: Leszármazottak utáni minimum, regionális rész (2023)
         descendientes_minimos_aggregate_autonomico_2024:
-          label: Leszármazotti minimum, autonóm rész (2024)
+          label: Leszármazottak utáni minimum, regionális rész (2024)
         descendientes_minimos_aggregate_autonomico_2025:
-          label: Leszármazotti minimum, autonóm rész (2025)
+          label: Leszármazottak utáni minimum, regionális rész (2025)
         gastos_guarderia_reales_2024:
-          label: Bölcsődei költségek (2024)
+          label: Bölcsődei kiadások (2024)
         madrid_nacimiento_adopcion_eligible_count:
-          label: Madridi születési vagy örökbefogadási kedvezményre jogosult leszármazottak
+          label: Madrid születési/örökbefogadási kedvezményre jogosultak száma
         minor_children_in_unit:
-          label: Kiskorú gyermekek a családban
+          label: Kiskorú gyermekek a családi egységben
         situacion_familiar:
           label: Családi helyzet
         unidad_familiar_otros_miembros_base:
-          label: A család többi tagjának adóalapja
+          label: A családi egység többi tagjának adóalapja (Madrid)
       renta_spouse:
         birth_date:
           label: Házastárs születési dátuma
         disability_grade:
           label: Házastárs fogyatékosságának mértéke
         eu_eea_country:
-          label: Házastárs EU- vagy EGT-országa
+          label: Házastárs EU/EGT országa
         eu_eea_resident:
-          label: A házastárs EU- vagy EGT-lakos
+          label: Házastárs EU/EGT-rezidens
         name:
           label: Házastárs utóneve
         non_resident_irpf:
-          label: A házastárs nem belföldi illetőségű
+          label: Házastárs nem rezidens (nem IRPF-adózó)
         sex:
           label: Házastárs neme
         surnames:
           label: Házastárs vezetéknevei
         tax_id:
-          label: Házastárs NIF/NIE-je
+          label: Házastárs adóazonosítója (NIF/NIE)
       renta_taxpayer:
         birth_date:
           label: Születési dátum
         death_date:
-          label: Halálozás dátuma
+          label: Elhalálozás dátuma
         disability_grade:
           label: Fogyatékosság mértéke
         marital_status:
@@ -7217,11 +7218,11 @@ profile:
         marriage_date:
           label: Házasságkötés dátuma
         marriage_full_year:
-          label: Egész évben fennálló házasság
+          label: Egész évben fennálló házasság (számított)
         marriage_month_end:
-          label: A házasság utolsó hónapja az adóévben
+          label: Házasság záró hónapja (számított)
         marriage_month_start:
-          label: A házasság első hónapja az adóévben
+          label: Házasság kezdő hónapja (számított)
         sex:
           label: Nem
       tax_residence:
@@ -7268,23 +7269,23 @@ profile:
           label: Államnak fizetett adó aránya
       usage_ratios:
         business_ratio:
-          label: Üzleti használat aránya
+          label: Üzleti használati arány
         category_id:
           label: Kategória
       vivienda_office:
         office_m2:
-          label: Irodai alapterület (m2)
+          label: Irodai célra használt alapterület (m2)
         total_m2:
           label: Lakás teljes alapterülete (m2)
       withholding:
         has_employees:
-          label: Alkalmazottakat forrásadóval fizet
+          label: Van alkalmazottja
         modelo_111_no_retenciones_periods:
-          label: Modelo 111 forrásadó nélküli időszakai
+          label: Modelo 111 forrásadó nélküli időszakok
         pays_capital_income_with_retencion:
           label: Tőkejövedelmet forrásadóval fizet
         pays_professionals_with_retencion:
-          label: Szakembereket forrásadóval fizet
+          label: Szakembereknek forrásadóval fizet
         pays_rent_with_retencion:
           label: Bérleti díjat forrásadóval fizet
     section:
@@ -7301,11 +7302,11 @@ profile:
       capabilities:
         title: Szolgáltatási képességek
       censo:
-        title: Cenzus és bejelentkezés
+        title: Censo és bejelentkezés
       contact:
         title: Kapcsolat és adóügyi cím
       filing_export:
-        title: Bevallási és exportálási környezet
+        title: Bevallási és exportálási kontextus
       identity:
         title: Azonosítás
       irpf:
@@ -7313,21 +7314,21 @@ profile:
       iva:
         title: IVA-profil
       maritime_worker:
-        title: Tengerészi besorolás
+        title: Trabajador del mar (besorolás)
       obligations:
-        title: Bevallási kötelezettség küszöbei
+        title: Bevallási kötelezettség küszöbértékei
       preferences:
         title: Kezelői beállítások
       properties:
         title: Ingatlanok és bérbeadás
       provenance:
-        title: Adat eredete és hatálya
+        title: Eredet és érvényesség
       renta_family:
-        title: Család a Rentában
+        title: Család (Renta)
       renta_spouse:
-        title: Házastárs a Rentában
+        title: Házastárs (Renta)
       renta_taxpayer:
-        title: Renta-adózó
+        title: Adózó (Renta)
       tax_residence:
         title: Adóügyi illetőség és joghatóság
       taxpayer_type:
@@ -7337,7 +7338,7 @@ profile:
       vivienda_office:
         title: Állandó lakás irodai hasznosítása
       withholding:
-        title: Kifizetői forrásadó-kötelezettségek
+        title: Forrásadó-fizetői kötelezettségek
   validation:
     required_field_missing: Hiányzik egy kötelező profilmező.
 review:
