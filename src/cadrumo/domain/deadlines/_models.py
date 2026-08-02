@@ -960,4 +960,3 @@ class Schedule(BaseModel):
     def _require_utc_generated_at(cls, value: datetime) -> datetime:
         """Route the stamp through the canonical UTC-aware contract."""
         return validate_utc_aware(value)
-
