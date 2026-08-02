@@ -88,6 +88,25 @@ def _cohort(
     return root
 
 
+def _replace_generated_json_surface(cohort: Path, *, surface: str, payload: object) -> str:
+    """Replace one real generated JSON document with an arbitrary parsed JSON shape."""
+    encoded = json.dumps(payload)
+    if surface == "scoop":
+        (cohort / "scoop" / "cadrumo.json").write_text(encoded, encoding="utf-8")
+        return "scoop manifest unreadable"
+    if surface == "marketplace":
+        bundle = next((cohort / "claude").glob("cadrumo-marketplace-*.zip"))
+        with zipfile.ZipFile(bundle, "w") as archive:
+            archive.writestr("plugins/cadrumo/.claude-plugin/plugin.json", encoded)
+        return "marketplace plugin manifest unreadable"
+    if surface == "mcpb":
+        bundle = next((cohort / "mcpb").glob("cadrumo-*.mcpb"))
+        with zipfile.ZipFile(bundle, "w") as archive:
+            archive.writestr("manifest.json", encoded)
+        return "mcpb bundle manifest unreadable"
+    raise AssertionError(f"unexpected generated JSON surface: {surface}")
+
+
 def test_all_surfaces_bind_the_cohort(tmp_path: Path) -> None:
     """A consistent cohort passes: every embedded version + digest equals the cohort."""
     cohort = _cohort(tmp_path / "cohort")
@@ -135,6 +154,24 @@ def test_mcpb_stamped_version_drift_is_named(tmp_path: Path) -> None:
     check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
     assert not check.passed
     assert "mcpb stamped version" in check.detail
+
+
+@pytest.mark.parametrize("surface", ("scoop", "marketplace", "mcpb"))
+@pytest.mark.parametrize("payload", ([], 7))
+def test_generated_json_non_object_surface_blocks_readiness(
+    tmp_path: Path,
+    surface: str,
+    payload: object,
+) -> None:
+    """Real JSON files and bundle members with list/scalar bodies block instead of crashing the gate."""
+    cohort = _cohort(tmp_path / "cohort")
+    expected_detail = _replace_generated_json_surface(cohort, surface=surface, payload=payload)
+
+    check = check_generated_surface_versions(tmp_path, cohort_directory=cohort)
+
+    assert check.severity == "blocking"
+    assert check.passed is False
+    assert expected_detail in check.detail
 
 
 def test_missing_cohort_surfaces_fail_closed(tmp_path: Path) -> None:

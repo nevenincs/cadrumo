@@ -49,7 +49,7 @@ import zipfile
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 from pydantic import ValidationError
 
@@ -200,6 +200,13 @@ def _read_mcpb_manifest(repo_root: Path) -> tuple[str, tuple[str, ...]]:
     mcp_config = payload.get("server", {}).get("mcp_config", {})
     args = tuple(str(arg) for arg in mcp_config.get("args", []))
     return version, args
+
+
+def _require_json_object(payload: object, *, surface: str) -> dict[str, object]:
+    """Return a decoded JSON object or refuse the named release surface."""
+    if not isinstance(payload, dict):
+        raise ValueError(f"{surface} must be a JSON object")
+    return cast(dict[str, object], payload)
 
 
 def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
@@ -574,9 +581,17 @@ def check_generated_surface_versions(
     manifest_path = cohort_root / "release-cohort.json"
     python_cohort_path = cohort_root / "python" / "python-cohort.json"
     try:
-        version = str(json.loads(manifest_path.read_text(encoding=_UTF_8))["version"])
-        python_sha = json.loads(python_cohort_path.read_text(encoding=_UTF_8))["sha256"]
-    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        cohort_manifest = _require_json_object(
+            json.loads(manifest_path.read_text(encoding=_UTF_8)),
+            surface="release cohort manifest",
+        )
+        version = str(cohort_manifest["version"])
+        python_cohort = _require_json_object(
+            json.loads(python_cohort_path.read_text(encoding=_UTF_8)),
+            surface="python cohort manifest",
+        )
+        python_sha = _require_json_object(python_cohort["sha256"], surface="python cohort digest map")
+    except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
         return ReadinessCheck(
             name, "blocking", False, f"cohort version/digest surfaces unreadable under {cohort_root}: {exc}"
         )
@@ -584,7 +599,10 @@ def check_generated_surface_versions(
     failures: list[str] = []
 
     try:
-        scoop = json.loads((cohort_root / "scoop" / "cadrumo.json").read_text(encoding=_UTF_8))
+        scoop = _require_json_object(
+            json.loads((cohort_root / "scoop" / "cadrumo.json").read_text(encoding=_UTF_8)),
+            surface="scoop manifest",
+        )
         if str(scoop.get("version")) != version:
             failures.append(f"scoop version {scoop.get('version')!r} != cohort {version!r}")
         expected_hashes = [
@@ -592,10 +610,14 @@ def check_generated_surface_versions(
             python_sha["cadrumo-data-manuals"],
             python_sha["cadrumo-data-official"],
         ]
-        actual_hashes = list(scoop.get("architecture", {}).get("64bit", {}).get("hash", []))
+        scoop_architecture = _require_json_object(scoop.get("architecture"), surface="scoop architecture")
+        scoop_64bit = _require_json_object(scoop_architecture.get("64bit"), surface="scoop 64bit architecture")
+        actual_hashes = scoop_64bit.get("hash")
+        if not isinstance(actual_hashes, list):
+            raise ValueError("scoop 64bit hashes must be a JSON array")
         if actual_hashes != expected_hashes:
             failures.append("scoop 64bit hashes do not equal the cohort python-wheel digests")
-    except (OSError, json.JSONDecodeError, KeyError) as exc:
+    except (OSError, json.JSONDecodeError, KeyError, ValueError) as exc:
         failures.append(f"scoop manifest unreadable: {exc}")
 
     try:
@@ -618,10 +640,13 @@ def check_generated_surface_versions(
             failures.append(f"multiple marketplace zips present, cannot bind one: {[z.name for z in market_zips]}")
         else:
             with zipfile.ZipFile(market_zips[0]) as archive:
-                plugin = json.loads(archive.read("plugins/cadrumo/.claude-plugin/plugin.json"))
+                plugin = _require_json_object(
+                    json.loads(archive.read("plugins/cadrumo/.claude-plugin/plugin.json")),
+                    surface="marketplace plugin manifest",
+                )
             if str(plugin.get("version")) != version:
                 failures.append(f"marketplace plugin version {plugin.get('version')!r} != cohort {version!r}")
-    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError) as exc:
+    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError, ValueError) as exc:
         failures.append(f"marketplace plugin manifest unreadable: {exc}")
 
     try:
@@ -636,10 +661,13 @@ def check_generated_surface_versions(
             failures.append(f"multiple mcpb bundles present, cannot bind one: {[b.name for b in mcpb_bundles]}")
         else:
             with zipfile.ZipFile(mcpb_bundles[0]) as archive:
-                mcpb_manifest = json.loads(archive.read("manifest.json"))
+                mcpb_manifest = _require_json_object(
+                    json.loads(archive.read("manifest.json")),
+                    surface="mcpb bundle manifest",
+                )
             if str(mcpb_manifest.get("version")) != version:
                 failures.append(f"mcpb stamped version {mcpb_manifest.get('version')!r} != cohort {version!r}")
-    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError) as exc:
+    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError, ValueError) as exc:
         failures.append(f"mcpb bundle manifest unreadable: {exc}")
 
     if failures:
