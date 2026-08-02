@@ -22,7 +22,13 @@ from ......domain.calculations.registry import (
     RemoteOperation,
     assert_remote_operation_allowed,
 )
+from ......tests.aeat_literal_fixtures import (
+    CENSAL_WRITE_SURFACE_PATH_CANARIES,
+    PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
+    aeat_url,
+)
 from .._adapter_utils import is_aeat_auth_gate_redirect
+from .._errors import SedeNavigationError
 from .._nif_iva_check import (
     _READ_GUARD_POLICY,
     DEFAULT_NIF_IVA_TIMEOUT_MS,
@@ -30,6 +36,7 @@ from .._nif_iva_check import (
     NifIvaCheckSedeDriver,
     SedeNifIvaCheckObservation,
     _assert_query_browser_action,
+    assert_nif_iva_read_landing,
     extract_verdict_from_response_text,
 )
 
@@ -197,3 +204,49 @@ def test_nif_iva_read_guard_refuses_non_aeat_host() -> None:
             _READ_GUARD_POLICY,
             RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
         )
+
+
+class TestNifIvaLandingRefusal:
+    """Where AEAT actually served the read, checked after every query.
+
+    The auth-gate detector names ONE known landing and keeps precedence
+    for its far better diagnostic. This rule is the complement: it refuses
+    every landing nobody enumerated, which is the set an auth-gate
+    detector structurally cannot cover. The tests drive the driver's own
+    exported rule, not a copy of it.
+    """
+
+    def test_the_sede_entry_page_is_admitted(self) -> None:
+        assert_nif_iva_read_landing(_NIF_IVA_ENTRY_URL)
+
+    def test_the_form_servlet_is_admitted(self) -> None:
+        assert_nif_iva_read_landing(_AEAT.oracles.nif_iva_verification)
+
+    def test_a_sibling_load_balancer_host_serving_the_servlet_is_admitted(self) -> None:
+        """Host drift across AEAT's www{n} pool is dispatch, not a write."""
+        assert_nif_iva_read_landing(f"{_AEAT.domains.www12}{urlsplit(_AEAT.oracles.nif_iva_verification).path}")
+
+    @pytest.mark.parametrize("write_path", CENSAL_WRITE_SURFACE_PATH_CANARIES)
+    def test_a_real_aeat_write_surface_is_refused(self, write_path: str) -> None:
+        """None of these carries a write verb; the path allow-list is what refuses them."""
+        with pytest.raises(SedeNavigationError):
+            assert_nif_iva_read_landing(aeat_url("www1", write_path))
+
+    def test_the_procedure_launcher_family_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_nif_iva_read_landing(aeat_url("www1", f"{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}G322.shtml"))
+
+    def test_the_auth_gate_landing_is_refused_when_the_detector_is_bypassed(self) -> None:
+        """The 4033 gate is the observed landing for this surface.
+
+        The dedicated detector runs first on the navigation path and wins
+        on diagnostic quality; this proves the generic rule refuses it
+        too, so a query that lands there after a submit -- where the
+        detector is not consulted -- is still refused.
+        """
+        with pytest.raises(SedeNavigationError):
+            assert_nif_iva_read_landing(_AUTH_GATE_4033_URL)
+
+    def test_an_unreadable_landing_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_nif_iva_read_landing("")
