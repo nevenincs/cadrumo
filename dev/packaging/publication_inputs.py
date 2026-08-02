@@ -129,7 +129,9 @@ def unmapped_acquisition_lanes(descriptor: DownloadDescriptor) -> tuple[str, ...
     claim it is supposed to prove. A non-empty result is a hole in the
     mapping, not a reason to proceed silently.
     """
-    return tuple(sorted(channel_id for channel_id in acquisition_lanes(descriptor) if channel_id not in LANE_WORKFLOW_BY_CHANNEL))
+    return tuple(
+        sorted(channel_id for channel_id in acquisition_lanes(descriptor) if channel_id not in LANE_WORKFLOW_BY_CHANNEL)
+    )
 
 
 def acquisition_lane_workflows(descriptor: DownloadDescriptor) -> tuple[str, ...]:
@@ -268,9 +270,43 @@ def main(argv: list[str] | None = None) -> int:
     """Refuse an under-sourced dispatch, else emit the per-input demand."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--github-output", type=Path, default=None)
+    # Orchestrator-facing modes. Both READ the same claimed-channel derivation
+    # the publication gate reads, so the lanes a release dispatches and the
+    # evidence it later demands can never disagree.
+    parser.add_argument(
+        "--emit-lane-workflows",
+        action="store_true",
+        help="Print the acquisition workflow paths the claimed channels require, one per line.",
+    )
+    parser.add_argument(
+        "--check-host-extension-precondition",
+        action="store_true",
+        help="Refuse when a claimed host-extension channel has no operator-minted claude evidence release.",
+    )
     args = parser.parse_args(argv)
 
     descriptor = load_descriptor()
+
+    if args.emit_lane_workflows:
+        for workflow_path in acquisition_lane_workflows(descriptor):
+            print(workflow_path)
+        return 0
+
+    if args.check_host_extension_precondition:
+        # Deliberately reads the evidence-release tag from the environment
+        # rather than a flag: the orchestrator has no such dispatch input, and
+        # under today's descriptor no host-extension channel is claimed, so
+        # this passes trivially. The refusal exists so that flipping a channel
+        # to available cannot silently publish it unevidenced.
+        refusal = host_extension_precondition_refusal(
+            descriptor,
+            claude_evidence_release=os.environ.get("CLAUDE_EVIDENCE_RELEASE", ""),
+        )
+        if refusal is not None:
+            print(refusal, file=sys.stderr)
+            return 1
+        print("host-extension precondition satisfied")
+        return 0
     provided = {name: os.environ.get(name.upper(), "") for name in SOURCE_INPUT_BY_CHANNEL.values()}
     provided[COHORT_INPUT] = os.environ.get(COHORT_INPUT.upper(), "")
 

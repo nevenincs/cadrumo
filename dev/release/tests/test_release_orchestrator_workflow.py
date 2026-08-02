@@ -177,3 +177,47 @@ def test_the_campaign_builds_the_commit_the_bump_landed() -> None:
 
     assert "bump" in campaign["needs"]
     assert "needs.bump.outputs.commit" in str(campaign)
+
+
+def test_the_acquisition_lane_set_is_derived_not_hardcoded() -> None:
+    """Lanes come from the claimed-channel authority the publication gate reads.
+
+    Hardcoding them would let the two disagree: a channel flipped to
+    `available` would demand evidence at the publication gate that no lane in
+    this workflow ever produced, and the release would refuse at the very end
+    of the chain instead of dispatching one more run at the start.
+    """
+    surface = _run_surface(_document(), "acquire")
+
+    assert "dev.packaging.publication_inputs --emit-lane-workflows" in surface
+    # No lane workflow may be named literally here - naming one IS the
+    # hardcoding this test forbids.
+    for lane in ("packaging-scoop.yml", "packaging-homebrew.yml", "packaging-claude.yml"):
+        assert lane not in surface, f"{lane} is hardcoded; the lane set must be derived"
+
+
+def test_each_dispatched_lane_carries_this_release_s_cohort_and_commit() -> None:
+    """Every lane is pinned to the campaign's own run and commit.
+
+    A lane dispatched without them would install whatever the shared
+    repository last published, proving a previous release rather than this one.
+    """
+    surface = _run_surface(_document(), "acquire")
+
+    assert "source_run_id=" in surface
+    assert "source_commit=" in surface
+    assert "needs.campaign.outputs.packaging_run_id" in str(_document()["jobs"]["acquire"])
+
+
+def test_todays_python_only_descriptor_dispatches_no_acquisition_lane() -> None:
+    """Bound to the real descriptor: the loop is legitimately empty right now.
+
+    Asserted against the shipped channel descriptor rather than a fixture,
+    because the property that matters is that THIS repository's current claims
+    produce no lane - which is what makes the empty loop correct rather than
+    broken.
+    """
+    from dev.docs.download_matrix import load_descriptor
+    from dev.packaging.publication_inputs import acquisition_lane_workflows
+
+    assert acquisition_lane_workflows(load_descriptor()) == ()

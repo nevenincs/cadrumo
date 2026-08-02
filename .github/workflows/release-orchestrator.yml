@@ -184,3 +184,50 @@ jobs:
             --head-sha "${head_sha}" \
             --repository "${GITHUB_REPOSITORY}" \
             --output-name packaging_run_id
+
+  acquire:
+    name: Cadrumo / run the acquisition lanes the claimed channels require
+    needs: [preflight, campaign]
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 180
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Dispatch every lane the claimed channels require
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGING_RUN_ID: ${{ needs.campaign.outputs.packaging_run_id }}
+          HEAD_SHA: ${{ needs.campaign.outputs.head_sha }}
+        run: |
+          # DERIVED, never hardcoded. The lane set comes from the same claimed-
+          # channel authority the publication gate reads, so an unclaimed
+          # channel is never dispatched and a claimed one cannot be skipped -
+          # and flipping a channel to `available` arms its lane with no edit to
+          # this workflow. Under today's python-only descriptor this loop is
+          # legitimately empty.
+          lanes="$(uv run --frozen python -m dev.packaging.publication_inputs --emit-lane-workflows)"
+          if [[ -z "${lanes}" ]]; then
+            echo "No acquisition lane is claimed by the current channel descriptor; nothing to dispatch."
+            exit 0
+          fi
+          while IFS= read -r lane; do
+            [[ -z "${lane}" ]] && continue
+            echo "Dispatching acquisition lane ${lane}"
+            uv run --frozen python -m dev.release.run_resolution \
+              --workflow "${lane}" \
+              --head-sha "${HEAD_SHA}" \
+              --repository "${GITHUB_REPOSITORY}" \
+              --input "source_run_id=${PACKAGING_RUN_ID}" \
+              --input "source_commit=${HEAD_SHA}"
+          done <<< "${lanes}"
