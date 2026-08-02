@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period, PeriodKind, StandardPeriodCode
+from ...core.identity import SubjectTaxId
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -48,7 +49,20 @@ class IvaCompensationPeriodState(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    taxpayer_nif: str = Field(min_length=1, max_length=32)
+    taxpayer_nif: SubjectTaxId | None = Field(
+        default=None,
+        description=(
+            "The filing subject, validated through the canonical Spanish "
+            "tax-identifier authority. None is the declared 'subject not "
+            "carried' case: the annual-partition reconstruction rebuilds "
+            "period states from casilla observations, which record no "
+            "taxpayer, and those states are computational scaffold that is "
+            "never persisted. Every state that IS persisted or surfaced to an "
+            "operator carries a real identifier, and a malformed one is "
+            "refused here rather than reaching carry-forward, wallet-balance "
+            "or live-history consumers as if it identified the subject."
+        ),
+    )
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
     expediente_id: str = Field(min_length=1, max_length=32)
@@ -76,7 +90,14 @@ class IvaCompensationCarryForwardLot(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    taxpayer_nif: str = Field(min_length=1, max_length=32)
+    taxpayer_nif: SubjectTaxId | None = Field(
+        default=None,
+        description=(
+            "The filing subject carried through from the source period state; "
+            "None where that state declared no subject (see "
+            ":class:`IvaCompensationPeriodState`)."
+        ),
+    )
     source_filing_year: int = Field(ge=2000, le=2099)
     source_period: Period
     generated_amount: Decimal = Field(ge=_ZERO)
@@ -109,7 +130,7 @@ class IvaCompensationCarryForwardReport(BaseModel):
 class _WorkingCarryForwardLot:
     """Mutable accumulator for one generated lot during FIFO allocation."""
 
-    taxpayer_nif: str
+    taxpayer_nif: str | None
     source_filing_year: int
     source_period: Period
     generated_amount: Decimal

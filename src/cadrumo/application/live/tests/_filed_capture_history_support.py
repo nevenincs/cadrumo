@@ -43,7 +43,11 @@ from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
-_SYNTHETIC_PROFILE_ID = "SYNTHETIC_PROFILE"
+#: A checksum-valid synthetic NIF. This value reaches
+#: ``IvaCompensationPeriodState.taxpayer_nif`` as the captured
+#: ``authenticated_identity``, and that field is a ``SubjectTaxId``, so a
+#: placeholder label is refused at the boundary.
+_SYNTHETIC_PROFILE_ID = "12345678Z"
 _SYNTHETIC_EXPEDIENTE_ID = "200030300000000Z"
 _SESSION_BUCKET_ID = "45454545-4545-4454-8454-454545454545"
 
