@@ -45,6 +45,7 @@ from ...filing import (
     ModeloValidationFinding,
     ModeloValue,
     ModeloValueKind,
+    compute_modelo_draft_id,
     registry_schema_version,
 )
 from ...user_profile import profile_create_storage_span
@@ -404,7 +405,6 @@ def test_invoices_pending_load_failure_context_omits_raw_storage_error(tmp_path:
 
 def _draft(
     *,
-    draft_id: str,
     modelo: str = "130",
     period: Period = _PERIOD,
     status: ModeloDraftStatus = ModeloDraftStatus.LISTO_PARA_PRESENTAR,
@@ -418,18 +418,25 @@ def _draft(
             source="test",
         ),
     )
+    snapshot_ref = RegistrySnapshotRef(
+        modelo=modelo,
+        revision_id=_TEST_REVISION_ID,
+        modelo_year=period.filing_year,
+        period=period.registry_token,
+    )
     return ModeloDraft(
-        draft_id=draft_id,
+        draft_id=compute_modelo_draft_id(
+            modelo=modelo,
+            period=period,
+            profile_tax_id="00000000T",
+            snapshot_ref=snapshot_ref,
+            values=values,
+        ),
         modelo=modelo,
         period=period,
         profile_tax_id="00000000T",
         subject_tax_id="00000000T",
-        snapshot_ref=RegistrySnapshotRef(
-            modelo=modelo,
-            revision_id=_TEST_REVISION_ID,
-            modelo_year=period.filing_year,
-            period=period.registry_token,
-        ),
+        snapshot_ref=snapshot_ref,
         status=status,
         values=values,
         findings=findings,
@@ -497,14 +504,15 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
     )
     with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
-        _write_draft(settings, _draft(draft_id="d1", findings=findings))
+        draft = _draft(findings=findings)
+        _write_draft(settings, draft)
         items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 3
     severities = {item.severity for item in items}
     assert severities == {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH, ReviewSeverity.INFO}
     for item in items:
         assert isinstance(item, FindingReviewItem)
-        assert item.draft_id == "d1"
+        assert item.draft_id == draft.draft_id
 
 
 def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> None:
@@ -512,7 +520,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
     settings = _build_settings(tmp_path)
     with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
-        _write_draft(settings, _draft(draft_id="d_draft", status=ModeloDraftStatus.BORRADOR))
+        _write_draft(settings, _draft(status=ModeloDraftStatus.BORRADOR))
         items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
     assert items[0].source is None
@@ -525,7 +533,7 @@ def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tm
     settings = _build_settings(tmp_path)
     with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
-        _write_draft(settings, _draft(draft_id="d2", status=ModeloDraftStatus.VALIDADO))
+        _write_draft(settings, _draft(status=ModeloDraftStatus.VALIDADO))
         items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
     assert items[0].source is None
@@ -537,12 +545,13 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     settings = _build_settings(tmp_path)
     with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
-        _write_draft(settings, _draft(draft_id="d_stale", status=ModeloDraftStatus.APROBACION_CADUCADA))
+        draft = _draft(status=ModeloDraftStatus.APROBACION_CADUCADA)
+        _write_draft(settings, draft)
         items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.HIGH
-    assert items[0].draft_id == "d_stale"
+    assert items[0].draft_id == draft.draft_id
     summary_key = items[0].summary
     assert summary_key == "review.filing.stale_approval_summary"
     assert items[0].drill_command.startswith("aeat app review view ")
@@ -552,7 +561,7 @@ def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> N
     settings = _build_settings(tmp_path)
     with profile_create_storage_span(_PROFILE_ID):
         _seed_active_profile()
-        _write_draft(settings, _draft(draft_id="d3", status=ModeloDraftStatus.LISTO_PARA_PRESENTAR))
+        _write_draft(settings, _draft(status=ModeloDraftStatus.LISTO_PARA_PRESENTAR))
         assert drafts_pending(settings, bucket_id=_PROFILE_ID) == ()
 
 
@@ -569,7 +578,7 @@ def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None
         _seed_active_profile()
         _write_draft(
             settings,
-            _draft(draft_id="d4", findings=(finding, finding)),
+            _draft(findings=(finding, finding)),
         )
         items = drafts_pending(settings, bucket_id=_PROFILE_ID)
     assert len(items) == 1

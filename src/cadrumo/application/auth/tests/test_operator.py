@@ -19,7 +19,7 @@ from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import RegistrySnapshotRef
-from ....domain.filing import ModeloDraft, registry_schema_version
+from ....domain.filing import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -95,21 +95,31 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     configure_operator_auth("certificate")
     now = _DRAFT_STORAGE_WRITTEN_AT
 
-    draft_id = "unreadable-workspace-draft"
+    period = Period.from_year_and_code(2026, "1T")
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2026-v1",
+        modelo_year=2026,
+        period="1T",
+    )
+    # The repository files a draft under its content address, so the corrupted
+    # row this test writes must be keyed by the same derived id.
+    draft_id = compute_modelo_draft_id(
+        modelo="303",
+        period=period,
+        profile_tax_id="00000000T",
+        snapshot_ref=snapshot_ref,
+        values=(),
+    )
     repository = ModeloDraftRepository()
     repository.save(
         ModeloDraft(
             draft_id=draft_id,
             modelo="303",
-            period=Period.from_year_and_code(2026, "1T"),
+            period=period,
             profile_tax_id="00000000T",
             subject_tax_id="00000000T",
-            snapshot_ref=RegistrySnapshotRef(
-                modelo="303",
-                revision_id="2026-v1",
-                modelo_year=2026,
-                period="1T",
-            ),
+            snapshot_ref=snapshot_ref,
             status=ModeloDraftStatus.BORRADOR,
             values=(),
             created_at=now,

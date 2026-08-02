@@ -35,6 +35,7 @@ from .._schema import (
     ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
+    compute_modelo_draft_id,
     registry_schema_version,
 )
 
@@ -62,34 +63,43 @@ _NONCANONICAL_IVA_DEVENGADO_CASILLA_ID = " iva.devengado "
 def _populated_amended_draft() -> ModeloDraft:
     """Build the ModeloDraft embedded inside the amendment."""
 
-    return ModeloDraft(
-        draft_id="d" * 64,
+    period = Period.from_year_and_code(2025, "1T")
+    snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
+    values = (
+        ModeloValue(
+            casilla_id=_IVA_DEVENGADO_CASILLA,
+            value=Decimal("20500.00"),  # corrected upward by 500
+            kind=ModeloValueKind.LITERAL,
+            source="amended literal",
+        ),
+        ModeloValue(
+            casilla_id=_IVA_RESULTADO_CASILLA,
+            value=Decimal("12845.67"),  # 500 higher than the original
+            kind=ModeloValueKind.COMPUTED,
+            source="recomputed after iva.devengado correction",
+            formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
+        ),
+    )
+    return ModeloDraft(
+        draft_id=compute_modelo_draft_id(
+            modelo="303",
+            period=period,
+            profile_tax_id="12345678Z",
+            snapshot_ref=snapshot_ref,
+            values=values,
+        ),
+        modelo="303",
+        period=period,
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
-        snapshot_ref=RegistrySnapshotRef(
-            modelo="303",
-            revision_id="2025-y-siguientes",
-            modelo_year=2025,
-            period="1T",
-        ),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
-        values=(
-            ModeloValue(
-                casilla_id=_IVA_DEVENGADO_CASILLA,
-                value=Decimal("20500.00"),  # corrected upward by 500
-                kind=ModeloValueKind.LITERAL,
-                source="amended literal",
-            ),
-            ModeloValue(
-                casilla_id=_IVA_RESULTADO_CASILLA,
-                value=Decimal("12845.67"),  # 500 higher than the original
-                kind=ModeloValueKind.COMPUTED,
-                source="recomputed after iva.devengado correction",
-                formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
-            ),
-        ),
+        values=values,
         binding_values=(),
         findings=(),
         created_at=_DRAFT_TIMESTAMP,

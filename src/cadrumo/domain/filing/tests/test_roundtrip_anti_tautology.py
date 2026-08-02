@@ -49,6 +49,7 @@ from .._schema import (
     ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
+    compute_modelo_draft_id,
     registry_schema_version,
 )
 
@@ -80,29 +81,38 @@ _IVA_RESULTADO_CASILLA: CasillaId = _casilla_id("iva.resultado")
 _IVA_RESULTADO_OPERANDS = (_IVA_DEVENGADO_CASILLA, _IVA_DEDUCIBLE_CASILLA)
 
 
-def _populated_draft() -> ModeloDraft:
-    return ModeloDraft(
-        draft_id="d" * 64,
+def _populated_draft(*, resultado: Decimal = Decimal("12345.67")) -> ModeloDraft:
+    period = Period.from_year_and_code(2025, "1T")
+    snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
+    values = (
+        ModeloValue(
+            casilla_id=_IVA_RESULTADO_CASILLA,
+            value=resultado,
+            kind=ModeloValueKind.COMPUTED,
+            source="computed from inputs",
+            formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
+        ),
+    )
+    return ModeloDraft(
+        draft_id=compute_modelo_draft_id(
+            modelo="303",
+            period=period,
+            profile_tax_id="12345678Z",
+            snapshot_ref=snapshot_ref,
+            values=values,
+        ),
+        modelo="303",
+        period=period,
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
-        snapshot_ref=RegistrySnapshotRef(
-            modelo="303",
-            revision_id="2025-y-siguientes",
-            modelo_year=2025,
-            period="1T",
-        ),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
-        values=(
-            ModeloValue(
-                casilla_id=_IVA_RESULTADO_CASILLA,
-                value=Decimal("12345.67"),
-                kind=ModeloValueKind.COMPUTED,
-                source="computed from inputs",
-                formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
-            ),
-        ),
+        values=values,
         binding_values=(),
         casilla_provenance=(
             ModeloCasillaProvenance(
@@ -221,7 +231,11 @@ def test_boundary_catches_optional_field_drop(tmp_path: Path) -> None:
         try:
             repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
             for index, field_name in enumerate(_OPTIONAL_FIELD_DROP_FIELDS, start=1):
-                original = _populated_draft().model_copy(update={"draft_id": str(index) * 64})
+                # Each case needs its own storage row. The repository refuses a
+                # draft whose id is not its content address, so the cases are
+                # separated by distinct CONTENT (a per-case resultado amount)
+                # and the id follows from it, rather than by an invented id.
+                original = _populated_draft(resultado=Decimal(f"12345.6{index}"))
                 repo.save(original)
 
                 with session_scope(profile.repository._engine) as session:

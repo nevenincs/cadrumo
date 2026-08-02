@@ -33,7 +33,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, ClassVar, override
 
-from ....domain.filing import ModeloDraft
+from ....domain.filing import FilingValidationError, ModeloDraft, compute_modelo_draft_id
 from ..storage import FILING_DRAFTS_NAMESPACE, SecureBoundRepository, SensitivityClass
 from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 
@@ -82,6 +82,47 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     @override
     def extract_identifier(self, payload: ModeloDraft) -> str:
         return payload.draft_id
+
+    @override
+    def save(self, payload: ModeloDraft) -> None:
+        """Persist ``payload`` after confirming ``draft_id`` is its content address.
+
+        :attr:`~domain.filing.ModeloDraft.draft_id` is documented as a hash over
+        the draft's modelo, period, taxpayer, registry snapshot, casilla values,
+        and binding values, and
+        :func:`~domain.filing.compute_modelo_draft_id` is its sole canonical
+        derivation — but nothing recomputed it, so an arbitrary, blank,
+        whitespace, or stale id was persisted and reloaded unchanged and a
+        stored draft could claim an identity that was not its own content. Two
+        different drafts could then occupy one row, or one draft two rows.
+
+        The check lives here rather than on the model because the id is a
+        *durable* claim: an in-memory draft may legitimately carry a
+        caller-chosen handle while its content is still being assembled, but
+        once written it is the natural key this repository files it under and
+        every later reader resolves it by.
+
+        Raises:
+            FilingValidationError: ``draft_id`` is not the content address the
+                canonical helper derives for this draft.
+        """
+        derived = compute_modelo_draft_id(
+            modelo=payload.modelo,
+            period=payload.period,
+            profile_tax_id=payload.profile_tax_id,
+            snapshot_ref=payload.snapshot_ref,
+            values=payload.values,
+            binding_values=payload.binding_values,
+        )
+        if payload.draft_id != derived:
+            raise FilingValidationError(
+                f"refusing to persist draft_id {payload.draft_id!r}: it is not this draft's content "
+                f"address; compute_modelo_draft_id derives {derived!r} from (modelo={payload.modelo!r}, "
+                f"period={payload.period!r}, profile_tax_id={payload.profile_tax_id!r}, "
+                f"snapshot_ref={payload.snapshot_ref.revision_id!r}, {len(payload.values)} values, "
+                f"{len(payload.binding_values)} binding values)",
+            )
+        super().save(payload)
 
     def list_draft_ids(self) -> tuple[str, ...]:
         """Return every draft id persisted in this repository, in lexicographic order."""

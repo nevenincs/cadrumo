@@ -259,6 +259,12 @@ class ModeloDraft(BaseModel):
         axis and another in the filing-subject axis, preserved intact across the
         encrypted round-trip. Only ``profile_tax_id`` is hashed into
         ``draft_id``, so the divergence is not even visible in the identity.
+
+        The ``draft_id`` content-address invariant is NOT enforced here. A draft
+        is content-addressed only once its content is final, while intermediate
+        in-memory drafts legitimately carry a caller-chosen handle; the identity
+        is checked where it becomes a durable claim, in
+        :meth:`~adapters.persistence.profile.filing_drafts.ModeloDraftRepository.save`.
         """
         if self.profile_tax_id != self.subject_tax_id:
             raise FilingValidationError(
