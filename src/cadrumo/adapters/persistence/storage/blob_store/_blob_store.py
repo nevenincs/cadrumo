@@ -69,6 +69,7 @@ from ..errors import (
     DecryptionError,
     EncryptionError,
     EnvelopeVersionError,
+    StorageValidationError,
 )
 from ..master_key import MasterKeyProvider, get_active_master_key
 
@@ -333,6 +334,12 @@ class EncryptedBlobStore:
         """
         sha_hex = _hex_digest(plaintext)
         policy = default_policy_for(classification)
+        # Recorded before anything is written, so a failed manifest commit can
+        # tell a payload THIS call published from one that was already on disk
+        # under a live manifest. The store is content-addressed, so re-putting
+        # identical bytes lands on the same paths; unlinking unconditionally
+        # would delete a blob other references still resolve.
+        payload_pre_existed = self._plaintext_path_for(sha_hex).exists() or self._ciphertext_path_for(sha_hex).exists()
 
         if classification is SensitivityClass.CORPUS:
             if policy.at_rest is not AtRestTreatment.PLAINTEXT:
@@ -371,7 +378,18 @@ class EncryptedBlobStore:
             classification=classification,
             payload=manifest,
         )
-        save_envelope(envelope, self._manifest_path_for(sha_hex))
+        try:
+            save_envelope(envelope, self._manifest_path_for(sha_hex))
+        except (OSError, StorageValidationError):
+            # The payload is on disk but no manifest describes it, so every
+            # read path reports the blob absent while the bytes remain --
+            # untracked ciphertext for an encrypted class, and untracked
+            # PLAINTEXT for CORPUS. Nothing would ever collect it, and a retry
+            # would rewrite it. Remove what this call published, then let the
+            # original failure surface.
+            if not payload_pre_existed:
+                self._discard_unmanifested_payload(sha_hex)
+            raise
         _log.debug(
             "blob_store put: sha256=%s classification=%s size=%d content_type=%s",
             sha_hex[:16],
@@ -383,6 +401,27 @@ class EncryptedBlobStore:
             sha256_plaintext_hex=sha_hex,
             classification=classification,
         )
+
+    def _discard_unmanifested_payload(self, sha_hex: str) -> None:
+        """Remove payload bytes left behind by a put whose manifest never committed.
+
+        Best-effort by design: the caller is already unwinding a failure, and
+        raising from here would replace the reason the put failed with the
+        reason the cleanup failed. If this cannot remove the file, the outcome
+        is the untracked payload that existed before this compensation, logged
+        so an operator can find it.
+        """
+        for payload_path in (self._plaintext_path_for(sha_hex), self._ciphertext_path_for(sha_hex)):
+            if not payload_path.exists():
+                continue
+            try:
+                payload_path.unlink()
+            except OSError:
+                _log.warning(
+                    "blob_store put rollback: could not remove an unmanifested payload path_marker=%s",
+                    _path_log_marker(payload_path),
+                    exc_info=True,
+                )
 
     def get(self, reference: BlobReference) -> bytes:
         """Return the plaintext bytes for ``reference``.
