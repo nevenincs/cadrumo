@@ -25,8 +25,46 @@ resolution defect.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date
 
 from ._schema import LegalReference, ModeloRevision
+
+
+@dataclass(frozen=True, slots=True)
+class RevisionLegalApplicabilityWindow:
+    """Presentation-aware interval an applicability authority must overlap.
+
+    ``ModeloRevision.valid_from`` / ``valid_to`` describe the tax-period
+    revision, while annual and informative forms are commonly approved and
+    filed in the following calendar year.  Declared deadline windows therefore
+    extend a bounded revision through its latest legally grounded presentation
+    close.  An open-ended revision keeps an open upper bound: a later amendment
+    can legitimately be one of its applicability authorities.
+    """
+
+    starts_on: date
+    closes_on: date | None
+
+    @classmethod
+    def from_revision(cls, revision: ModeloRevision) -> RevisionLegalApplicabilityWindow:
+        """Derive the inclusive revision-plus-presentation interval."""
+        if revision.valid_to is None:
+            return cls(starts_on=revision.valid_from, closes_on=None)
+        closes_on_candidates = [
+            revision.valid_to,
+            *(window.closes_on for window in revision.deadline_windows),
+        ]
+        return cls(
+            starts_on=revision.valid_from,
+            closes_on=max(closes_on_candidates),
+        )
+
+    def overlaps(self, reference: LegalReference) -> bool:
+        """Return whether ``reference`` is effective anywhere in this interval."""
+        if reference.effective_to is not None and reference.effective_to < self.starts_on:
+            return False
+        return self.closes_on is None or reference.effective_from <= self.closes_on
 
 
 def validate_orden_aplicabilidad(
@@ -68,6 +106,7 @@ def validate_orden_aplicabilidad(
 
     # Validate each declared entry.
     legal_refs_set = set(revision.legal_refs)
+    applicability_window = RevisionLegalApplicabilityWindow.from_revision(revision)
     for ref_id in revision.orden_aplicabilidad:
         # (i) Must resolve in the legal catalogue.
         if ref_id not in legal_catalogue:
@@ -95,6 +134,27 @@ def validate_orden_aplicabilidad(
                 f"is not present in the revision's legal_refs; add it to legal_refs so "
                 f"snapshot ref-collection carries the orden",
             )
+
+        # (iv) The form-approval authority must be effective during the
+        # revision's tax-period interval or its declared presentation window.
+        # This deliberately validates the typed ``orden_aplicabilidad`` claim,
+        # not every legal_refs member: revision legal_refs also aggregate
+        # substantive law and amendments whose individual temporal semantics
+        # are not interchangeable with form approval.
+        if not applicability_window.overlaps(ref):
+            closes_on = applicability_window.closes_on
+            if ref.effective_to is not None and ref.effective_to < applicability_window.starts_on:
+                hard.append(
+                    f"{scope}: revision {revision.id!r} orden_aplicabilidad entry {ref_id!r} "
+                    f"expired on {ref.effective_to.isoformat()} before revision applicability "
+                    f"starts on {applicability_window.starts_on.isoformat()}",
+                )
+            elif closes_on is not None:
+                hard.append(
+                    f"{scope}: revision {revision.id!r} orden_aplicabilidad entry {ref_id!r} "
+                    f"takes effect on {ref.effective_from.isoformat()} after the presentation-aware "
+                    f"applicability window closes on {closes_on.isoformat()}",
+                )
 
     return hard
 

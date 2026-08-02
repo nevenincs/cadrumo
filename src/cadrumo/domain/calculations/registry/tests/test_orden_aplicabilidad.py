@@ -22,6 +22,8 @@ from datetime import date
 
 import pytest
 
+from .....core.resources import bundled_path
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidationError, build_snapshot
 from .._ids import LegalRefId, SourceRefId
 from .._schema import (
     LegalReference,
@@ -156,6 +158,101 @@ def test_valid_orden_aplicabilidad_passes_all_checks() -> None:
         _VALID_CATALOGUE,
     )
     assert len(hard) == 0, f"Unexpected hard failures: {hard}"
+
+
+def _modelo_100_2025() -> tuple[ModeloDefinition, RegistryCatalogues]:
+    modelos, catalogues = _committed_registry_tree()
+    modelo = next(modelo for modelo in modelos if modelo.id == "100")
+    return modelo, catalogues
+
+
+def _catalogues_with_m100_2025_order_window(
+    catalogues: RegistryCatalogues,
+    *,
+    effective_from: date,
+    effective_to: date | None = None,
+) -> RegistryCatalogues:
+    ref_id = "orden-hac-277-2026:art-3"
+    reference = catalogues.legal[ref_id].model_copy(
+        update={"effective_from": effective_from, "effective_to": effective_to},
+    )
+    return catalogues.model_copy(update={"legal": {**catalogues.legal, ref_id: reference}})
+
+
+def test_m100_2025_accepts_form_order_effective_in_presentation_window() -> None:
+    """The 2025 form order takes effect in 2026 before its filing campaign."""
+    modelo, catalogues = _modelo_100_2025()
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="0A",
+    )
+
+    reference = snapshot.legal["orden-hac-277-2026:art-3"]
+    assert reference.effective_from == date(2026, 3, 28)
+    assert max(window.closes_on for window in snapshot.deadline_windows.values()) == date(2026, 6, 30)
+
+
+def test_m100_2025_accepts_form_order_on_presentation_close_boundary() -> None:
+    modelo, catalogues = _modelo_100_2025()
+    boundary_catalogues = _catalogues_with_m100_2025_order_window(
+        catalogues,
+        effective_from=date(2026, 6, 30),
+    )
+
+    snapshot = build_snapshot(
+        modelo,
+        boundary_catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="0A",
+    )
+
+    assert snapshot.legal["orden-hac-277-2026:art-3"].effective_from == date(2026, 6, 30)
+
+
+def test_m100_2025_rejects_form_order_after_presentation_close() -> None:
+    modelo, catalogues = _modelo_100_2025()
+    future_catalogues = _catalogues_with_m100_2025_order_window(
+        catalogues,
+        effective_from=date(2026, 7, 1),
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"takes effect on 2026-07-01 after .* closes on 2026-06-30",
+    ):
+        build_snapshot(
+            modelo,
+            future_catalogues,
+            source_root=bundled_path(),
+            filing_year=2025,
+            period="0A",
+        )
+
+
+def test_m100_2025_rejects_form_order_expired_before_revision() -> None:
+    modelo, catalogues = _modelo_100_2025()
+    expired_catalogues = _catalogues_with_m100_2025_order_window(
+        catalogues,
+        effective_from=date(2024, 1, 1),
+        effective_to=date(2024, 12, 31),
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"expired on 2024-12-31 before .* starts on 2025-01-01",
+    ):
+        build_snapshot(
+            modelo,
+            expired_catalogues,
+            source_root=bundled_path(),
+            filing_year=2025,
+            period="0A",
+        )
 
 
 # ---------------------------------------------------------------------------
