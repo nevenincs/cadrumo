@@ -51,9 +51,7 @@ def _streams_sha256(function: ast.FunctionDef) -> bool:
         for node in ast.walk(function)
     )
     streams_file = any(
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "read"
+        isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "read"
         for node in ast.walk(function)
     )
     return builds_digest and streams_file

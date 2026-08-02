@@ -305,9 +305,7 @@ def test_identity_state_is_shared_across_the_two_call_paths() -> None:
         async with connect(server) as session:
             whoami_result = await session.call_tool(WHOAMI_TOOL, {})
             assert whoami_result.is_error is False
-            mutate_result = await session.call_tool(
-                "execute", {"command_key": _MUTATING_KEY, "arguments": {}}
-            )
+            mutate_result = await session.call_tool("execute", {"command_key": _MUTATING_KEY, "arguments": {}})
         assert mutate_result.structured_content is not None
         assert expected_refusal not in str(mutate_result.structured_content.get("refusal", ""))
 

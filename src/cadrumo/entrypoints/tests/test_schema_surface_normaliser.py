@@ -33,9 +33,7 @@ class TestProjection:
         assert normalise_cli_path_to_schema_key((_EXE, "config", "status")) == "config.status"
 
     def test_hyphens_become_underscores(self) -> None:
-        assert normalise_cli_path_to_schema_key((_EXE, "app", "modelo", "support-matrix")) == (
-            "modelo.support_matrix"
-        )
+        assert normalise_cli_path_to_schema_key((_EXE, "app", "modelo", "support-matrix")) == ("modelo.support_matrix")
 
     @pytest.mark.parametrize("namespace", sorted(APP_NAMESPACE_FLATTEN))
     def test_flattened_namespaces_drop_the_app_prefix(self, namespace: str) -> None:
@@ -48,9 +46,7 @@ class TestProjection:
     def test_the_exception_table_applies_last(self) -> None:
         """A mapped path resolves to its pinned machine contract, not its CLI shape."""
         assert "config.profile.history" in SCHEMA_KEY_BY_CLI_PATH
-        assert normalise_cli_path_to_schema_key((_EXE, "config", "profile", "history")) == (
-            "config.bucket.history"
-        )
+        assert normalise_cli_path_to_schema_key((_EXE, "config", "profile", "history")) == ("config.bucket.history")
 
     def test_a_path_without_the_executable_token_is_left_intact(self) -> None:
         assert normalise_cli_path_to_schema_key(("config", "status")) == "config.status"

@@ -415,7 +415,14 @@ def test_response_schema_embeds_the_cli_registered_result_model_for_every_verb()
         assert success_properties["command"] == {"const": key, "type": "string"}
         assert success_properties["status"] == {"enum": ["success", "warning"], "type": "string"}
         assert error_properties["status"] == {"const": "error", "type": "string"}
-        assert set(error_branch["required"]) == {"schema_version", "command", "active_profile", "status", "error", "notices"}
+        assert set(error_branch["required"]) == {
+            "schema_version",
+            "command",
+            "active_profile",
+            "status",
+            "error",
+            "notices",
+        }
         schema = SCHEMA_REGISTRY.get(key)
         if schema is None:
             continue

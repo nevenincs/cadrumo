@@ -395,6 +395,7 @@ def test_promoted_scenario_refuses_a_nonidentical_same_signature_replacement(tmp
 
     assert path.read_text(encoding="utf-8") == original
 
+
 class _ScenarioOutcomeRowFields(TypedDict):
     scenario: str
     persona: str

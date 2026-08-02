@@ -164,7 +164,10 @@ def test_emit_latest_projects_cohort_manifest(tmp_path: Path) -> None:
     assert reloaded["schema_name"] == "cadrumo.download-latest.v1"
 
 
-@pytest.mark.parametrize("release_base_url", ("not-a-url", "http://example.invalid/releases/v9.9.9", "https://example.invalid/releases/v9.9.9?asset=x"))
+@pytest.mark.parametrize(
+    "release_base_url",
+    ("not-a-url", "http://example.invalid/releases/v9.9.9", "https://example.invalid/releases/v9.9.9?asset=x"),
+)
 def test_emit_latest_refuses_malformed_or_noncanonical_release_base_url(tmp_path: Path, release_base_url: str) -> None:
     """Asset URLs are derived only from an unambiguous HTTPS release directory."""
     manifest_path = _write_cohort_manifest(tmp_path)

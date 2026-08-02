@@ -380,7 +380,9 @@ def test_rule_payload_refuses_noncanonical_rule_contract(payload: dict[str, obje
 
 
 @pytest.mark.parametrize("payload_type", (RuleApplyMatchPayload, RuleApplyAppliedPayload))
-def test_rule_apply_payload_refuses_malformed_rule_identity(payload_type: type[RuleApplyMatchPayload | RuleApplyAppliedPayload]) -> None:
+def test_rule_apply_payload_refuses_malformed_rule_identity(
+    payload_type: type[RuleApplyMatchPayload | RuleApplyAppliedPayload],
+) -> None:
     payload: dict[str, object] = {
         "transaction_id": "transaction-1",
         "matched_rule_id": "not-a-digest",

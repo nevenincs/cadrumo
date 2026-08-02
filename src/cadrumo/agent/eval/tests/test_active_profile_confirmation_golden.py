@@ -271,7 +271,10 @@ def test_profile_switch_requires_reconfirmation_before_later_mutation(_isolated_
     assert not result.passed
     assert result.confirmed_before_first_mutation
     assert not result.confirmed_before_each_mutation
-    assert any("config.login" in failure and "modelo.work.calculate" in failure and "re-arm" in failure for failure in result.failures)
+    assert any(
+        "config.login" in failure and "modelo.work.calculate" in failure and "re-arm" in failure
+        for failure in result.failures
+    )
 
 
 def test_runner_rejects_a_scenario_with_no_mutating_step() -> None:

@@ -621,8 +621,7 @@ def _with_derived_303_compensation_available_observation(
     else:
         source_artefact_kind = "derived_carry_policy"
         source_locator = (
-            f"carry-policy:{M303_COMPENSATION_POSTERIOR_CASILLA}+"
-            f"max(0,-{M303_COMPENSATION_RESULTADO_CASILLA})"
+            f"carry-policy:{M303_COMPENSATION_POSTERIOR_CASILLA}+max(0,-{M303_COMPENSATION_RESULTADO_CASILLA})"
         )
     derived = ObservedCasillaValue(
         casilla_id=target_id,

@@ -53,9 +53,7 @@ _PAYLOAD_PACKAGES: tuple[str, ...] = (
 # those owners explicit rather than creating a CLI re-export merely to satisfy
 # a filename-driven scanner. These imports occur only while building the
 # capability manifest/MCP surface, never during command parsing or dispatch.
-_LAZY_SCHEMA_OWNER_MODULES: tuple[str, ...] = (
-    "cadrumo.application.wizard._results",
-)
+_LAZY_SCHEMA_OWNER_MODULES: tuple[str, ...] = ("cadrumo.application.wizard._results",)
 
 
 class SchemaModuleLoadFailure(BaseModel):

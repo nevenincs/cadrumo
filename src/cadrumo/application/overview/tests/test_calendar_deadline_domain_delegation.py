@@ -88,8 +88,7 @@ def test_overview_window_lookup_goes_through_the_domain_resolver_cache() -> None
     _registry_window_for_work_unit(unit)
 
     assert resolve_filing_window.cache_info().misses == 1, (
-        "overview resolved a deadline window without going through "
-        "domain.deadlines.resolve_filing_window"
+        "overview resolved a deadline window without going through domain.deadlines.resolve_filing_window"
     )
 
 

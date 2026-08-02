@@ -25,6 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_INPUT_CASILLA")
 _TARGET_CASILLA: CasillaId = validated_casilla_id("02", surface="_TARGET_CASILLA")
 
+
 def _service() -> RegistryQueryService:
     return RegistryQueryService(resources().modelos.authority)
 

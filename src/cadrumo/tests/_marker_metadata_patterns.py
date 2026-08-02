@@ -32,7 +32,9 @@ class PatternCase(NamedTuple):
 
 
 CAMPAIGN_METADATA_CASES: tuple[PatternCase, ...] = (
-    PatternCase(re.compile(r"\btest_w\d+_p\d+", re.IGNORECASE), ("def test_w01_p02_thing",), ("def test_workbook_parity",)),
+    PatternCase(
+        re.compile(r"\btest_w\d+_p\d+", re.IGNORECASE), ("def test_w01_p02_thing",), ("def test_workbook_parity",)
+    ),
     PatternCase(
         re.compile(r"\bW\d{1,3}(?:\.P\d{1,3})?(?:\.S\d{1,4})?\b"),
         ("carried in W01.P02.S03",),

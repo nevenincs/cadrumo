@@ -117,8 +117,7 @@ class TestOffHostNavigationIsRefusedBeforeItHappens:
         # not consulted but NOT that the request actually went out. This
         # ordering makes the mutation report the navigation itself.
         assert recorder.attempted == [], (
-            f"AUTHENTICATED SESSION NAVIGATED OFF-AEAT to {recorder.attempted!r}; "
-            "the guard did not stop the request"
+            f"AUTHENTICATED SESSION NAVIGATED OFF-AEAT to {recorder.attempted!r}; the guard did not stop the request"
         )
         # Then: it was the guard that stopped it, and it named what it rejected.
         # Which check fires varies by URL shape -- a non-https or ported
@@ -181,7 +180,6 @@ class TestTheOffHostUrlReachesTheGuardFromARealParse:
     """End-to-end: a resumen page names the host, and the guard still refuses."""
 
     @pytest.mark.asyncio
-
     async def test_a_page_supplied_off_host_href_is_refused(self) -> None:
         """DISCRIMINATING: the audit's reproduction, now closed.
 
@@ -236,7 +234,6 @@ class TestLegitimateAeatReadsStillPass:
         _walker._assert_read_http("GET", f"{origin}/wlpl/TEWV-CORE/ResumenVlt")
 
     @pytest.mark.asyncio
-
     async def test_an_allowed_url_navigates(self) -> None:
         """SUPPORTING: passes with the guard removed; confirms the admit path."""
         recorder = _NavigationRecorder()

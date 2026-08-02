@@ -77,8 +77,8 @@ def notifications_pull(ctx: typer.Context) -> None:
     result = NotificationsCaptureResult(
         bucket_id=bucket_id,
         snapshot_id=persisted.snapshot_id,
-            captured_at=persisted.captured_at,
-            persisted_at=persisted.persisted_at,
+        captured_at=persisted.captured_at,
+        persisted_at=persisted.persisted_at,
         row_count=len(persisted.rows),
         source_url=persisted.source_url,
     )
@@ -114,7 +114,7 @@ def notifications_list(ctx: typer.Context) -> None:
         rows=[
             NotificationSnapshotListingPayload(
                 snapshot_id=r.snapshot_id,
-                    captured_at=r.captured_at,
+                captured_at=r.captured_at,
                 row_count=len(r.rows),
             )
             for r in rows
@@ -150,7 +150,7 @@ def notifications_show(
     result = NotificationsViewResult(
         bucket_id=bucket_id,
         snapshot_id=record.snapshot_id,
-           captured_at=record.captured_at,
+        captured_at=record.captured_at,
         source_url=record.source_url,
         row_count=len(record.rows),
         rows=[
@@ -212,7 +212,7 @@ def notifications_latest(ctx: typer.Context) -> None:
     result = NotificationsLatestResult(
         bucket_id=bucket_id,
         snapshot_id=record.snapshot_id,
-           captured_at=record.captured_at,
+        captured_at=record.captured_at,
         source_url=record.source_url,
         row_count=len(record.rows),
     )

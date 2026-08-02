@@ -176,7 +176,6 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
             load_run(original.run_id)
 
 
-
 class TestRunOwnsItsRow:
     """A run is returned only from the key its own id derives.
 

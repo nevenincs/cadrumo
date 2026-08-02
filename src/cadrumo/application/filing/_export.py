@@ -557,9 +557,7 @@ def verify_export(
         draft_id=draft.draft_id,
         file_path=file_path,
         verdict=(
-            DeclaracionVerifyVerdict.MATCH
-            if not mismatched and not mismatched_root
-            else DeclaracionVerifyVerdict.DRIFT
+            DeclaracionVerifyVerdict.MATCH if not mismatched and not mismatched_root else DeclaracionVerifyVerdict.DRIFT
         ),
         mismatched_casilla_ids=mismatched,
         unchecked_casilla_ids=unchecked,

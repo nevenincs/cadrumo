@@ -238,6 +238,7 @@ class CommandIndex:
         scored.sort(key=lambda item: (-item[0], item[1]))
         return [command_key for _overlap, _ordinal, command_key in scored]
 
+
 def build_command_index(docs: Iterable[CommandDoc]) -> CommandIndex:
     """Build a :class:`CommandIndex` from the command documents."""
     return CommandIndex(tuple(docs))

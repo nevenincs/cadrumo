@@ -208,9 +208,13 @@ def _register_modelo_project_command(
                 base_liquidable_general_0505=_decimal_wire(service_result.m100_projection.base_liquidable_general_0505),
                 pagos_fraccionados_0604=_decimal_wire(service_result.m100_projection.pagos_fraccionados_0604),
                 cuota_integra_estatal_0545=_decimal_wire(service_result.m100_projection.cuota_integra_estatal_0545),
-                cuota_integra_autonomica_0546=_decimal_wire(service_result.m100_projection.cuota_integra_autonomica_0546),
+                cuota_integra_autonomica_0546=_decimal_wire(
+                    service_result.m100_projection.cuota_integra_autonomica_0546
+                ),
                 cuota_liquida_estatal_0595=_decimal_wire(service_result.m100_projection.cuota_liquida_estatal_0595),
-                cuota_liquida_autonomica_0596=_decimal_wire(service_result.m100_projection.cuota_liquida_autonomica_0596),
+                cuota_liquida_autonomica_0596=_decimal_wire(
+                    service_result.m100_projection.cuota_liquida_autonomica_0596
+                ),
                 cuota_resultante_0597=_decimal_wire(service_result.m100_projection.cuota_resultante_0597),
             ),
         )

@@ -124,6 +124,7 @@ class JustificanteCaptureSnapshot(BaseModel):
     def _parse_source_kind(cls, value: object) -> ObservationSourceKind:
         """Parse persisted snapshot JSON into the closed observation taxonomy."""
         return ObservationSourceKind(value)
+
     captured_at: datetime
     state: SnapshotLifecycleState
     superseded_by_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)

@@ -135,7 +135,7 @@ def _register_ledger_providers_command(app: typer.Typer) -> None:
             {
                 "providers": [
                     {
-                           "provider": item.provider,
+                        "provider": item.provider,
                         "cli_binary": item.cli_binary,
                         "available": item.available,
                         "resolved_path": item.resolved_path,

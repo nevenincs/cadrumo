@@ -65,10 +65,12 @@ def generate_ed25519_keypair_hex() -> Ed25519KeypairHex:
             format=PrivateFormat.Raw,
             encryption_algorithm=NoEncryption(),
         ).hex(),
-        public_key_hex=private_key.public_key().public_bytes(
+        public_key_hex=private_key.public_key()
+        .public_bytes(
             encoding=Encoding.Raw,
             format=PublicFormat.Raw,
-        ).hex(),
+        )
+        .hex(),
     )
 
 

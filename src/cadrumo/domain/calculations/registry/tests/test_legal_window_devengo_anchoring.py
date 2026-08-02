@@ -112,8 +112,7 @@ def test_devengo_anchoring_rejects_a_mis_eras_substantive_law_citation() -> None
     # anchoring and not to some other window boundary.
     applicability_window = RevisionLegalApplicabilityWindow.from_revision(modelo.revisions[_REVISION])
     assert applicability_window.overlaps(mutated), (
-        "the mutated reference must still satisfy the old overlap-only check for this to be a "
-        "meaningful teeth proof"
+        "the mutated reference must still satisfy the old overlap-only check for this to be a meaningful teeth proof"
     )
 
     with pytest.raises(RegistryValidationError, match="does not cover revision '2025''s devengo date"):

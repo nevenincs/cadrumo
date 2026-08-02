@@ -230,7 +230,6 @@ def test_clear_auth_acquisition_lock_is_repeatable(tmp_path: Path) -> None:
     assert not path.exists()
 
 
-
 class TestStaleRemovalIsCompareAndDelete:
     """A stale verdict authorises removing THOSE bytes, not the file's future.
 
@@ -325,9 +324,12 @@ class TestStaleRemovalIsCompareAndDelete:
             pytest.fail("a live replacement lock must block acquisition")
 
         assert path.exists()
-        assert AuthAcquisitionLockRecord.model_validate_json(
-            path.read_text(encoding=UTF_8_ENCODING),
-        ) == replacement
+        assert (
+            AuthAcquisitionLockRecord.model_validate_json(
+                path.read_text(encoding=UTF_8_ENCODING),
+            )
+            == replacement
+        )
 
     def test_an_unreplaced_stale_lock_is_still_cleared(self, tmp_path: pathlib.Path) -> None:
         """Anti-tautology: the guard discriminates rather than never deleting."""

@@ -628,8 +628,7 @@ def _first_lineage_inconsistent_row(rows: list[SecureObjectRawRow]) -> str | Non
         ):
             hmac_hex = _object_key_hmac(row.namespace, row.object_key)
             return (
-                f"revision_lineage_inconsistent:mirror_preflight:{hmac_hex[:16]}:"
-                f"{_LINEAGE_FAILURE_BLOCKS_NOT_DEGRADES}"
+                f"revision_lineage_inconsistent:mirror_preflight:{hmac_hex[:16]}:{_LINEAGE_FAILURE_BLOCKS_NOT_DEGRADES}"
             )
     return None
 

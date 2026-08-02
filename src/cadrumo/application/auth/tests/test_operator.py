@@ -660,9 +660,7 @@ def test_auth_probe_verdict_contract_refuses_unknown_values() -> None:
     with pytest.raises(ValidationError):
         LiveAuthPreflightReport.model_validate(invalid_probe_result)
     with pytest.raises(ValidationError):
-        ProviderConfigurationProbe.model_validate(
-            {"provider": "certificate", "result": "apparently_ready"}
-        )
+        ProviderConfigurationProbe.model_validate({"provider": "certificate", "result": "apparently_ready"})
 
 
 def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:

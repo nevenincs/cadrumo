@@ -61,13 +61,9 @@ def test_the_base_class_is_defined_before_not_found_is_imported() -> None:
     """
     tree = _module_tree("__init__.py")
 
-    definitions = {
-        node.name: node.lineno for node in tree.body if isinstance(node, ast.ClassDef)
-    }
+    definitions = {node.name: node.lineno for node in tree.body if isinstance(node, ast.ClassDef)}
     not_found_import = next(
-        node.lineno
-        for node in tree.body
-        if isinstance(node, ast.ImportFrom) and node.module == "_not_found"
+        node.lineno for node in tree.body if isinstance(node, ast.ImportFrom) and node.module == "_not_found"
     )
 
     for name in _FACADE_NAMES_NEEDED_BY_NOT_FOUND:

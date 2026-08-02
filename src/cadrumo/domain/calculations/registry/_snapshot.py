@@ -355,9 +355,7 @@ def _check_revision_scoped_legal_windows(
                 f"revision applicability starts_on {revision.valid_from.isoformat()}",
             )
         elif revision.valid_to is not None:
-            effective_to_text = (
-                f", effective_to {reference.effective_to.isoformat()}" if reference.effective_to else ""
-            )
+            effective_to_text = f", effective_to {reference.effective_to.isoformat()}" if reference.effective_to else ""
             failures.append(
                 f"legal reference {legal_id!r} (kind {reference.kind!r}, effective_from "
                 f"{reference.effective_from.isoformat()}{effective_to_text}) does not cover revision "

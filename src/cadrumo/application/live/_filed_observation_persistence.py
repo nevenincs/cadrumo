@@ -627,6 +627,8 @@ def _with_derived_303_compensation_available(
         source_refs=tuple(casilla.source_refs),
     )
     return observation.model_copy(update={"observations": (*observation.observations, derived)})
+
+
 __all__ = [
     "FiledJustificanteEnrollmentResult",
     "enroll_filed_justificante_evidence",

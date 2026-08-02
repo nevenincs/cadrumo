@@ -225,7 +225,10 @@ def test_sign_then_verify_with_correct_public_key_passes(tmp_path: Path) -> None
         assert round_tripped.public_key_hex == public_key.public_key_hex
         assert len(bytes.fromhex(round_tripped.signature_hex)) == 64
 
-        assert verify_review_package_signature(package_path, round_tripped, public_key_hex=public_key.public_key_hex) is True
+        assert (
+            verify_review_package_signature(package_path, round_tripped, public_key_hex=public_key.public_key_hex)
+            is True
+        )
 
 
 @pytest.mark.parametrize(

@@ -95,7 +95,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # sides in its failure diagnostic.
 
 
-
 class _PayloadWithStaleDraftRefs(Protocol):
     stale_draft_revision_references: Sequence[object]
 
