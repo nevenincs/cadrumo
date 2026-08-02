@@ -19,18 +19,13 @@ from typing import Annotated, Final, override
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.hashing import content_hash_hex
 from ...core.time import UtcInstant, validate_utc_aware
 from ..contribuyente import ProfileName as _ProfileName
 from ._errors import BucketEventValidationError
 
-_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
-
-BucketEventId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
+BucketEventId = Hex64Str
 """Lowercase 64-character SHA-256 identifier of a bucket event.
 
 Content-addressed from the full event body, so structurally identical

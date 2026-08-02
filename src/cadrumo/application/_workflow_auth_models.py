@@ -14,14 +14,11 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
-from ..core import STRICT_FROZEN_CONFIG
+from ..core import STRICT_FROZEN_CONFIG, Hex64Str
 from ..core.identity import BucketId
 from ..core.time import validate_utc_aware
 
-_AuthOperationId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"),
-]
+_AuthOperationId = Hex64Str
 """Identity of one durable auth operation.
 
 Producers derive it as ``hashlib.sha256(...).hexdigest()``, so the value is

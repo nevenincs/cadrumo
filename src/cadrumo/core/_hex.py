@@ -20,6 +20,10 @@ admits 32 decoded bytes and :data:`HEX_PATTERN_128` admits 64.
 
 from __future__ import annotations
 
+from typing import Annotated
+
+from pydantic import StringConstraints
+
 HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 """Exactly 64 lowercase hex characters, i.e. 32 decoded bytes.
 
@@ -35,4 +39,24 @@ already guaranteed to decode to a correctly-sized signature; no separate
 length check is needed at the pydantic boundary.
 """
 
-__all__ = ["HEX_PATTERN_64", "HEX_PATTERN_128"]
+Hex64Str = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=HEX_PATTERN_64),
+]
+"""The canonical hex-64 constrained shape (lowercase, exactly 64 hex chars).
+
+Every unrelated hex-64 IDENTITY concept the codebase carries — a registry
+snapshot id, a ledger transaction id, a content digest, a bucket event id, a
+durable auth-operation id, and any future concept sharing this shape — is
+declared as its OWN semantic alias assigned FROM this one primitive
+(``SnapshotId = Hex64Str``), never by re-declaring the
+``StringConstraints(...)`` call. One declaration means a future shape change
+(a different digest width, admitting uppercase) is made once, here, and
+every semantic alias picks it up; each alias still keeps its own name so a
+value of one identity concept is never confused for another at the call
+site, even though they are not distinguishable at the type-checker level
+(plain ``Annotated[str, ...]`` aliases carry no nominal distinction; the
+naming discipline is the enforcement).
+"""
+
+__all__ = ["HEX_PATTERN_64", "HEX_PATTERN_128", "Hex64Str"]
