@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.persistence.storage.master_key._active_session
+   cadrumo.adapters.persistence.storage.master_key._bucket_identity
    cadrumo.adapters.persistence.storage.master_key._bucket_session
    cadrumo.adapters.persistence.storage.master_key._dek_wrap
    cadrumo.adapters.persistence.storage.master_key._errors
