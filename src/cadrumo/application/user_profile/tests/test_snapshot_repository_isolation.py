@@ -83,21 +83,28 @@ def test_a_same_profile_snapshot_round_trips_through_encryption() -> None:
     assert reloaded.profile_id == _BUCKET_A
 
 
-def test_the_live_profile_repository_is_deliberately_unguarded() -> None:
-    """The lifecycle service's duplicate holds one repository for two identities.
+def test_the_live_profile_repository_is_guarded_like_the_snapshot_repository() -> None:
+    """Both repositories refuse a foreign identity; the asymmetry is resolved.
 
-    ``duplicate`` reads the source profile and writes the new one through a
-    single bucket-bound repository, so a foreign identity is an exercised
-    production shape there rather than a leak. Whether that shape should exist
-    is a design question about duplication; it is not something a guard can
-    settle without simply breaking it. This test exists so the asymmetry with
-    the snapshot repository above reads as a decision.
+    This previously asserted the OPPOSITE, and said so deliberately: the live
+    repository was left unguarded because ``ProfileLifecycleService.duplicate``
+    held one bucket-bound repository across a read of the source and a write
+    of the target, which made a foreign identity an exercised shape rather
+    than a leak.
+
+    That premise no longer holds. ``duplicate`` had no production callers --
+    the operator duplicate verb provisions a fresh bucket and never routed
+    through it -- and it has since been deleted, so nothing in the tree
+    presents a foreign identity as legitimate. The test is inverted rather
+    than removed so the resolution stays as legible as the original asymmetry
+    was.
     """
     repository = UserProfileLifecycleRepository(bucket_id=_BUCKET_A)
 
-    repository.save(_record(_PROFILE_B))
-
-    assert repository.load(_PROFILE_B).profile_id == _PROFILE_B
+    with pytest.raises(ProfileBucketMismatchError):
+        repository.save(_record(_PROFILE_B))
+    with pytest.raises(ProfileBucketMismatchError):
+        repository.load(_PROFILE_B)
 
 
 @pytest.fixture(autouse=True)
