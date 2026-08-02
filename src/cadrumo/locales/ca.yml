@@ -3517,6 +3517,11 @@ cli:
         push_help: Puja els espais de dades locals a Google Drive
         push_limit_help: Nombre màxim de fitxers que es pujaran
         push_namespace_help: Espai de dades que vols pujar; es pot repetir
+        push_unmanifested_object_warning: '{count} objecte(s) no s''han pogut eliminar
+          després de retenir el manifest del seu espai de noms; queden de manera durable
+          al proveïdor remot sense cap manifest que els pugui enumerar ni reconciliar.
+          Investiga''ls i elimina''ls manualment, o repeteix la pujada un cop resolt
+          el fallo subjacent.'
         root_folder_id_unset: No hi ha cap carpeta arrel de Google Drive configurada;
           executa `aeat config google folder set <id>` primer
     init:

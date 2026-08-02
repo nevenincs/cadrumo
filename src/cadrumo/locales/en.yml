@@ -3273,6 +3273,11 @@ cli:
         push_help: Push the local data namespaces to the configured Google Drive folder
         push_limit_help: Maximum number of files to push (defaults to no limit)
         push_namespace_help: Namespace to push (repeatable; defaults to every namespace)
+        push_unmanifested_object_warning: '{count} object(s) could not be removed
+          after their namespace''s manifest was withheld; they remain durable on the
+          remote provider with no manifest that can enumerate or reconcile them. Investigate
+          and remove them manually, or retry the push once the underlying failure
+          is resolved.'
         root_folder_id_unset: No Google Drive root folder is configured; run `aeat
           config google folder set <id>` first
     init:

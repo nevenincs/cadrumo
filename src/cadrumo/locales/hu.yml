@@ -3467,6 +3467,11 @@ cli:
         push_limit_help: 'Feltolható fájlok maximális száma (alapértelmezés: korlátlan).'
         push_namespace_help: 'Feltolható névtér (ismételhető; alapértelmezés: minden
           névtér).'
+        push_unmanifested_object_warning: '{count} objektumot nem sikerült eltávolítani,
+          miután a névterük manifestje visszatartásra került; tartósan megmaradnak
+          a távoli szolgáltatónál olyan manifest nélkül, amely felsorolhatná vagy
+          egyeztethetné őket. Vizsgáld meg és távolítsd el őket manuálisan, vagy próbáld
+          meg újra a feltöltést, miután a mögöttes hiba megoldódott.'
         root_folder_id_unset: 'Nincs beállított Google Drive gyökérmappa; futtassa:
           `aeat config google folder set <azonosító>`.'
     init:

@@ -259,7 +259,16 @@ def _register_archive_import_command(archive_app: typer.Typer) -> None:
             manifest_digest=outcome.manifest_digest,
             archive_schema_version=outcome.archive_schema_version,
         )
-        switch_notice = _build_archive_import_active_switch_notice(outcome.bucket_id)
+        from ....application.workflow import read_profile_bucket_by_id
+
+        restored_pointer = read_profile_bucket_by_id(outcome.bucket_id)
+        # ImportBucketResult carries no display label; the restored bucket's
+        # own manifest (written by the import itself) is the source of truth
+        # for it. A missing manifest read here would mean the import call
+        # above already failed, so this is a defensive fallback, not the
+        # expected path.
+        label = restored_pointer.label if restored_pointer is not None else outcome.bucket_id
+        switch_notice = _build_archive_import_active_switch_notice(label)
         _emit_envelope(
             ctx,
             command="config.profile.archive.import",
@@ -274,12 +283,17 @@ def _register_archive_import_command(archive_app: typer.Typer) -> None:
         )
 
 
-def _build_archive_import_active_switch_notice(bucket_id: str) -> Notice:
+def _build_archive_import_active_switch_notice(label: str) -> Notice:
     """Build the info notice naming the active-profile switch on archive import.
 
     Mirrors ``_build_import_active_switch_notice`` in :mod:`._profile_bundle`:
     the restored bucket is provisioned as the ACTIVE profile, so subsequent
-    commands operate on it until the operator explicitly switches.
+    commands operate on it until the operator explicitly switches. ``label``
+    is the restored profile's own operator-facing label (read back from its
+    manifest, since :class:`~application.bucket_maintenance.ImportBucketResult`
+    carries no label), so the message and suggestion are as complete and
+    actionable as the sibling profile-bundle-import notice, never the raw
+    bucket UUID or a literal unfilled placeholder.
     """
     return Notice(
         severity=NoticeSeverity.INFO,
@@ -287,13 +301,14 @@ def _build_archive_import_active_switch_notice(bucket_id: str) -> Notice:
         message=tr(
             "cli.config.profile.archive.import_active_switch_info",
             default=(
-                "The restored profile is now the ACTIVE profile; subsequent "
+                "The restored profile {name} is now the ACTIVE profile; subsequent "
                 "commands operate on it. Run 'aeat config login <name>' to change "
                 "the active profile."
             ),
+            name=label,
         ),
-        suggestion="aeat config login",
-        context={"active_profile": bucket_id},
+        suggestion=f"aeat config login {label}",
+        context={"active_profile": label},
     )
 
 

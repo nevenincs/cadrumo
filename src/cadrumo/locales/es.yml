@@ -3543,6 +3543,11 @@ cli:
         push_help: Sube los espacios de datos locales a Google Drive
         push_limit_help: Número máximo de archivos que se subirán
         push_namespace_help: Espacio de datos que quieres subir; se puede repetir
+        push_unmanifested_object_warning: '{count} objeto(s) no se pudieron eliminar
+          tras retener el manifiesto de su espacio de nombres; permanecen de forma
+          durable en el proveedor remoto sin un manifiesto que pueda enumerarlos ni
+          reconciliarlos. Investígalos y elimínalos manualmente, o repite el envío
+          una vez resuelto el fallo subyacente.'
         root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta
           `aeat config google folder set <id>` primero
     init:
