@@ -31,19 +31,12 @@ from typing import TYPE_CHECKING
 from ....core.i18n import tr
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Mapping, Sequence
 
     from ....adapters.inbound.tui import FormPage, ManagerAction, ManagerActionOutcome
     from ....application.auth import AuthConfigureResult
     from ....application.user_profile import CensalReconciliation, EffectiveFact, ProfileOverview
     from ....core import AuthProviderKind
-
-    FormPresenter = Callable[[FormPage], Mapping[str, str] | None]
-    """Shows one page and returns what the operator committed, or ``None``.
-
-    The screen's own ``present_form`` is the shipped implementation; the
-    seam exists so the action's branches are reachable headlessly.
-    """
 
 _AUTH_PROVIDER_PATH = "auth.provider"
 _AUTH_DNI_NIE_PATH = "auth.dni_nie"
@@ -384,7 +377,7 @@ def certificate_action() -> ManagerAction:
     )
 
 
-def _run_certificate(present: FormPresenter | None = None) -> ManagerActionOutcome:
+def _run_certificate() -> ManagerActionOutcome:
     """Collect how this taxpayer authenticates, and whatever that mode needs.
 
     The point of asking here is that authenticating is what lets the
@@ -413,9 +406,8 @@ def _run_certificate(present: FormPresenter | None = None) -> ManagerActionOutco
     from ....application.auth import list_operator_certificate_sources
     from ._manager_frontend import build_active_profile_overview, present_form
 
-    show = present if present is not None else present_form
     listing = list_operator_certificate_sources()
-    collected = show(
+    collected = present_form(
         _auth_form_page(
             on_record=_auth_facts_on_record(),
             certificate_names=tuple(source.name for source in listing.sources),

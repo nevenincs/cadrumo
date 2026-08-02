@@ -26,6 +26,7 @@ See Also:
 
 from __future__ import annotations
 
+import threading
 from contextvars import copy_context
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, override
@@ -106,26 +107,63 @@ _PROGRESS_TONE = "-progress"
 _NOTICE_TONES = (_REFUSAL_TONE, _RESULT_TONE, _PROGRESS_TONE)
 """Every tone the one notice channel can take, so setting one clears the rest."""
 
+_FORM_WAIT_POLL_SECONDS = 0.1
+"""How often the action thread re-checks that the application is still up.
+
+Only a liveness poll: the dismissal wakes the wait immediately, and this
+bounds how long the thread survives an application that went away without
+answering."""
+
+_OUTPUT_LANGUAGE_PATH = "preferences.output_language"
+"""The profile field deciding what language this page is written in.
+
+Named here because the page reaches for it directly, which it does for no
+other field: changing it changes every label on screen including the ones
+that would lead an operator to it.
+"""
+
 
 class FieldEditScreen(ModalScreen[str | None]):
     """Edit one field's value. Dismisses with the new value, or ``None``."""
 
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
-    def __init__(self, field: ProfileFieldView) -> None:
+    def __init__(
+        self,
+        field: ProfileFieldView,
+        *,
+        prompt: str | None = None,
+        choice_labels: Mapping[str, str] | None = None,
+    ) -> None:
         super().__init__()
         self._field = field
+        self._prompt = prompt if prompt is not None else field.label
+        """What to call the field here, when the schema's own name is not
+        the one the operator knows it by."""
+        self._choice_labels = dict(choice_labels or {})
+        """How to show each enum token, for a field whose stored tokens are
+        not words.
+
+        A language is stored as ``es`` and read as "Spanish", and an
+        operator picking their own language cannot be asked to recognise
+        the token — least of all in a language they do not read. The token
+        is still what gets dismissed and written; only its presentation
+        changes."""
+
+    def _label_for(self, value: str) -> str:
+        """Show one enum token the way the operator should read it."""
+        return self._choice_labels.get(value, value)
 
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
-            yield Label(self._field.label, id="edit-label")
+            yield Label(self._prompt, id="edit-label")
             yield Static(tr("flows.manager.edit.path", path=self._field.path), id="edit-path")
             # A masked field starts EMPTY rather than pre-filled with the
             # placeholder: pre-filling would submit the dots back as the
             # literal new value the moment the operator pressed enter.
             if self._field.enum_values:
-                yield OptionList(*self._field.enum_values, id="edit-options")
+                yield OptionList(*[self._label_for(value) for value in self._field.enum_values], id="edit-options")
             else:
                 yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
             with Horizontal(id="edit-actions"):
@@ -217,6 +255,11 @@ class ProfileManagerApp(App[None]):
 
     BINDINGS: ClassVar = [
         Binding("f3", "toggle_appearance", "", show=False),
+        # Shown in the footer, unlike the others. The language of the page
+        # is the one setting an operator may need to change before they can
+        # read the page well enough to find it, so it cannot be one more
+        # row in a table they are struggling with.
+        Binding("f2", "choose_language", "", show=True),
         Binding("q", "quit", "", show=False),
         Binding("escape", "quit", "", show=False),
     ]
@@ -267,6 +310,11 @@ class ProfileManagerApp(App[None]):
         in flight together would each merge into the same pre-edit snapshot,
         so the second save would drop the first operator's field. Serialising
         is a correctness requirement here, not a tidiness preference."""
+        self._pending_write_path: str | None = None
+        """Which field the in-flight write is for, or ``None`` when idle.
+
+        Kept because one field decides how the whole page is worded, so
+        settling its write needs a different redraw from every other."""
         self._pending_action: Worker[ManagerActionOutcome] | None = None
         """The one in-flight action, or ``None`` when no button is working.
 
@@ -533,6 +581,7 @@ class ProfileManagerApp(App[None]):
                 raise TypeError(message)
             return written
 
+        self._pending_write_path = path
         self._pending_write = self.run_worker(
             _write,
             name="profile-field-write",
@@ -561,7 +610,19 @@ class ProfileManagerApp(App[None]):
     def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
         """Show what storage made of one finished field write."""
         self._pending_write = None
+        written_path = self._pending_write_path
+        self._pending_write_path = None
         if worker.state is WorkerState.SUCCESS and worker.result is not None:
+            if written_path == _OUTPUT_LANGUAGE_PATH:
+                # The page is now written in a different language, and the
+                # incremental path cannot express that: it repaints the
+                # cells whose content moved, while a language switch also
+                # moves the column headers and section titles, which are
+                # chrome rather than cells. Rebuilding is the only redraw
+                # that reaches all of it.
+                self.overview = worker.result
+                self._render()
+                return
             self._apply_overview(worker.result)
             return
         # A refusal reaches the operator as itself. A cancelled or
@@ -706,8 +767,35 @@ class ProfileManagerApp(App[None]):
         waits for what the operator committed. That wait is the point: the
         action is written as a straight line — show the page, use the
         answer — and it stays that way, with only where it runs changed.
+
+        The wait is an explicit event rather than ``push_screen_wait``.
+        That call resolves the running worker from a context variable, and
+        this thread cannot satisfy it: the action runs inside a context
+        copied on the UI task before the worker existed, so the worker is
+        absent from it however the call is marshalled. Reaching for
+        ``push_screen_wait`` here raised ``NoActiveWorker`` — but only
+        AFTER the screen was already on the stack, so the operator was
+        given a working form to fill in whose every value was then thrown
+        away with the dead action. Waiting on an event the dismissal sets
+        depends on nothing ambient.
+
+        The wait ends if the application stops, so quitting with a form
+        open cannot strand this thread. It returns ``None`` in that case,
+        which every caller already treats as "the operator walked away".
         """
-        return self.call_from_thread(self.push_screen_wait, FormScreen(page, rebuild=rebuild))
+        collected: Mapping[str, str] | None = None
+        answered = threading.Event()
+
+        def _accept(result: Mapping[str, str] | None) -> None:
+            nonlocal collected
+            collected = result
+            answered.set()
+
+        self.call_from_thread(self.push_screen, FormScreen(page, rebuild=rebuild), _accept)
+        while not answered.wait(timeout=_FORM_WAIT_POLL_SECONDS):
+            if not self.is_running:
+                return None
+        return collected
 
     @override
     async def action_quit(self) -> None:
@@ -730,6 +818,41 @@ class ProfileManagerApp(App[None]):
             self._refuse(tr("flows.manager.action.busy"))
             return
         self.exit(None)
+
+    def action_choose_language(self) -> None:
+        """Open the language chooser on the field that already holds it.
+
+        The language is an ordinary profile field and is written through
+        the ordinary door: this opens the same dialog selecting a row would
+        open, on the same field, and hands the answer to the same callback,
+        so there is no second way for the language to be set. What the
+        binding adds is reachability — the setting that decides what every
+        other row says should not itself be findable only by reading them.
+
+        The tokens are shown as language names, because an operator whose
+        page is in a language they do not read is exactly the one who
+        cannot be asked to recognise ``hu``.
+        """
+        field = self._field_by_key.get(_OUTPUT_LANGUAGE_PATH)
+        if field is None:
+            # A profile schema that declares no language field is not a
+            # failure; the page simply has nothing to offer here.
+            self._refuse(tr("flows.manager.language.unavailable"))
+            return
+        if self._pending_write is not None or self._pending_action is not None:
+            self._refuse(tr("flows.manager.action.busy"))
+            return
+        self.push_screen(
+            FieldEditScreen(
+                field,
+                prompt=tr("wizard.setup.profile.output-language.prompt"),
+                choice_labels={
+                    value: tr(f"wizard.setup.profile.output-language.choices.{value}.label")
+                    for value in field.enum_values
+                },
+            ),
+            self._apply_edit_for(field),
+        )
 
     def action_toggle_appearance(self) -> None:
         toggle_appearance(self)
