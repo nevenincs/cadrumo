@@ -43,6 +43,13 @@ from typing import Final
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
+from dev.packaging.evidence_release import (
+    download_release_assets,
+    list_releases,
+    resolve_gh,
+    run_gh_with_retry,
+)
+
 _UTF_8: Final[str] = "utf-8"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 _COMMIT_PATTERN: Final[str] = r"^[0-9a-f]{40}$"
@@ -231,6 +238,72 @@ def candidate_tags_in(releases: list[dict[str, object]]) -> tuple[str, ...]:
     )
 
 
+def publish_candidate(
+    candidate: ReleaseCandidate,
+    *,
+    repository: str,
+    staging_directory: Path,
+    gh_executable: str | None = None,
+) -> str:
+    """Seal the candidate onto its own draft release and return the tag.
+
+    Idempotent against its own prior attempt: a re-seal of the SAME candidate
+    clobbers its asset rather than minting a second draft, because two drafts
+    sharing one tag make which assets a later download resolves undefined --
+    the hazard the evidence transport already refuses on.
+    """
+    gh = resolve_gh(gh_executable)
+    tag = candidate.tag
+    asset = write_candidate(candidate, staging_directory / CANDIDATE_ASSET_NAME)
+    existing = candidate_tags_in(list_releases(gh, repository))
+    if tag in existing:
+        run_gh_with_retry(gh, ["release", "upload", tag, str(asset), "--repo", repository, "--clobber"])
+        return tag
+    run_gh_with_retry(
+        gh,
+        [
+            "release",
+            "create",
+            tag,
+            str(asset),
+            "--repo",
+            repository,
+            "--draft",
+            "--title",
+            f"RELEASE CANDIDATE (non-release) {candidate.version}",
+            "--notes",
+            f"Sealed candidate for {candidate.version}, soak closes {candidate.soak_deadline.isoformat()}.",
+        ],
+    )
+    return tag
+
+
+def fetch_candidate(
+    tag: str,
+    *,
+    repository: str,
+    download_directory: Path,
+    gh_executable: str | None = None,
+) -> ReleaseCandidate:
+    """Download and strictly load one sealed candidate by tag."""
+    parse_candidate_tag(tag)
+    gh = resolve_gh(gh_executable)
+    download_release_assets(
+        gh,
+        repository=repository,
+        tag=tag,
+        patterns=[CANDIDATE_ASSET_NAME],
+        directory=download_directory,
+    )
+    return load_candidate(download_directory / CANDIDATE_ASSET_NAME)
+
+
+def list_sealed_candidate_tags(*, repository: str, gh_executable: str | None = None) -> tuple[str, ...]:
+    """Return every sealed candidate tag currently on the forge."""
+    gh = resolve_gh(gh_executable)
+    return candidate_tags_in(list_releases(gh, repository))
+
+
 __all__ = [
     "CANDIDATE_ASSET_NAME",
     "CANDIDATE_TAG_RE",
@@ -239,9 +312,12 @@ __all__ = [
     "SoakWindow",
     "candidate_tag",
     "candidate_tags_in",
+    "fetch_candidate",
+    "list_sealed_candidate_tags",
     "load_candidate",
     "load_soak_window",
     "parse_candidate_tag",
+    "publish_candidate",
     "seal_candidate",
     "write_candidate",
 ]

@@ -10,6 +10,8 @@ evidence garbage collector cannot reach.
 from __future__ import annotations
 
 import json
+import stat
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -240,3 +242,116 @@ def test_the_module_exports_its_public_surface() -> None:
     """Everything a consumer needs is public, so no caller reaches into a private name."""
     for name in ("ReleaseCandidate", "seal_candidate", "load_candidate", "candidate_tag", "load_soak_window"):
         assert name in release_candidate.__all__
+
+
+def _write_recording_gh(bin_dir: Path, *, stdout: str = "", log: Path | None = None) -> Path:
+    """Write a real `gh` stub that records its argv and emits fixed output.
+
+    A recording stub rather than a mock: the transport's correctness is the
+    exact argv it builds (draft, clobber, repo pin), so the test has to observe
+    a real process invocation to assert anything meaningful about it.
+    """
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    if sys.platform.startswith("win"):
+        script = bin_dir / "gh.bat"
+        lines = ["@echo off"]
+        if log is not None:
+            lines.append(f'echo %* >> "{log}"')
+        for line in stdout.splitlines():
+            lines.append(f"echo {line}")
+        script.write_text("\r\n".join(lines) + "\r\n", encoding="utf-8")
+    else:
+        script = bin_dir / "gh"
+        body = ["#!/usr/bin/env bash"]
+        if log is not None:
+            body.append(f'echo "$@" >> "{log}"')
+        body.append(f"cat <<'OUT'\n{stdout}\nOUT")
+        script.write_text("\n".join(body) + "\n", encoding="utf-8")
+        script.chmod(script.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return script
+
+
+def test_publishing_a_new_candidate_creates_one_draft_in_the_reserved_namespace(tmp_path: Path) -> None:
+    """A first seal creates a DRAFT release carrying the record as its asset."""
+    log = tmp_path / "argv.log"
+    script = _write_recording_gh(tmp_path / "bin", stdout="", log=log)
+    candidate = _fully_populated()
+
+    tag = release_candidate.publish_candidate(
+        candidate,
+        repository="nevenincs/cadrumo",
+        staging_directory=tmp_path / "stage",
+        gh_executable=str(script),
+    )
+
+    assert tag == "release-candidate-4242"
+    recorded = log.read_text(encoding="utf-8")
+    assert "release create release-candidate-4242" in recorded
+    # A candidate is never a publishable release: it must be a draft, and it
+    # must be pinned to this repository rather than the ambient default.
+    assert "--draft" in recorded
+    assert "--repo nevenincs/cadrumo" in recorded
+    # The record itself rides as the asset; without it the draft is an empty
+    # marker and the promoter has nothing to read days later.
+    assert release_candidate.CANDIDATE_ASSET_NAME in recorded
+
+
+def test_resealing_the_same_candidate_clobbers_rather_than_minting_a_second_draft(tmp_path: Path) -> None:
+    """Idempotence against its own prior attempt.
+
+    Two drafts sharing one tag make which assets a later download resolves
+    undefined - the same hazard the evidence transport refuses on - so a
+    re-seal must upload over the existing draft, never create another.
+    """
+    existing = json.dumps({"tag_name": "release-candidate-4242", "draft": True, "created_at": "2026-08-02T00:00:00Z"})
+    log = tmp_path / "argv.log"
+    script = _write_recording_gh(tmp_path / "bin", stdout=existing, log=log)
+
+    release_candidate.publish_candidate(
+        _fully_populated(),
+        repository="nevenincs/cadrumo",
+        staging_directory=tmp_path / "stage",
+        gh_executable=str(script),
+    )
+
+    recorded = log.read_text(encoding="utf-8")
+    assert "release upload release-candidate-4242" in recorded
+    assert "--clobber" in recorded
+    assert "release create" not in recorded
+
+
+def test_listing_sealed_candidates_ignores_evidence_and_published_releases(tmp_path: Path) -> None:
+    """The forge listing is filtered to drafts inside the reserved namespace."""
+    payload = "\n".join(
+        json.dumps(record)
+        for record in (
+            {"tag_name": "release-candidate-4242", "draft": True, "created_at": "2026-08-02T00:00:00Z"},
+            {"tag_name": "evidence-smoke-4242", "draft": True, "created_at": "2026-08-02T00:00:00Z"},
+            {"tag_name": "v1.2.3", "draft": False, "created_at": "2026-08-02T00:00:00Z"},
+        )
+    )
+    script = _write_recording_gh(tmp_path / "bin", stdout=payload)
+
+    tags = release_candidate.list_sealed_candidate_tags(
+        repository="nevenincs/cadrumo",
+        gh_executable=str(script),
+    )
+
+    assert tags == ("release-candidate-4242",)
+
+
+def test_fetching_refuses_a_tag_outside_the_reserved_namespace(tmp_path: Path) -> None:
+    """The namespace check happens BEFORE any download.
+
+    Ordering matters: a promoter that downloaded first would treat any draft's
+    asset as a candidate, so a foreign tag must be refused without a fetch.
+    """
+    script = _write_recording_gh(tmp_path / "bin", stdout="")
+
+    with pytest.raises(ReleaseCandidateError):
+        release_candidate.fetch_candidate(
+            "evidence-smoke-4242",
+            repository="nevenincs/cadrumo",
+            download_directory=tmp_path / "dl",
+            gh_executable=str(script),
+        )
