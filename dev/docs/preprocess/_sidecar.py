@@ -117,6 +117,11 @@ def write_sidecar(source: Path, output: PreprocessOutput) -> tuple[Path, Path]:
 def load_sidecar(source: Path) -> PreprocessOutput:
     """Load and validate the provenance sidecar for a source file.
 
+    Recomputes the origin file's sha256 and cross-checks it against the
+    sidecar's recorded ``source_sha256`` so a sidecar left behind by an edit
+    to the source (without re-running the extractor) is refused rather than
+    silently served as current.
+
     Args:
         source: The origin file whose ``*.extracted.json`` is read.
 
@@ -125,8 +130,9 @@ def load_sidecar(source: Path) -> PreprocessOutput:
 
     Raises:
         PreprocessSidecarError: If the sidecar is missing, unreadable, not
-            valid JSON, or fails schema validation (including an unknown
-            ``schema_version``).
+            valid JSON, fails schema validation (including an unknown
+            ``schema_version``), or its recorded ``source_sha256`` no longer
+            matches the origin file's live content hash.
     """
     _, json_path = sidecar_paths_for(source)
     try:
@@ -137,6 +143,13 @@ def load_sidecar(source: Path) -> PreprocessOutput:
     # JSON document as a JSON document (StrEnum from its string value, tuple
     # from a JSON array) rather than refusing it as it would a raw dict.
     try:
-        return PreprocessOutput.model_validate_json(raw)
+        output = PreprocessOutput.model_validate_json(raw)
     except ValueError as exc:
         raise PreprocessSidecarError(f"sidecar for {source} failed to load or validate: {exc}") from exc
+    live_sha256 = sha256_of(source)
+    if output.source_sha256 != live_sha256:
+        raise PreprocessSidecarError(
+            f"sidecar for {source} is stale: recorded source_sha256={output.source_sha256} "
+            f"but the source file now hashes to {live_sha256}"
+        )
+    return output

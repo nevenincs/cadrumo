@@ -159,6 +159,43 @@ def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
         load_sidecar(source_copy)
 
 
+def test_load_sidecar_refuses_a_source_changed_since_extraction(tmp_path: Path) -> None:
+    """A sidecar whose source file changed on disk (same length) is refused as stale.
+
+    Real freshness proof: the origin bytes change without re-running the
+    extractor, so the sidecar's recorded ``source_sha256`` no longer matches
+    the file's live content hash. If this passed, `source_sha256` would be
+    advisory rather than an enforced freshness key.
+    """
+    source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name
+    source_copy.write_bytes(_WORKED_EXAMPLE_HTML.read_bytes())
+    output = build_outputs(source_copy, repo_root=tmp_path)[0]
+    write_sidecar(source_copy, output)
+
+    original = source_copy.read_bytes()
+    # Same length, different bytes: rules out a size-based staleness proxy.
+    mutated = original.replace(b"modelo 184", b"modelo 999", 1)
+    assert len(mutated) == len(original)
+    assert mutated != original
+    source_copy.write_bytes(mutated)
+
+    with pytest.raises(PreprocessSidecarError, match="is stale"):
+        load_sidecar(source_copy)
+
+
+def test_load_sidecar_accepts_an_unchanged_source(tmp_path: Path) -> None:
+    """A source file untouched since extraction loads cleanly."""
+    source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name
+    source_copy.write_bytes(_WORKED_EXAMPLE_HTML.read_bytes())
+    output = build_outputs(source_copy, repo_root=tmp_path)[0]
+    write_sidecar(source_copy, output)
+
+    reloaded = load_sidecar(source_copy)
+
+    assert reloaded == output
+    assert reloaded.source_sha256 == sha256_of(source_copy)
+
+
 @pytest.mark.parametrize("source_relpath", ("/etc/passwd", "../outside.html", "C:/secret/file.html", "dir\\file.html"))
 def test_schema_refuses_non_repository_source_provenance(source_relpath: str) -> None:
     """Sidecars may name only canonical POSIX-relative paths from the repository root."""
