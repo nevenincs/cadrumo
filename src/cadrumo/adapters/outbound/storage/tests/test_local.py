@@ -163,6 +163,30 @@ def test_get_round_trips_payload(provider: LocalFileSystemProvider) -> None:
     assert metadata.byte_length == len(payload)
 
 
+def test_hmac_prefix_collision_refuses_every_operation_and_preserves_original(
+    provider: LocalFileSystemProvider,
+) -> None:
+    """A real local collision cannot overwrite, read, or delete the first object."""
+    namespace = "ledger_transaction"
+    key_a = "abcdef12-AAAAAAAA"
+    key_b = "abcdef12-BBBBBBBB"
+    payload_a = b"payload-a"
+    payload_b = b"payload-b"
+    provider.put(namespace, key_a, payload_a, content_hash=_hash(payload_a), label="first")
+
+    with pytest.raises(OutboundStorageIntegrityError, match="HMAC prefix collision"):
+        provider.put(namespace, key_b, payload_b, content_hash=_hash(payload_b), label="second")
+    with pytest.raises(OutboundStorageIntegrityError, match="HMAC prefix collision"):
+        provider.get(namespace, key_b)
+    with pytest.raises(OutboundStorageIntegrityError, match="HMAC prefix collision"):
+        provider.delete(namespace, key_b)
+
+    fetched, metadata = provider.get(namespace, key_a)
+    assert fetched == payload_a
+    assert metadata.object_key_hmac == key_a
+    assert list(provider.iter_objects(namespace)) == [metadata]
+
+
 def test_get_raises_storage_not_found_for_missing_object(provider: LocalFileSystemProvider) -> None:
     provider.put(
         "ledger_transaction",

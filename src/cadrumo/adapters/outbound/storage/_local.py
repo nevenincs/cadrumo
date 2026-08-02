@@ -193,17 +193,42 @@ class LocalFileSystemProvider:
         """Find the on-disk file for ``object_key_hmac`` if present.
 
         Searches the namespace directory for a file matching the HMAC
-        prefix; the label suffix is operator-mutable so we resolve by
-        prefix to keep rename detection cheap.
+        prefix, then verifies the full HMAC in its sidecar. The label suffix
+        is operator-mutable, so it cannot participate in identity resolution.
+        A matching prefix without a matching sidecar HMAC is a collision, not
+        an existing object: treating it as a match could overwrite, return, or
+        delete another object's payload.
         """
         namespace_dir = self._root / namespace
         if not namespace_dir.is_dir():
             return None
         prefix = provider_object_hmac_prefix(object_key_hmac)
+        resolved_path: Path | None = None
         for entry in namespace_dir.iterdir():
-            if entry.is_file() and entry.name.startswith(f"{prefix}--") and entry.suffix == _FILE_EXTENSION:
-                return entry
-        return None
+            if not (entry.is_file() and entry.name.startswith(f"{prefix}--") and entry.suffix == _FILE_EXTENSION):
+                continue
+            sidecar_path = entry.with_name(entry.stem + _SIDECAR_EXTENSION)
+            if not sidecar_path.is_file():
+                # Preserve the public get/delete behavior for an orphaned
+                # payload: get reports its missing sidecar and delete can
+                # remove it. A valid foreign sidecar elsewhere still wins as
+                # a collision below.
+                resolved_path = entry
+                continue
+            sidecar = self._load_sidecar(sidecar_path)
+            sidecar_hmac = sidecar.get("object_key_hmac")
+            if sidecar_hmac != object_key_hmac:
+                raise OutboundStorageIntegrityError(
+                    f"HMAC prefix collision for {object_key_hmac!r}: "
+                    f"sidecar {sidecar_path.name!r} identifies {sidecar_hmac!r}",
+                    context={
+                        "object_key_hmac": object_key_hmac,
+                        "sidecar_object_key_hmac": repr(sidecar_hmac),
+                        "sidecar_path": str(sidecar_path),
+                    },
+                )
+            resolved_path = entry
+        return resolved_path
 
     def _load_sidecar(self, sidecar_path: Path) -> Mapping[str, object]:
         try:
