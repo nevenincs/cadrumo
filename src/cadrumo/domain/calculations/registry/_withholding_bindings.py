@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
+from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
@@ -60,12 +61,21 @@ _WithholdingFact = Literal[
 
 
 class WithholdingObservation(BaseModel):
-    """Per-perceptor retencion / ingreso-a-cuenta observation for modelo 190 / 193."""
+    """Per-perceptor retencion / ingreso-a-cuenta observation for modelo 190 / 193.
+
+    ``perceptor_tax_id`` is normalised to its canonical identity token on
+    construction, so the identity the clave/subclave aggregations count is the
+    identity the encrypted percepciones store keys by. Holding the raw
+    declaration here split the two: the repository trimmed and uppercased the
+    tax ID before hashing it into the object key, so two canonically-equal
+    declarations were counted as two distinct percepciones while sharing one
+    stored row, and the later write overwrote the earlier evidence.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
-    perceptor_tax_id: str = Field(min_length=1, max_length=64)
+    perceptor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
     perceptor_legal_name: str = Field(default="", max_length=200)
     country_code: str = Field(default="ES", min_length=2, max_length=2)
     transaction_date: date

@@ -60,6 +60,7 @@ from ...adapters.persistence.storage import (
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
+from ...core.identity import tax_id_identity_token
 from ...core.time import now
 from ...domain.calculations.registry import WithholdingObservation
 from ._errors import AggregationValidationError, t
@@ -88,7 +89,16 @@ class _PercepcionObservationEnvelopePayload(BaseModel):
 
 
 def _hashed_perceptor_token(perceptor_tax_id: str) -> str:
-    token = perceptor_tax_id.strip().upper()
+    """Return the sha256 of the perceptor's canonical identity token.
+
+    Normalises through the same :func:`tax_id_identity_token` the observation
+    model applies on construction, so the object key and the clave/subclave
+    aggregation key are derived from one identity. The normalisation is
+    idempotent, so an observation-sourced tax ID passes through unchanged; the
+    blank guard remains as a defence for callers that key without an
+    observation.
+    """
+    token = tax_id_identity_token(perceptor_tax_id)
     if not token:
         raise AggregationValidationError(
             t("aggregation.retenciones.errors.perceptor_nif_blank"),

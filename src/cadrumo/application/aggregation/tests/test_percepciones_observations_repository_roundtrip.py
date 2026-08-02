@@ -28,7 +28,7 @@ from ....adapters.persistence.storage import PathContainmentError
 from ....core import Period
 from ....core.aggregation import RetencionClave
 from ....core.external_constants import UTF_8_ENCODING
-from ....domain.calculations.registry import WithholdingObservation
+from ....domain.calculations.registry import WithholdingObservation, aggregate_withholding_by_clave
 from ....tests.secure_sql import isolated_runtime_profile
 from .._percepciones_observations_repository import (
     PercepcionObservationRepository,
@@ -305,3 +305,47 @@ def test_replacement_carries_over_a_row_present_in_both_sets(tmp_path: Path) -> 
         )
 
         assert repo.load_observations("190", period) == (carried,)
+
+
+def test_whitespace_variant_tax_ids_are_one_perceptor_in_store_and_aggregation(tmp_path: Path) -> None:
+    """Canonically-equal perceptor declarations resolve to ONE percepción everywhere.
+
+    The observation model held the tax ID exactly as declared while the
+    repository trimmed and uppercased it before hashing it into the object key.
+    Two declarations of the same perceptor under the same clave, differing only
+    in surrounding whitespace or letter case, were therefore counted as two
+    distinct percepciones while sharing a single stored row whose later write
+    overwrote the earlier evidence — the declared registro-tipo-2 count and the
+    persisted evidence disagreeing.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = PercepcionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        padded = _observation(nif=" 12345678z ", clave="A", dinerario=Decimal("1000"))
+        canonical = _observation(nif="12345678Z", clave="A", dinerario=Decimal("2000"))
+
+        # The model itself canonicalises, so the aggregation identity matches.
+        assert padded.perceptor_tax_id == canonical.perceptor_tax_id == "12345678Z"
+
+        # One distinct (perceptor, clave, subclave) percepcion, not two.
+        breakdown = aggregate_withholding_by_clave((padded, canonical))
+        assert sum(row.percepcion_count for row in breakdown) == 1
+
+        repo.replace_observations(
+            modelo="190",
+            filing_year=2024,
+            period=period,
+            observations=(padded, canonical),
+            source_kind="aggregate_pull",
+        )
+        stored = repo.load_observations("190", period)
+        assert len(stored) == 1
+        assert len({o.perceptor_tax_id for o in stored}) == 1
+
+
+def test_padded_tax_id_keys_to_the_canonical_object_key() -> None:
+    """A padded declaration and its canonical form address the same stored row."""
+    period = Period.from_year_and_code(2024, "0A")
+    padded_key = percepcion_observation_key("190", 2024, period, " 12345678z ", "A", "")
+    canonical_key = percepcion_observation_key("190", 2024, period, "12345678Z", "A", "")
+    assert padded_key == canonical_key
