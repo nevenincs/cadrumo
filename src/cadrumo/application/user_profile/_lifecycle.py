@@ -37,7 +37,6 @@ from ...domain.user_profile import (
 )
 from . import (
     CompleteSetupCommand,
-    DuplicateProfileCommand,
     EditProfileFieldCommand,
     ProfileLifecycleResult,
     ProfileListing,
@@ -330,39 +329,6 @@ class ProfileLifecycleService:
         )
         return ProfileLifecycleResult(profile=target, applied_at=now)
 
-    def duplicate(self, command: DuplicateProfileCommand) -> ProfileLifecycleResult:
-        """Copy an existing live profile under a new id and display name.
-
-        Returns a :class:`ProfileLifecycleResult` with the newly created
-        duplicate profile.
-        """
-        if self._repository.exists(command.target_profile_id):
-            raise _profile_already_exists_error(
-                profile_id=command.target_profile_id,
-                bucket_id=self._repository.bucket_id,
-            )
-        source = self._repository.load(command.source_profile_id)
-        if source.status is not UserProfileStatus.ACTIVE:
-            raise _profile_tombstoned_error(command.source_profile_id, action="duplicate")
-        now = utc_now()
-        target = source.model_copy(
-            update={
-                "profile_id": command.target_profile_id,
-                "display_name": command.target_display_name,
-                "created_at": now,
-                "updated_at": now,
-                "removed_at": None,
-                "status": UserProfileStatus.ACTIVE,
-            },
-        )
-        self._repository.save(target)
-        self._emit_event(
-            event_type=BucketEventType.PROFILE_DUPLICATED,
-            object_id=target.profile_id,
-            occurred_at=now,
-            payload={"source_profile_id": source.profile_id},
-        )
-        return ProfileLifecycleResult(profile=target, applied_at=now)
 
     # ── helpers ────────────────────────────────────────────────────
 
@@ -493,7 +459,7 @@ def _profile_already_exists_error(*, profile_id: str, bucket_id: str) -> Profile
     )
 
 
-def _profile_tombstoned_error(profile_id: str, *, action: Literal["rename", "duplicate"]) -> ProfileNotFoundError:
+def _profile_tombstoned_error(profile_id: str, *, action: Literal["rename"]) -> ProfileNotFoundError:
     if action == "rename":
         return ProfileNotFoundError(
             _PROFILE_TOMBSTONED_RENAME_MESSAGE,

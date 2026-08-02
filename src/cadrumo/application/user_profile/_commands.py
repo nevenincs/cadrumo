@@ -136,16 +136,6 @@ class ReactivateProfileCommand(BaseModel):
     profile_id: ProfileId
 
 
-class DuplicateProfileCommand(BaseModel):
-    """Copy an existing profile under a new id and display name."""
-
-    model_config = _STRICT_FROZEN
-
-    source_profile_id: ProfileId
-    target_profile_id: ProfileId
-    target_display_name: str = Field(min_length=1, max_length=160)
-
-
 class RenameProfileCommand(BaseModel):
     """Update a live profile's display label.
 

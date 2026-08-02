@@ -26,7 +26,6 @@ from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.user_profile import schema_valid_placeholder
 from .. import (
     CompleteSetupCommand,
-    DuplicateProfileCommand,
     EditProfileFieldCommand,
     ProfileLifecycleService,
     ProfileValidationService,
@@ -252,25 +251,6 @@ def test_reactivate_emits_profile_reactivated_event(
     assert BucketEventType.PROFILE_REACTIVATED in event_types
 
 
-def test_duplicate_copies_to_a_new_id(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
-    svc = _service(secure_objects, schema)
-    svc.register(
-        RegisterProfileCommand(
-            profile_id="11111111-1111-4111-8111-111111111111",
-            display_name="Operator",
-            facts=_all_required_facts(schema),
-        ),
-    )
-    result = svc.duplicate(
-        DuplicateProfileCommand(
-            source_profile_id="11111111-1111-4111-8111-111111111111",
-            target_profile_id="22222222-2222-4222-8222-222222222222",
-            target_display_name="Spouse",
-        ),
-    )
-    assert result.profile.profile_id == "22222222-2222-4222-8222-222222222222"
-    assert result.profile.display_name == "Spouse"
-    assert result.profile.status is UserProfileStatus.ACTIVE
 
 
 def test_rename_updates_label_only(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
@@ -334,34 +314,6 @@ def test_rename_refuses_a_tombstoned_profile(
     assert error.context == {"profile_id": "11111111-1111-4111-8111-111111111111", "action": "rename"}
 
 
-def test_duplicate_refuses_a_tombstoned_source_without_rendering_profile_id(
-    secure_objects: SecureObjectRepository,
-    schema: ProfileSchemaDefinition,
-) -> None:
-    svc = _service(secure_objects, schema)
-    svc.register(
-        RegisterProfileCommand(
-            profile_id="11111111-1111-4111-8111-111111111111",
-            display_name="Operator",
-            facts=_all_required_facts(schema),
-        ),
-    )
-    svc.remove(RemoveProfileCommand(profile_id="11111111-1111-4111-8111-111111111111"))
-
-    with pytest.raises(ProfileNotFoundError) as exc_info:
-        svc.duplicate(
-            DuplicateProfileCommand(
-                source_profile_id="11111111-1111-4111-8111-111111111111",
-                target_profile_id="33333333-3333-4333-8333-333333333333",
-                target_display_name="Copy",
-            ),
-        )
-    error = exc_info.value
-    assert str(error) == "tombstoned profile cannot be duplicated"
-    assert "11111111-1111-4111-8111-111111111111" not in str(error)
-    assert error.translated_message == "application.user_profile.errors.lifecycle_profile_tombstoned_duplicate"
-    assert tr(error.translated_message) != error.translated_message
-    assert error.context == {"profile_id": "11111111-1111-4111-8111-111111111111", "action": "duplicate"}
 
 
 def test_lifecycle_emits_bucket_events(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
@@ -383,14 +335,7 @@ def test_lifecycle_emits_bucket_events(secure_objects: SecureObjectRepository, s
     svc.edit_field(
         EditProfileFieldCommand(profile_id="11111111-1111-4111-8111-111111111111", path="identity.email", value=None)
     )
-    svc.duplicate(
-        DuplicateProfileCommand(
-            source_profile_id="11111111-1111-4111-8111-111111111111",
-            target_profile_id="22222222-2222-4222-8222-222222222222",
-            target_display_name="Spouse",
-        ),
-    )
-    svc.remove(RemoveProfileCommand(profile_id="22222222-2222-4222-8222-222222222222"))
+    svc.remove(RemoveProfileCommand(profile_id="11111111-1111-4111-8111-111111111111"))
 
     catalogue = events_repo.load()
     by_type: dict[BucketEventType, int] = {}
@@ -399,7 +344,6 @@ def test_lifecycle_emits_bucket_events(secure_objects: SecureObjectRepository, s
     assert by_type[BucketEventType.PROFILE_BUCKET_CREATED] == 1
     assert by_type[BucketEventType.PROFILE_VALUES_UPDATED] >= 2  # register-with-facts + edit_field
     assert by_type[BucketEventType.PROFILE_VALUES_CLEARED] == 1
-    assert by_type[BucketEventType.PROFILE_DUPLICATED] == 1
     assert by_type[BucketEventType.PROFILE_TOMBSTONED] == 1
 
 
@@ -410,10 +354,8 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
     ) as profile:
         svc = _service(profile.repository, schema)
         source_profile_id = "55555555-5555-4555-8555-555555555555"
-        target_profile_id = "66666666-6666-4666-8666-666666666666"
         original_label = "Sensitive Operator Label"
         renamed_label = "Renamed Sensitive Label"
-        duplicate_label = "Duplicate Sensitive Label"
 
         svc.register(
             RegisterProfileCommand(
@@ -423,13 +365,6 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
             ),
         )
         svc.rename(RenameProfileCommand(profile_id=source_profile_id, target_display_name=renamed_label))
-        svc.duplicate(
-            DuplicateProfileCommand(
-                source_profile_id=source_profile_id,
-                target_profile_id=target_profile_id,
-                target_display_name=duplicate_label,
-            ),
-        )
 
         catalogue = BucketEventHistoryRepository(objects=profile.repository).load()
         register_events = catalogue.for_bucket(
@@ -440,23 +375,19 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
             _PROFILE_BUCKET_ID,
             event_types=(BucketEventType.PROFILE_RENAMED,),
         )
-        duplicate_events = catalogue.for_bucket(
-            _PROFILE_BUCKET_ID,
-            event_types=(BucketEventType.PROFILE_DUPLICATED,),
-        )
         assert register_events[-1].payload["display_name"] == original_label
         assert rename_events[-1].payload["previous_display_name"] == original_label
-        assert duplicate_events[-1].payload["source_profile_id"] == source_profile_id
 
         from ....tests.secure_sql import read_db_at_rest_bytes
 
         database_bytes = read_db_at_rest_bytes(profile.paths.db_dir / "cadrumo.db")
+        # Only values this flow actually writes are asserted absent. A value
+        # nothing persists is absent trivially, which would read as encryption
+        # coverage while proving nothing.
         for plaintext in (
             source_profile_id,
-            target_profile_id,
             original_label,
             renamed_label,
-            duplicate_label,
         ):
             assert plaintext.encode("utf-8") not in database_bytes
 
