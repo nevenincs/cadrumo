@@ -40,7 +40,7 @@ from ._modelo_manager import (
     ModeloLocaleTranslationFile,
     classify_modelo_locale_leaf,
 )
-from ._registry_scanner import scan_registry_keys
+from ._registry_scanner import scan_profile_schema_keys, scan_registry_keys
 from ._status import (
     RESERVED_INTERPOLATION_TOKENS,
     CatalogueLeafState,
@@ -73,6 +73,7 @@ __all__ = [
     "classify_modelo_locale_leaf",
     "get_registered_keys",
     "scan_namespace_markers",
+    "scan_profile_schema_keys",
     "scan_registry_keys",
     "scan_source_tree",
 ]

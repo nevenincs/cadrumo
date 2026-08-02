@@ -66,6 +66,13 @@ from ._errors import (
     UserProfileSchemaLoadError,
     UserProfileValidationError,
 )
+from ._labels import (
+    profile_field_label,
+    profile_field_label_key,
+    profile_schema_locale_keys,
+    profile_section_title,
+    profile_section_title_key,
+)
 from ._loader import load_user_profile_schema
 from ._registry_contract import (
     UserProfileRegistryContractIssue,
@@ -159,6 +166,11 @@ __all__ = [
     "new_profile_id",
     "new_profile_snapshot_id",
     "profile_binding_selectors",
+    "profile_field_label",
+    "profile_field_label_key",
+    "profile_schema_locale_keys",
+    "profile_section_title",
+    "profile_section_title_key",
     "utc_now",
     "validate_user_profile_registry_contract",
 ]
