@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
+from datetime import timedelta, timezone
 from typing import Any
 
 import pytest
 
+from ......core import SecureObjectWrite
+from ......core.errors import CoreValidationError
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError
 from ._secure_objects_support import (
@@ -109,6 +112,110 @@ def test_revision_id_round_trips_for_self_consistency_check(tmp_path: Path) -> N
                 "revision_id does not recompute from round-tripped columns; the "
                 "self-consistency gate would fail-close valid rows"
             )
+
+
+@pytest.mark.parametrize(
+    ("label", "written_at"),
+    [
+        ("naive", datetime(2026, 5, 1, 12, 0)),
+        ("plus_one_hour", datetime(2026, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=1)))),
+        ("minus_five_hours", datetime(2026, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=-5)))),
+    ],
+)
+def test_save_refuses_a_written_at_that_could_not_be_read_back(
+    tmp_path: Path,
+    label: str,
+    written_at: datetime,
+) -> None:
+    """A write whose instant cannot recompute its own revision is refused, not committed.
+
+    The revision id hashes the instant canonicalised to UTC, while the SQLite
+    column stores the wall clock and drops ``tzinfo``. An offset-bearing
+    instant therefore recomputes a different revision on read than the one it
+    was stored under, so the row used to commit and then raise
+    :class:`SecureObjectUnreadableError` on every subsequent load -- data
+    accepted and then permanently unreachable. A naive instant carries no
+    offset to canonicalise at all. Both are refused at the write funnel, and
+    the refusal must happen BEFORE the row is committed.
+    """
+
+    with _ephemeral_secure_repo(tmp_path, f"written-at-{label}.db") as (_db_path, engine, repo):
+        with pytest.raises(CoreValidationError):
+            repo.save(
+                namespace="aeat-test",
+                object_key=f"key-{label}",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=written_at,
+                payload=b"body",
+            )
+
+        # The refusal is pre-commit: no row was left behind for this key.
+        from sqlalchemy import func, select
+
+        from .._orm import SecureObjectRow
+        from ..session import session_scope
+
+        with session_scope(engine) as session:
+            committed = session.execute(
+                select(func.count()).select_from(SecureObjectRow).where(SecureObjectRow.namespace == "aeat-test"),
+            ).scalar_one()
+        assert committed == 0
+
+
+def test_save_accepts_and_reads_back_a_utc_aware_written_at(tmp_path: Path) -> None:
+    """Positive control: the accepted spelling round-trips through the real read path.
+
+    Without this, the refusal test above would pass equally well if the write
+    funnel had simply started rejecting every instant.
+    """
+
+    written_at = datetime(2026, 5, 1, 12, 0, tzinfo=UTC)
+    with _ephemeral_secure_repo(tmp_path, "written-at-utc.db") as (_db_path, _engine, repo):
+        repo.save(
+            namespace="aeat-test",
+            object_key="key-utc",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=written_at,
+            payload=b"body",
+        )
+        record = repo.load(
+            "aeat-test",
+            "key-utc",
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=1,
+        )
+
+    assert record is not None
+    assert record.payload == b"body"
+
+
+def test_secure_object_write_dto_and_save_share_one_written_at_contract(tmp_path: Path) -> None:
+    """``save_many`` refuses the same instants the direct ``save`` boundary refuses.
+
+    The DTO path and the bare-parameter path are separate entry points; both
+    funnel through one write gate, so neither can accept an instant the other
+    rejects.
+    """
+
+    offset_instant = datetime(2026, 5, 1, 12, 0, tzinfo=timezone(timedelta(hours=1)))
+    with (
+        _ephemeral_secure_repo(tmp_path, "written-at-dto.db") as (_db_path, _engine, repo),
+        pytest.raises(CoreValidationError),
+    ):
+        repo.save_many(
+            (
+                SecureObjectWrite(
+                    namespace="aeat-test",
+                    object_key="key-dto",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=offset_instant,
+                    payload=b"body",
+                ),
+            ),
+        )
 
 
 def test_revision_lineage_tamper_fails_closed(tmp_path: Path) -> None:
@@ -257,12 +364,17 @@ def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
 
 
 def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: Path) -> None:
-    """A decrypted record roundtrip must preserve every boundary field."""
+    """A decrypted record roundtrip must preserve every boundary field.
+
+    ``written_at`` is UTC-aware on both sides: the write funnel admits only
+    UTC-aware instants, and the read path re-attaches UTC to the column
+    SQLite returns naive, so the boundary is lossless for the instant too.
+    """
 
     with _ephemeral_secure_repo(tmp_path, "record.db") as (db_path, _engine, repo):
         namespace = "cadrumo-test.record"
         natural_key = "record-key-non-default"
-        written_at = datetime(2026, 5, 21, 10, 30, 0)
+        written_at = datetime(2026, 5, 21, 10, 30, 0, tzinfo=UTC)
         payload = b"strict-record-roundtrip-payload"
         repo.save(
             namespace=namespace,

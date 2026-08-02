@@ -344,7 +344,7 @@ def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
 
     with _ephemeral_secure_repo(tmp_path, "peek.db") as (_, _, repo):
         namespace = "cadrumo-test.peek"
-        written_at = datetime(2026, 5, 21, 9, 15, 0)
+        written_at = datetime(2026, 5, 21, 9, 15, 0, tzinfo=UTC)
         repo.save(
             namespace=namespace,
             object_key="peek-key-non-default",
@@ -377,7 +377,7 @@ def test_peek_metadata_reflects_on_disk_schema_version_drift(tmp_path: Path) -> 
             object_key="drift-key",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(2026, 5, 21, 8, 0, 0),
+            written_at=datetime(2026, 5, 21, 8, 0, 0, tzinfo=UTC),
             payload=b"drift-payload",
         )
         before = repo.peek_metadata(namespace, "drift-key")
@@ -412,7 +412,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
             object_key=natural_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
-            written_at=datetime(2026, 5, 21, 7, 0, 0),
+            written_at=datetime(2026, 5, 21, 7, 0, 0, tzinfo=UTC),
             payload=b"first-writer-payload",
         )
         SecureObjectRepository(engine=engine).save(
@@ -420,7 +420,7 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
             object_key=natural_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=2,
-            written_at=datetime(2026, 5, 21, 8, 0, 0),
+            written_at=datetime(2026, 5, 21, 8, 0, 0, tzinfo=UTC),
             payload=b"second-writer-payload",
         )
 

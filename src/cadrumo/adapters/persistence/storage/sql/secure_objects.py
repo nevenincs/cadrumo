@@ -16,6 +16,7 @@ from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now as _utc_now
+from .....core.time import coerce_utc_aware, validate_utc_aware
 from .._namespace_registry import (
     SecureObjectNamespaceDefinition,
     StorageHierarchyRegistry,
@@ -336,6 +337,12 @@ class SecureObjectRepository:
                     written_at_value = datetime.fromisoformat(written_at_raw)
                 else:
                     written_at_value = written_at_raw
+                # Re-attach UTC, matching the record and metadata read paths.
+                # The raw surface exists to be fed back through
+                # ``save_with_raw_key`` when restoring an archive bundle, and
+                # that write boundary admits only UTC-aware instants -- a
+                # naive value here would make a bundle unrestorable.
+                written_at_value = coerce_utc_aware(written_at_value)
                 # SQLite returns BLOB columns as bytes when the stored
                 # value contains non-text bytes, but as str when the
                 # bytes happen to be valid UTF-8. Normalise both into
@@ -779,7 +786,10 @@ class SecureObjectRepository:
                 :class:`~adapters.persistence.storage.SensitivityClass`
                 for this record.
             schema_version: Envelope schema version to stamp on the row.
-            written_at: Timezone-aware write timestamp.
+            written_at: UTC-aware write timestamp. A naive or
+                offset-bearing instant is refused: the SQLite column drops
+                ``tzinfo``, so it would not recompute the revision it was
+                stored under.
             payload: Plaintext envelope bytes. Encrypted at the column boundary.
             write_provenance: Human-readable string identifying the write origin.
             source_event_id: Optional opaque domain-event identifier for audit trails.
@@ -932,7 +942,9 @@ class SecureObjectRepository:
                 :class:`~adapters.persistence.storage.SensitivityClass`
                 to upsert at.
             schema_version: Envelope schema version captured on the row.
-            written_at: Timezone-aware datetime captured on the row.
+            written_at: UTC-aware datetime captured on the row. A naive or
+                offset-bearing instant is refused for the same reason as
+                :meth:`save`.
             payload: Plaintext envelope bytes (the column encrypts).
             write_provenance: Human-readable string identifying the write
                 origin (e.g. caller module or operation name). Defaults to
@@ -1018,6 +1030,16 @@ class SecureObjectRepository:
         source_event_id: str | None,
         expected_revision_id: str | None,
     ) -> None:
+        # Single write funnel for save, save_many, apply_batch, and
+        # save_with_raw_key. ``written_at`` is gated here rather than only on
+        # the ``SecureObjectWrite`` DTO because the direct ``save`` and
+        # ``save_with_raw_key`` boundaries take a bare ``datetime`` and never
+        # construct that model. An offset-bearing instant loses its ``tzinfo``
+        # in the SQLite column while the revision id was derived from the UTC
+        # instant, so the row would commit and then fail its own read-time
+        # self-consistency gate for good; refusing it keeps write and read
+        # deriving one revision from one spelling.
+        written_at = validate_utc_aware(written_at)
         (
             row_id,
             previous_revision_id,
@@ -1240,7 +1262,10 @@ class SecureObjectRepository:
             namespace=namespace,
             classification=str(raw.classification),
             schema_version=int(raw.schema_version),
-            written_at=raw.written_at,
+            # Re-attach UTC exactly as the record read path does, so peeking a
+            # row and loading it report the same instant rather than an aware
+            # and a naive spelling of it.
+            written_at=coerce_utc_aware(raw.written_at),
             byte_length=len(bytes(raw.payload)),
         )
 
