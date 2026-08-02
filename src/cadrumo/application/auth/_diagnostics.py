@@ -20,7 +20,7 @@ from datetime import datetime
 from enum import StrEnum
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.persistence.storage import (
     CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
@@ -28,9 +28,10 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.errors import CoreValidationError
 from ...core.external_constants import UTF_8_ENCODING, load_external_constants
 from ...core.hashing import sha256_hex
-from ...core.time import now
+from ...core.time import now, validate_utc_aware
 from ._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
@@ -82,8 +83,20 @@ class AuthDiagnosticSummary(BaseModel):
     certificate_path_configured: bool | None = None
     certificate_password_configured: bool | None = None
     certificate_file_present: bool | None = None
-    phone_state: str = ""
+    #: The operator-observed Cl@ve app state, or ``None`` when the operator has
+    #: not reported one yet. Typed from the closed vocabulary rather than left
+    #: as free text: the taxonomy used to be enforced only on the mutation
+    #: verb, so a persisted row could list a state the mutation API refuses.
+    phone_state: AuthDiagnosticPhoneState | None = None
     phone_state_reported_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def _instants_are_utc(self) -> AuthDiagnosticSummary:
+        """Hold every projected instant to the canonical UTC contract."""
+        validate_utc_aware(self.captured_at)
+        if self.phone_state_reported_at is not None:
+            validate_utc_aware(self.phone_state_reported_at)
+        return self
 
 
 class AuthDiagnosticListReport(BaseModel):
@@ -197,8 +210,10 @@ def record_auth_diagnostic_phone_state(
     Returns an :class:`AuthDiagnosticReportResult`, or ``None`` when the
     diagnostic is not found.
     """
-    if phone_state not in AUTH_DIAGNOSTIC_PHONE_STATES:
-        raise AuthDiagnosticPhoneStateError(phone_state, context={"phone_state": phone_state})
+    try:
+        AuthDiagnosticPhoneState(phone_state)
+    except ValueError as exc:
+        raise AuthDiagnosticPhoneStateError(phone_state, context={"phone_state": phone_state}) from exc
     objects = _secure_objects()
     record = objects.load(
         _DIAGNOSTIC_NAMESPACE,
@@ -257,6 +272,61 @@ def _payload(raw: bytes) -> _DiagnosticPayload:
     return _DiagnosticPayload.model_validate(data)
 
 
+def _validated_utc_instant(raw: str, *, field: str) -> datetime:
+    """Parse a persisted ISO instant and hold it to the canonical UTC contract.
+
+    These instants were parsed with a bare :meth:`datetime.fromisoformat`, so a
+    row written without an offset, or with a local one, was returned as a naive
+    or non-UTC value while :func:`~core.time.validate_utc_aware` — the contract
+    every other persisted instant in this codebase carries — rejects both. A
+    diagnostic listing sorted by capture time then ordered naive and aware rows
+    against each other, which is not a comparison the two shapes support.
+
+    Raises:
+        AuthDiagnosticPayloadError: When ``raw`` is not an ISO instant, or is
+            not UTC-aware.
+    """
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError as exc:
+        raise AuthDiagnosticPayloadError(
+            f"auth diagnostic payload {field} is not an ISO-8601 instant",
+        ) from exc
+    try:
+        return validate_utc_aware(parsed)
+    except CoreValidationError as exc:
+        raise AuthDiagnosticPayloadError(
+            f"auth diagnostic payload {field} must be a UTC-aware instant",
+        ) from exc
+
+
+def _validated_phone_state(raw: object) -> AuthDiagnosticPhoneState | None:
+    """Resolve a persisted phone state through the one closed vocabulary.
+
+    The taxonomy was enforced only on the mutation verb: the read path pushed
+    whatever the row held through ``str()``, so a payload carrying an
+    unrecognised state was listed verbatim while the mutation API refused the
+    same value. ``None`` is the documented absence — a diagnostic captured
+    before the operator reported anything simply has no state yet.
+
+    Raises:
+        AuthDiagnosticPayloadError: When a populated value is outside the
+            closed vocabulary.
+    """
+    if raw is None:
+        return None
+    text = str(raw).strip()
+    if not text:
+        return None
+    try:
+        return AuthDiagnosticPhoneState(text)
+    except ValueError as exc:
+        accepted = ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES)
+        raise AuthDiagnosticPayloadError(
+            f"auth diagnostic payload carries unknown phone state {text!r}; accepted values are: {accepted}",
+        ) from exc
+
+
 def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
     captured_at = payload.captured_at
     if not captured_at:
@@ -266,13 +336,13 @@ def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
     phone_state_reported_at = None
     raw_reported_at = operator_report.get("reported_at")
     if isinstance(raw_reported_at, str) and raw_reported_at:
-        phone_state_reported_at = datetime.fromisoformat(raw_reported_at)
+        phone_state_reported_at = _validated_utc_instant(raw_reported_at, field="operator_report.reported_at")
     raw_headless = auth_attempt.get("headless")
     summary = AuthDiagnosticSummary(
         diagnostic_id=payload.diagnostic_id,
         reason=payload.reason,
         url=_redacted_url_summary(payload.url),
-        captured_at=datetime.fromisoformat(captured_at),
+        captured_at=_validated_utc_instant(captured_at, field="captured_at"),
         html_captured=bool(payload.html and payload.html.strip()),
         screenshot_captured=bool(payload.screenshot_png_base64 and payload.screenshot_png_base64.strip()),
         auth_mode=str(auth_attempt.get("auth_mode") or ""),
@@ -298,7 +368,7 @@ def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
         certificate_path_configured=_optional_bool(auth_attempt.get("certificate_path_configured")),
         certificate_password_configured=_optional_bool(auth_attempt.get("certificate_password_configured")),
         certificate_file_present=_optional_bool(auth_attempt.get("certificate_file_present")),
-        phone_state=str(operator_report.get("phone_state") or payload.phone_state or ""),
+        phone_state=_validated_phone_state(operator_report.get("phone_state") or payload.phone_state),
         phone_state_reported_at=phone_state_reported_at,
     )
     return summary
