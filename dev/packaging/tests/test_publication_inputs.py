@@ -21,6 +21,7 @@ from dev.packaging.publication_inputs import (
     COHORT_INPUT,
     SOURCE_INPUT_BY_CHANNEL,
     _emit_outputs,
+    acquisition_lanes,
     demanded_inputs,
     main,
     missing_sources,
@@ -133,6 +134,73 @@ def test_a_claimed_channel_with_no_known_source_refuses_rather_than_passing() ->
     widened = descriptor.model_copy(update={"channel": (*descriptor.channel, orphan)})
     assert unmapped_claimed_channels(widened) == ("unknown-channel",)
     assert any("unknown-channel" in line for line in refusals(widened, {COHORT_INPUT: "1"}))
+
+
+def test_todays_descriptor_needs_no_acquisition_lane_because_only_python_is_claimed() -> None:
+    """The bootstrap case restated for lanes: python's evidence rides the smoke run itself."""
+    descriptor = load_descriptor()
+    assert acquisition_lanes(descriptor) == ()
+
+
+@pytest.mark.parametrize("channel_id", [_SCOOP, _HOMEBREW])
+def test_claiming_scoop_or_homebrew_arms_its_acquisition_lane(channel_id: str) -> None:
+    """The negative control: an unclaimed channel is never a lane, a claimed one always is."""
+    descriptor = load_descriptor()
+    assert channel_id not in acquisition_lanes(descriptor)
+
+    claimed = _with_availability(descriptor, channel_id, Availability.AVAILABLE)
+    assert channel_id in acquisition_lanes(claimed)
+
+
+def test_claiming_scoop_and_homebrew_together_arms_both_lanes() -> None:
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, _SCOOP, Availability.AVAILABLE),
+        _HOMEBREW,
+        Availability.AVAILABLE,
+    )
+    assert acquisition_lanes(both) == (_HOMEBREW, _SCOOP)
+
+
+def test_flipping_availability_back_to_public_launch_disarms_the_lane() -> None:
+    """No workflow edit either way: the lane set tracks the claim, not a separate switch."""
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, _SCOOP, Availability.AVAILABLE)
+    assert _SCOOP in acquisition_lanes(claimed)
+    reverted = _with_availability(claimed, _SCOOP, Availability.PUBLIC_LAUNCH)
+    assert _SCOOP not in acquisition_lanes(reverted)
+
+
+def test_a_claimed_channel_absent_from_the_source_mapping_is_never_silently_a_lane() -> None:
+    """Fail-closed composition: an unmapped claim must not pass unproven through this derivation either.
+
+    ``acquisition_lanes`` excludes it (it cannot resolve a lane for a channel
+    with no known evidence source at all), and the pre-existing
+    ``unmapped_claimed_channels`` / ``refusals`` still catch it at the CLI
+    boundary — so nothing about adding this derivation weakens that refusal.
+    """
+    descriptor = load_descriptor()
+    orphan = descriptor.channel[0].model_copy(
+        update={
+            "id": "unknown-channel",
+            "availability": Availability.AVAILABLE,
+            "artifact_kinds": (),
+            "evidence_rows": ("unknown-row",),
+        },
+    )
+    widened = descriptor.model_copy(update={"channel": (*descriptor.channel, orphan)})
+    assert "unknown-channel" not in acquisition_lanes(widened)
+    assert unmapped_claimed_channels(widened) == ("unknown-channel",)
+    assert any("unknown-channel" in line for line in refusals(widened, {COHORT_INPUT: "1"}))
+
+
+def test_python_is_never_an_acquisition_lane_even_when_every_channel_is_claimed() -> None:
+    """python's evidence source is the cohort input itself; it must never be mistaken for a lane."""
+    descriptor = load_descriptor()
+    fully_claimed = descriptor
+    for channel in descriptor.channel:
+        fully_claimed = _with_availability(fully_claimed, channel.id, Availability.AVAILABLE)
+    assert "python" not in acquisition_lanes(fully_claimed)
 
 
 def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) -> None:

@@ -66,6 +66,33 @@ SOURCE_INPUT_BY_CHANNEL: Final[Mapping[str, str]] = {
 COHORT_INPUT: Final[str] = "packaging_run_id"
 
 
+def acquisition_lanes(descriptor: DownloadDescriptor) -> tuple[str, ...]:
+    """Return claimed channel ids requiring a separate acquisition-workflow dispatch, sorted.
+
+    Derived from the SAME claimed-channel authority :data:`SOURCE_INPUT_BY_CHANNEL`
+    already declares — no second mapping is introduced. A channel whose evidence
+    source IS the cohort input itself (today, only ``python``: its evidence rides
+    the packaging-smoke run that produced the cohort) needs no acquisition
+    dispatch. Every other claimed channel's evidence comes from a dedicated
+    acquisition workflow run, so it is a lane. A claimed channel absent from
+    :data:`SOURCE_INPUT_BY_CHANNEL` entirely is never silently treated as
+    lane-free here — it is simply excluded from this result, and the existing
+    fail-closed :func:`unmapped_claimed_channels` / :func:`refusals` catch it
+    at the CLI boundary instead of letting it pass unproven.
+
+    Flipping a channel's availability to ``available`` therefore arms its lane
+    with no workflow edit: the set changes because the claim changed, not
+    because this function was taught a new channel.
+    """
+    return tuple(
+        sorted(
+            channel.id
+            for channel in claimed_channels(descriptor)
+            if SOURCE_INPUT_BY_CHANNEL.get(channel.id) not in (None, COHORT_INPUT)
+        ),
+    )
+
+
 def unmapped_claimed_channels(descriptor: DownloadDescriptor) -> tuple[str, ...]:
     """Return claimed channel ids this module cannot source evidence for.
 
