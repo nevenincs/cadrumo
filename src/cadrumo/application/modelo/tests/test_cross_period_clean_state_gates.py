@@ -388,10 +388,10 @@ def _clean_state_repair_verdict(
             (CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE,),
             (
                 "Review the grupo roster for source modelo=303 year=2025 period=1T; "
-                "unexpected captured members: C00000002. Then rerun verification."
+                "unexpected captured members: C00000000. Then rerun verification."
             ),
             (),
-            ("C00000002",),
+            ("C00000000",),
         ),
         (
             (CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE,),

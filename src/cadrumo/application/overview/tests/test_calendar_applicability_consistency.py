@@ -58,7 +58,7 @@ def _autonomo() -> TaxpayerProfile:
 
 def _sociedad_limitada() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345678",
+        tax_id="B12345674",
         entity_type=EntityType.LEGAL_ENTITY,
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime.GENERAL,
@@ -67,7 +67,7 @@ def _sociedad_limitada() -> TaxpayerProfile:
 
 def _landlord() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X9876543L",
+        tax_id="X9876543K",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.CAPITAL_INMOBILIARIO}),
         iva_regime=IVARegime.GENERAL,
@@ -76,7 +76,7 @@ def _landlord() -> TaxpayerProfile:
 
 def _attribution_entity() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="E12345678",
+        tax_id="E12345674",
         entity_type=EntityType.ATTRIBUTION_ENTITY,
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime.GENERAL,

@@ -23,6 +23,7 @@ from ...core.external_constants import (
     MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
     WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
 )
+from ...core.identity import SubjectTaxId
 from ...core.time import validate_utc_aware
 from ..contribuyente import (
     UE_EEA_COUNTRY_CODES,
@@ -359,7 +360,7 @@ class CrossPeriodGroupMemberRoster(BaseModel):
     source_modelo: Annotated[Modelo, BeforeValidator(_parse_modelo_identifier)] = Modelo.M322
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
-    member_nifs: tuple[str, ...] = Field(min_length=1)
+    member_nifs: tuple[SubjectTaxId, ...] = Field(min_length=1)
 
     @field_validator("member_nifs", mode="before")
     @classmethod
@@ -373,12 +374,17 @@ class CrossPeriodGroupMemberRoster(BaseModel):
     @field_validator("member_nifs")
     @classmethod
     def _validate_member_nifs(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        cleaned = tuple(str(item).strip().upper() for item in value)
-        if any(not item for item in cleaned):
-            raise DeadlineValidationError("cross-period group member NIFs must be non-blank")
-        if len(set(cleaned)) != len(cleaned):
+        """Reject duplicate members and give the roster a stable order.
+
+        Each entry has already passed the canonical :data:`SubjectTaxId`
+        contract, which trims, uppercases, and runs the AEAT checksum, so this
+        validator only enforces the roster-level invariants. Deduplication must
+        run after that normalisation: two spellings of one member would
+        otherwise both count towards the expected fan-in.
+        """
+        if len(set(value)) != len(value):
             raise DeadlineValidationError("cross-period group member NIFs must be unique")
-        return tuple(sorted(cleaned))
+        return tuple(sorted(value))
 
     @model_validator(mode="after")
     def _validate_period_year_matches(self) -> CrossPeriodGroupMemberRoster:
@@ -410,7 +416,11 @@ class TaxpayerProfile(BaseModel):
     facts the deadline engine consumes today.
 
     Attributes:
-        tax_id: NIF / NIE / CIF. Stored verbatim, no normalisation.
+        tax_id: NIF / NIE / CIF, validated and normalised through the
+            canonical :data:`SubjectTaxId` contract. Deadline computation
+            and imported schedule state carry this identity, so it runs
+            the AEAT checksum here rather than trusting an adjacent
+            boundary to have run it.
         entity_type: The taxpayer's entity type (natural person, legal
             entity, or attribution entity). ``None`` when the operator
             has not yet declared it.
@@ -501,7 +511,7 @@ class TaxpayerProfile(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    tax_id: str = Field(min_length=1)
+    tax_id: SubjectTaxId
     entity_type: EntityType | None = None
     legal_entity_form: LegalEntityForm | None = None
     irpf_income_categories: frozenset[IrpfIncomeCategory] = frozenset()

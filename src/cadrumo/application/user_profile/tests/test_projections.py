@@ -94,15 +94,15 @@ def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_perso
 
 
 def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
-    profile = projection_for_taxpayer({"tax.id": "X9876543A", "iva.regime": "GENERAL"})
-    assert profile.tax_id == "X9876543A"
+    profile = projection_for_taxpayer({"tax.id": "X9876543K", "iva.regime": "GENERAL"})
+    assert profile.tax_id == "X9876543K"
     assert profile.iva_regime is IVARegime.GENERAL
 
 
 def test_projection_for_taxpayer_uses_defaults_when_record_is_blank() -> None:
     record = UserProfileRecord(profile_id="11111111-1111-4111-8111-111111111111", display_name="Operator", facts=())
-    profile = projection_for_taxpayer(record, tax_id_default="Z0000000Z")
-    assert profile.tax_id == "Z0000000Z"
+    profile = projection_for_taxpayer(record, tax_id_default="Z0000000M")
+    assert profile.tax_id == "Z0000000M"
     assert profile.iva_regime is IVARegime.GENERAL
 
 

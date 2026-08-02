@@ -161,7 +161,7 @@ def _seed_sociedad_m_profile() -> None:
         facts=(
             UserProfileFact(path="identity.name", value="Sociedad M Ejemplo"),
             UserProfileFact(path="identity.legal_name", value="Sociedad Limitada M SL"),
-            UserProfileFact(path="identity.tax_id", value="B87654321"),
+            UserProfileFact(path="identity.tax_id", value="B87654323"),
             UserProfileFact(path="activities.description", value="actividad economica"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),

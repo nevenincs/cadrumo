@@ -87,7 +87,7 @@ def _pensioner() -> TaxpayerProfile:
     """A pensioner: pensión only (a rendimiento del trabajo)."""
 
     return TaxpayerProfile(
-        tax_id="Z3456789A",
+        tax_id="Z3456789D",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.PENSION}),
         iva_regime=IVARegime.EXENTO,
@@ -98,7 +98,7 @@ def _autonomo() -> TaxpayerProfile:
     """An autónomo en estimación directa: actividad económica."""
 
     return TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
@@ -120,7 +120,7 @@ def _sociedad_limitada() -> TaxpayerProfile:
 def _undeclared() -> TaxpayerProfile:
     """A profile with no taxpayer model declared at all."""
 
-    return TaxpayerProfile(tax_id="C5678901C", iva_regime=IVARegime.GENERAL)
+    return TaxpayerProfile(tax_id="C5678901I", iva_regime=IVARegime.GENERAL)
 
 
 def _attribution_entity() -> TaxpayerProfile:
@@ -131,7 +131,7 @@ def _attribution_entity() -> TaxpayerProfile:
     """
 
     return TaxpayerProfile(
-        tax_id="E12345678",
+        tax_id="E12345674",
         entity_type=EntityType.ATTRIBUTION_ENTITY,
         iva_regime=IVARegime.GENERAL,
     )
@@ -216,7 +216,7 @@ def test_natural_person_without_income_categories_is_incomplete() -> None:
     to guess rather than defaulting to autónomo."""
 
     profile = TaxpayerProfile(
-        tax_id="D6789012D",
+        tax_id="D6789012I",
         entity_type=EntityType.NATURAL_PERSON,
         iva_regime=IVARegime.GENERAL,
     )
@@ -285,7 +285,7 @@ def test_natural_person_no_income_categories_uses_undeclared_reason() -> None:
     undeclared rationale, not the un-ruled one."""
 
     profile = TaxpayerProfile(
-        tax_id="F6789012F",
+        tax_id="F6789012I",
         entity_type=EntityType.NATURAL_PERSON,
         iva_regime=IVARegime.GENERAL,
     )
@@ -402,7 +402,7 @@ def _autonomo_objetiva() -> TaxpayerProfile:
     """An autónomo en estimación objetiva (módulos)."""
 
     return TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.OBJETIVA,
@@ -414,7 +414,7 @@ def _autonomo_simplificada() -> TaxpayerProfile:
     """An autónomo en estimación directa simplificada."""
 
     return TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
@@ -426,13 +426,13 @@ def test_pago_fraccionado_regime_matrix_routes_modelos_130_and_131() -> None:
     """M130/M131 stay mutually exclusive by estimation regime and taxpayer route."""
 
     default_directa_profile = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
     )
     modulos_general_profile = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
@@ -514,7 +514,7 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
         "ley-35-2006:art-101",
     )
     autonomo_pays_salaries = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
@@ -522,7 +522,7 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
         has_employees=True,
     )
     autonomo_pays_rent = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
@@ -530,7 +530,7 @@ def test_payer_fact_modelos_apply_when_required_fact_is_declared() -> None:
         pays_rent_with_retencion=True,
     )
     autonomo_above_347_threshold = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
@@ -593,7 +593,7 @@ def test_modelo_190_tracks_modelo_111_payer_fact() -> None:
     the same withholding-payer fact and carry the same verdict."""
 
     paying = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,

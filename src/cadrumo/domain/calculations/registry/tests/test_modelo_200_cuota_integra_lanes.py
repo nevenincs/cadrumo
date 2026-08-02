@@ -457,7 +457,7 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
     Modelo 202 modality question.
     """
     natural_person = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         iva_regime=IVARegime.GENERAL,
         incn_prior_12_months=Decimal("9000000"),

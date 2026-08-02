@@ -59,7 +59,7 @@ _INCN_BELOW_THRESHOLD = Decimal("5_999_999.99")
 
 def _sl_profile(incn: Decimal | None) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="B12345678",
+        tax_id="B12345674",
         entity_type=EntityType.LEGAL_ENTITY,
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime.GENERAL,
@@ -78,7 +78,7 @@ def _natural_person_profile() -> TaxpayerProfile:
 
 def _attribution_entity_profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="E12345678",
+        tax_id="E12345674",
         entity_type=EntityType.ATTRIBUTION_ENTITY,
         irpf_income_categories=frozenset(),
         iva_regime=IVARegime.GENERAL,

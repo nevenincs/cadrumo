@@ -156,7 +156,7 @@ def test_registry_rules_derive_per_entity_and_per_regime_verdicts() -> None:
     """Real profiles exercise entity and IRPF-regime applicability gates."""
 
     direct_autonomo = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
@@ -187,7 +187,7 @@ def _attribution_entity_profile(
     third_party_transactions_above_347_threshold: bool = False,
 ) -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="E12345678",
+        tax_id="E12345674",
         entity_type=EntityType.ATTRIBUTION_ENTITY,
         iva_regime=iva_regime,
         has_employees=has_employees,
@@ -275,7 +275,7 @@ def test_actividad_economica_without_declared_regime_defaults_to_directa_m130() 
     """
 
     autonomo_no_regime = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
@@ -363,7 +363,7 @@ def test_objective_estimation_regime_routes_to_m131() -> None:
     """An autónomo who explicitly elects módulos owes M131, not M130."""
 
     autonomo_modulos = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
         iva_regime=IVARegime.GENERAL,
@@ -385,7 +385,7 @@ def test_pure_landlord_without_actividad_economica_owes_no_m130() -> None:
     """
 
     landlord = TaxpayerProfile(
-        tax_id="A4567890B",
+        tax_id="A4567890A",
         entity_type=EntityType.NATURAL_PERSON,
         irpf_income_categories=frozenset({IrpfIncomeCategory.CAPITAL_INMOBILIARIO}),
         iva_regime=IVARegime.GENERAL,

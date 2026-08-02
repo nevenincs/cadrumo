@@ -222,7 +222,7 @@ def test_rectificativa_refund_carries_devolucion_iban(isolated_backend: None) ->
         period="02",
     )
     redeme = TaxpayerProfile(
-        tax_id="redemecompany",
+        tax_id="B66012345",
         iva_regime=IVARegime.GENERAL,
         iva=ModeloIVAProfile(redeme_enrolled=True, refund_account=RefundAccount(iban=_SPANISH_IBAN)),
     )

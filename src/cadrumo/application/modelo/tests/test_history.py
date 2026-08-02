@@ -67,7 +67,7 @@ def _seed_sociedad_profile() -> None:
             profile_id=_BUCKET_ID,
             display_name="Test runtime profile",
             facts=(
-                UserProfileFact(path="identity.tax_id", value="B12345678"),
+                UserProfileFact(path="identity.tax_id", value="B12345674"),
                 UserProfileFact(path="identity.legal_name", value="History Test Sociedad Limitada"),
                 UserProfileFact(path="activities.description", value="corporate tax activity"),
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),

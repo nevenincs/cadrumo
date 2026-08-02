@@ -178,7 +178,7 @@ def test_related_party_observation_country_code_must_be_uppercase_alphabetic() -
     with pytest.raises(ValidationError, match="country_code must be uppercase alphabetic"):
         RelatedPartyOperationObservation(
             source_id="op1",
-            counterparty_tax_id="A12345678",
+            counterparty_tax_id="A12345674",
             country_code="es",
             transaction_date=date(2025, 3, 15),
             operation_kind_code="01",
@@ -190,7 +190,7 @@ def test_related_party_observation_amount_must_be_decimal() -> None:
     with pytest.raises(ValidationError):
         RelatedPartyOperationObservation(
             source_id="op1",
-            counterparty_tax_id="A12345678",
+            counterparty_tax_id="A12345674",
             transaction_date=date(2025, 3, 15),
             operation_kind_code="01",
             amount=cast(Decimal, True),
@@ -204,7 +204,7 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
     obs = (
         RelatedPartyOperationObservation(
             source_id="op1",
-            counterparty_tax_id="A12345678",
+            counterparty_tax_id="A12345674",
             country_code="ES",
             transaction_date=date(2025, 3, 15),
             operation_kind_code="01",
@@ -213,7 +213,7 @@ def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
         ),
         RelatedPartyOperationObservation(
             source_id="op2",
-            counterparty_tax_id="A12345678",
+            counterparty_tax_id="A12345674",
             country_code="ES",
             transaction_date=date(2025, 6, 15),
             operation_kind_code="01",

@@ -117,7 +117,7 @@ def test_export_service_refuses_ledger_revision_without_evidence_reference(
                 output_path=output_path,
                 actor="operator",
             ),
-            workflow_profile=TaxpayerProfile(tax_id="taxpayerdefault", iva_regime=IVARegime.GENERAL),
+            workflow_profile=TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL),
             calculation_repository=repository,
         )
 

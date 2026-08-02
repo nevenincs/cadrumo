@@ -122,7 +122,7 @@ def _seed_first_year_modalidad_cuota_profile() -> None:
         profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="First Year Cuota Test SL"),
             UserProfileFact(path="activities.description", value="software consultancy"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
@@ -213,7 +213,7 @@ def test_first_year_modalidad_cuota_m200_calculates_drafts_and_verifies(
     report = verify_modelo_revision(
         result.revision.calculation_revision_id,
         actor="system",
-        workflow_profile=TaxpayerProfile(tax_id="B12345678", iva_regime=IVARegime.GENERAL),
+        workflow_profile=TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime.GENERAL),
         work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
         calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
