@@ -41,12 +41,13 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+from pydantic import ValidationError
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....core import Period
@@ -338,6 +339,26 @@ def test_decrypt_feedback_package_recovers_document_byte_for_byte(tmp_path: Path
         now=_NOW,
     )
     assert recovered == feedback
+
+
+@pytest.mark.parametrize(
+    "submitted_at",
+    (
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+    ),
+)
+def test_build_feedback_package_refuses_a_naive_or_non_utc_submitted_at(submitted_at: datetime) -> None:
+    """A feedback document must carry one explicit UTC ``submitted_at`` instant."""
+    with pytest.raises(ValidationError, match="datetime must be"):
+        build_feedback_package(
+            bucket_id="originator-bucket",
+            work_unit_id=_PLACEHOLDER_WORK_UNIT_ID,
+            calculation_revision_id=_PLACEHOLDER_REVISION_ID,
+            note="approved",
+            submitted_by="accountant",
+            submitted_at=submitted_at,
+        )
 
 
 def test_decrypt_feedback_package_fails_with_wrong_private_key() -> None:

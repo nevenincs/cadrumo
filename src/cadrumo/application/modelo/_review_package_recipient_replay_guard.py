@@ -57,6 +57,7 @@ from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 
 if TYPE_CHECKING:
@@ -88,7 +89,7 @@ class ConsumedNonceRecord(BaseModel):
     model_config = _STRICT_FROZEN
 
     nonce_hex: str = Field(pattern=_HEX_PATTERN_64)
-    consumed_at: datetime
+    consumed_at: UtcInstant
 
 
 class ConsumedNonceLedger(BaseModel):

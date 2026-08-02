@@ -25,10 +25,11 @@ from __future__ import annotations
 import contextvars
 import secrets
 import threading
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....tests.review_package_adapters import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
@@ -85,6 +86,22 @@ def test_mark_consumed_then_load_roundtrips_with_strict_equality(tmp_path: Path)
     record = reloaded.records[0]
     assert record.nonce_hex == nonce_hex
     assert record.consumed_at == _NOW
+
+
+@pytest.mark.parametrize(
+    "consumed_at",
+    (
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+    ),
+)
+def test_mark_consumed_refuses_a_naive_or_non_utc_consumed_at(tmp_path: Path, consumed_at: datetime) -> None:
+    """A consumed-nonce record must carry one explicit UTC ``consumed_at`` instant."""
+    nonce_hex = _fresh_nonce_hex()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-replay-time") as profile:
+        repository = RecipientReplayGuardRepository(objects=profile.repository)
+        with pytest.raises(ValidationError, match="datetime must be"):
+            repository.mark_consumed(nonce_hex, consumed_at=consumed_at)
 
 
 def test_ledger_is_never_stored_as_plaintext(tmp_path: Path) -> None:

@@ -50,7 +50,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
     Ed25519PrivateKey,
     Ed25519PublicKey,
 )
-from pydantic import BaseModel, Field, TypeAdapter, field_validator
+from pydantic import BaseModel, Field, TypeAdapter
 
 from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
 from ...adapters.persistence.storage import SecureObjectRevisionConflictError
@@ -69,8 +69,8 @@ from ...core.ed25519_signing import (
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId
+from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
-from ...core.time import validate_utc_aware as _validate_utc_aware
 from ._review_package import assert_review_package_verifies
 
 if TYPE_CHECKING:
@@ -112,19 +112,7 @@ class ReviewPackageSigningKeypair(BaseModel):
     bucket_id: str = Field(min_length=1)
     private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: datetime
-
-    @field_validator("created_at")
-    @classmethod
-    def _created_at_is_utc(cls, value: datetime) -> datetime:
-        """Hold the keypair's minting instant to the same UTC contract as its signatures.
-
-        The envelope this key signs already refuses a naive or offset
-        ``signed_at``; a key whose own ``created_at`` was ambiguous made the
-        "was this signature made after the key existed?" question unanswerable
-        across the very boundary the signature exists to defend.
-        """
-        return _validate_utc_aware(value)
+    created_at: UtcInstant
 
     def private_key(self) -> Ed25519PrivateKey:
         """Reconstruct the live :class:`Ed25519PrivateKey` from stored raw bytes."""
@@ -148,13 +136,7 @@ class ReviewPackageSigningPublicKey(BaseModel):
 
     bucket_id: str = Field(min_length=1)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: datetime
-
-    @field_validator("created_at")
-    @classmethod
-    def _created_at_is_utc(cls, value: datetime) -> datetime:
-        """Carry the keypair's UTC minting instant into the exported half unchanged."""
-        return _validate_utc_aware(value)
+    created_at: UtcInstant
 
 
 class SignedReviewPackage(BaseModel):
@@ -176,13 +158,7 @@ class SignedReviewPackage(BaseModel):
     manifest_sha256: str = Field(pattern=_HEX_PATTERN_64)
     signature_hex: str = Field(pattern=_HEX_PATTERN_128)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    signed_at: datetime
-
-    @field_validator("signed_at")
-    @classmethod
-    def _signed_at_is_utc(cls, value: datetime) -> datetime:
-        """Refuse an ambiguous or non-canonical signature-envelope instant."""
-        return _validate_utc_aware(value)
+    signed_at: UtcInstant
 
 
 def _canonical_bucket_id(bucket_id: str) -> str:

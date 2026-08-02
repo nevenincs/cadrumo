@@ -34,12 +34,13 @@ from __future__ import annotations
 
 import contextvars
 import threading
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+from pydantic import ValidationError
 
 from ....core import Period
 from ....domain.calculations.registry import CasillaObservation, validated_casilla_id
@@ -427,6 +428,28 @@ def test_encrypt_refuses_non_positive_valid_for(tmp_path: Path) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "issued_at",
+    (
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+    ),
+)
+def test_encrypt_refuses_a_naive_or_non_utc_issued_at(tmp_path: Path, issued_at: datetime) -> None:
+    """An encrypted envelope must carry one explicit UTC ``issued_at`` instant."""
+    package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-time")
+    recipient_public_key_hex = public_key_hex_from_raw_bytes(
+        X25519PrivateKey.generate().public_key().public_bytes_raw(),
+    )
+
+    with pytest.raises(ValidationError, match="datetime must be"):
+        encrypt_review_package_for_recipient(
+            package_bytes,
+            recipient_public_key_hex=recipient_public_key_hex,
+            issued_at=issued_at,
+        )
+
+
 def test_review_only_envelope_decrypts_but_carries_the_flag(tmp_path: Path) -> None:
     """A review-only package decrypts to real bytes, flagged non-filing-grade."""
     package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-n")
@@ -585,6 +608,29 @@ def test_ensure_recipient_encryption_keypair_mints_once_and_reuses(tmp_path: Pat
         assert public.public_key_hex == minted.public_key_hex
         # The public projection never carries the private key.
         assert not hasattr(public, "private_key_hex")
+
+
+@pytest.mark.parametrize(
+    "generated_at",
+    (
+        pytest.param(datetime(2026, 7, 3, 12, 0), id="naive"),
+        pytest.param(datetime(2026, 7, 3, 14, 0, tzinfo=timezone(timedelta(hours=2))), id="non-utc"),
+    ),
+)
+def test_ensure_recipient_encryption_keypair_refuses_a_naive_or_non_utc_generated_at(
+    tmp_path: Path,
+    generated_at: datetime,
+) -> None:
+    """The minted keypair's ``created_at`` must carry one explicit UTC instant."""
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-time") as profile,
+        pytest.raises(ValidationError, match="datetime must be"),
+    ):
+        ensure_recipient_encryption_keypair(
+            bucket_id="recip-enc-keypair-time",
+            repository=profile.repository,
+            generated_at=generated_at,
+        )
 
 
 def test_load_recipient_encryption_keypair_refuses_before_mint(tmp_path: Path) -> None:

@@ -61,6 +61,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.identity import BucketId
+from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 from ...domain.modelos import CalculationRevisionId, WorkUnitId
 from ._review_package_counter_sign import CounterSignedReceipt, verify_counter_signed_receipt
@@ -122,7 +123,7 @@ class FeedbackPackage(BaseModel):
     calculation_revision_id: CalculationRevisionId
     note: str = Field(default="", max_length=4000)
     counter_signed_receipt: CounterSignedReceipt | None = Field(default=None)
-    submitted_at: datetime
+    submitted_at: UtcInstant
     submitted_by: str = Field(min_length=1, max_length=128)
 
 
