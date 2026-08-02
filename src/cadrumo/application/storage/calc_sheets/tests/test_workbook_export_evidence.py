@@ -22,6 +22,7 @@ from .._records import (
     SheetExportPlan,
     SheetFormulaCell,
     SheetGuideContent,
+    SheetProtectedRange,
     SheetValueCell,
     TabName,
 )
@@ -69,6 +70,20 @@ def _evidence_plan() -> SheetExportPlan:
             ),
         ),
         guide=SheetGuideContent(title="Modelo 303", paragraphs=("Use Entradas.",)),
+        # Evidencia protection is now derived from the plan rather than applied
+        # unconditionally by the materialiser, so a plan that wants the tab
+        # locked has to say so -- which is the point: the plan is the contract
+        # both transports read.
+        protected_ranges=(
+            SheetProtectedRange(
+                tab=TabName.EVIDENCIA,
+                start_row=1,
+                end_row=1000,
+                start_column=1,
+                end_column=16,
+                description="Generated evidence: read-only",
+            ),
+        ),
         evidence=SheetEvidenceFacet(
             snapshot_fingerprint="f" * 64,
             contributor_rows=(

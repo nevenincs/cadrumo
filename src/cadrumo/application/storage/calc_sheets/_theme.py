@@ -28,6 +28,17 @@ from typing import Final, Literal
 # installed monospace (Consolas / Liberation Mono) when Roboto Mono is absent.
 WORKBOOK_FONT_FAMILY: Final[str] = "Roboto Mono"
 
+STYLED_RANGE_VERTICAL_ALIGN: Final[str] = "top"
+"""Vertical alignment applied to every role-styled range, in both transports.
+
+Unlike the horizontal alignment this is uniform across roles, which is why it
+belongs here rather than on :class:`RoleStyle`. It lived as a literal inside
+the offline materialiser instead, so the online request builder simply never
+emitted the facet and Sheets kept its bottom-aligned default -- the two
+transports disagreed on a plan they both claim to mirror, and no palette entry
+was wrong, so nothing pointed at the gap.
+"""
+
 # Slate brand ink used for header-band text and emphasis foregrounds.
 _SLATE: Final[str] = "1F3864"
 _WHITE: Final[str] = "FFFFFF"
@@ -112,6 +123,7 @@ def openpyxl_argb(value: str) -> str:
 
 __all__ = [
     "ROLE_STYLES",
+    "STYLED_RANGE_VERTICAL_ALIGN",
     "WORKBOOK_FONT_FAMILY",
     "HorizontalAlign",
     "RoleStyle",

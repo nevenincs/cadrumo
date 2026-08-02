@@ -46,6 +46,7 @@ from pydantic import BaseModel, Field
 
 from ....application.storage.calc_sheets import (
     ROLE_STYLES,
+    STYLED_RANGE_VERTICAL_ALIGN,
     WORKBOOK_FONT_FAMILY,
     SheetAutoFilter,
     SheetCellConstraint,
@@ -401,6 +402,7 @@ def _build_emphasis_format_requests(
 
 
 _HORIZONTAL_ALIGN: Final[Mapping[str, str]] = {"left": "LEFT", "center": "CENTER", "right": "RIGHT"}
+_VERTICAL_ALIGN: Final[Mapping[str, str]] = {"top": "TOP", "middle": "MIDDLE", "bottom": "BOTTOM"}
 # Approximate Sheets pixel size for one character column-width unit.
 _PIXELS_PER_WIDTH_UNIT: Final[int] = 7
 
@@ -462,11 +464,16 @@ def _build_styled_range_requests(
         user_format: dict[str, Any] = {
             "textFormat": text_format,
             "horizontalAlignment": _HORIZONTAL_ALIGN[style.align],
+            # Sheets defaults to BOTTOM, so omitting this facet was not a
+            # neutral omission: it silently rendered the opposite of what the
+            # offline transport applies to the same plan.
+            "verticalAlignment": _VERTICAL_ALIGN[STYLED_RANGE_VERTICAL_ALIGN],
             "wrapStrategy": "WRAP" if styled.wrap else "OVERFLOW_CELL",
         }
         fields = [
             "userEnteredFormat.textFormat",
             "userEnteredFormat.horizontalAlignment",
+            "userEnteredFormat.verticalAlignment",
             "userEnteredFormat.wrapStrategy",
         ]
         if style.fill_hex is not None:
