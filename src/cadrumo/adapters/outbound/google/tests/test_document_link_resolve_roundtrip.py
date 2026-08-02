@@ -35,15 +35,15 @@ from .....domain.attachments import (
     add_attachment_bytes,
 )
 from .....tests.secure_sql import isolated_runtime_profile
-
-# The attachment store refuses a manifest naming another profile bucket, so
-# the fixture names the same bucket the runtime profile provisions.
-_BUCKET_ID = "9d4e1a2b-6c70-4f81-8b92-a3c4d5e6f701"
 from ...storage import OutboundStoragePermissionError
 from .._document_link_resolver import resolve_document_link
 from ._drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+# The attachment store refuses a manifest naming another profile bucket, so
+# the fixture names the same bucket the runtime profile provisions.
+_BUCKET_ID = "9d4e1a2b-6c70-4f81-8b92-a3c4d5e6f701"
 
 _FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 _DRIVE_LINK = f"https://drive.google.com/file/d/{_FILE_ID}/view"

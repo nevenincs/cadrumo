@@ -33,15 +33,15 @@ import pytest
 from .....adapters.persistence.storage.attachment import AttachmentStore
 from .....domain.attachments import AttachmentKind, AttachmentSource, add_attachment_bytes
 from .....tests.secure_sql import isolated_runtime_profile
-
-# The attachment store refuses a manifest naming another profile bucket, so
-# the fixture names the same bucket the runtime profile provisions.
-_BUCKET_ID = "9d4e1a2b-6c70-4f81-8b92-a3c4d5e6f701"
 from ...storage import OutboundStorageError, OutboundStoragePermissionError
 from .._document_link_resolver import list_drive_folder_documents, resolve_document_link
 from ._drive_media_server import drive_files_list_endpoint, drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+# The attachment store refuses a manifest naming another profile bucket, so
+# the fixture names the same bucket the runtime profile provisions.
+_BUCKET_ID = "9d4e1a2b-6c70-4f81-8b92-a3c4d5e6f701"
 
 _FOLDER_ID = "1FoldEr12345678901234567890AB"
 # Drive file ids must be >=10 chars to match the /d/<id>/ URL pattern the
