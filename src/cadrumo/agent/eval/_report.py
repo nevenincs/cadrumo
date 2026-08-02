@@ -93,6 +93,62 @@ class MeasurementReport(BaseModel):
         return self.scenarios_run > 0 and self.invariants_hold and self.scenarios_passed == self.scenarios_run
 
 
+def _index_trajectories_by_session(
+    trajectories: tuple[LiveTrajectory, ...],
+) -> dict[str, LiveTrajectory]:
+    """Key the captured trajectories by session id, refusing a duplicate id.
+
+    Session id is what pairs a score with its evidence, so two captures sharing
+    one id would let a row silently borrow the wrong session's counts.
+    """
+    by_session: dict[str, LiveTrajectory] = {}
+    for trajectory in trajectories:
+        if trajectory.session_id in by_session:
+            raise ValueError(
+                f"duplicate trajectory session_id {trajectory.session_id!r}: each captured "
+                "session must be unique, or a report row could silently borrow the wrong evidence",
+            )
+        by_session[trajectory.session_id] = trajectory
+    return by_session
+
+
+def _scenario_outcome_row(
+    score: LiveScenarioScore,
+    trajectory: LiveTrajectory | None,
+) -> ScenarioOutcomeRow:
+    """Project one score and its matched trajectory into a report row.
+
+    Refuses an incoherent pairing before it is rendered: a score and the
+    trajectory it matched by session id must agree on who ran what. An
+    unmatched score still renders (its verdict stands on its own) with zero
+    evidence counts rather than borrowing another session's.
+    """
+    if trajectory is not None:
+        if trajectory.persona != score.persona:
+            raise ValueError(
+                f"score for session {score.session_id!r} claims persona {score.persona!r}, "
+                f"but its matched trajectory recorded persona {trajectory.persona!r}",
+            )
+        # trajectory.scenario is optional (empty for free-exploration
+        # captures never tagged with a scenario at capture time); only a
+        # trajectory that DOES declare a scenario can disagree.
+        if trajectory.scenario and trajectory.scenario != score.scenario:
+            raise ValueError(
+                f"score for session {score.session_id!r} claims scenario {score.scenario!r}, "
+                f"but its matched trajectory recorded scenario {trajectory.scenario!r}",
+            )
+    return ScenarioOutcomeRow(
+        scenario=score.scenario,
+        persona=score.persona,
+        session_id=score.session_id,
+        passed=score.passed,
+        tool_calls=len(trajectory.tool_calls) if trajectory else 0,
+        narrations=len(trajectory.narrations) if trajectory else 0,
+        elicitations=len(trajectory.elicitations) if trajectory else 0,
+        failures=score.failures,
+    )
+
+
 def build_measurement_report(
     *,
     scores: tuple[LiveScenarioScore, ...],
@@ -109,44 +165,8 @@ def build_measurement_report(
     Returns:
         A :class:`MeasurementReport`.
     """
-    by_session: dict[str, LiveTrajectory] = {}
-    for trajectory in trajectories:
-        if trajectory.session_id in by_session:
-            raise ValueError(
-                f"duplicate trajectory session_id {trajectory.session_id!r}: each captured "
-                "session must be unique, or a report row could silently borrow the wrong evidence",
-            )
-        by_session[trajectory.session_id] = trajectory
-
-    rows: list[ScenarioOutcomeRow] = []
-    for score in scores:
-        trajectory = by_session.get(score.session_id)
-        if trajectory is not None:
-            if trajectory.persona != score.persona:
-                raise ValueError(
-                    f"score for session {score.session_id!r} claims persona {score.persona!r}, "
-                    f"but its matched trajectory recorded persona {trajectory.persona!r}",
-                )
-            # trajectory.scenario is optional (empty for free-exploration
-            # captures never tagged with a scenario at capture time); only a
-            # trajectory that DOES declare a scenario can disagree.
-            if trajectory.scenario and trajectory.scenario != score.scenario:
-                raise ValueError(
-                    f"score for session {score.session_id!r} claims scenario {score.scenario!r}, "
-                    f"but its matched trajectory recorded scenario {trajectory.scenario!r}",
-                )
-        rows.append(
-            ScenarioOutcomeRow(
-                scenario=score.scenario,
-                persona=score.persona,
-                session_id=score.session_id,
-                passed=score.passed,
-                tool_calls=len(trajectory.tool_calls) if trajectory else 0,
-                narrations=len(trajectory.narrations) if trajectory else 0,
-                elicitations=len(trajectory.elicitations) if trajectory else 0,
-                failures=score.failures,
-            ),
-        )
+    by_session = _index_trajectories_by_session(trajectories)
+    rows = tuple(_scenario_outcome_row(score, by_session.get(score.session_id)) for score in scores)
     return MeasurementReport(
         scenarios_run=len(scores),
         scenarios_passed=sum(1 for score in scores if score.passed),
@@ -156,7 +176,7 @@ def build_measurement_report(
         unfaithful_narrations_total=sum(
             sum(1 for check in score.narration_checks if not check.faithful) for score in scores
         ),
-        rows=tuple(rows),
+        rows=rows,
     )
 
 

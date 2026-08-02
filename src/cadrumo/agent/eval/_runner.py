@@ -37,8 +37,9 @@ from __future__ import annotations
 
 import tomllib
 from collections.abc import Iterable, Mapping
-from itertools import pairwise
 from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict
 
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.json_contract import EnvelopeStatus
@@ -58,7 +59,10 @@ from ._models import (
     ProfileConfirmationVerdict,
     UnderDeclarationScenario,
     UnderDeclarationVerdict,
+    lifecycle_stages_in_canonical_order,
 )
+
+_STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
 
 def load_scenario(path: Path) -> GoldenScenario:
@@ -286,6 +290,62 @@ def _check_verification_contract(scenario: GoldenScenario, revision: object, fai
     return True
 
 
+def _check_trajectory_resolution(
+    scenario: GoldenScenario,
+    valid_commands: frozenset[str],
+    failures: list[str],
+) -> bool:
+    """Assert every verb the scenario declares resolves against the live CLI surface."""
+    unresolved = [verb for verb in scenario.expected_trajectory if verb not in valid_commands]
+    if not unresolved:
+        return True
+    failures.append(f"trajectory cites unresolved command keys: {', '.join(unresolved)}")
+    return False
+
+
+def _check_declared_lifecycle_order(scenario: GoldenScenario, failures: list[str]) -> bool:
+    """Assert the DECLARED trajectory visits each lifecycle stage once, in order.
+
+    Two distinct ways to break the contract, reported distinctly: declaring a
+    stage twice is an authoring error in the scenario itself (a stage has no
+    defined position once it appears twice), so it is reported as a duplicate
+    rather than as an ordering violation, and the ordering check is skipped
+    because it would be meaningless.
+    """
+    declared_stages = tuple(stage for stage in scenario.expected_trajectory if stage in LIFECYCLE_STAGE_ORDER)
+    duplicate_stages = tuple(stage for stage in LIFECYCLE_STAGE_ORDER if declared_stages.count(stage) > 1)
+    if duplicate_stages:
+        failures.append(
+            "trajectory declares lifecycle stage(s) more than once: " + ", ".join(duplicate_stages),
+        )
+        return False
+
+    positions = {verb: index for index, verb in enumerate(scenario.expected_trajectory)}
+    if lifecycle_stages_in_canonical_order(positions):
+        return True
+    failures.append("trajectory violates the create -> calculate -> verify -> export lifecycle order")
+    return False
+
+
+def _check_skill_consistency(scenario: GoldenScenario, failures: list[str]) -> bool:
+    """Assert the shipped skill playbook cites every verb the trajectory declares.
+
+    The operator follows the skill, so a trajectory verb the playbook never
+    mentions is a workflow the operator has no documented route to.
+    """
+    skill_text = _skill_text(scenario.skill_name)
+    if skill_text is None:
+        failures.append(f"skill '{scenario.skill_name}' not found among shipped skills")
+        return False
+    missing = [verb for verb in scenario.expected_trajectory if _cli_form(verb) not in skill_text]
+    if not missing:
+        return True
+    failures.append(
+        "skill playbook does not cite trajectory verbs: " + ", ".join(_cli_form(v) for v in missing),
+    )
+    return False
+
+
 def _iter_casillas(casillas: object) -> Iterable[object]:
     if isinstance(casillas, dict):
         return tuple(casillas.values())
@@ -339,36 +399,11 @@ def run_golden_scenario(
     """
     failures: list[str] = []
 
-    unresolved = [verb for verb in scenario.expected_trajectory if verb not in valid_commands]
-    trajectory_resolves = not unresolved
-    if unresolved:
-        failures.append(f"trajectory cites unresolved command keys: {', '.join(unresolved)}")
+    trajectory_resolves = _check_trajectory_resolution(scenario, valid_commands, failures)
 
-    declared_stages = tuple(stage for stage in scenario.expected_trajectory if stage in LIFECYCLE_STAGE_ORDER)
-    duplicate_stages = tuple(stage for stage in LIFECYCLE_STAGE_ORDER if declared_stages.count(stage) > 1)
-    if duplicate_stages:
-        lifecycle_ordered = False
-        failures.append(
-            "trajectory declares lifecycle stage(s) more than once: " + ", ".join(duplicate_stages),
-        )
-    else:
-        positions = {verb: index for index, verb in enumerate(scenario.expected_trajectory)}
-        present_stages = [stage for stage in LIFECYCLE_STAGE_ORDER if stage in positions]
-        lifecycle_ordered = all(positions[earlier] < positions[later] for earlier, later in pairwise(present_stages))
-    if not lifecycle_ordered and not duplicate_stages:
-        failures.append("trajectory violates the create -> calculate -> verify -> export lifecycle order")
+    lifecycle_ordered = _check_declared_lifecycle_order(scenario, failures)
 
-    skill_text = _skill_text(scenario.skill_name)
-    if skill_text is None:
-        skill_consistent = False
-        failures.append(f"skill '{scenario.skill_name}' not found among shipped skills")
-    else:
-        missing = [verb for verb in scenario.expected_trajectory if _cli_form(verb) not in skill_text]
-        skill_consistent = not missing
-        if missing:
-            failures.append(
-                "skill playbook does not cite trajectory verbs: " + ", ".join(_cli_form(v) for v in missing),
-            )
+    skill_consistent = _check_skill_consistency(scenario, failures)
 
     revision = _resolve_revision(scenario)
 
@@ -672,6 +707,110 @@ def check_contradiction_scenario(
     )
 
 
+class _ProfileSwitch(BaseModel):
+    """A declared profile-switching step, which re-arms the confirmation boundary."""
+
+    model_config = _STRICT_FROZEN
+
+    index: int
+    command: str
+
+
+class _UnconfirmedMutation(BaseModel):
+    """One mutating step that ran with no active-profile confirmation in force."""
+
+    model_config = _STRICT_FROZEN
+
+    index: int
+    command: str
+    latest_profile_switch: _ProfileSwitch | None = None
+
+
+class _ConfirmationPrefixVerdict(BaseModel):
+    """The required-prefix dimensions over an observed trajectory, and their reasons."""
+
+    model_config = _STRICT_FROZEN
+
+    confirmed_before_first_mutation: bool
+    confirmed_before_each_mutation: bool
+    failures: tuple[str, ...] = ()
+
+
+def _scan_unconfirmed_mutations(
+    scenario: ProfileConfirmationScenario,
+    trajectory: tuple[str, ...],
+) -> tuple[_UnconfirmedMutation, ...]:
+    """Replay the confirm / switch / mutate state machine over the observed order.
+
+    Confirmation is a latch the confirmation command sets and any declared
+    profile switch clears, so every mutation observed while the latch is open
+    is recorded together with the switch that last re-armed the boundary - the
+    detail that distinguishes "never confirmed at all" from "confirmed, then
+    switched taxpayer and mutated without re-confirming".
+    """
+    active_profile_confirmed = False
+    latest_profile_switch: _ProfileSwitch | None = None
+    unconfirmed: list[_UnconfirmedMutation] = []
+    for index, step in enumerate(trajectory):
+        if step == scenario.confirmation_command:
+            active_profile_confirmed = True
+        elif step in scenario.profile_switching_commands:
+            active_profile_confirmed = False
+            latest_profile_switch = _ProfileSwitch(index=index, command=step)
+        elif step in scenario.mutating_commands and not active_profile_confirmed:
+            unconfirmed.append(
+                _UnconfirmedMutation(index=index, command=step, latest_profile_switch=latest_profile_switch),
+            )
+    return tuple(unconfirmed)
+
+
+def _confirmation_prefix_verdict(
+    scenario: ProfileConfirmationScenario,
+    trajectory: tuple[str, ...],
+    *,
+    unconfirmed: tuple[_UnconfirmedMutation, ...],
+    first_mutation_index: int,
+) -> _ConfirmationPrefixVerdict:
+    """Project the unconfirmed mutations onto the two required-prefix dimensions.
+
+    The first mutation is reported separately from the rest: mutating before
+    ANY confirmation is the plain cross-tenant leak, while a later unconfirmed
+    mutation is the subtler post-switch case and names the switch that re-armed
+    the boundary.
+    """
+    confirmed_before_first_mutation = not any(mutation.index == first_mutation_index for mutation in unconfirmed)
+
+    failures: list[str] = []
+    if not confirmed_before_first_mutation:
+        failures.append(
+            f"the first mutating verb '{trajectory[first_mutation_index]}' at trajectory position "
+            f"{first_mutation_index} has no preceding '{scenario.confirmation_command}' active-profile "
+            "confirmation - an operator could mutate the wrong taxpayer's data without ever confirming "
+            "which profile is active (the cross-tenant wrong-active-profile leak)",
+        )
+
+    for mutation in unconfirmed:
+        if mutation.index == first_mutation_index:
+            continue
+        switch = mutation.latest_profile_switch
+        switch_detail = (
+            f" after profile-switching verb '{switch.command}' at trajectory position {switch.index}"
+            if switch is not None
+            else ""
+        )
+        failures.append(
+            f"the mutating verb '{mutation.command}' at trajectory position {mutation.index} has no preceding "
+            f"'{scenario.confirmation_command}' active-profile confirmation{switch_detail}; profile "
+            "switches re-arm the confirmation boundary to prevent a cross-tenant wrong-active-profile leak",
+        )
+
+    return _ConfirmationPrefixVerdict(
+        confirmed_before_first_mutation=confirmed_before_first_mutation,
+        confirmed_before_each_mutation=not unconfirmed,
+        failures=tuple(failures),
+    )
+
+
 def check_profile_confirmation_scenario(
     scenario: ProfileConfirmationScenario,
     *,
@@ -742,45 +881,15 @@ def check_profile_confirmation_scenario(
     confirmed_before_first_mutation = False
     confirmed_before_each_mutation = False
     if mutating_step_present:
-        active_profile_confirmed = False
-        unconfirmed_mutations: list[tuple[int, str, tuple[int, str] | None]] = []
-        latest_profile_switch: tuple[int, str] | None = None
-        first_mutation_index = mutation_positions[0]
-
-        for index, step in enumerate(trajectory):
-            if step == scenario.confirmation_command:
-                active_profile_confirmed = True
-            elif step in scenario.profile_switching_commands:
-                active_profile_confirmed = False
-                latest_profile_switch = (index, step)
-            elif step in scenario.mutating_commands and not active_profile_confirmed:
-                unconfirmed_mutations.append((index, step, latest_profile_switch))
-
-        confirmed_before_first_mutation = not any(
-            index == first_mutation_index for index, _, _ in unconfirmed_mutations
+        prefix = _confirmation_prefix_verdict(
+            scenario,
+            trajectory,
+            unconfirmed=_scan_unconfirmed_mutations(scenario, trajectory),
+            first_mutation_index=mutation_positions[0],
         )
-        confirmed_before_each_mutation = not unconfirmed_mutations
-        if not confirmed_before_first_mutation:
-            failures.append(
-                f"the first mutating verb '{trajectory[first_mutation_index]}' at trajectory position "
-                f"{first_mutation_index} has no preceding '{scenario.confirmation_command}' active-profile "
-                "confirmation - an operator could mutate the wrong taxpayer's data without ever confirming "
-                "which profile is active (the cross-tenant wrong-active-profile leak)",
-            )
-
-        for mutation_index, mutation, profile_switch in unconfirmed_mutations:
-            if mutation_index == first_mutation_index:
-                continue
-            switch_detail = (
-                f" after profile-switching verb '{profile_switch[1]}' at trajectory position {profile_switch[0]}"
-                if profile_switch is not None
-                else ""
-            )
-            failures.append(
-                f"the mutating verb '{mutation}' at trajectory position {mutation_index} has no preceding "
-                f"'{scenario.confirmation_command}' active-profile confirmation{switch_detail}; profile "
-                "switches re-arm the confirmation boundary to prevent a cross-tenant wrong-active-profile leak",
-            )
+        confirmed_before_first_mutation = prefix.confirmed_before_first_mutation
+        confirmed_before_each_mutation = prefix.confirmed_before_each_mutation
+        failures.extend(prefix.failures)
 
     return ProfileConfirmationVerdict(
         scenario=scenario.name,

@@ -21,7 +21,6 @@ extra reads are fine, a skipped verify or an out-of-order export is not.
 from __future__ import annotations
 
 from collections.abc import Callable
-from itertools import pairwise
 from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -30,11 +29,14 @@ from ._models import (
     LIFECYCLE_STAGE_ORDER,
     GoldenScenario,
     LiveInvariantVerdict,
+    LiveToolCallRecord,
     LiveTrajectory,
     NarrationFaithfulness,
+    lifecycle_stages_in_canonical_order,
 )
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
 
 class FaithfulnessCheckFn(Protocol):
     """The real ``faithfulness_check`` signature, caller-injected."""
@@ -104,6 +106,174 @@ def _leaf(command_key_or_tool: str) -> str:
     return command_key_or_tool.rsplit(".", 1)[-1].rsplit("_", 1)[-1]
 
 
+class _LifecycleOrderVerdict(BaseModel):
+    """The observed-trajectory lifecycle-ordering dimension and its reason."""
+
+    model_config = _STRICT_FROZEN
+
+    ordered: bool
+    failures: tuple[str, ...] = ()
+
+
+def _score_observed_lifecycle_order(observed: tuple[str, ...]) -> _LifecycleOrderVerdict:
+    """Decide whether the observed keys hold the lifecycle order, and why not.
+
+    Two distinct ways to break the order, reported distinctly: RE-ENTERING a
+    stage (running ``calculate`` twice) is a different operator error from
+    running the stages out of sequence, so a re-entry names the stage(s) rather
+    than reporting a generic ordering violation. Stage positions record the
+    FIRST occurrence, so a re-entry cannot mask an out-of-order earlier stage.
+    """
+    positions: dict[str, int] = {}
+    reentered_stages: list[str] = []
+    for index, key in enumerate(observed):
+        if key in LIFECYCLE_STAGE_ORDER:
+            if key in positions:
+                reentered_stages.append(key)
+                continue
+            positions[key] = index
+    ordered = not reentered_stages and lifecycle_stages_in_canonical_order(positions)
+    if ordered:
+        return _LifecycleOrderVerdict(ordered=True)
+    if reentered_stages:
+        return _LifecycleOrderVerdict(
+            ordered=False,
+            failures=("observed trajectory re-enters lifecycle stage(s): " + ", ".join(reentered_stages),),
+        )
+    return _LifecycleOrderVerdict(
+        ordered=False,
+        failures=("observed trajectory violates the create -> calculate -> verify -> export lifecycle order",),
+    )
+
+
+class _NarrationAnchor(BaseModel):
+    """The tool calls one narration consumed, and the call it is anchored to."""
+
+    model_config = _STRICT_FROZEN
+
+    cursor: int = Field(ge=0)
+    consumed_result_texts: tuple[str, ...] = ()
+    anchor_command_key: str = ""
+
+
+def _advance_to_narration_anchor(
+    calls: tuple[LiveToolCallRecord, ...],
+    cursor: int,
+    *,
+    anchor_step: str,
+) -> _NarrationAnchor:
+    """Consume tool calls from ``cursor`` up to the one this narration describes.
+
+    A narration that names its step consumes calls until that step's call is
+    reached; a free narration (no declared step) consumes exactly one call and
+    is anchored to it. Either way the consumed results become part of the
+    running corpus the faithfulness check reads, so a narration is always
+    judged against every tool result that preceded it.
+    """
+    consumed: list[str] = []
+    while cursor < len(calls):
+        consumed.append(calls[cursor].result_text)
+        step_key = calls[cursor].command_key
+        cursor += 1
+        if anchor_step and step_key == anchor_step:
+            break
+        if not anchor_step:
+            break
+    return _NarrationAnchor(
+        cursor=cursor,
+        consumed_result_texts=tuple(consumed),
+        anchor_command_key=calls[cursor - 1].command_key if cursor else "",
+    )
+
+
+class _NarrationScoring(BaseModel):
+    """Per-narration faithfulness verdicts plus the handoff steps they block."""
+
+    model_config = _STRICT_FROZEN
+
+    checks: tuple[NarrationFaithfulness, ...] = ()
+    handoff_blocks: tuple[str, ...] = ()
+
+
+def _score_narration_faithfulness(
+    trajectory: LiveTrajectory,
+    *,
+    faithfulness_check_fn: FaithfulnessCheckFn,
+    handoff_leaves: frozenset[str],
+) -> _NarrationScoring:
+    """Run the injected faithfulness check over every narration in session order.
+
+    Each narration is checked against the CUMULATIVE corpus of tool results
+    observed up to its anchoring call, so a narration may legitimately cite any
+    figure the session had already seen. Only a narration on an irreversible
+    handoff leaf is checked as ``blocking``; elsewhere an unfaithful narration
+    is advisory.
+    """
+    checks: list[NarrationFaithfulness] = []
+    handoff_blocks: list[str] = []
+    corpus_parts: list[str] = []
+    cursor = 0
+    for narration in trajectory.narrations:
+        anchor = _advance_to_narration_anchor(trajectory.tool_calls, cursor, anchor_step=narration.step)
+        cursor = anchor.cursor
+        corpus_parts.extend(anchor.consumed_result_texts)
+        step = narration.step or anchor.anchor_command_key
+        blocking = _leaf(step) in handoff_leaves if step else False
+        verdict = faithfulness_check_fn(
+            agent_text=narration.text,
+            tool_result_json="\n".join(corpus_parts),
+            blocking=blocking,
+        )
+        check = NarrationFaithfulness(
+            step=step or "(free narration)",
+            faithful=bool(getattr(verdict, "faithful", False)),
+            blocking=bool(getattr(verdict, "blocking", blocking)),
+            flagged_values=tuple(getattr(verdict, "flagged_values", ()) or ()),
+        )
+        checks.append(check)
+        if check.blocks:
+            handoff_blocks.append(step or "(free narration)")
+    return _NarrationScoring(checks=tuple(checks), handoff_blocks=tuple(handoff_blocks))
+
+
+def _score_hard_invariants(
+    trajectory: LiveTrajectory,
+    *,
+    scenario_name: str,
+    live_write_leaves: frozenset[str],
+    handoff_blocks: tuple[str, ...],
+) -> LiveInvariantVerdict:
+    """Score the two hard invariants: no live submit, no blocked handoff narration.
+
+    Both are harness-design findings rather than ordinary dimension failures.
+    The console exposes no submit tool at all, so ANY call reaching a live-write
+    leaf means the surface leaked one; a blocked handoff narration means the
+    agent cited an ungrounded amount at the irreversible filing boundary.
+    """
+    live_submit_attempts = tuple(
+        call.tool_name
+        for call in trajectory.tool_calls
+        if _leaf(call.command_key or call.tool_name) in live_write_leaves
+    )
+
+    failures: list[str] = []
+    if live_submit_attempts:
+        failures.append(
+            f"live-submit attempt(s) observed: {', '.join(live_submit_attempts)} - the console "
+            "exposes no submit tool, so any attempt is a harness-design finding",
+        )
+    if handoff_blocks:
+        failures.append(
+            f"handoff-boundary narration cited ungrounded amounts at: {', '.join(handoff_blocks)}",
+        )
+    return LiveInvariantVerdict(
+        scenario=scenario_name,
+        live_submit_attempts=live_submit_attempts,
+        handoff_faithfulness_blocks=handoff_blocks,
+        failures=tuple(failures),
+    )
+
+
 def score_live_trajectory(
     trajectory: LiveTrajectory,
     *,
@@ -150,25 +320,9 @@ def score_live_trajectory(
     if unresolved:
         failures.append(f"observed command keys do not resolve: {', '.join(unresolved)}")
 
-    positions: dict[str, int] = {}
-    reentered_stages: list[str] = []
-    for index, key in enumerate(observed):
-        if key in LIFECYCLE_STAGE_ORDER:
-            if key in positions:
-                reentered_stages.append(key)
-                continue
-            positions[key] = index
-    present = [stage for stage in LIFECYCLE_STAGE_ORDER if stage in positions]
-    lifecycle_ordered = not reentered_stages and all(
-        positions[earlier] < positions[later] for earlier, later in pairwise(present)
-    )
-    if not lifecycle_ordered:
-        if reentered_stages:
-            failures.append(
-                "observed trajectory re-enters lifecycle stage(s): " + ", ".join(reentered_stages),
-            )
-        else:
-            failures.append("observed trajectory violates the create -> calculate -> verify -> export lifecycle order")
+    lifecycle = _score_observed_lifecycle_order(observed)
+    lifecycle_ordered = lifecycle.ordered
+    failures.extend(lifecycle.failures)
 
     expected_covered = _is_subsequence(scenario.expected_trajectory, observed)
     if not expected_covered:
@@ -183,59 +337,18 @@ def score_live_trajectory(
     if tool_errors:
         failures.append(f"tool call(s) returned an error: {', '.join(tool_errors)}")
 
-    live_submit_attempts = tuple(
-        call.tool_name
-        for call in trajectory.tool_calls
-        if _leaf(call.command_key or call.tool_name) in live_write_leaves
+    narration = _score_narration_faithfulness(
+        trajectory,
+        faithfulness_check_fn=faithfulness_check_fn,
+        handoff_leaves=handoff_leaves,
     )
-
-    narration_checks: list[NarrationFaithfulness] = []
-    handoff_blocks: list[str] = []
-    corpus_parts: list[str] = []
-    call_cursor = 0
-    for narration in trajectory.narrations:
-        while call_cursor < len(trajectory.tool_calls):
-            corpus_parts.append(trajectory.tool_calls[call_cursor].result_text)
-            step_key = trajectory.tool_calls[call_cursor].command_key
-            call_cursor += 1
-            if narration.step and step_key == narration.step:
-                break
-            if not narration.step:
-                break
-        step = narration.step or (trajectory.tool_calls[call_cursor - 1].command_key if call_cursor else "")
-        blocking = _leaf(step) in handoff_leaves if step else False
-        verdict = faithfulness_check_fn(
-            agent_text=narration.text,
-            tool_result_json="\n".join(corpus_parts),
-            blocking=blocking,
-        )
-        check = NarrationFaithfulness(
-            step=step or "(free narration)",
-            faithful=bool(getattr(verdict, "faithful", False)),
-            blocking=bool(getattr(verdict, "blocking", blocking)),
-            flagged_values=tuple(getattr(verdict, "flagged_values", ()) or ()),
-        )
-        narration_checks.append(check)
-        if check.blocks:
-            handoff_blocks.append(step or "(free narration)")
-
-    invariant_failures: list[str] = []
-    if live_submit_attempts:
-        invariant_failures.append(
-            f"live-submit attempt(s) observed: {', '.join(live_submit_attempts)} - the console "
-            "exposes no submit tool, so any attempt is a harness-design finding",
-        )
-    if handoff_blocks:
-        invariant_failures.append(
-            f"handoff-boundary narration cited ungrounded amounts at: {', '.join(handoff_blocks)}",
-        )
-    invariants = LiveInvariantVerdict(
-        scenario=scenario.name,
-        live_submit_attempts=live_submit_attempts,
-        handoff_faithfulness_blocks=tuple(handoff_blocks),
-        failures=tuple(invariant_failures),
+    invariants = _score_hard_invariants(
+        trajectory,
+        scenario_name=scenario.name,
+        live_write_leaves=live_write_leaves,
+        handoff_blocks=narration.handoff_blocks,
     )
-    failures.extend(invariant_failures)
+    failures.extend(invariants.failures)
 
     return LiveScenarioScore(
         scenario=scenario.name,
@@ -246,7 +359,7 @@ def score_live_trajectory(
         expected_covered=expected_covered,
         tool_errors=tool_errors,
         invariants=invariants,
-        narration_checks=tuple(narration_checks),
+        narration_checks=narration.checks,
         failures=tuple(failures),
     )
 
