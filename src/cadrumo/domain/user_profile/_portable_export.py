@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
 from ...core.time import now as utc_now
-from ...core.time import validate_utc_aware
+from ...core.time import UtcInstant, validate_utc_aware
 from ..modelos import CalculationRevision as _CalculationRevision
 from ..modelos import ModeloRecord as _ModeloRecord
 from ..modelos import WorkUnit as _WorkUnit
@@ -195,7 +195,12 @@ class UserProfilePortableExport(BaseModel):
     # AEAD nonce per seal), so making the bundle byte-stable would not yield a
     # content-addressable archive. The strict roundtrip gate compares re-loaded
     # repository objects, not this wrapper, so the timestamp does not affect it.
-    exported_at: datetime = Field(default_factory=utc_now)
+    # Held to the same instant contract as the carried rows below. It was a
+    # bare ``datetime`` while ``CarriedSecureObject.written_at`` validated, so
+    # one export boundary transported two competing timestamp policies: the
+    # outer provenance stamp accepted a naive or offset value that every row
+    # it wrapped would have refused.
+    exported_at: UtcInstant = Field(default_factory=utc_now)
     profile: UserProfileRecord
 
     # --- Financial-history fields --------------------------------------------
