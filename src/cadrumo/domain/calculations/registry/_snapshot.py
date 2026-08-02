@@ -22,6 +22,7 @@ from ._export import derive_export_layouts_from_bindings
 from ._period_selector_match import registry_period_for_request
 from ._schema import (
     CasillaDefinition,
+    LegalReference,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -252,6 +253,67 @@ def build_validated_snapshot(
     )
 
 
+#: Legal-reference ``kind``s that carry substantive tax law -- rate scales,
+#: deduction limits, thresholds -- as opposed to procedural/administrative
+#: instruments. Substantive-law kinds are anchored to the tax period's own
+#: devengo date (``revision.valid_to``), never the presentation-extended
+#: window: see :func:`_legal_window_covers_devengo`.
+_SUBSTANTIVE_LAW_KINDS = frozenset(
+    {
+        "ley",
+        "real_decreto",
+        "real_decreto_legislativo",
+        "real_decreto_ley",
+        "reglamento",
+        "directiva",
+        "acuerdo_internacional",
+    },
+)
+
+
+def _legal_window_covers_devengo(revision: ModeloRevision, reference: LegalReference) -> bool:
+    """Return whether ``reference``'s effective window grounds ``revision``.
+
+    A revision-scoped legal reference is a filing-specific grounding claim, so
+    the temporal test applied to it depends on WHAT KIND of authority it is --
+    this is the same "form approval is presentation-scoped, substantive law is
+    devengo-scoped" distinction
+    :func:`~cadrumo.domain.calculations.registry._validate_orden_aplicabilidad.validate_orden_aplicabilidad`
+    already draws for the ``orden_aplicabilidad`` field:
+
+    - A substantive-law reference (``kind`` in :data:`_SUBSTANTIVE_LAW_KINDS` --
+      a rate scale, a deduction limit, a threshold) must be in force AT THE
+      REVISION'S OWN DEVENGO DATE (``revision.valid_to``, the 31 December the
+      tax period closes on -- IRPF art. 12). A redaction that only starts
+      partway through the following calendar year, while the return is still
+      being filed, did NOT govern the tax period and must not ground it, even
+      though it overlaps the presentation-extended window below.
+    - Every other kind (``orden``, ``manual``, ``instruction`` -- procedural or
+      interpretive instruments) keeps the existing presentation-window-tolerant
+      overlap check via :class:`RevisionLegalApplicabilityWindow`: the orden
+      ministerial approving a modelo form, or a manual's TFI-documentation
+      annex, is legitimately published AFTER the tax year closes, during the
+      presentation window, and rejecting those on a devengo-only test would
+      reject every correctly-grounded citation in the tree (verified: 13 such
+      pairs, 2026-08-02 severity probe).
+
+    Do NOT widen :data:`_SUBSTANTIVE_LAW_KINDS` to admit ``orden`` (or narrow
+    it further) without re-running that severity probe -- a carve-out here is
+    exactly where this gate can go quietly vacuous.
+    """
+    if reference.kind not in _SUBSTANTIVE_LAW_KINDS:
+        return RevisionLegalApplicabilityWindow.from_revision(revision).overlaps(reference)
+    if reference.effective_to is not None and reference.effective_to < revision.valid_from:
+        return False
+    if revision.valid_to is None:
+        # Open-ended (*-y-siguientes) revision: no fixed devengo date to
+        # anchor to. Mirrors the orden gate's own open-ended carve-out.
+        return True
+    if reference.effective_from > revision.valid_to:
+        return False
+    return reference.effective_to is None or reference.effective_to >= revision.valid_to
+
+
 def _check_revision_scoped_legal_windows(
     modelo: ModeloDefinition,
     revision: ModeloRevision,
@@ -261,9 +323,9 @@ def _check_revision_scoped_legal_windows(
 
     Modelo-level legal refs describe the modelo's cross-year authority corpus and
     remain exempt. A ref collected only because the selected revision or one of
-    its nested records cites it is a filing-specific grounding claim, so its
-    effective window must overlap the revision's tax-period-to-presentation
-    applicability window.
+    its nested records cites it is a filing-specific grounding claim, checked by
+    :func:`_legal_window_covers_devengo` -- devengo-anchored for substantive law,
+    presentation-window-tolerant for procedural/administrative kinds.
     """
     revision_legal_ids, _revision_source_ids = _collect_snapshot_ref_ids(modelo, revision)
     scoped_legal_ids = revision_legal_ids - set(modelo.legal_refs)
@@ -273,17 +335,33 @@ def _check_revision_scoped_legal_windows(
         reference = catalogues.legal.get(legal_id)
         if reference is None:
             continue
-        if applicability_window.overlaps(reference):
+        if _legal_window_covers_devengo(revision, reference):
             continue
-        if reference.effective_to is not None and reference.effective_to < applicability_window.starts_on:
+        if reference.kind not in _SUBSTANTIVE_LAW_KINDS:
+            if reference.effective_to is not None and reference.effective_to < applicability_window.starts_on:
+                failures.append(
+                    f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
+                    f"revision applicability starts_on {applicability_window.starts_on.isoformat()}",
+                )
+            elif applicability_window.closes_on is not None:
+                failures.append(
+                    f"legal reference {legal_id!r} effective_from {reference.effective_from.isoformat()} is after "
+                    f"revision applicability closes_on {applicability_window.closes_on.isoformat()}",
+                )
+            continue
+        if reference.effective_to is not None and reference.effective_to < revision.valid_from:
             failures.append(
                 f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
-                f"revision applicability starts_on {applicability_window.starts_on.isoformat()}",
+                f"revision applicability starts_on {revision.valid_from.isoformat()}",
             )
-        elif applicability_window.closes_on is not None:
+        elif revision.valid_to is not None:
+            effective_to_text = (
+                f", effective_to {reference.effective_to.isoformat()}" if reference.effective_to else ""
+            )
             failures.append(
-                f"legal reference {legal_id!r} effective_from {reference.effective_from.isoformat()} is after "
-                f"revision applicability closes_on {applicability_window.closes_on.isoformat()}",
+                f"legal reference {legal_id!r} (kind {reference.kind!r}, effective_from "
+                f"{reference.effective_from.isoformat()}{effective_to_text}) does not cover revision "
+                f"{revision.id!r}'s devengo date {revision.valid_to.isoformat()}",
             )
     if failures:
         raise RegistryValidationError(

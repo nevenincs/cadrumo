@@ -6,7 +6,7 @@ expression = { op = "max", args = [
     { casilla_id = "0500" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-63"]
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-63-2015"]
 source_refs = ["lirpf-cuota-chain-authority", "aeat-dr-100-2020-dictionary"]
 
 [[revisions."2020".formulas.source_citations]]

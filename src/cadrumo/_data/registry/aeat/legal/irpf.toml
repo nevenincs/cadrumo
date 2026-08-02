@@ -3001,6 +3001,29 @@ required_text = [
     "tipo medio de gravamen general estatal",
 ]
 
+[legal."ley-35-2006:art-63-2015"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-63-2015.html#a63"
+document_id = "BOE-A-2006-20764"
+article = "63"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20141128&tn=1#a63"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+effective_to = 2020-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 63, redaction selected by BOE at 2014-11-28 (art. 1.39 Ley 26/2014, BOE-A-2014-12327), in force 2015-01-01 to 2020-12-31: five-bracket state general scale (9,50/12,00/15,00/18,50/22,50 percent up to 12.450/20.200/35.200/60.000/en adelante euros), before Ley 11/2020 art. 58 added a sixth bracket (24,50 percent above 300.000 euros) with effect from 2021-01-01; brackets below 300.000 euros are numerically unchanged by that amendment. Grounds the 2020 Modelo 100 escala general estatal parameter (renta-2020-escala-estatal-base-general) and its dependent cuota-íntegra-estatal formulas — the stored 2020 bracket values were independently verified against this redaction and are unaffected by the citation correction."
+required_text = [
+    "Escala general del Impuesto.",
+    "base liquidable general que exceda del importe del mínimo personal y familiar",
+    "A la base liquidable general se le aplicarán los tipos",
+    "se minorará en el importe derivado de aplicar",
+    "tipo medio de gravamen general estatal",
+]
+
 [legal."ley-35-2006:art-66"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -4304,6 +4327,29 @@ required_text = [
     "2.000 euros anuales",
     "incrementará en 8.000 euros",
     "contribuciones empresariales",
+    "5.000 euros anuales para las primas a seguros colectivos de dependencia",
+]
+
+[legal."ley-35-2006:art-52-2022"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-52-2022.html#a52"
+document_id = "BOE-A-2006-20764"
+article = "52"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764&p=20220701&tn=1#a52"
+published_at = 2006-11-29
+effective_from = 2022-07-02
+effective_to = 2022-12-31
+review_status = "reviewed"
+reviewed_at = 2026-08-02
+reviewed_by = "agent-review"
+notes = "LIRPF art 52, redaction selected by BOE at 2022-07-01 (disposición final 1.1 Ley 12/2022, BOE-A-2022-10852, corrected by the errata published 2022-10-06, BOE-A-2022-16278), in force 2022-07-02 to 2022-12-31: joint reduction limit is 1.500 euros annually, increased by 8.500 euros for empresarial/worker contributions (via the coeficiente table this redaction introduces) or 4.250 euros for autónomo sectorial plans, plus 5.000 euros for dependencia insurance premiums. The headline 1.500/8.500 euros figures were already in force from 2022-01-01 (art. 59.2 Ley 22/2021, BOE-A-2021-21653) and are numerically unchanged by this redaction and by the 2023-01-01 redaction; only the worker-contribution coefficient mechanics changed. Grounds the 2022 Modelo 100 previsión social reduction casillas for the redaction actually in force at that revision's devengo date (2022-12-31) — distinct from the 2021-only art-52-2021 entry (2.000/8.000 euros) and cited instead of the bare current entry, whose effective_from (2023-01-01) postdates the 2022 devengo date even though its required_text figures happen to match."
+required_text = [
+    "Límite de reducción.",
+    "El 30 por 100 de la suma",
+    "1.500 euros anuales",
+    "En 8.500 euros anuales",
     "5.000 euros anuales para las primas a seguros colectivos de dependencia",
 ]
 

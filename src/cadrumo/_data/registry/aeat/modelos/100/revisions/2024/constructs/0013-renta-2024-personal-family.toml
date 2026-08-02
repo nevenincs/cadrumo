@@ -1,7 +1,7 @@
 [[revisions."2024".constructs]]
 id = "renta-2024-personal-family"
 title = "Modelo 100 2024 personal and family profile inputs"
-legal_refs = ["orden-hac-1347-2024:art-4", "ley-35-2006:art-57", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-64", "ley-35-2006:art-74", "ley-35-2006:art-75", "ley-35-2006:art-81-bis", "ley-35-2006:art-82", "ley-35-2006:art-83"]
+legal_refs = ["orden-hac-1347-2024:art-4", "ley-35-2006:art-57", "ley-35-2006:art-58", "ley-35-2006:art-59", "ley-35-2006:art-60", "ley-35-2006:art-64", "ley-35-2006:art-74", "ley-35-2006:art-75-2015", "ley-35-2006:art-81-bis", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = [
     "aeat-dr-100-2024-dictionary",
     "aeat-dr-100-2024-xsd",
