@@ -185,6 +185,29 @@ def _blob_integrity_error(message: str, *, violation: str, object_kind: str = "b
     )
 
 
+def _assert_declared_plaintext_size(plaintext: bytes, manifest: BlobManifest) -> None:
+    """Refuse a manifest whose declared size contradicts the recovered bytes.
+
+    The digest check that precedes this pins the bytes themselves, so a
+    disagreement here can only mean the manifest's own ``size_plaintext``
+    field is wrong -- a cross-field contradiction inside one manifest rather
+    than payload corruption. It was previously undetected on both read paths,
+    which left a declared integrity field that could be contradicted while the
+    store still reported a successful read: forensic metadata that says one
+    thing while the store returns another, and a wrong answer for any consumer
+    that budgets or bounds on the declared size without recounting.
+
+    Shared by both layouts deliberately. The two read paths recover their
+    plaintext by different routes, and giving each its own copy of the
+    comparison is how one of them ends up without it.
+    """
+    if len(plaintext) != manifest.size_plaintext:
+        raise _blob_integrity_error(
+            "blob plaintext size disagrees with the manifest",
+            violation="plaintext_size",
+        )
+
+
 def _load_blob_manifest_envelope(path: Path, *, expected_class: SensitivityClass) -> Envelope[BlobManifest]:
     try:
         return load_envelope(
@@ -566,6 +589,7 @@ class EncryptedBlobStore:
         data = target.read_bytes()
         if _hex_digest(data) != manifest.sha256_plaintext_hex:
             raise _blob_integrity_error("plaintext blob digest mismatch", violation="plaintext_digest")
+        _assert_declared_plaintext_size(data, manifest)
         return data
 
     def _read_ciphertext_blob(self, manifest: BlobManifest) -> bytes:
@@ -588,6 +612,7 @@ class EncryptedBlobStore:
         plaintext = decrypt_record(payload_blob, key=dek, associated_data=_BLOB_AAD)
         if _hex_digest(plaintext) != manifest.sha256_plaintext_hex:
             raise _blob_integrity_error("decrypted blob digest mismatch", violation="decrypted_digest")
+        _assert_declared_plaintext_size(plaintext, manifest)
         return plaintext
 
     @staticmethod
