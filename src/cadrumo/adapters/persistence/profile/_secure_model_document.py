@@ -41,6 +41,12 @@ def resolve_profile_secure_object_repository(
     bucket is for application callers whose authoritative context already names
     the target bucket; every other production caller resolves through the
     active-bucket runtime wrapper. No plaintext or filesystem fallback exists.
+
+    Args:
+        objects: An explicit :class:`SecureObjectRepository` to reuse (the
+            test seam), bypassing bucket resolution entirely when supplied.
+        bucket_id: An explicit bucket id to resolve against, for a caller
+            whose authoritative context already names the target bucket.
     """
     if objects is not None:
         return objects

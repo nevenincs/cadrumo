@@ -102,6 +102,10 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
         once written it is the natural key this repository files it under and
         every later reader resolves it by.
 
+        Args:
+            payload: The :class:`ModeloDraft` aggregate to persist under its
+                own content-addressed ``draft_id``.
+
         Raises:
             FilingValidationError: ``draft_id`` is not the content address the
                 canonical helper derives for this draft.
