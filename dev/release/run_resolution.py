@@ -41,7 +41,9 @@ See Also:
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 import shutil
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -480,3 +482,69 @@ __all__ = [
     "wait_for_conclusion",
     "wait_for_run",
 ]
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Dispatch one workflow, resolve MY run, wait for it, and report the outcome.
+
+    This is the entry point the release orchestrator invokes per chained stage.
+    It composes the three library steps in the only safe order: capture the
+    clock, dispatch, then resolve the run started AFTER that instant at this
+    head commit.
+
+    Resolving by identity rather than recency is the whole point. The packaging
+    campaign queues rather than cancels on a newer dispatch, so the newest run
+    of that workflow can easily belong to a neighbouring campaign; promoting it
+    would carry a cohort this release never built.
+
+    Exits non-zero when the dispatched run did not succeed, so a failed stage
+    stops the chain rather than letting it seal a candidate over a red campaign.
+    """
+    parser = argparse.ArgumentParser(description="Dispatch a workflow and wait for the run this dispatch started.")
+    parser.add_argument("--workflow", required=True)
+    parser.add_argument("--head-sha", required=True)
+    parser.add_argument("--ref", default="main")
+    parser.add_argument("--input", action="append", default=[], metavar="KEY=VALUE")
+    parser.add_argument("--repository", default=_DEFAULT_REPO_SLUG)
+    parser.add_argument("--resolve-seconds", type=float, default=600.0)
+    parser.add_argument("--conclude-seconds", type=float, default=7200.0)
+    parser.add_argument("--github-output", default=os.environ.get("GITHUB_OUTPUT", ""))
+    parser.add_argument("--output-name", default="run_id")
+    args = parser.parse_args(argv)
+
+    inputs: dict[str, str] = {}
+    for pair in args.input:
+        key, separator, value = pair.partition("=")
+        if not separator:
+            raise RunResolutionError(f"--input expects KEY=VALUE, got {pair!r}")
+        inputs[key] = value
+
+    run = dispatch_and_resolve(
+        args.workflow,
+        head_sha=args.head_sha,
+        ref=args.ref,
+        inputs=inputs,
+        resolve_budget=PollBudget(total_seconds=args.resolve_seconds),
+        repo_slug=args.repository,
+    )
+    print(f"resolved {args.workflow} run {run.run_id}")
+
+    outcome = wait_for_conclusion(
+        run,
+        budget=PollBudget(total_seconds=args.conclude_seconds),
+        repo_slug=args.repository,
+    )
+    print(f"run {run.run_id} concluded {outcome.conclusion}")
+
+    if args.github_output:
+        with Path(args.github_output).open("a", encoding="utf-8") as handle:
+            handle.write(f"{args.output_name}={run.run_id}\n")
+
+    if outcome.conclusion != "success":
+        print(f"REFUSED: {args.workflow} run {run.run_id} concluded {outcome.conclusion}, not success")
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -130,3 +130,57 @@ jobs:
           uv run --frozen python -m dev.release.version_bump \
             --repository "${GITHUB_REPOSITORY}" \
             $([ "${DRY_RUN}" = "true" ] && echo "--dry-run" || echo "--push")
+
+  campaign:
+    name: Cadrumo / run the packaging campaign at the bumped commit
+    needs: [preflight, bump]
+    # `always()` because the bump job is SKIPPED on a resume, and a skipped
+    # dependency would otherwise skip this job too. The resume branch supplies
+    # its own campaign run instead of building one.
+    if: ${{ always() && needs.preflight.result == 'success' && needs.bump.result != 'failure' }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 180
+    permissions:
+      actions: write
+      contents: read
+    outputs:
+      packaging_run_id: ${{ steps.campaign.outputs.packaging_run_id }}
+      head_sha: ${{ steps.campaign.outputs.head_sha }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Dispatch the packaging campaign and wait for MY run
+        id: campaign
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESUME: ${{ needs.preflight.outputs.resume }}
+          BUMPED_COMMIT: ${{ needs.bump.outputs.commit }}
+        run: |
+          # Resolution is by IDENTITY, never by recency. packaging-smoke queues
+          # rather than cancels on a newer dispatch, so the newest run of that
+          # workflow can belong to a neighbouring campaign; promoting it would
+          # carry a cohort this release never built. dev.release.run_resolution
+          # captures the clock before dispatching and then resolves the run
+          # started after that instant at this head commit.
+          if [[ -n "${RESUME}" ]]; then
+            echo "packaging_run_id=${RESUME}" >> "$GITHUB_OUTPUT"
+            head_sha="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RESUME}" --jq .head_sha)"
+            echo "head_sha=${head_sha}" >> "$GITHUB_OUTPUT"
+            echo "Resumed from packaging-smoke run ${RESUME} at ${head_sha}; no campaign dispatched."
+            exit 0
+          fi
+          head_sha="${BUMPED_COMMIT:-$(git rev-parse HEAD)}"
+          echo "head_sha=${head_sha}" >> "$GITHUB_OUTPUT"
+          uv run --frozen python -m dev.release.run_resolution \
+            --workflow ".github/workflows/packaging-smoke.yml" \
+            --head-sha "${head_sha}" \
+            --repository "${GITHUB_REPOSITORY}" \
+            --output-name packaging_run_id

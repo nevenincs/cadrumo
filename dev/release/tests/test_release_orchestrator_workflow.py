@@ -143,3 +143,37 @@ def test_only_the_bump_job_may_write_repository_contents() -> None:
             assert job["permissions"]["contents"] == "write"
             continue
         assert job.get("permissions", {}).get("contents") != "write", f"{name} must not write refs"
+
+
+def test_the_campaign_resolves_its_own_run_rather_than_the_newest() -> None:
+    """Identity, not recency - the hazard the whole resolver exists for.
+
+    packaging-smoke QUEUES rather than cancels on a newer dispatch, so the
+    newest run of that workflow can belong to a neighbouring campaign.
+    Promoting it would seal a cohort this release never built, and every
+    downstream hash check would still pass because the cohort is internally
+    consistent - just not ours.
+    """
+    surface = _run_surface(_document(), "campaign")
+
+    assert "dev.release.run_resolution" in surface
+    assert ".github/workflows/packaging-smoke.yml" in surface
+    # The stage must key on a head commit, which is what makes the resolution
+    # an identity question rather than an ordering one.
+    assert "--head-sha" in surface
+
+    # A bare newest-run query is exactly the shortcut this must never take.
+    for shortcut in ("--limit 1", "runs?per_page=1", "| head -1", "[0].id", "--jq '.workflow_runs[0]"):
+        assert shortcut not in surface, f"campaign stage takes the recency shortcut: {shortcut}"
+
+
+def test_the_campaign_builds_the_commit_the_bump_landed() -> None:
+    """The campaign keys on the bump's output commit, never a re-derived one.
+
+    A re-derived commit differs from the bump's only when something else raced
+    - which is precisely the moment the difference matters.
+    """
+    campaign = _document()["jobs"]["campaign"]
+
+    assert "bump" in campaign["needs"]
+    assert "needs.bump.outputs.commit" in str(campaign)

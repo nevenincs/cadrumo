@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:a87883f129e5ca32bfce8c5b8395b9113f830c6da844ff1ba38b4c5975edf723'
+body_hash: 'sha256:b0e946465bbb54776a80de6fdd373fa1f3d91054eaba6657c843c6cdb7e3132d'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -31,6 +31,7 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S20]]'
   - '[[2026-08-02-release-pipeline-full-automation-W03-P05-S21]]'
   - '[[2026-08-02-release-pipeline-full-automation-W03-P05-S22]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W03-P05-S23]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S36]]'
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
   - '[[2026-08-02-release-pipeline-full-automation-plan]]'
@@ -71,6 +72,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W02-P04-S20` - Author the scheduled soak promoter workflow on a cron plus workflow_dispatch, running one short-lived job per tick on the self-hosted fleet under a product-scoped no-cancel concurrency group, invoking the selection logic and dispatching the publication authority with the run ids recorded on the candidate, so the soak boundary is crossed by a clock with no human re-entering the loop, gate: uv run --no-sync pytest dev/release/tests/test_soak_promoter_workflow.py -q passes pinning the schedule trigger, the runner labels, the concurrency group, the absence of any manual input that could shorten a window, and the dispatch target being publish-release.yml
 - `2026-08-02-release-pipeline-full-automation-W03-P05-S21` - Author the release orchestrator workflow shell taking a dry_run boolean and an optional resume input naming an existing packaging-smoke run and nothing else, with no typed confirmation input because the dispatch itself is the intent act, running on the self-hosted fleet under a product-scoped no-cancel concurrency group so two dispatches cannot interleave two versions, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py -q passes pinning the exact input set, the runner labels, the concurrency group and its cancel-in-progress false, and asserting no confirmation-phrase input exists
 - `2026-08-02-release-pipeline-full-automation-W03-P05-S22` - Wire the bump stage as the orchestrator first job invoking the bump executor and emitting the bumped commit and version as job outputs the downstream stages key on, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py -q passes asserting the bump job invokes dev.release.version_bump and that its outputs are consumed by the campaign stage rather than re-derived
+- `2026-08-02-release-pipeline-full-automation-W03-P05-S23` - Wire the packaging campaign stage to dispatch packaging-smoke at the bumped commit and resolve its own run through the run-resolution module rather than the newest run, then wait on the conclusion waiter, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py -q passes asserting the stage invokes dev.release.run_resolution and never reads a bare latest-run query, with end-to-end chaining flagged non-local and CI-only
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S36` - Record OP-12 as a named operator settings action deleting the orphaned pypi-data-official environment, which is a live Trusted Publishing trust anchor naming a workflow that no longer exists and therefore standing authority with no owner, and extend the read-only forge inventory probe to report any environment referencing an absent workflow so the orphan class is detectable rather than rediscovered, gate: uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes with a case whose fixture environment names a workflow path absent from the tree and is reported as orphaned
 
 ### plan
