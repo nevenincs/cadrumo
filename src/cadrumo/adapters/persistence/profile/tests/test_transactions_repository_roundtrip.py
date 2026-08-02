@@ -47,9 +47,14 @@ from .....domain.transactions import (
 )
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage import SecureObjectRepository, SensitivityClass
-from ...storage.errors import ClassificationError, EnvelopeVersionError
+from ...storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
 from ...storage.sql import SecureObjectRawRow
-from ..transactions import TransactionCatalogueRepository
+from ..transactions import (
+    _TX_CATALOGUE_VERSION,
+    TX_BUCKET_NAMESPACE,
+    TransactionCatalogueRepository,
+    transaction_object_key,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -162,6 +167,88 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
     assert loaded_mixed.raw.provenance.source_row_index == 7
     assert (tmp_path / "cadrumo-storage" / "buckets" / _BUCKET_ID / "db" / "cadrumo.db").is_file()
+
+
+def test_transaction_catalogue_refuses_foreign_payload_rekeyed_under_an_indexed_row(
+    tmp_path: Path,
+) -> None:
+    """A valid foreign transaction re-filed under another indexed row is never projected."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        indexed = _transaction(
+            provider_id="provider-row-indexed",
+            amount=Decimal("100.00"),
+            description="Indexed transaction",
+            classification=BusinessClassification.BUSINESS,
+        )
+        foreign = _transaction(
+            provider_id="provider-row-foreign",
+            amount=Decimal("200.00"),
+            description="Foreign transaction payload",
+            classification=BusinessClassification.PERSONAL,
+        )
+        original = TransactionCatalogue.from_transactions([indexed, foreign])
+        repo.save(original)
+
+        # Baseline: full and date-indexed reads both faithfully project genuine
+        # encrypted rows before the identity substitution below.
+        assert TransactionCatalogueRepository(bucket_id=profile.bucket_id).load() == original
+        assert (
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_for_date_range(
+                date(2024, 4, 1),
+                date(2024, 4, 30),
+            )
+            == original
+        )
+
+        indexed_key = transaction_object_key(profile.bucket_id, indexed.transaction_id)
+        foreign_key = transaction_object_key(profile.bucket_id, foreign.transaction_id)
+        indexed_record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            indexed_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        foreign_record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            foreign_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert indexed_record is not None
+        assert foreign_record is not None
+
+        # This is a real encrypted-store substitution, not a model double: the
+        # foreign envelope remains valid for its own derived transaction ID but
+        # is deliberately written under the indexed row's natural key.
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=indexed_key,
+            classification=indexed_record.classification,
+            schema_version=indexed_record.schema_version,
+            written_at=foreign_record.written_at,
+            payload=foreign_record.payload,
+            write_provenance="test.transactions_repository.foreign_payload_rekey",
+        )
+
+        expected_identifier = transaction_object_key(profile.bucket_id, indexed.transaction_id)
+        with pytest.raises(SecureObjectRowIdentityError) as full_read:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        assert full_read.value.expected_identifier == expected_identifier
+
+        with pytest.raises(SecureObjectRowIdentityError) as date_indexed_read:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load_for_date_range(
+                date(2024, 4, 1),
+                date(2024, 4, 30),
+            )
+        assert date_indexed_read.value.expected_identifier == expected_identifier
+
+        with pytest.raises(SecureObjectRowIdentityError) as partitioned_read:
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).partition_by_date_range(
+                date(2024, 4, 1),
+                date(2024, 4, 30),
+            )
+        assert partitioned_read.value.expected_identifier == expected_identifier
 
 
 def test_transaction_catalogue_load_uses_json_mode_for_derived_id_roundtrip(
