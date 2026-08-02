@@ -376,13 +376,25 @@ def test_a_cleared_path_is_reported_apart_from_a_declared_disagreement() -> None
         "contact.fiscal_address": EffectiveFact(value="OTRA CALLE 9", source="manual_cli"),
     }
 
-    summary = _censal_pull_summary(reconciliation, read_count=2, declared=declared, labels={})
+    summary = _censal_pull_summary(
+        reconciliation,
+        read_count=2,
+        declared=declared,
+        labels={"contact.postcode": "Código postal", "contact.fiscal_address": "Domicilio fiscal"},
+    )
     cleared, contested = _split_divergences(reconciliation, declared)
 
     assert cleared == ("contact.postcode",)
     assert contested == ("contact.fiscal_address",)
-    assert summary.count("contact.postcode") == 1, "the cleared path is named once, in its own sentence"
-    assert summary.count("contact.fiscal_address") == 1
+    # The split is asserted by path because that is what the reconciliation
+    # deals in; the summary is asserted by label because that is what the
+    # operator reads. Passing no labels here would let the summary fall
+    # back to paths and the counts would still hold, which would quietly
+    # pin the rendering this reports on.
+    assert summary.count("Código postal") == 1, "the cleared field is named once, in its own sentence"
+    assert summary.count("Domicilio fiscal") == 1
+    assert "contact.postcode" not in summary, "a dotted path is not a name the operator has seen"
+    assert "contact.fiscal_address" not in summary
 
 
 def test_a_path_the_operator_never_set_is_not_treated_as_cleared() -> None:
