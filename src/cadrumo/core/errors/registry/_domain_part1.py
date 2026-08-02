@@ -624,6 +624,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.auth._apoderado.ApoderadoConfigurationIdentityError",
+        ErrorCode(
+            code="INTEGRITY_APODERADO_CONFIGURATION_IDENTITY",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_apoderado_configuration_identity",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.auth._apoderado.ApoderadoConfigurationNotSetError",
         ErrorCode(
             code="REFUSED_APODERADO_NOT_CONFIGURED",

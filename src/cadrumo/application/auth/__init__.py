@@ -190,6 +190,7 @@ from ._acquisition_lock import (
 from ._actions import update_auth
 from ._apoderado import (
     ApoderadoConfiguration,
+    ApoderadoConfigurationIdentityError,
     ApoderadoConfigurationNotSetError,
     ApoderadoLiveCheckUnavailableError,
     ApoderadoRepresentedNifInvalidError,
@@ -312,6 +313,7 @@ __all__ = [
     "ActiveAuthProjectionSnapshot",
     "ActiveCertificateCredentials",
     "ApoderadoConfiguration",
+    "ApoderadoConfigurationIdentityError",
     "ApoderadoConfigurationNotSetError",
     "ApoderadoFlowAnswers",
     "ApoderadoLiveCheckUnavailableError",
