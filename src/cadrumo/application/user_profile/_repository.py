@@ -282,6 +282,21 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
                 own profile. The answer for a foreign id would always be
                 ``False``, which is indistinguishable from "no such profile"
                 and is read as permission to create.
+
+        Refusing here rather than answering honestly was the one judgement
+        call in extending the guard, so the evidence is recorded. A probe is
+        a legitimate use of ``exists`` in general -- but a tree-wide sweep of
+        every caller found none that uses THIS method as a cross-bucket
+        presence check. Its sole production caller is
+        :meth:`ProfileLifecycleService.register`, which treats ``False`` as
+        permission to create.
+
+        The cross-bucket probe does exist in this module, one class down:
+        :meth:`UserProfileSnapshotRepository.exists` takes a *snapshot* id, so
+        asking about a foreign one is a real question with a real answer, and
+        it is deliberately left answering. The difference is that a lifecycle
+        key IS the bucket, so "is profile B in bucket A?" collapses into a
+        question only a confused caller asks.
         """
         self._assert_owns(profile_id, surface="exists")
         return self._objects.exists(
