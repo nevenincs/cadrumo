@@ -79,6 +79,40 @@ def test_validator_rejects_schedule_periods_outside_revision_selector(
         RegistryValidator(registry_authority.catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
+@pytest.mark.parametrize(
+    ("modelo_id", "declared_kind", "contradictory_kind"),
+    (
+        ("111", "quarterly", "annual"),
+        ("184", "annual", "quarterly"),
+    ),
+)
+def test_validator_rejects_filing_schedule_cadence_contradictions(
+    registry_authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+    declared_kind: str,
+    contradictory_kind: str,
+) -> None:
+    modelo = registry_authority.modelo(modelo_id)
+    revision = next(iter(modelo.revisions.values()))
+    schedule = next(item for item in revision.filing_schedules if item.period_kind == declared_kind)
+    contradictory = schedule.model_copy(update={"period_kind": contradictory_kind})
+    mutated_revision = revision.model_copy(update={"filing_schedules": (contradictory,)})
+    mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
+
+    with pytest.raises(RegistryValidationError, match=r"period_kind .* contradicts periods"):
+        RegistryValidator(registry_authority.catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+
+
+@pytest.mark.parametrize("modelo_id", ("036", "111", "184", "202", "369", "840"))
+def test_shipped_filing_schedule_cadences_pass_canonical_period_classification(
+    registry_authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+) -> None:
+    modelo = registry_authority.modelo(modelo_id)
+
+    RegistryValidator(registry_authority.catalogues, source_root=bundled_path()).validate_modelo(modelo)
+
+
 def test_filing_schedule_predicate_with_unknown_field_is_reported_as_contract_error(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
