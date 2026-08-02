@@ -11,39 +11,8 @@ related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace release-pipeline-full-automation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
 
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
 
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S12 and 2026-08-02-release-pipeline-full-automation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Delete both the unix and windows release-apply recipes in full and update the guidance conformance test to assert their absence and to assert just release survives as the read-only dry-run preview, so one authority owns version advancement and a deleted path cannot be mis-invoked, gate: uv run --no-sync pytest dev/release/tests/test_justfile_release_guidance.py -q passes with release-apply asserted absent from the justfile and rg -n release-apply over the tree matching only vault records and history and ## Scope
-
-- `justfile`
-- `dev/release/tests/test_justfile_release_guidance.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Delete both the unix and windows release-apply recipes in full and update the guidance conformance test to assert their absence and to assert just release survives as the read-only dry-run preview, so one authority owns version advancement and a deleted path cannot be mis-invoked, gate: uv run --no-sync pytest dev/release/tests/test_justfile_release_guidance.py -q passes with release-apply asserted absent from the justfile and rg -n release-apply over the tree matching only vault records and history
 

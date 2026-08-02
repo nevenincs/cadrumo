@@ -364,3 +364,46 @@ def test_a_rehearsal_bump_pushes_no_ref() -> None:
     # Both appear in one branch, so the rehearsal and the real run are the same
     # code path with one flag differing rather than two divergent paths.
     assert 'DRY_RUN}" = "true"' in surface
+
+
+def test_a_resume_skips_the_bump_so_no_second_version_is_burned() -> None:
+    """Recovering from a late failure must not cost another version.
+
+    A chain that failed after a successful campaign has already landed a
+    version. Re-bumping to retry would burn a second one permanently via the
+    identity ledger, to recover from a failure that had nothing to do with the
+    first.
+    """
+    bump = _document()["jobs"]["bump"]
+
+    assert bump["if"] == "${{ needs.preflight.outputs.resume == '' }}"
+
+
+def test_a_resumed_run_is_verified_on_gate_twos_terms() -> None:
+    """The one place an operator still types a run id is the one place to check it.
+
+    Unverified, a resume could carry a foreign, failed, or never-landed
+    campaign's cohort straight to a sealed candidate - and every later hash
+    check would pass, because that cohort is internally consistent.
+    """
+    surface = _invocation_surface(_document(), "campaign")
+
+    assert ".conclusion" in surface and "success" in surface
+    assert ".github/workflows/packaging-smoke.yml" in surface
+    assert "head_repository.full_name" in surface
+    # main-ancestry, matching Gate 2's own dispatch-event rule.
+    assert "compare/main..." in surface
+    assert 'ancestry" = "identical"' in surface
+
+
+def test_the_campaign_is_skipped_on_resume_without_skipping_the_chain() -> None:
+    """The resume path reuses the campaign job rather than bypassing it.
+
+    Bypassing would mean the seal reads its run id from a different place on
+    the resume path than on the normal path - two sources for one fact, which
+    is how they drift.
+    """
+    campaign = _document()["jobs"]["campaign"]
+
+    assert "always()" in campaign["if"], "a skipped bump must not skip the campaign job on the resume path"
+    assert "needs.bump.result != 'failure'" in campaign["if"], "a genuinely failed bump must still stop the chain"

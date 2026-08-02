@@ -205,10 +205,23 @@ jobs:
           # captures the clock before dispatching and then resolves the run
           # started after that instant at this head commit.
           if [[ -n "${RESUME}" ]]; then
+            # A resumed run is VERIFIED on exactly the terms Gate 2 verifies a
+            # hand-supplied one, and for the same reason: this input is the only
+            # place an operator still types a run id, so it is the only place a
+            # wrong one can enter. Unverified, a resume could carry a foreign
+            # or failed campaign's cohort straight to a sealed candidate.
+            run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RESUME}")"
+            test "$(jq -r .conclusion <<<"$run_json")" = "success"
+            test "$(jq -r .path <<<"$run_json")" = ".github/workflows/packaging-smoke.yml"
+            test "$(jq -r .head_repository.full_name <<<"$run_json")" = "${GITHUB_REPOSITORY}"
+            head_sha="$(jq -r .head_sha <<<"$run_json")"
+            # main-ancestry, matching Gate 2's dispatch-event rule: a cohort
+            # built off a branch that never landed must not reach publication.
+            ancestry="$(gh api "repos/${GITHUB_REPOSITORY}/compare/main...${head_sha}" --jq .status)"
+            test "$ancestry" = "identical" -o "$ancestry" = "behind"
             echo "packaging_run_id=${RESUME}" >> "$GITHUB_OUTPUT"
-            head_sha="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RESUME}" --jq .head_sha)"
             echo "head_sha=${head_sha}" >> "$GITHUB_OUTPUT"
-            echo "Resumed from packaging-smoke run ${RESUME} at ${head_sha}; no campaign dispatched."
+            echo "Resumed from verified packaging-smoke run ${RESUME} at ${head_sha}; no campaign dispatched."
             exit 0
           fi
           head_sha="${BUMPED_COMMIT:-$(git rev-parse HEAD)}"
