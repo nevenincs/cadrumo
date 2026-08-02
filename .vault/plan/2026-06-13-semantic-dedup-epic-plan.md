@@ -4,7 +4,7 @@ tags:
   - '#semantic-dedup-epic'
 date: '2026-06-13'
 modified: '2026-08-02'
-body_hash: 'sha256:a628ceec8227d0b7237de97f3efed5ef3f6a0b99bf3107b10a7182d1c727e8a5'
+body_hash: 'sha256:9021b7de8f341a8167cdfc489204a96c98dd964f735abfe65db579085c2b6b49'
 tier: L3
 related:
   - '[[2026-06-13-semantic-dedup-epic-audit]]'
@@ -12,7 +12,7 @@ related:
   - '[[2026-06-13-semantic-dedup-epic-research]]'
 ---
 
-<!-- RETIRED: W02, P04, S08, S09, S10, S11, S12, S13, S14 -->
+<!-- RETIRED: W02, P04, S08, S09, S10, S11, S12, S13, S14, S219, S221 -->
 
 # `semantic-dedup-epic` plan
 
@@ -915,7 +915,7 @@ Replace the verified non-atomic read-modify-write replay path with a durable con
 
 Route report, revision, and declaration-summary timestamps through the canonical UTC-aware authority.
 
-- [ ] `W08.P142.S171` - Validate verification-report, revision-lifecycle, and declaration-summary timestamps through the canonical UTC-aware contract.; `src/cadrumo/domain/modelos; persistence profile adapters; filing calculation; focused UTC regressions`.
+- [x] `W08.P142.S171` - Validate verification-report, revision-lifecycle, and declaration-summary timestamps through the canonical UTC-aware contract.; `src/cadrumo/domain/modelos; persistence profile adapters; filing calculation; focused UTC regressions`.
 
 ### Phase `W08.P143` - Constrain measurement report aggregates
 
@@ -981,7 +981,7 @@ Refuse foreign signing-key payloads and make first-use signing-key minting concu
 
 Replace primitive review-package transport fields with the canonical manifest, identity, count, and timestamp contracts.
 
-- [ ] `W08.P153.S182` - Validate review-package CLI transport fields through the canonical manifest, identity, count, and timestamp contracts.; `src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py; review-package CLI tests`.
+- [x] `W08.P153.S182` - Validate review-package CLI transport fields through the canonical manifest, identity, count, and timestamp contracts.; `src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py; review-package CLI tests`.
 
 ### Phase `W08.P154` - Type ledger status transport
 
@@ -993,7 +993,194 @@ Project ledger status bucket identity and counts through canonical domain constr
 
 Ensure promoted scenarios cannot overwrite distinct failure, tool-error, or narration evidence sharing a coarse signature.
 
-- [ ] `W08.P155.S184` - Include failure, tool-error, and narration evidence in flywheel promotion identity and refuse distinct-content overwrites.; `src/cadrumo/agent/eval/_flywheel.py; report and flywheel tests`.
+- [x] `W08.P155.S184` - Include failure, tool-error, and narration evidence in flywheel promotion identity and refuse distinct-content overwrites.; `src/cadrumo/agent/eval/_flywheel.py; report and flywheel tests`.
+
+### Phase `W08.P156` - Bind transaction catalogue rows to payload identities
+
+Refuse decrypted transaction payloads whose identity differs from their requested index or row key.
+
+- [x] `W08.P156.S185` - Verify decrypted transaction payload identities against their requested and indexed transaction keys.; `src/cadrumo/adapters/persistence/profile/transactions.py; transaction repository round-trip tests`.
+
+### Phase `W08.P157` - Reject duplicate declared golden lifecycle stages
+
+Prevent runner declaration maps from silently overwriting repeated lifecycle-stage contracts.
+
+- [x] `W08.P157.S186` - Reject duplicate declared lifecycle stages before golden-runner stage mapping.; `src/cadrumo/agent/eval/_runner.py; golden lifecycle tests`.
+
+### Phase `W08.P158` - Preserve overview obligation-coverage transport
+
+Carry canonical obligation coverage and its partition invariants through overview payload and rendering boundaries.
+
+- [x] `W08.P158.S187` - Project typed obligation coverage through overview calendar payloads and rendering.; `src/cadrumo/entrypoints/cli/_overview_payloads.py; overview rendering and calendar tests`.
+
+### Phase `W08.P159` - Enforce recipient fingerprint uniqueness
+
+Refuse persisted recipient registries whose trusted identifiers are duplicated.
+
+- [x] `W08.P159.S188` - Reject duplicated trusted recipient identifiers in persisted recipient registries.; `src/cadrumo/application/modelo/_review_package_recipient_registry.py; recipient registry tests`.
+
+### Phase `W08.P160` - Bind IVA compensation history to period keys
+
+Refuse persisted IVA compensation states whose payload period differs from the natural row key.
+
+- [x] `W08.P160.S189` - Verify IVA compensation history payload periods match the natural keys used for persistence and listing.; `src/cadrumo/application/calculations/_iva_compensation_history.py; compensation history tests`.
+
+### Phase `W08.P161` - Refuse duplicate asset-ledger bulk identities
+
+Apply the asset-ledger identifier uniqueness invariant to public bulk persistence.
+
+- [x] `W08.P161.S190` - Enforce asset-ledger identifier uniqueness in public bulk save operations.; `src/cadrumo/adapters/persistence/profile/assets.py; asset ledger tests`.
+
+### Phase `W08.P162` - Bind IVA remote acquisitions to storage keys
+
+Refuse remote-acquisition payloads whose acquisition identity differs from their persisted row key.
+
+- [x] `W08.P162.S191` - Verify remote IVA acquisition payload identities against their persisted keys.; `src/cadrumo/application/live/_iva_remote_state.py; IVA remote-acquisition tests`.
+
+### Phase `W08.P163` - Make prorrata register upserts concurrency-safe
+
+Preserve distinct concurrent prorrata records instead of losing one in read-modify-write updates.
+
+- [x] `W08.P163.S192` - Use conflict-safe updates for distinct concurrent prorrata register records.; `src/cadrumo/adapters/persistence/profile/prorrata_register.py; prorrata register tests`.
+
+### Phase `W08.P164` - Type ledger import transport contracts
+
+Project ledger-import identities, counts, references, and diagnostics through canonical transport constraints.
+
+- [x] `W08.P164.S193` - Validate ledger-import payload identities, counts, references, and diagnostics through canonical contracts.; `src/cadrumo/entrypoints/cli/_ledger_payloads.py; ledger import tests`.
+
+### Phase `W08.P165` - Type Borrador snapshot CLI transport
+
+Carry canonical Borrador snapshot identity, lifecycle, period, UTC timestamp, and count constraints through CLI projections.
+
+- [x] `W08.P165.S194` - Validate Borrador 100 CLI summary, view, and latest payload fields through canonical snapshot contracts.; `src/cadrumo/entrypoints/cli/_app_live_payloads.py; Borrador CLI tests`.
+
+### Phase `W08.P166` - Enforce UTC review-package envelope instants
+
+Reject naive and non-UTC signing and countersigning envelope timestamps at their application boundaries.
+
+- [x] `W08.P166.S195` - Validate signing and countersigning envelope instants through the canonical UTC-aware contract.; `src/cadrumo/application/modelo/_review_package_signing.py; _review_package_counter_sign.py; review-package tests`.
+
+### Phase `W08.P167` - Ledger import fingerprint parity
+
+Make diagnostic and persisted ledger-import duplicate classification use one direction-qualified existing-record fingerprint projection.
+
+- [x] `W08.P167.S196` - Unify existing transaction deduplication fingerprints for diagnostics and persisted ledger import, preserving direction-qualified re-import identity.; `src/cadrumo/application/transactions/_import.py; src/cadrumo/application/ledger/_actions_import.py; focused import tests`.
+
+### Phase `W08.P168` - CLI transport schema hardening
+
+Replace permissive or duplicated CLI transport projections with their canonical typed result contracts before JSON rendering.
+
+- [x] `W08.P168.S197` - Type auth CLI output envelopes against the canonical operator results and reject undeclared secret-bearing fields.; `src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/entrypoints/cli/_config/_auth.py; auth CLI payload tests`.
+- [x] `W08.P168.S198` - Reuse the canonical telemetry event schema for CLI telemetry preview output and refuse malformed payload fields.; `src/cadrumo/entrypoints/cli/_diagnostics_payloads.py; src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py; telemetry payload tests`.
+- [x] `W08.P168.S199` - Project registry workbook verification through canonical typed reports instead of permissive raw dictionaries.; `src/cadrumo/entrypoints/cli/_registry_payloads.py; src/cadrumo/entrypoints/cli/registry.py; registry payload typing tests`.
+
+### Phase `W08.P169` - Calculation revision bucket authority
+
+Enforce bucket ownership when calculation revisions and their work units are resolved for read and transition operations.
+
+- [x] `W08.P169.S200` - Refuse foreign-bucket calculation revision lookup and transitions through one bucket-bound resolution contract.; `src/cadrumo/application/modelo/_calculation_actions.py; focused calculation action tests`.
+
+### Phase `W08.P170` - Registry legal identity and corpus containment
+
+Enforce canonical legal parameter identities and constrain derived legal-evidence sidecars to the bundled corpus root.
+
+- [x] `W08.P170.S201` - Validate legal-parameter table identities through the canonical ParameterId contract.; `src/cadrumo/domain/calculations/registry/_schema_references.py; _loader.py; loader directory tests`.
+- [x] `W08.P170.S202` - Refuse extracted legal corpus sidecars that resolve outside the bundled source root.; `src/cadrumo/domain/calculations/registry/_legal.py; catalogue verification tests`.
+
+### Phase `W08.P171` - Filing timestamp authority
+
+Validate filing amendment audit instants through the canonical UTC-aware contract before persistence and projection.
+
+- [x] `W08.P171.S203` - Enforce UTC-aware amendment created_at values at the domain persistence boundary.; `src/cadrumo/domain/filing/_amendment.py; amendment roundtrip and filing repository tests`.
+
+### Phase `W08.P172` - Authentication diagnostic identity
+
+Make retained Cl@ve diagnostic evidence collision-resistant so rapid failures cannot overwrite encrypted records.
+
+- [x] `W08.P172.S204` - Mint collision-resistant Cl@ve diagnostic identifiers before encrypted persistence.; `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_page_flow.py; auth diagnostic persistence tests`.
+
+### Phase `W08.P173` - LLM cache model identity
+
+Make encrypted LLM cache object keys injective across distinct provider model identifiers.
+
+- [x] `W08.P173.S205` - Use an injective model-identity component for encrypted LLM cache keys while retaining safe filesystem display names.; `src/cadrumo/adapters/outbound/llm/_cache.py; focused LLM cache tests`.
+
+### Phase `W08.P174` - OAuth metadata timestamp authority
+
+Require UTC-aware instants for OAuth credential metadata before persistence and CLI projection.
+
+- [x] `W08.P174.S206` - Enforce canonical UTC-aware issued and refresh instants in OAuth metadata records.; `src/cadrumo/adapters/outbound/google/_records.py; focused Google OAuth record tests`.
+
+### Phase `W08.P175` - Observability append integrity
+
+Make concurrent JSONL event persistence preserve every event through the canonical writer synchronization boundary.
+
+- [x] `W08.P175.S207` - Serialize concurrent observability JSONL appends and prove all independently written events remain readable.; `src/cadrumo/core/observability/_store.py; _sink.py if required; observability writer tests`.
+
+### Phase `W08.P176` - Credential and telemetry input integrity
+
+Reject structurally invalid OAuth credentials and ambiguous LLM telemetry instants at canonical record boundaries.
+
+- [x] `W08.P176.S208` - Reject whitespace-only OAuth refresh tokens while preserving opaque nonblank token bytes.; `src/cadrumo/adapters/outbound/google/_records.py; OAuth record/flow/session tests`.
+- [x] `W08.P176.S209` - Enforce canonical UTC-aware instants for LLM telemetry records before persistence and retention.; `src/cadrumo/adapters/outbound/llm/_run_telemetry.py; telemetry roundtrip/retention tests`.
+
+### Phase `W08.P177` - Declaracion PDF source identity
+
+Bind cached PDF extraction to immutable source content so observations cannot be derived from a replaced file under a new digest.
+
+- [x] `W08.P177.S210` - Key declaracion PDF extraction by content identity and refuse stale metadata-preserving cache reuse.; `src/cadrumo/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py; parser source identity tests`.
+
+### Phase `W08.P178` - Registry revision timeline integrity
+
+Detect every overlapping revision window at registry admission before runtime selection becomes ambiguous.
+
+- [x] `W08.P178.S211` - Validate non-adjacent overlapping registry revision windows through pairwise selector checks.; `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py; temporal registry tests`.
+
+### Phase `W08.P179` - Filing cadence and trace identity
+
+Reject contradictory filing schedule metadata and bind stored run traces to their requested directory identity.
+
+- [x] `W08.P179.S212` - Validate filing schedule cadence metadata against canonical period token classifications.; `registry schedule schema and validation; filing schedule tests`.
+- [x] `W08.P179.S213` - Require decoded observability traces to match their run directory identity before loading or listing.; `src/cadrumo/core/observability/_store.py; observability trace tests`.
+
+### Phase `W08.P180` - Next-wave high-severity containment and identity repairs
+
+Close current-state high-severity audit findings with canonical validation, focused commits, and execution evidence.
+
+- [x] `W08.P180.S214` - Contain MCP telemetry session identifiers beneath the configured telemetry root.; `src/cadrumo/entrypoints/mcp/_telemetry.py; MCP telemetry retention and serving-gate tests`.
+- [x] `W08.P180.S215` - Enforce RegistrySnapshot nested map-key and payload-identity parity.; `registry snapshot schema and construct tests`.
+- [x] `W08.P180.S216` - Reject stale XLSX formula caches before financial amount parsing.; `financial XLSX inbound parser and real workbook import tests`.
+- [x] `W08.P180.S217` - Validate registry legal-reference applicability against the selected filing revision.; `registry legal-reference schema, applicability validation, snapshot assembly, and legal-reference tests`.
+- [x] `W08.P180.S218` - Normalize malformed tabular export decoding into typed errors and validate JSONL rows.; `application export tabular verifier and focused export/ledger tests`.
+- [x] `W08.P180.S220` - Refuse local-storage HMAC-prefix collisions unless the full object identity matches.; `local storage object resolution and collision regression tests`.
+- [x] `W08.P180.S222` - Validate ECB currency codes before constructing exchange-rate request paths.; `outbound ECB FX provider and focused provider tests`.
+- [x] `W08.P180.S223` - Paginate Google Drive vault, namespace, and file resolution lookups.; `Google Drive storage resolver and multi-page lookup tests`.
+- [x] `W08.P180.S224` - Require full Google Drive object HMAC identity when iterating owned marker files.; `Google Drive storage iterator and malformed-marker regression tests`.
+- [x] `W08.P180.S225` - Normalize malformed successful Ollama tags responses into unavailable dependency status.; `application provisioning probe and focused provisioning tests`.
+- [x] `W08.P180.S226` - Reject malformed registry formula operator arity at authority validation.; `registry formula schema, canonical runtime operator metadata, and formula validation tests`.
+- [x] `W08.P180.S227` - Convert malformed generated-surface JSON shapes into blocking release-readiness results.; `release readiness generated-surface parser and direct tests`.
+- [x] `W08.P180.S228` - Detect contradictory same-revision metadata in remote mirror comparisons.; `remote mirror manifest comparison and direct storage tests`.
+- [x] `W08.P180.S229` - Reject unsupported remote mirror manifest schema versions at load.; `remote mirror manifest records, loader, and direct storage tests`.
+- [x] `W08.P180.S230` - Reject empty scalar registry parameter value tables at authority validation.; `registry parameter schema, runtime parity, and direct validation tests`.
+- [x] `W08.P180.S231` - Canonicalize persisted config-reset bucket identities before lock acquisition and resume.; `config-reset journal models, resume orchestration, and recovery tests`.
+- [x] `W08.P180.S232` - Reject authorization manifest capabilities for unknown Modelo identities.; `access-gate authorization manifest loader and direct manifest tests`.
+- [x] `W08.P180.S233` - Enforce RegistryScenarioRunReport aggregate status consistency with comparisons.; `registry scenario report schema and direct scenario tests`.
+- [x] `W08.P180.S234` - Reject inverted extraction anchor bounding-box ranges at registry validation.; `registry extraction anchor schema and direct schema tests`.
+- [x] `W08.P180.S235` - Type workflow declaration pointers with canonical Modelo and draft-status identities.; `workflow state models and declaration persistence tests`.
+- [x] `W08.P180.S236` - Reject duplicate legal catalogue identities in parameter-only registry loading.; `registry parameter-only loader and direct directory-mode tests`.
+- [x] `W08.P180.S237` - Confine profile-export recovery cleanup to the canonical staged sibling of its destination.; `profile bundle export operation, recovery cleanup, and direct recovery tests`.
+- [x] `W08.P180.S238` - Require positive minimum coverage for registry extraction profiles.; `registry extraction profile schema and direct extraction tests`.
+- [x] `W08.P180.S239` - Enforce revision-scoped legal-reference applicability windows in registry snapshots.; `registry snapshot validation, affected M100 legal-reference data, and direct legal-window tests`.
+- [x] `W08.P180.S240` - Make sealed-profile archive import atomic across bucket activation, catalogue restoration, and completion event.; `bucket maintenance import transaction boundary and direct encrypted archive tests`.
+- [x] `W08.P180.S241` - Make forced sealed-profile archive import atomic for pre-existing target buckets.; `bucket maintenance forced-import rollback boundary and direct encrypted archive tests`.
+- [x] `W08.P180.S242` - Reject overlapping dated keyed parameter-bracket windows during registry schema validation.; `registry formula parameter schema and direct bracket-window tests`.
+- [x] `W08.P180.S243` - Reject non-finite OFX transaction amounts during source validation with typed financial-source errors.; `OFX provider validation and direct real-fixture tests`.
+- [x] `W08.P180.S244` - Reject contradictory duplicate casilla rows in local observation spreadsheet imports.; `local observation spreadsheet parser and direct CSV/XLSX duplicate-row tests`.
+- [x] `W08.P180.S245` - Reject negative verification-expectation tolerances during registry schema validation.; `registry verification expectation schema and direct tolerance tests`.
+- [x] `W08.P180.S246` - Make Modelo sandbox merge atomic when foreign filing persistence is refused.; `bucket sandbox merge transaction boundary and direct encrypted-storage tests`.
+- [x] `W08.P180.S247` - Refuse stale formula caches in local observation XLSX imports.; `local observation XLSX parser and direct stale-formula-cache tests`.
+- [x] `W08.P180.S248` - Reject negative workbook-parity scenario tolerances.; `registry parity scenario schema and direct workbook-parity tests`.
 
 ## Parallelization
 

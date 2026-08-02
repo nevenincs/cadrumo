@@ -5,47 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:9079c31cb0489566a3bf6259b2a57ffa092a99f813938885ac8310cfacc9a9b6'
+body_hash: 'sha256:ff8108af97f7336defa51dbe41a94412553b9e13a26365a6683b396e1b97f07c'
 step_id: 'S48'
 related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace semantic-dedup-epic with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S48 and 2026-06-13-semantic-dedup-epic-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Type official filing-observation source kinds and route persistence, cross-period, and overview classification through their shared capability and ## Scope
-
-- `src/cadrumo/application/calculations/_observations_repository.py`
-- `src/cadrumo/application/live/_filed_observation_persistence.py`
-- `src/cadrumo/application/calculations/_cross_period_clean_state.py`
-- `src/cadrumo/application/overview/_calendar_evidence.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Type official filing-observation source kinds and route persistence, cross-period, and overview classification through their shared capability
 
@@ -58,10 +22,6 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
-
 ## Outcome
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

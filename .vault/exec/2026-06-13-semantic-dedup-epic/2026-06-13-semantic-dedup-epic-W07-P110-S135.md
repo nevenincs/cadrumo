@@ -5,45 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:9b8eecaa7a382fea1fce6d2b3123d6277299981313ea02cc6e5e8fd8aa771db6'
+body_hash: 'sha256:36347b748cfeb11bf6a62b1781ce9480d8108bd41a8fcd8129fc8162b15a1a45'
 step_id: 'S135'
 related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace semantic-dedup-epic with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S135 and 2026-06-13-semantic-dedup-epic-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Enforce layout-exclusive fields on agent materialisation payloads and cover contaminated workspace and plugin refusals. and ## Scope
-
-- `src/cadrumo/entrypoints/cli/_app_agent_workspace_payloads.py`
-- `agent workspace tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Enforce layout-exclusive fields on agent materialisation payloads and cover contaminated workspace and plugin refusals.
 
@@ -54,10 +20,6 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
-
 ## Outcome
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

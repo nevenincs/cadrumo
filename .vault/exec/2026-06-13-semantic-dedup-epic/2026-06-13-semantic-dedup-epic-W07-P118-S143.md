@@ -5,45 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:dc0c3377d333a98782e95d6cd03957d8414a941729b2db7dd2bcbb221021e059'
+body_hash: 'sha256:c1d7189304480aac438b95de439d2c3b312df8c96bc4de7c7c420a7d589dd607'
 step_id: 'S143'
 related:
   - "[[2026-06-13-semantic-dedup-epic-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace semantic-dedup-epic with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S143 and 2026-06-13-semantic-dedup-epic-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Use the canonical first-attempt submission identity and timezone-aware instant conversion for justificante imports, with real draft/receipt regression coverage. and ## Scope
-
-- `src/cadrumo/application/filing/_import.py`
-- `src/cadrumo/application/filing/tests/test_import.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Use the canonical first-attempt submission identity and timezone-aware instant conversion for justificante imports, with real draft/receipt regression coverage.
 
@@ -54,10 +20,6 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
-
 ## Outcome
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
