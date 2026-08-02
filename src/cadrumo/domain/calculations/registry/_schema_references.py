@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import AfterValidator, AnyHttpUrl, Field, TypeAdapter, field_validator, model_validator
 
+from ....core import RegistryPeriodCode, RegistrySelectorPeriodCode
 from ....core.external_constants import (
     PDF_EXTENSION,
     XLS_EXTENSION,
@@ -21,10 +22,26 @@ __all__ = [
     "LegalParameter",
     "LegalReference",
     "PeriodSelector",
+    "RegistryExternalLink",
     "RegistrySnapshotRef",
     "SourceReference",
     "TemporalApplicability",
 ]
+
+
+_HTTP_URL_ADAPTER = TypeAdapter(AnyHttpUrl)
+
+
+def _validate_registry_external_link(value: str) -> str:
+    """Validate one authoritative link while retaining registry string semantics."""
+    parsed = _HTTP_URL_ADAPTER.validate_python(value)
+    if parsed.scheme != "https":
+        raise RegistryValidationError(f"registry external link scheme must be https, got {parsed.scheme!r}")
+    return str(parsed)
+
+
+RegistryExternalLink = Annotated[str, AfterValidator(_validate_registry_external_link)]
+"""Canonical fragment-preserving HTTPS link used by registry evidence records."""
 
 
 class RegistrySnapshotRef(RegistryModel):
@@ -33,14 +50,14 @@ class RegistrySnapshotRef(RegistryModel):
     modelo: ModeloId
     revision_id: RevisionId
     modelo_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=32)
+    period: RegistryPeriodCode
 
 
 class PeriodSelector(RegistryModel):
     years: tuple[int, ...] = ()
     year_from: int | None = None
     year_to: int | None = None
-    periods: tuple[str, ...] = Field(min_length=1)
+    periods: tuple[RegistrySelectorPeriodCode, ...] = Field(min_length=1)
 
     @field_validator("periods")
     @classmethod
@@ -107,7 +124,7 @@ class LegalReference(RegistryModel):
     document_id: str
     article: str | None = None
     section: str | None = None
-    permalink: str
+    permalink: RegistryExternalLink
     published_at: date | None = None
     effective_from: date
     effective_to: date | None = None
@@ -158,7 +175,7 @@ class SourceReference(RegistryModel):
     published_at: date | None = None
     applies_from: date | None = None
     applies_to: date | None = None
-    source_url: str
+    source_url: RegistryExternalLink
     review_status: ReviewStatus
 
     @model_validator(mode="after")

@@ -143,7 +143,7 @@ def collab_recipient_add(
         label=record.label,
         public_key_hex=record.public_key_hex,
         fingerprint_sha256=record.fingerprint_sha256,
-        added_at=record.added_at.isoformat(),
+        added_at=record.added_at,
     )
     _emit_envelope(
         ctx,
@@ -175,7 +175,7 @@ def collab_recipient_list(ctx: typer.Context) -> None:
             label=record.label,
             public_key_hex=record.public_key_hex,
             fingerprint_sha256=record.fingerprint_sha256,
-            added_at=record.added_at.isoformat(),
+                added_at=record.added_at,
         )
         for record in records
     ]

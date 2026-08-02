@@ -34,7 +34,9 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from dev.packaging.cohort_manifest import LoadedReleaseCohort, sha256_file
+from dev.packaging._command import CommandResult
+from dev.packaging._hashing import sha256_path
+from dev.packaging.cohort_manifest import LoadedReleaseCohort
 from dev.packaging.evidence import (
     AcquisitionIdentity,
     ClientIdentity,
@@ -50,7 +52,7 @@ from dev.packaging.evidence import (
     write_distribution_evidence,
 )
 from dev.packaging.evidence_scrub import scrub_distribution_evidence
-from dev.packaging.installed_tax_oracle import CommandEvidence, InstalledTaxEvidence
+from dev.packaging.installed_tax_oracle import InstalledTaxEvidence
 
 if TYPE_CHECKING:
     from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence
@@ -90,11 +92,11 @@ class RealClientSession(BaseModel):
     tool_called: str = Field(min_length=1)
 
 
-def _command_transcript(command: CommandEvidence) -> CommandTranscript:
+def _command_transcript(command: CommandResult) -> CommandTranscript:
     """Map one captured installed-CLI invocation to a tamper-evident transcript.
 
     The wall-clock ``started_at`` / ``completed_at`` stamps and ``cwd`` are read
-    straight from the enriched :class:`~dev.packaging.installed_tax_oracle.CommandEvidence`;
+    straight from the canonical :class:`~dev.packaging._command.CommandResult`;
     the stream digests are recomputed from the retained output by
     :meth:`~dev.packaging.evidence.CommandTranscript.from_output`.
     """
@@ -103,14 +105,8 @@ def _command_transcript(command: CommandEvidence) -> CommandTranscript:
         [line for line in command.stdout.strip().splitlines()[:1] if line] if "--version" in command.argv else []
     )
     relevant_output = (*version_lines, summary)
-    return CommandTranscript.from_output(
-        argv=command.argv,
-        cwd=command.cwd,
-        started_at=datetime.fromisoformat(command.started_at),
-        completed_at=datetime.fromisoformat(command.completed_at),
-        exit_status=command.returncode,
-        stdout=command.stdout,
-        stderr=command.stderr,
+    return CommandTranscript.from_result(
+        command,
         relevant_output=relevant_output,
     )
 
@@ -118,7 +114,7 @@ def _command_transcript(command: CommandEvidence) -> CommandTranscript:
 def _installed_executable(name: str, path: str) -> InstalledExecutableIdentity:
     """Digest one absolute installed executable that the oracle actually drove."""
     resolved = Path(path).resolve(strict=True)
-    return InstalledExecutableIdentity(name=name, path=str(resolved), sha256=sha256_file(resolved))
+    return InstalledExecutableIdentity(name=name, path=str(resolved), sha256=sha256_path(resolved))
 
 
 def _mcp_call_summary(mcp_evidence: InstalledMcpEvidence) -> list[dict[str, Any]]:
@@ -465,15 +461,15 @@ def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
     """
     _require_isolation_fields(data, kind="installed CLI", fields=("checkout_imports_removed",))
     commands = tuple(
-        CommandEvidence(
+        CommandResult(
             argv=tuple(command["argv"]),
+            cwd=command["cwd"],
+            started_at=datetime.fromisoformat(command["started_at"]),
+            completed_at=datetime.fromisoformat(command["completed_at"]),
             duration_seconds=command["duration_seconds"],
             returncode=command["returncode"],
             stdout=command["stdout"],
             stderr=command["stderr"],
-            started_at=command["started_at"],
-            completed_at=command["completed_at"],
-            cwd=command["cwd"],
         )
         for command in data["commands"]
     )

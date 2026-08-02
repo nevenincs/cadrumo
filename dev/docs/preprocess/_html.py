@@ -19,6 +19,10 @@ Splitting follows the BOE document structure:
   the per-article jurisprudence ``<form>`` controls live before the first
   article or between the marker and the heading; they are stripped so only
   article prose ships.
+* the same structural treatment applies to BOE ``anexo`` headings.  A
+  marker-backed annex is its own unit and keeps the literal BOE fragment;
+  unmarked annex headings are still their own titled units, without inventing
+  a fragment that the source does not supply.
 
 Attribution is pulled from the canonical link embedded in a full BOE document,
 composing the per-article permalink with the ``#aN`` anchor; single-article
@@ -35,6 +39,7 @@ from __future__ import annotations
 
 import html as html_entities
 import re
+import unicodedata
 from pathlib import Path
 from typing import Final
 
@@ -52,7 +57,7 @@ HTML_EXTRACTOR_ID = "normatives-html"
 
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
-HTML_EXTRACTOR_VERSION = "1.0"
+HTML_EXTRACTOR_VERSION = "1.1"
 _UTF_8: Final[str] = "utf-8"
 
 #: Standing BOE/AEAT attribution used when no canonical link pins a permalink.
@@ -78,16 +83,113 @@ _SCRIPT = re.compile(r"<script\b.*?</script>", re.IGNORECASE | re.DOTALL)
 _STYLE = re.compile(r"<style\b.*?</style>", re.IGNORECASE | re.DOTALL)
 _SUBIR = re.compile(r'<p[^>]*class="linkSubir"[^>]*>.*?</p>', re.IGNORECASE | re.DOTALL)
 
-# The article heading delimiter and the bloque markers. The anchor matcher
-# keeps only article (#aN) anchors for the unit anchor; the marker matcher
-# strips every "[Bloque N: #...]" navigation marker (article, titulo,
-# capitulo, etc.) from the body text - none of them are article prose.
-_ARTICULO_SPLIT = re.compile(r'<h5[^>]*class="articulo"[^>]*>', re.IGNORECASE)
-_BLOQUE_ANCHOR = re.compile(r"\[Bloque\s+\d+:\s*(#a[\w-]+)\]", re.IGNORECASE)
+# The unit-heading delimiter and the bloque markers. The anchor matcher
+# preserves every BOE fragment assigned to an extracted unit, including
+# dispositions and annexes; the marker matcher strips every
+# "[Bloque N: #...]" navigation marker from the body text - none are article
+# prose.
+_UNIT_HEADING_SPLIT = re.compile(
+    r"""<h[1-6]\b(?=[^>]*\bclass=["'][^"']*\b(?:articulo|anexo|anexo_num)\b[^"']*["'])[^>]*>""",
+    re.IGNORECASE,
+)
+_ORDINAL_WORD = r"(?:Primero|Segundo|Tercero|Cuarto|Quinto|Sexto|S[eé]ptimo|Octavo|Noveno|D[eé]cimo)"
+_APARTADO_ORDINAL_HEADING = re.compile(
+    rf"""(?P<section><section\b(?=[^>]*\bclass=["'][^"']*\bapartado\b[^"']*["'])[^>]*>\s*)
+    (?P<opening><h(?P<level>[1-6])\b(?![^>]*\bclass=)[^>]*>)
+    (?P<ordinal>\s*{_ORDINAL_WORD}\.\s*)</h(?P=level)\s*>""",
+    re.IGNORECASE | re.VERBOSE,
+)
+_ORDINAL_PROVISION_PARAGRAPH = re.compile(
+    rf"""<p\b(?=[^>]*\bclass=["'][^"']*\bparrafo(?:_2)?\b[^"']*["'])[^>]*>
+    \s*(?P<content>{_ORDINAL_WORD}\..*?)</p>""",
+    re.IGNORECASE | re.DOTALL | re.VERBOSE,
+)
+_ORDINAL_TITLE_BODY = re.compile(r"^(?P<title>.+?\.)\s*–\s*(?P<body>.+)$", re.DOTALL)
+_BLOQUE_ANCHOR = re.compile(r"\[Bloque\s+\d+:\s*(#[\w-]+)\]", re.IGNORECASE)
 _BLOQUE_MARKER = re.compile(r"\[Bloque\s+\d+:[^\]]*\]", re.IGNORECASE)
+_ARTICLE_HEADING_ANCHOR = re.compile(r"^art[ií]culo\s+(\d+(?:\s*(?:bis|ter|quater|quinquies))?)\b", re.IGNORECASE)
+_HEADING_CLOSE = re.compile(r"</h[1-6]\s*>", re.IGNORECASE)
 _TAG = re.compile(r"<[^>]+>")
 _WS = re.compile(r"[ \t]+")
 _BLANKS = re.compile(r"\n{3,}")
+
+# BOE's annual estimacion-objetiva orders express the reviewed calculation
+# instructions as paragraph headings inside ANEXO I/II, rather than as HTML
+# heading elements.  The parent annex remains a useful search unit, but an
+# exact legal citation must resolve only the stated instruction fragment.  A
+# derived fragment therefore carries a stable corpus-local anchor and stops at
+# the next source-stated peer heading; it never borrows ``required_text`` as a
+# selector and never widens to the whole annex at citation time.
+_ANNEX_FRAGMENT_SPECS: Final[dict[str, tuple[tuple[str, str, str], ...]]] = {
+    "ANEXO I": (
+        ("#anexo-i-instruccion-2-1", "2.1 fase 1:", "2.2 fase 2:"),
+        ("#anexo-i-instruccion-2-2", "2.2 fase 2:", "2.3 fase 3:"),
+        ("#anexo-i-instruccion-2-3", "2.3 fase 3:", "3. los agricultores jovenes"),
+        ("#anexo-i-instruccion-3", "3. los agricultores jovenes", "pagos fraccionados"),
+    ),
+    "ANEXO II": (
+        ("#anexo-ii-instruccion-2-2-a", "2.2 fase 2:", "b) minoracion por incentivos a la inversion"),
+        ("#anexo-ii-instruccion-2-2-b", "b) minoracion por incentivos a la inversion", "2.3 fase 3:"),
+        (
+            "#anexo-ii-instruccion-2-3-incompatibilidades",
+            "incompatibilidades entre los indices correctores:",
+            "a) indices correctores especiales.",
+        ),
+        (
+            "#anexo-ii-instruccion-2-3-b-1",
+            "b.1) indice corrector para empresas de pequena dimension:",
+            "b.2) indice corrector de temporada:",
+        ),
+        (
+            "#anexo-ii-instruccion-2-3-b-2",
+            "b.2) indice corrector de temporada:",
+            "b.3) indice corrector de exceso:",
+        ),
+        (
+            "#anexo-ii-instruccion-2-3-b-3",
+            "b.3) indice corrector de exceso:",
+            "b.4) indice corrector por inicio de nuevas actividades.",
+        ),
+        (
+            "#anexo-ii-instruccion-2-3-b-4",
+            "b.4) indice corrector por inicio de nuevas actividades.",
+            "pagos fraccionados",
+        ),
+    ),
+}
+
+_IVA_2025_INSTRUCTION_FRAGMENT_SPEC: Final[tuple[str, str, str]] = (
+    "#anexo-i-instrucciones-iva",
+    "instrucciones para la aplicacion de los indices y modulos en el impuesto sobre el valor anadido",
+    "cuotas trimestrales",
+)
+
+# The IVA activity tables repeat some IRPF activity titles earlier in ANEXO II.
+# The occurrence number is therefore source structure, not a text-content
+# heuristic: select the stated caption occurrence and stop at the next stated
+# peer activity caption.
+_ANNEX_OCCURRENCE_FRAGMENT_SPECS: Final[dict[str, tuple[tuple[str, str, int, str], ...]]] = {
+    "ANEXO II": (
+        (
+            "#anexo-i-iva-721-2",
+            "actividad: transporte por autotaxis",
+            2,
+            "actividad: transporte de mercancias por carretera, excepto residuos",
+        ),
+        (
+            "#anexo-i-iva-722",
+            "actividad: transporte de mercancias por carretera, excepto residuos",
+            1,
+            "actividad: transporte de residuos por carretera",
+        ),
+        (
+            "#anexo-i-iva-972-1",
+            "actividad: servicios de peluqueria de senora y caballero",
+            2,
+            "actividad: salones e institutos de belleza",
+        ),
+    ),
+}
 
 
 def _clip_to_content(markup: str) -> str:
@@ -127,14 +229,16 @@ def _strip_tags(markup: str) -> str:
 
 
 def _segments(markup: str) -> list[tuple[str, str]]:
-    """Split markup into ``(anchor, article_markup)`` pairs per article.
+    """Split markup into ``(anchor, unit_markup)`` pairs per legal heading.
 
-    The text before the first ``<h5 class="articulo">`` (document metadata
-    and the TOC link farm) is discarded. Each article's anchor is read from
-    the ``[Bloque N: #aN]`` marker in the tail of the preceding segment when
-    present, else the empty string.
+    The text before the first article or annex heading (document metadata and
+    the TOC link farm) is discarded. Each unit's anchor is read from the
+    ``[Bloque N: #... ]`` marker in the tail of the preceding segment when
+    present, else the empty string.  This deliberately does not mint a
+    fragment for an unmarked annex: ``PreprocessUnit.anchor`` is a literal
+    BOE deep-link fragment, not an extractor alias.
     """
-    parts = _ARTICULO_SPLIT.split(markup)
+    parts = _UNIT_HEADING_SPLIT.split(markup)
     if len(parts) <= 1:
         return []
     segments: list[tuple[str, str]] = []
@@ -150,19 +254,148 @@ def _segments(markup: str) -> list[tuple[str, str]]:
     return segments
 
 
-def _heading_and_body(article_markup: str) -> tuple[str, str]:
-    """Split one article segment into ``(heading, body)`` clean text.
+def _promote_ordinal_legal_boundaries(markup: str) -> str:
+    """Promote two BOE ordinal-provision encodings to legal headings.
 
-    The segment begins immediately after the opening ``<h5 ...>`` tag, so the
-    heading runs up to the closing ``</h5>`` and the body is everything
-    after, with block-level noise already removed by the caller.
+    BOE normally uses classed heading tags for legal-unit boundaries.  A small
+    legacy subset instead encodes an ordinal provision as either an unclassed
+    heading directly inside ``section.apartado``, or as a run of ordinal
+    ``parrafo`` elements before the first regular legal heading.  Both forms
+    state a legal boundary in their source text but carry no BOE fragment, so
+    this only promotes their internal segmentation: it never assigns one.
     """
-    head_end = article_markup.lower().find("</h5>")
-    if head_end == -1:
-        return "", _strip_tags(article_markup)
-    heading = _strip_tags(article_markup[:head_end])
-    body = _strip_tags(article_markup[head_end + len("</h5>") :])
+
+    markup = _APARTADO_ORDINAL_HEADING.sub(
+        lambda match: (
+            f'{match.group("section")}{match.group("opening")[:-1]} class="articulo">'
+            f"{match.group('ordinal')}</h{match.group('level')}>"
+        ),
+        markup,
+    )
+
+    first_heading = _UNIT_HEADING_SPLIT.search(markup)
+    preamble_end = first_heading.start() if first_heading is not None else len(markup)
+    preamble = markup[:preamble_end]
+    matches = list(_ORDINAL_PROVISION_PARAGRAPH.finditer(preamble))
+    if len(matches) < 2:
+        return markup
+
+    def replace_ordinal_paragraph(match: re.Match[str]) -> str:
+        content = match.group("content").strip()
+        title_and_body = _ORDINAL_TITLE_BODY.match(content)
+        if title_and_body is None:
+            return f'<h5 class="articulo">{content}</h5>'
+        return (
+            f'<h5 class="articulo">{title_and_body.group("title").strip()}</h5>'
+            f'<p class="parrafo">{title_and_body.group("body").strip()}</p>'
+        )
+
+    return _ORDINAL_PROVISION_PARAGRAPH.sub(replace_ordinal_paragraph, preamble) + markup[preamble_end:]
+
+
+def _heading_and_body(unit_markup: str) -> tuple[str, str]:
+    """Split one legal-unit segment into ``(heading, body)`` clean text.
+
+    The segment begins immediately after its opening heading tag, so the
+    heading runs up to its closing ``</hN>`` and the body is everything after,
+    with block-level noise already removed by the caller.
+    """
+    closing = _HEADING_CLOSE.search(unit_markup)
+    if closing is None:
+        return "", _strip_tags(unit_markup)
+    heading = _strip_tags(unit_markup[: closing.start()])
+    body = _strip_tags(unit_markup[closing.end() :])
     return heading, body
+
+
+def _anchor_from_heading(heading: str) -> str:
+    """Derive BOE's article fragment when legacy source markup lacks a bloque marker."""
+    match = _ARTICLE_HEADING_ANCHOR.match(heading.strip())
+    if match is None:
+        return ""
+    return "#a" + re.sub(r"\s+", "", match.group(1)).lower()
+
+
+def _fold_fragment_heading(text: str) -> str:
+    """Fold a source heading for stable boundary recognition."""
+    decomposed = unicodedata.normalize("NFKD", text.replace("\xa0", " "))
+    without_marks = "".join(char for char in decomposed if not unicodedata.combining(char))
+    return re.sub(r"\s+", " ", without_marks).strip().casefold()
+
+
+def _derived_annex_fragment_units(
+    unit: PreprocessUnit,
+    *,
+    include_iva_2025_fragments: bool,
+) -> list[PreprocessUnit]:
+    """Derive citation-sized units from source-stated annex instruction headings."""
+    if unit.title not in _ANNEX_FRAGMENT_SPECS:
+        return []
+    lines = unit.text.splitlines()
+    folded = tuple(_fold_fragment_heading(line) for line in lines)
+    derived: list[PreprocessUnit] = []
+    fragment_specs = _ANNEX_FRAGMENT_SPECS[unit.title]
+    if include_iva_2025_fragments and unit.title == "ANEXO II":
+        fragment_specs = (_IVA_2025_INSTRUCTION_FRAGMENT_SPEC, *fragment_specs)
+    for anchor, start_prefix, end_prefix in fragment_specs:
+        starts = [index for index, line in enumerate(folded) if line.startswith(start_prefix)]
+        ends = [index for index, line in enumerate(folded) if line.startswith(end_prefix)]
+        if len(starts) != 1 or len(ends) != 1 or ends[0] <= starts[0] + 1:
+            continue
+        start = starts[0]
+        end = ends[0]
+        title = lines[start].strip()
+        body = "\n".join(lines[start + 1 : end]).strip()
+        if not title or not body:
+            continue
+        derived.append(
+            PreprocessUnit(
+                text=body,
+                title=title,
+                section=f"{unit.title}: {title}",
+                anchor=anchor,
+            ),
+        )
+    occurrence_specs = _ANNEX_OCCURRENCE_FRAGMENT_SPECS.get(unit.title, ()) if include_iva_2025_fragments else ()
+    for anchor, start_prefix, occurrence, end_prefix in occurrence_specs:
+        starts = [index for index, line in enumerate(folded) if line.startswith(start_prefix)]
+        if len(starts) < occurrence:
+            continue
+        start = starts[occurrence - 1]
+        ends = [index for index, line in enumerate(folded[start + 1 :], start=start + 1) if line.startswith(end_prefix)]
+        if not ends or ends[0] <= start + 1:
+            continue
+        end = ends[0]
+        title = lines[start].strip()
+        body = "\n".join(lines[start + 1 : end]).strip()
+        if not title or not body:
+            continue
+        derived.append(
+            PreprocessUnit(
+                text=body,
+                title=title,
+                section=f"{unit.title}: {title}",
+                anchor=anchor,
+            ),
+        )
+    return derived
+
+
+def _with_derived_annex_fragments(
+    units: list[PreprocessUnit],
+    *,
+    include_iva_2025_fragments: bool,
+) -> list[PreprocessUnit]:
+    """Append citation-sized derived fragments in parent-annex order."""
+    derived = [
+        fragment
+        for unit in units
+        for fragment in _derived_annex_fragment_units(
+            unit,
+            include_iva_2025_fragments=include_iva_2025_fragments,
+        )
+    ]
+    return [*units, *derived]
 
 
 def _document_boe_url(markup: str) -> str:
@@ -183,12 +416,12 @@ def _attribution_for(boe_url: str) -> str:
 def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     """Extract a BOE normatives HTML file into one or more records.
 
-    One :class:`PreprocessUnit` per article (split on ``<h5
-    class="articulo">``), titled by the article heading and anchored to its
-    ``#aN`` permalink fragment. A file with no article delimiter (a stray
-    fragment) extracts to a single whole-document unit. When the combined
-    text would exceed the per-sidecar byte budget the units are grouped so
-    each :class:`PreprocessOutput` renders under the walker's file cap.
+    One :class:`PreprocessUnit` per article or annex heading, titled by that
+    heading and anchored to its literal BOE fragment when present. A file with
+    no supported legal-heading delimiter (a stray fragment) extracts to a
+    single whole-document unit. When the combined text would exceed the
+    per-sidecar byte budget the units are grouped so each
+    :class:`PreprocessOutput` renders under the walker's file cap.
 
     Args:
         source: Path to the ``.html`` file.
@@ -204,6 +437,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     markup = _STYLE.sub(" ", markup)
     markup = _FORM.sub(" ", markup)
     markup = _SUBIR.sub(" ", markup)
+    markup = _promote_ordinal_legal_boundaries(markup)
 
     relpath = source.resolve().relative_to(repo_root.resolve()).as_posix()
     digest = sha256_of(source)
@@ -220,6 +454,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
         text = body or heading
         if not text:
             continue
+        anchor = anchor or _anchor_from_heading(heading)
         units.append(
             PreprocessUnit(
                 text=text,
@@ -236,6 +471,11 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
         whole = _strip_tags(markup)
         if whole:
             units.append(PreprocessUnit(text=whole))
+
+    units = _with_derived_annex_fragments(
+        units,
+        include_iva_2025_fragments=source.name == "orden-hac-1347-2024.html",
+    )
 
     if not units:
         return [

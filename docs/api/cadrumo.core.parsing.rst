@@ -13,5 +13,6 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.core.parsing._codes
    cadrumo.core.parsing._dates
    cadrumo.core.parsing._utils

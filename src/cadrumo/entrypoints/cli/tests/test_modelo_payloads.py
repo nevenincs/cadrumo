@@ -28,10 +28,16 @@ from ....domain.calculations.registry import (
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
     derive_calculation_revision_id,
 )
+from .._config._google_payloads import GoogleSyncCalcComputeCasillaPayload
 from .._modelo_payloads import (
     CalculationRevisionPayload,
+    CasillaObservationPayload,
+    DeltaRowPayload,
+    FindingPayload,
     ObservationPayload,
     WorkCalculateResult,
     WorkObservationsResult,
@@ -163,6 +169,84 @@ def test_observation_payload_rejects_non_canonical_casilla_id() -> None:
             legal_refs=("ley-58-2003:art-120",),
             source_refs=("libro-1",),
         )
+
+
+def test_verification_finding_payload_preserves_the_domain_contract() -> None:
+    finding = FindingPayload(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=_PAYLOAD_CASILLA,
+        expectation_id="m130-rendimiento-neto-non-negative",
+        message="Rendimiento neto cannot be negative.",
+        next_action="Correct casilla 001 and rerun verification.",
+        legal_refs=["ley-35-2006:art-28"],
+        source_refs=["modelo-130-2025-instructions"],
+    )
+
+    assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert finding.severity is ModeloVerificationFindingSeverity.BLOCKING
+    assert finding.model_dump(mode="json")["kind"] == "blocking_rule"
+
+
+def test_verification_finding_payload_rejects_ungrounded_or_malformed_rows() -> None:
+    raw = {
+        "kind": "blocking_rule",
+        "severity": "blocking",
+        "message": "Rendimiento neto cannot be negative.",
+        "legal_refs": ["ley-35-2006:art-28"],
+        "source_refs": ["modelo-130-2025-instructions"],
+    }
+
+    for field, value in (
+        ("kind", "bogus"),
+        ("severity", "bogus"),
+        ("message", ""),
+        ("legal_refs", []),
+        ("expectation_id", "bad expectation"),
+    ):
+        with pytest.raises(ValidationError):
+            FindingPayload.model_validate({**raw, field: value})
+
+
+def test_casilla_provenance_payloads_share_formula_identifier_validation() -> None:
+    """Every CLI casilla provenance surface accepts and rejects the same FormulaId grammar."""
+    observation = CasillaObservationPayload(
+        casilla_id=_PAYLOAD_CASILLA,
+        value="1234.56",
+        formula_id="m130-test-formula",
+        legal_refs=["ley-58-2003:art-120"],
+        source_refs=["libro-1"],
+    )
+    delta = DeltaRowPayload(
+        casilla_id=_PAYLOAD_CASILLA,
+        label="Rendimiento neto",
+        section="Liquidación",
+        year_a_value="100.00",
+        year_b_value="1234.56",
+        delta="1134.56",
+        pct_change="1134.56",
+        formula_id="m130-test-formula",
+        legal_refs=["ley-58-2003:art-120"],
+        source_refs=["libro-1"],
+    )
+    google = GoogleSyncCalcComputeCasillaPayload(
+        casilla_id=_PAYLOAD_CASILLA,
+        value="1234.56",
+        formula_id="m130-test-formula",
+        legal_refs=["ley-58-2003:art-120"],
+        source_refs=["libro-1"],
+    )
+
+    assert observation.formula_id == delta.formula_id == google.formula_id == "m130-test-formula"
+
+    for payload_type, payload in (
+        (CasillaObservationPayload, observation.model_dump()),
+        (DeltaRowPayload, delta.model_dump()),
+        (GoogleSyncCalcComputeCasillaPayload, google.model_dump()),
+    ):
+        payload["formula_id"] = "bad formula"
+        with pytest.raises(ValidationError, match="String should match pattern"):
+            payload_type.model_validate(payload)
 
 
 def test_observation_payload_rejects_non_canonical_operand_casilla_ref() -> None:

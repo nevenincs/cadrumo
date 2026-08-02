@@ -14,6 +14,9 @@ in :mod:`user_profile`, and provisioning semantics live in
 
 from __future__ import annotations
 
+from pydantic import Field
+
+from ....application.preflight import HealthSeverity
 from .._schemas import OutputSchema, register_schema
 
 
@@ -47,7 +50,7 @@ class CheckDependencyPayload(OutputSchema):
     is populated only when the probe can name a concrete operator action.
     """
 
-    service: str
+    service: str = Field(min_length=1)
     available: bool
     detail: str = ""
     remediation: str = ""
@@ -73,9 +76,9 @@ class CheckPreflightPayload(OutputSchema):
     the exit code.
     """
 
-    check: str
+    check: str = Field(min_length=1)
     healthy: bool
-    severity: str
+    severity: HealthSeverity
     detail: str = ""
     remediation: str = ""
 

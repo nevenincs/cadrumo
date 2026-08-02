@@ -11,6 +11,9 @@ set by the root landing/help payloads.
 
 from __future__ import annotations
 
+from pydantic import Field
+
+from ...application.operator_surface import CommandSchemaRef, OperatorSurfaceContract
 from ._schemas import OutputSchema, register_schema
 
 
@@ -28,7 +31,7 @@ class ContractManifestResult(OutputSchema):
     of truth for the manifest structure.
     """
 
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    manifest_version: str = "1"
+    envelope_schema_version: str = Field(min_length=1)
+    contract: OperatorSurfaceContract
+    command_schemas: tuple[CommandSchemaRef, ...]

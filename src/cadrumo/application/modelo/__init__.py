@@ -520,6 +520,7 @@ from ._work_plazo import (
     ModeloWorkConditionalRecargoPreview,
     ModeloWorkDeadlinePosture,
     modelo_work_deadline_posture,
+    validate_modelo_work_deadline_posture,
 )
 from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
 
@@ -892,6 +893,7 @@ __all__ = [
     "validate_m145_communication_record",
     "validate_m349_country_prefix_context",
     "validate_m349_nif_format",
+    "validate_modelo_work_deadline_posture",
     "verify_counter_signed_receipt",
     "verify_modelo_revision",
     "verify_review_package",

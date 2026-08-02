@@ -11,13 +11,13 @@ from pathlib import Path
 
 import pytest
 
+from dev.packaging._hashing import sha256_path
 from dev.packaging.cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
     SourceIdentity,
     create_manifest,
     load_release_cohort,
-    sha256_file,
     write_manifest,
 )
 from dev.packaging.evidence import (
@@ -132,7 +132,7 @@ def _record(
                 InstalledExecutableIdentity(
                     name="cadrumo",
                     path=sys.executable,
-                    sha256=sha256_file(Path(sys.executable)),
+                    sha256=sha256_path(Path(sys.executable)),
                 ),
             ),
         ),

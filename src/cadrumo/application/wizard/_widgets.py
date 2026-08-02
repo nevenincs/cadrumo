@@ -23,6 +23,7 @@ from pathlib import Path
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...core.identity import IdentityError, validate_identity
+from ...core.redaction import redact_validation_context as _redact_validation_context
 from ._errors import WizardValidationError
 from ._models import WizardQuestion, WizardWidget
 
@@ -64,19 +65,6 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
     error_context = _redact_validation_context(render_context)
     translated = tr(message_key, **render_context)
     return WizardValidationError(message_key, context=error_context, translated_message=translated)
-
-
-def _redact_validation_context(context: dict[str, object]) -> dict[str, object]:
-    """Return structured diagnostics without raw operator answers."""
-    redacted = dict(context)
-    raw = redacted.pop("raw", None)
-    if raw is not None:
-        redacted["raw_redacted"] = True
-        redacted["raw_length"] = len(str(raw))
-    detail = redacted.pop("detail", None)
-    if detail is not None:
-        redacted["detail_redacted"] = True
-    return redacted
 
 
 def validate_text(raw: str, question: WizardQuestion) -> str:

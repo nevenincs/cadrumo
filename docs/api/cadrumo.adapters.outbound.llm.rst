@@ -26,5 +26,6 @@ Submodules
    cadrumo.adapters.outbound.llm._errors
    cadrumo.adapters.outbound.llm._models
    cadrumo.adapters.outbound.llm._pricing
+   cadrumo.adapters.outbound.llm._retention
    cadrumo.adapters.outbound.llm._run_telemetry
    cadrumo.adapters.outbound.llm._usage

@@ -19,6 +19,7 @@ from ....core.time import now
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._ids import CasillaId, RelationId, WorkbookOutputId
+from ._period_selector_match import selector_period_matches_request
 from ._scenario_filing_period import hydrate_scenario_filing_period
 from ._workbook_parity import (
     SyntheticInputSet,
@@ -82,7 +83,8 @@ class ParityScenario(ParityTapeModel):
         if self.period.strip() != self.period:
             raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
         if self.filing_period is not None and (
-            self.filing_period.filing_year != self.filing_year or self.filing_period.registry_token != self.period
+            self.filing_period.filing_year != self.filing_year
+            or not selector_period_matches_request(self.period, self.filing_period.registry_token)
         ):
             raise RegistryValidationError("scenario filing_period must match filing_year and period")
         return self

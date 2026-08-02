@@ -114,6 +114,7 @@ def _scenario() -> ProfileConfirmationScenario:
         name="m347-active-profile-confirmed-before-mutation",
         confirmation_command=_CONFIRMATION_COMMAND,
         mutating_commands=_MUTATING_COMMANDS,
+        profile_switching_commands=("config.login",),
     )
 
 
@@ -189,8 +190,10 @@ def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: Path) 
 
     assert result.passed, result.failures
     assert result.confirmation_command_resolves
+    assert result.profile_switching_commands_resolve
     assert result.mutating_step_present
     assert result.confirmed_before_first_mutation
+    assert result.confirmed_before_each_mutation
 
 
 def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
@@ -218,6 +221,7 @@ def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backe
     assert result.confirmation_command_resolves
     assert result.mutating_step_present
     assert not result.confirmed_before_first_mutation
+    assert not result.confirmed_before_each_mutation
     assert any(
         "modelo.work.create" in failure and "config.profile.status" in failure and "cross-tenant" in failure
         for failure in result.failures
@@ -247,6 +251,27 @@ def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolat
     assert not result.passed
     assert result.mutating_step_present
     assert not result.confirmed_before_first_mutation
+    assert not result.confirmed_before_each_mutation
+
+
+def test_profile_switch_requires_reconfirmation_before_later_mutation(_isolated_cli_backend: Path) -> None:  # noqa: F811
+    """FAIL-catch: an observed profile switch invalidates earlier confirmation before the next mutation."""
+    _create_profile()
+
+    _dispatch_confirmation()
+    _dispatch_create()
+    switch_trajectory = (_CONFIRMATION_COMMAND, "modelo.work.create", "config.login", "modelo.work.calculate")
+
+    result = check_profile_confirmation_scenario(
+        _scenario(),
+        trajectory=switch_trajectory,
+        valid_commands=valid_cli_commands(),
+    )
+
+    assert not result.passed
+    assert result.confirmed_before_first_mutation
+    assert not result.confirmed_before_each_mutation
+    assert any("config.login" in failure and "modelo.work.calculate" in failure and "re-arm" in failure for failure in result.failures)
 
 
 def test_runner_rejects_a_scenario_with_no_mutating_step() -> None:

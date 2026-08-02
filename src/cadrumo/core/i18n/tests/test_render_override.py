@@ -82,9 +82,9 @@ def test_fallback_language_is_default_output_language() -> None:
 
 def test_stale_product_identity_normalises_without_corrupting_machine_or_authority_names() -> None:
     """The renderer distinguishes product, command, machine, and authority names."""
-    from .._render import _normalise_product_identity_references
+    from ...product_identity import normalise_product_identity_references
 
-    rendered = _normalise_product_identity_references(
+    rendered = normalise_product_identity_references(
         "Cadrumo prepares the draft for AEAT; run cadrumo\n"
         "app modelo work calculate or cadrumo manual fetch. Install cadrumo; "
         "launch cadrumo-mcp; read cadrumo://status; set CADRUMO_OUTPUT_LANGUAGE.",

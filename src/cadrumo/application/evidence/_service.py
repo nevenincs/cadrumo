@@ -30,6 +30,7 @@ from typing import ClassVar, override
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.storage import (
     APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
     SecureBoundRepository,
@@ -248,6 +249,15 @@ class EvidenceBundleService:
                 check=VerificationCheck.BUCKET_BINDING,
                 passed=bundle.bucket_id == bucket_id,
                 detail=f"manifest bucket={bundle.bucket_id!r}",
+            ),
+        )
+        work_units = WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
+        work_unit_exists = work_units.get(bundle.work_unit_id) is not None
+        findings.append(
+            EvidenceBundleCheckResult(
+                check=VerificationCheck.WORK_UNIT_BINDING,
+                passed=work_unit_exists,
+                detail=f"work_unit_id={bundle.work_unit_id!r}",
             ),
         )
 

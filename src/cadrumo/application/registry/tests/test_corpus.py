@@ -680,3 +680,37 @@ def test_registry_citation_projections_reject_blank_authoritative_text() -> None
             permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
             cite="Ley 35/2006, art. 32 (BOE-A-2006-20764)",
         )
+
+
+def test_registry_citation_projections_require_canonical_external_links() -> None:
+    with pytest.raises(ValidationError, match=r"boe_url"):
+        RegistryCitationReferenceProjection(
+            id="ley-35-2006",
+            kind="ley",
+            number="35/2006",
+            title="Ley 35/2006",
+            published_at="2006-11-29",
+            boe_id="BOE-A-2006-20764",
+            boe_url="not-a-url",
+            articulo_count=1,
+            short_title="Ley 35/2006",
+        )
+
+    with pytest.raises(ValidationError, match=r"permalink"):
+        RegistryCitationArticleProjection(
+            numero="32",
+            titulo="Art. 32",
+            summary="Rendimientos del trabajo.",
+            permalink="http://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
+            cite="Ley 35/2006, art. 32 (BOE-A-2006-20764)",
+        )
+
+    projection = RegistryCitationArticleProjection(
+        numero="32",
+        titulo="Art. 32",
+        summary="Rendimientos del trabajo.",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
+        cite="Ley 35/2006, art. 32 (BOE-A-2006-20764)",
+    )
+
+    assert str(projection.permalink).endswith("#a32")

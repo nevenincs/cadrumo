@@ -32,13 +32,14 @@ See Also:
 
 from __future__ import annotations
 
+from ...domain.calculations.registry import CasillaId, FormulaId, LegalRefId, ParameterId, RevisionId
 from ._schemas import OutputSchema, register_schema
 
 
 class CasillaDiffPayload(OutputSchema):
     """One added or removed casilla row."""
 
-    id: str
+    id: CasillaId
     number: str
     label: str
 
@@ -47,30 +48,30 @@ class RenumberedCasillaPayload(OutputSchema):
     """One casilla whose ``continuidad_id`` persisted but whose id/number changed."""
 
     continuidad_id: str
-    from_id: str
+    from_id: CasillaId
     from_number: str
-    to_id: str
+    to_id: CasillaId
     to_number: str
 
 
 class FormulaDiffPayload(OutputSchema):
     """One formula whose expression, rounding, or legal grounding changed."""
 
-    id: str
-    target_casilla_id: str
+    id: FormulaId
+    target_casilla_id: CasillaId
     from_expression: dict[str, object]
     to_expression: dict[str, object]
-    from_legal_refs: list[str] = []
-    to_legal_refs: list[str] = []
+    from_legal_refs: list[LegalRefId] = []
+    to_legal_refs: list[LegalRefId] = []
 
 
 class ParameterDiffPayload(OutputSchema):
     """One parameter (rate/threshold/bracket table) whose value changed."""
 
-    id: str
+    id: ParameterId
     data_type: str
-    from_legal_refs: list[str] = []
-    to_legal_refs: list[str] = []
+    from_legal_refs: list[LegalRefId] = []
+    to_legal_refs: list[LegalRefId] = []
 
 
 class BindingDiffPayload(OutputSchema):
@@ -93,28 +94,28 @@ class RegistryDiffRevisionsResult(OutputSchema):
     modelo: str
     from_year: int
     to_year: int
-    from_revision_id: str
-    to_revision_id: str
+    from_revision_id: RevisionId
+    to_revision_id: RevisionId
     same_revision: bool
 
     added_casillas: list[CasillaDiffPayload] = []
     removed_casillas: list[CasillaDiffPayload] = []
     renumbered_casillas: list[RenumberedCasillaPayload] = []
-    changed_casilla_legal_refs: list[str] = []
+    changed_casilla_legal_refs: list[CasillaId] = []
 
-    added_formulas: list[str] = []
-    removed_formulas: list[str] = []
+    added_formulas: list[FormulaId] = []
+    removed_formulas: list[FormulaId] = []
     changed_formulas: list[FormulaDiffPayload] = []
 
-    added_parameters: list[str] = []
-    removed_parameters: list[str] = []
+    added_parameters: list[ParameterId] = []
+    removed_parameters: list[ParameterId] = []
     changed_parameters: list[ParameterDiffPayload] = []
 
     added_bindings: list[BindingDiffPayload] = []
     removed_bindings: list[BindingDiffPayload] = []
 
-    revision_legal_refs_added: list[str] = []
-    revision_legal_refs_removed: list[str] = []
+    revision_legal_refs_added: list[LegalRefId] = []
+    revision_legal_refs_removed: list[LegalRefId] = []
 
 
 __all__ = [

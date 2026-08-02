@@ -254,3 +254,70 @@ class TestRunIdentity:
         pattern = re.compile(RUN_ID_PATTERN)
         for _ in range(50):
             assert pattern.fullmatch(_mint_run_id())
+
+
+class TestTraceFingerprints:
+    """The three trace fingerprints are content digests, not free-form strings.
+
+    ``corpus_sha256`` and ``db_sha256`` gate :func:`replay_run`, and
+    ``cert_fingerprint`` records which credential signed the run. A malformed
+    value here is a claim about bytes that can never be reproduced: the
+    comparison it exists to support silently never matches. Both the persisted
+    :class:`RunTrace` and the in-memory :class:`RunContextInfo` that precedes
+    it carry the same alias, so a bad digest cannot be smuggled in before
+    persistence either.
+    """
+
+    _MALFORMED = ("not-a-digest", "A" * 64, "z" * 64, "a" * 63, "a" * 65, " " + "a" * 63)
+    _CANONICAL = "a" * 64
+
+    def _make_context(self, **overrides: str) -> object:
+        from .._context import RunContextInfo
+
+        fields: dict[str, object] = {
+            "run_id": _RUN_ID,
+            "entrypoint": "cadrumo hello",
+            "started_at": _AWARE_STARTED_AT,
+            "arguments": (),
+            "corpus_sha256": self._CANONICAL,
+            "db_sha256": "b" * 64,
+            "cert_fingerprint": "",
+            "initial_step_id": "step-0",
+        }
+        fields.update(overrides)
+        return RunContextInfo(**fields)  # type: ignore[arg-type]
+
+    @pytest.mark.parametrize("field", ["corpus_sha256", "db_sha256"])
+    def test_trace_refuses_malformed_replay_fingerprints(self, field: str) -> None:
+        """A replay gate fingerprint must be lowercase hex-64 or nothing at all."""
+        for bad in self._MALFORMED:
+            with pytest.raises(ValidationError):
+                _make_trace(**{field: bad})  # type: ignore[arg-type]
+        assert getattr(_make_trace(**{field: self._CANONICAL}), field) == self._CANONICAL  # type: ignore[arg-type]
+
+    def test_trace_cert_fingerprint_admits_only_absent_or_digest(self) -> None:
+        """The documented "no cert configured" case is ``""`` — not any other junk."""
+        for bad in self._MALFORMED:
+            with pytest.raises(ValidationError):
+                _make_trace(cert_fingerprint=bad)
+        assert _make_trace(cert_fingerprint="").cert_fingerprint == ""
+        assert _make_trace(cert_fingerprint=self._CANONICAL).cert_fingerprint == self._CANONICAL
+
+    @pytest.mark.parametrize("field", ["corpus_sha256", "db_sha256", "cert_fingerprint"])
+    def test_run_context_refuses_malformed_fingerprints(self, field: str) -> None:
+        """The pre-persistence context carries the same contract as the trace.
+
+        Typing only :class:`RunTrace` would leave the live context free to hold
+        a malformed digest for the whole run and fail only at write time.
+        """
+        for bad in self._MALFORMED:
+            with pytest.raises(ValidationError):
+                self._make_context(**{field: bad})
+        assert getattr(self._make_context(**{field: self._CANONICAL}), field) == self._CANONICAL
+
+    def test_valid_digests_survive_the_json_round_trip(self) -> None:
+        """A well-formed fingerprint is preserved byte-for-byte through persistence."""
+        trace = _make_trace(corpus_sha256="c" * 64, db_sha256="d" * 64, cert_fingerprint="e" * 64)
+        rebuilt = RunTrace.model_validate_json(trace.model_dump_json())
+        assert rebuilt == trace
+        assert rebuilt.cert_fingerprint == "e" * 64

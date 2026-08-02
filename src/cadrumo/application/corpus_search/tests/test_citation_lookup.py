@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from ....domain.calculations.registry import bundled_authority
-from .._citation_lookup import bundled_citation_lookup
+from .._citation_lookup import CitationLookup, bundled_citation_lookup
 from .._errors import CorpusSearchInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -21,12 +23,17 @@ def test_resolve_returns_verbatim_text_and_metadata() -> None:
     assert "extempor" in resolution.verbatim_text.lower()
 
 
-def test_resolve_raw_html_fallback_for_sidecar_less_source() -> None:
-    # A minority of corpus refs point at per-article HTML with no extracted
-    # sidecar; the lookup falls back to the raw BOE excerpt, case-preserved.
-    lookup = bundled_citation_lookup()
-    resolution = lookup.resolve("ley-35-2006:art-1")
-    assert "Naturaleza del Impuesto" in resolution.verbatim_text
+def test_resolve_refuses_a_sidecar_less_source(tmp_path: Path) -> None:
+    """An anchor cannot widen to raw BOE text when its unit sidecar is absent."""
+    reference = bundled_authority().catalogues.legal["ley-35-2006:art-1"]
+    source_path = bundled_authority().source_root / reference.corpus_ref.partition("#")[0]
+    copied_path = tmp_path / reference.corpus_ref.partition("#")[0]
+    copied_path.parent.mkdir(parents=True)
+    copied_path.write_bytes(source_path.read_bytes())
+
+    lookup = CitationLookup({reference.id: reference}, source_root=tmp_path)
+    with pytest.raises(CorpusSearchInputError, match="no readable extracted corpus text"):
+        lookup.resolve("ley-35-2006:art-1")
 
 
 def test_resolve_slices_consolidated_document_by_anchor() -> None:

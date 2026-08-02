@@ -200,7 +200,7 @@ def _contract_root(ctx: typer.Context) -> None:
         envelope_schema_version=ENVELOPE_SCHEMA_VERSION,
         command_schemas=command_schemas,
     )
-    result = ContractManifestResult.model_validate(manifest.model_dump(mode="json"))
+    result = ContractManifestResult.model_validate(manifest.model_dump(mode="python"))
     _emit_envelope(
         ctx,
         command="contract",

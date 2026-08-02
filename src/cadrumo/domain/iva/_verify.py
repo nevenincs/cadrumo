@@ -8,13 +8,11 @@ already performs:
   :class:`cadrumo.domain.iva.IvaCitation`.
 * Every citation must have non-empty
   :attr:`cadrumo.domain.iva.IvaCitation.quoted_text`.
-* Every ``boe_references`` id must match the kebab-case document-id
-  shape used by the registry legal catalogue.
+* Every citation identity must resolve to a verified, article-qualified
+  registry legal reference with bundled corpus evidence.
 """
 
 from __future__ import annotations
-
-import re
 
 from ...core.logging import get_logger
 from ._schema import (
@@ -26,9 +24,6 @@ from ._schema import (
 
 _logger = get_logger(__name__)
 
-_NORMATIVE_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
-
-
 def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
     """Run every cross-record check on ``catalogue``.
 
@@ -39,7 +34,12 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
         A :class:`cadrumo.domain.iva.IvaVerificationReport` aggregating every
         finding.
     """
+    # Keep this local: registry binding modules consume the IVA public facade.
+    from ...core.resources import bundled_path
+    from ..calculations.registry import bundled_authority, verify_legal_reference
+
     issues: list[IvaVerificationIssue] = []
+    legal = bundled_authority().catalogues.legal
 
     present = set(catalogue.regulations.keys())
     missing = [member for member in IvaCategory if member not in present]
@@ -73,13 +73,41 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                         category_id=regulation.category.value,
                     ),
                 )
-        for ref in regulation.boe_references:
-            if not _NORMATIVE_ID_PATTERN.fullmatch(ref):
+            reference = legal.get(citation.legal_reference)
+            if reference is None:
                 issues.append(
                     IvaVerificationIssue(
                         level="error",
-                        code="invalid_legal_reference_id",
-                        message=f"boe_reference {ref!r} is not a kebab-case legal reference id",
+                        code="unknown_legal_reference",
+                        message=(
+                            f"citation legal_reference {citation.legal_reference!r} "
+                            "is absent from the registry legal catalogue"
+                        ),
+                        category_id=regulation.category.value,
+                    ),
+                )
+                continue
+            if reference.article is None:
+                issues.append(
+                    IvaVerificationIssue(
+                        level="error",
+                        code="legal_reference_not_article_qualified",
+                        message=f"citation legal_reference {citation.legal_reference!r} has no registry article",
+                        category_id=regulation.category.value,
+                    ),
+                )
+                continue
+            try:
+                verify_legal_reference(reference, source_root=bundled_path())
+            except Exception as exc:
+                issues.append(
+                    IvaVerificationIssue(
+                        level="error",
+                        code="legal_reference_unverified",
+                        message=(
+                            f"citation legal_reference {citation.legal_reference!r} "
+                            f"has invalid corpus evidence: {exc}"
+                        ),
                         category_id=regulation.category.value,
                     ),
                 )

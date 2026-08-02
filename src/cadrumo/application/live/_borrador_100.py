@@ -34,7 +34,7 @@ from ...adapters.persistence.storage import (
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, SnapshotId
 from ...domain.calculations.registry import BindingId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
@@ -65,7 +65,7 @@ class Borrador100Snapshot(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    snapshot_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: SnapshotId
     bucket_id: BucketId
     modelo: str = Field(pattern=f"^{Modelo.M100.value}$")
     filing_year: int = Field(ge=1900, le=9999)
@@ -74,7 +74,7 @@ class Borrador100Snapshot(BaseModel):
     source_url: str = Field(min_length=1, max_length=2048)
     state: SnapshotLifecycleState
     binding_values: Mapping[BindingId, _BorradorValue] = Field(default_factory=dict)
-    superseded_by_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    superseded_by_snapshot_id: SnapshotId | None = None
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
     discard_reason: str = Field(default="", max_length=500)

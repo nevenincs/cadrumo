@@ -56,6 +56,14 @@ from ...core.json_contract import EnvelopeStatus
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
+LIFECYCLE_STAGE_ORDER: tuple[str, ...] = (
+    "modelo.work.create",
+    "modelo.work.calculate",
+    "modelo.work.verify",
+    "modelo.export",
+)
+"""Canonical command-stage order shared by declared and observed eval trajectories."""
+
 
 class GoldenScenario(BaseModel):
     """One declared workflow expectation, loaded from a scenario TOML file.
@@ -442,7 +450,7 @@ class ContradictionVerdict(BaseModel):
 
 
 class ProfileConfirmationScenario(BaseModel):
-    """A declared expectation that an active-profile confirmation precedes the first mutation.
+    """A declared expectation that active-profile confirmation precedes each mutation.
 
     Guards against auth / profile / state confusion - the
     wrong-active-profile cross-tenant data leak: "wrong active profile silently shows
@@ -461,6 +469,8 @@ class ProfileConfirmationScenario(BaseModel):
             derived from the real MCP tool-descriptor mutability classification,
             mirroring how :class:`ContradictionScenario.mutating_commands` is declared
             scenario data rather than resolved by this module).
+        profile_switching_commands: Registry command keys that switch the active
+            profile and therefore require a new confirmation before a later mutation.
     """
 
     model_config = _STRICT_FROZEN
@@ -468,6 +478,7 @@ class ProfileConfirmationScenario(BaseModel):
     name: str = Field(min_length=1)
     confirmation_command: str = Field(min_length=1)
     mutating_commands: tuple[str, ...] = Field(min_length=1)
+    profile_switching_commands: tuple[str, ...] = ()
 
 
 class ProfileConfirmationVerdict(BaseModel):
@@ -483,17 +494,21 @@ class ProfileConfirmationVerdict(BaseModel):
 
     scenario: str = Field(min_length=1)
     confirmation_command_resolves: bool
+    profile_switching_commands_resolve: bool
     mutating_step_present: bool
     confirmed_before_first_mutation: bool
+    confirmed_before_each_mutation: bool
     failures: tuple[str, ...] = ()
 
     @property
     def passed(self) -> bool:
-        """True when the confirmation command resolved, a mutation was exercised, and it preceded that mutation."""
+        """True when every exercised mutation followed a valid active-profile confirmation."""
         return (
             self.confirmation_command_resolves
+            and self.profile_switching_commands_resolve
             and self.mutating_step_present
             and self.confirmed_before_first_mutation
+            and self.confirmed_before_each_mutation
             and not self.failures
         )
 

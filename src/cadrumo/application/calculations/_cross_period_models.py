@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...domain.calculations.registry import CasillaId, LegalRefId, RegistryModeloObservation, SourceRefId
 from ...domain.modelos import CalculationRevisionState, VerificationCompletenessStatus
+from ._observations_repository import ObservationSourceKind
 
 
 def _require_period_year(period: Period, filing_year: int, *, field_name: str) -> None:
@@ -27,7 +28,7 @@ class _ObservationPayload(Protocol):
     """
 
     observation: RegistryModeloObservation
-    source_kind: str
+    source_kind: ObservationSourceKind
     member_nif: str | None
     stamped_revision_id: str
     source_metadata: dict[str, str]
@@ -83,8 +84,9 @@ class NoPriorObligationProvenanceKind(StrEnum):
 
     The ``NO_PRIOR_OBLIGATION_PRE_ACTIVITY`` value is the facet-kind discriminator
     carried on the evidence row; it names a *suppression*, not an evidence source,
-    and is therefore categorically never a member of :data:`_OFFICIAL_SOURCE_KINDS`
-    (which families a *filing's* AEAT evidence). The regression in
+    and is therefore categorically never an official
+    :class:`ObservationSourceKind` (which families a *filing's* AEAT evidence).
+    The regression in
     ``test_cross_period_clean_state_enforcement.py`` pins that exclusion.
     """
 

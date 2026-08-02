@@ -24,11 +24,14 @@ persistence contract.
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import Field, model_validator
 
+from ...application.live import LiveIvaAcquisitionFailureMode, LiveIvaReadStatus, LiveIvaReadSurface
 from ...core import Period
+from ...core.identity import BucketId, SnapshotId
 from ...domain.calculations.registry import BindingId
 from ._schemas import OutputSchema, register_schema
 
@@ -219,6 +222,9 @@ class IvaWalletAuthorityDecisionPayload(OutputSchema):
     divergence: str
     blocked: bool
     stale_wallet: bool
+    reason: str
+    wallet_captured_at: datetime | None
+    decided_at: datetime
     authority_sources: list[str]
 
 
@@ -316,10 +322,10 @@ class LiveIvaSurfaceOutcomePayload(OutputSchema):
     closed with redacted diagnostics.
     """
 
-    surface: str
-    status: str
-    outcome_mode: str
-    failure_mode: str | None
+    surface: LiveIvaReadSurface
+    status: LiveIvaReadStatus
+    outcome_mode: LiveIvaAcquisitionFailureMode
+    failure_mode: LiveIvaAcquisitionFailureMode | None
     failure_type: str | None
     failure_context: dict[str, Any] | None
     captured_count: int | None
@@ -329,10 +335,11 @@ class LiveIvaSurfaceOutcomePayload(OutputSchema):
 class LiveIvaAuthOutcomePayload(OutputSchema):
     """Redacted JSON projection of :class:`LiveIvaAuthOutcome`."""
 
-    status: str
-    outcome_mode: str
-    failure_mode: str | None
+    status: LiveIvaReadStatus
+    outcome_mode: LiveIvaAcquisitionFailureMode
+    failure_mode: LiveIvaAcquisitionFailureMode | None
     failure_type: str | None
+    diagnostic_ref: str | None = Field(default=None, pattern=r"^sha256:[0-9a-f]{12}$")
     provider_kind: str | None
     reused_persisted_session: bool | None
     fresh: bool | None
@@ -398,9 +405,9 @@ class NotificationSnapshotListingPayload(OutputSchema):
     :class:`NotificationRowPayload` records.
     """
 
-    snapshot_id: str
-    captured_at: str
-    row_count: int
+    snapshot_id: SnapshotId
+    captured_at: datetime
+    row_count: int = Field(ge=0)
 
 
 @register_schema("app.live.notifications.pull")
@@ -413,12 +420,12 @@ class NotificationsCaptureResult(OutputSchema):
     acknowledgement.
     """
 
-    bucket_id: str
-    snapshot_id: str
-    captured_at: str
-    persisted_at: str
-    row_count: int
-    source_url: str
+    bucket_id: BucketId
+    snapshot_id: SnapshotId
+    captured_at: datetime
+    persisted_at: datetime
+    row_count: int = Field(ge=0)
+    source_url: str = Field(min_length=1)
 
 
 @register_schema("app.live.notifications.list")
@@ -430,8 +437,8 @@ class NotificationsListResult(OutputSchema):
     detail stays on :class:`NotificationsViewResult`.
     """
 
-    bucket_id: str
-    count: int
+    bucket_id: BucketId
+    count: int = Field(ge=0)
     rows: list[NotificationSnapshotListingPayload]
 
 
@@ -446,11 +453,11 @@ class NotificationsViewResult(OutputSchema):
     notification-state mutation.
     """
 
-    bucket_id: str
-    snapshot_id: str
-    captured_at: str
-    source_url: str
-    row_count: int
+    bucket_id: BucketId
+    snapshot_id: SnapshotId
+    captured_at: datetime
+    source_url: str = Field(min_length=1)
+    row_count: int = Field(ge=0)
     rows: list[NotificationRowPayload]
 
 
@@ -465,11 +472,11 @@ class NotificationsLatestResult(OutputSchema):
     data.
     """
 
-    bucket_id: str
-    snapshot_id: str | None
-    captured_at: str | None = None
+    bucket_id: BucketId
+    snapshot_id: SnapshotId | None
+    captured_at: datetime | None = None
     source_url: str | None = None
-    row_count: int | None = None
+    row_count: int | None = Field(default=None, ge=0)
 
 
 # ---------------------------------------------------------------------------

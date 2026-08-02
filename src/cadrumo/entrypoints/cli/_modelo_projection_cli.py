@@ -34,6 +34,7 @@ from ...application.modelo import (
 )
 from ...core import Modelo
 from ...core.i18n import tr
+from ...core.output_rendering import jsonable_output_payload
 from ...domain.calculations.registry import CasillaId, RegistrySnapshotError, RegistryValidationError
 from ._common import _emit_envelope
 from ._modelo_payloads import (
@@ -188,15 +189,15 @@ def _register_modelo_project_command(
             quarters_available=list(service_result.quarters_available),
             is_extrapolated=service_result.is_extrapolated,
             m130_accumulated=M130AccumulatedPayload(
-                ingresos=str(service_result.m130_accumulated.ingresos),
-                gastos=str(service_result.m130_accumulated.gastos),
-                rendimiento_neto=str(service_result.m130_accumulated.rendimiento_neto),
-                pagos_fraccionados=str(service_result.m130_accumulated.pagos_fraccionados),
+                ingresos=_decimal_wire(service_result.m130_accumulated.ingresos),
+                gastos=_decimal_wire(service_result.m130_accumulated.gastos),
+                rendimiento_neto=_decimal_wire(service_result.m130_accumulated.rendimiento_neto),
+                pagos_fraccionados=_decimal_wire(service_result.m130_accumulated.pagos_fraccionados),
             ),
             casilla_observations=[
                 CasillaObservationPayload(
                     casilla_id=entry.casilla_id,
-                    value=str(entry.value),
+                    value=_decimal_wire(entry.value),
                     formula_id=entry.formula_id,
                     legal_refs=list(entry.legal_refs),
                     source_refs=list(entry.source_refs),
@@ -204,13 +205,13 @@ def _register_modelo_project_command(
                 for entry in service_result.casilla_observations
             ],
             m100_projection=M100ProjectionPayload(
-                base_liquidable_general_0505=str(service_result.m100_projection.base_liquidable_general_0505),
-                pagos_fraccionados_0604=str(service_result.m100_projection.pagos_fraccionados_0604),
-                cuota_integra_estatal_0545=str(service_result.m100_projection.cuota_integra_estatal_0545),
-                cuota_integra_autonomica_0546=str(service_result.m100_projection.cuota_integra_autonomica_0546),
-                cuota_liquida_estatal_0595=str(service_result.m100_projection.cuota_liquida_estatal_0595),
-                cuota_liquida_autonomica_0596=str(service_result.m100_projection.cuota_liquida_autonomica_0596),
-                cuota_resultante_0597=str(service_result.m100_projection.cuota_resultante_0597),
+                base_liquidable_general_0505=_decimal_wire(service_result.m100_projection.base_liquidable_general_0505),
+                pagos_fraccionados_0604=_decimal_wire(service_result.m100_projection.pagos_fraccionados_0604),
+                cuota_integra_estatal_0545=_decimal_wire(service_result.m100_projection.cuota_integra_estatal_0545),
+                cuota_integra_autonomica_0546=_decimal_wire(service_result.m100_projection.cuota_integra_autonomica_0546),
+                cuota_liquida_estatal_0595=_decimal_wire(service_result.m100_projection.cuota_liquida_estatal_0595),
+                cuota_liquida_autonomica_0596=_decimal_wire(service_result.m100_projection.cuota_liquida_autonomica_0596),
+                cuota_resultante_0597=_decimal_wire(service_result.m100_projection.cuota_resultante_0597),
             ),
         )
         extrapolation_note = (
@@ -348,14 +349,22 @@ def _delta_row_payload(row: ModeloCompareDeltaRow) -> DeltaRowPayload:
         casilla_id=row.casilla_id,
         label=row.label,
         section=row.section,
-        year_a_value=str(row.year_a_value),
-        year_b_value=str(row.year_b_value),
-        delta=str(row.delta),
-        pct_change=str(row.pct_change) if row.pct_change is not None else None,
+        year_a_value=_decimal_wire(row.year_a_value),
+        year_b_value=_decimal_wire(row.year_b_value),
+        delta=_decimal_wire(row.delta),
+        pct_change=_decimal_wire(row.pct_change) if row.pct_change is not None else None,
         formula_id=row.formula_id,
         legal_refs=list(row.legal_refs),
         source_refs=list(row.source_refs),
     )
+
+
+def _decimal_wire(value: Decimal) -> str:
+    """Render a Decimal through the CLI's canonical JSON normalization authority."""
+    rendered = jsonable_output_payload(value)
+    if not isinstance(rendered, str):
+        raise TypeError(f"CLI Decimal normalization returned {type(rendered).__name__}, not str")
+    return rendered
 
 
 __all__ = ["register_projection_commands"]

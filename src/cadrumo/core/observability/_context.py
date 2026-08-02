@@ -23,6 +23,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG
 from ..config import PROJECT_ROOT, load_settings
+from ..identity import ContentDigest, ContentDigestOrAbsent
 from ..logging import attach_run_sink, detach_run_sink, get_logger
 from ..time import now
 from ._capture import _CAPTURE_SINK
@@ -78,9 +79,9 @@ class RunContextInfo(BaseModel):
     entrypoint: str
     started_at: datetime
     arguments: tuple[ArgumentRecord, ...]
-    corpus_sha256: str
-    db_sha256: str
-    cert_fingerprint: str
+    corpus_sha256: ContentDigest
+    db_sha256: ContentDigest
+    cert_fingerprint: ContentDigestOrAbsent
     initial_step_id: str
 
 

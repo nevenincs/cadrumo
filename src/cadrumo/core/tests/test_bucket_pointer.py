@@ -44,6 +44,12 @@ def test_json_round_trip() -> None:
     assert revived == pointer
 
 
+def test_pointer_bucket_id_uses_canonical_identity_normalization() -> None:
+    """Pointer selectors trim at the same strict boundary as every bucket-bearing record."""
+    pointer = BucketPointer(bucket_id="  profile-bucket  ", schema_version=1)
+    assert pointer.bucket_id == "profile-bucket"
+
+
 def test_toml_round_trip() -> None:
     for bucket_id, schema_version in (
         ("bucket-001", 1),
@@ -57,6 +63,8 @@ def test_toml_round_trip() -> None:
 def test_rejects_invalid_constructor_fields() -> None:
     cases: tuple[_BucketPointerKwargs, ...] = (
         {"bucket_id": "", "schema_version": 1},
+        {"bucket_id": "   ", "schema_version": 1},
+        {"bucket_id": "x" * 129, "schema_version": 1},
         {"bucket_id": "bucket-001", "schema_version": 0},
     )
     for kwargs in cases:

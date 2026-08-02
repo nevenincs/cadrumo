@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.adapters.outbound.storage._drive_pagination
    cadrumo.adapters.outbound.storage._errors
    cadrumo.adapters.outbound.storage._factory
    cadrumo.adapters.outbound.storage._google_drive

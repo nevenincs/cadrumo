@@ -45,10 +45,10 @@ from ...domain.calculations.registry import (
     undeclared_casilla_ids,
     validated_casilla_id,
 )
-from ..calculations import CalculationObservationRepository, observation_key
+from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
 from ._action_errors import ModeloLocalObservationError
 
-OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND: Final = "operator_manual"
+OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND: Final = ObservationSourceKind.OPERATOR_MANUAL
 """Non-official source kind for operator-supplied local observations."""
 
 _NUMERIC_CASILLA_DATA_TYPES: Final = frozenset({"decimal", "money", "integer", "ratio"})
@@ -64,7 +64,7 @@ class ModeloLocalObservationResult(BaseModel):
     period: Period
     revision_id: str
     observation_key: str
-    source_kind: str
+    source_kind: ObservationSourceKind
     casilla_values: dict[CasillaId, Decimal]
     captured_at: datetime
     captured_by: str

@@ -27,7 +27,7 @@ from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 
 MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
-_EXP_130_1T = "202613000010001A"
+_EXP_130_1T = "13020260410ABCD1234EFGH5678"
 _WORK_UNIT_TIMESTAMP = datetime(2026, 5, 28, 15, 45, tzinfo=UTC)
 
 

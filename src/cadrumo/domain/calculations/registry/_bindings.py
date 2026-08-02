@@ -135,6 +135,7 @@ from ._ledger_impatriado_bindings import (
     validate_ledger_impatriado_income_aggregation_binding,
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
+from ._period_selector_match import selector_period_matches_request
 from ._retenciones_bindings import (
     _RetencionesAggregationSelector,
     resolve_retenciones_aggregation_binding_values,
@@ -387,7 +388,7 @@ class RegistryModeloObservation(BaseModel):
             return self
         if self.filing_period.filing_year != self.filing_year:
             raise RegistryValidationError("observation filing_period year must match filing_year")
-        if self.filing_period.registry_token != self.period:
+        if not selector_period_matches_request(self.period, self.filing_period.registry_token):
             raise RegistryValidationError("observation filing_period code must match period")
         return self
 

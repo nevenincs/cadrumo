@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
@@ -15,6 +16,7 @@ from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from .._ledger_rule_payloads import ClassificationRulePayload, RuleApplyAppliedPayload, RuleApplyMatchPayload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -349,6 +351,45 @@ def test_rule_add_invalid_regex_rejected() -> None:
         ["app", "ledger", "rule", "add", "--description-pattern", "[invalid", "--classification", "BUSINESS"],
     )
     assert result.exit_code != 0
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        {
+            "rule_id": "not-a-digest",
+            "description_pattern": "acme",
+            "classification": "BUSINESS",
+            "priority": 1,
+            "actor": "operator",
+            "created_at": "2026-08-01T12:00:00Z",
+        },
+        {
+            "rule_id": "a" * 64,
+            "description_pattern": "[invalid",
+            "classification": "BUSINESS",
+            "priority": 1,
+            "actor": "operator",
+            "created_at": "2026-08-01T12:00:00Z",
+        },
+    ),
+)
+def test_rule_payload_refuses_noncanonical_rule_contract(payload: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        ClassificationRulePayload.model_validate(payload)
+
+
+@pytest.mark.parametrize("payload_type", (RuleApplyMatchPayload, RuleApplyAppliedPayload))
+def test_rule_apply_payload_refuses_malformed_rule_identity(payload_type: type[RuleApplyMatchPayload | RuleApplyAppliedPayload]) -> None:
+    payload: dict[str, object] = {
+        "transaction_id": "transaction-1",
+        "matched_rule_id": "not-a-digest",
+        "classification": "BUSINESS",
+    }
+    if payload_type is RuleApplyMatchPayload:
+        payload["description"] = "Acme invoice"
+    with pytest.raises(ValidationError):
+        payload_type.model_validate(payload)
 
 
 @pytest.mark.parametrize("pattern", ["", "   "])

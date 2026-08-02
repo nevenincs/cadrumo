@@ -35,13 +35,17 @@ Edge-case honesty:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
-import pdfplumber
 import pytest
 
 from .....core.resources import bundled_path
+from .....tests.fixtures import (
+    FIXTURE_PROVENANCE_REAL,
+    FIXTURE_PROVENANCE_SYNTHETIC,
+    provenance_mismatches,
+    sidecar_provenance,
+)
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -51,39 +55,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # RegistryValidator._justificante_corpus_root.
 _FIXTURE_ROOT = bundled_path().resolve().parents[0] / "tests" / "fixtures" / "justificantes"
 
-_SYNTHETIC_PRODUCER_SIGNATURE = "aeat-test-fixture-generator"
-
-_RECOGNISED_PROVENANCE = frozenset({"real_corpus", "synthetic_generated"})
 _TAG_TO_PROVENANCE = {
-    "real_aeat_corpus_pdf": "real_corpus",
-    "synthetic_from_aeat_published_text": "synthetic_generated",
+    "real_aeat_corpus_pdf": FIXTURE_PROVENANCE_REAL,
+    "synthetic_from_aeat_published_text": FIXTURE_PROVENANCE_SYNTHETIC,
 }
-
-
-def _sidecar_provenance(pdf_path: Path) -> str | None:
-    """Return the fixture sidecar's declared ``provenance``, or None if absent.
-
-    Every fixture under a modelo subdirectory ships a ``.json`` sidecar that
-    self-declares its provenance (``real_corpus`` | ``synthetic_generated``).
-    The gate trusts this declaration but cross-checks it against the physical
-    ``/Producer`` evidence, so a mis-stamped sidecar cannot pass. This replaces
-    the per-fixture real-anchor allowlist: a real parser-corpus anchor kept in
-    an otherwise-synthetic pool (e.g. M390 2021-0A) simply declares
-    ``real_corpus`` in its own sidecar.
-    """
-    sidecar = pdf_path.with_suffix(".json")
-    if not sidecar.is_file():
-        return None
-    value = json.loads(sidecar.read_text(encoding="utf-8")).get("provenance")
-    return str(value) if value is not None else None
-
-
-def _producer_field(pdf_path: Path) -> str | None:
-    """Return the /Producer DocInfo value for a PDF, or None if absent."""
-    with pdfplumber.open(str(pdf_path)) as pdf:
-        meta = pdf.metadata or {}
-        value = meta.get("Producer")
-        return str(value) if value else None
 
 
 def _all_fixture_pdfs(modelo_id: str) -> list[Path]:
@@ -170,32 +145,10 @@ def test_verification_source_matches_fixture_producer(
     mismatches: list[str] = []
     seen_provenances: set[str] = set()
     for pdf_path in fixture_pdfs:
-        producer = _producer_field(pdf_path)
-        is_synthetic = _SYNTHETIC_PRODUCER_SIGNATURE in (producer or "").lower()
-        provenance = _sidecar_provenance(pdf_path)
-
-        if provenance is None:
-            mismatches.append(
-                f"{pdf_path.name}: sidecar declares no provenance; every gated "
-                "fixture must self-declare real_corpus or synthetic_generated",
-            )
-            continue
-        seen_provenances.add(provenance)
-        if provenance not in _RECOGNISED_PROVENANCE:
-            mismatches.append(
-                f"{pdf_path.name}: sidecar provenance {provenance!r} is not a "
-                "recognised value (real_corpus | synthetic_generated)",
-            )
-        elif provenance == "synthetic_generated" and not is_synthetic:
-            mismatches.append(
-                f"{pdf_path.name}: sidecar declares synthetic_generated but "
-                f"/Producer={producer!r} lacks the {_SYNTHETIC_PRODUCER_SIGNATURE!r} signature",
-            )
-        elif provenance == "real_corpus" and is_synthetic:
-            mismatches.append(
-                f"{pdf_path.name}: sidecar declares real_corpus but "
-                f"/Producer={producer!r} carries the synthetic generator signature",
-            )
+        provenance = sidecar_provenance(pdf_path)
+        if provenance is not None:
+            seen_provenances.add(provenance)
+        mismatches.extend(provenance_mismatches(pdf_path))
 
     expected = _TAG_TO_PROVENANCE[verification_source]
     if expected not in seen_provenances:

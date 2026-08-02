@@ -25,7 +25,10 @@ documents and validates the transport shape emitted by :mod:`_overview`.
 
 from __future__ import annotations
 
-from pydantic import Field
+from datetime import date
+from typing import Literal
+
+from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
 from ._ledger_payloads import LedgerStatusResult
@@ -70,10 +73,10 @@ class OverviewCalendarEntryPayload(OutputSchema):
     jurisdictions: list[str] = []
     payment_cutoff_on: str | None = None
     status: str
-    user_state: str
+    user_state: Literal["due", "late", "filed", "unknown"]
     recovery: dict[str, object] | None = None
     filing_year: int | None = None
-    censo_enrolment_state: str
+    censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
     filing_evidence: OverviewCalendarFilingEvidencePayload
     source: str = "registry_deadline"
     local_work_unit_id: str | None = None
@@ -95,11 +98,11 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     modelo: str | None = None
     filing_year: int | None = None
     period: str | None = None
-    local_filing_state: str
+    local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
     local_filing_record_id: str | None = None
     local_calculation_revision_id: str | None = None
     local_filed_at: str | None = None
-    aeat_submission_state: str
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
     aeat_submitted_at: str | None = None
     aeat_reference_id: str | None = None
     aeat_snapshot_id: str | None = None
@@ -109,6 +112,15 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     justificante_required: bool
     justificante_verified: bool
     evidence_source: str | None = None
+
+    @model_validator(mode="after")
+    def _require_csv_for_verified_justificante(self) -> OverviewCalendarFilingEvidencePayload:
+        verified_state = self.aeat_submission_state == "justificante_verified"
+        if self.justificante_verified != verified_state:
+            raise ValueError("justificante_verified must agree with aeat_submission_state")
+        if verified_state != (self.verified_justificante_csv is not None):
+            raise ValueError("verified_justificante_csv must be present exactly for verified justificantes")
+        return self
 
 
 class OverviewCalendarEventPayload(OutputSchema):
@@ -121,7 +133,7 @@ class OverviewCalendarEventPayload(OutputSchema):
     themselves.
     """
 
-    event_type: str
+    event_type: Literal["filing", "message"]
     post_filing_kind: str | None = None
     event_date: str
     source: str
@@ -133,10 +145,23 @@ class OverviewCalendarEventPayload(OutputSchema):
     period: str | None = None
     status: str | None = None
     source_url: str | None = None
-    aeat_submission_state: str | None = None
+    aeat_submission_state: (
+        Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"] | None
+    ) = None
     aeat_submitted_at: str | None = None
     justificante_verified: bool | None = None
     verified_justificante_csv: str | None = None
+
+    @model_validator(mode="after")
+    def _require_event_csv_for_verified_justificante(self) -> OverviewCalendarEventPayload:
+        verified_state = self.aeat_submission_state == "justificante_verified"
+        if self.justificante_verified is True and not verified_state:
+            raise ValueError("justificante_verified requires a verified AEAT submission state")
+        if verified_state and (self.justificante_verified is not True or self.verified_justificante_csv is None):
+            raise ValueError("verified AEAT submission requires justificante CSV evidence")
+        if not verified_state and self.verified_justificante_csv is not None:
+            raise ValueError("justificante CSV evidence requires a verified AEAT submission state")
+        return self
 
 
 class OverviewCalendarWarningPayload(OutputSchema):
@@ -164,6 +189,17 @@ class OverviewCalendarRangePayload(OutputSchema):
 
     from_date: str
     to_date: str
+
+    @model_validator(mode="after")
+    def _enforce_inclusive_date_order(self) -> OverviewCalendarRangePayload:
+        try:
+            from_date = date.fromisoformat(self.from_date)
+            to_date = date.fromisoformat(self.to_date)
+        except ValueError as exc:
+            raise ValueError("calendar range dates must be ISO-8601 dates") from exc
+        if from_date > to_date:
+            raise ValueError("calendar range from_date cannot be after to_date")
+        return self
 
 
 class OverviewCalendarCompletenessPayload(OutputSchema):

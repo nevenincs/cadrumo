@@ -17,7 +17,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
+from .....application.preflight import HealthSeverity
 from .....core.config import override_settings
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -82,3 +84,16 @@ def test_config_check_flags_missing_corpus_as_red_preflight_row(tmp_path: Path) 
     assert normatives["healthy"] is False
     assert normatives["severity"] == "error"
     assert normatives["remediation"]
+
+
+def test_config_check_payload_rows_refuse_empty_ids_and_unknown_severity() -> None:
+    """The doctor transport preserves canonical dependency and preflight identifiers."""
+
+    from .._check_payloads import CheckDependencyPayload, CheckPreflightPayload
+
+    with pytest.raises(ValidationError):
+        CheckDependencyPayload(service="", available=True)
+    with pytest.raises(ValidationError):
+        CheckPreflightPayload(check="", healthy=True, severity=HealthSeverity.OK)
+    with pytest.raises(ValidationError):
+        CheckPreflightPayload(check="storage:local-root", healthy=True, severity="bogus")

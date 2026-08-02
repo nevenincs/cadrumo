@@ -24,6 +24,7 @@ for _import_root in (str(_REPO_ROOT), str(_SOURCE_ROOT)):
     if _import_root not in sys.path:
         sys.path.insert(0, _import_root)
 
+from dev.packaging._hashing import sha256_path  # noqa: E402
 from dev.packaging.cohort_manifest import (  # noqa: E402
     ArtifactKind,
     BuildIdentity,
@@ -31,7 +32,6 @@ from dev.packaging.cohort_manifest import (  # noqa: E402
     SourceIdentity,
     create_manifest,
     load_release_cohort,
-    sha256_file,
     write_manifest,
 )
 from dev.packaging.python_cohort import (  # noqa: E402
@@ -286,7 +286,7 @@ def _build_identity(clean_root: Path) -> BuildIdentity:
         uv=uv_version,
         platform=platform.system(),
         architecture=platform.machine(),
-        build_constraints_sha256=sha256_file(constraints),
+        build_constraints_sha256=sha256_path(constraints),
     )
 
 

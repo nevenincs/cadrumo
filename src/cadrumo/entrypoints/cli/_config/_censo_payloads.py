@@ -15,6 +15,9 @@ authority.
 
 from __future__ import annotations
 
+from pydantic import model_validator
+
+from ....domain.user_profile import UserProfileFact
 from .._schemas import OutputSchema, register_schema
 
 
@@ -29,6 +32,12 @@ class CensoPullFactPayload(OutputSchema):
     path: str
     value: str
     source: str
+
+    @model_validator(mode="after")
+    def _validate_canonical_profile_fact(self) -> CensoPullFactPayload:
+        """Keep the presentation row on the domain's profile path/provenance contract."""
+        UserProfileFact(path=self.path, value=self.value, source=self.source)
+        return self
 
 
 class CensoPullDivergencePayload(OutputSchema):

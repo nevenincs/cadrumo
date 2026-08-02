@@ -336,6 +336,9 @@ def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
                 divergence=decision.divergence,
                 blocked=decision.blocked,
                 stale_wallet=decision.stale_wallet,
+                reason=decision.reason,
+                wallet_captured_at=decision.wallet_captured_at,
+                decided_at=decision.decided_at,
                 authority_sources=list(decision.authority_sources),
             )
             for decision in report.authority_decisions
@@ -391,6 +394,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
             ),
         )
     for decision in report.authority_decisions:
+        wallet_captured_at = decision.wallet_captured_at.isoformat() if decision.wallet_captured_at else None
         lines.append(
             _metric_line(
                 "authority_decision",
@@ -406,6 +410,9 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                         f"divergence={decision.divergence}",
                         f"blocked={decision.blocked}",
                         f"stale_wallet={decision.stale_wallet}",
+                        f"reason={decision.reason}",
+                        f"wallet_captured_at={wallet_captured_at}",
+                        f"decided_at={decision.decided_at.isoformat()}",
                         f"taxpayer_ref={decision.taxpayer_ref}",
                     ),
                 ),
@@ -586,11 +593,12 @@ def iva_wallet_pull_evidence_cmd(
         target_period=report.target_period,
         acquisition_manifest_id=report.acquisition_manifest_id or "",
         auth=LiveIvaAuthOutcomePayload(
-            status=report.auth.status.value,
-            outcome_mode=report.auth.outcome_mode.value,
-            failure_mode=report.auth.failure_mode.value if report.auth.failure_mode else None,
-            failure_type=report.auth.failure_type,
-            provider_kind=report.auth.provider_kind,
+               status=report.auth.status,
+               outcome_mode=report.auth.outcome_mode,
+                  failure_mode=report.auth.failure_mode,
+               failure_type=report.auth.failure_type,
+               diagnostic_ref=report.auth.diagnostic_ref,
+               provider_kind=report.auth.provider_kind,
             reused_persisted_session=report.auth.reused_persisted_session,
             fresh=report.auth.fresh,
         ),
@@ -598,10 +606,10 @@ def iva_wallet_pull_evidence_cmd(
         wallet_succeeded=report.wallet_succeeded,
         outcomes=[
             LiveIvaSurfaceOutcomePayload(
-                surface=outcome.surface.value,
-                status=outcome.status.value,
-                outcome_mode=outcome.outcome_mode.value,
-                failure_mode=outcome.failure_mode.value if outcome.failure_mode else None,
+                   surface=outcome.surface,
+                   status=outcome.status,
+                   outcome_mode=outcome.outcome_mode,
+                   failure_mode=outcome.failure_mode,
                 failure_type=outcome.failure_type,
                 failure_context=outcome.failure_context,
                 captured_count=outcome.captured_count,

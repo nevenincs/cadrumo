@@ -16,4 +16,5 @@ Submodules
    cadrumo.domain.iva_compensation._balance
    cadrumo.domain.iva_compensation._carry_forward
    cadrumo.domain.iva_compensation._errors
+   cadrumo.domain.iva_compensation._filed_derivation
    cadrumo.domain.iva_compensation._reconciliation

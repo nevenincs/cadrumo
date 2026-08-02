@@ -5,11 +5,15 @@ from __future__ import annotations
 import hashlib
 import zipfile
 from collections.abc import Generator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
+from ....core import Period
+from ....domain.modelos import ModeloCode, WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     BundleVerificationState,
@@ -28,7 +32,6 @@ def _hex64(label: str) -> str:
 
 
 WU_100 = _hex64("wu-100")
-WU_1 = _hex64("wu-1")
 WU_A = _hex64("wu-A")
 WU_B = _hex64("wu-B")
 REV_1_ID = _hex64("rev-1")
@@ -36,11 +39,38 @@ FILING_1_ID = _hex64("filing-1")
 _BUCKET_ID = "41e0c259-7c89-4c5f-9908-c5d44d8d77a8"
 _BUCKET_A_ID = "2585593c-dcdb-4af7-8c1a-4852593c2d4e"
 _BUCKET_B_ID = "e46b34f4-5d44-49da-97f8-830ec116d038"
+_WORK_UNIT_CREATED_AT = datetime(2026, 8, 1, tzinfo=UTC)
+_WORK_UNIT_PERIOD = Period.from_year_and_code(2026, "0A")
+_WORK_UNIT_REVISION_ID = "r" + "0" * 63
+WU_1 = derive_work_unit_id(
+    bucket_id=_BUCKET_ID,
+    modelo="100",
+    filing_year=2026,
+    period=_WORK_UNIT_PERIOD,
+    revision_id=_WORK_UNIT_REVISION_ID,
+)
 
 
 @pytest.fixture
 def runtime_profile(tmp_path: Path) -> Generator[TestRuntimeProfile]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        WorkUnitCatalogueRepository(bucket_id=profile.bucket_id, objects=profile.repository).save(
+            WorkUnitCatalogue(
+                work_units={
+                    WU_1: WorkUnit(
+                        work_unit_id=WU_1,
+                        bucket_id=profile.bucket_id,
+                        modelo=ModeloCode("100"),
+                        filing_year=2026,
+                        period=_WORK_UNIT_PERIOD,
+                        revision_id=_WORK_UNIT_REVISION_ID,
+                        name="100-2026-0A",
+                        created_at=_WORK_UNIT_CREATED_AT,
+                        updated_at=_WORK_UNIT_CREATED_AT,
+                    ),
+                },
+            ),
+        )
         yield profile
 
 
@@ -178,6 +208,28 @@ class TestVerify:
         )
         assert report.verification_state is BundleVerificationState.INCOMPLETE
         assert report.completeness_ratio == 0.5
+
+    def test_check_fails_when_manifest_work_unit_is_not_persisted(
+        self,
+        runtime_profile: TestRuntimeProfile,
+        payloads: dict[tuple[str, str], bytes],
+    ) -> None:
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(
+            bucket_id=runtime_profile.bucket_id,
+            work_unit_id=WU_100,
+            record_payloads=payloads,
+        )
+
+        report = svc.check(
+            bucket_id=runtime_profile.bucket_id,
+            bundle_id=added.bundle_id,
+            record_payloads=payloads,
+        )
+
+        assert report.verification_state is BundleVerificationState.FAILED
+        work_unit_finding = next(f for f in report.findings if f.check is VerificationCheck.WORK_UNIT_BINDING)
+        assert work_unit_finding.passed is False
 
 
 class TestExport:

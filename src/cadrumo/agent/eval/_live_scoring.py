@@ -27,6 +27,7 @@ from typing import Protocol
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._models import (
+    LIFECYCLE_STAGE_ORDER,
     GoldenScenario,
     LiveInvariantVerdict,
     LiveTrajectory,
@@ -34,16 +35,6 @@ from ._models import (
 )
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
-
-# Mirrors the runner's lifecycle stage order (kept as data here; the runner
-# owns the declared-trajectory variant of the same assertion).
-_LIFECYCLE_ORDER: tuple[str, ...] = (
-    "modelo.work.create",
-    "modelo.work.calculate",
-    "modelo.work.verify",
-    "modelo.export",
-)
-
 
 class FaithfulnessCheckFn(Protocol):
     """The real ``faithfulness_check`` signature, caller-injected."""
@@ -141,7 +132,7 @@ def score_live_trajectory(
     positions: dict[str, int] = {}
     for index, key in enumerate(observed):
         positions.setdefault(key, index)
-    present = [stage for stage in _LIFECYCLE_ORDER if stage in positions]
+    present = [stage for stage in LIFECYCLE_STAGE_ORDER if stage in positions]
     lifecycle_ordered = all(positions[earlier] < positions[later] for earlier, later in pairwise(present))
     if not lifecycle_ordered:
         failures.append("observed trajectory violates the create -> calculate -> verify -> export lifecycle order")

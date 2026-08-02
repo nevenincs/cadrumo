@@ -20,7 +20,7 @@ from decimal import Decimal
 
 import pytest
 
-from .. import coerce_decimal
+from .. import coerce_decimal, coerce_finite_european_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -95,3 +95,12 @@ def test_coerce_decimal_debug_log_omits_raw_malformed_value(
     assert getattr(relevant[0], "default_is_none", None) is True
     assert getattr(relevant[0], "error_type", None) == "InvalidOperation"
     assert raw_value not in relevant[0].getMessage()
+
+
+def test_coerce_finite_european_decimal_preserves_amount_and_refuses_non_finite_values() -> None:
+    """The tolerant spreadsheet boundary retains Spanish amount semantics without admitting non-finite Decimal."""
+    assert coerce_finite_european_decimal("1.234,56") == Decimal("1234.56")
+    assert coerce_finite_european_decimal("10000.50") == Decimal("10000.50")
+
+    for raw_value in ("not-a-number", "NaN", "Infinity", "-Infinity"):
+        assert coerce_finite_european_decimal(raw_value) is None, raw_value

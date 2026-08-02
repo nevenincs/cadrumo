@@ -37,6 +37,8 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ...core import Period as _Period
+from ...domain.modelos import is_justificante_backed_external_evidence
+from ..calculations import is_official_aeat_observation_source
 from ._calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEvent,
@@ -51,20 +53,6 @@ if TYPE_CHECKING:
     from ...domain.modelos import ModeloRecord
     from ..live import JustificanteCaptureSnapshot
 
-_JUSTIFICANTE_BACKED_EVIDENCE_KINDS = frozenset(
-    {
-        "aeat_csv_register",
-        "aeat_justificante_pdf",
-        "aeat_live_capture",
-    },
-)
-_OFFICIAL_CALCULATION_SOURCE_KINDS = frozenset(
-    {
-        "aeat_sede_justificante",
-        "aeat_sede_live_capture",
-        "aeat_csv_register",
-    },
-)
 _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = MappingProxyType(
     {
         OverviewAeatSubmissionState.NOT_OBSERVED: 0,
@@ -250,7 +238,7 @@ def _filing_axes_from_modelo_record(
         kind = getattr(external_evidence, "kind", None)
         aeat_evidence_kind = str(getattr(kind, "value", kind))
         aeat_reference_id = str(external_evidence.reference_id)
-        if aeat_accepted and aeat_evidence_kind in _JUSTIFICANTE_BACKED_EVIDENCE_KINDS:
+        if aeat_accepted and is_justificante_backed_external_evidence(external_evidence.kind):
             verified_justificante = _modelo_record_verified_justificante(
                 modelo=modelo,
                 filing_year=filing_year,
@@ -322,11 +310,11 @@ def _justificante_matches_calendar_target(
     period: _Period,
     expected_tax_id: str,
 ) -> bool:
-    return (
-        justificante.tax_id.strip().upper() == expected_tax_id.strip().upper()
-        and justificante.modelo.strip() == modelo
-        and str(justificante.ejercicio or "").strip() == str(filing_year)
-        and justificante.period == period
+    return justificante.matches_filing_target(
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        tax_id=expected_tax_id,
     )
 
 
@@ -459,7 +447,7 @@ def _filing_evidence_from_calculation_observation(
     otherwise the row remains submitted-observed evidence.
     """
     source_kind = str(getattr(payload, "source_kind", ""))
-    if source_kind not in _OFFICIAL_CALCULATION_SOURCE_KINDS:
+    if not is_official_aeat_observation_source(source_kind):
         return None
     source_metadata = getattr(payload, "source_metadata", None)
     source_metadata = source_metadata if isinstance(source_metadata, Mapping) else {}

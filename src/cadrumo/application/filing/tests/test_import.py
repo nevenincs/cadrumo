@@ -22,6 +22,7 @@ from ....core.errors import resolve_error_message
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.filing import ModeloImportError
 from ....domain.justificante import Justificante, JustificanteParseError
+from ....domain.submission import make_submission_id
 from ....tests import FIXTURES_DIR
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from .. import ModeloOperatorProfile, build_draft, import_filing_from_justificante
@@ -151,6 +152,52 @@ def test_submission_record_preserves_typed_draft_period(
 
     assert submission.period == period
     assert submission.model_dump(mode="json")["period"] == {"filing_year": 2026, "code": "1T"}
+    assert submission.submission_id == make_submission_id(draft.draft_id, 1)
+
+
+def test_submission_record_preserves_an_aware_receipt_instant(
+    schema_provider: RegistrySchemaAccessor,
+) -> None:
+    period = Period.from_year_and_code(2026, "1T")
+    draft = build_draft(
+        modelo="130",
+        period=period,
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Aware import test"),
+        inputs={
+            _M130_INGRESOS_CASILLA: Decimal("100"),
+            _M130_GASTOS_CASILLA: Decimal("25"),
+            _M130_PAGOS_PREVIOS_CASILLA: Decimal("0"),
+            _M130_RETENCIONES_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+            _M130_PRIOR_RETURN_CASILLA: Decimal("0"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-pagos-fraccionados-anteriores": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+        schema_provider=schema_provider,
+    )
+    presented_at = datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC)
+    justificante = Justificante(
+        csv="ABCD1234EFGH5678",
+        modelo="130",
+        period=period,
+        ejercicio="2026",
+        presentation_id="1302026ABCD1234",
+        presented_at=presented_at,
+        tax_id="12345678Z",
+        total_a_ingresar=Decimal("10.00"),
+        verification_url=AnyHttpUrl(justificante_cotejo_url("ABCD1234EFGH5678")),
+        source_pdf_path=Path("var") / "justificantes" / "modelo_130_2026Q1.pdf",
+        source_pdf_sha256="a" * 64,
+        parsed_at=datetime(2026, 4, 10, 9, 25, tzinfo=UTC),
+    )
+
+    submission = _build_submission_record(justificante=justificante, draft=draft)
+
+    assert submission.submitted_at == presented_at
+    assert submission.attempts[0].started_at == presented_at
 
 
 class TestImportFromJustificante:

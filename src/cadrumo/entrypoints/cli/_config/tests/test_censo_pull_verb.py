@@ -27,7 +27,9 @@ from typing import Any
 
 import pytest
 import typer
+from pydantic import ValidationError
 
+from .....application.user_profile import CENSO_SOURCE_TAG
 from .....core.config import Settings
 from .....tests.cli_runner import invoke_cached_cli
 from .. import _censo_file
@@ -176,6 +178,22 @@ def test_preview_is_the_default_posture() -> None:
     """``--apply`` defaults to off, so an unqualified pull writes nothing."""
     apply_param = next(param for param in _censo_commands()["pull"].params if "--apply" in param.opts)
     assert apply_param.default is False
+
+
+@pytest.mark.parametrize(
+    ("path", "source"),
+    [
+        ("bad", CENSO_SOURCE_TAG),
+        ("", CENSO_SOURCE_TAG),
+        ("contact.postcode", "bogus"),
+        ("contact.postcode", "x" * 81),
+    ],
+)
+def test_censo_pull_fact_payload_refuses_noncanonical_path_or_provenance(path: str, source: str) -> None:
+    """Censo fact rows inherit the same path/provenance validation as stored facts."""
+
+    with pytest.raises(ValidationError):
+        CensoPullFactPayload(path=path, value="28013", source=source)
 
 
 def test_a_cleared_path_is_not_reported_as_a_declared_value() -> None:

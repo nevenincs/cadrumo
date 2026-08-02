@@ -33,10 +33,19 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ...adapters.outbound.aeat.export._errors import AeatExportFormatError
+from ...adapters.outbound.aeat.export._formats._record_spec import (
+    FicheroBoeEncoding,
+    FieldKind,
+    Justification,
+    SignedMode,
+    record_field,
+)
+from ...adapters.outbound.aeat.export._formats._serialise import render_record_body
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, validated_casilla_id_map
@@ -45,7 +54,6 @@ from ...core.errors import resolve_error_message
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId, IdentityError, validate_spanish_tax_id
 from ...core.logging import get_logger
-from ...core.money import round_to_cents
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.buckets import (
@@ -57,7 +65,6 @@ from ...domain.buckets import (
 from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaFieldKind,
-    ExportFieldDefinition,
     ExportRecordDefinition,
     RegistrySnapshot,
     casillas_by_id,
@@ -625,148 +632,21 @@ def _validation_issue_summary(result: M145CommunicationValidationResult) -> str:
     return ", ".join(issue_kinds)
 
 
-def _export_record_length(record: ExportRecordDefinition) -> int:
-    fields_with_offsets = tuple(
-        field for field in record.fields if field.offset is not None and field.length is not None
-    )
-    if not fields_with_offsets:
-        raise M145CommunicationRecordExportError(
-            f"Modelo 145 export record {record.id!r} declares no fixed-width fields",
-            context={"export_record_id": record.id, "reason": "no_fixed_width_fields"},
-        )
-    return max((field.offset or 0) + (field.length or 0) - 1 for field in fields_with_offsets)
+def _m145_fichero_encoding(encoding: str) -> FicheroBoeEncoding:
+    """Map the registry's Latin-1 spelling to the shared encoder vocabulary."""
+    if encoding == "latin-1":
+        return "iso-8859-1"
+    return cast(FicheroBoeEncoding, encoding)
 
 
-def _pad_character(field: ExportFieldDefinition) -> str:
-    match field.padding:
-        case "left_zero":
-            return "0"
-        case "left_space" | "right_space":
-            return " "
-        case "none":
-            return ""
-        case _:
-            raise M145CommunicationRecordExportError(
-                f"Modelo 145 export field {field.id!r} uses unsupported padding {field.padding!r}",
-                context={"export_field_id": field.id, "padding": field.padding, "reason": "unsupported_padding"},
-            )
-
-
-def _encode_fixed_width_value(value: str, *, field: ExportFieldDefinition, encoding: str) -> bytes:
-    if field.length is None:
-        raise M145CommunicationRecordExportError(
-            f"Modelo 145 export field {field.id!r} lacks a fixed length",
-            context={"export_field_id": field.id, "reason": "missing_length"},
-        )
-    try:
-        raw = value.encode(encoding)
-    except UnicodeEncodeError as exc:
-        raise M145CommunicationRecordExportError(
-            f"Modelo 145 export field {field.id!r} contains characters not encodable as {encoding!r}",
-            context={"export_field_id": field.id, "encoding": encoding, "reason": "encoding"},
-        ) from exc
-    if len(raw) > field.length:
-        raise M145CommunicationRecordExportError(
-            f"Modelo 145 export field {field.id!r} overflows length {field.length}; "
-            f"encoded value needs {len(raw)} bytes",
-            context={
-                "export_field_id": field.id,
-                "length": field.length,
-                "encoded_length": len(raw),
-                "reason": "overflow",
-            },
-        )
-    pad_character = _pad_character(field)
-    if not pad_character:
-        if len(raw) != field.length:
-            raise M145CommunicationRecordExportError(
-                f"Modelo 145 export field {field.id!r} must encode exactly {field.length} bytes; got {len(raw)}",
-                context={
-                    "export_field_id": field.id,
-                    "length": field.length,
-                    "encoded_length": len(raw),
-                    "reason": "exact_length",
-                },
-            )
-        return raw
-    pad = pad_character.encode(encoding)
-    padding = pad * (field.length - len(raw))
-    match field.justification:
-        case "left":
-            return raw + padding
-        case "right":
-            return padding + raw
-        case "none":
-            if padding:
-                raise M145CommunicationRecordExportError(
-                    f"Modelo 145 export field {field.id!r} cannot pad with justification='none'",
-                    context={"export_field_id": field.id, "reason": "unsupported_justification"},
-                )
-            return raw
-        case _:
-            raise M145CommunicationRecordExportError(
-                f"Modelo 145 export field {field.id!r} uses unsupported justification {field.justification!r}",
-                context={
-                    "export_field_id": field.id,
-                    "justification": field.justification,
-                    "reason": "unsupported_justification",
-                },
-            )
-
-
-def _money_export_digits(value: str, *, field: ExportFieldDefinition) -> str:
-    if not value.strip():
-        return ""
-    amount = coerce_decimal_strict(value.strip())
-    if amount < 0 and not field.signed:
-        raise M145CommunicationRecordExportError(
-            f"Modelo 145 export field {field.id!r} cannot encode a negative amount",
-            context={"export_field_id": field.id, "reason": "negative_amount"},
-        )
-    cents = int(round_to_cents(abs(amount)) * Decimal("100"))
-    return str(cents)
-
-
-def _field_export_text(
-    field: ExportFieldDefinition,
-    *,
+def _m145_export_inputs(
+    record_definition: ExportRecordDefinition,
     record: M145CommunicationRecord,
-) -> str:
-    match field.kind:
-        case CasillaFieldKind.LITERAL:
-            return field.literal or ""
-        case CasillaFieldKind.FILLER:
-            return ""
-        case CasillaFieldKind.CASILLA:
-            if field.casilla_id is None:
-                raise M145CommunicationRecordExportError(
-                    f"Modelo 145 export field {field.id!r} has no casilla id",
-                    context={"export_field_id": field.id, "reason": "missing_casilla"},
-                )
-            value = record.field_values.get(field.casilla_id, "")
-            match field.data_type:
-                case "money":
-                    return _money_export_digits(value, field=field)
-                case "integer":
-                    return str(int(value.strip())) if value.strip() else ""
-                case "text":
-                    return value
-                case _:
-                    raise M145CommunicationRecordExportError(
-                        f"Modelo 145 export field {field.id!r} uses unsupported data_type {field.data_type!r}",
-                        context={"export_field_id": field.id, "data_type": field.data_type, "reason": "data_type"},
-                    )
-        case _:
-            raise M145CommunicationRecordExportError(
-                f"Modelo 145 export field {field.id!r} uses unsupported kind {field.kind!r}",
-                context={"export_field_id": field.id, "kind": str(field.kind), "reason": "field_kind"},
-            )
-
-
-def _render_m145_export_record(record_definition: ExportRecordDefinition, record: M145CommunicationRecord) -> bytes:
-    encoding = record_definition.encoding
-    total_length = _export_record_length(record_definition)
-    payload = bytearray(b" " * total_length)
+) -> tuple[tuple[object, ...], dict[str, str], dict[CasillaId, object], int]:
+    """Adapt one M145 registry record into canonical fixed-width encoder inputs."""
+    specs = []
+    headers: dict[str, str] = {}
+    casilla_values: dict[CasillaId, Decimal] = {}
     for field in sorted(
         record_definition.fields,
         key=lambda item: (-1 if item.offset is None else item.offset, item.id),
@@ -776,11 +656,107 @@ def _render_m145_export_record(record_definition: ExportRecordDefinition, record
                 f"Modelo 145 export field {field.id!r} lacks fixed-width coordinates",
                 context={"export_field_id": field.id, "reason": "missing_coordinates"},
             )
-        text = _field_export_text(field, record=record)
-        encoded = _encode_fixed_width_value(text, field=field, encoding=encoding)
-        start = field.offset - 1
-        payload[start : start + field.length] = encoded
-    return bytes(payload) + _LINE_ENDINGS[record_definition.line_ending]
+        justification = Justification.LEFT if field.justification == "left" else Justification.RIGHT
+        pad_char = "0" if field.padding == "left_zero" else " "
+        if field.kind is CasillaFieldKind.LITERAL:
+            specs.append(
+                record_field(
+                    offset=field.offset,
+                    length=field.length,
+                    field_id=field.id,
+                    kind=FieldKind.RESERVED,
+                    literal_value=field.literal or "",
+                ),
+            )
+            continue
+        if field.kind is CasillaFieldKind.FILLER:
+            headers[field.id] = ""
+            specs.append(
+                record_field(
+                    offset=field.offset,
+                    length=field.length,
+                    field_id=field.id,
+                    kind=FieldKind.ALPHANUMERIC,
+                    justification=justification,
+                    pad_char=pad_char,
+                ),
+            )
+            continue
+        if field.kind is not CasillaFieldKind.CASILLA or field.casilla_id is None:
+            raise M145CommunicationRecordExportError(
+                f"Modelo 145 export field {field.id!r} cannot be mapped to the canonical encoder",
+                context={"export_field_id": field.id, "reason": "field_kind"},
+            )
+        value = record.field_values.get(field.casilla_id, "")
+        if field.data_type == "money":
+            if value.strip():
+                try:
+                    casilla_values[field.casilla_id] = Decimal(value.strip())
+                except InvalidOperation as exc:
+                    raise M145CommunicationRecordExportError(
+                        f"Modelo 145 export field {field.id!r} has an invalid money value",
+                        context={"export_field_id": field.id, "reason": "money_value"},
+                    ) from exc
+            specs.append(
+                record_field(
+                    offset=field.offset,
+                    length=field.length,
+                    field_id=field.id,
+                    casilla_id=field.casilla_id,
+                    kind=FieldKind.CURRENCY,
+                    justification=justification,
+                    pad_char=pad_char,
+                    signed_mode=SignedMode.INLINE_SIGN if field.signed else SignedMode.UNSIGNED,
+                ),
+            )
+            continue
+        if field.data_type == "integer":
+            try:
+                headers[field.id] = str(int(value.strip())) if value.strip() else ""
+            except ValueError as exc:
+                raise M145CommunicationRecordExportError(
+                    f"Modelo 145 export field {field.id!r} has an invalid integer value",
+                    context={"export_field_id": field.id, "reason": "integer_value"},
+                ) from exc
+            kind = FieldKind.NUMERIC
+        elif field.data_type == "text":
+            headers[field.id] = value
+            kind = FieldKind.ALPHANUMERIC
+        else:
+            raise M145CommunicationRecordExportError(
+                f"Modelo 145 export field {field.id!r} uses unsupported data_type {field.data_type!r}",
+                context={"export_field_id": field.id, "data_type": field.data_type, "reason": "data_type"},
+            )
+        specs.append(
+            record_field(
+                offset=field.offset,
+                length=field.length,
+                field_id=field.id,
+                kind=kind,
+                justification=justification,
+                pad_char=pad_char,
+            ),
+        )
+    total_length = max(spec.offset + spec.length - 1 for spec in specs)
+    return tuple(specs), headers, casilla_values, total_length
+
+
+def _render_m145_export_record(record_definition: ExportRecordDefinition, record: M145CommunicationRecord) -> bytes:
+    specs, headers, casilla_values, total_length = _m145_export_inputs(record_definition, record)
+    try:
+        body = render_record_body(
+            casilla_values=casilla_values,
+            headers=headers,
+            specs=specs,
+            encoding=_m145_fichero_encoding(record_definition.encoding),
+            total_length=total_length,
+        )
+    except AeatExportFormatError as exc:
+        raise M145CommunicationRecordExportError(
+            f"Modelo 145 export record {record_definition.id!r} could not be rendered: {exc}",
+            context={"export_record_id": record_definition.id, "reason": "canonical_fixed_width_encoder"},
+        ) from exc
+    return body + _LINE_ENDINGS[record_definition.line_ending]
 
 
 def export_m145_communication_record(

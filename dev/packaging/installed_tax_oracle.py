@@ -12,14 +12,18 @@ import json
 import os
 import re
 import secrets
-import subprocess
-import time
+import sys
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from dev.packaging._command import CommandResult, run_command  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -66,27 +70,6 @@ class InstalledTaxOracleError(RuntimeError):
 
 
 @dataclass(frozen=True)
-class CommandEvidence:
-    """One public command invocation retained by the installed oracle.
-
-    ``started_at`` / ``completed_at`` are timezone-aware ISO-8601 wall-clock
-    stamps bracketing the subprocess, and ``cwd`` is the execution directory.
-    They carry the fields a tamper-evident
-    :class:`~dev.packaging.evidence.DistributionEvidence` command transcript
-    requires, captured at run time rather than reconstructed afterwards.
-    """
-
-    argv: tuple[str, ...]
-    duration_seconds: float
-    returncode: int
-    stdout: str
-    stderr: str
-    started_at: str
-    completed_at: str
-    cwd: str
-
-
-@dataclass(frozen=True)
 class InstalledTaxEvidence:
     """Evidence proving installed CLI calculation and persistence behavior."""
 
@@ -103,11 +86,25 @@ class InstalledTaxEvidence:
     source_refs: tuple[str, ...]
     notice_codes: tuple[str, ...]
     checkout_imports_removed: bool
-    commands: tuple[CommandEvidence, ...]
+    commands: tuple[CommandResult, ...]
 
     def to_jsonable(self) -> dict[str, Any]:
         """Return a JSON-compatible evidence mapping."""
-        return asdict(self)
+        document = asdict(self)
+        document["commands"] = [
+            {
+                "argv": list(command.argv),
+                "cwd": command.cwd,
+                "started_at": command.started_at.isoformat(),
+                "completed_at": command.completed_at.isoformat(),
+                "duration_seconds": command.duration_seconds,
+                "returncode": command.returncode,
+                "stdout": command.stdout,
+                "stderr": command.stderr,
+            }
+            for command in self.commands
+        ]
+        return document
 
 
 def checkout_imports_removed(environment: Mapping[str, str]) -> bool:
@@ -229,37 +226,19 @@ def _run(
     cwd: Path,
     env: dict[str, str],
     timeout_seconds: float,
-) -> CommandEvidence:
-    started = time.monotonic()
-    started_at = datetime.now(UTC)
-    completed = subprocess.run(  # noqa: S603 - fixed public executable and declarative argv
+) -> CommandResult:
+    result = run_command(
         argv,
         cwd=cwd,
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-        errors="strict",
-        timeout=timeout_seconds,
-        check=False,
+        environment=env,
+        timeout_seconds=timeout_seconds,
     )
-    completed_at = datetime.now(UTC)
-    evidence = CommandEvidence(
-        argv=argv,
-        duration_seconds=round(time.monotonic() - started, 3),
-        returncode=completed.returncode,
-        stdout=completed.stdout,
-        stderr=completed.stderr,
-        started_at=started_at.isoformat(),
-        completed_at=completed_at.isoformat(),
-        cwd=str(cwd),
-    )
-    if completed.returncode != 0:
+    if result.returncode != 0:
         raise InstalledTaxOracleError(
-            f"installed command failed ({completed.returncode}): {argv!r}\n"
-            f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
+            f"installed command failed ({result.returncode}): {argv!r}\n"
+            f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}",
         )
-    return evidence
+    return result
 
 
 def assert_envelope_contract(
@@ -309,7 +288,7 @@ def assert_no_diagnostic_notices(
         raise error(f"{command} emitted unexpected diagnostic notices: {diagnostics!r}")
 
 
-def _json_envelope(evidence: CommandEvidence, *, expected_command: str) -> dict[str, Any]:
+def _json_envelope(evidence: CommandResult, *, expected_command: str) -> dict[str, Any]:
     try:
         document = json.loads(evidence.stdout)
     except json.JSONDecodeError as exc:
@@ -390,7 +369,7 @@ def run_installed_tax_oracle(
     resolved_work_dir.mkdir(parents=True, exist_ok=True)
     environment = isolated_product_environment(storage_root)
     base = (str(resolved_cli), "--format", "json")
-    commands: list[CommandEvidence] = []
+    commands: list[CommandResult] = []
 
     version = _run(
         (str(resolved_cli), "--version"),

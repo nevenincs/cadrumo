@@ -35,6 +35,7 @@ from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+from pydantic import ValidationError
 
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
@@ -160,6 +161,23 @@ def test_collab_recipient_add_rejects_malformed_public_key(tmp_path: Path) -> No
             ["config", "collab", "recipient", "add", "someone", "--public-key", "not-hex"],
         )
         assert result.exit_code != 0, result.output
+
+
+def test_recipient_payload_refuses_an_arbitrary_fingerprint() -> None:
+    """The displayed trust fingerprint is always derived from the registered key."""
+
+    from datetime import UTC, datetime
+
+    from .._collab_payloads import RecipientFingerprintRowPayload
+
+    with pytest.raises(ValidationError, match="fingerprint_sha256"):
+        RecipientFingerprintRowPayload(
+            recipient_id="my-accountant",
+            label="My accountant",
+            public_key_hex=_fresh_public_key_hex(),
+            fingerprint_sha256="0" * 64,
+            added_at=datetime(2026, 8, 1, tzinfo=UTC),
+        )
 
 
 def test_collab_recipient_remove_unknown_id_refuses(tmp_path: Path) -> None:

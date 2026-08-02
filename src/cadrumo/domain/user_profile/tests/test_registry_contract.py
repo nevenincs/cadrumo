@@ -8,9 +8,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....core.errors import BaseSeverity
 from ....core.resources import resources
 from .. import (
-    UserProfileRegistryContractSeverity,
+    UserProfileRegistryContractIssue,
     build_user_profile_selector_index,
     load_user_profile_schema,
     profile_binding_selectors,
@@ -23,6 +24,30 @@ if TYPE_CHECKING:  # pragma: no cover
     from .._schema import ProfileSchemaDefinition
 
 _MODELO_100_ANUALIDADES_YEARS = (2021, 2022, 2023)
+
+
+def test_registry_contract_issue_uses_base_severity_but_refuses_info() -> None:
+    issue = UserProfileRegistryContractIssue(
+        severity=BaseSeverity.WARNING,
+        modelo_id="303",
+        revision_id="2025",
+        surface="binding",
+        construct_id="binding-iva-regime",
+        selector="iva.regime",
+        message="profile selector needs review",
+    )
+
+    assert issue.severity is BaseSeverity.WARNING
+    with pytest.raises(ValueError, match="Input should be"):
+        UserProfileRegistryContractIssue(
+            severity=BaseSeverity.INFO,
+            modelo_id="303",
+            revision_id="2025",
+            surface="binding",
+            construct_id="binding-iva-regime",
+            selector="iva.regime",
+            message="informational findings are not part of this contract",
+        )
 
 
 def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
@@ -104,7 +129,7 @@ def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema(
         for issue in report.errors
     ]
     assert report.valid, "\n".join(blocking)
-    assert all(issue.severity is not UserProfileRegistryContractSeverity.ERROR for issue in report.issues)
+    assert all(issue.severity is not BaseSeverity.ERROR for issue in report.issues)
     # Every WARNING must be the tolerated "export header not yet
     # classified" kind: committed layouts carry header fields whose
     # selectors are per-filing flags (e.g. declaracion_complementaria),

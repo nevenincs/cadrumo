@@ -7,11 +7,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....adapters.outbound.storage import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
     OutboundStorageNotFoundError,
     OutboundStorageValidationError,
+    ProviderKind,
     RemoteMirrorNamespaceManifest,
     build_remote_mirror_namespace_manifest,
     put_remote_mirror_namespace_manifest,
@@ -30,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_google_sync_probe_payload_accepts_unknown_root_folder_presence() -> None:
     result = GoogleSyncProbeResult(
         profile="profile-id",
-        provider_kind="local_filesystem",
+        provider_kind=ProviderKind.LOCAL_FILESYSTEM,
         reachable=True,
         writable=False,
         read_only=True,
@@ -41,6 +43,22 @@ def test_google_sync_probe_payload_accepts_unknown_root_folder_presence() -> Non
 
     assert result.root_folder_present is None
     assert result.model_dump()["root_folder_present"] is None
+
+
+@pytest.mark.parametrize("provider_kind", ["", "bogus"])
+def test_google_sync_probe_payload_refuses_unknown_provider_kind(provider_kind: str) -> None:
+    """The CLI probe contract admits only storage backends the provider can report."""
+
+    with pytest.raises(ValidationError, match="ProviderKind"):
+        GoogleSyncProbeResult(
+            profile="profile-id",
+            provider_kind=provider_kind,
+            reachable=True,
+            writable=False,
+            read_only=True,
+            root_folder_present=None,
+            root_folder_id="",
+        )
 
 
 def test_google_sync_push_persists_manifest_matching_uploaded_ciphertext_objects(tmp_path: Path) -> None:

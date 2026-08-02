@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.aeat.export._formats._serialise import render_record_body
 from ....core.resources import resources
 from ....domain.calculations.registry import ExportFieldDefinition, ResolvedExportLayout, resolve_export_layout
 from ....tests.secure_sql import isolated_runtime_profile
@@ -29,6 +30,7 @@ from .. import (
     create_m145_communication_record,
     export_m145_communication_record,
 )
+from .._m145_communication_records import _m145_export_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -113,6 +115,36 @@ def test_export_m145_communication_record_applies_registry_numeric_and_money_pad
     assert _payload_slice(result.payload, descendant_year) == b"2010"
     assert _payload_slice(result.payload, compensation) == f"{123456:017d}".encode()
     assert _payload_slice(result.payload, absent_ascendant_year) == b"0000"
+
+
+def test_export_m145_communication_record_matches_canonical_encoder_for_money_and_text(tmp_path: Path) -> None:
+    """The registry layout's text and monetary fields share the generic byte encoder."""
+    resolved = _resolved_layout()
+    record_definition = resolved.layout.records[0]
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        record = create_m145_communication_record(
+            M145CommunicationCreateCommand(
+                communication_year=2026,
+                field_values=_field_values(
+                    **{
+                        "perceptor.primer-apellido": "García",
+                        "pension-compensatoria.importe-anual": "1234.56",
+                    },
+                ),
+            ),
+            bucket_id=runtime.bucket_id,
+        )
+        result = export_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+
+    specs, headers, casilla_values, total_length = _m145_export_inputs(record_definition, record)
+    canonical_body = render_record_body(
+        casilla_values=casilla_values,
+        headers=headers,
+        specs=specs,
+        encoding="iso-8859-1",
+        total_length=total_length,
+    )
+    assert result.payload == canonical_body
 
 
 def test_export_m145_communication_record_refuses_invalid_record(tmp_path: Path) -> None:

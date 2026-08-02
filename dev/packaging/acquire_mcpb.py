@@ -17,7 +17,6 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
 import sys
 import urllib.request
 import zipfile
@@ -38,6 +37,7 @@ from dev.packaging._acquire_common import (  # noqa: E402
     require_command_succeeded,
     verify_artifact_digest,
 )
+from dev.packaging._command import run_command  # noqa: E402
 from dev.packaging.cohort_manifest import LoadedReleaseCohort, load_release_cohort  # noqa: E402
 from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
 from dev.packaging.evidence import (  # noqa: E402
@@ -109,7 +109,7 @@ def _download_bundle(
     if resolved_gh is None:
         raise AcquisitionError("gh not found on PATH; pass --mcpb-url or --gh to fetch the published bundle")
     gh = Path(resolved_gh)
-    completed = subprocess.run(  # noqa: S603 - resolved gh executable and declarative argv
+    completed = run_command(
         [
             str(gh),
             "release",
@@ -123,12 +123,9 @@ def _download_bundle(
             "*.mcpb",
             "--skip-existing",
         ],
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
+        cwd=dist,
+        timeout_seconds=timeout_seconds,
         errors="replace",
-        check=False,
-        timeout=timeout_seconds,
     )
     (logs / "gh-mcpb-download.log").write_text(
         f"exit_code={completed.returncode}\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",

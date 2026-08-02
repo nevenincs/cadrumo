@@ -42,6 +42,7 @@ from ...domain.modelos import (
     VerificationCompletenessStatus,
     VerificationReportCatalogue,
     VerificationReportCatalogueRepositoryProtocol,
+    is_justificante_backed_external_evidence,
 )
 from ._cross_period_models import (
     CrossPeriodCleanStateBlocker,
@@ -58,30 +59,13 @@ from ._cross_period_models import (
     _period_strictly_before_activity_start,
 )
 from ._m111_no_retenciones import is_m111_no_retenciones_period
-from ._observations_repository import CalculationObservationRepository
+from ._observations_repository import (
+    CalculationObservationRepository,
+    ObservationSourceKind,
+    is_official_aeat_observation_source,
+)
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
-
-_OFFICIAL_SOURCE_KINDS: Final = frozenset(
-    {
-        "aeat_sede_justificante",
-        "aeat_sede_live_capture",
-        "aeat_csv_register",
-    },
-)
-_JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS: Final = frozenset(
-    {
-        # A CSV-register import is filing-grade only after the CSV resolves to
-        # persisted justificante metadata and the receipt matches the filing.
-        "aeat_csv_register",
-        "aeat_justificante_pdf",
-        # A live-captured justificante is the authentic AEAT-signed receipt
-        # pulled read-only from the sede (the same PDF an operator would
-        # download and import as aeat_justificante_pdf), so it satisfies the
-        # justificante-verification gate.
-        "aeat_live_capture",
-    },
-)
 
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
@@ -672,7 +656,7 @@ def _aeat_register_provenance_blockers(
     *,
     expected_tax_id: str | None,
 ) -> list[CrossPeriodCleanStateBlocker]:
-    if payload.source_kind not in _OFFICIAL_SOURCE_KINDS:
+    if not is_official_aeat_observation_source(payload.source_kind):
         return []
     metadata = payload.source_metadata
     if not metadata:
@@ -799,7 +783,7 @@ def _resolve_observation_values(
     observation_values: dict[CasillaId, object] = {}
     if requirement.requires_member_fan_in and value_member_payloads:
         observation_source_kind = _combined_source_kind(item.source_kind for item in value_member_payloads)
-        if any(item.source_kind == "operator_manual" for item in value_member_payloads):
+        if any(item.source_kind is ObservationSourceKind.OPERATOR_MANUAL for item in value_member_payloads):
             blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
         for item in value_member_payloads:
             for casilla_id in requirement.source_casilla_ids:
@@ -810,7 +794,7 @@ def _resolve_observation_values(
     else:
         observation_source_kind = payload.source_kind
         observation_values = dict(payload.observation.casilla_values)
-        if payload.source_kind == "operator_manual":
+        if payload.source_kind is ObservationSourceKind.OPERATOR_MANUAL:
             blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
         for casilla_id in requirement.source_casilla_ids:
             if casilla_id not in observation_values:
@@ -981,9 +965,9 @@ def _filing_external_evidence_blockers(
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE)
     if filing.external_evidence is None:
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE)
-        if observation_source_kind not in _OFFICIAL_SOURCE_KINDS:
+        if not is_official_aeat_observation_source(observation_source_kind or ""):
             blockers.append(CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE)
-    elif filing.external_evidence.kind.value not in _JUSTIFICANTE_VERIFIED_EXTERNAL_EVIDENCE_KINDS:
+    elif not is_justificante_backed_external_evidence(filing.external_evidence.kind):
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION)
     else:
         justificante = justificante_repository.load(filing.external_evidence.reference_id)
@@ -1042,12 +1026,11 @@ def _justificante_matches_filing(
     expected_tax_id = filing.member_nif or taxpayer_tax_id
     if expected_tax_id is None or not expected_tax_id.strip():
         return False
-    tax_id_matches = justificante.tax_id.strip().upper() == expected_tax_id.strip().upper()
-    return (
-        justificante.modelo.strip() == str(filing.modelo)
-        and str(justificante.ejercicio or "").strip() == str(filing.filing_year)
-        and justificante.period == filing.period
-        and tax_id_matches
+    return justificante.matches_filing_target(
+        modelo=str(filing.modelo),
+        filing_year=filing.filing_year,
+        period=filing.period,
+        tax_id=expected_tax_id,
     )
 
 

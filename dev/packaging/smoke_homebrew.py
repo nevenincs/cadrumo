@@ -13,10 +13,16 @@ import shutil
 import subprocess
 import sys
 import threading
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final, override
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from dev.packaging._command import CommandResult, run_command  # noqa: E402
+from dev.packaging._hashing import sha256_path  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _FORMULA_NAME: Final[str] = "cadrumo"
@@ -41,15 +47,6 @@ def _require_valid_tap_name(tap_name: str) -> None:
         raise SystemExit(f"tap name must be one lowercase user/repository pair: {tap_name!r}")
 
 
-@dataclass(frozen=True)
-class CommandEvidence:
-    """Captured result of one successful external command."""
-
-    argv: tuple[str, ...]
-    log: str
-    stdout: str
-
-
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
     @override
     def log_message(self, format: str, *args: object) -> None:
@@ -66,14 +63,6 @@ class _QuietServer(http.server.ThreadingHTTPServer):
         """Ignore clients closing a completed or superseded Homebrew download."""
 
 
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _text_sha256(value: str) -> str:
     return hashlib.sha256(value.encode(_UTF_8)).hexdigest()
 
@@ -85,31 +74,22 @@ def _run(
     log_dir: Path,
     label: str,
     env: dict[str, str] | None = None,
-) -> CommandEvidence:
-    completed = subprocess.run(  # noqa: S603 - fixed internal commands and explicit paths.
-        argv,
-        cwd=cwd,
-        env=env,
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-        errors="strict",
-    )
+) -> CommandResult:
+    completed = run_command(argv, cwd=cwd, environment=env)
     log = log_dir / f"{label}.log"
-    rendered = (
+    log.write_text(
         f"argv={json.dumps(argv, ensure_ascii=False)}\n"
         f"cwd={cwd}\n"
         f"exit_code={completed.returncode}\n"
         f"stdout:\n{completed.stdout}\n"
-        f"stderr:\n{completed.stderr}\n"
+        f"stderr:\n{completed.stderr}\n",
+        encoding=_UTF_8,
     )
-    log.write_text(rendered, encoding=_UTF_8)
     if completed.returncode != 0:
         raise SystemExit(
             f"command failed ({completed.returncode}): {argv!r}; retained log: {log}",
         )
-    return CommandEvidence(tuple(argv), str(log), completed.stdout)
+    return completed
 
 
 def _brew_lines(
@@ -146,7 +126,7 @@ def localize_formula(
         if artifact.parent != cohort_dir:
             raise SystemExit(f"formula cohort artifact escapes its directory: {artifact}")
         expected_sha256 = match.group("sha256")
-        actual_sha256 = _sha256(artifact)
+        actual_sha256 = sha256_path(artifact)
         if actual_sha256 != expected_sha256:
             raise SystemExit(
                 f"formula cohort artifact digest mismatch: {filename} expected {expected_sha256}, got {actual_sha256}",
@@ -291,7 +271,7 @@ def run_homebrew_smoke(
     cohort_artifacts = [
         {
             "filename": Path(original).name,
-            "sha256": _sha256(cohort / Path(original).name),
+            "sha256": sha256_path(cohort / Path(original).name),
             "size": (cohort / Path(original).name).stat().st_size,
         }
         for original in replacements
@@ -463,7 +443,7 @@ def run_homebrew_smoke(
         )
         tax_document = json.loads(tax_evidence.read_text(encoding=_UTF_8))
         mcp_document = json.loads(mcp_evidence.read_text(encoding=_UTF_8))
-        aeat_sha256 = _sha256(aeat)
+        aeat_sha256 = sha256_path(aeat)
         aeat_path_sha256 = _text_sha256(str(aeat))
         _assert_oracle_evidence(
             tax_document=tax_document,
@@ -486,9 +466,9 @@ def run_homebrew_smoke(
             "tap_name": tap_name,
             "formula_name": qualified,
             "source_formula": str(formula_source),
-            "source_formula_sha256": _sha256(formula_source),
+            "source_formula_sha256": sha256_path(formula_source),
             "localized_formula": str(staged_formula),
-            "localized_formula_sha256": _sha256(staged_formula),
+            "localized_formula_sha256": sha256_path(staged_formula),
             "cohort_url_replacements": replacements,
             "cohort_artifacts": cohort_artifacts,
             "installed_prefix": str(installed_prefix),
@@ -497,7 +477,7 @@ def run_homebrew_smoke(
             "aeat_sha256": aeat_sha256,
             "aeat_path_sha256": aeat_path_sha256,
             "mcp_command": str(mcp),
-            "mcp_sha256": _sha256(mcp),
+            "mcp_sha256": sha256_path(mcp),
             "mcp_invoked_cli_sha256": mcp_document["invoked_cli_sha256"],
             "version_output": version,
             "tax_evidence": str(tax_evidence),

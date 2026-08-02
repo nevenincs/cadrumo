@@ -53,7 +53,7 @@ def register(app: typer.Typer) -> None:
         # registry referential integrity. Report-only: a red preflight row is
         # surfaced for operator visibility but does not, on its own, flip the
         # capability/dependency exit contract below.
-        preflight = [row.model_dump(mode="json") for row in run_preflight_checks()]
+        preflight = [row.model_dump(mode="python") for row in run_preflight_checks()]
         any_provider = any(p.available for p in providers)
         extra_available = {status.service: status.available for status in extras}
 

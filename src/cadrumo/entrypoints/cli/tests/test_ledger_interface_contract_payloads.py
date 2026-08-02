@@ -10,6 +10,7 @@ round-trip.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ....application.ledger import ExportSerializationFormat, LedgerExportResult, LedgerExportRow
 from .._ledger_llm_payloads import (
@@ -47,6 +48,7 @@ from .._ledger_payloads import (
     TransactionPayload,
     _LedgerMutationResult,
 )
+from .._modelo_payloads import LedgerIssuePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -77,6 +79,19 @@ def _period_payload(**overrides: object) -> dict[str, object]:
     }
     base.update(overrides)
     return base
+
+
+def test_readiness_issue_payloads_keep_the_domain_detail_requirement() -> None:
+    """Both operator projections refuse an issue the ledger preflight model rejects."""
+    shared = {"transaction_id": "a" * 64, "reason": "missing_category", "detail": "category required"}
+
+    assert LedgerPreflightIssuePayload.model_validate(shared).detail == "category required"
+    assert LedgerIssuePayload.model_validate(shared).detail == "category required"
+
+    for payload_type in (LedgerPreflightIssuePayload, LedgerIssuePayload):
+        invalid = {**shared, "detail": ""}
+        with pytest.raises(ValueError, match="at least 1 character"):
+            payload_type.model_validate(invalid)
 
 
 def _business_invoice_payload(**overrides: object) -> dict[str, object]:
@@ -284,7 +299,7 @@ def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
     export = LedgerExportPayload.model_validate(
         {
             "bucket_id": "default",
-            "export_id": "export-001",
+            "export_id": "e" * 64,
             "export_format": "csv",
             "media_type": "text/csv",
             "filename_extension": ".csv",
@@ -297,6 +312,17 @@ def test_export_and_preflight_payloads_use_typed_nested_rows() -> None:
         },
     )
     assert isinstance(export.rows[0], LedgerExportRowPayload)
+
+    for field, value in (
+        ("export_id", "not-a-digest"),
+        ("sha256", "not-a-digest"),
+        ("byte_size", -1),
+        ("rows", [{**export_row, "booked_date": "not-a-date"}]),
+        ("rows", [{**export_row, "amount": "not-a-decimal"}]),
+        ("rows", [{**export_row, "currency": "eur"}]),
+    ):
+        with pytest.raises(ValidationError):
+            LedgerExportPayload.model_validate({**export.model_dump(), field: value})
 
     preflight = LedgerPreflightResult.model_validate(
         {

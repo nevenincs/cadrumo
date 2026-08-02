@@ -18,6 +18,7 @@ tooling does not depend on free-form ``model_dump(mode="json")`` output.
 
 from __future__ import annotations
 
+from ...application.review import ReviewSeverity, ReviewState
 from ...core.identity import BucketId
 from ...domain.calculations.registry import LegalRefId
 from ._schemas import OutputSchema, register_schema
@@ -39,8 +40,8 @@ class ReviewQueueRowPayload(OutputSchema):
     bucket_id: BucketId
     modelo: str | None = None
     period: str | None = None
-    severity: str
-    state: str
+    severity: ReviewSeverity
+    state: ReviewState
     blocking: bool
     reason: str = ""
     current_owner_surface: str

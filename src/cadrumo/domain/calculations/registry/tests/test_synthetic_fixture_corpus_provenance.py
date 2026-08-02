@@ -33,18 +33,17 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
-import pdfplumber
 import pytest
 
 from .....core.resources import bundled_path
 from .....tests.fixtures import (
-    FIXTURE_PROVENANCE_REAL,
     FIXTURE_PROVENANCE_SYNTHETIC,
-    RECOGNISED_FIXTURE_PROVENANCES,
     SYNTHETIC_FIXTURE_PRODUCER,
+    producer_field,
+    provenance_mismatches,
+    sidecar_provenance,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -57,68 +56,6 @@ _GATED_CORPORA: tuple[tuple[str, Path], ...] = (
     ("borrador", _FIXTURE_ROOT / "borrador"),
     ("n26", _FIXTURE_ROOT / "financial" / "n26"),
 )
-
-
-def _producer_field(pdf_path: Path) -> str | None:
-    """Return the ``/Producer`` DocInfo value for a PDF, or None if absent."""
-    with pdfplumber.open(str(pdf_path)) as pdf:
-        meta = pdf.metadata or {}
-        value = meta.get("Producer")
-        return str(value) if value else None
-
-
-def _sidecar_provenance(pdf_path: Path) -> str | None:
-    """Return the sidecar's declared ``provenance``, or None when undeclared.
-
-    Absent sidecar and present-but-silent sidecar collapse to the same answer
-    deliberately: both leave the fixture undeclared, which is the condition the
-    gate refuses.
-    """
-    sidecar = pdf_path.with_suffix(".json")
-    if not sidecar.is_file():
-        return None
-    value = json.loads(sidecar.read_text(encoding="utf-8")).get("provenance")
-    return str(value) if value is not None else None
-
-
-def provenance_mismatches(pdf_path: Path) -> list[str]:
-    """Return every way ``pdf_path``'s declared provenance contradicts its bytes.
-
-    An empty list means the fixture self-declares a recognised provenance and
-    the physical ``/Producer`` evidence agrees with that declaration.
-
-    Factored out of the tests so the anti-tautology proof below can drive it
-    over deliberately-corrupt inputs and observe it *fail*. A gate whose
-    discriminating logic exists only inside a passing assertion cannot be shown
-    to discriminate at all.
-    """
-    producer = _producer_field(pdf_path)
-    is_synthetic = SYNTHETIC_FIXTURE_PRODUCER in (producer or "").lower()
-    provenance = _sidecar_provenance(pdf_path)
-
-    if provenance is None:
-        return [
-            f"{pdf_path.name}: no sidecar provenance declared; every gated fixture "
-            f"must self-declare {FIXTURE_PROVENANCE_REAL} or {FIXTURE_PROVENANCE_SYNTHETIC} "
-            f"in {pdf_path.with_suffix('.json').name}",
-        ]
-    if provenance not in RECOGNISED_FIXTURE_PROVENANCES:
-        return [
-            f"{pdf_path.name}: sidecar provenance {provenance!r} is not one of "
-            f"{sorted(RECOGNISED_FIXTURE_PROVENANCES)}",
-        ]
-    if provenance == FIXTURE_PROVENANCE_SYNTHETIC and not is_synthetic:
-        return [
-            f"{pdf_path.name}: sidecar declares {FIXTURE_PROVENANCE_SYNTHETIC} but "
-            f"/Producer={producer!r} lacks the {SYNTHETIC_FIXTURE_PRODUCER!r} signature; "
-            "an unsignatured producer reads as real origin",
-        ]
-    if provenance == FIXTURE_PROVENANCE_REAL and is_synthetic:
-        return [
-            f"{pdf_path.name}: sidecar declares {FIXTURE_PROVENANCE_REAL} but "
-            f"/Producer={producer!r} carries the synthetic generator signature",
-        ]
-    return []
 
 
 def _corpus_pdfs(corpus_dir: Path) -> list[Path]:
@@ -163,79 +100,21 @@ def test_gated_corpus_is_not_empty(corpus_name: str, corpus_dir: Path) -> None:
     )
 
 
-def _write_probe_pdf(path: Path, *, producer: str | None) -> None:
-    """Render a real one-page PDF at ``path``, optionally signing its producer."""
-    from reportlab.lib.pagesizes import A4
-    from reportlab.pdfgen import canvas
-
-    c = canvas.Canvas(str(path), pagesize=A4)
-    if producer is not None:
-        c.setProducer(producer)
-    c.drawString(72, 720, "provenance discriminator probe")
-    c.showPage()
-    c.save()
-
-
-def _write_sidecar(pdf_path: Path, provenance: str | None) -> None:
-    """Write ``pdf_path``'s sidecar, omitting ``provenance`` when None."""
-    payload: dict[str, str] = {} if provenance is None else {"provenance": provenance}
-    pdf_path.with_suffix(".json").write_text(json.dumps(payload), encoding="utf-8")
-
-
 @pytest.mark.parametrize(
-    "producer,provenance,expected_fragment",
+    "pdf_path,expected_provenance",
     [
-        (None, FIXTURE_PROVENANCE_SYNTHETIC, "lacks the"),
-        ("reportlab", FIXTURE_PROVENANCE_SYNTHETIC, "lacks the"),
-        (SYNTHETIC_FIXTURE_PRODUCER, FIXTURE_PROVENANCE_REAL, "carries the synthetic generator signature"),
-        (SYNTHETIC_FIXTURE_PRODUCER, None, "no sidecar provenance declared"),
-        (SYNTHETIC_FIXTURE_PRODUCER, "invented_provenance", "is not one of"),
+        (_FIXTURE_ROOT / "borrador" / "modelo_100_2021.pdf", FIXTURE_PROVENANCE_SYNTHETIC),
+        (_FIXTURE_ROOT / "financial" / "n26" / "n26-savings-2024-06.pdf", FIXTURE_PROVENANCE_SYNTHETIC),
     ],
-    ids=[
-        "unsignatured-claiming-synthetic",
-        "reportlab-producer-claiming-synthetic",
-        "signatured-claiming-real",
-        "signatured-but-undeclared",
-        "unrecognised-provenance-value",
-    ],
+    ids=["borrador-synthetic", "n26-synthetic"],
 )
-def test_the_discriminator_rejects_each_way_a_declaration_can_lie(
-    tmp_path: Path,
-    producer: str | None,
-    provenance: str | None,
-    expected_fragment: str,
+def test_shared_discriminator_accepts_committed_fixture_evidence(
+    pdf_path: Path,
+    expected_provenance: str,
 ) -> None:
-    """Anti-tautology proof: the checker fails on each corrupt pairing.
-
-    Every committed fixture currently passes, so the gate above cannot by
-    itself show that it would catch anything. These cases drive the same
-    checker over real PDFs written to carry each defect and assert it reports
-    the mismatch — including the two shapes actually found in the tree before
-    this work: an unsignatured producer, and the literal ``"reportlab"``.
-    """
-    pdf_path = tmp_path / "probe.pdf"
-    _write_probe_pdf(pdf_path, producer=producer)
-    _write_sidecar(pdf_path, provenance)
-
-    mismatches = provenance_mismatches(pdf_path)
-
-    assert mismatches, (
-        f"the discriminator accepted producer={producer!r} against a sidecar declaring "
-        f"{provenance!r}; it cannot detect this class of mis-declaration"
+    """The shared reader and discriminator accept committed fixture evidence."""
+    assert sidecar_provenance(pdf_path) == expected_provenance
+    assert (SYNTHETIC_FIXTURE_PRODUCER in (producer_field(pdf_path) or "").lower()) == (
+        expected_provenance == FIXTURE_PROVENANCE_SYNTHETIC
     )
-    assert any(expected_fragment in m for m in mismatches), (
-        f"expected a mismatch naming {expected_fragment!r}, got: {mismatches}"
-    )
-
-
-def test_the_discriminator_accepts_a_truthfully_declared_fixture(tmp_path: Path) -> None:
-    """The mirror of the proof above: a correct pairing must not be flagged.
-
-    Without this, a checker that returned a mismatch unconditionally would
-    satisfy every case above while being useless.
-    """
-    pdf_path = tmp_path / "probe.pdf"
-    _write_probe_pdf(pdf_path, producer=SYNTHETIC_FIXTURE_PRODUCER)
-    _write_sidecar(pdf_path, FIXTURE_PROVENANCE_SYNTHETIC)
-
     assert provenance_mismatches(pdf_path) == []

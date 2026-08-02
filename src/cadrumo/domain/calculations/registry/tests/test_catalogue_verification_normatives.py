@@ -11,6 +11,7 @@ from .....core.resources import bundled_path
 from .._corpus_catalogue import verify_source_file
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
+from .._loader import load_catalogue_file
 from ._catalogue_verification_support import (
     _FORMAL_WITHHOLDING_ARTICLE_REF,
     _FORMAL_WITHHOLDING_MODELOS,
@@ -223,11 +224,72 @@ def test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus() -> None:
     assert reference.required_text == (
         "Plazo de presentación del borrador de declaración",
         "2 de abril y 30 de junio de 2025",
-        "desde el día 2 de abril hasta el 25 de junio de 2025",
+        "plazo específicamente establecido en el artículo 13.3",
     )
     assert source.corpus_path == "corpus/normatives/html/orden-hac-242-2025.html"
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
     verify_source_file(PROJECT_ROOT, source)
+
+
+@pytest.mark.parametrize(
+    ("catalogue_filename", "ref_id", "selected_unit_phrase"),
+    (
+        ("iae.toml", "rdleg-1175-1990:art-unico", "Artículo único"),
+        (
+            "irpf.toml",
+            "orden-eha-3435-2007:anexo-i",
+            "Se sustituye por el que figura como anexo de la Orden HAC/1417/2018",
+        ),
+        (
+            "irpf.toml",
+            "orden-eha-3435-2007:anexo-ii",
+            "Se sustituye por el que figura como anexo I de la Orden HAC/56/2024",
+        ),
+        ("irpf.toml", "orden-eha-3435-2007:anexo-iv", "ANEXO IV"),
+        ("irpf.toml", "orden-eha-3435-2007:anexo-v", "ANEXO V"),
+        ("irpf.toml", "orden-hac-56-2024:art-1", "Retenciones e ingresos a cuenta sobre determinadas rentas"),
+        ("irpf.toml", "orden-hac-1431-2025:art-2", "Se suprime el anexo I de la Orden EHA/3127/2009"),
+        ("irpf.toml", "orden-hac-277-2026:art-7", "plazo específicamente establecido en el artículo 13.3"),
+        ("irpf.toml", "orden-hac-265-2024:art-8", "plazo específicamente establecido en el artículo 13.3"),
+        ("irpf.toml", "orden-hac-248-2021:art-8", "plazo específicamente establecido en el artículo 14.3"),
+        ("irpf.toml", "orden-hfp-207-2022:art-8", "plazo específicamente establecido en el artículo 14.3"),
+        ("irpf.toml", "orden-hfp-310-2023:art-8", "plazo específicamente establecido en el artículo 14.3"),
+        ("irpf.toml", "orden-hac-242-2025:art-8", "plazo específicamente establecido en el artículo 13.3"),
+        ("is.toml", "ley-44-2015:art-2", "S.A.L."),
+        ("iva.toml", "orden-eha-769-2010:art-1", "diseños lógicos que figuran en el anexo de esta orden"),
+        ("iva.toml", "orden-eha-769-2010:art-2", "acuerdos de ventas de bienes en consigna"),
+        ("iva.toml", "orden-hac-174-2020:art-1", "Se modifica el artículo 1 de la Orden EHA/769/2010"),
+        ("iva.toml", "rd-596-2016", "Sede electrónica de la Agencia Estatal de la Administración Tributaria"),
+        ("modelo-189.toml", "orden-hfp-1180-2023:art-primero", "Se modifica su artículo 3"),
+        (
+            "modelo-231.toml",
+            "orden-hac-1285-2020:art-primero-anexo",
+            "modelo 231 de Declaración de información país por país",
+        ),
+        (
+            "modelo-280.toml",
+            "orden-hac-1276-2019:art-quinto",
+            "El número identificativo que habrá de figurar en el modelo 280",
+        ),
+        ("modelo-289.toml", "rd-1021-2015:art-3", "titularidad o el control de cuentas financieras"),
+        (
+            "modelo-289.toml",
+            "orden-hfp-1351-2021:art-octavo",
+            "declaración informativa anual de cuentas financieras en el ámbito de la asistencia mutua",
+        ),
+        ("modelo-379.toml", "orden-hfp-1415-2023:art-5", "código seguro de verificación de 16 caracteres"),
+    ),
+)
+def test_repaired_required_text_is_verified_against_its_selected_bundled_unit(
+    catalogue_filename: str,
+    ref_id: str,
+    selected_unit_phrase: str,
+) -> None:
+    catalogue = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue_filename))
+    reference = catalogue.legal[ref_id]
+
+    assert selected_unit_phrase in reference.required_text
+    verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
 
 
 def test_modelo_100_historical_form_order_refs_link_to_boe_corpus() -> None:

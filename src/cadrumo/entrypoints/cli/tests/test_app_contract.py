@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from ....application.operator_surface import (
     OperatorMutability,
@@ -50,6 +51,23 @@ def test_manifest_envelope_is_a_success_document() -> None:
     assert manifest["manifest_version"] == "1"
     assert manifest["envelope_schema_version"] == "2"
     assert {"contract", "command_schemas"} <= set(manifest)
+
+
+def test_contract_manifest_payload_refuses_empty_or_untyped_manifest_shape() -> None:
+    """The CLI result shares the canonical manifest's required shape."""
+
+    from .._app_contract_payloads import ContractManifestResult
+
+    with pytest.raises(ValidationError):
+        ContractManifestResult.model_validate({})
+    with pytest.raises(ValidationError):
+        ContractManifestResult.model_validate(
+            {
+                "envelope_schema_version": "",
+                "contract": {},
+                "command_schemas": (),
+            },
+        )
 
 
 def test_manifest_carries_both_pinned_roots() -> None:

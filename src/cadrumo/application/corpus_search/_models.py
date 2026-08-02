@@ -18,7 +18,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -151,6 +151,17 @@ class RetrievalResponse(BaseModel):
     mode: RetrievalMode
     hits: tuple[RetrievalHit, ...] = ()
     citation: CitationResolution | None = None
+
+    @model_validator(mode="after")
+    def _mode_and_result_agree(self) -> "RetrievalResponse":
+        if self.mode is RetrievalMode.CITATION:
+            if self.citation is None:
+                raise ValueError("a CITATION response must carry a citation")
+            if self.hits:
+                raise ValueError("a CITATION response must not carry lexical hits")
+        elif self.citation is not None:
+            raise ValueError("a LEXICAL_ONLY response must not carry a citation")
+        return self
 
 
 __all__ = [

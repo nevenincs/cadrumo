@@ -16,7 +16,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.storage import SecretStore, get_secret_store
@@ -31,6 +31,7 @@ from ...user_profile import profile_create_storage_span, profile_storage_session
 from ...workflow import workflow_state_repository
 from .. import (
     AuthLoginPreconditionError,
+    CertificateSourceCheckEntry,
     ProviderProbeResult,
     active_auth_projection_span,
     build_live_auth_preflight_report,
@@ -61,6 +62,31 @@ _MISSING_BUCKET = "55555555-5555-4555-8555-555555555555"
 _PROFILE_LABEL = "gestor-cert-rotation"
 _SECRET_B = "bucket-b-correct-horse"  # noqa: S105 - synthetic test fixture, not a secret
 _NOW = datetime(2099, 5, 28, 14, 10, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize("invalid_result", ("", "ok", "OK", "not-a-verdict"))
+def test_certificate_source_check_entry_refuses_noncanonical_probe_verdicts(invalid_result: str) -> None:
+    """The operator projection cannot widen the closed provider-probe result enum."""
+    with pytest.raises(ValidationError, match="result"):
+        CertificateSourceCheckEntry(
+            name="personal",
+            certificate_path="C:/certificates/personal.p12",
+            result=invalid_result,
+            summary="certificate verdict",
+        )
+
+
+def test_certificate_source_check_entry_preserves_probe_verdict_json_value() -> None:
+    """A canonical verdict remains typed in memory and serializes as its wire value."""
+    entry = CertificateSourceCheckEntry(
+        name="personal",
+        certificate_path="C:/certificates/personal.p12",
+        result=ProviderProbeResult.OK,
+        summary="certificate valid",
+    )
+
+    assert entry.result is ProviderProbeResult.OK
+    assert entry.model_dump(mode="json")["result"] == ProviderProbeResult.OK.value
 
 
 def _register_operator_profile():

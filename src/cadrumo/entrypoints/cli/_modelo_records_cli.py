@@ -301,7 +301,7 @@ def filing_record_import(
 
     result = FilingRecordImportResult.model_validate(
         {
-            "evidence_kind": kind.value,
+            "evidence_kind": kind,
             "evidence_reference_id": evidence_reference_id,
             **filing_record_payload(record).model_dump(mode="python"),
         },

@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.hashing import sha256_hex
+from ...core.identity import SnapshotId, TransactionId
 from ..calculations.registry import CasillaId, LegalRefId, SourceRefId
 
 
@@ -37,8 +38,8 @@ class LedgerRowFingerprint(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
-    fingerprint: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
+    fingerprint: SnapshotId
 
 
 class LedgerFilingSnapshot(BaseModel):
@@ -59,7 +60,7 @@ class LedgerFilingSnapshot(BaseModel):
     model_config = _STRICT_FROZEN
 
     rows: tuple[LedgerRowFingerprint, ...] = ()
-    snapshot_fingerprint: str = Field(min_length=64, max_length=64)
+    snapshot_fingerprint: SnapshotId
     captured_at: datetime
 
 
@@ -76,12 +77,12 @@ class LedgerFilingStalenessVerdict(BaseModel):
     model_config = _STRICT_FROZEN
 
     is_stale: bool
-    changed: tuple[str, ...] = ()
-    removed: tuple[str, ...] = ()
-    unchanged: tuple[str, ...] = ()
+    changed: tuple[TransactionId, ...] = ()
+    removed: tuple[TransactionId, ...] = ()
+    unchanged: tuple[TransactionId, ...] = ()
 
 
-def snapshot_fingerprint(rows: tuple[LedgerRowFingerprint, ...]) -> str:
+def snapshot_fingerprint(rows: tuple[LedgerRowFingerprint, ...]) -> SnapshotId:
     """Return the aggregate content address over sorted contributor fingerprints."""
     canonical = "\n".join(f"{row.transaction_id}={row.fingerprint}" for row in _sorted_rows(rows))
     return sha256_hex(canonical.encode("utf-8"))
@@ -93,7 +94,7 @@ def _sorted_rows(rows: tuple[LedgerRowFingerprint, ...]) -> tuple[LedgerRowFinge
 
 def diff_ledger_fingerprints(
     snapshot: LedgerFilingSnapshot,
-    current_fingerprints: Mapping[str, str],
+    current_fingerprints: Mapping[TransactionId, SnapshotId],
 ) -> LedgerFilingStalenessVerdict:
     """Compare a filed snapshot against live per-contributor fingerprints.
 
@@ -143,8 +144,8 @@ class LedgerEvidenceRow(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
-    fingerprint: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
+    fingerprint: SnapshotId
     booked_date: str = Field(min_length=1)
     value_date: str | None = None
     # Non-negative magnitude in the row's native currency; flow is carried by
@@ -227,7 +228,7 @@ class LedgerFilingEvidence(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    snapshot_fingerprint: str = Field(min_length=64, max_length=64)
+    snapshot_fingerprint: SnapshotId
     rows: tuple[LedgerEvidenceRow, ...] = ()
     manual_entries: tuple[ManualFactBasisEntry, ...] = ()
     captured_at: datetime

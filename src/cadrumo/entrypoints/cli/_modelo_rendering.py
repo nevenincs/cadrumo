@@ -450,7 +450,7 @@ def _work_unit_deadline_output_from_posture(
             assessment_status=preview.assessment_status,
         )
     deadline_payload = WorkDeadlinePosturePayload(
-        closes_on=posture.closes_on.isoformat(),
+        closes_on=posture.closes_on,
         days_remaining=posture.days_remaining,
         days_overdue=posture.days_overdue,
         conditional_recargo_preview=preview_payload,
@@ -777,24 +777,24 @@ def filing_record_payload(record) -> ModeloRecordPayload:
     external_evidence: ExternalEvidencePayload | None = None
     if record.external_evidence is not None:
         external_evidence = ExternalEvidencePayload(
-            kind=record.external_evidence.kind.value,
+            kind=record.external_evidence.kind,
             reference_id=record.external_evidence.reference_id,
-            imported_at=record.external_evidence.imported_at.isoformat(),
+            imported_at=record.external_evidence.imported_at,
         )
     return ModeloRecordPayload(
         filing_record_id=record.filing_record_id,
         work_unit_id=record.work_unit_id,
         calculation_revision_id=record.calculation_revision_id,
         bucket_id=record.bucket_id,
-        modelo=str(record.modelo),
+        modelo=record.modelo,
         filing_year=record.filing_year,
         period=record.period,
-        filed_at=record.filed_at.isoformat(),
+        filed_at=record.filed_at,
         filed_by=record.filed_by,
         notes=record.notes,
         aeat_accepted=record.aeat_accepted,
-        status=record.status.value,
-        superseded_at=record.superseded_at.isoformat() if record.superseded_at else None,
+        status=record.status,
+        superseded_at=record.superseded_at,
         superseded_by_filing_record_id=record.superseded_by_filing_record_id,
         external_evidence=external_evidence,
         amends_filing_record_id=record.amends_filing_record_id,
@@ -913,8 +913,8 @@ def verification_report_payload(report) -> VerificationReportPayload:
         message, next_action = _render_verification_finding_text(finding)
         findings.append(
             FindingPayload(
-                kind=finding.kind.value,
-                severity=finding.severity.value,
+                kind=finding.kind,
+                severity=finding.severity,
                 casilla_id=finding.casilla_id,
                 expectation_id=finding.expectation_id,
                 message=message,

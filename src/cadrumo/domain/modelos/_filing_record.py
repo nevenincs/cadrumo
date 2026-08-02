@@ -89,6 +89,22 @@ class ExternalEvidenceKind(StrEnum):
     AEAT_LIVE_CAPTURE = "aeat_live_capture"
 
 
+def is_justificante_backed_external_evidence(kind: ExternalEvidenceKind) -> bool:
+    """Return whether ``kind`` requires matching persisted receipt metadata.
+
+    Every current external-evidence kind is filing-grade only after its
+    reference resolves to a matching :class:`domain.justificante.Justificante`.
+    Keeping this closed policy beside the enum prevents application consumers
+    from silently disagreeing when a new evidence kind is introduced.
+    """
+    return kind in frozenset(
+        {
+            ExternalEvidenceKind.AEAT_CSV_REGISTER,
+            ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+        },
+    )
+
 _EvidenceReference = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -370,4 +386,5 @@ __all__ = [
     "ModeloRecordCatalogue",
     "ModeloRecordStatus",
     "derive_filing_record_id",
+    "is_justificante_backed_external_evidence",
 ]

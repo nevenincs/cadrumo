@@ -28,6 +28,7 @@ from decimal import Decimal
 
 from pydantic import Field
 
+from ...core.telemetry import TelemetryTier
 from ._decimal_wire import DecimalWireText, bounded_decimal_wire_text
 from ._schemas import OutputSchema, register_schema
 
@@ -267,7 +268,7 @@ class TelemetryStatusResult(OutputSchema):
     """
 
     opt_in: bool
-    tier: str
+    tier: TelemetryTier
     gestor_mode: bool
     endpoint: str | None = None
     would_emit_if_acknowledged: bool

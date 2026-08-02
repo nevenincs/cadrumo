@@ -30,7 +30,7 @@ from typing import Annotated
 from pydantic import AfterValidator
 
 from ._bucket import BucketId
-from ._digest import ContentDigest
+from ._digest import ContentDigest, ContentDigestOrAbsent
 from ._documents import (
     IdentityDocument,
     IdentityError,
@@ -74,6 +74,7 @@ __all__ = [
     "NIF_IVA_FORMATS",
     "BucketId",
     "ContentDigest",
+    "ContentDigestOrAbsent",
     "IdentityDocument",
     "IdentityError",
     "NifIvaFormatSpec",

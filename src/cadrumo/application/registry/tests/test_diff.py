@@ -47,9 +47,16 @@ that the witness does not exist yet.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from ....domain.calculations.registry import ModeloRevision, RegistrySnapshotError, bundled_authority
+from ....domain.calculations.registry import (
+    ModeloRevision,
+    NoRevisionForPeriodError,
+    RegistrySnapshotError,
+    bundled_authority,
+)
 from .. import RegistryApplicationInputError, diff_registry_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -318,6 +325,29 @@ def test_diff_registry_revisions_refuses_a_year_no_revision_covers() -> None:
     message = str(excinfo.value)
     assert excinfo.value.context is not None
     assert "1999" in message or excinfo.value.context.get("filing_year") == 1999
+
+
+def test_diff_registry_revisions_applies_the_canonical_validity_window_and_retains_context() -> None:
+    """The 2023 revision cannot be used before its real 2023 effective date.
+
+    The domain selector owns the date test and raises its structured year-only
+    error. Diffing adds the command-specific list of available revisions without
+    replacing that cause with a second candidate-selection implementation.
+    """
+    with pytest.raises(RegistryApplicationInputError) as excinfo:
+        diff_registry_revisions(
+            "303",
+            from_year=_M303_POST_YEAR,
+            to_year=_M303_POST_YEAR,
+            as_of=date(2022, 12, 31),
+        )
+
+    assert excinfo.value.context is not None
+    assert excinfo.value.context["filing_year"] == _M303_POST_YEAR
+    assert excinfo.value.context["available_revisions"] == "2009-y-siguientes, 2023-y-siguientes"
+    cause = excinfo.value.__cause__
+    assert isinstance(cause, NoRevisionForPeriodError)
+    assert cause.period == "year"
 
 
 def test_diff_registry_revisions_refuses_an_unknown_modelo() -> None:

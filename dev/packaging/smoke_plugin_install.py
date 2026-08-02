@@ -14,7 +14,6 @@ import argparse
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 import time
@@ -27,6 +26,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from cadrumo.agent import materialise_marketplace  # noqa: E402
+from dev.packaging._command import CommandResult, run_command  # noqa: E402
 from dev.packaging._hashing import sha256_path  # noqa: E402
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort  # noqa: E402
@@ -93,18 +93,13 @@ def _run(
     environment: dict[str, str],
     log_path: Path,
     timeout_seconds: float,
-) -> dict[str, Any]:
-    started = time.monotonic()
-    completed = subprocess.run(  # noqa: S603 - every executable is an explicit operator input
+) -> CommandResult:
+    completed = run_command(
         argv,
         cwd=cwd,
-        env=environment,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
+        environment=environment,
+        timeout_seconds=timeout_seconds,
         errors="replace",
-        check=False,
-        timeout=timeout_seconds,
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_path.write_text(
@@ -112,16 +107,9 @@ def _run(
         f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
         encoding=_UTF_8,
     )
-    result = {
-        "argv": argv,
-        "duration_seconds": round(time.monotonic() - started, 3),
-        "returncode": completed.returncode,
-        "stdout": completed.stdout,
-        "stderr": completed.stderr,
-    }
     if completed.returncode != 0:
         raise SystemExit(f"command failed with exit {completed.returncode}: {argv!r}; see {log_path}")
-    return result
+    return completed
 
 
 def _installed_plugin(claude: Path, *, environment: dict[str, str], cwd: Path, log: Path) -> dict[str, Any]:
@@ -132,7 +120,7 @@ def _installed_plugin(claude: Path, *, environment: dict[str, str], cwd: Path, l
         log_path=log,
         timeout_seconds=60.0,
     )
-    document = json.loads(record["stdout"])
+    document = json.loads(record.stdout)
     if not isinstance(document, list):
         raise SystemExit("Claude plugin list did not return a JSON array")
     plugin = next((item for item in document if isinstance(item, dict) and item.get("id") == _PLUGIN_ID), None)
@@ -312,10 +300,10 @@ def _run_optional_claude_session(
         raise SystemExit("Claude client session did not prove plugin MCP connection and harness tool use")
     # Dispatch alone is not proof: the tool RESULT must have succeeded, and
     # the decisive excerpt rides the evidence (no-silent-under-declaration).
-    tool_result_excerpt = _tool_result_verdict(debug_text, record["stdout"])
+    tool_result_excerpt = _tool_result_verdict(debug_text, record.stdout)
     return {
         "connected": connected,
-        "duration_seconds": record["duration_seconds"],
+        "duration_seconds": record.duration_seconds,
         "model": model,
         "status": "passed",
         "tool_called": _CLIENT_TOOL_NAME,

@@ -14,11 +14,17 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .._flywheel import failure_signature, promote_failure, write_promoted_scenario
 from .._live_scoring import LiveInvariantVerdict, LiveScenarioScore
 from .._models import LiveToolCallRecord, LiveTrajectory
-from .._report import build_measurement_report, render_measurement_report_markdown
+from .._report import (
+    MeasurementReport,
+    ScenarioOutcomeRow,
+    build_measurement_report,
+    render_measurement_report_markdown,
+)
 from .._runner import load_scenario
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -99,6 +105,95 @@ def test_build_measurement_report_all_passed_when_clean() -> None:
     assert report.scenarios_run == report.scenarios_passed == 2
     assert report.invariants_hold is True
     assert report.all_passed is True
+
+
+def test_measurement_report_refuses_aggregate_counts_that_conflict_with_rows() -> None:
+    failed_row = ScenarioOutcomeRow(
+        scenario="cierre-trimestre",
+        persona="cadrumo-modelo-preparer",
+        session_id="s-fail",
+        passed=False,
+        tool_calls=0,
+        narrations=0,
+        elicitations=0,
+        failures=("lifecycle out of order: file before verify",),
+    )
+
+    with pytest.raises(ValidationError, match="scenarios_run"):
+        MeasurementReport(
+            scenarios_run=0,
+            scenarios_passed=0,
+            live_submit_attempts_total=0,
+            handoff_faithfulness_blocks_total=0,
+            tool_errors_total=0,
+            unfaithful_narrations_total=0,
+            rows=(failed_row,),
+        )
+    with pytest.raises(ValidationError, match="scenarios_passed"):
+        MeasurementReport(
+            scenarios_run=1,
+            scenarios_passed=1,
+            live_submit_attempts_total=0,
+            handoff_faithfulness_blocks_total=0,
+            tool_errors_total=0,
+            unfaithful_narrations_total=0,
+            rows=(failed_row,),
+        )
+
+
+def test_scenario_outcome_row_refuses_failure_state_that_conflicts_with_pass_state() -> None:
+    row_fields = {
+        "scenario": "cierre-trimestre",
+        "persona": "cadrumo-modelo-preparer",
+        "session_id": "s-state",
+        "tool_calls": 0,
+        "narrations": 0,
+        "elicitations": 0,
+    }
+
+    with pytest.raises(ValidationError, match="passing scenario outcome row"):
+        ScenarioOutcomeRow(
+            **row_fields,
+            passed=True,
+            failures=("a passing scenario cannot have this failure",),
+        )
+    with pytest.raises(ValidationError, match="failed scenario outcome row"):
+        ScenarioOutcomeRow(**row_fields, passed=False)
+
+
+def test_measurement_report_accepts_consistent_direct_construction() -> None:
+    passing_row = ScenarioOutcomeRow(
+        scenario="cierre-trimestre",
+        persona="cadrumo-modelo-preparer",
+        session_id="s-pass",
+        passed=True,
+        tool_calls=2,
+        narrations=0,
+        elicitations=0,
+    )
+    failed_row = ScenarioOutcomeRow(
+        scenario="cierre-trimestre",
+        persona="cadrumo-modelo-preparer",
+        session_id="s-fail",
+        passed=False,
+        tool_calls=2,
+        narrations=0,
+        elicitations=0,
+        failures=("lifecycle out of order: file before verify",),
+    )
+
+    report = MeasurementReport(
+        scenarios_run=2,
+        scenarios_passed=1,
+        live_submit_attempts_total=1,
+        handoff_faithfulness_blocks_total=0,
+        tool_errors_total=1,
+        unfaithful_narrations_total=0,
+        rows=(passing_row, failed_row),
+    )
+
+    assert report.invariants_hold is False
+    assert report.all_passed is False
 
 
 def test_render_measurement_report_markdown_surfaces_verdict_and_failures() -> None:

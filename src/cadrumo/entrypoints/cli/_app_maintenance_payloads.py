@@ -22,15 +22,18 @@ See Also:
 
 from __future__ import annotations
 
+from pydantic import Field
+
+from ...application.user_profile import ProfileBundleExportPurpose
 from ._schemas import OutputSchema, register_schema
 
 
 class ReconciledProfileExportPayload(OutputSchema):
     """One crash-interrupted export the sweep resolved and cleared."""
 
-    operation_id: str
-    destination: str
-    purpose: str
+    operation_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    destination: str = Field(min_length=1)
+    purpose: ProfileBundleExportPurpose
 
 
 class UnreconciledProfileExportPayload(OutputSchema):
@@ -42,17 +45,17 @@ class UnreconciledProfileExportPayload(OutputSchema):
     contents onto an operator-facing surface.
     """
 
-    journal_id: str
+    journal_id: str = Field(min_length=1)
     destination: str | None = None
-    reason: str
+    reason: str = Field(min_length=1)
 
 
 @register_schema("app.maintenance.reconcile")
 class ProfileBundleReconcileResult(OutputSchema):
     """Outcome of one portable profile-bundle export reconciliation sweep."""
 
-    reconciled_count: int
-    failed_count: int
+    reconciled_count: int = Field(ge=0)
+    failed_count: int = Field(ge=0)
     reconciled: list[ReconciledProfileExportPayload]
     failed: list[UnreconciledProfileExportPayload]
 

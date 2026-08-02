@@ -24,11 +24,12 @@ def _casilla_id(value: object) -> CasillaId:
 _EVIDENCE_CASILLA: CasillaId = _casilla_id("00501")
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
+_TRANSACTION_ID = "c" * 64
 
 
 def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> None:
     row = LedgerEvidenceRow(
-        transaction_id="tx-1",
+        transaction_id=_TRANSACTION_ID,
         fingerprint="a" * 64,
         booked_date="2026-01-31",
         value_date="2026-02-01",
@@ -82,7 +83,7 @@ def test_ledger_filing_evidence_round_trips_strict_json_with_all_carriers() -> N
 
 def test_ledger_filing_evidence_records_are_frozen_and_strict() -> None:
     row = LedgerEvidenceRow(
-        transaction_id="tx-1",
+        transaction_id=_TRANSACTION_ID,
         fingerprint="a" * 64,
         booked_date="2026-01-31",
         amount=Decimal("1.00"),
@@ -96,7 +97,7 @@ def test_ledger_filing_evidence_records_are_frozen_and_strict() -> None:
 
     with pytest.raises(ValidationError):
         LedgerEvidenceRow(
-            transaction_id="tx-1",
+            transaction_id=_TRANSACTION_ID,
             fingerprint="short",
             booked_date="2026-01-31",
             amount=Decimal("1.00"),
@@ -119,7 +120,7 @@ def test_ledger_filing_evidence_rejects_ungrounded_rows_and_manual_entries() -> 
     with pytest.raises(ValidationError, match="legal_refs"):
         LedgerEvidenceRow.model_validate(
             {
-                "transaction_id": "tx-1",
+                "transaction_id": _TRANSACTION_ID,
                 "fingerprint": "a" * 64,
                 "booked_date": "2026-01-31",
                 "amount": Decimal("1.00"),
@@ -144,7 +145,7 @@ def test_ledger_filing_evidence_rejects_ungrounded_rows_and_manual_entries() -> 
 def test_ledger_filing_evidence_rejects_blank_grounding_refs() -> None:
     with pytest.raises(ValidationError, match="legal_refs"):
         LedgerEvidenceRow(
-            transaction_id="tx-1",
+            transaction_id=_TRANSACTION_ID,
             fingerprint="a" * 64,
             booked_date="2026-01-31",
             amount=Decimal("1.00"),

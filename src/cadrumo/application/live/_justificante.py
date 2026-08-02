@@ -71,6 +71,7 @@ from ...core import Modelo, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import BucketId
+from ..calculations import ObservationSourceKind
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SecureSnapshotRepository,
@@ -85,11 +86,10 @@ _JUSTIFICANTE_CAPTURE_SNAPSHOT_VERSION = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.
 _JUSTIFICANTE_CAPTURE_SNAPSHOT_SENSITIVITY = JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE.sensitivity
 _LIVE_EVIDENCE_STAMPED_PAYLOAD_VERSION = 2
 
-# Official source kind stamped on the captured receipt. Member of the
-# cross-period clean-state gate's ``_OFFICIAL_SOURCE_KINDS`` frozenset, so a
-# dependent period whose upstream evidence is this capture clears the
-# ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker.
-JUSTIFICANTE_CAPTURE_SOURCE_KIND = "aeat_sede_live_capture"
+# Official source kind stamped on the captured receipt. Its explicit
+# ``is_official_aeat`` capability lets a dependent period whose upstream evidence
+# is this capture clear the ``MISSING_JUSTIFICANTE_VERIFICATION`` blocker.
+JUSTIFICANTE_CAPTURE_SOURCE_KIND = ObservationSourceKind.AEAT_SEDE_LIVE_CAPTURE
 
 
 class JustificanteCaptureSnapshotNotFoundError(SnapshotNotFoundError):
@@ -117,7 +117,13 @@ class JustificanteCaptureSnapshot(BaseModel):
     csv: str = Field(min_length=8, max_length=32)
     pdf_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     pdf_base64: str = Field(min_length=1)
-    source_kind: str = Field(default=JUSTIFICANTE_CAPTURE_SOURCE_KIND, min_length=1, max_length=64)
+    source_kind: ObservationSourceKind = Field(default=JUSTIFICANTE_CAPTURE_SOURCE_KIND)
+
+    @field_validator("source_kind", mode="before")
+    @classmethod
+    def _parse_source_kind(cls, value: object) -> ObservationSourceKind:
+        """Parse persisted snapshot JSON into the closed observation taxonomy."""
+        return ObservationSourceKind(value)
     captured_at: datetime
     state: SnapshotLifecycleState
     superseded_by_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
@@ -590,10 +596,11 @@ def _justificante_matches_capture_axis(
     justificante: Justificante,
     snapshot: JustificanteCaptureSnapshot,
 ) -> bool:
-    return (
-        justificante.modelo.strip() == snapshot.modelo
-        and str(justificante.ejercicio or "").strip() == str(snapshot.filing_year)
-        and justificante.period == snapshot.period
+    return justificante.matches_filing_target(
+        modelo=snapshot.modelo,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period,
+        presentation_id=snapshot.expediente_id,
     )
 
 
@@ -667,7 +674,12 @@ def register_capture_as_filing_evidence(
             f"captured justificante csv {justificante.csv!r} does not match live snapshot csv {snapshot.csv!r}",
         )
     expected_tax_id = _expected_tax_id_for_filing_record(current)
-    if not _justificante_matches_filing_record(justificante, current, expected_tax_id=expected_tax_id):
+    if not _justificante_matches_filing_record(
+        justificante,
+        current,
+        expected_tax_id=expected_tax_id,
+        presentation_id=snapshot.expediente_id,
+    ):
         raise LiveApplicationInputError(
             f"captured justificante {snapshot.csv!r} does not match current filing record "
             f"for modelo={current.modelo!s} period={current.period!s}",
@@ -762,12 +774,14 @@ def _justificante_matches_filing_record(
     filing: ModeloRecord,
     *,
     expected_tax_id: str,
+    presentation_id: str | None = None,
 ) -> bool:
-    return (
-        justificante.modelo.strip() == str(filing.modelo)
-        and str(justificante.ejercicio or "").strip() == str(filing.filing_year)
-        and justificante.period == filing.period
-        and justificante.tax_id.strip().upper() == expected_tax_id.strip().upper()
+    return justificante.matches_filing_target(
+        modelo=str(filing.modelo),
+        filing_year=filing.filing_year,
+        period=filing.period,
+        tax_id=expected_tax_id,
+        presentation_id=presentation_id,
     )
 
 

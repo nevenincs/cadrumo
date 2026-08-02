@@ -74,7 +74,7 @@ def test_stamp_registers_justificante_and_marks_filing_live_captured() -> None:
     assert events[0].payload["source_kind"] == "aeat_sede_live_capture"
     assert events[0].payload["pdf_sha256"] == snapshot.pdf_sha256
     assert events[0].payload["captured_at"] == "2026-04-18T10:00:00+00:00"
-    assert events[0].payload["expediente_id"] == "202613000010001A"
+    assert events[0].payload["expediente_id"] == "13020260410ABCD1234EFGH5678"
 
 
 def test_stamp_keeps_existing_matching_aeat_evidence_without_rewriting_event() -> None:
@@ -189,6 +189,25 @@ def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None
     assert filing is not None
     assert filing.external_evidence is None
     assert filing.aeat_accepted is False
+
+
+def test_stamp_refuses_when_snapshot_expediente_disagrees_with_receipt_presentation_id() -> None:
+    """A presentation identifier on the receipt must match the live expediente."""
+    from .._errors import LiveApplicationInputError
+
+    work_unit_id = _seed_work_unit(modelo="130", filing_year=2026, period="1T")
+    _seed_unverified_filing(work_unit_id=work_unit_id, modelo="130", filing_year=2026, period="1T")
+    snapshot = _persist_capture(
+        pdf_bytes=MODELO_130_FIXTURE.read_bytes(),
+        modelo=Modelo.M130.value,
+        filing_year=2026,
+        period="1T",
+    ).model_copy(update={"expediente_id": "13020260410DIFFERENTIDENT"})
+
+    with pytest.raises(LiveApplicationInputError, match="does not match current filing record"):
+        register_capture_as_filing_evidence(snapshot=snapshot)
+
+    assert JustificanteRepository().load("ABCD1234EFGH5678") is None
 
 
 def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> None:

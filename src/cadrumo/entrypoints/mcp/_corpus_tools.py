@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...application.corpus_search import RetrievalMode, RetrievalResponse, search_corpus
 
@@ -87,6 +87,17 @@ class CorpusSearchPayload(BaseModel):
     results: tuple[CorpusSearchResultRow, ...] = ()
     citation: CorpusCitationResult | None = None
 
+    @model_validator(mode="after")
+    def _mode_and_result_agree(self) -> "CorpusSearchPayload":
+        if self.mode is RetrievalMode.CITATION:
+            if self.citation is None:
+                raise ValueError("a CITATION payload must carry a citation")
+            if self.results:
+                raise ValueError("a CITATION payload must not carry lexical results")
+        elif self.citation is not None:
+            raise ValueError("a LEXICAL_ONLY payload must not carry a citation")
+        return self
+
 
 def _snippet(text: str) -> str:
     collapsed = " ".join(text.split())
@@ -101,8 +112,11 @@ def corpus_search_payload_from_response(response: RetrievalResponse) -> CorpusSe
     Returns:
         A :class:`CorpusSearchPayload`.
     """
-    if response.mode is RetrievalMode.CITATION and response.citation is not None:
+    if response.mode is RetrievalMode.CITATION:
+        # RetrievalResponse's own validator guarantees a CITATION-mode response
+        # always carries a resolved citation and no lexical hits.
         citation = response.citation
+        assert citation is not None
         return CorpusSearchPayload(
             query=response.query,
             mode=response.mode,

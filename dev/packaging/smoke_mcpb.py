@@ -18,6 +18,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from dev.packaging._command import CommandResult, run_command  # noqa: E402
 from dev.packaging._hashing import sha256_path  # noqa: E402
 from dev.packaging.constraint_effect import assert_installed_matches_constraints  # noqa: E402
 from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
@@ -28,18 +29,8 @@ _MCPB_CLI_VERSION: Final[str] = "2.1.2"
 _BUILDER = _REPO_ROOT / "packaging" / "mcpb" / "build.py"
 
 
-def _run(argv: list[str], *, cwd: Path, env: dict[str, str], log: Path, timeout: float) -> None:
-    completed = subprocess.run(  # noqa: S603 - fixed repository and installed tool commands
-        argv,
-        cwd=cwd,
-        env=env,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-        errors="strict",
-        check=False,
-        timeout=timeout,
-    )
+def _run(argv: list[str], *, cwd: Path, env: dict[str, str], log: Path, timeout: float) -> CommandResult:
+    completed = run_command(argv, cwd=cwd, environment=env, timeout_seconds=timeout)
     log.write_text(
         f"argv={json.dumps(argv)}\n"
         f"cwd={cwd}\n"
@@ -50,6 +41,7 @@ def _run(argv: list[str], *, cwd: Path, env: dict[str, str], log: Path, timeout:
     )
     if completed.returncode != 0:
         raise SystemExit(f"command failed ({completed.returncode}): {argv!r}; retained log: {log}")
+    return completed
 
 
 def _run_concurrent_launches(
@@ -137,13 +129,7 @@ def _npx_argv(npx: Path) -> list[str]:
         probed.append(cli)
     npm = shutil.which("npm")
     if nodes and npm is not None:
-        completed = subprocess.run(  # noqa: S603 - fixed installed tool command
-            [npm, "root", "--global"],
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=60,
-        )
+        completed = run_command([npm, "root", "--global"], cwd=_REPO_ROOT, timeout_seconds=60)
         global_root = completed.stdout.strip()
         if completed.returncode == 0 and global_root:
             cli = Path(global_root) / "npm" / "bin" / "npx-cli.js"

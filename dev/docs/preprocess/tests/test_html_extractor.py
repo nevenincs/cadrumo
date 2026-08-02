@@ -4,6 +4,8 @@ Exercises real corpus HTML through the production extractor (no mocks):
 
 * a real multi-article consolidated law splits into one unit per article,
   each titled and anchored to its ``#aN`` BOE permalink fragment;
+* real marker-backed and unmarked annex headings become distinct legal units,
+  while only source-supplied fragments are recorded as unit anchors;
 * the TOC link farm and per-article jurisprudence forms are stripped - known
   boilerplate is ABSENT and known article prose is PRESENT;
 * attribution resolves from the HTML's canonical BOE permalink for a law,
@@ -47,12 +49,25 @@ _NORMATIVES = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus" / "normatives"
 _LAW_HTML = _NORMATIVES / "html" / "ley-37-1992.html"
 # A real single-article slice with no canonical link (base-attribution fallback).
 _SLICE_HTML = _NORMATIVES / "html" / "orden-hap-2250-2015-art-4.html"
+# A BOE consolidated order whose annexes have literal ``[Bloque ...]``
+# fragments, and a BOE daily-document order whose structural annex headings
+# have no literal fragment to claim.
+_MARKED_ANNEX_HTML = _NORMATIVES / "html" / "orden-eha-3435-2007.html"
+_UNMARKED_ANNEX_HTML = _NORMATIVES / "html" / "orden-hfp-1359-2023.html"
+_MODULES_2025_HTML = _NORMATIVES / "html" / "orden-hac-1347-2024.html"
+_APARTADO_ORDINAL_HTML = _NORMATIVES / "html" / "orden-hac-3625-2003-art-3.html"
+_ORDINAL_PARAGRAPH_HTML = _NORMATIVES / "html" / "boe-a-2011-208-modelo-145.html"
 
 
 def test_worked_example_files_exist() -> None:
-    """Both real corpus HTML files are present (guards the whole proof)."""
+    """The real corpus HTML documents used by this proof are present."""
     assert _LAW_HTML.is_file(), _LAW_HTML
     assert _SLICE_HTML.is_file(), _SLICE_HTML
+    assert _MARKED_ANNEX_HTML.is_file(), _MARKED_ANNEX_HTML
+    assert _UNMARKED_ANNEX_HTML.is_file(), _UNMARKED_ANNEX_HTML
+    assert _MODULES_2025_HTML.is_file(), _MODULES_2025_HTML
+    assert _APARTADO_ORDINAL_HTML.is_file(), _APARTADO_ORDINAL_HTML
+    assert _ORDINAL_PARAGRAPH_HTML.is_file(), _ORDINAL_PARAGRAPH_HTML
 
 
 def test_law_splits_into_anchored_articles() -> None:
@@ -76,6 +91,130 @@ def test_law_splits_into_anchored_articles() -> None:
     assert article_one.anchor == "#a1"
     assert "Impuesto sobre el Valor Añadido" in article_one.text
     assert "tributo de naturaleza indirecta" in article_one.text
+
+
+def test_law_retains_non_article_boe_anchor() -> None:
+    """A BOE disposition retains its own fragment rather than an article-only fallback."""
+    output = build_outputs(_LAW_HTML, repo_root=_REPO_ROOT)[0]
+
+    disposition = next(
+        unit for unit in output.units if unit.title and unit.title.startswith("Disposición adicional primera.")
+    )
+
+    assert disposition.anchor == "#daprimera"
+    assert "entidades locales" in disposition.text
+
+
+def test_annex_headings_become_distinct_units_without_inventing_fragments() -> None:
+    """Real BOE annex headings retain literal fragments, or no fragment at all.
+
+    ``orden-eha-3435-2007`` exposes its annex ids in real ``Bloque`` markers;
+    the extractor must preserve those ids rather than attach an annex to the
+    preceding article.  ``orden-hfp-1359-2023`` has equally explicit annex
+    headings but no source fragment, so its unit must stay unanchored instead
+    of reusing the preceding article's anchor.
+    """
+    marked = build_outputs(_MARKED_ANNEX_HTML, repo_root=_REPO_ROOT)[0]
+    annex_one = next(unit for unit in marked.units if unit.title == "ANEXO I")
+    annex_two = next(unit for unit in marked.units if unit.title == "ANEXO II")
+    assert annex_one.anchor == "#ai"
+    assert annex_two.anchor == "#ai-2"
+    assert "Ref. BOE-A-2018-17997" in annex_one.text
+
+    unmarked = build_outputs(_UNMARKED_ANNEX_HTML, repo_root=_REPO_ROOT)[0]
+    unmarked_annex = next(unit for unit in unmarked.units if unit.title == "ANEXO I")
+    assert unmarked_annex.anchor is None
+    assert "Actividades agrícolas, ganaderas y forestales" in unmarked_annex.text
+
+
+def test_ordinal_legal_boundaries_are_titled_units_without_invented_anchors() -> None:
+    """Legacy BOE ordinal forms remain discrete, structurally matchable units.
+
+    The model-309 slice exposes its provision as an unclassed heading inside
+    ``section.apartado``.  The Modelo 145 resolution encodes its operative
+    provisions as ordinal paragraphs.  Both lack source-supplied fragments,
+    so their titles, rather than a fabricated anchor, give the resolver its
+    unique structural target.
+    """
+    apartado = build_outputs(_APARTADO_ORDINAL_HTML, repo_root=_REPO_ROOT)[0]
+    tercero_units = [unit for unit in apartado.units if unit.title == "Tercero."]
+    assert len(tercero_units) == 1
+    tercero = tercero_units[0]
+    assert tercero.anchor is None
+    assert tercero.section == tercero.title
+    assert "Plazo de presentación del modelo 309" in tercero.text
+    assert "veinte primeros días naturales" in tercero.text
+    assert "Disposición adicional única." not in tercero.text
+
+    modelo_145 = build_outputs(_ORDINAL_PARAGRAPH_HTML, repo_root=_REPO_ROOT)[0]
+    primero_title = (
+        "Primero. Aprobación del modelo 145, de comunicación de datos del perceptor de rentas del trabajo a su pagador."
+    )
+    primero_units = [unit for unit in modelo_145.units if unit.title == primero_title]
+    assert len(primero_units) == 1
+    primero = primero_units[0]
+    segundo_units = [unit for unit in modelo_145.units if unit.title and unit.title.startswith("Segundo.")]
+    assert len(segundo_units) == 1
+    segundo = segundo_units[0]
+    assert primero.anchor is None
+    assert primero.section == primero.title
+    assert "Se aprueba el modelo 145" in primero.text
+    assert "ejemplar para la empresa o entidad pagadora" in primero.text
+    assert "Serán válidos también" in primero.text
+    assert "Contenido de la comunicación de los datos relativos a hijos" not in primero.text
+    assert segundo.anchor is None
+    assert segundo.section == segundo.title
+    assert "hijos y otros descendientes" in segundo.text
+
+
+def test_annex_instructions_become_atomic_citation_units() -> None:
+    """Real BOE paragraph headings bound one local citation unit each."""
+    output = build_outputs(_UNMARKED_ANNEX_HTML, repo_root=_REPO_ROOT)[0]
+    fragments = {unit.anchor: unit for unit in output.units if unit.anchor and "instruccion" in unit.anchor}
+
+    employment = fragments["#anexo-ii-instruccion-2-2-a"]
+    assert employment.title == "2.2\u2003Fase\xa02: Rendimiento neto minorado."
+    assert "a)\u2003Minoración por incentivos al empleo." in employment.text
+    assert "Si la diferencia resultase positiva" in employment.text
+    assert "b)\u2003Minoración por incentivos a la inversión." not in employment.text
+
+    excess = fragments["#anexo-ii-instruccion-2-3-b-3"]
+    assert "al exceso sobre dichas cuantías se le aplicará el índice\xa01,30" in excess.text
+    assert "b.4)\u2003Índice corrector por inicio de nuevas actividades." not in excess.text
+
+    modules_2025 = build_outputs(_MODULES_2025_HTML, repo_root=_REPO_ROOT)[0]
+    annex_one_point_three = next(unit for unit in modules_2025.units if unit.anchor == "#anexo-i-instruccion-3")
+    assert "agricultores jóvenes o asalariados agrarios" in annex_one_point_three.title
+    assert "pagos fraccionados" in annex_one_point_three.text
+    assert "A efectos del pago fraccionado" not in annex_one_point_three.text
+
+
+def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> None:
+    """Real 2025 IVA source boundaries exclude adjacent instruction and activity units."""
+    output = build_outputs(_MODULES_2025_HTML, repo_root=_REPO_ROOT)[0]
+    fragments = {unit.anchor: unit for unit in output.units if unit.anchor}
+
+    instructions = fragments["#anexo-i-instrucciones-iva"]
+    assert "La cuota devengada por operaciones corrientes será la suma" in instructions.text
+    assert "será deducible el\xa01 por ciento" in instructions.text
+    assert "La cuota derivada del régimen simplificado será la mayor" in instructions.text
+    assert "Cuotas trimestrales" not in instructions.text
+
+    autotaxis = fragments["#anexo-i-iva-721-2"]
+    assert autotaxis.title == "Actividad: Transporte por autotaxis"
+    assert "Epígrafe I.A.E.: 721.2" in autotaxis.text
+    assert "Cuota mínima por operaciones corrientes: 10\xa0%" in autotaxis.text
+    assert "Transporte de mercancías por carretera" not in autotaxis.text
+
+    freight = fragments["#anexo-i-iva-722"]
+    assert "Epígrafe I.A.E.: 722" in freight.text
+    assert "Cuota mínima por operaciones corrientes: 10\xa0%" in freight.text
+    assert "Actividad: Transporte de residuos por carretera" not in freight.text
+
+    hairdressing = fragments["#anexo-i-iva-972-1"]
+    assert "Epígrafe I.A.E. 972.1" in hairdressing.text
+    assert "Cuota mínima por operaciones corrientes: 13\xa0%" in hairdressing.text
+    assert "Actividad: Salones e institutos de belleza" not in hairdressing.text
 
 
 def test_toc_and_form_boilerplate_is_stripped() -> None:
@@ -121,13 +260,14 @@ def test_attribution_resolves_from_canonical_link_and_falls_back() -> None:
     assert "Official source:" not in slice_out.attribution
 
 
-def test_single_article_slice_extracts_one_unit() -> None:
-    """A bare single-article slice yields one readable unit, no anchor."""
+def test_single_article_slice_derives_its_anchor_from_the_article_heading() -> None:
+    """A legacy slice without a bloque marker still exposes its BOE article anchor."""
     output = build_outputs(_SLICE_HTML, repo_root=_REPO_ROOT)[0]
     assert output.status is ExtractionStatus.OK
     assert len(output.units) == 1
     unit = output.units[0]
     assert unit.title is not None and unit.title.startswith("Artículo 4.")
+    assert unit.anchor == "#a4"
     assert "modelo 184" in unit.text
     assert "<" not in unit.text and ">" not in unit.text
 

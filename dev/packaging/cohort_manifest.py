@@ -13,6 +13,8 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from dev.packaging._hashing import sha256_path
+
 _UTF_8: Final[str] = "utf-8"
 _SCHEMA: Final[Literal["cadrumo.release-cohort.v1"]] = "cadrumo.release-cohort.v1"
 _MANIFEST_NAME: Final[str] = "release-cohort.json"
@@ -171,15 +173,6 @@ class LoadedReleaseCohort:
         return (self.directory / PurePosixPath(record.path)).resolve(strict=True)
 
 
-def sha256_file(path: Path) -> str:
-    """Return the SHA-256 digest of one file without loading it into memory."""
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def cohort_identifier(
     *,
     version: str,
@@ -219,7 +212,7 @@ def artifact_record(
         name=name,
         kind=kind,
         path=relative,
-        sha256=sha256_file(artifact),
+        sha256=sha256_path(artifact),
         size=artifact.stat().st_size,
     )
 
@@ -286,7 +279,7 @@ def load_release_cohort(directory: Path) -> LoadedReleaseCohort:
                 f"cohort artifact size mismatch for {record.name!r}: "
                 f"expected {record.size}, got {artifact.stat().st_size}",
             )
-        actual = sha256_file(artifact)
+        actual = sha256_path(artifact)
         if actual != record.sha256:
             raise SystemExit(
                 f"cohort artifact digest mismatch for {record.name!r}: expected {record.sha256}, got {actual}",
@@ -310,6 +303,5 @@ __all__ = [
     "cohort_identifier",
     "create_manifest",
     "load_release_cohort",
-    "sha256_file",
     "write_manifest",
 ]

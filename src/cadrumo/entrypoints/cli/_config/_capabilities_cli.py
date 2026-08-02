@@ -44,9 +44,9 @@ def _register_show(capabilities_app: typer.Typer) -> None:
             decision = resolve_active_capability(capability)
             rows.append(
                 {
-                    "capability": capability.value,
+                    "capability": capability,
                     "enabled": decision.enabled,
-                    "source": decision.source.value,
+                    "source": decision.source,
                     "reason": decision.reason,
                 },
             )
@@ -90,7 +90,7 @@ def _register_set(capabilities_app: typer.Typer) -> None:
             ),
         )
         result = CapabilitySetResult.model_validate(
-            {"profile_id": profile_id, "capability": capability.value, "enabled": enabled},
+            {"profile_id": profile_id, "capability": capability, "enabled": enabled},
         )
         lines = [
             f"{tr('cli.config.profile.capabilities.capability_label', default='capability')}\t{capability.value}",

@@ -415,7 +415,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
                     certificate_path=record.certificate_path,
                     friendly_name=record.friendly_name or "",
                     active=record.name == active_name,
-                    result=str(outcome.result),
+                    result=outcome.result,
                     summary=outcome.summary,
                     days_until_expiry=outcome.days_until_expiry,
                 ),

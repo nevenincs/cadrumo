@@ -40,11 +40,13 @@ from typing import Any, ClassVar, cast, override
 
 import pytest
 from click.testing import Result
+from pydantic import ValidationError
 
 from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
+from ....core.telemetry import TelemetryTier
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -113,6 +115,29 @@ def test_telemetry_status_defaults_to_fully_inert(_isolated_backend: None) -> No
     assert payload["gestor_mode"] is False
     assert payload["endpoint"] is None
     assert payload["would_emit_if_acknowledged"] is False
+
+
+@pytest.mark.parametrize("tier", ["", "bogus"])
+def test_telemetry_status_payload_refuses_unknown_tier(tier: str) -> None:
+    """The CLI status boundary admits only the core telemetry posture enum."""
+
+    from .._diagnostics_payloads import TelemetryStatusResult
+
+    with pytest.raises(ValidationError, match="TelemetryTier"):
+        TelemetryStatusResult(
+            opt_in=False,
+            tier=tier,
+            gestor_mode=False,
+            would_emit_if_acknowledged=False,
+        )
+
+    accepted = TelemetryStatusResult(
+        opt_in=False,
+        tier=TelemetryTier.OFF,
+        gestor_mode=False,
+        would_emit_if_acknowledged=False,
+    )
+    assert accepted.tier is TelemetryTier.OFF
 
 
 def test_telemetry_status_previews_a_fully_opted_in_posture_via_flags(_isolated_backend: None) -> None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from datetime import date
 from pathlib import Path
 
@@ -57,6 +58,14 @@ def _source_reference(path: str, payload: bytes) -> SourceReference:
     )
 
 
+def _write_extracted_unit(corpus_path: Path, *, anchor: str, text: str) -> None:
+    """Write the canonical selected-unit artefact used by legal verification."""
+    corpus_path.with_name(corpus_path.name + ".extracted.json").write_text(
+        json.dumps({"units": [{"anchor": anchor, "text": text}]}),
+        encoding="utf-8",
+    )
+
+
 def test_verify_source_file_checks_hash_and_size(tmp_path: Path) -> None:
     payload = b"official"
     source_path = tmp_path / "corpus" / "source.xlsx"
@@ -76,6 +85,24 @@ def test_verify_source_file_rejects_hash_mismatch(tmp_path: Path) -> None:
 
     with pytest.raises(RegistryValidationError, match=r"byte count mismatch|sha256 mismatch"):
         verify_source_file(tmp_path, _source_reference("corpus/source.xlsx", b"official"))
+
+
+def test_verify_source_file_rehashes_same_size_timestamp_restored_replacement(tmp_path: Path) -> None:
+    """Byte verification must not reuse a digest after metadata-preserving tampering."""
+
+    payload = b"official"
+    source_path = tmp_path / "corpus" / "source.xlsx"
+    source_path.parent.mkdir(parents=True)
+    source_path.write_bytes(payload)
+    reference = _source_reference("corpus/source.xlsx", payload)
+    verify_source_file(tmp_path, reference)
+
+    original_stat = source_path.stat()
+    source_path.write_bytes(b"tampered")
+    os.utime(source_path, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        verify_source_file(tmp_path, reference)
 
 
 def test_verify_source_file_rejects_path_escape(tmp_path: Path) -> None:
@@ -189,6 +216,7 @@ def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
     corpus_path.write_text("<p>other legal text</p>", encoding="utf-8")
+    _write_extracted_unit(corpus_path, anchor="a110", text="other legal text")
     reference = _legal_reference().model_copy(
         update={
             "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
@@ -204,6 +232,7 @@ def test_verify_legal_catalogue_checks_required_text_when_article_is_absent(tmp_
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "orden-hfp-1359-2023-da-5.html"
     corpus_path.parent.mkdir(parents=True)
     corpus_path.write_text("<p>official text without the disposition phrase</p>", encoding="utf-8")
+    _write_extracted_unit(corpus_path, anchor="da5", text="official text without the disposition phrase")
     reference = _legal_reference(
         ref_id="orden-hfp-1359-2023:da-5",
         kind="orden",
@@ -223,6 +252,7 @@ def test_verify_legal_catalogue_checks_required_text_for_treaty_refs(tmp_path: P
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "convenio-es-gb-2013-art-6.html"
     corpus_path.parent.mkdir(parents=True)
     corpus_path.write_text("<p>official treaty text without the property-income phrase</p>", encoding="utf-8")
+    _write_extracted_unit(corpus_path, anchor="art-6", text="official treaty text without the property-income phrase")
     reference = _legal_reference(
         ref_id="convenio-es-gb-2013:art-6",
         kind="acuerdo_internacional",
@@ -245,6 +275,7 @@ def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Pat
         "<p>20 por ciento del rendimiento neto</p>",
         encoding="utf-8",
     )
+    _write_extracted_unit(corpus_path, anchor="a110", text="20 por ciento del rendimiento neto")
     reference = _legal_reference().model_copy(
         update={
             "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
@@ -258,6 +289,32 @@ def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Pat
     assert result is None
 
 
+def test_verify_legal_catalogue_refuses_an_anchor_that_would_widen_to_another_unit(tmp_path: Path) -> None:
+    """Required text in a sibling unit cannot validate an absent cited anchor."""
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.with_name(corpus_path.name + ".extracted.json").write_text(
+        json.dumps(
+            {
+                "units": [
+                    {"anchor": "a109", "text": "20 por ciento del rendimiento neto"},
+                    {"anchor": "a111", "text": "unrelated legal text"},
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+    reference = _legal_reference().model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
+            "required_text": ("20 por ciento del rendimiento neto",),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="cannot resolve one corpus unit"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
 def test_legal_corpus_text_cache_is_path_scoped_for_same_size_files(tmp_path: Path) -> None:
     """Same-name, same-size corpus files must not share cached legal text."""
     alpha_path = tmp_path / "corpus" / "normatives" / "alpha" / "same-size-cache-collision.html"
@@ -266,6 +323,8 @@ def test_legal_corpus_text_cache_is_path_scoped_for_same_size_files(tmp_path: Pa
     bravo_path.parent.mkdir(parents=True)
     alpha_path.write_text("<p>alpha required</p>", encoding="utf-8")
     bravo_path.write_text("<p>bravo required</p>", encoding="utf-8")
+    _write_extracted_unit(alpha_path, anchor="a", text="alpha required")
+    _write_extracted_unit(bravo_path, anchor="b", text="bravo required")
 
     assert alpha_path.name == bravo_path.name
     assert alpha_path.stat().st_size == bravo_path.stat().st_size
@@ -285,6 +344,40 @@ def test_legal_corpus_text_cache_is_path_scoped_for_same_size_files(tmp_path: Pa
 
     verify_legal_catalogue({alpha.id: alpha}, source_root=tmp_path)
     verify_legal_catalogue({bravo.id: bravo}, source_root=tmp_path)
+
+
+def test_legal_corpus_text_cache_is_anchor_scoped_within_one_sidecar(tmp_path: Path) -> None:
+    """Sibling anchors must never reuse the first selected extracted unit."""
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "two-articles.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>two legal units</p>", encoding="utf-8")
+    corpus_path.with_name(corpus_path.name + ".extracted.json").write_text(
+        json.dumps(
+            {
+                "units": [
+                    {"anchor": "a110", "text": "first article required text"},
+                    {"anchor": "a111", "text": "second article required text"},
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
+    first = _legal_reference(ref_id="rd-439-2007:art-110-first").model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/two-articles.html#a110",
+            "required_text": ("first article required text",),
+        },
+    )
+    second = _legal_reference(ref_id="rd-439-2007:art-111-second").model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/two-articles.html#a111",
+            "required_text": ("second article required text",),
+        },
+    )
+
+    verify_legal_catalogue({first.id: first, second.id: second}, source_root=tmp_path)
+
+
 
 
 def test_source_citation_text_cache_is_path_scoped_for_same_size_files(tmp_path: Path) -> None:
@@ -408,6 +501,7 @@ def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp
         "<p>other legal text without the phrase</p>",
         encoding="utf-8",
     )
+    _write_extracted_unit(corpus_path, anchor="a110", text="other legal text without the phrase")
     reference = _legal_reference().model_copy(
         update={
             "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
@@ -428,6 +522,7 @@ def test_registry_validator_rejects_missing_required_text(tmp_path: Path) -> Non
         "<p>other legal text without the phrase</p>",
         encoding="utf-8",
     )
+    _write_extracted_unit(corpus_path, anchor="a110", text="other legal text without the phrase")
     reference = _legal_reference().model_copy(
         update={
             "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
@@ -541,5 +636,6 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
         ),
         encoding="utf-8",
     )
+    _write_extracted_unit(section_path, anchor="sec1", text="Seccion 1")
 
     verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)

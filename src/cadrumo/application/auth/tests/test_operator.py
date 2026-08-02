@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -23,10 +23,13 @@ from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from ..._state_projection_auth import ProjectionAuthReadiness
 from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import (
     AuthLoginPreconditionError,
+    ProviderConfigurationProbe,
+    ProviderProbeResult,
     active_auth_projection_span,
     login_operator_auth,
     register_operator_certificate_source,
@@ -41,6 +44,7 @@ from .._operator import (
     reset_operator_auth,
 )
 from .._operator import test_operator_auth as run_operator_auth_test
+from .._operator_results import AuthTestResult, LiveAuthPreflightReport
 from .._sessions import (
     AuthProfileIdentityMismatchError,
     _prepare_clave_auth,
@@ -605,7 +609,7 @@ def test_live_auth_preflight_reports_expired_persisted_session_state() -> None:
         with frozen_clock(_SESSION_PROBE_NOW):
             report = build_live_auth_preflight_report("clave_movil")
 
-    assert report.probe_result == "ok"
+    assert report.probe_result is ProviderProbeResult.OK
     assert report.persisted_session_present is True
     assert report.persisted_session_expired is True
     assert report.persisted_session_state == "expired"
@@ -632,7 +636,23 @@ def test_live_auth_preflight_uses_explicit_certificate_settings(tmp_path: Path) 
     assert report.provider == "certificate"
     assert report.certificate_path_configured is True
     assert report.certificate_file_present is True
-    assert report.probe_result == "corrupt"
+    assert report.probe_result is ProviderProbeResult.CORRUPT
+
+
+def test_auth_probe_verdict_contract_refuses_unknown_values() -> None:
+    """Readiness projections must not turn malformed provider verdicts into readiness output."""
+
+    invalid_probe_result = {"probe_result": "apparently_ready"}
+    with pytest.raises(ValidationError):
+        ProjectionAuthReadiness.model_validate(invalid_probe_result)
+    with pytest.raises(ValidationError):
+        AuthTestResult.model_validate(invalid_probe_result)
+    with pytest.raises(ValidationError):
+        LiveAuthPreflightReport.model_validate(invalid_probe_result)
+    with pytest.raises(ValidationError):
+        ProviderConfigurationProbe.model_validate(
+            {"provider": "certificate", "result": "apparently_ready"}
+        )
 
 
 def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:

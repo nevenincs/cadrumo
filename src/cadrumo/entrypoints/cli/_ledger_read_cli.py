@@ -39,7 +39,6 @@ from ...core import LedgerSortField, LedgerSortOrder, Period, resolve_active_buc
 from ...core.decimal import coerce_decimal_strict
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...core.parsing import parse_iso8601_date
 from ...domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.categories import (
     CATEGORY_FAMILY_MEMBERS,
@@ -136,7 +135,7 @@ def _register_ledger_providers_command(app: typer.Typer) -> None:
             {
                 "providers": [
                     {
-                        "provider": item.provider.value,
+                           "provider": item.provider,
                         "cli_binary": item.cli_binary,
                         "available": item.available,
                         "resolved_path": item.resolved_path,
@@ -300,17 +299,14 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
 def _parse_iso_date(value: str | None, option: str) -> date | None:
     if value is None:
         return None
-    try:
-        return parse_iso8601_date(value.strip())
-    except ValueError as exc:
-        raise _bad(
-            tr(
-                "cli.ledger.llm_diagnostics.bad_date",
-                option=option,
-                value=value,
-                default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
-            ),
-        ) from exc
+    from ._common import _parse_iso_date as _parse_required_iso_date
+
+    return _parse_required_iso_date(
+        value,
+        label=option,
+        translation_key="cli.ledger.llm_diagnostics.bad_date",
+        default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
+    )
 
 
 def _register_ledger_categories_command(app: typer.Typer) -> None:

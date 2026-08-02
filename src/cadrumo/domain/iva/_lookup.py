@@ -93,17 +93,15 @@ def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
     if regulation is None:
         raise IvaCategoryNotFoundError(f"IVA category {category.value!r} not found in catalogue")
     citation = regulation.citations[0]
-    source_label = _SOURCE_LABELS.get(citation.source.value, citation.source.value)
-    return f"{source_label}, {citation.article}: {citation.quoted_text}"
+    from ...core.resources import resources
 
-
-_SOURCE_LABELS: dict[str, str] = {
-    "ley-37-1992": "Ley 37/1992",
-    "manual-iva-2025": "Manual práctico IVA 2025",
-    "directive-2006-112-ec": "Directive 2006/112/EC",
-    "other": "other",
-}
-"""Human-readable labels for each :class:`cadrumo.domain.iva.IvaCitationSource`."""
+    reference = resources().modelos.authority.catalogues.legal.get(citation.legal_reference)
+    if reference is None:
+        raise IvaCatalogueError(
+            f"citation legal_reference {citation.legal_reference!r} is absent from the registry legal catalogue",
+        )
+    article = f"Art. {reference.article}" if reference.article is not None else citation.legal_reference
+    return f"{reference.document_id}, {article}: {citation.quoted_text}"
 
 
 __all__ = ["cite", "lookup_rate"]
