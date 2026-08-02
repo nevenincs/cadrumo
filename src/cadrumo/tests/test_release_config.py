@@ -83,11 +83,11 @@ class ReleasePleaseConfig(BaseModel):
 
     schema_url: str | None = Field(default=None, alias="$schema")
     #: Caps how far back release-please walks commit history on its very
-    #: FIRST run against this repo (no release PR it generated has ever
-    #: merged): full 40-char commit SHA only, top-level-only per
+    #: first run against this repo (no release pull request it generated has
+    #: ever merged): full 40-char commit SHA only, top-level-only per
     #: release-please's own docs. Release-please ignores this key once a
-    #: release PR it generated has merged, so it is safe to remove after
-    #: that point rather than something this schema must keep forever.
+    #: release pull request it generated has merged, so it is safe to remove
+    #: after that point rather than something this schema must keep forever.
     bootstrap_sha: str | None = Field(default=None, alias="bootstrap-sha")
     release_type: str = Field(alias="release-type")
     include_component_in_tag: bool = Field(alias="include-component-in-tag")
@@ -241,11 +241,10 @@ def test_release_please_config_is_well_formed() -> None:
     # very first automated bump has not run yet), so bootstrap-sha must be
     # present and a full 40-char commit SHA -- without it, release-please
     # finds no GitHub Release matching the manifest's recorded version and
-    # falls back to walking the ENTIRE commit history one commit at a time,
-    # which measurably 504s against this repo's real history
-    # (`2026-08-02-release-pipeline-full-automation` W02.P03 grounding).
+    # falls back to walking the entire commit history one commit at a time,
+    # which measurably times out against this repo's real history.
     assert config.bootstrap_sha is not None, (
-        "bootstrap-sha must stay set until release-please's first generated release PR merges"
+        "bootstrap-sha must stay set until release-please's first generated release pull request merges"
     )
     assert re.fullmatch(r"[0-9a-f]{40}", config.bootstrap_sha), "bootstrap-sha must be a full 40-char commit SHA"
 

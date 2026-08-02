@@ -2,30 +2,41 @@
 
 This runbook covers the complete release lifecycle for Cadrumo maintainers.
 
-**`.github/workflows/publish-release.yml` is the sole publication authority.** It
-promotes an immutable, CI-tested release cohort to every public channel — PyPI, GitHub
-Release, Scoop bucket, Homebrew tap, and the Claude plugin marketplace — without
-rebuilding any artifact. The workflow requires the one-time channel prerequisites below, and the
-protected `release` environment's approval click is the human gate.
+**One dispatch drives the release.** `.github/workflows/release-orchestrator.yml` bumps
+the version, runs the packaging campaign, runs whichever acquisition lanes the claimed
+channels require, and seals a release candidate — all from a single `workflow_dispatch`,
+with no human decision anywhere downstream of pressing Run.
+`.github/workflows/release-soak-promoter.yml` then crosses the 48-72 hour soak on its own
+clock and dispatches `.github/workflows/publish-release.yml`, **the sole publication
+authority**, which promotes the sealed, CI-tested cohort to every public channel — PyPI,
+GitHub Release, Scoop bucket, Homebrew tap, and the Claude plugin marketplace — without
+rebuilding any artifact. Neither workflow reads a required-reviewer approval click in its
+own logic; the publish job still runs inside the protected `release` GitHub environment
+for the OIDC trust anchor that environment name provides, and that environment's
+`required_reviewers` rule, if the operator has not yet removed it (**OP-9**, see
+Operator actions below), is a standing GitHub setting independent of anything this
+workflow reads or enforces.
 
-Dispatching publish-release.yml with `dry_run=true` runs Gate 1 (prerequisite check) and
-Gate 2 (validate) fully but skips Gate 3 (publish), so the validate-everything-publish-
-nothing diagnostic lives on the single authority. The former validate-only `publish.yml`
-stub was retired.
+Dispatching `publish-release.yml` directly with `dry_run=true` still runs Gate 2
+(validate) fully but skips Gate 3 (publish), for a validate-everything-publish-nothing
+rehearsal of the publication authority alone; `release-orchestrator.yml`'s own `dry_run`
+input rehearses the whole chain instead, from the bump through the sealed candidate,
+advancing no version and publishing nothing.
 
 For the full pipeline review and gap analysis see
 `.vault/reference/2026-07-19-post-release-distribution-reference.md`.
 
-## Release at a glance (6 stages)
+## Release at a glance
 
-| Stage | Where | What |
+| Phase | Where | What |
 | --- | --- | --- |
-| 0. Version + tag | Local, human | Bump 7 surfaces, `uv lock`, commit, tag, push main + tag |
-| 1. Build + prove | CI (`packaging-smoke.yml`, auto-triggered by push) | 3-OS smoke, build immutable release cohort, 3 oracle-emit rows |
-| 2. Channel proofs | CI (3 manual dispatches) + operator real-client captures | Scoop, Homebrew, Claude acquisition; mint 4 claude rows |
-| 3. Readiness gate | Local, human | Aggregate every row the claimed channels require; `just release-readiness-json` must report `"ok": true` |
-| 4. Publish | CI (`publish-release.yml`, human approval required) | Gate 1 opt-in → Gate 2 validate → Gate 3 publish → reacquire |
-| 5. Reacquire + docs | Local, human | Run the reacquisition lanes, unlock the docs-claims gate, `just docs-deploy` |
+| 1. Dispatch | CI (`release-orchestrator.yml`, one `workflow_dispatch`) | Bump 7 surfaces + lock, packaging campaign, acquisition lanes, seal a release candidate |
+| 2. Soak (machine-held) | CI (`release-soak-promoter.yml`, hourly cron) | Wait 48-72h against immutable bytes, re-verify readiness, dispatch publication |
+| 3. Publish | CI (`publish-release.yml`) | Gate 2 validate → Gate 3 publish (behind the `release` environment) |
+| 4. Post-publication verification | Local, human | Reacquisition lanes prove each channel; `just docs-deploy` closes the docs tripwire |
+
+The one remaining local, human act ahead of a first dispatch is arming the workflow's
+one-time channel prerequisites (below) — none of it happens per release.
 
 ## Repository identity
 
@@ -47,9 +58,11 @@ superseded
 does not govern active naming. The following sources define the release mechanics:
 
 - [`.github/workflows/publish-release.yml`](.github/workflows/publish-release.yml) —
-  the sole upload authority: manual dispatch, protected `release` environment with
-  required reviewers, OIDC Trusted Publishing, promote-without-rebuild from the
-  retained cohort bytes.
+  the sole upload authority: dispatched by the soak promoter (or manually for a
+  rehearsal), the protected `release` environment for its OIDC trust anchor (its
+  `required_reviewers` rule is a standing GitHub setting the workflow's own logic does
+  not read — see OP-9 under Operator actions), OIDC Trusted Publishing,
+  promote-without-rebuild from the retained cohort bytes.
 - [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml) —
   runs the three-OS artifact checks, builds the immutable full release cohort once per
   run and publishes it (`cadrumo-release-cohort.tar.gz`) to the run's draft evidence
@@ -313,7 +326,7 @@ under two different names is exactly the confusion this narrowing exists to
 prevent. OP-3's only remaining half is setting the deploy-role variable the
 `Cadrumo Docs Publish` workflow (`docs-publish.yml`) reads to assume its OIDC
 role on `release: published`. Until that variable is set, the workflow stays
-inert and Stage 5's `just docs-deploy` remains a human act.
+inert and the post-publication `just docs-deploy` remains a human act.
 
 Verify all three actions afterwards, rather than assuming — a settings change
 leaves no commit, so nothing in the tree records whether it happened:
@@ -381,376 +394,126 @@ root. Never use a maintainer's real taxpayer profile for release verification.
 
 ## Operate a release
 
-### Stage 0: version + tag
+### Dispatch the release
 
-Run every command from the repository root on a clean `main` branch.
-
-**The bump is the first act of a release cycle, not a step you reach later.** A
-cohort is stamped with whatever version the declarations hold when it is built,
-so building before bumping mints a cohort under the previous release's number.
-That is not a recoverable mistake once anything ships: a package index upload is
-permanent, and the number is burned whether or not the upload was intended.
-
-The version is computed, never chosen. `release-please` derives it from
-conventional-commit history against the floor recorded in
-`.release-please-manifest.json`; with `bump-minor-pre-major` a feature commit
-takes the next minor. Do not hand-pick a number to match an expectation.
-
-Two guards enforce this and both refuse rather than warn:
-
-- The cohort seal step refuses to build a version any destination already owns,
-  so a skipped bump is caught when the cost is one re-run.
-- Publication Gate 2 asks the same question again immediately before the first
-  write, covering the case where a cohort was sealed earlier and dispatched
-  later.
-
-Both consult `dev/release/burned_versions.json`, an append-only ledger of
-numbers that may never be minted again. A version enters it whenever an outward
-artefact carrying it is deleted, **in the same change as the deletion** —
-disposing of an artefact and burning its number are one act, never two. The
-ledger exists because deleting a release erases the destination-side evidence
-that the number was ever exposed, while anyone who fetched those bytes still
-holds them.
-
-1. Update `main` and run the pre-bump subset of the readiness gate:
-
-   ```console
-   git switch main
-   git pull --ff-only
-   just release-readiness-json
-   ```
-
-   At this point in the cycle the gate is **expected to report `"ok": false`** on the
-   two cohort-bound blocking checks, `distribution-evidence-complete` and
-   `generated-surface-versions`. Both require a local `var/release-cohort/` built at
-   the checked-out commit and carrying the tag `v{version}`, and no such cohort
-   exists until Stage 1 builds it from the tagged commit — so demanding them here
-   would gate the bump on a state only a post-bump release can reach. They are the
-   release gate at Stage 3, where `"ok": true` is required.
-
-   What must hold **now** is every check that does not depend on a cohort:
-   `project-names-canonical`, `version-surfaces-agree`, `changelog-ready`, and — when
-   `gh` can reach the tracker — no open `priority:P0-blocker` issue. If any of those
-   four fails, stop.
-
-   The same expectation applies to `just release-apply` in step 4: it refuses on the
-   identical cohort-bound check, so read its printed checklist and apply the items by
-   hand.
-
-2. Run the release and packaging checks:
-
-   ```console
-   uv sync --frozen
-   just packaging-smoke-dependencies
-   just packaging-smoke
-   just packaging-smoke-docker
-   uv run --no-sync pytest src/cadrumo/tests/test_release_config.py dev/release/tests -q
-   ```
-
-   Every command must exit zero.
-
-3. Preview the release-please proposal:
-
-   ```console
-   just release
-   ```
-
-   The command must exit zero and create a non-empty `var/release/release-please.log`.
-   Compare the proposal with every commit since the preceding tag.
-
-4. Set one `X.Y.Z` version across all **seven** release surfaces. Run `just
-   release-apply` to see the printed checklist, then apply each item by hand:
-
-   - `.release-please-manifest.json`
-   - `pyproject.toml` — `[project].version`
-   - `packaging/cadrumo_data_manuals/pyproject.toml` — `[project].version`
-   - `packaging/cadrumo_data_official/pyproject.toml` — `[project].version`
-   - `src/cadrumo/__init__.py` — `__version__`
-   - `CHANGELOG.md` — prepend the release block using the dry-run log as source
-   - `uv.lock` — regenerate with `uv lock && uv lock --check`
-
-   **Do not touch `packaging/mcpb/manifest.json`.** Its tracked `"version"` is a
-   synthetic sentinel (`0.0.0`); `packaging/mcpb/build.py` stamps the real cohort
-   version over it at build time, and `check_version_surfaces_agree`
-   (`dev/release/readiness.py`) refuses any other tracked literal because a
-   real-looking value there would masquerade as an authority. The built bundle's
-   stamped version is bound to the cohort by `check_generated_surface_versions`
-   instead. Bumping it fails the blocking version gate.
-
-   Also update both exact companion dependency pins in `pyproject.toml`:
-   `cadrumo-data-manuals==X.Y.Z` and `cadrumo-data-official==X.Y.Z`.
-
-5. Rerun the readiness gate and companion parity test. Confirm
-   `version-surfaces-agree` now reports the new version and still passes; the two
-   cohort-bound checks named in step 1 remain expected failures until Stage 3. The
-   lock check and both test commands must pass outright:
-
-   ```console
-   just release-readiness
-   uv lock --check
-   uv run --no-sync pytest src/cadrumo/tests/test_release_config.py dev/release/tests -q
-   uv run --no-sync pytest dev/packaging/tests/test_cadrumo_data_distribution.py::test_companion_version_matches_root_distribution -q
-   ```
-
-6. Stage and commit all seven release surfaces together:
-
-   ```console
-   git add \
-     .release-please-manifest.json pyproject.toml \
-     packaging/cadrumo_data_manuals/pyproject.toml \
-     packaging/cadrumo_data_official/pyproject.toml \
-     src/cadrumo/__init__.py \
-     CHANGELOG.md uv.lock
-   git commit -m "chore(release): vX.Y.Z"
-   ```
-
-   If the staged diff contains any path outside those seven, stop.
-
-### Stage 0b: release-candidate soak (non-hotfix releases)
-
-Before pushing the final tag, run a local soak against a pre-release build. RC tags are
-local only — never push an RC tag.
-
-1. Create an annotated local tag:
-
-   ```console
-   git tag -a vX.Y.Z-rc.1 -m "Cadrumo vX.Y.Z-rc.1"
-   ```
-
-2. Run `just packaging-smoke` and `just packaging-smoke-docker` against the tagged
-   commit. Both commands must exit zero. Every manifest they create must contain
-   `"ok": true`.
-
-3. Install the built core wheel into a clean scratch environment. Configure a new local
-   storage root so the probe starts with fresh Cadrumo state. Use only fictional
-   taxpayer data. If Cadrumo detects former-product state or any existing taxpayer
-   profile, stop.
-
-4. Run the installed probes in this order:
-   - `aeat --version` must print `CADRUMO X.Y.Z`.
-   - `aeat --help` must exit zero and display the `config` and `app` roots.
-   - A representative human workflow must run through `aeat` and report its output
-     path, byte size, and SHA-256 digest.
-   - When the `agent` extra is installed, the plugin launcher must invoke `cadrumo-mcp`
-     without a missing-extra refusal.
-
-5. Record every probe command, exit status, and visible result. Missing output, real
-   taxpayer data, or former-product state fails the candidate.
-
-6. Hold for at least 48 hours. If any packaging lane turns red, a `priority:P0-blocker`
-   issue opens, or the changelog omits a user-visible change since the preceding tag,
-   stop. Fix forward, delete only the local RC tag, and restart as `vX.Y.Z-rc.2`.
-
-7. When every condition passes, create the final tag and push:
-
-   ```console
-   git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"
-   git push origin main
-   git push origin refs/tags/vX.Y.Z
-   ```
-
-Emergency hotfixes may skip the soak. Use the cycle times in
-`docs/_release_checklist.yaml` and record the exception.
-
-### Stage 1: build + prove
-
-The push to `main` automatically triggers the `Cadrumo Packaging Smoke` workflow
-(`.github/workflows/packaging-smoke.yml`). Wait for the run to go fully green. It runs:
-
-- Three per-OS smoke legs (Linux X64, Windows X64, macOS ARM64) proving wheel
-  installation, bundled data, extras, split, and browser lanes.
-- `build-release-cohort`: builds the **one immutable release cohort** on exactly
-  CPython 3.13, under any uv, from a fresh clean clone with `SOURCE_DATE_EPOCH` and
-  `PYTHONHASHSEED=0`. The uv version is recorded in the cohort's build identity
-  rather than pinned, so reproducibility is checked by comparing build identities
-  instead of being enforced by refusing to build when the toolchain moves. The cohort holds 13 files: 6 Python dist files,
-  `python-cohort.json`, 2 Claude plugin zips, `cadrumo.json` (Scoop manifest),
-  `cadrumo.rb` (Homebrew formula), `cadrumo-X.Y.Z.mcpb`, and `release-cohort.json`.
-  The cohort id is a SHA-256 over the complete artifact set; CI never rebuilds these
-  bytes. The job creates the run's draft evidence release `evidence-smoke-<run id>`
-  (the sole creator) and publishes the cohort as `cadrumo-release-cohort.tar.gz`.
-- Three `oracle-emit-*` legs: each downloads that single cohort archive from the
-  run's evidence draft, installs its wheels into a fresh venv, runs the grounded CLI
-  and MCP tax oracles (Modelo 200 `DP200014:00562 == 23000.00` per the readiness
-  ADR), and mints one sanctioned `DistributionEvidence` row (`python-linux-x86-64`,
-  `python-windows-x86-64`, `python-macos-arm64`) onto the same draft.
-- `seal-evidence-manifest`: hashes the draft's complete asset set and seals
-  `evidence-manifest.json` binding the run identity to every asset digest.
-
-**Note the run id** of the successful smoke run. It is the identity anchor for every
-subsequent dispatch and for the final publish dispatch. Evidence drafts have no
-Actions-storage retention window, but the evidence GC keeps only the newest three per
-lane — promote (or protect the draft via the GC's keep-tags input) before it ages out
-of the keep window.
-
-### Stage 2: channel acquisition proofs
-
-Dispatch the three acquisition workflows with the smoke run id and head commit SHA. In
-the GitHub Actions UI, or via the CLI:
+Everything from computing the version through sealing a release candidate is one
+`workflow_dispatch` of `.github/workflows/release-orchestrator.yml`, from the GitHub
+Actions UI or:
 
 ```console
-gh workflow run packaging-scoop.yml \
-  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<HEAD_SHA>
-
-gh workflow run packaging-homebrew.yml \
-  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<HEAD_SHA>
-
-gh workflow run packaging-claude.yml \
-  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<HEAD_SHA>
+gh workflow run release-orchestrator.yml -f dry_run=false
 ```
 
-Each workflow verifies source-run identity (success, `packaging-smoke.yml`, `push`,
-`main`, same repo, matching `head_sha`) before proceeding.
+Nothing downstream of this dispatch asks a human anything. The dispatch itself is the
+deliberate act; there is no confirmation-phrase input, because typing one would
+reproduce the ceremony the automation removed while protecting against nothing the
+guard set does not.
 
-- `packaging-scoop.yml` (self-hosted Windows, native, pinned to the
-  `windows-scoop`-labelled runner so it lands in the dedicated non-admin runner
-  user's own Scoop profile and never touches the fleet's Docker daemon):
-  hash-verifies and installs
-  the smoke draft's cohorts, generates the Scoop manifest, runs the oracles, and
-  publishes the `scoop-windows-x86-64` `DistributionEvidence` row onto its own sealed
-  draft `evidence-scoop-<run id>`.
-- `packaging-homebrew.yml` (matrix: self-hosted macOS ARM64, Linux X64, and
-  Linux ARM64; macOS Intel is not a supported platform): installs from the tap
-  snapshot on each platform, runs the oracles, and publishes its
-  `homebrew-<os>-<arch>` `DistributionEvidence` row per matrix row onto the
-  single sealed draft `evidence-homebrew-<run id>`.
-- `packaging-claude.yml` (self-hosted Windows): runs a live Claude Code session and
-  the MCPB runtime oracle; produces lane evidence, not `DistributionEvidence` rows.
+`just release-readiness` (backed by `dev/release/readiness.py`) stays available for
+local, pre-dispatch diagnosis of the checks that do not depend on a cohort
+(`project-names-canonical`, `version-surfaces-agree`, `changelog-ready`, no open
+`priority:P0-blocker` issue) — a convenience, not a mandatory step; the bump and
+publication stages run the same checks themselves and refuse on their own account.
 
-**Operator real-client captures (4 claude rows):** The four `claude-*` evidence rows
-require real client installations performed by a human. The honesty guard in
-`dev/packaging/distribution_evidence_emit.py` refuses SDK-driven runs. Run one capture
-per row using:
+**What happens automatically, in order:**
 
-```console
-uv run --no-sync python -m dev.packaging.emit_real_client_evidence <args>
-```
+1. **Host-extension evidence precondition.** Refuses the whole chain, before the bump,
+   if a claimed channel needs operator-minted evidence it does not have. Under today's
+   python-only channel descriptor no host-extension channel is claimed, so this passes
+   trivially. If a `claude-*` channel is ever claimed, mint its four real-client rows
+   first — the honesty guard in `dev/packaging/distribution_evidence_emit.py` refuses
+   SDK-driven runs, so this stays a human act:
 
-Refer to the module's docstring for per-row arguments and the required isolation proof.
+   ```console
+   uv run --no-sync python -m dev.packaging.emit_real_client_evidence <args>
+   ```
 
-The 48-72 hour soak window covers the time needed for the channel proof runs and
-real-client captures.
+   Refer to the module's docstring for per-row arguments and the required isolation
+   proof.
 
-### Stage 3: readiness aggregation
+2. **Bump.** `dev.release.version_bump` computes the version from conventional-commit
+   history — never a hand-typed number, which is the transcription error class this
+   stage exists to remove — applies it to all seven declaration surfaces, regenerates
+   and verifies the lock, and guards, commits, tags, and pushes. The all-destination
+   identity guard runs before any ref leaves the runner, so a version an index, the
+   tag/release namespace, the burned ledger, or the manifest floor already owns refuses
+   before a tag exists.
+3. **Packaging campaign.** Dispatches `packaging-smoke.yml` at the bumped commit and
+   resolves its own run by identity (never by "the newest run of that workflow", which
+   could belong to a neighbouring campaign): three per-OS smoke legs, the one immutable
+   release cohort, and the three `oracle-emit-*` `DistributionEvidence` rows.
+4. **Acquisition lanes.** Dispatches exactly the lanes the claimed channels require —
+   derived from the same claimed-channel authority the publication gate reads, never
+   hardcoded — and waits on each. Under today's descriptor this is legitimately empty.
+5. **Seal.** Writes a typed release-candidate record (version, source commit, every run
+   id, the claimed channel set, `dry_run`, and a soak deadline computed from
+   `docs/_release_checklist.yaml`) to a reserved, GC-exempt draft-release namespace, and
+   the run ends. No job holds a shared self-hosted runner across the soak.
 
-The readiness gate (`just release-readiness-json`, backed by `dev/release/readiness.py`)
-requires a passing `DistributionEvidence` row in `var/distribution-install-readiness/`
-for every row the **claimed** channels own — the union over channels marked
-`availability = "available"` in `docs/_data/download_channels.toml`, floored at the
-language-native registry (`required_evidence_rows`, `dev/docs/download_matrix.py`) —
-alongside a local `var/release-cohort/` at the release commit and tag.
+`dry_run=true` rehearses the whole chain — bump computation, campaign, acquisition,
+seal — advancing no version and publishing nothing; the bump stage stops after
+computing the candidate version rather than pushing. `resume_packaging_run_id` re-enters
+the chain at an existing, identity-verified `packaging-smoke.yml` run instead of
+re-bumping and rebuilding, so a chain that failed after a successful campaign can
+converge without burning a second version.
 
-The table below lists all eleven rows any channel *can* produce; it is not the
-obligation. Flipping a channel to `available` immediately re-arms every row it owns,
-so confirm the live required set before collecting:
+### Release-candidate soak (machine-held)
 
-```console
-uv run --no-sync python -c "from dev.release.readiness import REQUIRED_DISTRIBUTION_ROWS; print(REQUIRED_DISTRIBUTION_ROWS)"
-```
+The release-candidate soak is a 48-72 hour wall-clock wait against an immutable cohort,
+not a human review — nobody re-reads anything during it. `.github/workflows/release-soak-promoter.yml`
+ticks hourly (`cron: "17 * * * *"`), reads every sealed candidate, and:
 
-| Row | Emission path | CI automated? |
-| --- | --- | --- |
-| `python-linux-x86-64` | `oracle-emit-linux` job in packaging-smoke | Yes |
-| `python-windows-x86-64` | `oracle-emit-windows` job in packaging-smoke | Yes |
-| `python-macos-arm64` | `oracle-emit-macos` job in packaging-smoke | Yes |
-| `scoop-windows-x86-64` | `packaging-scoop.yml` (row asset on `evidence-scoop-<run id>`) | Yes |
-| `homebrew-macos-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
-| `homebrew-linux-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
-| `homebrew-linux-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
-| `claude-code-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
-| `claude-cowork-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
-| `claude-desktop-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
-| `claude-desktop-mcpb` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
+- Selects the eldest candidate whose deadline has elapsed; a candidate whose window is
+  still open is left alone.
+- **Re-verifies readiness against the sealed cohort immediately before dispatching.** A
+  candidate whose blocking evidence regressed during its window is invalidated with a
+  named refusal, never promoted on a stale green and never repaired in place — the
+  fix-forward path is a fresh dispatch, which computes a fresh version.
+- Dispatches `publish-release.yml` with the run ids the candidate recorded at seal time,
+  pressing exactly the button an operator would; Gate 2 verifies every supplied run
+  independently, exactly as it verifies a hand-typed one.
+- Marks the candidate consumed once its dispatch succeeds, so an overlapping tick cannot
+  double-publish the same cohort.
 
-**Aggregating the rows:** the seven CI-minted rows (three `python-*`, `scoop-windows-x86-64`,
-three `homebrew-*`) ride their runs' draft evidence releases
-(`evidence-<lane>-<run id>`) as flat `{row_id}-{evidence_id}.json` assets. Collect
-them into `var/distribution-install-readiness/` with:
+There is deliberately no input that shortens a window. **Hotfix carve-out:** authorised
+*on the candidate*, not on the promoter — a shortened window is accepted only when the
+candidate carries both an incident reference and an explicit release-owner approval,
+refused at construction without both, so an emergency is recorded where it can be
+audited rather than typed into a dispatch form where it cannot. See the cycle times in
+`docs/_release_checklist.yaml`. A `dry_run` candidate's soak still completes on schedule,
+but it is refused at promotion time and never published — the rehearsal proves this
+stage too, without a real release ever crossing it.
 
-```console
-just release-collect-evidence <smoke-run-id> <scoop-run-id> <homebrew-run-id>
-```
+### Publish
 
-The four `claude-*` rows are minted locally by the operator's `emit_real_client_evidence`
-runs above and already live in that directory. Once every required row is present, verify:
-
-```console
-just release-readiness-json
-```
-
-The JSON must report `"ok": true` with `distribution-evidence-complete` PASS before
-proceeding to Stage 4.
-
-### Stage 4: dispatch the publication workflow
-
-First transport the four operator-minted `claude-*` rows into CI: upload the local
-records to a release the publish workflow can pull (a draft is fine), for example
-
-```console
-gh release create vX.Y.Z-evidence --draft --notes "claude-* rows" \
-  var/distribution-install-readiness/claude-*.json
-```
-
-Then dispatch `Publish Cadrumo release`. Gate 2 **derives** which acquisition inputs a
-release actually needs from the channels that release claims, so supply only those and
-leave the rest empty — an input the release does not claim is not an omission. A
-descriptor claiming the python (registry) channel alone carries `packaging_run_id` and
-nothing else. The full four-input form below applies only when the release claims the
-Scoop, Homebrew and Claude channels too: the smoke run (3 python rows + sealed cohort),
-the Scoop and Homebrew acquisition runs from Stage 2 (their rows), and the evidence
-release tag above:
-
-```console
-gh workflow run publish-release.yml \
-  -f packaging_run_id=<SMOKE_RUN_ID> \
-  -f scoop_run_id=<SCOOP_RUN_ID> \
-  -f homebrew_run_id=<HOMEBREW_RUN_ID> \
-  -f claude_evidence_release=vX.Y.Z-evidence
-```
-
-**Dispatch ceiling.** Every source the publish workflow pulls from is a draft
-evidence release (`evidence-<lane>-<run id>`, plus the operator's `claude-*` evidence
-release). Drafts have no Actions-storage retention window, but the evidence GC
-(`evidence-gc.yml`) keeps only the newest three drafts per lane; a superseded draft
-that has been collected is gone. Dispatch the publication while every source draft
-still exists (protect a slow promotion's drafts via the GC's keep-tags input); if a
-source draft was collected, Gate 2 fails on the missing draft — re-run a fresh smoke
-run (and the affected acquisition dispatches) and dispatch again against the new run
-ids.
-
-Gate 2 derives each lane's evidence tag from its run-id input, downloads and
-hash-verifies every draft's assets against its sealed `evidence-manifest.json` and
-the Actions API run record, checks each acquisition run's identity, and re-verifies
-every required row against the sealed cohort — so the local
-`just release-collect-evidence` count is reproduced hard in CI, never trusted.
-
-The workflow runs three sequential jobs:
-
-**Gate 1 — prerequisite check.** Confirms the `release` environment carries a
-required-reviewer rule, since that approval click is the human release gate.
-Fails closed on a real publication; a dry run warns and proceeds.
+`publish-release.yml` runs two jobs once dispatched (by the promoter, above, or directly
+for a rehearsal):
 
 **Gate 2 — validate (no rebuild).** Verifies the source run identity (success,
 `packaging-smoke.yml`, `push`, `main`, same repo, matching `head_sha`) and, with parity
 checks, each acquisition run (`packaging-scoop.yml` / `packaging-homebrew.yml`,
 `workflow_dispatch`, same repo, success). Downloads and hash-verifies the **sealed**
-release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence draft
-— the single source of every channel's bytes, PyPI included) and aggregates every
-required `DistributionEvidence` row from its authoritative draft — up to 3 python from
-the smoke draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows, as the
-claimed channels demand — from the evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
-publication chain. Re-points `promote_python_cohort --emit-version-only` at the sealed
-cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
-version. Runs `dev.release.readiness --json --skip-network --cohort-dir
-var/promotion/release-cohort --evidence-dir var/promotion/evidence/rows`; the sealed
-cohort's installed behaviour is proven per-OS by the `DistributionEvidence` rows, not
-by the smoke build. Gate 2 passes only with every required row present and verified.
+release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence draft —
+the single source of every channel's bytes, PyPI included) and aggregates every required
+`DistributionEvidence` row from its authoritative draft — up to 3 python from the smoke
+draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows, as the claimed channels
+demand. The per-OS smoke build cohorts are deliberately NOT part of the publication
+chain. Re-points `promote_python_cohort --emit-version-only` at the sealed cohort's
+`python/` bytes to guard the PyPI version against overwrite and emit the version. Runs
+`dev.release.readiness --json --skip-network --cohort-dir var/promotion/release-cohort
+--evidence-dir var/promotion/evidence/rows`; the sealed cohort's installed behaviour is
+proven per-OS by the `DistributionEvidence` rows, not by the smoke build. Gate 2 passes
+only with every required row present and verified.
 
-**Gate 3 — publish** (`environment: release`, human approval required). After the
-approval click, the job re-downloads and re-verifies the sealed cohort archive and
-every evidence row/manifest from the same drafts (never rebuilds), runs the
-fail-closed `evidence_release leak-sweep` over everything about to be attached
-(residual runner metadata hard-fails the promotion), and:
+**Gate 3 — publish** (`environment: release`). The job runs inside the protected
+`release` GitHub environment for its OIDC trust anchor; the environment's own
+`required_reviewers` protection rule, if the operator has not yet removed it
+(**OP-9**, see Operator actions below), is a standing GitHub setting the job's own logic
+neither reads nor requires — there is no `operator-preflight` job checking it. The
+publish job re-downloads and re-verifies the sealed cohort archive and every evidence
+row/manifest from the same drafts (never rebuilds), runs the fail-closed
+`evidence_release leak-sweep` over everything about to be attached (residual runner
+metadata hard-fails the promotion), and:
 
 - Publishes all 6 distributions to PyPI from the sealed cohort's `python/` subdir (the
   exact bytes every other channel ships and the oracle-emit legs proved) via
@@ -777,11 +540,10 @@ Each channel push refuses instructively when its credentials are absent. The buc
 tap pushes each stage exactly one file, so they are likewise safe against sibling
 products' files in the shared repositories.
 
-### Stage 5: reacquisition and docs unlock
+### Post-publication verification
 
-After publication, run the reacquisition lanes to prove each channel serves the correct
-cohort and to unlock the docs-claims gate
-(`dev/docs/tests/test_distribution_claims.py`):
+After publication, run the reacquisition lanes. These prove each channel serves the
+correct cohort — they authorise nothing; the publish above already happened:
 
 ```console
 uv run --no-sync python -m dev.packaging.acquire_pypi
@@ -799,9 +561,11 @@ uv run --no-sync powershell dev/packaging/acquire_scoop.ps1
 
 Each lane downloads the published artifact, verifies its digest against the cohort,
 runs the installed behavior oracles, and emits a reacquisition evidence row. The
-docs-claims gate fails any README or docs page that advertises a channel without a
-passing reacquisition row for that channel. Land install-claim docs updates only after
-all applicable reacquisition lanes pass.
+docs-claims gate (`dev/docs/tests/test_distribution_claims.py`) fails any README or docs
+page that advertises a channel without a passing reacquisition row for that channel —
+another verification, not an authorisation: it blocks a documentation claim, never the
+release itself. Land install-claim docs updates only after all applicable reacquisition
+lanes pass.
 
 #### Distribution-complete tripwire
 

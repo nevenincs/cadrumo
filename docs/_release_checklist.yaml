@@ -1,32 +1,35 @@
 # Machine-validated release-readiness checklist for Cadrumo.
 #
 # Read and validated by `dev/release/readiness.py` (schema:
-# `ReleaseChecklist` in that module) before any release proceeds past the
-# `just release-apply` step. This file is data, not automation: nothing here
-# triggers an outward action. A human always runs `just release-apply`,
-# reviews the printed checklist, and decides whether to push and publish.
+# `ReleaseChecklist` in that module) at bump time and again by the
+# publication authority's Gate 2. This file is data, not automation: nothing
+# here triggers an outward action. `dev.release.release_candidate` reads the
+# `soak` window below to compute a sealed candidate's deadline, and
+# `dev.release.soak_promoter` reads the `hotfix` cycle times when a
+# candidate carries the authorised hotfix carve-out.
 #
 # See RELEASING.md for the full per-release sequence and rollback procedure.
 
 schema_version: 1
 
-# Non-hotfix releases soak on a pre-release channel before the human decides
-# to push + publish. There is no separate PyPI "beta" project yet (Cadrumo
-# is pre-1.0 and has not shipped its first PyPI release) — the soak vehicle
-# today is a local, tagged pre-release build (`vX.Y.Z-rc.N`, built and smoke
-# tested via `just packaging-smoke*`, installed from the built wheel into a
-# scratch venv) reviewed over the soak window before the real tag lands.
-# Promote this to a real `cadrumo-beta` PyPI project once the first stable
-# release has shipped and a channel is worth maintaining.
+# Non-hotfix releases soak against an immutable, already-built cohort before
+# the machine-held soak promoter dispatches publication. There is no
+# separate PyPI "beta" project yet (Cadrumo is pre-1.0 and has not shipped
+# its first PyPI release) — the soak vehicle is the sealed release-candidate
+# record `dev.release.release_candidate` seals at the end of a
+# `release-orchestrator.yml` run, carrying the exact cohort
+# `release-soak-promoter.yml` re-verifies and, once the window closes,
+# promotes. Promote this to a real `cadrumo-beta` PyPI project once the
+# first stable release has shipped and a channel is worth maintaining.
 soak:
   applies_to: "non-hotfix"
   minimum_hours: 48
   maximum_hours: 72
-  vehicle: "local pre-release build (vX.Y.Z-rc.N), packaging-smoke matrix, scratch-venv install"
+  vehicle: "sealed release-candidate record over the immutable release-orchestrator cohort, re-verified by the soak promoter at promotion"
   exit_gates:
-    - "full packaging-smoke lane green (just packaging-smoke, Linux/WSL)"
-    - "no priority:P0-blocker issue opened against the RC build during the soak window"
-    - "changelog entry reviewed against the conventional-commit log since the last tag"
+    - "full packaging campaign green at seal time (release-orchestrator.yml's campaign stage)"
+    - "no priority:P0-blocker issue opened against the candidate during the soak window"
+    - "the readiness gate re-verified clean against the sealed cohort immediately before promotion"
 
 versioning:
   scheme: "SemVer"
@@ -55,7 +58,7 @@ rollback:
   mechanism: "revert the release commit + tag on main, publish a corrected patch release; PyPI yank marks the bad version so pip/uv skip it by default"
 
 audit_state_gate:
-  description: "Deterministic pre-release invariants checked by `dev/release/readiness.py` before `just release-apply` is trusted."
+  description: "Deterministic pre-release invariants checked by `dev/release/readiness.py`, run automatically by the bump stage and again by publication Gate 2."
   checks:
     - "pyproject.toml, src/cadrumo/__init__.py, and .release-please-manifest.json report one identical version"
     - "CHANGELOG.md is non-empty and carries no unresolved release-please merge markers"
