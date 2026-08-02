@@ -26,6 +26,7 @@ See Also:
 
 from __future__ import annotations
 
+from contextvars import copy_context
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, override
 
@@ -33,15 +34,20 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, DataTable, Footer, Input, Label, Static
+from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
+from textual.worker import Worker, WorkerState
 
 from ....core.i18n import tr
+from ._form_screen import FormScreen, presenting_forms_through
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Mapping, Sequence
 
-    from ....application.user_profile import ProfileFieldView, ProfileOverview
+    from textual.widgets.data_table import ColumnKey
+
+    from ....application.user_profile import ProfileFieldView, ProfileOverview, ProfileSectionView
+    from ._form_screen import FormPage
 
 
 @dataclass(frozen=True, slots=True)
@@ -71,6 +77,12 @@ class ManagerAction:
     key: str
     label: str
     run: Callable[[], ManagerActionOutcome]
+    label_key: str | None = None
+    """Locale key for labels that must survive a mid-session language switch.
+
+    ``label`` remains the fallback for a host-supplied action that does not
+    have a catalogue key.
+    """
 
 
 _PRESENT_GLYPH = "●"
@@ -96,26 +108,52 @@ class FieldEditScreen(ModalScreen[str | None]):
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
             yield Label(self._field.label, id="edit-label")
-            yield Static(self._field.path, id="edit-path")
+            yield Static(tr("flows.manager.edit.path", path=self._field.path), id="edit-path")
             # A masked field starts EMPTY rather than pre-filled with the
             # placeholder: pre-filling would submit the dots back as the
             # literal new value the moment the operator pressed enter.
-            yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
+            if self._field.enum_values:
+                yield OptionList(*self._field.enum_values, id="edit-options")
+            else:
+                yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
                 yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
 
     def on_mount(self) -> None:
-        self.query_one("#edit-input", Input).focus()
+        if not self._field.enum_values:
+            self.query_one("#edit-input", Input).focus()
+            return
+        options = self.query_one("#edit-options", OptionList)
+        current = next(
+            (index for index, value in enumerate(self._field.enum_values) if value == self._field.value),
+            None,
+        )
+        if current is not None:
+            options.highlighted = current
+        options.focus()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-edit-save":
-            self.dismiss(self.query_one("#edit-input", Input).value)
+            if self._field.enum_values:
+                self._dismiss_highlighted_option()
+            else:
+                self.dismiss(self.query_one("#edit-input", Input).value)
         else:
             self.dismiss(None)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         self.dismiss(event.value)
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        self._dismiss_highlighted_option()
+
+    def _dismiss_highlighted_option(self) -> None:
+        highlighted = self.query_one("#edit-options", OptionList).highlighted
+        if highlighted is None:
+            self.dismiss(None)
+            return
+        self.dismiss(self._field.enum_values[highlighted])
 
     def action_cancel(self) -> None:
         self.dismiss(None)
@@ -191,6 +229,37 @@ class ProfileManagerApp(App[None]):
         from ever displaying its own optimistic guess — whatever the store
         made of the value is what appears."""
         self._field_by_key: dict[str, ProfileFieldView] = {}
+        self._table_by_section: dict[str, DataTable[str]] = {}
+        """The live table per section, so a single-field edit can address a
+        cell instead of rebuilding the widget tree.
+
+        Repopulated by every full render, which is the only thing that
+        replaces these widgets; an entry here is therefore always the table
+        currently mounted for that section."""
+        self._columns_by_section: dict[str, list[ColumnKey]] = {}
+        """Column keys as ``add_columns`` handed them back, per section.
+
+        ``update_cell`` addresses a cell by (row key, column key), and the
+        row key is already the field path. Retaining the column keys is the
+        only missing half of that coordinate."""
+        self._pending_write: Worker[ProfileOverview] | None = None
+        """The one in-flight field write, or ``None`` when storage is idle.
+
+        Writes are serialised rather than overlapped because the door is a
+        read-modify-write of the WHOLE fact set: it loads the record, merges
+        the new fact into the existing set, and saves the result. Two writes
+        in flight together would each merge into the same pre-edit snapshot,
+        so the second save would drop the first operator's field. Serialising
+        is a correctness requirement here, not a tidiness preference."""
+        self._pending_action: Worker[ManagerActionOutcome] | None = None
+        """The one in-flight action, or ``None`` when no button is working.
+
+        Separate from the write worker because the two mean different
+        things to the operator and are reported differently, but serialised
+        against each other for the same reason writes are serialised among
+        themselves: an action reloads and rewrites the whole profile, so
+        letting one overlap a field write would let either land on a
+        snapshot the other had already moved."""
 
     @override
     def compose(self) -> ComposeResult:
@@ -202,7 +271,7 @@ class ProfileManagerApp(App[None]):
                 with Vertical(id="manager-actions-panel", classes="cadrumo-panel"):
                     with Horizontal(id="manager-actions"):
                         for action in self._actions:
-                            yield Button(action.label, id=f"action-{action.key}")
+                            yield Button(self._action_label(action), id=f"action-{action.key}")
                     yield Static(id="manager-action-result")
             for section in self.overview.sections:
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
@@ -210,18 +279,96 @@ class ProfileManagerApp(App[None]):
 
     def on_mount(self) -> None:
         install_cadrumo_themes(self)
-        self.query_one("#manager-banner", Static).update(
-            tr("flows.manager.title", profile=self.overview.label),
-        )
-        if self._actions:
-            self.query_one("#manager-actions-panel", Vertical).border_title = tr("flows.manager.actions.section")
         self._render()
 
     # ── rendering ───────────────────────────────────────────────────────
 
     def _render(self) -> None:
-        """Rebuild the progress line and every section table from the overview."""
+        """Rebuild the progress line and every section table from the overview.
+
+        This is the wholesale redraw: it destroys and remounts every table.
+        It is what ``on_mount`` needs, and what an action returning a fresh
+        overview needs, because either can hand the page a structurally
+        different profile. A single-field edit goes through
+        :meth:`_apply_overview` instead, which repaints only the cells whose
+        content actually moved — the same page, at a fraction of the work.
+        """
+        self._render_chrome()
         self.query_one("#manager-notice", Static).update("")
+        self._render_progress()
+        self._field_by_key.clear()
+        self._table_by_section.clear()
+        self._columns_by_section.clear()
+        for section in self.overview.sections:
+            panel = self.query_one(f"#section-{section.key}", Static)
+            panel.border_title = self._section_title(section)
+            panel.remove_children()
+            table: DataTable[str] = DataTable(cursor_type="row", zebra_stripes=True)
+            panel.mount(table)
+            self._table_by_section[section.key] = table
+            self._columns_by_section[section.key] = table.add_columns(
+                tr("flows.manager.column.state"),
+                tr("flows.manager.column.field"),
+                tr("flows.manager.column.value"),
+            )
+            for field in section.fields:
+                key = field.path
+                self._field_by_key[key] = field
+                table.add_row(*self._rendered_row(field), key=key)
+
+    def _apply_overview(self, updated: ProfileOverview) -> None:
+        """Show ``updated`` by repainting only what differs from the page on screen.
+
+        The row SET cannot change under an edit: the overview is projected
+        by walking the profile SCHEMA, not the record's facts, so every
+        declared field yields a row whether or not it holds a value. What an
+        edit CAN change is a row's rendered content — and not only the edited
+        row's, since the write door normalises values and re-derives presence
+        and completeness. So rather than assume the edited path is the only
+        thing that moved, this diffs the old page against the new one and
+        writes exactly the cells that differ: usually one row, occasionally a
+        few, never all of them.
+
+        The structural comparison is the safety valve. Should the projection
+        ever become record-dependent — a conditional section, a repeatable
+        row set — the shapes stop matching and this falls back to the full
+        rebuild rather than writing into stale coordinates.
+        """
+        previous = self.overview
+        self.overview = updated
+        if self._shape_of(previous) != self._shape_of(updated):
+            self._render()
+            return
+
+        self._render_chrome()
+        self.query_one("#manager-notice", Static).update("")
+        self._render_progress()
+        for was, now in zip(previous.sections, updated.sections, strict=True):
+            table = self._table_by_section.get(now.key)
+            columns = self._columns_by_section.get(now.key)
+            if table is None or columns is None:
+                # The page was never fully rendered, so there are no cells to
+                # address. Build it rather than silently dropping the update.
+                self._render()
+                return
+            if (was.present_count, was.total_count) != (now.present_count, now.total_count):
+                self.query_one(f"#section-{now.key}", Static).border_title = self._section_title(now)
+            for before, after in zip(was.fields, now.fields, strict=True):
+                self._field_by_key[after.path] = after
+                old_cells = self._rendered_row(before)
+                new_cells = self._rendered_row(after)
+                if old_cells == new_cells:
+                    continue
+                for column, old_cell, new_cell in zip(columns, old_cells, new_cells, strict=True):
+                    if old_cell != new_cell:
+                        # ``update_width`` defaults off, which would clip a value
+                        # that grew past the column's current width — the full
+                        # rebuild sizes columns as it adds rows, and this is the
+                        # equivalent for a cell written in place.
+                        table.update_cell(after.path, column, new_cell, update_width=True)
+
+    def _render_progress(self) -> None:
+        """Restate the present/total/missing counts under the current overview."""
         self.query_one("#manager-progress", Static).update(
             tr(
                 "flows.manager.progress",
@@ -230,38 +377,80 @@ class ProfileManagerApp(App[None]):
                 missing=len(self.overview.missing_required),
             ),
         )
-        self._field_by_key.clear()
-        for section in self.overview.sections:
-            panel = self.query_one(f"#section-{section.key}", Static)
-            panel.border_title = tr(
-                "flows.manager.section_title",
-                title=section.title,
-                present=section.present_count,
-                total=section.total_count,
-            )
-            panel.remove_children()
-            table: DataTable[str] = DataTable(cursor_type="row", zebra_stripes=True)
-            panel.mount(table)
-            table.add_columns(
-                tr("flows.manager.column.state"),
-                tr("flows.manager.column.field"),
-                tr("flows.manager.column.value"),
-            )
-            for field in section.fields:
-                key = field.path
-                self._field_by_key[key] = field
-                label = f"{field.label}{_REQUIRED_MARK}" if field.required else field.label
-                table.add_row(
-                    _PRESENT_GLYPH if field.present else _ABSENT_GLYPH,
-                    label,
-                    field.value or "",
-                    key=key,
-                )
+
+    @staticmethod
+    def _section_title(section: ProfileSectionView) -> str:
+        """Render one section's border title with its filled-in count."""
+        return tr(
+            "flows.manager.section_title",
+            title=section.title,
+            present=section.present_count,
+            total=section.total_count,
+        )
+
+    @staticmethod
+    def _rendered_row(field: ProfileFieldView) -> tuple[str, str, str]:
+        """The three cells a field occupies, as the single authority on both paths.
+
+        The full rebuild and the incremental update must agree on what a row
+        looks like, or an edited row would drift from its unedited siblings.
+        Deriving both from here is what makes the diff comparison meaningful:
+        it compares exactly the strings that get written.
+        """
+        return (
+            _PRESENT_GLYPH if field.present else _ABSENT_GLYPH,
+            f"{field.label}{_REQUIRED_MARK}" if field.required else field.label,
+            field.value or "",
+        )
+
+    @staticmethod
+    def _shape_of(overview: ProfileOverview) -> tuple[tuple[str, tuple[str, ...]], ...]:
+        """The page's row layout: section keys, each with its field paths in order.
+
+        Two overviews sharing a shape address the same cells, which is the
+        precondition for updating one in place from the other.
+        """
+        return tuple((section.key, tuple(field.path for field in section.fields)) for section in overview.sections)
+
+    def _render_chrome(self) -> None:
+        """Resolve all manager-owned chrome under the active output language."""
+        title = tr("flows.manager.title", profile=self.overview.label)
+        self.title = title
+        self.sub_title = ""
+        self.query_one("#manager-banner", Static).update(title)
+        if not self._actions:
+            return
+        self.query_one("#manager-actions-panel", Vertical).border_title = tr("flows.manager.actions.section")
+        for action in self._actions:
+            self.query_one(f"#action-{action.key}", Button).label = self._action_label(action)
+
+    @staticmethod
+    def _action_label(action: ManagerAction) -> str:
+        """Render a supplied action label without freezing its locale at construction."""
+        if action.label_key is None:
+            return action.label
+        return tr(action.label_key, default=action.label)
 
     # ── editing ─────────────────────────────────────────────────────────
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Open the edit dialog for the selected field."""
+        """Open the edit dialog for the selected field.
+
+        Refused while a write is in flight: the door merges into the record
+        as it loads it, so a second edit started before the first landed
+        would merge into the pre-edit facts and drop the first field.
+
+        Refused while an action runs for the same reason, one step larger:
+        an action rewrites the whole profile, so a field edited against the
+        page as it looks now would be merged into a record the action is
+        about to replace.
+        """
+        if self._pending_write is not None:
+            self._notify(tr("flows.manager.edit.write_in_flight"))
+            return
+        if self._pending_action is not None:
+            self._notify(tr("flows.manager.action.busy"))
+            return
         key = event.row_key.value
         if key is None:
             return
@@ -289,44 +478,192 @@ class ProfileManagerApp(App[None]):
         return _apply
 
     def _persist(self, path: str, value: str) -> None:
-        """Write one field through the injected door and re-render.
+        """Write one field through the injected door, off the event loop.
 
-        A refusal is reported in the notice line rather than raised, for
-        the same reason the action buttons catch: the operator is mid-page
-        and an exception would take the whole screen down over one
-        rejected value.
+        The write reaches encrypted storage and takes long enough to be felt.
+        Run inline it would block Textual's loop for its whole duration, so
+        the page would stop repainting and stop answering keys — the operator
+        reads that as a frozen application rather than a slow save. It
+        therefore runs on a worker thread, and the page is updated from
+        :meth:`on_worker_state_changed` once storage has spoken.
+
+        The context is copied into the thread because the write door resolves
+        the active profile bucket from a context variable; a bare thread would
+        not see it and every write would fail to find a profile.
+
+        A refusal is reported in the notice line rather than raised, for the
+        same reason the action buttons catch: the operator is mid-page and an
+        exception would take the whole screen down over one rejected value.
+        Because the door now raises on a worker thread, ``exit_on_error`` is
+        off so the failure is held on the worker for the UI task to read,
+        rather than escaping into the thread and leaving the page silently
+        unchanged.
         """
-        try:
-            self.overview = self._persist_field(path, value)
-        except Exception as refusal:
-            self._notify(str(refusal))
+        if self._pending_write is not None:
+            self._notify(tr("flows.manager.edit.write_in_flight"))
             return
-        self._render()
+        write_context = copy_context()
+
+        def _write() -> ProfileOverview:
+            written = write_context.run(self._persist_field, path, value)
+            if written is None:
+                # The door declares it hands back the reloaded page, so this
+                # is a broken contract rather than a refused value. Raised
+                # here it lands on the worker's error and reaches the
+                # operator as itself; returned, it would be reported as
+                # "could not be saved" — which would be a lie about a write
+                # that may well have landed.
+                message = "the profile write door returned no overview to render"
+                raise TypeError(message)
+            return written
+
+        self._pending_write = self.run_worker(
+            _write,
+            name="profile-field-write",
+            group="profile-field-write",
+            exit_on_error=False,
+            thread=True,
+        )
+
+    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """Land one finished worker back on Textual's UI task.
+
+        Widgets are only safe to touch from this task, so every repaint
+        waits until here rather than happening in the worker. Both kinds of
+        background work arrive through this one handler because Textual
+        reports them all here; which one finished is decided by identity,
+        so a worker this screen did not start is left alone.
+        """
+        if event.state not in {WorkerState.SUCCESS, WorkerState.ERROR, WorkerState.CANCELLED}:
+            return
+        if self._pending_write is not None and event.worker is self._pending_write:
+            self._settle_write(self._pending_write)
+            return
+        if self._pending_action is not None and event.worker is self._pending_action:
+            self._settle_action(self._pending_action)
+
+    def _settle_write(self, worker: Worker[ProfileOverview]) -> None:
+        """Show what storage made of one finished field write."""
+        self._pending_write = None
+        if worker.state is WorkerState.SUCCESS and worker.result is not None:
+            self._apply_overview(worker.result)
+            return
+        # A refusal reaches the operator as itself. A cancelled or
+        # result-less worker would otherwise leave the page looking as
+        # though nothing had been asked of it.
+        self._notify(str(worker.error) if worker.error is not None else tr("flows.manager.edit.write_failed"))
+
+    def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
+        """Report one finished action and adopt any profile it handed back.
+
+        A failure is reported rather than raised for the reason the old
+        inline call caught: the operator is mid-page, and an exception
+        would take the whole screen down over, say, a missing certificate.
+        The difference is that the failure now arrives as a refusal the
+        action chose, not as the seam's own crash.
+        """
+        self._pending_action = None
+        if worker.state is not WorkerState.SUCCESS or worker.result is None:
+            self._report_action(
+                str(worker.error) if worker.error is not None else tr("flows.manager.action.failed"),
+            )
+            return
+        outcome = worker.result
+        self._report_action(outcome.message)
+        if outcome.overview is not None:
+            # A full redraw, not a cell diff: an action can change the
+            # profile's shape, which is exactly what the diff cannot do.
+            self.overview = outcome.overview
+            self._render()
 
     def _notify(self, message: str) -> None:
         """Show one refusal above the tables until the next successful edit."""
         self.query_one("#manager-notice", Static).update(message)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Run the pressed action and report what it did.
+        """Start the pressed action off the event loop.
 
-        A refusal is reported in the same line as a success rather than
-        raised: the operator is mid-page and an exception would take the
-        whole screen down over, say, a missing certificate.
+        An action cannot run on this task. Every one of them owns a loop
+        for the length of its work — the censal pull drives a browser
+        session through ``asyncio.run``, and the certificate and export
+        doors open a page — and a loop cannot be started from a task that
+        is already running one. Pressing a button therefore used to report
+        ``asyncio.run() cannot be called from a running event loop`` into
+        the result line and do nothing at all.
+
+        On a worker thread there is no running loop, so an action that
+        starts one is legal again, and one that wants to show a page gets a
+        presenter that opens it here instead of starting a second
+        application. Blocking is fine there and would not be here: the
+        censal pull waits on a live browser, which on this task would
+        freeze the page.
+
+        The context is copied for the same reason the field write copies
+        it: the doors these actions call resolve the active profile bucket
+        from a context variable, which a bare thread would not carry.
         """
         button_id = event.button.id or ""
         action = next((item for item in self._actions if f"action-{item.key}" == button_id), None)
         if action is None:
             return
-        try:
-            outcome = action.run()
-        except Exception as refusal:
-            self.query_one("#manager-action-result", Static).update(str(refusal))
+        if self._pending_action is not None or self._pending_write is not None:
+            self._report_action(tr("flows.manager.action.busy"))
             return
-        self.query_one("#manager-action-result", Static).update(outcome.message)
-        if outcome.overview is not None:
-            self.overview = outcome.overview
-            self._render()
+        action_context = copy_context()
+
+        def _run() -> ManagerActionOutcome:
+            with presenting_forms_through(self._present_form_here):
+                return action.run()
+
+        self._pending_action = self.run_worker(
+            lambda: action_context.run(_run),
+            name=f"profile-action-{action.key}",
+            group="profile-action",
+            exit_on_error=False,
+            thread=True,
+        )
+        self._report_action(tr("flows.manager.action.working", action=self._action_label(action)))
+
+    def _present_form_here(
+        self,
+        page: FormPage,
+        rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
+    ) -> Mapping[str, str] | None:
+        """Open one form page on this application, from the action's thread.
+
+        Called on the worker thread, where touching a widget directly is
+        not safe, so the push is handed to the UI task and this thread
+        waits for what the operator committed. That wait is the point: the
+        action is written as a straight line — show the page, use the
+        answer — and it stays that way, with only where it runs changed.
+        """
+        return self.call_from_thread(self.push_screen_wait, FormScreen(page, rebuild=rebuild))
+
+    def _report_action(self, message: str) -> None:
+        """Show what the last pressed action has to say."""
+        self.query_one("#manager-action-result", Static).update(message)
+
+    @override
+    async def action_quit(self) -> None:
+        """Leave the manager, unless a field write is still landing.
+
+        A thread-backed write cannot be cancelled safely: quitting would only
+        detach its result while encrypted storage may still complete the
+        save, so the operator would leave believing an edit was lost that in
+        fact landed. Waiting for the one in-flight write is the honest
+        behaviour, and it is bounded by a single storage round trip.
+
+        A running action is held for the same reason and is the stronger
+        case: it may be mid-way through reconciling a censal read into the
+        profile, so leaving now would abandon a write already under way.
+        """
+        if self._pending_write is not None:
+            self._notify(tr("flows.manager.edit.write_in_flight"))
+            return
+        if self._pending_action is not None:
+            self._report_action(tr("flows.manager.action.busy"))
+            return
+        self.exit(None)
 
     def action_toggle_appearance(self) -> None:
         toggle_appearance(self)

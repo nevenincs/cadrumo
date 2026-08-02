@@ -22,6 +22,8 @@ point composes.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, override
@@ -36,7 +38,17 @@ from ....core.i18n import tr
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Iterator, Mapping, Sequence
+
+type FormRebuild = Callable[[Mapping[str, str]], FormPage]
+"""Recomputes a page from the answers given to it so far."""
+
+type FormPresenter = Callable[[FormPage, FormRebuild | None], Mapping[str, str] | None]
+"""Shows one page and returns what the operator committed, or ``None``.
+
+Takes the rebuild callable positionally so a host can supply the same
+shape whether or not the page regenerates itself.
+"""
 
 
 class FormFieldKind(StrEnum):
@@ -490,6 +502,45 @@ def run_form_tui(
     return app.collected
 
 
+_ACTIVE_FORM_PRESENTER: ContextVar[FormPresenter | None] = ContextVar(
+    "cadrumo_active_form_presenter",
+    default=None,
+)
+"""How a form should be shown, when something has already decided.
+
+Empty in the ordinary case, where a caller reaching a form is free to
+start an application for it. A host that is already running one binds
+this so the same call opens a page on the host instead.
+"""
+
+
+@contextmanager
+def presenting_forms_through(presenter: FormPresenter) -> Iterator[None]:
+    """Route form presentation through ``presenter`` for this context.
+
+    A context variable rather than an argument because the callers that
+    present a form do not take one: an action is a plain zero-argument
+    callable, and several of them are deliberately kept that way — the
+    censal action's parameterless signature is a pinned safety property,
+    since a parameter there would be somewhere to aim the read at another
+    taxpayer. The host therefore states how forms are shown for the
+    duration of the call rather than threading it through every action.
+
+    Restores the previous value on the way out, so nesting is safe and an
+    action that raises cannot leave a stale presenter bound.
+    """
+    token = _ACTIVE_FORM_PRESENTER.set(presenter)
+    try:
+        yield
+    finally:
+        _ACTIVE_FORM_PRESENTER.reset(token)
+
+
+def active_form_presenter() -> FormPresenter | None:
+    """The presenter bound for this context, or ``None`` to start an application."""
+    return _ACTIVE_FORM_PRESENTER.get()
+
+
 def multi_choice_tokens(value: str) -> tuple[str, ...]:
     """Split a stored multi-choice value back into its tokens."""
     return tuple(token for token in value.split(_MULTI_CHOICE_SEPARATOR) if token)
@@ -507,10 +558,13 @@ __all__ = [
     "FormField",
     "FormFieldKind",
     "FormPage",
+    "FormPresenter",
     "FormScreen",
     "OneChoiceEditScreen",
     "TextEditScreen",
+    "active_form_presenter",
     "form_choices",
     "multi_choice_tokens",
+    "presenting_forms_through",
     "run_form_tui",
 ]
