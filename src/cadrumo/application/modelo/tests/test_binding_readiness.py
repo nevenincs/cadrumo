@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import date
 from pathlib import Path
@@ -134,6 +135,33 @@ def _write_year_ambiguous_registry(
     corpus_file.write_bytes(b"x" * 1000)
     (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
     (corpus_file.parent / "test-ley-001.html").write_text("<html>test provision text</html>", encoding="utf-8")
+    # The registry loader requires a companion ``.extracted.json`` sidecar
+    # alongside every legal-reference corpus file (see
+    # ``domain.calculations.registry._legal._legal_corpus_text``); a single
+    # unit whose text carries the catalogue's declared ``required_text``
+    # satisfies both the existence check and the anchor resolution.
+    (corpus_file.parent / "test-ley-001.html.extracted.json").write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "source_kind": "normatives_html",
+                "status": "ok",
+                "source_relpath": "corpus/test/test-ley-001.html",
+                "source_sha256": "0" * 64,
+                "preprocessor_id": "test-fixture",
+                "preprocessor_version": "1.0",
+                "units": [
+                    {
+                        "text": "test provision text",
+                        "title": "Article 1",
+                        "section": "Article 1",
+                        "anchor": "a1",
+                    },
+                ],
+            },
+        ),
+        encoding="utf-8",
+    )
 
     (legal_dir / "catalogue.toml").write_text(_MINIMAL_CATALOGUE_TOML, encoding="utf-8")
     (modelos_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TOML, encoding="utf-8")

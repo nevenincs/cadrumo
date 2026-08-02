@@ -116,7 +116,7 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
 
     when = datetime(2026, 1, 2, tzinfo=UTC)
     typed_period = Period.from_year_and_code(filing_year, period)
-    work_unit_revision_marker = f"sealed-{filing_year}-{period}"
+    work_unit_revision_marker = f"sealed-{filing_year}-{period.lower()}"
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
