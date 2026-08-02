@@ -341,10 +341,23 @@ def test_successful_write_leaves_only_the_finished_archive(tmp_path: Path) -> No
     assert recovered.payload_envelope_bytes == b"payload-envelope-bytes"
 
 
+def _member_bytes(archive: tarfile.TarFile, member: tarfile.TarInfo) -> bytes:
+    """Read one regular member's bytes, failing loudly on a non-regular entry.
+
+    ``extractfile`` returns ``None`` for a non-regular member; every member a
+    sealed archive carries is regular, so a ``None`` here means the fixture
+    itself is wrong rather than the code under test.
+    """
+    extracted = archive.extractfile(member)
+    assert extracted is not None, f"fixture archive member {member.name!r} is not a regular file"
+    with extracted:
+        return extracted.read()
+
+
 def _repack_with_extra_recovery_member(source: Path, target: Path) -> None:
     """Copy a 2-member archive and append an undeclared ``recovery.wrap`` member."""
     with tarfile.open(source, mode="r:gz") as original:
-        members = [(member, original.extractfile(member).read()) for member in original.getmembers()]  # type: ignore[union-attr]
+        members = [(member, _member_bytes(original, member)) for member in original.getmembers()]
     with tarfile.open(target, mode="w:gz") as repacked:
         for member, data in members:
             repacked.addfile(member, io.BytesIO(data))
@@ -394,7 +407,7 @@ def test_reader_refuses_an_empty_required_member(tmp_path: Path) -> None:
     )
     hollowed = tmp_path / "hollowed.cadrumo-bucket.tar.gz"
     with tarfile.open(archive_path, mode="r:gz") as original:
-        members = [(member, original.extractfile(member).read()) for member in original.getmembers()]  # type: ignore[union-attr]
+        members = [(member, _member_bytes(original, member)) for member in original.getmembers()]
     with tarfile.open(hollowed, mode="w:gz") as repacked:
         for member, data in members:
             if member.name == PAYLOAD_MEMBER_NAME:
