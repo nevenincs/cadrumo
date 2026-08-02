@@ -201,6 +201,7 @@ adapters:
           write_non_dict_response: Google Drive write response for {action} had an
             unexpected shape.
           modified_time_invalid: 'Google Drive returned no usable modification time for this object; its metadata cannot be trusted.'
+          size_invalid: 'Google Drive reported no usable size for this object; its metadata cannot be trusted.'
       local:
         errors:
           byte_length_invalid: Local storage sidecar byte_length has invalid type

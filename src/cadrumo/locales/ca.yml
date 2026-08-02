@@ -224,6 +224,7 @@ adapters:
           write_non_dict_response: La resposta d escriptura de Google Drive per a
             {action} tenia una forma inesperada.
           modified_time_invalid: 'Google Drive no ha retornat una data de modificació utilitzable per a aquest objecte; no es poden considerar fiables les seves metadades.'
+          size_invalid: 'Google Drive no ha indicat una mida utilitzable per a aquest objecte; no es poden considerar fiables les seves metadades.'
       local:
         errors:
           byte_length_invalid: El byte_length del sidecar local té tipus invàlid {actual_type}.

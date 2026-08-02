@@ -209,6 +209,7 @@ adapters:
           write_non_dict_response: A Google Drive {action} írási válasza váratlan
             alakú volt.
           modified_time_invalid: 'A Google Drive nem adott vissza használható módosítási időpontot ehhez az objektumhoz; a metaadatai nem megbízhatók.'
+          size_invalid: 'A Google Drive nem adott meg használható méretet ehhez az objektumhoz; a metaadatai nem megbízhatók.'
       local:
         errors:
           byte_length_invalid: 'A helyi sidecar byte_length mezőjének típusa érvénytelen:

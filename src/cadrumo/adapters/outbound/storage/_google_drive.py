@@ -930,6 +930,51 @@ def _build_media_body(payload: bytes) -> Any:  # ANY-RETURN-RATIONALE-GOOGLE-DRI
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-DRIVE-ENTRY: raw Google Drive API file
 # resource (untyped googleapiclient dict); narrowed via explicit key access.
+def _parse_drive_size(value: object, *, provider_object_id: str) -> int:
+    """Return the byte length Drive reported, or refuse the response.
+
+    The coercion here used to catch every ``TypeError``/``ValueError`` and
+    substitute ``0``, so a malformed remote ``size`` asserted a zero-byte
+    contract that nothing downstream re-tested. ``get`` compares the
+    DOWNLOADED payload's length against this value, so the two agreed
+    trivially for an empty object and the malformed response passed clean;
+    ``iter_objects`` downloads nothing at all and so had no second opinion to
+    offer. An operator reading either surface saw a confident ``0``.
+
+    Drive sends ``size`` as a decimal string for binary content, which is the
+    only shape this adapter's own objects take: every object it writes is an
+    uploaded blob, never a native Google document (the file kind whose size
+    Drive genuinely omits). A value that is absent, non-numeric, or negative
+    is therefore a broken response rather than a variation to absorb.
+
+    Raises:
+        :class:`adapters.outbound.storage.OutboundStorageIntegrityError`: When
+            the field is absent, is not an integer or a decimal string, or is
+            negative.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise OutboundStorageIntegrityError(
+            "drive object metadata carries no usable size",
+            context={"provider_object_id": provider_object_id, "actual_value": repr(value)},
+            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+        )
+    try:
+        byte_length = int(value)
+    except ValueError:
+        raise OutboundStorageIntegrityError(
+            "drive object size is not an integer",
+            context={"provider_object_id": provider_object_id, "actual_value": str(value)},
+            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+        ) from None
+    if byte_length < 0:
+        raise OutboundStorageIntegrityError(
+            "drive object size is negative",
+            context={"provider_object_id": provider_object_id, "actual_value": str(value)},
+            translated_message="adapters.outbound.storage.google_drive.errors.size_invalid",
+        )
+    return byte_length
+
+
 def _parse_drive_modified_time(value: object, *, provider_object_id: str) -> datetime:
     """Return the write instant Drive reported, or refuse the response.
 
@@ -983,12 +1028,9 @@ def _metadata_from_drive_entry(
     object_key_hmac: str,
 ) -> ProviderObjectMetadata:
     """Convert a Drive ``files().get/list`` response into :class:`ProviderObjectMetadata`."""
-    byte_length_raw = entry.get("size", 0)
-    try:
-        byte_length = int(byte_length_raw) if byte_length_raw is not None else 0
-    except (TypeError, ValueError):
-        byte_length = 0
-    written_at = _parse_drive_modified_time(entry.get("modifiedTime"), provider_object_id=str(entry.get("id", "")))
+    provider_object_id = str(entry.get("id", ""))
+    byte_length = _parse_drive_size(entry.get("size"), provider_object_id=provider_object_id)
+    written_at = _parse_drive_modified_time(entry.get("modifiedTime"), provider_object_id=provider_object_id)
 
     app_properties = entry.get("appProperties") or {}
     content_hash = str(app_properties.get("content_hash", "") or "")
@@ -1000,7 +1042,7 @@ def _metadata_from_drive_entry(
         namespace=namespace,
         object_key_hmac=object_key_hmac,
         provider_object_id=str(entry.get("id", "")),
-        byte_length=max(byte_length, 0),
+        byte_length=byte_length,
         content_hash=content_hash,
         written_at=written_at,
     )
