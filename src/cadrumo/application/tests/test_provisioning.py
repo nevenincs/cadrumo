@@ -8,7 +8,14 @@ Ollama endpoint and a controlled Playwright cache directory; no mocks.
 
 from __future__ import annotations
 
+import json
+import threading
+from collections.abc import Iterator
+from contextlib import contextmanager
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import ClassVar, override
 
 import pytest
 
@@ -28,12 +35,59 @@ from ..provisioning import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+class _OllamaTagsEndpoint(BaseHTTPRequestHandler):
+    """Loopback Ollama endpoint returning one configured ``/api/tags`` body."""
+
+    payload: ClassVar[object]
+
+    def do_GET(self) -> None:
+        if self.path != "/api/tags":
+            self.send_error(HTTPStatus.NOT_FOUND)
+            return
+        encoded = json.dumps(self.payload).encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("content-type", "application/json")
+        self.send_header("content-length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
+    @override
+    def log_message(self, format: str, *args: object) -> None:
+        """Silence loopback-server request logging during tests."""
+
+
+@contextmanager
+def _serve_ollama_tags(payload: object) -> Iterator[str]:
+    _OllamaTagsEndpoint.payload = payload
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _OllamaTagsEndpoint)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_port}"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
 def test_probe_ollama_vision_unreachable_returns_unavailable_with_remediation() -> None:
     """An unreachable Ollama endpoint yields unavailable + a `serve` remediation, never an exception."""
     # Port 1 is reserved/closed — the connection is refused fast.
     with override_settings(cadrumo_llm_ollama_chat_url="http://127.0.0.1:1/api/chat"):
         status = probe_ollama_vision()
     assert isinstance(status, DependencyStatus)
+    assert status.service == "ollama-vision"
+    assert status.available is False
+    assert "not reachable" in status.detail
+    assert "ollama serve" in status.remediation
+
+
+@pytest.mark.parametrize("payload", ([], {"models": None}, {"models": [{"name": 7}]}))
+def test_probe_ollama_vision_malformed_successful_tags_response_is_unavailable(payload: object) -> None:
+    """A real successful tags response with the wrong JSON shape stays a typed unavailable result."""
+    with _serve_ollama_tags(payload) as endpoint, override_settings(cadrumo_llm_ollama_chat_url=f"{endpoint}/api/chat"):
+        status = probe_ollama_vision()
+
     assert status.service == "ollama-vision"
     assert status.available is False
     assert "not reachable" in status.detail
