@@ -44,9 +44,18 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-from dev.docs.download_matrix import DownloadDescriptor, claimed_channels, load_descriptor
+from dev.docs.download_matrix import ChannelTier, DownloadDescriptor, claimed_channels, load_descriptor
 
 _UTF_8: Final[str] = "utf-8"
+
+#: The local capture verb that mints one of the four required ``claude-*``
+#: real-client rows. Named verbatim in :func:`host_extension_precondition_refusal`
+#: so the refusal tells the operator exactly what to run rather than a bare
+#: "value invalid". Never invoked by this module or by any orchestrator built on
+#: it: the honesty guard in :mod:`dev.packaging.distribution_evidence_emit`
+#: refuses SDK-driven runs by design, and defeating it would make the evidence a
+#: lie about what was actually installed.
+EMIT_REAL_CLIENT_EVIDENCE_COMMAND: Final[str] = "uv run --no-sync python -m dev.packaging.emit_real_client_evidence"
 
 #: Channel id -> the ``publish-release.yml`` dispatch input naming the run or
 #: release that carries that channel's acquisition evidence. Many-to-one is
@@ -152,6 +161,44 @@ def refusals(descriptor: DownloadDescriptor, provided: Mapping[str, str]) -> tup
             "docs/_data/download_channels.toml.",
         )
     return tuple(lines)
+
+
+def host_extension_precondition_refusal(
+    descriptor: DownloadDescriptor,
+    *,
+    claude_evidence_release: str,
+) -> str | None:
+    """Refuse an orchestration when a claimed host-extension channel has no evidence release.
+
+    This is a fail-closed PRECONDITION meant to run at orchestration ENTRY —
+    before the bump or any other stage — so a claimed ``claude-plugin`` /
+    ``mcpb`` channel with no operator-minted evidence release stops the whole
+    chain before a version is burned, rather than after. It never attempts to
+    produce the four required ``claude-*`` rows itself: the honesty guard in
+    :mod:`dev.packaging.distribution_evidence_emit` refuses SDK-driven runs by
+    design, and defeating it would make the evidence a lie about what was
+    actually installed. Those rows stay a human act, captured with
+    :data:`EMIT_REAL_CLIENT_EVIDENCE_COMMAND` against a real Claude client.
+
+    Returns ``None`` when the precondition holds: no host-extension channel is
+    claimed, or one is claimed and ``claude_evidence_release`` was supplied.
+    Otherwise returns one instructive refusal line naming every claimed
+    host-extension channel and the exact capture command to run.
+    """
+    host_channels = sorted(
+        channel.id for channel in claimed_channels(descriptor) if channel.tier is ChannelTier.HOST_EXTENSION
+    )
+    if not host_channels:
+        return None
+    if claude_evidence_release.strip():
+        return None
+    return (
+        f"REFUSED: host-extension channel(s) {host_channels} are claimed, but no operator-minted claude "
+        "evidence release was supplied. These four claude-* rows cannot be produced by a workflow — "
+        f"capture them locally first with `{EMIT_REAL_CLIENT_EVIDENCE_COMMAND}` against a real Claude "
+        "client, publish the results as a GitHub release, then dispatch the orchestrator again naming "
+        "that release's tag."
+    )
 
 
 def _emit_outputs(descriptor: DownloadDescriptor, output_path: Path) -> None:

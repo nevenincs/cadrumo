@@ -19,10 +19,12 @@ from cadrumo.tests.env_scope import scoped_env_var
 from dev.docs.download_matrix import Availability, DownloadDescriptor, claimed_channels, load_descriptor
 from dev.packaging.publication_inputs import (
     COHORT_INPUT,
+    EMIT_REAL_CLIENT_EVIDENCE_COMMAND,
     SOURCE_INPUT_BY_CHANNEL,
     _emit_outputs,
     acquisition_lanes,
     demanded_inputs,
+    host_extension_precondition_refusal,
     main,
     missing_sources,
     refusals,
@@ -201,6 +203,62 @@ def test_python_is_never_an_acquisition_lane_even_when_every_channel_is_claimed(
     for channel in descriptor.channel:
         fully_claimed = _with_availability(fully_claimed, channel.id, Availability.AVAILABLE)
     assert "python" not in acquisition_lanes(fully_claimed)
+
+
+def test_unclaimed_host_extension_precondition_passes_regardless_of_evidence_release() -> None:
+    """No host-extension channel claimed: the precondition holds even with an empty release tag."""
+    descriptor = load_descriptor()
+    assert host_extension_precondition_refusal(descriptor, claude_evidence_release="") is None
+    assert host_extension_precondition_refusal(descriptor, claude_evidence_release="   ") is None
+
+
+def test_claimed_and_supplied_host_extension_precondition_passes() -> None:
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE)
+    assert host_extension_precondition_refusal(claimed, claude_evidence_release="evidence-claude-123") is None
+
+
+def test_claimed_and_absent_host_extension_precondition_refuses_naming_the_capture_command() -> None:
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE)
+
+    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="")
+
+    assert refusal is not None
+    assert refusal.startswith("REFUSED:")
+    assert EMIT_REAL_CLIENT_EVIDENCE_COMMAND in refusal
+    assert "claude-plugin" in refusal
+    # Never a step this module performs itself.
+    assert "capture them locally" in refusal
+
+
+def test_host_extension_precondition_treats_whitespace_only_evidence_release_as_absent() -> None:
+    """A blank/whitespace tag is not a supplied release; it must not satisfy the precondition."""
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, "mcpb", Availability.AVAILABLE)
+    refusal = host_extension_precondition_refusal(claimed, claude_evidence_release="   ")
+    assert refusal is not None
+    assert "mcpb" in refusal
+
+
+def test_host_extension_precondition_names_every_claimed_host_channel() -> None:
+    descriptor = load_descriptor()
+    both = _with_availability(
+        _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
+        "mcpb",
+        Availability.AVAILABLE,
+    )
+    refusal = host_extension_precondition_refusal(both, claude_evidence_release="")
+    assert refusal is not None
+    assert "claude-plugin" in refusal
+    assert "mcpb" in refusal
+
+
+def test_host_extension_precondition_never_fires_for_a_non_host_extension_claim() -> None:
+    """Claiming scoop/homebrew must not trip the claude-specific precondition."""
+    descriptor = load_descriptor()
+    claimed = _with_availability(descriptor, "scoop", Availability.AVAILABLE)
+    assert host_extension_precondition_refusal(claimed, claude_evidence_release="") is None
 
 
 def test_emitted_outputs_cover_every_known_input_in_both_states(tmp_path: Path) -> None:
