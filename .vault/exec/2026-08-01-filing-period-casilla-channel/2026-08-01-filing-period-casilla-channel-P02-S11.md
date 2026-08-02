@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#filing-period-casilla-channel'
 date: '2026-08-01'
-modified: '2026-08-01'
+modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:266923d20805a30c1f0194871df0174d8a30145437ed28d2ec27b21605eb8ef1'
+body_hash: 'sha256:6ceacc83f913d3c3eac0a8672d841a6de8ddaccc3ba95dace1ee8aa2084028cc'
 step_id: 'S11'
 related:
   - "[[2026-08-01-filing-period-casilla-channel-plan]]"
