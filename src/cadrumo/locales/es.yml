@@ -1596,6 +1596,7 @@ application:
         compatible con esta versión de la aplicación.
       censal_read_identity_profile_malformed: 'El NIF de este perfil no es un identificador fiscal español válido, por lo que no puede confirmarse que la lectura censal le corresponda. Corrija el NIF y vuelva a ejecutar la consulta.'
       censal_read_identity_read_malformed: 'El NIF de la lectura censal no es un identificador fiscal español válido, por lo que no puede confirmarse que corresponda a este perfil.'
+      repository_profile_bucket_mismatch: 'El perfil %{profile_id} no pertenece al bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad de perfil.'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil siguen difiriendo del Certificado
         de Situación Censal y quedan sin resolver: {axes}.'
@@ -6210,6 +6211,8 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
     integrity_apoderado_configuration_identity: 'La configuración de apoderado almacenada no pertenece al perfil desde el que se ha leído.'
+    integrity_storage_secure_object_row_identity: 'Un objeto seguro almacenado no reconstruye la clave con la que está archivado; el registro fue sustituido o archivado incorrectamente.'
+    integrity_profile_bucket_mismatch: 'El perfil %{profile_id} no pertenece al bucket %{bucket_id}; un bucket de perfil contiene exactamente una identidad de perfil.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no
       ha superado su propia validación. Tu comando era correcto; esto es un defecto
@@ -6664,6 +6667,7 @@ errors:
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
         para almacenamiento runtime.
+      object_key_grammar_mismatch: 'El espacio de nombres de objeto seguro %{namespace} declara la gramática de clave %{object_key_grammar}, y la clave utilizada no la cumple: %{reason}'
     runtime:
       cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
         solo está disponible antes de seleccionar un bucket de perfil activo.

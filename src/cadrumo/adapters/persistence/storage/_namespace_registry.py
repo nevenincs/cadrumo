@@ -102,6 +102,81 @@ class SecureObjectNamespaceDefinition(BaseModel):
             raise NamespaceRegistryError("default object key must not contain path separators")
         return value
 
+    @property
+    def singleton_object_key(self) -> str | None:
+        """Return the one key this namespace admits, or ``None`` when it is multi-key.
+
+        A grammar carrying no ``{placeholder}`` names a literal key rather than
+        a template, so the namespace holds exactly one row under exactly that
+        key -- ``catalogue``, ``default``, ``state``. That makes the declared
+        grammar machine-checkable for this class of namespace without a
+        per-namespace parser.
+        """
+        if "{" in self.object_key_grammar:
+            return None
+        return self.object_key_grammar
+
+    def validate_object_key(self, object_key: str) -> None:
+        """Raise :class:`NamespaceRegistryError` when ``object_key`` violates this contract.
+
+        Two checks apply. Every namespace rejects surrounding whitespace and a
+        ``..`` traversal segment, because the key also names a logical storage
+        path (:func:`secure_object_logical_path`). Path SEPARATORS are not
+        rejected: several namespaces declare a grammar rooted at a logical
+        path (``{logical_root}|...``, ``{storage_state_path_posix}``) whose
+        keys legitimately contain them.
+
+        A singleton namespace additionally requires the key to equal its
+        declared literal. Without that, a valid envelope written under a
+        mistyped key round-trips through raw storage while the owning
+        repository -- which addresses the singleton by its canonical key --
+        reports the record absent: the row is silently orphaned rather than
+        refused.
+
+        A templated (multi-key) namespace is checked for traversal safety
+        only. Its placeholder grammar stays documentation until a typed
+        per-namespace key validator exists; asserting more here would refuse
+        keys the registry itself declares as valid.
+
+        Args:
+            object_key: The natural (pre-digest) key a caller is addressing.
+
+        Raises:
+            NamespaceRegistryError: When the key is unsafe or, for a singleton
+                namespace, is not the declared literal.
+        """
+        if object_key != object_key.strip():
+            raise NamespaceRegistryError(
+                f"object key for namespace {self.namespace!r} must not carry surrounding whitespace",
+            )
+        segments = object_key.replace("\\", "/").replace(":", "/").split("/")
+        if ".." in segments:
+            raise NamespaceRegistryError(
+                f"object key for namespace {self.namespace!r} must not contain a traversal segment",
+            )
+        singleton_key = self.singleton_object_key
+        if singleton_key is not None and object_key != singleton_key:
+            raise NamespaceRegistryError(
+                f"namespace {self.namespace!r} is a singleton addressed only by {singleton_key!r}; got {object_key!r}",
+            )
+
+    @model_validator(mode="after")
+    def _singleton_default_key_matches_grammar(self) -> SecureObjectNamespaceDefinition:
+        """Keep a singleton namespace's default key equal to its declared grammar.
+
+        The default key is what repositories address the singleton by, and the
+        grammar is what :meth:`validate_object_key` enforces. If the two
+        disagreed, every write through the repository's own default would be
+        refused by the namespace's own contract.
+        """
+        singleton_key = self.singleton_object_key
+        if singleton_key is not None and self.default_object_key not in (None, singleton_key):
+            raise NamespaceRegistryError(
+                f"singleton namespace {self.namespace!r} declares grammar {singleton_key!r} "
+                f"but default object key {self.default_object_key!r}",
+            )
+        return self
+
     @model_validator(mode="after")
     def _remote_mirror_policy_is_consistent(self) -> SecureObjectNamespaceDefinition:
         if self.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:

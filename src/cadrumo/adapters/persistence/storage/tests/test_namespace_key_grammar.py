@@ -19,6 +19,8 @@ from .....application.calculations import member_observation_key, observation_ke
 from .....core import Period
 from .....domain.transactions import transaction_index_object_key, transaction_object_key
 from .. import CALCULATION_OBSERVATIONS_NAMESPACE, TRANSACTION_CATALOGUE_NAMESPACE
+from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -113,3 +115,69 @@ def test_calculation_observation_pre_correction_grammar_rejected_the_member_key(
     assert not _matches_any(member_observation_key("353", period, "B12345678"), drifted)
     # The single-filer key was always covered; only the member variant drifted.
     assert _matches_any(observation_key("100", period), drifted)
+
+
+def test_singleton_namespaces_admit_only_their_declared_key() -> None:
+    """A grammar with no placeholder names one literal key, and only that key.
+
+    Before the grammar was enforced, a singleton namespace accepted any key.
+    A valid envelope written under a mistyped key round-tripped through raw
+    storage while the owning repository -- which addresses the singleton by
+    its canonical key -- reported the record absent, silently orphaning the
+    row from the catalogue it belonged to.
+    """
+    singletons = [
+        definition
+        for definition in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if definition.singleton_object_key is not None
+    ]
+    assert singletons, "registry declares at least one singleton namespace"
+
+    for definition in singletons:
+        declared = definition.singleton_object_key
+        assert declared is not None
+        # The declared key is admitted...
+        definition.validate_object_key(declared)
+        # ...and every other spelling of it is refused.
+        for rejected in (f"{declared}-other", f"{declared}:other", "wrong", "../escape"):
+            with pytest.raises(NamespaceRegistryError):
+                definition.validate_object_key(rejected)
+
+
+def test_templated_namespaces_admit_their_real_keys_and_refuse_traversal() -> None:
+    """A multi-key namespace keeps accepting the keys its own repositories derive.
+
+    Positive control for the enforcement above: the singleton rule must not
+    leak into templated namespaces, whose keys carry segment separators and
+    (for path-rooted grammars) path separators by declaration. Only a ``..``
+    traversal segment is refused.
+    """
+    period = Period.from_year_and_code(2024, "1T")
+    observations = CALCULATION_OBSERVATIONS_NAMESPACE
+    assert observations.singleton_object_key is None
+
+    observations.validate_object_key(observation_key("100", period))
+    observations.validate_object_key(member_observation_key("353", period, "B12345678"))
+
+    transactions = TRANSACTION_CATALOGUE_NAMESPACE
+    assert transactions.singleton_object_key is None
+    transactions.validate_object_key(transaction_object_key("bucket", "txn"))
+    transactions.validate_object_key(transaction_index_object_key("bucket"))
+
+    for traversal in ("..", "a:..:b", "a/../b"):
+        with pytest.raises(NamespaceRegistryError):
+            transactions.validate_object_key(traversal)
+
+
+def test_singleton_default_object_key_agrees_with_its_grammar() -> None:
+    """A singleton's repository-facing default key is the key its grammar admits.
+
+    If the two disagreed, every write through the repository's own default
+    would be refused by the namespace's own contract.
+    """
+    for definition in STORAGE_NAMESPACE_REGISTRY.namespaces:
+        declared = definition.singleton_object_key
+        if declared is None or definition.default_object_key is None:
+            continue
+        assert definition.default_object_key == declared
+        definition.validate_object_key(definition.default_object_key)

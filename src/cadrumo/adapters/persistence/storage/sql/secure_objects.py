@@ -15,8 +15,8 @@ from .....core.classification import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
-from .....core.time import now as _utc_now
 from .....core.time import coerce_utc_aware, validate_utc_aware
+from .....core.time import now as _utc_now
 from .._namespace_registry import (
     SecureObjectNamespaceDefinition,
     StorageHierarchyRegistry,
@@ -31,6 +31,7 @@ from ..crypto import (
 from ..errors import (
     ClassificationError,
     EnvelopeVersionError,
+    NamespaceRegistryError,
     RepositoryError,
     SecureObjectRevisionConflictError,
     SecureObjectUnreadableError,
@@ -156,10 +157,16 @@ class SecureObjectRepository:
         namespace: str,
         classification: SensitivityClass,
         schema_version: int,
+        object_key: str | None = None,
     ) -> None:
         definition = self._registered_namespace_definition(namespace)
         if definition is None:
             return
+        if object_key is not None:
+            # ``save_with_raw_key`` passes ``None``: it addresses a row by a
+            # pre-computed HMAC digest whose natural key was already lost, so
+            # there is no key left to check against the declared grammar.
+            self._enforce_registered_object_key(definition, object_key)
         if classification is not definition.sensitivity:
             raise ClassificationError(
                 translated_message="errors.storage.namespace.classification_mismatch",
@@ -178,6 +185,32 @@ class SecureObjectRepository:
                     "expected": definition.schema_version,
                 },
             )
+
+    @staticmethod
+    def _enforce_registered_object_key(
+        definition: SecureObjectNamespaceDefinition,
+        object_key: str,
+    ) -> None:
+        """Refuse an object key the namespace's declared grammar does not admit.
+
+        The registry declares a natural-key grammar per namespace. Until this
+        gate existed the declaration was documentation: a singleton namespace
+        such as the invoice catalogue accepted any key, so a valid envelope
+        written under a mistyped key round-tripped through raw storage while
+        the owning repository -- which addresses the singleton by its canonical
+        key -- reported the record absent. The row was orphaned, not refused.
+        """
+        try:
+            definition.validate_object_key(object_key)
+        except NamespaceRegistryError as exc:
+            raise StorageValidationError(
+                translated_message="errors.storage.namespace.object_key_grammar_mismatch",
+                context={
+                    "namespace": definition.namespace,
+                    "object_key_grammar": definition.object_key_grammar,
+                    "reason": str(exc),
+                },
+            ) from exc
 
     def _enforce_registered_read_policy(
         self,
@@ -817,6 +850,7 @@ class SecureObjectRepository:
                 namespace=write.namespace,
                 classification=write.classification,
                 schema_version=write.schema_version,
+                object_key=write.object_key,
             )
         self._check_session_freshness()
         with session_scope(self._engine) as session:
@@ -885,6 +919,7 @@ class SecureObjectRepository:
                 namespace=write.namespace,
                 classification=write.classification,
                 schema_version=write.schema_version,
+                object_key=write.object_key,
             )
         for removal in deletions:
             self._registered_namespace_definition(removal.namespace)
@@ -1001,6 +1036,10 @@ class SecureObjectRepository:
             namespace=namespace,
             classification=classification,
             schema_version=schema_version,
+            # ``save`` passes the natural string key; ``save_with_raw_key``
+            # passes an already-digested ``bytes`` key with no natural form
+            # left to check against the namespace's declared grammar.
+            object_key=key if isinstance(key, str) else None,
         )
         with session_scope(self._engine) as session:
             self._save_internal_in_session(

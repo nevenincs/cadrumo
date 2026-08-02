@@ -1587,6 +1587,7 @@ application:
         amb aquesta versió de l'aplicació.
       censal_read_identity_profile_malformed: 'El NIF d''aquest perfil no és un identificador fiscal espanyol vàlid, de manera que no es pot confirmar que la lectura censal li correspongui. Corregiu el NIF i torneu a executar la consulta.'
       censal_read_identity_read_malformed: 'El NIF de la lectura censal no és un identificador fiscal espanyol vàlid, de manera que no es pot confirmar que correspongui a aquest perfil.'
+      repository_profile_bucket_mismatch: 'El perfil %{profile_id} no pertany al bucket %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.'
     notices:
       censo_divergences_open: '{count} dada/es del perfil encara difereixen del Certificat
         de Situació Censal i resten sense resoldre: {axes}.'
@@ -6171,6 +6172,8 @@ errors:
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
     integrity_apoderado_configuration_identity: 'La configuració d''apoderat emmagatzemada no pertany al perfil des del qual s''ha llegit.'
+    integrity_storage_secure_object_row_identity: 'Un objecte segur emmagatzemat no reconstrueix la clau amb què està arxivat; el registre va ser substituït o arxivat incorrectament.'
+    integrity_profile_bucket_mismatch: 'El perfil %{profile_id} no pertany al bucket %{bucket_id}; un bucket de perfil conté exactament una identitat de perfil.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construït un registre intern que no
       ha superat la seva pròpia validació. La teva ordre era correcta; això és un
@@ -6622,6 +6625,7 @@ errors:
         una sensibilitat desconeguda: %{classification}.'
       unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
         per a l'emmagatzematge runtime.
+      object_key_grammar_mismatch: 'L''espai de noms d''objecte segur %{namespace} declara la gramàtica de clau %{object_key_grammar}, i la clau utilitzada no la compleix: %{reason}'
     runtime:
       cold_bootstrap_active_profile_refused: L'emmagatzematge d'arrencada en fred
         només està disponible abans de seleccionar un bucket de perfil actiu.
