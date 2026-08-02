@@ -204,9 +204,14 @@ def _seed_external_baseline(
     filing_year: int = 2026,
     period_code: str = "1T",
     revision_id_value: str = "2019-y-siguientes",
+    member_nif: str | None = None,
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
-    its underlying calculation revision and work unit."""
+    its underlying calculation revision and work unit.
+
+    ``member_nif`` seeds a member-scoped group-filing baseline (e.g. a 322
+    imputación member) rather than a single-filer one; omitted, the baseline
+    keeps the existing single-filer shape every other caller relies on."""
 
     wu_repo, cr_repo, fr_repo, _, _ = repos_tuple
     work_unit = _seed_work_unit(
@@ -229,6 +234,7 @@ def _seed_external_baseline(
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=revision_id,
         filed_by="aeat-import",
+        member_nif=member_nif,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -260,6 +266,7 @@ def _seed_external_baseline(
         modelo=work_unit.modelo,
         filing_year=work_unit.filing_year,
         period=work_unit.period,
+        member_nif=member_nif,
         filed_at=_T1,
         filed_by="aeat-import",
         notes=None,
@@ -496,6 +503,98 @@ def test_amend_new_revision_is_filed_complementaria(repos: _Repos) -> None:
     assert new_revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
     assert new_revision.amends_filing_record_id == outcome.baseline.filing_record_id
     assert new_revision.amendment_reason == "under-reported turnover discovered in audit"
+
+
+def test_amend_member_scoped_filing_id_carries_member_nif(repos: _Repos) -> None:
+    """A member-scoped amendment's new filing record carries the baseline's
+    ``member_nif`` -- both on the persisted record and in its derived id --
+    rather than silently defaulting to the single-filer ``None`` slot."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _, _, baseline = _seed_external_baseline(
+        repos,
+        casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
+        member_nif="A00000000",
+    )
+    assert baseline.member_nif == "A00000000"
+
+    new_filing = amend_modelo_revision(
+        from_filing_record_id=baseline.filing_record_id,
+        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        reason="member A turnover correction",
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+
+    assert new_filing.member_nif == "A00000000"
+    assert new_filing.filing_record_id == derive_filing_record_id(
+        work_unit_id=new_filing.work_unit_id,
+        calculation_revision_id=new_filing.calculation_revision_id,
+        filed_by="operator-A",
+        member_nif="A00000000",
+    )
+
+
+def test_amend_member_scoped_filing_does_not_collide_with_single_filer_record(repos: _Repos) -> None:
+    """Amending a member-scoped baseline must not collide with an unrelated
+    single-filer VIGENTE record sharing the same (modelo, year, period).
+
+    Reproduces the second-order ``ModeloRecordCatalogue`` hazard the
+    ``member_nif`` drop caused: without it, the amendment's new filing record
+    would land on the single-filer ``None`` coordinate and collide with a
+    genuine single-filer current record for the same (bucket, modelo,
+    filing_year, period) -- surfacing as a confusing "more than one current
+    filing record" catalogue error with no path back to the missing-member
+    cause."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit, _, baseline_a = _seed_external_baseline(
+        repos,
+        casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")},
+        member_nif="A00000000",
+    )
+
+    single_filer_revision_id = "b" * 64
+    single_filer_filing_id = derive_filing_record_id(
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=single_filer_revision_id,
+        filed_by="aeat-import",
+    )
+    single_filer_filing = ModeloRecord(
+        filing_record_id=single_filer_filing_id,
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=single_filer_revision_id,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=_T1,
+        filed_by="aeat-import",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    fr_repo.save(upsert_filing_record(fr_repo.load(), single_filer_filing))
+
+    new_filing = amend_modelo_revision(
+        from_filing_record_id=baseline_a.filing_record_id,
+        overrides={_AMEND_INCOME_CASILLA: Decimal("1100")},
+        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        reason="member A turnover correction",
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+
+    assert new_filing.member_nif == "A00000000"
+    refreshed_single_filer = get_filing_record(single_filer_filing_id, filing_repository=fr_repo)
+    assert refreshed_single_filer.status is ModeloRecordStatus.VIGENTE
 
 
 def test_amend_overridden_casilla_takes_new_value(repos: _Repos) -> None:

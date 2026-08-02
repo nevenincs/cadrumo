@@ -321,9 +321,9 @@ class ModeloRecordCatalogue(BaseModel):
         """Resolve every ``amends_filing_record_id`` to a real, distinct, same-coordinate record.
 
         A declaración complementaria corrects one earlier filing for the same
-        (bucket, modelo, filing_year, period) coordinate. The field alone is
-        shape-validated, so without this a record could claim to amend a
-        filing that does not exist, or itself, and the catalogue would accept
+        (bucket, modelo, filing_year, period, member_nif) coordinate. The field
+        alone is shape-validated, so without this a record could claim to amend
+        a filing that does not exist, or itself, and the catalogue would accept
         the claim as a valid audit chain.
 
         The amendment relationship is stored twice -- forwards as the
@@ -338,16 +338,18 @@ class ModeloRecordCatalogue(BaseModel):
         legitimately be inconsistent between writes; both ends of this link live
         in one catalogue written in one call, so here it is a refusal.
 
-        Two deliberate exclusions:
+        ``member_nif`` is part of the compared coordinate: the amendment
+        builder propagates it verbatim from the baseline, so a member-scoped
+        amendment that landed on the wrong member (or dropped it to the
+        single-filer ``None`` slot) is refused here rather than silently
+        colliding with an unrelated current record in
+        :meth:`ModeloRecordCatalogue._enforce_keys_match`.
 
-        * ``member_nif`` is not compared. The amendment builder does not
-          currently propagate it from the baseline, so comparing it here would
-          refuse member-scoped amendments rather than surface that separate gap.
-        * The target's ``status`` is not asserted to be ``SUPERSEDIDO``.
-          :meth:`ModeloRecord._enforce_invariants` already refuses a ``VIGENTE``
-          record that carries supersession metadata, so a target whose
-          ``superseded_by_filing_record_id`` matches is necessarily superseded;
-          restating it here would be a second spelling of one rule.
+        One deliberate exclusion: the target's ``status`` is not asserted to be
+        ``SUPERSEDIDO``. :meth:`ModeloRecord._enforce_invariants` already
+        refuses a ``VIGENTE`` record that carries supersession metadata, so a
+        target whose ``superseded_by_filing_record_id`` matches is necessarily
+        superseded; restating it here would be a second spelling of one rule.
         """
         for record in self.records.values():
             target_id = record.amends_filing_record_id
@@ -363,8 +365,14 @@ class ModeloRecordCatalogue(BaseModel):
                     f"filing record {record.filing_record_id!r} amends {target_id!r}, "
                     "which is not in this catalogue",
                 )
-            coordinates = (record.bucket_id, record.modelo, record.filing_year, record.period)
-            target_coordinates = (target.bucket_id, target.modelo, target.filing_year, target.period)
+            coordinates = (record.bucket_id, record.modelo, record.filing_year, record.period, record.member_nif)
+            target_coordinates = (
+                target.bucket_id,
+                target.modelo,
+                target.filing_year,
+                target.period,
+                target.member_nif,
+            )
             if coordinates != target_coordinates:
                 raise ModeloValidationError(
                     f"filing record {record.filing_record_id!r} amends {target_id!r} across filing "
