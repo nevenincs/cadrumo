@@ -22,7 +22,10 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, RegistrySnapshot, validated_casilla_id
 from ....domain.iva_compensation import IvaCompensationPeriodState
 
-_TAXPAYER_REF = "taxpayeralpha"
+#: A checksum-valid synthetic NIF. ``IvaCompensationPeriodState.taxpayer_nif``
+#: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
+#: and the fixture must carry a real identifier shape.
+_TAXPAYER_REF = "12345678Z"
 
 
 def _casilla_id(value: object) -> CasillaId:

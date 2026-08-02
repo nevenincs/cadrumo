@@ -95,6 +95,47 @@ class InvoiceCatalogueRepository:
         """Return whether an invoice catalogue has been persisted."""
         return self._objects.exists(_INVOICE_NAMESPACE, _INVOICE_OBJECT_KEY)
 
+    def _assert_catalogue_bucket(self, catalogue: InvoiceCatalogue, *, direction: str) -> None:
+        """Refuse a catalogue carrying an invoice attributed to another bucket.
+
+        The repository is opened against ONE bucket's encrypted store, so an
+        invoice naming a different bucket is a foreign row: reading it surfaces
+        another profile's invoice as this profile's, and writing it stamps that
+        profile's identity into this database. Neither read nor write checked,
+        even though the sibling purchase-invoice and business-operation stores
+        do, so the rich invoice catalogue was the one invoice surface where a
+        foreign row passed silently.
+
+        Applied on both directions through one helper: a check on only one of
+        them leaves the other as the way in.
+
+        ``bucket_id is None`` is UNATTRIBUTED, not foreign, and is allowed --
+        the field is optional and most invoices carry no bucket at all. Only a
+        populated, mismatching bucket is refused. A repository constructed with
+        an injected store and no resolved bucket has nothing to compare against
+        and checks nothing.
+
+        Raises:
+            InvoicePersistenceError: An invoice names a bucket other than the
+                one this repository is bound to.
+        """
+        bound = self._bucket_id
+        if bound is None:
+            return
+        foreign = sorted(
+            {
+                str(invoice.bucket_id)
+                for invoice in catalogue.invoices.values()
+                if invoice.bucket_id is not None and str(invoice.bucket_id) != bound
+            },
+        )
+        if foreign:
+            raise InvoicePersistenceError(
+                f"invoice catalogue {direction} bucket {bound!r} carries invoices "
+                f"attributed to {', '.join(repr(value) for value in foreign)}",
+                context={"bucket_id": bound, "foreign_bucket_ids": ",".join(foreign), "direction": direction},
+            )
+
     def load(self) -> InvoiceCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 
@@ -136,7 +177,9 @@ class InvoiceCatalogueRepository:
                 f"invoice catalogue is at version {envelope.schema_version}; "
                 f"consumer supports up to {_INVOICE_CATALOGUE_VERSION}",
             )
-        return envelope.payload
+        catalogue = envelope.payload
+        self._assert_catalogue_bucket(catalogue, direction="read from")
+        return catalogue
 
     def save(self, catalogue: InvoiceCatalogue) -> None:
         """Persist ``catalogue`` atomically under the file lock.
@@ -153,6 +196,7 @@ class InvoiceCatalogueRepository:
         """
         from ..storage import Envelope
 
+        self._assert_catalogue_bucket(catalogue, direction="saved through")
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
             written_at=now(),
@@ -182,6 +226,9 @@ class InvoiceCatalogueRepository:
         """
         from ..storage import Envelope, SecureObjectWrite
 
+        # The co-commit path is a WRITE like save(); leaving it unchecked would
+        # leave the transaction/event route as the way a foreign row still gets in.
+        self._assert_catalogue_bucket(catalogue, direction="saved through")
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
             written_at=now(),

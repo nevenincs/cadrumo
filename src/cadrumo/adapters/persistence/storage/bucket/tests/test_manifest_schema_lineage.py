@@ -40,6 +40,8 @@ from .._manifest import (
 )
 from .._manifest_io import ensure_manifest_schema_readable, manifest_path, read_manifest, write_manifest
 
+_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _FORMAT_KEY = "bucket_manifest"
@@ -47,7 +49,7 @@ _FORMAT_KEY = "bucket_manifest"
 
 def _manifest() -> BucketManifest:
     return BucketManifest(
-        bucket_id="11111111-1111-4111-8111-111111111111",
+        bucket_id=_BUCKET_ID,
         label="Lineage Operator",
         created_at=datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC),
         last_unlocked_at=None,
@@ -136,7 +138,7 @@ def test_the_read_path_applies_the_gate_to_a_real_on_disk_manifest(tmp_path: Pat
     this the range gate could be correct and simply never called, which is how
     this format spent its whole life with a version field and no check.
     """
-    paths = provision_bucket_directory(tmp_path, "alpha")
+    paths = provision_bucket_directory(tmp_path, _BUCKET_ID)
     write_manifest(paths, _manifest())
     target = manifest_path(paths)
     skewed = target.read_text(encoding=UTF_8_ENCODING).replace(
@@ -153,6 +155,6 @@ def test_the_read_path_applies_the_gate_to_a_real_on_disk_manifest(tmp_path: Pat
 
 def test_a_current_version_manifest_still_reads(tmp_path: Path) -> None:
     """Anti-tautology: the refusals above discriminate rather than always-refuse."""
-    paths = provision_bucket_directory(tmp_path, "alpha")
+    paths = provision_bucket_directory(tmp_path, _BUCKET_ID)
     write_manifest(paths, _manifest())
     assert read_manifest(paths).schema_version == BUCKET_MANIFEST_SCHEMA_VERSION

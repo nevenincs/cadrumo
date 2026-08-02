@@ -70,7 +70,6 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import datetime
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
@@ -82,7 +81,7 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
 from ...core.external_constants import SANDBOX_LABEL_PREFIX as _SANDBOX_LABEL_PREFIX
 from ...core.identity import BucketId
-from ...core.time import now
+from ...core.time import UtcInstant, now
 from ...domain.buckets import (
     BucketEvent,
     BucketEventObjectType,
@@ -290,7 +289,7 @@ class DiscardSandboxResult(BaseModel):
 
     bucket_id: BucketId
     previous_label: str
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 class ArchiveSandboxCommand(BaseModel):
@@ -319,7 +318,7 @@ class ArchiveSandboxResult(BaseModel):
 
     bucket_id: BucketId
     label: str
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 class RestoreSandboxCommand(BaseModel):
@@ -342,7 +341,7 @@ class RestoreSandboxResult(BaseModel):
 
     bucket_id: BucketId
     label: str
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 class MergeSandboxCommand(BaseModel):
@@ -381,7 +380,7 @@ class MergeSandboxResult(BaseModel):
     target_bucket_id: BucketId
     scope: SandboxMergeScope
     merged_counts: dict[str, int]
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 def create_sandbox(command: CreateSandboxCommand) -> CreateSandboxResult:

@@ -51,11 +51,11 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import STRICT_FROZEN_CONFIG, Period
+from ...core import STRICT_FROZEN_CONFIG, Period, SecureObjectWrite
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.resources import resources
-from ...core.time import now
+from ...core.time import UtcInstant, now
 from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ._errors import ObservationCasillaReferenceError, ObservationKeyError
@@ -110,6 +110,11 @@ class ObservationEnvelopePayload(BaseModel):
     ``stamped_revision_id``, and source-specific ``source_metadata``. The model
     does not encrypt that metadata; the secure repository envelope does.
 
+    ``captured_at`` is the canonical :data:`~core.time.UtcInstant`. A bare
+    ``datetime`` field admitted a naive value, so a capture instant with no
+    zone reached persistence and every later comparison against a UTC-aware
+    instant was answering a different question than it appeared to.
+
     Every persisted observation carries its source registry revision stamp so
     carry reads can reconfirm the value against the law-determined revision.
     A missing or structurally invalid stamp refuses at load; a valid but
@@ -119,7 +124,7 @@ class ObservationEnvelopePayload(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     observation: RegistryModeloObservation
-    captured_at: datetime
+    captured_at: UtcInstant
     source_kind: ObservationSourceKind = Field(
         description="Typed provenance of this calculation observation.",
     )
@@ -418,9 +423,19 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
 
         Used by grouped previous-filing and clean-state readers to enumerate all
         known source rows for a modelo, including member-widened keys.
+
+        Scans through
+        :meth:`~adapters.persistence.storage.SecureBoundRepository.iter_verified_records`
+        rather than the unverified counterpart: the ``modelo`` filter below
+        reads the payload's own coordinates, so a row filed under another
+        ``(modelo, filing_year, period, member)`` key would enter the window it
+        describes rather than the one it is stored in, and carry-forward and
+        aggregation readers would fold a foreign period's figures into this
+        modelo. The verified scan recomputes the natural key from each payload
+        and refuses a mismatch instead of yielding it.
         """
         safe_repository_id(modelo, context="modelo")
-        for payload in self.iter_records():
+        for payload in self.iter_verified_records():
             if payload.observation.modelo == modelo:
                 yield payload
 
@@ -456,23 +471,33 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         return iva_wallet_decision_key(decision.taxpayer_nif, decision.target_period)
 
     def save_decision(self, decision: IvaCompensationReconciliationDecision) -> None:
-        """Persist ``decision`` to latest lookup and immutable audit history."""
+        """Persist ``decision`` to latest lookup and immutable audit history.
+
+        Both rows commit in ONE transaction. Writing the latest state and then
+        appending the audit event as a second, independent write left a window
+        in which a failure between them persisted a decision the immutable
+        history has no record of -- the history exists precisely to explain how
+        the latest state was reached, so a latest row with no event is a
+        decision that cannot be audited. The substrate already owns the
+        transaction boundary; this composes both writes into it.
+        """
         payload = IvaWalletDecisionEnvelopePayload(decision=decision)
-        super().save(payload)
-        envelope = Envelope[IvaWalletDecisionEnvelopePayload](
+        latest_write = self.to_secure_object_write(payload)
+        history_envelope = Envelope[IvaWalletDecisionEnvelopePayload](
             schema_version=self.schema_version,
-            written_at=now(),
+            written_at=latest_write.written_at,
             classification=self.sensitivity,
             payload=payload,
         )
-        self._objects.save(
+        history_write = SecureObjectWrite(
             namespace=self.history_namespace,
             object_key=iva_wallet_decision_event_key(decision),
             classification=self.sensitivity,
             schema_version=self.schema_version,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+            written_at=history_envelope.written_at,
+            payload=history_envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
+        self._objects.apply_batch((latest_write, history_write))
 
     def load_decision(
         self,
@@ -488,10 +513,20 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
 
         Each element is an :class:`IvaCompensationReconciliationDecision` sorted
         by ``(target_year, target_period, taxpayer_nif, decided_at)``.
+
+        Scans through
+        :meth:`~adapters.persistence.storage.SecureBoundRepository.iter_verified_records`
+        rather than the unverified counterpart. The latest-decision key is a
+        hash of the taxpayer and target period, so a decision filed under
+        another taxpayer's or period's key is invisible to any check that reads
+        the decrypted decision alone; it would then sort into this list as that
+        other subject's latest decision and enter reconciliation. The verified
+        scan recomputes the hashed key from each payload and refuses a
+        mismatch.
         """
         return tuple(
             sorted(
-                (payload.decision for payload in self.iter_records()),
+                (payload.decision for payload in self.iter_verified_records()),
                 key=lambda decision: (
                     decision.target_year,
                     decision.target_period.registry_token,

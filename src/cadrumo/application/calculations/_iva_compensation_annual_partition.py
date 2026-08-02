@@ -123,7 +123,11 @@ def _period_state_from_303_observation(observation: RegistryModeloObservation) -
         available = (posterior or _ZERO) + generated
     period = Period.from_year_and_code(observation.filing_year, observation.period)
     return IvaCompensationPeriodState(
-        taxpayer_nif="iva-annual-partition",
+        # A casilla observation records no taxpayer, and these states are
+        # computational scaffold for the FIFO partition below - never
+        # persisted, never shown. Declaring no subject is honest; a synthetic
+        # label in the identity field reads downstream as if it named one.
+        taxpayer_nif=None,
         filing_year=observation.filing_year,
         period=period,
         expediente_id=f"obs-{observation.filing_year}-{observation.period}",

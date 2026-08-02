@@ -139,6 +139,61 @@ class ExternalGroundingModel(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
+#: Bounds on a bundled oracle payload's ``raw_evidence_locator``, declared once.
+#:
+#: The generic :class:`~domain.calculations.registry.ReplayPayload` that every
+#: checker-style driver decodes through is deliberately looser — it makes the
+#: locator optional and caps it at 512 — because not every replay surface
+#: carries bundled-corpus evidence. The Renta WEB Open corpus is read by BOTH
+#: contracts, so these bounds are exported and re-applied at the Renta driver
+#: rather than restated there: a capture that satisfies grounding must not fail
+#: live replay, and one that skips the evidence locator entirely must not pass
+#: the driver while grounding would refuse it.
+BUNDLED_ORACLE_EVIDENCE_LOCATOR_MIN_LENGTH = 1
+BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH = 1024
+
+
+def require_bundled_oracle_evidence_locator(
+    raw_evidence_locator: str | None,
+    *,
+    surface_label: str,
+) -> str:
+    """Hold a decoded replay document to the bundled-oracle evidence contract.
+
+    Applies the same locator bounds :class:`BundledOraclePayload` enforces on
+    the grounding side, and makes the locator required, so a capture cannot
+    ground as bundled evidence while reaching a replay driver with no
+    provenance at all.
+
+    The expected-value map is deliberately NOT required here: a replay driver
+    reads the OBSERVED figures and receives the expected ones as a separate
+    argument, so a hand-written non-corpus capture legitimately omits it. Only
+    the evidence axis is shared between the two contracts.
+
+    Returns:
+        The validated ``raw_evidence_locator``.
+
+    Raises:
+        RegistryValidationError: When the locator is absent or out of bounds.
+    """
+    if raw_evidence_locator is None:
+        raise RegistryValidationError(
+            f"{surface_label} payload must declare raw_evidence_locator",
+        )
+    locator_length = len(raw_evidence_locator)
+    if not (
+        BUNDLED_ORACLE_EVIDENCE_LOCATOR_MIN_LENGTH
+        <= locator_length
+        <= BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH
+    ):
+        raise RegistryValidationError(
+            f"{surface_label} raw_evidence_locator must be between "
+            f"{BUNDLED_ORACLE_EVIDENCE_LOCATOR_MIN_LENGTH} and "
+            f"{BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH} characters, got {locator_length}",
+        )
+    return raw_evidence_locator
+
+
 class BundledOraclePayload(ExternalGroundingModel):
     """What every bundled oracle payload carries, whichever corpus holds it.
 
@@ -154,7 +209,10 @@ class BundledOraclePayload(ExternalGroundingModel):
     none of the three.
     """
 
-    raw_evidence_locator: str = Field(min_length=1, max_length=1024)
+    raw_evidence_locator: str = Field(
+        min_length=BUNDLED_ORACLE_EVIDENCE_LOCATOR_MIN_LENGTH,
+        max_length=BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
+    )
     expected_by_casilla_id: Mapping[CasillaId, str]
 
 

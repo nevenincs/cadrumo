@@ -1561,6 +1561,7 @@ application:
       run_not_found: 'Workflow run not found: {run_id}.'
       state_unreadable: Local configuration state could not be read.
       state_write_invalid_payload: 'Workflow state could not be saved: invalid payload.'
+      run_identity_mismatch: 'The stored workflow run does not match the run identifier it was read under.'
 auth:
   catalogue:
     certificate_description: X.509 client certificate authentication (FNMT-RCM or

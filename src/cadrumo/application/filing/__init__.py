@@ -162,6 +162,7 @@ from ...domain.filing import (
     compute_modelo_draft_id,
     derive_validation_status,
     make_amendment_id,
+    registry_schema_version,
 )
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ...domain.submission import ModeloDraftStatus
@@ -248,7 +249,11 @@ def build_draft(
         period=registry_period,
     )
     collection = schema_provider.get_collection(modelo)
-    if collection.schema_version != f"registry:{snapshot.modelo.id}:{snapshot.revision.id}":
+    expected_schema_version = registry_schema_version(
+        modelo=snapshot.modelo.id,
+        revision_id=snapshot.revision.id,
+    )
+    if collection.schema_version != expected_schema_version:
         raise ModeloBuilderError(
             f"schema provider version {collection.schema_version!r} does not match registry snapshot "
             f"{snapshot.revision.id!r}",
@@ -550,7 +555,8 @@ def _validate_filing_input_keys(
     if unknown:
         raise ModeloBuilderError(
             "filing input keys must be declared casilla.id, binding, or relation ids for "
-            f"registry:{snapshot.modelo.id}:{snapshot.revision.id}; unknown keys: "
+            f"{registry_schema_version(modelo=snapshot.modelo.id, revision_id=snapshot.revision.id)}; "
+            "unknown keys: "
             f"{', '.join(repr(key) for key in sorted(unknown))}",
         )
 

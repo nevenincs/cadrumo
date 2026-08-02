@@ -25,6 +25,7 @@ from ....domain.filing import (
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
+    registry_schema_version,
 )
 from ....tests.secure_sql import TestRuntimeProfile
 
@@ -36,10 +37,10 @@ _DRAFT_INPUT_CASILLA: CasillaId = validated_casilla_id("01", surface="_DRAFT_INP
 _FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 16, 30, 0, tzinfo=UTC)
 
 
-def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistrySnapshotRef:
     return RegistrySnapshotRef(
         modelo=modelo,
-        revision_id=schema_version,
+        revision_id=revision_id,
         modelo_year=period.filing_year,
         period=period.registry_token,
     )
@@ -55,7 +56,7 @@ def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft
             source="test input",
         ),
     )
-    snapshot_ref = _snapshot_ref(modelo="130", period=period, schema_version="test-schema-v1")
+    snapshot_ref = _snapshot_ref(modelo="130", period=period, revision_id="2019-y-siguientes")
     draft_id = compute_modelo_draft_id(
         modelo="130",
         period=period,
@@ -74,7 +75,7 @@ def _make_draft(*, period: Period = _P_Q1, ingresos: int = 12500) -> ModeloDraft
         values=values,
         created_at=now,
         updated_at=now,
-        schema_version="test-schema-v1",
+        schema_version=registry_schema_version(modelo="130", revision_id="2019-y-siguientes"),
     )
 
 

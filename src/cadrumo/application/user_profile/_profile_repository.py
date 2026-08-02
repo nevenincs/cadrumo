@@ -90,6 +90,7 @@ from ._profile_pointer_transaction import ActiveProfilePointerTransaction, activ
 from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
 
 if TYPE_CHECKING:
+    from ...domain.buckets import BucketEvent
     from ._lifecycle import ProfileLifecycleService
 
 _log = get_logger(__name__)
@@ -512,7 +513,13 @@ class ProfileRepository:
 
     # ── rename ─────────────────────────────────────────────────────
 
-    def rename(self, profile_id: str, *, new_label: str) -> ProfileAggregate:
+    def rename(
+        self,
+        profile_id: str,
+        *,
+        new_label: str,
+        extra_events: tuple[BucketEvent, ...] = (),
+    ) -> ProfileAggregate:
         """Change a profile's operator-visible label across its stores.
 
         Profile identity is an immutable UUID, so a rename is a pure
@@ -532,6 +539,8 @@ class ProfileRepository:
         Args:
             profile_id: The UUID of the profile to rename.
             new_label: The new operator-visible display name.
+            extra_events: Bucket events to commit in the same unit of work as
+                the record write, for a surface recording its own invocation.
 
         Returns:
             The updated
@@ -564,8 +573,13 @@ class ProfileRepository:
                     context={"profile": trimmed},
                 )
 
+        # extra_events rides the lifecycle service's record write so a
+        # composing surface records its own verb invocation in the same unit of
+        # work, rather than in a second write that can fail after the label has
+        # already moved.
         result = self._lifecycle_service(profile_id).rename(
             RenameProfileCommand(profile_id=profile_id, target_display_name=trimmed),
+            extra_events=extra_events,
         )
         renamed_record = result.profile
         # The repository is the sole writer of the manifest: rewrite the

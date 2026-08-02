@@ -159,16 +159,24 @@ def emit_manager_closed(ctx: typer.Context, label: str, *, created: bool) -> Non
     the session rather than committing it — by the time it renders, the
     record already holds whatever the operator changed.
     """
-    from ....application.wizard import ConfigProfileCreateResult, ConfigProfileEditResult
+    from ....application.wizard import (
+        ConfigProfileCreateResult,
+        ConfigProfileEditResult,
+        ProfileWizardStatus,
+    )
 
     message = tr(
         "cli.config.profile.manager_closed_created" if created else "cli.config.profile.manager_closed",
         profile=label,
     )
     result = (
-        ConfigProfileCreateResult(profile_name=label, status="created", active_profile=label)
+        ConfigProfileCreateResult(
+            profile_name=label,
+            status=ProfileWizardStatus.CREATED,
+            active_profile=label,
+        )
         if created
-        else ConfigProfileEditResult(profile_name=label, status="updated")
+        else ConfigProfileEditResult(profile_name=label, status=ProfileWizardStatus.UPDATED)
     )
     _emit_envelope(
         ctx,

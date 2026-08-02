@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 from collections.abc import Iterator
 
 import click
 import pytest
+from pydantic import ValidationError
 
+from ....core.config import override_settings
 from ....core.i18n import tr
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
+from ....entrypoints.cli._config import _manager_dispatch
+from .. import _commands as _wizard_commands
 from .._commands import _emit_wizard_success
 from .._persistence import WizardPersistMode
+from .._results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -100,3 +106,59 @@ def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
         assert notice["severity"] == "info"
         assert notice["code"] == f"{command_path}.next_step"
         assert notice["suggestion"] == "aeat app modelo work create"
+
+
+
+class TestStatusTokenLocaleParity:
+    """Both profile-create/edit producers emit one machine-readable status.
+
+    The interactive wizard resolved ``status`` through the active locale while
+    the profile-manager close path wrote literal English, so the same envelope
+    shape carried ``creado`` from one command and ``created`` from the other.
+    An automation branch on ``status`` was therefore correct in exactly one
+    locale. The token is now the closed ``ProfileWizardStatus`` vocabulary on
+    both sides; the localized verb stays on the text line.
+    """
+
+    _LOCALES = ("en", "es", "ca", "hu")
+
+    def test_the_token_vocabulary_is_locale_invariant(self) -> None:
+        for locale in self._LOCALES:
+            with override_settings(cadrumo_output_language=locale):
+                created = ConfigProfileCreateResult(
+                    profile_name="operator",
+                    status=ProfileWizardStatus.CREATED,
+                    active_profile="operator",
+                )
+                updated = ConfigProfileEditResult(
+                    profile_name="operator",
+                    status=ProfileWizardStatus.UPDATED,
+                )
+
+                assert created.status is ProfileWizardStatus.CREATED
+                assert updated.status is ProfileWizardStatus.UPDATED
+                assert created.model_dump(mode="json")["status"] == "created"
+                assert updated.model_dump(mode="json")["status"] == "updated"
+
+    def test_a_localized_verb_is_not_a_valid_token(self) -> None:
+        """The exact fragmentation this closes is now unrepresentable."""
+        for localized in ("creado", "actualizado", "creat", "actualitzat", "létrehozva"):
+            with pytest.raises(ValidationError):
+                ConfigProfileCreateResult(profile_name="operator", status=localized)
+
+    def test_both_producers_declare_the_same_vocabulary(self) -> None:
+        """One authority, not two lists that could drift apart."""
+        wizard_source = inspect.getsource(_wizard_commands)
+        manager_source = inspect.getsource(_manager_dispatch)
+
+        assert "ProfileWizardStatus.CREATED" in wizard_source
+        assert "ProfileWizardStatus.UPDATED" in wizard_source
+        assert "ProfileWizardStatus.CREATED" in manager_source
+        assert "ProfileWizardStatus.UPDATED" in manager_source
+        assert 'status="created"' not in manager_source
+        assert 'status="updated"' not in manager_source
+
+    def test_every_declared_status_round_trips(self) -> None:
+        for status in ProfileWizardStatus:
+            result = ConfigProfileCreateResult(profile_name="operator", status=status)
+            assert ConfigProfileCreateResult.model_validate_json(result.model_dump_json()) == result

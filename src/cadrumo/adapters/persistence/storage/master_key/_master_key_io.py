@@ -56,8 +56,14 @@ def _default_passphrase_callback(getpass_fn: Callable[[str], str] | None = None)
 
     configured = load_settings().cadrumo_secret_passphrase
     if configured is not None:
+        # The trailing CR/LF strip is for the env-var carrier, which commonly
+        # picks up a newline. It is NOT the whitespace-only check: a value of
+        # spaces or tabs survives it intact and stays truthy, so the guard
+        # below tests the fully-stripped form. Rejected rather than silently
+        # trimmed -- the passphrase is key-derivation input, so trimming would
+        # change which key a given credential unwraps.
         normalized = configured.get_secret_value().rstrip("\r\n")
-        if not normalized:
+        if not normalized.strip():
             raise SecretStoreError(
                 f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
             )

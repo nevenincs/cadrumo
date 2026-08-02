@@ -101,42 +101,91 @@ def inspect_auth_acquisition_lock(
 
     Returns an :class:`AuthAcquisitionLockStatus`.
     """
+    status, _observed = _inspect_with_observed_text(settings, kind, now=now, bucket_id=bucket_id)
+    return status
+
+
+def _inspect_with_observed_text(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    now: datetime | None = None,
+    bucket_id: str | None = None,
+) -> tuple[AuthAcquisitionLockStatus, str | None]:
+    """Return the lock status together with the exact text the verdict was read from.
+
+    The removal paths need the bytes the verdict describes, not just the
+    verdict: a stale lock can be released and REPLACED by a live one between
+    the inspection and the unlink, and deleting on the strength of the earlier
+    verdict then destroys a lock its owner believes it holds. Carrying the
+    observed text lets the deletion be a compare-and-delete against exactly
+    what was judged. ``None`` means the file was absent or unreadable.
+    """
     path = auth_acquisition_lock_path(settings, kind, bucket_id=bucket_id)
     reference = coerce_utc_aware(now) if now is not None else datetime.now(UTC)
-    if not path.exists():
-        return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.ABSENT, path=path)
     try:
-        record = AuthAcquisitionLockRecord.model_validate_json(path.read_text(encoding=UTF_8_ENCODING))
+        observed = path.read_text(encoding=UTF_8_ENCODING)
+    except FileNotFoundError:
+        return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.ABSENT, path=path), None
+    except OSError as exc:
+        _log.debug(
+            "auth acquisition lock file is unreadable; marking lock recoverable (%s: %s)",
+            type(exc).__name__,
+            exc,
+        )
+        return (
+            AuthAcquisitionLockStatus(
+                state=AuthAcquisitionLockState.CORRUPT,
+                path=path,
+                reason=f"invalid lock metadata: {type(exc).__name__}",
+                recoverable=True,
+            ),
+            None,
+        )
+    try:
+        record = AuthAcquisitionLockRecord.model_validate_json(observed)
     except (OSError, ValidationError, ValueError) as exc:
         _log.debug(
             "auth acquisition lock metadata is unreadable; marking lock recoverable (%s: %s)",
             type(exc).__name__,
             exc,
         )
-        return AuthAcquisitionLockStatus(
-            state=AuthAcquisitionLockState.CORRUPT,
-            path=path,
-            reason=f"invalid lock metadata: {type(exc).__name__}",
-            recoverable=True,
+        return (
+            AuthAcquisitionLockStatus(
+                state=AuthAcquisitionLockState.CORRUPT,
+                path=path,
+                reason=f"invalid lock metadata: {type(exc).__name__}",
+                recoverable=True,
+            ),
+            observed,
         )
 
     if record.expires_at <= reference:
-        return AuthAcquisitionLockStatus(
-            state=AuthAcquisitionLockState.STALE,
-            path=path,
-            record=record,
-            reason="lock expired",
-            recoverable=True,
+        return (
+            AuthAcquisitionLockStatus(
+                state=AuthAcquisitionLockState.STALE,
+                path=path,
+                record=record,
+                reason="lock expired",
+                recoverable=True,
+            ),
+            observed,
         )
     if _same_host(record.hostname) and not _pid_is_running(record.pid):
-        return AuthAcquisitionLockStatus(
-            state=AuthAcquisitionLockState.STALE,
-            path=path,
-            record=record,
-            reason="lock owner process is not running",
-            recoverable=True,
+        return (
+            AuthAcquisitionLockStatus(
+                state=AuthAcquisitionLockState.STALE,
+                path=path,
+                record=record,
+                reason="lock owner process is not running",
+                recoverable=True,
+            ),
+            observed,
         )
-    return AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.HELD, path=path, record=record)
+    return (
+        AuthAcquisitionLockStatus(state=AuthAcquisitionLockState.HELD, path=path, record=record),
+        observed,
+    )
 
 
 def clear_auth_acquisition_lock(
@@ -151,9 +200,12 @@ def clear_auth_acquisition_lock(
     Returns an :class:`AuthAcquisitionLockStatus` reflecting the state
     observed immediately before the file was removed.
     """
-    status = inspect_auth_acquisition_lock(settings, kind, bucket_id=bucket_id)
+    status, observed = _inspect_with_observed_text(settings, kind, bucket_id=bucket_id)
     if status.state is not AuthAcquisitionLockState.ABSENT:
-        _remove_lock_file(status.path)
+        if not _remove_lock_file_if_unchanged(status.path, observed):
+            # A replacement landed after the operator's snapshot; report the
+            # live lock rather than deleting a record they never saw.
+            return inspect_auth_acquisition_lock(settings, kind, bucket_id=bucket_id)
         return status.model_copy(
             update={
                 "reason": reason if status.reason is None else f"{status.reason}; reset={reason}",
@@ -199,9 +251,12 @@ def acquire_auth_acquisition_lock(
         try:
             fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:
-            status = inspect_auth_acquisition_lock(settings, kind)
+            status, observed = _inspect_with_observed_text(settings, kind)
             if status.recoverable:
-                _remove_lock_file(path)
+                # Compare-and-delete: when the stale record was replaced by a
+                # live one after the verdict, retry the create rather than
+                # destroying the replacement.
+                _remove_lock_file_if_unchanged(path, observed)
                 continue
             raise AuthAcquisitionLockedError(
                 translated_message="application.auth.acquisition_lock.errors.lock_held",
@@ -282,6 +337,36 @@ def _remove_lock_file(path: Path) -> None:
         path.unlink()
     except FileNotFoundError:
         return
+
+
+def _remove_lock_file_if_unchanged(path: Path, expected: str | None) -> bool:
+    """Delete ``path`` only while it still holds ``expected``; report whether it went.
+
+    A stale or corrupt verdict authorises removing THOSE bytes, not whatever
+    the file happens to hold when the unlink runs. Without the comparison a
+    lock released and reacquired between the inspection and the deletion is
+    destroyed while its new owner believes it holds it -- that owner then
+    issues a second Cl@ve petition, which is exactly what this lock exists to
+    prevent.
+
+    Returns:
+        ``True`` when the file was removed or was already gone, ``False`` when
+        the content changed and the file was therefore left in place.
+    """
+    try:
+        current = path.read_text(encoding=UTF_8_ENCODING)
+    except FileNotFoundError:
+        return True
+    except OSError:
+        # Unreadable now as well: the bytes cannot have been replaced by a
+        # record a live owner is relying on, so removal stays authorised.
+        _remove_lock_file(path)
+        return True
+    if expected is not None and current != expected:
+        _log.debug("auth acquisition lock changed between inspection and removal; leaving it in place")
+        return False
+    _remove_lock_file(path)
+    return True
 
 
 def _same_host(hostname: str) -> bool:

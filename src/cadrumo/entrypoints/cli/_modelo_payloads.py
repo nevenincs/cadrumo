@@ -29,6 +29,7 @@ from ...application.aggregation import (
     PerModeloAggregationContributor,
     PerModeloAggregationResult,
 )
+from ...application.calculations import ObservationSourceKind
 from ...application.modelo import validate_modelo_work_deadline_posture
 from ...core import BindingSourceKind, Period
 from ...core.identity import BucketId
@@ -773,9 +774,12 @@ class FilingRecordLocalObservationResult(OutputSchema):
 
     The payload mirrors
     :class:`ModeloLocalObservationResult`:
-    values are stored in the calculation-observation repository for prefill, while
-    ``official_evidence``, ``filing_record_created``, and ``aeat_accepted`` remain
-    false so consumers cannot mistake operator-entered values for AEAT evidence.
+    values are stored in the calculation-observation repository for prefill.
+    ``official_evidence``, ``filing_record_created``, and ``aeat_accepted``
+    are pinned ``False`` -- :func:`~application.modelo.record_operator_local_observation`
+    never stamps a ``ModeloRecord`` or :class:`ExternalEvidence` for this
+    action, so the envelope cannot be constructed to look like AEAT-backed
+    evidence.
     """
 
     operation: str = "modelo.filing_record.observe_local"
@@ -784,14 +788,14 @@ class FilingRecordLocalObservationResult(OutputSchema):
     period: Period
     revision_id: RevisionId
     observation_key: str
-    source_kind: str
-    casilla_values: dict[CasillaId, str]
-    casilla_count: int
-    captured_at: str
-    captured_by: str
-    official_evidence: bool
-    filing_record_created: bool
-    aeat_accepted: bool
+    source_kind: ObservationSourceKind
+    casilla_values: dict[CasillaId, DecimalWireText]
+    casilla_count: int = Field(ge=0)
+    captured_at: datetime
+    captured_by: str = Field(min_length=1)
+    official_evidence: Literal[False] = False
+    filing_record_created: Literal[False] = False
+    aeat_accepted: Literal[False] = False
 
 
 @register_schema("modelo.casilla")

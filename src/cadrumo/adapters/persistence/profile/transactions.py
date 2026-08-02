@@ -82,7 +82,7 @@ from ....domain.transactions import (
     transaction_index_object_key,
     transaction_object_key,
 )
-from ..storage import TRANSACTION_CATALOGUE_NAMESPACE
+from ..storage import TRANSACTION_CATALOGUE_NAMESPACE, SecureObjectRowIdentityError
 from ..storage.sql import _orm
 from ..storage.sql.session import session_scope
 
@@ -350,6 +350,7 @@ class TransactionCatalogueRepository:
                     translated_message="errors.integrity.integrity_storage_envelope_version",
                 )
             transaction = envelope.payload
+            self._assert_transaction_row_identity(transaction, expected_transaction_id=transaction_id)
             # Write-path cache: memoize the stored envelope's payload hash against this exact
             # loaded instance. An untouched row at save time is the SAME
             # object (frozen models never mutate in place), so ``_reconcile``
@@ -599,12 +600,34 @@ class TransactionCatalogueRepository:
                     exc_info=True,
                 )
                 raise StoredTransactionDriftError(self._bucket_id, exc) from exc
-            transactions_by_id[transaction_id] = envelope.payload
+            transaction = envelope.payload
+            self._assert_transaction_row_identity(transaction, expected_transaction_id=transaction_id)
+            transactions_by_id[transaction_id] = transaction
         return [
             transactions_by_id[transaction_id]
             for transaction_id in selected_ids
             if transaction_id in transactions_by_id
         ]
+
+    def _assert_transaction_row_identity(
+        self,
+        transaction: Transaction,
+        *,
+        expected_transaction_id: str,
+    ) -> None:
+        """Refuse a decrypted transaction whose identity differs from its addressed row.
+
+        The membership and date indexes select encrypted rows by
+        ``transaction:{bucket_id}:{transaction_id}``.  A valid transaction
+        payload re-filed under another transaction's key passes schema
+        validation but must never be projected as the indexed transaction.
+        """
+        if transaction.transaction_id == expected_transaction_id:
+            return
+        raise SecureObjectRowIdentityError(
+            TX_BUCKET_NAMESPACE,
+            expected_identifier=transaction_object_key(self._bucket_id, expected_transaction_id),
+        )
 
     def _all_date_index_rows(self) -> dict[str, _IndexedTransactionDates]:
         """Return every ``{transaction_id: routing dates}`` this bucket's date index records."""

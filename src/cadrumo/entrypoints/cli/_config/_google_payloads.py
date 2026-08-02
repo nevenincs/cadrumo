@@ -30,10 +30,12 @@ See Also:
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import Field
 
 from ....adapters.outbound.storage import ProviderKind
-from ....domain.calculations.registry import CasillaId, FormulaId, LegalRefId, SourceRefId
+from ....domain.calculations.registry import CasillaId, FormulaId, LegalRefId, RelationId, SourceRefId
 from .._schemas import OutputSchema, register_schema
 
 
@@ -336,6 +338,36 @@ class GoogleSyncCalcPullOperatorEditPayload(OutputSchema):
     value: str | None = None
 
 
+class GoogleSyncCalcPullRelationEditPayload(OutputSchema):
+    """One populated relation edit emitted by ``sync calc pull``, with its grounding.
+
+    The pull adapter recovers a relation's provenance, source modelo / filing
+    year / periods / casillas, legal and source references, and resolution
+    instant from the workbook's developer metadata. This surface emitted only
+    ``{relation, value}``, so every one of those recovered facts was discarded
+    AFTER a typed pull had already established them — a number reaching the
+    operator with nothing saying where it came from, when the same value can
+    be a local filing's carry, a live AEAT read, or a hand edit, and only the
+    provenance tells them apart.
+
+    Typed rather than a ``dict[str, object]`` bag so the transport contract is
+    introspectable and a future field cannot be dropped silently.
+    ``provenance`` and ``resolved_at`` stay optional because a relation edited
+    in the workbook without an apply round-trip genuinely carries neither.
+    """
+
+    relation: RelationId
+    value: str | None = None
+    provenance: Literal["local_filing", "aeat_live", "operator_manual"] | None = None
+    source_modelo: str | None = None
+    source_filing_year: int | None = None
+    source_periods: list[str] = []
+    source_casilla_ids: list[CasillaId] = []
+    legal_refs: list[LegalRefId] = []
+    source_refs: list[SourceRefId] = []
+    resolved_at: str | None = None
+
+
 class GoogleSyncCalcComputeCasillaPayload(OutputSchema):
     """One registry-computed casilla emitted by ``sync calc compute``.
 
@@ -385,7 +417,7 @@ class GoogleSyncCalcPullResult(OutputSchema):
     relation_edits_populated: int
     operator_edits: list[GoogleSyncCalcPullOperatorEditPayload] = []
     binding_edits: list[dict[str, object]] = []
-    relation_edits: list[dict[str, object]] = []
+    relation_edits: list[GoogleSyncCalcPullRelationEditPayload] = []
     row_set_edits_populated: int
     row_set_cells_populated: int
     assembled_groupings: list[dict[str, object]] = []

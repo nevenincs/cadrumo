@@ -216,6 +216,7 @@ def _ensure_bucket_dir_lockable(paths: BucketPaths) -> None:
 
 
 def _acquire_local_slot(
+    target: Path,
     ownership_key: Path,
     paths: BucketPaths,
     *,
@@ -228,6 +229,13 @@ def _acquire_local_slot(
     Returns ``True`` when a fresh slot (depth 0) was created and the caller must
     proceed to the filesystem claim; ``False`` when an existing same-thread lock
     was re-entered (depth incremented) and the caller must return immediately.
+
+    Same-thread re-entry revalidates the on-disk record before honouring the
+    in-process slot. The slot is a cache of a filesystem fact, and the two can
+    diverge: if a foreign process replaced the lockfile while this thread held
+    it, re-entering on the strength of the local record alone would hand the
+    caller a lock this process does not hold, silently, with the foreign lock
+    still on disk. A definite foreign PID therefore refuses the re-entry.
     """
     while True:
         with _LOCAL_LOCKS_CONDITION:
@@ -247,6 +255,12 @@ def _acquire_local_slot(
                 if ownership.depth == 0:
                     raise RuntimeError(
                         "bucket lock cannot re-enter while initial acquisition is incomplete",
+                    )
+                recorded_pid = _read_pid(target)
+                if isinstance(recorded_pid, int) and recorded_pid != pid:
+                    raise BucketBusyError(
+                        bucket_id=paths.bucket_id,
+                        holding_pid=recorded_pid,
                     )
                 ownership.depth += 1
                 return False
@@ -336,7 +350,7 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
     deadline = time.monotonic() + max(wait_seconds, 0.0)
     thread_id = threading.get_ident()
 
-    if not _acquire_local_slot(ownership_key, paths, pid=pid, thread_id=thread_id, deadline=deadline):
+    if not _acquire_local_slot(target, ownership_key, paths, pid=pid, thread_id=thread_id, deadline=deadline):
         return
     _claim_lockfile(target, ownership_key, paths, pid=pid, thread_id=thread_id, deadline=deadline)
 
@@ -355,6 +369,12 @@ def _release_owned_slot(
     place (only its depth is decremented). At depth 1 the on-disk lockfile is
     unlinked only when its recorded PID matches, then the slot and its atexit
     registration are cleared.
+
+    A lockfile that now records a FOREIGN pid is left on disk -- deleting it
+    would drop another process's lock -- but the local slot is still cleared.
+    Keeping it would leave this process holding an ownership record for a lock
+    it demonstrably no longer holds, which a later same-thread acquire would
+    read as a live re-entry.
     """
     if ownership.thread_id != thread_id:
         return
@@ -368,7 +388,9 @@ def _release_owned_slot(
     if pid == current_pid:
         _unlink_lockfile_if_present(target, reason="release")
     elif pid is not _PidReadState.MISSING:
-        return
+        _log.debug(
+            "bucket lockfile release found a foreign holder; leaving the lockfile and clearing local ownership",
+        )
     del _LOCAL_LOCKS[ownership_key]
     _ATEXIT_REGISTRY.discard(ownership_key)
     _LOCAL_LOCKS_CONDITION.notify_all()

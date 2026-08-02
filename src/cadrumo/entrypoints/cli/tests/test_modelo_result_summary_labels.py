@@ -129,3 +129,29 @@ def test_result_summary_rows_render_requested_localized_label() -> None:
     assert payload_row.label == "Rendiment net"
     assert payload_row.localized_labels["ca"] == "Rendiment net"
     assert payload_row.localized_labels["en"] == "Net yield"
+
+
+def test_result_summary_row_refuses_an_unknown_role() -> None:
+    """The application and CLI rows both refuse a role outside the closed taxonomy."""
+    from pydantic import ValidationError
+
+    from ....application.modelo import ResultSummaryRow
+    from .._modelo_revision_payload_parts import ResultSummaryRowPayload
+
+    with pytest.raises(ValidationError):
+        ResultSummaryRow(casilla_id="03", label="Rendimiento neto", value=Decimal("123.45"), role="bogus")
+
+    with pytest.raises(ValidationError):
+        ResultSummaryRowPayload(casilla_id="03", label="Rendimiento neto", value="123.45", role="bogus")
+
+
+def test_result_summary_row_accepts_every_canonical_role() -> None:
+    """Every canonical role round-trips through both the application row and the CLI payload."""
+    from ....application.modelo import ResultSummaryRole, ResultSummaryRow
+    from .._modelo_revision_payload_parts import ResultSummaryRowPayload
+
+    for role in ResultSummaryRole:
+        row = ResultSummaryRow(casilla_id="03", label="Rendimiento neto", value=Decimal("123.45"), role=role)
+        assert row.role is role
+        payload = ResultSummaryRowPayload(casilla_id="03", label="Rendimiento neto", value="123.45", role=role)
+        assert payload.role is role

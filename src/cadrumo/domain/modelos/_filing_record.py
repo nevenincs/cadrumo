@@ -324,10 +324,30 @@ class ModeloRecordCatalogue(BaseModel):
         (bucket, modelo, filing_year, period) coordinate. The field alone is
         shape-validated, so without this a record could claim to amend a
         filing that does not exist, or itself, and the catalogue would accept
-        the claim as a valid audit chain. ``member_nif`` is deliberately not
-        compared: the amendment builder does not currently propagate it, so
-        comparing it here would refuse member-scoped amendments rather than
-        surface that separate gap.
+        the claim as a valid audit chain.
+
+        The amendment relationship is stored twice -- forwards as the
+        amendment's ``amends_filing_record_id`` and backwards as the baseline's
+        ``superseded_by_filing_record_id`` -- so the two records must agree
+        about it. A one-sided link, where the baseline names some third record
+        as its successor, describes an audit chain that reads differently
+        depending on which end you start from. The sibling
+        :func:`~domain.invoices.verify_link_consistency` *reports* the
+        equivalent one-sided state across the invoice and transaction
+        catalogues, because those are two independently-written stores that can
+        legitimately be inconsistent between writes; both ends of this link live
+        in one catalogue written in one call, so here it is a refusal.
+
+        Two deliberate exclusions:
+
+        * ``member_nif`` is not compared. The amendment builder does not
+          currently propagate it from the baseline, so comparing it here would
+          refuse member-scoped amendments rather than surface that separate gap.
+        * The target's ``status`` is not asserted to be ``SUPERSEDIDO``.
+          :meth:`ModeloRecord._enforce_invariants` already refuses a ``VIGENTE``
+          record that carries supersession metadata, so a target whose
+          ``superseded_by_filing_record_id`` matches is necessarily superseded;
+          restating it here would be a second spelling of one rule.
         """
         for record in self.records.values():
             target_id = record.amends_filing_record_id
@@ -349,6 +369,12 @@ class ModeloRecordCatalogue(BaseModel):
                 raise ModeloValidationError(
                     f"filing record {record.filing_record_id!r} amends {target_id!r} across filing "
                     f"coordinates: {target_coordinates!r} is not {coordinates!r}",
+                )
+            if target.superseded_by_filing_record_id != record.filing_record_id:
+                raise ModeloValidationError(
+                    f"one-sided amendment link: filing record {record.filing_record_id!r} amends "
+                    f"{target_id!r}, but {target_id!r} names "
+                    f"{target.superseded_by_filing_record_id!r} as its successor",
                 )
         return self
 

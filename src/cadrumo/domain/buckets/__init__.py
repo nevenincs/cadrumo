@@ -104,6 +104,7 @@ from ._event import (
 from ._event_repository import (
     BucketEventHistoryPersistenceError,
     append_bucket_event,
+    bucket_event_history_write,
     build_bucket_event,
     emit_bucket_event,
 )
@@ -130,6 +131,7 @@ __all__ = [
     "BucketRestoreRefusedError",
     "BucketsError",
     "append_bucket_event",
+    "bucket_event_history_write",
     "bucket_event_order_key",
     "build_bucket_event",
     "derive_bucket_event_id",

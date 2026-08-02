@@ -32,10 +32,16 @@ See Also:
 
 from __future__ import annotations
 
-from ._tabular import ExportSerializationFormat, TabularExportResult, serialize_tabular_rows
+from ._tabular import (
+    ExportSerializationFormat,
+    TabularExportResult,
+    serialize_tabular_rows,
+    verify_export_metadata,
+)
 
 __all__ = [
     "ExportSerializationFormat",
     "TabularExportResult",
     "serialize_tabular_rows",
+    "verify_export_metadata",
 ]

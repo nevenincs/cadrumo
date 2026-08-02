@@ -186,7 +186,7 @@ def _seed_m200_sociedad_profile() -> None:
         profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="Test Runtime Profile SL"),
             UserProfileFact(path="activities.description", value="software consultancy"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),

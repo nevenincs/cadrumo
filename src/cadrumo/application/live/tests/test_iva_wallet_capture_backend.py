@@ -36,7 +36,10 @@ from .. import load_iva_remote_state, persist_and_reconcile_iva_compensation_wal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_TAXPAYER_REF = "synthetic-taxpayer"
+#: A checksum-valid synthetic NIF. This value reaches
+#: ``IvaCompensationPeriodState.taxpayer_nif``, which is a ``SubjectTaxId``,
+#: so a placeholder label is refused at the boundary.
+_TAXPAYER_REF = "12345678Z"
 _CAPTURED_AT = datetime(2026, 5, 20, 10, 30, 0, tzinfo=UTC)
 _SESSION_BUCKET_ID = "38383838-3838-4383-8383-383838383838"
 _OTHER_SESSION_BUCKET_ID = "39393939-3939-4393-8393-393939393939"

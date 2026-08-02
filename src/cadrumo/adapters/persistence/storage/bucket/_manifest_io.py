@@ -145,6 +145,28 @@ def _serialise_manifest(manifest: BucketManifest) -> str:
     return rendered
 
 
+def _require_manifest_claims_its_directory(paths: BucketPaths, manifest: BucketManifest) -> None:
+    """Refuse a manifest whose ``bucket_id`` is not the directory it lives in.
+
+    The directory name IS the bucket's identity: the storage route, the
+    per-bucket keystore, and every secure-object row are addressed by it. The
+    manifest's own ``bucket_id`` was validated only for shape, so a manifest
+    claiming a different bucket read back cleanly and the scan surfaces
+    published the CLAIMED id — a pointer resolved by directory carried the
+    wrong identity, while a lookup by the claimed id found nothing at all.
+    Binding the two here makes the disagreement a loud refusal at the single
+    validating read and write ingress rather than a silent identity swap.
+
+    Raises:
+        StorageValidationError: When the two identities disagree.
+    """
+    if manifest.bucket_id != paths.bucket_id:
+        raise manifest_validation_error(
+            f"bucket manifest claims bucket {manifest.bucket_id!r} "
+            f"but resides in the directory for {paths.bucket_id!r}",
+        )
+
+
 def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
     """Atomically write the manifest under ``<bucket-dir>/manifest.toml``.
 
@@ -179,6 +201,7 @@ def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
         BucketManifest.model_validate(manifest.model_dump(mode="python"))
     except ValidationError as exc:
         raise manifest_validation_error("bucket manifest is not valid and was not written") from exc
+    _require_manifest_claims_its_directory(paths, manifest)
     payload = _serialise_manifest(manifest)
     try:
         if not target.parent.is_dir():
@@ -227,6 +250,7 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
         raise manifest_validation_error("bucket manifest is missing required lifecycle status")
     manifest = BucketManifest.model_validate(payload)
     ensure_manifest_schema_readable(manifest.schema_version)
+    _require_manifest_claims_its_directory(paths, manifest)
     return manifest
 
 

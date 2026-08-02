@@ -19,6 +19,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.export._formats._serialise import render_record_body
 from ....core.resources import resources
@@ -174,3 +175,69 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path
         )
         with pytest.raises(ValueError, match="overflows length"):
             export_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+
+
+def _seeded_export(runtime) -> M145CommunicationExportResult:
+    """Produce one genuine export receipt through the production path."""
+    record = create_m145_communication_record(
+        M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
+        bucket_id=runtime.bucket_id,
+    )
+    return export_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+
+
+def _tampered(result: M145CommunicationExportResult, **overrides: object):
+    return M145CommunicationExportResult.model_validate({**result.model_dump(), **overrides})
+
+
+def test_export_receipt_refuses_a_byte_length_that_measures_nothing(tmp_path: Path) -> None:
+    """A receipt whose byte_length does not measure its payload is refused.
+
+    The producer computes coherent values, so only a direct construction reaches
+    this. That is exactly the case the finding names: a public caller anchoring
+    downstream communication history on metadata describing no payload.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        result = _seeded_export(runtime)
+
+    with pytest.raises(ValidationError, match="byte_length"):
+        _tampered(result, byte_length=999)
+
+
+def test_export_receipt_refuses_a_digest_of_other_bytes(tmp_path: Path) -> None:
+    """A receipt carrying a digest of something else is refused."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        result = _seeded_export(runtime)
+
+    with pytest.raises(ValidationError, match="payload_sha256"):
+        _tampered(result, payload_sha256="0" * 64)
+
+
+def test_export_receipt_refuses_a_payload_swapped_under_a_kept_receipt(tmp_path: Path) -> None:
+    """Swapping the payload while keeping the receipt is refused too.
+
+    The mirror of the two cases above: a check that only ever compared the two
+    declared fields against each other would accept this, because the lie is in
+    the bytes rather than in the metadata.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        result = _seeded_export(runtime)
+
+    with pytest.raises(ValidationError):
+        _tampered(result, payload=result.payload + b"\x00")
+
+
+def test_export_receipt_round_trips_its_own_producer_output(tmp_path: Path) -> None:
+    """Positive control: the produced receipt revalidates unchanged.
+
+    Without it an all-refused result would look like a working guard while
+    actually meaning the producer emits an incoherent receipt.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        result = _seeded_export(runtime)
+
+    revalidated = M145CommunicationExportResult.model_validate(result.model_dump())
+
+    assert revalidated == result
+    assert revalidated.byte_length == len(result.payload)
+    assert revalidated.payload_sha256 == sha256(result.payload).hexdigest()

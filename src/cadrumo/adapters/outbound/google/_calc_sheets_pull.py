@@ -202,6 +202,40 @@ class RelationEdit(BaseModel):
     resolved_at: datetime | None = None
 
 
+def relation_edit_payload(edit: RelationEdit) -> dict[str, object]:
+    """Project one :class:`RelationEdit` into its operator-facing payload row.
+
+    The single projection of this model, so a transport cannot decide for
+    itself which of the recovered fields are worth carrying. The CLI emitted
+    ``{relation, value}`` and dropped the rest — provenance, the source
+    modelo / filing year / periods / casillas, the legal and source
+    references, and the resolution instant — even though the pull had already
+    recovered every one of them from the workbook's developer metadata. A
+    number arrived at the operator with nothing saying where it came from,
+    which is precisely what the recovery exists to prevent: the same value can
+    be a local filing's carry, a live AEAT read, or a hand edit, and only the
+    provenance distinguishes them.
+
+    Values are rendered as strings rather than JSON numbers: a relation value
+    is a :class:`~decimal.Decimal`, and a float round-trip is not a rendering
+    detail on a figure that reaches a filing. ``resolved_at`` is emitted in
+    ISO-8601, and stays ``None`` when the relation was edited in the workbook
+    without an apply round-trip.
+    """
+    return {
+        "relation": edit.relation,
+        "value": str(edit.value) if edit.value is not None else None,
+        "provenance": edit.provenance,
+        "source_modelo": edit.source_modelo,
+        "source_filing_year": edit.source_filing_year,
+        "source_periods": list(edit.source_periods),
+        "source_casilla_ids": list(edit.source_casilla_ids),
+        "legal_refs": list(edit.legal_refs),
+        "source_refs": list(edit.source_refs),
+        "resolved_at": edit.resolved_at.isoformat() if edit.resolved_at is not None else None,
+    }
+
+
 class RowSetCellEdit(BaseModel):
     """One operator-edited cell from a Detalle tab row-set."""
 

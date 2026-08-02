@@ -30,6 +30,7 @@ from ....filing import (
     ModeloValidationFinding,
     ModeloValue,
     ModeloValueKind,
+    registry_schema_version,
 )
 from ....modelos import (
     CalculationRevision,
@@ -299,7 +300,7 @@ def test_filing_draft_full_roundtrip() -> None:
         findings=(),
         created_at=_DRAFT_TIMESTAMP,
         updated_at=_DRAFT_TIMESTAMP,
-        schema_version="schema-2025-1",
+        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
         notes="",
     )
 
@@ -343,7 +344,7 @@ def test_filing_draft_subject_tax_id_validates_at_boundary() -> None:
         "findings": (),
         "created_at": _DRAFT_TIMESTAMP,
         "updated_at": _DRAFT_TIMESTAMP,
-        "schema_version": "schema-2025-1",
+        "schema_version": registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
     }
 
     # 12345678Z is a valid Spanish NIF (checksum letter for 12345678 is Z).
@@ -383,7 +384,7 @@ def test_filing_draft_profile_tax_id_validates_at_boundary() -> None:
         "findings": (),
         "created_at": _DRAFT_TIMESTAMP,
         "updated_at": _DRAFT_TIMESTAMP,
-        "schema_version": "schema-2025-1",
+        "schema_version": registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
     }
 
     valid = ModeloDraft(subject_tax_id="12345678Z", **common_kwargs)
@@ -431,7 +432,7 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
         findings=(),
         created_at=_DRAFT_TIMESTAMP,
         updated_at=_DRAFT_TIMESTAMP,
-        schema_version="schema-2025-1",
+        schema_version=registry_schema_version(modelo="303", revision_id="2025-y-siguientes"),
     )
 
     roundtripped = ModeloDraft.model_validate_json(original.model_dump_json())

@@ -192,3 +192,97 @@ def test_google_calc_compute_payload_rejects_computed_rows_without_provenance() 
 
     with pytest.raises(ValidationError):
         GoogleSyncCalcComputeResult.model_validate(raw)
+
+
+class TestPullRelationEditGrounding:
+    """A pulled relation reaches the operator with the grounding the pull recovered.
+
+    The adapter recovers a relation's provenance, source modelo / filing year /
+    periods / casillas, legal and source references and resolution instant from
+    the workbook's developer metadata. This surface emitted only
+    ``{relation, value}``, so all of it was discarded AFTER a typed pull had
+    already established it — a number arriving with nothing saying where it came
+    from, when the same value can be a local filing's carry, a live AEAT read or
+    a hand edit, and only the provenance tells them apart.
+
+    The projection is exercised through the adapter's own
+    :func:`relation_edit_payload`, so what is asserted is the real emit path
+    rather than a restated dict.
+    """
+
+    def test_every_recovered_grounding_field_survives_the_projection(self) -> None:
+        from datetime import UTC, datetime
+        from decimal import Decimal
+
+        from ....adapters.outbound.google import relation_edit_payload
+        from ....adapters.outbound.google._calc_sheets_pull import RelationEdit
+
+        edit = RelationEdit(
+            relation="m130-cuota-carry",
+            value=Decimal("1234.56"),
+            provenance="local_filing",
+            source_modelo="180",
+            source_filing_year=2025,
+            source_periods=("1T", "2T"),
+            source_casilla_ids=(_INGRESOS_CASILLA,),
+            legal_refs=(_LEGAL_REF,),
+            source_refs=(_SOURCE_REF,),
+            resolved_at=datetime(2026, 3, 1, 9, 30, tzinfo=UTC),
+        )
+
+        raw = _base_pull_payload()
+        raw["relation_edits_populated"] = 1
+        raw["relation_edits"] = [relation_edit_payload(edit)]
+        result = GoogleSyncCalcPullResult.model_validate(raw)
+
+        (row,) = result.relation_edits
+        assert row.relation == "m130-cuota-carry"
+        # Rendered as a string, not a JSON float: this figure reaches a filing.
+        assert row.value == "1234.56"
+        assert row.provenance == "local_filing"
+        assert row.source_modelo == "180"
+        assert row.source_filing_year == 2025
+        assert row.source_periods == ["1T", "2T"]
+        assert row.source_casilla_ids == [_INGRESOS_CASILLA]
+        assert row.legal_refs == [_LEGAL_REF]
+        assert row.source_refs == [_SOURCE_REF]
+        assert row.resolved_at == "2026-03-01T09:30:00+00:00"
+
+    def test_a_manually_edited_relation_carries_no_invented_grounding(self) -> None:
+        """A relation edited without an apply round-trip genuinely has none.
+
+        The optional fields must stay absent rather than acquire defaults that
+        would assert a provenance the workbook never recorded.
+        """
+        from ....adapters.outbound.google import relation_edit_payload
+        from ....adapters.outbound.google._calc_sheets_pull import RelationEdit
+
+        raw = _base_pull_payload()
+        raw["relation_edits_populated"] = 1
+        raw["relation_edits"] = [relation_edit_payload(RelationEdit(relation="m130-cuota-carry"))]
+        result = GoogleSyncCalcPullResult.model_validate(raw)
+
+        (row,) = result.relation_edits
+        assert row.provenance is None
+        assert row.resolved_at is None
+        assert row.source_modelo is None
+        assert row.source_periods == []
+        assert row.legal_refs == []
+
+    def test_an_unknown_provenance_token_is_refused(self) -> None:
+        """The provenance set is closed, so the transport cannot widen it."""
+        raw = _base_pull_payload()
+        raw["relation_edits_populated"] = 1
+        raw["relation_edits"] = [{"relation": "m130-cuota-carry", "provenance": "guessed"}]
+
+        with pytest.raises(ValidationError):
+            GoogleSyncCalcPullResult.model_validate(raw)
+
+    def test_a_malformed_casilla_reference_is_refused(self) -> None:
+        """Grounding is typed, so an anonymous casilla string cannot ride along."""
+        raw = _base_pull_payload()
+        raw["relation_edits_populated"] = 1
+        raw["relation_edits"] = [{"relation": "m130-cuota-carry", "source_casilla_ids": [_EMPTY_CASILLA_ID]}]
+
+        with pytest.raises(ValidationError):
+            GoogleSyncCalcPullResult.model_validate(raw)

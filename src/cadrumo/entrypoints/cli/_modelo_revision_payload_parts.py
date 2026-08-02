@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from pydantic import Field, model_validator
 
+from ...application.modelo import ResultSummaryRole
 from ...domain.calculations.registry import CasillaId, FormulaId, LegalRefId, SourceRefId
 from ._schemas import OutputSchema
 
@@ -88,7 +89,7 @@ class ResultSummaryRowPayload(OutputSchema):
     :class:`ObservationPayload` provenance.
     """
 
-    role: str
+    role: ResultSummaryRole
     casilla_id: CasillaId
     value: str  # serialised Decimal
     label: str

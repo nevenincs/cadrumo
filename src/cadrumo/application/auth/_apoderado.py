@@ -37,6 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
     SecureBoundRepository,
+    SecureObjectRowIdentityError,
     SensitivityClass,
     safe_repository_id,
 )
@@ -169,26 +170,27 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     def load(self, identifier: str) -> ApoderadoConfiguration | None:
         """Return the configuration stored under ``identifier``, or ``None``.
 
-        The base class validates the envelope class and version but not the
-        decrypted payload's own identity, and the object key is the only
-        durable statement of which bucket this configuration belongs to. A row
-        whose payload names a different bucket than the key it was read from is
-        therefore refused rather than returned: the two disagree, so neither
-        can be trusted as the record's owner.
+        The object key is the only durable statement of which bucket this
+        configuration belongs to, so a row whose payload names a different
+        bucket than the key it was read from is refused rather than returned:
+        the two disagree, so neither can be trusted as the record's owner.
+
+        That comparison now lives in the base repository, which applies it to
+        every secure-bound consumer. This override no longer repeats it -- a
+        second copy would drift -- and instead translates the substrate's
+        refusal into this domain's error, so callers keep the typed failure
+        they handle rather than a storage-layer one leaking through.
 
         Raises:
             ApoderadoConfigurationIdentityError: When the stored payload's
                 ``bucket_id`` does not derive the key it was read from.
         """
-        config = super().load(identifier)
-        if config is None:
-            return None
-        stored_key = self.extract_identifier(config)
-        if stored_key != safe_repository_id(identifier, context="identifier"):
+        try:
+            return super().load(identifier)
+        except SecureObjectRowIdentityError as exc:
             raise ApoderadoConfigurationIdentityError(
                 "stored apoderado configuration does not belong to the bucket it was read from",
-            )
-        return config
+            ) from exc
 
     @override
     def save(self, payload: ApoderadoConfiguration) -> None:

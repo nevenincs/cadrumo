@@ -307,6 +307,54 @@ def link_attachment_invoice(
     return updated
 
 
+def link_attachment_transaction(
+    store: AttachmentStoreProtocol,
+    *,
+    attachment_id: str,
+    transaction_id: str,
+) -> Attachment:
+    """Append ``transaction_id`` to a persisted attachment's ``linked_transaction_ids``.
+
+    The transaction-side twin of :func:`link_attachment_invoice`, and for the
+    same reason: ``add_attachment(_bytes)``'s ``link_transaction_ids``
+    parameter can only be populated for a transaction that already exists
+    *before* the evidence is captured, but the ledger evidence flow attaches an
+    already-stored attachment to an existing transaction. Without this the link
+    was recorded on the transaction only, so
+    :func:`list_attachments` with ``linked_to=<transaction_id>`` could not
+    discover an attachment the transaction itself cites -- even though the
+    manifest models the link and the surrounding workflow documents the
+    provenance as bidirectional.
+
+    Re-persists the same manifest (attachment id and bytes unchanged) through
+    the same :meth:`AttachmentStoreProtocol.write_manifest` write path
+    (``composition-service-no-parallel-write-path``).
+
+    Idempotent by construction: :class:`Attachment`'s
+    ``linked_transaction_ids`` validator deduplicates and preserves first-seen
+    order, so a repeated attach is a no-op rather than a growing tuple.
+
+    Args:
+        store: Backing :class:`AttachmentStoreProtocol`.
+        attachment_id: SHA-256 of the attachment bytes to update.
+        transaction_id: Stable ledger transaction identifier to record as
+            supported by this attachment.
+
+    Returns:
+        The re-persisted :class:`Attachment` manifest carrying
+        ``transaction_id`` in :attr:`Attachment.linked_transaction_ids`.
+    """
+    attachment = store.load_manifest(attachment_id)
+    if transaction_id in attachment.linked_transaction_ids:
+        return attachment
+    updated = attachment.model_copy(
+        update={"linked_transaction_ids": (*attachment.linked_transaction_ids, transaction_id)},
+    )
+    store.write_manifest(updated)
+    _logger.info("linked attachment %s to transaction %s", attachment_id, transaction_id)
+    return updated
+
+
 def list_attachments(
     store: AttachmentStoreProtocol,
     *,

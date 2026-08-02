@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId
+from ..calculations.registry import RevisionId
 from ..contribuyente import CCAA
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
@@ -76,10 +77,18 @@ _OptionalHex64 = Annotated[
         pattern=r"^[0-9a-f]{64}$",
     ),
 ]
-_RevisionId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
+_RevisionId = RevisionId
+"""The canonical registry revision-id type, not a second local constraint.
+
+``revision_id`` names a registry revision, so the value type that decides which
+spellings exist belongs to the registry. The local alias this replaced only
+stripped whitespace and bounded length, which accepted values the registry
+grammar refuses -- ``"BAD revision/with spaces"`` among them. Because membership
+and law-resolution checks run later in the application layer, such a revision was
+accepted, content-addressed into the work-unit identity, and persisted before any
+resolver could object, leaving a durable record whose identity was derived from a
+value no registry revision could ever match.
+"""
 _DisplayName = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=200),

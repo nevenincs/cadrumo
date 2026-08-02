@@ -19,8 +19,9 @@ import json
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from io import StringIO
+from types import MappingProxyType
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
@@ -39,6 +40,19 @@ class ExportSerializationFormat(StrEnum):
     XLSX = "xlsx"
 
 
+#: The one declaration of what each serialization format is called on the wire.
+#: ``serialize_tabular_rows`` reads it to stamp a result and
+#: :meth:`TabularExportResult._metadata_describes_the_payload` reads it to refuse
+#: a result whose stamp contradicts its own format, so the producer and the
+#: verifier cannot drift apart.
+_FORMAT_WIRE_NAMES: Mapping[ExportSerializationFormat, tuple[str, str]] = MappingProxyType(
+    {
+        ExportSerializationFormat.CSV: (_CSV_MIME_TYPE, "csv"),
+        ExportSerializationFormat.JSONL: (_JSONL_MIME_TYPE, "jsonl"),
+        ExportSerializationFormat.XLSX: (_XLSX_MIME_TYPE, "xlsx"),
+    },
+)
+
 _REFUSED_EXPORT_FIELD_MESSAGE = "errors.refused.refused_export_field"
 _REFUSED_EXPORT_FORMAT_MESSAGE = "errors.refused.refused_export_format"
 _FIELDNAMES_EMPTY_REASON = "fieldnames_empty"
@@ -46,6 +60,11 @@ _FIELDNAMES_BLANK_REASON = "fieldnames_blank"
 _FIELDNAMES_DUPLICATE_REASON = "fieldnames_duplicate"
 _UNKNOWN_FIELDS_REASON = "unknown_fields"
 _SHA256_INVALID_REASON = "sha256_invalid"
+_BYTE_SIZE_MISMATCH_REASON = "byte_size_mismatch"
+_SHA256_MISMATCH_REASON = "sha256_mismatch"
+_MEDIA_TYPE_MISMATCH_REASON = "media_type_mismatch"
+_EXTENSION_MISMATCH_REASON = "filename_extension_mismatch"
+_ROW_COUNT_MISMATCH_REASON = "row_count_mismatch"
 
 
 class TabularExportResult(BaseModel):
@@ -86,6 +105,33 @@ class TabularExportResult(BaseModel):
             raise _export_field_error(_SHA256_INVALID_REASON)
         return normalized
 
+    @model_validator(mode="after")
+    def _metadata_describes_the_payload(self) -> TabularExportResult:
+        """Refuse a result whose metadata contradicts the bytes it carries.
+
+        Every one of these fields is a pure function of ``payload`` and
+        ``format``, so a result that disagrees with its own bytes is not a
+        different opinion, it is false. Validating only the digest *shape*
+        meant a caller could publish a 29-byte payload as ``byte_size=0``
+        under an all-zero digest with JSON metadata for CSV -- and the ledger
+        export action anchors exactly these values into a durable
+        ``LEDGER_TRANSACTION_EXPORTED`` bucket event, where the lie outlives
+        the payload.
+
+        Raises:
+            ExportFieldError: A metadata field disagrees with the payload.
+        """
+        verify_export_metadata(
+            payload=self.payload,
+            export_format=self.format,
+            byte_size=self.byte_size,
+            sha256=self.sha256,
+            media_type=self.media_type,
+            filename_extension=self.filename_extension,
+            row_count=self.row_count,
+        )
+        return self
+
 
 def serialize_tabular_rows(
     rows: Sequence[Mapping[str, str]],
@@ -107,21 +153,16 @@ def serialize_tabular_rows(
     normalized_rows = tuple(_normalize_row(row, fieldnames=normalized_fields) for row in rows)
     if export_format is ExportSerializationFormat.CSV:
         payload = _serialize_csv(normalized_rows, fieldnames=normalized_fields)
-        media_type = _CSV_MIME_TYPE
-        extension = "csv"
     elif export_format is ExportSerializationFormat.JSONL:
         payload = _serialize_jsonl(normalized_rows, fieldnames=normalized_fields)
-        media_type = _JSONL_MIME_TYPE
-        extension = "jsonl"
     elif export_format is ExportSerializationFormat.XLSX:
         payload = _serialize_xlsx(normalized_rows, fieldnames=normalized_fields)
-        media_type = _XLSX_MIME_TYPE
-        extension = "xlsx"
     else:
         raise ExportFormatError(
             translated_message=_REFUSED_EXPORT_FORMAT_MESSAGE,
             context={"export_format": str(export_format)},
         )
+    media_type, extension = _FORMAT_WIRE_NAMES[export_format]
     return TabularExportResult(
         format=export_format,
         media_type=media_type,
@@ -156,6 +197,75 @@ def _export_field_error(reason: str, **context: object) -> ExportFieldError:
     return ExportFieldError(
         translated_message=_REFUSED_EXPORT_FIELD_MESSAGE,
         context={"reason": reason, **context},
+    )
+
+
+def verify_export_metadata(
+    *,
+    payload: bytes,
+    export_format: ExportSerializationFormat,
+    byte_size: int,
+    sha256: str,
+    media_type: str,
+    filename_extension: str,
+    row_count: int,
+) -> None:
+    """Refuse export metadata that contradicts the payload it describes.
+
+    The single check behind every serialized-payload result. Each argument is a
+    pure function of ``payload`` and ``export_format``, so a value that
+    disagrees with the bytes is false rather than merely different --
+    and :class:`~application.ledger.LedgerExportResult` redeclares the same
+    seven fields independently, which is exactly why the verification lives
+    here once instead of at each declaration.
+
+    Raises:
+        ExportFieldError: A metadata value disagrees with the payload.
+    """
+    if byte_size != len(payload):
+        raise _export_field_error(_BYTE_SIZE_MISMATCH_REASON)
+    if sha256 != sha256_hex(payload):
+        raise _export_field_error(_SHA256_MISMATCH_REASON)
+    expected_media_type, expected_extension = _FORMAT_WIRE_NAMES[export_format]
+    if media_type != expected_media_type:
+        raise _export_field_error(_MEDIA_TYPE_MISMATCH_REASON)
+    if filename_extension != expected_extension:
+        raise _export_field_error(_EXTENSION_MISMATCH_REASON)
+    if row_count != _payload_row_count(payload, export_format=export_format):
+        raise _export_field_error(_ROW_COUNT_MISMATCH_REASON)
+
+
+def _payload_row_count(payload: bytes, *, export_format: ExportSerializationFormat) -> int:
+    """Return the data-row count the serialized ``payload`` actually carries.
+
+    The inverse of the three serializers, and the reason ``row_count`` can be
+    checked rather than trusted. Each branch mirrors exactly what its writer
+    emits: CSV and XLSX carry one header row above the data, JSONL carries one
+    object per line and no header. CSV is read back through :mod:`csv` rather
+    than by counting newlines so a quoted field containing a line break counts
+    as the one row it is.
+    """
+    if export_format is ExportSerializationFormat.CSV:
+        rows = tuple(csv.reader(StringIO(payload.decode(_UTF_8_ENCODING))))
+        return max(len(rows) - 1, 0)
+    if export_format is ExportSerializationFormat.JSONL:
+        return sum(1 for line in payload.decode(_UTF_8_ENCODING).splitlines() if line.strip())
+    if export_format is ExportSerializationFormat.XLSX:
+        from io import BytesIO
+
+        from openpyxl import load_workbook
+
+        workbook = load_workbook(BytesIO(payload), read_only=True)
+        try:
+            worksheet = workbook.active
+            if worksheet is None:
+                return 0
+            return max((worksheet.max_row or 0) - 1, 0)
+        finally:
+            workbook.close()
+    raise ExportFormatError(
+        translated_message=_REFUSED_EXPORT_FORMAT_MESSAGE,
+        context={"export_format": str(export_format)},
     )
 
 

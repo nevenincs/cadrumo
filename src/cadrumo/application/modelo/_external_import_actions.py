@@ -99,7 +99,14 @@ def _load_external_import_target[CasillaKey](
 
     work_units = work_unit_repository.load()
     work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
+    # The catalogue may hold rows for more than one bucket, so a bare id lookup
+    # would let a caller import a bucket-B filing through A-bound stores: the
+    # sibling calculation, filing, and event repositories are supplied
+    # separately and none of them re-checks the target. A unit outside this
+    # repository's bucket is not addressable here and reads as not found, which
+    # also avoids confirming its existence to a caller with no claim on it.
+    repository_bucket = work_unit_repository.bucket_id
+    if work_unit is None or (repository_bucket is not None and work_unit.bucket_id != repository_bucket):
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": work_unit_id},

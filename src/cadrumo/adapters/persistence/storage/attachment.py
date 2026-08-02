@@ -22,6 +22,7 @@ addressed substrate and its sensitivity class is irreducibly FINANCIAL.
 
 from __future__ import annotations
 
+import hmac
 import json
 from collections.abc import Iterator
 from io import BytesIO
@@ -48,6 +49,7 @@ from ._namespace_registry import (
     ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
 )
 from ._namespace_registry import secure_object_namespace_logical_path
+from .crypto import HashedLookup
 from .envelope import Envelope
 from .runtime_repository import secure_object_repository_for_active_bucket
 from .sql import SecureObjectRepository
@@ -98,6 +100,27 @@ def _validate_manifest_envelope(envelope: Envelope[Attachment]) -> None:
         raise _attachment_validation_error(
             "invalid attachment manifest",
             violation="manifest_schema_version",
+        )
+
+
+def _assert_manifest_bound_to_row(attachment: Attachment, *, row_object_key: bytes) -> None:
+    """Refuse a manifest whose identity is not the row key it is filed under.
+
+    The row key is stored as a :class:`HashedLookup` digest, so the natural
+    key cannot be read back off the row -- but it can be recomputed from the
+    identity the manifest claims and compared. That makes the binding checkable
+    from the listing path, which holds no natural key, at the cost of one HMAC
+    rather than the blob decryption iteration deliberately avoids.
+
+    Both read surfaces route through here so they cannot diverge again:
+    :meth:`AttachmentStore.load_manifest` also compares the claimed identity
+    with the natural key it was called with, and this states the same
+    invariant against the row itself.
+    """
+    if not hmac.compare_digest(HashedLookup.compute(attachment.attachment_id), row_object_key):
+        raise _attachment_validation_error(
+            "manifest key does not match stored attachment_id",
+            violation="manifest_key",
         )
 
 
@@ -191,6 +214,49 @@ class AttachmentStore(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     objects: SecureObjectRepository | None = Field(default=None, exclude=True, repr=False)
+    bucket_id: str | None = Field(default=None)
+
+    def _bound_bucket_id(self) -> str | None:
+        """Return the profile bucket this store serves, when one is resolvable.
+
+        An explicit ``bucket_id`` wins. Otherwise the store reads the active
+        profile pointer, which is the same selection
+        :func:`secure_object_repository_for_active_bucket` makes -- so the
+        binding cannot disagree with the store the manifests land in. A store
+        constructed against an injected secure-object repository with no
+        declared bucket has no binding to enforce.
+        """
+        if self.bucket_id is not None:
+            return self.bucket_id
+        if self.objects is not None:
+            return None
+        from ....core import resolve_active_bucket_id
+
+        return resolve_active_bucket_id()
+
+    def _assert_manifest_bucket(self, attachment: Attachment, *, boundary: str) -> Attachment:
+        """Refuse an evidence manifest that belongs to another profile's bucket.
+
+        Attachment manifests are per-profile FINANCIAL custody records, but the
+        store carried no bucket identity of its own, so nothing compared
+        :attr:`Attachment.bucket_id` with the store the row was written into. A
+        manifest naming bucket B could be written into bucket A and returned by
+        A's load and list paths as local evidence.
+
+        A manifest that names no bucket is stamped with the store's own on the
+        way in: the bucket is not part of the content address, so recording it
+        makes the persisted row self-describing rather than leaving the
+        ownership question unanswerable at read time.
+        """
+        bound = self._bound_bucket_id()
+        if bound is None or attachment.bucket_id == bound:
+            return attachment
+        if attachment.bucket_id is None and boundary == "write":
+            return attachment.model_copy(update={"bucket_id": bound})
+        raise _attachment_validation_error(
+            "attachment manifest belongs to another profile bucket",
+            violation="manifest_foreign_bucket",
+        )
 
     def _objects_repo(self) -> SecureObjectRepository:
         return self.objects or secure_object_repository_for_active_bucket()
@@ -263,6 +329,57 @@ class AttachmentStore(BaseModel):
         if actual != digest:
             raise _attachment_validation_error("blob digest drift", violation="blob_digest_drift")
 
+    def _merge_with_stored_manifest(self, attachment: Attachment) -> Attachment:
+        """Fold ``attachment`` into any manifest already filed under the same bytes.
+
+        Attachments are content-addressed, so two ingestions of byte-identical
+        documents share one manifest key -- but they are two *observations*: an
+        invoice mailed and then also downloaded from Drive evidences two
+        transactions, from two channels, at two times. The unconditional upsert
+        replaced the first manifest, so the earlier links and capture context
+        silently vanished while the shared blob stayed intact, leaving evidence
+        consumers seeing only the most recent observation.
+
+        The merge is deterministic and independent of ingestion order for the
+        facts that accumulate, and stable for the facts that do not:
+
+        * ``linked_transaction_ids`` / ``linked_invoice_ids`` accumulate as a
+          union in first-seen order -- a link is an assertion that this document
+          evidences that row, and a later ingestion never retracts it.
+        * ``captured_at`` keeps the earliest observation: it answers "since when
+          do we hold these bytes".
+        * ``source``, ``source_reference``, ``captured_by``, ``source_command``,
+          and ``notes`` keep the FIRST observation's values. They describe the
+          channel the bytes were obtained through, which the later ingestion did
+          not change; treating them as immutable is what makes the merge
+          order-stable.
+        * ``metadata`` accumulates, with the earlier value winning a key
+          collision for the same reason.
+
+        Known limitation: the later observation's own channel reference is not
+        retained. Recording every observation would need an observation list on
+        :class:`Attachment` and a manifest schema-version bump; this merge stops
+        the *loss* of established links and capture context without that change.
+        """
+        try:
+            stored = self.load_manifest(attachment.attachment_id)
+        except AttachmentNotFoundError:
+            return attachment
+        merged_transactions = (*stored.linked_transaction_ids, *attachment.linked_transaction_ids)
+        merged_invoices = (*stored.linked_invoice_ids, *attachment.linked_invoice_ids)
+        merged_metadata = {**dict(attachment.metadata), **dict(stored.metadata)}
+        return stored.model_copy(
+            update={
+                # The model's own validators deduplicate the link tuples and
+                # freeze the mapping, so the merge states intent and the domain
+                # type enforces the shape.
+                "linked_transaction_ids": merged_transactions,
+                "linked_invoice_ids": merged_invoices,
+                "metadata": merged_metadata,
+                "captured_at": min(stored.captured_at, attachment.captured_at),
+            },
+        )
+
     def _assert_blob_present(self, attachment: Attachment) -> None:
         """Refuse a manifest that references bytes this store does not hold."""
         if not self._objects_repo().exists(_ATTACHMENT_BLOB_NAMESPACE, attachment.sha256):
@@ -302,6 +419,8 @@ class AttachmentStore(BaseModel):
                 violation="manifest_link_only_mime_type",
             )
         self._assert_manifest_matches_blob(attachment)
+        attachment = self._assert_manifest_bucket(attachment, boundary="write")
+        attachment = self._merge_with_stored_manifest(attachment)
         # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
@@ -342,19 +461,31 @@ class AttachmentStore(BaseModel):
                 "manifest key does not match stored attachment_id",
                 violation="manifest_key",
             )
+        _assert_manifest_bound_to_row(attachment, row_object_key=record.object_key)
         self._assert_manifest_matches_blob(attachment)
+        self._assert_manifest_bucket(attachment, boundary="load")
         return attachment
 
     def iter_manifests(self) -> Iterator[Attachment]:
         """Iterate over every :class:`Attachment` manifest in sorted attachment-id order.
 
-        Each manifest is checked to reference bytes this store actually holds.
-        The presence check is a key lookup rather than the full length/digest
-        reproduction :meth:`load_manifest` performs: iteration is the listing
-        path, and re-reading every blob would decrypt the whole evidence corpus
-        to render a list. The declared size is bound to the payload at
+        Each manifest is bound to the row it was stored under and checked to
+        reference bytes this store actually holds. The presence check is a key
+        lookup rather than the full length/digest reproduction
+        :meth:`load_manifest` performs: iteration is the listing path, and
+        re-reading every blob would decrypt the whole evidence corpus to
+        render a list. The declared size is bound to the payload at
         :meth:`write_manifest`, so a listed size cannot have been admitted
         unverified.
+
+        The key binding is what iteration previously lacked. ``load_manifest``
+        passes the row key into the decoder, so a manifest whose embedded
+        ``sha256`` drifted from the key it is filed under is refused there.
+        Iteration had no key to pass and derived the identity from that same
+        embedded field instead, which is self-consistent by construction --
+        so the one surface that could not detect the drift was the one that
+        enumerates the whole corpus, and a tampered manifest ``load_manifest``
+        rejected was listed as though it were sound.
         """
         manifests: list[Attachment] = []
         for record in self._objects_repo().list_records(
@@ -364,7 +495,9 @@ class AttachmentStore(BaseModel):
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         ):
             envelope = _decode_manifest_envelope(record.payload)
+            _assert_manifest_bound_to_row(envelope.payload, row_object_key=record.object_key)
             self._assert_blob_present(envelope.payload)
+            self._assert_manifest_bucket(envelope.payload, boundary="iterate")
             manifests.append(envelope.payload)
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)
 

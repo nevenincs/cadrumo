@@ -17,8 +17,15 @@ from ....domain.filing import (
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
+    registry_schema_version,
 )
-from ....domain.submission import ModeloDraftStatus, ModeloPresentado, SubmissionAttempt, SubmissionStatus
+from ....domain.submission import (
+    ModeloDraftStatus,
+    ModeloPresentado,
+    SubmissionAttempt,
+    SubmissionStatus,
+    make_submission_id,
+)
 from .. import (
     ModeloInputs,
     build_complementaria,
@@ -42,19 +49,19 @@ _M130_AGRARIAN_WITHHELD_CASILLA: CasillaId = validated_casilla_id("10", surface=
 _M130_HOME_DEDUCTION_CASILLA: CasillaId = validated_casilla_id("16", surface="_M130_HOME_DEDUCTION_CASILLA")
 _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M130_PRIOR_RETURN_CASILLA")
 _M130_RESULTADO_FINAL_CASILLA: CasillaId = validated_casilla_id("19", surface="_M130_RESULTADO_FINAL_CASILLA")
-_UNSUPPORTED_M999_SOURCE_CASILLA: CasillaId = validated_casilla_id("69", surface="_UNSUPPORTED_M999_SOURCE_CASILLA")
-_UNSUPPORTED_M999_UPDATE_BASE_CASILLA: CasillaId = validated_casilla_id(
+_UNREGISTERED_M037_SOURCE_CASILLA: CasillaId = validated_casilla_id("69", surface="_UNREGISTERED_M037_SOURCE_CASILLA")
+_UNREGISTERED_M037_UPDATE_BASE_CASILLA: CasillaId = validated_casilla_id(
     "07",
-    surface="_UNSUPPORTED_M999_UPDATE_BASE_CASILLA",
+    surface="_UNREGISTERED_M037_UPDATE_BASE_CASILLA",
 )
-_UNSUPPORTED_M999_UPDATE_CUOTA_CASILLA: CasillaId = validated_casilla_id(
+_UNREGISTERED_M037_UPDATE_CUOTA_CASILLA: CasillaId = validated_casilla_id(
     "29",
-    surface="_UNSUPPORTED_M999_UPDATE_CUOTA_CASILLA",
+    surface="_UNREGISTERED_M037_UPDATE_CUOTA_CASILLA",
 )
-_UNSUPPORTED_M998_SOURCE_CASILLA: CasillaId = validated_casilla_id("109", surface="_UNSUPPORTED_M998_SOURCE_CASILLA")
-_UNSUPPORTED_M998_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
+_UNREGISTERED_M993_SOURCE_CASILLA: CasillaId = validated_casilla_id("109", surface="_UNREGISTERED_M993_SOURCE_CASILLA")
+_UNREGISTERED_M993_EJERCICIO_CASILLA: CasillaId = validated_casilla_id(
     "01",
-    surface="_UNSUPPORTED_M998_EJERCICIO_CASILLA",
+    surface="_UNREGISTERED_M993_EJERCICIO_CASILLA",
 )
 
 
@@ -70,10 +77,10 @@ def _persisted_amendment_ids() -> tuple[str, ...]:
     return ModeloAmendmentRepository().list_amendment_ids()
 
 
-def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistrySnapshotRef:
     return RegistrySnapshotRef(
         modelo=modelo,
-        revision_id=schema_version,
+        revision_id=revision_id,
         modelo_year=period.filing_year,
         period=period.registry_token,
     )
@@ -88,23 +95,26 @@ def _submitted_filing(
     draft: ModeloDraft,
     *,
     submission_id: str = "sub-1",
-    justificante_csv: str | None = None,
+    justificante_csv: str | None = "CSV-ORIGINAL",
 ) -> ModeloPresentado:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
+    # ``submission_id`` names the case, not the stored identity: the record's
+    # identity is the content-derived coordinate the submission domain mints.
+    resolved_submission_id = make_submission_id(submission_id, 1)
     return ModeloPresentado(
-        submission_id=submission_id,
+        submission_id=resolved_submission_id,
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
         profile_tax_id=draft.profile_tax_id,
         status=SubmissionStatus.PRESENTADA,
-        justificante_csv=justificante_csv if justificante_csv is not None else f"CSV-{submission_id}",
+        justificante_csv=justificante_csv,
         justificante_pdf_path=None,
         submitted_at=now,
         acknowledged_at=None,
         attempts=(
             SubmissionAttempt(
-                attempt_id=f"{submission_id}.1",
+                attempt_id=f"{resolved_submission_id}.1",
                 started_at=now,
                 ended_at=now,
                 status=SubmissionStatus.PRESENTADA,
@@ -115,7 +125,11 @@ def _submitted_filing(
 
 def _draft(modelo: str, period: Period, casillas: dict[CasillaId, Decimal]) -> ModeloDraft:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
-    schema_version = f"registry:{modelo}:missing"
+    # The draft names a revision the registry does not carry; its schema marker
+    # must still be the marker for THAT revision, not a second, differently
+    # shaped string.
+    revision_id = "missing"
+    schema_version = registry_schema_version(modelo=modelo, revision_id=revision_id)
     values = tuple(
         ModeloValue(
             casilla_id=casilla_id,
@@ -131,7 +145,7 @@ def _draft(modelo: str, period: Period, casillas: dict[CasillaId, Decimal]) -> M
         period=period,
         profile_tax_id="00000000T",
         subject_tax_id="00000000T",
-        snapshot_ref=_snapshot_ref(modelo=modelo, period=period, schema_version=schema_version),
+        snapshot_ref=_snapshot_ref(modelo=modelo, period=period, revision_id=revision_id),
         status=ModeloDraftStatus.PRESENTADA,
         values=values,
         created_at=now,
@@ -209,7 +223,7 @@ class TestBuildComplementaria:
             },
         )
         _persist_original_draft(original_draft)
-        original = _submitted_filing(original_draft, justificante_csv="")
+        original = _submitted_filing(original_draft, justificante_csv=None)
 
         with pytest.raises(ModeloBuilderError, match="official justificante CSV"):
             build_complementaria(
@@ -220,13 +234,25 @@ class TestBuildComplementaria:
         assert _persisted_amendment_ids() == ()
 
     def test_complementaria_requires_original_registry_snapshot(self) -> None:
-        original_draft = _registry_draft(
+        built = _registry_draft(
             inputs={
                 _M130_INGRESOS_CASILLA: Decimal("10000"),
                 _M130_GASTOS_CASILLA: Decimal("4000"),
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             },
-        ).model_copy(update={"schema_version": "registry:130:wrong-revision"})
+        )
+        # Restate the draft as one built against a NON-ACTIVE registry revision.
+        # Both identity fields move together: a draft whose schema marker names
+        # one revision while its snapshot_ref names another is incoherent and no
+        # longer persists, so moving only the marker would exercise the
+        # persistence refusal instead of the stale-snapshot refusal under test.
+        stale_revision = "wrong-revision"
+        original_draft = built.model_copy(
+            update={
+                "snapshot_ref": built.snapshot_ref.model_copy(update={"revision_id": stale_revision}),
+                "schema_version": registry_schema_version(modelo=built.modelo, revision_id=stale_revision),
+            },
+        )
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft)
 
@@ -240,9 +266,10 @@ class TestBuildComplementaria:
 
     def test_unknown_modelo_requires_registry_definition(self) -> None:
         original_draft = _draft(
-            "999",
+            # A real AEAT code the calculation registry deliberately does not carry.
+            "037",
             Period.from_year_and_code(2024, "2T"),
-            {_UNSUPPORTED_M999_SOURCE_CASILLA: Decimal("1900.00")},
+            {_UNREGISTERED_M037_SOURCE_CASILLA: Decimal("1900.00")},
         )
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-999")
@@ -251,8 +278,8 @@ class TestBuildComplementaria:
             build_complementaria(
                 original,
                 {
-                    _UNSUPPORTED_M999_UPDATE_BASE_CASILLA: Decimal("11000.00"),
-                    _UNSUPPORTED_M999_UPDATE_CUOTA_CASILLA: Decimal("200.00"),
+                    _UNREGISTERED_M037_UPDATE_BASE_CASILLA: Decimal("11000.00"),
+                    _UNREGISTERED_M037_UPDATE_CUOTA_CASILLA: Decimal("200.00"),
                 },
                 schema_provider=_schema_provider(),
             )
@@ -260,9 +287,10 @@ class TestBuildComplementaria:
 
     def test_unknown_annual_modelo_requires_registry_definition(self) -> None:
         original_draft = _draft(
-            "998",
+            # A real AEAT code the calculation registry deliberately does not carry.
+            "993",
             Period.from_year_and_code(2024, "0A"),
-            {_UNSUPPORTED_M998_SOURCE_CASILLA: Decimal("8400.00")},
+            {_UNREGISTERED_M993_SOURCE_CASILLA: Decimal("8400.00")},
         )
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-998")
@@ -270,7 +298,7 @@ class TestBuildComplementaria:
         with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
             build_complementaria(
                 original,
-                {_UNSUPPORTED_M998_EJERCICIO_CASILLA: 2024},
+                {_UNREGISTERED_M993_EJERCICIO_CASILLA: 2024},
                 schema_provider=_schema_provider(),
             )
         assert _persisted_amendment_ids() == ()

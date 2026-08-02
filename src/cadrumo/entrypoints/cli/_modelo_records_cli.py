@@ -408,7 +408,7 @@ def filing_record_observe_local(
             casilla_id: str(value) for casilla_id, value in sorted(local_observation.casilla_values.items())
         },
         casilla_count=len(local_observation.casilla_values),
-        captured_at=local_observation.captured_at.isoformat(),
+        captured_at=local_observation.captured_at,
         captured_by=local_observation.captured_by,
         official_evidence=local_observation.official_evidence,
         filing_record_created=local_observation.filing_record_created,

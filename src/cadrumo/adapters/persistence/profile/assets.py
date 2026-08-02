@@ -44,6 +44,7 @@ _log = get_logger(__name__)
 ASSETS_LEDGER_FILENAME = "assets-ledger.secure-object"
 ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
 
+
 def load_assets() -> tuple[AssetRecord, ...]:
     """Load persisted asset records from the encrypted ledger.
 
@@ -172,8 +173,13 @@ class AssetsLedgerRepository:
         Args:
             document: Ledger document to encrypt and write.
         """
-        self._save_unlocked(document)
-        _log.info("saved %d asset records to secure object %s", len(document.assets), self._storage.object_key)
+        validated_document = AssetsLedgerDocument.model_validate(document.model_dump())
+        self._save_unlocked(validated_document)
+        _log.info(
+            "saved %d asset records to secure object %s",
+            len(validated_document.assets),
+            self._storage.object_key,
+        )
 
     def add(self, asset: AssetRecord) -> AssetsLedgerDocument:
         """Atomically add ``asset`` and refuse duplicate identifiers.

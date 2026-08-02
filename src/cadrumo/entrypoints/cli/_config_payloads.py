@@ -19,12 +19,14 @@ from ...application.auth import (
     AuthDiagnosticDetail,
     AuthDiagnosticPhoneState,
     AuthDiagnosticSummary,
+    AuthProviderListing,
 )
 from ...application.config_reset import (
     ConfigResetOperationStatus,
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
+from ...application.operator_surface import HelpSurface
 from ...application.user_profile import (
     ProfileBundleExportPurpose,
     ProfileBundleExportTransport,
@@ -34,7 +36,7 @@ from ...core import HEX_PATTERN_64
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId
 from ...core.time import validate_utc_aware
-from ...domain.user_profile import UserProfileStatus
+from ...domain.user_profile import UserProfileFact, UserProfileStatus
 from ._schemas import OutputSchema, register_schema
 
 # The two wizard-owned profile result schemas register through the manifest's
@@ -136,28 +138,38 @@ class ProfileFactPayload(OutputSchema):
 
 
 class ConfigHelpEntryPayload(OutputSchema):
-    """One command row in the curated config help document."""
+    """One command row in the curated config help document.
 
-    command: str
-    description: str
+    Field bounds mirror the canonical :class:`~cadrumo.application.operator_surface.HelpEntry`.
+    """
+
+    command: str = Field(min_length=1, max_length=80)
+    description: str = Field(min_length=1, max_length=80)
 
 
 class ConfigHelpSectionPayload(OutputSchema):
-    """One workflow-ordered section in the curated config help document."""
+    """One workflow-ordered section in the curated config help document.
 
-    title: str
-    entries: list[ConfigHelpEntryPayload]
+    Field bounds mirror the canonical :class:`~cadrumo.application.operator_surface.HelpSection`.
+    """
+
+    title: str = Field(min_length=1, max_length=80)
+    entries: list[ConfigHelpEntryPayload] = Field(min_length=1)
 
 
 @register_schema("root.config")
 class ConfigRootResult(OutputSchema):
-    """JSON envelope for bare ``aeat config`` and ``aeat config --help``."""
+    """JSON envelope for bare ``aeat config`` and ``aeat config --help``.
 
-    surface: str
-    heading: str
-    paragraphs: list[str]
-    sections: list[ConfigHelpSectionPayload]
-    footer: str
+    Mirrors the canonical :class:`~cadrumo.application.operator_surface.HelpDocument`
+    built by :func:`~cadrumo.application.operator_surface.build_help_document`.
+    """
+
+    surface: HelpSurface
+    heading: str = Field(min_length=1, max_length=120)
+    paragraphs: list[str] = Field(min_length=1)
+    sections: list[ConfigHelpSectionPayload] = Field(min_length=1)
+    footer: str = Field(min_length=1, max_length=120)
 
 
 # P05 — repair verb result schemas
@@ -566,12 +578,16 @@ class ConfigProfileDeleteResult(OutputSchema):
     """JSON envelope for ``aeat config profile delete``.
 
     Reports the tombstoned profile id and display label plus whether the active
-    profile pointer had to be cleared.
+    profile pointer had to be cleared. Bounded and typed at the same widths
+    :class:`~cadrumo.application.user_profile.ProfileLifecycleResult` carries
+    (the mutated :class:`~cadrumo.domain.user_profile.UserProfileRecord`), so
+    an empty identity/label or an unknown lifecycle status is refused rather
+    than reported as a valid tombstoning.
     """
 
-    profile_id: str
-    display_name: str
-    status: str
+    profile_id: BucketId
+    display_name: str = Field(min_length=1, max_length=160)
+    status: UserProfileStatus
     active_profile_cleared: bool
 
 
@@ -581,12 +597,13 @@ class ConfigProfileDuplicateResult(OutputSchema):
 
     Projects the source and new immutable profile ids produced by the profile
     lifecycle service; the copied fact set is not expanded in this mutation
-    result.
+    result. Bounded at the same widths the profile-pointer/record identity
+    carries, so a blank identity or label is refused.
     """
 
-    source_profile_id: str
-    target_profile_id: str
-    display_name: str
+    source_profile_id: BucketId
+    target_profile_id: BucketId
+    display_name: str = Field(min_length=1, max_length=160)
 
 
 @register_schema("config.profile.status")
@@ -778,12 +795,19 @@ class ConfigResetResumeResult(OutputSchema):
 class AuthProvidersResult(OutputSchema):
     """JSON envelope for ``aeat config auth providers``.
 
-    Wraps :class:`AuthProvidersReport`; each row is the
-    JSON form of :class:`AuthProviderListing`, preserving
-    implemented and reserved provider slots from the auth catalogue.
+    Wraps :class:`AuthProvidersReport`; each row IS the canonical
+    :class:`AuthProviderListing`, preserving implemented and reserved provider
+    slots from the auth catalogue.
+
+    The rows were redeclared as ``list[dict[str, object]]``, so the envelope
+    accepted a shape the report it wraps rejects outright: an empty row, an
+    empty label, ``implemented="yes"``, or an unknown provider id all passed
+    the shell while the canonical model refused each. Nesting the canonical
+    listing makes the envelope's contract the report's contract by
+    construction rather than by the projection remembering to agree.
     """
 
-    providers: list[dict[str, object]]
+    providers: list[AuthProviderListing]
 
 
 @register_schema("config.auth.configure")
@@ -918,9 +942,9 @@ class ApoderadoCheckResult(OutputSchema):
     live AEAT check.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     configured: bool
-    represented_nif: str | None = None
+    represented_nif: str | None = Field(default=None, min_length=1, max_length=16)
     granted_scopes: list[str] | None = None
 
 
@@ -1021,12 +1045,14 @@ class ConfigProfileRenameResult(OutputSchema):
     """JSON envelope for ``aeat config profile rename``.
 
     Reports the immutable profile id plus the previous and new display labels;
-    profile identity and bucket storage remain unchanged.
+    profile identity and bucket storage remain unchanged. Bounded at the same
+    widths :class:`~cadrumo.application.bucket_maintenance.RenameBucketResult`
+    carries, so a blank identity or label is refused.
     """
 
-    profile_id: str
-    previous_display_name: str
-    display_name: str
+    profile_id: BucketId
+    previous_display_name: str = Field(min_length=1, max_length=160)
+    display_name: str = Field(min_length=1, max_length=160)
 
 
 # Sealed bucket-archive result schemas (backup / restore / inspect)
@@ -1205,12 +1231,12 @@ class ApoderadoStatusResult(OutputSchema):
     verification.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     configured: bool
-    represented_nif: str | None = None
+    represented_nif: str | None = Field(default=None, min_length=1, max_length=16)
     granted_scopes: list[str] = []
-    catalogue_version: str | None = None
-    configured_at: str | None = None
+    catalogue_version: str | None = Field(default=None, min_length=1)
+    configured_at: datetime | None = None
 
 
 @register_schema("config.auth.apoderado.configure")
@@ -1223,12 +1249,12 @@ class ApoderadoConfigureResult(OutputSchema):
     configuration summary.
     """
 
-    bucket_id: str
-    represented_nif: str
+    bucket_id: BucketId
+    represented_nif: str = Field(min_length=1, max_length=16)
     granted_scopes: list[str] = []
-    catalogue_version: str
-    configured_at: str
-    notes: str = ""
+    catalogue_version: str = Field(min_length=1)
+    configured_at: datetime
+    notes: str = Field(default="", max_length=500)
 
 
 @register_schema("config.auth.apoderado.clear")
@@ -1239,7 +1265,7 @@ class ApoderadoClearResult(OutputSchema):
     whether a record existed to clear.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     cleared: bool
 
 
@@ -1426,12 +1452,22 @@ class CensoFileFactPayload(OutputSchema):
     """One candidate censal fact projected from the G313 certificate.
 
     ``source`` carries the non-official artefact provenance token, never
-    an AEAT-verified stamp.
+    an AEAT-verified stamp. Re-validated against the canonical
+    :class:`~cadrumo.domain.user_profile.UserProfileFact` contract -- the
+    same check the sibling :class:`CensoPullFactPayload` already applies --
+    so a malformed path or an undeclared/oversized source is refused
+    rather than forwarded.
     """
 
     path: str
     value: str
     source: str
+
+    @model_validator(mode="after")
+    def _validate_canonical_profile_fact(self) -> CensoFileFactPayload:
+        """Keep the presentation row on the domain's profile path/provenance contract."""
+        UserProfileFact(path=self.path, value=self.value, source=self.source)
+        return self
 
 
 @register_schema("config.profile.censo.file")

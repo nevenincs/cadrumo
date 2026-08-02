@@ -109,7 +109,7 @@ from ...application.invoices import build_catalogue_invoice, create_catalogue_in
 from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
-from ...core.decimal import normalize_decimal_separators
+from ...core.decimal import coerce_finite_european_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_date, parse_iso8601_date
@@ -286,14 +286,17 @@ def _find_invoice_date(text: str) -> str | None:
 
 
 def _parse_labelled_amount(pattern: re.Pattern[str], text: str) -> Decimal | None:
+    """Return the labelled amount captured from the text layer, or ``None``.
+
+    Shares the finite European-decimal authority with the vision adapter, so
+    the two extraction paths cannot read the same invoice differently: an
+    already dot-decimal amount keeps its scale and a non-finite token is
+    refused rather than becoming a filing figure.
+    """
     match = pattern.search(text)
     if match is None:
         return None
-    normalized = normalize_decimal_separators(match.group(1), strip_thousands=True)
-    try:
-        return Decimal(normalized)
-    except InvalidOperation:
-        return None
+    return coerce_finite_european_decimal(match.group(1))
 
 
 def _find_iva_rate(text: str) -> Decimal | None:

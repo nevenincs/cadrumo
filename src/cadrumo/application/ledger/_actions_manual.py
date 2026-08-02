@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 from ...core import BindingSourceKind, Period
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
+from ...domain.attachments import link_attachment_transaction
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepositoryProtocol,
@@ -188,6 +189,7 @@ def create_manual_transaction(
         catalogue=_upsert_transaction(catalogue, transaction),
         events=(event,),
     )
+    _record_attachment_back_references(transaction, attachment_store=attachment_store)
     return _result(command.bucket_id, transaction, (event.event_id,))
 
 
@@ -643,12 +645,52 @@ def update_manual_transaction(
         catalogue=_replace_transaction(catalogue, old_transaction_id=transaction_id, replacement=replacement),
         events=events,
     )
+    _record_attachment_back_references(
+        replacement,
+        attachment_store=attachment_store,
+    )
     return _result(
         command.bucket_id,
         replacement,
         tuple(event.event_id for event in events),
         stale_finalized_revisions=blockers if evidence_only else (),
     )
+
+
+def _record_attachment_back_references(
+    transaction: Transaction,
+    *,
+    attachment_store: _AttachmentStoreProtocol | None,
+) -> None:
+    """Record the transaction on every attachment manifest the transaction cites.
+
+    The transaction side of the link is written by the catalogue save above.
+    Without this, the manifest side stayed empty, so
+    :func:`~domain.attachments.list_attachments` with
+    ``linked_to=<transaction_id>`` could not discover an attachment the
+    transaction itself cites -- the manifest models the link and the evidence
+    workflow documents the provenance as bidirectional.
+
+    Runs after the transaction is durably persisted, so a failure here can only
+    leave the manifest side behind, never a manifest pointing at a transaction
+    that was never written. :func:`~domain.attachments.link_attachment_transaction`
+    is idempotent, so a re-attach re-converges the pair rather than duplicating
+    the reference.
+    """
+    if not transaction.attachment_ids:
+        return
+    if attachment_store is None:
+        from ...adapters.persistence.storage import AttachmentStore
+
+        store: _AttachmentStoreProtocol = AttachmentStore()
+    else:
+        store = attachment_store
+    for attachment_id in transaction.attachment_ids:
+        link_attachment_transaction(
+            store,
+            attachment_id=attachment_id,
+            transaction_id=transaction.transaction_id,
+        )
 
 
 def _prepare_manual_transaction_update(

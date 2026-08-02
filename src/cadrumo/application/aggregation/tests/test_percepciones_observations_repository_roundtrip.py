@@ -17,7 +17,7 @@ non-identifying AEAT codes and stay plain.
 from __future__ import annotations
 
 import hashlib
-from datetime import date
+from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -399,3 +399,48 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
 
         with pytest.raises(SecureObjectRowIdentityError):
             repo.load_observations("190", period)
+
+
+@pytest.mark.parametrize(
+    "captured_at",
+    [
+        datetime(2024, 4, 15, 10, 30),
+        datetime(2024, 4, 15, 10, 30, tzinfo=timezone(timedelta(hours=2))),
+    ],
+)
+def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -> None:
+    """A naive or non-UTC capture instant never reaches the encrypted store.
+
+    The sibling withholding envelopes carried a bare ``datetime`` while the
+    calculation observation envelope was meant to hold the shared UTC contract,
+    so each store admitted a capture instant with no zone and later comparisons
+    against UTC-aware instants silently answered a different question. All three
+    now use the one canonical UtcInstant.
+    """
+    from .._percepciones_observations_repository import _PercepcionObservationEnvelopePayload
+
+    with pytest.raises(ValidationError):
+        _PercepcionObservationEnvelopePayload(
+            modelo="190",
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "0A"),
+            observation=_observation(nif="11111111H", clave="A"),
+            captured_at=captured_at,
+            source_kind="aggregate_pull",
+        )
+
+
+def test_envelope_accepts_a_utc_capture_instant() -> None:
+    """The positive control for the refusal above."""
+    from .._percepciones_observations_repository import _PercepcionObservationEnvelopePayload
+
+    payload = _PercepcionObservationEnvelopePayload(
+        modelo="190",
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "0A"),
+        observation=_observation(nif="11111111H", clave="A"),
+        captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
+        source_kind="aggregate_pull",
+    )
+
+    assert payload.captured_at.utcoffset() == timedelta(0)

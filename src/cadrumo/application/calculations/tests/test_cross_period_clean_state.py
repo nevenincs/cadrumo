@@ -507,7 +507,7 @@ def test_cross_period_clean_state_blocks_taxpayer_filing_with_wrong_tax_id_justi
             modelo="303",
             period="1T",
             filing_year=_M390_YEAR,
-            tax_id="B12345678",
+            tax_id="B12345674",
         )
 
         verdict = _evaluate_clean_state(
@@ -793,7 +793,7 @@ def test_first_year_modalidad_cuota_suppresses_m202_dependency_through_evaluator
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = _evaluate_clean_state(
             _snapshot_202(),
-            taxpayer_tax_id="B12345678",
+            taxpayer_tax_id="B12345674",
             activity_start_date=date(2026, 2, 1),
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
         )
@@ -826,7 +826,7 @@ def test_mandatory_modalidad_base_keeps_m202_dependency_in_scope_through_evaluat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = _evaluate_clean_state(
             _snapshot_202(),
-            taxpayer_tax_id="B12345678",
+            taxpayer_tax_id="B12345674",
             activity_start_date=date(2026, 2, 1),
             modelo_202_modality=Modelo202Modality.ART_40_3_MANDATORY,
         )
@@ -849,7 +849,7 @@ def test_incomplete_modality_keeps_m202_dependency_in_scope_through_evaluator(tm
         for modality in (Modelo202Modality.INCOMPLETE, None):
             verdict = _evaluate_clean_state(
                 _snapshot_202(),
-                taxpayer_tax_id="B12345678",
+                taxpayer_tax_id="B12345674",
                 activity_start_date=date(2026, 2, 1),
                 modelo_202_modality=modality,
             )
@@ -869,7 +869,7 @@ def test_non_first_year_keeps_m202_dependency_in_scope_through_evaluator(tmp_pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         verdict = _evaluate_clean_state(
             _snapshot_202(),
-            taxpayer_tax_id="B12345678",
+            taxpayer_tax_id="B12345674",
             activity_start_date=date(2025, 6, 1),
             modelo_202_modality=Modelo202Modality.ART_40_2_OPTIONAL,
         )

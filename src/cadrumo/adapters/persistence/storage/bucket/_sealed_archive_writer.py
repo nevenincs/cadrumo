@@ -11,14 +11,19 @@ same-bucket exports differ only in the header's ``created_at`` field.
 from __future__ import annotations
 
 import io
+import os
 import tarfile
 from datetime import datetime
 from pathlib import Path
+from uuid import uuid4
 
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.logging import get_logger
 from .....core.product_identity import PRODUCT_IDENTITY
 from ._export_header import ExportArchiveHeader
 from ._sealed_archive_errors import SealedArchiveWriteError
+
+_log = get_logger(__name__)
 
 # Canonical member names. The layout MUST stay positional — the
 # reader validates the order. New member kinds open a new archive
@@ -105,6 +110,18 @@ def write_sealed_archive(
         raise SealedArchiveWriteError(
             "sealed-archive write refused: header.recovery_wrap_present is True but no recovery_wrap_bytes supplied",
         )
+    # Both members carry encrypted material, so zero bytes is never a
+    # legitimate value. An empty payload produced a structurally valid archive
+    # that round-tripped cleanly and carried nothing to decrypt; an empty
+    # declared recovery wrap lost the material the header says is present.
+    if not payload_envelope_bytes:
+        raise SealedArchiveWriteError(
+            "sealed-archive write refused: payload_envelope_bytes is empty; there would be nothing to decrypt",
+        )
+    if recovery_wrap_bytes is not None and not recovery_wrap_bytes:
+        raise SealedArchiveWriteError(
+            "sealed-archive write refused: recovery_wrap_bytes is empty but the header declares recovery material",
+        )
     if target_path.exists():
         raise SealedArchiveWriteError(
             f"sealed-archive write refused: target_path {target_path!s} already exists; "
@@ -113,8 +130,15 @@ def write_sealed_archive(
 
     header_bytes = header.model_dump_json().encode(UTF_8_ENCODING)
     instant = header.created_at
+    # Staged at a unique sibling and moved into place only once every member
+    # is written. Building directly at the operator's path meant a failure
+    # part-way through left a partial tarball exactly where a complete archive
+    # was expected: the next reader saw an apparently valid file with a
+    # truncated layout, and a retry could not use the no-overwrite guard above
+    # without the operator deleting the wreckage by hand.
+    staging_path = target_path.with_name(f"{target_path.name}.{uuid4().hex}.partial")
     try:
-        with tarfile.open(target_path, mode="w:gz") as archive:
+        with tarfile.open(staging_path, mode="w:gz") as archive:
             header_info = _normalised_tarinfo(HEADER_MEMBER_NAME, len(header_bytes), instant)
             archive.addfile(header_info, io.BytesIO(header_bytes))
             payload_info = _normalised_tarinfo(PAYLOAD_MEMBER_NAME, len(payload_envelope_bytes), instant)
@@ -122,10 +146,31 @@ def write_sealed_archive(
             if recovery_wrap_bytes is not None:
                 recovery_info = _normalised_tarinfo(RECOVERY_WRAP_MEMBER_NAME, len(recovery_wrap_bytes), instant)
                 archive.addfile(recovery_info, io.BytesIO(recovery_wrap_bytes))
+        os.replace(staging_path, target_path)
     except OSError as exc:
+        _discard_staging_archive(staging_path)
         raise SealedArchiveWriteError(
             f"sealed-archive write to {target_path!s} failed: {type(exc).__name__}: {exc}",
         ) from exc
+    except BaseException:
+        # Includes the caller interrupting the export. The staged file is this
+        # function's own temporary, so it is removed on every exit that does
+        # not reach the rename.
+        _discard_staging_archive(staging_path)
+        raise
+
+
+def _discard_staging_archive(staging_path: Path) -> None:
+    """Remove the staged archive, ignoring an already-absent file.
+
+    Failure to clean up must not mask the write failure being unwound, so a
+    removal error is swallowed here; the residue carries the ``.partial``
+    suffix that marks it as never having been a complete archive.
+    """
+    try:
+        staging_path.unlink(missing_ok=True)
+    except OSError:
+        _log.warning("sealed-archive staging cleanup failed", exc_info=True)
 
 
 __all__ = [

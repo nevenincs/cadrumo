@@ -24,10 +24,12 @@ from __future__ import annotations
 
 import base64
 import json
+from decimal import Decimal
 
 import pytest
 
 from ....core.config import load_settings
+from ....core.decimal import coerce_finite_european_decimal
 from ....tests.secure_sql import TestRuntimeProfile
 from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._evidence_draft import InvoiceDraft
@@ -210,3 +212,59 @@ class TestLocalVisionInvoiceFieldExtractor:
         assert draft.grand_total == 250
         assert draft.supplier_tax_id is None
         assert draft.invoice_number is None
+
+
+class TestGroundedAmountsShareTheCanonicalDecimalAuthority:
+    """Vision grounding reads amounts exactly as the canonical helper does.
+
+    The grounding step stripped every dot as a thousands separator, so an
+    already dot-decimal transcription was multiplied by a hundred, and it
+    admitted ``NaN``/``Infinity`` as filing amounts. Both paths now route
+    through :func:`~core.decimal.coerce_finite_european_decimal`.
+    """
+
+    @pytest.mark.parametrize(
+        ("transcribed", "expected"),
+        [
+            ("1234.56", Decimal("1234.56")),
+            ("259.26", Decimal("259.26")),
+            ("1493.82", Decimal("1493.82")),
+            ("1.234,56", Decimal("1234.56")),
+            ("1234,56", Decimal("1234.56")),
+            ("100,00", Decimal("100")),
+        ],
+        ids=["dot-decimal", "dot-decimal-small", "dot-decimal-total", "es-thousands", "comma", "canonical"],
+    )
+    def test_dot_and_comma_decimals_keep_their_scale(self, transcribed: str, expected: Decimal) -> None:
+        fields = _VisionExtractedFields.model_validate_json(_extraction_json(taxable_base=transcribed))
+        draft = _ground_extracted_fields(fields, raw_text_length=42)
+
+        assert draft.taxable_base == expected
+        assert draft.taxable_base == coerce_finite_european_decimal(transcribed)
+
+    @pytest.mark.parametrize("transcribed", ["NaN", "Infinity", "-Infinity", "nan"])
+    def test_non_finite_amounts_are_dropped_not_grounded(self, transcribed: str) -> None:
+        fields = _VisionExtractedFields.model_validate_json(_extraction_json(grand_total=transcribed))
+        draft = _ground_extracted_fields(fields, raw_text_length=42)
+
+        assert draft.grand_total is None
+
+    @pytest.mark.parametrize(
+        "transcribed",
+        ["1234.56", "1.234,56", "1234,56", "NaN", "Infinity", "not-a-number"],
+    )
+    def test_every_amount_field_agrees_with_the_canonical_helper(self, transcribed: str) -> None:
+        """No amount field may read a transcription differently from any other."""
+        fields = _VisionExtractedFields.model_validate_json(
+            _extraction_json(
+                taxable_base=transcribed,
+                iva_amount=transcribed,
+                grand_total=transcribed,
+            ),
+        )
+        draft = _ground_extracted_fields(fields, raw_text_length=42)
+
+        expected = coerce_finite_european_decimal(transcribed)
+        assert draft.taxable_base == expected
+        assert draft.iva_amount == expected
+        assert draft.grand_total == expected

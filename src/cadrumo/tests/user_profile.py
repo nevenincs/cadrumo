@@ -18,6 +18,11 @@ if TYPE_CHECKING:
     from ..domain.user_profile import ProfileFieldDefinition
 
 
+#: Checksum-valid NIF filler, derived through the canonical check-letter table
+#: rather than written out, so it cannot drift from the algorithm that admits it.
+_PLACEHOLDER_TAX_ID = f"12345678{nif_check_letter(12345678)}"
+
+
 def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
     """Return filler for one field that the field's own schema admits.
 
@@ -39,6 +44,14 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
     being legal - a test that needs a PARTICULAR value should say so
     rather than depend on which one happens to be first.
 
+    The tax-identifier field is the one case the field declaration cannot
+    answer on its own. Its profile-schema type is a plain ``string``, but the
+    projection into ``TaxpayerProfile`` runs the canonical ``SubjectTaxId``
+    contract, so the AEAT checksum is a constraint the schema does not express
+    and the generic sentinel cannot satisfy. It is keyed on the field key
+    rather than added to a table of paths: one field whose downstream contract
+    is stricter than its declared type, named where that is true.
+
     Args:
         field: The schema definition of the field being filled.
 
@@ -47,6 +60,8 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
     """
     if field.enum_values:
         return field.enum_values[0]
+    if field.key == "tax_id":
+        return _PLACEHOLDER_TAX_ID
     return "placeholder"
 
 

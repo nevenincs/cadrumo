@@ -12,13 +12,14 @@ loaded from a shipped scenario TOML - no doubles of the code under test
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
 
 from .._flywheel import failure_signature, promote_failure, write_promoted_scenario
 from .._live_scoring import LiveInvariantVerdict, LiveScenarioScore
-from .._models import LiveToolCallRecord, LiveTrajectory
+from .._models import LiveToolCallRecord, LiveTrajectory, NarrationFaithfulness
 from .._report import (
     MeasurementReport,
     ScenarioOutcomeRow,
@@ -26,6 +27,7 @@ from .._report import (
     render_measurement_report_markdown,
 )
 from .._runner import load_scenario
+
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -166,7 +168,7 @@ def test_measurement_report_refuses_aggregate_counts_that_conflict_with_rows() -
 
 
 def test_scenario_outcome_row_refuses_failure_state_that_conflicts_with_pass_state() -> None:
-    row_fields = {
+    row_fields: _ScenarioOutcomeRowFields = {
         "scenario": "cierre-trimestre",
         "persona": "cadrumo-modelo-preparer",
         "session_id": "s-state",
@@ -235,13 +237,28 @@ def test_render_measurement_report_markdown_surfaces_verdict_and_failures() -> N
     assert "lifecycle out of order: file before verify" in markdown
 
 
-def test_failure_signature_is_stable_and_shape_sensitive() -> None:
+def test_failure_signature_is_stable_for_identical_evidence_and_distinguishes_failure_details() -> None:
     first = failure_signature(_failing_score("s-a"))
-    # Signature is content-addressed on the failure SHAPE (scenario + dimensions
-    # + invariants), never the clock-free session id, so two sessions with the
-    # same failure collide by construction.
+    # The signature excludes the clock-free session id: a genuine replay of the
+    # same evidence remains idempotent across harness sessions.
     assert first == failure_signature(_failing_score("s-b"))
     assert first != failure_signature(_passing_score("s-a"))
+
+    distinct_evidence = _failing_score("s-c").model_copy(
+        update={
+            "tool_errors": ("execute: modelo.work.verify returned isError",),
+            "narration_checks": (
+                NarrationFaithfulness(
+                    step="modelo.export",
+                    faithful=False,
+                    blocking=True,
+                    flagged_values=("999.00",),
+                ),
+            ),
+            "failures": ("verification evidence disagrees with the live revision",),
+        },
+    )
+    assert first != failure_signature(distinct_evidence)
 
 
 def test_promote_failure_refuses_a_passing_score() -> None:
@@ -269,3 +286,65 @@ def test_write_promoted_scenario_is_idempotent(tmp_path: Path) -> None:
     assert signature in text
     assert scenario.name in text
     assert len(list(tmp_path.glob("*.toml"))) == 1
+
+
+def test_distinct_failure_evidence_gets_its_own_promoted_scenario(tmp_path: Path) -> None:
+    scenario = load_scenario(_SCENARIOS_DIR / "cierre_trimestre.toml")
+    first_score = _failing_score("s-first")
+    second_score = first_score.model_copy(
+        update={
+            "tool_errors": ("execute: modelo.work.verify returned isError",),
+            "narration_checks": (
+                NarrationFaithfulness(
+                    step="modelo.export",
+                    faithful=False,
+                    blocking=True,
+                    flagged_values=("999.00",),
+                ),
+            ),
+            "failures": ("verification evidence disagrees with the live revision",),
+        },
+    )
+    first = write_promoted_scenario(
+        score=first_score,
+        trajectory=_trajectory("s-first", command_keys=("modelo.work.verify", "modelo.work.file")),
+        scenario=scenario,
+        scenarios_dir=tmp_path,
+    )
+    second = write_promoted_scenario(
+        score=second_score,
+        trajectory=_trajectory("s-second", command_keys=("modelo.work.verify", "modelo.work.file")),
+        scenario=scenario,
+        scenarios_dir=tmp_path,
+    )
+
+    assert first != second
+    assert "lifecycle out of order: file before verify" in first.read_text(encoding="utf-8")
+    assert "verification evidence disagrees with the live revision" in second.read_text(encoding="utf-8")
+    assert len(list(tmp_path.glob("*.toml"))) == 2
+
+
+def test_promoted_scenario_refuses_a_nonidentical_same_signature_replacement(tmp_path: Path) -> None:
+    scenario = load_scenario(_SCENARIOS_DIR / "cierre_trimestre.toml")
+    score = _failing_score("s-fail")
+    first_trajectory = _trajectory("s-fail", command_keys=("modelo.work.verify", "modelo.work.file"))
+    path = write_promoted_scenario(score=score, trajectory=first_trajectory, scenario=scenario, scenarios_dir=tmp_path)
+    original = path.read_text(encoding="utf-8")
+
+    with pytest.raises(ValueError, match="refusing to overwrite existing evidence"):
+        write_promoted_scenario(
+            score=score,
+            trajectory=_trajectory("s-fail", command_keys=("modelo.work.calculate", "modelo.work.file")),
+            scenario=scenario,
+            scenarios_dir=tmp_path,
+        )
+
+    assert path.read_text(encoding="utf-8") == original
+
+class _ScenarioOutcomeRowFields(TypedDict):
+    scenario: str
+    persona: str
+    session_id: str
+    tool_calls: int
+    narrations: int
+    elicitations: int

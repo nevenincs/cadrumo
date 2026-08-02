@@ -395,3 +395,93 @@ def test_bucket_dir_file_collision_is_typed_and_redacted(tmp_path: Path) -> None
     envelope = build_error_envelope(excinfo.value)
     assert envelope.code == "INTEGRITY_STORAGE_BUCKET_VALIDATION"
     assert str(tmp_path) not in envelope.model_dump_json()
+
+
+def test_release_after_foreign_replacement_clears_local_ownership(tmp_path: Path) -> None:
+    """A foreign replacement ends this process's ownership, not just its lockfile claim.
+
+    ``release_lock`` correctly leaves a foreign lockfile on disk, but it used
+    to return before clearing the in-process ownership slot. The stale slot
+    then read as a live lock: a later same-thread acquire re-entered it at
+    depth 2 with ``wait_seconds=0``, so the caller was handed a lock this
+    process did not hold while the foreign lock sat on disk untouched.
+    """
+
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    target = lock_path(paths)
+    foreign_pid = os.getpid() + 1
+
+    acquire_lock(paths)
+    target.write_text(f"{foreign_pid}\n", encoding=UTF_8_ENCODING)
+    release_lock(paths)
+
+    # The foreign lock survives the release...
+    assert target.is_file()
+    assert int(target.read_text(encoding=UTF_8_ENCODING).strip()) == foreign_pid
+
+    # ...and this process no longer believes it owns the bucket, so a fresh
+    # acquire contends with the foreign holder instead of re-entering.
+    with pytest.raises(BucketBusyError) as excinfo:
+        acquire_lock(paths)
+    assert excinfo.value.bucket_id == "alpha"
+    assert excinfo.value.holding_pid == foreign_pid
+    assert int(target.read_text(encoding=UTF_8_ENCODING).strip()) == foreign_pid
+
+    target.unlink()
+
+
+def test_reentrant_acquire_refuses_when_a_foreign_process_replaced_the_lockfile(
+    tmp_path: Path,
+) -> None:
+    """Same-thread re-entry revalidates the disk record it is a cache of.
+
+    Holding the lock and then having it replaced by a foreign PID leaves the
+    in-process slot describing a lock this process no longer holds. Re-entry
+    on the strength of that slot alone would silently grant mutual exclusion
+    that does not exist, so the nested acquire must refuse and name the real
+    holder.
+    """
+
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    target = lock_path(paths)
+    foreign_pid = os.getpid() + 1
+
+    acquire_lock(paths)
+    try:
+        target.write_text(f"{foreign_pid}\n", encoding=UTF_8_ENCODING)
+
+        with pytest.raises(BucketBusyError) as excinfo:
+            acquire_lock(paths)
+
+        assert excinfo.value.bucket_id == "alpha"
+        assert excinfo.value.holding_pid == foreign_pid
+        # The refusal did not disturb the foreign holder's lockfile.
+        assert int(target.read_text(encoding=UTF_8_ENCODING).strip()) == foreign_pid
+    finally:
+        release_lock(paths)
+        if target.exists():
+            target.unlink()
+
+
+def test_reentrant_acquire_still_succeeds_while_this_process_holds_the_lockfile(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology control for the revalidated re-entry.
+
+    The refusal above must discriminate on the recorded PID, not simply break
+    nesting: an untouched lockfile recording this process must still re-enter,
+    and the depth accounting must still release on the final unwind.
+    """
+
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    target = lock_path(paths)
+
+    acquire_lock(paths)
+    acquire_lock(paths)
+    assert int(target.read_text(encoding=UTF_8_ENCODING).strip()) == os.getpid()
+
+    release_lock(paths)
+    assert target.is_file(), "the outer frame still holds the lock"
+
+    release_lock(paths)
+    assert not target.exists()

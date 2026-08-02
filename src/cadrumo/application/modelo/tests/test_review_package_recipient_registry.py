@@ -23,11 +23,13 @@ See Also:
 
 from __future__ import annotations
 
+import json as _json
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+from pydantic import ValidationError
 
 from ....tests.review_package_adapters import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
@@ -115,6 +117,47 @@ def test_add_then_load_roundtrips_with_strict_equality(tmp_path: Path) -> None:
     # Real behaviour: the reconstructed live public-key object actually
     # matches the bytes it was minted from, not just an equal hex string.
     assert record.public_key().public_bytes_raw().hex() == public_key_hex
+
+
+def test_encrypted_registry_load_refuses_duplicate_persisted_recipient_id(tmp_path: Path) -> None:
+    """A valid multi-recipient register roundtrips; a duplicate persisted id does not.
+
+    The duplicate is injected through the real encrypted secure-object repository
+    after confirming its two distinct trusted recipients reload normally. This
+    proves the register invariant is re-applied at the persisted-state load
+    boundary, where a pre-existing bad row must never select a trusted key by
+    tuple order.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-reg-persisted-duplicate") as profile:
+        repository = RecipientFingerprintRegistryRepository(objects=profile.repository)
+        repository.add(recipient_id="acct", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+        expected = repository.add(recipient_id="gestor", public_key_hex=_fresh_public_key_hex(), added_at=_NOW)
+
+        assert repository.load() == expected
+
+        persisted = profile.repository.load(
+            _NAMESPACE.namespace,
+            _NAMESPACE.require_default_object_key(),
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_NAMESPACE.schema_version,
+        )
+        assert persisted is not None
+        document = _json.loads(persisted.payload.decode("utf-8"))
+        records = document["records"]
+        assert [record["recipient_id"] for record in records] == ["acct", "gestor"]
+
+        records[1]["recipient_id"] = records[0]["recipient_id"]
+        profile.repository.save(
+            namespace=_NAMESPACE.namespace,
+            object_key=_NAMESPACE.require_default_object_key(),
+            classification=persisted.classification,
+            schema_version=persisted.schema_version,
+            written_at=persisted.written_at,
+            payload=_json.dumps(document).encode("utf-8"),
+        )
+
+        with pytest.raises(ValidationError, match="recipient_id must be unique"):
+            repository.load()
 
 
 def test_register_is_never_stored_as_plaintext(tmp_path: Path) -> None:
@@ -283,3 +326,52 @@ def test_known_vector_fingerprint_survives_the_encrypted_registry_roundtrip(tmp_
 
 
 __all__: list[str] = []
+
+
+def test_register_refuses_two_records_under_one_recipient_id() -> None:
+    """A register carrying a duplicated recipient_id is not a valid register.
+
+    ``add`` refuses a duplicate against the register it just loaded, which guards
+    only the write path. A persisted register with two records for one id was
+    accepted on load and ``get`` silently returned whichever came first, making
+    recipient encryption depend on row order rather than on one canonical
+    trusted key.
+    """
+    first = RecipientFingerprintRecord(
+        recipient_id="acct",
+        label="first key",
+        public_key_hex=_fresh_public_key_hex(),
+        added_at=_NOW,
+    )
+    second = first.model_copy(
+        update={
+            "label": "second key",
+            "public_key_hex": _fresh_public_key_hex(),
+        },
+    )
+    assert first.public_key_hex != second.public_key_hex
+
+    with pytest.raises(ValidationError, match="recipient_id must be unique"):
+        RecipientFingerprintRegister(records=(first, second))
+
+
+def test_register_accepts_distinct_recipient_ids() -> None:
+    """Positive control: two genuinely different recipients still register.
+
+    Without it the refusal above could hold because the register refuses every
+    multi-record value, which would break the real multi-recipient case.
+    """
+    first = RecipientFingerprintRecord(
+        recipient_id="acct",
+        public_key_hex=_fresh_public_key_hex(),
+        added_at=_NOW,
+    )
+    second = RecipientFingerprintRecord(
+        recipient_id="gestor",
+        public_key_hex=_fresh_public_key_hex(),
+        added_at=_NOW,
+    )
+
+    register = RecipientFingerprintRegister(records=(first, second))
+
+    assert {record.recipient_id for record in register.records} == {"acct", "gestor"}

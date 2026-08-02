@@ -19,7 +19,13 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from ..._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION
 from ...crypto import KEY_SIZE
 from ...envelope import Envelope
-from ...errors import BlobIntegrityError, BlobNotFoundError, DecryptionError, EnvelopeVersionError
+from ...errors import (
+    BlobIntegrityError,
+    BlobNotFoundError,
+    DecryptionError,
+    EnvelopeVersionError,
+    StorageValidationError,
+)
 from ...master_key import BucketSession, NoActiveBucketSessionError, activate_session
 from .. import BlobReference
 from .._blob_store import BlobManifest, EncryptedBlobStore
@@ -333,3 +339,91 @@ class TestActiveSessionDefaultProvider:
         with activate_session(_bucket_session(dek=fixed_master_key)):
             ref = store.put(b"active session blob", classification=SensitivityClass.FINANCIAL)
             assert store.get(ref) == b"active session blob"
+
+
+class TestPutManifestCommitFailure:
+    """A payload is never left on disk without the manifest that describes it."""
+
+    @staticmethod
+    def _blocked_manifest_path(store: EncryptedBlobStore, plaintext: bytes) -> Path:
+        """Make the manifest path a non-empty directory so the real write fails.
+
+        A genuine filesystem condition rather than a test double: ``put`` runs
+        unmodified and ``save_envelope`` meets an ``OSError`` writing to a
+        path that is a directory.
+        """
+        sha_hex = hashlib.sha256(plaintext).hexdigest()
+        shard = store.root_dir / "blobs" / sha_hex[:2]
+        shard.mkdir(parents=True, exist_ok=True)
+        manifest_path = shard / f"{sha_hex}.manifest.json"
+        if manifest_path.is_file():
+            manifest_path.unlink()
+        manifest_path.mkdir()
+        (manifest_path / "blocker").write_text("blocker", encoding=UTF_8_ENCODING)
+        return manifest_path
+
+    @pytest.mark.parametrize(
+        "classification",
+        [SensitivityClass.SECRET, SensitivityClass.CORPUS],
+    )
+    def test_failed_manifest_commit_leaves_no_untracked_payload(
+        self,
+        store: EncryptedBlobStore,
+        classification: SensitivityClass,
+    ) -> None:
+        """The payload is written before the manifest, so a manifest failure orphaned it.
+
+        Nothing referenced the leftover bytes: ``iter_manifests`` returned no
+        manifest while the payload file remained, untracked, for an encrypted
+        class and as readable PLAINTEXT for CORPUS. A retry would rewrite it
+        rather than reclaim it.
+        """
+        plaintext = b"orphan-probe-payload-" + classification.value.encode(UTF_8_ENCODING)
+        manifest_path = self._blocked_manifest_path(store, plaintext)
+
+        with pytest.raises(StorageValidationError):
+            store.put(plaintext, classification=classification)
+
+        sha_hex = hashlib.sha256(plaintext).hexdigest()
+        shard = store.root_dir / "blobs" / sha_hex[:2]
+        assert not (shard / sha_hex).exists(), "plaintext payload survived a failed manifest commit"
+        assert not (shard / f"{sha_hex}.enc").exists(), "ciphertext payload survived a failed manifest commit"
+
+        # Clear the injected fault so the store's own scan can run: it must
+        # find nothing, because the only thing the failed put left behind was
+        # the blocker this test placed.
+        (manifest_path / "blocker").unlink()
+        manifest_path.rmdir()
+        assert list(store.iter_manifests()) == []
+
+    def test_a_successful_put_still_keeps_its_payload(self, store: EncryptedBlobStore) -> None:
+        """Positive control: the rollback fires only on failure.
+
+        Without this the test above would pass equally well if ``put`` had
+        started deleting every payload it wrote.
+        """
+        reference = store.put(b"kept-payload", classification=SensitivityClass.SECRET)
+
+        assert store.get(reference) == b"kept-payload"
+        assert len(list(store.iter_manifests())) == 1
+
+    def test_a_failed_commit_does_not_remove_a_pre_existing_blob(self, store: EncryptedBlobStore) -> None:
+        """A live blob is not collateral damage when a later put of the same bytes fails.
+
+        The store is content-addressed, so re-putting identical bytes targets
+        the same payload path. Rolling back unconditionally would delete a
+        blob whose manifest is intact and whose references still resolve.
+        """
+        plaintext = b"shared-content-addressed-payload"
+        reference = store.put(plaintext, classification=SensitivityClass.SECRET)
+        manifest_path = self._blocked_manifest_path(store, plaintext)
+
+        with pytest.raises(StorageValidationError):
+            store.put(plaintext, classification=SensitivityClass.SECRET)
+
+        # Unblock the manifest path and confirm the original blob is intact.
+        (manifest_path / "blocker").unlink()
+        manifest_path.rmdir()
+        sha_hex = hashlib.sha256(plaintext).hexdigest()
+        assert (store.root_dir / "blobs" / sha_hex[:2] / f"{sha_hex}.enc").is_file()
+        assert reference.sha256_plaintext_hex == sha_hex

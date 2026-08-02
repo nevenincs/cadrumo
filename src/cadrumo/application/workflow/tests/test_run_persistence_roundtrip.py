@@ -19,14 +19,23 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage import Envelope
 from ....tests.secure_sql import isolated_runtime_profile
+from .._errors import WorkflowError
 from .._models import (
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
     WorkflowStep,
 )
-from .._persistence import load_run, save_run
+from .._persistence import (
+    _RUN_NAMESPACE,
+    _RUN_SENSITIVITY,
+    _RUN_VERSION,
+    WorkflowRunRepository,
+    load_run,
+    save_run,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -165,3 +174,76 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
         # load_run must trip the ABORTED ↔ aborted_reason invariant.
         with pytest.raises(ValidationError):
             load_run(original.run_id)
+
+
+
+class TestRunOwnsItsRow:
+    """A run is returned only from the key its own id derives.
+
+    ``save`` files each run under its own ``run_id``, so the secure-object key
+    IS the run's durable identity -- nothing else in the row asserts it. The
+    read paths validated envelope class and version only, so a valid run B
+    re-encrypted under A's key was returned by ``load(A)`` and enumerated by
+    ``list()`` under A's key with no typed mismatch. Resume and history readers
+    consume exactly those results.
+    """
+
+    _RUN_A = "a" * 16
+    _RUN_B = "b" * 16
+
+    def _run(self, run_id: str) -> WorkflowResult:
+        return _populated_run().model_copy(update={"run_id": run_id, "resumed_from": None})
+
+    def _rekey(self, repo: WorkflowRunRepository, *, payload_run_id: str, under_key: str) -> None:
+        """Write run ``payload_run_id``'s genuine envelope under a foreign key."""
+        envelope = Envelope[WorkflowResult](
+            schema_version=_RUN_VERSION,
+            written_at=_MUTATED_RUN_WRITTEN_AT,
+            classification=_RUN_SENSITIVITY,
+            payload=self._run(payload_run_id),
+        )
+        repo._objects.save(
+            namespace=_RUN_NAMESPACE,
+            object_key=under_key,
+            classification=_RUN_SENSITIVITY,
+            schema_version=_RUN_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+    def test_load_refuses_a_foreign_run_under_the_requested_key(self, tmp_path: Path) -> None:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repo = WorkflowRunRepository()
+            self._rekey(repo, payload_run_id=self._RUN_B, under_key=self._RUN_A)
+
+            with pytest.raises(WorkflowError):
+                repo.load(self._RUN_A)
+
+    def test_list_refuses_a_foreign_run_rather_than_enumerating_it(self, tmp_path: Path) -> None:
+        """Enumeration is the wider door: it has no requested key to compare."""
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repo = WorkflowRunRepository()
+            self._rekey(repo, payload_run_id=self._RUN_B, under_key=self._RUN_A)
+
+            with pytest.raises(WorkflowError):
+                repo.list()
+
+    def test_a_run_stored_under_its_own_id_still_loads_and_lists(self, tmp_path: Path) -> None:
+        """Anti-tautology: the refusals discriminate rather than always-refusing."""
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repo = WorkflowRunRepository()
+            run = self._run(self._RUN_A)
+            repo.save(run)
+
+            assert repo.load(self._RUN_A) == run
+            assert [item.run_id for item in repo.list()] == [self._RUN_A]
+
+    def test_two_genuine_runs_both_survive(self, tmp_path: Path) -> None:
+        """The guard must not collapse or reject distinct, correctly-keyed runs."""
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            repo = WorkflowRunRepository()
+            repo.save(self._run(self._RUN_A))
+            repo.save(self._run(self._RUN_B))
+
+            assert {item.run_id for item in repo.list()} == {self._RUN_A, self._RUN_B}
+            assert repo.load(self._RUN_B).run_id == self._RUN_B

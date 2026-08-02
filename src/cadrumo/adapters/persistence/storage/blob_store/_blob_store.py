@@ -69,6 +69,7 @@ from ..errors import (
     DecryptionError,
     EncryptionError,
     EnvelopeVersionError,
+    StorageValidationError,
 )
 from ..master_key import MasterKeyProvider, get_active_master_key
 
@@ -224,8 +225,38 @@ def _coherent_blob_manifest(envelope: Envelope[BlobManifest]) -> BlobManifest:
     return envelope.payload
 
 
-def _load_blob_manifest(path: Path, *, expected_class: SensitivityClass) -> BlobManifest:
-    """Load one manifest for a direct read, gated on classification coherence.
+def _manifest_digest_from_path(path: Path) -> str:
+    """Return the plaintext digest named by a manifest file's own filename."""
+    return path.name.removesuffix(_BLOB_MANIFEST_SUFFIX)
+
+
+def _assert_manifest_matches_filename(manifest: BlobManifest, *, expected_digest: str) -> None:
+    """Refuse a manifest whose embedded digest is not the one it is filed under.
+
+    The store is content-addressed: a manifest lives at
+    ``blobs/<hex[:2]>/<hex>.manifest.json`` and the payload paths are derived
+    from the digest the manifest CARRIES, not from the one in its filename.
+    Nothing compared the two, so rewriting the embedded digest to another
+    blob's re-pointed the read: ``get`` on the original reference located this
+    manifest by its untouched filename and then returned the *other* blob's
+    bytes, and iteration yielded that second identity for both files. Neither
+    surface reported anything wrong, because every digest involved was real
+    and every payload it checked reproduced its own hash.
+
+    Both surfaces route through here, each supplying the digest it legitimately
+    knows -- the caller's requested digest for a direct read, the filename for
+    a scan -- so the binding is one invariant rather than two conventions.
+    """
+    if manifest.sha256_plaintext_hex != expected_digest:
+        raise _blob_integrity_error(
+            "blob manifest digest does not match the manifest it was read from",
+            violation="manifest_digest_binding",
+            object_kind="manifest",
+        )
+
+
+def _load_blob_manifest(path: Path, *, expected_class: SensitivityClass, expected_digest: str) -> BlobManifest:
+    """Load one manifest for a direct read, gated on classification and identity.
 
     Returns the payload rather than the envelope so no caller can reach the
     nested classification without having passed :func:`_coherent_blob_manifest`
@@ -257,7 +288,9 @@ def _load_blob_manifest(path: Path, *, expected_class: SensitivityClass) -> Blob
             violation="manifest_payload",
             object_kind="manifest",
         ) from exc
-    return _coherent_blob_manifest(envelope)
+    manifest = _coherent_blob_manifest(envelope)
+    _assert_manifest_matches_filename(manifest, expected_digest=expected_digest)
+    return manifest
 
 
 class EncryptedBlobStore:
@@ -333,6 +366,12 @@ class EncryptedBlobStore:
         """
         sha_hex = _hex_digest(plaintext)
         policy = default_policy_for(classification)
+        # Recorded before anything is written, so a failed manifest commit can
+        # tell a payload THIS call published from one that was already on disk
+        # under a live manifest. The store is content-addressed, so re-putting
+        # identical bytes lands on the same paths; unlinking unconditionally
+        # would delete a blob other references still resolve.
+        payload_pre_existed = self._plaintext_path_for(sha_hex).exists() or self._ciphertext_path_for(sha_hex).exists()
 
         if classification is SensitivityClass.CORPUS:
             if policy.at_rest is not AtRestTreatment.PLAINTEXT:
@@ -371,7 +410,18 @@ class EncryptedBlobStore:
             classification=classification,
             payload=manifest,
         )
-        save_envelope(envelope, self._manifest_path_for(sha_hex))
+        try:
+            save_envelope(envelope, self._manifest_path_for(sha_hex))
+        except (OSError, StorageValidationError):
+            # The payload is on disk but no manifest describes it, so every
+            # read path reports the blob absent while the bytes remain --
+            # untracked ciphertext for an encrypted class, and untracked
+            # PLAINTEXT for CORPUS. Nothing would ever collect it, and a retry
+            # would rewrite it. Remove what this call published, then let the
+            # original failure surface.
+            if not payload_pre_existed:
+                self._discard_unmanifested_payload(sha_hex)
+            raise
         _log.debug(
             "blob_store put: sha256=%s classification=%s size=%d content_type=%s",
             sha_hex[:16],
@@ -383,6 +433,27 @@ class EncryptedBlobStore:
             sha256_plaintext_hex=sha_hex,
             classification=classification,
         )
+
+    def _discard_unmanifested_payload(self, sha_hex: str) -> None:
+        """Remove payload bytes left behind by a put whose manifest never committed.
+
+        Best-effort by design: the caller is already unwinding a failure, and
+        raising from here would replace the reason the put failed with the
+        reason the cleanup failed. If this cannot remove the file, the outcome
+        is the untracked payload that existed before this compensation, logged
+        so an operator can find it.
+        """
+        for payload_path in (self._plaintext_path_for(sha_hex), self._ciphertext_path_for(sha_hex)):
+            if not payload_path.exists():
+                continue
+            try:
+                payload_path.unlink()
+            except OSError:
+                _log.warning(
+                    "blob_store put rollback: could not remove an unmanifested payload path_marker=%s",
+                    _path_log_marker(payload_path),
+                    exc_info=True,
+                )
 
     def get(self, reference: BlobReference) -> bytes:
         """Return the plaintext bytes for ``reference``.
@@ -403,7 +474,11 @@ class EncryptedBlobStore:
         manifest_path = self._manifest_path_for(reference.sha256_plaintext_hex)
         if not manifest_path.exists():
             raise _blob_not_found_error("blob manifest not found", object_kind="manifest")
-        manifest = _load_blob_manifest(manifest_path, expected_class=reference.classification)
+        manifest = _load_blob_manifest(
+            manifest_path,
+            expected_class=reference.classification,
+            expected_digest=reference.sha256_plaintext_hex,
+        )
         if manifest.classification is SensitivityClass.CORPUS:
             return self._read_plaintext_blob(manifest)
         return self._read_ciphertext_blob(manifest)
@@ -504,7 +579,12 @@ class EncryptedBlobStore:
                         f"blob manifest is at version {envelope.schema_version}; "
                         f"consumer expects {BLOB_MANIFEST_SCHEMA_VERSION}",
                     )
-                yield manifest_path, _coherent_blob_manifest(envelope)
+                manifest = _coherent_blob_manifest(envelope)
+                _assert_manifest_matches_filename(
+                    manifest,
+                    expected_digest=_manifest_digest_from_path(manifest_path),
+                )
+                yield manifest_path, manifest
 
     def rotate_master_key(
         self,

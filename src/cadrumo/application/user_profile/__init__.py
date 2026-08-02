@@ -158,7 +158,6 @@ if TYPE_CHECKING:
     )
     from ._commands import (
         CompleteSetupCommand,
-        DuplicateProfileCommand,
         EditProfileFieldCommand,
         EditProfileSectionCommand,
         ProfileImportResult,
@@ -290,7 +289,6 @@ _register_language_resolver()
 
 _COMMAND_NAMES: frozenset[str] = frozenset(
     {
-        "DuplicateProfileCommand",
         "EditProfileFieldCommand",
         "EditProfileSectionCommand",
         "ProfileImportResult",
@@ -559,7 +557,6 @@ __all__ = [
     "CustodyRecoveryEnrollmentResult",
     "CustodyRecoveryStatus",
     "CustodyRecoveryVerification",
-    "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
     "EffectiveFact",

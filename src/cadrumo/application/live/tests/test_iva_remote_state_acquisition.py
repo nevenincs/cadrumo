@@ -14,7 +14,10 @@ from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from ....adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
-from ....adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
+from ....adapters.persistence.storage import (
+    LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
+    SecureObjectRowIdentityError,
+)
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....core import AuthProviderKind, Period
 from ....core.config import Settings
@@ -24,6 +27,7 @@ from ...auth import AuthenticatedAeatSessionResult
 from .. import (
     IvaCompensationHistoryCaptureReport,
     IvaRemoteStateAcquisitionManifest,
+    IvaRemoteStateAcquisitionManifestRepository,
     IvaRemoteStateAcquisitionReport,
     LiveIvaAcquisitionFailureMode,
     LiveIvaReadStatus,
@@ -569,6 +573,49 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
     assert remote_state.acquisition_manifests[0].auth_diagnostic_ref == manifest.auth.diagnostic_ref
     assert diagnostic_id not in manifest.model_dump_json()
     assert diagnostic_id not in remote_state.model_dump_json()
+
+
+def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another_id(tmp_path: Path) -> None:
+    """A valid manifest roundtrips, but cannot answer a foreign acquisition id.
+
+    The foreign row is written through the actual encrypted secure-object
+    repository with the repository's real envelope. It is therefore authentic
+    ciphertext whose only inconsistency is the object key, which proves the
+    live IVA surface refuses a re-key rather than returning a manifest for a
+    different acquisition request.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        report = build_iva_remote_state_acquisition_report(
+            output_root=tmp_path / "remote-state",
+            year_from=2024,
+            year_to=2024,
+            target_year=2026,
+            target_period=_TARGET_1T,
+        )
+        repository = IvaRemoteStateAcquisitionManifestRepository(objects=profile.repository)
+        manifest = persist_iva_remote_state_acquisition_report(
+            report,
+            captured_at=_CAPTURED_AT,
+            repository=repository,
+        )
+
+        assert load_iva_remote_state_acquisition_manifest(manifest.acquisition_id, repository=repository) == manifest
+
+        foreign_acquisition_id = f"{manifest.acquisition_id}:rekeyed"
+        _, envelope = repository._identified_envelope(manifest)
+        profile.repository.save(
+            namespace=repository.namespace,
+            object_key=foreign_acquisition_id,
+            classification=repository.sensitivity,
+            schema_version=repository.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(SecureObjectRowIdentityError) as refusal:
+            load_iva_remote_state_acquisition_manifest(foreign_acquisition_id, repository=repository)
+
+    assert refusal.value.expected_identifier == foreign_acquisition_id
 
 
 def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path: Path) -> None:

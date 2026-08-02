@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 import socket
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
@@ -17,6 +18,7 @@ from .._acquisition_lock import (
     AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockState,
+    _remove_lock_file_if_unchanged,
     acquire_auth_acquisition_lock,
     auth_acquisition_lock_path,
     clear_auth_acquisition_lock,
@@ -226,3 +228,127 @@ def test_clear_auth_acquisition_lock_is_repeatable(tmp_path: Path) -> None:
     assert second.recoverable is False
     assert third.state is AuthAcquisitionLockState.ABSENT
     assert not path.exists()
+
+
+
+class TestStaleRemovalIsCompareAndDelete:
+    """A stale verdict authorises removing THOSE bytes, not the file's future.
+
+    ``clear_auth_acquisition_lock`` and the recoverable branch of
+    ``acquire_auth_acquisition_lock`` inspected a stale or corrupt record and
+    then unlinked the path without binding the deletion to what they had just
+    judged. A lock released and reacquired in that window was destroyed while
+    its new owner believed it held it -- and that owner then issues a second
+    Cl@ve petition, the exact duplicate this lock exists to prevent.
+    """
+
+    def _expired_record(self) -> AuthAcquisitionLockRecord:
+        created = _STALE_LOCK_INSPECTION_AT - timedelta(hours=2)
+        return AuthAcquisitionLockRecord(
+            provider_kind=AuthProviderKind.CLAVE_MOVIL,
+            profile_name="operator",
+            pid=os.getpid(),
+            hostname=socket.gethostname(),
+            created_at=created,
+            expires_at=created + timedelta(seconds=1),
+            operation="auth-login",
+        )
+
+    def _live_record(self) -> AuthAcquisitionLockRecord:
+        now = datetime.now(UTC)
+        return AuthAcquisitionLockRecord(
+            provider_kind=AuthProviderKind.CLAVE_MOVIL,
+            profile_name="operator",
+            pid=os.getpid(),
+            hostname=socket.gethostname(),
+            created_at=now,
+            expires_at=now + timedelta(hours=1),
+            operation="auth-login",
+        )
+
+    def _write(self, path: pathlib.Path, record: AuthAcquisitionLockRecord) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(record.model_dump_json(indent=2), encoding=UTF_8_ENCODING)
+
+    def test_removal_is_bound_to_the_inspected_bytes(self, tmp_path: pathlib.Path) -> None:
+        """The compare-and-delete primitive refuses to unlink changed content.
+
+        This is the intra-operation window the removal paths now close: the
+        verdict is formed from one read, and the unlink is authorised only
+        while the file still holds exactly those bytes.
+        """
+        path = tmp_path / "clave.lock"
+        stale = self._expired_record().model_dump_json(indent=2)
+        path.write_text(stale, encoding=UTF_8_ENCODING)
+        live = self._live_record().model_dump_json(indent=2)
+        path.write_text(live, encoding=UTF_8_ENCODING)
+
+        removed = _remove_lock_file_if_unchanged(path, stale)
+
+        assert removed is False
+        assert path.read_text(encoding=UTF_8_ENCODING) == live
+
+    def test_unchanged_bytes_are_removed(self, tmp_path: pathlib.Path) -> None:
+        """Anti-tautology: the primitive discriminates rather than never deleting."""
+        path = tmp_path / "clave.lock"
+        stale = self._expired_record().model_dump_json(indent=2)
+        path.write_text(stale, encoding=UTF_8_ENCODING)
+
+        assert _remove_lock_file_if_unchanged(path, stale) is True
+        assert not path.exists()
+
+    def test_an_already_absent_file_counts_as_removed(self, tmp_path: pathlib.Path) -> None:
+        assert _remove_lock_file_if_unchanged(tmp_path / "missing.lock", "anything") is True
+
+    def test_a_corrupt_record_replaced_by_a_live_one_is_not_deleted(self, tmp_path: pathlib.Path) -> None:
+        """A corrupt verdict does not authorise deleting a later valid record."""
+        path = tmp_path / "clave.lock"
+        path.write_text("{not json", encoding=UTF_8_ENCODING)
+        live = self._live_record().model_dump_json(indent=2)
+        path.write_text(live, encoding=UTF_8_ENCODING)
+
+        assert _remove_lock_file_if_unchanged(path, "{not json") is False
+        assert path.read_text(encoding=UTF_8_ENCODING) == live
+
+    def test_reacquisition_leaves_a_replacement_lock_in_place(self, tmp_path: pathlib.Path) -> None:
+        """The same window exists on the automatic recoverable-reacquire path."""
+        settings = _settings(tmp_path)
+        path = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL)
+        self._write(path, self._expired_record())
+        replacement = self._live_record()
+        self._write(path, replacement)
+
+        with (
+            pytest.raises(AuthAcquisitionLockedError),
+            acquire_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, ttl_seconds=60),
+        ):
+            pytest.fail("a live replacement lock must block acquisition")
+
+        assert path.exists()
+        assert AuthAcquisitionLockRecord.model_validate_json(
+            path.read_text(encoding=UTF_8_ENCODING),
+        ) == replacement
+
+    def test_an_unreplaced_stale_lock_is_still_cleared(self, tmp_path: pathlib.Path) -> None:
+        """Anti-tautology: the guard discriminates rather than never deleting."""
+        settings = _settings(tmp_path)
+        path = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL)
+        self._write(path, self._expired_record())
+
+        result = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL)
+
+        assert not path.exists()
+        assert result.state is AuthAcquisitionLockState.STALE
+
+    def test_an_unreplaced_stale_lock_is_still_reacquired(self, tmp_path: pathlib.Path) -> None:
+        settings = _settings(tmp_path)
+        path = auth_acquisition_lock_path(settings, AuthProviderKind.CLAVE_MOVIL)
+        self._write(path, self._expired_record())
+
+        with acquire_auth_acquisition_lock(
+            settings,
+            AuthProviderKind.CLAVE_MOVIL,
+            ttl_seconds=60,
+        ) as record:
+            assert record.operation == "auth-login"
+            assert path.exists()

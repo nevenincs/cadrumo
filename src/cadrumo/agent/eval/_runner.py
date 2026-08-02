@@ -344,10 +344,18 @@ def run_golden_scenario(
     if unresolved:
         failures.append(f"trajectory cites unresolved command keys: {', '.join(unresolved)}")
 
-    positions = {verb: index for index, verb in enumerate(scenario.expected_trajectory)}
-    present_stages = [stage for stage in LIFECYCLE_STAGE_ORDER if stage in positions]
-    lifecycle_ordered = all(positions[earlier] < positions[later] for earlier, later in pairwise(present_stages))
-    if not lifecycle_ordered:
+    declared_stages = tuple(stage for stage in scenario.expected_trajectory if stage in LIFECYCLE_STAGE_ORDER)
+    duplicate_stages = tuple(stage for stage in LIFECYCLE_STAGE_ORDER if declared_stages.count(stage) > 1)
+    if duplicate_stages:
+        lifecycle_ordered = False
+        failures.append(
+            "trajectory declares lifecycle stage(s) more than once: " + ", ".join(duplicate_stages),
+        )
+    else:
+        positions = {verb: index for index, verb in enumerate(scenario.expected_trajectory)}
+        present_stages = [stage for stage in LIFECYCLE_STAGE_ORDER if stage in positions]
+        lifecycle_ordered = all(positions[earlier] < positions[later] for earlier, later in pairwise(present_stages))
+    if not lifecycle_ordered and not duplicate_stages:
         failures.append("trajectory violates the create -> calculate -> verify -> export lifecycle order")
 
     skill_text = _skill_text(scenario.skill_name)

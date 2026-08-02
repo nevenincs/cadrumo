@@ -49,14 +49,14 @@ from __future__ import annotations
 import asyncio
 import base64
 import re
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
 from ...adapters.outbound.llm import LLMClient, LLMProvider, LLMRequest, MultimodalImageInput
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
-from ...core.decimal import normalize_decimal_separators
+from ...core.decimal import coerce_finite_european_decimal
 from ...core.hashing import sha256_hex
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_date
@@ -190,13 +190,19 @@ def _grounded_date(raw: str | None) -> str | None:
 
 
 def _grounded_decimal(raw: str | None) -> Decimal | None:
+    """Return the model's transcribed amount as a finite Decimal, or ``None``.
+
+    Routed through the canonical finite European-decimal authority rather than
+    stripping every dot as a thousands separator. Unconditional stripping
+    corrupted an already dot-decimal transcription -- ``"1234.56"`` became
+    ``Decimal("123456")`` -- silently multiplying a taxable base, IVA amount or
+    grand total by a hundred, and it admitted ``NaN`` and ``Infinity`` as
+    amounts. The canonical helper reads a comma as the decimal separator (so
+    ``"1.234,56"`` still parses as ``1234.56``) and refuses non-finite values.
+    """
     if raw is None:
         return None
-    normalized = normalize_decimal_separators(raw.strip(), strip_thousands=True)
-    try:
-        return Decimal(normalized)
-    except InvalidOperation:
-        return None
+    return coerce_finite_european_decimal(raw.strip())
 
 
 def _grounded_currency(raw: str | None) -> str | None:

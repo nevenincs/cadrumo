@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -145,3 +145,47 @@ def test_every_advertised_kind_is_selectable_on_both_axes() -> None:
     assert row.kind in ACCEPTED_KINDS
     assert row.source_kind is not None
     assert row.source_kind == row.kind
+
+
+def _row_fields(**overrides: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "item_id": "finding-1",
+        "kind": "modelo_finding",
+        "source_kind": "modelo_finding",
+        "affected_object_id": "draft-1",
+        "bucket_id": _BUCKET_ID,
+        "severity": ReviewSeverity.HIGH,
+        "state": ReviewState.PENDING,
+        "blocking": True,
+        "current_owner_surface": "app modelo",
+        "canonical_next_command": "aeat app modelo verify",
+        "since": datetime(2026, 4, 6, 12, 0, tzinfo=UTC),
+        "summary": "s",
+    }
+    base.update(overrides)
+    return base
+
+
+def test_queue_row_accepts_a_utc_aware_instant() -> None:
+    row = ReviewQueueRow(**_row_fields())
+
+    assert row.since.utcoffset() == timedelta(0)
+
+
+@pytest.mark.parametrize(
+    "instant",
+    [
+        datetime(2026, 4, 6, 12, 0),
+        datetime(2026, 4, 6, 12, 0, tzinfo=timezone(timedelta(hours=1))),
+    ],
+    ids=["naive", "offset-plus-one"],
+)
+def test_queue_row_refuses_a_naive_or_non_utc_instant(instant: datetime) -> None:
+    """The projection must not re-admit what the canonical review item refuses.
+
+    ``ReviewItem.since`` validates UTC-awareness; the operator row redeclared
+    it as a bare ``datetime``, so a naive or ``+01:00`` instant entered the
+    projection and cross-source sorting stopped being deterministic.
+    """
+    with pytest.raises(ValidationError):
+        ReviewQueueRow(**_row_fields(since=instant))

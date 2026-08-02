@@ -40,8 +40,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 5, 19, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "35353535-3535-4353-8353-353535353535"
-_TAXPAYER_REF = "synthetic-taxpayer"
-_OTHER_TAXPAYER_REF = "other-synthetic-taxpayer"
+#: Checksum-valid synthetic NIFs. ``IvaCompensationPeriodState.taxpayer_nif``
+#: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
+#: and these fixtures must carry real identifier shapes.
+_TAXPAYER_REF = "12345678Z"
+_OTHER_TAXPAYER_REF = "87654321X"
 
 
 def test_sede_observation_satisfies_the_domain_wallet_protocol() -> None:

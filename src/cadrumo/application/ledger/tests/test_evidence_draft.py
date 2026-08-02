@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from io import BytesIO
@@ -36,6 +37,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
+from ....core.decimal import coerce_finite_european_decimal
 from ....domain.attachments import load_attachment
 from ....domain.invoices import InvoiceValidationError
 from ....domain.iva import InvoiceKind
@@ -44,6 +46,7 @@ from ...user_profile import UserProfileLifecycleRepository
 from .._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError
 from .._evidence_draft import (
     InvoiceDraft,
+    _parse_labelled_amount,
     confirm_invoice_draft_from_evidence,
     extract_invoice_draft_from_evidence,
     extract_invoice_fields,
@@ -827,3 +830,30 @@ class TestConfirmInvoiceDraftFromEvidence:
         reloaded_attachment = load_attachment(store, record.attachment_id)
         # Exactly one entry -- not duplicated by the second confirm call.
         assert reloaded_attachment.linked_invoice_ids == (first.invoice.invoice_id,)
+
+
+@pytest.mark.parametrize(
+    ("printed", "expected"),
+    [
+        ("1234.56", Decimal("1234.56")),
+        ("1.234,56", Decimal("1234.56")),
+        ("1234,56", Decimal("1234.56")),
+        ("NaN", None),
+        ("Infinity", None),
+    ],
+    ids=["dot-decimal", "es-thousands", "comma", "nan", "infinity"],
+)
+def test_text_layer_amount_matches_the_canonical_decimal_authority(
+    printed: str,
+    expected: Decimal | None,
+) -> None:
+    """The text layer reads an amount exactly as the canonical helper does.
+
+    Both extraction paths -- text layer and vision fallback -- must resolve the
+    same printed amount identically, or the same invoice yields a different
+    taxable base depending on whether the PDF carried a text layer.
+    """
+    parsed = _parse_labelled_amount(re.compile(r"BASE\s+([\d.,]+|NaN|Infinity)"), f"BASE {printed}")
+
+    assert parsed == expected
+    assert parsed == coerce_finite_european_decimal(printed)

@@ -61,7 +61,7 @@ def test_compose_export_headers_emits_devolucion_for_redeme_negative_303(isolate
 
     period = Period.from_year_and_code(2026, "02")
     redeme = TaxpayerProfile(
-        tax_id="redemecompany",
+        tax_id="B66012345",
         iva_regime=IVARegime.GENERAL,
         # A refund disposition needs a refund account on file; without it the
         # composer refuses (ModeloRefundAccountMissingError) rather than emitting

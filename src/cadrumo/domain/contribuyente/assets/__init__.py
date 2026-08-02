@@ -229,9 +229,19 @@ class AmortizacionLedger(BaseModel):
 class AssetsLedgerDocument(BaseModel):
     """JSON document containing the asset ledger.
 
+    ``AssetRecord.identifier`` is the ledger's natural key: amortisation
+    entries reference an asset by it, so two rows sharing one identifier leave
+    later lookup and amortisation consumers without a canonical asset. The
+    uniqueness invariant lives here, on the document, because the repository
+    had two competing versions of it -- incremental ``add`` refused a repeated
+    identifier while bulk ``save``/``save_assets`` accepted any document and
+    wrote it straight through, so the same ledger enforced the rule on one
+    write path and not the other.
+
     Attributes:
         schema_version: Forward-compatible schema version. ``"1"``.
-        assets: Tuple of :class:`AssetRecord` rows.
+        assets: Tuple of :class:`AssetRecord` rows, each with a distinct
+            ``identifier``.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -246,6 +256,25 @@ class AssetsLedgerDocument(BaseModel):
         if value != ASSETS_SCHEMA_VERSION:
             raise AssetValidationError(f"unsupported AssetsLedgerDocument schema_version {value!r}")
         return value
+
+    @model_validator(mode="after")
+    def _reject_duplicate_identifiers(self) -> AssetsLedgerDocument:
+        """Refuse a ledger carrying two assets under one identifier.
+
+        Enforced on the document rather than at a write method so every path
+        that can produce a ledger -- incremental insert, bulk replacement, and
+        the read boundary -- answers the same way. Applying at the read
+        boundary is deliberate: a stored ledger that already holds a duplicate
+        has no canonical asset for that identifier, and surfacing it silently
+        is what the repository used to do.
+        """
+        identifiers = [asset.identifier for asset in self.assets]
+        duplicates = sorted({value for value in identifiers if identifiers.count(value) > 1})
+        if duplicates:
+            raise AssetValidationError(
+                f"AssetsLedgerDocument carries duplicate asset identifiers: {', '.join(duplicates)}",
+            )
+        return self
 
 
 __all__ = [

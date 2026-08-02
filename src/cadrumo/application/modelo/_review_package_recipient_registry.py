@@ -46,7 +46,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PublicKey
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
@@ -113,11 +113,44 @@ class RecipientFingerprintRecord(BaseModel):
 
 
 class RecipientFingerprintRegister(BaseModel):
-    """A bucket's full set of trusted recipient fingerprint records."""
+    """A bucket's full set of trusted recipient fingerprint records.
+
+    ``recipient_id`` is the register's natural key: :meth:`
+    RecipientFingerprintRegistryRepository.get` resolves a recipient by it, and
+    the resolved record supplies the public key a package is sealed to.
+    """
 
     model_config = _STRICT_FROZEN
 
     records: tuple[RecipientFingerprintRecord, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="after")
+    def _enforce_unique_recipient_ids(self) -> RecipientFingerprintRegister:
+        """Refuse a register carrying two records under one ``recipient_id``.
+
+        :meth:`RecipientFingerprintRegistryRepository.add` already refuses a
+        duplicate against the register it just loaded, but that guards only the
+        write path. A register that reaches storage with two records for the same
+        id -- by any route -- was accepted on load, and ``get`` then returns
+        whichever comes first in the tuple. Recipient encryption would depend on
+        row order rather than on one canonical trusted key, and the operator who
+        verified a fingerprint out of band would have no way to tell which key
+        their package was actually sealed to.
+
+        Enforcing it on the model puts the refusal at every boundary the model
+        crosses, including hydration from the encrypted row, rather than only at
+        the one call site that happened to check.
+        """
+        seen: set[str] = set()
+        duplicates: set[str] = set()
+        for record in self.records:
+            if record.recipient_id in seen:
+                duplicates.add(record.recipient_id)
+            seen.add(record.recipient_id)
+        if duplicates:
+            listed = ", ".join(sorted(repr(value) for value in duplicates))
+            raise ValueError(f"recipient_id must be unique in a fingerprint register; duplicated: {listed}")
+        return self
 
 
 def public_key_hex_from_raw_bytes(raw_public_key: bytes) -> str:

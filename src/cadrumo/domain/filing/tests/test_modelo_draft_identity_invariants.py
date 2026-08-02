@@ -25,7 +25,7 @@ from pydantic import ValidationError
 
 from ....core import Period
 from ...calculations.registry import RegistrySnapshotRef
-from .. import ModeloDraft, ModeloDraftStatus, ModeloValue, ModeloValueKind
+from .. import ModeloDraft, ModeloDraftStatus, ModeloValue, ModeloValueKind, registry_schema_version
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -100,6 +100,52 @@ def test_coherent_draft_rehydrates_from_its_persisted_json() -> None:
     reloaded = ModeloDraft.model_validate_json(draft.model_dump_json())
 
     assert reloaded == draft
+
+
+def test_draft_refuses_a_schema_marker_naming_another_revision() -> None:
+    """A fabricated or stale schema marker must not travel with a different snapshot.
+
+    ``schema_version`` is a derived ``registry:{modelo}:{revision}`` marker over
+    the same snapshot the draft already carries typed. Declared as an
+    independent bare string, a stale marker rode alongside a different registry
+    revision and stayed invisible until some downstream check happened to run.
+    """
+    kwargs = _draft_kwargs()
+    kwargs["schema_version"] = registry_schema_version(modelo="130", revision_id="WRONG")
+
+    with pytest.raises(ValidationError, match=r"does not match the registry marker"):
+        ModeloDraft(
+            profile_tax_id=_PROFILE_NIF,
+            subject_tax_id=_PROFILE_NIF,
+            **kwargs,  # type: ignore[arg-type]
+        )
+
+
+def test_draft_refuses_a_modelo_that_contradicts_its_snapshot() -> None:
+    """The draft's modelo and its snapshot_ref's modelo are one axis, not two."""
+    kwargs = _draft_kwargs()
+    kwargs["modelo"] = "303"
+
+    with pytest.raises(ValidationError, match=r"does not match its snapshot_ref modelo"):
+        ModeloDraft(
+            profile_tax_id=_PROFILE_NIF,
+            subject_tax_id=_PROFILE_NIF,
+            **kwargs,  # type: ignore[arg-type]
+        )
+
+
+def test_schema_marker_helper_is_the_shape_the_draft_requires() -> None:
+    """The canonical helper's output is exactly what the coherence check accepts."""
+    marker = registry_schema_version(modelo="130", revision_id="2019-y-siguientes")
+
+    assert marker == "registry:130:2019-y-siguientes"
+
+    draft = ModeloDraft(
+        profile_tax_id=_PROFILE_NIF,
+        subject_tax_id=_PROFILE_NIF,
+        **_draft_kwargs(),  # type: ignore[arg-type]
+    )
+    assert draft.schema_version == marker
 
 
 def test_rehydration_refuses_a_persisted_divergent_draft() -> None:

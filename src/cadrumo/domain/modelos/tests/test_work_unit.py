@@ -20,7 +20,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo import (
@@ -36,6 +36,7 @@ from ....application.modelo import (
 from ....application.user_profile import UserProfileLifecycleRepository
 from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry import RevisionId
 from ...user_profile import UserProfileFact, UserProfileRecord
 from .._errors import ModeloValidationError
 from .._repository import (
@@ -705,3 +706,65 @@ def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogu
     second = _create_action_work_unit(repo, causante_ccaa=CCAA.CATALUNA)
     # Idempotency: same work_unit_id, first creation wins.
     assert first.work_unit_id == second.work_unit_id
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    ["BAD revision/with spaces", "2019 y siguientes", "2019-Y-SIGUIENTES", "-2019", "2019-", "with/slash"],
+)
+def test_work_unit_refuses_a_revision_id_outside_the_registry_grammar(malformed: str) -> None:
+    """A revision_id the registry grammar refuses cannot reach a persisted unit.
+
+    Membership and law-resolution checks run later in the application layer, so a
+    malformed revision was previously accepted, content-addressed into the
+    work-unit identity, and persisted before any resolver could object -- leaving
+    a durable record whose identity derived from a value no registry revision
+    could ever match.
+    """
+    assert TypeAdapter(RevisionId).validate_python is not None
+    with pytest.raises(ValidationError):
+        TypeAdapter(RevisionId).validate_python(malformed)
+
+    with pytest.raises(ValidationError):
+        _work_unit_with_revision(malformed)
+
+
+def test_work_unit_accepts_a_real_registry_revision_id() -> None:
+    """Positive control: the revision ids the registry actually declares still build.
+
+    Without it every refusal above could hold because the constraint rejects
+    everything, which would break every real work unit.
+    """
+    unit = _work_unit_with_revision("2019-y-siguientes")
+
+    assert unit.revision_id == "2019-y-siguientes"
+    assert unit.work_unit_id == derive_work_unit_id(
+        bucket_id=unit.bucket_id,
+        modelo=unit.modelo,
+        filing_year=unit.filing_year,
+        period=unit.period,
+        revision_id="2019-y-siguientes",
+    )
+
+
+def _work_unit_with_revision(revision_id: str) -> WorkUnit:
+    """Build a genuine 130/2026/1T work unit carrying ``revision_id``."""
+    bucket_id = "7cc00000-0000-4000-8000-0000000000cc"
+    period = Period.from_year_and_code(2026, "1T")
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo="130",
+            filing_year=2026,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=bucket_id,
+        name="130-2026-1T",
+        modelo="130",
+        filing_year=2026,
+        period=period,
+        revision_id=revision_id,
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        updated_at=datetime(2026, 1, 1, tzinfo=UTC),
+    )

@@ -210,7 +210,25 @@ class SecureBoundRepository[T: BaseModel]:
         return envelope
 
     def load(self, identifier: str) -> T | None:
-        """Return the persisted payload or ``None`` if absent."""
+        """Return the persisted payload or ``None`` if absent.
+
+        The payload's own natural identity is compared with the key it was
+        looked up under. ``save`` derives the row key from the payload via
+        :meth:`extract_identifier`, so the two are meant to be one fact in two
+        encodings -- but nothing on the read path checked that, and a row
+        written under a different key returned its payload unremarked. A caller
+        asking for one record was handed another and had no way to tell: the
+        returned object describes itself truthfully, it simply is not the one
+        that was requested.
+
+        Raises:
+            ClassificationError: Refused by the shared envelope gate.
+            EnvelopeVersionError: Refused by the shared envelope gate.
+            SecureObjectRowIdentityError: The payload's natural identity
+                differs from ``identifier``. Raised rather than returning
+                ``None``, because the row exists -- reporting it absent would
+                hide a real inconsistency behind an ordinary miss.
+        """
         safe_repository_id(identifier, context="identifier")
         record = self._objects.load(
             self.namespace,
@@ -229,7 +247,10 @@ class SecureBoundRepository[T: BaseModel]:
         # visible to type checkers at the call site. Future improvement: replace the
         # ClassVar[type[BaseModel]] fallback with explicit payload_model() overrides
         # to eliminate this cast entirely (see: CAST-RATIONALE-SECURE-REPOSITORY-LOAD).
-        return cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-LOAD
+        payload = cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-LOAD
+        if self.extract_identifier(payload) != identifier:
+            raise SecureObjectRowIdentityError(self.namespace, expected_identifier=identifier)
+        return payload
 
     def save(self, payload: T) -> None:
         """Persist ``payload`` as an encrypted envelope row.

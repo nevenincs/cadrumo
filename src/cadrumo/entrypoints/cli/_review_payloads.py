@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from ...application.review import ReviewSeverity, ReviewState
 from ...core.identity import BucketId
+from ...core.time import UtcInstant
 from ...domain.calculations.registry import LegalRefId
 from ._schemas import OutputSchema, register_schema
 
@@ -46,7 +47,16 @@ class ReviewQueueRowPayload(OutputSchema):
     reason: str = ""
     current_owner_surface: str
     canonical_next_command: str
-    since: str  # ISO-8601 datetime
+    since: UtcInstant
+    """The originating review item's instant, under the canonical UTC contract.
+
+    Declared as a bare ``str`` this edge accepted any text -- ``not-date``, or
+    a naive ISO instant the canonical review queue refuses -- and emitted it as
+    the row's timestamp. Typed as :data:`~cadrumo.core.time.UtcInstant` it is
+    the same contract the application row and the review item carry, and the
+    envelope's ``model_dump(mode="json")`` still renders it as the ISO-8601
+    string the wire contract documents.
+    """
     summary: str
     legal_refs: tuple[LegalRefId, ...] = ()
 

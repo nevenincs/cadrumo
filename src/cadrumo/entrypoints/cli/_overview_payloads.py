@@ -26,7 +26,7 @@ documents and validates the transport shape emitted by :mod:`_overview`.
 from __future__ import annotations
 
 from datetime import date
-from typing import Literal
+from typing import Literal, Self
 
 from pydantic import Field, model_validator
 
@@ -230,6 +230,46 @@ class OverviewSuppressedCalendarEntryPayload(OutputSchema):
     reason: str
 
 
+class OverviewAdvisedObligationPayload(OutputSchema):
+    """One obligation the calendar could not positively scope."""
+
+    modelo: str
+    reason: Literal[
+        "applicable_window_missing",
+        "applicability_undetermined",
+        "registry_unmodeled",
+    ]
+
+
+class OverviewObligationCoveragePayload(OutputSchema):
+    """JSON projection of the canonical total obligation-coverage partition.
+
+    Each modelo must occur in exactly one disposition.  The application service
+    establishes completeness against its authoritative obligation universe;
+    this transport contract preserves the non-overlap invariant so malformed
+    JSON cannot make an obligation appear both surfaced and advised.
+    """
+
+    surfaced: list[str] = []
+    confidently_excluded: list[str] = []
+    advised: list[OverviewAdvisedObligationPayload] = []
+    out_of_scope: list[str] = []
+
+    @model_validator(mode="after")
+    def _require_disjoint_dispositions(self) -> Self:
+        bucket_modelos = (
+            self.surfaced,
+            self.confidently_excluded,
+            [item.modelo for item in self.advised],
+            self.out_of_scope,
+        )
+        total_items = sum(len(modelos) for modelos in bucket_modelos)
+        distinct_modelos = {modelo for modelos in bucket_modelos for modelo in modelos}
+        if total_items != len(distinct_modelos):
+            raise ValueError("obligation coverage dispositions must form a disjoint partition")
+        return self
+
+
 class OverviewCalendarPayload(OutputSchema):
     """Typed :class:`OverviewCalendar` JSON fragment.
 
@@ -248,6 +288,7 @@ class OverviewCalendarPayload(OutputSchema):
     incomplete_reason: str | None = None
     suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
     events: list[OverviewCalendarEventPayload] = []
+    coverage: OverviewObligationCoveragePayload
 
 
 class OverviewCalendarProfilePayload(OutputSchema):
@@ -315,11 +356,20 @@ class OverviewCalendarResult(OutputSchema):
 
     from_date: str | None = None
     to_date: str | None = None
+    range: OverviewCalendarRangePayload | None = None
     entries: list[OverviewCalendarEntryPayload] = []
     events: list[OverviewCalendarEventPayload] = []
     warnings: list[OverviewCalendarWarningPayload] = []
     suppressed_entries: list[OverviewSuppressedCalendarEntryPayload] = []
     profiles: list[OverviewCalendarProfilePayload] = []
+    coverage: OverviewObligationCoveragePayload | None = None
+
+    @model_validator(mode="after")
+    def _require_single_profile_coverage(self) -> Self:
+        if self.range is not None and self.coverage is None:
+            raise ValueError("single-profile calendar results must include obligation coverage")
+        return self
+
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
@@ -338,6 +388,7 @@ class OverviewAgendaResult(OutputSchema):
 
     as_of: str | None = None
     horizon_days: int | None = None
+    coverage: OverviewObligationCoveragePayload
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.
@@ -354,6 +405,7 @@ class OverviewBacklogResult(OutputSchema):
     entry rows rather than command-local DTOs.
     """
 
+    coverage: OverviewObligationCoveragePayload
     # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
     # pydantic v2 model_config class-variable assignment triggers mypy
     # [assignment]; suppression is the only escape without a mypy plugin upgrade.

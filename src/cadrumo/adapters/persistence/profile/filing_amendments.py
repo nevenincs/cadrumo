@@ -47,6 +47,7 @@ from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
+    from ..storage.sql import SecureObjectRecord
 
 type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
@@ -105,15 +106,59 @@ class ModeloAmendmentRepository:
         safe_repository_id(amendment_id, context="amendment_id")
         return self.store_dir / f"{amendment_id}.lock"
 
-    def load(self, amendment_id: str) -> ModeloAmendment | None:
-        """Return the persisted amendment or ``None`` if absent."""
+    @staticmethod
+    def _verified_amendment(record: SecureObjectRecord) -> ModeloAmendment:
+        """Return the row's payload, refusing one filed under another key.
+
+        The amendment id is the object key, so the stored key and the decrypted
+        payload are two encodings of one fact and must agree. Nothing compared
+        them: a valid amendment B written under A's row key was returned by
+        ``load("amend-A")`` as A's amendment, and enumeration reported B twice
+        under two ids -- letting a complementaria consumer act on the wrong
+        filing amendment.
+
+        The comparison is on the stored digest rather than on the requested
+        string so the one check serves both the targeted read and the scan,
+        which never sees a natural id at all.
+
+        Raises:
+            ClassificationError: The stored envelope is not AUDIT-classified.
+            EnvelopeVersionError: The stored envelope is above this consumer's
+                supported version.
+            SecureObjectRowIdentityError: The payload rebuilds a different
+                amendment id than the key it is filed under.
+        """
         from ..storage import (
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            SecureObjectRowIdentityError,
             inner_envelope_version_is_current,
-            safe_repository_id,
         )
+        from ..storage.crypto import secure_object_key_digest
+
+        envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not _AMENDMENT_SENSITIVITY:
+            raise ClassificationError(
+                f"filing amendment row has classification {envelope.classification}; "
+                f"consumer expected {_AMENDMENT_SENSITIVITY}",
+            )
+        if not inner_envelope_version_is_current(envelope.schema_version, _AMENDMENT_ENVELOPE_VERSION):
+            raise EnvelopeVersionError(
+                f"filing amendment row is at version {envelope.schema_version}; "
+                f"consumer supports up to {_AMENDMENT_ENVELOPE_VERSION}",
+            )
+        payload = envelope.payload
+        if secure_object_key_digest(payload.amendment_id) != record.object_key:
+            raise SecureObjectRowIdentityError(
+                _AMENDMENT_NAMESPACE,
+                expected_identifier=payload.amendment_id,
+            )
+        return payload
+
+    def load(self, amendment_id: str) -> ModeloAmendment | None:
+        """Return the persisted amendment or ``None`` if absent."""
+        from ..storage import safe_repository_id
 
         safe_repository_id(amendment_id, context="amendment_id")
         record = self._objects.load(
@@ -124,18 +169,7 @@ class ModeloAmendmentRepository:
         )
         if record is None:
             return None
-        envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not _AMENDMENT_SENSITIVITY:
-            raise ClassificationError(
-                f"filing amendment {amendment_id} has classification {envelope.classification}; "
-                f"consumer expected {_AMENDMENT_SENSITIVITY}",
-            )
-        if not inner_envelope_version_is_current(envelope.schema_version, _AMENDMENT_ENVELOPE_VERSION):
-            raise EnvelopeVersionError(
-                f"filing amendment {amendment_id} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_AMENDMENT_ENVELOPE_VERSION}",
-            )
-        return envelope.payload
+        return self._verified_amendment(record)
 
     def save(self, amendment: BaseAmendment) -> None:
         """Persist ``amendment`` in the encrypted database object store.
@@ -174,17 +208,26 @@ class ModeloAmendmentRepository:
         return deleted
 
     def list_amendment_ids(self) -> tuple[str, ...]:
-        """Return every amendment id persisted in this repository."""
-        from ..storage import Envelope
+        """Return every amendment id persisted in this repository.
 
+        Each id is read from its payload and confirmed against the key its row
+        is filed under, through the one check :meth:`load` uses. Reading ids
+        from payloads alone let a duplicated envelope report the same id twice
+        while two distinct rows existed.
+
+        Raises:
+            SecureObjectRowIdentityError: A row's payload rebuilds a different
+                amendment id than the key it is filed under. Raised rather than
+                skipped: a caller enumerating amendment history must not be
+                handed a quietly shortened set.
+        """
         ids: list[str] = []
         for record in self._objects.list_records(
             _AMENDMENT_NAMESPACE,
             expected_class=_AMENDMENT_SENSITIVITY,
             max_supported_version=_AMENDMENT_ENVELOPE_VERSION,
         ):
-            envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
-            ids.append(envelope.payload.amendment_id)
+            ids.append(self._verified_amendment(record).amendment_id)
         return tuple(sorted(ids))
 
     def iter_amendments(self) -> Iterator[ModeloAmendment]:

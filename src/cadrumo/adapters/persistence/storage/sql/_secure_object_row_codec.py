@@ -31,7 +31,8 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Protocol, cast
 
 from sqlalchemy import bindparam, text, update
@@ -301,6 +302,97 @@ def secure_object_record_from_row(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _NormalisedListRawRow:
+    """One scan row's metadata coerced to the types the outcome models require."""
+
+    row_id: int
+    object_key: bytes
+    classification: str
+    schema_version: int
+    written_at: datetime
+    payload: bytes
+
+
+#: Placeholders used only when a metadata column cannot be coerced at all.
+#:
+#: They exist so an unreadable OUTCOME can still be constructed for the row --
+#: :class:`SecureObjectUnreadable` requires a non-negative id, a non-empty
+#: classification, a schema version of at least 1, and a real instant. They are
+#: deliberately implausible, and the accompanying ``reason`` names every column
+#: that drifted, so a sentinel is never mistaken for a value read off the row.
+_UNREADABLE_ROW_ID = 0
+_UNREADABLE_CLASSIFICATION = "<unreadable>"
+_UNREADABLE_SCHEMA_VERSION = 1
+_UNREADABLE_INSTANT = datetime(1, 1, 1, tzinfo=UTC)
+
+
+def _normalised_list_raw_row(row: _SecureObjectListRawRow) -> tuple[_NormalisedListRawRow, tuple[str, ...]]:
+    """Coerce one raw scan row, reporting which columns could not be read.
+
+    Never raises. A column that cannot be coerced contributes its name to the
+    returned tuple and a documented sentinel to the normalised row, so the
+    caller can always report a typed per-row failure instead of aborting the
+    scan on a raw ``ValueError`` or ``TypeError``.
+    """
+    malformed: list[str] = []
+
+    try:
+        row_id = int(row.id)
+    except (TypeError, ValueError):
+        malformed.append("id")
+        row_id = _UNREADABLE_ROW_ID
+    if row_id < 0:
+        malformed.append("id")
+        row_id = _UNREADABLE_ROW_ID
+
+    # ``object_key`` is a HashedLookup digest. Keep the bytes surface
+    # stable for diagnostics and raw mirror consumers.
+    raw_object_key = row.object_key
+    try:
+        object_key = raw_object_key.encode(UTF_8_ENCODING) if isinstance(raw_object_key, str) else bytes(raw_object_key)
+    except (TypeError, ValueError):
+        malformed.append("object_key")
+        object_key = b""
+
+    classification_str = str(row.classification)
+    if not classification_str:
+        malformed.append("classification")
+        classification_str = _UNREADABLE_CLASSIFICATION
+
+    try:
+        schema_version = int(row.schema_version)
+    except (TypeError, ValueError):
+        malformed.append("schema_version")
+        schema_version = _UNREADABLE_SCHEMA_VERSION
+    if schema_version < 1:
+        malformed.append("schema_version")
+        schema_version = _UNREADABLE_SCHEMA_VERSION
+
+    written_at = row.written_at
+    if not isinstance(written_at, datetime):
+        malformed.append("written_at")
+        written_at = _UNREADABLE_INSTANT
+
+    try:
+        payload_wire = bytes(row.payload)
+    except (TypeError, ValueError):
+        malformed.append("payload")
+        payload_wire = b""
+
+    return (
+        _NormalisedListRawRow(
+            row_id=row_id,
+            object_key=object_key,
+            classification=classification_str,
+            schema_version=schema_version,
+            written_at=written_at,
+            payload=payload_wire,
+        ),
+        tuple(malformed),
+    )
+
+
 def secure_object_list_item_from_raw_row(
     raw: object,
     *,
@@ -330,15 +422,19 @@ def secure_object_list_item_from_raw_row(
     """
     # CAST-RATIONALE-SECURE-OBJECT-RAW-ROW: SQL row tuples are structurally validated by this codec.
     row = cast(_SecureObjectListRawRow, raw)
-    row_id = int(row.id)
-    # ``object_key`` is a HashedLookup digest. Keep the bytes surface
-    # stable for diagnostics and raw mirror consumers.
-    _raw_ok = row.object_key
-    object_key = _raw_ok.encode(UTF_8_ENCODING) if isinstance(_raw_ok, str) else bytes(_raw_ok)
-    classification_str = str(row.classification)
-    schema_version = int(row.schema_version)
-    written_at = row.written_at
-    payload_wire = bytes(row.payload)
+    # Normalisation runs inside the fault-isolated boundary, not ahead of it.
+    # These coercions used to sit above the try block, so a tampered SQL
+    # ``schema_version = 'bogus'`` raised a raw ValueError out of ``int()`` and
+    # aborted the entire namespace scan -- the exact opposite of the
+    # one-outcome-per-row contract this function promises, and it never even
+    # reached the shared decode core.
+    normalised, malformed_fields = _normalised_list_raw_row(row)
+    row_id = normalised.row_id
+    object_key = normalised.object_key
+    classification_str = normalised.classification
+    schema_version = normalised.schema_version
+    written_at = normalised.written_at
+    payload_wire = normalised.payload
 
     def unreadable(reason: str) -> SecureObjectUnreadable:
         """Report this row as unreadable, carrying the identity every reason shares.
@@ -357,6 +453,13 @@ def secure_object_list_item_from_raw_row(
             written_at=written_at,
             reason=reason,
         )
+
+    if malformed_fields:
+        # The row's own metadata columns are unusable, so the decode core
+        # cannot be reached at all. Report it as this row's failure, naming
+        # the columns that drifted, rather than letting the coercion escape
+        # and take every remaining row of the scan with it.
+        return unreadable(f"row metadata is malformed: {', '.join(malformed_fields)}")
 
     try:
         return decode_secure_object_row(

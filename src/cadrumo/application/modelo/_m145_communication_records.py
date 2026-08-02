@@ -183,7 +183,13 @@ class M145CommunicationValidationResult(BaseModel):
 
 
 class M145CommunicationExportResult(BaseModel):
-    """Registry-layout export payload for one local communication record."""
+    """Registry-layout export payload for one local communication record.
+
+    ``byte_length`` and ``payload_sha256`` are a RECEIPT for ``payload``: the
+    communication event records them, and later history is anchored on them
+    rather than on the bytes. A receipt that does not describe its own payload
+    is worse than no receipt, because it reads as verified provenance.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -206,6 +212,30 @@ class M145CommunicationExportResult(BaseModel):
     payload: bytes
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
+
+    @model_validator(mode="after")
+    def _receipt_describes_its_payload(self) -> M145CommunicationExportResult:
+        """Confirm ``byte_length`` and ``payload_sha256`` measure ``payload``.
+
+        The producer computes coherent values, so the happy path never exercises
+        this. A public caller could construct the receipt directly with a false
+        length or an all-zero digest and anchor downstream communication history
+        on metadata that describes no payload at all -- and because the receipt
+        is what history keeps, nothing later could detect the substitution.
+
+        Recomputing from ``payload`` is the only check that cannot itself be
+        fooled: comparing the two declared fields against each other would pass
+        for any self-consistent pair of lies.
+        """
+        actual_length = len(self.payload)
+        if self.byte_length != actual_length:
+            raise ValueError(
+                f"byte_length {self.byte_length} does not measure the payload ({actual_length} bytes)",
+            )
+        actual_digest = sha256_hex(self.payload)
+        if self.payload_sha256 != actual_digest:
+            raise ValueError("payload_sha256 does not digest the payload it accompanies")
+        return self
 
 
 class M145CommunicationCreateCommand(BaseModel):

@@ -238,7 +238,14 @@ def audit_oracles_cmd(
     _emit_envelope(
         ctx,
         command="registry.audit_oracles",
-        result=RegistryAuditOraclesResult.model_validate(report.model_dump(mode="json")),
+        result=RegistryAuditOraclesResult(
+            environment=report.environment,
+            registered_oracle_ids=list(report.registered_oracle_ids),
+            failure_count=report.failure_count,
+            failures=list(report.failures),
+            applicability_declarations=list(report.applicability_declarations),
+            orphan_oracle_ids=list(report.orphan_oracle_ids),
+        ),
         lines=lines,
     )
     if report.failures:
@@ -297,7 +304,11 @@ def verify_filed_state_cmd(
     _emit_envelope(
         ctx,
         command="registry.verify_filed_state",
-        result=RegistryVerifyFiledStateResult.model_validate(report.model_dump(mode="json")),
+        result=RegistryVerifyFiledStateResult(
+            observation_path=report.observation_path,
+            source_observation_paths=list(report.source_observation_paths),
+            comparison=report.comparison,
+        ),
         lines=lines,
     )
 
@@ -515,7 +526,15 @@ def run_parity_cmd(
     _emit_envelope(
         ctx,
         command="registry.parity.run",
-        result=RegistryParityRunResult.model_validate(tape.model_dump(mode="json")),
+        result=RegistryParityRunResult(
+            created_at=tape.created_at,
+            scenario_path=tape.scenario_path,
+            scenario=tape.scenario,
+            workbook=tape.workbook,
+            runner=tape.runner,
+            report=tape.report,
+            path=tape.path,
+        ),
         lines=(
             _metric_line("scenario_id", tape.scenario.id),
             _metric_line("status", tape.report.status),
@@ -554,7 +573,14 @@ def replay_parity_cmd(
     _emit_envelope(
         ctx,
         command="registry.parity.replay",
-        result=RegistryParityReplayResult.model_validate(report.model_dump(mode="json")),
+        result=RegistryParityReplayResult(
+            tape_path=report.tape_path,
+            scenario_id=report.scenario_id,
+            status=report.status,
+            differences=list(report.differences),
+            stored=report.stored,
+            current=report.current,
+        ),
         lines=(
             _metric_line("scenario_id", report.scenario_id),
             _metric_line("status", report.status),

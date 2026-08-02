@@ -18,6 +18,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from ....adapters.persistence.storage import LLM_USAGE_NAMESPACE, secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage.crypto import secure_object_key_digest
 from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.hashing import canonical_json_bytes
@@ -145,7 +146,7 @@ class UsageRecorder:
             expected_class=_USAGE_SENSITIVITY,
             max_supported_version=_USAGE_VERSION,
         ):
-            decoded = self._decode_record_payload(stored.payload)
+            decoded = self._decode_record_payload(stored.payload, stored.object_key)
             if decoded is None:
                 continue
             record, _ = decoded
@@ -170,7 +171,7 @@ class UsageRecorder:
             expected_class=_USAGE_SENSITIVITY,
             max_supported_version=_USAGE_VERSION,
         ):
-            decoded = self._decode_record_payload(stored.payload)
+            decoded = self._decode_record_payload(stored.payload, stored.object_key)
             if decoded is None:
                 continue
             record, object_key_uuid = decoded
@@ -242,14 +243,24 @@ class UsageRecorder:
         """Return the stable logical usage partition."""
         return self.root_dir.resolve().as_posix()
 
-    def _decode_record_payload(self, payload: bytes) -> tuple[UsageRecord, str] | None:
+    def _decode_record_payload(self, payload: bytes, stored_key: bytes) -> tuple[UsageRecord, str] | None:
         """Decode one canonical usage payload for every read path.
+
+        The reconstructed save-time key is compared against the digest of the
+        row it was actually read from. The key was already being rebuilt here —
+        from the record's own fields plus the persisted UUID — but never
+        checked against the row holding it, so a valid record substituted under
+        another row's key was returned as that row AND made pruning miss: the
+        prune issued a delete for the key it reconstructed from the foreign
+        payload, so the stored row survived every retention pass and the record
+        the operator saw was not the record on disk.
 
         Returns ``None`` when the record belongs to another logical root.
 
         Raises:
             LLMCacheError: When a matching record lacks the save-time UUID
-                emitted by every current writer.
+                emitted by every current writer, or when its reconstructed key
+                does not derive the row it is stored in.
         """
         decoded = json.loads(payload.decode("utf-8"))
         if decoded.get("logical_root") != self._logical_root():
@@ -260,6 +271,12 @@ class UsageRecorder:
                 "LLM usage payload is missing its object_key_uuid; cannot validate its canonical save-time key.",
             )
         record = UsageRecord.model_validate_json(json.dumps(decoded["record"]))
+        reconstructed = self._object_key_for(record, object_key_uuid)
+        if secure_object_key_digest(reconstructed) != stored_key:
+            raise LLMCacheError(
+                "LLM usage record does not derive the row it is stored in; "
+                f"decrypted payload reconstructs the key {reconstructed!r}.",
+            )
         return record, object_key_uuid
 
     def _object_key_for(self, record: UsageRecord, object_key_uuid: str) -> str:

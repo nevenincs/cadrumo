@@ -120,7 +120,7 @@ def _seed_legal_entity_profile(
     facts: list[UserProfileFact] = [
         UserProfileFact(path="identity.name", value="Oracle IS Operator"),
         UserProfileFact(path="identity.legal_name", value="Oracle IS Operator SL"),
-        UserProfileFact(path="identity.tax_id", value="B12345678"),
+        UserProfileFact(path="identity.tax_id", value="B12345674"),
         UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
         UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
         UserProfileFact(

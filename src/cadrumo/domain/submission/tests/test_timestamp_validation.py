@@ -49,7 +49,7 @@ def test_submission_attempt_refuses_naive_and_non_utc_timestamps(value: datetime
     """Attempt ordering never sees malformed timestamp shapes."""
     with pytest.raises(ValidationError, match=r"timezone-aware UTC|must be in UTC"):
         SubmissionAttempt(
-            attempt_id="attempt-utc-boundary",
+            attempt_id=f"{make_submission_id('draft-utc-boundary', 1)}.1",
             started_at=value,
             ended_at=value,
             status=SubmissionStatus.PRESENTADA,

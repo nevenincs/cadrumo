@@ -86,6 +86,7 @@ from ._calc_sheets_pull import (
     RowSetEdit,
     compute_from_pull,
     pull_operator_edits,
+    relation_edit_payload,
 )
 from ._document_link_resolver import (
     DriveFolderDocument,
@@ -194,6 +195,7 @@ __all__ = [
     "load_token",
     "parse_drive_file_id",
     "pull_operator_edits",
+    "relation_edit_payload",
     "resolve_active_profile",
     "resolve_document_link",
     "resolve_impersonated_credentials",

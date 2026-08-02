@@ -1694,6 +1694,7 @@ application:
       state_unreadable: No s'ha pogut llegir l'estat de configuració local.
       state_write_invalid_payload: 'No s''ha pogut desar l''estat del flux de treball:
         càrrega útil no vàlida.'
+      run_identity_mismatch: 'L''execució emmagatzemada no coincideix amb l''identificador amb què s''ha llegit.'
 auth:
   catalogue:
     certificate_description: Autenticació basada en certificat X.509 (FNMT-RCM o una

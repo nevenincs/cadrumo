@@ -752,24 +752,24 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
 
     monthly_profiles = (
         TaxpayerProfile(
-            tax_id="B12345678",
+            tax_id="B12345674",
             iva_regime=IVARegime.GENERAL,
             iva=ModeloIVAProfile(redeme_enrolled=True),
         ),
         TaxpayerProfile(
-            tax_id="C12345678",
+            tax_id="C12345674",
             iva_regime=IVARegime.GENERAL,
             enrollment=ModeloEnrollment(large_company=True),
         ),
     )
     voluntary_sii_profile = TaxpayerProfile(
-        tax_id="A12345678",
+        tax_id="A12345674",
         iva_regime=IVARegime.GENERAL,
         iva=ModeloIVAProfile(sii_enrolled=True, redeme_enrolled=False),
         enrollment=ModeloEnrollment(large_company=False),
     )
     ordinary_quarterly_profile = TaxpayerProfile(
-        tax_id="D98765432",
+        tax_id="D98765431",
         iva_regime=IVARegime.GENERAL,
         iva=ModeloIVAProfile(sii_enrolled=False, redeme_enrolled=False),
         enrollment=ModeloEnrollment(large_company=False),

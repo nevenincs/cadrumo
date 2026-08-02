@@ -71,7 +71,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from ...adapters.persistence.storage.master_key import PassphraseCallback
-    from ...domain.buckets import BucketEventHistoryRepositoryProtocol
+    from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol
     from ..workflow import WorkflowState
 
 _log = get_logger(__name__)
@@ -349,6 +349,9 @@ def register_active_profile(
             :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
+        extra_events: Bucket events a composing surface wants committed in the
+            SAME unit of work as the relabel, so its record of the verb cannot
+            land without the change it describes (or the change without it).
         enforce_unique_tax_id: When ``True``, refuses if another live profile
             already carries the same tax id.
         routing_profile_id: When set, wires a cross-bucket routing entry so
@@ -747,6 +750,9 @@ def set_active_field(
             :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
+        extra_events: Bucket events a composing surface wants committed in the
+            SAME unit of work as the relabel, so its record of the verb cannot
+            land without the change it describes (or the change without it).
 
     Returns:
         The updated :class:`~cadrumo.application.workflow.WorkflowState`.
@@ -870,6 +876,7 @@ def rename_profile(
     new_label: str,
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
+    extra_events: tuple[BucketEvent, ...] = (),
 ) -> UserProfileRecord:
     """Rename a profile by updating its display label only.
 
@@ -880,6 +887,9 @@ def rename_profile(
             :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
+        extra_events: Bucket events a composing surface wants committed in the
+            SAME unit of work as the relabel, so its record of the verb cannot
+            land without the change it describes (or the change without it).
 
     The profile identity (``profile_id``), bucket directory, keystore
     directory, and secure-object key are immutable and never move. A
@@ -901,7 +911,7 @@ def rename_profile(
     """
     with _profile_mutation_span(profile_id):
         repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-        aggregate = repository.rename(profile_id, new_label=new_label)
+        aggregate = repository.rename(profile_id, new_label=new_label, extra_events=extra_events)
     return aggregate.record
 
 

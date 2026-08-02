@@ -14,7 +14,7 @@ plaintext NIF must never appear in the object key (only its sha256).
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -426,3 +426,56 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
 
         with pytest.raises(SecureObjectRowIdentityError):
             repo.load_observations("180", period)
+
+
+@pytest.mark.parametrize(
+    "captured_at",
+    [
+        datetime(2024, 4, 15, 10, 30),
+        datetime(2024, 4, 15, 10, 30, tzinfo=timezone(timedelta(hours=2))),
+    ],
+)
+def test_envelope_refuses_a_capture_instant_without_utc(captured_at: datetime) -> None:
+    """A naive or non-UTC capture instant never reaches the encrypted store.
+
+    The sibling withholding envelopes carried a bare ``datetime`` while the
+    calculation observation envelope was meant to hold the shared UTC contract,
+    so each store admitted a capture instant with no zone and later comparisons
+    against UTC-aware instants silently answered a different question. All three
+    now use the one canonical UtcInstant.
+    """
+    from .._retencion_observations_repository import _RetencionObservationEnvelopePayload
+
+    with pytest.raises(ValidationError):
+        _RetencionObservationEnvelopePayload(
+            modelo="180",
+            filing_year=2024,
+            period=Period.from_year_and_code(2024, "0A"),
+            observation=_observation(
+                nif="11111111H",
+                scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                retencion=Decimal("100"),
+            ),
+            captured_at=captured_at,
+            source_kind="aggregate_pull",
+        )
+
+
+def test_envelope_accepts_a_utc_capture_instant() -> None:
+    """The positive control for the refusal above."""
+    from .._retencion_observations_repository import _RetencionObservationEnvelopePayload
+
+    payload = _RetencionObservationEnvelopePayload(
+        modelo="180",
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "0A"),
+        observation=_observation(
+            nif="11111111H",
+            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            retencion=Decimal("100"),
+        ),
+        captured_at=datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
+        source_kind="aggregate_pull",
+    )
+
+    assert payload.captured_at.utcoffset() == timedelta(0)

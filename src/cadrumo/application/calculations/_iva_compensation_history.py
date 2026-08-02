@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import ClassVar, Final, override
+from typing import ClassVar, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,13 +44,13 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core import Modelo, Period
+from ...core.identity import ContentDigest
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
     undeclared_casilla_ids,
-    validated_casilla_id,
 )
 from ...domain.iva_compensation import (
     IvaCompensationCarryForwardReport,
@@ -63,33 +63,36 @@ from ...domain.iva_compensation import (
     iva_compensation_period_sort_key,
 )
 from ._errors import IvaCompensationModeloError
+from ._iva_compensation_casillas import (
+    M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
+)
 from ._ports import FiledDeclaracionObservationProtocol
 
 _ZERO = Decimal("0")
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="IVA compensation history casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"IVA compensation history casilla constant {value!r} is not a CasillaId") from exc
-
-
-_M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
-_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
-_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores"
-)
-_M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_RESULTADO_FINAL_CASILLA: Final[CasillaId] = _casilla_id("71")
-_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: Final[CasillaId] = _casilla_id(
-    "iva.anual.compensacion-ultimo-periodo-97",
-)
-_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: Final[CasillaId] = _casilla_id(
-    "iva.anual.compensacion-generada-ejercicio-no-97",
-)
 
 
 class IvaCompensationAnnualSummary(BaseModel):
@@ -112,7 +115,20 @@ class IvaCompensationAnnualSummary(BaseModel):
     generated_not_in_last_period_amount: Decimal = Field(ge=_ZERO)
     total_pending_amount: Decimal = Field(ge=_ZERO)
     source_observation_key: str = Field(min_length=1, max_length=96)
-    source_artefact_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    source_artefact_sha256: ContentDigest | None = Field(
+        default=None,
+        description=(
+            "SHA-256 of the filed artefact this state was read from, typed "
+            "through the canonical content-digest authority. None is the "
+            "declared 'no artefact captured' case -- a registry-observation "
+            "or manually seeded state carries no submitted file. A value that "
+            "IS present identifies content-addressed evidence, so it must "
+            "carry the canonical lowercase hex-64 shape: a 64-character "
+            "non-digest would otherwise be persisted alongside valid "
+            "compensation history and later be resolved as if it addressed "
+            "the artefact."
+        ),
+    )
 
 
 class IvaCompensationAnnualCrossCheck(BaseModel):
@@ -198,7 +214,7 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         def _sort_key(item: IvaCompensationPeriodState) -> tuple[int, tuple[int, str]]:
             return (item.filing_year, iva_compensation_period_sort_key(item.period))
 
-        return tuple(sorted(self.iter_records(), key=_sort_key))
+        return tuple(sorted(self.iter_verified_records(), key=_sort_key))
 
 
 _SEED_STATUS = "seeded"
@@ -363,7 +379,7 @@ def iva_compensation_state_from_registry_observation(
     status: str,
     presented_at: datetime,
     source_observation_key: str | None = None,
-    source_artefact_sha256: str | None = None,
+    source_artefact_sha256: ContentDigest | None = None,
 ) -> IvaCompensationPeriodState:
     """Build an :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
 
@@ -505,7 +521,7 @@ def _iva_compensation_state_from_values(
     status: str,
     presented_at: datetime,
     source_observation_key: str,
-    source_artefact_sha256: str | None,
+    source_artefact_sha256: ContentDigest | None,
 ) -> IvaCompensationPeriodState:
     result = _resolve_casilla_value(values, _M303_RESULTADO_CASILLA)
     posterior = _resolve_casilla_value(values, _M303_POSTERIOR_CASILLA)

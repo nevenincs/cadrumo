@@ -35,6 +35,7 @@ from ....domain.filing import (
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
+    registry_schema_version,
 )
 from ....domain.submission import ModeloDraftStatus
 from ....tests.cli_runner import invoke_cached_cli
@@ -54,10 +55,10 @@ _M130_PRIOR_RETURN_CASILLA: CasillaId = validated_casilla_id("18", surface="_M13
 _M202_CUOTA_CASILLA: CasillaId = validated_casilla_id("03", surface="_M202_CUOTA_CASILLA")
 
 
-def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistrySnapshotRef:
     return RegistrySnapshotRef(
         modelo=modelo,
-        revision_id=schema_version,
+        revision_id=revision_id,
         modelo_year=period.filing_year,
         period=period.registry_token,
     )
@@ -256,8 +257,9 @@ def _minimal_stored_draft(
             source="overview period filter regression",
         ),
     )
-    schema_version = "overview-period-filter-test"
-    snapshot_ref = _snapshot_ref(modelo=modelo, period=period, schema_version=schema_version)
+    revision_id = "overview-period-filter-test"
+    schema_version = registry_schema_version(modelo=modelo, revision_id=revision_id)
+    snapshot_ref = _snapshot_ref(modelo=modelo, period=period, revision_id=revision_id)
     draft_id = compute_modelo_draft_id(
         modelo=modelo,
         period=period,

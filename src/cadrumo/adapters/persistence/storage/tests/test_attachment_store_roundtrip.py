@@ -61,6 +61,9 @@ from ..sql.session import session_scope
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _CAPTURED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
+# The store refuses a manifest from another profile bucket, so the fixture
+# names the same bucket the runtime profile provisions.
+_BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
 _EnvelopeMetadataDriftCase = tuple[str, str, object, str]
 _MalformedManifestPayloadCase = tuple[str, bytes]
 
@@ -145,7 +148,7 @@ def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
         captured_at=_CAPTURED_AT,
         linked_transaction_ids=("tx-001", "tx-002"),
         linked_invoice_ids=("inv-2025-001",),
-        bucket_id="b" * 32,
+        bucket_id=_BUCKET_ID,
         captured_by="cli/aeat",
         source_command="aeat app attachments ingest",
         metadata={"vendor": "ACME SL", "currency": "EUR"},
@@ -156,7 +159,7 @@ def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
 def test_attachment_blob_and_manifest_round_trip(tmp_path: Path) -> None:
     """Bytes survive put_bytes -> read_bytes; manifest survives write -> load."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         payload = b"%PDF-1.4\n%attachment-store-roundtrip-canary\n" + b"\x00" * 64
         digest = store.put_bytes(payload)
@@ -226,7 +229,7 @@ def test_attachment_store_put_file_deduplicates_by_digest(tmp_path: Path) -> Non
     source_file = source_dir / "invoice.pdf"
     source_file.write_bytes(b"%PDF-1.4\n%put-file-dedup-canary\n" + b"\x00" * 128)
 
-    with isolated_runtime_profile(tmp_path=tmp_path / "profile"):
+    with isolated_runtime_profile(tmp_path=tmp_path / "profile", bucket_id=_BUCKET_ID):
         store = AttachmentStore()
 
         first_digest, first_size = store.put_file(source_file)
@@ -273,7 +276,7 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
     and the bytes-on-disk no longer prove the manifest's identity.
     """
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
         payload = b"sample attachment body for anti-tautology proof"
@@ -308,7 +311,7 @@ def test_attachment_manifest_envelope_metadata_drift_fails_closed(
     for case_label, field_name, tampered_value, expected_violation in _ENVELOPE_METADATA_DRIFT_CASES:
         case_tmp_path = tmp_path / case_label
         case_tmp_path.mkdir()
-        with isolated_runtime_profile(tmp_path=case_tmp_path) as profile:
+        with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=_BUCKET_ID) as profile:
             engine = get_engine(profile.settings)
             store = AttachmentStore()
             payload = b"attachment manifest envelope metadata proof"
@@ -350,7 +353,7 @@ def test_malformed_attachment_manifest_payload_is_localized_for_all_read_paths(
     for case_label, stored_payload in _MALFORMED_MANIFEST_PAYLOAD_CASES:
         case_tmp_path = tmp_path / case_label
         case_tmp_path.mkdir()
-        with isolated_runtime_profile(tmp_path=case_tmp_path) as profile:
+        with isolated_runtime_profile(tmp_path=case_tmp_path, bucket_id=_BUCKET_ID) as profile:
             engine = get_engine(profile.settings)
             store = AttachmentStore()
             payload = b"attachment malformed manifest payload proof"

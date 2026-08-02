@@ -13,6 +13,7 @@ by clock.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
@@ -22,16 +23,22 @@ from ._models import GoldenScenario, LiveTrajectory
 
 
 def failure_signature(score: LiveScenarioScore) -> str:
-    """A stable content address for one failure shape (scenario + failed dimensions)."""
-    basis = "|".join(
-        (
-            score.scenario,
-            str(score.keys_resolve),
-            str(score.lifecycle_ordered),
-            str(score.expected_covered),
-            ",".join(sorted(score.invariants.live_submit_attempts)),
-            ",".join(sorted(score.invariants.handoff_faithfulness_blocks)),
-        ),
+    """Return a stable content address for all evidence in one failed score."""
+    evidence = {
+        "scenario": score.scenario,
+        "keys_resolve": score.keys_resolve,
+        "lifecycle_ordered": score.lifecycle_ordered,
+        "expected_covered": score.expected_covered,
+        "invariants": score.invariants.model_dump(mode="json"),
+        "tool_errors": score.tool_errors,
+        "narration_checks": [check.model_dump(mode="json") for check in score.narration_checks],
+        "failures": score.failures,
+    }
+    basis = json.dumps(
+        evidence,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
     )
     return sha256_hex(basis.encode(_UTF_8))[:12]
 
@@ -90,12 +97,20 @@ def write_promoted_scenario(
 
     Returns:
         The path written (or the existing identical file on re-promotion).
+
+    Raises:
+        ValueError: When an existing promotion at the content-addressed path
+            has different contents. A hash collision or incomplete identity
+            must never overwrite a prior failure's evidence.
     """
     text = promote_failure(score=score, trajectory=trajectory, scenario=scenario)
     stem = f"{scenario.name.replace('-', '_')}_regression_{failure_signature(score)}"
     path = scenarios_dir / f"{stem}.toml"
-    if path.exists() and path.read_text(encoding=_UTF_8) == text:
-        return path
+    if path.exists():
+        existing = path.read_text(encoding=_UTF_8)
+        if existing == text:
+            return path
+        raise ValueError(f"promotion identity collision at {path.name}; refusing to overwrite existing evidence")
     scenarios_dir.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding=_UTF_8)
     return path

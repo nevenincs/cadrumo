@@ -202,6 +202,34 @@ class UserProfileFact(BaseModel):
         return self
 
 
+def _validate_payload_schema_identity(schema_id: str, schema_version: int, *, surface: str) -> None:
+    """Refuse payload schema metadata the loaded schema does not sanction.
+
+    ``schema_id`` and ``schema_version`` name the authority a persisted
+    payload claims to have been written under, and both were free: any
+    non-empty id and any integer at or above one validated, were hashed into
+    the canonical snapshot digest, and were read back later as if current. An
+    unknown authority is not a value with a typo in it -- it is a record
+    asserting a contract nothing in this codebase defines.
+
+    The version is bounded above rather than pinned. Pinning would refuse the
+    defaulted records this codebase actually writes, and the loaded schema's
+    version is the highest this code can be said to understand: a payload
+    claiming a FUTURE version was written by something newer, so reading it as
+    current is the failure worth closing.
+    """
+    schema = load_user_profile_schema()
+    if schema_id != schema.id:
+        raise UserProfileValidationError(
+            f"{surface}: schema_id {schema_id!r} is not the canonical profile schema {schema.id!r}",
+        )
+    if schema_version > schema.version:
+        raise UserProfileValidationError(
+            f"{surface}: schema_version {schema_version} is newer than the canonical "
+            f"profile schema version {schema.version}",
+        )
+
+
 class UserProfileRecord(BaseModel):
     """Live secure user-profile aggregate before persistence encoding."""
 
@@ -231,6 +259,11 @@ class UserProfileRecord(BaseModel):
         if isinstance(value, str):
             return UserProfileStatus(value)
         return value
+
+    @model_validator(mode="after")
+    def _validate_payload_schema(self) -> UserProfileRecord:
+        _validate_payload_schema_identity(self.schema_id, self.schema_version, surface="user profile record")
+        return self
 
     @model_validator(mode="after")
     def _validate_lifecycle(self) -> UserProfileRecord:
@@ -303,6 +336,11 @@ class UserProfileSnapshot(BaseModel):
     created_at: UtcInstant = Field(default_factory=utc_now)
     facts: tuple[UserProfileFact, ...]
     canonical_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+    @model_validator(mode="after")
+    def _validate_payload_schema(self) -> UserProfileSnapshot:
+        _validate_payload_schema_identity(self.schema_id, self.schema_version, surface="user profile snapshot")
+        return self
 
     @model_validator(mode="after")
     def _canonical_hash_matches_facts(self) -> UserProfileSnapshot:

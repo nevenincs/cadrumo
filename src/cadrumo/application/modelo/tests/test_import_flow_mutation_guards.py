@@ -8,8 +8,19 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
-from ....domain.modelos import CalculationRevisionAmendmentKind, ExternalEvidenceKind
+from ....domain.modelos import (
+    CalculationRevisionAmendmentKind,
+    ExternalEvidenceKind,
+    WorkUnit,
+    derive_work_unit_id,
+    upsert_work_unit,
+)
+from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AmendmentEvidenceMissingError,
     WorkUnitMutationRefusedError,
@@ -157,3 +168,82 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
             bucket_event_repository=bv_repo,
             clock=_T4,
         )
+
+
+def test_import_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path) -> None:
+    """A bucket-B work unit cannot be imported through A-bound repositories.
+
+    ``import_external_filing_evidence`` loaded the WorkUnit by id from a
+    caller-supplied repository and never checked that repository's bucket against
+    ``work_unit.bucket_id``, then used separately supplied calculation, filing,
+    work-unit, and event repositories for the whole mutation. A caller could
+    persist a B-bucket filing through A-bound stores, advance B pointers, and
+    emit a B event with no cross-bucket refusal.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_A) as profile:
+        wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
+        cr_repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        fr_repo = ModeloRecordCatalogueRepository(objects=profile.repository)
+        bv_repo = BucketEventHistoryRepository(objects=profile.repository)
+        foreign = _guard_work_unit(_GUARD_BUCKET_B)
+        wu_repo.save(upsert_work_unit(wu_repo.load(), foreign))
+
+        with pytest.raises(WorkUnitNotFoundError):
+            import_external_filing_evidence(
+                work_unit_id=foreign.work_unit_id,
+                casilla_values={_GUARD_INCOME_CASILLA: Decimal("1500")},
+                evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                evidence_reference_id="JUST-GUARD-FOREIGN",
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                filing_repository=fr_repo,
+                bucket_event_repository=bv_repo,
+                expected_tax_id="X1234567L",
+                clock=_GUARD_CLOCK,
+            )
+
+        # Nothing advanced, nothing filed, nothing recorded for bucket B.
+        assert wu_repo.load().get(foreign.work_unit_id) == foreign
+        assert len(cr_repo.load()) == 0
+        assert bv_repo.load().events == {}
+
+
+def test_the_foreign_import_target_is_genuinely_present(tmp_path: Path) -> None:
+    """Anti-tautology: the refusal above is bucket scope, not an absent unit."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_A) as profile:
+        wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
+        foreign = _guard_work_unit(_GUARD_BUCKET_B)
+        wu_repo.save(upsert_work_unit(wu_repo.load(), foreign))
+
+        stored = wu_repo.load().get(foreign.work_unit_id)
+
+    assert stored is not None
+    assert stored.bucket_id == _GUARD_BUCKET_B
+
+
+_GUARD_BUCKET_A = "6aa00000-0000-4000-8000-0000000000aa"
+_GUARD_BUCKET_B = "6bb00000-0000-4000-8000-0000000000bb"
+_GUARD_CLOCK = _T1
+_GUARD_INCOME_CASILLA = _IMPORT_INCOME_CASILLA
+
+
+def _guard_work_unit(bucket_id: str) -> WorkUnit:
+    """Build a valid M130 work unit owned by ``bucket_id``."""
+    period = Period.from_year_and_code(2026, "1T")
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo="130",
+            filing_year=2026,
+            period=period,
+            revision_id="2019-y-siguientes",
+        ),
+        bucket_id=bucket_id,
+        name="130-2026-1T",
+        modelo="130",
+        filing_year=2026,
+        period=period,
+        revision_id="2019-y-siguientes",
+        created_at=_T0,
+        updated_at=_T0,
+    )

@@ -87,7 +87,7 @@ from ._persistence import (
     descendant_facts_from_answers,
     project_answers,
 )
-from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
+from ._results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 from ._setup_legal_validators import (
     SETUP_UNIDAD_FAMILIAR_VALIDATOR_ID,
     attach_setup_legal_validators,
@@ -116,6 +116,7 @@ __all__ = [
     "ConfigProfileEditResult",
     "PageLegalZone",
     "ProfileFactsCheckpointStore",
+    "ProfileWizardStatus",
     "WizardChoice",
     "WizardCondition",
     "WizardEditUnsupportedConsoleError",

@@ -76,7 +76,7 @@ def _seed_m200_legal_entity_profile(objects: SecureObjectRepository) -> None:
         profile_id=_BUCKET_ID,
         display_name="Test runtime profile",
         facts=(
-            UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="identity.legal_name", value="Beatriz Test SL"),
             UserProfileFact(path="activities.description", value="software consultancy"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),

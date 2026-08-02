@@ -113,7 +113,7 @@ def _resolve_result_disposition(
 def _result_disposition_profile(kind: str) -> TaxpayerProfile:
     if kind == "redeme":
         return TaxpayerProfile(
-            tax_id="redemecompany",
+            tax_id="B66012345",
             iva_regime=IVARegime.GENERAL,
             iva=ModeloIVAProfile(redeme_enrolled=True),
         )

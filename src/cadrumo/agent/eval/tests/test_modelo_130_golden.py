@@ -80,6 +80,32 @@ def test_runner_rejects_out_of_order_lifecycle() -> None:
     assert not result.lifecycle_ordered
 
 
+def test_runner_rejects_a_duplicate_declared_lifecycle_stage() -> None:
+    scenario = load_scenario(_SCENARIO).model_copy(
+        update={
+            "expected_trajectory": (
+                "modelo.work.create",
+                "modelo.work.calculate",
+                "modelo.work.calculate",
+                "modelo.work.verify",
+                "modelo.export",
+            ),
+        },
+    )
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
+
+    assert not result.passed
+    assert not result.lifecycle_ordered
+    assert "trajectory declares lifecycle stage(s) more than once: modelo.work.calculate" in result.failures
+
+
+def test_runner_accepts_one_declaration_per_lifecycle_stage() -> None:
+    result = run_golden_scenario(load_scenario(_SCENARIO), valid_commands=valid_cli_commands())
+
+    assert result.passed, result.failures
+    assert result.lifecycle_ordered
+
+
 def test_verification_dimension_is_grounded_and_not_vacuous() -> None:
     # The modelo-130 revision must declare an AEAT-grounded verification contract
     # (computed_casilla_ids with source_refs), so a pass is grounded.

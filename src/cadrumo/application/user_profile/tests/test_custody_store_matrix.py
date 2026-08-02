@@ -24,7 +24,7 @@ import pytest
 
 from ....core.hashing import sha256_hex
 from ....core.resources import resources
-from ....domain.filing import ModeloDraft
+from ....domain.filing import ModeloDraft, registry_schema_version
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.custody_store_matrix_adapters import (
@@ -230,7 +230,7 @@ def _seed_draft(bucket_id: str) -> None:
         values=(),
         created_at=_NOW,
         updated_at=_NOW,
-        schema_version="1",
+        schema_version=registry_schema_version(modelo="303", revision_id="303-2026-v1"),
     )
     ModeloDraftRepository().save(draft)
 
@@ -489,7 +489,7 @@ def _build_modelo_draft() -> ModeloDraft:
         values=(),
         created_at=_NOW,
         updated_at=_NOW,
-        schema_version="1",
+        schema_version=registry_schema_version(modelo="303", revision_id="303-2026-v1"),
     )
 
 

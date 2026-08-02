@@ -47,6 +47,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_active_profile.py",
         "_records.py",
         "_session_store.py",
+        "test_session_store_logout_atomicity.py",  # contract: logout removes the token and its companion metadata, or neither
         "test_session_store_namespace_binding.py",  # contract: session-store secure-object namespace-binding roundtrip
         "test_api.py",  # contract: execute_request typed response + error-translation contract
         "test_apply_adapter_helpers.py",

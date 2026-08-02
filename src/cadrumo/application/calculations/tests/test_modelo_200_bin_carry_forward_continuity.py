@@ -66,7 +66,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # Casilla-only predicates (cap_le_when_positive) ignore the profile, but
 # _evaluate_verification_predicates requires a real TaxpayerProfile; supply a
 # minimal one rather than the typed-None hole the casilla-only path tolerated.
-_CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="B12345678", iva_regime=IVARegime.GENERAL)
+_CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime.GENERAL)
 
 _MODELO_200 = "200"
 

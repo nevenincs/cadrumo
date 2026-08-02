@@ -437,7 +437,7 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
                 profile_id=runtime.bucket_id,
                 display_name="M200 relation guidance profile",
                 facts=(
-                    UserProfileFact(path="identity.tax_id", value="B12345678"),
+                    UserProfileFact(path="identity.tax_id", value="B12345674"),
                     UserProfileFact(path="identity.legal_name", value="M200 Relation Guidance SL"),
                     UserProfileFact(path="activities.description", value="corporate relation guidance"),
                     UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),

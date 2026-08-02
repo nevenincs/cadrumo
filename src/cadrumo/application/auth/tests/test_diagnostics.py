@@ -14,12 +14,13 @@ from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
 from .._diagnostics import (
+    AuthDiagnosticPhoneState,
     _DiagnosticPayload,
     list_auth_diagnostics,
     load_auth_diagnostic,
     record_auth_diagnostic_phone_state,
 )
-from .._errors import AuthDiagnosticPhoneStateError
+from .._errors import AuthDiagnosticPayloadError, AuthDiagnosticPhoneStateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -225,3 +226,154 @@ def test_diagnostic_payload_rejects_non_object_json() -> None:
 
     with pytest.raises(ValueError, match="not a JSON object"):
         _payload(_json.dumps([1, 2, 3]).encode(UTF_8_ENCODING))
+
+
+def _store_diagnostic(repo: object, *, key: str, payload: dict[str, object]) -> None:
+    """Persist one genuine encrypted diagnostic row through the real repository."""
+    repo.save(  # type: ignore[attr-defined]
+        namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
+        object_key=key,
+        classification=SensitivityClass.SESSION,
+        schema_version=1,
+        written_at=datetime(2026, 5, 19, 8, 0, tzinfo=UTC),
+        payload=json.dumps(payload).encode(UTF_8_ENCODING),
+    )
+
+
+def _diagnostic_payload(**overrides: object) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "diagnostic_id": "diag",
+        "reason": "post-auth-landing-timeout",
+        "url": aeat_url("sede", "/"),
+        "captured_at": datetime(2026, 5, 19, 8, 0, tzinfo=UTC).isoformat(),
+    }
+    payload.update(overrides)
+    return payload
+
+
+class TestPersistedInstantContract:
+    """A persisted diagnostic instant is held to the canonical UTC contract.
+
+    ``captured_at`` and the operator report's ``reported_at`` were parsed with a
+    bare ``datetime.fromisoformat``, so a row written without an offset, or with
+    a local one, came back naive or non-UTC while ``validate_utc_aware`` — the
+    contract every other persisted instant carries — rejects both. The listing
+    sorts by capture time, which is not a comparison a mixed naive/aware set
+    supports.
+    """
+
+    def test_naive_captured_at_is_refused(self, tmp_path: Path) -> None:
+        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+            _store_diagnostic(
+                profile.repository,
+                key="diag",
+                payload=_diagnostic_payload(captured_at="2026-05-19T08:00:00"),
+            )
+
+            with pytest.raises(AuthDiagnosticPayloadError):
+                list_auth_diagnostics()
+
+    def test_non_utc_captured_at_is_refused(self, tmp_path: Path) -> None:
+        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+            _store_diagnostic(
+                profile.repository,
+                key="diag",
+                payload=_diagnostic_payload(captured_at="2026-05-19T08:00:00+02:00"),
+            )
+
+            with pytest.raises(AuthDiagnosticPayloadError):
+                list_auth_diagnostics()
+
+    def test_non_utc_reported_at_is_refused(self, tmp_path: Path) -> None:
+        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+            _store_diagnostic(
+                profile.repository,
+                key="diag",
+                payload=_diagnostic_payload(
+                    operator_report={
+                        "phone_state": "app_did_not_prompt",
+                        "reported_at": "2026-05-19T09:00:00+02:00",
+                    },
+                ),
+            )
+
+            with pytest.raises(AuthDiagnosticPayloadError):
+                list_auth_diagnostics()
+
+    def test_utc_instants_round_trip(self, tmp_path: Path) -> None:
+        """Anti-tautology: the refusals discriminate rather than always-refusing."""
+        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+            _store_diagnostic(
+                profile.repository,
+                key="diag",
+                payload=_diagnostic_payload(
+                    operator_report={
+                        "phone_state": "app_did_not_prompt",
+                        "reported_at": "2026-05-19T09:00:00+00:00",
+                    },
+                ),
+            )
+
+            report = list_auth_diagnostics()
+
+            assert report.row_count == 1
+            row = report.rows[0]
+            assert row.captured_at == datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
+            assert row.phone_state_reported_at == datetime(2026, 5, 19, 9, 0, tzinfo=UTC)
+
+
+class TestPersistedPhoneStateTaxonomy:
+    """A persisted phone state is held to the same closed vocabulary as the mutation.
+
+    The taxonomy was enforced only by ``record_auth_diagnostic_phone_state``:
+    the read path pushed whatever the row held through ``str()``, so a payload
+    carrying an unrecognised state was listed verbatim while the mutation API
+    refused the identical value for the same diagnostic.
+    """
+
+    def test_unknown_persisted_state_is_refused(self, tmp_path: Path) -> None:
+        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+            _store_diagnostic(
+                profile.repository,
+                key="diag",
+                payload=_diagnostic_payload(operator_report={"phone_state": "guessed"}),
+            )
+
+            with pytest.raises(AuthDiagnosticPayloadError):
+                list_auth_diagnostics()
+
+            with pytest.raises(AuthDiagnosticPhoneStateError):
+                record_auth_diagnostic_phone_state("diag", "guessed")
+
+    def test_unknown_top_level_state_is_refused(self, tmp_path: Path) -> None:
+        """The legacy top-level field carries the same vocabulary as the report."""
+        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+            _store_diagnostic(
+                profile.repository,
+                key="diag",
+                payload=_diagnostic_payload(phone_state="guessed"),
+            )
+
+            with pytest.raises(AuthDiagnosticPayloadError):
+                list_auth_diagnostics()
+
+    def test_absent_state_is_not_a_violation(self, tmp_path: Path) -> None:
+        """A diagnostic captured before any operator report simply has no state."""
+        with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+            _store_diagnostic(profile.repository, key="diag", payload=_diagnostic_payload())
+
+            row = list_auth_diagnostics().rows[0]
+
+            assert row.phone_state is None
+
+    def test_every_declared_state_round_trips(self, tmp_path: Path) -> None:
+        """Anti-tautology: the refusal discriminates rather than always-refusing."""
+        for state in AuthDiagnosticPhoneState:
+            with isolated_runtime_profile(tmp_path=tmp_path / state.value) as profile:
+                _store_diagnostic(
+                    profile.repository,
+                    key="diag",
+                    payload=_diagnostic_payload(operator_report={"phone_state": state.value}),
+                )
+
+                assert list_auth_diagnostics().rows[0].phone_state is state

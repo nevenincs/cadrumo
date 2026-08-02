@@ -28,6 +28,7 @@ from ....domain.filing import (
     ModeloValue,
     ModeloValueKind,
     compute_modelo_draft_id,
+    registry_schema_version,
 )
 from ....tests.secure_sql import TestRuntimeProfile
 
@@ -36,10 +37,10 @@ _AMENDMENT_CASILLA: CasillaId = validated_casilla_id("01", surface="_AMENDMENT_C
 _FOREIGN_CLASS_WRITTEN_AT = datetime(2026, 5, 26, 17, 0, 0, tzinfo=UTC)
 
 
-def _snapshot_ref(*, modelo: str, period: Period, schema_version: str) -> RegistrySnapshotRef:
+def _snapshot_ref(*, modelo: str, period: Period, revision_id: str) -> RegistrySnapshotRef:
     return RegistrySnapshotRef(
         modelo=modelo,
-        revision_id=schema_version,
+        revision_id=revision_id,
         modelo_year=period.filing_year,
         period=period.registry_token,
     )
@@ -56,7 +57,7 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
         ),
     )
     _period = Period.from_year_and_code(2026, "1T")
-    snapshot_ref = _snapshot_ref(modelo="130", period=_period, schema_version="test-schema-v1")
+    snapshot_ref = _snapshot_ref(modelo="130", period=_period, revision_id="2019-y-siguientes")
     amended_draft = ModeloDraft(
         draft_id=compute_modelo_draft_id(
             modelo="130",
@@ -74,7 +75,7 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
         values=values,
         created_at=now,
         updated_at=now,
-        schema_version="test-schema-v1",
+        schema_version=registry_schema_version(modelo="130", revision_id="2019-y-siguientes"),
     )
     return ModeloComplementaria(
         amendment_id=amendment_id,
