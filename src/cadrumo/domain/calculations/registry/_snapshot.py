@@ -174,6 +174,7 @@ def _build_validated_snapshot(
     period = registry_period_for_request(revision.period_selector.periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
+    _check_revision_scoped_source_windows(modelo, revision, catalogues)
     snapshot = RegistrySnapshot(
         modelo=modelo,
         revision=revision,
@@ -236,6 +237,64 @@ def build_validated_snapshot(
         on=on,
         revision_id=revision_id,
     )
+
+
+def _check_revision_scoped_source_windows(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+) -> None:
+    """Refuse a snapshot whose revision cites a source stale for that revision.
+
+    ``SourceReference.applies_from`` / ``applies_to`` previously validated only
+    that the two dates were internally ordered: nothing intersected the window
+    with the revision it was cited by, so a source that had expired before the
+    revision opened -- or that only began applying after it closed -- stayed
+    authoritative evidence inside a successful snapshot.
+
+    The check is deliberately scoped to the refs the *revision* owns, not the
+    union the snapshot carries. A ``ModeloDefinition``'s own ``source_refs`` are
+    the modelo's documentary corpus across every filing year (M100 lists each
+    year's XSD and manual), so intersecting those with one revision's window
+    would reject the shipped tree by design. A revision-scoped ref is the
+    revision's own claim that this source grounds it, which is the claim a
+    filing has to be able to defend.
+
+    Args:
+        modelo: The modelo owning the revision, named in the failure message.
+        revision: The selected revision whose scoped source refs are checked.
+        catalogues: Catalogues supplying the referenced source records.
+
+    Raises:
+        RegistryValidationError: If any revision-scoped source window fails to
+            overlap the revision's own validity window.
+    """
+    _revision_legal_ids, revision_source_ids = _collect_snapshot_ref_ids(modelo, revision)
+    scoped_source_ids = revision_source_ids - set(modelo.source_refs)
+    failures: list[str] = []
+    for source_id in sorted(scoped_source_ids):
+        source = catalogues.sources.get(source_id)
+        if source is None:
+            continue
+        if source.applies_to is not None and source.applies_to < revision.valid_from:
+            failures.append(
+                f"source {source_id!r} applies_to {source.applies_to.isoformat()} is before "
+                f"revision valid_from {revision.valid_from.isoformat()}",
+            )
+        elif (
+            source.applies_from is not None
+            and revision.valid_to is not None
+            and source.applies_from > revision.valid_to
+        ):
+            failures.append(
+                f"source {source_id!r} applies_from {source.applies_from.isoformat()} is after "
+                f"revision valid_to {revision.valid_to.isoformat()}",
+            )
+    if failures:
+        raise RegistryValidationError(
+            f"modelo {modelo.id} revision {revision.id} cites sources outside their applicability window:\n"
+            + "\n".join(f" - {failure}" for failure in failures),
+        )
 
 
 def _collect_snapshot_ref_ids(
