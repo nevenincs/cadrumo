@@ -262,9 +262,13 @@ def dispatch_publication(candidate: ReleaseCandidate, *, repository: str, gh_exe
 def main(argv: Sequence[str] | None = None) -> int:
     """Run one promoter tick against the live forge.
 
-    Exit status is 0 for any DECIDED tick, including one that promotes nothing:
-    most ticks land inside some candidate's window, and making the ordinary
-    case non-zero would train whoever reads the alerting channel to ignore it.
+    Exit status distinguishes an ordinary quiet tick from an INVALIDATED
+    candidate. Most ticks land inside some candidate's window and exit zero,
+    because making the ordinary case non-zero would train whoever reads the
+    alerting channel to ignore it. But a candidate whose readiness gate reds
+    during its soak is a real release refusing to publish, and returning zero
+    there meant the workflow's failure-guarded alert never fired: the cohort
+    was invalidated and reported to nobody.
     """
     parser = argparse.ArgumentParser(description="Promote the first sealed candidate whose soak window has closed.")
     parser.add_argument("--repository", required=True)
@@ -315,6 +319,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
 
     print(decision.reason)
+    if decision.invalidated:
+        # Non-zero so the workflow's failure guard fires. The message is
+        # already printed above; the exit status is what summons a human.
+        print("::error::a sealed candidate was invalidated on re-verification and did not publish")
+        return 1
     return 0
 
 

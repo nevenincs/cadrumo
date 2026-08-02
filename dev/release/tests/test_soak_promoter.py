@@ -25,7 +25,7 @@ from dev.release.release_candidate import (
     consumed_tag,
     seal_candidate,
 )
-from dev.release.soak_promoter import promote_once, select_promotable
+from dev.release.soak_promoter import PromotionDecision, promote_once, select_promotable
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -482,3 +482,51 @@ def test_a_tick_holding_only_a_completed_rehearsal_retires_it_and_says_so() -> N
     assert dispatched == []
     assert "dry_run" in decision.reason
     assert forge == [], "a completed rehearsal must not remain selectable"
+
+
+def test_an_invalidated_candidate_exits_non_zero_so_the_alert_fires() -> None:
+    """A regressed cohort must summon a human, not print into an empty room.
+
+    The promoter's alert step is failure-guarded, so a zero exit means the
+    alert never fires. Returning zero for an invalidated candidate therefore
+    reported a refused release to nobody - the exact silence this campaign
+    exists to remove.
+    """
+    decision = PromotionDecision(None, "invalidated", invalidated=True)
+
+    assert decision.promotes is False
+    assert decision.invalidated is True
+
+
+def test_an_ordinary_quiet_tick_is_not_invalidated() -> None:
+    """Control: the common case must stay zero-exit.
+
+    Most ticks land inside some candidate's window. Marking those invalidated
+    would fire an alert on every scheduled run and train the operator to
+    filter the channel, which is the same end state as no alerting at all.
+    """
+    candidate = _candidate()
+
+    still_soaking = promote_once(
+        (candidate,),
+        now=candidate.soak_deadline - timedelta(hours=1),
+        readiness_for=lambda _: _clean_report(),
+        dispatch=lambda _: None,
+    )
+    assert still_soaking.invalidated is False
+
+    nothing_sealed = promote_once(
+        (),
+        now=_OPENED,
+        readiness_for=lambda _: _clean_report(),
+        dispatch=lambda _: None,
+    )
+    assert nothing_sealed.invalidated is False
+
+    regressed = promote_once(
+        (candidate,),
+        now=candidate.soak_deadline + timedelta(hours=1),
+        readiness_for=lambda _: _red_report(),
+        dispatch=lambda _: None,
+    )
+    assert regressed.invalidated is True, "the positive case must differ from the two quiet ones"
