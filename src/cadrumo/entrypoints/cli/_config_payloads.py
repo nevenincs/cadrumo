@@ -20,6 +20,10 @@ from ...application.config_reset import (
     ConfigResetPauseReason,
     ConfigResetTargetPhase,
 )
+from ...application.user_profile import (
+    ProfileBundleExportPurpose,
+    ProfileBundleExportTransport,
+)
 from ...core import HEX_PATTERN_64
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId
@@ -665,7 +669,27 @@ class ConfigResetOperationPayload(OutputSchema):
             raise ValueError("paused target ids must belong to the reset target set")
         if (self.status is ConfigResetOperationStatus.COMPLETE) != (self.summary is not None):
             raise ValueError("complete reset operation requires exactly one summary")
+        if self.status is ConfigResetOperationStatus.COMPLETE:
+            self._validate_completion_reconciliation()
         return self
+
+    def _validate_completion_reconciliation(self) -> None:
+        assert self.summary is not None
+        if any(target.phase is not ConfigResetTargetPhase.DELETED for target in self.targets):
+            raise ValueError("complete reset operation requires every target to be deleted")
+        expected_deleted_count = sum(target.exists_at_snapshot for target in self.targets)
+        expected_already_absent_count = len(self.targets) - expected_deleted_count
+        expected_override_count = sum(bool(target.retention_override_approved) for target in self.targets)
+        if self.summary.target_count != len(self.targets):
+            raise ValueError("complete reset summary target count does not match targets")
+        if self.summary.deleted_count != expected_deleted_count:
+            raise ValueError("complete reset summary deleted count does not match targets")
+        if self.summary.already_absent_count != expected_already_absent_count:
+            raise ValueError("complete reset summary absent count does not match targets")
+        if self.summary.retention_override_count != expected_override_count:
+            raise ValueError("complete reset summary retention override count does not match targets")
+        if self.summary.completed_at != self.updated_at:
+            raise ValueError("complete reset summary timestamp must match operation update timestamp")
 
     @classmethod
     def from_operation(cls, operation: ConfigResetOperation) -> ConfigResetOperationPayload:
@@ -893,12 +917,30 @@ class ApoderadoCheckResult(OutputSchema):
 
 
 @register_schema("config.profile.export")
+class ConfigProfileExportReconcileFailurePayload(OutputSchema):
+    """JSON-safe projection of :class:`ProfileBundleExportReconcileFailure`.
+
+    One crash-recovery operation the pre-publication sweep could not
+    finalise. ``destination`` is ``None`` when the journal itself could not
+    be read; ``reason`` is the refusing error's class name.
+    """
+
+    journal_id: str = Field(min_length=1)
+    destination: str | None = None
+    reason: str = Field(min_length=1)
+
+
+@register_schema("config.profile.export")
 class ConfigProfileExportResult(OutputSchema):
     """JSON envelope for ``aeat config profile export``.
 
-    Reports the exported profile id, display label, output path, and portable
-    bundle schema version. Bundle contents are written to ``out`` rather than
-    embedded in the CLI envelope.
+    Projects :class:`~cadrumo.application.user_profile.ProfileBundleExportResult`:
+    the exported profile id, display label, output path, portable bundle
+    schema version, operator purpose, wire transport, the personal-data
+    categories the bundle carries and deliberately omits, and any
+    crash-recovery journal the pre-publication sweep could not finalise.
+    Bundle contents are written to ``out`` rather than embedded in the CLI
+    envelope.
     """
 
     profile_id: str
@@ -907,6 +949,11 @@ class ConfigProfileExportResult(OutputSchema):
     # bundle_schema_version is an int; the export handler passes the current
     # version through verbatim.
     schema_version: int
+    purpose: ProfileBundleExportPurpose
+    transport: ProfileBundleExportTransport
+    data_categories: list[str]
+    excluded_data_categories: list[str] = []
+    reconcile_failures: list[ConfigProfileExportReconcileFailurePayload] = []
 
 
 @register_schema("config.profile.subject_access_request")
@@ -916,8 +963,10 @@ class ConfigProfileSubjectAccessRequestResult(OutputSchema):
     A GDPR right-of-access export: the same portable bundle
     ``config profile export`` produces, framed as the operator's own
     personal-data archive. Reports the profile identity, output path, bundle
-    schema version, and the machine-readable catalogue of the personal-data
-    categories the archive carries so the subject can see what is held.
+    schema version, operator purpose, wire transport, the machine-readable
+    catalogue of the personal-data categories the archive carries so the
+    subject can see what is held, and any crash-recovery journal the
+    pre-publication sweep could not finalise.
 
     ``excluded_data_categories`` is reported alongside, never omitted. The
     bundle ships under the structured custody profile, so whole namespaces --
@@ -930,8 +979,11 @@ class ConfigProfileSubjectAccessRequestResult(OutputSchema):
     display_name: str
     out: str
     schema_version: int
+    purpose: ProfileBundleExportPurpose
+    transport: ProfileBundleExportTransport
     data_categories: list[str]
     excluded_data_categories: list[str] = []
+    reconcile_failures: list[ConfigProfileExportReconcileFailurePayload] = []
 
 
 @register_schema("config.profile.import")
