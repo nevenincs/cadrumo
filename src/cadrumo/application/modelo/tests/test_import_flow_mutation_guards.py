@@ -13,6 +13,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period
+from ....domain.calculations.registry import validated_casilla_id
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -25,6 +26,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     AmendmentEvidenceMissingError,
     CalculationRevisionNotFoundError,
@@ -61,10 +63,18 @@ from ._import_flow_support import (
     _Repos,
     _repos,
     _seed_local_filing_record,
+    _seed_ready_profile,
     _seed_work_unit,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _casilla_id(value: object):
+    try:
+        return validated_casilla_id(value, surface="test casilla id")
+    except ValueError as exc:
+        raise AssertionError(f"test fixture casilla key {value!r} is not a canonical casilla.id") from exc
 
 
 @pytest.fixture
@@ -212,6 +222,65 @@ def test_import_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path
         assert wu_repo.load().get(foreign.work_unit_id) == foreign
         assert len(cr_repo.load()) == 0
         assert bv_repo.load().events == {}
+
+
+def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: Path) -> None:
+    """A work-unit repository claiming one bucket cannot calculate against a
+    unit that actually belongs to another.
+
+    The active session is bound to bucket B (the foreign unit's genuine
+    owner, with a real ready profile) so the calculate path's own
+    profile-readiness gate is not what refuses this -- ``wu_repo`` is
+    constructed claiming bucket A while the loaded unit's own
+    ``bucket_id`` is B, isolating exactly the missing check:
+    ``calculate_modelo_revision`` never compares
+    ``work_unit_repository.bucket_id`` against the loaded unit's own
+    ``bucket_id``, unlike ``import_external_filing_evidence`` and the
+    calculation-revision addressing helpers in this same package.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_B) as profile:
+        _seed_ready_profile(
+            UserProfileLifecycleRepository(bucket_id=_GUARD_BUCKET_B, objects=profile.repository),
+            bucket_id=_GUARD_BUCKET_B,
+        )
+        wu_repo = WorkUnitCatalogueRepository(bucket_id=_GUARD_BUCKET_A, objects=profile.repository)
+        cr_repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        bv_repo = BucketEventHistoryRepository(objects=profile.repository)
+        foreign = _guard_work_unit(_GUARD_BUCKET_B)
+        wu_repo.save(upsert_work_unit(wu_repo.load(), foreign))
+
+        with pytest.raises(WorkUnitNotFoundError):
+            calculate_modelo_revision(
+                foreign.work_unit_id,
+                actor="operator-A",
+                casilla_inputs={
+                    _GUARD_INCOME_CASILLA: Decimal("1000"),
+                    _GUARD_EXPENSE_CASILLA: Decimal("0"),
+                    _GUARD_WITHHELD_CASILLA: Decimal("0"),
+                    _GUARD_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
+                    _GUARD_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+                    _GUARD_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+                    _GUARD_HOME_DEDUCTION_CASILLA: Decimal("0"),
+                    _GUARD_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+                },
+                binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("0")},
+                work_unit_repository=wu_repo,
+                calculation_repository=cr_repo,
+                bucket_event_repository=bv_repo,
+                clock=_GUARD_CLOCK,
+            )
+
+        assert wu_repo.load().get(foreign.work_unit_id) == foreign
+        assert len(cr_repo.load()) == 0
+
+
+_GUARD_EXPENSE_CASILLA = _casilla_id("02")
+_GUARD_WITHHELD_CASILLA = _casilla_id("05")
+_GUARD_PREVIOUS_PAYMENT_CASILLA = _casilla_id("06")
+_GUARD_AGRARIAN_VOLUME_CASILLA = _casilla_id("08")
+_GUARD_AGRARIAN_WITHHELD_CASILLA = _casilla_id("10")
+_GUARD_HOME_DEDUCTION_CASILLA = _casilla_id("16")
+_GUARD_PRIOR_RETURN_RESULT_CASILLA = _casilla_id("18")
 
 
 def test_the_foreign_import_target_is_genuinely_present(tmp_path: Path) -> None:
