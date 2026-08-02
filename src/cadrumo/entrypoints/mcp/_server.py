@@ -115,6 +115,7 @@ from ._resources import (
     list_harness_resources,
     parse_resource_uri,
     read_harness_resource,
+    resource_mime_type,
 )
 from ._result_thinning import BULK_RESOLUTION, ResourceLinkRef, thin_envelope
 from ._stdio_lifetime import arm_stdio_lifetime_watchdog, register_pre_exit_hook
@@ -1121,7 +1122,7 @@ def build_server(
         if kind in BUCKET_SCOPED_RESOURCE_KINDS:
             text = await _resolve_bulk_resource(kind, name, uri)
             return ReadResourceResult(
-                contents=[TextResourceContents(uri=uri, mime_type="application/json", text=text)],
+                contents=[TextResourceContents(uri=uri, mime_type=resource_mime_type(kind), text=text)],
             )
         try:
             content = read_harness_resource(uri)

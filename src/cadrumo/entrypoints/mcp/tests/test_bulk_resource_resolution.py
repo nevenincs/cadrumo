@@ -20,6 +20,7 @@ from .._resources import (
     list_harness_resource_templates,
     list_harness_resources,
     read_harness_resource,
+    resource_mime_type,
     resource_uri,
 )
 
@@ -48,3 +49,18 @@ def test_in_process_read_refuses_a_bucket_scoped_resource(kind: HarnessResourceK
 def test_resource_uri_round_trips_for_bucket_kinds() -> None:
     for kind in BUCKET_SCOPED_RESOURCE_KINDS:
         assert resource_uri(kind, "rev-1") == f"cadrumo://{kind.value}/rev-1"
+
+
+def test_bucket_scoped_kinds_advertise_json_while_bundled_kinds_advertise_markdown() -> None:
+    # The MCP server's bulk-resource read branch sources its response
+    # `mime_type` from this same canonical map, so a bucket-scoped kind can
+    # never advertise markdown while its read response is JSON (or vice
+    # versa) - the finding this regression pins.
+    for kind in HarnessResourceKind:
+        expected = "application/json" if kind in BUCKET_SCOPED_RESOURCE_KINDS else "text/markdown"
+        assert resource_mime_type(kind) == expected
+
+
+def test_advertised_template_mime_type_matches_the_canonical_resource_mime_type() -> None:
+    for template in list_harness_resource_templates():
+        assert template.mime_type == resource_mime_type(template.kind)

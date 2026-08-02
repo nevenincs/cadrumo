@@ -33,6 +33,7 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 _URI_SCHEME = "cadrumo"
 _URI_PREFIX = f"{_URI_SCHEME}://"
 _MARKDOWN = "text/markdown"
+_JSON = "application/json"
 _MARKDOWN_SUFFIX = ".md"
 
 
@@ -64,6 +65,20 @@ class HarnessResourceKind(StrEnum):
 BUCKET_SCOPED_RESOURCE_KINDS: frozenset[HarnessResourceKind] = frozenset(
     {HarnessResourceKind.OBSERVATIONS, HarnessResourceKind.EVIDENCE},
 )
+
+#: The MIME type advertised (in both ``resources/templates/list`` and the concrete
+#: ``resources/list``) and returned by ``resources/read`` for each resource kind.
+#: The bucket-scoped kinds resolve as a JSON array (see :func:`resource_mime_type`);
+#: every bundled document kind is verbatim markdown. One canonical map so the
+#: advertised template MIME and the actual read-content MIME cannot drift.
+_MIME_TYPES: dict[HarnessResourceKind, str] = {
+    kind: (_JSON if kind in BUCKET_SCOPED_RESOURCE_KINDS else _MARKDOWN) for kind in HarnessResourceKind
+}
+
+
+def resource_mime_type(kind: HarnessResourceKind) -> str:
+    """Return the canonical MIME type advertised and served for ``kind``."""
+    return _MIME_TYPES[kind]
 
 
 class HarnessResourceRef(BaseModel):
@@ -168,6 +183,7 @@ def _ref_for(kind: HarnessResourceKind, name: str) -> HarnessResourceRef:
         name=name,
         kind=kind,
         description=f"{_DESCRIPTIONS[kind]}: {name}",
+        mime_type=_MIME_TYPES[kind],
     )
 
 
@@ -195,6 +211,7 @@ def list_harness_resource_templates() -> tuple[HarnessResourceTemplate, ...]:
             name=f"cadrumo-{kind.value}",
             kind=kind,
             description=_TEMPLATE_DESCRIPTIONS[kind],
+            mime_type=_MIME_TYPES[kind],
         )
         for kind in HarnessResourceKind
     )
@@ -297,5 +314,6 @@ __all__ = [
     "list_harness_resources",
     "parse_resource_uri",
     "read_harness_resource",
+    "resource_mime_type",
     "resource_uri",
 ]
