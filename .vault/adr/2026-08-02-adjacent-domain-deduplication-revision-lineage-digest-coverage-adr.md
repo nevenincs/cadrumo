@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:b444f2d14c8d4547fb738bf1e29974d2571f3eafe09f65618719c053f56b97c1'
+body_hash: 'sha256:3bda08dd76eb70e36d65c36aee6ab8797845e64911280cdc4a4ffa9b65afde32'
 related:
   - "[[2026-08-02-adjacent-domain-deduplication-fleet-burndown-findings-audit]]"
 ---
@@ -21,6 +21,13 @@ stamped columns therefore sit outside the content address: `revision_ancestor_id
 `revision_written_at`, `write_provenance`, `source_event_id`, and `conflict_policy`.
 A row whose stored value for any of the five is edited recomputes the same
 `revision_id` and is admitted by `verify_revision_self_consistency`.
+
+The uncovered set is not the whole of the ancestry story, and the precise shape
+matters. `build_revision_ancestor_ids` prepends `previous_revision_id`, and that head
+link is itself a derivation input, so the gate pins the parent edge and nothing behind
+it. A forged chain therefore presents a *coherent* wrong lineage: the direct parent
+still verifies while the history behind it is fabricated, which is a harder thing to
+notice than an obviously broken chain.
 
 One of the five is load-bearing rather than merely descriptive. `revision_ancestor_ids`
 is read straight off the local row into the remote-mirror manifest, and
@@ -45,6 +52,27 @@ restorability test after the checkpoint flip.
 - The threat model that reaches all five columns is direct local database write
   access. There is no confidentiality break in it: the AEAD still authenticates and
   encrypts the payload, and the mirror carries ciphertext only.
+- That access splits into two models, and they must be kept apart because the gate
+  behaves differently under each. Against a *restamping* adversary — one who edits a
+  column and recomputes `revision_id` — the gate is worthless for all ten columns, and
+  its width is irrelevant. Against *partial tampering* — a buggy tool, a migration
+  script, or an adversary who does not restamp — the gate catches the four covered
+  columns and misses the five uncovered ones, and width is exactly what decides the
+  split. Every claim below names which model it is made under.
+- Under the partial-tamper model the gate is load-bearing, not redundant with the
+  AEAD. The payload associated data binds only namespace, object-key digest, and
+  schema version, so `written_at`, both content hashes, and both previous-revision
+  links are protected here and nowhere else. A tampered `written_at` is refused, and
+  this gate is its sole protection.
+- `revision_id` is a linking value, not a standalone stamp: `previous_revision_id` and
+  the ancestry chain reference it, and `expected_revision_id` reads it as an
+  optimistic-concurrency guard. Restamping it is therefore a whole-chain rewrite
+  across every referencing row, not a per-row column recompute.
+- Folding actor-ish or clock-ish fields into identity collides with the project's
+  idempotency rule for single-subject mutations, which deliberately keeps exactly
+  those fields out of derived ids. Two writes identical in content but differing in
+  `write_provenance` or `source_event_id` would derive different ids and stop
+  collapsing on retry.
 - `verify_revision_self_consistency` has exactly one production caller,
   `decode_secure_object_row` in `_secure_object_row_codec.py` — the decrypting read
   path. The mirror push consumes `iter_all_records_raw`, which by design bypasses the
@@ -83,12 +111,19 @@ restorability test after the checkpoint flip.
   derivation input and the second is not, so the two halves of one predicate carry
   different integrity properties, and only the second recognises lag beyond one
   generation.
-- Of the other four, `revision_written_at` alone reaches production logic: it selects
-  which entry becomes the manifest's `latest_revision_id` and
-  `latest_revision_written_at` watermark. Neither watermark has a production consumer
-  that gates on it. `write_provenance`, `source_event_id`, and `conflict_policy` are
+- Of the other four, `write_provenance`, `source_event_id`, and `conflict_policy` are
   written, copied into quarantine rows by `_secure_object_integrity.py`, and read by
-  nothing that decides anything.
+  nothing that decides anything. `conflict_policy` is a property of the write
+  *operation* rather than of the revision, so it has no claim on identity at all.
+- `revision_written_at` is UNRESOLVED, not cleared, and this record deliberately
+  declines to resolve it on a partial trace. It reaches the mirror manifest and selects
+  the watermark row, driving `latest_revision_id` and `latest_revision_written_at`.
+  Searching for consumers of those two fields found no production site that decides on
+  them — the same-named registry `latest_revision_id` is a different type on a
+  different model and is not this value — but that search was not exhaustive enough to
+  license a clearance. Separately, the column duplicates the `written_at` column that
+  IS mixed, and the gate reads `written_at` and never `revision_written_at`, so whether
+  it should exist at all is an open question this record does not answer.
 - `_secure_object_integrity.py` does not cover the five. It copies them verbatim into
   quarantine and validates rows through `probe_row_decryptability`, which is an AEAD
   readability probe, not a lineage check.
@@ -101,7 +136,7 @@ restorability test after the checkpoint flip.
 
 ## Considered options
 
-- **A. Widen `derive_revision_id` to all nine stamped columns.** Rejected: the
+- **A. Widen `derive_revision_id` to every stamped column except `revision_id` itself, that is the four it already covers plus the five it does not.** Rejected: the
   derivation is unkeyed, so an adversary who can write the columns can recompute the
   wider digest exactly as easily as the narrower one. It raises the cost of the attack
   by one hash call and closes nothing, while restamping every stored revision id.
@@ -113,11 +148,19 @@ restorability test after the checkpoint flip.
   multi-generation lag is the expected state under an operator-invoked, subsettable
   push. It also buys nothing against a deliberate adversary, because the surviving
   disjunct rests on `previous_revision_id`, forgeable by the same recomputation.
-- **F. Drop the ancestor disjunct and delete the column outright.** Rejected on the
-  same capability ground as C, and named explicitly because it is the only coherent
-  form of C: since the disjunct is the column's sole decision-making consumer,
-  dropping one without the other would leave an unbounded, untrusted, unread column,
-  which is the one indefensible outcome available here.
+- **F. Drop the ancestor disjunct and delete the column outright.** Rejected as a
+  consequence of rejecting C, not independently: it is the only coherent form of C,
+  because the disjunct is the column's sole decision-making consumer and dropping one
+  without the other would leave an unbounded, untrusted, unread column — the one
+  indefensible outcome available here. It becomes live only if C is ever revisited.
+- **G. Leave `revision_id` as the lineage address and attest the remaining stamped
+  columns with a separate metadata MAC.** Deferred, and the strongest of the rejected
+  family: it is the only option that protects audit attribution without redefining
+  revision identity, without restamping any chain, and without the idempotency
+  collision that sinks A. Not adopted now because nothing currently decides on the
+  three cleared attribution columns, so the machinery would attest data no gate reads;
+  it shares option D's key-availability dependency and is deferred on the same
+  trigger.
 - **D. Make the revision id a keyed MAC under a master-key sub-key.** Deferred, not
   rejected: it is the only option that actually defeats the stated threat model, but it
   couples verification to master-key availability, which collides with the
@@ -130,9 +173,13 @@ restorability test after the checkpoint flip.
 - Option E changes no persisted format. All eight derivation inputs are already
   present on the raw row, so no restamp, no bucket rebuild, and no durability-floor
   decision follows from it.
-- The pinned coverage test must not move under this decision. It pins what the digest
-  covers; this record changes only where the gate runs. If that module reds, the change
-  has drifted into option A or B.
+- The pinned coverage test stays green and unchanged under this decision, and that is
+  a property of the ruling rather than an accident. It pins what the digest covers,
+  while this record changes only where the gate runs, so nothing it asserts moves. It
+  therefore keeps working as the tripwire it was built to be: had this record chosen A,
+  B, or G, that module would have had to move in the same commit as the decision, and
+  its reddening is the mechanism that would have forced the prose to follow. If it reds
+  under the chosen option, the implementation has drifted into widening.
 - Option D's cost is asymmetric across the compatibility checkpoint, so deferring it
   is a priced decision, not a free one. Its blocking dependency is the
   rotated-master-key read path, whose own rationale must be reconciled before keying is
@@ -146,12 +193,14 @@ restorability test after the checkpoint flip.
 Two rulings, kept separate because the columns are not one problem.
 
 The first governs the digest and the four descriptive columns. `derive_revision_id`
-keeps its eight inputs. The guarantee is restated in its own terms: the gate detects
-corruption and partial tampering of the derivation tuple, and it is not an
-authentication mechanism, because an unkeyed digest over a row's own columns cannot
-authenticate that row against anyone who can write it. The already-corrected prose and
-the pinned coverage test stand as they are, with the gate's classification as a
-corruption detector made explicit alongside them.
+keeps its eight inputs. The guarantee is stated with its model attached: the gate is a
+corruption and partial-tamper detector over the derivation tuple, and within that model
+it is load-bearing — it is the only protection `written_at` has, since the payload
+associated data does not bind it. It is not an authentication mechanism, because an
+unkeyed digest over a row's own columns cannot authenticate that row against anyone who
+can write it and recompute. Both halves must be said together; the second alone reads
+as though the gate did little, which is the misreading this record exists to prevent.
+The already-corrected prose and the pinned coverage test stand unchanged.
 
 The second governs `revision_ancestor_ids` and the mirror. The blocking-bypass is real
 and is closed at the layer where it is actually open: the mirror preflight runs
@@ -171,15 +220,29 @@ at that time.
 
 ## Rationale
 
-The knockout is that the digest is unkeyed. Every remedy built on widening it assumes
-the adversary can edit a column but cannot recompute a hash, and that assumption fails
-for any adversary who has already reached the column — the algorithm is in the source
-and every input is in the row. Options A and B therefore pay a full restamp of every
-stored revision id for an attacker cost of one extra hash call. The only residual value
-in widening is detection of accidental single-column corruption, and that is not a
-failure mode this stack produces: the metadata stamp lands inside the same transaction
-as the ciphertext insert, so a row with one drifted metadata column and everything else
-intact is not a shape the writer can emit.
+The rejection of widening rests on the threat model being stated, because the obvious
+argument proves too much. Against a restamping adversary the digest is unkeyed, so
+editing a column and recomputing `revision_id` costs one extra hash call and defeats
+the gate at any width — but that argument devalues the four columns the gate already
+covers just as completely, so it cannot on its own justify keeping the boundary where
+it is. Taken alone it would argue the gate is pointless, which is false: under partial
+tampering the gate is the sole protection for `written_at`, and that is real coverage
+worth keeping.
+
+So the decision turns on the partial-tamper model, where width genuinely matters, and
+widening loses there on three independent grounds. The cost is not a column recompute
+but a whole-chain rewrite, because `revision_id` is referenced by
+`previous_revision_id`, by the ancestry chain, and by the `expected_revision_id`
+concurrency guard. The benefit is close to nil, because three of the five uncovered
+columns are read by nothing that decides anything, one is unresolved, and the
+consequential one is handled below by a cheaper route. And for two of them the change
+is affirmatively harmful: folding `write_provenance` or `source_event_id` into identity
+would give two content-identical writes different ids, breaking the idempotent-retry
+collapse that the project's single-subject mutation rule deliberately protects by
+keeping actor-ish and clock-ish fields out of derived ids.
+
+The corollary is that width was never the reason the digest is forgeable — the absence
+of a key is. That is why options D and G, not A and B, are the ones held open.
 
 What made the ancestor column look like a digest-coverage problem was the assumption
 that the gate runs on the mirror path. It does not. With exactly one production caller
@@ -225,6 +288,14 @@ A latent tension is surfaced for whoever takes up keying: verification under a k
 digest needs the master key, and the raw iterator exists precisely to surface rows when
 the key has rotated. Those two cannot both hold unchanged, and that reconciliation is
 the real blocking dependency on option D — not the restamp, which is cheap today.
+
+Two questions are left explicitly open rather than resolved by this record. Whether
+`revision_written_at` should exist at all is one: it duplicates the mixed `written_at`
+column, the gate never reads it, and its only reach is a manifest watermark on which no
+production decision was found — but that trace was not exhaustive, so it is recorded as
+unresolved and not as cleared. The other is attribution: options D and G both remain
+open on the same key-availability trigger, and G is the cheaper of the two if the need
+turns out to be attribution rather than identity.
 
 One defect this record does not close, and deliberately names rather than absorbing
 into the decision: the ancestor chain grows without truncation, so a frequently
