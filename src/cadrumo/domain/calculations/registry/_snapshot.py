@@ -19,6 +19,7 @@ from pathlib import Path
 
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
+from ._period_selector_match import registry_period_for_request
 from ._schema import (
     CasillaDefinition,
     ModeloDefinition,
@@ -160,6 +161,17 @@ def _build_validated_snapshot(
             "registry snapshot revision identity is ambiguous:\n"
             + "\n".join(f" - {failure}" for failure in identity_failures),
         )
+    # select_revision matches period selectors case-insensitively but returns
+    # the caller's token verbatim. Storing that raw token made the snapshot
+    # disagree with itself -- filing_period normalises through Period while
+    # .period did not -- and every consumer that tests exact membership against
+    # a relation's target_periods (relation_source_requirements, _active_relations,
+    # the Sheets pull) then silently activated nothing for a valid lower-case
+    # token such as "0a". Normalise once here, at the single snapshot
+    # construction site, through the same resolver the query service uses; it
+    # returns the declared selector token and preserves a concrete EVENT-n scope
+    # rather than collapsing it to the symbolic EVENT-N selector.
+    period = registry_period_for_request(revision.period_selector.periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
     legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
     snapshot = RegistrySnapshot(
