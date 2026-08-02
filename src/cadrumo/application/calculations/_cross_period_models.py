@@ -6,11 +6,17 @@ from datetime import date
 from enum import StrEnum
 from typing import Protocol, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...domain.calculations.registry import CasillaId, LegalRefId, RegistryModeloObservation, SourceRefId
-from ...domain.modelos import CalculationRevisionState, VerificationCompletenessStatus
+from ...domain.modelos import (
+    CalculationRevisionId,
+    CalculationRevisionState,
+    ExternalEvidenceKind,
+    FilingRecordId,
+    VerificationCompletenessStatus,
+)
 from ._observations_repository import ObservationSourceKind
 
 
@@ -264,20 +270,36 @@ class CrossPeriodDependencyInventory(BaseModel):
 
 
 class CrossPeriodDependencyEvidence(BaseModel):
-    """Observed filing-state evidence for one dependency requirement."""
+    """Observed filing-state evidence for one dependency requirement.
+
+    This model IS the clean-state verdict's evidence: a requirement whose
+    evidence carries no blockers is reported :attr:`clean`, and a filing
+    proceeds on that answer. Declaring the identities and provenance as bare
+    strings therefore admitted evidence that could not exist -- an observation
+    source outside the closed provenance taxonomy, filing-record and
+    calculation-revision references that are not the canonical hex-64
+    identities, an external-evidence kind naming no known evidence -- and the
+    enclosing verdict still reported ``clean=True``, because nothing had put a
+    blocker on it. Malformed evidence is not clean evidence; it is evidence
+    that was never observed.
+
+    Every identity and provenance field is now the canonical type its producer
+    already holds, so a value the rest of the system could never have minted is
+    refused at construction rather than laundered into a filing decision.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     requirement: CrossPeriodDependencyRequirement
-    observation_source_kind: str | None = None
-    filing_record_id: str | None = None
-    calculation_revision_id: str | None = None
-    member_filing_record_ids: tuple[str, ...] = ()
-    member_calculation_revision_ids: tuple[str, ...] = ()
+    observation_source_kind: ObservationSourceKind | None = None
+    filing_record_id: FilingRecordId | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
+    member_filing_record_ids: tuple[FilingRecordId, ...] = ()
+    member_calculation_revision_ids: tuple[CalculationRevisionId, ...] = ()
     calculation_revision_state: CalculationRevisionState | None = None
     verification_status: VerificationCompletenessStatus | None = None
     aeat_accepted: bool | None = None
-    external_evidence_kind: str | None = None
+    external_evidence_kind: ExternalEvidenceKind | None = None
     observed_member_nifs: tuple[str, ...] = ()
     expected_member_nifs: tuple[str, ...] = ()
     missing_member_nifs: tuple[str, ...] = ()
@@ -317,6 +339,28 @@ class CrossPeriodDependencyEvidence(BaseModel):
     dependency on that period can be scoped out only when the profile carries the
     explicit no-retenciones period token.
     """
+
+    @field_validator("observation_source_kind", mode="before")
+    @classmethod
+    def _parse_observation_source_kind(cls, value: object) -> object:
+        """Lift a raw provenance token to the closed observation-source taxonomy.
+
+        The strict model config does not coerce ``str`` -> ``StrEnum``, and the
+        upstream filing-history readers hand the stored token through as text.
+        An unknown token raises here rather than reaching a clean verdict as
+        free-form provenance.
+        """
+        if isinstance(value, str) and not isinstance(value, ObservationSourceKind):
+            return ObservationSourceKind(value)
+        return value
+
+    @field_validator("external_evidence_kind", mode="before")
+    @classmethod
+    def _parse_external_evidence_kind(cls, value: object) -> object:
+        """Lift a raw evidence token to the closed external-evidence catalogue."""
+        if isinstance(value, str) and not isinstance(value, ExternalEvidenceKind):
+            return ExternalEvidenceKind(value)
+        return value
 
     @property
     def clean(self) -> bool:
