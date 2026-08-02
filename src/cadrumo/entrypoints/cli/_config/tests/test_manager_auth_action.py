@@ -41,7 +41,7 @@ from pathlib import Path
 import pytest
 from textual.widgets import DataTable
 
-from .....adapters.inbound.tui import FormApp, FormPage
+from .....adapters.inbound.tui import FormApp, FormPage, FormScreen
 from .....application.user_profile import ProfileRepository, profile_create_storage_span
 from .....application.workflow import workflow_state_repository
 from .....core import AuthProviderKind, require_active_bucket_id
@@ -89,9 +89,19 @@ def _page(
 
 
 def _rows(app: FormApp) -> dict[str, str]:
-    """Read the page as the operator sees it: row key to displayed value."""
-    table: DataTable[str] = app.query_one("#form-table", DataTable)
+    """Read the page as the operator sees it: row key to displayed value.
+
+    The page is addressed through the screen stack because it is a screen
+    its host pushes, and ``App.query_one`` resolves against the default
+    screen instead of the pushed one.
+    """
+    table: DataTable[str] = _form_screen(app).query_one("#form-table", DataTable)
     return {str(row_key.value): str(table.get_row(row_key)[1]) for row_key in table.rows}
+
+
+def _form_screen(app: FormApp) -> FormScreen:
+    """The form page itself, wherever it sits in the host's screen stack."""
+    return next(screen for screen in reversed(app.screen_stack) if isinstance(screen, FormScreen))
 
 
 def _label_of(page: FormPage, key: str) -> str:
