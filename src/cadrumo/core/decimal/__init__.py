@@ -28,13 +28,14 @@ by convenience.
 
 from __future__ import annotations
 
-from ._coerce import coerce_decimal, coerce_decimal_strict, normalize_decimal_separators
+from ._coerce import coerce_decimal, coerce_decimal_strict, coerce_finite_european_decimal, normalize_decimal_separators
 from ._format import format_decimal
 from ._grammar import try_parse_canonical_decimal
 
 __all__ = [
     "coerce_decimal",
     "coerce_decimal_strict",
+    "coerce_finite_european_decimal",
     "format_decimal",
     "normalize_decimal_separators",
     "try_parse_canonical_decimal",

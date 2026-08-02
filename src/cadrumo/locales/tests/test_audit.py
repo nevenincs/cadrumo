@@ -8,11 +8,12 @@ from pathlib import Path
 
 import pytest
 
+from ...core import normalise_product_identity_references
 from ...core.i18n import extract_placeholders
 from ...core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
 from ...tests.cli_runner import invoke_typer_app
 from ..cli import app
-from ..manager import _STALE_CLI_EXECUTABLE_RE, LocaleError, LocaleManager, _flatten_leaf_values
+from ..manager import LocaleError, LocaleManager, _flatten_leaf_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -323,7 +324,7 @@ def test_committed_catalogues_follow_contextual_product_identity_contract() -> N
         assert {key for key, value in leaves.items() if _DISPLAY_NAME_RE.search(value)} == _IDENTITY_HEADING_KEYS
         assert all(PRODUCT_IDENTITY.cli_executable in leaves[key] for key in _CLI_KEYS[locale])
         assert all(PRODUCT_IDENTITY.display_name not in leaves[key] for key in _CLI_KEYS[locale])
-        assert not {key for key, value in leaves.items() if _STALE_CLI_EXECUTABLE_RE.search(value)}
+        assert not {key for key, value in leaves.items() if normalise_product_identity_references(value) != value}
         assert any(PRODUCT_IDENTITY.environment_prefix in value for value in leaves.values())
         assert any("cadrumo-vault/" in value for value in leaves.values())
         assert any(AEAT_AUTHORITY_SHORT_NAME in value for value in leaves.values())

@@ -535,6 +535,19 @@ def redact_for_log(text: str) -> str:
     return redact(text, rules=default_rules_for_class(_SensitivityClass.AUDIT))
 
 
+def redact_validation_context(context: Mapping[str, object]) -> dict[str, object]:
+    """Remove raw validation values while preserving safe diagnostic structure."""
+    redacted = dict(context)
+    raw = redacted.pop("raw", None)
+    if raw is not None:
+        redacted["raw_redacted"] = True
+        redacted["raw_length"] = len(str(raw))
+    detail = redacted.pop("detail", None)
+    if detail is not None:
+        redacted["detail_redacted"] = True
+    return redacted
+
+
 def redact_for_cli_output(text: str, *, reveal_identifiers: bool = False) -> str:
     """Redact a rendered operator-facing CLI output line.
 
@@ -597,4 +610,5 @@ __all__ = [
     "redact_for_log",
     "redact_structured",
     "redact_structured_for_cli_output",
+    "redact_validation_context",
 ]

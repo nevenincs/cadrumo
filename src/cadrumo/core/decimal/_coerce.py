@@ -125,6 +125,21 @@ def coerce_decimal_strict(value: object) -> Decimal:
     return Decimal(str(value))
 
 
+def coerce_finite_european_decimal(value: object) -> Decimal | None:
+    """Parse a finite decimal, accepting European thousands and decimal separators.
+
+    Spreadsheet and document-extraction callers receive formatted text rather
+    than a human-authored canonical command value. A comma therefore denotes a
+    decimal separator and preceding dots are thousands separators. Invalid and
+    non-finite values return ``None`` so their boundary can issue its own
+    refusal rather than silently substituting a financial amount.
+    """
+    if isinstance(value, str):
+        value = normalize_decimal_separators(value, strip_thousands="," in value)
+    parsed = coerce_decimal(value)
+    return parsed if parsed is not None and parsed.is_finite() else None
+
+
 def normalize_decimal_separators(text: str, *, strip_thousands: bool) -> str:
     """Normalise a European-formatted numeric string to a dot-decimal form.
 

@@ -12,6 +12,7 @@ from .. import (
     PRODUCT_IDENTITY,
     IdentityReferent,
     ProductIdentity,
+    normalise_product_identity_references,
 )
 from .. import __all__ as core_all
 from .. import product_identity as identity_module
@@ -24,6 +25,7 @@ _IDENTITY_EXPORTS = frozenset(
         "PRODUCT_IDENTITY",
         "IdentityReferent",
         "ProductIdentity",
+        "normalise_product_identity_references",
     }
 )
 
@@ -32,6 +34,7 @@ _CORE_IDENTITY_OBJECTS = {
     "PRODUCT_IDENTITY": PRODUCT_IDENTITY,
     "IdentityReferent": IdentityReferent,
     "ProductIdentity": ProductIdentity,
+    "normalise_product_identity_references": normalise_product_identity_references,
 }
 
 
@@ -85,6 +88,13 @@ def test_product_identity_distinguishes_prose_from_identity_context() -> None:
     assert PRODUCT_IDENTITY.prose_name == "Cadrumo"
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"
     assert PRODUCT_IDENTITY.prose_name != PRODUCT_IDENTITY.display_name
+
+
+def test_product_identity_normalizes_only_unambiguous_stale_command_prefixes() -> None:
+    """The shared normalizer preserves prose, machine identifiers, and authority names."""
+    assert normalise_product_identity_references(
+        "Cadrumo serves AEAT; run cadrumo app status, keep cadrumo-mcp and CADRUMO_TOKEN."
+    ) == "Cadrumo serves AEAT; run aeat app status, keep cadrumo-mcp and CADRUMO_TOKEN."
 
 
 def test_product_identity_is_immutable() -> None:

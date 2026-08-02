@@ -15,12 +15,12 @@ from typing import Any, override
 
 import yaml
 
+from ..core import normalise_product_identity_references
 from ..core.atomic_write import atomic_write_text
 from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.i18n import extract_placeholders
 from ..core.logging import get_logger
-from ..core.product_identity import PRODUCT_IDENTITY
 from ._registry_scanner import scan_registry_keys
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
@@ -371,7 +371,7 @@ class LocaleManager:
         if not value.strip():
             raise LocaleError(f"Cannot set {dotted_key!r}: a locale value must not be blank")
         locale_path = self._locale_path(locale)
-        value = _normalise_product_identity_references(value)
+        value = normalise_product_identity_references(value)
         parts = dotted_key.split(".")
         if not dotted_key or any(not part for part in parts):
             raise LocaleError(f"Invalid locale key: {dotted_key!r}")
@@ -564,14 +564,6 @@ def _yaml_quoted_scalar(value: str) -> str:
     return "'" + escaped + "'"
 
 
-_STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
-
-
-def _normalise_product_identity_references(value: str) -> str:
-    """Align command examples with the canonical human executable."""
-    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, value)
-
-
 def _resolve_leaf_parent(
     data: dict[str, LocaleNode],
     parts: list[str],
@@ -601,7 +593,7 @@ def _normalise_product_identity_node(value: LocaleNode) -> LocaleNode:
     if isinstance(value, dict):
         return _normalise_product_identity_mapping(value)
     if isinstance(value, str):
-        return _normalise_product_identity_references(value)
+        return normalise_product_identity_references(value)
     return value
 
 

@@ -45,6 +45,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ..identity import ContentDigest, ContentDigestOrAbsent
 from ..time import validate_utc_aware
 
 #: Canonical shape of a run identifier: 16 lowercase hex characters, the form
@@ -408,9 +409,9 @@ class RunTrace(BaseModel):
     finished_at: datetime | None
     entrypoint: str
     arguments: tuple[ArgumentRecord, ...]
-    corpus_sha256: str
-    db_sha256: str
-    cert_fingerprint: str
+    corpus_sha256: ContentDigest
+    db_sha256: ContentDigest
+    cert_fingerprint: ContentDigestOrAbsent
     outcome: RunOutcome
     replay_of: RunId | None = None
 

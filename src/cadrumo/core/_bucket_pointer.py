@@ -32,6 +32,7 @@ import tomllib
 from pydantic import BaseModel, Field
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .identity import BucketId
 
 
 class BucketPointer(BaseModel):
@@ -49,7 +50,7 @@ class BucketPointer(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     schema_version: int = Field(ge=1)
 
     def to_toml(self) -> str:

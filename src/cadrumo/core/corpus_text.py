@@ -15,7 +15,7 @@ _HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
 _COMBINING_MARK_RE = re.compile(r"[\u0300-\u036f]+")
 _WHITESPACE_RE = re.compile(r"\s+")
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
-_ARTICLE_ANCHOR_RE = re.compile(r"^(?:a|art|articulo)(\d+)")
+_ARTICLE_ANCHOR_RE = re.compile(r"^(?:a|art|articulo)(\d+)$")
 _ARTICLE_TITLE_RE = re.compile(r"^articulo(\d+)")
 
 _SPANISH_ORDINALS: Final[dict[str, str]] = {

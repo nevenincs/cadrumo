@@ -32,7 +32,7 @@ from ..config import Settings, load_settings
 from ..logging import get_logger
 from ..time import now
 from ._errors import RunTracePersistenceError, RunTraceValidationError
-from ._models import RunEvent, RunTrace
+from ._models import RUN_ID_PATTERN, RunEvent, RunTrace
 from ._redaction_rules import diagnostic_rules
 
 _logger = get_logger(__name__)
@@ -47,9 +47,6 @@ _ENVELOPE_FILENAME = "envelope.json"
 # layer against the same shape so a crafted id (e.g. ``..`` or
 # ``/etc/passwd``) cannot cause ``runs_dir / run_id`` to escape the
 # configured runs directory.
-_RUN_ID_PATTERN = re.compile(r"^[0-9a-f]{16}$")
-
-
 def _raise_persistence_error(operation: str, target: Path, exc: OSError) -> Never:
     """Raise a registered observability persistence error from ``exc``."""
     raise RunTracePersistenceError(operation=operation, path=target) from exc
@@ -74,7 +71,7 @@ def _validate_run_id(run_id: str) -> str:
         RunTraceValidationError: When ``run_id`` is not a 16-character
             lowercase hex string.
     """
-    if not _RUN_ID_PATTERN.fullmatch(run_id):
+    if re.fullmatch(RUN_ID_PATTERN, run_id) is None:
         raise RunTraceValidationError(
             f"invalid run_id {run_id!r}: expected 16 lowercase hex characters",
         )
@@ -433,7 +430,7 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
         if not is_dir:
             _logger.debug("iter_runs: skipping non-directory entry %s", entry)
             continue
-        if not _RUN_ID_PATTERN.fullmatch(entry.name):
+        if re.fullmatch(RUN_ID_PATTERN, entry.name) is None:
             _logger.debug("iter_runs: skipping non-run directory %s", entry.name)
             continue
         trace_path = entry / _TRACE_FILENAME
@@ -548,7 +545,7 @@ def _prune_run_dirs_by_age(
     survivors: list[tuple[float, Path]] = []
     for entry in entries:
         try:
-            if not entry.is_dir() or not _RUN_ID_PATTERN.fullmatch(entry.name):
+            if not entry.is_dir() or re.fullmatch(RUN_ID_PATTERN, entry.name) is None:
                 continue
             mtime = entry.stat().st_mtime
             modified = datetime.fromtimestamp(mtime, tz=UTC)

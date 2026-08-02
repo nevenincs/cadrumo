@@ -26,14 +26,13 @@ from ..config import PROJECT_ROOT, _settings_override, coerce_output_language_se
 from ..errors import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
-from ..product_identity import PRODUCT_IDENTITY
+from ..product_identity import PRODUCT_IDENTITY, normalise_product_identity_references
 
 _log = get_logger(__name__)
 _INITIALISED = False
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _FORMAT_FIELD_ROOT_RE = re.compile(r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?=$|[.\[])")
 _FORMATTER = Formatter()
-_STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
 # Test-scope flag: when True, tr raises UnmatchedPlaceholderError for any
@@ -276,7 +275,7 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
         interpolated, format_succeeded = _interpolate_with_status(translation_key, looked_up, interpolation)
     else:
         interpolated, format_succeeded = looked_up, True
-    rendered = _normalise_product_identity_references(interpolated)
+    rendered = normalise_product_identity_references(interpolated)
     if _I18N_STRICT_PLACEHOLDERS.get():
         _enforce_strict_placeholders(
             translation_key,
@@ -314,17 +313,6 @@ def _enforce_strict_placeholders(
             name=(unmatched_placeholders or failed_format_placeholders)[0],
             rendered=rendered,
         )
-
-
-def _normalise_product_identity_references(rendered: str) -> str:
-    """Project the canonical human executable into locale command text.
-
-    Locale catalogues can temporarily lag their per-language migration. Normalize
-    only unambiguous stale command prefixes at the shared render boundary.
-    Sentence-case ``Cadrumo``, identity-context ``CADRUMO``, lowercase package
-    and MCP identifiers, and uppercase ``AEAT`` authority prose remain untouched.
-    """
-    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
 
 
 def extract_placeholders(value: str) -> frozenset[str]:

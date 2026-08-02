@@ -57,6 +57,12 @@ class TestRegistryPeriodCodeValidator:
             ("EXT-3T", "EXT-3T"),
             ("EXT-4T", "EXT-4T"),
             ("AD-HOC", "AD-HOC"),
+            ("alta", "ALTA"),
+            ("modificacion", "MODIFICACION"),
+            ("baja", "BAJA"),
+            ("comunicacion", "COMUNICACION"),
+            ("variacion", "VARIACION"),
+            ("EVENT-N", "EVENT-N"),
             ("EVENT-1", "EVENT-1"),
             ("EVENT-2", "EVENT-2"),
             ("EVENT-27", "EVENT-27"),
@@ -86,7 +92,19 @@ class TestRegistryPeriodCodeAccessors:
     def test_accepted_period_codes_surface_expected_families(self) -> None:
         codes = accepted_period_codes()
         assert isinstance(codes, tuple)
-        for expected in ("1T", "0A", "12", "EXT-1T", "EXT-4T", "AD-HOC"):
+        for expected in (
+            "1T",
+            "0A",
+            "12",
+            "EXT-1T",
+            "EXT-4T",
+            "AD-HOC",
+            "ALTA",
+            "MODIFICACION",
+            "BAJA",
+            "COMUNICACION",
+            "VARIACION",
+        ):
             assert expected in codes
 
     def test_accepted_period_patterns_describe_event_regex(self) -> None:

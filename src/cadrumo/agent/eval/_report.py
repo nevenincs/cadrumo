@@ -11,7 +11,7 @@ no payloads (figures stay inside the in-memory trajectories).
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._live_scoring import LiveScenarioScore
 from ._models import LiveTrajectory
@@ -33,6 +33,17 @@ class ScenarioOutcomeRow(BaseModel):
     elicitations: int = Field(ge=0)
     failures: tuple[str, ...] = ()
 
+    @model_validator(mode="after")
+    def _failure_state_matches_pass_state(self) -> ScenarioOutcomeRow:
+        """Keep each rendered row's verdict and failure evidence coherent."""
+        if any(not failure.strip() for failure in self.failures):
+            raise ValueError("scenario outcome failure reasons must be non-empty")
+        if self.passed and self.failures:
+            raise ValueError("a passing scenario outcome row cannot carry failure reasons")
+        if not self.passed and not self.failures:
+            raise ValueError("a failed scenario outcome row must carry at least one failure reason")
+        return self
+
 
 class MeasurementReport(BaseModel):
     """The aggregate capability measurement of one live persona run."""
@@ -46,6 +57,22 @@ class MeasurementReport(BaseModel):
     tool_errors_total: int = Field(ge=0)
     unfaithful_narrations_total: int = Field(ge=0)
     rows: tuple[ScenarioOutcomeRow, ...] = ()
+
+    @model_validator(mode="after")
+    def _aggregate_counts_match_rows(self) -> MeasurementReport:
+        """Reject a report whose aggregate scenario verdict disagrees with its rows."""
+        actual_run = len(self.rows)
+        if self.scenarios_run != actual_run:
+            raise ValueError(
+                f"scenarios_run is {self.scenarios_run}, but the report contains {actual_run} scenario rows",
+            )
+
+        actual_passed = sum(row.passed for row in self.rows)
+        if self.scenarios_passed != actual_passed:
+            raise ValueError(
+                f"scenarios_passed is {self.scenarios_passed}, but {actual_passed} scenario rows passed",
+            )
+        return self
 
     @property
     def invariants_hold(self) -> bool:

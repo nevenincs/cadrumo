@@ -28,4 +28,21 @@ ContentDigest = Annotated[
 ]
 """Lowercase hex-64 SHA-256 digest of a payload's exact bytes."""
 
-__all__ = ("ContentDigest",)
+#: The digest shape widened to admit the empty string, derived from the same
+#: canonical pattern so the two cannot drift apart.
+_ABSENT_OR_HEX_64 = f"^(?:{HEX_PATTERN_64.removeprefix('^').removesuffix('$')})?$"
+
+ContentDigestOrAbsent = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, max_length=64, pattern=_ABSENT_OR_HEX_64),
+]
+"""A :data:`ContentDigest`, or ``""`` where absence is a documented outcome.
+
+Some fingerprints are genuinely optional -- a certificate fingerprint is ``""``
+when no certificate is configured, and that is a real state rather than a
+missing value. Such a field still must not accept a *malformed* digest, so this
+alias admits exactly two shapes: the canonical hex-64 digest, or nothing at
+all. Prefer :data:`ContentDigest` wherever a digest is always produced.
+"""
+
+__all__ = ("ContentDigest", "ContentDigestOrAbsent")
