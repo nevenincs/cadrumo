@@ -446,12 +446,34 @@ class LocalFileSystemProvider:
         return payload, metadata
 
     def delete(self, namespace: str, object_key_hmac: str) -> bool:
-        """Remove the object file and its sidecar from disk.
+        """Remove the object file and its sidecar from disk, or neither.
 
         Returns ``False`` immediately when the object is absent; deleting a
         non-existent object is idempotent.  The sidecar is removed with
         ``missing_ok=True`` so a pre-existing orphaned payload without a
         sidecar is still cleanly deleted.
+
+        A failure leaves the PAIR, never half of it. The payload used to be
+        unlinked first and the sidecar second, so a sidecar cleanup that failed
+        after the payload was already gone raised while leaving nothing to
+        retry: ``iter_objects`` no longer reported the object, ``get`` could
+        not read it, and the orphaned sidecar path then blocked a re-``put``
+        under the same key. The object was un-deletable, un-readable and
+        un-writable at once.
+
+        Two changes make the failure recoverable. The sidecar goes first, so a
+        refusal there removes nothing at all. And its bytes are read before
+        that removal, so a payload unlink that then fails can put the sidecar
+        back — the sidecar is metadata this method already holds, whereas the
+        payload is not something it could restore. Either way the retry that
+        follows sees the same state the caller started from.
+
+        Both unlinks are guarded on ``OSError`` rather than ``PermissionError``
+        alone: the ways a filesystem refuses to remove a path are not one
+        errno, and on some platforms an unlink of a directory-shaped sidecar
+        raises :exc:`IsADirectoryError`, which is not a
+        :exc:`PermissionError`. A narrower catch let exactly the corruption
+        shape above escape untranslated.
 
         Args:
             namespace: Logical bucket name.
@@ -462,8 +484,8 @@ class LocalFileSystemProvider:
             was already absent.
 
         Raises:
-            :class:`OutboundStoragePermissionError`: When the OS refuses the
-                ``unlink`` call.
+            :class:`OutboundStoragePermissionError`: When the OS refuses to
+                read or remove either half of the pair.
             :class:`OutboundStorageValidationError`: When ``namespace`` or
                 ``object_key_hmac`` fail format checks.
         """
@@ -474,16 +496,55 @@ class LocalFileSystemProvider:
         if target_path is None:
             return False
         sidecar_path = target_path.with_name(target_path.stem + _SIDECAR_EXTENSION)
+
+        sidecar_backup: str | None = None
+        if sidecar_path.is_file():
+            try:
+                sidecar_backup = sidecar_path.read_text(encoding=UTF_8_ENCODING)
+            except OSError as exc:
+                raise OutboundStoragePermissionError(
+                    f"cannot read sidecar {sidecar_path} before deleting object {target_path}: {exc}",
+                    context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
+                    translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
+                ) from None
+
         try:
-            target_path.unlink()
             sidecar_path.unlink(missing_ok=True)
-        except PermissionError as exc:
+        except OSError as exc:
+            raise OutboundStoragePermissionError(
+                f"cannot delete sidecar {sidecar_path}: {exc}",
+                context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
+                translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
+            ) from None
+
+        try:
+            target_path.unlink(missing_ok=True)
+        except OSError as exc:
+            self._restore_sidecar(sidecar_path, sidecar_backup)
             raise OutboundStoragePermissionError(
                 f"cannot delete object {target_path}: {exc}",
-                context={"path": str(target_path)},
+                context={"path": str(target_path), "sidecar_path": str(sidecar_path)},
                 translated_message="adapters.outbound.storage.local.errors.object_delete_permission",
             ) from None
         return True
+
+    @staticmethod
+    def _restore_sidecar(sidecar_path: Path, contents: str | None) -> None:
+        """Put a removed sidecar back after its partner's unlink failed.
+
+        Best-effort by necessity: this runs while an error is already on its
+        way out, and a restore that raised would replace the operator's real
+        failure with a second one. A failure here is logged and leaves the
+        payload orphaned — the state ``get`` already reports as corrupt and
+        ``iter_objects`` already skips, which is strictly better than the
+        vanished-object state this whole path exists to avoid.
+        """
+        if contents is None:
+            return
+        try:
+            atomic_write_text(sidecar_path, contents, encoding=UTF_8_ENCODING)
+        except OSError:
+            _logger.exception("delete: could not restore sidecar %s after a failed payload unlink", sidecar_path)
 
     def iter_namespaces(self) -> Iterator[str]:
         """Yield the name of every namespace subdirectory under ``root``.
