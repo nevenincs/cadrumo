@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period, PeriodKind, StandardPeriodCode
-from ...core.identity import SubjectTaxId
+from ...core.identity import ContentDigest, SubjectTaxId
 from ._errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -76,7 +76,20 @@ class IvaCompensationPeriodState(BaseModel):
     generated_amount: Decimal = Field(ge=Decimal("0"))
     available_end_amount: Decimal = Field(ge=Decimal("0"))
     source_observation_key: str = Field(min_length=1, max_length=96)
-    source_artefact_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    source_artefact_sha256: ContentDigest | None = Field(
+        default=None,
+        description=(
+            "SHA-256 of the filed artefact this state was read from, typed "
+            "through the canonical content-digest authority. None is the "
+            "declared 'no artefact captured' case -- a registry-observation "
+            "or manually seeded state carries no submitted file. A value that "
+            "IS present identifies content-addressed evidence, so it must "
+            "carry the canonical lowercase hex-64 shape: a 64-character "
+            "non-digest would otherwise be persisted alongside valid "
+            "compensation history and later be resolved as if it addressed "
+            "the artefact."
+        ),
+    )
 
     @model_validator(mode="after")
     def _period_year_matches(self) -> IvaCompensationPeriodState:

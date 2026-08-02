@@ -44,6 +44,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core import Modelo, Period
+from ...core.identity import ContentDigest
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -112,7 +113,20 @@ class IvaCompensationAnnualSummary(BaseModel):
     generated_not_in_last_period_amount: Decimal = Field(ge=_ZERO)
     total_pending_amount: Decimal = Field(ge=_ZERO)
     source_observation_key: str = Field(min_length=1, max_length=96)
-    source_artefact_sha256: str | None = Field(default=None, min_length=64, max_length=64)
+    source_artefact_sha256: ContentDigest | None = Field(
+        default=None,
+        description=(
+            "SHA-256 of the filed artefact this state was read from, typed "
+            "through the canonical content-digest authority. None is the "
+            "declared 'no artefact captured' case -- a registry-observation "
+            "or manually seeded state carries no submitted file. A value that "
+            "IS present identifies content-addressed evidence, so it must "
+            "carry the canonical lowercase hex-64 shape: a 64-character "
+            "non-digest would otherwise be persisted alongside valid "
+            "compensation history and later be resolved as if it addressed "
+            "the artefact."
+        ),
+    )
 
 
 class IvaCompensationAnnualCrossCheck(BaseModel):
@@ -363,7 +377,7 @@ def iva_compensation_state_from_registry_observation(
     status: str,
     presented_at: datetime,
     source_observation_key: str | None = None,
-    source_artefact_sha256: str | None = None,
+    source_artefact_sha256: ContentDigest | None = None,
 ) -> IvaCompensationPeriodState:
     """Build an :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
 
@@ -505,7 +519,7 @@ def _iva_compensation_state_from_values(
     status: str,
     presented_at: datetime,
     source_observation_key: str,
-    source_artefact_sha256: str | None,
+    source_artefact_sha256: ContentDigest | None,
 ) -> IvaCompensationPeriodState:
     result = _resolve_casilla_value(values, _M303_RESULTADO_CASILLA)
     posterior = _resolve_casilla_value(values, _M303_POSTERIOR_CASILLA)
