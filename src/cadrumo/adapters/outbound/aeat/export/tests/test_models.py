@@ -24,6 +24,11 @@ from ......domain.submission import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+# The attempt coordinate is `<submission_id>.<ordinal>`, so the fixture derives
+# both from one content-addressed id rather than naming them independently.
+_SUBMISSION_ID = make_submission_id("draft-1", 1)
+_ATTEMPT_ID = f"{_SUBMISSION_ID}.1"
+
 
 def _attempt(
     *,
@@ -31,7 +36,7 @@ def _attempt(
 ) -> SubmissionAttempt:
     """Build a deterministic :class:`SubmissionAttempt` for fixture reuse."""
     return SubmissionAttempt(
-        attempt_id="a1",
+        attempt_id=_ATTEMPT_ID,
         started_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
         ended_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
         status=status,
@@ -46,7 +51,7 @@ class TestSubmissionAttempt:
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             SubmissionAttempt.model_validate(
                 {
-                    "attempt_id": "a1",
+                    "attempt_id": _ATTEMPT_ID,
                     "started_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "ended_at": datetime(2026, 4, 12, 10, 0, 1, tzinfo=UTC),
                     "status": "SUBMITTED",
@@ -58,13 +63,13 @@ class TestSubmissionAttempt:
         """Assert the model is frozen (mutating an attribute raises)."""
         attempt = _attempt()
         with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-            attempt.attempt_id = "a2"
+            attempt.attempt_id = f"{_SUBMISSION_ID}.2"
 
     def test_end_before_start_rejected(self) -> None:
         """Assert ``ended_at < started_at`` is rejected by validation."""
         with pytest.raises(ValidationError, match=r"ended_at|started_at"):
             SubmissionAttempt(
-                attempt_id="a1",
+                attempt_id=_ATTEMPT_ID,
                 started_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
                 ended_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                 status=SubmissionStatus.PRESENTADA,
@@ -75,7 +80,7 @@ class TestSubmissionAttempt:
         with pytest.raises(ValidationError, match=r"status|Input should be"):
             SubmissionAttempt.model_validate(
                 {
-                    "attempt_id": "a1",
+                    "attempt_id": _ATTEMPT_ID,
                     "started_at": datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
                     "ended_at": datetime(2026, 4, 12, 10, 0, 1, tzinfo=UTC),
                     "status": "WHATEVER",
@@ -89,13 +94,14 @@ class TestModeloPresentado:
     def _filing(self, **overrides: object) -> ModeloPresentado:
         """Build a baseline :class:`ModeloPresentado`, applying ``overrides``."""
         base: dict[str, object] = dict(
-            submission_id=make_submission_id("draft-1", 1),
+            submission_id=_SUBMISSION_ID,
             draft_id="draft-1",
             modelo="130",
             period=Period.from_year_and_code(2026, "1T"),
             profile_tax_id="X1234567L",
             status=SubmissionStatus.PRESENTADA,
-            submitted_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
+            # submitted_at is the first attempt's start, not a free field.
+            submitted_at=datetime(2026, 4, 12, 10, 0, 0, tzinfo=UTC),
             attempts=(_attempt(),),
         )
         base.update(overrides)
@@ -105,14 +111,14 @@ class TestModeloPresentado:
         """Assert the canonical baseline filing validates and exposes its attempts."""
         filing = self._filing()
         assert filing.status is SubmissionStatus.PRESENTADA
-        assert filing.attempts[0].attempt_id == "a1"
+        assert filing.attempts[0].attempt_id == _ATTEMPT_ID
 
     def test_extra_fields_rejected(self) -> None:
         """Assert ``extra="forbid"`` rejects unknown keys on :class:`ModeloPresentado`."""
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             ModeloPresentado.model_validate(
                 {
-                    "submission_id": "x",
+                    "submission_id": _SUBMISSION_ID,
                     "draft_id": "draft-1",
                     "modelo": "130",
                     "period": Period.from_year_and_code(2026, "1T"),
