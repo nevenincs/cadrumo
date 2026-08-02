@@ -29,20 +29,34 @@ the right question and deserves the real answer:
   FIRST-PARTY HTTP call. A form POST issued by the browser after a
   ``click`` never reaches it, so it does not bound browser-driven
   navigation.
-* A landing refusal (``_assert_read_landing``) rejects a
-  write-adjacent page after AEAT has dispatched. It is currently
-  applied in ``_censal_datos`` only, not across every module that
-  fills or clicks.
+* A landing refusal rejects a page AEAT dispatched to that the
+  surface does not declare as one of its read pages. This is the only
+  wall that sees where a browser-driven navigation actually ENDED, and
+  it is the one the others' blind spots leave to it. Every module that
+  drives an AEAT control now carries one, each with its own allow-list
+  because the surfaces genuinely differ -- the Renta WEB Open simulator
+  is served from ``index.zul``, which the censal reader's marker list
+  forbids outright, so one shared list cannot serve the package. The
+  shared rule is ``_adapter_utils.assert_read_landing``; enrollment is
+  enforced by ``tests/test_landing_refusal_enrollment.py``, which fails
+  a module that drives a control without refusing its landing.
 * The filing tool itself is guarded separately in
   ``_renta_web_open_safety``, whose live-simulator proof asserts a
   *presentar declaración* click is blocked.
 
-The residual, stated plainly so nobody has to rediscover it: a
-``page.click`` on a filing control added to one of the modules without
-a landing refusal would pass the verb scan (``click`` is allowed), pass
-``_assert_read_http`` (never consulted for a browser POST), and
-pass this ``mode`` marker (never read). What prevents it is review, not
-a mechanism.
+The residual this note previously named -- a ``page.click`` on a filing
+control in a module with no landing refusal, passing the verb scan
+(``click`` is allowed), ``_assert_read_http`` (never consulted for a
+browser POST) and this ``mode`` marker (never read) -- is now a
+mechanism rather than a matter of review: adding such a click to an
+unenrolled module fails the enrollment gate.
+
+What remains true, and is stated so nobody mistakes the above for more
+than it is: the enrollment gate is a SOURCE scan, so it establishes that
+a landing rule is called from a navigation path, never that the rule's
+allow-list is correct for the surface. That second question is answered
+per module by that module's own proof, and only against the AEAT
+behaviour observed so far.
 
 Public surface: :class:`Expediente`, :class:`JustificanteRef`,
 :class:`SedeCapture`, :class:`FiledDeclaracionArtefact`,
