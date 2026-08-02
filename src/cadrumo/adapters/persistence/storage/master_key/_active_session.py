@@ -15,7 +15,8 @@ a session and enters :func:`activate_session` as a contextmanager;
 every column-level decrypt or encrypt call inside the block resolves
 the active DEK through :func:`get_active_master_key`. On exit the
 ``ContextVar`` token is reset to the previous value (``None`` at the
-top of the stack), so no key material outlives the with-block.
+top of the stack), so no *binding* outlives the with-block - the
+session itself is not closed here, only unbound from this context.
 :func:`close_active_bucket_session` is the explicit eviction boundary:
 it closes the current session before removing that exact binding.
 

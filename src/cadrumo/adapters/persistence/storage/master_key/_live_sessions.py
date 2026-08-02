@@ -2,8 +2,11 @@
 
 The active-session binding is a :class:`~contextvars.ContextVar`, which is the
 right shape for its job: each thread and each ``asyncio.Task`` gets its own
-active session, and an encrypt path can never see another context's key. It has
-one blind spot, and only one. A caller that needs to zeroise *every* live
+active session, and an encrypt path can never see a *sibling* context's key. A
+child task spawned from within a bound context inherits that binding by PEP 567
+copy-on-create - the same logical session extending into a scope the caller
+created, not a leak across contexts. It has one blind spot, and only one. A
+caller that needs to zeroise *every* live
 session - not the one bound in its own context - cannot reach the others, because
 by PEP 567 semantics a thread observes no binding another thread made.
 
