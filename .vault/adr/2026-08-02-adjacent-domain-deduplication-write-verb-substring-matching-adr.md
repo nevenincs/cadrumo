@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5bb5f7c1cd84a364b6340cbe2cd6fe53a6f55da907f409a1fd776ce085937d9'
+body_hash: 'sha256:c7a145a2815b5f9a72463dc23752ab0343cc83ac897dca85500336ffb00ff45d'
 related:
   - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"
   - '[[2026-08-01-adjacent-domain-deduplication-wave-two-audit]]'
@@ -148,9 +148,20 @@ refusal it is the opposite. "Admit the benign collision" and "widen a page-
 landing guard" can be the same edit. The check is cheap -- read what consumes
 the list before adding to it -- but nothing prompts it.
 
-Two gaps stay open and are not closed here. The wallet still reaches that gate
-without routing the URL through its read assertion, so the guard is absent from
-the path rather than wrong on it. And the state-creating canary tuple has no
-consumer, so nothing in the suite exercises this scan's behaviour on the paths
-the project itself nominates as dangerous — a guard with a declared canary set
-and no test that fires it.
+One gap stays open and is not closed here: the state-creating canary tuple has
+no consumer, so nothing in the suite exercises this scan's behaviour on the
+paths the project itself nominates as dangerous — a declared canary set with no
+test that fires it.
+
+An earlier draft of this record named a second gap, that the wallet reaches the
+gate "without routing the URL through its read assertion". That was the wrong
+vocabulary and is withdrawn rather than quietly dropped, because a gap stated in
+the wrong terms hands the next reader the wrong question. There is no missing
+call. The read assertion guards the first-party HTTP requests that module
+issues, and the gate is a URL AEAT DISPATCHES THE BROWSER TO — never one the
+module requests, so no assertion can be placed on it. Browser-driven navigation
+is bounded by the landing refusal instead, which the storage taxonomy already
+states is how that class is guarded "by construction". The wallet's real guard
+is that landing refusal against its read-path prefix tuple, and the gate's
+absence from that tuple is the deliberate exclusion described above, not an
+omission.
