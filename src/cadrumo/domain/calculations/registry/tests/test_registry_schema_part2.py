@@ -19,6 +19,7 @@ from .._schema import (
     DeadlineWindowDefinition,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
+    KeyedBracketEntry,
     ModeloRevision,
     ParameterDefinition,
 )
@@ -1051,6 +1052,87 @@ def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
             legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
             source_refs=("aeat-modelo-210-procedure",),
         )
+
+
+@pytest.mark.parametrize(
+    "rows",
+    [
+        pytest.param(
+            (
+                KeyedBracketEntry(
+                    key="general",
+                    value=Decimal("0.24"),
+                    valid_from=date(2020, 1, 1),
+                    valid_to=date(2025, 12, 31),
+                ),
+                KeyedBracketEntry(
+                    key="general",
+                    value=Decimal("0.30"),
+                    valid_from=date(2023, 1, 1),
+                    valid_to=date(2024, 12, 31),
+                ),
+            ),
+            id="wide-then-narrow",
+        ),
+        pytest.param(
+            (
+                KeyedBracketEntry(
+                    key="general",
+                    value=Decimal("0.30"),
+                    valid_from=date(2023, 1, 1),
+                    valid_to=date(2024, 12, 31),
+                ),
+                KeyedBracketEntry(
+                    key="general",
+                    value=Decimal("0.24"),
+                    valid_from=date(2020, 1, 1),
+                    valid_to=date(2025, 12, 31),
+                ),
+            ),
+            id="narrow-then-wide",
+        ),
+    ],
+)
+def test_keyed_bracket_table_rejects_overlapping_windows_in_either_order(
+    rows: tuple[KeyedBracketEntry, KeyedBracketEntry],
+) -> None:
+    """One key cannot select two simultaneous rates, regardless of row order."""
+    with pytest.raises(ValidationError, match="overlapping validity windows"):
+        ParameterDefinition(
+            id="test-keyed-rate-table-overlap",
+            data_type="keyed_bracket_table",
+            unit="percent",
+            keyed_brackets=rows,
+            legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+            source_refs=("aeat-modelo-210-procedure",),
+        )
+
+
+def test_keyed_bracket_table_allows_disjoint_windows_for_the_same_key() -> None:
+    """Annual replacement rows for the same categorical key remain valid."""
+    parameter = ParameterDefinition(
+        id="test-keyed-rate-table-disjoint",
+        data_type="keyed_bracket_table",
+        unit="percent",
+        keyed_brackets=(
+            KeyedBracketEntry(
+                key="general",
+                value=Decimal("0.24"),
+                valid_from=date(2024, 1, 1),
+                valid_to=date(2024, 12, 31),
+            ),
+            KeyedBracketEntry(
+                key="general",
+                value=Decimal("0.30"),
+                valid_from=date(2025, 1, 1),
+                valid_to=date(2025, 12, 31),
+            ),
+        ),
+        legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+        source_refs=("aeat-modelo-210-procedure",),
+    )
+
+    assert len(parameter.keyed_brackets) == 2
 
 
 def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None:
