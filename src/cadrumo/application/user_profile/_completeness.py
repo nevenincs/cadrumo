@@ -64,17 +64,36 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     return IrpfIncomeCategory.ACTIVIDAD_ECONOMICA.value in categories
 
 
+def profile_value_is_present(value: object) -> bool:
+    """Report whether ``value`` counts as a filled profile field.
+
+    The single presence rule every readiness surface reads. It existed in
+    two incompatible spellings before: the conditional rules below stripped
+    before deciding, as did the profile-key authority behind the CLI status
+    gate, while the schema-required reader and the overview it feeds tested
+    only ``!= ""``. A required identity holding spaces was therefore
+    complete to the surfaces that persist it and missing to the surface
+    that refuses it -- a readiness fork rather than a rendering difference,
+    because the two answers govern different decisions.
+
+    Stripping is the direction that resolves it. A whitespace-only value
+    survives no field-level parser in the system, so treating it as filled
+    only defers the refusal to a later boundary that reports it as
+    something other than an empty required field.
+    """
+    return bool(_token(value))
+
+
 def missing_required_field_paths(
     schema: ProfileSchemaDefinition,
     values: Mapping[str, str],
 ) -> tuple[str, ...]:
     """Report which schema-required field paths a value mapping leaves unsatisfied.
 
-    Presence is value-bearing but NOT whitespace-stripped, matching the
-    surfaces that consume this. Tightening it here would silently change
-    what counts as a filled field.
+    Presence is value-bearing, never fact-bearing, and is decided by the one
+    shared :func:`profile_value_is_present` rule rather than restated here.
     """
-    present = {path for path, value in values.items() if value != ""}
+    present = {path for path, value in values.items() if profile_value_is_present(value)}
     missing: list[str] = []
     for section in schema.sections:
         required = tuple(field.key for field in section.fields if field.required)
@@ -130,7 +149,7 @@ def _rows_of(section_key: str, present: Iterable[str]) -> dict[str, set[str]]:
 
 
 def _has_value(values: Mapping[str, object], path: str) -> bool:
-    return bool(_token(values.get(path)))
+    return profile_value_is_present(values.get(path))
 
 
 def _token(value: object) -> str:
@@ -151,4 +170,5 @@ __all__ = [
     "conditional_profile_required_paths",
     "iva_regime_required",
     "missing_required_field_paths",
+    "profile_value_is_present",
 ]
