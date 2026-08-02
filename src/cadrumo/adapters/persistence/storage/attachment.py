@@ -263,6 +263,37 @@ class AttachmentStore(BaseModel):
         if actual != digest:
             raise _attachment_validation_error("blob digest drift", violation="blob_digest_drift")
 
+    def _assert_blob_present(self, attachment: Attachment) -> None:
+        """Refuse a manifest that references bytes this store does not hold."""
+        if not self._objects_repo().exists(_ATTACHMENT_BLOB_NAMESPACE, attachment.sha256):
+            raise _attachment_validation_error(
+                "attachment manifest references bytes that are not stored",
+                violation="manifest_blob_missing",
+            )
+
+    def _assert_manifest_matches_blob(self, attachment: Attachment) -> None:
+        """Verify the manifest's declared size and digest against the stored bytes.
+
+        ``Attachment`` enforces ``attachment_id == sha256`` internally, but that
+        is a self-consistency check on the manifest alone: nothing bound the
+        declared :attr:`Attachment.bytes_size` to the payload the store actually
+        holds, so a caller could persist a manifest claiming any length for the
+        bytes. This reads the blob once and refuses a length or digest that does
+        not reproduce from the stored payload.
+        """
+        self._assert_blob_present(attachment)
+        stored = self.read_bytes(attachment.sha256)
+        if len(stored) != attachment.bytes_size:
+            raise _attachment_validation_error(
+                "attachment manifest bytes_size does not match the stored payload",
+                violation="manifest_bytes_size",
+            )
+        if sha256_hex(stored) != attachment.sha256:
+            raise _attachment_validation_error(
+                "attachment manifest sha256 does not match the stored payload",
+                violation="manifest_blob_digest",
+            )
+
     def write_manifest(self, attachment: Attachment) -> None:
         """Persist ``attachment`` as an encrypted manifest envelope."""
         if is_link_only_mime_type(attachment.mime_type):
@@ -270,6 +301,7 @@ class AttachmentStore(BaseModel):
                 "attachment manifest must carry document bytes, not a link-only URI list",
                 violation="manifest_link_only_mime_type",
             )
+        self._assert_manifest_matches_blob(attachment)
         # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
@@ -310,10 +342,20 @@ class AttachmentStore(BaseModel):
                 "manifest key does not match stored attachment_id",
                 violation="manifest_key",
             )
+        self._assert_manifest_matches_blob(attachment)
         return attachment
 
     def iter_manifests(self) -> Iterator[Attachment]:
-        """Iterate over every :class:`Attachment` manifest in sorted attachment-id order."""
+        """Iterate over every :class:`Attachment` manifest in sorted attachment-id order.
+
+        Each manifest is checked to reference bytes this store actually holds.
+        The presence check is a key lookup rather than the full length/digest
+        reproduction :meth:`load_manifest` performs: iteration is the listing
+        path, and re-reading every blob would decrypt the whole evidence corpus
+        to render a list. The declared size is bound to the payload at
+        :meth:`write_manifest`, so a listed size cannot have been admitted
+        unverified.
+        """
         manifests: list[Attachment] = []
         for record in self._objects_repo().list_records(
             _ATTACHMENT_MANIFEST_NAMESPACE,
@@ -322,6 +364,7 @@ class AttachmentStore(BaseModel):
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         ):
             envelope = _decode_manifest_envelope(record.payload)
+            self._assert_blob_present(envelope.payload)
             manifests.append(envelope.payload)
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)
 
