@@ -94,13 +94,33 @@ class TransactionParticipationIndexRepository:
 
         Returns an empty :class:`TransactionRevisionParticipationIndex` for that
         transaction when nothing has been persisted yet, rather than raising.
+
+        The decrypted payload's own ``transaction_id`` must rebuild the key the
+        row is filed under. It is the same fact twice --
+        :meth:`to_secure_object_write` derives the key FROM the payload, so the
+        write path cannot disagree with itself and needs no check; only a row
+        that arrived some other way can. Without the comparison, an index
+        belonging to transaction B read through A's key attributed B's
+        finalized-revision participations to A, which is what the ledger
+        deletion guard and the operator cross-reference both read.
+
+        Raises:
+            TransactionParticipationIndexPersistenceError: The stored row fails
+                the classification or envelope-version gate.
+            SecureObjectRowIdentityError: The payload names a different
+                transaction than the key it is filed under. Raised as the
+                substrate's own identity error rather than translated, so this
+                condition is the one recognisable failure across every
+                key-addressed repository instead of a per-repository dialect.
         """
         from ..storage import (
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
+            SecureObjectRowIdentityError,
             inner_envelope_version_is_current,
         )
+        from ..storage.crypto import secure_object_key_digest
 
         object_key = derive_participation_index_id(transaction_id)
         try:
@@ -144,7 +164,15 @@ class TransactionParticipationIndexRepository:
                     "max_supported_version": _PARTICIPATION_INDEX_SCHEMA_VERSION,
                 },
             )
-        return envelope.payload
+        payload = envelope.payload
+        payload_key = derive_participation_index_id(payload.transaction_id)
+        if secure_object_key_digest(payload_key) != record.object_key:
+            _LOGGER.error("participation-index row identity mismatch")
+            raise SecureObjectRowIdentityError(
+                _PARTICIPATION_INDEX_NAMESPACE,
+                expected_identifier=payload_key,
+            )
+        return payload
 
     def save(self, index: TransactionRevisionParticipationIndex) -> None:
         """Persist one transaction's participation index to encrypted storage."""
