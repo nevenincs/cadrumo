@@ -42,6 +42,7 @@ from pydantic import BaseModel
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
+    MasterKeyPassphraseMismatchError,
     RecoveryVerificationError,
     SecretStoreError,
     StorageValidationError,
@@ -51,12 +52,15 @@ from ...adapters.persistence.storage.master_key import (
     PassphraseCallback,
     RecoveryEnrollmentOutcome,
     activate_master_key_provider,
+    evaluate_login_throttle,
     get_master_key_provider,
+    record_login_failure,
     recovery_create,
     recovery_recover,
     recovery_rotate,
     recovery_status,
     recovery_verify,
+    reset_login_throttle,
     zeroise,
 )
 from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
@@ -450,6 +454,29 @@ def _require_file_custody(settings: Settings) -> None:
         )
 
 
+def _throttle_scope() -> tuple[Path, str] | None:
+    """Return ``(storage_root, bucket_id)`` for the shared failed-attempt budget.
+
+    The store passphrase this module verifies is the SAME secret the login door
+    authenticates against, so both must draw on one budget: throttling login
+    while leaving a second verification door free buys nothing. The counter is
+    keyed per bucket (``login_throttle_path`` requires keystore separation), so
+    the scope is the active bucket.
+
+    ``None`` when no profile is selected. Custody deliberately does not require
+    one - ``recover_secret_store`` runs precisely when the operator cannot
+    unlock a profile - so a missing selection degrades rather than refusing, in
+    the same spirit as :func:`_emit_custody_event`. That leaves a residual
+    unthrottled path for a caller who can clear the active-profile pointer;
+    closing it needs a store-scoped counter, which is a change to the throttle
+    module's own per-bucket contract rather than something to improvise here.
+    """
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        return None
+    return Path(load_settings().cadrumo_local_storage_root), bucket_id
+
+
 def change_passphrase(
     *,
     current_passphrase: str,
@@ -473,13 +500,39 @@ def change_passphrase(
     """
     resolved = _settings(settings)
     _require_file_custody(resolved)
+    # Evaluated BEFORE the unwrap below, which runs Argon2id: this door verifies
+    # the same secret the login door does, so it draws on the same budget rather
+    # than offering an unmetered way to test passphrases.
+    from ._login_session import ProfileLoginThrottledError
+
+    scope = _throttle_scope()
+    if scope is not None:
+        storage_root, throttle_bucket = scope
+        evaluation = evaluate_login_throttle(
+            storage_root=storage_root,
+            bucket_id=throttle_bucket,
+            now=utc_now(),
+        )
+        if evaluation.throttled:
+            raise ProfileLoginThrottledError(remaining_seconds=evaluation.remaining_seconds)
     verifying_provider = _file_provider_with_passphrase(settings=resolved, passphrase=current_passphrase)
     # The unwrapped master key is copied into a wipeable buffer and zeroed as
     # soon as it has been rewrapped, so the plaintext DEK does not linger in an
     # immutable object for the garbage collector to release at its leisure. A
     # passphrase change is one of the three recovery-surface operations that
     # opens this window, alongside recovery mint and unwrap.
-    master_key = bytearray(verifying_provider.get_master_key())
+    try:
+        master_key = bytearray(verifying_provider.get_master_key())
+    except MasterKeyPassphraseMismatchError:
+        # Feed the shared counter, so guesses spent here cost the attacker the
+        # same backoff they would have cost at the login door.
+        if scope is not None:
+            record_login_failure(storage_root=scope[0], bucket_id=scope[1], now=utc_now())
+        raise
+    if scope is not None:
+        # A verified passphrase clears the budget, matching login's semantics -
+        # the operator proved possession of the secret.
+        reset_login_throttle(storage_root=scope[0], bucket_id=scope[1])
     try:
         new_provider = _file_provider_with_passphrase(settings=resolved, passphrase=new_passphrase)
         new_provider.complete_recovery(bytes(master_key))
