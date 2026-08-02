@@ -63,6 +63,10 @@ class ParticipationRebuildStats(BaseModel):
         participation_count: Total number of (transaction, finalized-revision)
             participation entries written across all transactions.
         revision_count: Number of finalized revisions folded into the index.
+        stale_removed_count: Number of previously persisted participation objects
+            removed because the regenerated catalogue no longer records them —
+            the transactions whose finalized revisions were discarded, removed,
+            or reverted to borrador since the last rebuild.
     """
 
     model_config = _STRICT_FROZEN
@@ -70,6 +74,7 @@ class ParticipationRebuildStats(BaseModel):
     transaction_count: int = Field(ge=0)
     participation_count: int = Field(ge=0)
     revision_count: int = Field(ge=0)
+    stale_removed_count: int = Field(ge=0)
 
 
 def _filing_record_for_revision(
@@ -103,8 +108,14 @@ def rebuild_participation_index(
     ``modelo`` / ``filing_year`` / ``period`` from the work-unit catalogue and its
     ``filing_record_id`` from the filing-record catalogue, and writes one
     :class:`TransactionRevisionParticipationIndex` per contributing transaction.
-    Borrador and discarded revisions are excluded. Returns a
-    :class:`ParticipationRebuildStats` summary.
+    Borrador and discarded revisions are excluded.
+
+    The regenerated set REPLACES the persisted index rather than being upserted
+    over it: a transaction whose finalized revisions have since been discarded or
+    removed contributes no entry here, and its stale secure object is pruned in
+    the same atomic batch. Without that prune a removed revision would stay
+    visible through the derived cache while the authoritative catalogue no longer
+    records it. Returns a :class:`ParticipationRebuildStats` summary.
     """
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
@@ -150,13 +161,13 @@ def rebuild_participation_index(
             rebuilt[transaction_id] = upsert_transaction_participation(current, participation)
             participation_count += 1
 
-    for index in rebuilt.values():
-        participation_repo.save(index)
+    stale_removed_count = participation_repo.replace_all(rebuilt.values())
 
     return ParticipationRebuildStats(
         transaction_count=len(rebuilt),
         participation_count=participation_count,
         revision_count=revision_count,
+        stale_removed_count=stale_removed_count,
     )
 
 
