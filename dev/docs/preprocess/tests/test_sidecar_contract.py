@@ -159,6 +159,49 @@ def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
         load_sidecar(source_copy)
 
 
+@pytest.mark.parametrize("bad_version", ["999.0", "0.9", "1.1", ""])
+def test_load_sidecar_refuses_an_unsupported_schema_version(tmp_path: Path, bad_version: str) -> None:
+    """A sidecar declaring any schema_version but the current one is refused.
+
+    Covers both directions: a future version this loader has never seen
+    (`999.0`) and a below-floor version older than what this loader
+    understands (`0.9`, `1.1`), plus the degenerate empty string. If this
+    passed, `schema_version` would be a bare label rather than an enforced
+    compatibility gate.
+    """
+    source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name
+    source_copy.write_bytes(_WORKED_EXAMPLE_HTML.read_bytes())
+    output = build_outputs(source_copy, repo_root=tmp_path)[0]
+    _, json_path = write_sidecar(source_copy, output)
+
+    good = json_path.read_text(encoding="utf-8")
+    tampered = good.replace(f'"schema_version": "{output.schema_version}"', f'"schema_version": "{bad_version}"')
+    assert tampered != good
+    json_path.write_text(tampered, encoding="utf-8")
+
+    with pytest.raises(PreprocessSidecarError):
+        load_sidecar(source_copy)
+
+
+def test_preprocess_output_refuses_an_unsupported_schema_version_directly() -> None:
+    """The schema itself, not just the sidecar loader, refuses a bad version."""
+    output = build_outputs(_WORKED_EXAMPLE_HTML, repo_root=_REPO_ROOT)[0]
+    payload = output.model_dump(mode="json")
+    payload["schema_version"] = "999.0"
+
+    with pytest.raises(ValueError, match="unsupported preprocess schema_version"):
+        PreprocessOutput.model_validate(payload)
+
+
+def test_preprocess_output_accepts_the_current_schema_version() -> None:
+    """A record declaring the current schema_version validates cleanly."""
+    output = build_outputs(_WORKED_EXAMPLE_HTML, repo_root=_REPO_ROOT)[0]
+
+    assert output.schema_version == PREPROCESS_SCHEMA_VERSION
+    reloaded = PreprocessOutput.model_validate_json(output.model_dump_json())
+    assert reloaded == output
+
+
 def test_load_sidecar_refuses_a_source_changed_since_extraction(tmp_path: Path) -> None:
     """A sidecar whose source file changed on disk (same length) is refused as stale.
 

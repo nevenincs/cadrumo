@@ -142,6 +142,23 @@ class PreprocessOutput(BaseModel):
     )
     units: tuple[PreprocessUnit, ...] = Field(default=())
 
+    @field_validator("schema_version")
+    @classmethod
+    def _schema_version_is_supported(cls, value: str) -> str:
+        """Refuse a sidecar declaring any schema_version but the current one.
+
+        Per the pre-release no-legacy-compatibility regime this module
+        recognises exactly one schema shape; there is no upgrade path to
+        tolerate an older version and no forward-compatibility promise for a
+        newer one, so any mismatch is refused rather than silently accepted.
+        """
+        if value != PREPROCESS_SCHEMA_VERSION:
+            raise ValueError(
+                f"unsupported preprocess schema_version {value!r}: "
+                f"this loader only accepts {PREPROCESS_SCHEMA_VERSION!r}"
+            )
+        return value
+
     @field_validator("source_relpath")
     @classmethod
     def _source_relpath_is_canonical_posix_relative(cls, value: str) -> str:
