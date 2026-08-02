@@ -42,7 +42,7 @@ def _row_to_payload(row: ReviewQueueRow) -> ReviewQueueRowPayload:
         reason=row.reason,
         current_owner_surface=row.current_owner_surface,
         canonical_next_command=row.canonical_next_command,
-        since=row.since.isoformat(),
+        since=row.since,
         summary=row.summary,
         legal_refs=tuple(row.legal_refs),
     )

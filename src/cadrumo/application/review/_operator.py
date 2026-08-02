@@ -8,7 +8,6 @@ public :class:`BindingSourceKind` selector vocabulary for CLI rendering.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
 
@@ -19,6 +18,7 @@ from ...core import BindingSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
 from ...core.identity import BucketId
+from ...core.time import UtcInstant
 from ...domain.calculations.registry import LegalRefId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
@@ -44,7 +44,15 @@ class ReviewQueueRow(BaseModel):
     reason: str = ""
     current_owner_surface: str = Field(min_length=1)
     canonical_next_command: str = Field(min_length=1)
-    since: datetime
+    since: UtcInstant
+    """The originating review item's instant, carried under the same contract.
+
+    Every :class:`~cadrumo.application.review.ReviewItem` validates ``since``
+    as UTC-aware, and this projection is the only thing between that record
+    and the wire. Declared as a bare ``datetime`` it re-admitted the naive and
+    non-UTC values the canonical queue refuses, and cross-source sorting is
+    only deterministic while every row's instant is comparable.
+    """
     summary: str = Field(min_length=1)
     legal_refs: tuple[LegalRefId, ...] = Field(default_factory=tuple)
     """Legal references (BOE permalinks or canonical IDs) justifying the finding.
