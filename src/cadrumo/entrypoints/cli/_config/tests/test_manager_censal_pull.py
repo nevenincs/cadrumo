@@ -308,7 +308,7 @@ def test_the_summary_counts_all_three_outcomes() -> None:
         divergences=(("contact.fiscal_address", "CALLE MAYOR 1"),),
     )
 
-    summary = _censal_pull_summary(reconciliation, read_count=5, declared={})
+    summary = _censal_pull_summary(reconciliation, read_count=5, declared={}, labels={})
 
     assert "1" in summary, "one field was filled in"
     assert "3" in summary, "five read, one adopted and one diverging leaves three already matching"
@@ -340,11 +340,13 @@ def test_the_fiscal_identity_is_never_reported_as_an_outcome() -> None:
         CensalReconciliation(adopted=(postcode,), divergences=()),
         read_count=2,
         declared={},
+        labels={},
     )
     with_identity = _censal_pull_summary(
         CensalReconciliation(adopted=(postcode, identity), divergences=()),
         read_count=2,
         declared={},
+        labels={},
     )
 
     assert with_identity == without, "the fiscal identity must not move any of the three counts"
@@ -374,7 +376,7 @@ def test_a_cleared_path_is_reported_apart_from_a_declared_disagreement() -> None
         "contact.fiscal_address": EffectiveFact(value="OTRA CALLE 9", source="manual_cli"),
     }
 
-    summary = _censal_pull_summary(reconciliation, read_count=2, declared=declared)
+    summary = _censal_pull_summary(reconciliation, read_count=2, declared=declared, labels={})
     cleared, contested = _split_divergences(reconciliation, declared)
 
     assert cleared == ("contact.postcode",)
@@ -398,14 +400,45 @@ def test_a_path_the_operator_never_set_is_not_treated_as_cleared() -> None:
     assert contested == ("contact.postcode",)
 
 
-def test_the_summary_names_the_paths_aeat_disagrees_on() -> None:
-    """A divergence the operator cannot locate is not a report."""
+def test_the_summary_names_a_disagreement_the_way_the_page_names_it() -> None:
+    """A divergence the operator cannot locate is not a report.
+
+    Locating it means reading a name they have seen before. The page shows
+    a label per row, so the summary names the field by that label; the
+    dotted path is how the record addresses a value and is not something
+    the operator was ever shown.
+    """
     reconciliation = CensalReconciliation(
         adopted=(),
         divergences=(("contact.fiscal_address", "CALLE MAYOR 1"),),
     )
 
-    assert "contact.fiscal_address" in _censal_pull_summary(reconciliation, read_count=1, declared={})
+    summary = _censal_pull_summary(
+        reconciliation,
+        read_count=1,
+        declared={},
+        labels={"contact.fiscal_address": "Domicilio fiscal"},
+    )
+
+    assert "Domicilio fiscal" in summary, "the operator is told which field disagrees, in the page's words"
+    assert "contact.fiscal_address" not in summary, "the dotted path is not a name the operator has ever seen"
+
+
+def test_a_field_with_no_label_is_still_reported_by_its_path() -> None:
+    """Silence about a contradicted value would be worse than an obscure name.
+
+    A path missing from the projection has no label to show, and dropping
+    it would leave AEAT disagreeing with a stored value the operator is
+    never told about.
+    """
+    reconciliation = CensalReconciliation(
+        adopted=(),
+        divergences=(("contact.fiscal_address", "CALLE MAYOR 1"),),
+    )
+
+    summary = _censal_pull_summary(reconciliation, read_count=1, declared={}, labels={})
+
+    assert "contact.fiscal_address" in summary, "an unlabelled divergence must still be named"
 
 
 def test_a_clean_pull_says_nothing_about_divergences() -> None:
@@ -415,7 +448,7 @@ def test_a_clean_pull_says_nothing_about_divergences() -> None:
         divergences=(),
     )
 
-    assert "contact." not in _censal_pull_summary(reconciliation, read_count=1, declared={})
+    assert "contact." not in _censal_pull_summary(reconciliation, read_count=1, declared={}, labels={})
 
 
 @pytest.mark.usefixtures("active_profile")
@@ -446,6 +479,6 @@ def test_a_read_matching_the_profile_is_neither_adopted_nor_diverging() -> None:
     )
     assert again.adopted == (), "nothing to adopt when the record already agrees"
     assert again.divergences == (), "agreement is not a disagreement"
-    assert _censal_pull_summary(again, read_count=len(first.adopted), declared={}) is not None, (
+    assert _censal_pull_summary(again, read_count=len(first.adopted), declared={}, labels={}) is not None, (
         "a pull that changed nothing still has something to report"
     )

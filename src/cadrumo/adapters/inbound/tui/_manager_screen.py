@@ -34,7 +34,7 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, Static
+from textual.widgets import Button, DataTable, Footer, Input, Label, LoadingIndicator, OptionList, Static
 from textual.worker import Worker, WorkerState
 
 from ....core.i18n import tr
@@ -93,6 +93,18 @@ _ABSENT_GLYPH = "○"
 
 _REQUIRED_MARK = "*"
 """Marks a field filing will eventually require."""
+
+_REFUSAL_TONE = "-refusal"
+"""Something the page would not do. The operator's next task."""
+
+_RESULT_TONE = "-result"
+"""What an action did. Information, not a demand."""
+
+_PROGRESS_TONE = "-progress"
+"""Work still under way, which will be replaced by its own outcome."""
+
+_NOTICE_TONES = (_REFUSAL_TONE, _RESULT_TONE, _PROGRESS_TONE)
+"""Every tone the one notice channel can take, so setting one clears the rest."""
 
 
 class FieldEditScreen(ModalScreen[str | None]):
@@ -178,12 +190,16 @@ class ProfileManagerApp(App[None]):
         height: auto;
         width: 100%;
         padding: 0 2;
-        color: $error;
+        color: $text;
     }
+    #manager-notice.-refusal { color: $error; text-style: bold; }
+    #manager-notice.-result { color: $text; }
+    #manager-notice.-progress { color: $text-muted; }
     .manager-section DataTable { height: auto; width: 100%; background: $surface; }
     #manager-actions { height: auto; width: 100%; }
     #manager-actions Button { margin: 0 2 0 0; }
-    #manager-action-result { margin: 1 0 0 0; color: $text-muted; }
+    #manager-busy { display: none; height: 1; margin: 1 0 0 0; }
+    #manager-busy.busy { display: block; }
     #edit-dialog {
         border: thick $accent;
         background: $surface;
@@ -272,7 +288,7 @@ class ProfileManagerApp(App[None]):
                     with Horizontal(id="manager-actions"):
                         for action in self._actions:
                             yield Button(self._action_label(action), id=f"action-{action.key}")
-                    yield Static(id="manager-action-result")
+                    yield LoadingIndicator(id="manager-busy")
             for section in self.overview.sections:
                 yield Static(id=f"section-{section.key}", classes="manager-section cadrumo-panel")
         yield Footer()
@@ -294,7 +310,7 @@ class ProfileManagerApp(App[None]):
         content actually moved — the same page, at a fraction of the work.
         """
         self._render_chrome()
-        self.query_one("#manager-notice", Static).update("")
+        self._clear_notice()
         self._render_progress()
         self._field_by_key.clear()
         self._table_by_section.clear()
@@ -341,7 +357,7 @@ class ProfileManagerApp(App[None]):
             return
 
         self._render_chrome()
-        self.query_one("#manager-notice", Static).update("")
+        self._clear_notice()
         self._render_progress()
         for was, now in zip(previous.sections, updated.sections, strict=True):
             table = self._table_by_section.get(now.key)
@@ -446,10 +462,10 @@ class ProfileManagerApp(App[None]):
         about to replace.
         """
         if self._pending_write is not None:
-            self._notify(tr("flows.manager.edit.write_in_flight"))
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
         if self._pending_action is not None:
-            self._notify(tr("flows.manager.action.busy"))
+            self._refuse(tr("flows.manager.action.busy"))
             return
         key = event.row_key.value
         if key is None:
@@ -471,7 +487,7 @@ class ProfileManagerApp(App[None]):
             # raise: dismissing the dialog is how "leave this alone" is
             # expressed, and an empty box is not that.
             if field.required and not value.strip():
-                self._notify(tr("flows.manager.edit.required_blank", field=field.label))
+                self._refuse(tr("flows.manager.edit.required_blank", field=field.label))
                 return
             self._persist(field.path, value)
 
@@ -500,7 +516,7 @@ class ProfileManagerApp(App[None]):
         unchanged.
         """
         if self._pending_write is not None:
-            self._notify(tr("flows.manager.edit.write_in_flight"))
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
         write_context = copy_context()
 
@@ -551,7 +567,7 @@ class ProfileManagerApp(App[None]):
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
-        self._notify(str(worker.error) if worker.error is not None else tr("flows.manager.edit.write_failed"))
+        self._refuse(str(worker.error) if worker.error is not None else tr("flows.manager.edit.write_failed"))
 
     def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
         """Report one finished action and adopt any profile it handed back.
@@ -563,22 +579,75 @@ class ProfileManagerApp(App[None]):
         action chose, not as the seam's own crash.
         """
         self._pending_action = None
+        self._set_busy(False)
         if worker.state is not WorkerState.SUCCESS or worker.result is None:
-            self._report_action(
+            self._refuse(
                 str(worker.error) if worker.error is not None else tr("flows.manager.action.failed"),
             )
             return
         outcome = worker.result
-        self._report_action(outcome.message)
         if outcome.overview is not None:
             # A full redraw, not a cell diff: an action can change the
             # profile's shape, which is exactly what the diff cannot do.
             self.overview = outcome.overview
             self._render()
+        # After the redraw, which clears the channel: reporting first would
+        # write the outcome and then immediately wipe it.
+        self._report(outcome.message)
 
-    def _notify(self, message: str) -> None:
-        """Show one refusal above the tables until the next successful edit."""
-        self.query_one("#manager-notice", Static).update(message)
+    def _clear_notice(self) -> None:
+        """Empty the channel and drop its tone.
+
+        The tone goes with the text: leaving it behind would colour the
+        next message as whatever the last one was, and an empty line still
+        carrying the refusal style is a stripe of error colour explaining
+        nothing.
+        """
+        self._announce("", "")
+
+    def _refuse(self, message: str) -> None:
+        """Show something the page would not do, and why."""
+        self._announce(message, _REFUSAL_TONE)
+
+    def _report(self, message: str) -> None:
+        """Show what an action did."""
+        self._announce(message, _RESULT_TONE)
+
+    def _progress(self, message: str) -> None:
+        """Show what is happening while it is still happening."""
+        self._announce(message, _PROGRESS_TONE)
+
+    def _announce(self, message: str, tone: str) -> None:
+        """Put one line in the page's single diagnostic channel.
+
+        There is one channel because the operator has one place to look.
+        Refusals and results were previously split across two widgets of
+        different prominence — a bold docked line for a rejected field, a
+        muted line under the buttons for everything an action had to say —
+        so an action refusing for want of a certificate whispered while a
+        mistyped date shouted, though both are the page answering back.
+
+        What differs between them is emphasis, not location: a refusal is
+        the operator's next task and is coloured as such, a result is
+        information, and progress is neither and recedes.
+        """
+        notice = self.query_one("#manager-notice", Static)
+        notice.update(message)
+        for candidate in _NOTICE_TONES:
+            notice.set_class(candidate == tone, candidate)
+
+    def _set_busy(self, busy: bool) -> None:
+        """Show that background work is running, and refuse to start more.
+
+        Without this the page looks idle while an action is mid-flight —
+        the censal pull waits on a live browser session, which is long
+        enough that a still screen reads as a frozen one. Disabling the
+        buttons states the same thing the guard already enforces, rather
+        than letting a press be silently refused.
+        """
+        self.query_one("#manager-busy", LoadingIndicator).set_class(busy, "busy")
+        for action in self._actions:
+            self.query_one(f"#action-{action.key}", Button).disabled = busy
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Start the pressed action off the event loop.
@@ -607,7 +676,7 @@ class ProfileManagerApp(App[None]):
         if action is None:
             return
         if self._pending_action is not None or self._pending_write is not None:
-            self._report_action(tr("flows.manager.action.busy"))
+            self._refuse(tr("flows.manager.action.busy"))
             return
         action_context = copy_context()
 
@@ -622,7 +691,8 @@ class ProfileManagerApp(App[None]):
             exit_on_error=False,
             thread=True,
         )
-        self._report_action(tr("flows.manager.action.working", action=self._action_label(action)))
+        self._set_busy(True)
+        self._progress(tr("flows.manager.action.working", action=self._action_label(action)))
 
     def _present_form_here(
         self,
@@ -639,10 +709,6 @@ class ProfileManagerApp(App[None]):
         """
         return self.call_from_thread(self.push_screen_wait, FormScreen(page, rebuild=rebuild))
 
-    def _report_action(self, message: str) -> None:
-        """Show what the last pressed action has to say."""
-        self.query_one("#manager-action-result", Static).update(message)
-
     @override
     async def action_quit(self) -> None:
         """Leave the manager, unless a field write is still landing.
@@ -658,10 +724,10 @@ class ProfileManagerApp(App[None]):
         profile, so leaving now would abandon a write already under way.
         """
         if self._pending_write is not None:
-            self._notify(tr("flows.manager.edit.write_in_flight"))
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
         if self._pending_action is not None:
-            self._report_action(tr("flows.manager.action.busy"))
+            self._refuse(tr("flows.manager.action.busy"))
             return
         self.exit(None)
 

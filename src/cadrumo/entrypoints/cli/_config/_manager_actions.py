@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
     from ....adapters.inbound.tui import FormPage, ManagerAction, ManagerActionOutcome
     from ....application.auth import AuthConfigureResult
-    from ....application.user_profile import CensalReconciliation, EffectiveFact
+    from ....application.user_profile import CensalReconciliation, EffectiveFact, ProfileOverview
     from ....core import AuthProviderKind
 
     FormPresenter = Callable[[FormPage], Mapping[str, str] | None]
@@ -91,7 +91,12 @@ def censal_pull_action() -> ManagerAction:
     """
     from ....adapters.inbound.tui import ManagerAction
 
-    return ManagerAction(key="censal-pull", label=tr("flows.manager.action.censal_pull"), run=_run_censal_pull)
+    return ManagerAction(
+        key="censal-pull",
+        label=tr("flows.manager.action.censal_pull"),
+        label_key="flows.manager.action.censal_pull",
+        run=_run_censal_pull,
+    )
 
 
 def _run_censal_pull() -> ManagerActionOutcome:
@@ -153,9 +158,17 @@ def _run_censal_pull() -> ManagerActionOutcome:
     adoptable_read = len(facts)
     repository.save(apply_censal_read(state, read))
 
+    # Built once and used twice: the summary names the diverging fields
+    # the way the page does, and the page itself is what the screen redraws.
+    overview = build_active_profile_overview()
     return ManagerActionOutcome(
-        message=_censal_pull_summary(reconciliation, read_count=adoptable_read, declared=declared),
-        overview=build_active_profile_overview(),
+        message=_censal_pull_summary(
+            reconciliation,
+            read_count=adoptable_read,
+            declared=declared,
+            labels=_field_labels(overview),
+        ),
+        overview=overview,
     )
 
 
@@ -187,6 +200,7 @@ def _censal_pull_summary(
     *,
     read_count: int,
     declared: Mapping[str, EffectiveFact],
+    labels: Mapping[str, str],
 ) -> str:
     """Report what the read did to each field, in the operator's terms.
 
@@ -230,10 +244,36 @@ def _censal_pull_summary(
     ]
     cleared, contested = _split_divergences(reconciliation, declared)
     if contested:
-        parts.append(tr("flows.manager.action.censal_pull_contested", paths=", ".join(contested)))
+        parts.append(tr("flows.manager.action.censal_pull_contested", paths=_name_paths(contested, labels)))
     if cleared:
-        parts.append(tr("flows.manager.action.censal_pull_cleared", paths=", ".join(cleared)))
+        parts.append(tr("flows.manager.action.censal_pull_cleared", paths=_name_paths(cleared, labels)))
     return " ".join(parts)
+
+
+def _name_paths(paths: Sequence[str], labels: Mapping[str, str]) -> str:
+    """Name each path the way the page names it.
+
+    The operator is being told which of their fields AEAT disagrees with,
+    so they are named as the rows they can go and look at. A dotted path
+    is how the record addresses a field, not how the page shows it, and it
+    is not what the operator was reading when they answered.
+
+    A path with no label falls back to itself rather than being dropped: a
+    field missing from the projection is still a divergence they must be
+    told about, and an obscure name is better than silence about a value
+    AEAT contradicts.
+    """
+    return ", ".join(labels.get(path, path) for path in paths)
+
+
+def _field_labels(overview: ProfileOverview) -> Mapping[str, str]:
+    """Every field path on the page, mapped to the label shown for it.
+
+    Read from the projection rather than from a table here, so the names
+    follow the page: whatever the overview calls a field, including once
+    those labels are translated, is what this reports.
+    """
+    return {field.path: field.label for section in overview.sections for field in section.fields}
 
 
 def _split_divergences(
@@ -272,7 +312,12 @@ def export_action() -> ManagerAction:
     """Write a passphrase-encrypted portable copy of the profile."""
     from ....adapters.inbound.tui import ManagerAction
 
-    return ManagerAction(key="export", label=tr("flows.manager.action.export"), run=_run_export)
+    return ManagerAction(
+        key="export",
+        label=tr("flows.manager.action.export"),
+        label_key="flows.manager.action.export",
+        run=_run_export,
+    )
 
 
 def _run_export() -> ManagerActionOutcome:
@@ -331,7 +376,12 @@ def certificate_action() -> ManagerAction:
     """Choose how this taxpayer authenticates, and with which certificate."""
     from ....adapters.inbound.tui import ManagerAction
 
-    return ManagerAction(key="certificate", label=tr("flows.manager.action.certificate"), run=_run_certificate)
+    return ManagerAction(
+        key="certificate",
+        label=tr("flows.manager.action.certificate"),
+        label_key="flows.manager.action.certificate",
+        run=_run_certificate,
+    )
 
 
 def _run_certificate(present: FormPresenter | None = None) -> ManagerActionOutcome:

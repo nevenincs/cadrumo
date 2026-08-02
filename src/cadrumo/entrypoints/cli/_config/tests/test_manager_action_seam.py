@@ -61,7 +61,7 @@ def _manager() -> ProfileManagerApp:
 
 
 def _result_line(app: ProfileManagerApp) -> str:
-    return str(app.query_one("#manager-action-result", Static).content)
+    return str(app.query_one("#manager-notice", Static).content)
 
 
 def _open_form(app: ProfileManagerApp) -> FormScreen | None:
