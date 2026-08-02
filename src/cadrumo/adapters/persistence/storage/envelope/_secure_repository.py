@@ -36,12 +36,17 @@ from .....core.logging import get_logger
 from .....core.time import now
 from .._path_safety import safe_repository_id
 from ..crypto import secure_object_key_digest
-from ..errors import ClassificationError, EnvelopeVersionError, RepositorySetupError
+from ..errors import (
+    ClassificationError,
+    EnvelopeVersionError,
+    RepositorySetupError,
+    SecureObjectRowIdentityError,
+)
 from ..runtime_repository import (
     secure_object_repository_for_active_bucket_or_default_route,
     secure_object_repository_for_bucket,
 )
-from ..sql import SecureObjectDeletion, SecureObjectRepository
+from ..sql import SecureObjectDeletion, SecureObjectRecord, SecureObjectRepository
 from ._envelope import Envelope
 
 _log = get_logger(__name__)
@@ -356,6 +361,15 @@ class SecureBoundRepository[T: BaseModel]:
     # Enumeration
     # ------------------------------------------------------------------
 
+    def _iter_validated_rows(self) -> Iterator[tuple[SecureObjectRecord, Envelope[BaseModel]]]:
+        """Yield each stored row beside its classification/version-validated envelope."""
+        for record in self._objects.list_records(
+            self.namespace,
+            expected_class=self.sensitivity,
+            max_supported_version=self.schema_version,
+        ):
+            yield record, self._validate_envelope(record.payload, subject=f"{self.namespace} iterator row")
+
     def _iter_validated_envelopes(self) -> Iterator[Envelope[BaseModel]]:
         """Yield each row's classification/version-validated envelope in storage order.
 
@@ -367,12 +381,39 @@ class SecureBoundRepository[T: BaseModel]:
         any row is unreadable, so a full consumption never yields a readable
         subset past a corrupt row.
         """
-        for record in self._objects.list_records(
-            self.namespace,
-            expected_class=self.sensitivity,
-            max_supported_version=self.schema_version,
-        ):
-            yield self._validate_envelope(record.payload, subject=f"{self.namespace} iterator row")
+        for _record, envelope in self._iter_validated_rows():
+            yield envelope
+
+    def iter_verified_records(self) -> Iterator[T]:
+        """Yield every persisted payload whose identity matches the key it is filed under.
+
+        The verifying counterpart of :meth:`iter_records`. Each repository
+        derives its object key from the payload's own natural identity, so the
+        stored key and the decrypted payload are two encodings of one fact; this
+        scan recomputes the key from the payload and compares it against the
+        key the row is actually stored under.
+
+        A window scan that filters only on payload fields trusts the payload to
+        describe its own coordinates. A record written under another row's key
+        then enters the window it was filed into rather than the one it
+        describes, silently distorting whatever the window is counted for. The
+        digest comparison closes that gap without decrypting anything extra: the
+        stored key is already an HMAC digest of the natural id.
+
+        Raises:
+            SecureObjectRowIdentityError: A row's payload rebuilds a different
+                natural id than the key it is filed under. Raised rather than
+                skipped, so a caller counting rows for a declaration is never
+                handed a quietly shortened set.
+        """
+        for record, envelope in self._iter_validated_rows():
+            # Safe: same rationale as the load() path — the envelope was validated
+            # against Envelope[self.payload_type] == Envelope[T].
+            payload = cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+            identifier = self.extract_identifier(payload)
+            if secure_object_key_digest(identifier) != record.object_key:
+                raise SecureObjectRowIdentityError(self.namespace, expected_identifier=identifier)
+            yield payload
 
     def iter_ids(self) -> Iterator[str]:
         """Yield every persisted identifier in storage order.
