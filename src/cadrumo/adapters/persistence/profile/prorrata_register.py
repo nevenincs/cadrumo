@@ -45,6 +45,7 @@ _log = get_logger(__name__)
 
 PRORRATA_REGISTER_FILENAME = "prorrata-register.secure-object"
 
+
 def load_prorrata_register() -> ProrrataRegister:
     """Load the register, returning an empty register when absent.
 
@@ -175,24 +176,40 @@ class ProrrataRegisterRepository:
         the ejercicio's lifecycle (provisional seed then definitive settlement),
         so declaring an entry for an existing key replaces it rather than raising.
 
+        The register is a singleton row, so this "add or replace one entry" is
+        really read-whole-register, rebuild, write-whole-register. Run
+        unguarded, two callers declaring entries for DIFFERENT keys both read
+        the same register and the later save silently dropped the earlier
+        caller's entry -- a lost update, invisible to the key-replacement logic
+        because the two entries never met in one document.
+
+        The rebuild now runs through the shared revision-guarded unit of work,
+        so a concurrent write makes it re-read and re-apply rather than
+        overwrite.
+
         Args:
             entry: The entry to insert or update.
 
         Returns:
             The :class:`ProrrataRegister` including the entry.
+
+        Raises:
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
         """
-        current = self.load()
-        retained = tuple(
-            existing
-            for existing in current.entries
-            if (existing.ejercicio, existing.sector_id) != (entry.ejercicio, entry.sector_id)
-        )
-        updated = ProrrataRegister(
-            entries=(*retained, entry),
-            sector_definitions=current.sector_definitions,
-        )
-        self._save_unlocked(updated)
-        return updated
+
+        def _apply(current: ProrrataRegister) -> ProrrataRegister:
+            retained = tuple(
+                existing
+                for existing in current.entries
+                if (existing.ejercicio, existing.sector_id) != (entry.ejercicio, entry.sector_id)
+            )
+            return ProrrataRegister(
+                entries=(*retained, entry),
+                sector_definitions=current.sector_definitions,
+            )
+
+        return self._storage.mutate(_apply)
 
     def upsert_sector_definition(self, definition: SectorDefinition) -> ProrrataRegister:
         """Atomically add or replace a differentiated-sector definition by its ``sector_id``.
@@ -207,22 +224,29 @@ class ProrrataRegisterRepository:
             definition: The differentiated-sector partition entry to insert or
                 update.
 
+        Carries the same revision guard as :meth:`upsert_entry`, and for the
+        same reason: the two methods write the SAME singleton row, so an
+        unguarded sector declaration could discard a concurrently-declared
+        entry just as easily as another sector definition.
+
         Returns:
             The updated :class:`ProrrataRegister` including the definition.
-        """
-        current = self.load()
-        retained = tuple(
-            existing for existing in current.sector_definitions if existing.sector_id != definition.sector_id
-        )
-        updated = ProrrataRegister(
-            entries=current.entries,
-            sector_definitions=(*retained, definition),
-        )
-        self._save_unlocked(updated)
-        return updated
 
-    def _save_unlocked(self, register: ProrrataRegister) -> None:
-        self._storage.save(register)
+        Raises:
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
+        """
+
+        def _apply(current: ProrrataRegister) -> ProrrataRegister:
+            retained = tuple(
+                existing for existing in current.sector_definitions if existing.sector_id != definition.sector_id
+            )
+            return ProrrataRegister(
+                entries=current.entries,
+                sector_definitions=(*retained, definition),
+            )
+
+        return self._storage.mutate(_apply)
 
 
 __all__ = [
