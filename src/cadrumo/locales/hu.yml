@@ -6671,7 +6671,8 @@ flows:
       write_failed: A mezőt nem sikerült menteni. Próbáld újra.
       write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
         majd próbáld újra.
-    language: {}
+    language:
+      unavailable: Ez a profil nem kínál nyelvi beállítást.
     progress: '{present} / {total} mező kitöltve, {missing} hiányzik a benyújtáshoz'
     section_title: '{title} — {present}/{total}'
     title: 'Profil: {profile}'

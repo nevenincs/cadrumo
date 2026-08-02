@@ -6789,7 +6789,8 @@ flows:
       write_failed: No s'ha pogut desar el camp. Torna-ho a provar.
       write_in_flight: S'està desant el camp anterior. Espera que acabi i torna-ho
         a provar.
-    language: {}
+    language:
+      unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     progress: '{present} de {total} camps emplenats, en falten {missing} per presentar'
     section_title: '{title} — {present}/{total}'
     title: 'Perfil: {profile}'
