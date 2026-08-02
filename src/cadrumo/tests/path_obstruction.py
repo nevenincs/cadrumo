@@ -17,6 +17,13 @@ completely unmodified: no seam is added to the writer, no branch is added for
 tests, and the code under test reaches the real filesystem exactly as it does
 in a release.
 
+READS are refused by the same obstruction, and it serves an unreadable-file
+test as well as an unwritable-file one: ``open`` for reading a directory
+raises on both platforms too. The entry self-check probes the write direction
+because that is the stricter of the two and the one the storage substrate
+depends on -- a path that refuses a write may still be readable, but a
+directory refuses both.
+
 The obstruction is deliberately NON-EMPTY. An empty directory is removable,
 so a writer that tries to clear an unexpected path could dissolve the fault
 and turn the test green for the wrong reason.

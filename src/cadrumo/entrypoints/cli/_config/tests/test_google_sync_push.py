@@ -24,6 +24,7 @@ from .....adapters.outbound.storage._local import LocalFileSystemProvider
 from .....adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
 from .....adapters.persistence.storage.sql import SecureObjectRepository
 from .....core.i18n import tr
+from .....tests.path_obstruction import obstructed_path
 from .....tests.secure_sql import isolated_runtime_profile
 from .._google import _google_refusal, _label_for, _push_secure_object_mirror_rows
 from .._google_payloads import GoogleSyncProbeResult
@@ -400,9 +401,7 @@ def test_google_sync_push_blocks_a_namespace_whose_raw_row_lineage_recomputes_wr
         assert "mirror_preflight" in diagnostic
         assert "remote manifest" in diagnostic
 
-        tampered_raw_row = next(
-            row for row in repository.iter_all_records_raw() if row.namespace == tampered_namespace
-        )
+        tampered_raw_row = next(row for row in repository.iter_all_records_raw() if row.namespace == tampered_namespace)
         tampered_hmac = remote_mirror_object_key_hmac(tampered_namespace, tampered_raw_row.object_key)
         with pytest.raises(OutboundStorageNotFoundError):
             provider.get(tampered_namespace, tampered_hmac)
@@ -534,15 +533,15 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
         # plain file onto an existing directory, so the real atomic-write
         # commit for the second row's object genuinely fails -- no mock.
         second_target = provider.root / namespace / f"{second_hmac[:8]}--{second_label}.bin"
-        second_target.mkdir(parents=True)
 
-        result = _push_secure_object_mirror_rows(
-            provider=provider,
-            repository=repository,
-            namespace_filter=None,
-            limit=None,
-            dry_run=False,
-        )
+        with obstructed_path(second_target):
+            result = _push_secure_object_mirror_rows(
+                provider=provider,
+                repository=repository,
+                namespace_filter=None,
+                limit=None,
+                dry_run=False,
+            )
 
         assert len(result["failed_objects"]) == 1
         assert result["failed_objects"][0][0] == namespace
@@ -550,10 +549,11 @@ def test_google_sync_push_rolls_back_prior_objects_when_a_later_upload_fails(tmp
         assert result["manifest_pushed_by_namespace"] == {}
         assert result["pushed_by_namespace"] == {}
 
-        # The first row's object was genuinely uploaded, then rolled back:
-        # ``iter_objects`` yields only real ``.bin``-plus-sidecar objects, so
-        # this must be empty -- the pre-created directory collision at the
-        # second row's path is not itself a valid object and is excluded.
+        # The first row's object was genuinely uploaded, then rolled back. The
+        # obstruction is cleared by now, so nothing stands at the second row's
+        # path either: an empty listing here means the rollback removed what it
+        # published, rather than meaning the collision directory was filtered
+        # out of the listing.
         assert list(provider.iter_objects(namespace)) == [], "no unmanifested object may remain after the rollback"
 
 
