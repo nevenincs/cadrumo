@@ -55,7 +55,7 @@ def auth_diagnostics_list(
                 ),
             ),
         )
-    list_result = AuthDiagnosticsListResult.model_validate(report.model_dump(mode="json"))
+    list_result = AuthDiagnosticsListResult(row_count=report.row_count, rows=list(report.rows))
     _emit_envelope(ctx, command="config.auth.diagnostics.list", result=list_result, lines=lines)
 
 
@@ -87,7 +87,7 @@ def auth_diagnostics_show(
 
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
     bool_value = _optional_bool_text
-    show_result = AuthDiagnosticsShowResult.model_validate(detail.model_dump(mode="json"))
+    show_result = AuthDiagnosticsShowResult(**detail.model_dump())
     _emit_envelope(
         ctx,
         command="config.auth.diagnostics.show",
@@ -183,7 +183,7 @@ def auth_diagnostics_report(
     report_result = AuthDiagnosticsReportResult(
         diagnostic_id=result.diagnostic_id,
         phone_state=result.phone_state,
-        reported_at=result.reported_at.isoformat(),
+        reported_at=result.reported_at,
     )
     _emit_envelope(
         ctx,

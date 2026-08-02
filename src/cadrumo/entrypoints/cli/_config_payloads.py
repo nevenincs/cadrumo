@@ -15,6 +15,11 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import ConfigDict, Field, model_validator
 
+from ...application.auth import (
+    AuthDiagnosticDetail,
+    AuthDiagnosticPhoneState,
+    AuthDiagnosticSummary,
+)
 from ...application.config_reset import (
     ConfigResetOperationStatus,
     ConfigResetPauseReason,
@@ -698,9 +703,9 @@ class ConfigResetOperationPayload(OutputSchema):
             ConfigResetTargetPayload(
                 bucket_id=target.bucket_id,
                 label=target.label,
-                status_at_snapshot=(target.status_at_snapshot.value if target.status_at_snapshot is not None else None),
+                status_at_snapshot=target.status_at_snapshot,
                 exists_at_snapshot=target.exists_at_snapshot,
-                phase=target.phase.value,
+                phase=target.phase,
                 retention_blocks_erase=(target.retention.blocks_erase if target.retention is not None else None),
                 retention_override_approved=(
                     target.retention.override_approved if target.retention is not None else None
@@ -712,10 +717,10 @@ class ConfigResetOperationPayload(OutputSchema):
         summary = operation.summary
         return cls(
             operation_id=operation.operation_id,
-            status=operation.status.value,
+            status=operation.status,
             started_at=operation.started_at.isoformat(),
             updated_at=operation.updated_at.isoformat(),
-            pause_reason=(operation.pause_reason.value if operation.pause_reason is not None else None),
+            pause_reason=operation.pause_reason,
             paused_target_ids=list(operation.paused_target_ids),
             targets=targets,
             summary=(
@@ -916,7 +921,6 @@ class ApoderadoCheckResult(OutputSchema):
 # tail into every ``config`` verb.
 
 
-@register_schema("config.profile.export")
 class ConfigProfileExportReconcileFailurePayload(OutputSchema):
     """JSON-safe projection of :class:`ProfileBundleExportReconcileFailure`.
 
@@ -1293,30 +1297,26 @@ register_schema("config.auth.certificate.secret.remove")(CertificateSourceSecret
 class AuthDiagnosticsListResult(OutputSchema):
     """JSON envelope for ``aeat config auth diagnostics list``.
 
-    Mirrors :class:`AuthDiagnosticListReport`
-    ``model_dump(mode='json')``. ``extra="allow"`` forwards the per-row
-    :class:`AuthDiagnosticSummary` fields without
-    re-declaring the sub-model.
+    Nests the real :class:`AuthDiagnosticSummary` rows so a malformed
+    nested row (an unknown phone-state token, a non-datetime capture
+    time, an out-of-band extra field) the canonical summary already
+    refuses is refused here too, instead of forwarding an unvalidated
+    ``dict[str, object]``.
     """
 
     row_count: int
-    rows: list[dict[str, object]] = []
+    rows: list[AuthDiagnosticSummary] = []
 
 
 @register_schema("config.auth.diagnostics.show")
-class AuthDiagnosticsShowResult(OutputSchema):
+class AuthDiagnosticsShowResult(OutputSchema, AuthDiagnosticDetail):
     """JSON envelope for ``aeat config auth diagnostics show``.
 
-    Mirrors :class:`AuthDiagnosticDetail`
-    ``model_dump(mode='json')`` with fingerprint fields. ``extra="allow"``
-    forwards every redacted diagnostic field without re-declaring the
-    application model locally.
+    Reuses :class:`AuthDiagnosticDetail`'s own field set and validation
+    directly (multiple inheritance merges the strict/frozen configs of
+    both bases) instead of an ``extra="allow"`` shell that forwarded
+    every field unvalidated.
     """
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
 @register_schema("config.auth.diagnostics.report")
@@ -1327,9 +1327,9 @@ class AuthDiagnosticsReportResult(OutputSchema):
     operator records the phone-state outcome for an encrypted auth diagnostic.
     """
 
-    diagnostic_id: str
-    phone_state: str
-    reported_at: str
+    diagnostic_id: str = Field(min_length=1)
+    phone_state: AuthDiagnosticPhoneState
+    reported_at: datetime
 
 
 # Descendiente verb result schemas
