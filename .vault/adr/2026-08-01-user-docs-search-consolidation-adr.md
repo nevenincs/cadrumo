@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-01'
+modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:54978334613a6701f9c4513367f634fb08280c6c3d45aaa289b4a31ed3eff1a0'
+body_hash: 'sha256:5b578dcea0570e1ab826a0c42096605d7578fed39b991365f8eafaa0b3836484'
 related:
   - "[[2026-07-31-semantic-search-precompile-boundary-adr]]"
   - "[[2026-06-10-docs-terminology-search-adr]]"
@@ -91,7 +91,6 @@ The operator's directive and the corpus's oldest accepted doctrine coincide exac
 - The two 2026-08-01 commits' work products are acknowledged as overtaken, not refuted: `4dd9810c8f` correctly implemented a recommendation that was valid when written; `71a89d0d2d` correctly deduplicated a surface that was live when audited. Their deletion by the boundary plan is the ruling working as intended.
 - A future ADR wanting open-vocabulary semantic recall (rung 3 or a search service) must supersede both this record and the boundary ADR explicitly.
 
-
 ## Update 1 (2026-08-01): deployed-contract ground truth folded in
 
 An independent read-only investigation, verified against the tree and the live site, corrects three factual premises of this record; the rulings survive but two claims are amended. Original text above is preserved; this update governs where they conflict.
@@ -106,7 +105,6 @@ An independent read-only investigation, verified against the tree and the live s
 
 The live 404 on `/_generated/casillas/303.html` is deployment staleness (the destination pages landed at HEAD after the last deploy) and is closed by the redeploy step. The companion plan gains two phases for this update (deployed-contract remediation, legal record kind), sequenced before rung-2 so the final miss-rate baseline is measured against the ladder a reader actually reaches.
 
-
 ## Update 2 (2026-08-01): operator scope clarification and the misattribution teardown
 
 The operator's follow-up directive sharpens scope and adds one requirement; this update rules on both. Original text stands; this update governs where sharper.
@@ -119,7 +117,6 @@ The operator's follow-up directive sharpens scope and adds one requirement; this
 - `4dd9810c8f` (loader hardening executed after the ADR declined it): its `_model_loader.py`, `_embed_build.py`, and `test_query_embed.py` changes are all inside the boundary plan's staged deletion set; its `pyproject.toml` delta (the explicit dependency declaration the overtaken audit recommended) is retired by the boundary plan's packaging step that deletes the `search` extra and its pins. Fully covered; nothing survives.
 - `71a89d0d2d` (ranking centralization executed after the ADR resolved the finding by deletion): the module it created (`_ranking.py`, `test_ranking.py`) is staged for deletion, and every consumer it rewired (`command_search/_index.py`, `corpus_search/__init__.py`, `_retrieval.py`, `_embed_build.py`) is inside the boundary plan's rewire-and-delete commit. Fully covered; nothing survives.
 No separate teardown campaign is opened: opening one would duplicate the boundary plan's staged work, the exact double-authority failure R7 diagnosed. What this feature adds instead is the residual sweep (new step P03.S18): a vaultspec-rag-grounded pass over BOTH code and vault for artefacts of the overtaken audit recommendations BEYOND the two named commits, each candidate confirmed with rg, findings recorded and remediated as new steps. The sweep runs after the boundary plan lands so it measures the post-deletion tree, not the mid-sweep one.
-
 
 ## Update 3 (2026-08-01): locale capability ruled
 
@@ -135,9 +132,7 @@ The operator has escalated locale capability to a hard architectural requirement
 
 **L4 - Deploy gate, conditional and narrow.** If the pending measurement confirms the predicted gap, ONE thing lands before publish: the root-language-aware injection fix with its per-root parity gate (plan steps S19 and the sharpened S11) - it is a one-module change, and publishing without it would ship localized roots strictly poorer than English against the operator's stated criticality, when the fix costs less than the explanation. If the measurement instead shows records already landing per root, publish now - the shape is sound and later work extends it. Deploy is NOT blocked on anything else: not registry label coverage (separate feature), not the ~46 percent prose translation (English fallback inside a localized root is normal in-progress localization), not rung 2, not the legal record kind. Nothing in the current shape is hard to change after a static-site redeploy; the gate exists because the fix is cheap and the operator's requirement is explicit, not because the shape would be cemented.
 
-
 **Addendum: why no existing gate can see the gap, and what the new gate must therefore be.** Three confirmed blind spots let an `es` root shipping zero records pass every gate in the tree today: the deploy test loops over localized languages but asserts only that the injector RESOLVES (decision level, not artefact); the real-artefact injection gate builds its fixture site in English only and never builds a localized root; and the deployment's localized-root validation accepts any non-empty index chunks, which rendered pages alone satisfy. This is the same blind-gate class as the 2026-07-15 dead-target history and the pages-mode env value: the shipped artefact was never the observed surface. The S11 gate contract is therefore sharpened: it MUST build at least one localized root and assert against that root's BUILT ARTEFACT that the root's own loaded language index carries the full record corpus, with count parity across roots - never an injector-decision assertion, never an English-only fixture, never a non-emptiness check. This gate is the answer in BOTH measurement branches: if records are absent (the code-predicted branch), S19 fixes injection and the gate pins it; if records turn out present despite the pin, the gate pins whatever mechanism delivers them so it cannot silently regress. Sequencing follows the 2026-07-15 born-red lesson: the gate lands with or after the S19 fix, not before it.
-
 
 ## Update 4 (2026-08-01): the seed-idempotence contradiction, ruled; publish unblocked
 
@@ -150,7 +145,6 @@ Two how-to pages (`how-to/verification-reports`, `how-to/modelo-130`) fail the d
 **Publish adjudication.** The publish proceeds WITHOUT waiting for the framework change. The two coherence reds are harness-model artefacts, not reader-facing defects: the rendered pages are correct, every sequence is golden-verified standalone, the cover-to-cover reader skips collapsed setup by the rendering contract, and the literal-minded reader who re-runs it meets an instructive refusal that names its own remedy - not corruption, not silence. Green is NOT being redefined: the publish evidence MUST name the two red coherence runs and cite this adjudication, so the red is recorded, adjudicated, and temporary rather than silently waved through.
 
 **Ownership and handoff.** The once-per-page premise with page-scoped seed captures belongs to the sequence-framework campaign (the `docs-cli-sequences` surface), which amends or extends `2026-07-13-docs-cli-sequences-adr` when implementing and whose fix un-reds the two pages and immunises the latent sharing pages. This feature carries only the publish-record annotation requirement; it absorbs no framework or docs-content steps.
-
 
 ## Update 5 (2026-08-01): the translation-drift adjudication; publish-evidence contract extended
 
