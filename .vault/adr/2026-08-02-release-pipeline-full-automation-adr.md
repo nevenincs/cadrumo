@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:448527659bf00cdcca9aee9920c3a34c62c3386eda72d85ea93cb197f5780de4'
+body_hash: 'sha256:e3f10d12cb5499826d4c632f77e5b28b9767c04bc286f45e93b5cfb44f28b34d'
 related:
   - "[[2026-07-27-canonical-release-pipeline-adr]]"
   - "[[2026-07-27-publication-lane-consolidation-adr]]"
@@ -16,6 +16,7 @@ related:
   - "[[2026-07-20-release-asset-transport-adr]]"
   - "[[2026-07-25-account-distribution-standard-adr]]"
   - "[[2026-04-12-release-please-adr]]"
+  - '[[2026-07-04-release-readiness-gate-adr]]'
 ---
 
 # `release-pipeline-full-automation` adr: `the release pipeline runs itself: the human approval gate is deleted, one dispatch drives bump through publish, and the mechanical guards are the whole safety net` | (**status:** `accepted`)
@@ -450,9 +451,9 @@ execution half of P2 in `2026-07-27-publication-lane-consolidation-adr` and the
 local-only versioning mandate surviving in `2026-04-12-release-please-adr`; P1,
 P3, P4, and P5 of the former stand entirely, and the release-please manifest
 remains the single version source. It AMENDS
-`2026-07-27-pipeline-config-topology-adr` by narrowing the `release`
-environment's role from protection-plus-identity to identity alone, leaving its
-four homes, its detector, and its inventory unchanged. It AMENDS
+`2026-07-27-pipeline-config-topology-adr` by narrowing the role of BOTH the
+`release` and the `docs` environment from protection-plus-identity to identity
+alone, leaving its four homes, its detector, and its inventory unchanged. It AMENDS
 `2026-07-04-release-readiness-gate-adr` by moving the soak wait from a human to
 the pipeline without altering its duration or its terms. It COMPLETES, rather
 than reverses, the publication record's OP-6 and narrows the delivery record's
