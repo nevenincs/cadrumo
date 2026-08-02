@@ -65,7 +65,15 @@ _PAYLOAD_B = b"%PDF-1.4\n%attachment-iteration-binding-B\n" + b"\x11" * 48
 _ABSENT_DIGEST = "f" * 64
 
 
-def _attachment(*, sha256: str, bytes_size: int) -> Attachment:
+def _attachment(*, sha256: str, bytes_size: int, bucket_id: str) -> Attachment:
+    """Build a manifest owned by ``bucket_id``.
+
+    The bucket is the store's own, taken from the test profile rather than a
+    literal: ``write_manifest`` refuses a manifest naming a foreign bucket and
+    stamps its own onto one naming none, so a hardcoded value would make these
+    tests fail (or silently mutate) for a reason that has nothing to do with
+    the digest binding under test.
+    """
     return Attachment(
         attachment_id=sha256,
         kind=AttachmentKind.INVOICE_PDF,
@@ -75,7 +83,7 @@ def _attachment(*, sha256: str, bytes_size: int) -> Attachment:
         mime_type="application/pdf",
         bytes_size=bytes_size,
         captured_at=_CAPTURED_AT,
-        bucket_id="b" * 32,
+        bucket_id=bucket_id,
     )
 
 
@@ -108,12 +116,12 @@ def _rewrite_manifest_envelope(
         )
 
 
-def _seed_two_attachments(store: AttachmentStore) -> tuple[Attachment, Attachment]:
+def _seed_two_attachments(store: AttachmentStore, *, bucket_id: str) -> tuple[Attachment, Attachment]:
     """Persist two distinct attachments and return their manifests."""
     digest_a = store.put_bytes(_PAYLOAD_A)
     digest_b = store.put_bytes(_PAYLOAD_B)
-    attachment_a = _attachment(sha256=digest_a, bytes_size=len(_PAYLOAD_A))
-    attachment_b = _attachment(sha256=digest_b, bytes_size=len(_PAYLOAD_B))
+    attachment_a = _attachment(sha256=digest_a, bytes_size=len(_PAYLOAD_A), bucket_id=bucket_id)
+    attachment_b = _attachment(sha256=digest_b, bytes_size=len(_PAYLOAD_B), bucket_id=bucket_id)
     store.write_manifest(attachment_a)
     store.write_manifest(attachment_b)
     return attachment_a, attachment_b
@@ -121,9 +129,9 @@ def _seed_two_attachments(store: AttachmentStore) -> tuple[Attachment, Attachmen
 
 def test_untampered_manifests_load_and_list_identically(tmp_path: Path) -> None:
     """Positive control: both surfaces agree on sound manifests."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         store = AttachmentStore()
-        attachment_a, attachment_b = _seed_two_attachments(store)
+        attachment_a, attachment_b = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
         assert store.load_manifest(attachment_a.attachment_id) == attachment_a
         assert store.load_manifest(attachment_b.attachment_id) == attachment_b
@@ -143,7 +151,7 @@ def test_iteration_refuses_a_substitution_onto_another_stored_digest(tmp_path: P
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
-        attachment_a, attachment_b = _seed_two_attachments(store)
+        attachment_a, attachment_b = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
         _rewrite_manifest_envelope(
             engine,
@@ -170,7 +178,7 @@ def test_iteration_never_yields_the_substituted_identity(tmp_path: Path) -> None
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
-        attachment_a, attachment_b = _seed_two_attachments(store)
+        attachment_a, attachment_b = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
         _rewrite_manifest_envelope(
             engine,
@@ -199,7 +207,7 @@ def test_iteration_still_refuses_a_drift_to_an_unstored_digest(tmp_path: Path) -
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
-        attachment_a, _ = _seed_two_attachments(store)
+        attachment_a, _ = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
         _rewrite_manifest_envelope(
             engine,
@@ -222,7 +230,7 @@ def test_restoring_the_true_digest_restores_both_surfaces(tmp_path: Path) -> Non
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         engine = get_engine(profile.settings)
         store = AttachmentStore()
-        attachment_a, attachment_b = _seed_two_attachments(store)
+        attachment_a, attachment_b = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
         _rewrite_manifest_envelope(
             engine,
