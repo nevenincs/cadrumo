@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import PRODUCT_IDENTITY
-from dev.release import readiness
+from dev.release import readiness, version_identity
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -276,3 +276,120 @@ def stage_bump(
     regenerate_and_verify_lock(repo_root, uv_executable=uv_executable)
     verify_bump(repo_root)
     return updates
+
+
+#: The bumped surfaces plus the regenerated lock, staged for the release
+#: commit. Mirrors `release-apply` checklist step 9's explicit `git add`
+#: file list exactly (which deliberately excludes `packaging/mcpb/manifest.json`
+#: -- see the module docstring and `apply_version`).
+_STAGED_RELATIVE_PATHS: Final[tuple[Path, ...]] = (
+    MANIFEST_RELATIVE,
+    ROOT_PYPROJECT_RELATIVE,
+    DATA_MANUALS_PYPROJECT_RELATIVE,
+    DATA_OFFICIAL_PYPROJECT_RELATIVE,
+    INIT_RELATIVE,
+    CHANGELOG_RELATIVE,
+    Path("uv.lock"),
+)
+
+
+def _manifest_floor_at_head(repo_root: Path, *, git_executable: str) -> str:
+    """Return the manifest floor as committed at HEAD, before this bump.
+
+    Deliberately reads HEAD's blob rather than the working-tree file: by the
+    time this is called, `apply_version` has already rewritten the
+    working-tree manifest to the candidate version.
+    """
+    completed = _run([git_executable, "show", f"HEAD:{MANIFEST_RELATIVE.as_posix()}"], cwd=repo_root)
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        raise VersionBumpError(f"HEAD's {MANIFEST_RELATIVE} is not valid JSON: {exc}") from exc
+    recorded = payload.get(".") if isinstance(payload, dict) else None
+    if not isinstance(recorded, str) or not recorded.strip():
+        raise VersionBumpError(f"HEAD's {MANIFEST_RELATIVE} records no root version")
+    return recorded
+
+
+def commit_tag_and_push(
+    repo_root: Path,
+    version: str,
+    *,
+    repository: str,
+    git_executable: str | None = None,
+    push: bool = False,
+    skip_network: bool = False,
+    own_source_commit: str | None = None,
+) -> str:
+    """Guard, then commit, tag, and (only when `push` is True) push the bump.
+
+    The all-destination identity guard (`dev.release.version_identity`) runs
+    BEFORE any ref leaves the runner -- before even the local commit -- so a
+    version an index, the tag/release namespace, the burned ledger, or the
+    manifest floor already owns refuses before a tag exists rather than
+    after. This mirrors `release-apply` checklist steps 9-11.
+
+    `push` defaults to False: local commit and tag only, matching the
+    non-local/CI-only push leg (a real `git push` needs a real remote and
+    real credentials, which a unit test does not have); the orchestrator
+    passes `push=True` only inside CI, where a push is meaningful and safe
+    to attempt because the guard above already ran.
+
+    `skip_network` mirrors `dev.release.version_identity.main`'s own
+    `--skip-network` flag exactly: when set, only the burned ledger and the
+    manifest floor are checked (no live PyPI/forge queries), which is what
+    lets the burned-version and below-floor refusal cases run offline and
+    deterministically in tests.
+
+    Returns:
+        The SHA of the commit created.
+
+    Raises:
+        VersionBumpError: If `git` is unresolvable or any git subprocess
+            fails.
+        version_identity.VersionIdentityError: If the version collides with
+            any destination the identity guard checks.
+    """
+    git = git_executable or shutil.which("git")
+    if git is None:
+        raise VersionBumpError("git is not on PATH; cannot commit, tag, or push the bump")
+
+    # `apply_version` already rewrote the working-tree manifest to *version*
+    # by the time this stage runs (stage_bump precedes commit_tag_and_push in
+    # the orchestration), so reading the floor from the working tree would
+    # tautologically compare the candidate against itself. HEAD's committed
+    # manifest -- the state before this bump's working-tree changes -- is the
+    # floor the guard must check against.
+    floor = _manifest_floor_at_head(repo_root, git_executable=git)
+
+    owning: tuple[str, ...] = ()
+    existing_tags: tuple[str, ...] = ()
+    existing_releases: tuple[str, ...] = ()
+    if not skip_network:
+        owning = version_identity.pypi_projects_owning(version)
+        existing_tags = version_identity.forge_tags_owning(version, repository=repository)
+        existing_releases = version_identity.forge_releases_owning(
+            version,
+            repository=repository,
+            own_source_commit=own_source_commit,
+        )
+    refusals = version_identity.version_conflicts(
+        version,
+        owning_projects=owning,
+        existing_tags=existing_tags,
+        existing_releases=existing_releases,
+        floor=floor,
+    )
+    if refusals:
+        joined = "\n  - ".join(refusals)
+        raise version_identity.VersionIdentityError(f"version {version} is not available to publish:\n  - {joined}")
+
+    tag_name = f"v{version}"
+    _run([git, "add", "--", *(str(relative) for relative in _STAGED_RELATIVE_PATHS)], cwd=repo_root)
+    _run([git, "commit", "-m", f"chore(release): v{version}"], cwd=repo_root)
+    commit_sha = _run([git, "rev-parse", "HEAD"], cwd=repo_root).stdout.strip()
+    _run([git, "tag", "-a", tag_name, "-m", f"Cadrumo {tag_name}"], cwd=repo_root)
+    if push:
+        _run([git, "push", "origin", "main"], cwd=repo_root)
+        _run([git, "push", "origin", f"refs/tags/{tag_name}"], cwd=repo_root)
+    return commit_sha

@@ -9,13 +9,15 @@ checks its output must agree on what those surfaces are.
 from __future__ import annotations
 
 import json
+import shutil
 import stat
+import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
-from .. import readiness, version_bump
+from .. import readiness, version_bump, version_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -338,4 +340,117 @@ def test_stage_bump_refuses_before_any_commit_when_the_lock_check_fails(tmp_path
             changelog_block=_CHANGELOG_BLOCK,
             release_date="2026-08-02",
             uv_executable=str(stub),
+        )
+
+
+def _git(root: Path, *args: str) -> str:
+    """Run git in *root*, failing loudly with its stderr.
+
+    Mirrors `dev/audit/tests/test_checkout_drift.py`'s `_git` helper: a real
+    subprocess call against a real repository, with `core.autocrlf` pinned
+    off so the fixture's checkout semantics do not depend on the
+    contributor's global git config.
+    """
+    executable = shutil.which("git")
+    assert executable is not None, "git must be on PATH for these cases to mean anything"
+    result = subprocess.run(  # noqa: S603 - fixed argv, no shell, test-only.
+        [executable, "-c", "core.autocrlf=false", *args],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
+    )
+    assert result.returncode == 0, f"git {args} failed: {result.stderr}"
+    return result.stdout
+
+
+def _make_git_repo_root(tmp_path: Path, *, version: str = "1.2.3", manifest_floor: str | None = None) -> Path:
+    """A real git repository, initialised and committed, at the given version.
+
+    `manifest_floor` overrides the manifest's recorded version independent of
+    the declared surfaces, so a below-floor case can be built without also
+    building an inconsistent (and thus readiness-refused) surface set.
+    """
+    root = _make_repo_root(tmp_path, version=version)
+    if manifest_floor is not None:
+        (root / ".release-please-manifest.json").write_text(json.dumps({".": manifest_floor}), encoding="utf-8")
+    # `commit_tag_and_push` stages `uv.lock` (release-apply checklist step 9);
+    # in real orchestration `stage_bump` (S10) has already regenerated it by
+    # the time this stage runs, so the fixture seeds a placeholder.
+    (root / "uv.lock").write_text("# stub lock\n", encoding="utf-8")
+    _git(root, "init", "-q", "-b", "main")
+    _git(root, "add", "-A")
+    _git(root, "-c", "user.email=bump@example.invalid", "-c", "user.name=bump", "commit", "-q", "-m", "seed")
+    return root
+
+
+def test_commit_tag_and_push_creates_a_local_commit_and_tag_without_pushing(tmp_path: Path) -> None:
+    """A clean, non-burned, above-floor version commits and tags locally; push defaults off."""
+    root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="1.0.0")
+    # A real diff to commit -- in real orchestration `stage_bump` (S10) has
+    # already run and produced exactly this kind of change by the time this
+    # stage runs.
+    version_bump.apply_version(root, "2.0.0", changelog_block=_CHANGELOG_BLOCK, release_date="2026-08-02")
+
+    commit_sha = version_bump.commit_tag_and_push(
+        root,
+        "2.0.0",
+        repository="nevenincs/cadrumo",
+        skip_network=True,
+    )
+
+    assert commit_sha == _git(root, "rev-parse", "HEAD").strip()
+    tags = _git(root, "tag", "-l").split()
+    assert "v2.0.0" in tags
+    log = _git(root, "log", "-1", "--format=%s")
+    assert log.strip() == "chore(release): v2.0.0"
+
+
+def test_commit_tag_and_push_refuses_a_burned_version_before_any_commit(tmp_path: Path) -> None:
+    """A version on the shipped burned ledger refuses -- no commit, no tag created."""
+    root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="0.1.0")
+    before_head = _git(root, "rev-parse", "HEAD").strip()
+
+    with pytest.raises(version_identity.VersionIdentityError, match="burned"):
+        version_bump.commit_tag_and_push(
+            root,
+            "0.2.0",
+            repository="nevenincs/cadrumo",
+            skip_network=True,
+        )
+
+    assert _git(root, "rev-parse", "HEAD").strip() == before_head
+    assert "v0.2.0" not in _git(root, "tag", "-l").split()
+
+
+def test_commit_tag_and_push_refuses_a_version_at_or_below_the_manifest_floor(tmp_path: Path) -> None:
+    """A version at or below the recorded manifest floor refuses -- no commit, no tag created."""
+    root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="3.0.0")
+    before_head = _git(root, "rev-parse", "HEAD").strip()
+
+    with pytest.raises(version_identity.VersionIdentityError, match="floor"):
+        version_bump.commit_tag_and_push(
+            root,
+            "2.5.0",
+            repository="nevenincs/cadrumo",
+            skip_network=True,
+        )
+
+    assert _git(root, "rev-parse", "HEAD").strip() == before_head
+    assert "v2.5.0" not in _git(root, "tag", "-l").split()
+
+
+def test_commit_tag_and_push_refuses_when_git_is_unresolvable(tmp_path: Path) -> None:
+    """A real environment with no resolvable `git` binary refuses instructively."""
+    root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="1.0.0")
+    missing = tmp_path / "definitely-not-git"
+
+    with pytest.raises(version_bump.VersionBumpError, match="is not on PATH"):
+        version_bump.commit_tag_and_push(
+            root,
+            "2.0.0",
+            repository="nevenincs/cadrumo",
+            git_executable=str(missing),
+            skip_network=True,
         )
