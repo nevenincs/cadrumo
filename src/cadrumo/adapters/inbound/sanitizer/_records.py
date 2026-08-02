@@ -15,9 +15,18 @@ records should contain only synthetic values, hashes, surface names, and counts.
 
 from __future__ import annotations
 
+from hashlib import sha256
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SecretStr,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from ....core.identity import validate_spanish_tax_id
 from ._errors import SanitizerValidationError
@@ -411,12 +420,29 @@ class SanitizationResult(BaseModel):
     touches the filesystem. The result is an audit record for fixture
     preparation, not an application persistence model.
 
+    The OUTPUT facts are derived facts, not declarations, and the model
+    enforces that: ``output_sha256`` and ``output_size_bytes`` must be the
+    digest and length of the ``output_bytes`` carried alongside them. The
+    fields only checked shape before — lowercase hex-64 and non-negative — so
+    a result claiming ``output_sha256 = 'b' * 64`` and
+    ``output_size_bytes = 999`` for three bytes of content constructed
+    happily. That is a sidecar that describes a different artefact from the
+    one it ships with, and this record exists to be an audit trail: a
+    consumer verifying the digest later cannot tell a sanitiser bug from a
+    substituted file.
+
+    The SOURCE facts stay declarations, because the source bytes are
+    deliberately not carried here — they are the unsanitised original, and
+    :func:`sanitize_pdf` derives both from the real input at the one point
+    where it holds them. Binding them would require this record to keep the
+    very bytes the sanitiser exists to leave behind.
+
     Attributes:
         output_bytes: Byte-for-byte sanitised PDF.
-        source_sha256: SHA-256 of the input bytes.
-        output_sha256: SHA-256 of ``output_bytes``.
-        source_size_bytes: Size of the input.
-        output_size_bytes: Size of ``output_bytes``.
+        source_sha256: SHA-256 of the input bytes, derived by the pipeline.
+        output_sha256: SHA-256 of ``output_bytes``, enforced here.
+        source_size_bytes: Size of the input, derived by the pipeline.
+        output_size_bytes: Size of ``output_bytes``, enforced here.
         sanitizer_version: Version string of the sanitiser at the
             time of the run.
         determinism_flags: Captured save-flag set.
@@ -437,3 +463,24 @@ class SanitizationResult(BaseModel):
     replacements_applied: tuple[Replacement, ...]
     surfaces_scrubbed: tuple[ScrubbedSurface, ...]
     warnings: tuple[SanitizationWarning, ...]
+
+    @model_validator(mode="after")
+    def _output_facts_describe_the_output_bytes(self) -> SanitizationResult:
+        """Refuse a result whose declared output facts do not match its bytes.
+
+        Raises:
+            SanitizerValidationError: When the digest or the size disagrees
+                with ``output_bytes``.
+        """
+        actual_sha256 = sha256(self.output_bytes).hexdigest()
+        if self.output_sha256 != actual_sha256:
+            raise SanitizerValidationError(
+                f"output_sha256 does not describe output_bytes: declared {self.output_sha256}, "
+                f"bytes hash to {actual_sha256}",
+            )
+        if self.output_size_bytes != len(self.output_bytes):
+            raise SanitizerValidationError(
+                f"output_size_bytes does not describe output_bytes: declared {self.output_size_bytes}, "
+                f"bytes are {len(self.output_bytes)} long",
+            )
+        return self

@@ -15,6 +15,7 @@ The tests focus on three load-bearing contracts:
 from __future__ import annotations
 
 import re
+from hashlib import sha256
 
 import pytest
 from pydantic import SecretStr, ValidationError
@@ -213,6 +214,14 @@ def test_replacement_subclasses_reject_invalid_synthetic_values() -> None:
             assert re.search(expected_message, str(exc_info.value)), case_id
 
 
+#: The sanitised bytes every SanitizationResult fixture below ships. The
+#: model binds output_sha256 and output_size_bytes to these bytes, so both
+#: are DERIVED at the call site rather than written as literals: a fixture
+#: carrying arbitrary output facts is the exact shape the binding exists to
+#: refuse, and it is what these tests used to construct.
+_OUTPUT_BYTES = b"%PDF-1.4\n"
+
+
 class TestTokenMapShape:
     """TokenMap is strict-frozen and supports empty construction."""
 
@@ -395,11 +404,11 @@ class TestSanitizationResultShape:
     def test_accepts_canonical_result(self) -> None:
         flags = _determinism_flags()
         result = SanitizationResult(
-            output_bytes=b"%PDF-1.4\n",
+            output_bytes=_OUTPUT_BYTES,
             source_sha256="a" * 64,
-            output_sha256="b" * 64,
+            output_sha256=sha256(_OUTPUT_BYTES).hexdigest(),
             source_size_bytes=10,
-            output_size_bytes=10,
+            output_size_bytes=len(_OUTPUT_BYTES),
             sanitizer_version="0.1.0",
             determinism_flags=flags,
             replacements_applied=(),
@@ -407,16 +416,94 @@ class TestSanitizationResultShape:
             warnings=(),
         )
         assert result.sanitizer_version == "0.1.0"
+        # The positive control for the binding assertions below: a model that
+        # refused every result would satisfy them and nothing else.
+        assert result.output_sha256 == sha256(_OUTPUT_BYTES).hexdigest()
+        assert result.output_size_bytes == len(_OUTPUT_BYTES)
+
+    def test_rejects_an_output_digest_that_does_not_describe_the_bytes(self) -> None:
+        """The declared digest must be the digest of the bytes shipped with it.
+
+        Shape was the only check before, so a result could claim any
+        lowercase hex-64 digest for any content. This record is an audit
+        trail: a sidecar describing a different artefact from the one it
+        carries makes a later verification unable to tell a sanitiser bug
+        from a substituted file.
+        """
+        with pytest.raises(ValidationError, match=r"output_sha256 does not describe output_bytes"):
+            SanitizationResult(
+                output_bytes=_OUTPUT_BYTES,
+                source_sha256="a" * 64,
+                output_sha256="b" * 64,
+                source_size_bytes=10,
+                output_size_bytes=len(_OUTPUT_BYTES),
+                sanitizer_version="0.1.0",
+                determinism_flags=_determinism_flags(),
+                replacements_applied=(),
+                surfaces_scrubbed=(),
+                warnings=(),
+            )
+
+    def test_rejects_an_output_size_that_does_not_describe_the_bytes(self) -> None:
+        """Non-negative was the only constraint, so any length passed."""
+        with pytest.raises(ValidationError, match=r"output_size_bytes does not describe output_bytes"):
+            SanitizationResult(
+                output_bytes=_OUTPUT_BYTES,
+                source_sha256="a" * 64,
+                output_sha256=sha256(_OUTPUT_BYTES).hexdigest(),
+                source_size_bytes=10,
+                output_size_bytes=999,
+                sanitizer_version="0.1.0",
+                determinism_flags=_determinism_flags(),
+                replacements_applied=(),
+                surfaces_scrubbed=(),
+                warnings=(),
+            )
+
+    def test_an_empty_output_still_binds_rather_than_being_exempt(self) -> None:
+        """Zero bytes have a digest too, and it is not the zero digest.
+
+        The empty case is where a length-only check is most tempting to skip,
+        and where a stale digest carried from a previous run would otherwise
+        pass unnoticed.
+        """
+        result = SanitizationResult(
+            output_bytes=b"",
+            source_sha256="a" * 64,
+            output_sha256=sha256(b"").hexdigest(),
+            source_size_bytes=10,
+            output_size_bytes=0,
+            sanitizer_version="0.1.0",
+            determinism_flags=_determinism_flags(),
+            replacements_applied=(),
+            surfaces_scrubbed=(),
+            warnings=(),
+        )
+        assert result.output_size_bytes == 0
+
+        with pytest.raises(ValidationError, match=r"output_sha256 does not describe output_bytes"):
+            SanitizationResult(
+                output_bytes=b"",
+                source_sha256="a" * 64,
+                output_sha256=sha256(_OUTPUT_BYTES).hexdigest(),
+                source_size_bytes=10,
+                output_size_bytes=0,
+                sanitizer_version="0.1.0",
+                determinism_flags=_determinism_flags(),
+                replacements_applied=(),
+                surfaces_scrubbed=(),
+                warnings=(),
+            )
 
     def test_rejects_invalid_source_sha(self) -> None:
         flags = _determinism_flags()
         with pytest.raises(ValidationError, match=r"source_sha256"):
             SanitizationResult(
-                output_bytes=b"%PDF-1.4\n",
+                output_bytes=_OUTPUT_BYTES,
                 source_sha256="not-a-hash",
-                output_sha256="b" * 64,
+                output_sha256=sha256(_OUTPUT_BYTES).hexdigest(),
                 source_size_bytes=10,
-                output_size_bytes=10,
+                output_size_bytes=len(_OUTPUT_BYTES),
                 sanitizer_version="0.1.0",
                 determinism_flags=flags,
                 replacements_applied=(),
