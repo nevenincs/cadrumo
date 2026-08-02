@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -65,7 +65,14 @@ class ModeloListReport(BaseModel):
 
 
 class ModeloDescribeReport(BaseModel):
-    """Full describe view for one resolved modelo revision."""
+    """Full describe view for one resolved modelo revision.
+
+    Every field here is regulatory grounding an operator may need to justify a
+    revision selection, so the counts are bounded and ``filing_year`` shares the
+    :class:`~core.Period` year range: a describe view is projected verbatim into
+    the CLI ``--json`` envelope, and a negative count or an out-of-range year
+    reaching that surface is a defect in the projection, not a legitimate value.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -77,18 +84,18 @@ class ModeloDescribeReport(BaseModel):
     jurisdiction: str
     revision: str
     revision_ids: tuple[str, ...]
-    filing_year: int | None
+    filing_year: Annotated[int, Field(ge=1980, le=2200)] | None
     filing_period: Period | None = None
     period: str | None
     valid_from: date
     valid_to: date | None
     periods: tuple[str, ...]
-    casilla_count: int
-    manual_casilla_count: int
-    bound_casilla_count: int
-    computed_casilla_count: int
-    binding_count: int
-    formula_count: int
+    casilla_count: int = Field(ge=0)
+    manual_casilla_count: int = Field(ge=0)
+    bound_casilla_count: int = Field(ge=0)
+    computed_casilla_count: int = Field(ge=0)
+    binding_count: int = Field(ge=0)
+    formula_count: int = Field(ge=0)
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
 
