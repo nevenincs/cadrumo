@@ -23,7 +23,7 @@ from .._schema import (
     ModeloRevision,
     ParameterDefinition,
 )
-from .._schema_verification import VerificationPredicateDefinition
+from .._schema_verification import VerificationExpectationDefinition, VerificationPredicateDefinition
 from .._validate import RegistryValidator
 from ._registry_schema_support import (
     _as_communication_revision,
@@ -37,6 +37,35 @@ from ._registry_schema_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
+
+
+def test_verification_expectation_rejects_negative_tolerance() -> None:
+    with pytest.raises(ValidationError, match="tolerance"):
+        VerificationExpectationDefinition(
+            id="test.negative-tolerance",
+            computed_casilla_ids=(_NUMERIC_CASILLA_01,),
+            tolerance=Decimal("-0.01"),
+            rounding="money-2",
+            min_coverage=Decimal("1"),
+            discrepancy_causes=("rounding",),
+            legal_refs=("ley-35-2006:art-1",),
+            source_refs=("aeat-dr-130-2019-v12",),
+        )
+
+
+def test_verification_expectation_accepts_zero_tolerance() -> None:
+    expectation = VerificationExpectationDefinition(
+        id="test.zero-tolerance",
+        computed_casilla_ids=(_NUMERIC_CASILLA_01,),
+        tolerance=Decimal("0"),
+        rounding="money-2",
+        min_coverage=Decimal("1"),
+        discrepancy_causes=("rounding",),
+        legal_refs=("ley-35-2006:art-1",),
+        source_refs=("aeat-dr-130-2019-v12",),
+    )
+
+    assert expectation.tolerance == Decimal("0")
 
 
 def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() -> None:
