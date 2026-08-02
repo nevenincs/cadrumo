@@ -8,7 +8,7 @@ import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ..._export_field_kind import CasillaFieldKind
-from .. import CasillaId, RegistrySnapshot, validated_casilla_id
+from .. import BboxAnchorSpec, CasillaId, RegistrySnapshot, validated_casilla_id
 from .._authority import ValidatedRegistryAuthority
 from .._binding_selector_utils import selector_as_dict
 from .._schema import DataBindingDefinition
@@ -763,6 +763,16 @@ def test_extraction_target_definition_roundtrip() -> None:
     assert restored.match_strategy == "named_label"
     assert restored.value_kind == "text"
     assert restored.label_pattern == r"Mi etiqueta especial"
+
+
+def test_bbox_anchor_rejects_inverted_anchor_x_range() -> None:
+    with pytest.raises(ValidationError, match="bbox anchor_x_min must not exceed anchor_x_max"):
+        BboxAnchorSpec(
+            box_number_pattern=r"01",
+            value_offset="right_of_number",
+            anchor_x_min=200.0,
+            anchor_x_max=100.0,
+        )
 
 
 def test_extraction_target_definition_anti_tautology() -> None:

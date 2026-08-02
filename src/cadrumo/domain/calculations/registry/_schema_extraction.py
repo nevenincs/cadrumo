@@ -55,6 +55,16 @@ class BboxAnchorSpec(RegistryModel):
     value_x_max: float | None = None
     column_anchor: str | None = None
 
+    @model_validator(mode="after")
+    def _anchor_x_range_is_not_inverted(self) -> BboxAnchorSpec:
+        if (
+            self.anchor_x_min is not None
+            and self.anchor_x_max is not None
+            and self.anchor_x_min > self.anchor_x_max
+        ):
+            raise RegistryValidationError("bbox anchor_x_min must not exceed anchor_x_max")
+        return self
+
 
 class ExtractionTargetDefinition(RegistryModel):
     """Per-target descriptor for a registry extraction profile.
