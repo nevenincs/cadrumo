@@ -258,6 +258,7 @@ _RENTAL_USE_TYPE_VALUES = (
     "VIVIENDA_HABITUAL",
     "OTRO_INMUEBLE_NO_AFECTO",
     "LOCAL_COMERCIAL",
+    "VIVIENDA_TURISTICA",
     "VIVIENDA_DESOCUPADA",
 )
 
@@ -305,7 +306,7 @@ class FincaRow(Base):
             of, when applicable.
         use_type: Closed enum: ``VIVIENDA_ARRENDADA`` /
             ``VIVIENDA_HABITUAL`` / ``OTRO_INMUEBLE_NO_AFECTO`` /
-            ``LOCAL_COMERCIAL`` / ``VIVIENDA_DESOCUPADA``.
+            ``LOCAL_COMERCIAL`` / ``VIVIENDA_TURISTICA`` / ``VIVIENDA_DESOCUPADA``.
         is_stressed_area: Whether the finca sits in a declared
             stressed-rent area for LIRPF art. 23.2 tier resolution.
         schema_version: Per-row schema version; defaults to ``"1"``.

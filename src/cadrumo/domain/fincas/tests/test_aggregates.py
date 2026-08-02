@@ -28,6 +28,7 @@ from .. import (
     Finca,
     FincaGasto,
     FincaRendimientoRecord,
+    ReduccionTier,
     UseType,
     compute_finca_aggregates,
 )
@@ -161,3 +162,74 @@ def test_rental_aggregates_are_derived_from_persisted_register(engine: Engine) -
         assert non_let_attr.imputacion > Decimal("0"), "non-let VIVIENDA_DESOCUPADA must carry imputación"
         assert let_attr.imputacion == Decimal("0.00"), "arrendada finca must carry zero imputación"
         assert aggregates.imputacion_rentas_inmobiliarias == non_let_attr.imputacion
+
+
+@pytest.mark.parametrize("use_type", [UseType.LOCAL_COMERCIAL, UseType.VIVIENDA_TURISTICA])
+def test_rental_aggregates_non_reduccion_use_types_earn_income_with_zero_reduction(
+    engine: Engine,
+    use_type: UseType,
+) -> None:
+    """LOCAL_COMERCIAL / VIVIENDA_TURISTICA fincas earn rendimiento/gastos/
+    amortización like any active finca, but art. 23.2 LIRPF does not apply to
+    them at all: the aggregate must not raise (the reducción resolver refuses
+    non-VIVIENDA_ARRENDADA use types by design) and must attribute an explicit
+    zero, non-qualifying reducción rather than skipping the contract."""
+    with session_scope(engine) as session:
+        finca_repo = FincaRepository(session)
+        contract_repo = ArrendamientoRepository(session)
+        income_repo = FincaRendimientoRepository(session)
+        expense_repo = FincaGastoRepository(session)
+        ledger_repo = FincaAmortizacionLedgerRepository(session)
+
+        finca = finca_repo.upsert(
+            Finca(
+                identifier=f"{use_type.value}-finca",
+                address="Calle Alcala 50, Madrid",
+                valor_catastral_total=Decimal("200000.00"),
+                valor_catastral_construccion=Decimal("140000.00"),
+                valor_catastral_revision_year=2019,
+                coste_adquisicion=Decimal("300000.00"),
+                coste_adquisicion_construccion=Decimal("210000.00"),
+                acquisition_date=date(2015, 1, 1),
+                use_type=use_type,
+            ),
+        )
+        assert finca.id is not None
+
+        contract = contract_repo.upsert(
+            Arrendamiento(
+                finca_id=finca.id,
+                contract_celebration_date=date(2022, 9, 1),
+                tenant_count=1,
+                initial_rent=Decimal("2000.00"),
+            ),
+        )
+        assert contract.id is not None
+        gross_rent = Decimal("24000.00")
+        income_repo.upsert(
+            FincaRendimientoRecord(
+                contract_id=contract.id,
+                period_year=2025,
+                gross_rent_received=gross_rent,
+                dias_alquilados=365,
+            ),
+        )
+
+        aggregates = compute_finca_aggregates(
+            period_year=2025,
+            finca_repo=finca_repo,
+            contract_repo=contract_repo,
+            income_repo=income_repo,
+            expense_repo=expense_repo,
+            ledger_repo=ledger_repo,
+        )
+
+        assert aggregates.ingresos_integros == gross_rent
+        finca_attr = aggregates.per_finca_attribution[finca.id]
+        assert finca_attr.ingresos == gross_rent
+        assert finca_attr.amortizacion > Decimal("0"), "an active let finca still accrues amortisation"
+
+        contract_tier = aggregates.per_contract_tier[contract.id]
+        assert contract_tier.tier.tier is ReduccionTier.NOT_APPLICABLE
+        assert contract_tier.reduccion_amount == Decimal("0.00")
+        assert aggregates.reduccion_arrendamiento_vivienda == Decimal("0.00")
