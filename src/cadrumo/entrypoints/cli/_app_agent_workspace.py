@@ -71,7 +71,13 @@ def materialise(
 
 def _materialise_workspace_layout(output: Path) -> tuple[AgentWorkspaceResult, list[str]]:
     manifest = materialise_workspace(output)
-    result = AgentWorkspaceResult.model_validate(manifest.model_dump(mode="json"))
+    result = AgentWorkspaceResult(
+        layout=AgentLayout.WORKSPACE,
+        output_path=manifest.output_path,
+        skills_written=manifest.skills_written,
+        rules_written=manifest.rules_written,
+        personas_written=manifest.personas_written,
+    )
     lines = [
         tr(
             "cli.agent.materialise.summary",
