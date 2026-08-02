@@ -15,6 +15,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....domain.manuals import ManualPart
+from ..._errors import ResourceValidationError
 from ..manuals import ManualKey, ManualRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -86,3 +88,48 @@ def test_manual_repository_get_raises_for_unextracted_manual(tmp_path: Path) -> 
 
     with pytest.raises(ManualNotFoundError):
         repo.get(key)
+
+
+class TestManualPartVocabulary:
+    """An unknown part fails closed instead of selecting a different authority.
+
+    ``ManualRepository._load`` used to catch every ``ValueError`` from the
+    canonical ``ManualPart`` enum and substitute ``SINGLE``. A typo'd or stale
+    caller key therefore returned a valid but *different* authoritative manual
+    aggregate — the one a reader would go on to quote regulatory text from —
+    while the domain loader rejected the same value outright.
+    """
+
+    @pytest.mark.parametrize("bad", ["bogus", "SINGLE", "part9", "", " single "])
+    def test_unknown_part_is_refused_at_key_construction(self, bad: str) -> None:
+        """The refusal lands before any authority is selected."""
+        with pytest.raises(ResourceValidationError):
+            ManualKey(manual_id="iva", year=2025, part=bad)
+
+    def test_refusal_names_the_accepted_vocabulary(self) -> None:
+        """An operator must be able to recover from the message alone."""
+        with pytest.raises(ResourceValidationError) as excinfo:
+            ManualKey(manual_id="iva", year=2025, part="bogus")
+
+        for part in ManualPart:
+            assert part.value in str(excinfo.value)
+
+    @pytest.mark.parametrize("part", [p.value for p in ManualPart])
+    def test_every_declared_part_is_accepted(self, part: str) -> None:
+        """The guard must accept exactly the canonical vocabulary, not less."""
+        assert ManualKey(manual_id="renta", year=2025, part=part).part == part
+
+    def test_default_part_is_the_single_volume(self) -> None:
+        assert ManualKey(manual_id="iva", year=2025).part == ManualPart.SINGLE.value
+
+    def test_a_bogus_part_no_longer_resolves_to_the_single_volume(self) -> None:
+        """The exact substitution the fallback performed is now impossible.
+
+        Before the fix ``part="bogus"`` and ``part="single"`` loaded the same
+        aggregate and serialized identically, so the mis-key was undetectable.
+        """
+        single = ManualRepository().get(ManualKey(manual_id="iva", year=2025, part="single"))
+
+        assert single is not None
+        with pytest.raises(ResourceValidationError):
+            ManualRepository().get(ManualKey(manual_id="iva", year=2025, part="bogus"))
