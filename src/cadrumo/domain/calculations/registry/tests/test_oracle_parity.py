@@ -2,23 +2,161 @@
 
 from __future__ import annotations
 
-import pytest
-from pydantic import ValidationError
+from collections.abc import Mapping
 
+import pytest
+from pydantic import AnyUrl, ValidationError
+
+from .....tests.aeat_literal_fixtures import (
+    LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE,
+    LIVE_PARITY_PRET_CHECK_PATH_FIXTURE,
+    LIVE_PARITY_STATIC_REMOTE_PATH_FIXTURE,
+    aeat_host,
+    aeat_url,
+)
 from .._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .._errors import RegistryValidationError
 from .._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .._live_parity import (
     LiveParityCatalogue,
     OracleEnvironment,
+    OracleSurfaceKind,
     ParityFieldComparison,
     ParityResult,
     ReplayPayload,
     decode_replay_json_payload,
+    evaluate_planned_operations,
+    pre_flight_oracle_operations,
 )
+from .._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 from .._renta_web_open_oracle import RentaWebOpenOracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_WWW6_HOST = aeat_host("www6")
+
+
+class _CannedOracle:
+    """Real :class:`LiveParityOracle` implementation backed by canned operations.
+
+    Feeds operator-supplied ``planned_operations`` into the real
+    ``pre_flight_oracle_operations`` / ``evaluate_planned_operations``
+    production functions under test -- those functions run unchanged on the
+    canned plan, so a guard regression here is real, not a mock artefact.
+    """
+
+    def __init__(
+        self,
+        *,
+        oracle_id: str,
+        surface_kind: OracleSurfaceKind,
+        operations: tuple[RemoteOperation, ...],
+    ) -> None:
+        self._oracle_id = oracle_id
+        self._surface_kind: OracleSurfaceKind = surface_kind
+        self._operations = operations
+
+    @property
+    def oracle_id(self) -> str:
+        return self._oracle_id
+
+    @property
+    def surface_kind(self) -> OracleSurfaceKind:
+        return self._surface_kind
+
+    def planned_operations(self, payload: bytes, *, expected: Mapping[str, object]) -> tuple[RemoteOperation, ...]:
+        return self._operations
+
+    def verify_payload(
+        self,
+        policy: RemoteStateGuardPolicy,
+        payload: bytes,
+        *,
+        expected: Mapping[str, object],
+    ) -> ParityResult:
+        raise NotImplementedError("not exercised by the pre-flight/evaluate tests below")
+
+
+def _read_only_policy() -> RemoteStateGuardPolicy:
+    return RemoteStateGuardPolicy(
+        id="pre-flight-test-policy",
+        evidence_tier="executable_parity_evidence",
+        classification="open_simulator",
+        allowed_hosts=(_WWW6_HOST,),
+        synthetic_data_allowed=False,
+        requires_authentication=False,
+        requires_aeat_authorization=False,
+    )
+
+
+def _static_only_policy() -> RemoteStateGuardPolicy:
+    return RemoteStateGuardPolicy(
+        id="pre-flight-static-only-policy",
+        evidence_tier="official_source_guidance",
+        classification="static_official_only",
+        allowed_hosts=(),
+        synthetic_data_allowed=False,
+        requires_authentication=False,
+        requires_aeat_authorization=False,
+    )
+
+
+def _read_only_get(path: str) -> RemoteOperation:
+    return RemoteOperation(kind="http", method="GET", url=AnyUrl(aeat_url("www6", path)))
+
+
+def _post(path: str) -> RemoteOperation:
+    return RemoteOperation(kind="http", method="POST", url=AnyUrl(aeat_url("www6", path)))
+
+
+def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:
+    """``pre_flight_oracle_operations`` returns the plan when every step is read-only.
+
+    Restores the coverage ``LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE`` lost when
+    the 561-line ``test_live_parity.py`` (which exercised this exact function
+    with a canned oracle) was deleted in favour of this file's much narrower
+    predecessor -- ``pre_flight_oracle_operations`` stayed exported in
+    ``_live_parity.__all__`` with zero test coverage in the interim.
+    """
+    oracle = _CannedOracle(
+        oracle_id="pre-flight-read-only",
+        surface_kind="iva_id_check",
+        operations=(_read_only_get(LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE),),
+    )
+    operations = pre_flight_oracle_operations(oracle, _read_only_policy(), payload=b"", expected={})
+    assert operations == (_read_only_get(LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE),)
+
+
+def test_pre_flight_blocks_oracle_with_post_operation() -> None:
+    """A planned POST is refused before any network call, naming the offending step."""
+    oracle = _CannedOracle(
+        oracle_id="pre-flight-post",
+        surface_kind="pre_filing_validator",
+        operations=(
+            _read_only_get(LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE),
+            _post(LIVE_PARITY_PRET_CHECK_PATH_FIXTURE),
+        ),
+    )
+    with pytest.raises(RegistryValidationError, match="forbidden"):
+        pre_flight_oracle_operations(oracle, _read_only_policy(), payload=b"", expected={})
+
+
+def test_evaluate_planned_operations_returns_blocked_result_for_static_only_policy() -> None:
+    """A static-only policy blocks every remote operation, even a benign GET.
+
+    ``evaluate_planned_operations`` is the exception-free sibling of
+    ``pre_flight_oracle_operations``; it returns a ``blocked`` verdict rather
+    than raising, which this test proves by inspecting the returned value
+    instead of catching an exception.
+    """
+    oracle = _CannedOracle(
+        oracle_id="static-only-oracle",
+        surface_kind="file_validator",
+        operations=(_read_only_get(LIVE_PARITY_STATIC_REMOTE_PATH_FIXTURE),),
+    )
+    result = evaluate_planned_operations(oracle, _static_only_policy(), payload=b"", expected={})
+    assert isinstance(result, ParityResult)
+    assert result.verdict == "blocked"
 
 
 def test_parity_field_comparison_rejects_duplicate_field_names() -> None:
