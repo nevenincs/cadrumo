@@ -416,3 +416,43 @@ class TestPutManifestCommitFailure:
         sha_hex = hashlib.sha256(plaintext).hexdigest()
         assert (store.root_dir / "blobs" / sha_hex[:2] / f"{sha_hex}.enc").is_file()
         assert reference.sha256_plaintext_hex == sha_hex
+
+    def test_a_failed_commit_leaves_a_pre_existing_blob_readable(self, store: EncryptedBlobStore) -> None:
+        """The surviving blob must still resolve, not merely still have a file.
+
+        Preserving the path was not enough. A re-put of an encrypted class
+        mints a fresh per-blob DEK, so the payload it writes over a live blob
+        is different ciphertext under the same content-addressed name. When
+        the manifest commit then failed, the rollback skipped the unlink and
+        the file survived -- but the manifest that survived with it described
+        the ciphertext digest of the bytes just overwritten. ``iter_manifests``
+        still listed the blob and the original reference still pointed at it,
+        while reading it failed the digest check: a silently corrupted blob
+        that every inventory surface reported as healthy.
+        """
+        plaintext = b"live-blob-that-must-survive-a-failed-re-put"
+        reference = store.put(plaintext, classification=SensitivityClass.SECRET)
+
+        with obstructed_path(self._manifest_path(store, plaintext)), pytest.raises(StorageValidationError):
+            store.put(plaintext, classification=SensitivityClass.SECRET)
+
+        assert store.get(reference) == plaintext
+        assert len(list(store.iter_manifests())) == 1
+
+    def test_a_first_put_of_new_bytes_is_still_rolled_back(self, store: EncryptedBlobStore) -> None:
+        """Positive control for the restore: it must not resurrect an orphan.
+
+        The two rollback arms are chosen on whether a payload was displaced.
+        Without this, a restore that ran unconditionally -- writing back an
+        empty capture and leaving the file -- would satisfy the test above
+        while re-introducing the untracked payload the compensation exists to
+        remove.
+        """
+        plaintext = b"first-put-of-these-bytes"
+        sha_hex = hashlib.sha256(plaintext).hexdigest()
+
+        with obstructed_path(self._manifest_path(store, plaintext)), pytest.raises(StorageValidationError):
+            store.put(plaintext, classification=SensitivityClass.SECRET)
+
+        assert not (store.root_dir / "blobs" / sha_hex[:2] / f"{sha_hex}.enc").exists()
+        assert list(store.iter_manifests()) == []

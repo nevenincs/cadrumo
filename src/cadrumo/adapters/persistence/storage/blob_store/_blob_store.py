@@ -366,12 +366,24 @@ class EncryptedBlobStore:
         """
         sha_hex = _hex_digest(plaintext)
         policy = default_policy_for(classification)
-        # Recorded before anything is written, so a failed manifest commit can
+        # Captured before anything is written, so a failed manifest commit can
         # tell a payload THIS call published from one that was already on disk
         # under a live manifest. The store is content-addressed, so re-putting
         # identical bytes lands on the same paths; unlinking unconditionally
         # would delete a blob other references still resolve.
-        payload_pre_existed = self._plaintext_path_for(sha_hex).exists() or self._ciphertext_path_for(sha_hex).exists()
+        #
+        # The displaced BYTES are held, not merely the fact that a file was
+        # there. A re-put of an encrypted class mints a fresh per-blob DEK, so
+        # the payload it writes over a live blob is different ciphertext under
+        # the same content-addressed name. Skipping the unlink alone therefore
+        # preserved the file while its surviving manifest still described the
+        # ciphertext digest of the bytes that had just been overwritten: the
+        # live blob stayed listed and resolvable by reference, but reading it
+        # failed the digest check. Restoring what was displaced is what makes
+        # the untouched-blob guarantee true of its contents and not only of its
+        # path. The cost is bounded by one blob, which this method already
+        # holds in memory as ``plaintext``.
+        displaced_payload = self._capture_displaced_payload(sha_hex)
 
         if classification is SensitivityClass.CORPUS:
             if policy.at_rest is not AtRestTreatment.PLAINTEXT:
@@ -413,14 +425,21 @@ class EncryptedBlobStore:
         try:
             save_envelope(envelope, self._manifest_path_for(sha_hex))
         except (OSError, StorageValidationError):
-            # The payload is on disk but no manifest describes it, so every
-            # read path reports the blob absent while the bytes remain --
-            # untracked ciphertext for an encrypted class, and untracked
-            # PLAINTEXT for CORPUS. Nothing would ever collect it, and a retry
-            # would rewrite it. Remove what this call published, then let the
-            # original failure surface.
-            if not payload_pre_existed:
+            # The payload is on disk but no manifest describes what this call
+            # wrote, so undo the publication before letting the original
+            # failure surface. Nothing else would: no read path reports the
+            # bytes, so nothing would ever collect them.
+            #
+            # Which undo depends on what was there first. A payload this call
+            # introduced is removed outright -- otherwise it is untracked
+            # ciphertext for an encrypted class and untracked PLAINTEXT for
+            # CORPUS. A payload that displaced a live blob's bytes is put back,
+            # so the manifest that survived still describes the payload it is
+            # paired with.
+            if displaced_payload is None:
                 self._discard_unmanifested_payload(sha_hex)
+            else:
+                self._restore_displaced_payload(displaced_payload)
             raise
         _log.debug(
             "blob_store put: sha256=%s classification=%s size=%d content_type=%s",
@@ -433,6 +452,56 @@ class EncryptedBlobStore:
             sha256_plaintext_hex=sha_hex,
             classification=classification,
         )
+
+    def _capture_displaced_payload(self, sha_hex: str) -> tuple[Path, bytes] | None:
+        """Return the payload a put is about to overwrite, or ``None`` if there is none.
+
+        Args:
+            sha_hex: Plaintext SHA-256 identifying the content-addressed paths.
+
+        Returns:
+            The existing payload path and its bytes, or ``None`` when no
+            payload is stored under ``sha_hex`` yet. An unreadable existing
+            payload also yields ``None``: it cannot be restored, and treating
+            it as absent means the rollback removes the wreckage rather than
+            leaving a file it cannot vouch for.
+        """
+        for payload_path in (self._plaintext_path_for(sha_hex), self._ciphertext_path_for(sha_hex)):
+            if not payload_path.is_file():
+                continue
+            try:
+                return payload_path, payload_path.read_bytes()
+            except OSError:
+                _log.warning(
+                    "blob_store put: an existing payload could not be captured before being overwritten path_marker=%s",
+                    _path_log_marker(payload_path),
+                    exc_info=True,
+                )
+                return None
+        return None
+
+    def _restore_displaced_payload(self, displaced: tuple[Path, bytes]) -> None:
+        """Put back the payload bytes a failed put overwrote.
+
+        Best-effort for the same reason as
+        :meth:`_discard_unmanifested_payload`: the caller is already unwinding
+        a failure, and raising here would replace the reason the put failed
+        with the reason the restore did. A failed restore leaves the blob's
+        manifest describing bytes that are no longer under it, which is logged
+        so an operator can re-put the content.
+
+        Args:
+            displaced: The payload path and the bytes captured before the write.
+        """
+        payload_path, payload_bytes = displaced
+        try:
+            atomic_write_bytes(payload_path, payload_bytes)
+        except OSError:
+            _log.warning(
+                "blob_store put rollback: could not restore the payload this put overwrote path_marker=%s",
+                _path_log_marker(payload_path),
+                exc_info=True,
+            )
 
     def _discard_unmanifested_payload(self, sha_hex: str) -> None:
         """Remove payload bytes left behind by a put whose manifest never committed.
