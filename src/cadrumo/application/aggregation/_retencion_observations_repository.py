@@ -47,7 +47,7 @@ from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.identity import tax_id_identity_token
-from ...core.time import now
+from ...core.time import UtcInstant, now
 from ._errors import AggregationValidationError, t
 from ._observation_window import replace_observation_window
 from ._retenciones import RetencionObservation, RetencionScheme
@@ -61,6 +61,18 @@ class _RetencionObservationEnvelopePayload(BaseModel):
     the envelope schema identical to the other repositories' one-``payload`` shape
     and leaves room for future per-record metadata without breaking the inner
     record.
+
+    ``captured_at`` is the canonical :data:`~core.time.UtcInstant`: a bare
+    ``datetime`` admitted a naive value, so a capture instant with no zone
+    reached persistence and every later comparison against a UTC-aware instant
+    silently answered a different question.
+
+    ``source_kind`` here is CAPTURE provenance (which ingestion path wrote the
+    row), deliberately NOT the filed-observation
+    :class:`~application.calculations.ObservationSourceKind` taxonomy, which
+    classifies whether a FILED observation is official AEAT evidence. The two
+    are different value sets on different axes; unifying them would let a
+    capture token be read as filing-grade evidence.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -69,7 +81,7 @@ class _RetencionObservationEnvelopePayload(BaseModel):
     filing_year: int = Field(ge=2000, le=2099)
     period: Period
     observation: RetencionObservation
-    captured_at: datetime
+    captured_at: UtcInstant
     source_kind: str = Field(min_length=1)
     source_metadata: Mapping[str, str] = Field(default_factory=dict)
 
