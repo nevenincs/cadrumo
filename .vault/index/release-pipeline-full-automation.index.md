@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:9c25ebab81d0ef8aba0b8aea7377e1b807849dff2c339e39a46cb503a5c0bbb4'
+body_hash: 'sha256:7eaa8189f0d1c907aac7eaa3108178ae3b12b27489b85f2c7efe3f36e45f67bf'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -33,6 +33,7 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W03-P05-S22]]'
   - '[[2026-08-02-release-pipeline-full-automation-W03-P05-S23]]'
   - '[[2026-08-02-release-pipeline-full-automation-W03-P05-S24]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W03-P05-S25]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S36]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S37]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P08-S38]]'
@@ -77,6 +78,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W03-P05-S22` - Wire the bump stage as the orchestrator first job invoking the bump executor and emitting the bumped commit and version as job outputs the downstream stages key on, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py -q passes asserting the bump job invokes dev.release.version_bump and that its outputs are consumed by the campaign stage rather than re-derived
 - `2026-08-02-release-pipeline-full-automation-W03-P05-S23` - Wire the packaging campaign stage to dispatch packaging-smoke at the bumped commit and resolve its own run through the run-resolution module rather than the newest run, then wait on the conclusion waiter, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py -q passes asserting the stage invokes dev.release.run_resolution and never reads a bare latest-run query, with end-to-end chaining flagged non-local and CI-only
 - `2026-08-02-release-pipeline-full-automation-W03-P05-S24` - Wire the acquisition stage to dispatch exactly the lanes the claimed-channel derivation returns, passing its own smoke run id and head commit as each lane source_run_id and source_commit, resolving and waiting on each dispatched run, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py -q passes asserting the lane set is derived rather than hardcoded and that today's python-only descriptor dispatches no acquisition lane
+- `2026-08-02-release-pipeline-full-automation-W03-P05-S25` - Wire the host-extension evidence precondition into the orchestrator entry so a claimed claude channel with no operator-minted evidence release refuses the whole chain before the bump lands rather than after a version is burned, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py -q passes asserting the precondition job precedes the bump job in the needs graph
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S36` - Record OP-12 as a named operator settings action deleting the orphaned pypi-data-official environment, which is a live Trusted Publishing trust anchor naming a workflow that no longer exists and therefore standing authority with no owner, and extend the read-only forge inventory probe to report any environment referencing an absent workflow so the orphan class is detectable rather than rediscovered, gate: uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes with a case whose fixture environment names a workflow path absent from the tree and is reported as orphaned
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S37` - Comment on tracking issue 618 with the true split naming the repository half landed 2026-07-27, the two environments already deleted, the third pending OP-12, and the index-side Trusted Publisher registrations that no agent can verify, then close it once its forge half is complete, carrying any surviving index-side registration forward as a named operator item rather than silently absorbing it, gate: gh issue view 618 shows the comment and the closed state, flagged forge-side and non-local, and the carried-forward operator item is named in the runbook operator-actions section which the runbook conformance test asserts is present
 - `2026-08-02-release-pipeline-full-automation-W04-P08-S38` - Narrow the delivery record OP-3 on every operator-facing surface to its one remaining half, the deploy-role variable on the already-created docs environment, and state alongside it that the docs environment required_reviewers removal is the second half of OP-9 rather than a separate obligation, so a reader is not told to create an environment that exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting exactly the outstanding halves

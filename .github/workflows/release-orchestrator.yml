@@ -86,9 +86,43 @@ jobs:
           fi
           echo "rehearsal: dry_run=${DRY_RUN}"
 
+  precondition:
+    name: Cadrumo / refuse a claimed channel we cannot evidence
+    needs: preflight
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Require operator-minted evidence for every claimed host-extension channel
+        run: |
+          # BEFORE the bump, deliberately. The four claude-* rows assert that a
+          # REAL client installed real bytes; the emit honesty guard refuses
+          # SDK-driven runs, and defeating it would make the evidence a lie
+          # about what was installed. So they stay a human act and this stage
+          # only REFUSES on their absence - it never tries to produce them.
+          #
+          # Placed ahead of the bump so a claimed-but-unevidenced channel stops
+          # the chain while nothing is spent. Refusing after the bump would burn
+          # a version to discover a precondition that was knowable at entry.
+          #
+          # Under today's descriptor no host-extension channel is claimed, so
+          # this passes trivially. It exists so that flipping one to `available`
+          # cannot silently publish it unevidenced.
+          uv run --frozen python -m dev.packaging.publication_inputs \
+            --check-host-extension-precondition
+
   bump:
     name: Cadrumo / compute and land the version bump
-    needs: preflight
+    needs: [preflight, precondition]
     # Skipped entirely on a resume: the version the earlier chain landed is
     # already on main, and bumping again would burn a second version to
     # recover from a failure that had nothing to do with the first.

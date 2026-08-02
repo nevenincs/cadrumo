@@ -221,3 +221,44 @@ def test_todays_python_only_descriptor_dispatches_no_acquisition_lane() -> None:
     from dev.packaging.publication_inputs import acquisition_lane_workflows
 
     assert acquisition_lane_workflows(load_descriptor()) == ()
+
+
+def test_the_evidence_precondition_runs_before_the_bump() -> None:
+    """A knowable refusal must not cost a burned version.
+
+    The needs graph is the assertion, not step order: a claimed host-extension
+    channel with no operator-minted evidence is knowable at entry, so refusing
+    after the bump would spend a version to discover it. Versions are burned
+    permanently by the identity ledger, so the cost is not recoverable.
+    """
+    jobs = _document()["jobs"]
+
+    assert "precondition" in jobs
+    assert "precondition" in jobs["bump"]["needs"], "the bump must not run before the precondition clears"
+    assert jobs["precondition"]["needs"] == "preflight", "the precondition is the first real gate in the chain"
+
+
+def test_the_precondition_refuses_and_never_produces_the_claude_rows() -> None:
+    """It gates on the four real-client rows; it must never attempt to mint them.
+
+    The rows assert that a real client installed real bytes. The emit honesty
+    guard refuses SDK-driven runs by design, so a workflow that produced them
+    would be asserting the same sentence about a different event.
+    """
+    surface = _run_surface(_document(), "precondition")
+
+    assert "--check-host-extension-precondition" in surface
+    assert "emit_real_client_evidence" not in surface, "the orchestrator must never mint real-client evidence"
+
+
+def test_the_precondition_holds_against_the_live_descriptor() -> None:
+    """Bound to the shipped descriptor: no host-extension channel is claimed today.
+
+    A positive control for the refusal path lives in the owning module's own
+    tests; what this pins is that the CURRENT tree passes, so a red here means
+    the descriptor changed rather than the code broke.
+    """
+    from dev.docs.download_matrix import load_descriptor
+    from dev.packaging.publication_inputs import host_extension_precondition_refusal
+
+    assert host_extension_precondition_refusal(load_descriptor(), claude_evidence_release="") is None
