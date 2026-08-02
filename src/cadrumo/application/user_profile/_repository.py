@@ -37,11 +37,17 @@ from ...adapters.persistence.storage import (
     Envelope,
     EnvelopeVersionError,
     SecureObjectRepository,
+    SecureObjectWrite,
     inner_envelope_version_is_current,
 )
 from ...adapters.persistence.storage.bucket import BucketValidationError
 from ...core.logging import get_logger
 from ...core.time import now
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryRepositoryProtocol,
+    bucket_event_history_write,
+)
 from ...domain.user_profile import (
     ProfileBucketMismatchError,
     ProfileNotFoundError,
@@ -356,6 +362,74 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+        _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
+        _clear_output_language_cache()
+
+    def to_secure_object_write(self, record: UserProfileRecord) -> SecureObjectWrite:
+        """Return the prepared upsert for ``record`` without committing it.
+
+        The batching half of :meth:`save`, for a caller that must commit the
+        record in the SAME unit of work as something else -- in practice the
+        bucket event that claims the change happened. Emitting that event in a
+        second write let the rename come to rest durable-but-unrecorded: the
+        label moved and the audit trail did not, with no marker naming the gap.
+
+        Deliberately does NOT run the output-language cache refresh that
+        :meth:`save` performs. That is a post-commit side effect on in-process
+        state, and running it here would invalidate the cache for a write the
+        caller may still abandon.
+        """
+        envelope = Envelope[UserProfileRecord](
+            schema_version=_USER_PROFILE_VALUE_VERSION,
+            written_at=now(),
+            classification=_USER_PROFILE_VALUE_SENSITIVITY,
+            payload=record,
+        )
+        return SecureObjectWrite(
+            namespace=USER_PROFILE_VALUE_NAMESPACE,
+            object_key=user_profile_value_object_key(record.profile_id),
+            classification=_USER_PROFILE_VALUE_SENSITIVITY,
+            schema_version=_USER_PROFILE_VALUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+    def commit_with_events(
+        self,
+        record: UserProfileRecord,
+        *,
+        events: tuple[BucketEvent, ...],
+        event_repository: BucketEventHistoryRepositoryProtocol,
+    ) -> None:
+        """Persist ``record`` and ``events`` in one unit of work.
+
+        The batching counterpart of :meth:`save`. A caller that saved the
+        record and emitted afterwards could come to rest durable-but-
+        unrecorded, so this hands both writes to the secure-object backend's
+        atomic batch: neither the record nor the events it promises can land
+        without the other.
+
+        The post-commit cache refresh runs only after the batch commits, for
+        the same reason it is absent from :meth:`to_secure_object_write` -- a
+        refresh for a write that raised would leave the cache describing state
+        that never existed.
+        """
+        self._objects.save_many(
+            (
+                self.to_secure_object_write(record),
+                bucket_event_history_write(event_repository, events),
+            ),
+        )
+        self.refresh_output_language_cache(record)
+
+    def refresh_output_language_cache(self, record: UserProfileRecord) -> None:
+        """Apply the post-commit cache refresh :meth:`save` performs inline.
+
+        Paired with :meth:`to_secure_object_write` so a batching caller can
+        reproduce :meth:`save`'s full behaviour: prepare, commit alongside its
+        siblings, then refresh. Separating them is what keeps the cache from
+        being invalidated for a write that never lands.
+        """
         _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
         _clear_output_language_cache()
 

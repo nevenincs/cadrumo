@@ -51,8 +51,8 @@ from ...domain.buckets import (
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
+    bucket_event_history_write,
 )
-from ...domain.buckets import append_bucket_event as _append_bucket_event
 from ...domain.buckets import build_bucket_event as _build_domain_bucket_event
 from ...domain.buckets import emit_bucket_event as _emit_domain_bucket_event
 from ...domain.calculations.registry import (
@@ -199,11 +199,13 @@ def modelo_bucket_event_write(
 
     Appending is idempotent on content, so re-deriving the same event collapses
     onto the same ``event_id`` rather than duplicating the entry.
+
+    The shape is not modelo-specific and is no longer implemented here: this
+    delegates to :func:`~cadrumo.domain.buckets.bucket_event_history_write`,
+    which every emitting domain shares. The wrapper stays because the modelo
+    call sites read better naming their own domain.
     """
-    catalogue = repository.load()
-    for event in events:
-        catalogue = _append_bucket_event(catalogue, event)
-    return repository.to_secure_object_write(catalogue)
+    return bucket_event_history_write(repository, events)
 
 
 def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRef, ...]) -> str:

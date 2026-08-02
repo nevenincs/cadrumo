@@ -19,9 +19,11 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...core.errors import BaseSeverity
 from ...core.hashing import sha256_hex
 from ...domain.buckets import (
+    BucketEvent,
     BucketEventHistoryRepositoryProtocol,
     BucketEventObjectType,
     BucketEventType,
+    build_bucket_event,
     emit_bucket_event,
 )
 from ...domain.user_profile import (
@@ -269,7 +271,12 @@ class ProfileLifecycleService:
             payload={"adopted_count": str(adopted_count), "divergence_count": str(divergence_count)},
         )
 
-    def rename(self, command: RenameProfileCommand) -> ProfileLifecycleResult:
+    def rename(
+        self,
+        command: RenameProfileCommand,
+        *,
+        extra_events: tuple[BucketEvent, ...] = (),
+    ) -> ProfileLifecycleResult:
         """Update a live profile's display label and return a :class:`ProfileLifecycleResult`.
 
         Profile identity is an immutable UUID, so a rename touches only
@@ -283,6 +290,20 @@ class ProfileLifecycleService:
         The orchestration layer updates the parallel copy of the label
         held in the plaintext bucket manifest; the service contract is
         record-only.
+
+        The record write, ``PROFILE_RENAMED``, and any ``extra_events`` a
+        composing surface hands down commit in ONE unit of work. Saving the
+        record and emitting afterwards let the rename come to rest
+        durable-but-unrecorded: the label moved and the audit trail did not,
+        with no marker naming the gap. ``extra_events`` exists so a surface
+        layer can record its own verb invocation without opening a second
+        write it would have to reconcile -- the bucket-maintenance rename is
+        the caller this was built for.
+
+        The manifest write still sits outside this transaction, by design:
+        it is a plaintext file, not a secure-object row, so no SQL unit of
+        work can span both. That ordering is documented on the repository
+        and fails closed through the cross-store integrity check on load.
         """
         source = self._repository.load(command.profile_id)
         if source.status is not UserProfileStatus.ACTIVE:
@@ -296,12 +317,16 @@ class ProfileLifecycleService:
                 "updated_at": now,
             },
         )
-        self._repository.save(target)
-        self._emit_event(
+        renamed_event = self._build_event(
             event_type=BucketEventType.PROFILE_RENAMED,
             object_id=target.profile_id,
             occurred_at=now,
             payload={"previous_display_name": source.display_name},
+        )
+        self._repository.commit_with_events(
+            target,
+            events=(renamed_event, *extra_events),
+            event_repository=self._events,
         )
         return ProfileLifecycleResult(profile=target, applied_at=now)
 
@@ -404,6 +429,30 @@ class ProfileLifecycleService:
         for fact in incoming:
             merged[(fact.path, fact.valid_from, fact.valid_to)] = fact
         return tuple(merged.values())
+
+    def _build_event(
+        self,
+        *,
+        event_type: BucketEventType,
+        object_id: str,
+        occurred_at: datetime,
+        payload: dict[str, str] | None = None,
+    ) -> BucketEvent:
+        """Derive the lifecycle event without persisting it.
+
+        The derive half of :meth:`_emit_event`, for the transitions that
+        commit their event alongside the record write rather than after it.
+        """
+        return build_bucket_event(
+            bucket_id=self._repository.bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor=_PROFILE_LIFECYCLE_ACTOR,
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=object_id,
+            payload=dict(payload or {}),
+            payload_version=_PROFILE_EVENT_PAYLOAD_VERSION,
+        )
 
     def _emit_event(
         self,

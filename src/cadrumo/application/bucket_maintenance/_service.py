@@ -46,6 +46,7 @@ from ...domain.buckets import (
     BucketImportError,
     BucketRestoreRefusedError,
     append_bucket_event,
+    build_bucket_event,
     derive_bucket_event_id,
 )
 from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
@@ -312,8 +313,7 @@ class BucketMaintenanceService:
     def rename(self, command: RenameBucketCommand) -> RenameBucketResult:
         """Relabel the bucket identified by ``command.bucket_id``.
 
-        Reads the current operator-visible label, delegates the
-        cross-store relabel to :func:`rename_profile`, then emits
+        Reads the current operator-visible label, PLACEHOLDER
         ``BUCKET_RENAMED`` carrying the previous label in the payload
         so the audit consumer can render the before / after pair
         without re-reading the manifest.
@@ -349,40 +349,26 @@ class BucketMaintenanceService:
                 )
             previous_label = pointer.label
             with profile_storage_session(command.bucket_id):
-                record = rename_profile(
-                    profile_id=command.bucket_id,
-                    new_label=command.new_label,
-                )
                 occurred_at = now()
-                event = BucketEvent(
-                    event_id=derive_bucket_event_id(
-                        bucket_id=command.bucket_id,
-                        event_type=BucketEventType.BUCKET_RENAMED,
-                        occurred_at=occurred_at,
-                        actor="bucket-maintenance",
-                        object_type=BucketEventObjectType.BUCKET,
-                        object_id=command.bucket_id,
-                        payload={
-                            "previous_label": previous_label,
-                            "new_label": record.display_name,
-                        },
-                    ),
+                payload = {
+                    "previous_label": previous_label,
+                    "new_label": command.new_label.strip(),
+                }
+                event = build_bucket_event(
                     bucket_id=command.bucket_id,
                     event_type=BucketEventType.BUCKET_RENAMED,
                     occurred_at=occurred_at,
                     actor="bucket-maintenance",
                     object_type=BucketEventObjectType.BUCKET,
                     object_id=command.bucket_id,
+                    payload=payload,
                     payload_version=_RENAME_PAYLOAD_VERSION,
-                    payload={
-                        "previous_label": previous_label,
-                        "new_label": record.display_name,
-                    },
                 )
-                repository = self._event_repository or self._event_repository_for_bucket(
-                    command.bucket_id,
+                record = rename_profile(
+                    profile_id=command.bucket_id,
+                    new_label=command.new_label,
+                    extra_events=(event,),
                 )
-                repository.save(append_bucket_event(repository.load(), event))
         return RenameBucketResult(
             bucket_id=command.bucket_id,
             previous_label=previous_label,

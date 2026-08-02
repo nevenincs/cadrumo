@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from ._errors import BucketEventValidationError, BucketsError
 from ._event import (
@@ -26,6 +27,9 @@ from ._event import (
     derive_bucket_event_id,
 )
 from ._protocols import BucketEventHistoryRepositoryProtocol
+
+if TYPE_CHECKING:
+    from ...core.secure_object_write import SecureObjectWrite
 
 
 class BucketEventHistoryPersistenceError(BucketsError):
@@ -70,6 +74,33 @@ def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEve
     mapping = dict(catalogue.events)
     mapping[event.event_id] = event
     return BucketEventHistoryCatalogue(events=mapping)
+
+
+def bucket_event_history_write(
+    repository: BucketEventHistoryRepositoryProtocol,
+    events: tuple[BucketEvent, ...],
+) -> SecureObjectWrite:
+    """Return the catalogue write appending ``events``, without committing it.
+
+    The commit half of the co-emission pattern :func:`build_bucket_event`
+    exists for. A mutation that saves its state and emits afterwards can come
+    to rest durable-but-unrecorded -- the state survives while the history has
+    no matching entry and no retryable marker names the gap. Folding this
+    write into the owning catalogue's batch puts the state and the event it
+    promises in one SQL unit of work, so neither can land without the other.
+
+    Appending is idempotent on content, so re-deriving the same event
+    collapses onto the same ``event_id`` rather than duplicating the entry.
+
+    Lives here rather than in any one emitting domain because the shape is not
+    domain-specific: every emitter that needs its event to share a transaction
+    with its state change needs exactly this, and a per-domain copy is how one
+    of them silently drifts from the append contract.
+    """
+    catalogue = repository.load()
+    for event in events:
+        catalogue = append_bucket_event(catalogue, event)
+    return repository.to_secure_object_write(catalogue)
 
 
 def build_bucket_event(
