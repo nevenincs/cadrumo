@@ -266,6 +266,7 @@ adapters:
             el sidecar de l''objecte: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
             activa LongPathsEnabled (vegeu `aeat config check`).'
+          written_at_invalid: 'El camp written_at del sidecar local falta, no es pot interpretar o no indica zona horària: {actual_value}.'
   persistence:
     profile:
       assets:
@@ -858,6 +859,7 @@ application:
       errors:
         snapshot_bucket_mismatch: El bucket de la càrrega de la instantània no coincideix
           amb el bucket del repositori.
+        snapshot_key_mismatch: 'La instantània està emmagatzemada sota la clau d''una altra instantània.'
     verify:
       errors:
         bucket_id_blank: L identificador del bucket de verificació no pot estar buit.
@@ -1169,6 +1171,8 @@ application:
         per marcar com a presentat quan la finestra d''obligació sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+      m036_declaration_profile_bucket_mismatch: 'La declaració del model 036 indica un perfil diferent del bucket on es registraria'
+      filed_observation_split_storage_context: 'El magatzem de l''historial de compensació d''IVA és una base de dades diferent de la d''observacions de càlcul'
     findings:
       art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
         de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
@@ -6584,6 +6588,7 @@ errors:
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_evidence_bundle_ambiguous: 'El prefix de l''identificador del paquet d''evidències coincideix amb més d''un paquet en aquest bucket.'
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
@@ -6713,6 +6718,7 @@ flows:
         certificate: Certificat electrònic
         clave_movil: Cl@ve Mòbil
         clave_permanente: Cl@ve Permanent
+      certificate_incomplete: 'Identificació: %{provider}; %{reason} Executa: %{next_action}'
     actions:
       section: Accions
     column:

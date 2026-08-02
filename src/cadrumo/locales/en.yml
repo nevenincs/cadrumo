@@ -235,6 +235,7 @@ adapters:
           sidecar_write_path_too_long: 'Local storage could not write the object sidecar:
             the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
             to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+          written_at_invalid: 'Local storage sidecar written_at is missing, unparseable, or carries no timezone: {actual_value}.'
   persistence:
     profile:
       assets:
@@ -774,6 +775,7 @@ application:
       errors:
         snapshot_bucket_mismatch: Snapshot payload bucket does not match the repository
           bucket.
+        snapshot_key_mismatch: 'The snapshot is stored under a different snapshot''s key.'
     verify:
       errors:
         bucket_id_blank: Verify bucket id must not be blank.
@@ -1061,6 +1063,8 @@ application:
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
       calculate_typed_text_input_invalid: 'The --casilla value is not valid for that casilla''s declared type.'
+      m036_declaration_profile_bucket_mismatch: 'The M036 declaration names a different profile than the bucket it would be recorded in'
+      filed_observation_split_storage_context: 'The IVA compensation history store is a different database than the calculation observation store'
     findings:
       art20_reduccion_next_action: Verify whether your other non-work income excluding
         exempt income for the year does not exceed 6500 EUR; if it does not, declare
@@ -6151,6 +6155,7 @@ errors:
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
     unsupported_currency: The currency code provided is not supported.
+    refused_evidence_bundle_ambiguous: 'The evidence-bundle id prefix matches more than one bundle in this bucket.'
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
@@ -6275,6 +6280,7 @@ flows:
         certificate: Electronic certificate
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      certificate_incomplete: 'Identification: %{provider}; %{reason} Run: %{next_action}'
     actions:
       section: Actions
     column:

@@ -194,11 +194,19 @@ class EvidenceBundleService:
         return bundle
 
     def show(self, *, bucket_id: str, bundle_id: str) -> EvidenceBundle:
-        """Load a bundle by exact or prefix match of ``bundle_id``.
+        """Load a bundle by exact or unambiguous prefix match of ``bundle_id``.
 
         Tries an exact ``repository.load`` first; falls back to a prefix
-        scan over all records in the bucket. Raises
-        :class:`EvidenceBundleNotFoundError` when nothing matches.
+        scan over all records in the bucket. Every candidate — exact or
+        prefix — is bound to ``bucket_id``: a manifest whose own
+        ``bucket_id`` disagrees with the requested bucket is never
+        returned (it is a foreign or corrupt record, not a match), and a
+        prefix matching more than one bundle in this bucket is refused
+        rather than silently resolved to the first one found.
+
+        Raises:
+            EvidenceBundleNotFoundError: Nothing in ``bucket_id`` matches
+                ``bundle_id``, or the prefix matches more than one bundle.
 
         Returns:
             :class:`EvidenceBundle`: The retrieved evidence bundle.
@@ -206,16 +214,32 @@ class EvidenceBundleService:
         repository = self._repository_for(bucket_id)
         if bundle_id.strip():
             exact = repository.load(bundle_id)
-            if exact is not None:
+            if exact is not None and exact.bucket_id == bucket_id:
                 return exact
-        for bundle in repository.iter_records():
-            if bundle.bundle_id == bundle_id or bundle.bundle_id.startswith(bundle_id):
-                return bundle
-        raise EvidenceBundleNotFoundError(
-            translated_message="errors.refused.refused_evidence_bundle_not_found",
-            context={"bundle_id": bundle_id, "bucket_id": bucket_id},
-            suggestion="aeat app modelo audit check",
-        )
+        matches = [
+            bundle
+            for bundle in repository.iter_records()
+            if bundle.bucket_id == bucket_id
+            and (bundle.bundle_id == bundle_id or bundle.bundle_id.startswith(bundle_id))
+        ]
+        if not matches:
+            raise EvidenceBundleNotFoundError(
+                translated_message="errors.refused.refused_evidence_bundle_not_found",
+                context={"bundle_id": bundle_id, "bucket_id": bucket_id},
+                suggestion="aeat app modelo audit check",
+            )
+        if len(matches) > 1:
+            raise EvidenceBundleNotFoundError(
+                translated_message="errors.refused.refused_evidence_bundle_ambiguous",
+                context={
+                    "bundle_id": bundle_id,
+                    "bucket_id": bucket_id,
+                    "match_count": len(matches),
+                    "matches": ", ".join(sorted(bundle.bundle_id for bundle in matches)),
+                },
+                suggestion="provide a longer bundle id prefix",
+            )
+        return matches[0]
 
     def check(
         self,
@@ -262,7 +286,9 @@ class EvidenceBundleService:
         )
 
         total = len(bundle.records)
+        total_bytes = sum(record.payload_size_bytes for record in bundle.records)
         reachable = 0
+        reachable_bytes = 0
         digest_passes = 0
         digest_failures: list[str] = []
         for record in bundle.records:
@@ -270,13 +296,25 @@ class EvidenceBundleService:
             if key not in record_payloads:
                 continue
             reachable += 1
+            reachable_bytes += record.payload_size_bytes
             actual = _hash_payload(record_payloads[key])
             if actual == record.content_sha256:
                 digest_passes += 1
             else:
                 digest_failures.append(record.object_id)
 
-        completeness = reachable / total if total else 1.0
+        # completeness_ratio is documented (EvidenceRecordRef.payload_size_bytes)
+        # as the byte-weighted share of manifest payload reached, not a bare
+        # record count: a bundle dominated by one large unreachable record
+        # must not read as "mostly complete" because the other, tiny records
+        # were present. Fall back to the count-based ratio only when every
+        # record legitimately declares zero bytes (nothing to weight by).
+        if not total:
+            completeness = 1.0
+        elif total_bytes:
+            completeness = reachable_bytes / total_bytes
+        else:
+            completeness = reachable / total
         findings.append(
             EvidenceBundleCheckResult(
                 check=VerificationCheck.OBJECT_REACHABILITY,

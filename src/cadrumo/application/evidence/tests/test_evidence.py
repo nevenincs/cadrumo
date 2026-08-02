@@ -18,11 +18,12 @@ from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import (
     BundleVerificationState,
     EvidenceBundleNotFoundError,
+    EvidenceBundleRepository,
     EvidenceBundleService,
     EvidenceBundleVerificationError,
     VerificationCheck,
 )
-from .._models import derive_bundle_id
+from .._models import EvidenceBundle, EvidenceRecordRef, derive_bundle_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,6 +81,33 @@ def payloads() -> dict[tuple[str, str], bytes]:
         ("calculation_revision", "rev-1"): b"casilla-01=1000.00\ncasilla-02=210.00\n",
         ("filing_record", "filing-1"): b"justificante: CSV12345\n",
     }
+
+
+def _raw_bundle(
+    *,
+    bundle_id: str,
+    bucket_id: str,
+    work_unit_id: str,
+    records: tuple[EvidenceRecordRef, ...] = (),
+) -> EvidenceBundle:
+    """Build an :class:`EvidenceBundle` model directly, bypassing ``build()``.
+
+    Lets a test stamp an arbitrary ``bundle_id`` (for a controlled prefix
+    collision) or an arbitrary ``bucket_id`` (a manifest claiming a
+    different bucket than the one it is physically persisted through) —
+    a shape ``build()`` itself can never produce, but which the storage
+    layer does not otherwise forbid.
+    """
+    return EvidenceBundle(
+        bundle_id=bundle_id,
+        manifest_version=1,
+        bucket_id=bucket_id,
+        work_unit_id=work_unit_id,
+        records=records,
+        verification_state=BundleVerificationState.PENDING,
+        completeness_ratio=1.0,
+        created_at=_WORK_UNIT_CREATED_AT,
+    )
 
 
 def _secure_object_fingerprint(
@@ -157,6 +185,47 @@ class TestShow:
         assert excinfo.value.translated_message == "errors.refused.refused_evidence_bundle_not_found"
         assert excinfo.value.context == {"bundle_id": "no-such-bundle", "bucket_id": runtime_profile.bucket_id}
 
+    def test_show_refuses_an_ambiguous_prefix(
+        self,
+        runtime_profile: TestRuntimeProfile,
+    ) -> None:
+        repository = EvidenceBundleRepository(objects=runtime_profile.repository)
+        shared_prefix = "ab"
+        first = _raw_bundle(bundle_id=shared_prefix + "1" * 62, bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1)
+        second = _raw_bundle(bundle_id=shared_prefix + "2" * 62, bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1)
+        repository.save(first)
+        repository.save(second)
+
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        with pytest.raises(EvidenceBundleNotFoundError) as excinfo:
+            svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=shared_prefix)
+
+        assert excinfo.value.translated_message == "errors.refused.refused_evidence_bundle_ambiguous"
+        assert excinfo.value.context["match_count"] == 2
+
+        # An unambiguous, longer prefix still resolves cleanly.
+        resolved = svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=first.bundle_id[:10])
+        assert resolved.bundle_id == first.bundle_id
+
+
+class TestForeignBucketManifest:
+    def test_show_never_returns_a_manifest_claiming_a_different_bucket(
+        self,
+        runtime_profile: TestRuntimeProfile,
+    ) -> None:
+        # A bundle physically persisted through bucket A's repository but
+        # whose own manifest claims bucket B - the shape a corrupted or
+        # misrouted write would produce.
+        repository = EvidenceBundleRepository(objects=runtime_profile.repository)
+        foreign = _raw_bundle(bundle_id="c" * 64, bucket_id=_BUCKET_B_ID, work_unit_id=WU_1)
+        repository.save(foreign)
+
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        with pytest.raises(EvidenceBundleNotFoundError):
+            svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=foreign.bundle_id)
+        with pytest.raises(EvidenceBundleNotFoundError):
+            svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=foreign.bundle_id[:10])
+
 
 class TestVerify:
     def test_check_passes_on_unmodified_payloads(
@@ -207,7 +276,33 @@ class TestVerify:
             record_payloads=partial,
         )
         assert report.verification_state is BundleVerificationState.INCOMPLETE
-        assert report.completeness_ratio == 0.5
+        # Byte-weighted, not record-count-based: the reached record's own
+        # byte share of the manifest's total payload bytes.
+        reachable_bytes = len(payloads[("calculation_revision", "rev-1")])
+        total_bytes = sum(len(payload) for payload in payloads.values())
+        assert report.completeness_ratio == pytest.approx(reachable_bytes / total_bytes)
+
+    def test_completeness_ratio_is_weighted_by_payload_bytes_not_record_count(
+        self,
+        runtime_profile: TestRuntimeProfile,
+    ) -> None:
+        # A 90-byte record and a 10-byte record: reaching only the small one
+        # is 1-of-2 records (a count-based ratio of 0.5) but only 10/100 of
+        # the documented byte-weighted completeness.
+        skewed_payloads = {
+            ("calculation_revision", "rev-1"): b"x" * 90,
+            ("filing_record", "filing-1"): b"y" * 10,
+        }
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=skewed_payloads)
+
+        only_small = {("filing_record", "filing-1"): skewed_payloads[("filing_record", "filing-1")]}
+        report_small = svc.check(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id, record_payloads=only_small)
+        assert report_small.completeness_ratio == pytest.approx(0.1)
+
+        only_large = {("calculation_revision", "rev-1"): skewed_payloads[("calculation_revision", "rev-1")]}
+        report_large = svc.check(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id, record_payloads=only_large)
+        assert report_large.completeness_ratio == pytest.approx(0.9)
 
     def test_check_fails_when_manifest_work_unit_is_not_persisted(
         self,

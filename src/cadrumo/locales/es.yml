@@ -269,6 +269,7 @@ adapters:
             sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
             Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
             (véase `aeat config check`).'
+          written_at_invalid: 'El campo written_at del sidecar local falta, no se puede interpretar o no indica zona horaria: {actual_value}.'
   persistence:
     profile:
       assets:
@@ -863,6 +864,7 @@ application:
       errors:
         snapshot_bucket_mismatch: El bucket de la carga de la instantánea no coincide
           con el bucket del repositorio.
+        snapshot_key_mismatch: 'La instantánea está almacenada bajo la clave de otra instantánea.'
     verify:
       errors:
         bucket_id_blank: El identificador del bucket de verificación no puede estar
@@ -1176,6 +1178,8 @@ application:
         abierta.'
       workflow_input_mismatch: La solicitud de entrada del flujo de trabajo no coincide
         con la revisión de cálculo.
+      m036_declaration_profile_bucket_mismatch: 'La declaración del modelo 036 indica un perfil distinto del bucket en el que se registraría'
+      filed_observation_split_storage_context: 'El almacén del historial de compensación de IVA es una base de datos distinta de la de observaciones de cálculo'
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
@@ -6626,6 +6630,7 @@ errors:
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_evidence_bundle_ambiguous: 'El prefijo del identificador del paquete de evidencias coincide con más de un paquete en este bucket.'
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
@@ -6756,6 +6761,7 @@ flows:
         certificate: Certificado electrónico
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      certificate_incomplete: 'Identificación: %{provider}; %{reason} Ejecuta: %{next_action}'
     actions:
       section: Acciones
     column:

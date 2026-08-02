@@ -249,6 +249,7 @@ adapters:
             sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
             Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
             vagy engedélyezze a LongPathsEnabled beállítást (lásd `aeat config check`).'
+          written_at_invalid: 'A helyi sidecar written_at mezője hiányzik, nem értelmezhető, vagy nem tartalmaz időzónát: {actual_value}.'
   persistence:
     profile:
       assets:
@@ -800,6 +801,7 @@ application:
       errors:
         snapshot_bucket_mismatch: A pillanatkép payload bucketje nem egyezik a repository
           bucketjével.
+        snapshot_key_mismatch: 'A pillanatkép egy másik pillanatkép kulcsa alatt van tárolva.'
     verify:
       errors:
         bucket_id_blank: A verify bucket azonosítója nem lehet üres.
@@ -1103,6 +1105,8 @@ application:
         benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+      m036_declaration_profile_bucket_mismatch: 'A 036-os modell bevallása más profilt nevez meg, mint az a tároló, amelybe rögzülne'
+      filed_observation_split_storage_context: 'Az áfakompenzációs előzmények tárolója más adatbázis, mint a számítási megfigyeléseké'
     findings:
       art20_reduccion_next_action: Ellenőrizze, hogy a nem munkából származó egyéb
         jövedelme a mentes jövedelem nélkül az adóévben nem haladja-e meg a 6500 EUR-t;
@@ -6471,6 +6475,7 @@ errors:
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_evidence_bundle_ambiguous: 'A bizonyítékcsomag azonosítójának előtagja a tárolóban több csomagra is illik.'
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
@@ -6598,6 +6603,7 @@ flows:
         certificate: Elektronikus tanúsítvány
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
+      certificate_incomplete: 'Azonosítás: %{provider}; %{reason} Futtasd: %{next_action}'
     actions:
       section: Műveletek
     column:
