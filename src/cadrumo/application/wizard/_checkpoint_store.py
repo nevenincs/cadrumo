@@ -237,16 +237,49 @@ class ProfileFactsCheckpointStore:
         a completed (``ACTIVE``), tombstoned, or absent profile returns
         ``None``. The returned map is page-keyed and re-projected from the
         on-record facts for :func:`~cadrumo.application.flows.resume_flow`.
+
+        Eligibility is decided by the ENCRYPTED RECORD, reached through the
+        one load that verifies the plaintext manifest against it. Reading the
+        manifest mirror instead granted a resume on an unverified value: under
+        a torn completion (record written ``ACTIVE`` first, manifest mirror
+        second) the mirror still says ``SETUP_INCOMPLETE``, and this method
+        re-projected a completed profile's facts and let them be written back
+        over the live record, failing only at the final commit -- after the
+        writes had landed. The manifest may be used to EXCLUDE a profile; it
+        may not be used to GRANT a capability.
+
+        Raises:
+            ProfileIntegrityError: When the manifest and the encrypted record
+                disagree. Deliberately propagated rather than reported as "no
+                resume": the stores are inconsistent, which is not the same
+                fact as an ineligible profile.
         """
         del flow_id
-        from ..workflow import read_profile_bucket_by_id, workflow_state_repository
+        from ...domain.user_profile import ProfileNotFoundError
+        from ..user_profile import ProfileIntegrityError, ProfileRepository
+        from ..workflow import read_profile_bucket_by_id
 
-        pointer = read_profile_bucket_by_id(self._profile_id)
-        if pointer is None or pointer.status is not UserProfileStatus.SETUP_INCOMPLETE:
+        # The mirror is still consulted, but only to EXCLUDE: an absent bucket
+        # has nothing to resume and opening a storage span on it would raise
+        # for want of a manifest rather than answering the question. What the
+        # mirror may not do is GRANT, which is why eligibility below is decided
+        # on the record.
+        if read_profile_bucket_by_id(self._profile_id) is None:
             return None
-        with self._existing_profile_span():
-            record = workflow_state_repository().load().active_profile_record()
-        return checkpoint_answers_from_record(self._flow, record)
+        try:
+            with self._existing_profile_span():
+                aggregate = ProfileRepository().load(self._profile_id)
+        except ProfileIntegrityError:
+            # Ordered BEFORE the not-found arm on purpose: this subclasses it,
+            # so a single ``except ProfileNotFoundError`` would convert "the
+            # stores disagree about this profile" into "no resume available"
+            # and re-open exactly the hole this method is being fixed for.
+            raise
+        except ProfileNotFoundError:
+            return None
+        if aggregate.status is not UserProfileStatus.SETUP_INCOMPLETE:
+            return None
+        return checkpoint_answers_from_record(self._flow, aggregate.record)
 
     def discard(self, flow_id: str) -> None:
         """Erase the in-progress profile through the lifecycle authority.
