@@ -20,13 +20,33 @@ bucket erasure, tombstoning, or provisioning.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.bucket import bucket_paths, manifest_path, read_manifest
+from ....core import Period
+from ....domain.buckets import BucketEventType
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+    ModeloRecord,
+    ModeloRecordCatalogue,
+    ModeloRecordPersistenceError,
+    WorkUnit,
+    WorkUnitCatalogue,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    derive_work_unit_id,
+)
 from ....domain.user_profile import UserProfileStatus
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, isolated_two_bucket_runtime
 from .. import (
     SANDBOX_LABEL_PREFIX,
     ArchiveSandboxCommand,
@@ -54,6 +74,115 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 _REAL_PROFILE_LABEL = "Real client profile"
+_MERGE_TARGET_BUCKET_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+_MERGE_SOURCE_BUCKET_ID = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+_MERGE_AT = datetime(2026, 8, 2, 12, 0, tzinfo=UTC)
+
+
+def _modelo_history(
+    bucket_id: str,
+    *,
+    filing_year: int,
+    period_code: str,
+    filed: bool,
+) -> tuple[WorkUnit, CalculationRevision, ModeloRecord | None]:
+    """Build a valid, linked modelo history through the real domain constructors."""
+    period = Period.from_year_and_code(filing_year, period_code)
+    work_unit_id = derive_work_unit_id(
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=filing_year,
+        period=period,
+        revision_id="2026-y-siguientes",
+    )
+    calculation_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+    )
+    if filed:
+        revision = CalculationRevision(
+            calculation_revision_id=calculation_revision_id,
+            work_unit_id=work_unit_id,
+            state=CalculationRevisionState.PRESENTADO,
+            created_at=_MERGE_AT,
+            updated_at=_MERGE_AT,
+            verified_at=_MERGE_AT,
+            verified_by="sandbox-merge-test",
+            filed_at=_MERGE_AT,
+            filed_by="sandbox-merge-test",
+        )
+        filing_record_id = derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=calculation_revision_id,
+            filed_by="sandbox-merge-test",
+        )
+        filing_record = ModeloRecord(
+            filing_record_id=filing_record_id,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=calculation_revision_id,
+            bucket_id=bucket_id,
+            modelo="303",
+            filing_year=filing_year,
+            period=period,
+            filed_at=_MERGE_AT,
+            filed_by="sandbox-merge-test",
+        )
+        work_unit = WorkUnit(
+            work_unit_id=work_unit_id,
+            bucket_id=bucket_id,
+            modelo="303",
+            filing_year=filing_year,
+            period=period,
+            revision_id="2026-y-siguientes",
+            name=f"Modelo 303 {filing_year} {period_code}",
+            created_at=_MERGE_AT,
+            updated_at=_MERGE_AT,
+            current_calculation_revision_id=calculation_revision_id,
+            filed_calculation_revision_id=calculation_revision_id,
+            current_filing_record_id=filing_record_id,
+        )
+        return work_unit, revision, filing_record
+
+    revision = CalculationRevision(
+        calculation_revision_id=calculation_revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        created_at=_MERGE_AT,
+        updated_at=_MERGE_AT,
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=bucket_id,
+        modelo="303",
+        filing_year=filing_year,
+        period=period,
+        revision_id="2026-y-siguientes",
+        name=f"Modelo 303 {filing_year} {period_code}",
+        created_at=_MERGE_AT,
+        updated_at=_MERGE_AT,
+        current_calculation_revision_id=calculation_revision_id,
+    )
+    return work_unit, revision, None
+
+
+def _persist_modelo_history(
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    filing_record: ModeloRecord | None,
+) -> None:
+    """Seed typed modelo history through its real encrypted repositories."""
+    WorkUnitCatalogueRepository(bucket_id=work_unit.bucket_id).save(
+        WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
+    )
+    CalculationRevisionCatalogueRepository(bucket_id=work_unit.bucket_id).save(
+        CalculationRevisionCatalogue(revisions={revision.calculation_revision_id: revision}),
+    )
+    if filing_record is not None:
+        ModeloRecordCatalogueRepository(bucket_id=work_unit.bucket_id).save(
+            ModeloRecordCatalogue(records={filing_record.filing_record_id: filing_record}),
+        )
 
 
 def test_sandbox_label_prefix_helpers_round_trip() -> None:
@@ -233,3 +362,102 @@ def test_merge_refuses_an_unknown_target_bucket(tmp_path: Path) -> None:
                 confirmed=True,
             ),
         )
+
+
+def test_modelo_merge_foreign_filing_refusal_preserves_the_target_atomically(tmp_path: Path) -> None:
+    """A foreign sandbox filing refuses before any target catalogue or event can commit.
+
+    Both buckets use the real per-bucket DEK/SQL runtime.  The source contains
+    a legitimately filed modelo history, whose filing record is intrinsically
+    scoped to the sandbox bucket.  The target already holds independent
+    modelo state.  Its filing repository must reject the foreign record, and
+    the attempted merge must leave every target surface byte-for-byte logical
+    state unchanged rather than retaining a predecessor work-unit or revision.
+    """
+    with isolated_two_bucket_runtime(
+        tmp_path=tmp_path,
+        primary_bucket_id=_MERGE_TARGET_BUCKET_ID,
+        secondary_bucket_id=_MERGE_SOURCE_BUCKET_ID,
+        primary_label=_REAL_PROFILE_LABEL,
+        secondary_label=sandbox_label("modelo-atomicity"),
+    ) as runtime:
+        target_history = _modelo_history(
+            runtime.primary.bucket_id,
+            filing_year=2025,
+            period_code="4T",
+            filed=True,
+        )
+        _persist_modelo_history(*target_history)
+        target_work_units = WorkUnitCatalogueRepository(bucket_id=runtime.primary.bucket_id).load()
+        target_revisions = CalculationRevisionCatalogueRepository(bucket_id=runtime.primary.bucket_id).load()
+        target_filings = ModeloRecordCatalogueRepository(bucket_id=runtime.primary.bucket_id).load()
+        target_events = BucketEventHistoryRepository().load()
+
+        with runtime.switch_to_secondary():
+            source_history = _modelo_history(
+                runtime.secondary.bucket_id,
+                filing_year=2026,
+                period_code="1T",
+                filed=True,
+            )
+            _persist_modelo_history(*source_history)
+
+        with pytest.raises(ModeloRecordPersistenceError):
+            merge_sandbox(
+                MergeSandboxCommand(
+                    source_bucket_id=runtime.secondary.bucket_id,
+                    target_bucket_id=runtime.primary.bucket_id,
+                    scope=SandboxMergeScope.MODELO,
+                    confirmed=True,
+                ),
+            )
+
+        assert WorkUnitCatalogueRepository(bucket_id=runtime.primary.bucket_id).load() == target_work_units
+        assert CalculationRevisionCatalogueRepository(bucket_id=runtime.primary.bucket_id).load() == target_revisions
+        assert ModeloRecordCatalogueRepository(bucket_id=runtime.primary.bucket_id).load() == target_filings
+        assert BucketEventHistoryRepository().load() == target_events
+
+
+def test_modelo_merge_commits_a_draft_history_and_merge_event_together(tmp_path: Path) -> None:
+    """A filing-free sandbox draft promotes through the real encrypted target transaction."""
+    with isolated_two_bucket_runtime(
+        tmp_path=tmp_path,
+        primary_bucket_id=_MERGE_TARGET_BUCKET_ID,
+        secondary_bucket_id=_MERGE_SOURCE_BUCKET_ID,
+        primary_label=_REAL_PROFILE_LABEL,
+        secondary_label=sandbox_label("modelo-success"),
+    ) as runtime:
+        with runtime.switch_to_secondary():
+            source_work_unit, source_revision, source_filing = _modelo_history(
+                runtime.secondary.bucket_id,
+                filing_year=2026,
+                period_code="1T",
+                filed=False,
+            )
+            assert source_filing is None
+            _persist_modelo_history(source_work_unit, source_revision, source_filing)
+
+        result = merge_sandbox(
+            MergeSandboxCommand(
+                source_bucket_id=runtime.secondary.bucket_id,
+                target_bucket_id=runtime.primary.bucket_id,
+                scope=SandboxMergeScope.MODELO,
+                confirmed=True,
+            ),
+        )
+
+        assert result.merged_counts == {
+            "work_units": 1,
+            "calculation_revisions": 1,
+            "filing_records": 0,
+        }
+        target_work_units = WorkUnitCatalogueRepository(bucket_id=runtime.primary.bucket_id).load()
+        target_revisions = CalculationRevisionCatalogueRepository(bucket_id=runtime.primary.bucket_id).load()
+        target_events = BucketEventHistoryRepository().load()
+        assert target_work_units.get(source_work_unit.work_unit_id) == source_work_unit
+        assert target_revisions.get(source_revision.calculation_revision_id) == source_revision
+        merge_events = [
+            event for event in target_events.events.values() if event.event_type is BucketEventType.BUCKET_MERGED
+        ]
+        assert len(merge_events) == 1
+        assert merge_events[0].payload["scope"] == SandboxMergeScope.MODELO.value
