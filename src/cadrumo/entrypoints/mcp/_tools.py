@@ -83,6 +83,17 @@ def _family_intent(command_key: str, family_map_intent: dict[str, str]) -> str:
     return family_map_intent.get(family_token, "")
 
 
+def _cli_form(verb_schema: VerbInputSchema) -> str:
+    """Render the model-facing ``aeat ...`` invocation for a resolved verb.
+
+    Built from ``verb_schema.cli_path`` - the command's REAL resolved root
+    (``config`` or ``app``) - never re-derived from the dotted command key,
+    which would silently hardcode the ``app`` root for every family including
+    ``config.*`` verbs.
+    """
+    return "aeat " + " ".join(verb_schema.cli_path)
+
+
 def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     """Build the exposed MCP tool descriptors from the live manifest + registry.
 
@@ -111,9 +122,9 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     descriptors: list[McpToolDescriptor] = []
     for key in exposable_keys:
         mutability = _mutability_for_key(key, family_map)
-        cli_form = "aeat app " + key.replace(".", " ")
-        intent = _family_intent(key, intent_map)
         verb_schema = verb_schemas[key]
+        cli_form = _cli_form(verb_schema)
+        intent = _family_intent(key, intent_map)
         # The model-facing description stays English: the CLI form carries the
         # verb path and the shared family intent follows. The command's own
         # (Spanish) per-verb help is NOT put here - it feeds the search index
