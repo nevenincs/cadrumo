@@ -441,7 +441,7 @@ def google_sync_probe(
     resolved_root_folder_id = getattr(provider, "root_folder_id", "")
     probe_result = GoogleSyncProbeResult(
         profile=active,
-        provider_kind=report.provider_kind.value,
+        provider_kind=report.provider_kind,
         reachable=report.reachable,
         writable=report.writable,
         read_only=report.read_only,

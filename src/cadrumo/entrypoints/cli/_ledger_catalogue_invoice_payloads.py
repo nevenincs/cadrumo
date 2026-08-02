@@ -22,6 +22,16 @@ next to the verb that emits them without touching the slim
 
 from __future__ import annotations
 
+from datetime import date
+from decimal import Decimal
+from typing import Self
+
+from pydantic import Field, model_validator
+
+from ...core import IntracomOperationType
+from ...core.identity import BucketId, TransactionId, validate_spanish_tax_id
+from ...domain.invoices import InvoiceId, PaymentStatus, validate_country_code, validate_iva_number
+from ...domain.iva import InvoiceKind
 from ._schemas import OutputSchema, register_schema
 
 
@@ -41,22 +51,32 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     :class:`Invoice`.
     """
 
-    invoice_id: str
-    bucket_id: str | None = None
-    kind: str
-    invoice_number: str
-    issued_at: str
-    counterparty_name: str
-    counterparty_tax_id: str
-    counterparty_country: str
-    base_total: str
-    iva_total: str
-    grand_total: str
-    currency: str
-    payment_status: str
-    linked_transaction_ids: list[str] = []
+    invoice_id: InvoiceId
+    bucket_id: BucketId | None = None
+    kind: InvoiceKind
+    invoice_number: str = Field(min_length=1)
+    issued_at: date
+    counterparty_name: str = Field(min_length=1)
+    counterparty_tax_id: str = Field(min_length=1)
+    counterparty_country: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
+    base_total: Decimal = Field(ge=0)
+    iva_total: Decimal = Field(ge=0)
+    grand_total: Decimal = Field(ge=0)
+    currency: str = Field(min_length=3, max_length=3, pattern=r"^[A-Z]{3}$")
+    payment_status: PaymentStatus
+    linked_transaction_ids: list[TransactionId] = Field(default_factory=list)
     notes: str = ""
-    operation_type: str | None = None
+    operation_type: IntracomOperationType | None = None
+
+    @model_validator(mode="after")
+    def _validate_counterparty_identity(self) -> Self:
+        """Reuse the rich invoice identity validators for the wire projection."""
+        country = validate_country_code(self.counterparty_country)
+        if country == "ES":
+            validate_spanish_tax_id(self.counterparty_tax_id)
+        else:
+            validate_iva_number(self.counterparty_tax_id, country)
+        return self
 
 
 @register_schema("ledger.invoice.catalogue.create")
@@ -111,17 +131,17 @@ class CatalogueInvoiceListResult(OutputSchema):
     filtering stays in the CLI query before this envelope is validated.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     rows: list[CatalogueInvoiceRecordPayload]
-    count: int
+    count: int = Field(ge=0)
 
 
 class BulkInvoiceImportRowFailurePayload(OutputSchema):
     """One refused row from a bulk invoice import, naming its row and field."""
 
-    row_number: int
-    field: str
-    reason: str
+    row_number: int = Field(ge=1)
+    field: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
 
 
 @register_schema("ledger.invoice.catalogue.import")
@@ -137,12 +157,12 @@ class CatalogueInvoiceImportResult(OutputSchema):
     rows failed validation and were not persisted.
     """
 
-    bucket_id: str
-    rows: int
-    created: int
-    skipped_duplicate: int
+    bucket_id: BucketId
+    rows: int = Field(ge=0)
+    created: int = Field(ge=0)
+    skipped_duplicate: int = Field(ge=0)
     refused: list[BulkInvoiceImportRowFailurePayload] = []
-    created_invoice_ids: list[str] = []
+    created_invoice_ids: list[InvoiceId] = Field(default_factory=list)
 
 
 __all__ = [

@@ -200,7 +200,7 @@ def google_credential_source_set(
     impersonation = selection.impersonation
     typed = GoogleCredentialSourceSetResult(
         profile=active,
-        kind=selection.kind.value,
+           kind=selection.kind,
         target_principal=impersonation.target_principal if impersonation is not None else None,
         target_scopes=_default_scopes(selection),
         delegates=list(impersonation.delegates) if impersonation is not None else [],
@@ -246,7 +246,7 @@ def google_credential_source_show(
     typed = GoogleCredentialSourceShowResult(
         profile=active,
         configured=configured,
-        kind=resolved.kind.value,
+           kind=resolved.kind,
         target_principal=impersonation.target_principal if impersonation is not None else None,
         target_scopes=_default_scopes(resolved),
         delegates=list(impersonation.delegates) if impersonation is not None else [],

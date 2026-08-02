@@ -179,7 +179,7 @@ def _register_show_command(
             schema_version=report.schema_version,
             issues=[
                 ProfileIssuePayload(
-                    severity=issue.severity.value,
+                    severity=issue.severity,
                     code=issue.code,
                     path=issue.path,
                     message=issue.message,
@@ -473,7 +473,7 @@ def _register_validate_command(
             schema_version=report.schema_version,
             issues=[
                 ProfileIssuePayload(
-                    severity=issue.severity.value,
+                    severity=issue.severity,
                     code=issue.code,
                     path=issue.path,
                     message=issue.message,

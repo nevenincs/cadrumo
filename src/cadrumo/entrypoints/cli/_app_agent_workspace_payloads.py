@@ -58,6 +58,7 @@ class AgentWorkspaceResult(OutputSchema):
         if self.layout is AgentLayout.WORKSPACE:
             if self.rules_written is None or self.personas_written is None:
                 raise ValueError("workspace layout requires rules_written and personas_written")
+            unexpected = ("plugin_name", "version", "agents_written", "persona_default")
         else:
             missing = [
                 name
@@ -66,4 +67,8 @@ class AgentWorkspaceResult(OutputSchema):
             ]
             if missing:
                 raise ValueError(f"plugin layout requires {missing}")
+            unexpected = ("rules_written", "personas_written")
+        contaminated = [name for name in unexpected if getattr(self, name) is not None]
+        if contaminated:
+            raise ValueError(f"{self.layout.value} layout forbids {contaminated}")
         return self

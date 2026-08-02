@@ -435,9 +435,22 @@ def _catalogue_invoice_shared_fields(invoice) -> dict[str, object]:
 
 def _catalogue_invoice_payload(invoice) -> dict[str, object]:
     return {
-        **_catalogue_invoice_shared_fields(invoice),
+        "invoice_id": invoice.invoice_id,
         "bucket_id": invoice.bucket_id,
-        "operation_type": None if invoice.operation_type is None else invoice.operation_type.value,
+        "kind": invoice.kind,
+        "invoice_number": invoice.invoice_number,
+        "issued_at": invoice.issued_at,
+        "counterparty_name": invoice.counterparty_name,
+        "counterparty_tax_id": invoice.counterparty_tax_id,
+        "counterparty_country": invoice.counterparty_country,
+        "base_total": invoice.base_total,
+        "iva_total": invoice.iva_total,
+        "grand_total": invoice.grand_total,
+        "currency": invoice.currency,
+        "payment_status": invoice.payment_status,
+        "linked_transaction_ids": list(invoice.linked_transaction_ids),
+        "notes": invoice.notes,
+        "operation_type": invoice.operation_type,
     }
 
 

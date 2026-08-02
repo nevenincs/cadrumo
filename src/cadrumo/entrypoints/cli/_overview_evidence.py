@@ -322,11 +322,11 @@ def _stored_filed_justificante_matching_observation_csv(
     expected = (expected_tax_id or observation.authenticated_identity or "").strip().upper()
     if not expected:
         return None
-    if (
-        justificante.modelo.strip() == observation.modelo
-        and str(justificante.ejercicio or "").strip() == str(observation.ejercicio)
-        and justificante.period == observation.period
-        and justificante.tax_id.strip().upper() == expected
+    if justificante.matches_filing_target(
+        modelo=observation.modelo,
+        filing_year=observation.ejercicio,
+        period=observation.period,
+        tax_id=expected,
     ):
         return justificante.csv
     return None

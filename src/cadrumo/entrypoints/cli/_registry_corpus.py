@@ -69,7 +69,7 @@ def list_citations_cmd(
 ) -> None:
     """List the legal authorities codified in the project's legal corpus."""
     report = list_registry_citations(RegistryCitationsListCommand(tag=tag))
-    typed = CitationListResult.model_validate(report.model_dump(mode="json"))
+    typed = CitationListResult.model_validate_json(report.model_dump_json())
     _emit_envelope(ctx, command="registry.citations.list", result=typed, lines=_citation_list_lines(report))
 
 
@@ -87,7 +87,7 @@ def show_citation_cmd(
 ) -> None:
     """View one legal authority and, optionally, one cited article."""
     report = show_registry_citation(RegistryCitationShowCommand(legal_id=legal_id, articulo=articulo))
-    typed = CitationShowResult.model_validate(report.model_dump(mode="json"))
+    typed = CitationShowResult.model_validate_json(report.model_dump_json())
     _emit_envelope(ctx, command="registry.citations.view", result=typed, lines=_citation_show_lines(report))
 
 
@@ -95,7 +95,7 @@ def show_citation_cmd(
 def verify_citations_cmd(ctx: typer.Context) -> None:
     """Verify the legal corpus against its own schema invariants."""
     report = verify_registry_citations()
-    typed = CitationVerifyResult.model_validate(report.model_dump(mode="json"))
+    typed = CitationVerifyResult.model_validate_json(report.model_dump_json())
     _emit_envelope(ctx, command="registry.citations.verify", result=typed, lines=_citation_verification_lines(report))
     if not report.passed:
         raise typer.Exit(code=1)

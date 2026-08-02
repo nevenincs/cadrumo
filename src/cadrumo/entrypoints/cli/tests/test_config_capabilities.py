@@ -13,9 +13,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
-from ....application.user_profile import profile_create_storage_span
+from ....application.user_profile import CapabilitySource, profile_create_storage_span
 from ....application.workflow import workflow_state_repository
+from ....core import ServiceCapability
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -51,6 +53,22 @@ def test_show_reports_every_capability_with_default_posture() -> None:
     assert rows["cloud_evidence_upload"]["enabled"] is False
     assert rows["llm_vision"]["enabled"] is True
     assert rows["google_export"]["enabled"] is True
+
+
+@pytest.mark.parametrize(
+    ("capability", "source"),
+    [("", CapabilitySource.DEFAULT), ("bogus", CapabilitySource.DEFAULT), (ServiceCapability.LLM_VISION, "bogus")],
+)
+def test_capability_payload_refuses_unknown_capability_or_source(
+    capability: ServiceCapability | str,
+    source: CapabilitySource | str,
+) -> None:
+    """The capability result uses the resolver's closed identifiers unchanged."""
+
+    from .._config._capabilities_payloads import CapabilityRowPayload
+
+    with pytest.raises(ValidationError):
+        CapabilityRowPayload(capability=capability, enabled=True, source=source, reason="resolver result")
 
 
 def test_set_disables_a_capability_and_show_reflects_it() -> None:

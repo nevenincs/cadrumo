@@ -19,11 +19,12 @@ results stay authoritative while these classes expose JSON-safe
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
+from ...application.modelo import validate_modelo_work_deadline_posture
 from ...core import Period
 from ...core.identity import BucketId
 from ...domain.buckets import (
@@ -41,10 +42,16 @@ from ...domain.calculations.registry import (
     RelationId,
     RevisionId,
     SourceRefId,
+    VerificationExpectationId,
 )
 from ...domain.modelos import (
     CalculationRevisionId,
+    ExternalEvidenceKind,
     FilingRecordId,
+    ModeloCode,
+    ModeloRecordStatus,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
     VerificationReportId,
     WorkUnitId,
 )
@@ -161,10 +168,20 @@ class WorkDeadlinePosturePayload(OutputSchema):
     non-blocking advisory prose, which rides the envelope ``notices`` channel.
     """
 
-    closes_on: str  # ISO date
+    closes_on: date
     days_remaining: int | None = None
     days_overdue: int | None = None
     conditional_recargo_preview: WorkConditionalRecargoPreviewPayload | None = None
+
+    @model_validator(mode="after")
+    def _validate_deadline_posture(self) -> WorkDeadlinePosturePayload:
+        """Reuse the application deadline state invariant at the JSON boundary."""
+        validate_modelo_work_deadline_posture(
+            closes_on=self.closes_on,
+            days_remaining=self.days_remaining,
+            days_overdue=self.days_overdue,
+        )
+        return self
 
 
 class CalculationRevisionPayload(OutputSchema):
@@ -204,14 +221,14 @@ class CalculationRevisionPayload(OutputSchema):
 class FindingPayload(OutputSchema):
     """One verification finding row."""
 
-    kind: str
-    severity: str
+    kind: ModeloVerificationFindingKind
+    severity: ModeloVerificationFindingSeverity
     casilla_id: CasillaId | None = None
-    expectation_id: str | None = None
-    message: str
-    next_action: str | None = None
-    legal_refs: list[str] = Field(default_factory=list)
-    source_refs: list[str] = Field(default_factory=list)
+    expectation_id: VerificationExpectationId | None = None
+    message: str = Field(min_length=1, max_length=500)
+    next_action: str | None = Field(default=None, min_length=1, max_length=500)
+    legal_refs: list[LegalRefId] = Field(min_length=1)
+    source_refs: list[SourceRefId] = Field(default_factory=list)
 
 
 class CrossPeriodDependencyRequirementPayload(OutputSchema):
@@ -297,9 +314,9 @@ class ExternalEvidencePayload(OutputSchema):
     observed outside the application, not proof that this CLI submitted the return.
     """
 
-    kind: str
-    reference_id: str
-    imported_at: str
+    kind: ExternalEvidenceKind
+    reference_id: str = Field(min_length=1, max_length=128)
+    imported_at: datetime
 
 
 class ModeloRecordPayload(OutputSchema):
@@ -314,20 +331,34 @@ class ModeloRecordPayload(OutputSchema):
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     bucket_id: BucketId
-    modelo: str
-    filing_year: int
+    modelo: ModeloCode
+    filing_year: int = Field(ge=2000, le=2099)
     period: Period
-    filed_at: str
-    filed_by: str
+    filed_at: datetime
+    filed_by: str = Field(min_length=1, max_length=500)
     notes: str | None = None
-    aeat_accepted: bool | None = None
-    status: str
-    superseded_at: str | None = None
+    aeat_accepted: bool = False
+    status: ModeloRecordStatus
+    superseded_at: datetime | None = None
     superseded_by_filing_record_id: FilingRecordId | None = None
     external_evidence: ExternalEvidencePayload | None = None
     amends_filing_record_id: FilingRecordId | None = None
-    kind: str = "internal_filing"
+    kind: Literal["internal_filing"] = "internal_filing"
     live_submission: bool = False
+
+    @model_validator(mode="after")
+    def _validate_filing_record_grounding(self) -> ModeloRecordPayload:
+        """Keep the JSON projection aligned with the filing-record invariant."""
+        if self.aeat_accepted != (self.external_evidence is not None):
+            raise ValueError("AEAT acceptance and external evidence must be supplied together")
+        if self.status is ModeloRecordStatus.VIGENTE:
+            if self.superseded_at is not None or self.superseded_by_filing_record_id is not None:
+                raise ValueError("current filing record must not carry supersession metadata")
+        elif self.superseded_at is None or self.superseded_by_filing_record_id is None:
+            raise ValueError("superseded filing record must carry supersession metadata")
+        elif self.superseded_at < self.filed_at:
+            raise ValueError("superseded_at must not precede filed_at")
+        return self
 
 
 class FormulaPayload(OutputSchema):
@@ -600,7 +631,7 @@ class WorkDependenciesResult(OutputSchema):
 
 
 @register_schema("modelo.work.file")
-class WorkFileResult(OutputSchema):
+class WorkFileResult(ModeloRecordPayload):
     """Internal-filing confirmation returned by ``aeat app modelo work file``.
 
     The command delegates to
@@ -611,28 +642,10 @@ class WorkFileResult(OutputSchema):
     """
 
     operation: str = "modelo.work.file"
-    filing_record_id: FilingRecordId
-    work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
-    bucket_id: BucketId
-    modelo: str
-    filing_year: int
-    period: Period
-    filed_at: str
-    filed_by: str
-    notes: str | None = None
-    aeat_accepted: bool | None = None
-    status: str
-    superseded_at: str | None = None
-    superseded_by_filing_record_id: FilingRecordId | None = None
-    external_evidence: ExternalEvidencePayload | None = None
-    amends_filing_record_id: FilingRecordId | None = None
-    kind: str = "internal_filing"
-    live_submission: bool = False
 
 
 @register_schema("modelo.work.amend")
-class WorkAmendResult(OutputSchema):
+class WorkAmendResult(ModeloRecordPayload):
     """Amendment filing confirmation returned by ``aeat app modelo work amend``.
 
     The command delegates to
@@ -647,23 +660,6 @@ class WorkAmendResult(OutputSchema):
     operation: str = "modelo.work.amend"
     amendment_kind: str
     amends_filing_record_id: FilingRecordId
-    filing_record_id: FilingRecordId
-    work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
-    bucket_id: BucketId
-    modelo: str
-    filing_year: int
-    period: Period
-    filed_at: str
-    filed_by: str
-    notes: str | None = None
-    aeat_accepted: bool | None = None
-    status: str
-    superseded_at: str | None = None
-    superseded_by_filing_record_id: FilingRecordId | None = None
-    external_evidence: ExternalEvidencePayload | None = None
-    kind: str = "internal_filing"
-    live_submission: bool = False
 
 
 @register_schema("modelo.filing_record.list")
@@ -679,28 +675,10 @@ class ModeloRecordListResult(OutputSchema):
 
 
 @register_schema("modelo.filing_record.view")
-class ModeloRecordShowResult(OutputSchema):
+class ModeloRecordShowResult(ModeloRecordPayload):
     """Filing-record detail returned by ``aeat app modelo filing-record view``."""
 
     operation: str = "modelo.filing_record.show"
-    filing_record_id: FilingRecordId
-    work_unit_id: WorkUnitId
-    calculation_revision_id: CalculationRevisionId
-    bucket_id: BucketId
-    modelo: str
-    filing_year: int
-    period: Period
-    filed_at: str
-    filed_by: str
-    notes: str | None = None
-    aeat_accepted: bool | None = None
-    status: str
-    superseded_at: str | None = None
-    superseded_by_filing_record_id: FilingRecordId | None = None
-    external_evidence: ExternalEvidencePayload | None = None
-    amends_filing_record_id: FilingRecordId | None = None
-    kind: str = "internal_filing"
-    live_submission: bool = False
 
 
 @register_schema("modelo.verification_report.list")
@@ -756,7 +734,7 @@ class FormulasResult(OutputSchema):
 
 
 @register_schema("modelo.filing_record.import")
-class FilingRecordImportResult(OutputSchema):
+class FilingRecordImportResult(ModeloRecordPayload):
     """Result emitted by ``aeat app modelo filing-record import``.
 
     The command delegates to
@@ -768,26 +746,19 @@ class FilingRecordImportResult(OutputSchema):
     """
 
     operation: str = "modelo.filing_record.import"
-    evidence_kind: str
-    evidence_reference_id: str
-    filing_record_id: str
-    work_unit_id: str
-    calculation_revision_id: str
-    bucket_id: str
-    modelo: str
-    filing_year: int
-    period: Period
-    filed_at: str
-    filed_by: str
-    notes: str | None = None
-    aeat_accepted: bool | None = None
-    status: str
-    superseded_at: str | None = None
-    superseded_by_filing_record_id: str | None = None
-    external_evidence: ExternalEvidencePayload | None = None
-    amends_filing_record_id: FilingRecordId | None = None
-    kind: str = "internal_filing"
-    live_submission: bool = False
+    evidence_kind: ExternalEvidenceKind
+    evidence_reference_id: str = Field(min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def _validate_imported_evidence_matches_record(self) -> FilingRecordImportResult:
+        """Prevent import metadata from diverging from the attested evidence row."""
+        if self.external_evidence is None:
+            raise ValueError("imported filing record must carry external evidence")
+        if self.external_evidence.kind is not self.evidence_kind:
+            raise ValueError("evidence_kind must match external evidence")
+        if self.external_evidence.reference_id != self.evidence_reference_id:
+            raise ValueError("evidence_reference_id must match external evidence")
+        return self
 
 
 @register_schema("modelo.filing_record.observe_local")
@@ -994,7 +965,7 @@ class DeltaRowPayload(OutputSchema):
     year_b_value: str
     delta: str
     pct_change: str | None
-    formula_id: str | None = None
+    formula_id: FormulaId | None = None
     legal_refs: list[LegalRefId] = Field(min_length=1)
     source_refs: list[SourceRefId] = Field(min_length=1)
 
@@ -1073,7 +1044,7 @@ class CasillaObservationPayload(OutputSchema):
 
     casilla_id: CasillaId
     value: str
-    formula_id: str | None = None
+    formula_id: FormulaId | None = None
     legal_refs: list[LegalRefId] = Field(min_length=1)
     source_refs: list[SourceRefId] = Field(min_length=1)
 
@@ -1148,7 +1119,7 @@ class LedgerIssuePayload(OutputSchema):
 
     transaction_id: str
     reason: str
-    detail: str
+    detail: str = Field(min_length=1, max_length=512)
 
 
 @register_schema("modelo.readiness")

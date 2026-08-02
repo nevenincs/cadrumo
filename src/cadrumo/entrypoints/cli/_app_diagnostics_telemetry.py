@@ -123,7 +123,7 @@ def diagnostics_telemetry_status(
 
     result = TelemetryStatusResult(
         opt_in=report.opt_in,
-        tier=report.tier.value,
+            tier=report.tier,
         gestor_mode=report.gestor_mode,
         endpoint=report.endpoint,
         would_emit_if_acknowledged=report.would_emit_if_acknowledged,

@@ -18,6 +18,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ....application.review import ReviewSeverity, ReviewState
 from ....core import Period
 from .._review_payloads import (
     ReviewQueueResult,
@@ -39,8 +40,8 @@ def _populated_row(item_id: str = "review-001") -> ReviewQueueRowPayload:
         bucket_id="b" * 32,
         modelo="303",
         period=str(Period.from_year_and_code(2025, "1T")),
-        severity="HIGH",
-        state="PENDING",
+        severity=ReviewSeverity.HIGH,
+        state=ReviewState.PENDING,
         blocking=True,
         reason="missing required casilla",
         current_owner_surface="app modelo",
@@ -63,7 +64,7 @@ def test_review_queue_row_payload_roundtrips_strictly() -> None:
     # regulatory grounding tuple).
     assert roundtripped.legal_refs == ("ley-37-1992:art-21", "ley-37-1992:art-94")
     assert roundtripped.blocking is True
-    assert roundtripped.severity == "HIGH"
+    assert roundtripped.severity is ReviewSeverity.HIGH
 
 
 def test_review_queue_result_envelope_roundtrips() -> None:
@@ -100,6 +101,17 @@ def test_review_queue_row_payload_rejects_blank_legal_refs() -> None:
     serialized["legal_refs"] = [" "]
 
     with pytest.raises(ValidationError, match="legal_refs"):
+        ReviewQueueRowPayload.model_validate(serialized)
+
+
+@pytest.mark.parametrize(("field", "value"), (("severity", "bogus"), ("state", "bogus")))
+def test_review_queue_row_payload_rejects_unknown_enum_tokens(field: str, value: str) -> None:
+    """Machine-facing review rows accept only the application's closed enum vocabulary."""
+
+    serialized = _populated_row().model_dump(mode="json")
+    serialized[field] = value
+
+    with pytest.raises(ValidationError):
         ReviewQueueRowPayload.model_validate(serialized)
 
 

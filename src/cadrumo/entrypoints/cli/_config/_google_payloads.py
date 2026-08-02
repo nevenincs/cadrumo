@@ -32,6 +32,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
+from ....adapters.outbound.storage import ProviderKind
 from ....domain.calculations.registry import CasillaId, FormulaId, LegalRefId, SourceRefId
 from .._schemas import OutputSchema, register_schema
 
@@ -166,7 +167,7 @@ class GoogleSyncProbeResult(OutputSchema):
 
     operation: str = "config.google.sync.probe"
     profile: str
-    provider_kind: str
+    provider_kind: ProviderKind
     reachable: bool
     writable: bool
     read_only: bool

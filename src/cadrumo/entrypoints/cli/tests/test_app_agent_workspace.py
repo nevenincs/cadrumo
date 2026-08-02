@@ -12,9 +12,11 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
+from .._app_agent_workspace_payloads import AgentWorkspaceResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -45,3 +47,31 @@ def test_materialise_requires_output_option() -> None:
     result = invoke_cached_cli(["--format", "json", "app", "agent"])
     # The required --output option is missing: the CLI refuses with usage guidance.
     assert result.exit_code != 0
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        {
+            "layout": "workspace",
+            "output_path": "C:/workspace",
+            "skills_written": 1,
+            "rules_written": 1,
+            "personas_written": 1,
+            "plugin_name": "contaminated",
+        },
+        {
+            "layout": "plugin",
+            "output_path": "C:/plugin",
+            "skills_written": 1,
+            "plugin_name": "cadrumo",
+            "version": "1",
+            "agents_written": 1,
+            "persona_default": "operator",
+            "rules_written": 1,
+        },
+    ),
+)
+def test_materialise_payload_rejects_cross_layout_fields(payload: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        AgentWorkspaceResult.model_validate(payload)

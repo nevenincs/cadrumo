@@ -67,9 +67,9 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
     assert payload.amends_filing_record_id == amends_id
     evidence = payload.external_evidence
     assert evidence is not None
-    assert evidence.kind == "aeat_justificante_pdf"
+    assert evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
     assert evidence.reference_id == "JUST-2026-130-1T-XYZ789"
-    assert evidence.imported_at == imported_at.isoformat()
+    assert evidence.imported_at == imported_at
     payload_dict = payload.model_dump(mode="python")
     show_result = ModeloRecordShowResult.model_validate(payload_dict)
     import_result = FilingRecordImportResult.model_validate(
@@ -83,6 +83,41 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
     assert show_result.external_evidence is not None
     assert import_result.external_evidence is not None
     assert amend_result.external_evidence is not None
+
+
+def test_import_payload_rejects_external_evidence_that_differs_from_import_metadata() -> None:
+    """The import result cannot relabel or detach the official evidence it reports."""
+
+    from datetime import UTC, datetime
+
+    from pydantic import ValidationError
+
+    from ....domain.modelos import ExternalEvidenceKind, ModeloRecordStatus
+    from .._modelo_payloads import FilingRecordImportResult
+
+    payload = {
+        "evidence_kind": ExternalEvidenceKind.AEAT_CSV_REGISTER,
+        "evidence_reference_id": "CSV-303-2026-Q1",
+        "filing_record_id": "a" * 64,
+        "work_unit_id": "b" * 64,
+        "calculation_revision_id": "c" * 64,
+        "bucket_id": "default",
+        "modelo": "303",
+        "filing_year": 2026,
+        "period": Period.from_year_and_code(2026, "1T"),
+        "filed_at": datetime(2026, 4, 16, 12, 0, tzinfo=UTC),
+        "filed_by": "operator-A",
+        "aeat_accepted": True,
+        "status": ModeloRecordStatus.VIGENTE,
+        "external_evidence": {
+            "kind": ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            "reference_id": "CSV-303-2026-Q1",
+            "imported_at": datetime(2026, 4, 16, 12, 0, tzinfo=UTC),
+        },
+    }
+
+    with pytest.raises(ValidationError, match="evidence_kind must match"):
+        FilingRecordImportResult.model_validate(payload)
 
 
 def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:

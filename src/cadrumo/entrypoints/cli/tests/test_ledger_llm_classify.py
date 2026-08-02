@@ -13,6 +13,7 @@ from typing import Any
 
 import pytest
 from click.testing import Result
+from pydantic import ValidationError
 
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
@@ -21,6 +22,7 @@ from ....tests import temporary_env
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from .._ledger_rule_payloads import LLMProviderAvailabilityPayload
 from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -93,6 +95,19 @@ def test_providers_lists_availability(tmp_path: Path) -> None:
     assert names == {"claude", "antigravity", "codex"}
     for p in payload["providers"]:
         assert isinstance(p["available"], bool)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        {"provider": "bogus", "cli_binary": "claude", "available": False},
+        {"provider": "", "cli_binary": "claude", "available": False},
+        {"provider": "claude", "cli_binary": "", "available": False},
+    ),
+)
+def test_provider_availability_payload_rejects_noncanonical_provider_rows(payload: dict[str, object]) -> None:
+    with pytest.raises(ValidationError):
+        LLMProviderAvailabilityPayload.model_validate(payload)
 
 
 def test_llm_unavailable_provider_refuses_from_real_path_lookup(tmp_path: Path) -> None:

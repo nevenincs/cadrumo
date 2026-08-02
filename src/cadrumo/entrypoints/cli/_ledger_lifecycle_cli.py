@@ -47,7 +47,7 @@ from ...domain.transactions import (
     is_classified,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
-from ._ledger_support import _emit_update_result, _resolve_id
+from ._ledger_support import _emit_update_result, _ledger_validation_bad, _resolve_id
 from ._modelo_rendering import advisory_notice
 
 if TYPE_CHECKING:
@@ -89,13 +89,6 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     app.command("reset", help=tr("cli.ledger.reset.help"))(ledger_reset)
     app.command("split", help=tr("cli.ledger.split.help"))(ledger_split)
     app.command("merge", help=tr("cli.ledger.merge.help"))(ledger_merge)
-
-
-def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
-    item = error.errors()[0] if error.errors() else {}
-    location = ".".join(str(part) for part in item.get("loc", ()) if part is not None) or "ledger"
-    message = str(item.get("msg") or error)
-    return _bad(f"{location}: {message}")
 
 
 def ledger_attach(

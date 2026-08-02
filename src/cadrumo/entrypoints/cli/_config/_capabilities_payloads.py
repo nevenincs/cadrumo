@@ -16,6 +16,8 @@ resolved posture is computed by
 
 from __future__ import annotations
 
+from ....application.user_profile import CapabilitySource
+from ....core import ServiceCapability
 from .._schemas import OutputSchema, register_schema
 
 
@@ -30,9 +32,9 @@ class CapabilityRowPayload(OutputSchema):
     :class:`CapabilitySource`.
     """
 
-    capability: str
+    capability: ServiceCapability
     enabled: bool
-    source: str
+    source: CapabilitySource
     reason: str
 
 
@@ -61,5 +63,5 @@ class CapabilitySetResult(OutputSchema):
     """
 
     profile_id: str
-    capability: str
+    capability: ServiceCapability
     enabled: bool

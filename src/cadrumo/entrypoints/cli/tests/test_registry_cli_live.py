@@ -10,7 +10,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, ValidationError
 from typer.core import TyperGroup
 
 from ....adapters.outbound.aeat.sede import (
@@ -27,6 +27,8 @@ from ....application.live import (
     IvaCompensationHistoryRow,
     IvaWalletAuthorityDecisionRow,
     IvaWalletCaptureReport,
+    LiveIvaAcquisitionFailureMode,
+    LiveIvaReadStatus,
     capture_source_filed_data,
     filed_data_capture_failure_row,
     filed_data_listing_row,
@@ -518,7 +520,12 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         for line in lines
     )
     assert any(
-        line.startswith("authority_decision=") and "selected_authority=aeat_wallet" in line and "blocked=False" in line
+        line.startswith("authority_decision=")
+        and "selected_authority=aeat_wallet" in line
+        and "blocked=False" in line
+        and "reason=matched" in line
+        and "wallet_captured_at=2026-05-21T12:00:00+00:00" in line
+        and "decided_at=2026-05-21T12:00:00+00:00" in line
         for line in lines
     )
     assert any(line.startswith("authority_source=2026\t2T\taeat_wallet") for line in lines)
@@ -551,6 +558,48 @@ def test_live_iva_wallet_history_payload_preserves_typed_periods() -> None:
     payload = _iva_wallet_history_result(report)
 
     assert payload.rows[0].period == Period.from_year_and_code(2024, "1T")
+
+
+def test_live_iva_auth_payload_preserves_only_a_redacted_diagnostic_reference() -> None:
+    """A failed acquisition exposes correlation without disclosing diagnostic storage keys."""
+
+    from .._app_live_payloads import LiveIvaAuthOutcomePayload, LiveIvaSurfaceOutcomePayload
+
+    accepted = LiveIvaAuthOutcomePayload(
+        status=LiveIvaReadStatus.FAILED,
+        outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+        failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+        failure_type="AuthError",
+        diagnostic_ref="sha256:0123456789ab",
+        provider_kind=None,
+        reused_persisted_session=None,
+        fresh=None,
+    )
+    assert accepted.diagnostic_ref == "sha256:0123456789ab"
+
+    with pytest.raises(ValidationError):
+        LiveIvaAuthOutcomePayload(
+            status=LiveIvaReadStatus.FAILED,
+            outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+            failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+            failure_type="AuthError",
+            diagnostic_ref="diagnostic-private-object-key",
+            provider_kind=None,
+            reused_persisted_session=None,
+            fresh=None,
+        )
+
+    with pytest.raises(ValidationError):
+        LiveIvaSurfaceOutcomePayload(
+            surface="bogus",
+            status=LiveIvaReadStatus.FAILED,
+            outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+            failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+            failure_type="AuthError",
+            failure_context=None,
+            captured_count=None,
+            calculation_observation_count=None,
+        )
 
 
 def test_live_filed_list_payload_and_text_use_registry_period_tokens() -> None:

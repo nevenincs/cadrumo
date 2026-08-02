@@ -23,6 +23,11 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from pydantic import model_validator
+
+from ....application.modelo import RecipientFingerprintRecord
 from .._schemas import OutputSchema, register_schema
 
 
@@ -33,18 +38,26 @@ class RecipientFingerprintRowPayload(OutputSchema):
     label: str
     public_key_hex: str
     fingerprint_sha256: str
-    added_at: str
+    added_at: datetime
+
+    @model_validator(mode="after")
+    def _validate_recipient_record(self) -> RecipientFingerprintRowPayload:
+        """Derive the displayed fingerprint from the same trusted key contract."""
+        record = RecipientFingerprintRecord(
+            recipient_id=self.recipient_id,
+            label=self.label,
+            public_key_hex=self.public_key_hex,
+            added_at=self.added_at,
+        )
+        if self.fingerprint_sha256 != record.fingerprint_sha256:
+            raise ValueError("fingerprint_sha256 must be derived from public_key_hex")
+        return self
 
 
 @register_schema("config.collab.recipient.add")
-class ConfigCollabRecipientAddResult(OutputSchema):
+class ConfigCollabRecipientAddResult(RecipientFingerprintRowPayload):
     """JSON envelope for ``aeat config collab recipient add``."""
 
-    recipient_id: str
-    label: str
-    public_key_hex: str
-    fingerprint_sha256: str
-    added_at: str
 
 
 @register_schema("config.collab.recipient.list")

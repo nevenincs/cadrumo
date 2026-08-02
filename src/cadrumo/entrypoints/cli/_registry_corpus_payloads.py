@@ -19,6 +19,12 @@ that enters :class:`SchemaEnvelope` through :func:`_emit_envelope`.
 
 from __future__ import annotations
 
+from ...application.registry import (
+    RegistryCitationArticleProjection,
+    RegistryCitationReferenceProjection,
+    RegistryCorpusIssueProjection,
+    RegistryTopicProjection,
+)
 from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
@@ -33,19 +39,15 @@ class CitationListResult(OutputSchema):
     Mirrors :class:`RegistryCitationsListReport`:
     reviewed legal-reference rows are projected as
     :class:`RegistryCitationReferenceProjection`,
-    while localized related topics remain extra fields on the permissive
-    transport model.
+    alongside typed localized topic rows.
     """
 
     operation: str = "registry.citations.list"
     reference_count: int
     tag_filter: str | None = None
     topic_count: int
-    references: list[dict[str, object]] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class-variable assignment triggers mypy
-    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    topics: list[RegistryTopicProjection] = []
+    references: list[RegistryCitationReferenceProjection] = []
 
 
 @register_schema("registry.citations.view")
@@ -60,13 +62,9 @@ class CitationShowResult(OutputSchema):
     """
 
     operation: str = "registry.citations.show"
-    reference: dict[str, object] = {}
-    articulo: dict[str, object] | None = None
-    related_topics: list[dict[str, object]] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class-variable assignment triggers mypy
-    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    reference: RegistryCitationReferenceProjection
+    articulo: RegistryCitationArticleProjection | None = None
+    related_topics: list[RegistryTopicProjection] = []
 
 
 @register_schema("registry.citations.verify")
@@ -85,11 +83,8 @@ class CitationVerifyResult(OutputSchema):
     issue_count: int
     passed: bool
     topic_count: int
-    issues: list[dict[str, object]] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class-variable assignment triggers mypy
-    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    issues: list[RegistryCorpusIssueProjection] = []
+    topics: list[RegistryTopicProjection] = []
 
 
 @register_schema("registry.manuals.list")

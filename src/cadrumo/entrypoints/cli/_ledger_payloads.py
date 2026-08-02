@@ -34,9 +34,14 @@ sub-app payload families).
 
 from __future__ import annotations
 
+from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
+from pydantic import Field, field_validator
+
 from ...core import LinkInconsistencyDirection, Period
+from ...core.identity import BucketId, SnapshotId, TransactionId
 from ._ledger_business_payloads import (
     BusinessInvoiceListResult,
     BusinessInvoiceRecordPayload,
@@ -765,14 +770,14 @@ class LedgerExportRowPayload(OutputSchema):
     a string the serializer already emits ("" for an absent optional column).
     """
 
-    bucket_id: str
-    transaction_id: str
+    bucket_id: BucketId
+    transaction_id: TransactionId
     lifecycle_state: str
-    booked_date: str
+    booked_date: str = Field(min_length=10, max_length=10)
     value_date: str = ""
-    effective_date: str
-    amount: str
-    currency: str
+    effective_date: str = Field(min_length=10, max_length=10)
+    amount: str = Field(min_length=1)
+    currency: str = Field(pattern=r"^[A-Z]{3}$")
     direction: str
     counterparty: str = ""
     description: str
@@ -796,6 +801,35 @@ class LedgerExportRowPayload(OutputSchema):
     value_in_eur: str = ""
     fx_rate: str = ""
 
+    @field_validator("booked_date", "effective_date")
+    @classmethod
+    def _require_iso_date(cls, value: str) -> str:
+        """Keep exported mandatory dates parseable without changing their JSON wire form."""
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("must be an ISO-8601 date") from exc
+        return value
+
+    @field_validator("value_date")
+    @classmethod
+    def _validate_optional_iso_date(cls, value: str) -> str:
+        if value:
+            cls._require_iso_date(value)
+        return value
+
+    @field_validator("amount", "taxable_base", "iva_amount", "value_in_eur")
+    @classmethod
+    def _require_non_negative_decimal(cls, value: str) -> str:
+        if not value:
+            return value
+        try:
+            if Decimal(value) < 0:
+                raise ValueError("must be a non-negative decimal")
+        except InvalidOperation as exc:
+            raise ValueError("must be a canonical decimal") from exc
+        return value
+
 
 @register_schema("ledger.export")
 class LedgerExportPayload(OutputSchema):
@@ -810,14 +844,14 @@ class LedgerExportPayload(OutputSchema):
     :meth:`LedgerExportPayload.from_result`.
     """
 
-    bucket_id: str
-    export_id: str
+    bucket_id: BucketId
+    export_id: SnapshotId
     export_format: str
     media_type: str
     filename_extension: str
-    row_count: int
-    byte_size: int
-    sha256: str
+    row_count: int = Field(ge=0)
+    byte_size: int = Field(ge=0)
+    sha256: SnapshotId
     fieldnames: list[str]
     rows: list[LedgerExportRowPayload]
     bucket_event_ids: list[str] = []
@@ -1055,7 +1089,7 @@ class LedgerPreflightIssuePayload(OutputSchema):
 
     transaction_id: str
     reason: str
-    detail: str = ""
+    detail: str = Field(min_length=1, max_length=512)
 
 
 class LedgerLinkInconsistencyPayload(OutputSchema):

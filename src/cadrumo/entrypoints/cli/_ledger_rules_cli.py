@@ -137,11 +137,11 @@ def rule_add(
     payload = {
         "rule_id": rule.rule_id,
         "description_pattern": rule.description_pattern,
-        "classification": rule.classification.value,
+        "classification": rule.classification,
         "category_id": rule.category_id,
         "priority": rule.priority,
         "actor": rule.actor,
-        "created_at": rule.created_at.isoformat(),
+        "created_at": rule.created_at,
     }
     lines = [
         f"rule_id\t{_short_display_id(rule.rule_id)}",
@@ -200,7 +200,7 @@ def _rule_apply_dry_run_matches(
                 "transaction_id": transaction.transaction_id,
                 "description": transaction.raw.description,
                 "matched_rule_id": rule.rule_id,
-                "classification": rule.classification.value,
+                "classification": rule.classification,
             },
         )
     return would_match
@@ -243,7 +243,7 @@ def _rule_apply_payload(result: ApplyRulesResult) -> dict[str, object]:
         "matched": result.matched,
         "skipped_already_classified": result.skipped_already_classified,
         "no_match": result.no_match,
-        "applied": [row.model_dump(mode="json") for row in result.applied],
+        "applied": [row.model_dump(mode="python") for row in result.applied],
     }
 
 
@@ -349,11 +349,11 @@ def rule_list(ctx: typer.Context) -> None:
             {
                 "rule_id": r.rule_id,
                 "description_pattern": r.description_pattern,
-                "classification": r.classification.value,
+                    "classification": r.classification,
                 "category_id": r.category_id,
                 "priority": r.priority,
                 "actor": r.actor,
-                "created_at": r.created_at.isoformat(),
+                    "created_at": r.created_at,
             }
             for r in rules
         ],

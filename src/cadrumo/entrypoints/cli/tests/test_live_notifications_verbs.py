@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from click.testing import Result
+from pydantic import ValidationError
 
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
@@ -46,3 +48,26 @@ def test_notifications_list_is_empty_on_fresh_bucket() -> None:
 def test_notifications_show_refuses_unknown_snapshot() -> None:
     result = _invoke_notifications(["view", "no-such-snapshot"])
     assert result.exit_code != 0
+
+
+def test_notification_snapshot_payloads_refuse_malformed_identity_time_url_and_count() -> None:
+    """Notification transport preserves the persisted snapshot's strict fields."""
+
+    from .._app_live_payloads import NotificationsCaptureResult, NotificationSnapshotListingPayload
+
+    instant = datetime(2026, 8, 1, tzinfo=UTC)
+    with pytest.raises(ValidationError):
+        NotificationSnapshotListingPayload(snapshot_id="bad", captured_at=instant, row_count=0)
+    with pytest.raises(ValidationError):
+        NotificationSnapshotListingPayload(snapshot_id="a" * 64, captured_at="not-a-timestamp", row_count=0)
+    with pytest.raises(ValidationError):
+        NotificationSnapshotListingPayload(snapshot_id="a" * 64, captured_at=instant, row_count=-1)
+    with pytest.raises(ValidationError):
+        NotificationsCaptureResult(
+            bucket_id="00000000-0000-4000-8000-000000000000",
+            snapshot_id="a" * 64,
+            captured_at=instant,
+            persisted_at=instant,
+            row_count=0,
+            source_url="",
+        )

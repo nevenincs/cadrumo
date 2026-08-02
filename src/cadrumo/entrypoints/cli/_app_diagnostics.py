@@ -91,21 +91,14 @@ def _diagnostics_root(ctx: typer.Context) -> None:
 def _parse_iso_date(value: str | None, option: str) -> _date | None:
     if value is None:
         return None
-    from ...core.parsing import parse_iso8601_date
+    from ._common import _parse_iso_date as _parse_required_iso_date
 
-    try:
-        return parse_iso8601_date(value.strip())
-    except ValueError as exc:
-        from ._common import _bad
-
-        raise _bad(
-            tr(
-                "cli.diagnostics.run_health.bad_date",
-                option=option,
-                value=value,
-                default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
-            ),
-        ) from exc
+    return _parse_required_iso_date(
+        value,
+        label=option,
+        translation_key="cli.diagnostics.run_health.bad_date",
+        default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
+    )
 
 
 @app.command(

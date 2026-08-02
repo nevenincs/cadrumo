@@ -615,7 +615,8 @@ def test_ledger_split_rejects_blank_child_description(tmp_path: Path) -> None:
 
     assert result.exit_code != 0, result.output
     combined = result.output or ""
-    assert "description" in combined or "blank" in combined, combined
+    assert "description must not be blank" in combined, combined
+    assert "transaction is invalid" in combined.lower(), combined
 
 
 # ---------------------------------------------------------------------------

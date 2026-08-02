@@ -335,7 +335,7 @@ def _register_archive_inspect_command(archive_app: typer.Typer) -> None:
             manifest_digest=outcome.manifest_digest,
             recovery_wrap_present=outcome.recovery_wrap_present,
             archive_schema_version=outcome.archive_schema_version,
-            created_at=outcome.created_at.isoformat(),
+            created_at=outcome.created_at,
             size_bytes=outcome.size_bytes,
         )
         _emit_envelope(
