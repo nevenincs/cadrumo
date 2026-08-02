@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Final
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from dev.packaging.evidence_release import (
     download_release_assets,
@@ -130,6 +130,46 @@ class ReleaseCandidate(BaseModel):
     dry_run: bool
     soak_opened_at: datetime
     soak_deadline: datetime
+    #: Hotfix carve-out. A shortened window is admissible ONLY alongside an
+    #: incident record and an explicit release-owner approval, both recorded
+    #: here on the candidate itself so the shortening is auditable from the
+    #: artifact rather than from someone's memory of why.
+    soak_hours_override: int | None = Field(default=None, gt=0)
+    incident_reference: str = Field(default="")
+    release_owner_approval: str = Field(default="")
+
+    @model_validator(mode="after")
+    def _shortened_window_carries_its_authorisation(self) -> ReleaseCandidate:
+        """Refuse a shortened window that is not fully authorised.
+
+        The policy allows an emergency to shorten the ELAPSED soak, and only
+        on three conditions: an incident record, an explicit release-owner
+        approval, and every applicable gate green before publication. The
+        third is enforced at promotion time by the readiness re-check; the
+        first two are properties of this record and are enforced here, so an
+        unauthorised shortening cannot exist as a loadable candidate at all.
+        """
+        if self.soak_hours_override is None:
+            return self
+        missing = [
+            name
+            for name, value in (
+                ("incident_reference", self.incident_reference),
+                ("release_owner_approval", self.release_owner_approval),
+            )
+            if not value.strip()
+        ]
+        if missing:
+            raise ValueError(
+                f"a shortened soak window requires {' and '.join(missing)}; "
+                "the hotfix carve-out is an authorised exception, never a default",
+            )
+        return self
+
+    @property
+    def hotfix(self) -> bool:
+        """Whether this candidate soaks under the authorised hotfix carve-out."""
+        return self.soak_hours_override is not None
 
     @property
     def tag(self) -> str:
@@ -176,6 +216,9 @@ def seal_candidate(
     scoop_run_id: str = "",
     homebrew_run_id: str = "",
     claude_evidence_release: str = "",
+    soak_hours_override: int | None = None,
+    incident_reference: str = "",
+    release_owner_approval: str = "",
 ) -> ReleaseCandidate:
     """Mint a sealed candidate whose deadline is COMPUTED from the checklist window.
 
@@ -187,6 +230,17 @@ def seal_candidate(
     if opened_at.tzinfo is None:
         raise ReleaseCandidateError("soak opened_at must be timezone-aware; a naive instant has no deadline")
     opened = opened_at.astimezone(UTC)
+    if soak_hours_override is not None and soak_hours_override >= window.minimum_hours:
+        raise ReleaseCandidateError(
+            f"a soak override of {soak_hours_override}h does not shorten the declared "
+            f"{window.minimum_hours}h minimum; the carve-out exists to shorten an emergency window, "
+            "never to extend or restate the standard one",
+        )
+    deadline = (
+        opened + timedelta(hours=soak_hours_override)
+        if soak_hours_override is not None
+        else window.deadline_from(opened)
+    )
     return ReleaseCandidate(
         cohort_id=cohort_id,
         version=version,
@@ -198,7 +252,10 @@ def seal_candidate(
         claimed_channels=claimed_channels,
         dry_run=dry_run,
         soak_opened_at=opened,
-        soak_deadline=window.deadline_from(opened),
+        soak_deadline=deadline,
+        soak_hours_override=soak_hours_override,
+        incident_reference=incident_reference,
+        release_owner_approval=release_owner_approval,
     )
 
 

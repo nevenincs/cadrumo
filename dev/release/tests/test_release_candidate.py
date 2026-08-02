@@ -102,7 +102,11 @@ def test_a_record_carrying_an_unknown_field_refuses_to_load(tmp_path: Path) -> N
     """`extra="forbid"` in both directions: an unexpected key is a refusal, not a shrug."""
     path = write_candidate(_fully_populated(), tmp_path / "release-candidate.json")
     payload = json.loads(path.read_text(encoding="utf-8"))
-    payload["soak_hours_override"] = 1
+    # Deliberately a key no field claims. `soak_hours_override` was used here
+    # before the hotfix carve-out landed and would now be ACCEPTED as a real
+    # field - the test would still pass, via the carve-out validator rather
+    # than via extra="forbid", asserting something it no longer means.
+    payload["definitely_not_a_candidate_field"] = 1
     path.write_text(json.dumps(payload), encoding="utf-8")
 
     with pytest.raises(ValidationError):

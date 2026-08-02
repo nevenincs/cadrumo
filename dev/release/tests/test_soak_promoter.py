@@ -12,11 +12,13 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from pydantic import ValidationError
 
 from dev.release.readiness import ReadinessCheck, ReadinessReport
 from dev.release.release_candidate import (
     CANDIDATE_TAG_RE,
     ReleaseCandidate,
+    ReleaseCandidateError,
     SoakWindow,
     candidate_tag,
     candidate_tags_in,
@@ -265,3 +267,95 @@ def test_the_consumed_tag_leaves_the_selectable_namespace_but_keeps_the_record()
     assert retired == "release-candidate-consumed-4242"
     assert CANDIDATE_TAG_RE.fullmatch(retired) is None
     assert candidate_tags_in([{"tag_name": retired, "draft": True}]) == ()
+
+
+def _hotfix_candidate(*, incident: str = "INC-2026-08-02", approval: str = "release-owner:gergely") -> ReleaseCandidate:
+    return seal_candidate(
+        cohort_id="a" * 64,
+        version="1.2.4",
+        source_commit=_COMMIT,
+        packaging_run_id="9001",
+        claimed_channels=("python",),
+        dry_run=False,
+        window=_WINDOW,
+        opened_at=_OPENED,
+        soak_hours_override=6,
+        incident_reference=incident,
+        release_owner_approval=approval,
+    )
+
+
+def test_an_authorised_hotfix_shortens_the_window() -> None:
+    """The carve-out is honoured when its two recorded conditions are present."""
+    candidate = _hotfix_candidate()
+
+    assert candidate.hotfix is True
+    assert candidate.soak_deadline == _OPENED + timedelta(hours=6)
+    # It really is shorter than the standard window, not merely different.
+    assert candidate.soak_deadline < _OPENED + timedelta(hours=_WINDOW.minimum_hours)
+
+    decision = select_promotable((candidate,), now=_OPENED + timedelta(hours=7))
+    assert decision.promotes is True
+
+
+def test_a_shortened_window_without_an_incident_reference_is_refused() -> None:
+    """A shortening with no incident record cannot exist as a candidate at all."""
+    with pytest.raises(ValidationError, match="incident_reference"):
+        _hotfix_candidate(incident="   ")
+
+
+def test_a_shortened_window_without_release_owner_approval_is_refused() -> None:
+    """Both authorisations are required, and each is asserted separately.
+
+    Checking only one would let a candidate carrying an incident number but no
+    approval through - the shape an automated emergency path would produce by
+    accident.
+    """
+    with pytest.raises(ValidationError, match="release_owner_approval"):
+        _hotfix_candidate(approval="")
+
+
+def test_an_override_that_does_not_shorten_the_window_is_refused() -> None:
+    """The carve-out shortens an emergency window; it is not a general dial.
+
+    An override at or above the declared minimum is either a no-op wearing an
+    incident number or a way to EXTEND a window through the emergency path,
+    and neither is what the policy permits.
+    """
+    with pytest.raises(ReleaseCandidateError, match="does not shorten"):
+        seal_candidate(
+            cohort_id="a" * 64,
+            version="1.2.4",
+            source_commit=_COMMIT,
+            packaging_run_id="9001",
+            claimed_channels=("python",),
+            dry_run=False,
+            window=_WINDOW,
+            opened_at=_OPENED,
+            soak_hours_override=_WINDOW.minimum_hours,
+            incident_reference="INC-1",
+            release_owner_approval="release-owner:gergely",
+        )
+
+
+def test_a_hotfix_still_faces_the_full_readiness_gate() -> None:
+    """The carve-out shortens the CLOCK and weakens no gate.
+
+    The policy allows an emergency to shorten elapsed time only with every
+    applicable gate still green, so a hotfix whose readiness reds is
+    invalidated exactly like an ordinary candidate. A carve-out that also
+    skipped the gate would be the weakening this Step exists to avoid.
+    """
+    candidate = _hotfix_candidate()
+    dispatched: list[ReleaseCandidate] = []
+
+    decision = promote_once(
+        (candidate,),
+        now=_OPENED + timedelta(hours=7),
+        readiness_for=lambda _: _red_report(),
+        dispatch=dispatched.append,
+    )
+
+    assert decision.promotes is False
+    assert dispatched == []
+    assert "invalidated" in decision.reason
