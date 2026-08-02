@@ -426,6 +426,54 @@ reviewed_by = "registry-test"
         load_legal_parameters_only(tmp_path)
 
 
+def test_legal_parameters_only_rejects_duplicate_legal_ids_across_fragments(tmp_path: Path) -> None:
+    """The cycle-safe loader must preserve the full catalogue's unique legal authority."""
+
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    first_fragment = """
+[legal."ley-test:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/test/first.html#art-1"
+document_id = "BOE-FIRST"
+article = "1"
+permalink = "https://example.com/first"
+effective_from = 2026-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+required_text = ["first provision"]
+
+[parameters."test-rate"]
+evidence_tier = "legal_authority"
+value = "0.21"
+unit = "fraction"
+applies_to = "test-case"
+legal_refs = ["ley-test:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+""".lstrip()
+    second_fragment = (
+        first_fragment.replace("first", "second")
+        .replace("BOE-FIRST", "BOE-SECOND")
+        .replace(
+            '[parameters."test-rate"]',
+            '[parameters."other-rate"]',
+        )
+    )
+    (legal_dir / "a.toml").write_text(first_fragment, encoding="utf-8")
+    (legal_dir / "b.toml").write_text(second_fragment, encoding="utf-8")
+
+    with pytest.raises(
+        RegistryLoadError,
+        match=r"duplicate catalogue ids legal=\['ley-test:art-1'\] sources=\[\] parameters=\[\]",
+    ):
+        load_legal_parameters_only(tmp_path)
+
+
 def test_legal_parameters_only_rejects_noncanonical_parameter_key(tmp_path: Path) -> None:
     """The TOML map key must pass the canonical ParameterId boundary."""
 
