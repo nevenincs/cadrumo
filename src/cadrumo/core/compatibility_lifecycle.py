@@ -98,6 +98,12 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "archive": PersistedFormatClass.DURABLE,
     "bucket_dek": PersistedFormatClass.DURABLE,
     "bucket_manifest": PersistedFormatClass.DURABLE,
+    # The secret-store index maps HMAC lookup digests to blob references. It
+    # is DURABLE rather than regenerable: the digest is an HMAC of the natural
+    # key, and while each stored record still carries that key, no rebuild
+    # path exists to walk the blobs and re-derive the map. Losing the index
+    # therefore strands every secret it addressed.
+    "secret_index": PersistedFormatClass.DURABLE,
     # Regenerable — operational state, discarded and rebuilt on mismatch.
     "profile_session": PersistedFormatClass.REGENERABLE,
     "login_throttle": PersistedFormatClass.REGENERABLE,
