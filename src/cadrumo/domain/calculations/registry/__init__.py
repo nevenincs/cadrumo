@@ -347,6 +347,10 @@ from ._parity_tapes import (
     ParityScenario,
     ParityTape,
     ParityTapeReplayReport,
+    # Exported under an explicit name: ``_workbook_parity_types`` declares a
+    # same-named ``ParityStatus`` with a third ``not_run`` member, and a bare
+    # ``ParityStatus`` at this facade could not say which closed set it meant.
+    ParityStatus as ParityTapeStatus,
     generate_parity_tape_path,
     load_parity_scenario,
     load_parity_tape,
@@ -704,6 +708,7 @@ __all__ = [
     "ParityScenario",
     "ParityTape",
     "ParityTapeReplayReport",
+    "ParityTapeStatus",
     "ParityVerdict",
     "ParsedExportFieldValue",
     "ParsedExportPayload",

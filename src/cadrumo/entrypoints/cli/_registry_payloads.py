@@ -19,6 +19,20 @@ execution. These schemas document the CLI transport shape that enters
 
 from __future__ import annotations
 
+from datetime import datetime
+
+from pydantic import Field
+
+from ...domain.calculations.registry import (
+    CrossReferenceApplicabilityDeclaracion,
+    ParityScenario,
+    ParityTape,
+    ParityTapeStatus,
+    RegistryFiledStateComparison,
+    WorkbookArtefactReport,
+    WorkbookParityRunReport,
+    WorkbookRunnerAvailability,
+)
 from ._schemas import OutputSchema, register_schema
 
 
@@ -99,14 +113,10 @@ class RegistryAuditOraclesResult(OutputSchema):
 
     environment: str
     registered_oracle_ids: list[str] = []
-    failure_count: int
+    failure_count: int = Field(ge=0)
     failures: list[str] = []
-    applicability_declarations: list[dict[str, object]] = []
+    applicability_declarations: list[CrossReferenceApplicabilityDeclaracion] = []
     orphan_oracle_ids: list[str] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class-variable assignment triggers mypy
-    # [assignment]; suppression is the only escape without a mypy plugin upgrade.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
 @register_schema("registry.verify_filed_state")
@@ -123,11 +133,7 @@ class RegistryVerifyFiledStateResult(OutputSchema):
 
     observation_path: str
     source_observation_paths: list[str] = []
-    comparison: dict[str, object]
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    comparison: RegistryFiledStateComparison
 
 
 @register_schema("registry.workbooks.verify")
@@ -168,17 +174,13 @@ class RegistryParityRunResult(OutputSchema):
     run report; ``path`` is added by the CLI as the archive destination.
     """
 
-    created_at: str
+    created_at: datetime
     scenario_path: str | None = None
-    scenario: dict[str, object]
-    workbook: dict[str, object]
-    runner: dict[str, object]
-    report: dict[str, object]
+    scenario: ParityScenario
+    workbook: WorkbookArtefactReport
+    runner: WorkbookRunnerAvailability
+    report: WorkbookParityRunReport
     path: str | None = None
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
 
 
 @register_schema("registry.parity.replay")
@@ -194,11 +196,7 @@ class RegistryParityReplayResult(OutputSchema):
 
     tape_path: str
     scenario_id: str
-    status: str
+    status: ParityTapeStatus
     differences: list[str] = []
-    stored: dict[str, object]
-    current: dict[str, object]
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    stored: ParityTape
+    current: ParityTape
