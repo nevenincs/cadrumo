@@ -3,15 +3,34 @@ tags:
   - "#adr"
   - "#unified-review-queue"
 date: '2026-04-18'
-modified: '2026-07-17'
-body_hash: 'sha256:bda6c62493e16d9c19c0255e352422d8f2365b5948a830a42ad8cc9f316c33c2'
 related:
   - "[[2026-04-18-unified-review-queue-research]]"
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-12-filing-draft-engine-adr]]"
+superseded_by: '2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:b37c3048e5134e83c36d1d50754ac9d5e1d8930e2fb069446a68601a89f1192d'
 ---
+# unified-review-queue-adr | (**status:** `superseded`)
 
-# unified-review-queue-adr | (**status:** `accepted`)
+> **Superseded by `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr`**
+> — not by the `cli-workflow-redesign` apex ADR itself. This ADR designed a
+> top-level `aeat review queue` command with command-local `--format
+> table|json`. The redesign's root-tree contract (`2026-05-12-cli-workflow-redesign-adr`
+> §1) permits only `aeat config` and `aeat app` as roots, so a dedicated child
+> ADR — `app-review-queue-execution` — was accepted to relocate and adapt this
+> design: `aeat app review queue` plus a new `aeat app review show
+> REVIEW_ITEM_ID`, root `--format json|text` (not a command-local flag), and a
+> widened `kind` vocabulary (`ledger_transaction`/`purchase_invoice_evidence`/
+> `payable_invoice`/`collectible_invoice`/`modelo_finding`/`live_notification`/
+> `sync_divergence` replacing the original `transaction`/`invoice`/`divergence`/
+> `finding`/`inbox` set). Confirmed at HEAD: `entrypoints/cli/__init__.py`
+> mounts exactly one root Typer app (`name="app"`; no `financial`, `data`, or
+> top-level `review` root), and `("app", "review", "._review")` wires
+> `aeat app review` as designed by the successor. Read
+> `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr` for the
+> active design; its own text states plainly "The old top-level `aeat review
+> queue` placement is superseded."
 
 ## status
 

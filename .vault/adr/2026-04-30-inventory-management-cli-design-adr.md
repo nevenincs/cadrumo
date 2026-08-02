@@ -2,16 +2,34 @@
 tags:
   - "#adr"
   - "#inventory-management"
-date: 2026-04-30
-modified: '2026-07-17'
-body_hash: 'sha256:ca3af5d46838dca38d01905de39c98f7d85dc74b819b93bd7974a50841d20975'
+date: '2026-04-30'
 related:
   - "[[2026-04-30-inventory-management-cli-design-research]]"
   - "[[2026-04-29-inventory-management-adr]]"
   - "[[2026-04-30-inventory-management-cli-design-reference]]"
+superseded_by: '2026-05-12-cli-workflow-redesign-inventory-placement-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:7842a28fe3894edf2197435af1fd2bafa40158663e468d9540a4946ddf50b2c7'
 ---
+# inventory-management cli design adr: canonical data ledgers ux | (**status:** `superseded`)
 
-# inventory-management cli design adr: canonical data ledgers ux | (**status:** `accepted`)
+> **Superseded by `2026-05-12-cli-workflow-redesign-inventory-placement-adr`**
+> — not by the `cli-workflow-redesign` apex ADR itself. This ADR designed the
+> canonical inventory/amortization surface as `aeat data ledgers ...` (a new
+> `data` root). The redesign's root-tree contract
+> (`2026-05-12-cli-workflow-redesign-adr` §1) permits only `aeat config` and
+> `aeat app` — no third root — so a dedicated child ADR,
+> `inventory-placement`, was accepted to relocate the same command shape
+> under `aeat app ledger inventory` instead, stating plainly "The `data` root
+> is retired, not aliased." Confirmed at HEAD: `entrypoints/cli/__init__.py`
+> mounts no `data`-named root Typer app, and
+> `src/cadrumo/entrypoints/cli/_ledger_inventory_cli.py` implements the
+> `list`/`create`/`movement add`/`valuation preview` verb set under the
+> `app ledger inventory` path the successor designed. Read
+> `2026-05-12-cli-workflow-redesign-inventory-placement-adr` for the active
+> placement; the casilla `0155`/`0173` mapping and VAT/base decomposition
+> content in this ADR's body remain relevant background, only the command
+> root changed.
 
 ## CLI Backend Boundary
 

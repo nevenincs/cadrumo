@@ -1,18 +1,19 @@
 ---
 tags:
-  - '#adr'
-  - '#cli-workflow-redesign'
+  - "#adr"
+  - "#cli-workflow-redesign"
 date: '2026-05-12'
-modified: '2026-07-17'
-body_hash: 'sha256:7d6f8383a67a69e999489da7cd1e729a23abfa6c0053b5608ef290bc4b3745de'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-review-queue-execution-research]]"
   - "[[2026-04-18-unified-review-queue-adr]]"
   - "[[2026-04-18-unified-review-queue-plan]]"
   - "[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]"
+supersedes:
+  - '2026-04-18-unified-review-queue-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:7d6f8383a67a69e999489da7cd1e729a23abfa6c0053b5608ef290bc4b3745de'
 ---
-
 # `cli-workflow-redesign` adr: `app review queue execution` | (**status:** `accepted`)
 
 ## CLI Backend Boundary

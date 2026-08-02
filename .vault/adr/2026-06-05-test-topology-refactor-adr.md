@@ -10,8 +10,8 @@ related:
   - "[[2026-06-04-module-test-coverage-research]]"
 supersedes:
   - '2026-04-17-pytest-markers-adr'
-modified: '2026-07-17'
-body_hash: 'sha256:a90fc9bbc6771dfb30b619e84d65a00754e045e05342b8dd81c4f61bee2d60d0'
+modified: '2026-08-02'
+body_hash: 'sha256:8012d6d099f1ee4b1915e0bc584df99d71be56a4afccca0861241ddba106c19e'
 ---
 # `test-topology-refactor` adr: `hexagonal tests folders with marker-complete metadata-free suites` | (**status:** `accepted`)
 
@@ -131,3 +131,23 @@ The final migration must leave pytest discovery, marker hooks, coverage omit rul
 
 - **Rule slug:** `test-modules-use-test-prefix`.
   **Rule:** Python test modules must use `test_*.py` filenames only; `_test_*.py` and `*_test.py` patterns are forbidden.
+
+## Amendment — marker retirement confirmed done at HEAD
+
+`## Considerations` names `fixture_tier_l3`, `workbook_parity`, `slow`, and
+`inventory` as process/runtime-cost markers that "must be retired unless a
+later ADR proves" otherwise. As of this stamp `pyproject.toml`'s
+`[tool.pytest.ini_options] markers = [...]` block carries none of the four;
+the registered set is the hexagonal vocabulary this ADR designed
+(`unit`, `integration`, `aeat_live`, the six `hex_*` layer markers) plus
+later additions (`docs`, `serial`, `perf`, `external_tool`, `os_keychain`,
+`resident_service`). This is NOT a supersession — no later ADR retires this
+decision, and none is needed: this ADR's own plan and execution track closed
+the retirement out. See `2026-06-05-test-topology-refactor-plan` and the 45
+Step records under `.vault/exec/2026-06-05-test-topology-refactor/`; the
+paired `2026-06-05-test-topology-refactor-code-review-audit`'s TTR-003
+finding confirms the marker migration directly ("docs tooling tests... still
+used retired pytest markers. Those tests now use the active `unit` plus
+`hex_core`/`hex_entrypoint` vocabulary."). This note exists only so a reader
+of the Considerations prose above does not read the retirement as still
+pending — the four legacy markers are gone, not merely proposed for removal.

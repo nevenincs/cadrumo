@@ -2,15 +2,36 @@
 tags:
   - "#adr"
   - "#calc-verification"
-date: "2026-04-21"
-modified: '2026-07-17'
-body_hash: 'sha256:0c674a97e57a100f81be70caf4afa098c7d5864385fb0a92f9cb769466980ceb'
+date: '2026-04-21'
 related:
   - "[[2026-04-21-calc-verification-research]]"
   - "[[2026-04-21-casilla-schema-completeness-adr]]"
+superseded_by: '2026-05-03-calculation-truth-registry-pending-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:bcec8e60fab0c0c3f4727470a71d4a207e4964b857fc8d4f7ae6dac6972ea2f6'
 ---
+# `calc-verification` adr: `classify-discrepancies-then-produce-kent-readable-verdict` | (**status:** `superseded`)
 
-# `calc-verification` adr: `classify-discrepancies-then-produce-kent-readable-verdict` | (**status:** `accepted`)
+> **Superseded by `2026-05-03-calculation-truth-registry-pending-adr`.** This
+> ADR's `verify_declaracion(draft, declaracion, ruleset: Ruleset | None)`
+> signature depended on the Python `Ruleset`/`Engine` formula authority; both
+> classes were deleted from the tree as part of the calculation-truth-registry
+> rebuild and no `Ruleset`/`Engine` symbol exists anywhere in `src/cadrumo`
+> today. The function name `verify_declaracion` survives at
+> `src/cadrumo/application/verification/_verify.py`, but its live signature is
+> `verify_declaracion(declaracion, *, binding_values=None,
+> registry_root=None) -> VerificationVerdict`, reconciling a parsed
+> declaración directly against a `RegistrySnapshot` via
+> `calculate_registry_snapshot` — not against a `ruleset` argument, and not via
+> `Engine.audit_against`. `DiscrepancyCause` and `VerificationVerdict` survive
+> as concepts. The module's own current docstring flags it as a "deliberately
+> unwired reference implementation" with real production citations
+> (`application.modelo._reconcile`, `_reconcile_casilla`) but no direct CLI
+> caller — the `aeat filing verify <draft-id>` / `aeat filing import
+> --from-declaracion` CLI wiring this ADR's §4 describes does not exist
+> (there is no `filing` CLI group today). Read
+> `2026-05-03-calculation-truth-registry-pending-adr` for the active
+> calculation authority.
 
 ## Problem Statement
 

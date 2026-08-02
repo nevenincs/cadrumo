@@ -1,17 +1,35 @@
 ---
 tags:
-  - '#adr'
-  - '#mutation-harness-fix'
+  - "#adr"
+  - "#mutation-harness-fix"
 date: '2026-04-29'
-modified: '2026-07-17'
-body_hash: 'sha256:335f00a4218b9f400a0e68d74376ddf05a90a188e84da5ea3f02d693f5829e8e'
 related:
-  - '[[2026-04-29-mutation-harness-fix-research]]'
-  - '[[2026-04-25-mutation-harness-extension-adr]]'
-  - '[[2026-04-25-mutation-harness-extension-research]]'
+  - "[[2026-04-29-mutation-harness-fix-research]]"
+  - "[[2026-04-25-mutation-harness-extension-adr]]"
+  - "[[2026-04-25-mutation-harness-extension-research]]"
+superseded_by: '2026-05-03-calculation-truth-registry-pending-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:262bf9dabaa62403dcca2f52ba92c86cb6531c86cdf59ab4f22817c4fca3c2af'
 ---
+# ADR — `mutation-harness-fix`: empirical kill-rate aggregator + M100 fixture coverage | (**status:** `superseded`)
 
-# ADR — `mutation-harness-fix`: empirical kill-rate aggregator + M100 fixture coverage | (**status:** `accepted`)
+> **Superseded by `2026-05-03-calculation-truth-registry-pending-adr`.** This
+> ADR hardened the kill-rate aggregator and `EXPECTED_COUNTS` catalogue of the
+> same Python mutation harness extended by
+> `2026-04-25-mutation-harness-extension-adr`
+> (`src/aeat/domain/formulas/_rulesets/`, `_mutators.py`,
+> `test_mutator_kill_rate.py`, `test_mutator_tautology_regression.py`, and the
+> M100 scalar/sub_op fixtures this ADR added). That authority was deleted in
+> its entirety on 2026-05-03 (commit `6138f058fd`, "delete legacy formula
+> rulesets" — Phase 5 Step 7 of the calculation-truth-registry rebuild, see
+> `2026-05-03-calculation-truth-registry-phase5-step7-exec`), superseded by
+> the TOML-first registry architecture. `ClampPositiveFormula`, the class
+> Decision D4 here generalises `_mutate_outer_sub_op` to descend through, does
+> not exist anywhere in the current tree. No successor mutation-harness
+> kill-rate gate has been rebuilt against the registry runtime as of this
+> stamp; the decisions below are retained for provenance only. Read
+> `2026-05-03-calculation-truth-registry-pending-adr` for the active
+> calculation authority.
 
 ## Status
 

@@ -1,17 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#cli-workflow-redesign'
+  - "#adr"
+  - "#cli-workflow-redesign"
 date: '2026-05-12'
-modified: '2026-07-17'
-body_hash: 'sha256:d662d5206e6c806ce78a2780a9bb7ff536fcfc54af4361ebfb7b4ece60869c2e'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-inventory-placement-research]]"
   - "[[2026-04-30-inventory-management-cli-design-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
+supersedes:
+  - '2026-04-30-inventory-management-cli-design-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:d662d5206e6c806ce78a2780a9bb7ff536fcfc54af4361ebfb7b4ece60869c2e'
 ---
-
 # `cli-workflow-redesign` adr: `inventory placement and execution` | (**status:** `accepted`)
 
 ## CLI Backend Boundary

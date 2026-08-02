@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-130-relation-regression'
 date: '2026-05-26'
-modified: '2026-07-17'
-body_hash: 'sha256:a37bdf644269a2f2baabc956da4209dfdee7ed4984a685eaaa7cb4daecc288c8'
+modified: '2026-08-02'
+body_hash: 'sha256:e85dbb8f46d37e996a90176e98eba5b22d44adda2efeeeb66734cea5e1b8ed46'
 related:
   - "[[2026-05-19-modelo-130-relation-regression-research]]"
   - "[[2026-05-26-modelo-130-relation-regression-audit]]"
@@ -546,3 +546,41 @@ The campaign continues to harden, not weaken. Acceptance
 criterion 8 from Amendment (B) extends: every P08 Step closed
 with a verification gate before the campaign is considered
 structurally complete.
+
+## Amendment — scope restated as observation-backed sources
+
+Amendment 2026-05-27 (A) narrowed Decision Z2's strict-rejection scope to
+bound casillas whose binding `source == "previous_filing"` only. At HEAD the
+shipped scope is broader than that sentence states: the rejection and the
+absent-by-design materialisation path in
+`src/cadrumo/domain/calculations/registry/_formula_initial_values.py` are keyed
+off a named constant,
+
+```python
+_OBSERVATION_BACKED_SLOT_SOURCES: frozenset[str] = frozenset({"previous_filing", "relation_prefill"})
+```
+
+covering both `BindingSourceKind.PREVIOUS_FILING` and
+`BindingSourceKind.RELATION_PREFILL`. This landed with the relation-canonical
+cross-modelo fold-in work (RelationPrefill enrollment, slot hygiene, and the
+registry gates in `relation-slot-bindings-declare-relation-source`) after this
+ADR's original P07 hardening: a `relation_prefill` slot carries the identical
+silent-zero hazard the M130 carry-forward case exposed — it legitimately
+blanks when no prior filing exists (absent-by-design), but a dead or
+malformed relation-target slot must not silently zero-fill either. The two
+observation-backed source kinds share one guard rather than two, because the
+hazard and its resolution (input smuggling rejected; absent-by-design
+materialised through an explicit constructor, never the bare `inputs`
+fallback) are identical for both.
+
+**Corrected scope statement**: the Decision Z2 rejection and the
+absent-by-design carve-out apply to bound casillas whose binding source is
+**observation-backed** (`previous_filing` or `relation_prefill`), not to
+`previous_filing` alone. Bound casillas with a non-observation-backed source
+(`profile`, `ledger_*`, invoice, withholding, etc.) continue to support the
+`inputs` projection fallback unchanged, per Amendment 2026-05-27 (A)'s
+original rationale — that part of the scope statement still holds. Only the
+"previous_filing only" wording is corrected; the underlying structural
+invariant ("a bound casilla either receives a value through its declared
+binding, or its absence is declared at the selector level") was always the
+broader claim and is what HEAD actually enforces across both source kinds.

@@ -1,19 +1,25 @@
 ---
 tags:
-  - '#adr'
-  - '#calculation-truth-registry'
+  - "#adr"
+  - "#calculation-truth-registry"
 date: '2026-05-03'
-modified: '2026-07-17'
-body_hash: 'sha256:ec06ff06b9425fe3f2bf04099642d40cf47bb10fc845db3d71a1490dc076f6c4'
 related:
-  - '[[2026-05-03-calculation-truth-inventory-research]]'
-  - '[[2026-05-03-external-tax-definition-engines-reference]]'
-  - '[[2026-04-21-modelo-100-renta-research]]'
-  - '[[2026-04-27-modelo-100-renta-full-calc-research]]'
-  - '[[2026-04-29-m100-per-ano-test-parity-research]]'
-  - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
+  - "[[2026-05-03-calculation-truth-inventory-research]]"
+  - "[[2026-05-03-external-tax-definition-engines-reference]]"
+  - "[[2026-04-21-modelo-100-renta-research]]"
+  - "[[2026-04-27-modelo-100-renta-full-calc-research]]"
+  - "[[2026-04-29-m100-per-ano-test-parity-research]]"
+  - "[[2026-05-05-modelo-100-renta-source-dependency-reference]]"
+supersedes:
+  - '2026-04-25-mutation-harness-extension-adr'
+  - '2026-04-29-mutation-harness-fix-adr'
+  - '2026-04-12-filing-draft-engine-adr'
+  - '2026-04-21-calc-verification-adr'
+  - '2026-04-17-schema-extraction-adr'
+  - '2026-04-20-pdf-import-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:ec06ff06b9425fe3f2bf04099642d40cf47bb10fc845db3d71a1490dc076f6c4'
 ---
-
 # `calculation-truth-registry` adr: `Central AEAT legal calculation registry` | (**status:** `accepted`)
 
 ## Review State

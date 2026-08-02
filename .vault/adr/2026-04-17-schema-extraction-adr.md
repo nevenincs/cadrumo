@@ -1,22 +1,41 @@
 ---
-name: schema-extraction-adr
-description: Architecture Decision Record for programmatic AEAT modelo schema extraction (PDF/HTML → typed pydantic v2 model), operator/aeat#9
-type: adr
 tags:
   - "#adr"
   - "#schema-extraction"
 date: '2026-04-17'
-modified: '2026-07-17'
-body_hash: 'sha256:0aaa499823ac4501a147a1400a3f15efdef6d77e70249efaa33ccb8414e50db8'
 related:
   - "[[2026-04-17-schema-extraction-research]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-13-modelo-inventory-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"
   - "[[2026-04-12-justificante-parser-adr]]"
+superseded_by: '2026-05-03-calculation-truth-registry-pending-adr'
+name: schema-extraction-adr
+description: Architecture Decision Record for programmatic AEAT modelo schema extraction (PDF/HTML → typed pydantic v2 model), operator/aeat#9
+type: adr
+modified: '2026-08-02'
+body_hash: 'sha256:3f6612f760bd6b47c3288a7977caf3e597722cf436001e10bfd0abb18ea1101f'
 ---
+# Architecture Decision Record: AEAT modelo schema extraction (#9) | (**status:** `superseded`)
 
-# Architecture Decision Record: AEAT modelo schema extraction (#9) | (**status:** `accepted`)
+> **Superseded by `2026-05-03-calculation-truth-registry-pending-adr`.** The
+> `cadrumo.domain.schema` extraction subpackage this ADR designed — the
+> `Extractor` Protocol, `BoeOrdenExtractor`, the `BOE_ORDEN_SOURCES` fetch
+> table, `fetch_boe_pdf`, and the schema-cache persistence layer — was deleted
+> in its entirety on 2026-05-04 in commit `a5b7559c10` ("delete modelo
+> metadata and schema extraction"), the Phase 5 Step 17 execution of the
+> calculation-truth-registry rebuild (see
+> `2026-05-03-calculation-truth-registry-phase5-step17-exec`; the exec record
+> itself is dated 2026-05-04). Grepping the current tree for
+> `BOE_ORDEN_SOURCES`, `BoeOrdenExtractor`, or `fetch_boe_pdf` returns zero
+> hits. The calc-truth-registry ADR's own architecture explicitly downgrades
+> this class of tooling to a non-authoritative review aid (Decision 9: "Keep
+> ingestion/extraction tools only as non-authoritative review aids") rather
+> than "a typed, versioned pipeline the rest of the codebase can trust" this
+> ADR's Context claims — the authority this ADR proposed building never
+> became the registry's source of truth. Read
+> `2026-05-03-calculation-truth-registry-pending-adr` for the active
+> calculation authority.
 
 ## Status
 

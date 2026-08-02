@@ -3,12 +3,32 @@ tags:
   - "#adr"
   - "#filing-draft-engine"
 date: '2026-04-12'
-modified: '2026-07-17'
-body_hash: 'sha256:cfaca469025d90e142f213162dc5aa2ca204931ac0244912f7ac00a66d06af6e'
 related:
   - "[[2026-04-12-filing-draft-engine-research]]"
+superseded_by: '2026-05-03-calculation-truth-registry-pending-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:463eae02b5f200287e7ee68f9249efcd27c2d736324353e528faf5c57edb0863'
 ---
-# ADR — Filing draft generation engine (#39) | (**status:** `accepted`)
+# ADR — Filing draft generation engine (#39) | (**status:** `superseded`)
+
+> **Superseded by `2026-05-03-calculation-truth-registry-pending-adr`.** The
+> per-modelo `FilingBuilder` ABC, its `_BUILDER_REGISTRY` dispatch keyed by
+> modelo string, the concrete `Modelo130Builder`, and the standalone
+> `FilingValidator` class this ADR designed were deleted in their entirety on
+> 2026-05-03 in commit `d2243330d5` ("delete legacy filing builders" —
+> `src/aeat/domain/filing/_builder.py`, `_builders/` including
+> `modelo_130.py`/`modelo_303.py`/`modelo_390.py`, and `_validator.py`), the
+> Phase 5 Step 6 execution of the calculation-truth-registry rebuild (see
+> `2026-05-03-calculation-truth-registry-phase5-step6-exec`). A single
+> registry-driven `build_draft()` function now resolves a `RegistrySnapshot`
+> directly by modelo string with no builder-class dispatch of any kind — there
+> is no successor `get_builder`/per-modelo-Builder architecture, only a
+> uniform function. The surrounding record types this ADR introduced
+> (`FilingDraft`, `FilingValueKind`, `validate_draft`, `iter_findings`) survive
+> today under later renames (`ModeloDraft`, `ModeloValueKind`, etc.) and are
+> not retired — only the Builder-ABC/registry-dispatch architecture in
+> §"Builder ABC" is. Read `2026-05-03-calculation-truth-registry-pending-adr`
+> for the active calculation authority.
 
 Date: 2026-04-12
 Status: Accepted

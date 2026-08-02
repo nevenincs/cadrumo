@@ -1,15 +1,30 @@
 ---
 tags:
-  - '#adr'
-  - '#mutation-harness-extension'
+  - "#adr"
+  - "#mutation-harness-extension"
 date: '2026-04-25'
-modified: '2026-07-17'
-body_hash: 'sha256:a3a3ca9a62c39b1aabb16b418d0f0729f2bff71e40335a51600a1c21d8f75508'
 related:
   - "[[2026-04-25-mutation-harness-extension-research]]"
+superseded_by: '2026-05-03-calculation-truth-registry-pending-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:676667f064c273dcdeaaa961bcbfedcae62ddf4f1eee685887e6c41981a649e0'
 ---
+# `mutation-harness-extension` adr: percent + brackets + scalar mutators | (**status:** `superseded`)
 
-# `mutation-harness-extension` adr: percent + brackets + scalar mutators | (**status:** `accepted`)
+> **Superseded by `2026-05-03-calculation-truth-registry-pending-adr`.** The
+> mutation harness this ADR extended lived entirely inside the Python
+> formula-ruleset authority (`src/aeat/domain/formulas/_rulesets/`, including
+> `_mutators.py`, `test_operand_swap_mutation.py`, and the per-class harness
+> modules this ADR added). That whole authority was deleted — not migrated —
+> on 2026-05-03 in commit `6138f058fd` ("delete legacy formula rulesets"),
+> the Phase 5 Step 7 execution of the calculation-truth-registry rebuild (see
+> `2026-05-03-calculation-truth-registry-phase5-step7-exec`), which replaced
+> the Python ruleset authority with the TOML-first registry this ADR's
+> successor establishes. No successor mutation harness exists against the
+> registry formula runtime as of this stamp; the decisions below describe a
+> harness that no longer exists in the tree and are retained for provenance
+> only. Read `2026-05-03-calculation-truth-registry-pending-adr` for the
+> active calculation authority.
 
 ## Problem Statement
 

@@ -2,15 +2,35 @@
 tags:
   - "#adr"
   - "#pdf-import"
-date: "2026-04-20"
-modified: '2026-07-17'
-body_hash: 'sha256:19c006a68cba7336ae6510291a3a346691a419eb119253ed3d5f10ff3e51bd0d'
+date: '2026-04-20'
 related:
   - "[[2026-04-20-pdf-import-research]]"
   - "[[2026-04-17-export-first-adr]]"
+superseded_by: '2026-05-03-calculation-truth-registry-pending-adr'
+modified: '2026-08-02'
+body_hash: 'sha256:842795879d117b7911ad820c4fff9a8809317bc3c048fb479006db11578b3639'
 ---
+# `pdf-import` adr: `reconstruct-filing-draft-from-justificante-pdf` | (**status:** `superseded`)
 
-# `pdf-import` adr: `reconstruct-filing-draft-from-justificante-pdf` | (**status:** `accepted`)
+> **Superseded by `2026-05-03-calculation-truth-registry-pending-adr`, partially
+> — read the amendment below before this ADR's Decision.** This ADR's design
+> assumes the `get_builder`/`FilingBuilder`/`_BUILDER_REGISTRY` per-modelo
+> builder-class architecture (§Considerations: "`get_builder` raises
+> `FilingBuilderError` for unregistered modelos"; §Implementation: "Every
+> registered builder (`Modelo130Builder`, `Modelo303Builder`,
+> `Modelo390Builder`)..."). That architecture was deleted in its entirety on
+> 2026-05-03 (commit `d2243330d5`, "delete legacy filing builders" — see the
+> supersession note on `2026-04-12-filing-draft-engine-adr`, the ADR that
+> introduced it) and replaced by a single registry-driven `build_draft()`
+> function with no builder-class dispatch and no "unregistered modelo" error
+> case. Unlike the mutation-harness and schema-extraction ADRs, this
+> decision's actual DELIVERABLE — the `import_filing_from_justificante`
+> reconstruction service — is not dead: it was adapted to call the new
+> `build_draft()` and survives today under renamed types (`FilingDraft` →
+> `ModeloDraft`, `FilingBuilderError` → `ModeloBuilderError`, `SubmittedFiling`
+> → `ModeloPresentado`). Read `2026-05-03-calculation-truth-registry-pending-adr`
+> for the active calculation authority, and the amendment at the foot of this
+> document for what of this ADR is retired vs. what survives unwired.
 
 ## Problem Statement
 
@@ -126,3 +146,55 @@ Error handling:
 - A new persisted `SubmittedFiling` with `status=SUBMITTED` is created *without* any AEAT network call, which is a deliberate re-use of the existing post-submission record shape — this record is the declared source of truth for "a filing that exists at AEAT" and tastes exactly like one we submitted ourselves (because Kent's earlier manual submission did).
 - Warning messaging is added but no behaviour is wired to block filing flows on it — Kent fills the casillas later.
 - No tests are skipped, no lint rules are suppressed, no authentication code is touched.
+
+## Amendment — retired architecture vs. surviving service, and CLI delivery status at HEAD
+
+Two independent corrections to this ADR, established separately:
+
+**1. The builder-dispatch architecture this ADR assumes is retired.** §Considerations
+and §Implementation rely on `get_builder` raising `FilingBuilderError` for an
+unregistered modelo, and on per-modelo `Modelo130Builder` /`Modelo303Builder`
+/`Modelo390Builder` instances materialising empty casillas. None of
+`get_builder`, `Modelo130Builder`, `Modelo303Builder`, `Modelo390Builder`, or
+`_BUILDER_REGISTRY` exist anywhere in `src/cadrumo` today — they were deleted
+on 2026-05-03 (commit `d2243330d5`) as part of the same calculation-truth-registry
+rebuild that superseded `2026-04-12-filing-draft-engine-adr`, the ADR that
+introduced that architecture. `ModeloBuilderError` still exists as an
+exception name, but its live meaning changed: `build_draft()` now raises it
+for a registry schema-version mismatch or strict-validation failure, not for
+"no builder registered for this modelo" — there is no "unregistered modelo"
+case left to raise on, because every modelo with a registry snapshot builds
+the same way.
+
+**2. The reconstruction service itself is not dead — it was adapted, not
+deleted.** `import_filing_from_justificante` and `JustificanteImportResult`
+exist today at `src/cadrumo/application/filing/_import.py`, exported from the
+`application.filing` package facade, exercised by a real-behaviour test suite
+(`application/filing/tests/test_import.py`), and calling the new
+`build_draft()` under the renamed types (`FilingDraft` → `ModeloDraft`,
+`SubmittedFiling` → `ModeloPresentado`). This is the project's terminology
+evolution carrying the decision forward, not a rewrite of it.
+
+**3. What did not ship, and is not merely renamed elsewhere, is the CLI verb**
+this ADR's Decision and Consequences describe: `aeat filing import
+--from-justificante <path>`. There is no `filing` command group in the current
+CLI at all (the root surface is `config` and `app` only, per
+`aeat-architecture-boundaries`), and grepping the full `src/cadrumo` tree for
+`import_filing_from_justificante` and `JustificanteImportResult` finds zero
+callers outside the function's own test module — the service has never been
+wired to any CLI command. The current production import path for filing
+history, `aeat app modelo filing-record import <work-unit-id> --evidence-kind
+--evidence-id` (backed by `import_external_filing_evidence`), is a distinct,
+non-overlapping mechanism: it attaches already-captured external evidence to a
+work unit by evidence id, and does not parse a justificante PDF. The
+`_import.py` module's own docstring already draws this line ("This is not the
+production external-evidence import path for current filing records.").
+
+**Net effect**: the builder-architecture premise this ADR was written against
+is genuinely retired (hence the supersession stamp above), but its actual
+deliverable survived that retirement by adapting to the new `build_draft()`
+— it is simply never invoked, because the CLI verb promised in the
+Consequences section was never wired. A reader who needs offline
+justificante-PDF import must either wire `import_filing_from_justificante` to
+a CLI command first, or use the evidence-id path above for a filing record
+that already has captured evidence.
