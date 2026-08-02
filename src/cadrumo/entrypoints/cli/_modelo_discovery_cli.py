@@ -269,21 +269,7 @@ def _register_describe_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
                 raise typer.BadParameter(deps.bare_period_error(modelo, period, fallback=message)) from exc
             raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
 
-        result = ModeloDescribeResult(
-            code=report.code,
-            title=report.title,
-            official_name=report.official_name,
-            tax_domain=report.tax_domain,
-            cadence=report.cadence,
-            revision=report.revision,
-            filing_year=report.filing_year,
-            period=report.period,
-            revision_ids=list(report.revision_ids),
-            periods=list(report.periods),
-            casilla_count=report.casilla_count,
-            binding_count=report.binding_count,
-            formula_count=report.formula_count,
-        )
+        result = ModeloDescribeResult.from_report(report)
         lines = [
             f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
             f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
