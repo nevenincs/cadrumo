@@ -145,6 +145,135 @@ def test_the_parse_layer_tolerates_a_malformed_neighbour_rule() -> None:
     assert environment_inventory.protection_rule_types({"name": "release"}) == ()
 
 
+def _write_workflow(workflows_dir: Path, filename: str, *, environment_yaml: str | None) -> None:
+    """Write a minimal real workflow file, optionally declaring one job's `environment:`."""
+    workflows_dir.mkdir(parents=True, exist_ok=True)
+    body = "on: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n"
+    if environment_yaml is not None:
+        body += f"    environment: {environment_yaml}\n"
+    (workflows_dir / filename).write_text(body, encoding="utf-8")
+
+
+def test_environments_referenced_by_workflows_reads_the_scalar_form(tmp_path: Path) -> None:
+    _write_workflow(tmp_path / ".github" / "workflows", "publish-release.yml", environment_yaml="release")
+    _write_workflow(tmp_path / ".github" / "workflows", "docs-publish.yml", environment_yaml="docs")
+
+    references = environment_inventory.environments_referenced_by_workflows(tmp_path)
+
+    assert references["release"] == (".github/workflows/publish-release.yml",)
+    assert references["docs"] == (".github/workflows/docs-publish.yml",)
+    assert "pypi-data-official" not in references
+
+
+def test_environments_referenced_by_workflows_reads_the_mapping_name_form(tmp_path: Path) -> None:
+    workflows_dir = tmp_path / ".github" / "workflows"
+    workflows_dir.mkdir(parents=True)
+    (workflows_dir / "deploy.yml").write_text(
+        "on: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n"
+        "    environment:\n      name: release\n      url: https://example.invalid\n",
+        encoding="utf-8",
+    )
+
+    references = environment_inventory.environments_referenced_by_workflows(tmp_path)
+
+    assert references["release"] == (".github/workflows/deploy.yml",)
+
+
+def test_environments_referenced_by_workflows_ignores_a_malformed_workflow_file(tmp_path: Path) -> None:
+    """A neighbour's YAML error must not blind the scan to every other workflow."""
+    workflows_dir = tmp_path / ".github" / "workflows"
+    workflows_dir.mkdir(parents=True)
+    (workflows_dir / "broken.yml").write_text("jobs: [unterminated\n", encoding="utf-8")
+    _write_workflow(workflows_dir, "publish-release.yml", environment_yaml="release")
+
+    references = environment_inventory.environments_referenced_by_workflows(tmp_path)
+
+    assert references["release"] == (".github/workflows/publish-release.yml",)
+
+
+def test_environments_referenced_by_workflows_returns_empty_without_a_workflows_dir(tmp_path: Path) -> None:
+    assert environment_inventory.environments_referenced_by_workflows(tmp_path) == {}
+
+
+def test_fetch_environments_marks_an_unreferenced_environment_as_orphaned(tmp_path: Path) -> None:
+    """The gate case: an environment naming an absent-workflow path is reported orphaned."""
+    workflows_dir = tmp_path / ".github" / "workflows"
+    _write_workflow(workflows_dir, "publish-release.yml", environment_yaml="release")
+    _write_workflow(workflows_dir, "docs-publish.yml", environment_yaml="docs")
+    # pypi-data-official's owning workflow (pypi-upload.yml) is absent: no
+    # workflow file in this fixture tree declares environment: pypi-data-official.
+    payload = json.dumps({"name": "pypi-data-official", "protection_rules": [{"type": "branch_policy"}]})
+    script = _write_probe_gh(tmp_path / "bin", payload=payload)
+
+    records = environment_inventory.fetch_environments(
+        ("pypi-data-official",),
+        gh_executable=str(script),
+        repo_root=tmp_path,
+    )
+
+    assert len(records) == 1
+    record = records[0]
+    assert record.readable is True
+    assert record.referenced_by == ()
+    assert record.is_orphaned is True
+
+    report = environment_inventory.render_report(records)
+    assert "OP-12 OUTSTANDING" in report
+    assert "ORPHANED" in report
+    assert "pypi-data-official" in report
+
+
+def test_fetch_environments_marks_a_referenced_environment_as_not_orphaned(tmp_path: Path) -> None:
+    workflows_dir = tmp_path / ".github" / "workflows"
+    _write_workflow(workflows_dir, "publish-release.yml", environment_yaml="release")
+    payload = json.dumps({"name": "release", "protection_rules": []})
+    script = _write_probe_gh(tmp_path / "bin", payload=payload)
+
+    records = environment_inventory.fetch_environments(
+        ("release",),
+        gh_executable=str(script),
+        repo_root=tmp_path,
+    )
+
+    assert records[0].referenced_by == (".github/workflows/publish-release.yml",)
+    assert records[0].is_orphaned is False
+    assert "OP-12" not in environment_inventory.render_report(records)
+
+
+def test_is_orphaned_is_unknown_without_a_repo_root_scan(tmp_path: Path) -> None:
+    """Omitting repo_root must report unknown, never guess from an unscanned tree."""
+    payload = json.dumps({"name": "pypi-data-official", "protection_rules": []})
+    script = _write_probe_gh(tmp_path / "bin", payload=payload)
+
+    records = environment_inventory.fetch_environments(("pypi-data-official",), gh_executable=str(script))
+
+    assert records[0].referenced_by is None
+    assert records[0].is_orphaned is None
+    assert "OP-12" not in environment_inventory.render_report(records)
+
+
+def test_is_orphaned_is_never_true_for_an_unreadable_environment(tmp_path: Path) -> None:
+    """An orphan claim requires confirming the environment still exists on the forge."""
+    script = _write_probe_gh(tmp_path / "bin", payload="gh: not found", exit_code=1)
+
+    records = environment_inventory.fetch_environments(
+        ("pypi-data-official",),
+        gh_executable=str(script),
+        repo_root=tmp_path,
+    )
+
+    assert records[0].readable is False
+    assert records[0].is_orphaned is None
+
+
+def test_default_inventoried_environments_covers_op9_and_every_orphan_candidate() -> None:
+    assert environment_inventory.DEFAULT_INVENTORIED_ENVIRONMENTS == (
+        "release",
+        "docs",
+        "pypi-data-official",
+    )
+
+
 def test_the_module_exposes_no_mutation_path() -> None:
     """The inventory reads. An auditor that could also write would be the risk it audits.
 

@@ -258,7 +258,7 @@ mechanical guard set alone — the all-destination version-identity authority, p
 and per-asset verification, the complete blocking evidence set, the leak sweep, the
 supersession preflight, and the reversible-first destination ordering.
 
-### Operator actions (OP-9)
+### Operator actions
 
 **OP-9 — remove the `required_reviewers` protection rule from BOTH the `release`
 and the `docs` environments.** This is a GitHub settings action; no agent can
@@ -281,17 +281,37 @@ the obligation standing.
 Settings → Environments → *(each of `release`, `docs`)* → Deployment protection
 rules → untick **Required reviewers** → Save.
 
-Verify afterwards, rather than assuming — a settings change leaves no commit, so
-nothing in the tree records whether it happened:
+**OP-12 — delete the orphaned `pypi-data-official` GitHub environment.** Its
+owning workflow, `pypi-upload.yml`, was deleted 2026-07-27 alongside the retired
+PyPI-publish lane; the environment itself survived as a live Trusted Publishing
+trust anchor naming a workflow that no longer exists — standing authority with no
+owner. Two of the three retired-lane environments (`pypi`,
+`pypi-data-manuals`) are already gone; this is the third.
+
+Settings → Environments → `pypi-data-official` → Delete environment.
+
+Then, separately, verify whether an index-side PyPI Trusted Publisher
+registration still names `pypi-data-official` for the retired `cadrumo-data-official`
+package under **Publishing** at <https://pypi.org/manage/account/publishing/>. That
+check is outside this repository and this forge — no agent can perform or confirm
+it — so it is carried forward as a standing operator item rather than assumed
+clear. If a registration survives, remove it there directly; nothing in this
+repository can do so.
+
+Verify both actions afterwards, rather than assuming — a settings change leaves no
+commit, so nothing in the tree records whether it happened:
 
 ```bash
 uv run --no-sync python -m dev.release.environment_inventory
 ```
 
-It reads the live environments and reports each one's rule set. It is read-only and
-carries no mutation path. An environment it cannot read is reported `UNKNOWN`, never
-as satisfied, and the command exits non-zero in that case so an unreachable forge is
-never mistaken for a discharged obligation.
+It reads the live `release`, `docs`, and `pypi-data-official` environments and
+reports each one's rule set, plus — for `pypi-data-official` — whether any live
+workflow in this tree still declares `environment: pypi-data-official`
+(`OP-12 OUTSTANDING` when none does). It is read-only and carries no mutation
+path. An environment it cannot read is reported `UNKNOWN`, never as satisfied,
+and the command exits non-zero in that case so an unreachable forge is never
+mistaken for a discharged obligation.
 
 ### Self-hosted runner fleet
 

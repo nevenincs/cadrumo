@@ -27,9 +27,23 @@ OP-9
     which refs may deploy and is not a human gate. Removing the environments
     along with the rule breaks OIDC publication outright.
 
+OP-12
+    The orphaned ``pypi-data-official`` environment is deleted. It is a live
+    Trusted Publishing trust anchor left behind by the retired ``pypi-upload.yml``
+    workflow, which no longer exists in this tree — standing authority with no
+    owner. This module detects the orphan class generically
+    (:attr:`EnvironmentRecord.is_orphaned`): an environment that still exists on the
+    forge but that NO live workflow in ``.github/workflows/`` declares
+    ``environment:`` for. That is the repository-verifiable half of "orphaned".
+    Whether a matching index-side PyPI Trusted Publisher registration still
+    exists is outside this repository and this forge — no agent can check or
+    clear it from here, and this module never claims to.
+
 See Also:
     :func:`protection_rule_types`
         The parse layer, over an already-fetched payload.
+    :func:`environments_referenced_by_workflows`
+        The repo-tree scan behind orphan detection.
     :func:`fetch_environments`
         The one subprocess boundary.
 """
@@ -43,7 +57,10 @@ import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Final
+
+import yaml
 
 _GH_TIMEOUT_SECONDS: Final[float] = 30.0
 _DEFAULT_REPO_SLUG: Final[str] = "nevenincs/cadrumo"
@@ -55,6 +72,22 @@ HUMAN_APPROVAL_RULE: Final[str] = "required_reviewers"
 #: Environments whose ``required_reviewers`` rule OP-9 removes. Both are OIDC
 #: trust anchors and both keep their ``branch_policy``.
 OP9_ENVIRONMENTS: Final[tuple[str, ...]] = ("release", "docs")
+
+#: Environments whose live-but-unreferenced status this module checks for the
+#: orphan class OP-12 names. ``pypi-data-official`` is the one measured orphan
+#: (its owning workflow, ``pypi-upload.yml``, was deleted 2026-07-27); a future
+#: retirement adds its environment name here rather than growing a bespoke check.
+ORPHAN_CANDIDATE_ENVIRONMENTS: Final[tuple[str, ...]] = ("pypi-data-official",)
+
+#: The full default inventory: OP-9's two environments plus every named orphan
+#: candidate. This is what a plain ``python -m dev.release.environment_inventory``
+#: reports on, matching the RELEASING.md verification instruction.
+DEFAULT_INVENTORIED_ENVIRONMENTS: Final[tuple[str, ...]] = (*OP9_ENVIRONMENTS, *ORPHAN_CANDIDATE_ENVIRONMENTS)
+
+
+def _repo_root() -> Path:
+    """Return the repository root two levels above this module."""
+    return Path(__file__).resolve().parents[2]
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,6 +105,11 @@ class EnvironmentRecord:
     name: str
     rule_types: tuple[str, ...] | None
     detail: str = ""
+    #: Live workflow paths that declare ``environment: <name>``, or ``None``
+    #: when the repo-tree scan was not run for this record (the three-way
+    #: distinction matters the same way ``rule_types`` does: "no workflow
+    #: references this" and "we never checked" are opposite facts).
+    referenced_by: tuple[str, ...] | None = None
 
     @property
     def readable(self) -> bool:
@@ -84,6 +122,19 @@ class EnvironmentRecord:
         if self.rule_types is None:
             return None
         return HUMAN_APPROVAL_RULE in self.rule_types
+
+    @property
+    def is_orphaned(self) -> bool | None:
+        """Whether this is a live forge environment no workflow in the tree claims.
+
+        ``None`` when unknown: either the environment could not be read from
+        the forge, or the repo-tree reference scan was not performed for this
+        record. Never ``True`` for an unreadable environment — an orphan claim
+        requires confirming the environment still exists.
+        """
+        if not self.readable or self.referenced_by is None:
+            return None
+        return len(self.referenced_by) == 0
 
 
 def protection_rule_types(payload: Mapping[str, Any]) -> tuple[str, ...]:
@@ -105,11 +156,61 @@ def protection_rule_types(payload: Mapping[str, Any]) -> tuple[str, ...]:
     return tuple(types)
 
 
+def _workflow_files(repo_root: Path) -> tuple[Path, ...]:
+    """Return every ``.github/workflows/*.yml`` file under ``repo_root``, sorted."""
+    workflows_dir = repo_root / ".github" / "workflows"
+    if not workflows_dir.is_dir():
+        return ()
+    return tuple(sorted(workflows_dir.glob("*.yml")))
+
+
+def environments_referenced_by_workflows(repo_root: Path) -> Mapping[str, tuple[str, ...]]:
+    """Return environment name -> the live workflow paths that deploy to it.
+
+    Scans every ``.github/workflows/*.yml`` file for a job-level ``environment:``
+    key: the bare scalar-name form this repo uses (``environment: release``) and,
+    defensively, the ``{name, url}`` mapping form. An environment name absent
+    from this mapping's keys has no live workflow claiming it as a deployment
+    target — that absence is the repository-verifiable half of "orphaned"
+    (:attr:`EnvironmentRecord.is_orphaned`). The external half — whether a
+    matching index-side Trusted Publisher registration still names a workflow —
+    lives outside this repository and this forge, and is never claimed here.
+
+    A malformed workflow file is skipped rather than raised: a neighbour's YAML
+    error must not blind this scan to every other workflow's declarations.
+    """
+    references: dict[str, list[str]] = {}
+    for workflow_path in _workflow_files(repo_root):
+        try:
+            document = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+        except (yaml.YAMLError, UnicodeDecodeError):
+            continue
+        if not isinstance(document, Mapping):
+            continue
+        jobs = document.get("jobs")
+        if not isinstance(jobs, Mapping):
+            continue
+        relative = workflow_path.relative_to(repo_root).as_posix()
+        for job in jobs.values():
+            if not isinstance(job, Mapping):
+                continue
+            environment = job.get("environment")
+            if isinstance(environment, str):
+                name = environment
+            elif isinstance(environment, Mapping) and isinstance(environment.get("name"), str):
+                name = environment["name"]
+            else:
+                continue
+            references.setdefault(name, []).append(relative)
+    return {name: tuple(sorted(set(paths))) for name, paths in references.items()}
+
+
 def fetch_environments(
     names: Sequence[str] = OP9_ENVIRONMENTS,
     *,
     repo_slug: str = _DEFAULT_REPO_SLUG,
     gh_executable: str | None = None,
+    repo_root: Path | None = None,
 ) -> tuple[EnvironmentRecord, ...]:
     """Read each named environment from the forge, one GET apiece.
 
@@ -120,10 +221,19 @@ def fetch_environments(
     Every failure mode -- ``gh`` absent, a non-zero exit, a timeout, non-JSON
     output -- yields an UNREADABLE record carrying the reason, never a record
     that happens to look rule-free.
+
+    ``repo_root`` opts a caller into orphan detection: when supplied, every
+    successfully-read record's ``referenced_by`` is populated from
+    :func:`environments_referenced_by_workflows` scanned at that root. Omitted
+    (the default), every record's ``referenced_by`` stays ``None`` and
+    :attr:`EnvironmentRecord.is_orphaned` reports unknown rather than guessing
+    from an unscanned tree.
     """
     resolved = gh_executable if gh_executable is not None else shutil.which("gh")
     if resolved is None:
         return tuple(EnvironmentRecord(name, None, "gh unavailable: not found on PATH") for name in names)
+
+    references = environments_referenced_by_workflows(repo_root) if repo_root is not None else None
 
     records: list[EnvironmentRecord] = []
     for name in names:
@@ -150,7 +260,8 @@ def fetch_environments(
         if not isinstance(payload, Mapping):
             records.append(EnvironmentRecord(name, None, "could not be read: unexpected payload shape"))
             continue
-        records.append(EnvironmentRecord(name, protection_rule_types(payload)))
+        referenced_by = references.get(name, ()) if references is not None else None
+        records.append(EnvironmentRecord(name, protection_rule_types(payload), referenced_by=referenced_by))
     return tuple(records)
 
 
@@ -162,13 +273,34 @@ def render_report(records: Sequence[EnvironmentRecord]) -> str:
             lines.append(f"{record.name}: UNKNOWN - {record.detail}")
             continue
         rules = ", ".join(record.rule_types or ()) or "none"
-        if record.carries_human_approval_gate:
-            lines.append(
-                f"{record.name}: OP-9 OUTSTANDING - carries {HUMAN_APPROVAL_RULE} (rules: {rules}). "
-                f"Remove that rule only. Keep the environment and its branch_policy."
-            )
+        if record.name in OP9_ENVIRONMENTS:
+            if record.carries_human_approval_gate:
+                lines.append(
+                    f"{record.name}: OP-9 OUTSTANDING - carries {HUMAN_APPROVAL_RULE} (rules: {rules}). "
+                    f"Remove that rule only. Keep the environment and its branch_policy."
+                )
+            else:
+                lines.append(f"{record.name}: OP-9 satisfied - no {HUMAN_APPROVAL_RULE} rule (rules: {rules}).")
         else:
-            lines.append(f"{record.name}: OP-9 satisfied - no {HUMAN_APPROVAL_RULE} rule (rules: {rules}).")
+            lines.append(f"{record.name}: rules: {rules}.")
+        if record.is_orphaned:
+            lines.append(
+                f"{record.name}: OP-12 OUTSTANDING - ORPHANED, no live workflow declares "
+                f"environment: {record.name}. Delete this environment (Settings -> Environments -> "
+                f"{record.name} -> Delete environment). Then verify separately whether an index-side "
+                "PyPI Trusted Publisher registration still names this environment; that check is "
+                "outside this repository and this forge."
+            )
+        elif record.is_orphaned is False and record.name in ORPHAN_CANDIDATE_ENVIRONMENTS:
+            # Still readable AND referenced: this environment is not (or no
+            # longer) orphaned, which contradicts why it is on the orphan
+            # candidate list. Surfaced rather than silenced, because a
+            # re-referenced "orphan" is exactly the kind of drift this probe
+            # exists to make visible.
+            lines.append(
+                f"{record.name}: not orphaned - referenced by live workflow(s): "
+                f"{', '.join(record.referenced_by or ())}. OP-12 may need re-evaluation.",
+            )
     return "\n".join(lines)
 
 
@@ -186,8 +318,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", dest="as_json")
     args = parser.parse_args(argv)
 
-    names = tuple(args.environments) if args.environments else OP9_ENVIRONMENTS
-    records = fetch_environments(names, repo_slug=args.repository)
+    names = tuple(args.environments) if args.environments else DEFAULT_INVENTORIED_ENVIRONMENTS
+    records = fetch_environments(names, repo_slug=args.repository, repo_root=_repo_root())
 
     if args.as_json:
         print(
@@ -198,6 +330,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                         "rule_types": list(r.rule_types) if r.rule_types is not None else None,
                         "readable": r.readable,
                         "detail": r.detail,
+                        "referenced_by": list(r.referenced_by) if r.referenced_by is not None else None,
+                        "is_orphaned": r.is_orphaned,
                     }
                     for r in records
                 ],
