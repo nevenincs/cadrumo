@@ -48,7 +48,12 @@ def _populated_manifest(bucket_id: str) -> BucketManifest:
         last_unlocked_at=_POPULATED_TIMESTAMP,
         kdf_params=ManifestKdfParams(
             algorithm="argon2id",
-            version=2,
+            # 19 is Argon2 v1.3, the only version the substrate derives under.
+            # The non-default population discipline this fixture follows still
+            # holds on every cost axis below; the version axis has exactly one
+            # legal value, and the 2 that used to sit here was a schema version
+            # in an Argon2 version's slot.
+            version=19,
             memory_cost=65536,
             time_cost=3,
             parallelism=4,

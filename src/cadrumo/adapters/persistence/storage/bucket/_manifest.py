@@ -11,43 +11,65 @@ travel through the separate master-key surface.
 The :class:`ManifestKdfParams` nested model carried here is the
 manifest-side shape (algorithm tag, parameter version, the four
 Argon2id cost parameters, salt). The canonical OWASP-pinned
-constructor and the parameter-window validators live alongside it
-under ``master_key/_kdf_params.py``; manifest I/O wires the two
-together.
+constructor lives under ``master_key/_kdf_params.py``; the parameter
+window BOTH records validate against lives in ``_kdf_bounds.py``, in
+the package they share, because this package cannot import the
+master-key package without closing an import cycle -- which is how the
+window came to be written twice, with different numbers.
 """
 
 from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Final, Literal
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.identity import BucketId
 from .....core.time import validate_utc_aware
 from .....domain.user_profile import UserProfileStatus
+from .._kdf_bounds import (
+    MAX_MEMORY_COST_KIB,
+    MAX_PARALLELISM,
+    MAX_TIME_COST,
+    MIN_MEMORY_COST_KIB,
+    MIN_PARALLELISM,
+    MIN_TIME_COST,
+    Argon2Version,
+    KdfOutputLength,
+)
 from .._kdf_salt import decode_kdf_salt, encode_kdf_salt, require_kdf_salt_length
 
 
 class ManifestKdfParams(BaseModel):
     """Argon2id parameters and salt as carried in the bucket manifest.
 
-    Strict pydantic v2 record. The canonical OWASP-baseline constructor
-    is declared in :mod:`adapters.persistence.storage.master_key._kdf_params`;
-    this manifest-side record holds whatever parameters the bucket was
-    enrolled under so a future cost-bump can be non-breaking.
+    Strict pydantic v2 record holding whatever parameters the bucket was
+    enrolled under, so a future cost-bump can be non-breaking. "Whatever
+    parameters" means anywhere inside the one :mod:`.._kdf_bounds` window --
+    the same window the canonical enrollment record
+    :class:`~..master_key._kdf_params.KdfParams` accepts, read from the same
+    constants rather than restated here.
+
+    It previously declared only ``ge=1`` lower bounds and a free-form
+    ``algorithm``, so this record accepted an 8 KiB single-iteration parameter
+    set, a non-Argon2id algorithm name, and a 16-byte output that enrollment
+    refuses outright -- while the enrollment record's module documented that a
+    tampered manifest could not drive the KDF into a weaker regime at unlock.
+    Only one of the two could be right about the same numbers.
     """
 
     model_config = _STRICT_FROZEN
 
-    algorithm: str = Field(min_length=1)
-    version: int = Field(ge=1)
-    memory_cost: int = Field(ge=1)
-    time_cost: int = Field(ge=1)
-    parallelism: int = Field(ge=1)
+    algorithm: Literal["argon2id"]
+    version: Argon2Version
+    memory_cost: int = Field(ge=MIN_MEMORY_COST_KIB, le=MAX_MEMORY_COST_KIB)
+    time_cost: int = Field(ge=MIN_TIME_COST, le=MAX_TIME_COST)
+    parallelism: int = Field(ge=MIN_PARALLELISM, le=MAX_PARALLELISM)
     salt: bytes
-    output_length: int = Field(ge=16)
+    output_length: KdfOutputLength
 
     @field_validator("salt")
     @classmethod
@@ -99,7 +121,7 @@ class BucketManifest(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: Annotated[str, Field(min_length=1)]
+    bucket_id: BucketId
     label: str
     created_at: datetime
     last_unlocked_at: datetime | None
