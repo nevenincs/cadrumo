@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:861f1ca25158d043b88df1cbc6d36b171401fb470e0c55aaee2b0bb23ea866cd'
+body_hash: 'sha256:5b3b728ce02eef5361c87e90bebd2b8dce1f8c610f72b3bf913b796b95aee875'
 related: []
 ---
 
@@ -205,3 +205,52 @@ Do not reimplement the scan-verification fold held uncommitted at the session
 limit. It is written, verified, and extends the landed load-side guard; three
 findings across two agents are held behind it. A second implementation would be
 the duplication this campaign exists to remove.
+
+### Correction to the dead-surface recommendation, recorded on later evidence
+
+The three dead surfaces above were identified on a single evidence pattern.
+When each was ruled on individually with a positive control, that pattern held
+for two and misfired on one.
+
+The related-party materializer is not a dead surface. Its premise was that the
+value type is decimal, so the text fields it claims to materialise cannot be
+represented. At the current tree the value type carries text at all three
+layers: the producer edit model, the row-cell protocol, and the domain
+authority whose docstring states the split deliberately as text for the
+identifier and coded fields and decimal for the amount. The assembler routes
+text and money through separate coercions. The claimed capability is present
+and acting on the original finding would have deleted working code. Whether
+the premise was ever true could not be established: a history search on both
+type spellings returns only a package-root rename that rewrote the file
+wholesale and cannot discriminate.
+
+The profile listing method is confirmed to have no production callers, and its
+contract defect is stronger than first stated but different in kind. The claim
+that its test asserted a shape the storage contract forbids was not
+confirmable, because clearing a fact stores an absent value and no validator
+rejecting a whitespace-only value was found. The provable defect is a union
+mismatch: the signature accepts a text-only mapping while the storage contract
+admits text, boolean, integer, decimal, date, or absent, and the method calls a
+text-only operation on the value. Four of five contract-legal types are
+rejected. The recommendation to split the method from its test stands, with one
+correction: only the single test bound to the dead method retires with it. The
+module that contains it pins a cross-surface presence predicate that is live and
+exists because three surfaces once disagreed.
+
+The profile duplication service method is confirmed absent, but the phrase
+already deleted invites a wrong inference. The operator-facing duplicate verb is
+live, with tests, an envelope, help text, a documented sequence, and four locale
+catalogues, and it routes through profile registration rather than any service
+method. Deleting the residue does not drop a guard: a removed source already
+fails to resolve because tombstoned profiles are excluded by default, so
+behaviour is preserved and only the refusal message degrades. The residue is a
+type-forbidden branch, its message constant, four locale keys, and a package
+docstring naming two operations that do not exist.
+
+One sequencing constraint applies to that removal. The locale key's only code
+reference is inside the unreachable branch, so deleting the branch orphans the
+key in every catalogue and the locale drift gate fails until the key is retired.
+The branch deletion and the key retirement must land in the same change, with
+the key removed through the locale command rather than by editing the catalogue
+files.
+
