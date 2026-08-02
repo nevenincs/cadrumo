@@ -1,4 +1,13 @@
-"""Remote-read guard helpers for the declarations register walker."""
+"""Remote-read guard and CSV-extraction helpers for the declarations fetch adapter.
+
+The read guards (``assert_read_http``, ``assert_read_browser_action``) are
+consumed only by ``_declarations_fetch.py``, which delegates to them for its
+own ``_assert_read_http`` / ``_assert_read_browser_action`` wrappers.
+``_walker.py`` — a separate declarations-register surface — declares its own
+non-delegating read guards and never imports from this module.
+``extract_csv_from_url`` is shared more widely, by ``_declarations.py`` and
+``_parse.py`` as well.
+"""
 
 from __future__ import annotations
 
