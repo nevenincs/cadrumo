@@ -32,6 +32,8 @@ See Also:
 
 from __future__ import annotations
 
+import contextvars
+import threading
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -62,9 +64,14 @@ from .._review_package import build_review_package
 from .._review_package_recipient_encryption import (
     RecipientDecryptionError,
     RecipientEncryptionError,
+    RecipientEncryptionKeypair,
     RecipientPackageExpiredError,
+    _recipient_encryption_key_object_key,
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,
+    ensure_recipient_encryption_keypair,
+    load_recipient_encryption_keypair,
+    recipient_encryption_public_key,
 )
 from .._review_package_recipient_registry import (
     RecipientFingerprintRegistryRepository,
@@ -562,12 +569,6 @@ def test_envelope_json_round_trip_preserves_ciphertext_bytes(tmp_path: Path) -> 
 
 def test_ensure_recipient_encryption_keypair_mints_once_and_reuses(tmp_path: Path) -> None:
     """``ensure_recipient_encryption_keypair`` mirrors the signing keypair's idempotent-reuse contract."""
-    from .._review_package_recipient_encryption import (
-        ensure_recipient_encryption_keypair,
-        load_recipient_encryption_keypair,
-        recipient_encryption_public_key,
-    )
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-mint") as profile:
         minted = ensure_recipient_encryption_keypair(bucket_id="recip-enc-keypair-mint", repository=profile.repository)
         reused = ensure_recipient_encryption_keypair(bucket_id="recip-enc-keypair-mint", repository=profile.repository)
@@ -587,10 +588,7 @@ def test_ensure_recipient_encryption_keypair_mints_once_and_reuses(tmp_path: Pat
 
 
 def test_load_recipient_encryption_keypair_refuses_before_mint(tmp_path: Path) -> None:
-    from .._review_package_recipient_encryption import (
-        RecipientEncryptionKeyNotFoundError,
-        load_recipient_encryption_keypair,
-    )
+    from .._review_package_recipient_encryption import RecipientEncryptionKeyNotFoundError
 
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-unminted") as profile,
@@ -610,8 +608,6 @@ def test_recipient_encryption_key_is_stored_only_as_ciphertext_at_rest(tmp_path:
     ciphertext directly (bypassing the repository's decrypt step) and confirm
     the plaintext private-key hex does NOT appear in it.
     """
-    from .._review_package_recipient_encryption import ensure_recipient_encryption_keypair
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="recip-enc-keypair-custody") as profile:
         keypair = ensure_recipient_encryption_keypair(
             bucket_id="recip-enc-keypair-custody",
@@ -628,6 +624,120 @@ def test_recipient_encryption_key_is_stored_only_as_ciphertext_at_rest(tmp_path:
 
         assert keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes
         assert bytes.fromhex(keypair.private_key_hex) not in ciphertext_bytes
+
+
+@pytest.mark.parametrize(
+    "stored_bucket_id",
+    (
+        pytest.param("recip-enc-keypair-foreign", id="foreign"),
+        pytest.param(" recip-enc-keypair-owner ", id="whitespace"),
+    ),
+)
+def test_recipient_encryption_keypair_refuses_foreign_or_whitespace_payload_bucket(
+    tmp_path: Path,
+    stored_bucket_id: str,
+) -> None:
+    """A real encrypted row cannot claim a different or ambiguous bucket identity."""
+    target_bucket_id = "recip-enc-keypair-owner"
+    private_key = X25519PrivateKey.generate()
+    misplaced = RecipientEncryptionKeypair(
+        bucket_id=stored_bucket_id,
+        private_key_hex=private_key.private_bytes_raw().hex(),
+        public_key_hex=private_key.public_key().public_bytes_raw().hex(),
+        created_at=_NOW,
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=target_bucket_id) as profile:
+        object_key = _recipient_encryption_key_object_key(target_bucket_id)
+        misplaced_payload = misplaced.model_dump_json().encode("utf-8")
+        profile.repository.save(
+            namespace=_ENCRYPTION_KEY_NAMESPACE.namespace,
+            object_key=object_key,
+            classification=_ENCRYPTION_KEY_NAMESPACE.sensitivity,
+            schema_version=_ENCRYPTION_KEY_NAMESPACE.schema_version,
+            written_at=_NOW,
+            payload=misplaced_payload,
+            write_provenance="test.review_package_recipient_encryption.foreign_payload",
+        )
+
+        with pytest.raises(RecipientEncryptionError, match="does not belong"):
+            load_recipient_encryption_keypair(bucket_id=target_bucket_id, repository=profile.repository)
+        with pytest.raises(RecipientEncryptionError, match="does not belong"):
+            ensure_recipient_encryption_keypair(bucket_id=target_bucket_id, repository=profile.repository)
+
+        unchanged = profile.repository.load(
+            _ENCRYPTION_KEY_NAMESPACE.namespace,
+            object_key,
+            expected_class=_ENCRYPTION_KEY_NAMESPACE.sensitivity,
+            max_supported_version=_ENCRYPTION_KEY_NAMESPACE.schema_version,
+        )
+        assert unchanged is not None
+        assert unchanged.payload == misplaced_payload
+
+
+def test_concurrent_recipient_encryption_keypair_mint_reuses_one_encrypted_key_and_round_trips(
+    tmp_path: Path,
+) -> None:
+    """Concurrent first use returns one persisted X25519 keypair, which decrypts a real package."""
+    bucket_id = "recip-enc-keypair-concurrent"
+    worker_count = 12
+    gate = threading.Barrier(worker_count)
+    result_lock = threading.Lock()
+    minted: list[RecipientEncryptionKeypair] = []
+    errors: list[str] = []
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+
+        def worker() -> None:
+            try:
+                gate.wait(timeout=60)
+                keypair = ensure_recipient_encryption_keypair(
+                    bucket_id=bucket_id,
+                    repository=profile.repository,
+                    generated_at=_NOW,
+                )
+                with result_lock:
+                    minted.append(keypair)
+            except Exception as exc:  # surface a real worker failure to the assertion below
+                with result_lock:
+                    errors.append(f"{type(exc).__name__}: {exc}")
+
+        threads = [threading.Thread(target=contextvars.copy_context().run, args=(worker,)) for _ in range(worker_count)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=60)
+
+        assert not [thread for thread in threads if thread.is_alive()], "keypair mint workers deadlocked"
+        assert errors == [], f"concurrent keypair mint failures: {errors}"
+        assert len(minted) == worker_count
+
+        loaded = load_recipient_encryption_keypair(bucket_id=bucket_id, repository=profile.repository)
+        assert {keypair.private_key_hex for keypair in minted} == {loaded.private_key_hex}
+        assert {keypair.public_key_hex for keypair in minted} == {loaded.public_key_hex}
+
+        from sqlalchemy import func, select
+
+        with session_scope(profile.repository._engine) as session:
+            persisted_count = session.execute(
+                select(func.count())
+                .select_from(SecureObjectRow)
+                .where(SecureObjectRow.namespace == _ENCRYPTION_KEY_NAMESPACE.namespace),
+            ).scalar_one()
+        assert persisted_count == 1
+
+        package_bytes = _build_package_bytes(tmp_path, bucket_id="recip-enc-keypair-concurrent-package")
+        envelope = encrypt_review_package_for_recipient(
+            package_bytes,
+            recipient_public_key_hex=loaded.public_key_hex,
+            issued_at=_NOW,
+        )
+        recovered = decrypt_review_package_for_recipient(
+            envelope,
+            recipient_private_key=loaded.private_key(),
+            now=_NOW,
+        )
+        assert recovered.package_bytes == package_bytes
 
 
 __all__: list[str] = []
