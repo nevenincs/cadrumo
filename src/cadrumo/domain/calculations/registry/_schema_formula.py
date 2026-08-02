@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from ._errors import RegistryValidationError
+from ._formula_operator_contracts import require_formula_operator_arity
 from ._ids import BindingId, CasillaId, ParameterId, RelationId
 from ._schema_base import DateAxis, FormulaOperator, LegalRefs, RegistryModel, SourceCitation, SourceRefs
 from ._schema_scalars import DecimalValue
@@ -103,8 +104,7 @@ class FormulaExpression(RegistryModel):
             return self
         if sum(populated_leaves):
             raise RegistryValidationError("formula operator must not declare leaf sources")
-        if not self.args:
-            raise RegistryValidationError("formula operator must declare args")
+        require_formula_operator_arity(self.op, len(self.args))
         return self
 
 

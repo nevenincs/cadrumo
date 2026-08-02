@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING
 from ....core.money import round_to_cents as _round_to_cents
 from ._casilla_membership import undeclared_casilla_ids
 from ._errors import RegistrySnapshotError, RegistryValidationError
+from ._formula_operator_contracts import require_formula_operator_arity
 from ._ids import CasillaId, validated_casilla_id
 from ._schema import DatedValue, ModeloRevision, ParameterDefinition
 from ._schema_rounding import RegistryRoundingCode
@@ -114,6 +115,7 @@ def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
     consumed by
     :func:`domain.calculations.registry._formula_runtime.calculate_registry_snapshot`.
     """
+    require_formula_operator_arity(op, len(args))
     if op in {"add", "sum", "previous_period_sum"}:
         if op == "previous_period_sum":
             _require_non_empty(op, args)
