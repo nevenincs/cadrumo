@@ -42,7 +42,7 @@ from ...domain.transactions import (
     TransactionLifecycleLineageEntry,
     TransactionValidationError,
 )
-from ..export import ExportSerializationFormat
+from ..export import ExportSerializationFormat, verify_export_metadata
 from ..review import LedgerReviewStatus
 
 _TRANSFER_ALLOWED_STATES = frozenset(
@@ -894,3 +894,33 @@ class LedgerExportResult(BaseModel):
     rows: tuple[LedgerExportRow, ...]
     payload: bytes
     bucket_event_ids: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def _metadata_describes_the_payload(self) -> Self:
+        """Refuse a result whose metadata contradicts the bytes it carries.
+
+        These seven fields are redeclared here independently of
+        :class:`~application.export.TabularExportResult`, which produces them,
+        so this copy could disagree with its own payload even when the
+        producer's did not. The export action anchors ``row_count``,
+        ``byte_size`` and ``sha256`` into a durable
+        ``LEDGER_TRANSACTION_EXPORTED`` bucket event, where a false value
+        outlives the payload that would disprove it.
+
+        Verified through the export package's one
+        :func:`~application.export.verify_export_metadata` contract rather
+        than a second local re-derivation.
+
+        Raises:
+            ExportFieldError: A metadata value disagrees with the payload.
+        """
+        verify_export_metadata(
+            payload=self.payload,
+            export_format=self.export_format,
+            byte_size=self.byte_size,
+            sha256=self.sha256,
+            media_type=self.media_type,
+            filename_extension=self.filename_extension,
+            row_count=self.row_count,
+        )
+        return self
