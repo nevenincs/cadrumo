@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -362,6 +363,88 @@ class TestSecureStorage:
             "observation_bucket": _BUCKET_B_ID,
             "repository_bucket": secure_engine.bucket_id,
         }
+
+
+class TestObservationIdentityAndInstantContracts:
+    """``observation_id`` is a content digest and both instants are UTC-aware.
+
+    The identity reaches the secure-object key, the ``load`` comparison, and
+    the ``show`` projection, so a 64-character non-digest would be persisted
+    as if it were a content address. The instants order encrypted history and
+    ``checked_at`` feeds the content address itself.
+    """
+
+    @staticmethod
+    def _fields(**overrides: object) -> dict[str, object]:
+        base: dict[str, object] = {
+            "observation_id": "a" * 64,
+            "bucket_id": _BUCKET_A_ID,
+            "surface": VerifySurface.NIF_IVA,
+            "nif": "DE123456789",
+            "verdict": "valid",
+            "checked_at": datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
+            "persisted_at": datetime(2025, 3, 15, 11, 0, tzinfo=UTC),
+        }
+        base.update(overrides)
+        return base
+
+    def test_canonical_lowercase_hex_digest_is_accepted(self) -> None:
+        observation = VerifyObservation(**self._fields())
+
+        assert observation.observation_id == "a" * 64
+        assert observation.checked_at.utcoffset() == timedelta(0)
+        assert observation.persisted_at.utcoffset() == timedelta(0)
+
+    @pytest.mark.parametrize(
+        "malformed",
+        ["z" * 64, "A" * 64, "0123456789ABCDEF" * 4, "a" * 63, "a" * 65, "-" * 64],
+        ids=["non-hex", "uppercase", "uppercase-hex", "short", "long", "punctuation"],
+    )
+    def test_non_digest_observation_id_is_refused(self, malformed: str) -> None:
+        with pytest.raises(ValidationError):
+            VerifyObservation(**self._fields(observation_id=malformed))
+
+    @pytest.mark.parametrize("field", ["checked_at", "persisted_at"])
+    @pytest.mark.parametrize(
+        "instant",
+        [
+            datetime(2025, 3, 15, 10, 0),  # noqa: DTZ001 -- the naive shape under test
+            datetime(2025, 3, 15, 10, 0, tzinfo=timezone(timedelta(hours=1))),
+        ],
+        ids=["naive", "offset-plus-one"],
+    )
+    def test_naive_or_non_utc_instant_is_refused(self, field: str, instant: datetime) -> None:
+        with pytest.raises(ValidationError):
+            VerifyObservation(**self._fields(**{field: instant}))
+
+    def test_mixed_awareness_pair_is_refused(self) -> None:
+        with pytest.raises(ValidationError):
+            VerifyObservation(
+                **self._fields(persisted_at=datetime(2025, 3, 15, 11, 0)),  # noqa: DTZ001 -- naive half of the pair
+            )
+
+    def test_derived_identity_round_trips_through_the_encrypted_store(
+        self,
+        secure_engine: TestRuntimeProfile,
+    ) -> None:
+        svc = _service(secure_engine)
+        recorded = svc.record(
+            bucket_id=secure_engine.bucket_id,
+            surface=VerifySurface.TGVI,
+            nif="ESB12345674",
+            verdict="valid",
+            checked_at=datetime(2025, 3, 15, 10, 0, tzinfo=UTC),
+        )
+
+        repository = VerifyObservationRepository(bucket_id=secure_engine.bucket_id, objects=secure_engine.repository)
+        loaded = repository.load(recorded.observation_id)
+
+        assert loaded is not None
+        assert loaded == recorded
+        assert loaded.observation_id == loaded.observation_id.lower()
+        assert len(loaded.observation_id) == 64
+        assert loaded.checked_at.utcoffset() == timedelta(0)
+        assert loaded.persisted_at.utcoffset() == timedelta(0)
 
 
 class TestNoWriteSurface:
