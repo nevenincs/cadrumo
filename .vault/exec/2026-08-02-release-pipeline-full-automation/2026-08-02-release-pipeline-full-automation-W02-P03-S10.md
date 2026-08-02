@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce1c1107a6d462838ff77321989628afdb009bc10c41638fe8e30a3e7abdd3ea'
+body_hash: 'sha256:c495e36477493bcc33140e3a0cfa48e9a1521b87411b28f37aebc70705d7c430'
 step_id: 'S10'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Add the lock regeneration and verification leg plus the version-surfaces-agree readiness re-check to the bump executor so the transcription error class the readiness check exists to catch cannot survive an automated bump either, gate: uv run --no-sync pytest dev/release/tests/test_version_bump.py -q passes with a case that plants one stale surface and asserts the executor refuses before committing anything
 

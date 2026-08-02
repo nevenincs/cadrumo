@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e6fae536c5bc692244b3be5c7bd87d962a26d2e9437520685ccb316053ea6db'
+body_hash: 'sha256:d93d4a12866a707d8c748e4937d17cdb8767e053562492cd7662a7adf3b9b1af'
 step_id: 'S12'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Delete both the unix and windows release-apply recipes in full and update the guidance conformance test to assert their absence and to assert just release survives as the read-only dry-run preview, so one authority owns version advancement and a deleted path cannot be mis-invoked, gate: uv run --no-sync pytest dev/release/tests/test_justfile_release_guidance.py -q passes with release-apply asserted absent from the justfile and rg -n release-apply over the tree matching only vault records and history
 

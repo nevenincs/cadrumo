@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:d7a568e5b379b0f885e812b12f098220f935ec1d323d627ca245d568ec6a8c86'
+body_hash: 'sha256:c81046b5bd4ac3fd92c53bbc3c81ce2b97d4c71f7b757c23a264d3ece4828f99'
 step_id: 'S05'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Build the dispatch-and-resolve module that dispatches one workflow and then resolves the run IT started, keyed on the workflow path, the head commit, and a created-after timestamp captured before the dispatch, refusing on ambiguity rather than guessing, because gh workflow run returns no run id and the smoke workflow queues rather than cancels so the newest run may belong to a neighbour, gate: uv run --no-sync pytest dev/release/tests/test_run_resolution.py -q passes over injected Actions API payloads including a planted competing run started between the dispatch and the poll, and the resolver refuses rather than promoting the neighbour
 

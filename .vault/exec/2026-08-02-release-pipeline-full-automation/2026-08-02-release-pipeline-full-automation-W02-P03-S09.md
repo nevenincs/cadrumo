@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:71a1aec5c06d3dd8a9875057d61289737521ece813e92a51a357014a5516c68c'
+body_hash: 'sha256:3906a93e4f40d46dc8d88b13977b5ac256f25bc60788a04a676008e28559ff44'
 step_id: 'S09'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Build the bump executor that runs release-please against the manifest floor, reads the computed version rather than accepting a chosen one, and applies it to all seven declaration surfaces named by the retiring apply target, the release-please manifest, the three pyproject versions, the package dunder version, both base dependency pins, and the changelog block, gate: uv run --no-sync pytest dev/release/tests/test_version_bump.py -q passes against an injectable temporary repository root asserting each of the seven surfaces individually and asserting the build-stamped mcpb manifest sentinel is NOT touched
 

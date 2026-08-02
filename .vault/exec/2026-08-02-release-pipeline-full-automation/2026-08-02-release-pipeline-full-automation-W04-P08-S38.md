@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:6fed425e513ac0f1bb51bc78c1c22c0f2caec3c25ef7d2f28a0d1f4fecb21421'
+body_hash: 'sha256:1f73137505fc726849f7ba67887c6538b2b89efee2274e07fdbf7487116cc135'
 step_id: 'S38'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Narrow the delivery record OP-3 on every operator-facing surface to its one remaining half, the deploy-role variable on the already-created docs environment, and state alongside it that the docs environment required_reviewers removal is the second half of OP-9 rather than a separate obligation, so a reader is not told to create an environment that exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting exactly the outstanding halves
 

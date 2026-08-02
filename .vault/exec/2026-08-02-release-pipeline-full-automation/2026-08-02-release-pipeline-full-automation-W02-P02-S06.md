@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:a060af0b66e1ff45eebfb70b19480b50c6c175ea54a042717fef5e74a2553ad4'
+body_hash: 'sha256:48136053c5cec783694335e554522095a5da55b62de50fe16090ec9d0f20f163'
 step_id: 'S06'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Add the conclusion waiter as a bounded backoff poll with a declared budget and an instructive timeout refusal naming the run it was watching, sized as a cheap poll on a short-lived job rather than a busy hold, because a waiting orchestrator occupies one of four self-hosted runner slots shared across products for the whole campaign it watches, gate: uv run --no-sync pytest dev/release/tests/test_run_resolution.py -q passes covering success, failure, cancellation, and budget-exhaustion outcomes against an injected clock with no real sleeping
 

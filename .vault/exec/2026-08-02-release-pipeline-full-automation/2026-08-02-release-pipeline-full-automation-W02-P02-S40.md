@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ee5bf7daf66b6a542da65bc4d2f7ab1b0d9f89752a6e2e1617b7211d2fb5643'
+body_hash: 'sha256:6cd60702aea5cc659455c5409facf8bbc45318de920c96aa133d844930999272'
 step_id: 'S40'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Declare the lane-to-workflow mapping that turns a claimed channel into the acquisition workflow the orchestrator dispatches, covering packaging-scoop, packaging-homebrew, and packaging-claude, and keep it separate from the operator-minted claude row source so the dispatchable acquisition lane and the four non-automatable real-client captures are never conflated into one input, gate: uv run --no-sync pytest dev/packaging/tests -q -k publication_inputs passes asserting each mapped channel resolves to an existing workflow path on disk and that the claude channel resolves to BOTH a dispatchable acquisition lane and a human evidence-release precondition
 

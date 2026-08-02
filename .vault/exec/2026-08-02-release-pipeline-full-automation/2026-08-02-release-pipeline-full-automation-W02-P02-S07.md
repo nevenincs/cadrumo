@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:aaccfecc31f2531ac458928283a579cc3d719605c262a41d762a785bc9977f22'
+body_hash: 'sha256:b62c89100d30b1ca1c0cf154bc24ec780ec1c71fd8a59894d7e6e792e568fef9'
 step_id: 'S07'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Derive the acquisition lanes a release must dispatch from the same claimed-channel authority publication_inputs and the readiness gate already read, so an unclaimed channel is never dispatched and a claimed one can never be skipped, and so flipping a channel availability to available arms its lane with no workflow edit, gate: uv run --no-sync pytest dev/packaging/tests -q -k publication_inputs passes with cases covering the current descriptor claiming python only, a descriptor claiming scoop and homebrew, and a claimed channel absent from the source mapping refusing rather than passing unproven
 

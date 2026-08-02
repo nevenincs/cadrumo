@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:acc54bf5f67e8be7efcf9d2389f3a08fa6e21c5f86ff965a067ae7087930274e'
+body_hash: 'sha256:00ee6f92bc2d057ccc4798e9a61a2c111942f46c379f37501ce5495b85c7781a'
 step_id: 'S11'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Add the commit, tag, and push leg invoking the all-destination version-identity authority BEFORE any ref leaves the runner, so a bump colliding with an owned, burned, or below-floor version refuses before a tag exists rather than after, gate: uv run --no-sync pytest dev/release/tests/test_version_bump.py -q passes against an injectable git root covering the clean bump, a burned-version refusal, and a below-floor refusal, with real push execution flagged non-local and CI-only
 

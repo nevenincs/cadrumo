@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:81d3999993bb6acdb089a3ff2b3651606ab3a8db351d2c0b033542ed9ba15739'
+body_hash: 'sha256:5d565aea5dbd934245da510114709a77085cafeef48202249e72006a75a7cfc6'
 step_id: 'S13'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Add the OP-11 toolchain precondition refusing the bump stage instructively when node is absent from the runner, because release-please shells out through npx and whether the self-hosted Linux fleet carries node is unverified and named by the ADR as a plan precondition, gate: uv run --no-sync pytest dev/release/tests/test_version_bump.py -q passes with a case asserting the refusal names the provisioning action when the probe reports node missing
 

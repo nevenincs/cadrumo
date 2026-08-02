@@ -5,14 +5,11 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:144efd271990cf1bcc430f6c82cff0d54ace1d734e9bfac505b427b076447007'
+body_hash: 'sha256:e111ca730aeddcf091f11a295356d277127efc4c3a02451461bda023477c8fe2'
 step_id: 'S08'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"
 ---
-
-
-
 
 # Add the fail-closed precondition refusing an orchestration when a claimed host-extension channel has no operator-minted claude evidence release, naming the emit_real_client_evidence capture command in the refusal, and never attempting to produce those four rows because the emit honesty guard refuses SDK-driven runs by design and defeating it would make the evidence a lie about what was installed, gate: uv run --no-sync pytest dev/packaging/tests -q -k precondition passes covering the unclaimed-channel pass, the claimed-and-supplied pass, and the claimed-and-absent refusal carrying the capture command in its message
 
