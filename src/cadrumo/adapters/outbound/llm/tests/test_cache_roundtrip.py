@@ -42,17 +42,24 @@ def _populated_request() -> LLMRequest:
     )
 
 
-def _populated_response(created_at: datetime) -> LLMResponse:
+def _populated_response(
+    created_at: datetime,
+    *,
+    provider: LLMProvider = LLMProvider.ANTHROPIC,
+    model: str = "claude-opus-4-7",
+    text: str = "Casilla 03 records the cumulative net revenue for the reporting period.",
+    request_id: str = "a" * 64,
+) -> LLMResponse:
     return LLMResponse(
-        text="Casilla 03 records the cumulative net revenue for the reporting period.",
-        provider=LLMProvider.ANTHROPIC,
-        model="claude-opus-4-7",
+        text=text,
+        provider=provider,
+        model=model,
         input_tokens=137,
         output_tokens=64,
         cost_estimate_usd=Decimal("0.0145"),
         cache_hit=False,
         created_at=created_at,
-        request_id="a" * 64,
+        request_id=request_id,
     )
 
 
@@ -91,6 +98,43 @@ def test_llm_cache_entry_survives_encrypted_storage_roundtrip(
     stats = cache.stats()
     assert stats.entries == 1
     assert stats.total_bytes > 0
+
+
+def test_llm_cache_keeps_tagged_and_underscore_models_in_distinct_encrypted_entries(
+    tmp_path: Path,
+) -> None:
+    """Lossy display-path aliases must remain distinct secure cache identities."""
+
+    request = _populated_request()
+    cache = LLMCache(root_dir=tmp_path / "llm-cache")
+    tagged = _populated_response(
+        _CREATED_AT,
+        provider=LLMProvider.LOCAL,
+        model="qwen:3b",
+        text="TAGGED-MODEL-RESPONSE",
+        request_id="b" * 64,
+    )
+    underscored = _populated_response(
+        _CREATED_AT,
+        provider=LLMProvider.LOCAL,
+        model="qwen_3b",
+        text="UNDERSCORE-MODEL-RESPONSE",
+        request_id="c" * 64,
+    )
+
+    cache.write(request, tagged)
+    cache.write(request, underscored)
+
+    tagged_loaded = cache.read(request, LLMProvider.LOCAL, tagged.model)
+    underscored_loaded = cache.read(request, LLMProvider.LOCAL, underscored.model)
+
+    assert tagged_loaded is not None
+    assert tagged_loaded.model == "qwen:3b"
+    assert tagged_loaded.text == "TAGGED-MODEL-RESPONSE"
+    assert underscored_loaded is not None
+    assert underscored_loaded.model == "qwen_3b"
+    assert underscored_loaded.text == "UNDERSCORE-MODEL-RESPONSE"
+    assert cache.stats().entries == 2
 
 
 def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(

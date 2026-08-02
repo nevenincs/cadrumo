@@ -344,8 +344,8 @@ class LLMCache:
 
         The comparison is made on the derived OBJECT KEY rather than field by
         field, so it is exactly the mapping the writer used — including the
-        model-string sanitisation — and two models that sanitise to one
-        segment cannot be read as a mismatch.
+        injective model-identity encoding. Distinct accepted model identifiers
+        therefore cannot alias one secure-object row before this binding check.
 
         Raises:
             :exc:`~adapters.outbound.llm.LLMCacheError`: On any divergence.
@@ -360,16 +360,31 @@ class LLMCache:
 
     def _object_key_for(self, key: CacheKey) -> str:
         """Return the natural secure-object key for a cache key."""
-        sanitised_model = self._sanitise_model_for_path(key.model)
+        encoded_model = self._encode_model_for_object_key(key.model)
         return "|".join(
             (
                 self._logical_root(),
                 key.provider.value,
-                sanitised_model,
+                encoded_model,
                 key.prompt_hash,
                 key.args_hash,
             ),
         )
+
+    @classmethod
+    def _encode_model_for_object_key(cls, model: str) -> str:
+        """Encode one accepted model identity injectively for secure storage.
+
+        The filesystem display path deliberately keeps its compact, lossy
+        normalisation (for example ``qwen:3b`` becomes ``qwen_3b``). Secure
+        object identity cannot use that representation: an underscore-bearing
+        model would alias the tagged model. Validate through the existing path
+        safety boundary, then hex-encode the original UTF-8 bytes. Hex is
+        reversible and contains neither the object-key delimiter nor path
+        separators, so every accepted model string has one distinct safe token.
+        """
+        cls._sanitise_model_for_path(model)
+        return model.encode("utf-8").hex()
 
     def _logical_root(self) -> str:
         """Return the stable logical cache partition."""
