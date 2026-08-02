@@ -21,7 +21,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ....core.flows import (
     DEFER_TOKEN,
@@ -43,6 +43,7 @@ from .. import (
     FlowSection,
     FlowState,
     FlowSubmitError,
+    ReviewProjection,
     ValidationVerdict,
     answer,
     assert_submit_eligible,
@@ -447,3 +448,30 @@ def test_submit_gate_refuses_until_required_pages_are_answered() -> None:
     projection = assert_submit_eligible(definition, answered)
     assert projection.submit_eligible
     assert projection.required_remaining == 0
+
+
+def test_review_projection_refuses_contradictory_derived_state() -> None:
+    """Direct construction cannot contradict the review rows or their failures."""
+    definition = _submit_definition()
+    projection = review(definition, start_flow(definition, mode=FlowMode.CREATE))
+    document: dict[str, object] = dict(projection.model_dump())
+
+    with pytest.raises(ValidationError, match="answered_count"):
+        ReviewProjection.model_validate({**document, "answered_count": 1})
+    with pytest.raises(ValidationError, match="required_remaining"):
+        ReviewProjection.model_validate({**document, "required_remaining": 0})
+    with pytest.raises(ValidationError, match="blocking verdicts"):
+        ReviewProjection.model_validate({**document, "blocking": ()})
+    with pytest.raises(ValidationError, match="submit_eligible"):
+        ReviewProjection.model_validate({**document, "submit_eligible": True})
+    with pytest.raises(ValidationError, match="flow_verdicts"):
+        ReviewProjection.model_validate({**document, "flow_verdicts": (ValidationVerdict.passed(),)})
+
+
+def test_derived_review_projection_round_trips() -> None:
+    """A production-derived complete review remains valid through JSON round-trip."""
+    definition = _submit_definition()
+    state = answer(definition, start_flow(definition, mode=FlowMode.CREATE), "p_only", "value")
+    projection = review(definition, state)
+
+    assert ReviewProjection.model_validate_json(projection.model_dump_json()) == projection
