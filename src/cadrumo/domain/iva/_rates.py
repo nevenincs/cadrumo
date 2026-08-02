@@ -84,7 +84,9 @@ def _load_iva_rate_table_cached(
         partition = tuple(sorted(rates, key=lambda rate: (rate.kind.value, rate.effective_from)))
         _assert_no_overlap(member_state, partition)
         immutable[member_state] = partition
-    return MappingProxyType(immutable)
+    result = MappingProxyType(immutable)
+    _verify_rate_grounding(result)
+    return result
 
 
 def _parse_rate(raw_rate: object) -> IvaRateRecord:
@@ -106,9 +108,94 @@ def _parse_rate(raw_rate: object) -> IvaRateRecord:
             "pct": pct,
             "effective_from": data.get("effective_from"),
             "effective_until": data.get("effective_until"),
-            "boe_or_directive_reference": data.get("reference"),
+            "legal_refs": _reference_ids(data, "legal_refs"),
+            "source_refs": _reference_ids(data, "source_refs"),
         },
     )
+
+
+def _reference_ids(data: Mapping[str, object], key: str) -> tuple[str, ...]:
+    """Read one TOML array shape without accepting scalar coercion."""
+    if key not in data:
+        return ()
+    raw = data.get(key)
+    if not isinstance(raw, (list, tuple)):
+        raise IvaValidationError(f"{key} must be an array")
+    reference_ids: list[str] = []
+    for item in raw:
+        if not isinstance(item, str):
+            raise IvaValidationError(f"{key} must contain only registry identity strings")
+        reference_ids.append(item)
+    return tuple(reference_ids)
+
+
+def _verify_rate_grounding(
+    table: Mapping[EUMemberState, tuple[IvaRateRecord, ...]],
+) -> None:
+    """Resolve and verify every legal/source identity carried by rate rows."""
+    # Keep these imports local: registry binding modules consume the public IVA
+    # facade, while the rate loader is also part of that facade.
+    from ..calculations.registry import (
+        RegistryValidationError,
+        load_registry_tree,
+        verify_legal_reference,
+        verify_source_file,
+    )
+
+    source_root = bundled_path()
+    _, catalogues = load_registry_tree(source_root / "registry" / "aeat")
+    legal = catalogues.legal
+    sources = catalogues.sources
+    verified_legal: set[str] = set()
+    verified_sources: set[str] = set()
+    failures: list[str] = []
+
+    for rates in table.values():
+        for rate in rates:
+            row = f"{rate.member_state.value}/{rate.kind.value}/{rate.effective_from.isoformat()}"
+            for ref_id in rate.legal_refs:
+                if ref_id in verified_legal:
+                    continue
+                reference = legal.get(ref_id)
+                if reference is None:
+                    failures.append(f"{row}: unknown legal_ref {ref_id!r}")
+                    continue
+                try:
+                    verify_legal_reference(reference, source_root=source_root)
+                except RegistryValidationError as exc:
+                    failures.append(f"{row}: invalid legal_ref {ref_id!r}: {exc}")
+                    continue
+                verified_legal.add(ref_id)
+            row_sources = []
+            for ref_id in rate.source_refs:
+                reference = sources.get(ref_id)
+                if reference is None:
+                    failures.append(f"{row}: unknown source_ref {ref_id!r}")
+                    continue
+                row_sources.append(reference)
+                if ref_id in verified_sources:
+                    continue
+                try:
+                    verify_source_file(source_root, reference)
+                except RegistryValidationError as exc:
+                    failures.append(f"{row}: invalid source_ref {ref_id!r}: {exc}")
+                    continue
+                verified_sources.add(ref_id)
+            if rate.member_state is not EUMemberState.ES and not any(
+                reference.applies_from is not None
+                and reference.applies_from <= rate.effective_from
+                and (
+                    reference.applies_to is None
+                    or (rate.effective_until is not None and rate.effective_until <= reference.applies_to)
+                )
+                for reference in row_sources
+            ):
+                failures.append(
+                    f"{row}: no source_ref applicability window covers {rate.effective_from}/{rate.effective_until}",
+                )
+
+    if failures:
+        raise IvaCatalogueError("IVA rate grounding verification failed:\n" + "\n".join(f" - {f}" for f in failures))
 
 
 def _assert_no_overlap(

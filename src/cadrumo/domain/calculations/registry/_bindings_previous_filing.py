@@ -25,9 +25,9 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId
+from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, RegistrySelectorPeriodCode
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
@@ -330,8 +330,8 @@ class _PreviousModeloSelector(BaseModel):
 
     source_modelo: ModeloId
     filing_year_delta: int = 0
-    period: str | None = Field(default=None, min_length=1, max_length=8)
-    source_periods: tuple[str, ...] = ()
+    period: RegistrySelectorPeriodCode | None = None
+    source_periods: tuple[RegistrySelectorPeriodCode, ...] = ()
     source_period_offset_from_target: int | None = None
     prior_quarter_expanding_span: bool = False
     source_casilla_ids: tuple[CasillaId, ...] = ()
@@ -348,7 +348,10 @@ class _PreviousModeloSelector(BaseModel):
 
     @field_validator("source_periods")
     @classmethod
-    def _source_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+    def _source_periods_unique(
+        cls,
+        value: tuple[RegistrySelectorPeriodCode, ...],
+    ) -> tuple[RegistrySelectorPeriodCode, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("previous-filing source_periods entries must be unique")
         return value
@@ -374,7 +377,10 @@ class _PreviousModeloSelector(BaseModel):
 
     @field_validator("period")
     @classmethod
-    def _period_not_empty(cls, value: str | None) -> str | None:
+    def _period_not_empty(
+        cls,
+        value: RegistrySelectorPeriodCode | None,
+    ) -> RegistrySelectorPeriodCode | None:
         if value is not None and not value.strip():
             raise RegistryValidationError("previous-filing period must be non-empty")
         return value

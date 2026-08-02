@@ -21,7 +21,7 @@ from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError
-from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaCitationSource, IvaRegulation
+from ._schema import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation
 
 
 def load_iva_catalogue(path: Path) -> IvaCatalogue:
@@ -119,8 +119,6 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
     raw_citations = data.get("citations", ())
     if not isinstance(raw_citations, list | tuple):
         raise IvaCatalogueError("citations must be a list")
-    raw_boe = data.get("boe_references")
-    boe_refs: Sequence[object] = raw_boe if isinstance(raw_boe, list) else []
     raw_manual = data.get("manual_references")
     manual_refs: Sequence[object] = raw_manual if isinstance(raw_manual, list) else []
     return IvaRegulation.model_validate(
@@ -132,7 +130,6 @@ def _parse_regulation(raw_regulation: object) -> IvaRegulation:
             "iva_treatment": tr(str(data.get("iva_treatment"))),
             "requires_reverse_charge": data.get("requires_reverse_charge"),
             "requires_supplier_iva_id": data.get("requires_supplier_iva_id"),
-            "boe_references": tuple(boe_refs),
             "manual_references": tuple(manual_refs),
             "citations": tuple(_parse_citation(raw_citation) for raw_citation in raw_citations),
             "notes": data.get("notes", ""),
@@ -144,14 +141,10 @@ def _parse_citation(raw_citation: object) -> IvaCitation:
     if not isinstance(raw_citation, dict):
         raise IvaCatalogueError("citation entry must be a table")
     data = to_str_keyed_dict(dict(raw_citation.items()), error_factory=IvaCatalogueError)
-    source = IvaCitationSource(str(data.get("source")))
     return IvaCitation.model_validate(
         {
-            "source": source,
-            "article": data.get("article"),
-            "url": data.get("url"),
+            "legal_reference": data.get("legal_reference"),
             "quoted_text": tr(str(data.get("quoted_text"))),
-            "retrieval_date": data.get("retrieval_date"),
         },
     )
 

@@ -56,6 +56,7 @@ from ._ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
 )
+from ._period_selector_match import selector_period_matches_request
 from ._schema_governance import (
     validate_attribution_names_somebody,
     validate_governance_stamp_coherence,
@@ -119,6 +120,7 @@ __all__ = [
     "PeriodSelector",
     "ProfilePredicateDefinition",
     "RegistryCatalogues",
+    "RegistryExternalLink",
     "RegistryModel",
     "RegistryRoundingCode",
     "RegistryRoundingCodeValue",
@@ -173,6 +175,7 @@ from ._schema_references import (
     LegalParameter,
     LegalReference,
     PeriodSelector,
+    RegistryExternalLink,
     RegistrySnapshotRef,
     SourceReference,
     TemporalApplicability,
@@ -1047,7 +1050,7 @@ class RegistrySnapshot(RegistryModel):
             return self
         if self.filing_period.filing_year != self.filing_year:
             raise RegistryValidationError("snapshot filing_period year must match filing_year")
-        if self.filing_period.registry_token != self.period:
+        if not selector_period_matches_request(self.period, self.filing_period.registry_token):
             raise RegistryValidationError("snapshot filing_period code must match period")
         return self
 

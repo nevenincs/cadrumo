@@ -72,6 +72,14 @@ from ._errors import (
     IvaCompensationYearRangeError,
     IvaWalletReconciliationError,
 )
+from ._filed_derivation import (
+    M303_COMPENSATION_AVAILABLE_CASILLA,
+    M303_COMPENSATION_GENERADA_CASILLA,
+    M303_COMPENSATION_POSTERIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_CASILLA,
+    M303CompensationAvailableDerivation,
+    derive_m303_compensation_available_from_casillas,
+)
 from ._reconciliation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,
     IvaCompensationAuthoritySource,
@@ -86,6 +94,10 @@ from ._reconciliation import (
 
 __all__ = [
     "DEFAULT_MAX_WALLET_AGE_DAYS",
+    "M303_COMPENSATION_AVAILABLE_CASILLA",
+    "M303_COMPENSATION_GENERADA_CASILLA",
+    "M303_COMPENSATION_POSTERIOR_CASILLA",
+    "M303_COMPENSATION_RESULTADO_CASILLA",
     "IvaCompensationAuthoritySource",
     "IvaCompensationCarryForwardLot",
     "IvaCompensationCarryForwardPolicyError",
@@ -104,10 +116,12 @@ __all__ = [
     "IvaCompensationYearRangeError",
     "IvaWalletBalanceReport",
     "IvaWalletReconciliationError",
+    "M303CompensationAvailableDerivation",
     "build_iva_compensation_carry_forward_report",
     "build_iva_wallet_balance_report",
     "derive_303_compensation_available",
     "derive_iva_compensation_year_end_carry_partition",
+    "derive_m303_compensation_available_from_casillas",
     "enforce_iva_compensation_four_year_window",
     "iva_compensation_period_sort_key",
     "local_recurrence_authority_source",

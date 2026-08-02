@@ -69,7 +69,6 @@ from ._loader import load_user_profile_schema
 from ._registry_contract import (
     UserProfileRegistryContractIssue,
     UserProfileRegistryContractReport,
-    UserProfileRegistryContractSeverity,
     UserProfileSelectorIndex,
     build_user_profile_selector_index,
     profile_binding_selectors,
@@ -147,7 +146,6 @@ __all__ = [
     "UserProfileRecord",
     "UserProfileRegistryContractIssue",
     "UserProfileRegistryContractReport",
-    "UserProfileRegistryContractSeverity",
     "UserProfileSchemaLoadError",
     "UserProfileSelectorIndex",
     "UserProfileSnapshot",

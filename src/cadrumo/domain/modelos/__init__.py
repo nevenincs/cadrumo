@@ -102,6 +102,7 @@ from ._filing_record import (
     ModeloRecordCatalogue,
     ModeloRecordStatus,
     derive_filing_record_id,
+    is_justificante_backed_external_evidence,
 )
 from ._filing_repository import ModeloRecordPersistenceError, upsert_filing_record
 from ._iae_exemption import (
@@ -240,6 +241,7 @@ __all__ = (
     "derive_work_unit_id",
     "diff_ledger_fingerprints",
     "dt12_regime_window_eligibility",
+    "is_justificante_backed_external_evidence",
     "m349_nif_number_for_export",
     "materialize_m232_related_party_rows",
     "raise_catalogue_integrity_error",

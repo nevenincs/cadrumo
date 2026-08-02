@@ -81,6 +81,7 @@ from ..iva import (
     invoice_line_to_iva_observation,
 )
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ._ids import InvoiceId
 from ._protocols import InvoiceCatalogueRepositoryProtocol
 from ._service import (
     LinkInconsistency,
@@ -100,6 +101,7 @@ __all__ = [
     "InvoiceCatalogueError",
     "InvoiceCatalogueRepositoryProtocol",
     "InvoiceError",
+    "InvoiceId",
     "InvoiceLine",
     "InvoiceLinkError",
     "InvoiceLinkInconsistencyError",

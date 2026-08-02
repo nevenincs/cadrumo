@@ -8,7 +8,7 @@ statutory rate windows, catalogue text, and recargo tables are loaded from
 committed registry files under ``registry/aeat/iva``.
 
 The facade exposes closed identifiers such as :class:`IvaCategory`,
-:class:`EUMemberState`, :class:`IvaRateKind`, :class:`IvaCitationSource`,
+:class:`EUMemberState`, :class:`IvaRateKind`,
 :class:`IvaFlowDirection`, and :class:`IvaSettlementSide`; loaders and lookups
 such as :func:`load_iva_catalogues`, :func:`resolve_catalogue`,
 :func:`load_iva_rate_table`, :func:`lookup_rate`, :func:`load_recargo_rates`,
@@ -153,7 +153,6 @@ from ._schema import (
     IvaCatalogue,
     IvaCategory,
     IvaCitation,
-    IvaCitationSource,
     IvaExemptionArticle,
     IvaRateKind,
     IvaRateRecord,
@@ -190,7 +189,6 @@ __all__ = [
     "IvaCategory",
     "IvaCategoryNotFoundError",
     "IvaCitation",
-    "IvaCitationSource",
     "IvaClassificationError",
     "IvaClassificationResult",
     "IvaError",

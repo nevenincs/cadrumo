@@ -27,6 +27,16 @@ _HEX_DIGITS = frozenset("0123456789abcdef")
 _LINK_ONLY_MIME_TYPE = "text/uri-list"
 
 
+def normalize_media_type(value: str) -> str:
+    """Return the canonical MIME token without display-only parameters.
+
+    Manifests preserve their original, trimmed MIME value as provenance. Content
+    classification instead compares this normalized token, so case and valid
+    parameters cannot change an evidence boundary's meaning.
+    """
+    return value.split(";", 1)[0].strip().lower()
+
+
 def is_link_only_mime_type(value: str) -> bool:
     """Return whether ``value`` names the link-only URI-list media type.
 
@@ -36,8 +46,7 @@ def is_link_only_mime_type(value: str) -> bool:
     link-only as the bare form and must be refused by every boundary that
     guards evidence-byte manifests.
     """
-    media_type = value.split(";", 1)[0].strip().lower()
-    return media_type == _LINK_ONLY_MIME_TYPE
+    return normalize_media_type(value) == _LINK_ONLY_MIME_TYPE
 
 
 def _normalize_hex_digest(value: str, *, field_name: str) -> str:

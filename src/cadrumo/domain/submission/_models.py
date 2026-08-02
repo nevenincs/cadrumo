@@ -33,6 +33,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.hashing import sha256_hex
 from ...core.identity import SubjectTaxId
+from ...core.time import validate_utc_aware
 from ._errors import SubmissionValidationError
 
 
@@ -88,7 +89,12 @@ class SubmissionAttempt(BaseModel):
 
     @model_validator(mode="after")
     def _check_time_ordering(self) -> SubmissionAttempt:
-        """Reject attempts whose ``ended_at`` predates ``started_at``."""
+        """Reject non-UTC timestamps and attempts whose end predates their start."""
+        try:
+            validate_utc_aware(self.started_at)
+            validate_utc_aware(self.ended_at)
+        except ValueError as exc:
+            raise SubmissionValidationError(str(exc)) from exc
         if self.ended_at and self.ended_at < self.started_at:
             raise SubmissionValidationError(f"ended_at ({self.ended_at}) is before started_at ({self.started_at})")
         return self
@@ -136,6 +142,12 @@ class ModeloPresentado(BaseModel):
     @model_validator(mode="after")
     def _check_ack_consistency(self) -> ModeloPresentado:
         """Enforce ``ACEPTADA`` ↔ justificante-present invariants."""
+        try:
+            validate_utc_aware(self.submitted_at)
+            if self.acknowledged_at is not None:
+                validate_utc_aware(self.acknowledged_at)
+        except ValueError as exc:
+            raise SubmissionValidationError(str(exc)) from exc
         if self.status is SubmissionStatus.ACEPTADA:
             if not self.justificante_csv or not self.justificante_pdf_path:
                 raise SubmissionValidationError(

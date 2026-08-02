@@ -9,7 +9,6 @@ maps to a declared profile fact path.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from enum import StrEnum
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, Field
@@ -21,13 +20,7 @@ if TYPE_CHECKING:
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
-
-
-class UserProfileRegistryContractSeverity(StrEnum):
-    """Severity of a user-profile to modelo-registry contract issue."""
-
-    ERROR = "error"
-    WARNING = "warning"
+from ...core.errors import BaseSeverity
 
 
 class UserProfileRegistryContractIssue(BaseModel):
@@ -35,7 +28,7 @@ class UserProfileRegistryContractIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    severity: UserProfileRegistryContractSeverity
+    severity: Literal[BaseSeverity.ERROR, BaseSeverity.WARNING]
     modelo_id: str
     revision_id: str
     surface: Literal[
@@ -74,12 +67,12 @@ class UserProfileRegistryContractReport(BaseModel):
     @property
     def errors(self) -> tuple[UserProfileRegistryContractIssue, ...]:
         """Return blocking :class:`UserProfileRegistryContractIssue` failures."""
-        return tuple(issue for issue in self.issues if issue.severity is UserProfileRegistryContractSeverity.ERROR)
+        return tuple(issue for issue in self.issues if issue.severity is BaseSeverity.ERROR)
 
     @property
     def warnings(self) -> tuple[UserProfileRegistryContractIssue, ...]:
         """Return non-blocking :class:`UserProfileRegistryContractIssue` coverage gaps."""
-        return tuple(issue for issue in self.issues if issue.severity is UserProfileRegistryContractSeverity.WARNING)
+        return tuple(issue for issue in self.issues if issue.severity is BaseSeverity.WARNING)
 
     @property
     def valid(self) -> bool:
@@ -160,7 +153,7 @@ def _binding_issues(
         if not selectors:
             issues.append(
                 _issue(
-                    severity=UserProfileRegistryContractSeverity.ERROR,
+                    severity=BaseSeverity.ERROR,
                     modelo_id=modelo_id,
                     revision_id=revision.id,
                     surface="binding",
@@ -174,7 +167,7 @@ def _binding_issues(
             if selector not in index.profile_selectors:
                 issues.append(
                     _issue(
-                        severity=UserProfileRegistryContractSeverity.ERROR,
+                        severity=BaseSeverity.ERROR,
                         modelo_id=modelo_id,
                         revision_id=revision.id,
                         surface="binding",
@@ -197,7 +190,7 @@ def _schedule_issues(
             if condition.field not in index.schedule_predicates:
                 issues.append(
                     _issue(
-                        severity=UserProfileRegistryContractSeverity.ERROR,
+                        severity=BaseSeverity.ERROR,
                         modelo_id=modelo_id,
                         revision_id=revision.id,
                         surface="filing_schedule",
@@ -220,7 +213,7 @@ def _deadline_issues(
             if condition.field not in index.schedule_predicates:
                 issues.append(
                     _issue(
-                        severity=UserProfileRegistryContractSeverity.ERROR,
+                        severity=BaseSeverity.ERROR,
                         modelo_id=modelo_id,
                         revision_id=revision.id,
                         surface="deadline_window",
@@ -243,7 +236,7 @@ def _cross_reference_applicability_issues(
             if predicate.field not in index.schedule_predicates:
                 issues.append(
                     _issue(
-                        severity=UserProfileRegistryContractSeverity.ERROR,
+                        severity=BaseSeverity.ERROR,
                         modelo_id=modelo_id,
                         revision_id=revision.id,
                         surface="cross_reference_applicability",
@@ -276,7 +269,7 @@ def _export_issues(
                 ):
                     issues.append(
                         _issue(
-                            severity=UserProfileRegistryContractSeverity.ERROR,
+                            severity=BaseSeverity.ERROR,
                             modelo_id=modelo_id,
                             revision_id=revision.id,
                             surface="export_layout",
@@ -288,7 +281,7 @@ def _export_issues(
                 if field.kind == CasillaFieldKind.HEADER and field.header_key not in index.export_headers:
                     issues.append(
                         _issue(
-                            severity=UserProfileRegistryContractSeverity.WARNING,
+                            severity=BaseSeverity.WARNING,
                             modelo_id=modelo_id,
                             revision_id=revision.id,
                             surface="export_layout",
@@ -326,7 +319,7 @@ def profile_binding_selectors(selector: Mapping[str, object] | BaseModel) -> tup
 
 def _issue(
     *,
-    severity: UserProfileRegistryContractSeverity,
+    severity: Literal[BaseSeverity.ERROR, BaseSeverity.WARNING],
     modelo_id: str,
     revision_id: str,
     surface: Literal[

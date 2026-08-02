@@ -20,9 +20,10 @@ from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
 from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
+from ._period_selector_match import selector_period_matches_request
 from ._runtime_graph import expression_binding_refs
-from ._snapshot_coordinate import registry_snapshot_id_for
 from ._scenario_filing_period import hydrate_scenario_filing_period
+from ._snapshot_coordinate import registry_snapshot_id_for
 
 ScenarioStatus = Literal["match", "mismatch"]
 
@@ -84,7 +85,8 @@ class RegistryCalculationScenario(RegistryScenarioModel):
         if self.period.strip() != self.period:
             raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
         if self.filing_period is not None and (
-            self.filing_period.filing_year != self.filing_year or self.filing_period.registry_token != self.period
+            self.filing_period.filing_year != self.filing_year
+            or not selector_period_matches_request(self.period, self.filing_period.registry_token)
         ):
             raise RegistryValidationError("scenario filing_period must match filing_year and period")
         expected_targets = [expected.target_casilla_id for expected in self.expected_outputs]

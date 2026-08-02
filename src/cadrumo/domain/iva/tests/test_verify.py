@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-from .. import IvaCatalogue, IvaCategory, resolve_catalogue, verify_catalogue
+from .. import IvaCatalogue, IvaCategory, IvaCitation, IvaRegulation, resolve_catalogue, verify_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -39,3 +39,31 @@ def test_partial_catalogue_reports_only_the_gaps() -> None:
         if issue.code == "missing_category" and issue.category_id == IvaCategory.UNKNOWN.value
     ]
     assert len(missing) == 1
+
+
+def test_unknown_registry_legal_reference_is_reported() -> None:
+    original = _CATALOGUE.regulations[IvaCategory.DOMESTIC_GENERAL_21]
+    invalid_citation = IvaCitation.model_validate(
+        {
+            "legal_reference": "ley-37-1992:art-not-in-registry",
+            "quoted_text": original.citations[0].quoted_text,
+        },
+    )
+    invalid_regulation = IvaRegulation.model_validate(
+        {
+            **original.model_dump(),
+            "citations": (invalid_citation, *original.citations[1:]),
+        },
+    )
+    report = verify_catalogue(
+        IvaCatalogue(
+            regulations={
+                **_CATALOGUE.regulations,
+                IvaCategory.DOMESTIC_GENERAL_21: invalid_regulation,
+            },
+        ),
+    )
+    assert any(
+        issue.code == "unknown_legal_reference" and issue.category_id == IvaCategory.DOMESTIC_GENERAL_21.value
+        for issue in report.errors
+    )

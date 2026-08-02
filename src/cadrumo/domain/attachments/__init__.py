@@ -71,7 +71,7 @@ from ._errors import (
     AttachmentPersistenceError,
     AttachmentValidationError,
 )
-from ._models import Attachment, AttachmentCatalogue, is_link_only_mime_type
+from ._models import Attachment, AttachmentCatalogue, is_link_only_mime_type, normalize_media_type
 from ._protocols import AttachmentStoreProtocol
 from ._service import add_attachment, add_attachment_bytes, link_attachment_invoice, list_attachments, load_attachment
 
@@ -92,4 +92,5 @@ __all__ = [
     "link_attachment_invoice",
     "list_attachments",
     "load_attachment",
+    "normalize_media_type",
 ]

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from ....core import normalise_corpus_text
+from ....core import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
 from ._citation_blocklist import CitationSource, find_known_bad
 from ._errors import RegistryValidationError
 from ._schema import LegalReference
@@ -98,22 +98,40 @@ def verify_legal_catalogue(
         raise RegistryValidationError("legal catalogue validation failed:\n" + "\n".join(f" - {f}" for f in failures))
 
 
-_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int], str] = {}
+_LEGAL_CORPUS_CACHE: dict[tuple[str, int, int, str, tuple[str, ...]], str] = {}
 
 
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
-    path_text = reference.corpus_ref.split("#", 1)[0]
+    path_text, _, anchor = reference.corpus_ref.partition("#")
     path = (source_root / path_text).resolve()
     repo_root = source_root.resolve()
     if repo_root not in path.parents and path != repo_root:
         raise RegistryValidationError(f"legal reference {reference.id!r} escapes repository root")
-    if not path.is_file():
-        raise RegistryValidationError(f"legal reference {reference.id!r} missing corpus file {path_text!r}")
-    stat = path.stat()
-    cache_key = (str(path), stat.st_size, stat.st_mtime_ns)
+    sidecar = path.with_name(path.name + ".extracted.json")
+    if not sidecar.is_file():
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} missing extracted corpus sidecar {path_text!r}",
+        )
+    stat = sidecar.stat()
+    # A sidecar holds many extracted units.  The selected unit is therefore
+    # part of the cache identity; caching only by sidecar would let the first
+    # legal reference read from a document satisfy later sibling anchors.
+    cache_key = (str(sidecar), stat.st_size, stat.st_mtime_ns, anchor, reference.required_text)
     if cache_key in _LEGAL_CORPUS_CACHE:
         return _LEGAL_CORPUS_CACHE[cache_key]
 
-    text = normalise_corpus_text(path.read_text(encoding="utf-8", errors="replace"))
+    try:
+        text = normalise_corpus_text(
+            resolve_anchored_extracted_unit(
+                sidecar,
+                anchor=anchor,
+                required_text=reference.required_text,
+                include_title=True,
+            ),
+        )
+    except CorpusAnchorResolutionError as exc:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} cannot resolve one corpus unit for anchor {anchor!r}",
+        ) from exc
     _LEGAL_CORPUS_CACHE[cache_key] = text
     return text

@@ -6,7 +6,7 @@ The schema is frozen and strict wherever the loader idiom permits it,
 matching the current registry-backed legal grounding conventions.
 
 Closed catalogues (:class:`IvaCategory`, :class:`EUMemberState`,
-:class:`IvaRateKind`, :class:`IvaCitationSource`) are :class:`enum.StrEnum`
+:class:`IvaRateKind`) are :class:`enum.StrEnum`
 subclasses. Multilingual fields use :class:`cadrumo.core.i18n.tr` to ensure
 the internationalization engine can dynamically resolve the correct locale
 at runtime for UI labels and descriptions. Legal quotes remain Spanish-
@@ -22,7 +22,6 @@ from enum import StrEnum
 from typing import Annotated, override
 
 from pydantic import (
-    AnyHttpUrl,
     BaseModel,
     ConfigDict,
     Field,
@@ -265,39 +264,28 @@ class IvaRateKind(StrEnum):
     EXEMPT = "exempt"
 
 
-class IvaCitationSource(StrEnum):
-    """Closed catalogue of legal/regulatory sources cited by IVA rules."""
-
-    LEY_37_1992 = "ley-37-1992"
-    MANUAL_IVA_2025 = "manual-iva-2025"
-    DIRECTIVE_2006_112_EC = "directive-2006-112-ec"
-    OTHER = "other"
-
-
-_ArticleRef = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
-"""Free-form article reference shape, for example ``Art. 91.Uno.2.1º``."""
-
-
-_BoeOrDirectiveRef = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=256),
-]
-"""Free-form reference to the BOE entry or Council Directive backing a rate."""
-
-
-_NormativeId = Annotated[
+_RegistryLegalRef = Annotated[
     str,
     StringConstraints(
         strip_whitespace=True,
         min_length=1,
-        max_length=128,
-        pattern=r"^[a-z0-9][a-z0-9-]*$",
+        max_length=160,
+        pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
     ),
 ]
-"""Kebab-case legal reference document id used by the registry legal catalogue."""
+"""Registry legal-reference identifier; catalogue verification resolves it."""
+
+
+_RegistrySourceRef = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=160,
+        pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
+    ),
+]
+"""Registry source-reference identifier; catalogue verification resolves it."""
 
 
 _ManualRef = Annotated[
@@ -347,8 +335,10 @@ class IvaRateRecord(_IvaStrictFrozen):
         effective_from: First date the rate applies.
         effective_until: Last date the rate applies, or ``None`` for
             open-ended.
-        boe_or_directive_reference: Free-form reference to the BOE entry or
-            Council Directive article that backs this rate.
+        legal_refs: Binding registry legal-reference identities backing the
+            numerical rate where provision-level authority is bundled.
+        source_refs: Registry source-reference identities backing the
+            numerical foreign-rate evidence.
     """
 
     member_state: EUMemberState = Field(description="Issuing member state.")
@@ -363,11 +353,13 @@ class IvaRateRecord(_IvaStrictFrozen):
         default=None,
         description="Last date the rate applies, or ``None`` for open-ended.",
     )
-    boe_or_directive_reference: _BoeOrDirectiveRef = Field(
-        description=(
-            "Free-form reference to the BOE entry or Council Directive "
-            "article that backs this rate (e.g. 'Ley 37/1992 Art. 90.Uno')."
-        ),
+    legal_refs: tuple[_RegistryLegalRef, ...] = Field(
+        default=(),
+        description="Binding registry legal-reference identities backing this numerical rate.",
+    )
+    source_refs: tuple[_RegistrySourceRef, ...] = Field(
+        default=(),
+        description="Registry source-reference identities backing this rate.",
     )
 
     @model_validator(mode="after")
@@ -378,6 +370,28 @@ class IvaRateRecord(_IvaStrictFrozen):
                 f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
                 f"effective_from {self.effective_from} is after effective_until {self.effective_until}",
             )
+        if len(set(self.legal_refs)) != len(self.legal_refs):
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: legal_refs must be unique",
+            )
+        if len(set(self.source_refs)) != len(self.source_refs):
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: source_refs must be unique",
+            )
+        if not self.legal_refs and not self.source_refs:
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: missing registry legal_refs/source_refs",
+            )
+        if self.member_state is EUMemberState.ES and not self.legal_refs:
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
+                "Spanish rates require binding registry legal_refs",
+            )
+        if self.member_state is not EUMemberState.ES and not self.source_refs:
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
+                "foreign rates require registry source_refs",
+            )
         return self
 
 
@@ -387,36 +401,25 @@ class IvaCitation(_IvaStrictFrozen):
     The :attr:`quoted_text` field must be an authoritative translation key
     pointing to a non-empty Spanish string. It may be a faithful paraphrase
     of the article's statutory language when a verbatim extract is not
-    practical. Auditability relies on the combination of :attr:`source`,
-    :attr:`article` and :attr:`quoted_text`.
+    practical. Legal identity and evidence are owned by the registry entry
+    named in :attr:`legal_reference`.
 
     Attributes:
-        source: Legal source of the citation.
-        article: Article reference, for example ``Art. 91.Uno.2.1º``.
-        url: Optional deep link to the cited article.
+        legal_reference: Article-qualified registry legal-reference id.
         quoted_text: Non-empty Spanish quote or faithful paraphrase.
-        retrieval_date: Date the citation was retrieved or last reviewed.
     """
 
-    source: IvaCitationSource = Field(description="Legal source of the citation.")
-    article: _ArticleRef = Field(
-        description="Article reference, e.g. 'Art. 91.Uno.2.1º'.",
-    )
-    url: AnyHttpUrl | None = Field(
-        default=None,
-        description="Optional deep link to the cited article.",
+    legal_reference: _RegistryLegalRef = Field(
+        description="Article-qualified id resolved through the registry legal catalogue.",
     )
     quoted_text: tr = Field(
         description="Non-empty Spanish quote (or faithful paraphrase).",
-    )
-    retrieval_date: date = Field(
-        description="Date the citation was retrieved / last reviewed.",
     )
 
     @model_validator(mode="after")
     def _validate(self) -> IvaCitation:
         """Enforce the advertised non-empty citation text invariant."""
-        _require_translatable(self.quoted_text, f"IvaCitation[{self.source.value}:{self.article}].quoted_text")
+        _require_translatable(self.quoted_text, f"IvaCitation[{self.legal_reference}].quoted_text")
         return self
 
 
@@ -438,8 +441,6 @@ class IvaRegulation(_IvaStrictFrozen):
         requires_reverse_charge: Whether the rule triggers
             *inversión del sujeto pasivo*.
         requires_supplier_iva_id: Whether a supplier NIF-IVA is mandatory.
-        boe_references: Registry legal-reference document ids backing this
-            rule.
         manual_references: Optional Manual práctico IVA rule ids or section
             references.
         citations: At least one :class:`IvaCitation` is required.
@@ -460,9 +461,6 @@ class IvaRegulation(_IvaStrictFrozen):
     )
     requires_supplier_iva_id: bool = Field(
         description="Whether a supplier NIF-IVA is mandatory for this rule.",
-    )
-    boe_references: tuple[_NormativeId, ...] = Field(
-        description="Registry legal-reference document ids backing this rule.",
     )
     manual_references: tuple[_ManualRef, ...] = Field(
         description="Optional Manual práctico IVA rule ids or section refs.",

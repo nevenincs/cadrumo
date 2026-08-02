@@ -90,3 +90,33 @@ class Justificante(BaseModel):
             return Period.from_year_and_code(int(ejercicio), raw_period)
         except PeriodError:
             return raw_period
+
+    def matches_filing_target(
+        self,
+        *,
+        modelo: str,
+        filing_year: int,
+        period: Period,
+        tax_id: str | None = None,
+        presentation_id: str | None = None,
+    ) -> bool:
+        """Return whether this receipt belongs to one filing target.
+
+        ``tax_id`` and ``presentation_id`` are optional refinements for
+        receipt sources that do not expose the corresponding axis. A receipt
+        that does expose a presentation identifier must agree whenever the
+        caller supplies the corresponding expediente identity.
+        """
+        receipt_presentation_id = (self.presentation_id or "").strip()
+        if (
+            presentation_id is not None
+            and receipt_presentation_id
+            and receipt_presentation_id.casefold() != presentation_id.strip().casefold()
+        ):
+            return False
+        return (
+            self.modelo.strip() == modelo.strip()
+            and str(self.ejercicio or "").strip() == str(filing_year)
+            and self.period == period
+            and (tax_id is None or self.tax_id.strip().upper() == tax_id.strip().upper())
+        )

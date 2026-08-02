@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
-from .. import IvaCategory, IvaCitation, IvaCitationSource, cite, resolve_catalogue
+from .. import IvaCategory, IvaCitation, cite, resolve_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -35,19 +35,17 @@ def test_iva_citation_rejects_blank_quoted_text_at_schema_boundary() -> None:
     with pytest.raises(ValidationError, match="quoted_text"):
         IvaCitation.model_validate(
             {
-                "source": IvaCitationSource.LEY_37_1992,
-                "article": "Art. 90.Uno",
-                "url": "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a90",
+                "legal_reference": "ley-37-1992:art-90",
                 "quoted_text": tr("   "),
-                "retrieval_date": date(2026, 7, 1),
             },
         )
 
 
-def test_cite_domestic_general_mentions_ley_37_1992() -> None:
+def test_cite_domestic_general_renders_its_registry_legal_reference() -> None:
     rendered = cite(IvaCategory.DOMESTIC_GENERAL_21, on=date(2025, 6, 15))
     assert rendered
-    assert "Ley 37/1992" in rendered
+    assert "BOE-A-1992-28740" in rendered
+    assert "Art. 90" in rendered
 
 
 def test_every_committed_regulation_has_citations() -> None:
