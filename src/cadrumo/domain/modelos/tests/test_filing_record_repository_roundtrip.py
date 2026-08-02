@@ -719,6 +719,7 @@ def _amendment_pair(
     target_id_override: str | None = None,
     amendment_period: Period | None = None,
     amendment_filing_year: int | None = None,
+    baseline_successor_override: str | None = None,
 ) -> ModeloRecordCatalogue:
     """Build a baseline plus an amendment whose link can be steered off target."""
     bucket_id = _RECORD_BUCKET_ID
@@ -750,7 +751,7 @@ def _amendment_pair(
         filed_by="aeat.cli.modelo.file",
         status=ModeloRecordStatus.SUPERSEDIDO,
         superseded_at=amendment_filed_at,
-        superseded_by_filing_record_id=amendment_id,
+        superseded_by_filing_record_id=baseline_successor_override or amendment_id,
     )
     period = amendment_period or _P_2024_2T
     amendment = ModeloRecord(
@@ -975,3 +976,134 @@ def test_foreign_bucket_filing_record_is_refused_at_load(tmp_path: Path) -> None
         "expected_bucket_id": _BUCKET_ID,
         "record_bucket_ids": [_FOREIGN_BUCKET_ID],
     }
+
+
+def test_one_sided_amendment_link_is_refused() -> None:
+    """Both records must agree about the amendment relationship they share.
+
+    The three-record disagreement: the amendment correctly resolves to its
+    baseline, but the baseline names a third record as its successor. Read
+    forwards the chain is coherent; read backwards it is not, so the audit
+    history depends on which end you start from.
+    """
+    third_party_successor = _hex("e")
+
+    with pytest.raises(ValidationError, match="one-sided amendment link"):
+        _amendment_pair(baseline_successor_override=third_party_successor)
+
+
+def test_amendment_whose_baseline_names_no_successor_is_refused() -> None:
+    """An amendment with no answering back-reference is the same one-sided defect.
+
+    Reaches the refusal through a baseline that is still current, so the
+    supersession side of the link is absent rather than merely wrong.
+    """
+    bucket_id = _RECORD_BUCKET_ID
+    work_unit_id = _hex("a")
+    baseline_revision = _hex("b")
+    amendment_revision = _hex("c")
+    baseline_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=baseline_revision,
+        filed_by="aeat.cli.modelo.file",
+    )
+    amendment_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=amendment_revision,
+        filed_by="aeat.cli.modelo.amend",
+    )
+    baseline_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    baseline = ModeloRecord(
+        filing_record_id=baseline_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=baseline_revision,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=baseline_filed_at,
+        filed_by="aeat.cli.modelo.file",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    amendment = ModeloRecord(
+        filing_record_id=amendment_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=amendment_revision,
+        bucket_id=bucket_id,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=baseline_filed_at + timedelta(days=45),
+        filed_by="aeat.cli.modelo.amend",
+        status=ModeloRecordStatus.SUPERSEDIDO,
+        superseded_at=baseline_filed_at + timedelta(days=90),
+        superseded_by_filing_record_id=_hex("e"),
+        amends_filing_record_id=baseline_id,
+    )
+
+    with pytest.raises(ValidationError, match="one-sided amendment link"):
+        ModeloRecordCatalogue(records={baseline_id: baseline, amendment_id: amendment})
+
+
+def test_agreeing_amendment_link_is_accepted() -> None:
+    """Valid parity: forward and reverse links naming each other pass."""
+    catalogue = _amendment_pair()
+
+    amendment = catalogue.current_for(
+        bucket_id=_RECORD_BUCKET_ID,
+        modelo="303",
+        filing_year=2024,
+        period=_P_2024_2T,
+    )
+    assert amendment is not None
+    assert amendment.amends_filing_record_id is not None
+    baseline = catalogue.get(amendment.amends_filing_record_id)
+    assert baseline is not None
+    assert baseline.superseded_by_filing_record_id == amendment.filing_record_id
+
+
+def test_amendment_chain_of_three_agrees_at_every_hop() -> None:
+    """A -> B -> C: each hop's forward and reverse links must name each other."""
+    bucket_id = _RECORD_BUCKET_ID
+    work_unit_id = _hex("a")
+    first_filed_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
+    revisions = (_hex("b"), _hex("c"), _hex("d"))
+    actors = ("aeat.cli.modelo.file", "aeat.cli.modelo.amend", "aeat.cli.modelo.amend")
+    ids = tuple(
+        derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision,
+            filed_by=actor,
+        )
+        for revision, actor in zip(revisions, actors, strict=True)
+    )
+    records: dict[str, ModeloRecord] = {}
+    for index, (record_id, revision, actor) in enumerate(zip(ids, revisions, actors, strict=True)):
+        is_last = index == len(ids) - 1
+        filed_at = first_filed_at + timedelta(days=45 * index)
+        records[record_id] = ModeloRecord(
+            filing_record_id=record_id,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision,
+            bucket_id=bucket_id,
+            modelo=ModeloCode("303"),
+            filing_year=2024,
+            period=_P_2024_2T,
+            filed_at=filed_at,
+            filed_by=actor,
+            status=ModeloRecordStatus.VIGENTE if is_last else ModeloRecordStatus.SUPERSEDIDO,
+            superseded_at=None if is_last else filed_at + timedelta(days=45),
+            superseded_by_filing_record_id=None if is_last else ids[index + 1],
+            amends_filing_record_id=None if index == 0 else ids[index - 1],
+        )
+
+    catalogue = ModeloRecordCatalogue(records=records)
+
+    assert len(catalogue) == 3
+    for index, record_id in enumerate(ids[1:], start=1):
+        record = catalogue.get(record_id)
+        assert record is not None
+        assert record.amends_filing_record_id == ids[index - 1]
+        baseline = catalogue.get(ids[index - 1])
+        assert baseline is not None
+        assert baseline.superseded_by_filing_record_id == record_id
