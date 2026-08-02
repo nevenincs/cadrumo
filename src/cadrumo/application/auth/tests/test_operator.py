@@ -19,7 +19,7 @@ from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import RegistrySnapshotRef
-from ....domain.filing import ModeloDraft
+from ....domain.filing import ModeloDraft, registry_schema_version
 from ....domain.submission import ModeloDraftStatus
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -114,7 +114,7 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
             values=(),
             created_at=now,
             updated_at=now,
-            schema_version="test",
+            schema_version=registry_schema_version(modelo="303", revision_id="2026-v1"),
         ),
     )
     secure_object_repository_for_active_bucket().save(
