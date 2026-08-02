@@ -19,6 +19,7 @@ from ...application.auth import (
     AuthDiagnosticDetail,
     AuthDiagnosticPhoneState,
     AuthDiagnosticSummary,
+    AuthProviderListing,
 )
 from ...application.config_reset import (
     ConfigResetOperationStatus,
@@ -778,12 +779,19 @@ class ConfigResetResumeResult(OutputSchema):
 class AuthProvidersResult(OutputSchema):
     """JSON envelope for ``aeat config auth providers``.
 
-    Wraps :class:`AuthProvidersReport`; each row is the
-    JSON form of :class:`AuthProviderListing`, preserving
-    implemented and reserved provider slots from the auth catalogue.
+    Wraps :class:`AuthProvidersReport`; each row IS the canonical
+    :class:`AuthProviderListing`, preserving implemented and reserved provider
+    slots from the auth catalogue.
+
+    The rows were redeclared as ``list[dict[str, object]]``, so the envelope
+    accepted a shape the report it wraps rejects outright: an empty row, an
+    empty label, ``implemented="yes"``, or an unknown provider id all passed
+    the shell while the canonical model refused each. Nesting the canonical
+    listing makes the envelope's contract the report's contract by
+    construction rather than by the projection remembering to agree.
     """
 
-    providers: list[dict[str, object]]
+    providers: list[AuthProviderListing]
 
 
 @register_schema("config.auth.configure")

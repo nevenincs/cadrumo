@@ -72,7 +72,7 @@ def auth_providers(
     from .._config_payloads import AuthProvidersResult
 
     report = list_operator_auth_providers()
-    result = AuthProvidersResult(providers=report.model_dump(mode="json")["providers"])
+    result = AuthProvidersResult(providers=list(report.providers))
     rows: list[str] = []
     for provider in report.providers:
         if provider.implemented:

@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
 from .. import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
+    AuthProvidersReport,
     get_auth_provider,
     implemented_auth_provider_ids,
     known_auth_provider_ids,
     list_auth_providers,
+    list_operator_auth_providers,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -90,3 +93,50 @@ def test_every_entry_carries_strings() -> None:
     for entry in AUTH_PROVIDER_CATALOGUE:
         assert entry.label.strip(), f"{entry.id}: missing label"
         assert entry.description.strip(), f"{entry.id}: missing description"
+
+
+class TestCliEnvelopeParity:
+    """The CLI envelope's rows carry the catalogue's own contract.
+
+    ``AuthProvidersResult.providers`` was redeclared as
+    ``list[dict[str, object]]``, so the envelope accepted shapes the report it
+    wraps rejects outright — an empty row, an empty label, a non-boolean
+    ``implemented``, an unknown provider id. Nesting the canonical
+    :class:`AuthProviderListing` makes the two contracts one declaration.
+    """
+
+    def _envelope(self) -> type:
+        from ....entrypoints.cli._config_payloads import AuthProvidersResult
+
+        return AuthProvidersResult
+
+    def test_the_real_catalogue_projects_cleanly(self) -> None:
+        report = list_operator_auth_providers()
+
+        result = self._envelope()(providers=list(report.providers))
+
+        assert [row.id for row in result.providers] == [row.id for row in report.providers]
+        assert [row.implemented for row in result.providers] == [row.implemented for row in report.providers]
+
+    @pytest.mark.parametrize(
+        "row",
+        [
+            {},
+            {"id": "", "label": {"key": "k"}, "description": {"key": "k"}, "implemented": True},
+            {"id": "Certificate", "label": {"key": "k"}, "description": {"key": "k"}, "implemented": True},
+            {"id": "certificate", "label": {"key": "k"}, "description": {"key": "k"}, "implemented": "yes"},
+            {"id": "certificate", "description": {"key": "k"}, "implemented": True},
+        ],
+    )
+    def test_the_envelope_refuses_what_the_report_refuses(self, row: dict[str, object]) -> None:
+        with pytest.raises(ValidationError):
+            AuthProvidersReport(providers=[row])
+        with pytest.raises(ValidationError):
+            self._envelope()(providers=[row])
+
+    def test_envelope_survives_a_json_round_trip(self) -> None:
+        """The wire form must rebuild into the same typed rows."""
+        envelope = self._envelope()
+        result = envelope(providers=list(list_operator_auth_providers().providers))
+
+        assert envelope.model_validate_json(result.model_dump_json()) == result
