@@ -102,3 +102,62 @@ def test_the_two_declarations_agree_on_every_candidate(candidate: str | None) ->
         return True
 
     assert accepts(_annual_summary, candidate) == accepts(_period_state, candidate)
+
+
+@pytest.mark.parametrize("malformed", ["bad", "12345678A", "", "   "])
+def test_annual_summary_refuses_a_malformed_subject_identity(malformed: str) -> None:
+    """The annual summary names its subject through the same authority as the period state.
+
+    Both are populated from one ``authenticated_identity`` and compared against
+    each other by the annual cross-check, so a bounded plain string on this side
+    meant the AEAT checksum ran on one half of that comparison and not the
+    other. ``12345678A`` is one control letter away from the valid
+    ``12345678Z``, so a guard that checked only shape or length accepts it and
+    fails this test.
+    """
+    with pytest.raises(ValidationError):
+        _annual_summary_with_nif(malformed)
+
+
+def test_both_authorities_agree_on_the_subject_identity() -> None:
+    """The period and annual declarations must accept and refuse the same subjects."""
+
+    def accepts(build: object, value: str) -> bool:
+        try:
+            build(value)  # type: ignore[operator]
+        except ValidationError:
+            return False
+        return True
+
+    for candidate in (_VALID_NIF, "bad", "12345678A", ""):
+        assert accepts(_annual_summary_with_nif, candidate) == accepts(_period_state_with_nif, candidate)
+
+
+def _annual_summary_with_nif(nif: str) -> IvaCompensationAnnualSummary:
+    return IvaCompensationAnnualSummary(
+        taxpayer_nif=nif,
+        filing_year=2025,
+        expediente_id="202539000000001Z",
+        status="presented",
+        presented_at=_PRESENTED_AT,
+        last_period_compensation_amount=Decimal("60.00"),
+        generated_not_in_last_period_amount=Decimal("40.00"),
+        total_pending_amount=Decimal("100.00"),
+        source_observation_key="390:2025:0A",
+        source_artefact_sha256=_VALID_DIGEST,
+    )
+
+
+def _period_state_with_nif(nif: str) -> IvaCompensationPeriodState:
+    return IvaCompensationPeriodState(
+        taxpayer_nif=nif,
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        expediente_id="202530300000001Z",
+        status="presented",
+        presented_at=_PRESENTED_AT,
+        generated_amount=Decimal("100.00"),
+        available_end_amount=Decimal("100.00"),
+        source_observation_key="303:2025:1T",
+        source_artefact_sha256=_VALID_DIGEST,
+    )

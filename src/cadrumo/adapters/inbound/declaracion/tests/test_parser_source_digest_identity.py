@@ -16,12 +16,14 @@ from plain SHA-256 rather than merely agreeing with themselves.
 from __future__ import annotations
 
 import hashlib
+import os
+from pathlib import Path
 
 import pytest
 
 from .....core.hashing import sha256_hex
-from .. import parse_declaracion_bytes
-from ._parser_boundary_support import FIXTURES_DIR
+from .. import parse_declaracion, parse_declaracion_bytes
+from ._parser_boundary_support import FIXTURES_DIR, _write_declaration_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -64,3 +66,48 @@ def test_parsed_observation_stamps_the_standard_library_digest_of_its_source_byt
     )
 
     assert filing.source_pdf_sha256 == hashlib.sha256(pdf_bytes).hexdigest()
+
+
+def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tmp_path: Path) -> None:
+    """A same-size, same-mtime replacement cannot inherit cached text or provenance."""
+
+    first_pdf = tmp_path / "first.pdf"
+    second_pdf = tmp_path / "second.pdf"
+    target_pdf = tmp_path / "declaracion.pdf"
+    _write_declaration_pdf(first_pdf, values={}, tax_id="00000000T")
+    _write_declaration_pdf(second_pdf, values={}, tax_id="00000001R")
+
+    first_bytes = first_pdf.read_bytes()
+    second_bytes = second_pdf.read_bytes()
+    equal_size = max(len(first_bytes), len(second_bytes))
+    first_bytes = first_bytes.ljust(equal_size, b" ")
+    second_bytes = second_bytes.ljust(equal_size, b" ")
+    assert len(first_bytes) == len(second_bytes)
+    assert hashlib.sha256(first_bytes).digest() != hashlib.sha256(second_bytes).digest()
+
+    fixed_ns = 1_700_000_000_000_000_000
+    target_pdf.write_bytes(first_bytes)
+    os.utime(target_pdf, ns=(fixed_ns, fixed_ns))
+    first = parse_declaracion(
+        target_pdf,
+        modelo_override="130",
+        año_override=2024,
+        period_override="1T",
+    )
+    original_stat = target_pdf.stat()
+
+    target_pdf.write_bytes(second_bytes)
+    os.utime(target_pdf, ns=(fixed_ns, fixed_ns))
+    replacement_stat = target_pdf.stat()
+    replacement = parse_declaracion(
+        target_pdf,
+        modelo_override="130",
+        año_override=2024,
+        period_override="1T",
+    )
+
+    assert replacement_stat.st_size == original_stat.st_size
+    assert replacement_stat.st_mtime_ns == original_stat.st_mtime_ns
+    assert first.tax_id == "00000000T"
+    assert replacement.tax_id == "00000001R"
+    assert replacement.source_pdf_sha256 == hashlib.sha256(second_bytes).hexdigest()

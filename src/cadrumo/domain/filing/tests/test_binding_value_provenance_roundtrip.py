@@ -47,6 +47,7 @@ from .._schema import (
     ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
+    compute_modelo_draft_id,
     registry_schema_version,
 )
 
@@ -61,7 +62,7 @@ _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-def _populated_draft() -> ModeloDraft:
+def _populated_draft(*, rendimiento: Decimal = Decimal("8400.00")) -> ModeloDraft:
     """Build a draft whose binding values carry NON-DEFAULT provenance.
 
     Every provenance field is set to a non-default value (a typed source
@@ -69,46 +70,57 @@ def _populated_draft() -> ModeloDraft:
     populated row index) so a save-drops-field / load-re-defaults-field
     regression cannot pass the strict-equality witness vacuously.
     """
-    return ModeloDraft(
-        draft_id="b" * 64,
+    period = Period.from_year_and_code(2025, "1T")
+    snapshot_ref = RegistrySnapshotRef(
         modelo="130",
-        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2019-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
+    values = (
+        ModeloValue(
+            casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
+            value=rendimiento,
+            kind=ModeloValueKind.LITERAL,
+            source="user-supplied",
+        ),
+    )
+    binding_values = (
+        ModeloBindingValue(
+            binding_id="modelo-130-ingresos-ledger",
+            value=Decimal("8400.00"),
+            kind=ModeloValueKind.LITERAL,
+            source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+            legal_refs=("ley-35-2006:art-27", "ley-35-2006:art-28"),
+            source_refs=("aeat-m130-2025-ingresos", "aeat-m130-instrucciones"),
+            row_index=1,
+        ),
+        ModeloBindingValue(
+            binding_id="modelo-130-gastos-ledger",
+            value=Decimal("1200.50"),
+            kind=ModeloValueKind.LITERAL,
+            source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
+            legal_refs=("ley-35-2006:art-30",),
+            source_refs=("aeat-m130-2025-gastos",),
+        ),
+    )
+    return ModeloDraft(
+        draft_id=compute_modelo_draft_id(
+            modelo="130",
+            period=period,
+            profile_tax_id="12345678Z",
+            snapshot_ref=snapshot_ref,
+            values=values,
+            binding_values=binding_values,
+        ),
+        modelo="130",
+        period=period,
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
-        snapshot_ref=RegistrySnapshotRef(
-            modelo="130",
-            revision_id="2019-y-siguientes",
-            modelo_year=2025,
-            period="1T",
-        ),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
-        values=(
-            ModeloValue(
-                casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
-                value=Decimal("8400.00"),
-                kind=ModeloValueKind.LITERAL,
-                source="user-supplied",
-            ),
-        ),
-        binding_values=(
-            ModeloBindingValue(
-                binding_id="modelo-130-ingresos-ledger",
-                value=Decimal("8400.00"),
-                kind=ModeloValueKind.LITERAL,
-                source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
-                legal_refs=("ley-35-2006:art-27", "ley-35-2006:art-28"),
-                source_refs=("aeat-m130-2025-ingresos", "aeat-m130-instrucciones"),
-                row_index=1,
-            ),
-            ModeloBindingValue(
-                binding_id="modelo-130-gastos-ledger",
-                value=Decimal("1200.50"),
-                kind=ModeloValueKind.LITERAL,
-                source=BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION,
-                legal_refs=("ley-35-2006:art-30",),
-                source_refs=("aeat-m130-2025-gastos",),
-            ),
-        ),
+        values=values,
+        binding_values=binding_values,
         casilla_provenance=(),
         findings=(),
         created_at=_DRAFT_TIMESTAMP,
@@ -164,7 +176,11 @@ def test_boundary_catches_binding_provenance_field_drop(
         try:
             repository = ModeloDraftRepository(bucket_id=_BUCKET_ID)
             for index, field_name in enumerate(_PROVENANCE_FIELDS, start=1):
-                original = _populated_draft().model_copy(update={"draft_id": str(index) * 64})
+                # Each case needs its own storage row. The repository refuses a
+                # draft whose id is not its content address, so the cases are
+                # separated by distinct CONTENT (a per-case rendimiento amount)
+                # and the id follows from it, rather than by an invented id.
+                original = _populated_draft(rendimiento=Decimal(f"8400.0{index}"))
                 repository.save(original)
 
                 with session_scope(profile.repository._engine) as session:

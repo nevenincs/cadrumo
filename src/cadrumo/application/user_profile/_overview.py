@@ -174,8 +174,9 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     Args:
         path: Dotted schema path of the field, e.g. ``auth.dni_nie``.
         label: Operator-facing description, or the path when none exists.
-        sensitivity: Declared sensitivity, or ``None`` for a field the
-            schema does not know (masking then rests on the keywords).
+        sensitivity: Declared :class:`SensitivityClass`, or ``None`` for a
+            field the schema does not know (masking then rests on the
+            keywords).
 
     Returns:
         Whether the value must be replaced with

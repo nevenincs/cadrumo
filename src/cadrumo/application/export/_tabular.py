@@ -18,8 +18,10 @@ import csv
 import json
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from io import StringIO
+from io import BytesIO, StringIO
 from types import MappingProxyType
+from xml.etree.ElementTree import ParseError
+from zipfile import BadZipFile
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -65,6 +67,8 @@ _SHA256_MISMATCH_REASON = "sha256_mismatch"
 _MEDIA_TYPE_MISMATCH_REASON = "media_type_mismatch"
 _EXTENSION_MISMATCH_REASON = "filename_extension_mismatch"
 _ROW_COUNT_MISMATCH_REASON = "row_count_mismatch"
+_PAYLOAD_DECODE_INVALID_REASON = "payload_decode_invalid"
+_JSONL_RECORD_INVALID_REASON = "jsonl_record_invalid"
 
 
 class TabularExportResult(BaseModel):
@@ -200,6 +204,10 @@ def _export_field_error(reason: str, **context: object) -> ExportFieldError:
     )
 
 
+def _payload_decode_error(export_format: ExportSerializationFormat) -> ExportFieldError:
+    return _export_field_error(_PAYLOAD_DECODE_INVALID_REASON, export_format=export_format.value)
+
+
 def verify_export_metadata(
     *,
     payload: bytes,
@@ -246,23 +254,43 @@ def _payload_row_count(payload: bytes, *, export_format: ExportSerializationForm
     as the one row it is.
     """
     if export_format is ExportSerializationFormat.CSV:
-        rows = tuple(csv.reader(StringIO(payload.decode(_UTF_8_ENCODING))))
+        try:
+            rows = tuple(csv.reader(StringIO(payload.decode(_UTF_8_ENCODING))))
+        except (UnicodeDecodeError, csv.Error) as exc:
+            raise _payload_decode_error(export_format) from exc
         return max(len(rows) - 1, 0)
     if export_format is ExportSerializationFormat.JSONL:
-        return sum(1 for line in payload.decode(_UTF_8_ENCODING).splitlines() if line.strip())
-    if export_format is ExportSerializationFormat.XLSX:
-        from io import BytesIO
-
-        from openpyxl import load_workbook
-
-        workbook = load_workbook(BytesIO(payload), read_only=True)
         try:
-            worksheet = workbook.active
-            if worksheet is None:
-                return 0
-            return max((worksheet.max_row or 0) - 1, 0)
-        finally:
-            workbook.close()
+            lines = payload.decode(_UTF_8_ENCODING).splitlines()
+        except UnicodeDecodeError as exc:
+            raise _payload_decode_error(export_format) from exc
+        row_count = 0
+        for line_number, line in enumerate(lines, start=1):
+            if not line.strip():
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise _payload_decode_error(export_format) from exc
+            if not isinstance(row, dict):
+                raise _export_field_error(_JSONL_RECORD_INVALID_REASON, line_number=line_number)
+            row_count += 1
+        return row_count
+    if export_format is ExportSerializationFormat.XLSX:
+        from openpyxl import load_workbook
+        from openpyxl.utils.exceptions import InvalidFileException
+
+        try:
+            workbook = load_workbook(BytesIO(payload), read_only=True)
+            try:
+                worksheet = workbook.active
+                if worksheet is None:
+                    return 0
+                return max((worksheet.max_row or 0) - 1, 0)
+            finally:
+                workbook.close()
+        except (BadZipFile, InvalidFileException, KeyError, OSError, ParseError, ValueError) as exc:
+            raise _payload_decode_error(export_format) from exc
     raise ExportFormatError(
         translated_message=_REFUSED_EXPORT_FORMAT_MESSAGE,
         context={"export_format": str(export_format)},
@@ -291,8 +319,6 @@ def _serialize_xlsx(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, 
     :class:`~adapters.inbound.financial.providers._xlsx.XlsxProvider`,
     which shares the CSV bank-layout catalogue.
     """
-    from io import BytesIO
-
     from openpyxl import Workbook
 
     workbook = Workbook()

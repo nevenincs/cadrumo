@@ -33,6 +33,7 @@ from ...filing import (
     ModeloValidationFinding,
     ModeloValue,
     ModeloValueKind,
+    compute_modelo_draft_id,
     registry_schema_version,
 )
 from ...user_profile import profile_create_storage_span, profile_storage_session
@@ -141,27 +142,35 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
             message=_summary("range"),
         )
         period = Period.from_year_and_code(2026, "1T")
+        snapshot_ref = RegistrySnapshotRef(
+            modelo="130",
+            revision_id=_TEST_REVISION_ID,
+            modelo_year=period.filing_year,
+            period=period.registry_token,
+        )
+        values = (
+            ModeloValue(
+                casilla_id=_REVIEW_FINDING_CASILLA,
+                value=Decimal("0"),
+                kind=ModeloValueKind.LITERAL,
+                source="test",
+            ),
+        )
         draft = ModeloDraft(
-            draft_id="d1",
+            draft_id=compute_modelo_draft_id(
+                modelo="130",
+                period=period,
+                profile_tax_id="00000000T",
+                snapshot_ref=snapshot_ref,
+                values=values,
+            ),
             modelo="130",
             period=period,
             profile_tax_id="00000000T",
             subject_tax_id="00000000T",
-            snapshot_ref=RegistrySnapshotRef(
-                modelo="130",
-                revision_id=_TEST_REVISION_ID,
-                modelo_year=period.filing_year,
-                period=period.registry_token,
-            ),
+            snapshot_ref=snapshot_ref,
             status=ModeloDraftStatus.BORRADOR,
-            values=(
-                ModeloValue(
-                    casilla_id=_REVIEW_FINDING_CASILLA,
-                    value=Decimal("0"),
-                    kind=ModeloValueKind.LITERAL,
-                    source="test",
-                ),
-            ),
+            values=values,
             findings=(finding,),
             created_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
             updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),

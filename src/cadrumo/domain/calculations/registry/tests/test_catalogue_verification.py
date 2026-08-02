@@ -583,7 +583,10 @@ def test_lirpf_capital_gains_foundation_links_to_full_boe_corpus() -> None:
             date(2015, 1, 1),
             (
                 "Normas específicas de valoración",
-                "acciones admitidas a negociación",
+                # LIRPF art. 37.1.a is "valores admitidos a negociación". The
+                # "acciones" phrasing belongs to the Manual Práctico's worked
+                # examples, not to the statute this reference cites.
+                "valores admitidos a negociación",
                 "valores no admitidos a negociación",
                 "instituciones de inversión colectiva",
             ),

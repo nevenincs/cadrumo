@@ -48,7 +48,12 @@ class TestParseResumenTree:
         assert years == [2021, 2022, 2023]
 
     def test_every_expediente_is_read_only(self) -> None:
-        """Assert every parsed expediente carries ``mode='read'`` (structural write-guard)."""
+        """Assert every parsed expediente carries the ``mode='read'`` declared-shape marker.
+
+        The marker is documentation and test scaffolding, not a runtime
+        guard — nothing in production reads it. What holds the read-only
+        boundary is described in the ``_schema`` module docstring.
+        """
         html = (_FIXTURE_ROOT / "resumen-vlt-modelo-100-expanded.html").read_text(encoding="utf-8")
         for expediente in parse_resumen_tree(html, base_url=_SEDE_BASE):
             assert expediente.mode == "read"
@@ -113,10 +118,7 @@ class TestParseExpedienteDetail:
 
     def test_accepts_the_maximum_length_csv(self) -> None:
         """The detail parser and ``JustificanteRef`` accept a 32-character CSV."""
-        html = (
-            '<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV='
-            f"{'A' * 32}\">declaracion</a>"
-        )
+        html = f'<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV={"A" * 32}">declaracion</a>'
 
         ref = parse_expediente_detail(
             html,
@@ -128,10 +130,7 @@ class TestParseExpedienteDetail:
 
     def test_rejects_a_csv_longer_than_the_shared_constraint(self) -> None:
         """Do not truncate a 33-character CSV before the strict model validates it."""
-        html = (
-            '<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV='
-            f"{'A' * 33}\">declaracion</a>"
-        )
+        html = f'<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV={"A" * 33}">declaracion</a>'
 
         with pytest.raises(SedeParseError, match="does not match the AEAT shape"):
             parse_expediente_detail(

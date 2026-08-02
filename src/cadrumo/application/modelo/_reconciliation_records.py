@@ -24,7 +24,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import ClassVar, override
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage import (
     MODELO_RECONCILIATION_RECORDS_NAMESPACE,
@@ -34,6 +34,9 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.identity import BucketId
+from ...core.time import validate_utc_aware
+from ...domain.buckets import BucketEventId
+from ...domain.calculations.registry import LegalRefId, SourceRefId
 from ...domain.modelos import WorkUnitId
 
 
@@ -105,8 +108,34 @@ class ModeloReconciliationDiff(BaseModel):
     evidence_value: str = ""
     kind: str = Field(min_length=1)
     diff_kind: ModeloReconciliationDiffKind = ModeloReconciliationDiffKind.HEADER_FIELD
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
+
+    @model_validator(mode="after")
+    def _enforce_value_diff_grounding(self) -> ModeloReconciliationDiff:
+        """Require legal and source grounding on every value-bearing diff.
+
+        The docstring above promises a ``total`` or ``casilla`` diff carries the
+        reconciling expectation's or casilla's registry grounding, but both
+        tuples defaulted empty and unconstrained, so an ungrounded — or
+        free-text — value divergence persisted and read back as if it were
+        grounded. The producers already hold the refs (the total target and the
+        registry casilla each declare them), so an empty tuple here means the
+        grounding was lost on the way, not that none exists.
+
+        Header diffs (modelo, ejercicio, period, tax_id) compare filing identity
+        rather than a regulated amount and carry no casilla grounding by design;
+        they keep the empty tuples.
+        """
+        if self.diff_kind is ModeloReconciliationDiffKind.HEADER_FIELD:
+            return self
+        if not self.legal_refs or not self.source_refs:
+            raise ValueError(
+                f"{self.diff_kind.value} diff {self.field_name!r} must carry legal_refs and "
+                f"source_refs grounding; got legal_refs={self.legal_refs!r}, "
+                f"source_refs={self.source_refs!r}",
+            )
+        return self
 
 
 class ModeloReconciliationAdvisory(BaseModel):
@@ -157,7 +186,7 @@ class ModeloReconciliationRecord(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_event_id: str = Field(min_length=1, max_length=128)
+    bucket_event_id: BucketEventId
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     source_kind: ModeloReconciliationEvidenceKind
@@ -167,6 +196,18 @@ class ModeloReconciliationRecord(BaseModel):
     advisories: tuple[ModeloReconciliationAdvisory, ...] = ()
     actor: str = Field(min_length=1, max_length=64)
     reconciled_at: datetime
+
+    @field_validator("reconciled_at")
+    @classmethod
+    def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
+        """Hold the persisted instant to the canonical UTC-aware contract.
+
+        The record documents a canonical UTC history, but a bare ``datetime``
+        accepted a naive or ``+01:00`` value, so two reconciliations of the same
+        work unit could not be ordered against each other and a Madrid-local
+        instant read back as if it were UTC.
+        """
+        return validate_utc_aware(value)
 
 
 def modelo_reconciliation_record_key(*, work_unit_id: str, bucket_event_id: str) -> str:
@@ -254,7 +295,7 @@ class ModeloReconciliationHistoryEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    event_id: str = Field(min_length=1, max_length=128)
+    event_id: BucketEventId
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     source_kind: ModeloReconciliationEvidenceKind
@@ -264,6 +305,12 @@ class ModeloReconciliationHistoryEntry(BaseModel):
     diffs: tuple[ModeloReconciliationDiff, ...] = ()
     actor: str = Field(min_length=1, max_length=64)
     reconciled_at: datetime
+
+    @field_validator("reconciled_at")
+    @classmethod
+    def _reconciled_at_is_utc(cls, value: datetime) -> datetime:
+        """Project the record's UTC instant under the same canonical contract."""
+        return validate_utc_aware(value)
 
 
 def list_modelo_reconciliations(

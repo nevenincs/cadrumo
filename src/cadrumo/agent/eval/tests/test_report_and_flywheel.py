@@ -109,6 +109,60 @@ def test_build_measurement_report_all_passed_when_clean() -> None:
     assert report.all_passed is True
 
 
+def test_empty_measurement_report_is_never_all_passed() -> None:
+    """A report measuring ZERO scenarios must not render as a passing run.
+
+    ``scenarios_passed == scenarios_run`` holds vacuously at ``0 == 0``, and
+    both hard invariants read clean at zero because nothing raised them - so
+    without an explicit ``scenarios_run > 0`` guard, a run that verified
+    nothing certifies as PASS, which is exactly the "claim PASS while its
+    scenario evidence is empty" shape the report exists to refuse.
+    """
+    empty_report = MeasurementReport(
+        scenarios_run=0,
+        scenarios_passed=0,
+        live_submit_attempts_total=0,
+        handoff_faithfulness_blocks_total=0,
+        tool_errors_total=0,
+        unfaithful_narrations_total=0,
+        rows=(),
+    )
+
+    assert empty_report.invariants_hold is True  # both hard invariants are legitimately clean at zero
+    assert empty_report.all_passed is False
+    assert "Verdict: FAIL" in render_measurement_report_markdown(empty_report)
+
+
+def test_a_genuine_passing_report_still_reports_pass() -> None:
+    """Positive control for the empty-report guard above.
+
+    Without this, an implementation that refuses ``all_passed`` for every
+    report (not just the empty one) would satisfy the test above and nothing
+    would catch it.
+    """
+    passing_row = ScenarioOutcomeRow(
+        scenario="cierre-trimestre",
+        persona="cadrumo-modelo-preparer",
+        session_id="s-pass",
+        passed=True,
+        tool_calls=1,
+        narrations=0,
+        elicitations=0,
+    )
+    report = MeasurementReport(
+        scenarios_run=1,
+        scenarios_passed=1,
+        live_submit_attempts_total=0,
+        handoff_faithfulness_blocks_total=0,
+        tool_errors_total=0,
+        unfaithful_narrations_total=0,
+        rows=(passing_row,),
+    )
+
+    assert report.all_passed is True
+    assert "Verdict: PASS" in render_measurement_report_markdown(report)
+
+
 def test_build_measurement_report_refuses_a_scenario_mismatched_trajectory() -> None:
     # The score claims "cierre-trimestre" but its matched trajectory (same
     # session id) recorded a different scenario; this must not silently mix

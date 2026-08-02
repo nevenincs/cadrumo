@@ -250,6 +250,15 @@ def test_archive_import_switches_active_profile_with_notice(tmp_path: Path) -> N
         assert switch["severity"] == "info"
         assert "active" in switch["message"].lower()
 
+        # The notice names the restored profile's own label (read back from
+        # its manifest, since ImportBucketResult carries none) rather than
+        # the raw bucket UUID or an unfilled literal placeholder, and the
+        # suggestion is a complete, directly-runnable command -- at parity
+        # with the sibling ``config profile import`` switch notice.
+        assert "profile2" in switch["message"]
+        assert switch["suggestion"] == "aeat config login profile2"
+        assert switch["context"]["active_profile"] == "profile2"
+
         assert resolve_active_bucket_id() == source_bucket_id
 
 

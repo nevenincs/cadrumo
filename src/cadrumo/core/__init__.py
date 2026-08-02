@@ -102,7 +102,7 @@ from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
-from ._hex import HEX_PATTERN_64, HEX_PATTERN_128, Hex64Str
+from ._hex import HEX_PATTERN_16, HEX_PATTERN_64, HEX_PATTERN_128, Hex16Str, Hex64Str
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._invoice_link import LinkInconsistencyDirection
 from ._irnr import (
@@ -250,9 +250,9 @@ __all__: list[str] = [
     "FETCH_GATED_M210_TIPO_RENTA_CODES",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
     "GOOGLE_EXTRA",
+    "HEX_PATTERN_16",
     "HEX_PATTERN_64",
     "HEX_PATTERN_128",
-    "Hex64Str",
     "IBAN_SHAPE_RE",
     "LENGTH_ALONE_IS_STRONG",
     "LENGTH_FAIR_FLOOR",
@@ -291,6 +291,8 @@ __all__: list[str] = [
     "ForeignAssetObligationGroup",
     "FormerProductStateError",
     "GoogleCredentialSourceKind",
+    "Hex16Str",
+    "Hex64Str",
     "IdentityReferent",
     "IntracomOperationType",
     "LedgerSortField",

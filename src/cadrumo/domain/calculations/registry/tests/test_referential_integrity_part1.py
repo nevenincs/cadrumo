@@ -653,7 +653,10 @@ def test_dangling_verification_expectation_computed_casillas() -> None:
         id="test.expectation",
         computed_casilla_ids=(_NONEXISTENT_CASILLA,),
         tolerance=Decimal("0"),
-        rounding="ROUND_HALo_UP",
+        # A real member of the verification rounding vocabulary. The subject
+        # here is the dangling casilla reference, so the rounding value must be
+        # valid or the model refuses before the reference check is reached.
+        rounding="money-2",
         min_coverage=Decimal("1"),
         discrepancy_causes=("rounding",),
         legal_refs=(REFERENCE_LEGAL_ID,),

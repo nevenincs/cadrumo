@@ -79,9 +79,24 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
         on listing all healthy submissions even when a single row is
         unreadable.
 
+        An identity mismatch is NOT in that resilient category and raises.
+        This scan is custom rather than the base repository's, so the identity
+        check ``load`` performs did not reach it: a valid filing attempt B
+        stored under A's row key was yielded here as an ordinary submission,
+        corrupting audit-history identity. Such a row is perfectly READABLE --
+        it is simply filed under a key it does not describe -- so skipping it
+        would both hide the inconsistency and silently shorten the history a
+        caller is auditing.
+
         Returns:
             Iterator over :class:`ModeloPresentado` records.
+
+        Raises:
+            SecureObjectRowIdentityError: A row's payload rebuilds a different
+                submission id than the key it is filed under.
         """
+        from ..storage import SecureObjectRowIdentityError
+        from ..storage.crypto import secure_object_key_digest
         from ..storage.sql import SecureObjectRecord
 
         envelope_cls = self._envelope_cls()
@@ -109,6 +124,11 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
                 continue
             # CAST-RATIONALE-SUBMISSION-ENVELOPE-CAST: envelope verified via metadata
             payload = cast(ModeloPresentado, envelope.payload)
+            if secure_object_key_digest(payload.submission_id) != item.object_key:
+                raise SecureObjectRowIdentityError(
+                    self.namespace,
+                    expected_identifier=payload.submission_id,
+                )
             records.append((payload.submission_id, payload))
         for _, payload in sorted(records, key=lambda record: record[0]):
             yield payload

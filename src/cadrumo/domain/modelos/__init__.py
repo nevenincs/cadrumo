@@ -122,8 +122,8 @@ from ._ledger_filing_snapshot import (
     snapshot_fingerprint,
 )
 from ._m232_row_materialisation import (
+    M232_MAX_RELATED_PARTY_ROWS,
     m232_related_party_row_casilla_values,
-    materialize_m232_related_party_rows,
 )
 from ._participation_index import (
     TransactionParticipationIndexPersistenceError,
@@ -173,6 +173,7 @@ from ._verification_repository import VerificationReportPersistenceError, upsert
 from ._work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState, derive_work_unit_id
 
 __all__ = (
+    "M232_MAX_RELATED_PARTY_ROWS",
     "CalculationRevision",
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
@@ -247,7 +248,6 @@ __all__ = (
     "is_justificante_backed_external_evidence",
     "m232_related_party_row_casilla_values",
     "m349_nif_number_for_export",
-    "materialize_m232_related_party_rows",
     "raise_catalogue_integrity_error",
     "snapshot_fingerprint",
     "upsert_calculation_revision",

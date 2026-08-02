@@ -103,8 +103,11 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     """
 
     original = _populated_record()
+    # Bound to the record's own profile, matching every production
+    # construction: this proof is about a dropped field surviving the
+    # encrypted boundary, not about addressing a foreign bucket.
     repo = UserProfileLifecycleRepository(
-        bucket_id=runtime_profile.bucket_id,
+        bucket_id=original.profile_id,
         objects=runtime_profile.repository,
     )
     repo.save(original)

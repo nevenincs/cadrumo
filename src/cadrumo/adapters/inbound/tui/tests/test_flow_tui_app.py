@@ -599,7 +599,16 @@ async def test_checkbox_page_stages_two_selections_under_one_key() -> None:
 
 @pytest.mark.asyncio
 async def test_secret_answer_is_masked_in_the_echo_and_the_review_table() -> None:
-    app = FlowTuiApp(_secret_definition(), mode=FlowMode.MODIFY, registered_values={})
+    # A non-empty registered value for the SECRET page is the positive
+    # control the answer-only fixture below cannot provide: the registered
+    # column must mask it exactly as the answer column masks the in-flow
+    # answer, through the same widget-kind lookup, not a second authority.
+    registered_secret = "vault-stored-token"  # noqa: S105 - test fixture value, not a credential
+    app = FlowTuiApp(
+        _secret_definition(),
+        mode=FlowMode.MODIFY,
+        registered_values={"p_secret": registered_secret},
+    )
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.press(*"hunter2")
         await pilot.click("#btn-next")  # commit the secret, advance to p_after
@@ -627,6 +636,11 @@ async def test_secret_answer_is_masked_in_the_echo_and_the_review_table() -> Non
         assert rows["p_secret"][0]  # status glyph column populated
         assert rows["p_secret"][2] == masked
         assert "hunter2" not in rows["p_secret"][2]
+        # The registered column is the positive control: a real on-record
+        # value for a SECRET page must render the same masked marker, never
+        # the raw registered value, in the clear.
+        assert rows["p_secret"][3] == masked
+        assert registered_secret not in rows["p_secret"][3]
 
 
 @pytest.mark.asyncio

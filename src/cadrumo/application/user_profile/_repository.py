@@ -207,20 +207,29 @@ class _BucketBoundRepository:
         stored row and its contents disagreed about whose profile it was, and
         nothing on either path compared them.
 
-        NOT applied to the live-profile repository yet, and the reason is a
-        loose end rather than a principle. Production always binds a lifecycle
-        repository to its own profile -- the operator duplicate verb
-        provisions a fresh bucket, and the aggregation readers pass the same
-        id as both arguments -- so the guard would be correct there too.
+        Now applied to the live-profile repository as well. The obstacle was
+        :meth:`ProfileLifecycleService.duplicate`, which held one bucket-bound
+        repository across a read of the source and a write of the target; it
+        had no production callers and has since been deleted, so nothing in
+        the tree presents a foreign identity as legitimate.
 
-        The one in-tree consumer it would break is
-        :meth:`ProfileLifecycleService.duplicate`, which holds a single
-        bucket-bound repository across a read of the source and a write of the
-        target. That method has no production callers: outside its own unit
-        tests nothing invokes it, and the operator verb does not route through
-        it. So it is not evidence that a foreign identity is legitimate; it is
-        a dead surface that has to be deleted or wired up before the guard can
-        extend, and that decision is larger than this boundary.
+        Every production construction of a lifecycle repository binds the
+        bucket to the very id it goes on to address: the aggregation and
+        modelo readers all spell
+        ``UserProfileLifecycleRepository(bucket_id=X).load(X)``, the profile
+        repository binds ``bucket_id=profile_id``, and the lifecycle service
+        is built for the same ``resolved_id`` that its
+        ``RegisterProfileCommand`` carries. A foreign identity on this
+        repository is therefore a caller holding the wrong handle, never a
+        question the design intends to answer.
+
+        That is why the probe surfaces refuse rather than answering falsely.
+        ``exists`` returning ``False`` for a foreign id reads identically to
+        "no such profile anywhere", and its one production caller --
+        ``register`` -- treats ``False`` as permission to create. A probe
+        against the wrong repository would answer ``False``, and registration
+        would proceed to write into a bucket that already holds a different
+        profile. Refusing converts that silent divergence into a stop.
         """
         trimmed = profile_id.strip()
         if trimmed != self._bucket_id:
@@ -267,7 +276,29 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
 
         Returns:
             ``True`` when a record exists under that key, else ``False``.
+
+        Raises:
+            ProfileBucketMismatchError: ``profile_id`` is not this bucket's
+                own profile. The answer for a foreign id would always be
+                ``False``, which is indistinguishable from "no such profile"
+                and is read as permission to create.
+
+        Refusing here rather than answering honestly was the one judgement
+        call in extending the guard, so the evidence is recorded. A probe is
+        a legitimate use of ``exists`` in general -- but a tree-wide sweep of
+        every caller found none that uses THIS method as a cross-bucket
+        presence check. Its sole production caller is
+        :meth:`ProfileLifecycleService.register`, which treats ``False`` as
+        permission to create.
+
+        The cross-bucket probe does exist in this module, one class down:
+        :meth:`UserProfileSnapshotRepository.exists` takes a *snapshot* id, so
+        asking about a foreign one is a real question with a real answer, and
+        it is deliberately left answering. The difference is that a lifecycle
+        key IS the bucket, so "is profile B in bucket A?" collapses into a
+        question only a confused caller asks.
         """
+        self._assert_owns(profile_id, surface="exists")
         return self._objects.exists(
             USER_PROFILE_VALUE_NAMESPACE,
             user_profile_value_object_key(profile_id),
@@ -302,6 +333,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             :class:`~cadrumo.adapters.persistence.storage.EnvelopeVersionError`:
                 The stored schema version is newer than this code can read.
         """
+        self._assert_owns(profile_id, surface="load")
         record = self._objects.load(
             USER_PROFILE_VALUE_NAMESPACE,
             user_profile_value_object_key(profile_id),
@@ -338,6 +370,12 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
                     "max_supported_version": _USER_PROFILE_VALUE_VERSION,
                 },
             )
+        # The entry guard above proves the CALLER asked for this bucket's
+        # profile; this proves the stored row agrees. They catch different
+        # faults -- a caller holding the wrong handle, and a row whose
+        # contents name a profile other than the key it is filed under -- and
+        # only the second survives a correct caller.
+        self._assert_owns(envelope.payload.profile_id, surface="load")
         return envelope.payload
 
     def save(self, record: UserProfileRecord) -> None:
@@ -355,7 +393,12 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
 
         Args:
             record: The live :class:`UserProfileRecord` aggregate to encrypt and store.
+
+        Raises:
+            ProfileBucketMismatchError: ``record`` names a profile other than
+                this bucket's own.
         """
+        self._assert_owns(record.profile_id, surface="save")
         envelope = Envelope[UserProfileRecord](
             schema_version=_USER_PROFILE_VALUE_VERSION,
             written_at=now(),
@@ -386,7 +429,17 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         :meth:`save` performs. That is a post-commit side effect on in-process
         state, and running it here would invalidate the cache for a write the
         caller may still abandon.
+
+        Guarded in its own right rather than relying on :meth:`save`: this is
+        a second write path to the same key, reached by ``commit_with_events``
+        and by any caller batching its own unit of work. A guard on ``save``
+        alone would leave the hole open on the path that bypasses it.
+
+        Args:
+            record: The live :class:`UserProfileRecord` aggregate to prepare
+                for write without committing it yet.
         """
+        self._assert_owns(record.profile_id, surface="to_secure_object_write")
         envelope = Envelope[UserProfileRecord](
             schema_version=_USER_PROFILE_VALUE_VERSION,
             written_at=now(),
@@ -421,6 +474,14 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         the same reason it is absent from :meth:`to_secure_object_write` -- a
         refresh for a write that raised would leave the cache describing state
         that never existed.
+
+        Args:
+            record: The live :class:`UserProfileRecord` aggregate to persist
+                alongside ``events`` in the same secure-object batch.
+            events: The bucket events claiming this change happened. They
+                commit with the record or not at all.
+            event_repository: The history repository whose write is batched
+                beside the record's.
         """
         self._objects.save_many(
             (
@@ -437,6 +498,10 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         reproduce :meth:`save`'s full behaviour: prepare, commit alongside its
         siblings, then refresh. Separating them is what keeps the cache from
         being invalidated for a write that never lands.
+
+        Args:
+            record: The live :class:`UserProfileRecord` aggregate whose
+                output-language preference the cache should now reflect.
         """
         _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
         _clear_output_language_cache()
@@ -462,6 +527,10 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
                 envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
             except ValidationError as exc:
                 raise StoredProfileDriftError(self._bucket_id, exc) from exc
+            # Keys are stored hashed, so the row cannot be asked which profile
+            # it was filed under; the payload's own claim is the only identity
+            # available here, and it must be this bucket's.
+            self._assert_owns(envelope.payload.profile_id, surface="iter_records")
             yield envelope.payload
 
     def delete(self, profile_id: str) -> bool:
@@ -478,7 +547,14 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         Returns:
             ``True`` when a record was deleted, ``False`` when no record was
             stored under that key.
+
+        Raises:
+            ProfileBucketMismatchError: ``profile_id`` is not this bucket's
+                own profile. Same shape as :meth:`exists`: a foreign id would
+                delete nothing and report ``False``, which reads as "already
+                gone".
         """
+        self._assert_owns(profile_id, surface="delete")
         deleted = self._objects.delete(
             USER_PROFILE_VALUE_NAMESPACE,
             user_profile_value_object_key(profile_id),

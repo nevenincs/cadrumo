@@ -24,7 +24,6 @@ that matches the LGT Art. 122 article you're filing under.
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
@@ -34,6 +33,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...core.hashing import content_hash_hex
+from ...core.time import UtcInstant
 from ..calculations.registry import CasillaId
 from ._protocols import ModeloInputs
 from ._schema import ModeloDraft
@@ -85,7 +85,10 @@ class BaseAmendment(BaseModel):
     original_period: Period
     delta: CasillaDelta = Field(min_length=1)
     amended_draft: ModeloDraft
-    created_at: datetime
+    # An amendment's audit instant must obey the same persisted UTC contract
+    # as its embedded draft.  A naive or offset-aware value makes the legal
+    # correction chronology ambiguous after encrypted rehydration.
+    created_at: UtcInstant
 
 
 class ModeloComplementaria(BaseAmendment):

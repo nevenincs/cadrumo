@@ -34,8 +34,9 @@ from functools import lru_cache
 from urllib.parse import urlparse
 
 from ....core.config import load_settings
+from ....core.errors import CoreValidationError
 from ....core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
-from ....core.parsing import parse_iso8601_date
+from ....core.parsing import normalise_iso_4217_currency, parse_iso8601_date
 from ....domain.currency import ExchangeRateProviderError
 
 ECB_DATA_API_HOST = "data-api.ecb.europa.eu"
@@ -85,7 +86,7 @@ class EcbReferenceRateProvider:
             ExchangeRateProviderError: When the ECB Data Portal cannot be
                 reached or returns an unusable response.
         """
-        code = currency.upper()
+        code = _normalise_ecb_currency(currency)
         if code == DEFAULT_CURRENCY:
             return Decimal("1")
         key = (code, rate_date)
@@ -114,10 +115,20 @@ class EcbReferenceRateProvider:
 
 def _observation_url(currency: str, start: date, end: date) -> str:
     """Build the ECB Data Portal daily-spot observation URL for one currency."""
+    code = _normalise_ecb_currency(currency)
     return (
-        f"{ECB_EXR_ENDPOINT}/D.{currency}.EUR.SP00.A"
+        f"{ECB_EXR_ENDPOINT}/D.{code}.EUR.SP00.A"
         f"?startPeriod={start.isoformat()}&endPeriod={end.isoformat()}&format=csvdata"
     )
+
+
+def _normalise_ecb_currency(currency: str) -> str:
+    """Return a canonical currency code safe to embed in an ECB series path."""
+    try:
+        return normalise_iso_4217_currency(currency)
+    except CoreValidationError as exc:
+        msg = f"ECB exchange-rate currency must be a three-letter ISO 4217 code; got {currency!r}"
+        raise ExchangeRateProviderError(msg) from exc
 
 
 def _parse_observations(payload: str) -> list[tuple[date, Decimal]]:

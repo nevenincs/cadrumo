@@ -32,6 +32,7 @@ from ._schema import (
     ModeloRevision,
     RelationDefinition,
     SourceReference,
+    _filing_schedule_period_kind_mismatches,
 )
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
@@ -226,6 +227,12 @@ def validate_filing_schedule_section(
             failures.append(
                 f"{prefix}: filing schedule {schedule.id!r} declares periods outside revision selector "
                 f"{unknown_periods!r}",
+            )
+        cadence_mismatches = _filing_schedule_period_kind_mismatches(schedule.period_kind, schedule.periods)
+        if cadence_mismatches:
+            failures.append(
+                f"{prefix}: filing schedule {schedule.id!r} period_kind {schedule.period_kind!r} "
+                f"contradicts periods {cadence_mismatches!r}",
             )
         for condition in schedule.profile_conditions:
             condition_owner = f"filing schedule {schedule.id} condition {condition.field}"

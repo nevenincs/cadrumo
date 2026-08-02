@@ -24,7 +24,7 @@ import pytest
 
 from ....core.hashing import sha256_hex
 from ....core.resources import resources
-from ....domain.filing import ModeloDraft, registry_schema_version
+from ....domain.filing import ModeloDraft, compute_modelo_draft_id, registry_schema_version
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.custody_store_matrix_adapters import (
@@ -216,21 +216,34 @@ def _verify_filing_history(bucket_id: str) -> None:
 def _seed_draft(bucket_id: str) -> None:
     from ....core import Period
     from ....domain.calculations.registry import RegistrySnapshotRef
+
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="303-2024-v1",
+        modelo_year=2024,
+        period="4T",
+    )
     from ....domain.filing import ModeloDraft
     from ....domain.submission import ModeloDraftStatus
 
     draft = ModeloDraft(
-        draft_id="draft-303-2024-4t",
+        draft_id=compute_modelo_draft_id(
+            modelo="303",
+            period=Period.from_year_and_code(2024, "4T"),
+            profile_tax_id="12345678Z",
+            snapshot_ref=snapshot_ref,
+            values=(),
+        ),
         modelo="303",
         period=Period.from_year_and_code(2024, "4T"),
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
-        snapshot_ref=RegistrySnapshotRef(modelo="303", revision_id="303-2026-v1", modelo_year=2026, period="4T"),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
         values=(),
         created_at=_NOW,
         updated_at=_NOW,
-        schema_version=registry_schema_version(modelo="303", revision_id="303-2026-v1"),
+        schema_version=registry_schema_version(modelo="303", revision_id="303-2024-v1"),
     )
     ModeloDraftRepository().save(draft)
 
@@ -475,21 +488,34 @@ def _verify_apoderado(bucket_id: str) -> None:
 def _build_modelo_draft() -> ModeloDraft:
     from ....core import Period
     from ....domain.calculations.registry import RegistrySnapshotRef
+
+    snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="303-2024-v1",
+        modelo_year=2024,
+        period="4T",
+    )
     from ....domain.filing import ModeloDraft
     from ....domain.submission import ModeloDraftStatus
 
     return ModeloDraft(
-        draft_id="draft-303-2024-4t-amend",
+        draft_id=compute_modelo_draft_id(
+            modelo="303",
+            period=Period.from_year_and_code(2024, "4T"),
+            profile_tax_id="12345678Z",
+            snapshot_ref=snapshot_ref,
+            values=(),
+        ),
         modelo="303",
         period=Period.from_year_and_code(2024, "4T"),
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
-        snapshot_ref=RegistrySnapshotRef(modelo="303", revision_id="303-2026-v1", modelo_year=2026, period="4T"),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
         values=(),
         created_at=_NOW,
         updated_at=_NOW,
-        schema_version=registry_schema_version(modelo="303", revision_id="303-2026-v1"),
+        schema_version=registry_schema_version(modelo="303", revision_id="303-2024-v1"),
     )
 
 

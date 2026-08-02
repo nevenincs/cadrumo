@@ -38,7 +38,7 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 
 from ...core import LinkInconsistencyDirection, Period
 from ...core.identity import BucketId, SnapshotId, TransactionId
@@ -236,13 +236,21 @@ class LedgerIrpfCategoryPayload(OutputSchema):
 
 
 class LedgerReviewRowPayload(OutputSchema):
-    """One :class:`LedgerReviewRow` transport row."""
+    """One :class:`LedgerReviewRow` transport row.
 
-    id: str
-    date: str
-    amount: str
-    description: str
-    status: str
+    Mirrors the canonical row's constraints rather than restating its fields as
+    free strings: the id is the content-addressed transaction identity, the
+    date is the 10-character ISO day, and the amount, description and review
+    status are the values the row was projected from. Declared as bare ``str``
+    this transport accepted ``id='bad'``, ``date='bad'`` and blank
+    amount/description that :class:`LedgerReviewRow` itself refuses.
+    """
+
+    id: TransactionId
+    date: str = Field(min_length=10, max_length=10)
+    amount: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    status: str = Field(min_length=1)
     transaction: TransactionPayload | None = None
 
 
@@ -1068,20 +1076,54 @@ class LedgerReviewResult(OutputSchema):
     - Empty-result (positional id with no match): empty ``rows`` + ``filters``
     - Single-row detail: scalar fields for the matched row
 
-    All fields are optional so each discriminated path validates cleanly.
+    Every field is optional because the branches are disjoint, so the branch
+    invariant below -- not the field types -- is what makes the envelope
+    honest: without it ``model_validate({})``, ``{"filters": []}`` and a
+    half-populated detail all validated, and an operator could not tell an
+    empty result from a malformed one.
+
+    The detail fields carry the same constraints as
+    :class:`LedgerReviewRowPayload`, so a detail branch cannot claim a row
+    shape the canonical projection would refuse.
     """
 
     # Multi-row and empty-result paths
     rows: list[LedgerReviewRowPayload] | None = None
     filters: list[str] | None = None
     # Single-transaction detail path
-    id: str | None = None
-    date: str | None = None
-    amount: str | None = None
-    description: str | None = None
-    review_status: str | None = None
+    id: TransactionId | None = None
+    date: str | None = Field(default=None, min_length=10, max_length=10)
+    amount: str | None = Field(default=None, min_length=1)
+    description: str | None = Field(default=None, min_length=1)
+    review_status: str | None = Field(default=None, min_length=1)
     transaction: TransactionPayload | None = None
     verbose: bool | None = None
+
+    @model_validator(mode="after")
+    def _exactly_one_complete_branch(self) -> LedgerReviewResult:
+        """Require the envelope to be exactly one of the three documented branches.
+
+        ``rows``/``filters`` together are the list branch (an empty ``rows`` is
+        the legitimate no-match result); the five detail fields together are the
+        detail branch. Mixing them, or populating neither, describes no
+        outcome the command can produce.
+
+        Raises:
+            ValueError: The envelope is neither a complete list branch nor a
+                complete detail branch, or is both.
+        """
+        detail_fields = (self.id, self.date, self.amount, self.description, self.review_status)
+        is_list_branch = self.rows is not None and self.filters is not None
+        detail_present = sum(field is not None for field in detail_fields)
+        is_detail_branch = detail_present == len(detail_fields)
+        if is_list_branch and detail_present:
+            raise ValueError("ledger review result must not mix the list and detail branches")
+        if not is_list_branch and not is_detail_branch:
+            raise ValueError(
+                "ledger review result must populate either rows and filters, "
+                "or every one of id, date, amount, description and review_status",
+            )
+        return self
 
 
 # ---------------------------------------------------------------------------

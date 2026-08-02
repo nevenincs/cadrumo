@@ -49,6 +49,7 @@ from ._adapter_utils import (
     _LocateHelper,
     _SedeCheckerModel,
     assert_query_browser_action_for,
+    assert_read_landing,
     extract_marker_verdict,
     is_aeat_auth_gate_redirect,
     make_locate_helper,
@@ -86,6 +87,48 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     requires_authentication=False,
     requires_aeat_authorization=False,
 )
+
+
+# The two pages this driver is allowed to be sitting on: the sede gestiones
+# entry that issues the servlet's session cookies, and the form servlet
+# itself. The form posts back to its own servlet, so the response page is
+# the same path as the form page and nothing else is a NIF-IVA read.
+_NIF_IVA_READ_PATH_PREFIXES: tuple[str, ...] = (
+    _EXTERNAL.aeat.help_pages.nif_iva_landing,
+    urlsplit(_EXTERNAL.aeat.oracles.nif_iva_verification).path,
+)
+
+
+def assert_nif_iva_read_landing(landing_url: str) -> None:
+    """Refuse a landing that is neither the sede entry nor the form servlet.
+
+    The auth-gate detector above this rule names ONE known landing with a
+    far better diagnostic, and keeps precedence for that reason. This rule
+    is the complement: it refuses every landing nobody enumerated, which is
+    the set an auth-gate detector cannot cover. It runs after each submit
+    because the query click issues a browser form POST that reaches neither
+    the first-party HTTP guard nor the forbidden-verb source scan.
+
+    Public so the driver's proof exercises this exact rule rather than a
+    mirrored copy that would keep agreeing with itself.
+
+    Args:
+        landing_url: The URL AEAT actually served, read off the page.
+
+    Raises:
+        SedeNavigationError: When the landing is not a declared read page.
+    """
+    assert_read_landing(
+        landing_url,
+        surface="NIF-IVA",
+        policy=_READ_GUARD_POLICY,
+        allowed_path_prefixes=_NIF_IVA_READ_PATH_PREFIXES,
+    )
+
+
+def _assert_read_landing(page: Page) -> None:
+    """Read the landed URL off ``page`` and route it through the NIF-IVA landing rule."""
+    assert_nif_iva_read_landing(getattr(page, "url", "") or "")
 
 
 def _assert_query_browser_action(action: str) -> None:
@@ -377,6 +420,7 @@ async def collect_nif_iva_check_observations(
             description="NIF-IVA sede entry network idle",
             timeout_ms=timeout_ms,
         )
+        _assert_read_landing(page)
 
         # Form servlet: now reachable with sede cookies set.
         await browser_session.navigate(page, _EXTERNAL.aeat.oracles.nif_iva_verification)
@@ -418,6 +462,7 @@ async def collect_nif_iva_check_observations(
                 ),
             )
 
+        _assert_read_landing(page)
         await _open_nif_iva_form(page, timeout_ms=timeout_ms)
 
         observations: list[SedeNifIvaCheckObservation] = []
@@ -484,6 +529,11 @@ async def _check_single_nif(
         description="NIF-IVA response network idle",
         timeout_ms=timeout_ms,
     )
+    # The query click issues a browser form POST, which the first-party HTTP
+    # guard never sees and which the forbidden-verb source scan permits by
+    # design. This is the only wall between that click and whatever AEAT
+    # chose to serve back.
+    _assert_read_landing(page)
     body_text = await _playwright_stage(
         page.locator("body").inner_text(timeout=timeout_ms),
         stage=f"check-nif-{nif}:scrape-body",

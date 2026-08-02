@@ -69,6 +69,7 @@ from ...core.ed25519_signing import (
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId
+from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 from ._review_package import assert_review_package_verifies
 
@@ -111,7 +112,7 @@ class ReviewPackageSigningKeypair(BaseModel):
     bucket_id: str = Field(min_length=1)
     private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: datetime
+    created_at: UtcInstant
 
     def private_key(self) -> Ed25519PrivateKey:
         """Reconstruct the live :class:`Ed25519PrivateKey` from stored raw bytes."""
@@ -135,7 +136,7 @@ class ReviewPackageSigningPublicKey(BaseModel):
 
     bucket_id: str = Field(min_length=1)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: datetime
+    created_at: UtcInstant
 
 
 class SignedReviewPackage(BaseModel):
@@ -157,7 +158,7 @@ class SignedReviewPackage(BaseModel):
     manifest_sha256: str = Field(pattern=_HEX_PATTERN_64)
     signature_hex: str = Field(pattern=_HEX_PATTERN_128)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    signed_at: datetime
+    signed_at: UtcInstant
 
 
 def _canonical_bucket_id(bucket_id: str) -> str:

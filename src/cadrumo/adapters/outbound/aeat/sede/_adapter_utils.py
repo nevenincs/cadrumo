@@ -8,6 +8,12 @@ re-implementing the same logic per driver.
 
 :func:`make_locate_helper` and :func:`assert_query_browser_action_for` factor
 out the two private helper shapes that each checker driver used to duplicate.
+
+:func:`assert_read_landing` is the package's landing refusal: the one wall
+that sees where AEAT actually dispatched a read, rather than where the driver
+asked to go. Every driver that fills a form and clicks a control needs it,
+because the click issues a browser form POST that the first-party HTTP guard
+never sees and that the forbidden-verb source scan deliberately permits.
 """
 
 from __future__ import annotations
@@ -27,11 +33,23 @@ if TYPE_CHECKING:
     from playwright.async_api import Locator, Page
 
 from pydantic import BaseModel
+from pydantic import ValidationError as PydanticValidationError
 
 from .....core.logging import get_logger
-from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
+from .....domain.calculations.registry import (
+    RegistryValidationError,
+    RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
+)
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
-from ._errors import BrowserAdapterTypeError, JustificanteFetchError, SedeFailureMode, SedeParseError
+from ._errors import (
+    BrowserAdapterTypeError,
+    JustificanteFetchError,
+    SedeFailureMode,
+    SedeNavigationError,
+    SedeParseError,
+)
 
 _log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
@@ -204,6 +222,115 @@ def landed_origin(landed_url: str | None) -> str | None:
     if not landed.scheme or not landed.netloc:
         return None
     return f"{landed.scheme}://{landed.netloc}"
+
+
+def assert_read_landing(
+    landing_url: str | None,
+    *,
+    surface: str,
+    policy: RemoteStateGuardPolicy,
+    allowed_path_prefixes: tuple[str, ...],
+) -> None:
+    """Refuse a landing that is not one of a read surface's declared read pages.
+
+    The landing refusal is the only wall that sees where AEAT actually
+    DISPATCHED. The sibling walls each miss a browser-driven navigation by
+    construction: the package's forbidden-verb source scan deliberately
+    permits ``click`` / ``fill`` / ``press``, and the HTTP guard is consulted
+    only for a first-party request, never for the form POST a click issues.
+    A driver that fills a form and clicks a control therefore has no
+    mechanism telling it where it ended up unless it calls this.
+
+    The rule is an ALLOW-list, not a denylist, and it fails closed at every
+    step: a landing with no readable origin is refused, a landing the
+    surface's own guard policy does not admit is refused, a surface that
+    declares no read pages refuses everything, and a landing outside the
+    declared pages is refused. An unrecognised landing is a refusal — the
+    guard never has to enumerate the write surfaces it has not seen, which
+    is what a denylist has to get exhaustively right.
+
+    Routing the landed URL through ``policy`` is deliberate rather than
+    redundant: that evaluation carries the canonical AEAT write-verb token
+    scan (``presentar``, ``firmar``, ``pagar``, ``submit`` and the rest) and
+    the authority checks that refuse a credentialed, off-port or off-host
+    landing. What it CANNOT see is an AEAT write path whose URL contains no
+    write verb at all — ``BUGC-JDIT/ModifDomiDual`` and
+    ``BU36-ASIS/M036/index.zul`` are both writes and neither carries a token
+    the scan knows. The path allow-list is what closes that half, so the two
+    checks are complementary and both are required.
+
+    The censal reader (:mod:`._censal_datos`) keeps its own marker-keyed
+    refusal in addition to this one. Its consulta page and its modification
+    siblings are reached through the same launcher, so it names the write
+    paths outright; that predicate is exported for conformance gates and is
+    not superseded here.
+
+    Args:
+        landing_url: The URL AEAT actually served, after redirects — read
+            off the page, never the URL that was requested.
+        surface: Sede surface label used in the refusal message and context
+            (e.g. ``"GROI"``), so a refusal names which driver refused.
+        policy: The surface's own remote-state guard policy.
+        allowed_path_prefixes: Absolute path prefixes this surface is
+            allowed to land on. Empty refuses every landing.
+
+    Raises:
+        SedeNavigationError: When the landing is unreadable, off-policy, or
+            outside the surface's declared read pages.
+    """
+    origin = landed_origin(landing_url)
+    if origin is None:
+        raise SedeNavigationError(
+            f"{surface} landed on no usable origin, so where AEAT dispatched this read cannot be "
+            "established; the read is refused rather than assumed to have stayed on a read page",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context={"surface": surface, "landing_url": landing_url or "<empty>"},
+            suggestion=(
+                "Re-authenticate and retry. A landing with no scheme and host usually means the "
+                "browser never navigated, or AEAT served an interstitial."
+            ),
+        )
+    raw_landing = landing_url or ""
+    try:
+        assert_remote_operation_allowed(
+            policy,
+            RemoteOperation(kind="http", method="GET", url=raw_landing),
+        )
+    except (RegistryValidationError, PydanticValidationError) as exc:
+        # A landing that is not a well-formed absolute URL is refused here
+        # rather than allowed to leak a pydantic error out of the adapter
+        # boundary. The origin gate above already rejects every relative and
+        # authority-less form, so this arm is insurance against a shape it
+        # does not anticipate -- and insurance that REFUSES, not one that
+        # degrades to a pass.
+        raise SedeNavigationError(
+            f"{surface} landing was refused by its own read guard policy: {exc}",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context={"surface": surface, "landing_url": raw_landing, "policy_id": policy.id},
+            suggestion=(
+                "This landing is off the surface's allowed hosts or carries an AEAT write-action "
+                "token. Do not widen the policy to admit it without establishing what AEAT served."
+            ),
+        ) from exc
+    landed_path = urlsplit(raw_landing).path
+    folded_path = landed_path.casefold()
+    if not any(folded_path.startswith(prefix.casefold()) for prefix in allowed_path_prefixes):
+        raise SedeNavigationError(
+            f"{surface} landed outside its declared read pages and was refused; this driver reads "
+            f"only and never reaches an AEAT write path. landed_path={landed_path!r}",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            context={
+                "surface": surface,
+                "landing_url": raw_landing,
+                "landed_path": landed_path,
+                "allowed_path_prefixes": allowed_path_prefixes,
+            },
+            suggestion=(
+                "AEAT dispatched this read somewhere the surface does not declare as a read page. "
+                "Establish what the landing is before declaring it; a filing tool or procedure "
+                "launcher is never added to the allow-list."
+            ),
+        )
 
 
 def response_media_type(content_type: str) -> str:
@@ -444,6 +571,7 @@ __all__ = [
     "_SedeCheckerModel",
     "assert_pdf_response",
     "assert_query_browser_action_for",
+    "assert_read_landing",
     "extract_marker_verdict",
     "first_visible_locator",
     "landed_origin",

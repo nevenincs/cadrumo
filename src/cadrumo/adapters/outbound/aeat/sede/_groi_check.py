@@ -61,6 +61,7 @@ from ._adapter_utils import (
     _LocateHelper,
     _SedeCheckerModel,
     assert_query_browser_action_for,
+    assert_read_landing,
     extract_marker_verdict,
     make_locate_helper,
     nif_check_operation_tail,
@@ -79,6 +80,13 @@ from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNa
 logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
 _GROI_HOST = urlsplit(_EXTERNAL.aeat.oracles.groi_check).netloc
+
+# The one page this driver is allowed to be sitting on. The GROI form posts
+# back to its own servlet -- the form's ``action`` is a RELATIVE path whose
+# final segment ``_assert_form_action_is_consult_endpoint`` pins to this
+# path's own last segment before any click runs -- so the servlet path is
+# both the form page and the response page, and nothing else is a GROI read.
+_GROI_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(_EXTERNAL.aeat.oracles.groi_check).path,)
 
 
 DEFAULT_GROI_TIMEOUT_MS: int = 30000
@@ -109,6 +117,39 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     requires_authentication=True,
     requires_aeat_authorization=False,
 )
+
+
+def assert_groi_read_landing(landing_url: str) -> None:
+    """Refuse a landing that is not the GROI consult servlet.
+
+    The pre-submit form-action check confirms where a click WILL post; this
+    confirms where AEAT actually SERVED. They are different questions: the
+    form action is read off a DOM AEAT controls, and a redirect chain after
+    the POST is invisible to it. Called after every navigation and after
+    every submit, so the verdict parser only ever reads a page this driver
+    is entitled to be on.
+
+    Public so the driver's no-write proof exercises this exact rule rather
+    than a mirrored copy, which would keep agreeing with itself after the
+    rule changed shape.
+
+    Args:
+        landing_url: The URL AEAT actually served, read off the page.
+
+    Raises:
+        SedeNavigationError: When the landing is not the GROI servlet.
+    """
+    assert_read_landing(
+        landing_url,
+        surface="GROI",
+        policy=_READ_GUARD_POLICY,
+        allowed_path_prefixes=_GROI_READ_PATH_PREFIXES,
+    )
+
+
+def _assert_read_landing(page: Page) -> None:
+    """Read the landed URL off ``page`` and route it through the GROI landing rule."""
+    assert_groi_read_landing(getattr(page, "url", "") or "")
 
 
 def _assert_query_browser_action(action: str) -> None:
@@ -305,6 +346,7 @@ async def collect_groi_observations(
                 description="GROI form network idle",
                 timeout_ms=timeout_ms,
             )
+            _assert_read_landing(page)
             await _open_groi_form(page, timeout_ms=timeout_ms)
             verdict = await _check_single_nif(page, nif=nif, timeout_ms=timeout_ms)
             observations.append(GroiNifVerdict(nif=nif, verdict=verdict, raw_evidence_locator=page.url))
@@ -434,6 +476,11 @@ async def _check_single_nif(
         description="GROI response network idle",
         timeout_ms=timeout_ms,
     )
+    # The submit click issues a browser form POST. That POST never reaches
+    # the first-party HTTP guard and the package's forbidden-verb source
+    # scan permits ``click`` outright, so this is the only wall standing
+    # between the click and whatever AEAT chose to serve.
+    _assert_read_landing(page)
     body_text = await _playwright_stage(
         page.locator("body").inner_text(timeout=timeout_ms),
         stage=f"check-nif-{nif}:scrape-body",

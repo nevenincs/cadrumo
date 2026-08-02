@@ -612,11 +612,16 @@ class LedgerReviewQuery(BaseModel):
 
 
 class LedgerReviewRow(BaseModel):
-    """Backend projection for one ledger review row."""
+    """Backend projection for one ledger review row.
+
+    ``id`` is the content-addressed ledger transaction identity, not merely a
+    64-character string: it is the value the operator passes back to address
+    the row, so an id that is the right length but not a digest names nothing.
+    """
 
     model_config = _STRICT_FROZEN
 
-    id: str = Field(min_length=64, max_length=64)
+    id: TransactionId
     date: str = Field(min_length=10, max_length=10)
     amount: str = Field(min_length=1)
     description: str = Field(min_length=1)

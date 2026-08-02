@@ -43,6 +43,7 @@ _log = get_logger(__name__)
 
 INVENTORY_LEDGER_FILENAME = "inventory-ledger.secure-object"
 
+
 def load_inventory() -> tuple[InventoryLedger, ...]:
     """Load inventory ledgers from the encrypted ledger.
 
@@ -192,23 +193,37 @@ class InventoryLedgerRepository:
         Returns:
             The :class:`InventoryLedgerDocument` including the new ledger.
 
+        The document is a singleton row, so creating one ledger rewrites the
+        whole document. Read, duplicate-check, rebuild, and write ran unguarded,
+        so two callers creating ledgers for DIFFERENT activity/year pairs both
+        read the same document and the later write silently discarded the
+        earlier ledger -- a lost update the pair check could never notice,
+        because the two ledgers never met in one document.
+
+        The mutation now runs through the shared revision-guarded unit of work,
+        with the duplicate check inside it so it is re-evaluated against the
+        newly-current document on every attempt.
+
         Raises:
             InventoryLedgerError: When a ledger with the same ``(actividad_id, year)`` pair exists.
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
         """
-        current = self._load_unlocked()
-        if any(
-            existing.actividad_id == ledger.actividad_id and existing.year == ledger.year
-            for existing in current.ledgers
-        ):
-            raise InventoryLedgerError(
-                f"inventory ledger already exists for {ledger.actividad_id!r} in {ledger.year}",
-                context={"actividad_id": ledger.actividad_id, "year": ledger.year},
-                suggestion="aeat app ledger inventory list",
-                translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_already_exists",
-            )
-        updated = InventoryLedgerDocument(ledgers=(*current.ledgers, ledger))
-        self._save_unlocked(updated)
-        return updated
+
+        def _insert(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
+            if any(
+                existing.actividad_id == ledger.actividad_id and existing.year == ledger.year
+                for existing in current.ledgers
+            ):
+                raise InventoryLedgerError(
+                    f"inventory ledger already exists for {ledger.actividad_id!r} in {ledger.year}",
+                    context={"actividad_id": ledger.actividad_id, "year": ledger.year},
+                    suggestion="aeat app ledger inventory list",
+                    translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_already_exists",
+                )
+            return InventoryLedgerDocument(ledgers=(*current.ledgers, ledger))
+
+        return self._storage.mutate(_insert)
 
     def record_movement(self, actividad_id: str, movement: MovementRecord, *, year: int) -> InventoryLedger:
         """Atomically append ``movement`` to the target activity-and-year ledger.
@@ -226,32 +241,44 @@ class InventoryLedgerRepository:
         Returns:
             The updated :class:`InventoryLedger`.
 
+        Carries the same revision guard as :meth:`create`, and needs it more:
+        appending a movement rewrites the WHOLE singleton document, so an
+        unguarded append discarded any ledger — or any other activity's
+        movement — that landed between this call's read and its write.
+
         Raises:
             InventoryLedgerError: When the target ledger does not exist or the
                 movement id is duplicated.
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
         """
-        ledgers = list(self._load_unlocked().ledgers)
-        for index, ledger in enumerate(ledgers):
-            if ledger.actividad_id == actividad_id and ledger.year == year:
-                if any(existing.movement_id == movement.movement_id for existing in ledger.period_movements):
-                    raise InventoryLedgerError(
-                        f"movement {movement.movement_id!r} already exists",
-                        context={"movement_id": movement.movement_id},
-                        suggestion="aeat app ledger inventory valuation preview",
-                        translated_message="adapters.persistence.profile.inventory.errors.movement_already_exists",
-                    )
-                updated = ledger.model_copy(update={"period_movements": (*ledger.period_movements, movement)})
-                ledgers[index] = updated
-                self._save_unlocked(InventoryLedgerDocument(ledgers=tuple(ledgers)))
-                return updated
-        raise InventoryLedgerError(
-            f"inventory ledger not found for {actividad_id!r} in {year}",
-            context={"actividad_id": actividad_id, "year": year},
-            translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_not_found",
-        )
 
-    def _load_unlocked(self) -> InventoryLedgerDocument:
-        return self.load()
+        def _append(current: InventoryLedgerDocument) -> InventoryLedgerDocument:
+            ledgers = list(current.ledgers)
+            for index, ledger in enumerate(ledgers):
+                if ledger.actividad_id == actividad_id and ledger.year == year:
+                    if any(existing.movement_id == movement.movement_id for existing in ledger.period_movements):
+                        raise InventoryLedgerError(
+                            f"movement {movement.movement_id!r} already exists",
+                            context={"movement_id": movement.movement_id},
+                            suggestion="aeat app ledger inventory valuation preview",
+                            translated_message="adapters.persistence.profile.inventory.errors.movement_already_exists",
+                        )
+                    ledgers[index] = ledger.model_copy(
+                        update={"period_movements": (*ledger.period_movements, movement)},
+                    )
+                    return InventoryLedgerDocument(ledgers=tuple(ledgers))
+            raise InventoryLedgerError(
+                f"inventory ledger not found for {actividad_id!r} in {year}",
+                context={"actividad_id": actividad_id, "year": year},
+                translated_message="adapters.persistence.profile.inventory.errors.inventory_ledger_not_found",
+            )
+
+        # Re-read the target out of the committed document rather than closing
+        # over the value built inside the mutation: ``mutate`` may run it more
+        # than once, and only the winning attempt's ledger is the one persisted.
+        document = self._storage.mutate(_append)
+        return next(item for item in document.ledgers if item.actividad_id == actividad_id and item.year == year)
 
     def _save_unlocked(self, document: InventoryLedgerDocument) -> None:
         self._storage.save(document)

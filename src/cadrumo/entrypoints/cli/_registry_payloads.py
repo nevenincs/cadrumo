@@ -34,6 +34,7 @@ from ...domain.calculations.registry import (
     RelationId,
     SourceRefId,
     WorkbookArtefactReport,
+    WorkbookModeloCoverage,
     WorkbookParityRefId,
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
@@ -196,13 +197,9 @@ class RegistryWorkbooksVerifyResult(OutputSchema):
     formula_workbook_count: int
     unsupported_xls_count: int
     failed_count: int
-    runner: dict[str, object]
-    reports: list[dict[str, object]] = []
-    modelo_coverage: list[dict[str, object]] = []
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = {"extra": "allow"}  # type: ignore[assignment]
+    runner: WorkbookRunnerAvailability
+    reports: list[WorkbookArtefactReport] = []
+    modelo_coverage: list[WorkbookModeloCoverage] = []
 
 
 @register_schema("registry.parity.run")

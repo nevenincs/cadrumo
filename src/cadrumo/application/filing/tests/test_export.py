@@ -1060,3 +1060,97 @@ def test_export_payload_parser_rejects_layout_literal_drift(tmp_path: Path) -> N
 
     with pytest.raises(RegistryValidationError, match="literal field"):
         parse_export_payload(layout, bytes(payload))
+
+
+def _export_modelo_100_xml(tmp_path: Path) -> tuple[ModeloDraft, Path, RegistrySchemaAccessor]:
+    """Write a genuine M100 XML-dictionary export and return its inputs."""
+    draft = _approved_modelo_100_xml_dictionary_draft()
+    provider = _schema_provider(filing_year=2024, period="0A", modelos=("100",))
+    output = tmp_path / "modelo-100-2024.xml"
+    export_draft(
+        draft,
+        output_path=output,
+        headers={"surnames": "SURNAME BLANK", "name": "STATE"},
+        schema_provider=provider,
+    )
+    return draft, output, provider
+
+
+def test_verify_matches_the_untampered_xml_dictionary_export(tmp_path: Path) -> None:
+    """Positive control: an untouched export still verifies as MATCH.
+
+    Without it every root-metadata refusal below would also pass if verify had
+    simply started rejecting all XML exports.
+    """
+    draft, output, provider = _export_modelo_100_xml(tmp_path)
+
+    result = verify_export(draft, file_path=output, schema_provider=provider)
+
+    assert result.verdict is DeclaracionVerifyVerdict.MATCH
+    assert result.mismatched_casilla_ids == ()
+    assert result.mismatched_root_fields == ()
+
+
+@pytest.mark.parametrize(
+    ("attribute", "wrong_value"),
+    [
+        ("modelo", "999"),
+        ("ejercicio", "1900"),
+        ("periodo", "BOGUS"),
+        ("versionxsd", "0.0"),
+    ],
+)
+def test_verify_refuses_an_xml_export_whose_root_names_another_declaration(
+    tmp_path: Path,
+    attribute: str,
+    wrong_value: str,
+) -> None:
+    """Casillas alone cannot certify a file: the root says WHICH declaration it is.
+
+    The exporter writes modelo, ejercicio, periodo and versionxsd as
+    ``Declaracion`` root attributes, but the parser walked entry paths and read
+    element text only, so a file with matching casilla values and a wrong
+    modelo, year, period or XSD version was certified ``MATCH``.
+    """
+    draft, output, provider = _export_modelo_100_xml(tmp_path)
+
+    root = DefusedElementTree.fromstring(output.read_bytes())
+    assert root.attrib[attribute] != wrong_value, "fixture must actually change the attribute"
+    root.set(attribute, wrong_value)
+    output.write_bytes(ElementTree.tostring(root, encoding="utf-8", xml_declaration=True))
+
+    result = verify_export(draft, file_path=output, schema_provider=provider)
+
+    assert result.verdict is DeclaracionVerifyVerdict.DRIFT
+    assert result.mismatched_root_fields == (attribute,)
+    # The casilla values are untouched, so the divergence is the root alone.
+    assert result.mismatched_casilla_ids == ()
+
+
+def test_verify_refuses_an_xml_export_whose_xsd_schema_location_was_replaced(tmp_path: Path) -> None:
+    """The declared XSD location is part of the file's identity, not decoration."""
+    draft, output, provider = _export_modelo_100_xml(tmp_path)
+
+    root = DefusedElementTree.fromstring(output.read_bytes())
+    location_attribute = next(name for name in root.attrib if name.endswith("noNamespaceSchemaLocation"))
+    root.set(location_attribute, "https://example.invalid/other.xsd")
+    output.write_bytes(ElementTree.tostring(root, encoding="utf-8", xml_declaration=True))
+
+    result = verify_export(draft, file_path=output, schema_provider=provider)
+
+    assert result.verdict is DeclaracionVerifyVerdict.DRIFT
+    assert result.mismatched_root_fields == (location_attribute,)
+
+
+def test_verify_reports_a_root_attribute_dropped_from_the_file(tmp_path: Path) -> None:
+    """An absent identity attribute is a divergence, not a silent pass."""
+    draft, output, provider = _export_modelo_100_xml(tmp_path)
+
+    root = DefusedElementTree.fromstring(output.read_bytes())
+    del root.attrib["periodo"]
+    output.write_bytes(ElementTree.tostring(root, encoding="utf-8", xml_declaration=True))
+
+    result = verify_export(draft, file_path=output, schema_provider=provider)
+
+    assert result.verdict is DeclaracionVerifyVerdict.DRIFT
+    assert result.mismatched_root_fields == ("periodo",)

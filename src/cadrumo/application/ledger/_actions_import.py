@@ -51,6 +51,7 @@ from ...domain.transactions import (
     derive_import_fingerprint,
     derive_movement_day_key,
     derive_transaction_id,
+    existing_transaction_import_fingerprints,
 )
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._actions_common import (
@@ -84,22 +85,6 @@ class LedgerProviderID(StrEnum):
     N26 = "n26"
     PDF = "pdf"
     PDF_N26 = "pdf-n26"
-
-
-def _transaction_dedup_fingerprints(transaction: Transaction) -> frozenset[str]:
-    """Return import-dedup fingerprints for an already-stored transaction.
-
-    Rows imported after the cross-format dedup landed carry a stamped
-    :attr:`~cadrumo.domain.transactions.Transaction.import_fingerprint`; that value is the canonical
-    identity and is used verbatim. Hand-entered rows and unstamped imported
-    rows have no fingerprint, so the
-    fingerprint is derived from the current ``raw`` as a best-effort
-    fallback - this keeps re-imports of unstamped rows idempotent.
-    """
-    fingerprints = {derive_import_fingerprint(transaction.raw, direction=transaction.direction)}
-    if transaction.import_fingerprint:
-        fingerprints.add(transaction.import_fingerprint)
-    return frozenset(fingerprints)
 
 
 class _ImportRowPlan(NamedTuple):
@@ -174,7 +159,7 @@ def _evaluate_import_rows(
     existing_fingerprints = {
         fingerprint
         for transaction in catalogue.values()
-        for fingerprint in _transaction_dedup_fingerprints(transaction)
+        for fingerprint in existing_transaction_import_fingerprints(transaction)
     }
     existing_day_keys = {derive_movement_day_key(transaction.raw) for transaction in catalogue.values()}
     imported: list[Transaction] = []

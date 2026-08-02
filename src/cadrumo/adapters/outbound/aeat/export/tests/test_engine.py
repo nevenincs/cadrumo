@@ -43,8 +43,9 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
     )
 
 
-def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> ModeloPresentado:
+def _historical_filing(draft_label: str = "draft-1", modelo: str = "130") -> ModeloPresentado:
     """Build a production historical filing record for encrypted persistence."""
+    submission_id = make_submission_id(draft_label, 1)
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id="draft-1",
@@ -55,7 +56,7 @@ def _historical_filing(submission_id: str = "sub-1", modelo: str = "130") -> Mod
         submitted_at=_SUBMITTED_AT,
         attempts=(
             SubmissionAttempt(
-                attempt_id="attempt-1",
+                attempt_id=f"{submission_id}.1",
                 started_at=_SUBMITTED_AT,
                 ended_at=_SUBMITTED_AT,
                 status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
@@ -78,7 +79,7 @@ def test_engine_exposes_no_remote_write_methods(tmp_path: Path) -> None:
 
 def test_load_submission_roundtrips_real_encrypted_record(tmp_path: Path) -> None:
     engine = _build_engine(tmp_path)
-    filing = _historical_filing(submission_id=make_submission_id("draft-1", 1))
+    filing = _historical_filing()
     SubmissionRepository().save(filing)
 
     assert engine.load_submission(filing.submission_id) == filing
@@ -91,8 +92,8 @@ def test_load_submission_rejects_traversal_id(tmp_path: Path) -> None:
 
 def test_list_submissions_filters_real_encrypted_records(tmp_path: Path) -> None:
     engine = _build_engine(tmp_path)
-    first = _historical_filing(submission_id="sub-1", modelo="130")
-    second = _historical_filing(submission_id="sub-2", modelo="303")
+    first = _historical_filing(draft_label="draft-1", modelo="130")
+    second = _historical_filing(draft_label="draft-2", modelo="303")
     repository = SubmissionRepository()
     repository.save(first)
     repository.save(second)

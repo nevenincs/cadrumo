@@ -280,16 +280,20 @@ def test_profile_answer_type_error_raise_sites(call: Callable[[], object]) -> No
 
 
 # ---------------------------------------------------------------------------
-# RegistryValidationError in M232 row bindings
+# RegistryValidationError in M232 row materialisation
 # ---------------------------------------------------------------------------
 
 
-def test_m232_binding_error_too_many_rows() -> None:
-    """materialize_m232_related_party_rows raises RegistryValidationError for >5 rows."""
+def test_m232_row_mapping_error_too_many_rows() -> None:
+    """m232_related_party_row_casilla_values raises RegistryValidationError for >5 rows."""
     from decimal import Decimal as _Decimal
 
-    from ..domain.calculations.registry import ModeloRevision, RegistryValidationError
-    from ..domain.modelos import Modelo232VinculadaRow, materialize_m232_related_party_rows
+    from ..domain.calculations.registry import RegistryValidationError
+    from ..domain.modelos import (
+        M232_MAX_RELATED_PARTY_ROWS,
+        Modelo232VinculadaRow,
+        m232_related_party_row_casilla_values,
+    )
 
     sample_row = Modelo232VinculadaRow(
         nif="12345678A",
@@ -297,11 +301,23 @@ def test_m232_binding_error_too_many_rows() -> None:
         tipo_operacion="01",
         importe=_Decimal("0"),
     )
-    six_rows = tuple([sample_row] * 6)
+
+    # The capacity itself is the form's structure -- five vinculada slots at
+    # positions 144-748 on page_01 -- so it is pinned to the literal here.
+    # Deriving both the accepted and the refused size from the constant alone
+    # would move both goalposts together and pass at any capacity.
+    assert M232_MAX_RELATED_PARTY_ROWS == 5
+
+    # Positive control: a full form maps cleanly onto every row slot, so the
+    # refusal below is the capacity check firing rather than a row fixture the
+    # mapping would have rejected at any size.
+    at_capacity = m232_related_party_row_casilla_values((sample_row,) * M232_MAX_RELATED_PARTY_ROWS)
+    assert {casilla_id.split("-")[1] for casilla_id in at_capacity} == {
+        str(index) for index in range(1, M232_MAX_RELATED_PARTY_ROWS + 1)
+    }
 
     with pytest.raises(RegistryValidationError):
-        # negative test: None rejected where ModeloRevision is required
-        materialize_m232_related_party_rows(cast(ModeloRevision, None), six_rows)
+        m232_related_party_row_casilla_values((sample_row,) * (M232_MAX_RELATED_PARTY_ROWS + 1))
 
 
 # ---------------------------------------------------------------------------

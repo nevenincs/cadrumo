@@ -29,6 +29,7 @@ import asyncio
 from collections.abc import Mapping
 from re import compile
 from typing import TYPE_CHECKING, Literal
+from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Locator, Page
@@ -42,6 +43,7 @@ from .....domain.calculations.registry import (
     CasillaId,
     RegistryValidationError,
     RemoteOperation,
+    RemoteStateGuardPolicy,
     RentaWebOpenDisplayOverride,
     RentaWebOpenLivePayload,
     RentaWebOpenObservation,
@@ -50,7 +52,7 @@ from .....domain.calculations.registry import (
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, BrowserSession, DefaultBrowserSession, default_browser_session_factory
-from ._adapter_utils import registry_failure_message, require_playwright_page
+from ._adapter_utils import assert_read_landing, registry_failure_message, require_playwright_page
 from ._browser_constants import PLAYWRIGHT_WAIT_NETWORKIDLE, default_viewport
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
@@ -58,6 +60,79 @@ from ._renta_web_open_safety import assert_click_target_safe, install_page_safet
 
 _SPANISH_AMOUNT_RE = compile(r"[-+]?\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\d+(?:[.,]\d+)?")
 logger = get_logger(__name__)
+
+_EXTERNAL = Settings.external_constants()
+_RENTA_WEB_OPEN_APP_HOST = urlsplit(_EXTERNAL.aeat.oracles.renta_web_open_app_template).netloc
+
+# The OPEN simulator's own application directory, taken as the parent of the
+# configured app template path. Everything the driver reads is a page inside
+# that ZK application, so the directory is the whole read surface.
+#
+# This is the one landing rule in the package that must NOT key on ``.zul``:
+# the simulator is itself served from ``index.zul``, so the censal reader's
+# marker list -- which forbids ``.zul`` because AEAT's M036 filing tool is a
+# ZK app -- would refuse the very page this driver exists to read. Per-surface
+# evidence is why the allow-list is a directory here and a servlet path there.
+_RENTA_WEB_OPEN_READ_PATH_PREFIXES: tuple[str, ...] = (
+    urlsplit(_EXTERNAL.aeat.oracles.renta_web_open_app_template).path.rsplit("/", 1)[0] + "/",
+)
+
+# Local policy, declared the same way the GROI and NIF-IVA drivers declare
+# theirs. The oracle's own policy is supplied by its registry cross-reference
+# and is not reachable from this module; this one authorises nothing new, it
+# only gives the landing rule an authority to check the landed host against.
+_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+    id="aeat-renta-web-open-direct-driver-read",
+    evidence_tier="executable_parity_evidence",
+    classification="open_simulator",
+    allowed_hosts=(_RENTA_WEB_OPEN_APP_HOST,),
+    # Widen to any subdomain under the AEAT apex so a www{n} load-balancer
+    # dispatch is tolerated, not refused; the path allow-list is unchanged.
+    allowed_host_suffixes=(_EXTERNAL.aeat.domains.host_suffix,),
+    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.renta_web_open_browser_action_patterns,
+    synthetic_data_allowed=False,
+    requires_authentication=False,
+    requires_aeat_authorization=False,
+)
+
+
+def assert_renta_web_open_read_landing(landing_url: str) -> None:
+    """Refuse a landing outside the anonymous OPEN simulator application.
+
+    ``app_url`` is a field on the caller-supplied live payload, so the URL
+    this driver navigates to is external input rather than a constant. The
+    driver then fills a synthetic identification profile and casilla values
+    into whatever it landed on. The click guard blocks a *presentar* click
+    and the page safety net blocks a forbidden navigation, but neither
+    establishes that the page being FILLED is the anonymous simulator --
+    and a synthetic profile typed into a real declaration is already
+    damage, whether or not the submit that follows is blocked.
+
+    This rule closes that: the landing must be inside the OPEN application
+    directory, so a payload pointing anywhere else is refused before any
+    field is filled.
+
+    Public so the driver's proof exercises this exact rule rather than a
+    mirrored copy that would keep agreeing with itself.
+
+    Args:
+        landing_url: The URL AEAT actually served, read off the page.
+
+    Raises:
+        SedeNavigationError: When the landing is outside the OPEN simulator.
+    """
+    assert_read_landing(
+        landing_url,
+        surface="Renta WEB Open",
+        policy=_READ_GUARD_POLICY,
+        allowed_path_prefixes=_RENTA_WEB_OPEN_READ_PATH_PREFIXES,
+    )
+
+
+def _assert_read_landing(page: Page) -> None:
+    """Read the landed URL off ``page`` and route it through the OPEN simulator landing rule."""
+    assert_renta_web_open_read_landing(getattr(page, "url", "") or "")
+
 
 #: Timeout (ms) for the "element visible" fast-path probe when locating
 #: casilla inputs. Deliberately short: fall through to the XPath fallback
@@ -186,6 +261,10 @@ async def collect_renta_web_open_observation(
             )
             await _navigate_to_resumen(page, timeout_ms=live_payload.timeout_ms)
         values = await _scrape_renta_web_open_values(page, live_payload=live_payload)
+        # raw_evidence_locator is stored parity evidence; assert the landing
+        # before recording it so the locator names a page this driver was
+        # entitled to read.
+        _assert_read_landing(page)
         return RentaWebOpenObservation(values=values, raw_evidence_locator=page.url)
     except (BrowserAdapterTypeError, SedeError, SiteHealthError, BrowserError):
         raise
@@ -237,6 +316,10 @@ async def _open_renta_web_open_session(
         description="Renta WEB Open network idle after app navigation",
         timeout_ms=live_payload.timeout_ms,
     )
+    # app_url is caller-supplied payload input, so this is the first point
+    # at which the page about to be FILLED can be established as the
+    # anonymous simulator rather than something else AEAT served.
+    _assert_read_landing(page)
     return page, context
 
 

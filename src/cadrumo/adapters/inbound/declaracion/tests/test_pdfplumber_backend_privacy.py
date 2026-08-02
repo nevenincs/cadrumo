@@ -16,7 +16,7 @@ def test_pdfium_fallback_debug_log_does_not_expose_source_path(caplog: pytest.Lo
     _extract_pages_text_with_pdfium_cached.cache_clear()
 
     with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.declaracion._parsers._pdfplumber_backend"):
-        result = _extract_pages_text_with_pdfium_cached(sensitive_path, 1, 1)
+        result = _extract_pages_text_with_pdfium_cached(sensitive_path, 1, 1, "0" * 64)
 
     rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
     assert result is None

@@ -43,7 +43,6 @@ from ...core.i18n import tr
 from ._common import _emit_envelope
 from ._diagnostics_payloads import (
     TelemetryFlushResult,
-    TelemetryPayloadPreviewPayload,
     TelemetryStatusResult,
 )
 
@@ -245,20 +244,9 @@ def diagnostics_telemetry_flush(
         preview = flush_telemetry(settings=settings, acknowledged=acknowledge)
         sent = preview.would_send
 
-    payload_row = TelemetryPayloadPreviewPayload(
-        schema_version=preview.payload.schema_version,
-        workspace_hash=preview.payload.workspace_hash,
-        command=preview.payload.command,
-        counters=dict(preview.payload.counters),
-        timings_ms=dict(preview.payload.timings_ms),
-        succeeded=preview.payload.succeeded,
-        error_kind=preview.payload.error_kind,
-        captured_at=preview.payload.captured_at,
-    )
-
     result = TelemetryFlushResult(
         dry_run=dry_run,
-        payload=payload_row,
+        payload=preview.payload,
         gate_permits=preview.gate_permits,
         endpoint_configured=preview.endpoint_configured,
         would_send=preview.would_send,
@@ -270,9 +258,9 @@ def diagnostics_telemetry_flush(
             "cli.diagnostics.telemetry.flush.header",
             default="Telemetry payload (dry run, nothing sent):" if dry_run else "Telemetry flush:",
         ),
-        f"command\t{payload_row.command}",
-        f"counters\t{payload_row.counters}",
-        f"succeeded\t{payload_row.succeeded}",
+        f"command\t{preview.payload.command}",
+        f"counters\t{preview.payload.counters}",
+        f"succeeded\t{preview.payload.succeeded}",
         f"gate_permits\t{preview.gate_permits}",
         f"endpoint_configured\t{preview.endpoint_configured}",
         f"would_send\t{preview.would_send}",

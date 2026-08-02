@@ -170,6 +170,10 @@ def decode_secure_object_row(
     and never selects a decode branch, so hostile header metadata cannot buy an
     attacker anything beyond a refusal they could have caused anyway.
 
+    Args:
+        expected_class: The :class:`SensitivityClass` this namespace declares;
+            the stored row's own classification must match it exactly.
+
     Raises:
         ClassificationError: Unknown classification, or one that does not match
             the namespace's expected class.
@@ -281,6 +285,11 @@ def secure_object_record_from_row(
     Fail-closed policy: a caller loading a specific row wants the typed error,
     not a placeholder. Normalisation of the ORM row is the only thing this
     wrapper adds; every check lives in :func:`decode_secure_object_row`.
+
+    Args:
+        expected_class: The :class:`SensitivityClass` the row's own
+            classification must match, forwarded verbatim to
+            :func:`decode_secure_object_row`.
     """
     return decode_secure_object_row(
         namespace=row.namespace,

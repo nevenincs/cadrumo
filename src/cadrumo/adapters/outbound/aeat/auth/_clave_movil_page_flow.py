@@ -21,8 +21,10 @@ import base64
 import contextlib
 import json
 import time
+from datetime import datetime
 from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
+from uuid import uuid4
 
 from bs4 import BeautifulSoup
 
@@ -70,6 +72,16 @@ if TYPE_CHECKING:
     from .....core.external_constants import AeatClaveMovilSurface
 
 log = get_logger(__name__)
+
+
+def _mint_diagnostic_id(captured_at: datetime) -> str:
+    """Return a collision-resistant, operator-safe Cl@ve diagnostic identifier.
+
+    The timestamp keeps captured diagnostics naturally inspectable, while the
+    UUID4 suffix prevents distinct failures in one UTC instant from sharing an
+    encrypted secure-object key.
+    """
+    return f"{captured_at:%Y%m%dT%H%M%S}.{captured_at.microsecond:06d}Z-{uuid4().hex}"
 
 
 class _ClaveMovilPageFlowMixin(abc.ABC):
@@ -432,13 +444,14 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         diagnostic namespace.
         """
         try:
-            ts = now().strftime("%Y%m%dT%H%M%SZ")
+            captured_at = now()
+            diagnostic_id = _mint_diagnostic_id(captured_at)
             url = getattr(page, "url", "") or ""
             payload: dict[str, object] = {
-                "diagnostic_id": ts,
+                "diagnostic_id": diagnostic_id,
                 "reason": reason,
                 "url": url,
-                "captured_at": now().isoformat(),
+                "captured_at": captured_at.isoformat(),
                 "auth_attempt": self._attempt_context(),
             }
             content = getattr(page, "content", None)
@@ -463,19 +476,19 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                     payload["screenshot_capture_error"] = "timeout"
             secure_object_repository_for_active_bucket().save(
                 namespace=_DIAGNOSTIC_NAMESPACE,
-                object_key=ts,
+                object_key=diagnostic_id,
                 classification=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity,
                 schema_version=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version,
-                written_at=now(),
+                written_at=captured_at,
                 payload=json.dumps(payload, sort_keys=True, default=str).encode(UTF_8_ENCODING),
             )
             log.warning(
                 "ClaveMovilAuthProvider: encrypted diagnostic captured id=%s (url=%s reason=%s)",
-                ts,
+                diagnostic_id,
                 url,
                 reason,
             )
-            return ts
+            return diagnostic_id
         except Exception:  # diagnostic dump is best-effort; Playwright screenshot/content errors must not raise
             log.warning("ClaveMovilAuthProvider: diagnostic dump failed", exc_info=True)
             return None

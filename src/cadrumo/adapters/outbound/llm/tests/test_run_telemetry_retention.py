@@ -106,7 +106,9 @@ def test_prune_enforces_max_records_cap_evicting_oldest_first(tmp_path: Path) ->
     removed = recorder.prune(retention_days=30, max_records=3)
 
     assert removed == 2
-    remaining_ids = {item.run_id for item in recorder.load_records()}
+    remaining_records = recorder.load_records()
+    assert all(item.started_at.utcoffset() == timedelta(0) for item in remaining_records)
+    remaining_ids = {item.run_id for item in remaining_records}
     # The three most-recent (smallest age) records survive; the two oldest are gone.
     assert remaining_ids == {"run-1", "run-2", "run-3"}
 

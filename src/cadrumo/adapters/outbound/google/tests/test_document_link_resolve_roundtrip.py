@@ -41,6 +41,10 @@ from ._drive_media_server import drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+# The attachment store refuses a manifest naming another profile bucket, so
+# the fixture names the same bucket the runtime profile provisions.
+_BUCKET_ID = "9d4e1a2b-6c70-4f81-8b92-a3c4d5e6f701"
+
 _FILE_ID = "1AbcDEfgHIjkLMnoPQRstuVWxyz12345"
 _DRIVE_LINK = f"https://drive.google.com/file/d/{_FILE_ID}/view"
 _CAPTURED_AT = datetime(2026, 5, 28, 12, 45, 0, tzinfo=UTC)
@@ -64,7 +68,7 @@ def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
         source_reference=_DRIVE_LINK,
         mime_type="application/pdf",
         captured_at=_CAPTURED_AT,
-        bucket_id="b" * 32,
+        bucket_id=_BUCKET_ID,
         link_transaction_ids=("tx-doclink-1",),
         metadata={"source": "GOOGLE_DRIVE", "source_reference": _DRIVE_LINK},
     )
@@ -73,7 +77,7 @@ def _store_resolved_link(store: AttachmentStore, *, payload: bytes):
 def test_fetch_and_encrypt_roundtrip_stores_fetched_bytes(tmp_path: Path) -> None:
     """Drive bytes resolved through the seam are stored byte-identically."""
     payload = b"%PDF-1.4\n%resolved-drive-justificante\n" + b"\x01" * 48
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         attachment = _store_resolved_link(store, payload=payload)
 
@@ -110,7 +114,7 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
     from ....persistence.storage.sql import SecureObjectRow
 
     payload = b"%PDF-1.4 anti-tautology blob mutation proof payload"
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         store = AttachmentStore()
         attachment = _store_resolved_link(store, payload=payload)
         # Baseline: the freshly-stored blob verifies.
@@ -143,7 +147,7 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
 
 def test_gmail_reference_refuses_and_writes_nothing(tmp_path: Path) -> None:
     """A Gmail link refuses with the scope error and stores no manifest/blob."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         with pytest.raises(OutboundStoragePermissionError) as excinfo:
             resolve_document_link(
@@ -159,7 +163,7 @@ def test_gmail_reference_refuses_and_writes_nothing(tmp_path: Path) -> None:
 
 def test_url_reference_refuses_and_writes_nothing(tmp_path: Path) -> None:
     """An arbitrary URL refuses with the scope error and stores nothing."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         with pytest.raises(OutboundStoragePermissionError) as excinfo:
             resolve_document_link(

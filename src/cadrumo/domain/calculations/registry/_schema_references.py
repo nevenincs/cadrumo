@@ -15,7 +15,7 @@ from ....core.external_constants import (
     XLSX_EXTENSION,
 )
 from ._errors import RegistryValidationError
-from ._ids import LegalRefId, ModeloId, RevisionId, SourceRefId
+from ._ids import LegalRefId, ModeloId, ParameterId, RevisionId, SourceRefId
 from ._schema_base import DateAxis, EvidenceTier, LegalRefs, RegistryModel, ReviewStatus
 
 __all__ = [
@@ -215,7 +215,7 @@ class SourceReference(RegistryModel):
 class LegalParameter(RegistryModel):
     """Versioned legal parameter value cited by registry formulas."""
 
-    id: str
+    id: ParameterId
     evidence_tier: Literal["legal_authority"]
     value: str
     unit: str

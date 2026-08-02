@@ -22,7 +22,7 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import Period, RevisionReviewStatus, TaxDomain
+from ....core import Period, PeriodKind, RevisionReviewStatus, TaxDomain
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -664,6 +664,34 @@ class DeadlineWindowDefinition(RegistryModel):
         return self
 
 
+_SCHEDULE_PERIOD_KINDS: dict[str, frozenset[PeriodKind]] = {
+    "monthly": frozenset({PeriodKind.MONTHLY}),
+    "quarterly": frozenset({PeriodKind.QUARTERLY, PeriodKind.INSTALMENT, PeriodKind.EXTENDED}),
+    "annual": frozenset({PeriodKind.ANNUAL}),
+    # Event/administrative tokens are EXTENDED in the canonical classifier.
+    # Modelo 840 deliberately uses 0A as the exercise coordinate for an ad-hoc
+    # IAE filing, so ANNUAL is also an admitted token shape for this schedule
+    # contract; legal/source grounding still owns whether that declaration is
+    # correct for a particular modelo.
+    "ad_hoc": frozenset({PeriodKind.EXTENDED, PeriodKind.ANNUAL}),
+}
+
+
+def _filing_schedule_period_kind_mismatches(period_kind: str, periods: tuple[str, ...]) -> tuple[str, ...]:
+    """Return schedule tokens whose canonical cadence contradicts ``period_kind``."""
+    accepted = _SCHEDULE_PERIOD_KINDS[period_kind]
+    mismatches: list[str] = []
+    for token in periods:
+        try:
+            canonical_kind = Period.from_year_and_code(2000, token).kind
+        except ValueError:
+            mismatches.append(token)
+            continue
+        if canonical_kind not in accepted:
+            mismatches.append(token)
+    return tuple(mismatches)
+
+
 class ModeloScheduleDefinition(RegistryModel):
     id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_.-]+$")
     period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
@@ -684,6 +712,11 @@ class ModeloScheduleDefinition(RegistryModel):
     def _validate_schedule(self) -> ModeloScheduleDefinition:
         if self.profile_condition_mode == "any" and not self.profile_conditions:
             raise RegistryValidationError(f"filing schedule {self.id!r} any-mode requires profile conditions")
+        mismatches = _filing_schedule_period_kind_mismatches(self.period_kind, self.periods)
+        if mismatches:
+            raise RegistryValidationError(
+                f"filing schedule {self.id!r} period_kind {self.period_kind!r} contradicts periods {mismatches!r}",
+            )
         return self
 
 
@@ -1044,6 +1077,37 @@ class RegistrySnapshot(RegistryModel):
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
 
+    @staticmethod
+    def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:
+        """Require every snapshot map key to name the payload stored beneath it."""
+        for key, payload in values.items():
+            payload_id = getattr(payload, "id", None)
+            if not isinstance(payload_id, str):
+                raise RegistryValidationError(
+                    f"snapshot {field_name} payload beneath key {key!r} has no string id",
+                )
+            if key != payload_id:
+                raise RegistryValidationError(
+                    f"snapshot {field_name} key {key!r} does not match payload id {payload_id!r}",
+                )
+
+    @model_validator(mode="after")
+    def _validate_identifier_keyed_maps(self) -> RegistrySnapshot:
+        """Keep all nested lookup identities aligned with their typed payloads."""
+        self._validate_identifier_keyed_map("legal", self.legal)
+        self._validate_identifier_keyed_map("sources", self.sources)
+        self._validate_identifier_keyed_map("extraction_profiles", self.extraction_profiles)
+        self._validate_identifier_keyed_map("live_cross_references", self.live_cross_references)
+        self._validate_identifier_keyed_map("workbook_parity_refs", self.workbook_parity_refs)
+        self._validate_identifier_keyed_map("verification_expectations", self.verification_expectations)
+        self._validate_identifier_keyed_map("application_links", self.application_links)
+        self._validate_identifier_keyed_map("deadline_windows", self.deadline_windows)
+        self._validate_identifier_keyed_map("filing_schedules", self.filing_schedules)
+        self._validate_identifier_keyed_map("support_removal_decisions", self.support_removal_decisions)
+        self._validate_identifier_keyed_map("constructs", self.constructs)
+        self._validate_identifier_keyed_map("dependency_classifications", self.dependency_classifications)
+        return self
+
     @model_validator(mode="after")
     def _validate_filing_period_consistency(self) -> RegistrySnapshot:
         if self.filing_period is None:
@@ -1082,6 +1146,10 @@ class RegistrySnapshot(RegistryModel):
             ),
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),
+            rounding_codes=frozenset(expectation.rounding for expectation in expectations),
+            discrepancy_causes=frozenset(
+                cause for expectation in expectations for cause in expectation.discrepancy_causes
+            ),
         )
 
 

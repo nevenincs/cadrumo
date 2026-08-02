@@ -90,6 +90,13 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
             response = client.get(url)
             response.raise_for_status()
             payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("Ollama tags response must be a JSON object")
+            models = payload.get("models")
+            if not isinstance(models, list) or any(
+                not isinstance(entry, dict) or not isinstance(entry.get("name"), str) for entry in models
+            ):
+                raise ValueError("Ollama tags response must contain model objects with string names")
     except (httpx.HTTPError, ValueError):
         return DependencyStatus(
             service="ollama-vision",
@@ -97,7 +104,7 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
             detail=f"Ollama is not reachable at {url}",
             remediation="start Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url",
         )
-    names = {str(entry.get("name", "")) for entry in payload.get("models", []) if isinstance(entry, dict)}
+    names = {entry["name"] for entry in models}
     # Ollama lists names with the tag (e.g. "qwen2.5vl:3b"); match the configured
     # model exactly or by its untagged stem.
     present = model in names or any(name.split(":", 1)[0] == model.split(":", 1)[0] for name in names)

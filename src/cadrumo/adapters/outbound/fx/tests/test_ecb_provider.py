@@ -14,7 +14,7 @@ from .....domain.currency import (
     MonetaryAmount,
 )
 from .....tests.ecb_stub import ecb_csv_fetch
-from .._ecb_provider import EcbReferenceRateProvider, default_ecb_rate_provider
+from .._ecb_provider import EcbReferenceRateProvider, _observation_url, default_ecb_rate_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -74,6 +74,26 @@ def test_date_outside_the_lookback_window_returns_none(
 ) -> None:
     # Far earlier than any published observation: the widened window is empty.
     assert provider.get_eur_rate("USD", date(2024, 12, 1)) is None
+
+
+@pytest.mark.parametrize("currency", ("usd", " usd "))
+def test_observation_url_normalises_currency_before_constructing_the_ecb_path(currency: str) -> None:
+    assert _observation_url(currency, date(2025, 3, 1), date(2025, 3, 14)) == (
+        "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A"
+        "?startPeriod=2025-03-01&endPeriod=2025-03-14&format=csvdata"
+    )
+
+
+@pytest.mark.parametrize("currency", ("USD/../../EVIL", "USD?evil=1", "US D", "US", "USDD"))
+def test_observation_url_refuses_malformed_currency_before_constructing_the_ecb_path(currency: str) -> None:
+    with pytest.raises(ExchangeRateProviderError, match="three-letter ISO 4217 code"):
+        _observation_url(currency, date(2025, 3, 1), date(2025, 3, 14))
+
+
+@pytest.mark.parametrize("currency", ("USD/../../EVIL", "USD?evil=1"))
+def test_provider_refuses_path_containing_currency_before_lookup(currency: str) -> None:
+    with pytest.raises(ExchangeRateProviderError, match="three-letter ISO 4217 code"):
+        EcbReferenceRateProvider().get_eur_rate(currency, date(2025, 3, 14))
 
 
 def test_resolved_rates_are_memoized_per_currency_and_date() -> None:

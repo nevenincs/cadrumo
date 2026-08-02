@@ -1064,7 +1064,16 @@ class Settings(CadrumoMcpServingSettings):
             # than re-implementing the TOML parse inline. The reader
             # uses strict pydantic validation; this preserves the
             # one-resolver invariant for the active-profile pointer.
-            from . import pointer_path, read_pointer
+            #
+            # Reached through the owning submodule, never the ``cadrumo.core``
+            # facade. Both helpers are served by the package's PEP 562
+            # ``__getattr__``, which is defined near the END of
+            # ``core/__init__``; any module imported EARLIER in that file that
+            # reaches this validator therefore asks a half-built package for an
+            # attribute whose accessor does not exist yet, and the whole package
+            # becomes unimportable. Naming the submodule keeps this resolvable
+            # no matter how early the caller sits.
+            from ._bucket_pointer_io import pointer_path, read_pointer
 
             try:
                 pointer = read_pointer(self.cadrumo_local_storage_root)

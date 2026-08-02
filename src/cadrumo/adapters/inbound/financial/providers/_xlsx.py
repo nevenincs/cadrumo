@@ -59,7 +59,8 @@ class XlsxProvider(FinancialProvider):
     score. Numeric and date cell values are read directly from the
     cell types (rather than coerced through their printed strings)
     so locale-formatted ``Decimal`` and ``date`` parsing stays
-    accurate.
+    accurate. Formula cells in selected data rows are refused rather than
+    trusting a workbook's potentially stale cached values.
 
     Like :class:`~adapters.inbound.financial.providers.CsvProvider`, this
     provider shares the tabular alias catalogue and stores every parsed row as
@@ -188,7 +189,11 @@ class XlsxProvider(FinancialProvider):
         workbook = _open_workbook_or_refuse(path)
         try:
             best = _select_best_layout_across_worksheets(workbook)
-            best_rows = [list(row) for row in best.worksheet.iter_rows(values_only=True)] if best.worksheet else []
+            best_rows = _materialize_selected_rows_or_refuse_formula_cells(
+                best.worksheet,
+                sheet_name=best.sheet_name,
+                header_index=best.header_index,
+            )
             self._last_sheet_name = best.sheet_name
             self._last_header_index = best.header_index + 1
             if best.score < _MIN_LAYOUT_SCORE:
@@ -271,9 +276,9 @@ def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatc
 
 
 def _open_workbook_or_refuse(path: Path) -> Workbook:
-    """Open ``path`` as an openpyxl workbook or re-wrap the parse failure."""
+    """Open ``path`` with formulas visible or re-wrap the parse failure."""
     try:
-        return load_workbook(filename=path, read_only=True, data_only=True)
+        return load_workbook(filename=path, read_only=True, data_only=False)
     except Exception as exc:  # pragma: no cover - exercised via validation path
         raise InvalidFinancialSourceError(f"could not open workbook: {path}") from exc
 
@@ -295,6 +300,28 @@ def _close_workbook_during_teardown(workbook: Workbook) -> None:
             close_exc,
             exc_info=True,
         )
+
+
+def _materialize_selected_rows_or_refuse_formula_cells(
+    worksheet: Worksheet | None,
+    *,
+    sheet_name: str,
+    header_index: int,
+) -> list[list[Any]]:
+    """Materialize a selected worksheet after refusing formula-bearing data rows."""
+    if worksheet is None:
+        return []
+    rows: list[list[Any]] = []
+    for row_index, cells in enumerate(worksheet.iter_rows(), start=1):
+        if row_index > header_index + 1:
+            for column_index, cell in enumerate(cells, start=1):
+                if cell.data_type == "f":
+                    raise InvalidFinancialSourceError(
+                        f"worksheet {sheet_name!r} contains formula cell at row {row_index}, column {column_index}; "
+                        "formula cached values are not accepted",
+                    )
+        rows.append([cell.value for cell in cells])
+    return rows
 
 
 def _best_layout_match_for_worksheet(

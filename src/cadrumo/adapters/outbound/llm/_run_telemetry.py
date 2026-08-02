@@ -45,7 +45,7 @@ See Also:
 from __future__ import annotations
 
 import json
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
@@ -57,7 +57,7 @@ from ....adapters.persistence.storage.crypto import secure_object_key_digest
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
-from ....core.time import now
+from ....core.time import UtcInstant, now
 from ._errors import LLMCacheError
 from ._retention import select_retention_removal_keys
 
@@ -86,7 +86,7 @@ class LLMRunRecord(BaseModel):
     duration_ms: int = Field(ge=0, description="Wall-clock run duration in milliseconds.")
     succeeded: bool = Field(description="Whether the run completed without raising.")
     error_kind: str = Field(default="", description="Exception class name when the run failed; empty on success.")
-    started_at: datetime = Field(description="UTC timestamp the run started.")
+    started_at: UtcInstant = Field(description="UTC timestamp the run started.")
 
 
 class LLMRunTelemetrySummary(BaseModel):

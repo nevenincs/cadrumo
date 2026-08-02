@@ -31,6 +31,7 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
+from ._decimal_wire import NonNegativeDecimalWireText
 from ._ledger_payloads import LedgerStatusResult
 from ._schemas import OutputSchema, register_schema
 
@@ -51,6 +52,48 @@ class OverviewDraftPayload(OutputSchema):
     draft_id: str
     modelo: str
     status: str
+
+
+class OverviewRecargoBandPayload(OutputSchema):
+    """JSON projection of the resolved :class:`RecargoBand`.
+
+    Mirrors the canonical band field for field, including the ``legal_ref``
+    that grounds the surcharge in Ley 58/2003 art-27. ``surcharge_pct`` rides
+    as a canonical decimal string so the percentage cannot lose precision to a
+    JSON float on the way to the operator.
+    """
+
+    id: str = Field(min_length=1, max_length=64)
+    min_completed_months: int = Field(ge=0)
+    max_completed_months: int | None = None
+    surcharge_pct: NonNegativeDecimalWireText
+    interest_applies: bool = False
+    legal_ref: str = Field(min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def _validate_window(self) -> Self:
+        """Reject an inverted completed-months window, as the canonical band does."""
+        if self.max_completed_months is not None and self.max_completed_months < self.min_completed_months:
+            raise ValueError(
+                f"recargo band {self.id}: max_completed_months ({self.max_completed_months}) "
+                f"is below min_completed_months ({self.min_completed_months})",
+            )
+        return self
+
+
+class OverviewRecoveryPayload(OutputSchema):
+    """JSON projection of the canonical :class:`Recovery` payload.
+
+    An OVERDUE entry's recovery carries legal obligations -- the resolved
+    recargo band with its legal reference, and the next command the operator
+    must run. Exposing it as a bare ``dict[str, object]`` let an empty mapping
+    serialize as a valid recovery, so an overdue row could reach the operator
+    with its legal grounding and its remedial action silently absent.
+    """
+
+    still_filable: bool = True
+    recargo_band: OverviewRecargoBandPayload
+    next_command: str = Field(min_length=1, max_length=256)
 
 
 class OverviewCalendarEntryPayload(OutputSchema):
@@ -74,7 +117,7 @@ class OverviewCalendarEntryPayload(OutputSchema):
     payment_cutoff_on: str | None = None
     status: str
     user_state: Literal["due", "late", "filed", "unknown"]
-    recovery: dict[str, object] | None = None
+    recovery: OverviewRecoveryPayload | None = None
     filing_year: int | None = None
     censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
     filing_evidence: OverviewCalendarFilingEvidencePayload
@@ -145,9 +188,9 @@ class OverviewCalendarEventPayload(OutputSchema):
     period: str | None = None
     status: str | None = None
     source_url: str | None = None
-    aeat_submission_state: (
-        Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"] | None
-    ) = None
+    aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"] | None = (
+        None
+    )
     aeat_submitted_at: str | None = None
     justificante_verified: bool | None = None
     verified_justificante_csv: str | None = None

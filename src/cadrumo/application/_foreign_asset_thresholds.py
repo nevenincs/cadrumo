@@ -72,7 +72,15 @@ def foreign_asset_declaration_thresholds_for_revision(
     revision: ModeloRevision,
     filing_date: date,
 ) -> Mapping[ForeignAssetObligationGroup, ForeignAssetDeclarationThreshold]:
-    """Resolve the threshold parameters declared by one already-selected revision."""
+    """Resolve the threshold parameters declared by one already-selected revision.
+
+    Args:
+        modelo: The Modelo 720/721 code the thresholds are declared under.
+        revision: The already-selected :class:`ModeloRevision` whose
+            parameters carry the initial-declaration and re-declaration
+            threshold values.
+        filing_date: The date used to resolve a date-scoped parameter value.
+    """
     groups = _GROUPS_BY_MODELO.get(modelo)
     initial_parameter_id = _INITIAL_PARAMETER_IDS.get(modelo)
     redeclaration_parameter_id = _REDECLARATION_PARAMETER_IDS.get(modelo)

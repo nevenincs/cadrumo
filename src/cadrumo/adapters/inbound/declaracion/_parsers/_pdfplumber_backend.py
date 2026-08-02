@@ -24,8 +24,13 @@ from pathlib import Path
 
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
-from ...pdf import extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl
-from ...pdf import extract_pages_text_with_fast_path as _extract_pages_text_with_fast_path_impl
+from ...pdf import (
+    extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl,
+)
+from ...pdf import (
+    extract_pages_text_with_fast_path as _extract_pages_text_with_fast_path_impl,
+)
+from ...pdf import sha256_file
 from .._errors import DeclaracionParseError
 
 _logger = get_logger(__name__)
@@ -108,7 +113,13 @@ def _extract_pages_text_with_pdfium(pdf_path: Path) -> tuple[str, ...] | None:
     """Run the cached pypdfium2 path extraction for one filesystem PDF."""
     resolved = pdf_path.resolve()
     stat = resolved.stat()
-    return _extract_pages_text_with_pdfium_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    content_digest = sha256_file(resolved)
+    return _extract_pages_text_with_pdfium_cached(
+        str(resolved),
+        stat.st_size,
+        stat.st_mtime_ns,
+        content_digest,
+    )
 
 
 @lru_cache(maxsize=256)
@@ -116,9 +127,13 @@ def _extract_pages_text_with_pdfium_cached(
     path: str,
     byte_count: int,
     modified_ns: int,
+    content_digest: str = "",
 ) -> tuple[str, ...] | None:
-    """Return canary-validated pypdfium2 page text for a stable file revision."""
-    del byte_count, modified_ns
+    """Return canary-validated PDFium text for one content-bound file revision."""
+    # All three discriminators are intentionally part of the lru_cache key.
+    # Size and mtime retain the cheap stable-file identity, while the digest is
+    # load-bearing when a replacement preserves both metadata values.
+    del byte_count, modified_ns, content_digest
     pages = _pdfium_pages_text(path, source_label=_INPUT_PDF_SOURCE_LABEL)
     if pages is None or not any(pages):
         return None

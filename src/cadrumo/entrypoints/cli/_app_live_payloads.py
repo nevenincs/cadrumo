@@ -24,16 +24,39 @@ persistence contract.
 
 from __future__ import annotations
 
-from datetime import datetime
-from typing import Any, Literal
+from datetime import datetime, timedelta
+from typing import Annotated, Any, Literal
 
-from pydantic import Field, model_validator
+from pydantic import AfterValidator, Field, field_validator, model_validator
 
-from ...application.live import LiveIvaAcquisitionFailureMode, LiveIvaReadStatus, LiveIvaReadSurface
-from ...core import Period
-from ...core.identity import BucketId, SnapshotId
+from ...application.calculations import ObservationSourceKind
+from ...application.live import (
+    LiveIvaAcquisitionFailureMode,
+    LiveIvaReadStatus,
+    LiveIvaReadSurface,
+    SnapshotLifecycleState,
+)
+from ...core import Modelo, Period
+from ...core.identity import BucketId, ContentDigest, SnapshotId
 from ...domain.calculations.registry import BindingId
 from ._schemas import OutputSchema, register_schema
+
+
+def _is_a_registry_period_token(value: str) -> str:
+    """Return ``value`` when it is a bare registry period code, else refuse.
+
+    The justificante wire carries the bare token (``"1T"``, ``"0A"``) rather
+    than a structured :class:`~core.Period`, so the JSON contract stays a
+    string -- but a string is not a free-form label. Parsing it back through
+    the canonical period grammar is what stops ``period='bogus'`` from being
+    emitted as a capture's filing period.
+    """
+    Period.from_year_and_code(2000, value)
+    return value
+
+
+JustificantePeriodToken = Annotated[str, AfterValidator(_is_a_registry_period_token)]
+"""A bare registry period code, validated through the canonical period grammar."""
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -705,17 +728,17 @@ class JustificanteCaptureResult(OutputSchema):
     evidence once metadata parses.
     """
 
-    bucket_id: str
-    snapshot_id: str
-    modelo: str
-    filing_year: int
-    period: str
-    expediente_id: str
-    csv: str
-    pdf_sha256: str
-    source_kind: str
-    state: str
-    captured_at: str
+    bucket_id: BucketId
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    modelo: Modelo
+    filing_year: int = Field(ge=1900, le=9999)
+    period: JustificantePeriodToken
+    expediente_id: str = Field(min_length=12, max_length=32)
+    csv: str = Field(min_length=8, max_length=32)
+    pdf_sha256: ContentDigest
+    source_kind: ObservationSourceKind
+    state: SnapshotLifecycleState
+    captured_at: datetime
     justificante_metadata_registered: bool
     calendar_evidence_available: bool
     modelo_filing_record_required: bool
@@ -730,13 +753,13 @@ class JustificanteSnapshotSummaryPayload(OutputSchema):
     :class:`JustificanteCaptureSnapshotService`.
     """
 
-    snapshot_id: str
-    modelo: str
-    filing_year: int
-    period: str
-    pdf_sha256: str
-    state: str
-    captured_at: str
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    modelo: Modelo
+    filing_year: int = Field(ge=1900, le=9999)
+    period: JustificantePeriodToken
+    pdf_sha256: ContentDigest
+    state: SnapshotLifecycleState
+    captured_at: datetime
 
 
 @register_schema("app.live.justificante.list")
@@ -765,17 +788,17 @@ class JustificanteViewResult(OutputSchema):
     reconcile the local evidence chain without printing the stored receipt body.
     """
 
-    bucket_id: str
-    snapshot_id: str
-    modelo: str
-    filing_year: int
-    period: str
-    expediente_id: str
-    csv: str
-    pdf_sha256: str
-    source_kind: str
-    state: str
-    captured_at: str
+    bucket_id: BucketId
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    modelo: Modelo
+    filing_year: int = Field(ge=1900, le=9999)
+    period: JustificantePeriodToken
+    expediente_id: str = Field(min_length=12, max_length=32)
+    csv: str = Field(min_length=8, max_length=32)
+    pdf_sha256: ContentDigest
+    source_kind: ObservationSourceKind
+    state: SnapshotLifecycleState
+    captured_at: datetime
 
 
 class VerifyObservationSummaryPayload(OutputSchema):
@@ -863,6 +886,22 @@ class VerifyTgviResult(VerifyObservationPayload):
 # ---------------------------------------------------------------------------
 
 
+def _canonical_borrador_period(value: str) -> str:
+    """Validate and normalise the canonical string transport for a filing period."""
+    return str(Period.from_string(value))
+
+
+def _canonical_borrador_utc_timestamp(value: str) -> str:
+    """Require an ISO-8601 UTC timestamp while retaining its JSON string form."""
+    try:
+        timestamp = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError("must be an ISO-8601 timestamp") from exc
+    if timestamp.tzinfo is None or timestamp.utcoffset() != timedelta(0):
+        raise ValueError("must be a UTC timestamp")
+    return value
+
+
 class Borrador100SnapshotSummaryPayload(OutputSchema):
     """Summary row for one persisted Modelo 100 borrador snapshot.
 
@@ -872,13 +911,23 @@ class Borrador100SnapshotSummaryPayload(OutputSchema):
     superseded, discarded, or only through an explicit ``--state all`` listing.
     """
 
-    snapshot_id: str
-    filing_year: int
+    snapshot_id: SnapshotId
+    filing_year: int = Field(ge=1900, le=9999)
     period: str
     captured_at: str
-    source_url: str
-    binding_count: int
-    state: str
+    source_url: str = Field(min_length=1, max_length=2048)
+    binding_count: int = Field(ge=0)
+    state: Literal["active", "superseded", "discarded"]
+
+    @field_validator("period")
+    @classmethod
+    def _validate_period(cls, value: str) -> str:
+        return _canonical_borrador_period(value)
+
+    @field_validator("captured_at")
+    @classmethod
+    def _validate_captured_at(cls, value: str) -> str:
+        return _canonical_borrador_utc_timestamp(value)
 
 
 @register_schema("app.live.borrador.100.list")
@@ -890,13 +939,19 @@ class Borrador100ListResult(OutputSchema):
     :class:`Borrador100SnapshotService`.
     """
 
-    bucket_id: str
-    count: int
+    bucket_id: BucketId
+    count: int = Field(ge=0)
     rows: list[Borrador100SnapshotSummaryPayload]
+
+    @model_validator(mode="after")
+    def _require_count_to_match_rows(self) -> Borrador100ListResult:
+        if self.count != len(self.rows):
+            raise ValueError("count must equal the number of Borrador snapshot rows")
+        return self
 
 
 @register_schema("app.live.borrador.100.view")
-class Borrador100ViewResult(OutputSchema):
+class Borrador100ViewResult(Borrador100SnapshotSummaryPayload):
     """Typed detail view for one Modelo 100 borrador snapshot.
 
     ``binding_values`` is a ``{BindingId: string_value}`` mapping keyed by
@@ -907,14 +962,7 @@ class Borrador100ViewResult(OutputSchema):
     validation time.
     """
 
-    bucket_id: str
-    snapshot_id: str
-    filing_year: int
-    period: str
-    captured_at: str
-    source_url: str
-    binding_count: int
-    state: str
+    bucket_id: BucketId
     binding_values: dict[BindingId, str]
 
 
@@ -929,11 +977,32 @@ class Borrador100LatestResult(OutputSchema):
     shape stable while still identifying the queried ``filing_year``.
     """
 
-    bucket_id: str
-    filing_year: int
-    snapshot_id: str | None
+    bucket_id: BucketId
+    filing_year: int = Field(ge=1900, le=9999)
+    snapshot_id: SnapshotId | None
     captured_at: str | None = None
     period: str | None = None
-    source_url: str | None = None
-    binding_count: int | None = None
-    state: str | None = None
+    source_url: str | None = Field(default=None, min_length=1, max_length=2048)
+    binding_count: int | None = Field(default=None, ge=0)
+    state: Literal["active"] | None = None
+
+    @field_validator("period")
+    @classmethod
+    def _validate_optional_period(cls, value: str | None) -> str | None:
+        return _canonical_borrador_period(value) if value is not None else None
+
+    @field_validator("captured_at")
+    @classmethod
+    def _validate_optional_captured_at(cls, value: str | None) -> str | None:
+        return _canonical_borrador_utc_timestamp(value) if value is not None else None
+
+    @model_validator(mode="after")
+    def _enforce_latest_empty_or_active_shape(self) -> Borrador100LatestResult:
+        snapshot_fields = (self.captured_at, self.period, self.source_url, self.binding_count, self.state)
+        if self.snapshot_id is None:
+            if any(value is not None for value in snapshot_fields):
+                raise ValueError("empty latest results cannot carry snapshot-derived fields")
+            return self
+        if any(value is None for value in snapshot_fields):
+            raise ValueError("latest results with a snapshot_id require every snapshot-derived field")
+        return self

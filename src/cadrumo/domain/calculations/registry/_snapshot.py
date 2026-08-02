@@ -30,6 +30,7 @@ from ._schema import (
 )
 from ._temporal import select_revision
 from ._validate import RegistryValidator
+from ._validate_orden_aplicabilidad import validate_orden_aplicabilidad
 from ._validate_references import check_all_id_references
 from ._validate_revision_identity import revision_reference_identity_failures
 
@@ -152,6 +153,17 @@ def _build_validated_snapshot(
     """Return a selected snapshot after the caller has validated ``modelo``."""
     _install_cross_domain_snapshot_checks()
     revision = select_revision(modelo, filing_year=filing_year, period=period, on=on, revision_id=revision_id)
+    legal_applicability_failures = validate_orden_aplicabilidad(
+        f"snapshot modelo {modelo.id} revision {revision.id}",
+        modelo.id,
+        revision,
+        catalogues.legal,
+    )
+    if legal_applicability_failures:
+        raise RegistryValidationError(
+            "registry snapshot legal applicability validation failed:\n"
+            + "\n".join(f" - {failure}" for failure in legal_applicability_failures),
+        )
     identity_failures = revision_reference_identity_failures(
         f"snapshot modelo {modelo.id} revision {revision.id}",
         revision,

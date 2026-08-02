@@ -731,7 +731,7 @@ def _emit_amend_wizard_result(
     result = WorkAmendWizardResult.model_validate(
         {
             **filing_payload,
-            "amendment_kind": amendment_kind.value,
+            "amendment_kind": amendment_kind,
             "amendment_reason": reason,
             "corrected_casillas": corrected_payload,
             "export_next_action": export_next_action,

@@ -19,7 +19,10 @@ from ...application.auth import (
     AuthDiagnosticDetail,
     AuthDiagnosticPhoneState,
     AuthDiagnosticSummary,
+    AuthLoginResult,
     AuthProviderListing,
+    AuthStatusResult,
+    AuthTestResult,
 )
 from ...application.config_reset import (
     ConfigResetOperationStatus,
@@ -32,9 +35,10 @@ from ...application.user_profile import (
     ProfileBundleExportTransport,
 )
 from ...application.workflow import ProfileHealthStatus, ProfileSource
-from ...core import HEX_PATTERN_64
+from ...core import HEX_PATTERN_64, Period
+from ...core.config import SecretStoreBackend
 from ...core.errors import BaseSeverity
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ProfileId
 from ...core.time import validate_utc_aware
 from ...domain.user_profile import UserProfileFact, UserProfileStatus
 from ._schemas import OutputSchema, register_schema
@@ -379,10 +383,10 @@ class ConfigLoginResult(OutputSchema):
 
     profile_id: BucketId
     active_profile: str
-    backend_kind: str
-    authenticated_at: str
-    idle_deadline: str
-    absolute_deadline: str
+    backend_kind: SecretStoreBackend
+    authenticated_at: datetime
+    idle_deadline: datetime
+    absolute_deadline: datetime
     session_persisted: bool
     already_authenticated: bool
     closed_previous_profile: str | None = None
@@ -529,11 +533,11 @@ class ConfigProfileValidateResult(OutputSchema):
     blocking issues exist and ``2`` when any error-severity issue surfaces.
     """
 
-    profile_id: str
-    display_name: str
-    status: str
+    profile_id: ProfileId
+    display_name: str = Field(min_length=1, max_length=160)
+    status: UserProfileStatus
     valid: bool
-    schema_version: int
+    schema_version: int = Field(ge=1)
     issues: list[ProfileIssuePayload]
 
 
@@ -564,13 +568,20 @@ class ConfigProfilePreflightResult(OutputSchema):
     :class:`ProfilePreflightReport`.
     """
 
-    profile_id: str
-    modelo: str
-    revision_id: str
-    filing_year: int
-    period: str
+    profile_id: ProfileId
+    modelo: str = Field(min_length=1, max_length=16)
+    revision_id: str = Field(min_length=1, max_length=64)
+    filing_year: int = Field(ge=2000, le=2100)
+    period: Period
     ready: bool
     missing: list[ProfilePreflightMissingPayload]
+
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> ConfigProfilePreflightResult:
+        """Reuse the canonical ``ProfilePreflightReport`` coordinate invariant."""
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("filing_year must match period.filing_year")
+        return self
 
 
 @register_schema("config.profile.delete")
@@ -862,51 +873,33 @@ class AuthConfigurePayload(OutputSchema):
 
 
 @register_schema("config.auth.status")
-class AuthStatusPayload(OutputSchema):
+class AuthStatusPayload(OutputSchema, AuthStatusResult):
     """JSON envelope for ``aeat config auth status``.
 
-    The application :class:`AuthStatusResult` model
-    evolves independently; ``extra="allow"`` ensures any additional fields pass
-    through without re-declaring every provider-specific key here. The payload is
-    a local readiness projection and never performs live AEAT contact.
+    Reuses the application-owned :class:`AuthStatusResult` field set and strict
+    validation directly. The payload is a local readiness projection and never
+    performs live AEAT contact.
     """
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
 @register_schema("config.auth.test")
-class AuthTestPayload(OutputSchema):
+class AuthTestPayload(OutputSchema, AuthTestResult):
     """JSON envelope for ``aeat config auth test``.
 
-    Thin envelope over :class:`AuthTestResult`; the
-    application model carries all provider-specific probe fields.
-    ``extra="allow"`` forwards them without re-declaration. The command tests
-    local readiness and persisted-session metadata; it does not submit to AEAT.
+    Reuses the application-owned :class:`AuthTestResult` field set and strict
+    validation directly. The command tests local readiness and persisted-session
+    metadata; it does not submit to AEAT.
     """
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
 @register_schema("config.auth.login")
-class AuthLoginPayload(OutputSchema):
+class AuthLoginPayload(OutputSchema, AuthLoginResult):
     """JSON envelope for ``aeat config auth login``.
 
-    Thin envelope over :class:`AuthLoginResult`; the
-    application model carries provider-specific live-login fields.
-    ``extra="allow"`` forwards them without re-declaration. Session cookies,
-    tokens, QR payloads, and certificate material stay outside the JSON result.
+    Reuses the application-owned :class:`AuthLoginResult` field set and strict
+    validation directly. Session cookies, tokens, QR payloads, and certificate
+    material stay outside the JSON result.
     """
-
-    # TYPE-IGNORE-RATIONALE-PYDANTIC-MODEL-CONFIG-CLASSVAR:
-    # pydantic v2 model_config class var shadows ConfigDict descriptor;
-    # mypy assignment check is incorrect.
-    model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
 @register_schema("config.auth.logout")

@@ -19,7 +19,13 @@ from ......domain.calculations.registry import (
     RemoteOperation,
     assert_remote_operation_allowed,
 )
-from ......tests.aeat_literal_fixtures import AEAT_SUFFIX_LOOKALIKE_HOST_CANARY
+from ......tests.aeat_literal_fixtures import (
+    AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,
+    CENSAL_WRITE_SURFACE_PATH_CANARIES,
+    PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
+    aeat_url,
+    configured_path,
+)
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
 from .._errors import SedeNavigationError, SedeParseError
@@ -30,6 +36,7 @@ from .._iva_compensation_wallet import (
     _assert_read_http,
     _dump_wallet_diagnostic,
     _wait_for_wallet_execute_initial_shape,
+    assert_wallet_read_landing,
 )
 from .._iva_compensation_wallet_parsing import (
     IVA_COMPENSATION_WALLET_READ_POLICY,
@@ -747,3 +754,57 @@ class TestWalletReadPolicy:
             if urlsplit(getattr(external.aeat.domains, name)).netloc in _WALLET_URL
         ]
         assert numbered == [], f"the wallet URL pins a numbered host: {numbered}"
+
+
+class TestWalletLandingRefusal:
+    """Where AEAT served the read, checked after the ``ejecutar`` submit.
+
+    This is the most write-adjacent driver in the package: it fills an
+    ejercicio and periodo and clicks a real submit input. That click issues
+    a browser form POST, which the first-party HTTP guard never sees and
+    which the forbidden-verb source scan permits by design. The post-execute
+    shape check reads the returned HTML's own form action -- a DOM AEAT
+    controls -- so it is not evidence of the URL served.
+
+    The tests drive the reader's own exported rule, not a copy of it.
+    """
+
+    def test_the_pre303_presentation_service_is_admitted(self) -> None:
+        assert_wallet_read_landing(PRE303_PRESENTATION_SERVICE_URL)
+
+    def test_the_wallet_itself_is_admitted(self) -> None:
+        assert_wallet_read_landing(IVA_COMPENSATION_WALLET_URL)
+
+    def test_a_numbered_load_balancer_host_serving_the_wallet_is_admitted(self) -> None:
+        """AEAT assigns the numbered host per session; that dispatch is not a write."""
+        aeat = Settings.external_constants().aeat
+        assert_wallet_read_landing(f"{aeat.domains.www6}{urlsplit(IVA_COMPENSATION_WALLET_URL).path}")
+
+    @pytest.mark.parametrize("write_path", CENSAL_WRITE_SURFACE_PATH_CANARIES)
+    def test_a_real_aeat_write_surface_is_refused(self, write_path: str) -> None:
+        """None of these carries a write verb; the path allow-list is what refuses them."""
+        with pytest.raises(SedeNavigationError):
+            assert_wallet_read_landing(aeat_url("sede", write_path))
+
+    def test_the_procedure_launcher_family_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_wallet_read_landing(aeat_url("sede", f"{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}G322.shtml"))
+
+    def test_the_auth_gate_landing_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_wallet_read_landing(aeat_url("sede", configured_path("sede_paths", "auth_gate_4033")))
+
+    def test_a_stalled_traversal_still_on_the_acting_capacity_gate_is_refused(self) -> None:
+        """The gate is transit, not rest.
+
+        Every landing rule in this reader sits after a wait that has
+        already required the traversal to have left the gate, so resting
+        there means the continuation did not complete.
+        """
+        aeat = Settings.external_constants().aeat
+        with pytest.raises(SedeNavigationError):
+            assert_wallet_read_landing(f"{aeat.domains.sede}{aeat.clave_movil.dialogo_representacion_path}")
+
+    def test_an_unreadable_landing_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_wallet_read_landing("")

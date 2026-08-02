@@ -44,7 +44,7 @@ from ...adapters.persistence.storage import (
     safe_repository_id,
 )
 from ...core import Modelo, Period
-from ...core.identity import ContentDigest
+from ...core.identity import ContentDigest, SubjectTaxId
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -106,7 +106,17 @@ class IvaCompensationAnnualSummary(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    taxpayer_nif: str = Field(min_length=1, max_length=32)
+    taxpayer_nif: SubjectTaxId = Field(
+        description=(
+            "The filing subject, validated through the canonical Spanish "
+            "tax-identifier authority. The sibling "
+            "IvaCompensationPeriodState already types this identity, and both "
+            "are populated from the same authenticated_identity and compared "
+            "against each other by the annual cross-check, so a bounded plain "
+            "string here meant one side of that comparison ran the AEAT "
+            "checksum and the other did not."
+        ),
+    )
     filing_year: int = Field(ge=2000, le=2099)
     expediente_id: str = Field(min_length=1, max_length=32)
     status: str = Field(min_length=1, max_length=32)

@@ -57,6 +57,10 @@ def registry_snapshot_id_for(snapshot: RegistrySnapshot) -> str:
     Use this when the snapshot IS the authority for all four coordinates. When
     the year and period come from a parsed artefact instead, call
     :func:`registry_snapshot_id` with those values.
+
+    Args:
+        snapshot: The :class:`RegistrySnapshot` whose modelo, revision,
+            filing year, and period supply the four identity coordinates.
     """
     return registry_snapshot_id(
         modelo=snapshot.modelo.id,

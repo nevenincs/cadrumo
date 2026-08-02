@@ -164,7 +164,8 @@ def lifecycle(runtime_profile: TestRuntimeProfile) -> UserProfileLifecycleReposi
     """A real lifecycle repository over a real runtime profile."""
 
     return UserProfileLifecycleRepository(
-        bucket_id=_BUCKET_ID,
+        # Bound to the profile it stores, as every production construction is.
+        bucket_id=_PROFILE_UUID,
         objects=runtime_profile.repository,
     )
 
@@ -311,7 +312,8 @@ def test_dropping_a_persisted_corporate_tax_fact_surfaces_on_reload(
     """
 
     lifecycle = UserProfileLifecycleRepository(
-        bucket_id=_BUCKET_ID,
+        # Bound to the profile it stores, as every production construction is.
+        bucket_id=_PROFILE_UUID,
         objects=runtime_profile.repository,
     )
 

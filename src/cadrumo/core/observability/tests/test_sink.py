@@ -21,6 +21,8 @@ Covers:
 from __future__ import annotations
 
 import logging
+import shutil
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -92,6 +94,26 @@ class TestJsonlStoreRoundTrip:
                 handle.write('{"not_a": "valid_run_event"}\n')
             with pytest.raises(RunTraceValidationError, match=r"failed strict validation"):
                 load_events(evt.run_id)
+
+    def test_concurrent_direct_appends_preserve_every_event(self, tmp_path: Path) -> None:
+        """Concurrent real writers retain every independently addressable event."""
+
+        event_count = 1_000
+        with override_settings(cadrumo_runs_dir=str(tmp_path)) as settings:
+            events = tuple(self._make_event(ordinal % 60) for ordinal in range(event_count))
+            events = tuple(
+                event.model_copy(update={"step_id": f"concurrent-{ordinal}"}) for ordinal, event in enumerate(events)
+            )
+            run_id = events[0].run_id
+            with ThreadPoolExecutor(max_workers=64) as executor:
+                written = tuple(
+                    executor.map(lambda event: save_events_append(run_id, event, settings=settings), events)
+                )
+            loaded = load_events(run_id)
+
+        assert len(set(written)) == 1
+        assert len(loaded) == len(events)
+        assert {event.step_id for event in loaded} == {event.step_id for event in events}
 
 
 class TestJsonlRunSinkRunIdFilter:
@@ -257,6 +279,45 @@ class TestStorePersistenceErrors:
         assert error.operation == "load_trace"
         assert error.path == trace_path
         assert isinstance(error.__cause__, OSError)
+
+    def test_load_trace_refuses_an_embedded_identity_from_another_run(self, tmp_path: Path) -> None:
+        """A valid trace copied from run B cannot be replayed through run A."""
+        run_a = "0123456789abcdef"
+        run_b = "abcdef0123456789"
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+            trace_b = self._trace(run_b)
+            source = save_trace(trace_b)
+            target = runs_dir() / run_a / "trace.json"
+            target.parent.mkdir()
+            shutil.copyfile(source, target)
+
+            assert load_trace(run_b) == trace_b
+            with pytest.raises(RunTraceValidationError, match=rf"run {run_a!r} contains embedded run_id {run_b!r}"):
+                load_trace(run_a)
+
+    def test_iter_runs_logs_and_skips_trace_copied_from_another_run(
+        self,
+        tmp_path: Path,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Run enumeration retains B and skips its copied trace under directory A."""
+        run_a = "0123456789abcdef"
+        run_b = "abcdef0123456789"
+        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+            trace_b = self._trace(run_b)
+            source = save_trace(trace_b)
+            target = runs_dir() / run_a / "trace.json"
+            target.parent.mkdir()
+            shutil.copyfile(source, target)
+
+            caplog.set_level(logging.WARNING, logger="cadrumo.core.observability._store")
+            assert list(iter_runs()) == [(run_b, trace_b)]
+
+        messages = [record.getMessage() for record in caplog.records]
+        assert any(
+            "skipping run directory 0123456789abcdef" in message and "embedded run_id 'abcdef0123456789'" in message
+            for message in messages
+        )
 
     def test_iter_runs_logs_skipped_entries(self, tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
         runs_root = tmp_path / "runs"

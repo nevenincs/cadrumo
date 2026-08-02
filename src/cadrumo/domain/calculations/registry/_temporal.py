@@ -25,6 +25,10 @@ def select_revision_for_year(
     as bindings discovery.  Callers that already have its revision may
     materialise a snapshot with that explicit ``revision_id`` rather than
     independently selecting again.
+
+    Args:
+        modelo: The :class:`ModeloDefinition` whose declared revisions are
+            searched for the one matching ``filing_year`` and ``on``.
     """
     candidates = [
         revision

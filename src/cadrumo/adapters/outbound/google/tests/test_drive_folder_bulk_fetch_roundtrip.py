@@ -39,6 +39,10 @@ from ._drive_media_server import drive_files_list_endpoint, drive_media_endpoint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+# The attachment store refuses a manifest naming another profile bucket, so
+# the fixture names the same bucket the runtime profile provisions.
+_BUCKET_ID = "9d4e1a2b-6c70-4f81-8b92-a3c4d5e6f701"
+
 _FOLDER_ID = "1FoldEr12345678901234567890AB"
 # Drive file ids must be >=10 chars to match the /d/<id>/ URL pattern the
 # resolver's parse_drive_file_id recognises (see
@@ -94,7 +98,7 @@ def _pull_folder(
             source_reference=reference,
             mime_type=document.mime_type,
             captured_at=_CAPTURED_AT,
-            bucket_id="b" * 32,
+            bucket_id=_BUCKET_ID,
             metadata={"source": "GOOGLE_DRIVE", "drive_folder_id": _FOLDER_ID},
         )
         fetched.append(attachment.attachment_id)
@@ -111,7 +115,7 @@ def test_folder_with_n_pdfs_yields_n_encrypted_evidence_records(tmp_path: Path) 
     listing_page = {
         "files": [{"id": file_id, "name": f"{file_id}.pdf", "mimeType": "application/pdf"} for file_id in payloads],
     }
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         fetched, refused = _pull_folder(store, listing_pages=[listing_page], file_payloads=payloads)
 
@@ -144,7 +148,7 @@ def test_permission_denied_file_refuses_individually_without_aborting_sweep(tmp_
             {"id": _FILE_ID_2, "name": "file-ok-2.pdf", "mimeType": "application/pdf"},
         ],
     }
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         fetched, refused = _pull_folder(
             store,
@@ -188,7 +192,7 @@ def test_rerunning_sweep_over_same_bytes_is_idempotent(tmp_path: Path) -> None:
     payload = b"%PDF-1.4\n%idempotent-invoice\n" + b"\x09" * 32
     listing_page = {"files": [{"id": _FILE_ID_1, "name": "file-1.pdf", "mimeType": "application/pdf"}]}
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = AttachmentStore()
         first_fetched, first_refused = _pull_folder(
             store,

@@ -237,6 +237,29 @@ class WorkUnitCatalogueRepository:
             expected_revision_id=expected_revision_id,
         )
 
+    def save_with_secure_object_writes(
+        self,
+        catalogue: WorkUnitCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist ``catalogue`` plus related secure objects in one unit of work.
+
+        The catalogue save and every extra write land or fail together in a
+        single SQL transaction. A work-unit lifecycle transition that saved the
+        catalogue and emitted its bucket event afterwards could come to rest
+        durable-but-unrecorded: the created, renamed, or discarded unit survived
+        while the history had no matching entry and no marker named the gap.
+        Folding the event's write in here puts the state and its promised event
+        in one transaction, so neither can land without the other.
+
+        Args:
+            catalogue: The :class:`WorkUnitCatalogue` to persist.
+            extra_writes: Additional
+                :class:`~adapters.persistence.storage.SecureObjectWrite`
+                objects to commit atomically with the catalogue.
+        """
+        self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
+
 
 __all__ = [
     "WorkUnitCatalogueRepository",

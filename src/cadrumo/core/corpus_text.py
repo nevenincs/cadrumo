@@ -9,6 +9,8 @@ import unicodedata
 from pathlib import Path
 from typing import Final
 
+from .errors import CoreError
+
 __all__ = ["CorpusAnchorResolutionError", "normalise_corpus_text", "resolve_anchored_extracted_unit"]
 
 _HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
@@ -60,8 +62,17 @@ _ANCHOR_PREFIXES: Final[dict[str, str]] = {
 }
 
 
-class CorpusAnchorResolutionError(ValueError):
-    """Raised when an extracted corpus sidecar has no unique target unit."""
+class CorpusAnchorResolutionError(CoreError):
+    """Raised when an extracted corpus sidecar has no unique target unit.
+
+    A core-primitive failure, so it inherits :class:`CoreError` and carries a
+    registered error code rather than deriving from a bare
+    :class:`ValueError`. Both consumers -- the citation lookup and the registry
+    legal-reference reader -- catch it by name and immediately wrap it in their
+    own registered error, so nothing depended on the builtin base; what an
+    unregistered root did cost was a structured envelope, leaving an operator a
+    raw interpreter traceback for a bundled-corpus anchor that cannot resolve.
+    """
 
 
 def normalise_corpus_text(text: str) -> str:
@@ -160,9 +171,7 @@ def _title_matches_anchor(title: str, target: str) -> bool:
         return False
     if target.isdigit():
         return title_key == target or (
-            title_key.startswith(target)
-            and len(title_key) > len(target)
-            and not title_key[len(target)].isdigit()
+            title_key.startswith(target) and len(title_key) > len(target) and not title_key[len(target)].isdigit()
         )
     for prefix, replacement in _ANCHOR_PREFIXES.items():
         if target.startswith(prefix):
@@ -185,9 +194,7 @@ def _title_matches_anchor(title: str, target: str) -> bool:
     anchor_article = _ARTICLE_ANCHOR_RE.match(target)
     title_article = _ARTICLE_TITLE_RE.match(title_key)
     return (
-        anchor_article is not None
-        and title_article is not None
-        and anchor_article.group(1) == title_article.group(1)
+        anchor_article is not None and title_article is not None and anchor_article.group(1) == title_article.group(1)
     )
 
 
@@ -195,7 +202,5 @@ def _is_exact_article_title_match(title_key: str, expanded_anchor: str) -> bool:
     anchor_article = _ARTICLE_TITLE_RE.match(expanded_anchor)
     title_article = _ARTICLE_TITLE_RE.match(title_key)
     return (
-        anchor_article is not None
-        and title_article is not None
-        and anchor_article.group(1) == title_article.group(1)
+        anchor_article is not None and title_article is not None and anchor_article.group(1) == title_article.group(1)
     )

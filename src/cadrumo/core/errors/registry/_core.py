@@ -63,6 +63,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.core.corpus_text.CorpusAnchorResolutionError",
+        ErrorCode(
+            code="INTEGRITY_CORPUS_ANCHOR_RESOLUTION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_corpus_anchor_resolution",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.core.errors.DecimalFormatError",
         ErrorCode(
             code="ERROR_DECIMAL_FORMAT",

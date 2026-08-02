@@ -386,6 +386,68 @@ def test_filing_record_catalogue_rejects_duplicate_current_group_member() -> Non
         )
 
 
+def test_filing_record_catalogue_rejects_amendment_across_member_nif() -> None:
+    """An amendment link across two different ``member_nif`` values is refused.
+
+    A declaracion complementaria corrects one earlier filing for the SAME
+    (bucket, modelo, filing_year, period, member_nif) coordinate. A record
+    claiming to amend another member's filing -- matching bucket, modelo,
+    year, and period but naming a different member -- is not a within-member
+    correction, and must be rejected rather than silently accepted as a valid
+    audit chain across two unrelated members' filings.
+    """
+
+    bucket_id = _RECORD_BUCKET_ID
+    filed_at = datetime(2026, 3, 10, 9, 0, 0, tzinfo=UTC)
+    baseline_id = derive_filing_record_id(
+        work_unit_id=_hex("1"),
+        calculation_revision_id=_hex("2"),
+        filed_by="aeat.cli.modelo.file",
+        member_nif="A00000000",
+    )
+    amendment_id = derive_filing_record_id(
+        work_unit_id=_hex("1"),
+        calculation_revision_id=_hex("3"),
+        filed_by="aeat.cli.modelo.amend",
+        member_nif="B00000001",
+    )
+
+    with pytest.raises(ValidationError, match="across filing"):
+        ModeloRecordCatalogue(
+            records={
+                baseline_id: ModeloRecord(
+                    filing_record_id=baseline_id,
+                    work_unit_id=_hex("1"),
+                    calculation_revision_id=_hex("2"),
+                    bucket_id=bucket_id,
+                    modelo=ModeloCode("322"),
+                    filing_year=2026,
+                    period=_P_2026_01,
+                    member_nif="A00000000",
+                    filed_at=filed_at,
+                    filed_by="aeat.cli.modelo.file",
+                    status=ModeloRecordStatus.SUPERSEDIDO,
+                    superseded_at=filed_at + timedelta(minutes=5),
+                    superseded_by_filing_record_id=amendment_id,
+                ),
+                amendment_id: ModeloRecord(
+                    filing_record_id=amendment_id,
+                    work_unit_id=_hex("1"),
+                    calculation_revision_id=_hex("3"),
+                    bucket_id=bucket_id,
+                    modelo=ModeloCode("322"),
+                    filing_year=2026,
+                    period=_P_2026_01,
+                    member_nif="B00000001",
+                    filed_at=filed_at + timedelta(minutes=5),
+                    filed_by="aeat.cli.modelo.amend",
+                    status=ModeloRecordStatus.VIGENTE,
+                    amends_filing_record_id=baseline_id,
+                ),
+            },
+        )
+
+
 def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
     tmp_path: Path,
 ) -> None:

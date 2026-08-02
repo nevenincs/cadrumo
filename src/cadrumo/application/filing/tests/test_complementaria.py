@@ -17,6 +17,7 @@ from ....domain.filing import (
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
+    compute_modelo_draft_id,
     registry_schema_version,
 )
 from ....domain.submission import (
@@ -139,13 +140,20 @@ def _draft(modelo: str, period: Period, casillas: dict[CasillaId, Decimal]) -> M
         )
         for casilla_id, value in sorted(casillas.items())
     )
+    snapshot_ref = _snapshot_ref(modelo=modelo, period=period, revision_id=revision_id)
     return ModeloDraft(
-        draft_id=f"unsupported-{modelo}-{period.registry_token}",
+        draft_id=compute_modelo_draft_id(
+            modelo=modelo,
+            period=period,
+            profile_tax_id="00000000T",
+            snapshot_ref=snapshot_ref,
+            values=values,
+        ),
         modelo=modelo,
         period=period,
         profile_tax_id="00000000T",
         subject_tax_id="00000000T",
-        snapshot_ref=_snapshot_ref(modelo=modelo, period=period, revision_id=revision_id),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.PRESENTADA,
         values=values,
         created_at=now,
@@ -247,10 +255,21 @@ class TestBuildComplementaria:
         # longer persists, so moving only the marker would exercise the
         # persistence refusal instead of the stale-snapshot refusal under test.
         stale_revision = "wrong-revision"
+        stale_snapshot_ref = built.snapshot_ref.model_copy(update={"revision_id": stale_revision})
         original_draft = built.model_copy(
             update={
-                "snapshot_ref": built.snapshot_ref.model_copy(update={"revision_id": stale_revision}),
+                "snapshot_ref": stale_snapshot_ref,
                 "schema_version": registry_schema_version(modelo=built.modelo, revision_id=stale_revision),
+                # The id is the draft's content address, and the snapshot is part
+                # of that content, so restating the snapshot restates the id.
+                "draft_id": compute_modelo_draft_id(
+                    modelo=built.modelo,
+                    period=built.period,
+                    profile_tax_id=built.profile_tax_id,
+                    snapshot_ref=stale_snapshot_ref,
+                    values=built.values,
+                    binding_values=built.binding_values,
+                ),
             },
         )
         _persist_original_draft(original_draft)

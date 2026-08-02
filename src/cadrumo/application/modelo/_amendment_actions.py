@@ -355,6 +355,7 @@ def _build_amendment_filing_updates(
         work_unit_id=baseline.work_unit_id,
         calculation_revision_id=new_revision_id,
         filed_by=actor.strip(),
+        member_nif=baseline.member_nif,
     )
     new_filing = _build_amendment_filing_record(
         filing_record_id=new_filing_id,
@@ -424,6 +425,7 @@ def _build_amendment_filing_record(
         modelo=baseline.modelo,
         filing_year=baseline.filing_year,
         period=baseline.period,
+        member_nif=baseline.member_nif,
         filed_at=filed_at,
         filed_by=filed_by,
         notes=None,

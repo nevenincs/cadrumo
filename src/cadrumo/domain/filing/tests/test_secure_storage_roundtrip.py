@@ -34,6 +34,7 @@ from .._schema import (
     ModeloDraftStatus,
     ModeloValue,
     ModeloValueKind,
+    compute_modelo_draft_id,
     registry_schema_version,
 )
 
@@ -66,34 +67,43 @@ def _populated_draft() -> ModeloDraft:
     field.
     """
 
-    return ModeloDraft(
-        draft_id="d" * 64,
+    period = Period.from_year_and_code(2025, "1T")
+    snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
+        revision_id="2025-y-siguientes",
+        modelo_year=2025,
+        period="1T",
+    )
+    values = (
+        ModeloValue(
+            casilla_id=_IVA_DEVENGADO_CASILLA,
+            value=Decimal("20000.00"),
+            kind=ModeloValueKind.LITERAL,
+            source="user-supplied",
+        ),
+        ModeloValue(
+            casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
+            value=Decimal("12345.67"),
+            kind=ModeloValueKind.COMPUTED,
+            source="computed from iva.devengado - iva.deducible",
+            formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
+        ),
+    )
+    return ModeloDraft(
+        draft_id=compute_modelo_draft_id(
+            modelo="303",
+            period=period,
+            profile_tax_id="12345678Z",
+            snapshot_ref=snapshot_ref,
+            values=values,
+        ),
+        modelo="303",
+        period=period,
         profile_tax_id="12345678Z",
         subject_tax_id="12345678Z",
-        snapshot_ref=RegistrySnapshotRef(
-            modelo="303",
-            revision_id="2025-y-siguientes",
-            modelo_year=2025,
-            period="1T",
-        ),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
-        values=(
-            ModeloValue(
-                casilla_id=_IVA_DEVENGADO_CASILLA,
-                value=Decimal("20000.00"),
-                kind=ModeloValueKind.LITERAL,
-                source="user-supplied",
-            ),
-            ModeloValue(
-                casilla_id=_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA,
-                value=Decimal("12345.67"),
-                kind=ModeloValueKind.COMPUTED,
-                source="computed from iva.devengado - iva.deducible",
-                formula_trace_casilla_ids=_IVA_RESULTADO_OPERANDS,
-            ),
-        ),
+        values=values,
         binding_values=(),
         casilla_provenance=(
             ModeloCasillaProvenance(
@@ -112,7 +122,7 @@ def _populated_draft() -> ModeloDraft:
         approved_by="operator-reviewer-1",
         review_checksum="a" * 64,
         approval_basis=ModeloApprovalBasis(
-            draft_payload_fingerprint="b" * 64,
+            draft_payload_fingerprint="b" * 16,
             draft_review_fingerprint="c" * 64,
             transaction_catalogue_fingerprint="d" * 64,
             invoice_catalogue_fingerprint="1" * 64,
@@ -169,7 +179,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.approved_by == "operator-reviewer-1"
     assert loaded.review_checksum == "a" * 64
     assert loaded.approval_basis is not None
-    assert loaded.approval_basis.draft_payload_fingerprint == "b" * 64
+    assert loaded.approval_basis.draft_payload_fingerprint == "b" * 16
 
 
 def test_modelo_value_rejects_legacy_formula_trace_key() -> None:

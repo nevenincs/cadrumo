@@ -110,7 +110,11 @@ def prepare_calculation(
         :class:`ResolvedCalculationChannels`.
     """
     work_units = work_unit_repository.load()
-    work_unit = _load_work_unit_for_calculation(work_units, work_unit_id=work_unit_id)
+    work_unit = _load_work_unit_for_calculation(
+        work_units,
+        work_unit_id=work_unit_id,
+        repository_bucket_id=work_unit_repository.bucket_id,
+    )
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
     require_profile_ready_for_work_unit(work_unit)

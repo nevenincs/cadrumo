@@ -7,17 +7,18 @@ records the rest of the project pins against — keep them stable.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
+from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Hex16Str, Period
 from ...core.errors import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
-from ...core.identity import SubjectTaxId
+from ...core.identity import ContentDigest, SubjectTaxId
+from ...core.time import UtcInstant
 from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
 from ._errors import FilingValidationError
@@ -172,20 +173,62 @@ class ModeloValidationFinding(BaseModel):
     references_rules: tuple[str, ...] = Field(default_factory=tuple)
 
 
+ModeloDraftContentAddress = Hex16Str
+"""A filing draft's short content address, as :func:`compute_modelo_draft_id` mints it.
+
+Assigned from the canonical :data:`~core.Hex16Str` primitive rather than
+re-declaring the constraint, per the discipline that module documents.
+"""
+
+
 class ModeloApprovalBasis(BaseModel):
-    """Persisted approval-basis digests for deterministic stale detection."""
+    """Persisted approval-basis digests for deterministic stale detection.
+
+    Every field is a re-computable claim, so each is shape-constrained: left as
+    bare strings, a blank, short, over-long, uppercase or non-hex value
+    persisted and read back as though it were content-addressed, and the
+    mismatch surfaced only when some later pass happened to recompute.
+
+    The eight fingerprints are deliberately NOT one uniform type.
+    ``draft_payload_fingerprint`` carries the draft's own 16-character content
+    address (the approval path assigns it straight from
+    :attr:`ModeloDraft.draft_id`), while the other seven are full SHA-256
+    hex-64 digests of upstream state. Typing all eight as
+    :data:`~core.identity.ContentDigest` would refuse the value the approval
+    path actually writes.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     version: str = APPROVAL_BASIS_VERSION
-    draft_payload_fingerprint: str
-    draft_review_fingerprint: str
-    transaction_catalogue_fingerprint: str
-    invoice_catalogue_fingerprint: str
-    prior_filing_observations_fingerprint: str
-    profile_activity_fingerprint: str
-    category_profiles_fingerprint: str
-    schema_formula_fingerprint: str
+    draft_payload_fingerprint: ModeloDraftContentAddress
+    draft_review_fingerprint: ContentDigest
+    transaction_catalogue_fingerprint: ContentDigest
+    invoice_catalogue_fingerprint: ContentDigest
+    prior_filing_observations_fingerprint: ContentDigest
+    profile_activity_fingerprint: ContentDigest
+    category_profiles_fingerprint: ContentDigest
+    schema_formula_fingerprint: ContentDigest
+
+    @field_validator("version")
+    @classmethod
+    def _version_is_the_current_basis_layout(cls, value: str) -> str:
+        """Refuse a version this code cannot have computed.
+
+        ``version`` names the basis LAYOUT, and :data:`APPROVAL_BASIS_VERSION`
+        is its sole declaration, so the only value this code writes is that
+        one. A free-text version made the layout claim unfalsifiable: a
+        superseded or invented marker rode along and the staleness comparison
+        reported a version change rather than a malformed record. Compared
+        against the constant rather than pinned with ``Literal`` so the version
+        stays declared exactly once.
+        """
+        if value != APPROVAL_BASIS_VERSION:
+            raise FilingValidationError(
+                f"approval basis version {value!r} is not the current basis layout "
+                f"{APPROVAL_BASIS_VERSION!r}",
+            )
+        return value
 
 
 def registry_schema_version(*, modelo: str, revision_id: str) -> str:
@@ -232,11 +275,15 @@ class ModeloDraft(BaseModel):
     binding_values: tuple[ModeloBindingValue, ...] = Field(default_factory=tuple)
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     findings: tuple[ModeloValidationFinding, ...] = Field(default_factory=tuple)
-    created_at: datetime
-    updated_at: datetime
+    # Lifecycle instants are typed, not bare datetimes: draft ordering and the
+    # approval decision compare them, and a naive or offset value makes those
+    # comparisons ambiguous. ``UtcInstant`` is the shared core contract, so the
+    # refusal lives in the type rather than in a fourth hand-rolled validator.
+    created_at: UtcInstant
+    updated_at: UtcInstant
     schema_version: str
     notes: str = ""
-    approved_at: datetime | None = None
+    approved_at: UtcInstant | None = None
     approved_by: str | None = None
     review_checksum: str | None = None
     approval_basis: ModeloApprovalBasis | None = None
@@ -254,6 +301,12 @@ class ModeloDraft(BaseModel):
         axis and another in the filing-subject axis, preserved intact across the
         encrypted round-trip. Only ``profile_tax_id`` is hashed into
         ``draft_id``, so the divergence is not even visible in the identity.
+
+        The ``draft_id`` content-address invariant is NOT enforced here. A draft
+        is content-addressed only once its content is final, while intermediate
+        in-memory drafts legitimately carry a caller-chosen handle; the identity
+        is checked where it becomes a durable claim, in
+        :meth:`~adapters.persistence.profile.filing_drafts.ModeloDraftRepository.save`.
         """
         if self.profile_tax_id != self.subject_tax_id:
             raise FilingValidationError(
@@ -275,7 +328,65 @@ class ModeloDraft(BaseModel):
                 f"{expected_schema_version!r} derived from snapshot_ref "
                 f"(modelo={self.snapshot_ref.modelo!r}, revision={self.snapshot_ref.revision_id!r})",
             )
+        self._enforce_snapshot_period_coherence()
+        self._enforce_collection_coordinate_uniqueness()
         return self
+
+    def _enforce_snapshot_period_coherence(self) -> None:
+        """Confirm ``period`` and ``snapshot_ref`` name the same filing period.
+
+        Scoped to the year and period axes only: the modelo axis is already
+        checked above, so this closes the remaining half of the coordinate
+        contract rather than restating it.
+
+        The builder derives both from one value --
+        ``filing_year, registry_period = period.filing_year, period.registry_token``
+        feeds ``modelo_year`` and ``period`` on the ref it constructs -- so
+        equality is the invariant, not an approximation of one. Direct
+        construction and repository rehydration could otherwise accept a draft
+        for 2026/1T carrying a snapshot reference for 2025/4T, and that
+        mismatch reaches review, approval, and downstream registry re-resolution
+        unchanged, because every later consumer trusts whichever coordinate it
+        happens to read.
+        """
+        if self.snapshot_ref.modelo_year != self.period.filing_year:
+            raise FilingValidationError(
+                f"draft period filing year {self.period.filing_year!r} does not match its "
+                f"snapshot_ref modelo_year {self.snapshot_ref.modelo_year!r}",
+            )
+        if self.snapshot_ref.period != self.period.registry_token:
+            raise FilingValidationError(
+                f"draft period token {self.period.registry_token!r} does not match its "
+                f"snapshot_ref period {self.snapshot_ref.period!r}",
+            )
+
+    def _enforce_collection_coordinate_uniqueness(self) -> None:
+        """Confirm no casilla or binding coordinate is claimed twice.
+
+        The draft builders reject duplicate inputs before constructing a draft,
+        but that guards only the build path: the persisted tuples had no
+        uniqueness rule, so direct construction and rehydration accepted two
+        rows for one casilla, or two for one ``(binding_id, row_index)``. Lookup
+        then resolves to whichever row comes first and the last writer wins
+        silently -- ambiguity inside an otherwise strictly typed aggregate, and
+        one that also makes ``draft_id`` a hash over a value whose meaning
+        depends on tuple order.
+
+        ``row_index`` is part of the binding coordinate, so a repeating record
+        legitimately carries the same ``binding_id`` many times; only a repeated
+        pair is a duplicate.
+        """
+        casilla_ids = [value.casilla_id for value in self.values]
+        duplicate_casillas = sorted({key for key in casilla_ids if casilla_ids.count(key) > 1})
+        if duplicate_casillas:
+            listed = ", ".join(repr(key) for key in duplicate_casillas)
+            raise FilingValidationError(f"draft values claim a casilla more than once: {listed}")
+
+        binding_keys = [(value.binding_id, value.row_index) for value in self.binding_values]
+        duplicate_bindings = sorted({key for key in binding_keys if binding_keys.count(key) > 1})
+        if duplicate_bindings:
+            listed = ", ".join(f"{binding_id!r} row {row_index!r}" for binding_id, row_index in duplicate_bindings)
+            raise FilingValidationError(f"draft binding_values claim a coordinate more than once: {listed}")
 
 
 def compute_modelo_draft_id(

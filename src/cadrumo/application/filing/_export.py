@@ -84,7 +84,11 @@ from ...domain.filing import (
 )
 from ...domain.submission import ModeloDraftStatus
 from ._export_parity import _did_page_suppressed, assert_export_mirrors_manifest
-from ._export_xml_dictionary import render_xml_dictionary_layout
+from ._export_xml_dictionary import (
+    expected_xml_dictionary_root_identity,
+    read_xml_dictionary_root_identity,
+    render_xml_dictionary_layout,
+)
 from .runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
@@ -215,6 +219,12 @@ class DeclaracionVerifyResult(BaseModel):
             not round-trip through the export parser because the wire
             schema exposes them as reserved constants or derived fields
             rather than deserialised currency casillas.
+        mismatched_root_fields: Tuple of declaration-identity attribute names
+            (``modelo``, ``ejercicio``, ``periodo``, ``versionxsd``, the XSD
+            schema location) whose value in an XML-dictionary file differs
+            from the draft the file is being verified against. Empty when
+            ``verdict is MATCH``, and always empty for a layout whose format
+            carries no root identity.
         file_sha256: Hex SHA-256 of the bytes the verifier read.
             Lets the audit trail prove the same file the export
             command wrote was the one verified, even if
@@ -242,6 +252,7 @@ class DeclaracionVerifyResult(BaseModel):
     verdict: DeclaracionVerifyVerdict
     mismatched_casilla_ids: tuple[CasillaId, ...] = ()
     unchecked_casilla_ids: tuple[CasillaId, ...] = ()
+    mismatched_root_fields: tuple[str, ...] = ()
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     mismatched_casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     file_sha256: str | None = Field(default=None)
@@ -462,12 +473,39 @@ def verify_export(
     # a MATCH does not mean every draft casilla was confirmed on disk.
     checked_set = set(checked)
     unchecked = tuple(sorted(value.casilla_id for value in draft.values if value.casilla_id not in checked_set))
+    # An XML declaration identifies itself in its root attributes, and the
+    # casilla comparison above reads only element text. A file whose casillas
+    # all agree but whose modelo, ejercicio, periodo or XSD version name a
+    # different declaration is not the artefact this draft produced, so
+    # comparing values alone certified it as a MATCH.
+    try:
+        mismatched_root = _mismatched_root_fields(
+            subview.export_layouts[0],
+            draft=draft,
+            payload=payload,
+            schema_provider=provider,
+        )
+    except FilingExportValidationError:
+        _logger.warning("declaration export verification could not read root identity of %s", file_path, exc_info=True)
+        return DeclaracionVerifyResult(
+            draft_id=draft.draft_id,
+            file_path=file_path,
+            verdict=DeclaracionVerifyVerdict.MISSING,
+            file_sha256=digest,
+            verified_at=now(),
+            narrative="filing.export.malformed_file",
+        )
     return DeclaracionVerifyResult(
         draft_id=draft.draft_id,
         file_path=file_path,
-        verdict=DeclaracionVerifyVerdict.MATCH if not mismatched else DeclaracionVerifyVerdict.DRIFT,
+        verdict=(
+            DeclaracionVerifyVerdict.MATCH
+            if not mismatched and not mismatched_root
+            else DeclaracionVerifyVerdict.DRIFT
+        ),
         mismatched_casilla_ids=mismatched,
         unchecked_casilla_ids=unchecked,
+        mismatched_root_fields=mismatched_root,
         casilla_provenance=_provenance_for_casillas(draft, checked),
         mismatched_casilla_provenance=_provenance_for_casillas(draft, mismatched),
         file_sha256=digest,
@@ -857,6 +895,37 @@ def _mismatched_casilla_ids(
         elif str(expected) != str(parsed.value):
             mismatched.append(parsed.casilla_id)
     return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
+
+
+def _mismatched_root_fields(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    payload: bytes,
+    schema_provider: RegistrySchemaAccessor,
+) -> tuple[str, ...]:
+    """Return the root identity attributes that disagree with ``draft``.
+
+    Only an ``xml_dictionary`` layout carries a self-identifying root; a
+    fixed-width record has no such header, so the comparison is empty there
+    rather than vacuously true.
+
+    The expected values are rebuilt through the same
+    :func:`~application.filing._export_xml_dictionary.xml_dictionary_root_identity`
+    contract the writer uses, so a future attribute added to the root is
+    compared automatically instead of silently going unchecked.
+    """
+    if layout.format is not ExportLayoutFormat.XML_DICTIONARY:
+        return ()
+    expected = expected_xml_dictionary_root_identity(
+        layout,
+        draft=draft,
+        schema_provider=schema_provider,
+    )
+    actual = read_xml_dictionary_root_identity(payload)
+    return tuple(
+        sorted(name for name, value in expected.items() if actual.get(name) != value),
+    )
 
 
 def _provenance_for_casillas(

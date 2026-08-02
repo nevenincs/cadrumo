@@ -179,7 +179,7 @@ def auth_status(
             context={"provider": provider or ""},
         ) from exc
     payload = result.model_dump(mode="json")
-    envelope_result = AuthStatusPayload.model_validate(payload)
+    envelope_result = AuthStatusPayload.model_validate_json(result.model_dump_json())
     _emit_envelope(
         ctx,
         command="config.auth.status",
@@ -243,7 +243,7 @@ def auth_test(
             context={"provider": provider or ""},
         ) from exc
     payload = result.model_dump(mode="json")
-    envelope_result = AuthTestPayload.model_validate(payload)
+    envelope_result = AuthTestPayload.model_validate_json(result.model_dump_json())
     _emit_envelope(
         ctx,
         command="config.auth.test",
@@ -290,7 +290,7 @@ def auth_login(
     except (AuthLoginNotEnabledError, AuthLoginPreconditionError) as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
     payload = result.model_dump(mode="json")
-    envelope_result = AuthLoginPayload.model_validate(payload)
+    envelope_result = AuthLoginPayload.model_validate_json(result.model_dump_json())
     _emit_envelope(
         ctx,
         command="config.auth.login",

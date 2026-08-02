@@ -41,6 +41,9 @@ _EXPECTED_REASON_KEYS = {
         "application.filing.review.stale_reasons.category_profiles_changed"
     ),
     ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED: "application.filing.review.stale_reasons.schema_formula_changed",
+    ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH: (
+        "application.filing.review.stale_reasons.review_checksum_mismatch"
+    ),
 }
 
 

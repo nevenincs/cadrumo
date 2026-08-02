@@ -1,7 +1,8 @@
 """Calculation-completeness manifest validation helpers.
 
-Checks that each supplied manifest covers the derived non-internal calculation
-closure, and that every manifest casilla has legal and source grounding.
+Checks that each supplied :class:`ModeloRevision`'s manifest covers the
+derived non-internal calculation closure, and that every manifest casilla
+has legal and source grounding.
 """
 
 from __future__ import annotations

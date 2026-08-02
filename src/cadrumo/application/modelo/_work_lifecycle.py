@@ -46,7 +46,8 @@ from ...domain.modelos import (
 )
 from ._action_errors import WorkUnitAlreadyDiscardedError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
 from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
-from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
 
 
 def _default_name(*, modelo: str, filing_year: int, period: Period) -> str:
@@ -167,9 +168,10 @@ def create_work_unit(
         updated_at=now,
         causante_ccaa=causante_ccaa,
     )
-    repo.save(upsert_work_unit(catalogue, unit))
-    _emit_bucket_event(
-        repository=bv_repo,
+    # One unit of work: the new work unit and MODELO_WORK_UNIT_CREATED. Emitted
+    # through a separate write, an event-storage failure left the unit durable
+    # while the history had no record that it was ever created.
+    created_event = _build_bucket_event(
         bucket_id=unit.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,
         occurred_at=now,
@@ -183,6 +185,10 @@ def create_work_unit(
             "revision_id": unit.revision_id,
             "name": unit.name,
         },
+    )
+    repo.save_with_secure_object_writes(
+        upsert_work_unit(catalogue, unit),
+        (_bucket_event_write(bv_repo, (created_event,)),),
     )
     return unit
 
@@ -302,9 +308,8 @@ def rename_work_unit(
     cleaned_name = new_name.strip()
     cleaned_actor = actor.strip()
     renamed = existing.model_copy(update={"name": cleaned_name, "updated_at": now})
-    repo.save(upsert_work_unit(catalogue, renamed))
-    _emit_bucket_event(
-        repository=bv_repo,
+    # One unit of work: the renamed unit and MODELO_WORK_UNIT_RENAMED.
+    renamed_event = _build_bucket_event(
         bucket_id=renamed.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_RENAMED,
         occurred_at=now,
@@ -318,6 +323,10 @@ def rename_work_unit(
             "previous_name": existing.name,
             "new_name": cleaned_name,
         },
+    )
+    repo.save_with_secure_object_writes(
+        upsert_work_unit(catalogue, renamed),
+        (_bucket_event_write(bv_repo, (renamed_event,)),),
     )
     return renamed
 
@@ -362,9 +371,8 @@ def discard_work_unit(
             "updated_at": now,
         },
     )
-    repo.save(upsert_work_unit(catalogue, discarded))
-    _emit_bucket_event(
-        repository=bv_repo,
+    # One unit of work: the discarded unit and MODELO_WORK_UNIT_DISCARDED.
+    discarded_event = _build_bucket_event(
         bucket_id=discarded.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_DISCARDED,
         occurred_at=now,
@@ -377,5 +385,9 @@ def discard_work_unit(
             "period": discarded.period.registry_token,
             "reason": discarded.discard_reason or "",
         },
+    )
+    repo.save_with_secure_object_writes(
+        upsert_work_unit(catalogue, discarded),
+        (_bucket_event_write(bv_repo, (discarded_event,)),),
     )
     return discarded

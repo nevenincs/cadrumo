@@ -25,6 +25,7 @@ from ....core.config import override_settings
 from ....core.i18n import tr
 from ....core.time import now
 from ....domain.user_profile import (
+    ProfileBucketMismatchError,
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
     UserProfileFact,
@@ -119,24 +120,90 @@ def test_lifecycle_round_trip_carries_record(secure_objects: SecureObjectReposit
 
 
 def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path) -> None:
+    """Each repository reads and writes its own bucket's database, not a shared one.
+
+    This previously proved isolation by asking bucket B whether profile A
+    existed and expecting ``False``. That probe is now refused, and simply
+    flipping the assertion to a refusal would have quietly gutted the test:
+    the guard fires BEFORE any database access, so a refusal says nothing
+    about which database the repository is bound to. The rewritten proof
+    stays inside what the guard permits -- each bucket asked only about its
+    own profile -- and is strictly stronger than the original.
+
+    Every assertion below fails if the two buckets share one database.
+    ``iter_records`` is the sharpest: on a shared database each repository
+    would see the other's row too, and the per-row ownership check would
+    raise rather than quietly returning a longer list.
+    """
     profile_a = "a4f1c2e0-1111-4222-8333-444455556666"
     profile_b = "b5e2d3f1-2222-4333-8444-555566667777"
-    profile = UserProfileRecord(
+    record_a = UserProfileRecord(
         profile_id=profile_a,
-        display_name="Operator",
+        display_name="Operator A",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+    )
+    record_b = UserProfileRecord(
+        profile_id=profile_b,
+        display_name="Operator B",
+        facts=(UserProfileFact(path="identity.tax_id", value="87654321X"),),
     )
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         with profile_create_storage_span(profile_a):
             bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
-            bucket_a.save(profile)
+            bucket_a.save(record_a)
             assert bucket_a.exists(profile_a) is True
+            assert bucket_a.load(profile_a).display_name == "Operator A"
+            assert [row.profile_id for row in bucket_a.iter_records()] == [profile_a]
 
         with profile_create_storage_span(profile_b):
             bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
-            assert bucket_b.exists(profile_a) is False
+            # B's own profile is absent until B writes it -- on a shared
+            # database A's row would already be visible here.
+            assert bucket_b.exists(profile_b) is False
+            bucket_b.save(record_b)
+            assert bucket_b.load(profile_b).display_name == "Operator B"
+            assert [row.profile_id for row in bucket_b.iter_records()] == [profile_b]
 
         assert (storage_root / "buckets" / profile_a / "db" / "cadrumo.db").is_file()
+        assert (storage_root / "buckets" / profile_b / "db" / "cadrumo.db").is_file()
+
+
+def test_lifecycle_repository_refuses_a_foreign_profile_on_every_surface(tmp_path: Path) -> None:
+    """A repository bound to one bucket refuses to address another's profile.
+
+    Separated from the binding proof above deliberately: this asserts the
+    guard, that one asserts the storage isolation, and collapsing them would
+    let a refusal stand in for evidence about which database was opened.
+
+    ``exists`` and ``delete`` are the cases worth stating explicitly. Both
+    previously answered falsely rather than wrongly -- ``False`` for a foreign
+    id, meaning "no such profile" and "already gone" -- and ``register`` reads
+    ``exists`` returning ``False`` as permission to create.
+    """
+    profile_a = "a4f1c2e0-1111-4222-8333-444455556666"
+    profile_b = "b5e2d3f1-2222-4333-8444-555566667777"
+    foreign_record = UserProfileRecord(
+        profile_id=profile_b,
+        display_name="Operator B",
+        facts=(UserProfileFact(path="identity.tax_id", value="87654321X"),),
+    )
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_a):
+        bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
+        surfaces: tuple[tuple[str, Callable[[], object]], ...] = (
+            ("exists", lambda: bucket_a.exists(profile_b)),
+            ("load", lambda: bucket_a.load(profile_b)),
+            ("delete", lambda: bucket_a.delete(profile_b)),
+            ("save", lambda: bucket_a.save(foreign_record)),
+            ("to_secure_object_write", lambda: bucket_a.to_secure_object_write(foreign_record)),
+        )
+        for surface, call in surfaces:
+            with pytest.raises(ProfileBucketMismatchError) as excinfo:
+                call()
+            assert excinfo.value.context == {
+                "profile_id": profile_b,
+                "bucket_id": profile_a,
+                "surface": surface,
+            }
 
 
 def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Path) -> None:
@@ -168,14 +235,16 @@ def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> 
 
 
 def test_lifecycle_load_missing_raises_profile_not_found(secure_objects: SecureObjectRepository) -> None:
+    # Bound to the id it loads, as every production construction is: the
+    # absent-record path is only reachable once ownership is satisfied.
     repo = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     with pytest.raises(ProfileNotFoundError) as excinfo:
-        repo.load("11111111-1111-4111-8111-111111111111")
+        repo.load(_BUCKET_ID)
     assert str(excinfo.value) == "profile record not found in secure storage"
     assert excinfo.value.translated_message == "application.user_profile.errors.repository_profile_record_missing"
     assert tr(excinfo.value.translated_message, locale="en") != excinfo.value.translated_message
-    assert excinfo.value.context == {"profile_id": "11111111-1111-4111-8111-111111111111", "bucket_id": _BUCKET_ID}
-    assert "11111111-1111-4111-8111-111111111111" not in str(excinfo.value)
+    assert excinfo.value.context == {"profile_id": _BUCKET_ID, "bucket_id": _BUCKET_ID}
+    assert _BUCKET_ID not in str(excinfo.value)
 
 
 def test_lifecycle_load_rejects_inner_classification_without_identifier_leak(
@@ -203,7 +272,7 @@ def test_lifecycle_load_rejects_inner_classification_without_identifier_leak(
     )
 
     with pytest.raises(ClassificationError) as excinfo:
-        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(profile_id)
+        UserProfileLifecycleRepository(bucket_id=profile_id, objects=secure_objects).load(profile_id)
 
     assert str(excinfo.value) == "profile record classification is incompatible with this repository"
     assert (
@@ -243,7 +312,7 @@ def test_lifecycle_load_rejects_inner_version_without_identifier_leak(
     )
 
     with pytest.raises(EnvelopeVersionError) as excinfo:
-        UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load(profile_id)
+        UserProfileLifecycleRepository(bucket_id=profile_id, objects=secure_objects).load(profile_id)
 
     assert str(excinfo.value) == "profile record schema version is not supported"
     assert (

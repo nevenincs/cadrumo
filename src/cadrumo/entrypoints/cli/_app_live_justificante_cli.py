@@ -14,7 +14,7 @@ from typing import Annotated
 
 import typer
 
-from ...core import Period, PeriodError
+from ...core import Modelo, Period, PeriodError
 from ...core.i18n import tr
 from ._app_live_auth_preflight import resolve_active_bucket, run_auth_preflight
 from ._common import _emit_envelope
@@ -100,15 +100,15 @@ def justificante_pull(
     result = JustificanteCaptureResult(
         bucket_id=bucket_id,
         snapshot_id=persisted.snapshot_id,
-        modelo=persisted.modelo,
+        modelo=Modelo(persisted.modelo),
         filing_year=persisted.filing_year,
         period=persisted.period.registry_token,
         expediente_id=persisted.expediente_id,
         csv=persisted.csv,
         pdf_sha256=persisted.pdf_sha256,
         source_kind=persisted.source_kind,
-        state=persisted.state.value,
-        captured_at=persisted.captured_at.isoformat(),
+        state=persisted.state,
+        captured_at=persisted.captured_at,
         justificante_metadata_registered=outcome.justificante_metadata_registered,
         calendar_evidence_available=outcome.justificante_metadata_registered,
         modelo_filing_record_required=not outcome.filing_evidence_stamped,
@@ -165,12 +165,12 @@ def justificante_list(ctx: typer.Context) -> None:
         rows=[
             JustificanteSnapshotSummaryPayload(
                 snapshot_id=row.snapshot_id,
-                modelo=row.modelo,
+                modelo=Modelo(row.modelo),
                 filing_year=row.filing_year,
                 period=row.period.registry_token,
                 pdf_sha256=row.pdf_sha256,
-                state=row.state.value,
-                captured_at=row.captured_at.isoformat(),
+                state=row.state,
+                captured_at=row.captured_at,
             )
             for row in rows
         ],
@@ -216,15 +216,15 @@ def justificante_view(
     result = JustificanteViewResult(
         bucket_id=bucket_id,
         snapshot_id=record.snapshot_id,
-        modelo=record.modelo,
+        modelo=Modelo(record.modelo),
         filing_year=record.filing_year,
         period=record.period.registry_token,
         expediente_id=record.expediente_id,
         csv=record.csv,
         pdf_sha256=record.pdf_sha256,
         source_kind=record.source_kind,
-        state=record.state.value,
-        captured_at=record.captured_at.isoformat(),
+        state=record.state,
+        captured_at=record.captured_at,
     )
     lines = [
         f"bucket\t{bucket_id}",

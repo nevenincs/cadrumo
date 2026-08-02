@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import threading
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -41,6 +42,12 @@ _logger = get_logger(__name__)
 _TRACE_FILENAME = "trace.json"
 _EVENTS_FILENAME = "events.jsonl"
 _ENVELOPE_FILENAME = "envelope.json"
+
+# Both the public direct append path and JsonlRunSink write the same per-run
+# JSONL artefacts.  One process-wide lock keeps their independent file handles
+# from interleaving or losing lines under concurrent worker activity.
+_EVENTS_APPEND_LOCK = threading.Lock()
+
 
 # Run ids are minted by :func:`core.observability._context._mint_run_id`
 # as ``uuid4().hex[:16]``. Validate every run_id reaching the filesystem
@@ -76,6 +83,15 @@ def _validate_run_id(run_id: str) -> str:
             f"invalid run_id {run_id!r}: expected 16 lowercase hex characters",
         )
     return run_id
+
+
+def _require_trace_identity(trace: RunTrace, *, expected_run_id: str) -> RunTrace:
+    """Return ``trace`` only when its embedded and filesystem identities agree."""
+    if trace.run_id != expected_run_id:
+        raise RunTraceValidationError(
+            f"trace.json for run {expected_run_id!r} contains embedded run_id {trace.run_id!r}",
+        )
+    return trace
 
 
 def runs_dir(settings: Settings | None = None) -> Path:
@@ -178,8 +194,8 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
 
     Raises:
         RunTraceValidationError: When ``run_id`` has an invalid shape,
-            when the file is missing, or when its contents fail strict
-            validation.
+            when the file is missing, when its contents fail strict
+            validation, or when its embedded identity names another run.
     """
     _validate_run_id(run_id)
     target = runs_dir(settings) / run_id / _TRACE_FILENAME
@@ -194,11 +210,12 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
     except OSError as exc:
         _raise_persistence_error("load_trace", target, exc)
     try:
-        return RunTrace.model_validate_json(raw)
+        trace = RunTrace.model_validate_json(raw)
     except ValidationError as exc:
         raise RunTraceValidationError(
             f"trace.json for run {run_id!r} failed strict validation: {exc}",
         ) from exc
+    return _require_trace_identity(trace, expected_run_id=run_id)
 
 
 def save_envelope(
@@ -317,7 +334,7 @@ def save_events_append(
     redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
     line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
     try:
-        with target.open("a", encoding="utf-8", newline="") as handle:
+        with _EVENTS_APPEND_LOCK, target.open("a", encoding="utf-8", newline="") as handle:
             handle.write(line)
             handle.flush()
     except OSError as exc:
@@ -401,12 +418,12 @@ def load_events(
 def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTrace]]:
     """Yield ``(run_id, RunTrace)`` pairs sorted by ``started_at`` descending.
 
-    Directories without a valid ``trace.json`` — or whose name does not
-    match the canonical ``run_id`` shape — are skipped silently. This
-    lets crashed runs (no on-exit finaliser call) coexist with healthy
-    ones rather than poisoning a run listing, and blocks any
-    non-run artefacts that may have been dropped into the runs
-    directory by hand.
+    Directories without a valid ``trace.json``, whose name does not match the
+    canonical ``run_id`` shape, or whose embedded trace identity does not
+    match their directory are skipped. This lets crashed runs (no on-exit
+    finaliser call) coexist with healthy ones rather than poisoning a run
+    listing, and blocks any non-run artefacts that may have been dropped into
+    the runs directory by hand.
 
     Args:
         settings: Optional :class:`core.config.Settings` override.
@@ -439,6 +456,7 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
             continue
         try:
             trace = RunTrace.model_validate_json(trace_path.read_text(encoding="utf-8"))
+            trace = _require_trace_identity(trace, expected_run_id=entry.name)
         except OSError:
             _logger.warning(
                 "iter_runs: skipping run directory %s — trace.json could not be read",
@@ -452,6 +470,9 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
                 entry.name,
                 exc_info=True,
             )
+            continue
+        except RunTraceValidationError as exc:
+            _logger.warning("iter_runs: skipping run directory %s — %s", entry.name, exc)
             continue
         pairs.append((entry.name, trace))
     pairs.sort(key=lambda item: item[1].started_at, reverse=True)

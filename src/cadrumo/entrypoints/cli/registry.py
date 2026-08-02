@@ -461,7 +461,17 @@ def verify_workbooks_cmd(
     _emit_envelope(
         ctx,
         command="registry.workbooks.verify",
-        result=RegistryWorkbooksVerifyResult.model_validate(report.model_dump(mode="json")),
+        result=RegistryWorkbooksVerifyResult(
+            root=report.root,
+            workbook_count=report.workbook_count,
+            scanned_count=report.scanned_count,
+            formula_workbook_count=report.formula_workbook_count,
+            unsupported_xls_count=report.unsupported_xls_count,
+            failed_count=report.failed_count,
+            runner=report.runner,
+            reports=list(report.reports),
+            modelo_coverage=list(report.modelo_coverage),
+        ),
         lines=(
             _metric_line("backend_exists", report.backend_exists),
             _metric_line("passed", report.passed),

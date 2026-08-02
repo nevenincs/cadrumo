@@ -426,6 +426,73 @@ reviewed_by = "registry-test"
         load_legal_parameters_only(tmp_path)
 
 
+def test_legal_parameters_only_rejects_noncanonical_parameter_key(tmp_path: Path) -> None:
+    """The TOML map key must pass the canonical ParameterId boundary."""
+
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (legal_dir / "parameters.toml").write_text(
+        """
+[parameters."bad id with spaces"]
+evidence_tier = "legal_authority"
+value = "0.21"
+unit = "fraction"
+applies_to = "test-case"
+legal_refs = ["ley-test:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        RegistryLoadError,
+        match=r"invalid legal parameter 'bad id with spaces'",
+    ):
+        load_legal_parameters_only(tmp_path)
+
+
+def test_legal_parameters_only_preserves_valid_parameter_key_identity(tmp_path: Path) -> None:
+    """A valid TOML key is the identity of the loaded typed parameter."""
+
+    legal_dir = tmp_path / "legal"
+    legal_dir.mkdir()
+    (legal_dir / "catalogue.toml").write_text(
+        """
+[legal."ley-test:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/test/ley-test.html#art-1"
+document_id = "BOE-TEST-001"
+article = "1"
+permalink = "https://example.com/ley-test"
+effective_from = 2026-01-01
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+required_text = ["test provision"]
+
+[parameters."test-rate"]
+evidence_tier = "legal_authority"
+value = "0.21"
+unit = "fraction"
+applies_to = "test-case"
+legal_refs = ["ley-test:art-1"]
+review_status = "reviewed"
+reviewed_at = 2026-06-28
+reviewed_by = "registry-test"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    parameters = load_legal_parameters_only(tmp_path)
+
+    assert tuple(parameters) == ("test-rate",)
+    assert parameters["test-rate"].id == "test-rate"
+
+
 def test_registry_tree_rejects_parameter_unknown_legal_refs(tmp_path: Path) -> None:
     """The full registry merge validates legal-parameter legal refs before returning."""
 

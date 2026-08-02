@@ -11,7 +11,9 @@ save-and-exit appears only where the definition declares checkpointing
 for the mode, with an explicit unavailability line on the no-op arm.
 
 The registered-values column is domain-supplied display data keyed by
-page key; the substrate renders it verbatim and never interprets it —
+page key; the substrate renders it, masking a SECRET page's value
+through the same widget-kind lookup the answer column uses. Beyond
+that one interpretation the substrate does not reformat the string —
 the comparison judgment stays with the operator (and with the domain's
 own validators).
 """
@@ -140,7 +142,7 @@ class ReviewScreen(Screen[None]):
                 _STATUS_GLYPHS.get(row.status, "?"),
                 prompt or row.key,
                 self._answer_cell(app, row.key),
-                app.registered_values.get(row.key, ""),
+                self._registered_cell(app, row.key),
                 key=row.key,
             )
         blocking_text = "\n".join(tr(v.message_key, **v.context) for v in projection.blocking if v.message_key)
@@ -169,6 +171,21 @@ class ReviewScreen(Screen[None]):
         if answer and app.is_secret_page(page_key):
             return tr("flows.progress.current_answer_secret")
         return answer
+
+    @staticmethod
+    def _registered_cell(app: FlowTuiApp, page_key: str) -> str:
+        """The registered-value column cell, masked when the page collects a secret.
+
+        Mirrors :meth:`_answer_cell` exactly: a SECRET page's on-record
+        value must never appear in the review table (or a captured session
+        log) any more than its in-flow answer may, so this reads the same
+        ``app.is_secret_page`` widget-kind lookup rather than a second,
+        independently-drifting masking authority.
+        """
+        registered = app.registered_values.get(page_key, "")
+        if registered and app.is_secret_page(page_key):
+            return tr("flows.progress.current_answer_secret")
+        return registered
 
     def _prompts_by_key(self, app: FlowTuiApp) -> dict[str, str]:
         """Resolved prompt copy per visible page key (orphans keep their key)."""

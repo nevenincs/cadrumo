@@ -135,6 +135,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId
+from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 
 if TYPE_CHECKING:
@@ -200,7 +201,7 @@ class RecipientEncryptionKeypair(BaseModel):
     bucket_id: str = Field(min_length=1)
     private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: datetime
+    created_at: UtcInstant
 
     def private_key(self) -> X25519PrivateKey:
         """Reconstruct the live :class:`X25519PrivateKey` from stored raw bytes."""
@@ -225,7 +226,7 @@ class RecipientEncryptionPublicKey(BaseModel):
 
     bucket_id: str = Field(min_length=1)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: datetime
+    created_at: UtcInstant
 
 
 def _canonical_bucket_id(bucket_id: str) -> str:
@@ -412,8 +413,8 @@ class RecipientEncryptedPackage(BaseModel):
     recipient_public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     ciphertext: bytes = Field(min_length=1)
     envelope_nonce_hex: str = Field(pattern=_HEX_PATTERN_64)
-    issued_at: datetime
-    valid_until: datetime | None = Field(default=None)
+    issued_at: UtcInstant
+    valid_until: UtcInstant | None = Field(default=None)
     review_only: bool = Field(default=False)
 
     @field_validator("ciphertext", mode="before")

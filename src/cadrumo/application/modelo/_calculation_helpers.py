@@ -57,16 +57,33 @@ from ._registry_resources import (
 )
 
 
-def load_work_unit_for_calculation(work_units: WorkUnitCatalogue, *, work_unit_id: str) -> WorkUnit:
+def load_work_unit_for_calculation(
+    work_units: WorkUnitCatalogue,
+    *,
+    work_unit_id: str,
+    repository_bucket_id: str | None = None,
+) -> WorkUnit:
     """Load a mutable :class:`cadrumo.domain.modelos.WorkUnit` for calculation.
 
-    Missing ids raise :class:`WorkUnitNotFoundError`. Work units already marked
-    ``DESCARTADO`` raise :class:`WorkUnitMutationRefusedError`, because the
-    calculate path must not create a new revision for a discarded lifecycle
-    record.
+    Missing ids raise :class:`WorkUnitNotFoundError`. A unit whose own
+    ``bucket_id`` disagrees with ``repository_bucket_id`` (the caller-supplied
+    ``work_unit_repository``'s bound bucket) is reported as NOT FOUND rather
+    than as a refusal: from that repository's scope it genuinely is not
+    addressable, and a distinct refusal would confirm the existence of a work
+    unit in a bucket the caller has no claim on. Mirrors
+    :func:`~application.modelo._work_lifecycle._work_unit_in_repository_bucket`
+    and :func:`~application.modelo._calculation_actions._calculation_revision_in_repository_bucket`,
+    the equivalent checks on the work-unit-lifecycle and calculation-revision
+    addressing paths -- this is the calculate entrypoint's own counterpart.
+    The check is skipped only when ``repository_bucket_id`` is ``None``,
+    where there is no scope to compare against.
+
+    Work units already marked ``DESCARTADO`` raise
+    :class:`WorkUnitMutationRefusedError`, because the calculate path must not
+    create a new revision for a discarded lifecycle record.
     """
     work_unit = work_units.get(work_unit_id)
-    if work_unit is None:
+    if work_unit is None or (repository_bucket_id is not None and work_unit.bucket_id != repository_bucket_id):
         raise WorkUnitNotFoundError(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": work_unit_id},

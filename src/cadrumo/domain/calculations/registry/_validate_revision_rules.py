@@ -25,16 +25,16 @@ _M210_TIPO_RENTA_CODE_PARAMETER_PREFIX = "m210-tipo-renta-code-"
 def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
     failures: list[str] = []
     revisions = sorted(modelo.revisions.values(), key=lambda item: item.valid_from)
-    for index, current in enumerate(revisions[1:], start=1):
-        previous = revisions[index - 1]
-        previous_to = previous.valid_to
-        if (previous_to is None or previous_to >= current.valid_from) and period_selectors_overlap(
-            previous.period_selector,
-            current.period_selector,
-        ):
-            failures.append(
-                f"modelo {modelo.id}: revisions {previous.id!r} and {current.id!r} overlap on period selector",
-            )
+    for index, earlier in enumerate(revisions):
+        for later in revisions[index + 1 :]:
+            if earlier.valid_to is not None and earlier.valid_to < later.valid_from:
+                # Later revisions are ordered by valid_from, so no subsequent
+                # revision can overlap this bounded earlier window either.
+                break
+            if period_selectors_overlap(earlier.period_selector, later.period_selector):
+                failures.append(
+                    f"modelo {modelo.id}: revisions {earlier.id!r} and {later.id!r} overlap on period selector",
+                )
     return failures
 
 

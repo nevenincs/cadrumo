@@ -279,13 +279,19 @@ def _compare_manifest_objects(
         local_entry = local_by_key[object_key_hmac]
         remote_entry = remote_by_key[object_key_hmac]
         if local_entry.storage_revision_id == remote_entry.storage_revision_id:
-            if local_entry.ciphertext_hash != remote_entry.ciphertext_hash:
+            contradictory_fields = _same_revision_metadata_differences(
+                local_entry=local_entry,
+                remote_entry=remote_entry,
+            )
+            if contradictory_fields:
                 issues.append(
                     RemoteMirrorIssue(
                         kind=RemoteMirrorIssueKind.REVISION_CONFLICT,
                         namespace=local.namespace,
                         object_key_hmac=object_key_hmac,
-                        detail="matching revision ids carry different ciphertext hashes",
+                        detail=(
+                            "matching revision ids carry contradictory metadata: " + ", ".join(contradictory_fields)
+                        ),
                     ),
                 )
             continue
@@ -308,6 +314,29 @@ def _compare_manifest_objects(
             ),
         )
     return tuple(issues)
+
+
+def _same_revision_metadata_differences(
+    *,
+    local_entry: RemoteMirrorObjectManifest,
+    remote_entry: RemoteMirrorObjectManifest,
+) -> tuple[str, ...]:
+    """Return authoritative fields that cannot diverge under one revision ID."""
+    compared_fields = (
+        "classification",
+        "schema_version",
+        "byte_length",
+        "ciphertext_hash",
+        "previous_storage_revision_id",
+        "revision_ancestor_ids",
+        "row_written_at",
+        "revision_written_at",
+    )
+    return tuple(
+        field_name
+        for field_name in compared_fields
+        if getattr(local_entry, field_name) != getattr(remote_entry, field_name)
+    )
 
 
 def _provider_payload_matches_manifest_entry(

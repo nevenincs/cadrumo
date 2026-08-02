@@ -25,6 +25,13 @@ from ......domain.calculations.registry import (
     RemoteOperation,
     assert_remote_operation_allowed,
 )
+from ......tests.aeat_literal_fixtures import (
+    CENSAL_WRITE_SURFACE_PATH_CANARIES,
+    PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
+    aeat_url,
+    configured_path,
+)
+from .._errors import SedeNavigationError
 from .._groi_check import (
     _READ_GUARD_POLICY,
     DEFAULT_GROI_TIMEOUT_MS,
@@ -32,6 +39,7 @@ from .._groi_check import (
     GroiResult,
     GroiSedeDriver,
     _assert_query_browser_action,
+    assert_groi_read_landing,
     extract_verdict_from_response_text,
 )
 
@@ -234,3 +242,45 @@ def test_groi_read_guard_refuses_non_aeat_host() -> None:
             _READ_GUARD_POLICY,
             RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
         )
+
+
+class TestGroiLandingRefusal:
+    """Where AEAT actually served the read, checked after every submit.
+
+    The GROI driver fills a NIF and clicks a submit control. That click
+    issues a browser form POST which reaches neither the first-party HTTP
+    guard nor the package's forbidden-verb source scan, so this landing
+    rule is the only wall between the click and whatever AEAT served. The
+    tests drive the driver's own exported rule, not a copy of it.
+    """
+
+    def test_the_consult_servlet_is_admitted(self) -> None:
+        assert_groi_read_landing(Settings.external_constants().aeat.oracles.groi_check)
+
+    def test_a_sibling_load_balancer_host_serving_the_servlet_is_admitted(self) -> None:
+        """Host drift across AEAT's www{n} pool is dispatch, not a write."""
+        aeat = Settings.external_constants().aeat
+        assert_groi_read_landing(f"{aeat.domains.www12}{urlsplit(aeat.oracles.groi_check).path}")
+
+    @pytest.mark.parametrize("write_path", CENSAL_WRITE_SURFACE_PATH_CANARIES)
+    def test_a_real_aeat_write_surface_is_refused(self, write_path: str) -> None:
+        """None of these carries a write verb; the path allow-list is what refuses them."""
+        with pytest.raises(SedeNavigationError):
+            assert_groi_read_landing(aeat_url("www2", write_path))
+
+    def test_the_procedure_launcher_family_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_groi_read_landing(aeat_url("www2", f"{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}G322.shtml"))
+
+    def test_the_auth_gate_landing_is_refused(self) -> None:
+        """The observed failure mode for this surface: AEAT answers with its 4033 gate.
+
+        Before this rule the driver scraped that page and classified its
+        text, so an auth refusal could only ever surface as a verdict.
+        """
+        with pytest.raises(SedeNavigationError):
+            assert_groi_read_landing(aeat_url("www2", configured_path("sede_paths", "auth_gate_4033")))
+
+    def test_an_unreadable_landing_is_refused(self) -> None:
+        with pytest.raises(SedeNavigationError):
+            assert_groi_read_landing("")

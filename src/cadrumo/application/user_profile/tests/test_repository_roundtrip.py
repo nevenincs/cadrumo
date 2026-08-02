@@ -186,9 +186,12 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     machine is not actually enforced post-persistence.
     """
 
-    bucket_id = runtime_profile.bucket_id
-    lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
+    # Bound to the record's own profile, matching every production
+    # construction: this proof is about lifecycle drift surviving the
+    # encrypted boundary, not about addressing a foreign bucket.
     record = _populated_record()
+    bucket_id = record.profile_id
+    lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
     lifecycle.save(record)
 
     stored = runtime_profile.repository.load(
