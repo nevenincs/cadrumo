@@ -116,6 +116,24 @@ enrolling_test = "x.py"
             load_authorization_manifest(root)
 
 
+def test_unknown_modelo_fragment_is_rejected_before_capability_derivation(tmp_path: Path) -> None:
+    """An unknown ID must not load into the manifest's capability source."""
+    _write_fragment(
+        tmp_path,
+        "999",
+        """
+[modelo]
+modelo = "999"
+renta_years = [2025, 2026]
+evidence_class = "calculation"
+enrolling_test = "tests/unknown-modelo.py"
+""",
+    )
+
+    with pytest.raises(AuthorizationManifestError, match="non-enrollable modelo"):
+        load_authorization_manifest(tmp_path)
+
+
 def test_manifest_dir_resolves_under_root(tmp_path: Path) -> None:
     """manifest_dir points at authorization.d under the registry root."""
     assert manifest_dir(tmp_path) == tmp_path / AUTHORIZATION_MANIFEST_DIRNAME
