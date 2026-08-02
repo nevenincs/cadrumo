@@ -296,9 +296,17 @@ scratch/*
 .campaign-runs/
 .vault-scratch/
 .dedup-scan/
-tmp/
-tmp_*/
-temp/
+# Temporary files and directories at any depth.  Keep this deliberately
+# name-based rather than using *temp*, which would also hide durable sources
+# such as template files.
+**/[Tt][Mm][Pp]/
+**/[Tt][Ee][Mm][Pp]/
+**/.[Tt][Mm][Pp]/
+**/[Tt][Mm][Pp][-_]*/
+**/[Tt][Ee][Mm][Pp][-_]*/
+**/.[Tt][Mm][Pp][-_]*/
+**/*.[Tt][Mm][Pp]
+**/*.[Tt][Ee][Mm][Pp]
 cache/
 
 # Root-level ad-hoc agent run directories (the retired .runtime-sNN-*
