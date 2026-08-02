@@ -643,6 +643,95 @@ if sys.platform == "win32":
             if unanchored_polls >= orphan_confirmations:
                 _exit_on_watched_death(0, "<unanchored>", reason="unanchored_orphan")
 
+    def _anchor_on_client(watched: list[_WatchedProcess], resolved: int | None) -> bool:
+        """Add the client anchor to ``watched``; report whether one is held.
+
+        A pid already present counts as held without opening a second handle:
+        an explicit parent override naming the same process is the anchor, and
+        re-opening it would leak a duplicate handle for no added liveness.
+        """
+        if resolved is None:
+            return False
+        if any(target.pid == resolved for target in watched):
+            return True
+        client = _open_watched(resolved, grace_prunable=False)
+        if client is None:
+            return False
+        watched.append(client)
+        return True
+
+    def _extend_with_ancestor_chain(watched: list[_WatchedProcess]) -> None:
+        """Add discovered ancestors, skipping any already watched.
+
+        A duplicate arrives holding its own freshly-opened handle, so it must be
+        closed rather than merely dropped or the handle leaks for the process
+        lifetime.
+        """
+        known = {target.pid for target in watched}
+        for target in _open_ancestor_chain():
+            if target.pid in known:
+                _kernel32.CloseHandle(target.handle)
+            else:
+                watched.append(target)
+
+    def _windows_watch_targets(
+        client_pid: int | None,
+        parent_pid: int | None,
+    ) -> list[_WatchedProcess]:
+        """Return the processes whose exit means this server lost its client.
+
+        Ordered by how much authority each anchor carries: an explicit parent
+        override first, then the stdin pipe creator, and only when neither
+        yields a client anchor does the discovered ancestor chain stand in.
+
+        An empty list is a legitimate result, not a failure - it is the orphan
+        signature itself, and the caller arms on it so the watchdog thread can
+        poll for an anchor and reap on confirmed orphanhood.
+        """
+        watched: list[_WatchedProcess] = []
+        if parent_pid is not None:
+            explicit = _open_watched(parent_pid, grace_prunable=False)
+            if explicit is None:
+                logger.warning("watchdog: explicit parent pid %d not watchable", parent_pid)
+            else:
+                watched.append(explicit)
+        if _anchor_on_client(watched, client_pid or resolve_stdin_client_pid()):
+            return watched
+        _extend_with_ancestor_chain(watched)
+        return watched
+
+    def _arm_windows_watchdog(
+        *,
+        client_pid: int | None,
+        parent_pid: int | None,
+        grace_seconds: float,
+        rearm_seconds: float,
+        orphan_confirmations: int,
+    ) -> bool:
+        """Start the Windows watchdog thread over the resolved anchor set."""
+        watched = _windows_watch_targets(client_pid, parent_pid)
+        if not watched:
+            # Nothing watchable is the orphan signature itself, not a reason
+            # to stand down: arm on an empty set so the thread polls for an
+            # anchor and reaps on confirmed orphanhood.
+            logger.debug("watchdog: no watchable targets; arming the unanchored re-acquisition poll")
+        thread = threading.Thread(
+            target=_windows_wait,
+            args=(watched, grace_seconds, rearm_seconds, orphan_confirmations),
+            name="cadrumo-mcp-client-watchdog",
+            daemon=True,
+        )
+        try:
+            thread.start()
+        except Exception:
+            _close_targets(watched)
+            raise
+        logger.debug(
+            "watchdog: armed on %s",
+            ", ".join(f"{target.pid}({target.exe})" for target in watched) or "no anchor yet",
+        )
+        return True
+
 else:
 
     def resolve_stdin_client_pid() -> int | None:
@@ -814,6 +903,28 @@ def _posix_watchdog(
             _exit_on_watched_death(0, "<unanchored>", reason="unanchored_orphan")
 
 
+def _arm_posix_watchdog(
+    *,
+    parent_pid: int | None,
+    rearm_seconds: float,
+    orphan_confirmations: int,
+) -> bool:
+    """Start the POSIX reparent-plus-ancestor poll thread."""
+    extra = (parent_pid,) if parent_pid is not None else ()
+    # The POSIX poll cadence is derived from the same knobs the Windows path
+    # takes, so a test can compress both platforms through the real
+    # parameters instead of patching either.
+    thread = threading.Thread(
+        target=_posix_watchdog,
+        args=(os.getppid(), extra, min(_POSIX_POLL_SECONDS, rearm_seconds), orphan_confirmations),
+        name="cadrumo-mcp-client-watchdog",
+        daemon=True,
+    )
+    thread.start()
+    logger.debug("watchdog: armed POSIX ancestor poll")
+    return True
+
+
 def arm_stdio_lifetime_watchdog(
     client_pid: int | None = None,
     parent_pid: int | None = None,
@@ -868,68 +979,18 @@ def arm_stdio_lifetime_watchdog(
 
     try:
         if sys.platform == "win32":
-            watched: list[_WatchedProcess] = []
-            if parent_pid is not None:
-                explicit = _open_watched(parent_pid, grace_prunable=False)
-                if explicit is None:
-                    logger.warning("watchdog: explicit parent pid %d not watchable", parent_pid)
-                else:
-                    watched.append(explicit)
-            resolved = client_pid or resolve_stdin_client_pid()
-            client_watched = False
-            if resolved is not None:
-                if any(w.pid == resolved for w in watched):
-                    client_watched = True
-                else:
-                    client = _open_watched(resolved, grace_prunable=False)
-                    if client is not None:
-                        watched.append(client)
-                        client_watched = True
-            if not client_watched:
-                fallback = _open_ancestor_chain()
-                known = {w.pid for w in watched}
-                for target in fallback:
-                    if target.pid in known:
-                        # Already watched (an explicit override on the chain);
-                        # drop the duplicate without leaking its fresh handle.
-                        _kernel32.CloseHandle(target.handle)
-                    else:
-                        watched.append(target)
-            if not watched:
-                # Nothing watchable is the orphan signature itself, not a reason
-                # to stand down: arm on an empty set so the thread polls for an
-                # anchor and reaps on confirmed orphanhood.
-                logger.debug("watchdog: no watchable targets; arming the unanchored re-acquisition poll")
-            thread = threading.Thread(
-                target=_windows_wait,
-                args=(watched, grace_seconds, rearm_seconds, orphan_confirmations),
-                name="cadrumo-mcp-client-watchdog",
-                daemon=True,
+            return _arm_windows_watchdog(
+                client_pid=client_pid,
+                parent_pid=parent_pid,
+                grace_seconds=grace_seconds,
+                rearm_seconds=rearm_seconds,
+                orphan_confirmations=orphan_confirmations,
             )
-            try:
-                thread.start()
-            except Exception:
-                _close_targets(watched)
-                raise
-            logger.debug(
-                "watchdog: armed on %s",
-                ", ".join(f"{w.pid}({w.exe})" for w in watched) or "no anchor yet",
-            )
-            return True
-
-        extra = (parent_pid,) if parent_pid is not None else ()
-        # The POSIX poll cadence is derived from the same knobs the Windows path
-        # takes, so a test can compress both platforms through the real
-        # parameters instead of patching either.
-        thread = threading.Thread(
-            target=_posix_watchdog,
-            args=(os.getppid(), extra, min(_POSIX_POLL_SECONDS, rearm_seconds), orphan_confirmations),
-            name="cadrumo-mcp-client-watchdog",
-            daemon=True,
+        return _arm_posix_watchdog(
+            parent_pid=parent_pid,
+            rearm_seconds=rearm_seconds,
+            orphan_confirmations=orphan_confirmations,
         )
-        thread.start()
-        logger.debug("watchdog: armed POSIX ancestor poll")
-        return True
     except Exception:
         logger.debug("watchdog: arming failed; not arming", exc_info=True)
         return False

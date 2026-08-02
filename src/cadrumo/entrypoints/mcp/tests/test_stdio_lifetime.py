@@ -35,6 +35,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from ....core.config import reset_settings_cache
 from .._stdio_lifetime import (
     _GRACE_SECONDS,
     PARENT_PID_ENV,
@@ -157,6 +158,13 @@ def test_kill_switch_disables_arming_in_process() -> None:
     """
     previous = os.environ.get(STDIO_WATCHDOG_ENV)
     os.environ[STDIO_WATCHDOG_ENV] = "false"
+    # `_constructed_settings` is lru_cached, so settings built earlier in this
+    # process would answer from before the assignment above and the env var
+    # would look inert. Dropping the cache keeps this driving the REAL
+    # environment variable through the real settings facade - the point of the
+    # test - instead of substituting `override_settings`, which would prove the
+    # override mechanism rather than the operator's knob.
+    reset_settings_cache()
     try:
         assert watchdog_disabled() is True
         assert arm_stdio_lifetime_watchdog() is False
@@ -165,6 +173,7 @@ def test_kill_switch_disables_arming_in_process() -> None:
             del os.environ[STDIO_WATCHDOG_ENV]
         else:
             os.environ[STDIO_WATCHDOG_ENV] = previous
+        reset_settings_cache()
     # The switch is genuinely load-bearing: with it restored, arming succeeds.
     assert watchdog_disabled() is False
 
