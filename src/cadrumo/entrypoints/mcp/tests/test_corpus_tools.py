@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import pytest
+from pydantic import ValidationError
 
 from ....application.corpus_search import (
     CitationResolution,
@@ -21,6 +22,8 @@ from ....application.corpus_search import (
 from ....core.config import override_settings
 from .._corpus_tools import (
     CORPUS_SEARCH_TOOL,
+    CorpusCitationResult,
+    CorpusSearchPayload,
     build_corpus_search_payload,
     build_corpus_search_tool,
     corpus_search_payload_from_response,
@@ -75,6 +78,46 @@ def test_payload_maps_citation_short_circuit() -> None:
     assert payload.citation is not None
     assert payload.citation.document_id == "BOE-A-2003-23186"
     assert payload.citation.uri == corpus_uri("ley-58-2003:art-27.2")
+
+
+def _citation_result() -> CorpusCitationResult:
+    return CorpusCitationResult(
+        citation_id="ley-58-2003:art-27.2",
+        document_id="BOE-A-2003-23186",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a27",
+        uri=corpus_uri("ley-58-2003:art-27.2"),
+        snippet="Los recargos por declaración extemporánea…",
+    )
+
+
+def test_citation_payload_without_citation_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        CorpusSearchPayload(query="ley-58-2003:art-27.2", mode=RetrievalMode.CITATION, citation=None)
+
+
+def test_citation_payload_carrying_lexical_results_is_refused() -> None:
+    from .._corpus_tools import CorpusSearchResultRow
+
+    with pytest.raises(ValidationError):
+        CorpusSearchPayload(
+            query="ley-58-2003:art-27.2",
+            mode=RetrievalMode.CITATION,
+            citation=_citation_result(),
+            results=(
+                CorpusSearchResultRow(
+                    corpus_ref="corpus/normatives/html/a.html#a1",
+                    title="Artículo de prueba",
+                    snippet="texto",
+                    score=0.5,
+                    uri=corpus_uri("corpus/normatives/html/a.html#a1"),
+                ),
+            ),
+        )
+
+
+def test_lexical_only_payload_carrying_a_citation_is_refused() -> None:
+    with pytest.raises(ValidationError):
+        CorpusSearchPayload(query="recargo", mode=RetrievalMode.LEXICAL_ONLY, citation=_citation_result())
 
 
 def test_render_text_lists_results_and_uris() -> None:
