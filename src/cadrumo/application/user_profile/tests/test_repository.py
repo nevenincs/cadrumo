@@ -266,7 +266,10 @@ def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObject
     )
     snapshot_id = new_profile_snapshot_id("11111111-1111-4111-8111-111111111111")
     snapshot = UserProfileSnapshot.from_profile(profile, snapshot_id=snapshot_id)
-    repo = UserProfileSnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    # Bound to the snapshot's own profile: the row is keyed by the bucket, so a
+    # repository bound elsewhere would file this snapshot under a bucket that
+    # does not own it.
+    repo = UserProfileSnapshotRepository(bucket_id=profile.profile_id, objects=secure_objects)
 
     repo.save(snapshot)
     assert repo.exists(snapshot_id)

@@ -283,6 +283,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.user_profile._errors.ProfileBucketMismatchError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_BUCKET_MISMATCH",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_profile_bucket_mismatch",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.user_profile._errors.ProfileSnapshotNotFoundError",
         ErrorCode(
             code="INTEGRITY_PROFILE_SNAPSHOT_NOT_FOUND",

@@ -62,6 +62,15 @@ class ProfileSnapshotNotFoundError(UserProfileError):
     """Raised when a snapshot id has no persisted record in the secure backend."""
 
 
+class ProfileBucketMismatchError(UserProfileError):
+    """Raised when a payload's profile identity is not the bound bucket's own.
+
+    A profile bucket is an isolated store holding exactly one profile
+    identity. This refuses the cross-profile read or write that the
+    key-derivation habit alone did not prevent.
+    """
+
+
 class ProfileExportError(UserProfileError):
     """Base error for profile-archive export failures (serialization, write)."""
 
