@@ -534,8 +534,15 @@ def commit_tag_and_push(
         raise version_identity.VersionIdentityError(f"version {version} is not available to publish:\n  - {joined}")
 
     tag_name = f"v{version}"
+    # `-c` rather than a persisted `git config` call: this repo is the real
+    # checkout (or, under a rehearsal, the disposable copy that already seeded
+    # its own persisted identity), and a runner image carries no default git
+    # identity, so a bare `git commit` fails "Author identity unknown" the
+    # first time this stage actually runs. The same bot identity the account's
+    # other automated commits (the Scoop/Homebrew tap pushes) already use.
+    identity = ["-c", "user.name=cadrumo-release", "-c", "user.email=release@cadrumo.invalid"]
     _run([git, "add", "--", *(str(relative) for relative in _STAGED_RELATIVE_PATHS)], cwd=repo_root)
-    _run([git, "commit", "-m", f"chore(release): v{version}"], cwd=repo_root)
+    _run([git, *identity, "commit", "-m", f"chore(release): v{version}"], cwd=repo_root)
     commit_sha = _run([git, "rev-parse", "HEAD"], cwd=repo_root).stdout.strip()
     _run([git, "tag", "-a", tag_name, "-m", f"Cadrumo {tag_name}"], cwd=repo_root)
     if push:
@@ -617,24 +624,17 @@ def rehearse_bump(
         if git is None:
             raise VersionBumpError("git is not on PATH; cannot rehearse the bump")
         _run([git, "init", "-q", "-b", "main"], cwd=rehearsal_root)
-        _run(
-            [git, "-c", "user.email=rehearsal@cadrumo.invalid", "-c", "user.name=rehearsal", "add", "-A"],
-            cwd=rehearsal_root,
-        )
-        _run(
-            [
-                git,
-                "-c",
-                "user.email=rehearsal@cadrumo.invalid",
-                "-c",
-                "user.name=rehearsal",
-                "commit",
-                "-q",
-                "-m",
-                "rehearsal seed",
-            ],
-            cwd=rehearsal_root,
-        )
+        # Persisted into the rehearsal repo's OWN local config (not `-c`, which
+        # only scopes one invocation) so every later commit in this disposable
+        # tree -- including the one `commit_tag_and_push` makes below, which
+        # runs no differently here than it would against the real repo -- has
+        # a valid identity. Runner images ship no default git identity, so a
+        # bare `git commit` with no persisted config fails "Author identity
+        # unknown" the first time a rehearsal reaches its own bump commit.
+        _run([git, "config", "user.email", "rehearsal@cadrumo.invalid"], cwd=rehearsal_root)
+        _run([git, "config", "user.name", "rehearsal"], cwd=rehearsal_root)
+        _run([git, "add", "-A"], cwd=rehearsal_root)
+        _run([git, "commit", "-q", "-m", "rehearsal seed"], cwd=rehearsal_root)
 
         stage_bump(
             rehearsal_root,
