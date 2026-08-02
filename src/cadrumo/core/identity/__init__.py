@@ -15,6 +15,9 @@ intentionally tiny:
   stable error code ``INTEGRITY_IDENTITY_DOCUMENT``.
 * :data:`SubjectTaxId` — pydantic-ready alias for fields that must carry a
   validated Spanish tax identifier.
+* :func:`tax_id_identity_token` and :data:`TaxIdIdentityToken` — the shared
+  comparison form for identifiers whose bearer may not be Spanish, used
+  wherever a grouping key and a storage key must agree.
 
 The module lives in :mod:`core` because identity validation is a
 domain concern, not a persistence concern. The persistence layer's
@@ -27,7 +30,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from pydantic import AfterValidator
+from pydantic import AfterValidator, BeforeValidator
 
 from ._bucket import BucketId
 from ._digest import ContentDigest, ContentDigestOrAbsent
@@ -46,7 +49,7 @@ from ._nif_iva import (
 )
 from ._profile import ProfileId
 from ._snapshot import SnapshotId
-from ._tax_id import nif_check_letter, validate_spanish_tax_id
+from ._tax_id import nif_check_letter, tax_id_identity_token, validate_spanish_tax_id
 from ._transaction import TransactionId
 
 
@@ -59,6 +62,17 @@ def _subject_tax_id_validator(value: str) -> str:
     """
     return validate_spanish_tax_id(value)
 
+
+type TaxIdIdentityToken = Annotated[str, BeforeValidator(tax_id_identity_token)]
+"""Canonical identity form of a tax identifier, normalised at the boundary.
+
+Runs :func:`tax_id_identity_token` BEFORE the field's own length constraints,
+so a field annotated with it stores the canonical token and any ``min_length``
+bound is applied to that token rather than to the raw declaration. Unlike
+:data:`SubjectTaxId` it asserts no checksum, so it fits identifiers whose
+bearer may be non-resident; use :data:`SubjectTaxId` where the value must be a
+valid Spanish NIF / NIE / CIF.
+"""
 
 type SubjectTaxId = Annotated[str, AfterValidator(_subject_tax_id_validator)]
 """Canonical Spanish NIF / NIE / CIF, validated at the pydantic boundary.
@@ -82,11 +96,13 @@ __all__ = [
     "ProfileId",
     "SnapshotId",
     "SubjectTaxId",
+    "TaxIdIdentityToken",
     "TransactionId",
     "nif_check_letter",
     "nif_iva_format_for_country",
     "nif_iva_prefix_for_country",
     "normalise_nif_iva",
+    "tax_id_identity_token",
     "validate_identity",
     "validate_spanish_tax_id",
 ]

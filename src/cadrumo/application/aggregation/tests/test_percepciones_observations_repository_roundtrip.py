@@ -24,12 +24,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage import PathContainmentError
 from ....core import Period
 from ....core.aggregation import RetencionClave
 from ....core.external_constants import UTF_8_ENCODING
 from ....domain.calculations.registry import WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
-from .._errors import AggregationValidationError
 from .._percepciones_observations_repository import (
     PercepcionObservationRepository,
     percepcion_observation_key,
@@ -234,17 +234,14 @@ def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
 
 
 def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> None:
-    """A replacement that cannot be persisted leaves the declared window untouched.
+    """A replacement that cannot be committed leaves the declared window untouched.
 
     The set-replace used to commit each stale-row delete before looping through
     the saves one at a time, so a refusal part-way through destroyed the prior
     declared set and left only the rows written before the failure. The next
     calculate then read that partial window as the operator's declared truth —
-    a silent under-count whose own evidence had already been deleted.
-
-    The refusal here is production-reachable: a perceptor tax ID that is
-    whitespace-only satisfies the observation model's length bound but has no
-    canonical hashed token, so keying the row raises before it can be stored.
+    a silent under-count whose own evidence had already been deleted. Nothing
+    may reach storage until the whole replacement is prepared.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = PercepcionObservationRepository()
@@ -262,18 +259,16 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             source_kind="aggregate_pull",
         )
 
-        unstorable = (
-            _observation(nif="44444444A", clave="A"),
-            _observation(nif=" ", clave="A"),
+        replacement = repo.build_observation_payload(
+            modelo="190",
+            filing_year=2024,
+            period=period,
+            observation=_observation(nif="44444444A", clave="A"),
+            source_kind="aggregate_pull",
         )
-        with pytest.raises(AggregationValidationError):
-            repo.replace_observations(
-                modelo="190",
-                filing_year=2024,
-                period=period,
-                observations=unstorable,
-                source_kind="aggregate_pull",
-            )
+        stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
+        with pytest.raises(PathContainmentError):
+            repo.replace_records((replacement,), (*stale_identifiers, "190:2024:0A:../escape:A:-"))
 
         survived = repo.load_observations("190", period)
         assert set(survived) == set(declared)

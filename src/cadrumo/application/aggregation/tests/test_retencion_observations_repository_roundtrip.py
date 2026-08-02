@@ -21,16 +21,16 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.storage import PathContainmentError
 from ....core import BindingSourceKind, Period
 from ....core.external_constants import UTF_8_ENCODING
 from ....tests.secure_sql import isolated_runtime_profile
-from .._errors import AggregationValidationError
 from .._retencion_observations_repository import (
     RetencionObservationRepository,
     persist_retencion_observations,
     retencion_observation_key,
 )
-from .._retenciones import RetencionObservation, RetencionScheme
+from .._retenciones import RetencionObservation, RetencionScheme, aggregate_retenciones_111
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -210,17 +210,14 @@ def test_persist_helper_writes_set_readable_by_load(tmp_path: Path) -> None:
 
 
 def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> None:
-    """A replacement that cannot be persisted leaves the declared window untouched.
+    """A replacement that cannot be committed leaves the declared window untouched.
 
     The set-replace used to commit each stale-row delete before looping through
     the saves one at a time, so a refusal part-way through destroyed the prior
     declared set and left only the rows written before the failure. The next
     calculate then read that partial window as the operator's declared truth —
-    a silent under-count whose own evidence had already been deleted.
-
-    The refusal here is production-reachable: a perceptor NIF that is
-    whitespace-only satisfies the observation model's length bound but has no
-    canonical hashed token, so keying the row raises before it can be stored.
+    a silent under-count whose own evidence had already been deleted. Nothing
+    may reach storage until the whole replacement is prepared.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = RetencionObservationRepository()
@@ -238,18 +235,20 @@ def test_failed_replacement_leaves_the_prior_window_intact(tmp_path: Path) -> No
             source_kind="aggregate_pull",
         )
 
-        unstorable = (
-            _observation(nif="44444444A", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("400")),
-            _observation(nif=" ", scheme=RetencionScheme.ECONOMIC_ACTIVITY, retencion=Decimal("500")),
+        replacement = repo.build_observation_payload(
+            modelo="180",
+            filing_year=2024,
+            period=period,
+            observation=_observation(
+                nif="44444444A",
+                scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                retencion=Decimal("400"),
+            ),
+            source_kind="aggregate_pull",
         )
-        with pytest.raises(AggregationValidationError):
-            repo.replace_observations(
-                modelo="180",
-                filing_year=2024,
-                period=period,
-                observations=unstorable,
-                source_kind="aggregate_pull",
-            )
+        stale_identifiers = tuple(repo.extract_identifier(row) for row in repo.iter_records())
+        with pytest.raises(PathContainmentError):
+            repo.replace_records((replacement,), (*stale_identifiers, "180:2024:0A:../escape:x"))
 
         survived = repo.load_observations("180", period)
         assert set(survived) == set(declared)
@@ -317,3 +316,55 @@ def test_replacement_leaves_other_windows_untouched(tmp_path: Path) -> None:
         )
 
         assert repo.load_observations("180", neighbour) == (neighbour_row,)
+
+
+def test_whitespace_variant_nifs_are_one_perceptor_in_store_and_aggregation(tmp_path: Path) -> None:
+    """Canonically-equal NIF declarations resolve to ONE perceptor everywhere.
+
+    The observation model held the NIF exactly as declared while the repository
+    trimmed and uppercased it before hashing it into the object key. Two
+    declarations of the same perceptor differing only in surrounding whitespace
+    or letter case therefore produced two rollups and a distinct-perceptor count
+    of two, while sharing a single stored row whose later write overwrote the
+    earlier evidence — the calculated declaration and the persisted evidence
+    disagreeing about how many perceptors exist.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = RetencionObservationRepository()
+        period = Period.from_year_and_code(2024, "0A")
+        padded = _observation(
+            nif=" 12345678z ",
+            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            retencion=Decimal("10"),
+        )
+        canonical = _observation(
+            nif="12345678Z",
+            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            retencion=Decimal("20"),
+        )
+
+        # The model itself canonicalises, so the aggregation identity matches.
+        assert padded.perceptor_nif == canonical.perceptor_nif == "12345678Z"
+
+        aggregation = aggregate_retenciones_111((padded, canonical), period=period)
+        assert aggregation.total_perceptors == 1
+        assert len(aggregation.rollups) == 1
+
+        repo.replace_observations(
+            modelo="180",
+            filing_year=2024,
+            period=period,
+            observations=(padded, canonical),
+            source_kind="aggregate_pull",
+        )
+        stored = repo.load_observations("180", period)
+        assert len({o.perceptor_nif for o in stored}) == 1
+        assert len(stored) == 1
+
+
+def test_padded_nif_keys_to_the_canonical_object_key() -> None:
+    """A padded declaration and its canonical form address the same stored row."""
+    period = Period.from_year_and_code(2024, "0A")
+    padded_key = retencion_observation_key("180", 2024, period, " 12345678z ", RetencionScheme.ECONOMIC_ACTIVITY)
+    canonical_key = retencion_observation_key("180", 2024, period, "12345678Z", RetencionScheme.ECONOMIC_ACTIVITY)
+    assert padded_key == canonical_key

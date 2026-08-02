@@ -31,6 +31,35 @@ _CIF_LEADERS = _CIF_KIND_LETTERS
 _CIF_LETTER_CONTROL_LEADERS = set("PQRSNW")
 
 
+def tax_id_identity_token(value: str) -> str:
+    """Return the canonical identity form of a tax identifier, without a checksum claim.
+
+    The one comparison form for tax identifiers whose bearer is not
+    guaranteed to be Spanish -- a Modelo 190 perceptor may be non-resident
+    and carry a foreign identifier, so :func:`validate_spanish_tax_id`'s
+    checksum gate would refuse a legitimately declared row. This function
+    answers only "are these two identifiers the same identifier", which is
+    what grouping keys, distinct counts, and storage object keys need.
+
+    Normalisation is trim-and-uppercase and nothing more: it is idempotent,
+    so a value already in canonical form is returned unchanged, and it never
+    silently merges two identifiers that differ in their characters.
+
+    Applying it at the model boundary AND at the storage key is the point:
+    when an aggregator groups by the raw value while the repository keys by a
+    normalised one, two canonically-equal identifiers become two rollups but
+    one stored row, so the declared distinct count and the persisted evidence
+    disagree.
+
+    Args:
+        value: Raw tax identifier as declared.
+
+    Returns:
+        The trimmed, uppercased identifier.
+    """
+    return value.strip().upper()
+
+
 def validate_spanish_tax_id(value: str) -> str:
     """Validate a Spanish NIF, NIE, or CIF and return its canonical form.
 
@@ -207,4 +236,4 @@ def _validate_cif(value: str) -> str:
     return value
 
 
-__all__ = ["nif_check_letter", "validate_spanish_tax_id"]
+__all__ = ["nif_check_letter", "tax_id_identity_token", "validate_spanish_tax_id"]
