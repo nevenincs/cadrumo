@@ -91,9 +91,21 @@ PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
 #
 # The two Cl@ve surfaces this read passes THROUGH -- the access selector
 # and AEAT's acting-capacity gate -- are deliberately absent. They are
-# transit, not rest: every landing rule below sits after a
-# ``wait_for_url`` that has already required the traversal to have left
-# them, so admitting them would only let a stalled traversal pass.
+# transit, not rest, and admitting either would let a traversal that
+# stalled on it pass as a completed read.
+#
+# What sits in front of the two landing rules is NOT the same guarantee,
+# so do not read them as one. The own-name continuation's rule follows a
+# ``wait_for_url`` that has already required the traversal to reach the
+# target path, so a stall raises before the rule is reached. The wallet
+# execute rule follows a load-state wait only, and runs solely on the
+# branch where the execute control was present: when the page carries no
+# wallet form at all, this read returns having run NO landing rule, and
+# what refuses is the parser, which demands a wallet table and is called
+# with ``allow_empty_wallet_shell`` false on that path. That is a
+# backstop of a different shape -- it answers "is this a wallet?", never
+# "did AEAT serve a page we declared?" -- so it reports a changed
+# external shape where a landing rule would name the undeclared landing.
 #
 # The acting-capacity gate additionally CANNOT be admitted through the
 # shared rule, and the reason is worth stating where someone would
@@ -264,9 +276,7 @@ async def _open_authenticated_surface(
         await page.click(_EXTERNAL.aeat.clave_movil.authorize_button_selector)
         try:
             await page.wait_for_url(
-                lambda url: (
-                    target_path in url or is_aeat_auth_gate_redirect(url) or _is_representation_gate_url(url)
-                ),
+                lambda url: target_path in url or is_aeat_auth_gate_redirect(url) or _is_representation_gate_url(url),
                 timeout=settings.cadrumo_browser_navigation_timeout_ms,
             )
         except PlaywrightError:
