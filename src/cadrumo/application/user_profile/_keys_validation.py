@@ -79,7 +79,7 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
 
     Returns a :class:`ProfileValidationResult`.
     """
-    entries = _get_profile_keys()
+    entries = _registered_profile_keys()
     static_required_keys = tuple(
         entry.key
         for entry in entries
@@ -111,16 +111,32 @@ def list_profile_key_records() -> tuple[ProfileKey, ...]:
     """Return the full :data:`PROFILE_KEYS` tuple in registry order.
 
     Each element is a :class:`ProfileKey` describing one profile field.
+    """
+    return _registered_profile_keys()
 
-    The registry is populated by the wizard catalogue's import side effect,
-    so this reader imports the wizard before reading rather than trusting an
-    unrelated caller to have done it. The CLI root callback also registers
-    the catalogue, but only on the paths that reach past its early returns,
-    which leaves every other reader depending on whichever module happened
-    to import the wizard first. The import is function-local so nothing is
-    paid at module load and the command-tree cold-start budget is untouched;
-    see :func:`_ensure_profile_keys_registered` for why moving it to module
-    scope breaks a real import rather than merely costing time.
+
+def _registered_profile_keys() -> tuple[ProfileKey, ...]:
+    """Return the profile-key registry, registering it first if nothing has.
+
+    Every reader in this module goes through here, and the reason is that
+    only one of them used to. The registry is populated by the wizard
+    catalogue's import side effect, so a reader that calls the domain
+    accessor directly is not reading a registry -- it is betting that some
+    unrelated module already imported the wizard. Two of the three readers
+    took that bet and lost it in a cold process: the domain registry raises
+    :class:`ProfileKeysRegistrationError` rather than returning an empty
+    tuple, so ``validate_profile_values`` and ``list_profile_value_rows``
+    raised on a fresh interpreter while ``list_profile_key_records`` -- the
+    one reader that registered -- succeeded and left the other two working
+    for the rest of the process.
+
+    That is why the defect hides from the test suite. Any module that
+    touches the wizard catalogue first repairs the import order for
+    everything after it, so the failure only reaches an operator through
+    a cold entry point (workflow profile health) that does not.
+
+    The import in :func:`_ensure_profile_keys_registered` MUST stay
+    function-local; see that function for the import cycle it breaks.
     """
     _ensure_profile_keys_registered()
     return _get_profile_keys()
@@ -154,7 +170,7 @@ def list_profile_value_rows(
 ) -> tuple[ProfileValueRow, ...]:
     """Return schema-backed :class:`ProfileValueRow` entries for display surfaces."""
     rows: list[ProfileValueRow] = []
-    for entry in _get_profile_keys():
+    for entry in _registered_profile_keys():
         value = values.get(entry.key)
         is_set = value is not None and value.strip() != ""
         if not is_set and not include_unset:
