@@ -81,8 +81,16 @@ class MeasurementReport(BaseModel):
 
     @property
     def all_passed(self) -> bool:
-        """True when every scenario passed and the invariants hold."""
-        return self.invariants_hold and self.scenarios_passed == self.scenarios_run
+        """True when at least one scenario ran, every scenario passed, and the invariants hold.
+
+        A run measuring ZERO scenarios is a legitimate report to construct
+        (a harness invocation can genuinely exercise nothing), but it is
+        NEVER a passing one: ``scenarios_passed == scenarios_run`` holds
+        vacuously at ``0 == 0``, so without this guard an empty run rendered
+        the operator-facing markdown's ``Verdict: PASS`` on evidence that
+        certifies nothing rather than a clean result.
+        """
+        return self.scenarios_run > 0 and self.invariants_hold and self.scenarios_passed == self.scenarios_run
 
 
 def build_measurement_report(
