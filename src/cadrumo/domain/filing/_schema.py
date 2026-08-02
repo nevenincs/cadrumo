@@ -11,7 +11,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
 from ...core.errors import BaseSeverity
@@ -20,6 +20,7 @@ from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
 from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
+from ._errors import FilingValidationError
 
 APPROVAL_BASIS_VERSION = "review-basis-v4"
 
@@ -66,6 +67,35 @@ class ModeloValue(BaseModel):
     kind: ModeloValueKind
     source: str
     formula_trace_casilla_ids: tuple[CasillaId, ...] | None = None
+
+    @model_validator(mode="after")
+    def _enforce_provenance_matrix(self) -> ModeloValue:
+        """Confirm ``value`` and ``formula_trace_casilla_ids`` agree with ``kind``.
+
+        The attribute contract above is a state matrix, not three independent
+        fields: a value is absent exactly when the casilla is EMPTY, and a
+        formula trace exists exactly when the value was COMPUTED. Left
+        unenforced, a directly-constructed or storage-rehydrated draft can carry
+        an EMPTY casilla holding a Decimal, a COMPUTED casilla with no trace to
+        audit it against, or a LITERAL casilla claiming a formula lineage it
+        never had — none of which the builder produces, and none of which the
+        downstream formula check sees unless it is explicitly invoked.
+
+        An empty trace tuple is legitimate: a registry formula over constants
+        declares no casilla inputs, so COMPUTED requires the trace to be
+        *present*, not non-empty.
+        """
+        if (self.value is None) is not (self.kind is ModeloValueKind.EMPTY):
+            raise FilingValidationError(
+                f"casilla {self.casilla_id!r}: value is None only for kind EMPTY; "
+                f"got kind={self.kind.value!r} with value={self.value!r}",
+            )
+        if (self.formula_trace_casilla_ids is not None) is not (self.kind is ModeloValueKind.COMPUTED):
+            raise FilingValidationError(
+                f"casilla {self.casilla_id!r}: formula_trace_casilla_ids is carried only for kind "
+                f"COMPUTED; got kind={self.kind.value!r} with trace={self.formula_trace_casilla_ids!r}",
+            )
+        return self
 
 
 class ModeloBindingValue(BaseModel):

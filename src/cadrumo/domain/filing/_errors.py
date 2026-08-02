@@ -18,10 +18,17 @@ class ModeloBuilderError(ModeloDraftError):
 
 
 class FilingValidationError(ModeloDraftError, CoreValidationError):
-    """Raised when validation surfaces a blocking finding.
+    """Raised when a filing record is invalid.
 
-    The validator itself never raises; this error is reserved for
-    callers that opt into ``fail_on_warning`` and want a hard fail.
+    Two distinct callers raise it. :class:`ModeloValidator` never raises on its
+    own — findings are returned — so this error is what a caller opting into
+    ``fail_on_warning`` gets for a blocking finding on an otherwise well-formed
+    draft. The schema models also raise it from their cross-field validators for
+    a record that is structurally malformed: a provenance kind contradicting its
+    own value, an identity that is not its own content address, or two identity
+    axes naming different taxpayers. Inheriting :class:`ValueError` (via
+    :class:`~core.errors.CoreValidationError`) means pydantic surfaces the second
+    kind as a :class:`pydantic.ValidationError` at the model boundary.
     """
 
 
