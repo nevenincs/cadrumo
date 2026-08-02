@@ -4,7 +4,7 @@ tags:
   - '#release-pipeline-full-automation'
 date: '2026-08-02'
 modified: '2026-08-02'
-body_hash: 'sha256:aa34706b48fb9216f32725bab1d331d4d053f64c6028fe11510b148359901a8b'
+body_hash: 'sha256:e865eb6c601bc67d278fe1fcc238966ceb8e9e1b9c1e96864404dd9903958b48'
 tier: L3
 related:
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
@@ -123,7 +123,7 @@ Close every item the fresh-context honesty review surfaced against the landed ch
 
 - [x] `W04.P09.S41` - Make the promoter selection skip past a non-promotable candidate rather than returning on the first one, and retire a rehearsal candidate out of the selectable namespace once its window closes, because a rehearsal seals a real GC-exempt draft while the rehearsal input defaults to true, and a refused rehearsal candidate is currently never consumed so it is re-selected on every tick forever and every real candidate sealed afterwards never publishes, gate: uv run --no-sync pytest dev/release/tests/test_soak_promoter.py -q passes with a case planting a rehearsal candidate whose deadline precedes a real candidate deadline and asserting the real candidate is still dispatched exactly once, plus a second case asserting the rehearsal candidate leaves the selectable namespace; `dev/release/soak_promoter.py, dev/release/release_candidate.py, dev/release/tests/test_soak_promoter.py`.
 - [ ] `W04.P09.S42` - Make the labelled-issue alert path survive a repository carrying no release-alert label, because the live forge carries no such label so every default-path alert is currently refused by the forge and degraded to a run-log warning nobody reads, leaving the alerting deliverable that pays for the removed approval click delivering nothing, gate: uv run --no-sync pytest dev/release/tests/test_release_alerting.py -q passes with a case whose injected executable refuses the label exactly as the live forge does and asserts the alert is still delivered rather than degraded to a warning; `dev/release/alerting.py, dev/release/tests/test_release_alerting.py`.
-- [ ] `W04.P09.S43` - Record the release-alert label as a named operator provisioning action alongside OP-10 so the forge state the default alerting path depends on is verifiable rather than assumed, and extend the read-only environment inventory probe to report whether that label exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting the label item, and uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes over a fixture payload with the label absent; `dev/release/environment_inventory.py, dev/release/tests/test_environment_inventory.py, RELEASING.md, src/cadrumo/tests/test_release_config.py`.
+- [x] `W04.P09.S43` - Record the release-alert label as a named operator provisioning action alongside OP-10 so the forge state the default alerting path depends on is verifiable rather than assumed, and extend the read-only environment inventory probe to report whether that label exists, gate: uv run --no-sync pytest src/cadrumo/tests/test_release_config.py -q passes with the operator-actions section asserting the label item, and uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes over a fixture payload with the label absent; `dev/release/environment_inventory.py, dev/release/tests/test_environment_inventory.py, RELEASING.md, src/cadrumo/tests/test_release_config.py`.
 - [x] `W04.P09.S44` - Make the promoter exit status distinguish an ordinary quiet tick from an invalidated candidate so a cohort whose readiness gate reds during its soak reaches the failure-guarded alert instead of reporting to nobody, honouring the decision record obligation that a failed or refused chain alerts, gate: uv run --no-sync pytest dev/release/tests/test_soak_promoter.py -q passes asserting a readiness-regressed elapsed candidate yields a non-zero exit while a tick whose every window is still open yields zero; `dev/release/soak_promoter.py, dev/release/tests/test_soak_promoter.py`.
 - [ ] `W04.P09.S45` - Carry every acquisition run id from the acquisition stage onto the sealed candidate record, declaring the stage job outputs and giving each dispatched lane its own output name, because the seal module reads three acquisition environment variables the orchestrator never sets and the stage declares no outputs at all, so the ids are dropped and the promoter would dispatch the publication without its acquisition proofs the moment a channel is claimed, gate: uv run --no-sync pytest dev/release/tests/test_release_orchestrator_workflow.py -q passes with a case asserting the seal stage receives every acquisition run id the derived lane set produces under a descriptor claiming scoop and homebrew, and asserting the assertion fails when a lane output is dropped; `.github/workflows/release-orchestrator.yml, dev/release/seal_candidate.py, dev/release/tests/test_release_orchestrator_workflow.py`.
 - [ ] `W04.P09.S46` - Fix the promoter report-only shell guard which tests the variable for emptiness rather than truth so a manual dispatch rendering the boolean as the literal string false always passes the flag and can therefore never promote, and pin the input semantics, gate: uv run --no-sync pytest dev/release/tests/test_soak_promoter_workflow.py -q passes asserting the promote step passes the report-only flag when the input is true and passes no flag when the input is false or unset; `.github/workflows/release-soak-promoter.yml, dev/release/tests/test_soak_promoter_workflow.py`.
@@ -240,8 +240,13 @@ is closed with its named gate green and the following hold together:
   protection-rule read, `environment: release` is still asserted present on the
   publish job, and the inverted conformance gate reds against a planted job that
   re-adds a protection-rule read.
-- `rg -n CADRUMO_PUBLISH_ENABLED` and `rg -n release-apply` over the tree match
-  only vault records and history.
+- `rg -n CADRUMO_PUBLISH_ENABLED` over the tree matches only vault records and
+  history. `rg -n release-apply` over the tree matches only vault records,
+  `CHANGELOG.md` history, and the justfile-guidance conformance test that
+  asserts the retired recipe's absence — narrower than "vault records and
+  history" alone, because the bump module's docstrings legitimately describe
+  the retired manual checklist's numbered steps by paraphrase rather than by
+  the literal retired command name.
 - The run resolver refuses rather than promoting a neighbour when a competing
   run is planted between the dispatch and the poll, and the conclusion waiter
   covers success, failure, cancellation, and budget exhaustion against an
