@@ -25,6 +25,7 @@ from ._config_reset_models import (
     new_config_reset_operation_id,
 )
 from ._config_reset_repository import (
+    ConfigResetJournalCorruptError,
     ConfigResetJournalIncompleteError,
     ConfigResetJournalNotFoundError,
     ConfigResetJournalRepository,
@@ -174,6 +175,11 @@ def resume_config_reset(
         except ConfigResetJournalNotFoundError as exc:
             raise ConfigResetOperationNotFoundError(
                 "configuration reset operation was not found",
+                context={"operation_id": operation_id},
+            ) from exc
+        except ConfigResetJournalCorruptError as exc:
+            raise ConfigResetError(
+                "configuration reset journal is corrupt",
                 context={"operation_id": operation_id},
             ) from exc
         if operation.status is ConfigResetOperationStatus.COMPLETE:
