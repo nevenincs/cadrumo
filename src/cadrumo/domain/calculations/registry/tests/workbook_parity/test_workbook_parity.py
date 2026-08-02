@@ -461,6 +461,83 @@ def test_parity_scenario_rejects_malformed_output_identifier(tmp_path: Path) -> 
         )
 
 
+def test_parity_scenario_rejects_negative_tolerance(tmp_path: Path) -> None:
+    synthetic = SyntheticInputSet(
+        id="modelo-130-negative-tolerance",
+        modelo="130",
+        revision="2019-y-siguientes",
+        values=(
+            SyntheticInputValue(
+                id="casilla-01",
+                value=Decimal("10000"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
+                registry_binding="01",
+            ),
+        ),
+    )
+
+    with pytest.raises(ValidationError, match="tolerance"):
+        ParityScenario(
+            id="modelo-130-negative-tolerance",
+            modelo="130",
+            revision="2019-y-siguientes",
+            filing_year=2026,
+            period="1T",
+            workbook_path=tmp_path / "modelo-130.xlsx",
+            synthetic_input=synthetic,
+            output_cells={"casilla-19": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
+            registry_outputs={"casilla-19": _M130_CASILLA_19},
+            tolerance=Decimal("-0.01"),
+        )
+
+
+def test_parity_scenario_zero_tolerance_accepts_exact_comparison(tmp_path: Path) -> None:
+    workbook_path = tmp_path / "modelo_303" / "files" / "303-test.xlsx"
+    _write_formula_workbook(workbook_path)
+    workbook = scan_workbook(workbook_path, root=tmp_path)
+    synthetic = SyntheticInputSet(
+        id="modelo-303-zero-tolerance",
+        modelo="303",
+        revision="2026",
+        values=(
+            SyntheticInputValue(
+                id="base",
+                value=Decimal("10"),
+                workbook_cell=WorkbookCellRef(sheet="Modelo", coordinate="A1"),
+                registry_binding="iva.base",
+            ),
+        ),
+    )
+    scenario = ParityScenario(
+        id="modelo-303-zero-tolerance",
+        modelo="303",
+        revision="2026",
+        filing_year=2026,
+        period="1T",
+        workbook_path=workbook_path,
+        synthetic_input=synthetic,
+        output_cells={"result": WorkbookCellRef(sheet="Modelo", coordinate="B1", formula="=A1+A2")},
+        registry_outputs={"result": _M130_CASILLA_19},
+        tolerance=Decimal("0"),
+    )
+
+    report = compare_registry_to_workbook(
+        synthetic_input=scenario.synthetic_input,
+        workbook=workbook,
+        runner=verify_workbook_backend(tmp_path, scan_limit=1).runner,
+        expected_workbook_values={"result": Decimal("31")},
+        actual_registry_values={"result": Decimal("31")},
+        output_cells=scenario.output_cells,
+        registry_snapshot_id="303:2026:1T",
+        legal_refs={"result": ("ley-37-1992:art-90",)},
+        source_refs={"result": ("aeat-dr-303-2026",)},
+        tolerance=scenario.tolerance,
+    )
+
+    assert report.status == "match"
+    assert report.comparisons[0].tolerance == Decimal("0")
+
+
 def test_verify_workbook_backend_reports_existing_backend(tmp_path: Path) -> None:
     _write_formula_workbook(tmp_path / "modelo_390" / "files" / "390-test.xlsx")
 

@@ -60,7 +60,7 @@ class ParityScenario(ParityTapeModel):
     registry_outputs: dict[WorkbookOutputId, CasillaId] = Field(min_length=1)
     date_context: dict[str, date] = Field(default_factory=dict)
     relation_values: dict[RelationId, Decimal] = Field(default_factory=dict)
-    tolerance: Decimal = Decimal("0")
+    tolerance: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
     notes: tuple[str, ...] = ()
 
     @model_validator(mode="before")
