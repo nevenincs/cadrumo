@@ -131,11 +131,21 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     if repo_root not in path.parents and path != repo_root:
         raise RegistryValidationError(f"legal reference {reference.id!r} escapes repository root")
     sidecar = path.with_name(path.name + ".extracted.json")
-    if not sidecar.is_file():
+    try:
+        resolved_sidecar = sidecar.resolve()
+    except OSError as exc:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} extracted corpus sidecar could not be resolved: {exc}",
+        ) from exc
+    if repo_root not in resolved_sidecar.parents and resolved_sidecar != repo_root:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} extracted corpus sidecar escapes repository root"
+        )
+    if not resolved_sidecar.is_file():
         raise RegistryValidationError(
             f"legal reference {reference.id!r} missing extracted corpus sidecar {path_text!r}",
         )
-    stat = sidecar.stat()
+    stat = resolved_sidecar.stat()
     # A sidecar holds many extracted units.  The selected unit is therefore
     # part of the cache identity; caching only by sidecar would let the first
     # legal reference read from a document satisfy later sibling anchors.
@@ -147,10 +157,10 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     # stat fields stay as the cheap first-order discriminator, mirroring the
     # registry loader's TOML fingerprint.
     cache_key = (
-        str(sidecar),
+        str(resolved_sidecar),
         stat.st_size,
         stat.st_mtime_ns,
-        _sidecar_content_digest(sidecar, reference),
+        _sidecar_content_digest(resolved_sidecar, reference),
         anchor,
         reference.required_text,
     )
@@ -160,7 +170,7 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     try:
         text = normalise_corpus_text(
             resolve_anchored_extracted_unit(
-                sidecar,
+                resolved_sidecar,
                 anchor=anchor,
                 required_text=reference.required_text,
                 include_title=True,

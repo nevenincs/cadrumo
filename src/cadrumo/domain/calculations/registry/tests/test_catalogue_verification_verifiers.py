@@ -297,6 +297,30 @@ def test_verify_legal_catalogue_refuses_a_corpus_file_with_no_extracted_sidecar(
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+def test_verify_legal_catalogue_refuses_sidecar_symlink_outside_corpus_root(tmp_path: Path) -> None:
+    """A corpus-local sidecar name cannot make external evidence authoritative."""
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "symlinked-sidecar.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>official source</p>", encoding="utf-8")
+    external_sidecar = tmp_path.parent / "external-sidecar.extracted.json"
+    external_sidecar.write_text(
+        json.dumps({"units": [{"anchor": "a1", "text": "external evidence"}]}), encoding="utf-8"
+    )
+    sidecar = corpus_path.with_name(corpus_path.name + ".extracted.json")
+    sidecar.symlink_to(external_sidecar)
+    reference = _legal_reference(ref_id="rd-439-2007:art-110-sidecar-symlink").model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/symlinked-sidecar.html#a1",
+            "required_text": ("external evidence",),
+        },
+    )
+
+    assert sidecar.is_file(), "the exploit must present an apparently valid sidecar file"
+    assert sidecar.resolve() == external_sidecar.resolve()
+    with pytest.raises(RegistryValidationError, match="sidecar escapes repository root"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
 def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Path) -> None:
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
     corpus_path.parent.mkdir(parents=True)
