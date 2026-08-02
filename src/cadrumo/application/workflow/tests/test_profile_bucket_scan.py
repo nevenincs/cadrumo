@@ -138,3 +138,48 @@ def test_one_malformed_manifest_does_not_hide_the_other_profiles(tmp_path: Path)
 
     assert list(pointers) == [good_id]
     assert [issue.bucket_id for issue in issues] == [bad_id]
+
+
+def test_manifest_claiming_another_bucket_never_reaches_the_live_surface(tmp_path: Path) -> None:
+    """A manifest may not rename its own container.
+
+    The directory name IS the bucket's identity: the storage route, keystore,
+    and every secure-object row are addressed by it. The manifest's own
+    ``bucket_id`` was validated only for shape, so a manifest claiming a
+    different bucket enumerated cleanly and the scan published the CLAIMED id
+    — a pointer resolved by directory carried the wrong identity while a
+    lookup by the claimed id found nothing at all.
+    """
+    directory_id = "11111111-1111-4111-8111-111111111111"
+    claimed_id = "22222222-2222-4222-8222-222222222222"
+    bucket_dir = tmp_path / "buckets" / directory_id
+    bucket_dir.mkdir(parents=True)
+    (bucket_dir / "manifest.toml").write_text(
+        _manifest_toml(bucket_id=claimed_id, label="Impostor"),
+        encoding="utf-8",
+    )
+
+    pointers = list_profile_buckets(root=tmp_path)
+    issues = list_profile_bucket_scan_issues(root=tmp_path)
+
+    assert claimed_id not in pointers, "the scan must not publish the claimed identity"
+    assert pointers == {}
+    assert len(issues) == 1
+    assert issues[0].bucket_id == directory_id
+
+
+def test_a_manifest_naming_its_own_directory_still_enumerates(tmp_path: Path) -> None:
+    """Anti-tautology: the refusal above discriminates rather than always-refusing."""
+    directory_id = "11111111-1111-4111-8111-111111111111"
+    bucket_dir = tmp_path / "buckets" / directory_id
+    bucket_dir.mkdir(parents=True)
+    (bucket_dir / "manifest.toml").write_text(
+        _manifest_toml(bucket_id=directory_id, label="Genuine"),
+        encoding="utf-8",
+    )
+
+    pointers = list_profile_buckets(root=tmp_path)
+
+    assert list(pointers) == [directory_id]
+    assert pointers[directory_id].label == "Genuine"
+    assert list_profile_bucket_scan_issues(root=tmp_path) == ()

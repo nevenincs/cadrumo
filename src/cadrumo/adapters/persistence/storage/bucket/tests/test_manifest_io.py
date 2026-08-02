@@ -244,3 +244,75 @@ def test_the_write_validation_accepts_a_valid_manifest(tmp_path: Path) -> None:
     valid = _fixture_manifest().model_copy(update={"idle_lock_minutes": 1})
     write_manifest(paths, valid)
     assert read_manifest(paths).idle_lock_minutes == 1
+
+
+class TestManifestClaimsItsDirectory:
+    """A manifest cannot name a bucket other than the directory it lives in.
+
+    The directory name IS the bucket's identity: the storage route, the
+    per-bucket keystore, and every secure-object row are addressed by it. The
+    manifest's own ``bucket_id`` was validated only for shape, so a manifest
+    claiming a different bucket read back cleanly and the scan surfaces
+    published the CLAIMED id — a pointer resolved by directory carried the
+    wrong identity while a lookup by the claimed id found nothing.
+    """
+
+    def _foreign_manifest(self) -> BucketManifest:
+        return _fixture_manifest().model_copy(update={"bucket_id": "beta"})
+
+    def test_write_refuses_a_manifest_naming_another_bucket(self, tmp_path: Path) -> None:
+        paths = provision_bucket_directory(tmp_path, "alpha")
+
+        with pytest.raises(StorageValidationError):
+            write_manifest(paths, self._foreign_manifest())
+
+    def test_write_refusal_names_both_identities(self, tmp_path: Path) -> None:
+        """An operator must be able to see which two ids disagreed."""
+        paths = provision_bucket_directory(tmp_path, "alpha")
+
+        with pytest.raises(StorageValidationError) as excinfo:
+            write_manifest(paths, self._foreign_manifest())
+
+        assert "alpha" in str(excinfo.value)
+        assert "beta" in str(excinfo.value)
+
+    def test_read_refuses_a_manifest_naming_another_bucket(self, tmp_path: Path) -> None:
+        """The refusal must hold for bytes already on disk, not only new writes."""
+        paths = provision_bucket_directory(tmp_path, "alpha")
+        write_manifest(paths, _fixture_manifest())
+        raw = manifest_path(paths).read_text(encoding=UTF_8_ENCODING)
+        manifest_path(paths).write_text(
+            raw.replace('bucket_id = "alpha"', 'bucket_id = "beta"'),
+            encoding=UTF_8_ENCODING,
+        )
+
+        with pytest.raises(StorageValidationError):
+            read_manifest(paths)
+
+    def test_matching_identity_still_round_trips(self, tmp_path: Path) -> None:
+        """The guard must not refuse the legitimate write-then-read path."""
+        paths, manifest = _write_fixture_manifest(tmp_path)
+
+        assert read_manifest(paths) == manifest
+
+    @pytest.mark.parametrize("bad", ["", "   ", "a" * 129])
+    def test_manifest_bucket_id_carries_the_canonical_contract(self, bad: str) -> None:
+        """The field is the canonical ``BucketId``, not a bare non-empty string.
+
+        A blank-after-strip or overlength id is refused at construction, so it
+        cannot reach disk and then fail only against the directory comparison.
+        """
+        fields = _fixture_manifest().model_dump(mode="python")
+
+        with pytest.raises(ValidationError):
+            BucketManifest.model_validate({**fields, "bucket_id": bad})
+
+        assert BucketManifest.model_validate({**fields, "bucket_id": "a" * 128}).bucket_id == "a" * 128
+
+    def test_whitespace_wrapped_id_is_canonicalized_not_stored_padded(self) -> None:
+        """A padded declaration normalises to the spelling the directory uses."""
+        rebuilt = BucketManifest.model_validate(
+            {**_fixture_manifest().model_dump(mode="python"), "bucket_id": "  alpha  "},
+        )
+
+        assert rebuilt.bucket_id == "alpha"
