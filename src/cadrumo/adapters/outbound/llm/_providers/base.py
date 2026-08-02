@@ -12,15 +12,13 @@ from __future__ import annotations
 import logging
 import math
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from collections.abc import Mapping
 
+import httpx
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .._errors import LLMProviderError, LLMRateLimitError
 from .._models import LLMProvider
-
-if TYPE_CHECKING:
-    import httpx
 
 
 class ProviderRequest(BaseModel):
@@ -183,6 +181,55 @@ def require_provider_response_item[ProviderResponseItem](
     if not items:
         raise LLMProviderError(f"{provider_name} returned no {item_name}.")
     return items[0]
+
+
+async def post_provider_request(
+    client: httpx.AsyncClient,
+    url: str,
+    *,
+    provider_name: str,
+    model: str,
+    logger: logging.Logger,
+    headers: Mapping[str, str] | None = None,
+    json: object,
+) -> httpx.Response:
+    """POST to a provider endpoint, mapping transport failure to the typed boundary.
+
+    ``LLMProviderError`` is the declared transport/provider boundary of this
+    subpackage, and the Anthropic adapter maps its SDK's connection and timeout
+    failures onto it. The httpx-based adapters did not agree: Gemini caught
+    :exc:`httpx.RequestError` while OpenAI and the local runtime called
+    ``client.post`` bare, so an unreachable endpoint surfaced as a raw
+    ``ConnectError`` / ``ConnectTimeout`` from two of the four providers. The
+    error TYPE, and therefore every caller's recovery path, depended on which
+    provider happened to be configured — for one and the same failure.
+
+    Routing every httpx provider through this one call makes the boundary a
+    property of the transport rather than of each adapter's memory to catch,
+    and keeps the provider context (name, model) attached to the failure.
+
+    Args:
+        client: The provider adapter's own ``httpx.AsyncClient``.
+        url: Fully resolved endpoint.
+        provider_name: Human-readable provider label for log and error text.
+        model: Model identifier, included in the log context.
+        logger: Adapter logger for transport diagnostics.
+        headers: Optional request headers (auth material, API keys).
+        json: JSON-serialisable request body.
+
+    Returns:
+        The provider's :class:`httpx.Response`, unexamined — status dispatch
+        remains :func:`check_http_error`'s job.
+
+    Raises:
+        LLMProviderError: When the request never produced a response
+            (connection refused, DNS failure, timeout, protocol error).
+    """
+    try:
+        return await client.post(url, headers=headers, json=json)
+    except httpx.RequestError as exc:
+        logger.debug("%s connection failure model=%s", provider_name, model, exc_info=True)
+        raise LLMProviderError(f"{provider_name} connection failure.") from exc
 
 
 def check_http_error(response: httpx.Response, *, provider_name: str, model: str, logger: logging.Logger) -> None:

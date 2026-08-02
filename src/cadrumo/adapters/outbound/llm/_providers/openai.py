@@ -23,6 +23,7 @@ from .base import (
     _ProviderAdapter,
     check_http_error,
     parse_provider_response,
+    post_provider_request,
     require_provider_response_item,
 )
 
@@ -133,8 +134,12 @@ class OpenAIAdapter(_ProviderAdapter):
             messages.append({"role": "system", "content": request.system})
         messages.append({"role": "user", "content": request.prompt})
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:
-            response = await client.post(
+            response = await post_provider_request(
+                client,
                 _openai_chat_url(),
+                provider_name="OpenAI",
+                model=request.model,
+                logger=_logger,
                 headers={"Authorization": f"Bearer {self._api_key}"},
                 json={
                     "model": request.model,
