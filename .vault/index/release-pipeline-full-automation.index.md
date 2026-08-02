@@ -6,12 +6,13 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:44b7eef44e1bd867d69c97ac4050b90642812e7981d8d9c93fa6541ec031cc15'
+body_hash: 'sha256:ad3b97a5486de3f08c3e2f3a431e175a7493e2f83fde5683fd50888dd9dab516'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S03]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S04]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W02-P04-S14]]'
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
   - '[[2026-08-02-release-pipeline-full-automation-plan]]'
 ---
@@ -32,6 +33,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W01-P01-S02` - Invert test_preflight_enforces_the_human_approval_gate_it_promises into a gate asserting that no job reads an environment protection rule, that no job conditions on required_reviewers, and that environment release survives on the publish job, so the removal is an asserted property a later honesty pass cannot silently restore, gate: uv run --no-sync pytest dev/release/tests/test_publish_release_workflow.py -q passes and a planted job re-adding a protection-rule read reds the new assertion
 - `2026-08-02-release-pipeline-full-automation-W01-P01-S03` - Rewrite the publication authority header comments that still promise an operator opt-in variable and an approval click, replacing them with the guard set that actually gates the run, and pin the corrected prose so the described gate and the enforced gate cannot drift apart again, gate: uv run --no-sync pytest dev/release/tests/test_publish_release_workflow.py -q passes with an assertion that the header names no approval click and no opt-in variable
 - `2026-08-02-release-pipeline-full-automation-W01-P01-S04` - Record OP-9 as a named operator settings action removing the required_reviewers protection rule from BOTH the release and docs environments while keeping each environment and its branch_policy, and add a read-only forge inventory probe that reports each environment protection-rule set without mutating anything so the operator half is verifiable rather than assumed, gate: uv run --no-sync pytest dev/release/tests -q -k environment_inventory passes over fixture payloads covering a rule-present, a rule-absent, and an unreadable-environment response
+- `2026-08-02-release-pipeline-full-automation-W02-P04-S14` - Declare the release-candidate record as a strict typed model carrying the cohort id, the version, the source commit, the smoke run id, every acquisition run id, the claimed channel set, the dry_run flag, the soak opened_at, and the computed soak deadline, with the window read from the release checklist soak hours rather than a new literal so one authority still owns the duration, gate: uv run --no-sync pytest dev/release/tests/test_release_candidate.py -q passes with a strict save-load-equality roundtrip populating every defaultable field non-default plus an anti-tautology proof deleting the deadline from the serialized payload and asserting the load refuses
 
 ### plan
 
