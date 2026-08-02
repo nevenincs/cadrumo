@@ -174,7 +174,7 @@ def _fully_populated_record(
                 kind="casilla_value_mismatch",
                 diff_kind=ModeloReconciliationDiffKind.CASILLA,
                 legal_refs=("ley-35-2006:art-79", "ley-35-2006:art-80"),
-                source_refs=("aeat:manual-renta-2024#cuota-diferencial",),
+                source_refs=("aeat-dr-100-2024-dictionary",),
             ),
             ModeloReconciliationDiff(
                 field_name="total_ingresar",
@@ -183,7 +183,7 @@ def _fully_populated_record(
                 kind="total_ingresar_mismatch",
                 diff_kind=ModeloReconciliationDiffKind.TOTAL,
                 legal_refs=("rd-439-2007:art-110",),
-                source_refs=("aeat:modelo-131-instrucciones",),
+                source_refs=("aeat-dr-131-2024",),
             ),
         ),
         advisories=(
@@ -366,7 +366,7 @@ def test_grounded_diffs_survive_the_persist_and_read_back_cycle() -> None:
     assert entry.diff_count == 2
     assert entry.diffs == record.diffs
     assert "ley-35-2006:art-79" in entry.diffs[0].legal_refs
-    assert entry.diffs[0].source_refs == ("aeat:manual-renta-2024#cuota-diferencial",)
+    assert entry.diffs[0].source_refs == ("aeat-dr-100-2024-dictionary",)
 
 
 def test_finalise_reconciliation_issues_exactly_one_batched_save() -> None:

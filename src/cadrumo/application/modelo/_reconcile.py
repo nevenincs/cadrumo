@@ -988,14 +988,27 @@ def _casilla_divergence_diff(
     """Project one :class:`CasillaDivergence` onto a typed :class:`ModeloReconciliationDiff`.
 
     Grounds the diff in the casilla's own registry-declared ``legal_refs`` /
-    ``source_refs`` when the casilla is declared (it always is for a divergence
-    drawn from ``computed_casilla_ids``, but the lookup stays defensive), so the
-    per-casilla divergence carries the same legal grounding a ``total`` diff
-    carries (``aeat-calculation-grounding``).
+    ``source_refs``, so the per-casilla divergence carries the same legal
+    grounding a ``total`` diff carries (``aeat-calculation-grounding``).
+
+    A divergence is always drawn from ``computed_casilla_ids``, so its casilla
+    is always declared in the revision. Falling back to empty grounding when the
+    lookup missed would emit a value diff that claims no legal basis, which
+    ``ModeloReconciliationDiff`` now refuses; the miss is surfaced here as a
+    named failure rather than laundered into an ungrounded record.
+
+    Raises:
+        ReconciliationDeclaracionSourceUnsupportedError: The divergence names a
+            casilla the revision does not declare, so no grounding exists.
     """
     casilla = revision_casillas.get(divergence.casilla_id)
-    legal_refs = tuple(str(ref) for ref in casilla.legal_refs) if casilla is not None else ()
-    source_refs = tuple(str(ref) for ref in casilla.source_refs) if casilla is not None else ()
+    if casilla is None:
+        raise ReconciliationDeclaracionSourceUnsupportedError(
+            f"reconciliation divergence names casilla {divergence.casilla_id!r}, which the "
+            f"revision does not declare, so the diff has no legal grounding",
+        )
+    legal_refs = tuple(str(ref) for ref in casilla.legal_refs)
+    source_refs = tuple(str(ref) for ref in casilla.source_refs)
     return ModeloReconciliationDiff(
         field_name=divergence.casilla_id,
         work_unit_value=_format_decimal(divergence.computed_value) if divergence.computed_value is not None else "",
