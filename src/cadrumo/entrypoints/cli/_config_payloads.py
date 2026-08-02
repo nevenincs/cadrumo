@@ -13,10 +13,18 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, model_validator
 
+from ...application.config_reset import (
+    ConfigResetOperationStatus,
+    ConfigResetPauseReason,
+    ConfigResetTargetPhase,
+)
+from ...core import HEX_PATTERN_64
 from ...core.errors import BaseSeverity
 from ...core.identity import BucketId
+from ...core.time import validate_utc_aware
+from ...domain.user_profile import UserProfileStatus
 from ._schemas import OutputSchema, register_schema
 
 # The two wizard-owned profile result schemas register through the manifest's
@@ -590,37 +598,74 @@ class ConfigStatusResult(OutputSchema):
 class ConfigResetTargetPayload(OutputSchema):
     """Secret-free phase projection for one reset target."""
 
-    bucket_id: str
-    label: str | None
-    status_at_snapshot: str | None
+    bucket_id: str = Field(min_length=1)
+    label: str | None = Field(default=None, min_length=1, max_length=160)
+    status_at_snapshot: UserProfileStatus | None = None
     exists_at_snapshot: bool
-    phase: str
+    phase: ConfigResetTargetPhase
     retention_blocks_erase: bool | None
     retention_override_approved: bool | None
     completed_at: str | None
+
+    @model_validator(mode="after")
+    def _validate_completed_at(self) -> ConfigResetTargetPayload:
+        if self.completed_at is not None:
+            validate_utc_aware(datetime.fromisoformat(self.completed_at))
+        return self
 
 
 class ConfigResetSummaryPayload(OutputSchema):
     """Reconciled completion counts for one reset operation."""
 
-    target_count: int
-    deleted_count: int
-    already_absent_count: int
-    retention_override_count: int
+    target_count: int = Field(ge=0)
+    deleted_count: int = Field(ge=0)
+    already_absent_count: int = Field(ge=0)
+    retention_override_count: int = Field(ge=0)
     completed_at: str
+
+    @model_validator(mode="after")
+    def _validate_summary(self) -> ConfigResetSummaryPayload:
+        validate_utc_aware(datetime.fromisoformat(self.completed_at))
+        if self.deleted_count + self.already_absent_count != self.target_count:
+            raise ValueError("reset summary target counts do not reconcile")
+        if self.retention_override_count > self.target_count:
+            raise ValueError("retention override count cannot exceed target count")
+        return self
 
 
 class ConfigResetOperationPayload(OutputSchema):
     """Credential-free operator projection of one durable reset journal."""
 
-    operation_id: str
-    status: str
+    operation_id: str = Field(min_length=64, max_length=64, pattern=HEX_PATTERN_64)
+    status: ConfigResetOperationStatus
     started_at: str
     updated_at: str
-    pause_reason: str | None
+    pause_reason: ConfigResetPauseReason | None
     paused_target_ids: list[str]
     targets: list[ConfigResetTargetPayload]
     summary: ConfigResetSummaryPayload | None
+
+    @model_validator(mode="after")
+    def _validate_operation(self) -> ConfigResetOperationPayload:
+        started_at = datetime.fromisoformat(self.started_at)
+        updated_at = datetime.fromisoformat(self.updated_at)
+        validate_utc_aware(started_at)
+        validate_utc_aware(updated_at)
+        if updated_at < started_at:
+            raise ValueError("reset journal updated_at precedes started_at")
+        paused = self.status is ConfigResetOperationStatus.PAUSED
+        if paused != (self.pause_reason is not None):
+            raise ValueError("paused reset operation requires exactly one pause reason")
+        if paused != bool(self.paused_target_ids):
+            raise ValueError("paused reset operation requires one or more paused target ids")
+        if self.paused_target_ids != sorted(set(self.paused_target_ids)):
+            raise ValueError("paused reset target ids must be unique and sorted")
+        target_ids = {target.bucket_id for target in self.targets}
+        if any(target_id not in target_ids for target_id in self.paused_target_ids):
+            raise ValueError("paused target ids must belong to the reset target set")
+        if (self.status is ConfigResetOperationStatus.COMPLETE) != (self.summary is not None):
+            raise ValueError("complete reset operation requires exactly one summary")
+        return self
 
     @classmethod
     def from_operation(cls, operation: ConfigResetOperation) -> ConfigResetOperationPayload:
