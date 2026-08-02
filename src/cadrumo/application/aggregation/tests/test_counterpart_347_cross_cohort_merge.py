@@ -62,7 +62,7 @@ def _obs(
         counterparty_name="",
         counterparty_country="ES",
         operation_kind=op_kind,
-        operation_period="2025",
+        operation_period="0A",
         taxable_base=invoice_total,
         invoice_total=invoice_total,
         accrued_on="2025-03-15",
