@@ -111,3 +111,79 @@ def test_rejected_candidate_passphrase_leaves_store_openable_and_data_intact(tmp
     reopened = _provider(store_dir, established)
     assert reopened.get_master_key() == master_key
     assert decrypt_record(blob, key=reopened.get_master_key(), associated_data=_AAD) == b"a sensitive financial record"
+
+
+@pytest.mark.parametrize(
+    ("case", "value"),
+    [
+        ("spaces", "            "),
+        ("tabs", "\t\t\t\t\t\t\t\t\t\t\t\t"),
+        ("mixed_with_crlf", "   \t   \t   \r\n"),
+    ],
+)
+def test_whitespace_only_settings_passphrase_is_refused(case: str, value: str) -> None:
+    """A credential made of whitespace carries no operator secret and must not resolve.
+
+    The callback stripped only trailing CR/LF, so a value of spaces stayed
+    truthy and passed its own "whitespace-only" guard. It then cleared the
+    resolver's emptiness check and the NIST length floor -- twelve spaces are
+    twelve characters -- and provisioned a real master key.
+    """
+    with (
+        override_settings(cadrumo_secret_passphrase=SecretStr(value)),
+        pytest.raises(SecretStoreError),
+    ):
+        _default_passphrase_callback()
+    assert case  # names the parametrised case in failure output
+
+
+def test_a_passphrase_with_internal_spaces_is_still_accepted() -> None:
+    """Positive control: only all-whitespace is refused, not spaces as such.
+
+    Passphrase guidance encourages multi-word credentials, so internal spaces
+    must survive, and the value must be returned verbatim rather than trimmed
+    -- it is key-derivation input, and trimming would change which key it
+    unwraps.
+    """
+    with override_settings(cadrumo_secret_passphrase=SecretStr("correct horse battery staple\r\n")):
+        assert _default_passphrase_callback() == "correct horse battery staple"
+
+
+def test_provider_refuses_a_whitespace_only_injected_callback(tmp_path: Path) -> None:
+    """The resolver enforces the same contract as the settings callback.
+
+    An interactive prompt or an injected callback reaches the provider without
+    passing through the settings path, so the whitespace-only credential had a
+    second, independent route to provisioning a real master key.
+
+    The raised type is asserted EXACTLY. ``MasterKeyMaterialMissingError`` is
+    itself a ``SecretStoreError``, so a bare ``pytest.raises(SecretStoreError)``
+    would pass on an unprovisioned store even with this guard removed.
+    """
+    provider = FileFallbackMasterKeyProvider(
+        store_dir=tmp_path / "keys",
+        passphrase_callback=lambda: "            ",
+    )
+
+    with pytest.raises(SecretStoreError) as excinfo:
+        provider.provision_master_key()
+
+    assert type(excinfo.value) is SecretStoreError
+    assert not (tmp_path / "keys" / "master.key").exists()
+
+
+def test_provider_still_provisions_under_a_real_passphrase(tmp_path: Path) -> None:
+    """Positive control for the refusal above: a genuine passphrase still works."""
+    provider = FileFallbackMasterKeyProvider(
+        store_dir=tmp_path / "keys",
+        passphrase_callback=lambda: "correct horse battery staple",
+    )
+
+    master_key = provider.provision_master_key()
+
+    assert len(master_key) == 32
+    reopened = FileFallbackMasterKeyProvider(
+        store_dir=tmp_path / "keys",
+        passphrase_callback=lambda: "correct horse battery staple",
+    )
+    assert reopened.get_master_key() == master_key

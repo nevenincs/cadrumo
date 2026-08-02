@@ -428,7 +428,13 @@ class FileFallbackMasterKeyProvider:
 
     def _resolve_passphrase(self) -> bytes:
         value = self._passphrase_callback()
-        if not value:
+        # Tested on the stripped form: an all-whitespace credential is truthy
+        # and long enough to clear the NIST floor below, so an emptiness check
+        # alone provisioned and reopened a master key under a passphrase
+        # carrying no operator secret at all. Enforced here as well as in the
+        # settings callback, because an interactive prompt or an injected
+        # callback reaches this resolver without passing through that one.
+        if not value.strip():
             raise SecretStoreError(
                 "secret-store passphrase resolved to empty string; set "
                 f"{PASSPHRASE_ENV_VAR} or supply a non-empty value at the prompt.",
