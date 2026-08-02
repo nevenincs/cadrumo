@@ -208,6 +208,67 @@ def test_file_resolution_follows_page_token_to_a_matching_owned_object() -> None
 
 
 @pytest.mark.parametrize(
+    "app_properties",
+    (
+        {"namespace": "ledger_transaction", "object_key_hmac": "a" * 64, "content_hash": "sha256-a"},
+        {
+            "cadrumo_vault_app": "foreign",
+            "namespace": "ledger_transaction",
+            "object_key_hmac": "a" * 64,
+            "content_hash": "sha256-a",
+        },
+        {"cadrumo_vault_app": "cadrumo", "namespace": "ledger_transaction", "content_hash": "sha256-a"},
+    ),
+    ids=("missing-ownership-marker", "foreign-ownership-marker", "missing-full-object-key"),
+)
+def test_iter_objects_refuses_malformed_storage_app_properties(
+    app_properties: dict[str, str],
+) -> None:
+    """A generated Drive listing cannot promote malformed metadata to storage state."""
+    with drive_files_list_endpoint(
+        pages=(
+            {
+                "files": [
+                    {
+                        "id": "vault-id",
+                        "name": "cadrumo-vault",
+                        "mimeType": "application/vnd.google-apps.folder",
+                        "appProperties": {"cadrumo_vault_app": "cadrumo"},
+                    }
+                ]
+            },
+            {
+                "files": [
+                    {
+                        "id": "namespace-id",
+                        "name": "ledger_transaction",
+                        "appProperties": {"cadrumo_vault_app": "cadrumo"},
+                    }
+                ]
+            },
+            {
+                "files": [
+                    {
+                        "id": "object-id",
+                        "name": "aaaaaaaa--payload.bin",
+                        "size": "1",
+                        "modifiedTime": "2026-08-02T01:45:29Z",
+                        "appProperties": app_properties,
+                    }
+                ]
+            },
+        )
+    ) as endpoint:
+        provider = _provider()
+        provider._service = endpoint.service
+
+        with pytest.raises(OutboundStorageIntegrityError, match="appProperties"):
+            list(provider.iter_objects("ledger_transaction"))
+
+    assert len(endpoint.requested_queries) == 3
+
+
+@pytest.mark.parametrize(
     ("put_kwargs", "message"),
     (
         (

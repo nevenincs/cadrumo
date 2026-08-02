@@ -36,7 +36,7 @@ from __future__ import annotations
 import io
 from collections.abc import Iterator
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ....core.config import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME, load_settings
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
@@ -58,6 +58,9 @@ from ._errors import (
 from ._integrity import require_full_sha256_content_hash, verify_content_hash, verify_payload_byte_length
 from ._object_name import build_provider_object_name, provider_object_hmac_prefix, sanitize_provider_object_label
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
+
+if TYPE_CHECKING:
+    from ..google._records import DriveAppProperties
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
 _FILE_EXTENSION = ".bin"
@@ -765,9 +768,9 @@ class GoogleDriveProvider:
 
         Only files whose names end with ``.bin`` and contain ``--`` are
         yielded; Drive folders and unrelated files inside the namespace
-        folder are silently skipped.  The full HMAC is recovered from
-        ``appProperties.object_key_hmac`` when present, falling back to the
-        filename prefix.
+        folder are silently skipped. Each yielded object must carry the
+        provider-owned full HMAC in its ``appProperties`` metadata; the
+        filename prefix is presentation only and never an identity fallback.
 
         Args:
             namespace: Logical bucket name.
@@ -811,12 +814,11 @@ class GoogleDriveProvider:
                 name = str(entry.get("name", ""))
                 if not name.endswith(_FILE_EXTENSION) or "--" not in name:
                     continue
-                hmac = name.split("--", 1)[0]
-                full_hmac = (entry.get("appProperties") or {}).get("object_key_hmac", hmac)
+                app_properties = _drive_storage_app_properties(entry)
                 yield _metadata_from_drive_entry(
                     entry,
                     namespace=namespace_clean,
-                    object_key_hmac=str(full_hmac),
+                    object_key_hmac=app_properties.object_key_hmac,
                 )
             page_token = next_drive_page_token(
                 response.get("nextPageToken") if isinstance(response, dict) else None,
@@ -1084,20 +1086,25 @@ def _metadata_from_drive_entry(
     )
 
 
-def _drive_storage_content_hash(entry: dict[str, Any]) -> str:
-    """Validate the provider-owned ``appProperties`` map before a Drive read."""
+def _drive_storage_app_properties(entry: dict[str, Any]) -> DriveAppProperties:
+    """Return the validated app-owned metadata for a Drive storage object."""
     from pydantic import ValidationError
 
     from ..google._records import DriveAppProperties
 
     try:
-        return DriveAppProperties.model_validate(entry.get("appProperties")).content_hash
+        return DriveAppProperties.model_validate(entry.get("appProperties"))
     except ValidationError as exc:
         raise OutboundStorageIntegrityError(
             "drive object appProperties do not match the storage metadata contract",
             context={"provider_object_id": str(entry.get("id", ""))},
             translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
         ) from exc
+
+
+def _drive_storage_content_hash(entry: dict[str, Any]) -> str:
+    """Return the validated storage content hash for a Drive read."""
+    return _drive_storage_app_properties(entry).content_hash
 
 
 __all__ = ["GoogleDriveProvider"]
