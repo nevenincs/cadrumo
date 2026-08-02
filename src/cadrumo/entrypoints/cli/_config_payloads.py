@@ -578,12 +578,16 @@ class ConfigProfileDeleteResult(OutputSchema):
     """JSON envelope for ``aeat config profile delete``.
 
     Reports the tombstoned profile id and display label plus whether the active
-    profile pointer had to be cleared.
+    profile pointer had to be cleared. Bounded and typed at the same widths
+    :class:`~cadrumo.application.user_profile.ProfileLifecycleResult` carries
+    (the mutated :class:`~cadrumo.domain.user_profile.UserProfileRecord`), so
+    an empty identity/label or an unknown lifecycle status is refused rather
+    than reported as a valid tombstoning.
     """
 
-    profile_id: str
-    display_name: str
-    status: str
+    profile_id: BucketId
+    display_name: str = Field(min_length=1, max_length=160)
+    status: UserProfileStatus
     active_profile_cleared: bool
 
 
@@ -593,12 +597,13 @@ class ConfigProfileDuplicateResult(OutputSchema):
 
     Projects the source and new immutable profile ids produced by the profile
     lifecycle service; the copied fact set is not expanded in this mutation
-    result.
+    result. Bounded at the same widths the profile-pointer/record identity
+    carries, so a blank identity or label is refused.
     """
 
-    source_profile_id: str
-    target_profile_id: str
-    display_name: str
+    source_profile_id: BucketId
+    target_profile_id: BucketId
+    display_name: str = Field(min_length=1, max_length=160)
 
 
 @register_schema("config.profile.status")
@@ -1040,12 +1045,14 @@ class ConfigProfileRenameResult(OutputSchema):
     """JSON envelope for ``aeat config profile rename``.
 
     Reports the immutable profile id plus the previous and new display labels;
-    profile identity and bucket storage remain unchanged.
+    profile identity and bucket storage remain unchanged. Bounded at the same
+    widths :class:`~cadrumo.application.bucket_maintenance.RenameBucketResult`
+    carries, so a blank identity or label is refused.
     """
 
-    profile_id: str
-    previous_display_name: str
-    display_name: str
+    profile_id: BucketId
+    previous_display_name: str = Field(min_length=1, max_length=160)
+    display_name: str = Field(min_length=1, max_length=160)
 
 
 # Sealed bucket-archive result schemas (backup / restore / inspect)

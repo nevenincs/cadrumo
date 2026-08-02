@@ -355,7 +355,7 @@ def config_profile_delete(
     result = ConfigProfileDeleteResult(
         profile_id=record.profile_id,
         display_name=record.display_name,
-        status=record.status.value,
+        status=record.status,
         active_profile_cleared=deleting_active_profile,
     )
     lines = [
