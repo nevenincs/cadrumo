@@ -52,18 +52,6 @@ class ProfileValidationResult(BaseModel):
     total_keys: int
 
 
-class ProfileValueRow(BaseModel):
-    """One schema-backed profile value row for CLI/API display."""
-
-    model_config = _STRICT_FROZEN
-
-    key: str
-    value: str | None
-    is_set: bool
-    requirement: ProfileKeyRequirement
-    description: str
-
-
 def _has_value(values: Mapping[str, str], key: str) -> bool:
     return profile_value_is_present(values.get(key))
 
@@ -129,10 +117,9 @@ def _registered_profile_keys() -> tuple[ProfileKey, ...]:
     unrelated module already imported the wizard. Two of the three readers
     took that bet and lost it in a cold process: the domain registry raises
     :class:`ProfileKeysRegistrationError` rather than returning an empty
-    tuple, so ``validate_profile_values`` and ``list_profile_value_rows``
-    raised on a fresh interpreter while ``list_profile_key_records`` -- the
-    one reader that registered -- succeeded and left the other two working
-    for the rest of the process.
+    tuple, so ``validate_profile_values`` raised on a fresh interpreter
+    while ``list_profile_key_records`` -- the one reader that registered --
+    succeeded and left the others working for the rest of the process.
 
     That is why the defect hides from the test suite. Any module that
     touches the wizard catalogue first repairs the import order for
@@ -167,34 +154,8 @@ def _ensure_profile_keys_registered() -> None:
     _ = _wizard_catalogue
 
 
-def list_profile_value_rows(
-    values: Mapping[str, str],
-    *,
-    include_unset: bool = False,
-) -> tuple[ProfileValueRow, ...]:
-    """Return schema-backed :class:`ProfileValueRow` entries for display surfaces."""
-    rows: list[ProfileValueRow] = []
-    for entry in _registered_profile_keys():
-        value = values.get(entry.key)
-        is_set = profile_value_is_present(value)
-        if not is_set and not include_unset:
-            continue
-        rows.append(
-            ProfileValueRow(
-                key=entry.key,
-                value=value.strip() if is_set and value is not None else None,
-                is_set=is_set,
-                requirement=entry.requirement,
-                description=str(entry.description),
-            ),
-        )
-    return tuple(rows)
-
-
 __all__ = [
     "ProfileValidationResult",
-    "ProfileValueRow",
     "list_profile_key_records",
-    "list_profile_value_rows",
     "validate_profile_values",
 ]

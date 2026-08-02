@@ -20,7 +20,7 @@ import pytest
 
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, load_user_profile_schema
 from .._completeness import missing_required_field_paths, profile_value_is_present
-from .._keys_validation import list_profile_value_rows, validate_profile_values
+from .._keys_validation import validate_profile_values
 from .._overview import build_profile_overview
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -81,15 +81,6 @@ def test_overview_and_key_authority_agree_on_a_real_value() -> None:
     assert field.present is True
     assert _TAX_ID_PATH not in overview.missing_required
     assert _TAX_ID_PATH in validate_profile_values({_TAX_ID_PATH: "12345678Z"}).present_required
-
-
-@pytest.mark.parametrize("blank", _BLANK_VALUES)
-def test_value_rows_do_not_mark_a_whitespace_only_key_set(blank: str) -> None:
-    rows = list_profile_value_rows({_TAX_ID_PATH: blank}, include_unset=True)
-    row = next(row for row in rows if row.key == _TAX_ID_PATH)
-
-    assert row.is_set is False
-    assert row.value is None
 
 
 def test_cleared_and_absent_values_are_equally_absent() -> None:
