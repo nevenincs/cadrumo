@@ -45,9 +45,11 @@ from ....adapters.persistence.storage import (
     GOOGLE_OAUTH_CLIENT_NAMESPACE,
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
+    SecureObjectDeletion,
     SecureObjectRepository,
     secure_object_repository_for_active_bucket,
 )
+from ....adapters.persistence.storage.crypto import secure_object_key_digest
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
 from ._impersonation import GoogleCredentialSourceSelection
@@ -277,16 +279,42 @@ def delete_session(profile: str) -> tuple[bool, bool]:
     later login can reuse the Cloud Console JSON and the same Drive root
     folder.
 
+    The token and its companion metadata are one logout, so they are removed
+    in ONE unit of work. They used to be two independent commits: a failure on
+    the second left the token gone and the metadata behind, which is the worst
+    of the three possible outcomes. It is not a half-logout an operator can
+    see and retry — ``load_token`` reports no session while the metadata row
+    still describes one, so status surfaces read as logged-in against a
+    credential that no longer exists, and the stale row survives the retry
+    because the retry finds nothing to delete.
+
+    :meth:`~adapters.persistence.storage.SecureObjectRepository.apply_batch`
+    already provides the all-or-nothing removal, and it addresses rows by the
+    stored key digest, so the natural profile key is digested here through the
+    same helper the write path uses.
+
     Args:
         profile: The profile identifier whose token and metadata records to
             delete.
 
     Returns:
-        A pair ``(token_removed, metadata_removed)``.
+        A pair ``(token_removed, metadata_removed)``, reporting what was
+        present before the removal. Both are read before the batch rather
+        than returned by it: the batch is one statement per namespace and
+        reports no per-row outcome, and inferring presence from a delete's
+        return value is what forced the two-commit shape to begin with.
     """
     repo = _repository()
-    token_removed = repo.delete(_NAMESPACE_TOKEN, profile)
-    metadata_removed = repo.delete(_NAMESPACE_METADATA, profile)
+    digest = secure_object_key_digest(profile)
+    token_removed = repo.exists_by_raw_key(_NAMESPACE_TOKEN, digest)
+    metadata_removed = repo.exists_by_raw_key(_NAMESPACE_METADATA, digest)
+    repo.apply_batch(
+        writes=(),
+        deletions=(
+            SecureObjectDeletion(namespace=_NAMESPACE_TOKEN, hashed_object_key=digest),
+            SecureObjectDeletion(namespace=_NAMESPACE_METADATA, hashed_object_key=digest),
+        ),
+    )
     return token_removed, metadata_removed
 
 
