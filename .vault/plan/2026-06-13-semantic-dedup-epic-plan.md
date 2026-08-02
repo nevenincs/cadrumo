@@ -4,7 +4,7 @@ tags:
   - '#semantic-dedup-epic'
 date: '2026-06-13'
 modified: '2026-08-02'
-body_hash: 'sha256:c648a1301545ff8774d5e8dae8372d770005a6178816412a1a1e4426d2809502'
+body_hash: 'sha256:a058b72dc7e53d6874b060aac3ac5b34f546f5b02f2ffa64cf906f62df2e5a59'
 tier: L3
 related:
   - '[[2026-06-13-semantic-dedup-epic-audit]]'
@@ -921,7 +921,7 @@ Route report, revision, and declaration-summary timestamps through the canonical
 
 Reject contradictory score/row aggregate fields and preserve valid measurement-report construction.
 
-- [ ] `W08.P143.S172` - Enforce consistency between measurement-report rows and aggregate scenario counts, failures, and pass state.; `src/cadrumo/agent/eval/_report.py; agent evaluation report tests`.
+- [x] `W08.P143.S172` - Enforce consistency between measurement-report rows and aggregate scenario counts, failures, and pass state.; `src/cadrumo/agent/eval/_report.py; agent evaluation report tests`.
 
 ### Phase `W08.P144` - Constrain agent evaluation score invariants
 
