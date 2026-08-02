@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 from typing import TypedDict
 
 import pytest
 
+from ......core.errors import CoreValidationError
 from ...bucket import BucketLockedError
 from ...errors import StorageValidationError
 from .._active_session import (
@@ -28,6 +29,8 @@ _KEK = bytes(range(32))
 _DEK = bytes(range(32, 64))
 _BUCKET_ID = "66666666-6666-4666-8666-666666666666"
 _OTHER_BUCKET_ID = "77777777-7777-4777-8777-777777777777"
+_NAIVE = datetime(2026, 5, 14, 12, 0, 0)
+_PLUS_ONE = datetime(2026, 5, 14, 13, 0, 0, tzinfo=timezone(timedelta(hours=1)))
 
 
 def _open_session(
@@ -236,3 +239,71 @@ def test_open_rejects_non_positive_idle_minutes() -> None:
     with pytest.raises(StorageValidationError, match="idle_minutes must be a strict positive integer") as exc_info:
         _open_session(idle_minutes=0)
     assert exc_info.value.translated_message == "errors.integrity.integrity_storage_validation"
+
+
+@pytest.mark.parametrize("opened_at", (_NAIVE, _PLUS_ONE), ids=("naive", "non-utc"))
+def test_open_refuses_non_utc_lifecycle_start(opened_at: datetime) -> None:
+    with pytest.raises(CoreValidationError, match="UTC"):
+        _open_session(opened_at=opened_at)
+
+
+@pytest.mark.parametrize("invalid_instant", (_NAIVE, _PLUS_ONE), ids=("naive", "non-utc"))
+def test_open_resumed_refuses_non_utc_lifecycle_instants(invalid_instant: datetime) -> None:
+    with pytest.raises(CoreValidationError, match="UTC"):
+        BucketSession.open_resumed(
+            bucket_id=_BUCKET_ID,
+            dek=_DEK,
+            idle_minutes=15,
+            opened_at=invalid_instant,
+            idle_deadline=_NOW + timedelta(minutes=15),
+            absolute_deadline=_NOW + timedelta(minutes=30),
+        )
+
+    with pytest.raises(CoreValidationError, match="UTC"):
+        BucketSession.open_resumed(
+            bucket_id=_BUCKET_ID,
+            dek=_DEK,
+            idle_minutes=15,
+            opened_at=_NOW,
+            idle_deadline=invalid_instant,
+            absolute_deadline=_NOW + timedelta(minutes=30),
+        )
+
+    with pytest.raises(CoreValidationError, match="UTC"):
+        BucketSession.open_resumed(
+            bucket_id=_BUCKET_ID,
+            dek=_DEK,
+            idle_minutes=15,
+            opened_at=_NOW,
+            idle_deadline=_NOW + timedelta(minutes=15),
+            absolute_deadline=invalid_instant,
+        )
+
+
+def test_open_resumed_utc_session_preserves_expiry_semantics() -> None:
+    session = BucketSession.open_resumed(
+        bucket_id=_BUCKET_ID,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=_NOW,
+        idle_deadline=_NOW + timedelta(minutes=15),
+        absolute_deadline=_NOW + timedelta(minutes=30),
+    )
+
+    refreshed_at = _NOW + timedelta(minutes=10)
+    session.touch(refreshed_at)
+
+    assert session.opened_at == _NOW
+    assert session.idle_deadline == refreshed_at + timedelta(minutes=15)
+    assert session.is_expired(_NOW + timedelta(minutes=24)) is False
+    assert session.is_expired(_NOW + timedelta(minutes=30)) is True
+
+
+@pytest.mark.parametrize("invalid_now", (_NAIVE, _PLUS_ONE), ids=("naive", "non-utc"))
+def test_touch_and_expiry_refuse_non_utc_lifecycle_instants(invalid_now: datetime) -> None:
+    session = _open_session()
+
+    with pytest.raises(CoreValidationError, match="UTC"):
+        session.touch(invalid_now)
+    with pytest.raises(CoreValidationError, match="UTC"):
+        session.is_expired(invalid_now)
