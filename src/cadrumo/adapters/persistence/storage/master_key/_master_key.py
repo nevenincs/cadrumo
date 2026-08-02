@@ -566,12 +566,12 @@ class FileFallbackMasterKeyProvider:
         try:
             params = _KdfParameters.model_validate_json(raw_text)
         except (ValueError, ValidationError) as exc:
+            # Covers a malformed or non-canonical-length salt: the record owns
+            # the salt codec, so a bad salt is a parse refusal here rather than
+            # a KEK derived from material Argon2 should never have seen. The
+            # chained pydantic error names the offending field.
             raise _master_key_unavailable_error("failed to parse KDF parameters.") from exc
-        try:
-            salt = _b64decode(params.salt_b64)
-        except (ValueError, binascii.Error) as exc:
-            raise _master_key_unavailable_error("KDF parameters carry malformed salt.") from exc
-        kek = self._derive_kek_with_params(passphrase, salt, params)
+        kek = self._derive_kek_with_params(passphrase, params.salt, params)
         try:
             wire = base64.b64decode(self._master_key_path.read_bytes(), validate=True)
             blob = EncryptedBlob.from_wire(wire)
