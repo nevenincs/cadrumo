@@ -350,7 +350,7 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
     deadline = time.monotonic() + max(wait_seconds, 0.0)
     thread_id = threading.get_ident()
 
-    if not _acquire_local_slot(ownership_key, paths, pid=pid, thread_id=thread_id, deadline=deadline):
+    if not _acquire_local_slot(target, ownership_key, paths, pid=pid, thread_id=thread_id, deadline=deadline):
         return
     _claim_lockfile(target, ownership_key, paths, pid=pid, thread_id=thread_id, deadline=deadline)
 
@@ -369,6 +369,12 @@ def _release_owned_slot(
     place (only its depth is decremented). At depth 1 the on-disk lockfile is
     unlinked only when its recorded PID matches, then the slot and its atexit
     registration are cleared.
+
+    A lockfile that now records a FOREIGN pid is left on disk -- deleting it
+    would drop another process's lock -- but the local slot is still cleared.
+    Keeping it would leave this process holding an ownership record for a lock
+    it demonstrably no longer holds, which a later same-thread acquire would
+    read as a live re-entry.
     """
     if ownership.thread_id != thread_id:
         return
@@ -382,7 +388,9 @@ def _release_owned_slot(
     if pid == current_pid:
         _unlink_lockfile_if_present(target, reason="release")
     elif pid is not _PidReadState.MISSING:
-        return
+        _log.debug(
+            "bucket lockfile release found a foreign holder; leaving the lockfile and clearing local ownership",
+        )
     del _LOCAL_LOCKS[ownership_key]
     _ATEXIT_REGISTRY.discard(ownership_key)
     _LOCAL_LOCKS_CONDITION.notify_all()
