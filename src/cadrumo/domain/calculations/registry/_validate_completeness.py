@@ -35,10 +35,7 @@ def _emit_completeness_gate_failures(
         casilla_id
         for casilla_id in calculation_closure_casilla_ids(revision, modelo_id)
         if casilla_id not in manifest_casilla_ids
-        and (
-            (declared := declared_by_id.get(casilla_id)) is None
-            or not declared.internal_only
-        )
+        and ((declared := declared_by_id.get(casilla_id)) is None or not declared.internal_only)
     )
     if missing_closure_ids:
         failures.append(
