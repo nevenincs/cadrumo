@@ -63,16 +63,6 @@ jobs:
       resume: ${{ steps.plan.outputs.resume }}
       dry_run: ${{ steps.plan.outputs.dry_run }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          persist-credentials: false
-
-      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
-        with:
-          version: "0.11.29"
-          python-version: "3.13"
-          enable-cache: true
-
       - name: Resolve the dispatch into a plan
         id: plan
         env:
