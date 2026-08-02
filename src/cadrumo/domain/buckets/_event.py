@@ -402,6 +402,27 @@ class BucketEvent(BaseModel):
         return self
 
 
+def bucket_event_order_key(event: BucketEvent) -> tuple[datetime, str]:
+    """Return the canonical chronological sort key for one bucket event.
+
+    Ordering by ``occurred_at`` alone is not a total order: emissions inside
+    one operation share an instant by design (a rename emits the lifecycle
+    event and the maintenance event at the same ``now()``), so ties fell
+    through to whatever order the catalogue mapping happened to hold. Two
+    processes reading the same persisted events could therefore render the
+    operator different timelines, and the same reader could change its mind
+    after a reload -- with no validation error anywhere, because nothing was
+    wrong with the data.
+
+    ``event_id`` breaks the tie because it is content-addressed: it is
+    derived from the event body, so the tie-break is a property of the events
+    themselves rather than of how they were stored or merged. The
+    reconciliation history already ordered on this pair; this is the same
+    rule, declared once for every projection that reads bucket events.
+    """
+    return (event.occurred_at, event.event_id)
+
+
 class BucketEventHistoryCatalogue(BaseModel):
     """Immutable catalogue of every bucket event in storage."""
 
@@ -428,14 +449,14 @@ class BucketEventHistoryCatalogue(BaseModel):
     ) -> tuple[BucketEvent, ...]:
         """Return every :class:`BucketEvent` recorded against ``bucket_id`` in chronological order.
 
-        Events are sorted by ``occurred_at`` ascending and optionally filtered to one
-        or more event types.
+        Events are ordered by :func:`bucket_event_order_key` and optionally
+        filtered to one or more event types.
         """
         wanted = set(event_types) if event_types is not None else None
         matching = (
             e for e in self.events.values() if e.bucket_id == bucket_id and (wanted is None or e.event_type in wanted)
         )
-        return tuple(sorted(matching, key=lambda e: e.occurred_at))
+        return tuple(sorted(matching, key=bucket_event_order_key))
 
     def for_object(
         self,
@@ -443,13 +464,14 @@ class BucketEventHistoryCatalogue(BaseModel):
         object_type: BucketEventObjectType,
         object_id: str,
     ) -> tuple[BucketEvent, ...]:
-        """Return every event recorded against one object, ordered by ``occurred_at`` ascending.
+        """Return every event recorded against one object, in canonical chronological order.
 
         Returns:
-            Tuple of :class:`BucketEvent` records in chronological order.
+            Tuple of :class:`BucketEvent` records ordered by
+            :func:`bucket_event_order_key`.
         """
         matching = (e for e in self.events.values() if e.object_type is object_type and e.object_id == object_id)
-        return tuple(sorted(matching, key=lambda e: e.occurred_at))
+        return tuple(sorted(matching, key=bucket_event_order_key))
 
     def values(self) -> ValuesView[BucketEvent]:
         """Return a live view over every :class:`BucketEvent` in the catalogue."""
@@ -473,5 +495,6 @@ __all__ = [
     "BucketEventHistoryCatalogue",
     "BucketEventObjectType",
     "BucketEventType",
+    "bucket_event_order_key",
     "derive_bucket_event_id",
 ]

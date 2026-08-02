@@ -29,6 +29,7 @@ Public surface:
   lives in the persistence adapter and stores a ``FINANCIAL``
   :class:`adapters.persistence.storage.Envelope` singleton through
   :class:`adapters.persistence.storage.SecureObjectRepository`.
+* :func:`bucket_event_order_key` — the canonical chronological sort key.
 * :func:`derive_bucket_event_id` — deterministic SHA-256 event id.
 * :func:`append_bucket_event` — pure helper to insert one event
   into a catalogue (idempotent on identical content).
@@ -96,6 +97,7 @@ from ._event import (
     BucketEventId,
     BucketEventObjectType,
     BucketEventType,
+    bucket_event_order_key,
     derive_bucket_event_id,
     payload_value_fits,
 )
@@ -129,6 +131,7 @@ __all__ = [
     "BucketsError",
     "append_bucket_event",
     "build_bucket_event",
+    "bucket_event_order_key",
     "derive_bucket_event_id",
     "emit_bucket_event",
     "payload_value_fits",
