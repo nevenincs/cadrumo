@@ -28,7 +28,7 @@ from decimal import Decimal
 
 from pydantic import Field, model_validator
 
-from ...core.telemetry import TelemetryTier
+from ...core.telemetry import TelemetryEventPayload, TelemetryTier
 from ...core.time import validate_inclusive_iso_date_range
 from ._decimal_wire import DecimalWireText, bounded_decimal_wire_text
 from ._schemas import OutputSchema, register_schema
@@ -337,24 +337,6 @@ class TelemetryStatusResult(OutputSchema):
     would_emit_if_acknowledged: bool
 
 
-class TelemetryPayloadPreviewPayload(OutputSchema):
-    """The exact allowlisted event a flush would transmit.
-
-    Mirrors :class:`~core.telemetry.TelemetryEventPayload` field-for-field.
-    This IS the whole transmission allowlist: there is no other field
-    :func:`~application.diagnostics_telemetry.flush_telemetry` could send.
-    """
-
-    schema_version: int
-    workspace_hash: str
-    command: str
-    counters: dict[str, int]
-    timings_ms: dict[str, int]
-    succeeded: bool
-    error_kind: str | None = None
-    captured_at: str
-
-
 @register_schema("diagnostics.telemetry.flush")
 class TelemetryFlushResult(OutputSchema):
     """JSON envelope for ``aeat app diagnostics telemetry flush``.
@@ -366,7 +348,7 @@ class TelemetryFlushResult(OutputSchema):
     """
 
     dry_run: bool
-    payload: TelemetryPayloadPreviewPayload
+    payload: TelemetryEventPayload
     gate_permits: bool
     endpoint_configured: bool
     would_send: bool

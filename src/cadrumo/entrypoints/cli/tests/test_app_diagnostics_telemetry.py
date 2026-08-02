@@ -46,10 +46,11 @@ from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
-from ....core.telemetry import TelemetryTier
+from ....core.telemetry import TelemetryEventPayload, TelemetryTier
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from .._diagnostics_payloads import TelemetryFlushResult
 from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -179,6 +180,72 @@ def test_telemetry_status_previews_a_fully_opted_in_posture_via_flags(_isolated_
     fresh_payload = _json_result(fresh)
     assert fresh_payload["opt_in"] is False
     assert fresh_payload["tier"] == "off"
+
+
+def test_telemetry_flush_payload_round_trips_the_canonical_event_schema() -> None:
+    """The CLI envelope nests the actual allowlisted telemetry event model."""
+    wire_payload: dict[str, object] = {
+        "schema_version": 1,
+        "workspace_hash": "a" * 64,
+        "command": "diagnostics.llm_run",
+        "counters": {"runs": 2, "failed": 1},
+        "timings_ms": {"duration": 1200},
+        "succeeded": False,
+        "error_kind": "LLMClassifierError",
+        "captured_at": "2026-08-02T10:00:00+00:00",
+    }
+
+    result = TelemetryFlushResult.model_validate(
+        {
+            "dry_run": True,
+            "payload": wire_payload,
+            "gate_permits": False,
+            "endpoint_configured": False,
+            "would_send": False,
+            "sent": False,
+        },
+    )
+
+    assert isinstance(result.payload, TelemetryEventPayload)
+    assert result.model_dump(mode="json")["payload"] == wire_payload
+
+
+@pytest.mark.parametrize(
+    ("field", "invalid_value"),
+    [
+        ("schema_version", 0),
+        ("workspace_hash", "a" * 63),
+        ("error_kind", "x" * 65),
+    ],
+)
+def test_telemetry_flush_payload_refuses_malformed_canonical_event_fields(
+    field: str,
+    invalid_value: int | str,
+) -> None:
+    """The CLI envelope retains the canonical event model's validation boundaries."""
+    wire_payload: dict[str, object] = {
+        "schema_version": 1,
+        "workspace_hash": "a" * 64,
+        "command": "diagnostics.llm_run",
+        "counters": {},
+        "timings_ms": {},
+        "succeeded": False,
+        "error_kind": "LLMClassifierError",
+        "captured_at": "2026-08-02T10:00:00+00:00",
+    }
+    wire_payload[field] = invalid_value
+
+    with pytest.raises(ValidationError, match=field):
+        TelemetryFlushResult.model_validate(
+            {
+                "dry_run": True,
+                "payload": wire_payload,
+                "gate_permits": False,
+                "endpoint_configured": False,
+                "would_send": False,
+                "sent": False,
+            },
+        )
 
 
 def test_telemetry_flush_rejects_an_unknown_tier(_isolated_backend: None) -> None:
