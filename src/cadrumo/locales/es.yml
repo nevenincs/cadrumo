@@ -6206,6 +6206,7 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
+    integrity_apoderado_configuration_identity: 'La configuración de apoderado almacenada no pertenece al perfil desde el que se ha leído.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construido un registro interno que no
       ha superado su propia validación. Tu comando era correcto; esto es un defecto

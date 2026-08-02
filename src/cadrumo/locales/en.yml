@@ -5760,6 +5760,7 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    integrity_apoderado_configuration_identity: 'The stored apoderado configuration does not belong to the profile it was read from.'
   internal:
     cli_outbound_payload_boundary: Cadrumo built an internal record that failed its
       own validation. Your command was correct; this is a defect in Cadrumo. Report

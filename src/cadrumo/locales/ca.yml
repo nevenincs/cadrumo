@@ -6167,6 +6167,7 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
+    integrity_apoderado_configuration_identity: 'La configuració d''apoderat emmagatzemada no pertany al perfil des del qual s''ha llegit.'
   internal:
     cli_outbound_payload_boundary: Cadrumo ha construït un registre intern que no
       ha superat la seva pròpia validació. La teva ordre era correcta; això és un
