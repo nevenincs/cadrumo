@@ -22,6 +22,7 @@ See Also:
 
 from __future__ import annotations
 
+import hashlib
 from decimal import Decimal
 
 import pytest
@@ -117,6 +118,17 @@ def _counterpart_obs(
     )
 
 
+def _ledger_identity(label: str) -> str:
+    """Return a stable canonical transaction identity for a readable test label.
+
+    A ledger-sourced foreign-asset observation must carry a real hex-64
+    transaction identity: the resolver copies it into
+    ``source_transaction_ids``, which feeds the strict identity field on the
+    persisted calculation revision.
+    """
+    return hashlib.sha256(label.encode("utf-8")).hexdigest()
+
+
 def _asset_obs(
     *,
     source_kind: BindingSourceKind = BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
@@ -127,9 +139,14 @@ def _asset_obs(
     valuation: str = "50000.01",
     acquisition_date: str = "2023-01-15",
 ) -> ForeignAssetIngestObservation:
+    declared_source_id = source_id or f"{source_kind.value}-asset-1"
     return ForeignAssetIngestObservation(
         source_kind=source_kind,
-        source_object_id=source_id or f"{source_kind.value}-asset-1",
+        source_object_id=(
+            _ledger_identity(declared_source_id)
+            if source_kind is BindingSourceKind.LEDGER_TRANSACTION
+            else declared_source_id
+        ),
         asset_class=asset_class,
         asset_external_id=asset_external_id or f"{source_kind.value}-account",
         country=country,
@@ -354,9 +371,9 @@ def test_foreign_assets_m720_registry_rows_match_prior_aggregate_exactly() -> No
     }
     assert resolution.binding_values == {}
     assert dict(resolution.row_binding_values) == expected_row_values
-    assert resolution.source_transaction_ids == ("tx-account-ad",)
+    assert resolution.source_transaction_ids == (_ledger_identity("tx-account-ad"),)
     assert {item.source_ref for item in resolution.provenance} == {
-        "ledger_transaction:tx-account-ad",
+        f"ledger_transaction:{_ledger_identity('tx-account-ad')}",
         "payable_invoice:payable-account-ch",
     }
 
@@ -429,9 +446,9 @@ def test_foreign_assets_m720_mixed_valores_block_selects_both_rows_and_provenanc
     }
     assert resolution.binding_values == {}
     assert dict(resolution.row_binding_values) == expected_row_values
-    assert resolution.source_transaction_ids == ("tx-security-li",)
+    assert resolution.source_transaction_ids == (_ledger_identity("tx-security-li"),)
     assert {item.source_ref for item in resolution.provenance} == {
-        "ledger_transaction:tx-security-li",
+        f"ledger_transaction:{_ledger_identity('tx-security-li')}",
         "payable_invoice:payable-insurance-ch",
     }
 

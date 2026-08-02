@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date
 from decimal import Decimal
 
@@ -95,6 +96,23 @@ def _revision_without_foreign_asset_source() -> ModeloRevision:
     )
 
 
+def _is_ledger(source_kind: BindingSourceKind | str) -> bool:
+    """Return whether ``source_kind`` names the ledger-transaction source."""
+    return source_kind in (BindingSourceKind.LEDGER_TRANSACTION, BindingSourceKind.LEDGER_TRANSACTION.value)
+
+
+def ledger_identity(label: str) -> str:
+    """Return a stable canonical transaction identity for a readable test label.
+
+    A ledger-sourced observation must carry a real hex-64 transaction identity
+    because the resolver copies it into ``source_transaction_ids``, which feeds
+    the strict identity field on the persisted calculation revision. Deriving it
+    from a label keeps each fixture distinguishable and deterministic without
+    hand-writing digests at every call site.
+    """
+    return hashlib.sha256(label.encode("utf-8")).hexdigest()
+
+
 def _obs(
     *,
     asset_class: ForeignAssetClass,
@@ -113,7 +131,7 @@ def _obs(
     return ForeignAssetIngestObservation.model_validate(
         {
             "source_kind": source_kind,
-            "source_object_id": source_id,
+            "source_object_id": ledger_identity(source_id) if _is_ledger(source_kind) else source_id,
             "asset_class": asset_class,
             "asset_external_id": asset_external_id,
             "country": country,
@@ -356,9 +374,9 @@ class TestForeignAssetSourceResolver:
 
         assert resolution.owned_sources == (BindingSourceKind.FOREIGN_ASSET,)
         assert resolution.binding_values == {}
-        assert resolution.source_transaction_ids == ("tx-account-ad",)
+        assert resolution.source_transaction_ids == (ledger_identity("tx-account-ad"),)
         assert {item.source_ref for item in resolution.provenance} == {
-            "ledger_transaction:tx-account-ad",
+            f"ledger_transaction:{ledger_identity('tx-account-ad')}",
             "payable_invoice:payable-account-ch",
         }
 
@@ -521,7 +539,9 @@ class TestInvariants:
             )
 
 
-ValidationError = __import__("pydantic").ValidationError
+from pydantic import TypeAdapter, ValidationError  # noqa: E402
+
+from ....core.identity import TransactionId  # noqa: E402
 
 
 @pytest.mark.parametrize("impossible", ["2026-99-99", "2026-02-30", "2025-13-01", "0000-00-00"])
@@ -562,3 +582,99 @@ def test_valid_acquisition_date_aggregates_and_reaches_the_registry_row() -> Non
 
     row = _registry_observation_from_foreign_asset(observation)
     assert row.acquisition_date == date(2026, 3, 1)
+
+
+@pytest.mark.parametrize(
+    "not_a_transaction_identity",
+    ["ledger_transaction-urban-a", "INV-2025-0007", "A" * 64, "a" * 63, "a" * 65],
+)
+def test_ledger_sourced_observation_requires_the_canonical_transaction_identity(
+    not_a_transaction_identity: str,
+) -> None:
+    """A ledger observation cannot be ingested with an id the revision contract refuses.
+
+    The resolver copies ``source_object_id`` verbatim into
+    ``CalculationSourceResolution.source_transaction_ids``, which feeds the
+    strict hex-64 transaction-identity field on ``CalculationRevision``. Any
+    non-empty string used to be admitted here, so a validly-ingested ledger
+    observation could reach calculation persistence carrying an id the canonical
+    revision contract can never satisfy — and the refusal surfaced at the
+    persistence boundary, far from the row that caused it.
+    """
+    # Constructed directly: the _obs helper canonicalises ledger labels for
+    # convenience, and this test is precisely about the raw declared value.
+    with pytest.raises(ValidationError):
+        ForeignAssetIngestObservation.model_validate(
+            {
+                "source_kind": BindingSourceKind.LEDGER_TRANSACTION,
+                "source_object_id": not_a_transaction_identity,
+                "asset_class": ForeignAssetClass.ACCOUNT,
+                "asset_external_id": "AD-ACCOUNT-001",
+                "country": "AD",
+                "valuation_eur": Decimal("60000.00"),
+                "acquisition_date": "2023-01-15",
+                "held_at_year_end": True,
+            },
+        )
+
+
+def test_non_ledger_sources_keep_their_external_identifiers() -> None:
+    """An invoice-sourced observation keeps its external id, in provenance only.
+
+    The identity constraint is scoped to the ledger source kind: an external or
+    invoice-like identifier is legitimate provenance and must not be forced into
+    the transaction-identity shape.
+    """
+    observation = _obs(
+        asset_class=ForeignAssetClass.ACCOUNT,
+        valuation="60000.00",
+        source_kind=BindingSourceKind.PAYABLE_INVOICE,
+        source_id="INV-2025-0007",
+    )
+
+    assert observation.source_object_id == "INV-2025-0007"
+
+
+def test_resolved_ledger_ids_satisfy_the_revision_identity_contract() -> None:
+    """Every id the resolver reports as a transaction id validates as one.
+
+    The end-to-end property the finding names: what reaches
+    ``source_transaction_ids`` must be admissible by the persisted revision's
+    transaction-identity field, so ingestion and persistence cannot disagree.
+    """
+    period = _P_2025_ANNUAL
+    observations = (
+        _obs(
+            asset_class=ForeignAssetClass.ACCOUNT,
+            valuation="60000.00",
+            asset_external_id="AD-ACCOUNT-001",
+            country="AD",
+            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_id="tx-account-ad",
+        ),
+        _obs(
+            asset_class=ForeignAssetClass.ACCOUNT,
+            valuation="15000.00",
+            asset_external_id="CH-ACCOUNT-002",
+            country="CH",
+            source_kind=BindingSourceKind.PAYABLE_INVOICE,
+            source_id="INV-2025-0007",
+        ),
+    )
+
+    resolution = ForeignAssetsAggregationSourceResolver(observations=observations).resolve(
+        CalculationSourceContext(
+            bucket_id="operator",
+            modelo="720",
+            filing_year=2025,
+            period=period,
+            revision=_m720_revision(),
+        ),
+    )
+
+    assert resolution.source_transaction_ids
+    adapter = TypeAdapter(TransactionId)
+    for transaction_id in resolution.source_transaction_ids:
+        assert adapter.validate_python(transaction_id) == transaction_id
+    # The invoice-sourced external id stays out of the identity tuple.
+    assert "INV-2025-0007" not in resolution.source_transaction_ids
