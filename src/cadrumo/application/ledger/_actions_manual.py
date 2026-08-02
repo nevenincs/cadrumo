@@ -60,6 +60,7 @@ from ...domain.usage_ratios import (
 )
 from ..review import LedgerReviewStatus
 from ._actions_common import (
+    _attachment_store,
     _blocking_modelo_references,
     _bucket_event_repository,
     _build_bucket_event,
@@ -679,12 +680,7 @@ def _record_attachment_back_references(
     """
     if not transaction.attachment_ids:
         return
-    if attachment_store is None:
-        from ...adapters.persistence.storage import AttachmentStore
-
-        store: _AttachmentStoreProtocol = AttachmentStore()
-    else:
-        store = attachment_store
+    store = _attachment_store(attachment_store)
     for attachment_id in transaction.attachment_ids:
         link_attachment_transaction(
             store,

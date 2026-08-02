@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib
 import json
 import re
 import sys
@@ -17,7 +18,11 @@ from dev.docs.preprocess import (
 )
 from dev.docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
 
-from cadrumo.core import normalise_corpus_text
+# Absolute, string-form import by necessity: `_data/` and `_data/corpus/` carry
+# no `__init__.py` (they are a data tree, not a package chain), so this module
+# is imported in rootdir mode and a relative import cannot reach `cadrumo`.
+# The sibling `dev.*` imports above are absolute for the same reason.
+normalise_corpus_text = importlib.import_module("cadrumo.core").normalise_corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

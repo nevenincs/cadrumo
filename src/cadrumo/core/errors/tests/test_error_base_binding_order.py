@@ -81,7 +81,7 @@ def test_the_base_class_is_defined_before_not_found_is_imported() -> None:
 
 def test_the_package_actually_imports() -> None:
     """The behaviour the ordering exists to protect, not just its shape."""
-    import cadrumo.core.errors as errors_package
+    from ... import errors as errors_package
 
     assert issubclass(errors_package.CoreNotFoundError, errors_package.CoreError)
     assert issubclass(errors_package.CoreNotFoundError, KeyError)

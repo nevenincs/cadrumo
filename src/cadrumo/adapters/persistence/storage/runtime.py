@@ -16,12 +16,11 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from cadrumo.core.config import coerce_output_language_setting
-
 from ....core.config import (
     Settings,
     StorageRouteKind,
     classify_storage_route,
+    coerce_output_language_setting,
     load_settings,
     settings_for_active_profile_bucket,
 )

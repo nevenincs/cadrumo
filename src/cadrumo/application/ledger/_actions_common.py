@@ -140,6 +140,24 @@ def _bucket_event_repository(
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
 
+def _attachment_store(
+    store: _AttachmentStoreProtocol | None,
+) -> _AttachmentStoreProtocol:
+    """Return the injected attachment store, or construct the default concrete one.
+
+    Sibling of :func:`_transaction_repository`, :func:`_invoice_repository`, and
+    :func:`_bucket_event_repository`: this module is the one place in the ledger
+    package that resolves an injected port to a concrete adapter, so the
+    ``AttachmentStore`` construction has a single home rather than one copy per
+    call site that needs a default.
+    """
+    if store is not None:
+        return store
+    from ...adapters.persistence.storage import AttachmentStore
+
+    return AttachmentStore()
+
+
 def _require_actor(value: str, *, operation: str) -> str:
     trimmed = value.strip()
     if not trimmed:
@@ -516,12 +534,7 @@ def _verify_attachment_references(
     attachment_store: _AttachmentStoreProtocol | None,
 ) -> None:
     """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
-    if attachment_store is None:
-        from ...adapters.persistence.storage import AttachmentStore
-
-        store: _AttachmentStoreProtocol = AttachmentStore()
-    else:
-        store = attachment_store
+    store = _attachment_store(attachment_store)
     for attachment_id in command.attachment_ids:
         _verify_single_attachment(
             attachment_id,

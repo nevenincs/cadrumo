@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from cadrumo.entrypoints.mcp._stdio_lifetime import (
+from .._stdio_lifetime import (
     _GRACE_SECONDS,
     PARENT_PID_ENV,
     STDIO_WATCHDOG_ENV,
@@ -313,7 +313,7 @@ def test_pre_exit_hook_runs_before_the_hard_exit(tmp_path: Path) -> None:
         # than driving the POSIX reparent poll's 15s cadence.
         marker: list[str] = []
         register_pre_exit_hook(lambda: marker.append("ran"))
-        from cadrumo.entrypoints.mcp._stdio_lifetime import _run_pre_exit_hooks
+        from .._stdio_lifetime import _run_pre_exit_hooks
 
         _run_pre_exit_hooks()
         assert marker == ["ran"]
@@ -353,7 +353,7 @@ def test_a_hanging_pre_exit_hook_cannot_block_the_reap(tmp_path: Path) -> None:
     prevent.
     """
     if sys.platform != "win32":
-        from cadrumo.entrypoints.mcp._stdio_lifetime import _run_pre_exit_hooks
+        from .._stdio_lifetime import _run_pre_exit_hooks
 
         register_pre_exit_hook(lambda: time.sleep(30))
         started = time.monotonic()
@@ -585,13 +585,13 @@ def test_posix_parent_map_resolves_this_process_ancestry() -> None:
     whichever backend the platform actually took.
     """
     if sys.platform == "win32":
-        from cadrumo.entrypoints.mcp._stdio_lifetime import _snapshot_processes
+        from .._stdio_lifetime import _snapshot_processes
 
         parents, _ = _snapshot_processes()
         assert parents[os.getpid()] == os.getppid()
         return
 
-    from cadrumo.entrypoints.mcp._stdio_lifetime import _posix_ancestor_pids, _posix_parent_map
+    from .._stdio_lifetime import _posix_ancestor_pids, _posix_parent_map
 
     parents = _posix_parent_map()
     assert parents is not None, "no portable ancestry backend resolved on this platform"
