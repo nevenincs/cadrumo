@@ -1156,23 +1156,32 @@ class BucketMaintenanceService:
                 context={"bucket_id": header.bucket_id, "profile_id": bundle.profile.profile_id},
             )
         if existing is None:
-            self._provision_imported_bucket(bundle)
-        with profile_storage_session(header.bucket_id):
-            deserialize_profile_bundle(bundle, target_bucket_id=header.bucket_id)
-            occurred_at = now()
-            self._append_event(
-                bucket_id=header.bucket_id,
-                event_type=BucketEventType.BUCKET_IMPORTED,
-                object_id=header.bucket_id,
-                occurred_at=occurred_at,
-                payload_version=_IMPORT_PAYLOAD_VERSION,
-                payload={
-                    "source_path": command.source_path.name,
-                    "manifest_digest": header.manifest_digest,
-                    "archive_schema_version": str(header.archive_schema_version),
-                    "force_replace": str(command.force_replace).lower(),
-                },
-            )
+            # Keep every target-bucket write inside the atomic-create span.
+            # The typed catalogues commit independently, but a later carried
+            # object or completion-event refusal now unwinds the provisional
+            # pointer, bucket directory, and bucket DEK as one recovery unit.
+            # Closing this span immediately after registration left a failed
+            # import visible as an active, partially populated bucket.
+            with self._provision_imported_bucket(bundle):
+                occurred_at = self._restore_imported_bundle(
+                    bundle=bundle,
+                    command=command,
+                    bucket_id=header.bucket_id,
+                    manifest_digest=header.manifest_digest,
+                    archive_schema_version=header.archive_schema_version,
+                )
+        else:
+            # ``--force`` targets an already durable bucket, so it cannot use
+            # the new-bucket rollback owner. Preserve its existing explicit
+            # target session semantics.
+            with profile_storage_session(header.bucket_id):
+                occurred_at = self._restore_imported_bundle(
+                    bundle=bundle,
+                    command=command,
+                    bucket_id=header.bucket_id,
+                    manifest_digest=header.manifest_digest,
+                    archive_schema_version=header.archive_schema_version,
+                )
         return ImportBucketResult(
             bucket_id=header.bucket_id,
             manifest_digest=header.manifest_digest,
@@ -1250,8 +1259,52 @@ class BucketMaintenanceService:
             context={"missing_flags": _format_missing_flags(missing_flags)},
         )
 
+    def _restore_imported_bundle(
+        self,
+        *,
+        bundle: UserProfilePortableExport,
+        command: ImportBucketCommand,
+        bucket_id: str,
+        manifest_digest: str,
+        archive_schema_version: int,
+    ) -> datetime:
+        """Restore a validated bundle and append its completion event.
+
+        The caller owns the target-bucket recovery boundary: either the
+        new-bucket :meth:`_provision_imported_bucket` span, which rolls every
+        artifact back on failure, or an explicitly selected existing-bucket
+        session for ``--force``. Keeping the typed restore and its completion
+        event together ensures an import has no successful-looking result
+        without its durable ``BUCKET_IMPORTED`` record.
+        """
+        deserialize_profile_bundle(bundle, target_bucket_id=bucket_id)
+        occurred_at = now()
+        self._append_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.BUCKET_IMPORTED,
+            object_id=bucket_id,
+            occurred_at=occurred_at,
+            payload_version=_IMPORT_PAYLOAD_VERSION,
+            payload={
+                "source_path": command.source_path.name,
+                "manifest_digest": manifest_digest,
+                "archive_schema_version": str(archive_schema_version),
+                "force_replace": str(command.force_replace).lower(),
+            },
+        )
+        return occurred_at
+
     @staticmethod
-    def _provision_imported_bucket(bundle: UserProfilePortableExport) -> None:
+    @contextmanager
+    def _provision_imported_bucket(bundle: UserProfilePortableExport) -> Generator[str]:
+        """Provision a new archive target and retain its rollback owner.
+
+        The caller must complete typed restore and completion-event emission
+        while this context remains open. On any failure,
+        :func:`profile_create_storage_span` restores the pre-import pointer and
+        removes the newly created bucket plus its wrapped DEK, so no prefix of
+        the archive becomes an active recoverable profile.
+        """
         from ..workflow import workflow_state_repository
 
         profile_id = bundle.profile.profile_id
@@ -1266,6 +1319,7 @@ class BucketMaintenanceService:
                     routing_profile_id=routing_profile_id,
                 ),
             )
+            yield routing_profile_id
 
 
 def recovery_wrap_passphrase_present(command: ExportBucketCommand) -> bool:

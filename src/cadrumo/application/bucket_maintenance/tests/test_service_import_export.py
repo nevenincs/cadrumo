@@ -20,6 +20,7 @@ from ....adapters.persistence.storage import ClassificationError, SensitivityCla
 from ....adapters.persistence.storage.bucket import (
     ExportArchiveHeader,
     SealedArchiveContents,
+    bucket_paths,
     read_sealed_archive,
     write_sealed_archive,
 )
@@ -31,6 +32,7 @@ from ....adapters.persistence.storage.master_key import (
     derive_kek_with_params,
 )
 from ....core import Period
+from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.resources import resources
 from ....domain.buckets import BucketEventType, BucketImportError
@@ -391,39 +393,20 @@ def _write_poisoned_archive(
     )
 
 
-def test_a_refused_carried_object_leaves_the_typed_importers_durable(
+def test_a_refused_carried_object_leaves_no_import_target(
     runtime: TestRuntimeProfile,
     registered_profile: None,
     tmp_path: Path,
 ) -> None:
-    """CRASH-WINDOW CHARACTERISATION (#362): a poisoned carried object refuses
-    late, after the typed importers already committed durably.
+    """A late carried-object refusal rolls back the whole new-bucket import.
 
-    ``deserialize_profile_bundle`` runs four typed importers (work units,
-    ledger transactions, calculation revisions, filing records), each
-    committing its own catalogue write, and only THEN calls
-    ``restore_carried_objects`` -- which is itself atomic (proven by
-    ``test_custody_restore_atomicity.py``), but that atomicity covers only
-    the carried-object batch, not the typed-importer writes that already
-    landed before it ran.
-
-    This is a genuine production gap, not a test-double artefact: the
-    archive is a REAL sealed export (real AEAD, real Argon2id recovery
-    wrap), reopened, poisoned with one caller-supplied ``CarriedSecureObject``
-    whose classification does not match its namespace's registered
-    sensitivity, and re-sealed. The real write-policy validator
-    (``_enforce_registered_write_policy``) is what refuses it -- nothing
-    about the refusal path is simulated.
-
-    Per the crash-window ADR's own constraint ("a genuine production gap
-    surfaced by a test is reported rather than silently patched"), this test
-    characterises the CURRENT behaviour rather than enforcing a fixed
-    invariant: it asserts the import call raises AND that the target
-    bucket -- already provisioned and made active before the refusal --
-    durably holds the work unit the first typed importer wrote. A future fix
-    that wraps the whole restore in one unit of work would make the second
-    assertion fail, which is the intended signal to update this test
-    alongside that fix.
+    The archive is real AES-GCM payload encrypted under the real Argon2id
+    recovery key. It is re-sealed with a carried object whose classification
+    contradicts its registered namespace; the production secure-object policy
+    is what refuses it after the typed work-unit importer has run. The active
+    pointer and the whole target directory must nevertheless disappear, proving
+    the create-span recovery owner covers activation, typed restoration, and
+    completion-event emission as one import boundary.
     """
     del registered_profile
     work_unit = _work_unit(runtime.bucket_id)
@@ -476,26 +459,10 @@ def test_a_refused_carried_object_leaves_the_typed_importers_durable(
                 ),
             )
 
-        # The bucket was provisioned and registered active BEFORE the refusal.
         pointer = read_profile_bucket_by_id(runtime.bucket_id)
-        assert pointer is not None, "provisioning already committed before the carried-object refusal"
-
-        # THE CRASH WINDOW: the work unit the first typed importer wrote is
-        # durable in the target bucket, even though the caller was told the
-        # import failed and no BUCKET_IMPORTED event was ever recorded.
-        with profile_storage_session(runtime.bucket_id):
-            restored = WorkUnitCatalogueRepository(bucket_id=runtime.bucket_id).load()
-        assert work_unit.work_unit_id in restored.work_units, (
-            "expected the crash window to reproduce: the typed importer's row should be "
-            "durable despite the later carried-object refusal"
-        )
-
-        with profile_storage_session(runtime.bucket_id):
-            catalogue = BucketEventHistoryRepository().load()
-        event_types = {event.event_type for event in catalogue.events.values()}
-        assert BucketEventType.BUCKET_IMPORTED not in event_types, (
-            "the caller was told the import failed; no completion event should exist"
-        )
+        assert pointer is None, "a refused import must restore the pre-import active-pointer state"
+        target_paths = bucket_paths(load_settings().cadrumo_local_storage_root, runtime.bucket_id)
+        assert not target_paths.bucket_dir.exists(), "a refused import must remove typed-catalogue residue"
 
 
 def test_import_refuses_profile_archive_missing_filing_baseline(tmp_path: Path) -> None:
