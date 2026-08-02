@@ -184,6 +184,19 @@ class AssetsLedgerRepository:
     def add(self, asset: AssetRecord) -> AssetsLedgerDocument:
         """Atomically add ``asset`` and refuse duplicate identifiers.
 
+        The ledger is a singleton row, so adding one asset rewrites the whole
+        document. Read, duplicate-check, rebuild, and write ran unguarded, so
+        two callers adding DIFFERENT assets both read the same ledger and the
+        later write silently discarded the earlier asset -- a lost update the
+        duplicate check could never notice, because the two assets never met in
+        one document.
+
+        The mutation now runs through the shared revision-guarded unit of work:
+        the write carries the revision the ledger was read at, and a concurrent
+        write makes it re-read and re-apply rather than overwrite. The duplicate
+        check lives inside the mutation so it is re-evaluated against the
+        newly-current ledger on every attempt.
+
         Args:
             asset: Asset record to insert.
 
@@ -192,21 +205,21 @@ class AssetsLedgerRepository:
 
         Raises:
             AssetRecordError: When an asset with the same identifier already exists.
+            SecureObjectRevisionConflictError: When contention persists across
+                every attempt.
         """
-        current = self._load_unlocked()
-        if any(existing.identifier == asset.identifier for existing in current.assets):
-            raise AssetRecordError(
-                f"asset {asset.identifier!r} already exists",
-                context={"asset_id": asset.identifier},
-                suggestion=None,
-                translated_message="adapters.persistence.profile.assets.errors.asset_already_exists",
-            )
-        updated = AssetsLedgerDocument(assets=(*current.assets, asset))
-        self._save_unlocked(updated)
-        return updated
 
-    def _load_unlocked(self) -> AssetsLedgerDocument:
-        return self.load()
+        def _insert(current: AssetsLedgerDocument) -> AssetsLedgerDocument:
+            if any(existing.identifier == asset.identifier for existing in current.assets):
+                raise AssetRecordError(
+                    f"asset {asset.identifier!r} already exists",
+                    context={"asset_id": asset.identifier},
+                    suggestion=None,
+                    translated_message="adapters.persistence.profile.assets.errors.asset_already_exists",
+                )
+            return AssetsLedgerDocument(assets=(*current.assets, asset))
+
+        return self._storage.mutate(_insert)
 
     def _save_unlocked(self, document: AssetsLedgerDocument) -> None:
         self._storage.save(document)
