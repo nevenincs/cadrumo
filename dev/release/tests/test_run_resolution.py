@@ -131,6 +131,7 @@ def _read_argv(capture_path: Path) -> list[str]:
 
 
 def test_resolve_matches_the_single_dispatch_run() -> None:
+    """One matching candidate resolves cleanly to that run."""
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
     own = _run_record(run_id=101, created_at=created_after + timedelta(seconds=1))
     resolved = rr.resolve_dispatched_run(
@@ -148,6 +149,7 @@ def test_resolve_matches_the_single_dispatch_run() -> None:
 
 
 def test_resolve_raises_not_yet_visible_when_no_run_matches() -> None:
+    """No candidate at all is the retryable outcome, not a hard refusal."""
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
     with pytest.raises(rr.RunNotYetVisibleError):
         rr.resolve_dispatched_run(
@@ -172,6 +174,7 @@ def test_resolve_ignores_a_run_created_before_the_dispatch() -> None:
 
 
 def test_resolve_ignores_a_run_of_a_different_workflow_path() -> None:
+    """A run of a neighbouring workflow at the same commit must never match."""
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
     neighbour = _run_record(
         run_id=5,
@@ -188,6 +191,7 @@ def test_resolve_ignores_a_run_of_a_different_workflow_path() -> None:
 
 
 def test_resolve_ignores_a_run_of_a_different_head_sha() -> None:
+    """A run of the same workflow at a different commit must never match."""
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
     other_commit = _run_record(run_id=6, head_sha=_OTHER_SHA, created_at=created_after + timedelta(seconds=1))
     with pytest.raises(rr.RunNotYetVisibleError):
@@ -233,6 +237,7 @@ def test_resolve_refuses_two_candidate_runs_naming_both_ids() -> None:
 
 
 def test_resolve_rejects_a_malformed_head_sha() -> None:
+    """A non-SHA head_sha is refused before any candidate matching is attempted."""
     with pytest.raises(rr.RunResolutionError, match="40-character"):
         rr.resolve_dispatched_run(
             workflow_path=_WORKFLOW,
@@ -243,11 +248,12 @@ def test_resolve_rejects_a_malformed_head_sha() -> None:
 
 
 # ---------------------------------------------------------------------------
-# wait_for_run — bounded poll over an injected clock; the ADR's named hazard
+# wait_for_run — bounded poll over an injected clock; the competing-run hazard
 # ---------------------------------------------------------------------------
 
 
 def test_wait_for_run_retries_until_the_dispatch_run_becomes_visible() -> None:
+    """A run absent on the first polls resolves once it appears, backing off in between."""
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
     clock = _FakeClock(created_after)
     own = _run_record(run_id=42, created_at=created_after + timedelta(seconds=1))
@@ -272,7 +278,7 @@ def test_wait_for_run_retries_until_the_dispatch_run_becomes_visible() -> None:
 
 
 def test_wait_for_run_refuses_immediately_when_a_competing_run_appears_between_dispatch_and_poll() -> None:
-    """The exact scenario the ADR names: a competing run lands between dispatch and poll.
+    """The exact hazard this waiter exists for: a competing run lands between dispatch and poll.
 
     First poll: nothing visible. Second poll: BOTH this dispatch's own run and
     a competing run are now visible at once. The waiter must refuse instantly
@@ -306,6 +312,7 @@ def test_wait_for_run_refuses_immediately_when_a_competing_run_appears_between_d
 
 
 def test_wait_for_run_exhausts_its_budget_and_names_the_watched_dispatch() -> None:
+    """A dispatch that never becomes visible times out naming the workflow and commit."""
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
     clock = _FakeClock(created_after)
     with pytest.raises(rr.PollBudgetExhaustedError) as excinfo:
@@ -335,6 +342,7 @@ def _resolved_run() -> rr.DispatchedRun:
 
 @pytest.mark.parametrize("conclusion", ["success", "failure", "cancelled"])
 def test_wait_for_conclusion_reports_every_terminal_conclusion(conclusion: str) -> None:
+    """Success, failure, and cancellation all resolve normally on the first poll."""
     clock = _FakeClock(datetime(2026, 8, 2, tzinfo=UTC))
     outcome = rr.wait_for_conclusion(
         _resolved_run(),
@@ -348,6 +356,7 @@ def test_wait_for_conclusion_reports_every_terminal_conclusion(conclusion: str) 
 
 
 def test_wait_for_conclusion_retries_while_the_run_is_still_in_progress() -> None:
+    """An in-progress run is polled again rather than treated as concluded."""
     clock = _FakeClock(datetime(2026, 8, 2, tzinfo=UTC))
     calls = {"n": 0}
 
@@ -370,6 +379,7 @@ def test_wait_for_conclusion_retries_while_the_run_is_still_in_progress() -> Non
 
 
 def test_wait_for_conclusion_exhausts_its_budget_and_names_the_watched_run() -> None:
+    """A run that never concludes times out naming its id, workflow, and URL."""
     clock = _FakeClock(datetime(2026, 8, 2, tzinfo=UTC))
     run = _resolved_run()
     with pytest.raises(rr.RunResolutionError) as excinfo:
@@ -393,6 +403,7 @@ def test_wait_for_conclusion_exhausts_its_budget_and_names_the_watched_run() -> 
 
 
 def test_dispatch_workflow_invokes_gh_workflow_run_with_expected_arguments(tmp_path: Path) -> None:
+    """The real gh invocation carries the workflow path, repo, and ref."""
     capture = tmp_path / "argv.txt"
     script = _write_argv_capture_gh(tmp_path / "bin", capture_path=capture)
 
@@ -411,6 +422,7 @@ def test_dispatch_workflow_invokes_gh_workflow_run_with_expected_arguments(tmp_p
 
 
 def test_dispatch_workflow_passes_inputs_as_repeated_f_flags(tmp_path: Path) -> None:
+    """Each dispatch input becomes its own ``-f key=value`` argument."""
     capture = tmp_path / "argv.txt"
     script = _write_argv_capture_gh(tmp_path / "bin", capture_path=capture)
 
@@ -427,12 +439,14 @@ def test_dispatch_workflow_passes_inputs_as_repeated_f_flags(tmp_path: Path) -> 
 
 
 def test_dispatch_workflow_raises_on_gh_failure(tmp_path: Path) -> None:
+    """A non-zero gh exit becomes a RunResolutionError, never a silent no-op."""
     script = _write_probe_gh(tmp_path / "bin", payload="boom", exit_code=1)
     with pytest.raises(rr.RunResolutionError, match="failed"):
         rr.dispatch_workflow(_WORKFLOW, gh_executable=str(script))
 
 
 def test_list_workflow_runs_parses_real_subprocess_output(tmp_path: Path) -> None:
+    """Multi-line JSON output from a real gh stub parses into one record per line."""
     lines = "\n".join(
         json.dumps(record)
         for record in (
@@ -448,6 +462,7 @@ def test_list_workflow_runs_parses_real_subprocess_output(tmp_path: Path) -> Non
 
 
 def test_fetch_run_parses_real_subprocess_output(tmp_path: Path) -> None:
+    """A single-run JSON object from a real gh stub parses into a plain dict."""
     payload = json.dumps({"status": "completed", "conclusion": "success"})
     script = _write_probe_gh(tmp_path / "bin", payload=payload)
 
@@ -498,10 +513,12 @@ def test_dispatch_and_resolve_composes_dispatch_then_resolve(tmp_path: Path) -> 
 
 
 def test_poll_budget_rejects_non_positive_total_seconds() -> None:
+    """A zero or negative budget is refused at construction, not at first poll."""
     with pytest.raises(rr.RunResolutionError, match="total_seconds"):
         rr.PollBudget(total_seconds=0)
 
 
 def test_poll_budget_rejects_backoff_factor_below_one() -> None:
+    """A shrinking backoff factor would make retries faster, not slower; refuse it."""
     with pytest.raises(rr.RunResolutionError, match="backoff_factor"):
         rr.PollBudget(total_seconds=60, backoff_factor=0.5)

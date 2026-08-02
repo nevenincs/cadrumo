@@ -50,12 +50,13 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Final, TypeVar
+from typing import Final
 
 from dev.packaging._command import run_command
 
 _GH_TIMEOUT_SECONDS: Final[float] = 60.0
 _DEFAULT_REPO_SLUG: Final[str] = "nevenincs/cadrumo"
+_UTF_8: Final[str] = "utf-8"
 
 #: Bounded backoff poll defaults. A cheap poll on a short-lived job: the fleet
 #: is four self-hosted runners shared across products, so a poll that busy-holds
@@ -63,8 +64,6 @@ _DEFAULT_REPO_SLUG: Final[str] = "nevenincs/cadrumo"
 DEFAULT_INITIAL_INTERVAL_SECONDS: Final[float] = 5.0
 DEFAULT_MAX_INTERVAL_SECONDS: Final[float] = 60.0
 DEFAULT_BACKOFF_FACTOR: Final[float] = 2.0
-
-_T = TypeVar("_T")
 
 
 class RunResolutionError(RuntimeError):
@@ -130,6 +129,7 @@ class PollBudget:
     backoff_factor: float = DEFAULT_BACKOFF_FACTOR
 
     def __post_init__(self) -> None:
+        """Validate the declared budget, refusing a non-positive or degenerate configuration."""
         if self.total_seconds <= 0:
             raise RunResolutionError(f"poll budget total_seconds must be positive, got {self.total_seconds}")
         if self.initial_interval_seconds <= 0 or self.max_interval_seconds <= 0:
@@ -284,15 +284,15 @@ def resolve_dispatched_run(
     )
 
 
-def _poll_until(
-    attempt: Callable[[], _T],
+def _poll_until[T](
+    attempt: Callable[[], T],
     *,
     not_ready: type[Exception],
     budget: PollBudget,
     now: Callable[[], datetime],
     sleep: Callable[[float], None],
     watching: str,
-) -> _T:
+) -> T:
     """Retry ``attempt`` on ``not_ready`` with exponential backoff until the budget is spent.
 
     Any exception other than ``not_ready`` propagates immediately and is never
@@ -537,7 +537,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"run {run.run_id} concluded {outcome.conclusion}")
 
     if args.github_output:
-        with Path(args.github_output).open("a", encoding="utf-8") as handle:
+        with Path(args.github_output).open("a", encoding=_UTF_8) as handle:
             handle.write(f"{args.output_name}={run.run_id}\n")
 
     if outcome.conclusion != "success":
