@@ -5,7 +5,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b3b728ce02eef5361c87e90bebd2b8dce1f8c610f72b3bf913b796b95aee875'
+body_hash: 'sha256:7f4831c34c54fba4ce8dd1b109441061b60a272f253b92bd2a68ed36f6c9dff0'
 related: []
 ---
 
@@ -253,4 +253,37 @@ key in every catalogue and the locale drift gate fails until the key is retired.
 The branch deletion and the key retirement must land in the same change, with
 the key removed through the locale command rather than by editing the catalogue
 files.
+
+### Correction to the preceding correction: the materializer finding was right
+
+The paragraph above claiming the related-party materializer is not a dead
+surface is wrong, and the original finding was correct. It is retained rather
+than deleted because how it went wrong is the useful part.
+
+The audit named its subject by description rather than by exact symbol, and the
+description resolves to two different functions in the same area. One agent
+read it as the shared row-value authority, which returns text or decimal per
+field, is consumed by revision replay, and is correctly alive. Another read it
+as the observation materializer, which produced observation values typed
+decimal while four of five fields per row are text, coerced through a decimal
+constructor that raises on any of them. That second function had no callers and
+carried a latent crash that never fired. It has been deleted.
+
+Both agents verified carefully and neither made an error. The finding was
+ambiguous, and two independent readings of one sentence produced opposite
+verdicts about whether working code was at stake. An audit finding that
+identifies its subject by behaviour rather than by name is resolvable to more
+than one subject, and the ambiguity is invisible to whoever writes it, because
+the author knows which one they meant.
+
+The surrounding module is not dead either way. Only the observation materializer
+was removed, and the capacity refusal it carried was retargeted onto the
+surviving authority rather than dropped.
+
+One further correction from that work, on the retargeted test. Its first version
+derived both the accepted and the refused row counts from the same constant it
+was meant to pin, so raising that constant moved both goalposts together and the
+test passed at any value. A previously value-pinning test had been made vacuous
+while staying green, during a cleanup. The bound is now pinned to the count of
+slots the official form actually provides.
 
