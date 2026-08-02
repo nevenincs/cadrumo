@@ -64,6 +64,7 @@ from .._review_package_signing import (
     ReviewPackageSigningError,
     ReviewPackageSigningKeyNotFoundError,
     ReviewPackageSigningKeypair,
+    ReviewPackageSigningPublicKey,
     SignedReviewPackage,
     _signing_key_object_key,
     ensure_review_package_signing_keypair,
@@ -423,3 +424,63 @@ def test_concurrent_signing_keypair_mint_reuses_one_encrypted_key_and_signs_pack
 
 
 __all__: list[str] = []
+
+
+@pytest.mark.parametrize(
+    "instant",
+    [
+        datetime(2026, 5, 3, 12, 0),  # naive: the shape under test
+        datetime(2026, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1))),
+    ],
+)
+def test_signing_keypair_refuses_a_non_utc_created_at(instant: datetime) -> None:
+    """A key's minting instant is held to the same UTC contract as its signatures.
+
+    ``signed_at`` already refused a naive or offset instant while the key's own
+    ``created_at`` accepted one, so "was this signature made after the key
+    existed?" was unanswerable across the boundary the signature defends.
+    """
+    with pytest.raises(ValidationError):
+        ReviewPackageSigningKeypair(
+            bucket_id="bucket",
+            private_key_hex="a" * 64,
+            public_key_hex="b" * 64,
+            created_at=instant,
+        )
+
+
+@pytest.mark.parametrize(
+    "instant",
+    [
+        datetime(2026, 5, 3, 12, 0),  # naive: the shape under test
+        datetime(2026, 5, 3, 12, 0, tzinfo=timezone(timedelta(hours=1))),
+    ],
+)
+def test_signing_public_key_refuses_a_non_utc_created_at(instant: datetime) -> None:
+    """The exported half carries the same instant under the same contract."""
+    with pytest.raises(ValidationError):
+        ReviewPackageSigningPublicKey(
+            bucket_id="bucket",
+            public_key_hex="b" * 64,
+            created_at=instant,
+        )
+
+
+def test_signing_keys_accept_a_utc_created_at() -> None:
+    """Positive control: the UTC shape the mint path produces is still accepted."""
+    minted_at = datetime(2026, 5, 3, 12, 0, tzinfo=UTC)
+
+    keypair = ReviewPackageSigningKeypair(
+        bucket_id="bucket",
+        private_key_hex="a" * 64,
+        public_key_hex="b" * 64,
+        created_at=minted_at,
+    )
+    public = ReviewPackageSigningPublicKey(
+        bucket_id="bucket",
+        public_key_hex="b" * 64,
+        created_at=minted_at,
+    )
+
+    assert keypair.created_at == minted_at
+    assert public.created_at == minted_at
