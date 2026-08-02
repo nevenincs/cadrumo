@@ -834,3 +834,63 @@ def test_resolvable_same_coordinate_amendment_survives_encrypted_storage(
         amendment.filing_year,
         amendment.period,
     )
+
+
+def _record_with_source_transactions(source_transaction_ids: tuple[str, ...]) -> ModeloRecord:
+    """Build a current filing record carrying the given ledger provenance footprint."""
+    work_unit_id = _hex("a")
+    revision_id = _hex("c")
+    return ModeloRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            filed_by="aeat.cli.modelo.file",
+        ),
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_RECORD_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        filed_by="aeat.cli.modelo.file",
+        status=ModeloRecordStatus.VIGENTE,
+        source_transaction_ids=source_transaction_ids,
+    )
+
+
+@pytest.mark.parametrize(
+    "malformed",
+    (
+        ("bad",),
+        (_hex("a").upper(),),
+        (" " + _hex("a")[1:] + "z",),
+        (_hex("a")[:-1] + "g",),
+    ),
+    ids=("too-short", "uppercase-hex", "non-hex-tail", "non-hex-digit"),
+)
+def test_source_transaction_ids_must_be_canonical_transaction_identities(malformed: tuple[str, ...]) -> None:
+    """The provenance footprint holds real ledger identities, not arbitrary strings."""
+    with pytest.raises(ValidationError):
+        _record_with_source_transactions(malformed)
+
+
+def test_source_transaction_ids_reject_a_repeated_transaction() -> None:
+    """A repeat is a double count or a merged footprint, never a second contribution."""
+    with pytest.raises(ValidationError, match="must not repeat a transaction"):
+        _record_with_source_transactions((_hex("7"), _hex("7")))
+
+
+def test_canonical_source_transaction_footprint_survives_encrypted_storage(tmp_path: Path) -> None:
+    """Valid parity: a distinct, canonical footprint round-trips unchanged."""
+    footprint = (_hex("7"), _hex("8"))
+    record = _record_with_source_transactions(footprint)
+    original = ModeloRecordCatalogue(records={record.filing_record_id: record})
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).save(original)
+        loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert loaded == original
+    assert loaded.get(record.filing_record_id) is not None
+    assert loaded.get(record.filing_record_id).source_transaction_ids == footprint

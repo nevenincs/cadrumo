@@ -35,7 +35,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 
 from ...core import STRICT_FROZEN_CONFIG, Period
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId
+from ...core.identity import BucketId, TransactionId
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
@@ -197,11 +197,31 @@ class ModeloRecord(BaseModel):
     amends_filing_record_id: FilingRecordId | None = None
     # Denormalised footprint of the filed revision's contributing ledger
     # transactions, so an external audit tool holding only a filing record
-    # resolves its transaction set in one hop. Deliberately EXCLUDED from
+    # resolves its transaction set in one hop. Typed through the canonical
+    # :obj:`TransactionId` so the footprint carries real ledger identities the
+    # audit tool can look up, not arbitrary strings. Deliberately EXCLUDED from
     # ``derive_filing_record_id`` (mirroring the ledger_filing_snapshot exclusion
     # on the revision hash) so the content address is unaffected; defaults to ()
     # for non-ledger filings.
-    source_transaction_ids: tuple[str, ...] = ()
+    source_transaction_ids: tuple[TransactionId, ...] = ()
+
+    @field_validator("source_transaction_ids")
+    @classmethod
+    def _reject_duplicate_source_transactions(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Refuse a repeated transaction in the provenance footprint.
+
+        The footprint is the *set* of ledger rows that contributed to the filed
+        revision. A repeat is not a second contribution -- it is either a
+        double-counted row or a merge of two footprints -- and silently keeping
+        it would make an audit tool reading the record disagree with the ledger
+        about how many rows fed the filing.
+        """
+        duplicates = sorted({entry for entry in value if value.count(entry) > 1})
+        if duplicates:
+            raise ModeloValidationError(
+                f"source_transaction_ids must not repeat a transaction: {duplicates!r}",
+            )
+        return value
 
     @field_validator("modelo", mode="before")
     @classmethod
