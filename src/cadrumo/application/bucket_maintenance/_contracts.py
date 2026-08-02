@@ -11,13 +11,13 @@ Every bucket selector is a :class:`BucketId`.
 
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.identity import BucketId
+from ...core.time import UtcInstant
 from ...domain.retention import RetentionFloorAssessment
 from ...domain.user_profile import UserProfileStatus
 from .._bucket_deletion_contracts import BucketDeletionFingerprint
@@ -91,7 +91,7 @@ class RenameBucketResult(BaseModel):
     bucket_id: BucketId
     previous_label: str = Field(min_length=1, max_length=160)
     new_label: str = Field(min_length=1, max_length=160)
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 class DeleteBucketCommand(BaseModel):
@@ -160,9 +160,9 @@ class DeleteBucketResult(BaseModel):
 
     bucket_id: BucketId
     previous_label: str | None = Field(default=None, min_length=1, max_length=160)
-    occurred_at: datetime
+    occurred_at: UtcInstant
     retention_override_used: bool = False
-    latest_safe_erase_date: datetime | None = None
+    latest_safe_erase_date: UtcInstant | None = None
     deletion_fingerprint: str = Field(min_length=64, max_length=64, pattern=_SHA256_PATTERN)
     reset_operation_id: str | None = Field(
         default=None,
@@ -202,7 +202,7 @@ class ArchiveBucketResult(BaseModel):
 
     bucket_id: BucketId
     label: str = Field(min_length=1, max_length=160)
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 class RestoreBucketCommand(BaseModel):
@@ -225,7 +225,7 @@ class RestoreBucketResult(BaseModel):
 
     bucket_id: BucketId
     label: str = Field(min_length=1, max_length=160)
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 class BrowseBucketCommand(BaseModel):
@@ -350,7 +350,7 @@ class ExportBucketResult(BaseModel):
     output_path: Path
     manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     recovery_wrap_present: bool
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 class ImportBucketCommand(BaseModel):
@@ -385,7 +385,7 @@ class ImportBucketResult(BaseModel):
     bucket_id: BucketId
     manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     archive_schema_version: int = Field(ge=1)
-    occurred_at: datetime
+    occurred_at: UtcInstant
 
 
 class InspectBucketArchiveCommand(BaseModel):
@@ -419,5 +419,5 @@ class InspectBucketArchiveResult(BaseModel):
     manifest_digest: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
     recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
-    created_at: datetime
+    created_at: UtcInstant
     size_bytes: int = Field(ge=0)
