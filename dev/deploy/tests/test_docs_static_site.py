@@ -14,6 +14,7 @@ import pytest
 from dev.deploy.docs_static_site import (
     _DOWNLOAD_LATEST_SCHEMA,
     _DOWNLOAD_LATEST_STATIC_PATH,
+    _REQUIRED_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
     _language_build_command,
     _language_build_environment,
@@ -33,14 +34,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _materialise_language_root(html_root: Path, language: str) -> None:
-    """Write a minimal VALID localized site root: index page, index chunk, records.
+    """Write a minimal VALID localized site root satisfying the FULL artifact contract.
 
-    "Valid" now means what the publish contract means by it. The earlier version
-    wrote only a non-empty ``.pf_index`` chunk, which encoded exactly the
-    property the old preflight measured -- so a root carrying rendered pages and
-    zero search records read as complete here, which is the shape that shipped.
-    The fragments below carry the decided record kinds so a complete matrix is
-    complete under the real contract.
+    "Valid" now means what the publish contract means by it: not only the
+    index page and a non-empty, record-carrying Pagefind index, but every
+    artifact ``_REQUIRED_ARTIFACTS`` names -- the same complete set the
+    English root must carry -- plus a sitemap correctly rooted at the
+    language's own canonical sub-path. Before the fix a localized root was
+    accepted with none of these; the fragments below carry the decided
+    record kinds so a complete matrix is complete under the real contract.
 
     These fragments are SYNTHESISED, in the real on-disk shape, because what
     this module tests is the root-MATRIX logic: that every language is visited
@@ -49,12 +51,27 @@ def _materialise_language_root(html_root: Path, language: str) -> None:
     genuine no-injection build is the subject.
     """
     root = html_root / language
-    (root).mkdir(parents=True, exist_ok=True)
+    root.mkdir(parents=True, exist_ok=True)
     (root / "index.html").write_text("<html></html>", encoding="utf-8")
-    index_dir = root / "pagefind" / "index"
+    (root / "404.html").write_text("<html></html>", encoding="utf-8")
+    canonical_root = f"{_language_site_url(language)}/"
+    (root / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"  <url><loc>{canonical_root}</loc></url>\n"
+        "</urlset>\n",
+        encoding="utf-8",
+    )
+    pagefind_dir = root / "pagefind"
+    pagefind_dir.mkdir(parents=True, exist_ok=True)
+    (pagefind_dir / "pagefind-entry.json").write_text("{}", encoding="utf-8")
+    (pagefind_dir / "pagefind.js").write_text("// pagefind", encoding="utf-8")
+    (pagefind_dir / "pagefind-ui.js").write_text("// pagefind-ui", encoding="utf-8")
+    (pagefind_dir / "pagefind-ui.css").write_text("/* pagefind-ui */", encoding="utf-8")
+    index_dir = pagefind_dir / "index"
     index_dir.mkdir(parents=True, exist_ok=True)
     (index_dir / "en_abc.pf_index").write_bytes(b"substantive-index-data")
-    fragment_dir = root / "pagefind" / "fragment"
+    fragment_dir = pagefind_dir / "fragment"
     fragment_dir.mkdir(parents=True, exist_ok=True)
     for kind in sorted(DECIDED_INJECTED_RECORD_KINDS):
         payload = json.dumps({"url": f"/records/{kind}.html", "filters": {"kind": [kind]}})
@@ -120,7 +137,7 @@ def test_every_deploy_root_pins_the_full_record_injected_search_contract() -> No
 
 
 def test_validate_language_roots_accepts_a_complete_matrix(tmp_path: Path) -> None:
-    """Validation passes when every localized root has its index page and Pagefind index."""
+    """Validation passes when every localized root carries the complete required-artifact set."""
     for language in _localized_languages():
         _materialise_language_root(tmp_path, language)
     _validate_language_roots(tmp_path)
@@ -132,7 +149,39 @@ def test_validate_language_roots_refuses_a_missing_index(tmp_path: Path) -> None
         _materialise_language_root(tmp_path, language)
     missing = _localized_languages()[0]
     (tmp_path / missing / "index.html").unlink()
-    with pytest.raises(SystemExit, match="missing its rendered index page"):
+    with pytest.raises(SystemExit, match="required artifacts are missing"):
+        _validate_language_roots(tmp_path)
+
+
+@pytest.mark.parametrize("missing_artifact", sorted(_REQUIRED_ARTIFACTS))
+def test_validate_language_roots_refuses_each_missing_required_artifact(tmp_path: Path, missing_artifact: str) -> None:
+    """A localized root missing ANY required artifact fails validation, not only its index page.
+
+    Reproduces the audit finding: before the fix, a localized root could pass
+    with no 404 page, no sitemap, and no Pagefind JS/CSS bundle at all -- only
+    ``index.html`` and a substantive Pagefind index chunk were mandatory.
+    """
+    for language in _localized_languages():
+        _materialise_language_root(tmp_path, language)
+    target_language = _localized_languages()[0]
+    (tmp_path / target_language / missing_artifact).unlink()
+    with pytest.raises(SystemExit, match="required artifacts are missing"):
+        _validate_language_roots(tmp_path)
+
+
+def test_validate_language_roots_refuses_a_sitemap_rooted_at_the_wrong_url(tmp_path: Path) -> None:
+    """A localized root's sitemap must be rooted at its OWN language sub-path, not English."""
+    for language in _localized_languages():
+        _materialise_language_root(tmp_path, language)
+    target_language = _localized_languages()[0]
+    (tmp_path / target_language / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"  <url><loc>{CANONICAL_DOCS_BASE_URL}/</loc></url>\n"
+        "</urlset>\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SystemExit, match="missing the canonical docs root"):
         _validate_language_roots(tmp_path)
 
 

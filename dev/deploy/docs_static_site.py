@@ -203,30 +203,52 @@ def _build_site(repo_root: Path) -> Path:
     return repo_root / "docs" / "_build" / "html"
 
 
-def _validate_site_artifacts(html_root: Path) -> None:
-    """Require the rendered site and its Pagefind search bundle."""
+def _require_artifacts_present(html_root: Path, *, root_label: str) -> None:
+    """Require every artifact in :data:`_REQUIRED_ARTIFACTS` at ``html_root``.
+
+    Shared by the English root and every localized root: the same page, error
+    page, sitemap, and Pagefind bundle are mandatory on every deployed root,
+    not only the English one.
+    """
     missing = [artifact for artifact in _REQUIRED_ARTIFACTS if not (html_root / artifact).is_file()]
     if missing:
         joined = ", ".join(missing)
-        raise SystemExit(f"Docs build is not deployable; required artifacts are missing: {joined}")
+        raise SystemExit(f"{root_label} is not deployable; required artifacts are missing: {joined}")
+
+
+def _require_valid_sitemap(html_root: Path, *, expected_base_url: str, root_label: str) -> None:
+    """Require a valid, canonically-rooted ``sitemap.xml`` at ``html_root``.
+
+    ``expected_base_url`` is the root's OWN canonical URL (the English site's
+    ``CANONICAL_DOCS_BASE_URL``, or a localized root's ``/<language>``
+    sub-root via :func:`_language_site_url`) -- shared logic parameterized by
+    the caller's expected root, since a localized root's sitemap is correctly
+    rooted at its own language sub-path, not the English canonical root.
+    """
     try:
         sitemap = ElementTree.parse(html_root / "sitemap.xml")
     except OSError as exc:
         raise SystemExit(
-            f"Docs build did not produce a sitemap at {html_root / 'sitemap.xml'}; "
+            f"{root_label} did not produce a sitemap at {html_root / 'sitemap.xml'}; "
             "set CADRUMO_DOCS_BASE_URL so the build writes one.",
         ) from exc
     except ElementTree.ParseError as exc:
-        raise SystemExit("Docs build sitemap is not valid XML.") from exc
+        raise SystemExit(f"{root_label} sitemap is not valid XML.") from exc
     locations = [(element.text or "").strip() for element in sitemap.iter() if element.tag.endswith("loc")]
     if not locations:
-        raise SystemExit("Docs build sitemap has no URLs.")
-    canonical_root = f"{CANONICAL_DOCS_BASE_URL}/"
+        raise SystemExit(f"{root_label} sitemap has no URLs.")
+    canonical_root = f"{expected_base_url}/"
     if canonical_root not in locations:
-        raise SystemExit(f"Docs build sitemap is missing the canonical docs root: {canonical_root}")
-    unexpected = [location for location in locations if not location.startswith(f"{CANONICAL_DOCS_BASE_URL}/")]
+        raise SystemExit(f"{root_label} sitemap is missing the canonical docs root: {canonical_root}")
+    unexpected = [location for location in locations if not location.startswith(f"{expected_base_url}/")]
     if unexpected:
-        raise SystemExit("Docs build sitemap contains a non-canonical URL: " + unexpected[0])
+        raise SystemExit(f"{root_label} sitemap contains a non-canonical URL: " + unexpected[0])
+
+
+def _validate_site_artifacts(html_root: Path) -> None:
+    """Require the rendered site and its Pagefind search bundle."""
+    _require_artifacts_present(html_root, root_label="Docs build")
+    _require_valid_sitemap(html_root, expected_base_url=CANONICAL_DOCS_BASE_URL, root_label="Docs build")
     _require_search_index(html_root, root_label="Docs build")
 
 
@@ -336,13 +358,19 @@ def _build_language_roots(repo_root: Path, html_root: Path) -> None:
 
 
 def _validate_language_roots(html_root: Path) -> None:
-    """Require every localized site root to carry its page and its own Pagefind index."""
+    """Require every localized site root to carry the complete required-artifact set.
+
+    The same artifacts mandatory for the English root -- the rendered page,
+    the 404 error page, a canonically-rooted sitemap, and the full Pagefind
+    bundle -- are mandatory for every localized root too, not only its index
+    page and a non-empty Pagefind index.
+    """
     for language in _localized_languages():
         root = html_root / language
-        index = root / "index.html"
-        if not index.is_file():
-            raise SystemExit(f"Localized site root {language!r} is missing its rendered index page: {index}")
-        _require_search_index(root, root_label=f"Localized site root {language!r}")
+        label = f"Localized site root {language!r}"
+        _require_artifacts_present(root, root_label=label)
+        _require_valid_sitemap(root, expected_base_url=_language_site_url(language), root_label=label)
+        _require_search_index(root, root_label=label)
 
 
 def _aws_base_command(aws: str) -> list[str]:
