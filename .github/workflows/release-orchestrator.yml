@@ -170,9 +170,23 @@ jobs:
           #
           # --push only outside a rehearsal. A dry_run stops after computing the
           # version, so the rehearsal proves this stage rather than skipping it.
+          # POLARITY IS THE WHOLE SAFETY PROPERTY HERE, so the branch is written
+          # as an explicit if/else rather than an inline ternary: the ternary
+          # read correctly to a human while being untestable as a MAPPING, and
+          # its two flags could be swapped without any assertion noticing.
+          #
+          # Inverted, this is the worst mis-wiring available on this pipeline.
+          # `dry_run` defaults to true, so a rehearsal would push a real version
+          # bump and tag - the one irreversible act the whole design exists to
+          # gate - while a real dispatch would never land its version at all.
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            bump_mode=(--dry-run)
+          else
+            bump_mode=(--push)
+          fi
           uv run --frozen python -m dev.release.version_bump \
             --repository "${GITHUB_REPOSITORY}" \
-            $([ "${DRY_RUN}" = "true" ] && echo "--dry-run" || echo "--push")
+            "${bump_mode[@]}"
 
   campaign:
     name: Cadrumo / run the packaging campaign at the bumped commit

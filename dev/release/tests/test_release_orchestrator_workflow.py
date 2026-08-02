@@ -362,15 +362,69 @@ def test_dry_run_reaches_every_stage_of_the_chain() -> None:
         assert "needs.preflight.outputs.dry_run" in str(jobs[stage]), f"{stage} does not read the resolved dry_run"
 
 
+_BUMP_BRANCH = re.compile(
+    r'if\s*\[\[\s*"\$\{DRY_RUN\}"\s*==\s*"true"\s*\]\]\s*;\s*then\s+'
+    r"bump_mode=\((?P<rehearsal>[^)]*)\)\s+"
+    r"else\s+"
+    r"bump_mode=\((?P<real>[^)]*)\)",
+)
+
+
+def bump_polarity(body: str) -> tuple[str, str]:
+    """Return (rehearsal-branch flag, real-branch flag) from the bump stage.
+
+    Extracts the branch->flag MAPPING rather than checking that both flags
+    appear somewhere. Presence checks cannot tell `--dry-run` on the rehearsal
+    branch from `--dry-run` on the real one, which is the entire property.
+    """
+    match = _BUMP_BRANCH.search(body)
+    if match is None:
+        raise AssertionError("the bump stage no longer carries a parseable rehearsal/real branch")
+    return match.group("rehearsal").strip(), match.group("real").strip()
+
+
+def assert_bump_polarity(body: str) -> None:
+    """Raise unless the rehearsal branch rehearses and the real branch pushes."""
+    rehearsal, real = bump_polarity(body)
+    assert rehearsal == "--dry-run", f"the rehearsal branch emits {rehearsal!r}, not --dry-run"
+    assert real == "--push", f"the real branch emits {real!r}, not --push"
+
+
+def test_the_bump_branch_polarity_is_pinned_as_a_mapping() -> None:
+    """Which branch emits which flag, not merely that both flags exist.
+
+    The previous form asserted three independent substring presences, so
+    swapping the two flags left the whole suite green. Inverted, `dry_run`
+    defaults to true, so a rehearsal would push a real version bump and tag -
+    the one irreversible act this design exists to gate - while a real dispatch
+    would never land its version.
+    """
+    assert_bump_polarity(_run_surface(_document(), "bump"))
+
+
+def test_inverting_the_bump_branch_reds_this_gate() -> None:
+    """Mutation control: apply the exact inversion and prove the gate catches it.
+
+    This is the assertion the old test lacked. Without it, a polarity check that
+    had quietly stopped checking polarity is indistinguishable from a correct
+    one, which is how the original vocabulary check survived review.
+    """
+    body = _run_surface(_document(), "bump")
+    inverted = body.replace("bump_mode=(--dry-run)", "bump_mode=(@TMP@)")
+    inverted = inverted.replace("bump_mode=(--push)", "bump_mode=(--dry-run)")
+    inverted = inverted.replace("bump_mode=(@TMP@)", "bump_mode=(--push)")
+    assert inverted != body, "the inversion did not apply; this control is not exercising anything"
+
+    with pytest.raises(AssertionError, match="rehearsal branch emits"):
+        assert_bump_polarity(inverted)
+
+
 def test_a_rehearsal_bump_pushes_no_ref() -> None:
     """The one irreversible thing the bump does is gated on the rehearsal flag."""
     surface = _invocation_surface(_document(), "bump")
 
     assert "--dry-run" in surface
     assert "--push" in surface
-    # Both appear in one branch, so the rehearsal and the real run are the same
-    # code path with one flag differing rather than two divergent paths.
-    assert 'DRY_RUN}" = "true"' in surface
 
 
 def test_a_resume_skips_the_bump_so_no_second_version_is_burned() -> None:
@@ -531,6 +585,7 @@ def test_the_seal_module_refuses_a_run_id_as_an_evidence_release(monkeypatch: py
     mistake unrepresentable from any caller, and it fails at seal time rather
     than after the soak.
     """
+    from dev.packaging.evidence_release import EvidenceReleaseError
     from dev.release import seal_candidate as seal_module
     from dev.release.release_candidate import ReleaseCandidateError
 
@@ -541,8 +596,70 @@ def test_the_seal_module_refuses_a_run_id_as_an_evidence_release(monkeypatch: py
 
     # Control: a genuine tag is not refused by the same guard. Without this the
     # assertion above would pass just as well against a guard that rejected
-    # every value.
+    # every value. Past the guard, `main` reaches the real `gh` boundary
+    # (`resolve_gh`/`download_release_assets`, both raising
+    # EvidenceReleaseError) before any later ReleaseCandidateError site, so
+    # the two are the concrete failure modes this sandboxed run can hit.
     monkeypatch.setenv("CLAUDE_EVIDENCE_RELEASE", "claude-evidence-2026-08-02")
-    with pytest.raises(Exception) as caught:
+    with pytest.raises((EvidenceReleaseError, ReleaseCandidateError)) as caught:
         seal_module.main(["--repository", "nevenincs/cadrumo", "--packaging-run-id", "42"])
     assert "run id rather than a release tag" not in str(caught.value)
+
+
+_RESUME_CHECK = re.compile(
+    r'test\s+"\$\(jq -r \.(?P<field>[\w.]+) <<<"\$run_json"\)"\s*(?P<op>!?=)\s*"(?P<value>[^"]*)"'
+)
+
+
+def resume_identity_checks(body: str) -> dict[str, tuple[str, str]]:
+    """Return each verified field mapped to its (operator, expected value).
+
+    Captures the OPERATOR as well as the value. A scan that only confirmed the
+    field names and expected literals appear would pass just as happily on
+    `!=`, which inverts every check into accepting exactly what it was written
+    to refuse.
+    """
+    return {m.group("field"): (m.group("op"), m.group("value")) for m in _RESUME_CHECK.finditer(body)}
+
+
+def assert_resume_identity_polarity(body: str) -> None:
+    """Raise unless every resume identity check ACCEPTS its expected value."""
+    checks = resume_identity_checks(body)
+    for field, expected in (
+        ("conclusion", "success"),
+        ("path", ".github/workflows/packaging-smoke.yml"),
+        ("head_repository.full_name", "${GITHUB_REPOSITORY}"),
+    ):
+        assert field in checks, f"the resume path no longer verifies {field}"
+        operator, value = checks[field]
+        assert operator == "=", f"{field} is compared with {operator!r}, which accepts what it should refuse"
+        assert value == expected, f"{field} is compared against {value!r}, expected {expected!r}"
+
+
+def test_the_resume_identity_checks_are_pinned_by_polarity_not_vocabulary() -> None:
+    """Same class as the bump ternary, one severity lower.
+
+    A resume is the only place an operator still types a run id, so these are
+    the checks standing between a typo and a sealed candidate built from a
+    foreign, failed, or never-landed campaign.
+    """
+    assert_resume_identity_polarity(_run_surface(_document(), "campaign"))
+
+    # The ancestry check is a two-branch acceptance rather than a single
+    # equality, so it is asserted separately and on both accepted values.
+    surface = _run_surface(_document(), "campaign")
+    assert 'ancestry" = "identical"' in surface
+    assert 'ancestry" = "behind"' in surface
+
+
+def test_inverting_a_resume_identity_check_reds_this_gate() -> None:
+    """Mutation control: flip one comparison to `!=` and prove the gate catches it."""
+    body = _run_surface(_document(), "campaign")
+    inverted = body.replace(
+        'test "$(jq -r .conclusion <<<"$run_json")" = "success"',
+        'test "$(jq -r .conclusion <<<"$run_json")" != "success"',
+    )
+    assert inverted != body, "the inversion did not apply; this control is not exercising anything"
+
+    with pytest.raises(AssertionError, match="accepts what it should refuse"):
+        assert_resume_identity_polarity(inverted)

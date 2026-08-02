@@ -6,7 +6,7 @@ tags:
 date: '2026-08-02'
 modified: '2026-08-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:721b3d1a2027a1e5229794e0f3b4f4524fca64097dc0a837482c667157e946c8'
+body_hash: 'sha256:d18cf32b63f93528d9a36b18895ca9470d5cd714d9cb9750f2b5656333ebab82'
 related:
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S01]]'
   - '[[2026-08-02-release-pipeline-full-automation-W01-P01-S02]]'
@@ -60,6 +60,7 @@ related:
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S50]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S51]]'
   - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S52]]'
+  - '[[2026-08-02-release-pipeline-full-automation-W04-P09-S53]]'
   - '[[2026-08-02-release-pipeline-full-automation-adr]]'
   - '[[2026-08-02-release-pipeline-full-automation-audit]]'
   - '[[2026-08-02-release-pipeline-full-automation-plan]]'
@@ -133,6 +134,7 @@ Auto-generated index of all documents tagged with `#release-pipeline-full-automa
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S50` - Reconcile the plan Verification claim that a tree-wide search for the retired apply target matches only vault records and history, either by rewording the bump module docstrings that reference it or by narrowing the claim to the operator-facing surfaces it actually means, gate: rg -n release-apply over the tree matches only vault records, CHANGELOG history, and the conformance test asserting its absence
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S51` - Extend the alert guards on the multi-job workflows and the promoter to cover cancellation as well as failure
 - `2026-08-02-release-pipeline-full-automation-W04-P09-S52` - Stop feeding the packaging-claude acquisition lane run id into the operator-minted claude evidence-release input, and carry the real evidence-release tag onto the sealed candidate instead
+- `2026-08-02-release-pipeline-full-automation-W04-P09-S53` - Pin the polarity of the bump rehearsal-versus-real branch and the resume identity comparisons rather than their vocabulary
 
 ### plan
 
