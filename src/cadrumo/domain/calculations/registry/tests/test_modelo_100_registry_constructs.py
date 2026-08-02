@@ -16,11 +16,14 @@ from .. import (
     CasillaId,
     DataBindingDefinition,
     InputKind,
+    RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     RegistryValidator,
     RemoteOperation,
+    SupportRemovalDecisionDefinition,
     assert_remote_operation_allowed,
+    build_snapshot,
     parse_export_payload,
     remote_state_policy_from_cross_reference,
     resolve_construct,
@@ -45,6 +48,88 @@ from ._modelo_100_registry_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SNAPSHOT_IDENTIFIER_KEYED_MAPS = (
+    "legal",
+    "sources",
+    "extraction_profiles",
+    "live_cross_references",
+    "workbook_parity_refs",
+    "verification_expectations",
+    "application_links",
+    "deadline_windows",
+    "filing_schedules",
+    "support_removal_decisions",
+    "constructs",
+    "dependency_classifications",
+)
+
+
+def _revalidate_snapshot_with_map(
+    snapshot: RegistrySnapshot,
+    field_name: str,
+    values: Mapping[str, object],
+) -> RegistrySnapshot:
+    payload = {name: getattr(snapshot, name) for name in type(snapshot).model_fields}
+    payload[field_name] = values
+    return RegistrySnapshot.model_validate(payload)
+
+
+def _snapshot_with_populated_identifier_map(field_name: str) -> tuple[RegistrySnapshot, Mapping[str, object]]:
+    if field_name == "filing_schedules":
+        modelos_by_id, catalogues = _loaded_registry()
+        snapshot = build_snapshot(
+            modelos_by_id["036"],
+            catalogues,
+            source_root=_source_root(),
+            filing_year=2025,
+            period="alta",
+        )
+        return snapshot, snapshot.filing_schedules
+
+    snapshot = _modelo_100_snapshot()
+    if field_name == "support_removal_decisions":
+        decision = SupportRemovalDecisionDefinition(
+            id="snapshot-key-parity-removal",
+            subject_type="filing_schedule",
+            subject_id="modelo-100-unused-schedule",
+            decision="remove_from_filing_grade",
+            reason="out_of_scope",
+            evidence_note="Typed removal decision used to prove snapshot map-key identity enforcement.",
+            legal_refs=(next(iter(snapshot.legal)),),
+            source_refs=(next(iter(snapshot.sources)),),
+        )
+        return snapshot, {decision.id: decision}
+
+    values = cast(Mapping[str, object], getattr(snapshot, field_name))
+    assert values, f"real Modelo 100 snapshot must populate {field_name}"
+    return snapshot, values
+
+
+def test_real_registry_snapshots_accept_identifier_keyed_maps() -> None:
+    snapshot = _modelo_100_snapshot()
+    rebuilt = RegistrySnapshot.model_validate(
+        {name: getattr(snapshot, name) for name in type(snapshot).model_fields},
+    )
+
+    assert rebuilt == snapshot
+
+
+@pytest.mark.parametrize("field_name", _SNAPSHOT_IDENTIFIER_KEYED_MAPS)
+def test_registry_snapshot_rejects_identifier_map_key_payload_drift(field_name: str) -> None:
+    snapshot, values = _snapshot_with_populated_identifier_map(field_name)
+    accepted = _revalidate_snapshot_with_map(snapshot, field_name, values)
+    payload = next(iter(values.values()))
+    payload_id = cast(Any, payload).id
+    mismatched_key = "wrong-key"
+    assert getattr(accepted, field_name) == values
+    assert mismatched_key != payload_id
+
+    with pytest.raises(
+        ValidationError,
+        match=rf"snapshot {field_name} key 'wrong-key' does not match payload id {payload_id!r}",
+    ):
+        _revalidate_snapshot_with_map(snapshot, field_name, {mismatched_key: payload})
 
 
 def test_modelo_100_source_foundation_matches_revision_refs_and_links() -> None:

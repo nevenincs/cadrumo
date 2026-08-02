@@ -1077,6 +1077,37 @@ class RegistrySnapshot(RegistryModel):
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
 
+    @staticmethod
+    def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:
+        """Require every snapshot map key to name the payload stored beneath it."""
+        for key, payload in values.items():
+            payload_id = getattr(payload, "id", None)
+            if not isinstance(payload_id, str):
+                raise RegistryValidationError(
+                    f"snapshot {field_name} payload beneath key {key!r} has no string id",
+                )
+            if key != payload_id:
+                raise RegistryValidationError(
+                    f"snapshot {field_name} key {key!r} does not match payload id {payload_id!r}",
+                )
+
+    @model_validator(mode="after")
+    def _validate_identifier_keyed_maps(self) -> RegistrySnapshot:
+        """Keep all nested lookup identities aligned with their typed payloads."""
+        self._validate_identifier_keyed_map("legal", self.legal)
+        self._validate_identifier_keyed_map("sources", self.sources)
+        self._validate_identifier_keyed_map("extraction_profiles", self.extraction_profiles)
+        self._validate_identifier_keyed_map("live_cross_references", self.live_cross_references)
+        self._validate_identifier_keyed_map("workbook_parity_refs", self.workbook_parity_refs)
+        self._validate_identifier_keyed_map("verification_expectations", self.verification_expectations)
+        self._validate_identifier_keyed_map("application_links", self.application_links)
+        self._validate_identifier_keyed_map("deadline_windows", self.deadline_windows)
+        self._validate_identifier_keyed_map("filing_schedules", self.filing_schedules)
+        self._validate_identifier_keyed_map("support_removal_decisions", self.support_removal_decisions)
+        self._validate_identifier_keyed_map("constructs", self.constructs)
+        self._validate_identifier_keyed_map("dependency_classifications", self.dependency_classifications)
+        return self
+
     @model_validator(mode="after")
     def _validate_filing_period_consistency(self) -> RegistrySnapshot:
         if self.filing_period is None:
