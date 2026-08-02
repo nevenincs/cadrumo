@@ -32,9 +32,10 @@ from ...application.user_profile import (
     ProfileBundleExportTransport,
 )
 from ...application.workflow import ProfileHealthStatus, ProfileSource
-from ...core import HEX_PATTERN_64
+from ...core import HEX_PATTERN_64, Period
+from ...core.config import SecretStoreBackend
 from ...core.errors import BaseSeverity
-from ...core.identity import BucketId
+from ...core.identity import BucketId, ProfileId
 from ...core.time import validate_utc_aware
 from ...domain.user_profile import UserProfileFact, UserProfileStatus
 from ._schemas import OutputSchema, register_schema
@@ -379,10 +380,10 @@ class ConfigLoginResult(OutputSchema):
 
     profile_id: BucketId
     active_profile: str
-    backend_kind: str
-    authenticated_at: str
-    idle_deadline: str
-    absolute_deadline: str
+    backend_kind: SecretStoreBackend
+    authenticated_at: datetime
+    idle_deadline: datetime
+    absolute_deadline: datetime
     session_persisted: bool
     already_authenticated: bool
     closed_previous_profile: str | None = None
@@ -529,11 +530,11 @@ class ConfigProfileValidateResult(OutputSchema):
     blocking issues exist and ``2`` when any error-severity issue surfaces.
     """
 
-    profile_id: str
-    display_name: str
-    status: str
+    profile_id: ProfileId
+    display_name: str = Field(min_length=1, max_length=160)
+    status: UserProfileStatus
     valid: bool
-    schema_version: int
+    schema_version: int = Field(ge=1)
     issues: list[ProfileIssuePayload]
 
 
@@ -564,13 +565,20 @@ class ConfigProfilePreflightResult(OutputSchema):
     :class:`ProfilePreflightReport`.
     """
 
-    profile_id: str
-    modelo: str
-    revision_id: str
-    filing_year: int
-    period: str
+    profile_id: ProfileId
+    modelo: str = Field(min_length=1, max_length=16)
+    revision_id: str = Field(min_length=1, max_length=64)
+    filing_year: int = Field(ge=2000, le=2100)
+    period: Period
     ready: bool
     missing: list[ProfilePreflightMissingPayload]
+
+    @model_validator(mode="after")
+    def _period_matches_filing_year(self) -> ConfigProfilePreflightResult:
+        """Reuse the canonical ``ProfilePreflightReport`` coordinate invariant."""
+        if self.period.filing_year != self.filing_year:
+            raise ValueError("filing_year must match period.filing_year")
+        return self
 
 
 @register_schema("config.profile.delete")

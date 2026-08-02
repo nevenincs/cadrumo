@@ -122,7 +122,9 @@ def test_preflight_defaults_revision_from_natural_key() -> None:
     result_data = cast(dict[str, object], result_data_obj)
     assert result_data["modelo"] == "303"
     assert result_data["filing_year"] == 2026
-    assert result_data["period"] == "1T"
+    # ``period`` is the typed Period, not a bare registry-token string, so a
+    # malformed or year-mismatched coordinate is refused at the CLI boundary.
+    assert result_data["period"] == {"filing_year": 2026, "code": "1T"}
     # The resolved active revision is reported back, proving the natural-key
     # default fired rather than leaving the field blank or erroring.
     assert result_data["revision_id"] == expected_revision

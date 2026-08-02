@@ -359,7 +359,7 @@ def _register_preflight_command(
             modelo=report.modelo,
             revision_id=report.revision_id,
             filing_year=report.filing_year,
-            period=report.period.registry_token,
+            period=report.period,
             ready=report.ready,
             missing=[
                 ProfilePreflightMissingPayload(
@@ -468,7 +468,7 @@ def _register_validate_command(
         result = ConfigProfileValidateResult(
             profile_id=record.profile_id,
             display_name=record.display_name,
-            status=record.status.value,
+            status=record.status,
             valid=not blocking,
             schema_version=report.schema_version,
             issues=[
