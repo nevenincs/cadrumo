@@ -65,17 +65,36 @@ def verify_revision_self_consistency(
 ) -> TypeGuard[str]:
     """Return whether a stored ``revision_id`` recomputes from its lineage columns.
 
-    The revision id is a content address over the whole revision-lineage
-    metadata tuple (namespace, object-key digest, schema version,
-    ``written_at``, ``payload_hash``, ``ciphertext_hash``, and the previous
-    revision/payload-hash links). Recomputing it from the stored columns and
-    comparing to the stored ``revision_id`` is a read-time integrity gate: a
-    tamper of any single lineage column — including ``payload_hash`` — that
-    does not also recompute ``revision_id`` is detected and can be failed
-    closed. The check is purely metadata-internal (it never touches the
-    encrypted payload bytes), so it does not interfere with the AEAD payload
+    The revision id is a content address over exactly the eight inputs
+    :func:`derive_revision_id` mixes: namespace, object-key digest, schema
+    version, ``written_at``, ``payload_hash``, ``ciphertext_hash``, and the
+    previous revision/payload-hash links. Recomputing it from the stored
+    columns and comparing to the stored ``revision_id`` is a read-time
+    integrity gate: a tamper of any column in THAT tuple — including
+    ``payload_hash`` — that does not also recompute ``revision_id`` is detected
+    and can be failed closed.
+
+    The coverage stops at that tuple, and the stamping write is wider than it.
+    :func:`~._secure_object_row_codec.write_revision_metadata` also stamps
+    ``revision_ancestor_ids``, ``revision_written_at``, ``write_provenance``,
+    ``source_event_id``, and ``conflict_policy``, none of which is a derivation
+    input; a row whose stored value for any of them is edited recomputes the
+    same ``revision_id`` and is admitted here. ``revision_ancestor_ids`` is the
+    sharp case, because it is the ancestry chain itself: only its head, the
+    direct ``previous_revision_id`` link, is mixed, so this gate pins the parent
+    edge and not the chain behind it. The other four are audit attribution and
+    write bookkeeping. Bringing them under the digest would restamp every
+    stored ``revision_id``, which is a persisted-format decision rather than a
+    local fix, so the honest statement of today's guarantee is the eight-input
+    tuple named above.
+
+    The check is purely metadata-internal (it never touches the encrypted
+    payload bytes), so it does not interfere with the AEAD payload
     authentication or with corruption probes that re-encrypt a mutated payload
-    without restamping the metadata.
+    without restamping the metadata. It is not redundant with that
+    authentication either: the payload associated data binds namespace,
+    object-key digest, and schema version, so ``written_at``, the two content
+    hashes, and both previous-revision links are covered here and nowhere else.
 
     A row carrying no ``revision_id`` is REFUSED, not tolerated. Every write
     stamps revision metadata inside the same transaction that inserts the
