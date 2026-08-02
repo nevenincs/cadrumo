@@ -481,6 +481,56 @@ def test_run_release_please_dry_run_refuses_instructively_when_node_is_absent(tm
     assert "provision" in message
 
 
+def _write_probe_npx(bin_dir: Path, argv_path: Path) -> Path:
+    """Write a real executable `npx` script that records its argv and exits 0.
+
+    Mirrors `_write_probe_uv`/`test_readiness.py`'s `_write_probe_gh`
+    pattern: a real, explicit-path stub exercised via a real subprocess call,
+    not a mock standing in for the process boundary under test.
+    """
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    if sys.platform.startswith("win"):
+        script = bin_dir / "npx.bat"
+        script.write_text(f'@echo off\r\necho %* > "{argv_path}"\r\nexit /b 0\r\n', encoding="utf-8")
+    else:
+        script = bin_dir / "npx"
+        script.write_text(f'#!/usr/bin/env bash\necho "$@" > "{argv_path}"\nexit 0\n', encoding="utf-8")
+        script.chmod(script.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    return script
+
+
+def test_run_release_please_dry_run_passes_repo_relative_config_and_manifest_paths(tmp_path: Path) -> None:
+    """`--config-file`/`--manifest-file` must be repo-relative, never absolute local paths.
+
+    `--repo-url` puts release-please into its GitHub-API remote-fetch
+    manifest mode, where these flags are repo-relative STRINGS used to fetch
+    the named files from `target_branch` via the API, not local filesystem
+    paths. A live dispatch failed with "Missing required manifest config:
+    <absolute path>" because an earlier version of this function joined
+    `repo_root` onto them, producing a path that can never match anything in
+    the fetched tree. `node` is required and genuinely present on the
+    machine running this test (not mocked); only `npx` is a real, explicit-
+    path stub, per the established probe pattern.
+    """
+    root = tmp_path / "repo"
+    root.mkdir()
+    argv_path = tmp_path / "npx-argv.txt"
+    npx = _write_probe_npx(tmp_path / "bin", argv_path)
+
+    version_bump.run_release_please_dry_run(
+        root,
+        token="x",  # noqa: S106
+        repository="nevenincs/cadrumo",
+        npx_executable=str(npx),
+    )
+
+    captured = argv_path.read_text(encoding="utf-8")
+    assert "--config-file release-please-config.json" in captured
+    assert "--manifest-file .release-please-manifest.json" in captured
+    # The bug this proves fixed: the absolute repo_root must never appear.
+    assert str(root) not in captured
+
+
 def test_parse_computed_version_extracts_a_json_version_field() -> None:
     """A `"version": "X.Y.Z"` announcement in the debug log is extracted."""
     log = 'some debug noise\n{\n  "version": "2.4.0",\n  "notes": "..."\n}\nmore noise'
@@ -554,7 +604,7 @@ def test_rehearse_bump_refuses_a_burned_version_and_leaves_the_real_root_untouch
     root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="0.1.0")
     before_manifest = (root / ".release-please-manifest.json").read_text(encoding="utf-8")
     before_head = _git(root, "rev-parse", "HEAD").strip()
-    stub = _write_probe_uv(tmp_path / "bin")
+    probe_uv = _write_probe_uv(tmp_path / "bin")
 
     with pytest.raises(version_identity.VersionIdentityError, match="burned"):
         version_bump.rehearse_bump(
@@ -563,7 +613,7 @@ def test_rehearse_bump_refuses_a_burned_version_and_leaves_the_real_root_untouch
             changelog_block=_CHANGELOG_BLOCK,
             release_date="2026-08-02",
             repository="nevenincs/cadrumo",
-            uv_executable=str(stub),
+            uv_executable=str(probe_uv),
             skip_network=True,
         )
 
@@ -586,7 +636,7 @@ def test_rehearse_bump_succeeds_for_a_clean_version_and_still_leaves_the_real_ro
     root = _make_git_repo_root(tmp_path, version="1.2.3", manifest_floor="1.0.0")
     before_manifest = (root / ".release-please-manifest.json").read_text(encoding="utf-8")
     before_head = _git(root, "rev-parse", "HEAD").strip()
-    stub = _write_probe_uv(tmp_path / "bin")
+    probe_uv = _write_probe_uv(tmp_path / "bin")
 
     version_bump.rehearse_bump(
         root,
@@ -594,7 +644,7 @@ def test_rehearse_bump_succeeds_for_a_clean_version_and_still_leaves_the_real_ro
         changelog_block=_CHANGELOG_BLOCK,
         release_date="2026-08-02",
         repository="nevenincs/cadrumo",
-        uv_executable=str(stub),
+        uv_executable=str(probe_uv),
         skip_network=True,
     )  # must not raise
 

@@ -59,6 +59,9 @@ _UTF_8: Final[str] = "utf-8"
 #: touching it here would make the bump fail its own post-bump readiness
 #: re-check.
 MANIFEST_RELATIVE: Final[Path] = Path(".release-please-manifest.json")
+#: release-please's own config file, relative to the repository root -- see
+#: `run_release_please_dry_run`'s docstring for why this MUST stay relative.
+RELEASE_PLEASE_CONFIG_RELATIVE: Final[Path] = Path("release-please-config.json")
 ROOT_PYPROJECT_RELATIVE: Final[Path] = Path("pyproject.toml")
 DATA_MANUALS_PYPROJECT_RELATIVE: Final[Path] = Path("packaging/cadrumo_data_manuals/pyproject.toml")
 DATA_OFFICIAL_PYPROJECT_RELATIVE: Final[Path] = Path("packaging/cadrumo_data_official/pyproject.toml")
@@ -340,6 +343,15 @@ def run_release_please_dry_run(
     `npx`, and whether the self-hosted fleet carries a Node.js toolchain is
     unverified (`2026-08-02-release-pipeline-full-automation-adr`).
 
+    `config_file` / `manifest_file`, when supplied, MUST be paths relative to
+    the repository root, never absolute local filesystem paths: `--repo-url`
+    puts release-please into its GitHub-API remote-fetch mode, where these
+    flags are repo-relative strings used to fetch the named files from
+    `target_branch`, not local paths on this machine. Confirmed live: an
+    absolute path here makes release-please refuse with "Missing required
+    manifest config: <path>" because that string never matches anything in
+    the fetched tree.
+
     Grounding note, VERIFIED LIVE (2026-08-02, `nevenincs/cadrumo` @
     `ac6305809d`): this repository has no prior release-please-generated
     release (this is its first automated bump), so release-please finds no
@@ -371,8 +383,15 @@ def run_release_please_dry_run(
     npx = npx_executable or shutil.which("npx")
     if npx is None:
         raise VersionBumpError("npx is not on PATH; cannot invoke release-please")
-    config = config_file or (repo_root / "release-please-config.json")
-    manifest = manifest_file or (repo_root / MANIFEST_RELATIVE)
+    # RELATIVE, never joined onto repo_root: `--repo-url` puts release-please
+    # into its GitHub-API remote-fetch manifest mode, where `--config-file` /
+    # `--manifest-file` are repo-relative path STRINGS used to fetch the
+    # files from `target_branch` via the API, not local filesystem paths (see
+    # the grounding note above). An absolute local path never matches
+    # anything in the fetched tree and release-please refuses with
+    # "Missing required manifest config: <path>" -- confirmed live.
+    config = config_file if config_file is not None else RELEASE_PLEASE_CONFIG_RELATIVE
+    manifest = manifest_file if manifest_file is not None else MANIFEST_RELATIVE
     completed = _run(
         [
             npx,
