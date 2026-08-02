@@ -93,7 +93,7 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
         facts=(
             UserProfileFact(path="identity.name", value="Under Declaration Operator"),
             UserProfileFact(path="identity.legal_name", value="Under Declaration Operator SL"),
-            UserProfileFact(path="identity.tax_id", value="B12345678"),
+            UserProfileFact(path="identity.tax_id", value="B12345674"),
             UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000.00"),
