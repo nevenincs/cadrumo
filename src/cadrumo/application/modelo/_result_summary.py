@@ -33,6 +33,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
@@ -46,6 +47,19 @@ from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _re
 from ._work_lifecycle import get_work_unit
 
 _log = get_logger(__name__)
+
+
+class ResultSummaryRole(StrEnum):
+    """Closed vocabulary of why a casilla is a headline figure.
+
+    ``RESULT_INGRESAR`` / ``RESULT_DEVOLVER`` mark the registry-declared
+    result-to-pay / result-to-refund total. ``KEY_FIGURE`` marks a
+    computed casilla the modelo's verification expectation tracks.
+    """
+
+    RESULT_INGRESAR = "result_ingresar"
+    RESULT_DEVOLVER = "result_devolver"
+    KEY_FIGURE = "key_figure"
 
 
 class ResultSummaryRow(BaseModel):
@@ -67,13 +81,8 @@ class ResultSummaryRow(BaseModel):
     label: str
     localized_labels: dict[str, str] = Field(default_factory=dict)
     value: Decimal
-    role: str
-    """Why the casilla is a headline figure.
-
-    ``result_ingresar`` / ``result_devolver`` mark the registry-declared
-    result-to-pay / result-to-refund total. ``key_figure`` marks a
-    computed casilla the modelo's verification expectation tracks.
-    """
+    role: ResultSummaryRole
+    """Why the casilla is a headline figure. See :class:`ResultSummaryRole`."""
 
 
 class CalculationResultSummary(BaseModel):
@@ -138,11 +147,11 @@ def calculation_result_summary(
         return None
 
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
-    result_roles: dict[CasillaId, str] = {}
+    result_roles: dict[CasillaId, ResultSummaryRole] = {}
     key_figures: list[CasillaId] = []
     for expectation in snapshot.revision.verification_expectations:
         for kind, casilla_id in expectation.reconciliation_total_casilla_ids.items():
-            role = "result_ingresar" if kind == "ingresar" else "result_devolver"
+            role = ResultSummaryRole.RESULT_INGRESAR if kind == "ingresar" else ResultSummaryRole.RESULT_DEVOLVER
             result_roles.setdefault(casilla_id, role)
         for casilla_id in expectation.computed_casilla_ids:
             if casilla_id not in key_figures:
@@ -151,7 +160,7 @@ def calculation_result_summary(
     if not result_roles and not key_figures:
         return None
 
-    def _row(casilla_id: CasillaId, *, value: Decimal, role: str) -> ResultSummaryRow:
+    def _row(casilla_id: CasillaId, *, value: Decimal, role: ResultSummaryRole) -> ResultSummaryRow:
         casilla = casillas_by_id.get(casilla_id)
         return ResultSummaryRow(
             casilla_id=casilla_id,
@@ -175,7 +184,7 @@ def calculation_result_summary(
         value = casilla_values.get(casilla_id)
         if value is None or casilla_id in seen:
             continue
-        rows.append(_row(casilla_id, value=value, role="key_figure"))
+        rows.append(_row(casilla_id, value=value, role=ResultSummaryRole.KEY_FIGURE))
         seen.add(casilla_id)
 
     if not rows:
@@ -190,6 +199,7 @@ def calculation_result_summary(
 
 __all__ = [
     "CalculationResultSummary",
+    "ResultSummaryRole",
     "ResultSummaryRow",
     "calculation_result_summary",
 ]

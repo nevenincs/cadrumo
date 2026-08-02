@@ -339,6 +339,7 @@ from ._registry_discovery import (
 )
 from ._result_summary import (
     CalculationResultSummary,
+    ResultSummaryRole,
     ResultSummaryRow,
     calculation_result_summary,
 )
@@ -708,6 +709,7 @@ __all__ = [
     "ReconciliationCrossBucketRefusedError",
     "ReconciliationDeclaracionSourceUnsupportedError",
     "ReconciliationEvidenceInvalidError",
+    "ResultSummaryRole",
     "ResultSummaryRow",
     "ReviewOnlyWorkspace",
     "ReviewOnlyWorkspaceAuthorityError",
