@@ -360,10 +360,15 @@ def test_releasing_doc_operator_actions_section_names_the_outstanding_halves() -
     Prevents the operator-facing obligation inventory from silently drifting:
     OP-9 (the required_reviewers removal on release AND docs), OP-12 (delete
     the orphaned pypi-data-official environment) plus its carried-forward
-    index-side PyPI Trusted Publisher check from issue #618 -- an item no
-    agent can verify or clear, named rather than silently absorbed.
+    index-side PyPI Trusted Publisher check from issue #618, and OP-3 narrowed
+    to its one remaining half (the docs deploy-role variable) -- none of them
+    silently absorbed or told to redo work already done.
     """
     section = _operator_actions_section(RELEASING_PATH.read_text(encoding="utf-8"))
+    # Prose wraps at ~80 columns, so a multi-word phrase can straddle a line
+    # break in the raw text; normalize whitespace before substring checks so
+    # the assertions test content, not incidental line-wrap position.
+    normalized = " ".join(section.split())
 
     assert "OP-9" in section
     assert "required_reviewers" in section
@@ -377,6 +382,15 @@ def test_releasing_doc_operator_actions_section_names_the_outstanding_halves() -
     assert "#618" in section
     assert "Trusted Publisher" in section
     assert "index-account" in section.lower() or "index-side" in section.lower()
+
+    assert "OP-3" in section
+    assert "deploy-role" in section
+    # The docs environment already exists; a reader must never be told to
+    # create it, and the required_reviewers removal on it is OP-9's second
+    # half, not a second OP-3 obligation -- both are asserted explicitly so
+    # a future edit cannot silently reintroduce either confusion.
+    assert "already exists" in normalized
+    assert "second half of OP-9" in normalized
 
 
 def test_releasing_doc_documents_rc_soak_and_rollback() -> None:

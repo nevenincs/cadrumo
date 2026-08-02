@@ -303,8 +303,20 @@ fact outside this repository and this forge — no agent can perform or confirm
 it — so it stays a standing operator item rather than assumed clear. Remove any
 surviving registration there directly; nothing in this repository can do so.
 
-Verify both actions afterwards, rather than assuming — a settings change leaves no
-commit, so nothing in the tree records whether it happened:
+**OP-3 (narrowed) — set the docs-publish deploy-role variable on the
+already-created `docs` environment.** The `docs` environment already
+exists — it was created alongside `release` and carries the same
+`required_reviewers` rule OP-9 above removes from it. Do **not** create it
+again and do not remove its `required_reviewers` rule here: that removal is
+the *second half of OP-9*, not a separate obligation, and doing it twice
+under two different names is exactly the confusion this narrowing exists to
+prevent. OP-3's only remaining half is setting the deploy-role variable the
+`Cadrumo Docs Publish` workflow (`docs-publish.yml`) reads to assume its OIDC
+role on `release: published`. Until that variable is set, the workflow stays
+inert and Stage 5's `just docs-deploy` remains a human act.
+
+Verify all three actions afterwards, rather than assuming — a settings change
+leaves no commit, so nothing in the tree records whether it happened:
 
 ```bash
 uv run --no-sync python -m dev.release.environment_inventory
@@ -811,11 +823,13 @@ The tripwire is therefore procedural, and closing it is part of the release:
 just docs-deploy
 ```
 
-Once the deploy role exists (operator decision OP-3), the `Cadrumo Docs Publish`
-workflow runs this automatically on `release: published` and this step becomes a
-verification rather than an action. Until then it is a human act, and a release
-left without it is not finished — it is a release whose documentation still
-advertises its predecessor.
+Once the deploy-role variable is set on the already-created `docs` environment
+(operator decision **OP-3**, narrowed — see Operator actions above; the
+environment itself already exists, only the variable is outstanding), the
+`Cadrumo Docs Publish` workflow runs this automatically on `release: published`
+and this step becomes a verification rather than an action. Until then it is a
+human act, and a release left without it is not finished — it is a release
+whose documentation still advertises its predecessor.
 
 ## Report release problems
 
