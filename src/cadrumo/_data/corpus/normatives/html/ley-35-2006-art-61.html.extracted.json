@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-61.html",
+  "source_sha256": "00d0a96e84abd435d445b64315067e8be1b73c37e24905e0a1d3fc2c32e7a622",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Para la determinación del importe de los mínimos a que se refieren los artículos 57, 58, 59 y 60 de esta Ley, se tendrán en cuenta las siguientes normas:\n1.ª Cuando dos o más contribuyentes tengan derecho a la aplicación del mínimo por descendientes, ascendientes o discapacidad, respecto de los mismos ascendientes o descendientes, su importe se prorrateará entre ellos por partes iguales.\nNo obstante, cuando los contribuyentes tengan distinto grado de parentesco con el ascendiente o descendiente, la aplicación del mínimo corresponderá a los de grado más cercano, salvo que éstos no tengan rentas anuales, excluidas las exentas, superiores a 8.000 euros, en cuyo caso corresponderá a los del siguiente grado.\n2.ª No procederá la aplicación del mínimo por descendientes, ascendientes o discapacidad, cuando los ascendientes o descendientes que generen el derecho a los mismos presenten declaración por este Impuesto con rentas superiores a 1.800 euros.\n3.ª La determinación de las circunstancias personales y familiares que deban tenerse en cuenta a efectos de lo establecido en los artículos 57, 58, 59 y 60 de esta Ley, se realizará atendiendo a la situación existente en la fecha de devengo del Impuesto.\n4.ª No obstante lo dispuesto en el apartado anterior, en caso de fallecimiento de un descendiente o ascendiente que genere el derecho al mínimo por descendientes o ascendientes, la cuantía será de 2.400 euros anuales o 1.150 euros anuales por ese descendiente o ascendiente, respectivamente.\n5.ª Para la aplicación del mínimo por ascendientes, será necesario que éstos convivan con el contribuyente, al menos, la mitad del período impositivo o, en el caso de fallecimiento del ascendiente antes de la finalización de este, la mitad del período transcurrido entre el inicio del período impositivo y la fecha de fallecimiento.",
+      "title": "Artículo 61. Normas comunes para la aplicación del mínimo del contribuyente y por descendientes, ascendientes y discapacidad.",
+      "section": "Artículo 61. Normas comunes para la aplicación del mínimo del contribuyente y por descendientes, ascendientes y discapacidad.",
+      "anchor": "#a61"
+    }
+  ]
+}

@@ -115,7 +115,9 @@ Cuando la declaración haya sido presentada y procesada se generará un código 
 
 La presente Orden entrará en vigor el día siguiente al de su publicación en el Boletín Oficial del Estado.
 Madrid, 18 de marzo de 2010.–La Vicepresidenta Segunda del Gobierno y Ministra de Economía y Hacienda, Elena Salgado Méndez.
-ANEXO
+
+# ANEXO
+
 Diseños lógicos a los que deben ajustarse los archivos que se generen para la presentación telemática del modelo 349
 Diseños lógicos
 Descripción de los registros
@@ -847,11 +849,15 @@ Blancos.
 Se sustituye por el art. 3 y anexo IV de la Orden HAC/1274/2020, de 28 de diciembre. Ref. BOE-A-2020-17269
 Téngase en cuenta que será aplicable por primera vez a las declaraciones recapitulativas de operaciones intracomunitarias, modelo 349, correspondientes a 2021, según establece la disposición final única de la citada Orden.
 Se modifica su denominación y su contenido por el art. único.6 y el anexo de la Orden HAC/174/2020, de 4 de febrero. Ref. BOE-A-2020-2898
-ANEXO II
+
+# ANEXO II
+
 (Suprimido)
 Se suprime por el art. único.7 de la Orden HAC/174/2020, de 4 de febrero. Ref. BOE-A-2020-2898
 Se modifica por la disposición final 1 de la Orden EHA/1721/2011, de 16 de junio. Ref. BOE-A-2011-10827
 Téngase en cuenta que esta modificación se aplicará a las declaraciones correspondientes a periodos iniciados a partir del día 1 de julio de 2011, según establece la disposición final 2 de la citada Orden.
-ANEXO III
+
+# ANEXO III
+
 Este documento es de carácter informativo y no tiene valor jurídico.
 Ayúdenos a mejorar: puede dirigir sus comentarios y sugerencias a nuestro Servicio de atención al ciudadano

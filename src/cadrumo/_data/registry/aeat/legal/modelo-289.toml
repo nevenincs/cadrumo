@@ -13,7 +13,7 @@ reviewed_at = 2026-07-01
 reviewed_by = "downloaded official BOE-A-2015-12399 consolidated HTML from BOE on 2026-07-01"
 notes = "Real Decreto 1021/2015 articulo 3: regula la identificacion de la residencia fiscal de las personas que ostenten la titularidad o el control de cuentas financieras."
 required_text = [
-    "titularidad o el control de las cuentas financieras",
+    "titularidad o el control de cuentas financieras",
     "conforme a lo previsto en el anexo",
 ]
 
@@ -269,7 +269,7 @@ notes = "Orden HFP/1351/2021 articulo octavo: modifica la comunicacion de inexis
 required_text = [
     "Orden HAP/1695/2016, de",
     "Se modifica el articulo",
-    "no existen cuentas sujetas",
+    "declaración informativa anual de cuentas financieras en el ámbito de la asistencia mutua",
 ]
 
 [legal."orden-hfp-1192-2022:art-sexto"]

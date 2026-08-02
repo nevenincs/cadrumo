@@ -134,21 +134,27 @@ d) El número tres del apartado segundo de la Orden de 21 de diciembre de 20
 
 La presente orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado» y surtirá efectos respecto de la presentación e ingreso resultantes de las declaraciones formuladas en los modelos 130, 131 y 310 que correspondan al primer trimestre de 2007 y siguientes.
 Madrid, 19 de marzo de 2007.–El Vicepresidente Segundo del Gobierno y Ministro de Economía y Hacienda, Pedro Solbes Mira.
-ANEXO I
+
+# ANEXO I
+
 Se sustituye por el art. único.3 de la Orden HAP/258/2015, de 17 de febrero. Ref. BOE-A-2015-1656
 Esta modificación surtirá efectos respecto de la presentación de las declaraciones formuladas que correspondan a la primera autoliquidación trimestral del ejercicio 2015 y siguientes, según establece la disposición final 3 de la citada Orden.
 Se sustituye por el art. único y anexo I de la Orden EHA/580/2009, de 5 de marzo. Ref. BOE-A-2009-4138
 Esta modificación surtirá efectos respecto de la presentación de las declaraciones formuladas desde el primer trimestre del ejercicio 2009 y siguientes, según establece la disposición final única de la citada Orden.
 Se sustituye por el art. único.1 y anexo I de la Orden EHA/1796/2008, de 19 de junio. Ref. BOE-A-2008-10637
 Esta modificación surtirá efectos respecto de la presentación de las declaraciones formuladas desde el segundo trimestre del ejercicio 2008 y siguientes, según establece la disposición final única de la citada Orden.
-ANEXO II
+
+# ANEXO II
+
 Se sustituye por el art. único.3 de la Orden HAP/258/2015, de 17 de febrero. Ref. BOE-A-2015-1656
 Esta modificación surtirá efectos respecto de la presentación de las declaraciones formuladas que correspondan a la primera autoliquidación trimestral del ejercicio 2015 y siguientes, según establece la disposición final 3 de la citada Orden.
 Se sustituye por el art. único y anexo II de la Orden EHA/580/2009, de 5 de marzo. Ref. BOE-A-2009-4138
 Esta modificación surtirá efectos respecto de la presentación de las declaraciones formuladas desde el primer trimestre del ejercicio 2009 y siguientes, según establece la disposición final única de la citada Orden.
 Se sustituye por el art. único.1 y anexo II de la Orden EHA/1796/2008, de 19 de junio. Ref. BOE-A-2008-10637
 Esta modificación surtirá efectos respecto de la presentación de las declaraciones formuladas desde el segundo trimestre del ejercicio 2008 y siguientes, según establece la disposición final única de la citada Orden.
-ANEXO III
+
+# ANEXO III
+
 (Derogado).
 Se deroga por la disposición derogatoria única.5 de la Orden HAP/2215/2013, de 26 de noviembre. Ref. BOE-A-2013-12489
 Téngase en cuenta que será aplicable a las operaciones realizadas a partir del 1 de enero de 2014, según establece la disposición final 3 de la citada Orden.

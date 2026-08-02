@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-66-2002.html",
+  "source_sha256": "c123f133bec99b783a698eb3b595f8a5ef580629760e4857f4fc463f0d2adab9",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/66/2002, de 15 de enero, por la que se aprueba el modelo 038 (BOE-A-2002-1041) - Modelo 038\nOrden HAC/66/2002, de 15 de enero, por la que se aprueba el modelo 038.\nArticulo 1. Aprobacion del modelo 038.\nSe aprueba el modelo 038 «Relación de operaciones realizadas por entidades inscritas en registros públicos. Declaración informativa en euros».\nArticulo 6. Plazo de presentacion.\nLa presentación de las relaciones de operaciones realizadas por entidades inscritas en registros públicos, modelo 038, se llevará a cabo durante cada mes natural respecto de las inscripciones autorizadas en el mes inmediato anterior.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2002-1041) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

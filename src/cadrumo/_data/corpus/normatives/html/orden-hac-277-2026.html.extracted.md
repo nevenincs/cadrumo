@@ -166,13 +166,21 @@ En el caso de que la domiciliación se realice en una entidad no colaboradora de
 
 La presente orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado».
 Madrid, 25 de marzo de 2026.–La Vicepresidenta Primera del Gobierno y Ministra de Hacienda, María Jesús Montero Cuadrado.
-ANEXO I
+
+# ANEXO I
+
 Declaración del Impuesto sobre la Renta de las Personas Físicas
-ANEXO II
+
+# ANEXO II
+
 Documento de ingreso o devolución
-ANEXO III
+
+# ANEXO III
+
 Impuesto sobre el Patrimonio. Declaración
-ANEXO IV
+
+# ANEXO IV
+
 Impuesto sobre el Patrimonio 2025. Documento de ingreso
 Análisis
 ANÁLISIS

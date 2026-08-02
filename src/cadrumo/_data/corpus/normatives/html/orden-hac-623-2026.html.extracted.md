@@ -106,7 +106,9 @@ b) Por lo que respecta a la modificación de los plazos de presentación relat
 – En el caso de rentas imputadas de bienes inmuebles urbanos y de rendimientos derivados del arrendamiento o subarrendamiento de inmuebles y se opte por declarar los rendimientos devengados en el año natural de forma agrupada, respecto de los devengos correspondientes a 2026.
 – Tratándose de rentas derivadas del arrendamiento o subarrendamiento de inmuebles y se opte por declarar los rendimientos de forma separada, respecto de los devengos cuya fecha esté comprendida en el último trimestre natural de 2026.
 Madrid, 12 de junio de 2026.–El Ministro de Hacienda, Arcadi España García.
-ANEXO
+
+# ANEXO
+
 Autoliquidación-Modelo 210
 Análisis
 ANÁLISIS

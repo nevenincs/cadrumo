@@ -24,11 +24,11 @@ of being silently stored as links.
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any, Final, Protocol, cast
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from ....core.external_constants import PDF_MIME_TYPE
 from ....domain.attachments import AttachmentSource
@@ -38,6 +38,7 @@ from ..storage import (
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
 )
+from ..storage._drive_pagination import next_drive_page_token
 from ._api import GoogleDriveFile, execute_request
 
 # .../d/<ID>/... (file, spreadsheets, document) | ...?id=<ID> | bare <ID>.
@@ -99,9 +100,17 @@ class DriveFolderDocument(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    file_id: str
-    name: str
-    mime_type: str
+    file_id: str = Field(validation_alias="id", min_length=1)
+    name: str = Field(min_length=1)
+    mime_type: str = Field(alias="mimeType", min_length=1)
+
+    @field_validator("file_id", "name", "mime_type")
+    @classmethod
+    def _require_non_blank_wire_value(cls, value: str) -> str:
+        """Reject blank Drive resource values before a listing can consume them."""
+        if not value.strip():
+            raise ValueError("must not be blank")
+        return value
 
 
 @dataclass(frozen=True)
@@ -277,24 +286,18 @@ def list_drive_folder_documents(
     drive_service = service if service is not None else _drive_service(credentials)
     documents: list[DriveFolderDocument] = []
     skipped = 0
-    for raw_file in _iter_drive_folder_files(drive_service, folder_id=folder_id):
-        mime_type = raw_file.get("mimeType", "")
+    for document in _iter_drive_folder_files(drive_service, folder_id=folder_id):
+        mime_type = document.mime_type
         if mime_type == _DRIVE_FOLDER_MIME_TYPE:
             continue
         if mime_type not in _INVOICE_MIME_TYPES:
             skipped += 1
             continue
-        documents.append(
-            DriveFolderDocument(
-                file_id=raw_file["id"],
-                name=raw_file.get("name", raw_file["id"]),
-                mime_type=mime_type,
-            ),
-        )
+        documents.append(document)
     return DriveFolderListing(documents=tuple(documents), skipped_non_document_count=skipped)
 
 
-def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) -> Iterator[GoogleDriveFile]:
+def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) -> Iterator[DriveFolderDocument]:
     """Yield every raw Drive child of ``folder_id`` across pages, mapping scope refusals.
 
     A 403/404 (or any permission refusal without an already-named ``required_scope``)
@@ -303,6 +306,7 @@ def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) ->
     """
     query = f"'{folder_id}' in parents and trashed = false"
     page_token: str | None = None
+    seen_tokens: set[str] = set()
     while True:
         files = drive_service.files()
         if page_token is None:
@@ -336,11 +340,37 @@ def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) ->
             ) from exc
         # CAST-RATIONALE-thirdparty: Google Drive files-list is an untyped JSON API response
         raw_files = cast("list[GoogleDriveFile]", response.get("files", []))
-        yield from raw_files
+        for entry_index, raw_file in enumerate(raw_files):
+            yield _drive_folder_document_from_response(raw_file, folder_id=folder_id, entry_index=entry_index)
         # CAST-RATIONALE-thirdparty: Google Drive nextPageToken is an untyped JSON API response
-        page_token = cast("str | None", response.get("nextPageToken"))
+        page_token = next_drive_page_token(
+            response.get("nextPageToken"),
+            seen_tokens=seen_tokens,
+            action="drive.files.list",
+        )
         if not page_token:
             break
+
+
+def _drive_folder_document_from_response(
+    raw_file: object,
+    *,
+    folder_id: str,
+    entry_index: int,
+) -> DriveFolderDocument:
+    """Validate a successful ``files.list`` row before callers classify it."""
+    if not isinstance(raw_file, Mapping):
+        raise OutboundStorageNetworkError(
+            "Drive files.list returned a malformed file entry",
+            context={"action": "drive.files.list", "folder_id": folder_id, "entry_index": str(entry_index)},
+        )
+    try:
+        return DriveFolderDocument.model_validate(raw_file)
+    except ValidationError as exc:
+        raise OutboundStorageNetworkError(
+            "Drive files.list returned a malformed file entry",
+            context={"action": "drive.files.list", "folder_id": folder_id, "entry_index": str(entry_index)},
+        ) from exc
 
 
 __all__ = [

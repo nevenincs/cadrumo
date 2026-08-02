@@ -44,7 +44,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from enum import StrEnum
 
 # google-api-python-client-stubs ships ``googleapiclient.discovery.Resource``
@@ -71,7 +71,7 @@ from ....application.storage.calc_sheets import (
 )
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Period
-from ....core.decimal import coerce_decimal
+from ....core.decimal import coerce_decimal, coerce_finite_european_decimal
 from ....core.i18n import tr
 from ....core.time import coerce_utc_aware
 from ....domain.calculations.registry import (
@@ -1191,12 +1191,12 @@ def _require_metadata_match(*, pull: PullResult, snapshot: RegistrySnapshot) -> 
     )
 
 
-def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None) -> Decimal:
+def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None, *, input_key: str) -> Decimal:
     """Coerce an :attr:`~adapters.outbound.google._calc_sheets_pull.OperatorEdit.value` shape.
 
-    None / unparseable text / unsupported type all collapse to
-    ``Decimal("0")`` so the runtime's "every non-computed casilla has a
-    value" precondition holds.
+    An absent cell stays zero so the runtime can evaluate the complete input
+    lattice. Any supplied malformed or non-finite numeric value is refused;
+    it must never become an operator-looking zero.
     """
     if value is None:
         return Decimal("0")
@@ -1204,12 +1204,13 @@ def _coerce_edit_value_to_decimal(value: Decimal | str | bool | None) -> Decimal
         return value
     if isinstance(value, bool):
         return Decimal("1") if value else Decimal("0")
-    if isinstance(value, str):
-        try:
-            return Decimal(value)
-        except (InvalidOperation, ValueError):
-            return Decimal("0")
-    return Decimal("0")
+    parsed = coerce_finite_european_decimal(value)
+    if parsed is not None:
+        return parsed
+    raise OutboundStorageValidationError(
+        f"numeric spreadsheet edit {input_key!r} must be a finite decimal",
+        context={"input_key": input_key, "value": str(value)},
+    )
 
 
 def _collect_input_casilla_values(
@@ -1242,7 +1243,10 @@ def _collect_input_casilla_values(
         if casilla.input_kind in {InputKind.COMPUTED, InputKind.INFORMATIONAL}:
             continue
         edit = edits_by_casilla.get(casilla.id)
-        inputs[casilla.id] = _coerce_edit_value_to_decimal(edit.value if edit is not None else None)
+        inputs[casilla.id] = _coerce_edit_value_to_decimal(
+            edit.value if edit is not None else None,
+            input_key=casilla.id,
+        )
     return inputs
 
 
@@ -1261,7 +1265,10 @@ def _collect_binding_values(
             if text is not None:
                 enum_binding_values[binding.id] = text
         else:
-            binding_values[binding.id] = _coerce_edit_value_to_decimal(edit.value if edit is not None else None)
+            binding_values[binding.id] = _coerce_edit_value_to_decimal(
+                edit.value if edit is not None else None,
+                input_key=binding.id,
+            )
     return binding_values, enum_binding_values
 
 

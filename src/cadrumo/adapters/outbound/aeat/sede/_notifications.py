@@ -30,7 +30,7 @@ import re
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Final, Literal
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlunsplit
 
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, BaseModel, Field
@@ -248,6 +248,7 @@ def _parse_rows(
         if not has_cert:
             continue
         header_index = _index_columns(normalised)
+        summary_table_tipo = _summary_table_tipo(table) if is_summary else None
         for table_row in table.find_all("tr"):
             cells = [td.get_text(" ", strip=True) for td in table_row.find_all("td")]
             if not cells:
@@ -257,6 +258,7 @@ def _parse_rows(
                 header_index=header_index,
                 source_url=source_url,
                 is_summary=is_summary,
+                summary_table_tipo=summary_table_tipo,
             )
             if row is not None:
                 rows.append(row)
@@ -296,6 +298,7 @@ def _row_from_cells(
     header_index: dict[str, int],
     source_url: str,
     is_summary: bool,
+    summary_table_tipo: Literal["notificacion", "comunicacion"] | None,
 ) -> RemoteNotification | None:
     """Build a :class:`RemoteNotification` from one table row, or ``None`` if it cannot be classified."""
     cert_idx = header_index.get("certificado")
@@ -322,7 +325,12 @@ def _row_from_cells(
     titular_nif, titular_nombre = _split_nif_name(titular_raw)
     destinatario_nif, destinatario_nombre = _split_nif_name(destinatario_raw)
 
-    tipo = _classify_tipo(tipo_raw, concepto_raw, is_summary)
+    tipo = _classify_tipo(
+        tipo_raw,
+        concepto_raw,
+        is_summary=is_summary,
+        summary_table_tipo=summary_table_tipo,
+    )
     concepto = concepto_raw.replace("*", "").strip()
     leida = _parse_leida(leida_raw)
 
@@ -369,10 +377,25 @@ def _split_nif_name(raw: str) -> tuple[str, str]:
     return parts[0], parts[1].strip()
 
 
+def _summary_table_tipo(table: Any) -> Literal["notificacion", "comunicacion"] | None:
+    """Return the summary category declared by the table's preceding section heading."""
+    heading = table.find_previous(["h2", "h3"])
+    if heading is None:
+        return None
+    label = heading.get_text(" ", strip=True).lower()
+    if "comunic" in label:
+        return "comunicacion"
+    if "notific" in label:
+        return "notificacion"
+    return None
+
+
 def _classify_tipo(
     tipo_raw: str,
     concepto_raw: str,
+    *,
     is_summary: bool,
+    summary_table_tipo: Literal["notificacion", "comunicacion"] | None,
 ) -> Literal["notificacion", "comunicacion", "pendiente", "unknown"]:
     """Classify a row into ``notificacion`` / ``comunicacion`` / ``pendiente`` / ``unknown``."""
     lower = tipo_raw.lower()
@@ -382,12 +405,11 @@ def _classify_tipo(
         return "notificacion"
     if "comunic" in lower or "comunic" in concepto_raw.lower():
         return "comunicacion"
+    if summary_table_tipo is not None:
+        return summary_table_tipo
     if is_summary:
-        # Summary tables split notification rows from communication rows
-        # by table order rather than a "Tipo" column; when there's no
-        # column to read, default to "notificacion" for the first table
-        # and "comunicacion" for the second. Callers that need sharper
-        # classification should use parse_notifications_query.
+        # A malformed summary lacking its section heading retains the historic
+        # conservative default instead of silently becoming an unknown row.
         return "notificacion"
     return "unknown"
 
@@ -523,7 +545,7 @@ async def _navigate_and_parse(
         landing = urlsplit(landing_url)
         _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
         html = await page.content()
-        snapshot = parser(html, source_url=url)
+        snapshot = parser(html, source_url=_recorded_landing_url(landing_url, fallback_url=url))
         if not snapshot.rows and not _notifications_marker_present(html):
             # A zero-row parse with NO notifications page marker is a
             # wrong-service / auth-gate / maintenance landing, not a genuine
@@ -569,6 +591,14 @@ def _assert_read_http(method: str, url: str) -> None:
         _READ_GUARD_POLICY,
         RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
     )
+
+
+def _recorded_landing_url(landing_url: str, *, fallback_url: str) -> str:
+    """Return the usable landing origin/path for evidence provenance."""
+    landing = urlsplit(landing_url)
+    if landing.scheme and landing.netloc and landing.path:
+        return urlunsplit((landing.scheme, landing.netloc, landing.path, landing.query, ""))
+    return fallback_url
 
 
 def _notifications_marker_present(html: str) -> bool:

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-1999-11-17-apartado-quinto.html",
+  "source_sha256": "f3afe47f7e763fc071e8daf88549d8323ab59315a04f46e977b33a589e517c33",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Uno. Se aprueban los modelos 188 en pesetas y en euros «Impuesto sobre la Renta de las Personas Físicas, Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes). Retenciones e ingresos a cuenta. Rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalización y de contratos de seguro de vida o invalidez. Resumen anual». Dichos modelos que figuran en los anexos III y IV, respectivamente, de esta Orden, se componen, cada uno, de lo siguientes documentos:\na) Hoja resumen, que comprende dos ejemplares, uno para la Administración y otro para el interesado.\nb) Hojas interiores de relación de perceptores, cada una de las cuales consta, asimismo, de dos ejemplares, uno para la Administración y otro para el interesado.\nc) Sobre anual.\nd) Sobre anual PROGRAMA DE AYUDA, para las declaraciones generadas mediante el módulo de impresión elaborado por la Agencia Estatal de Administración Tributaria.\nDos. Serán igualmente válidas las declaraciones que, ajustándose a los contenidos de los modelos aprobados en el presente apartado de esta Orden, se realicen con el módulo de impresión en papel blanco que, en su caso y a estos efectos, elabore la Agencia Estatal de Administración Tributaria.\nTres. El modelo 188 en pesetas, que figura como anexo III de la presente Orden deberá ser utilizado por aquellos obligados tributarios que hayan presentado sus declaraciones-documentos de ingreso modelo 128 en pesetas, correspondientes al ejercicio a que se refiere el resumen anual, conforme a lo establecido en el número dos del apartado primero de esta Orden.\nCuatro. El modelo 188 en euros que figura como anexo IV de la presente Orden deberá ser utilizado por aquellos obligados tributarios que hayan ejercitado la opción de utilización del modelo 128 en euros, conforme a lo establecido en el número tres del apartado primero de la presente Orden.\nEl número de justificante que habrá de figurar en el modelo 188 en euros será un número secuencial cuyos tres primeros dígitos se correspondan con el código 189.",
+      "title": "Quinto. Aprobación de los modelos 188 en pesetas y en euros.",
+      "section": "Quinto. Aprobación de los modelos 188 en pesetas y en euros.",
+      "anchor": null
+    }
+  ]
+}

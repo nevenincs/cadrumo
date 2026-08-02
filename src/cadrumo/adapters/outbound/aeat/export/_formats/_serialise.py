@@ -93,7 +93,28 @@ def serialise(
             mismatch, or from the individual encoders on overflow or
             non-encoding-compatible characters.
     """
-    _require_headers_present(headers, required_field_ids)
+    body = render_record_body(
+        casilla_values=casilla_values,
+        headers=headers,
+        specs=specs,
+        encoding=encoding,
+        total_length=total_length,
+        required_field_ids=required_field_ids,
+    )
+    return body + _CRLF
+
+
+def render_record_body(
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    headers: Mapping[str, HeaderValue],
+    specs: tuple[RecordFieldSpec, ...],
+    encoding: FicheroBoeEncoding,
+    total_length: int,
+    required_field_ids: frozenset[str] = frozenset(),
+) -> bytes:
+    """Render one fixed-width record body without taking ownership of its terminator."""
+    _require_headers_present(headers, required_field_ids, subject="record")
     parts = [_encode_field(spec, casilla_values=casilla_values, headers=headers, encoding=encoding) for spec in specs]
     body = b"".join(parts)
     if len(body) != total_length:
@@ -101,16 +122,21 @@ def serialise(
             f"serialised body is {len(body)} bytes but total_length={total_length} "
             f"was declared; likely an encoder width mismatch.",
         )
-    return body + _CRLF
+    return body
 
 
-def _require_headers_present(headers: Mapping[str, HeaderValue], required_field_ids: frozenset[str]) -> None:
+def _require_headers_present(
+    headers: Mapping[str, HeaderValue],
+    required_field_ids: frozenset[str],
+    *,
+    subject: str,
+) -> None:
     """Fail fast on missing-or-empty required headers before any bytes are emitted."""
     for required in required_field_ids:
         value = headers.get(required)
         if value is None or (isinstance(value, str) and not value):
             raise AeatExportFormatError(
-                f"required header {required!r} missing from draft; cannot serialise fichero-BOE payload",
+                f"required header {required!r} missing from draft; cannot serialise fichero-BOE {subject}",
             )
 
 
@@ -240,12 +266,7 @@ def serialise_envelope(
             per-segment width mismatch.
     """
     # Pre-flight required headers once (not per-segment).
-    for required in required_field_ids:
-        value = headers.get(required)
-        if value is None or (isinstance(value, str) and not value):
-            raise AeatExportFormatError(
-                f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope",
-            )
+    _require_headers_present(headers, required_field_ids, subject="envelope")
 
     chunks: list[bytes] = []
     for segment in segments:
@@ -265,4 +286,4 @@ def serialise_envelope(
     return b"".join(chunks) + _CRLF
 
 
-__all__ = ["serialise", "serialise_envelope"]
+__all__ = ["render_record_body", "serialise", "serialise_envelope"]

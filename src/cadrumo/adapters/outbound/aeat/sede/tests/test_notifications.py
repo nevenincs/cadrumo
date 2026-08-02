@@ -18,6 +18,7 @@ from .._errors import SedeNavigationError
 from .._notifications import (
     _RESUMEN_URL,
     _navigate_and_parse,
+    _recorded_landing_url,
     parse_notifications_query,
     parse_notifications_summary,
 )
@@ -61,12 +62,34 @@ class TestParseNotificationsSummary:
         assert "comunic" in second.tipo.lower() or second.tipo == "comunicacion"
         assert second.fecha_emision.isoformat() == "2025-11-24"
 
+    def test_neutral_concept_in_communications_table_is_a_communication(self) -> None:
+        """The table heading classifies summary rows that have no type cue."""
+        html = (_FIXTURE_ROOT / "notifications-summary-resumen.html").read_text(encoding="utf-8")
+        neutral_html = html.replace("COMUNICACIÓN", "AVISO GENERAL", 1)
+
+        snap = parse_notifications_summary(neutral_html, source_url=_SUMMARY_URL)
+
+        communication = next(row for row in snap.rows if row.certificado_id == "2596230606502")
+        assert communication.concepto == "AVISO GENERAL"
+        assert communication.tipo == "comunicacion"
+
     def test_snapshot_carries_source_url(self) -> None:
         """Assert the snapshot records the originating ``source_url`` and ``mode='read'``."""
         html = (_FIXTURE_ROOT / "notifications-summary-resumen.html").read_text(encoding="utf-8")
         snap = parse_notifications_summary(html, source_url=_SUMMARY_URL)
         assert _SUMMARY_URL in str(snap.source_url)
         assert snap.mode == "read"
+
+    def test_sibling_landing_host_is_preserved_in_snapshot_and_row_provenance(self) -> None:
+        """A valid AEAT dispatch host, rather than www6, is the recorded source."""
+        html = (_FIXTURE_ROOT / "notifications-summary-resumen.html").read_text(encoding="utf-8")
+        landed_url = f"{_AEAT.domains.www12}{_AEAT.sede_paths.notifications_summary}"
+        recorded_url = _recorded_landing_url(landed_url, fallback_url=_SUMMARY_URL)
+
+        snap = parse_notifications_summary(html, source_url=recorded_url)
+
+        assert str(snap.source_url) == landed_url
+        assert {str(row.source_url) for row in snap.rows} == {landed_url}
 
 
 class TestParseNotificationsQuery:

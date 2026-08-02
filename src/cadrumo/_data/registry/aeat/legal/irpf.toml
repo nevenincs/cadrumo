@@ -311,7 +311,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-2000-11-20-modelo-115-apartado-primero.html#apartado-primero"
+corpus_ref = "corpus/normatives/html/orden-2000-11-20-modelo-115-apartado-primero.html#primero"
 document_id = "BOE-A-2000-21430"
 article = "primero"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-21430"
@@ -620,7 +620,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#disposicion-adicional-quinta"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#da-quinta"
 document_id = "BOE-A-2023-25882"
 section = "disposición adicional quinta"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
@@ -641,7 +641,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#disposicion-adicional-sexta"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#da-sexta"
 document_id = "BOE-A-2023-25882"
 section = "disposición adicional sexta"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
@@ -662,7 +662,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#disposicion-adicional-primera"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#da-primera"
 document_id = "BOE-A-2023-25882"
 section = "disposición adicional primera"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
@@ -892,7 +892,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#disposicion-adicional-primera"
+corpus_ref = "corpus/normatives/html/orden-hac-1347-2024.html#da-primera"
 document_id = "BOE-A-2024-24949"
 section = "disposición adicional primera"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-24949"
@@ -1183,7 +1183,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#disposicion-adicional-primera"
+corpus_ref = "corpus/normatives/html/orden-hac-1425-2025.html#da-primera"
 document_id = "BOE-A-2025-25272"
 section = "disposición adicional primera"
 permalink = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-25272"
@@ -1428,9 +1428,9 @@ reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
 notes = "Aprobacion del Modelo 117 como autoliquidacion periodica de retenciones, ingresos a cuenta y pagos a cuenta sobre rentas o ganancias por transmisiones o reembolsos de participaciones de IIC y transmisiones de derechos de suscripcion."
 required_text = [
-    "Modelo 117",
-    "Rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos",
-    "transmisiones de derechos de suscripción",
+    "ANEXO I",
+    "Se sustituye por el que figura como anexo de la Orden HAC/1417/2018",
+    "Se sustituye por el que figura como anexo de la Orden HAP/1626/2016",
 ]
 
 [legal."orden-eha-3435-2007:anexo-ii"]
@@ -1449,8 +1449,8 @@ reviewed_by = "operator"
 notes = "Aprobacion de Modelo 123 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
 required_text = [
     "Modelo 123",
-    "Retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario",
     "Autoliquidación periódica-Modelo 123",
+    "Se sustituye por el que figura como anexo I de la Orden HAC/56/2024",
 ]
 
 [legal."orden-eha-3435-2007:anexo-iv"]
@@ -1467,11 +1467,7 @@ review_status = "reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
 notes = "Aprobacion del Modelo 126 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y rentas por la contraprestacion de cuentas en instituciones financieras."
-required_text = [
-    "Modelo 126",
-    "rendimientos del capital mobiliario",
-    "contraprestación derivada de cuentas",
-]
+required_text = ["ANEXO IV"]
 
 [legal."orden-eha-3435-2007:anexo-v"]
 evidence_tier = "legal_authority"
@@ -1487,11 +1483,7 @@ review_status = "reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "agent-review"
 notes = "Aprobacion del Modelo 128 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalizacion y contratos de seguro."
-required_text = [
-    "Modelo 128",
-    "Rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalización",
-    "contratos de seguro de vida o invalidez",
-]
+required_text = ["ANEXO V"]
 
 [legal."orden-hac-56-2024:art-1"]
 evidence_tier = "legal_authority"
@@ -1511,7 +1503,7 @@ notes = "Sustituye el anexo II de Orden EHA/3435/2007 para Modelo 123 y desglosa
 required_text = [
     "El anexo II, modelo 123",
     "se sustituye por el anexo I de esta orden",
-    "dividendos y otras rentas de participación",
+    "Retenciones e ingresos a cuenta sobre determinadas rentas",
 ]
 
 [legal."orden-hap-1732-2014:art-2"]
@@ -1693,7 +1685,7 @@ notes = "Modifica la Orden EHA/3127/2009 para el Modelo 190 y aplica por primera
 required_text = [
     "Modificación de la Orden EHA/3127/2009",
     "modelo 190",
-    "ejercicio 2025 y siguientes",
+    "Se suprime el anexo I de la Orden EHA/3127/2009",
 ]
 
 [sources."aeat-dr-130-2019-v12"]
@@ -2466,7 +2458,7 @@ reviewed_by = "agent-review"
 notes = "LIRPF art 37: fija normas especificas de valoracion de ganancias y perdidas patrimoniales para valores cotizados/no cotizados, instituciones de inversion colectiva, aportaciones no dinerarias, permutas y otros supuestos."
 required_text = [
     "Normas específicas de valoración",
-    "acciones admitidas a negociación",
+    "valores admitidos a negociación",
     "valores no admitidos a negociación",
     "instituciones de inversión colectiva",
 ]
@@ -3358,7 +3350,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-35-2006.html#dasexta"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-sexta-beneficios-fiscales-especiales"
 document_id = "BOE-A-2006-20764"
 article = "DA-6"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dasexta"
@@ -3457,7 +3449,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-4"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-quincuagesima-deduccion-por-obras"
 document_id = "BOE-A-2006-20764"
 article = "DA-50"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-4"
@@ -3667,7 +3659,7 @@ notes = "Articulo 7 de la Orden HAC/277/2026: plazo de presentacion de la declar
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "8 de abril y 30 de junio de 2026",
-    "desde el día 8 de abril hasta el 25 de junio de 2026",
+    "plazo específicamente establecido en el artículo 13.3",
 ]
 
 [legal."orden-hac-277-2026:art-10"]
@@ -3730,7 +3722,7 @@ notes = "Articulo 8 de la Orden HAC/265/2024: plazo de presentacion de la declar
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "3 de abril y 1 de julio de 2024",
-    "desde el día 3 de abril hasta el 26 de junio de 2024",
+    "plazo específicamente establecido en el artículo 13.3",
 ]
 
 [legal."orden-hac-265-2024:art-11"]
@@ -3793,7 +3785,7 @@ notes = "Articulo 8 de la Orden HAC/248/2021: plazo de presentacion de la declar
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "7 de abril y 30 de junio de 2021",
-    "desde el día 7 de abril hasta el 25 de junio de 2021",
+    "plazo específicamente establecido en el artículo 14.3",
 ]
 
 [legal."orden-hac-248-2021:art-10"]
@@ -3856,7 +3848,7 @@ notes = "Articulo 8 de la Orden HFP/207/2022: plazo de presentacion de la declar
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "6 de abril y 30 de junio de 2022",
-    "desde el día 6 de abril hasta el 27 de junio de 2022",
+    "plazo específicamente establecido en el artículo 14.3",
 ]
 
 [legal."orden-hfp-207-2022:art-10"]
@@ -3919,7 +3911,7 @@ notes = "Articulo 8 de la Orden HFP/310/2023: plazo de presentacion de la declar
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "11 de abril y 30 de junio de 2023",
-    "desde el día 11 de abril hasta el 27 de junio de 2023",
+    "plazo específicamente establecido en el artículo 14.3",
 ]
 
 [legal."orden-hfp-310-2023:art-11"]
@@ -3982,7 +3974,7 @@ notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentacion de la declar
 required_text = [
     "Plazo de presentación del borrador de declaración",
     "2 de abril y 30 de junio de 2025",
-    "desde el día 2 de abril hasta el 25 de junio de 2025",
+    "plazo específicamente establecido en el artículo 13.3",
 ]
 
 [legal."orden-hac-242-2025:art-11"]
@@ -4270,7 +4262,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-35-2006.html#dt-6"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#dt-trigesima-octava-reduccion-aplicable"
 document_id = "BOE-A-2006-20764"
 article = "DT 38"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#dt-6"
@@ -4971,7 +4963,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-48"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#da-cuadragesima-octava-deduccion-aplicable"
 document_id = "BOE-A-2006-20764"
 article = "DA-48"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#da-48"

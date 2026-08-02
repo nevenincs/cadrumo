@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-ar-1992-art-19.html",
+  "source_sha256": "4a35e249cf5f89a7b584fa2fd206a15b37aff70b9005250ee59808a832861422",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Convenio España-Argentina 1992 - Articulo 19\nArticulo 19. Funciones publicas.\n1.a) Las remuneraciones, excluidas las pensiones, pagadas por un Estado Contratante o una de sus subdivisiones politicas o entidades locales a una persona fisica, por razon de servicios prestados a este Estado o a esta subdivision o entidad, solo pueden someterse a imposicion en este Estado.\nb) Sin embargo, estas remuneraciones solo pueden someterse a imposicion en el otro Estado Contratante si los servicios se prestan en este Estado y la persona fisica es un residente de este Estado que posee la nacionalidad de este Estado o no ha adquirido la condicion de residente de este Estado solamente para prestar los servicios.\n2.a) Las pensiones pagadas por un Estado Contratante o por alguna de sus subdivisiones politicas o entidades locales, bien directamente o con cargo a fondos constituidos, a una persona fisica por razon de servicios prestados a este Estado o a esta subdivision o entidad, solo pueden someterse a imposicion en este Estado.\nb) Sin embargo, estas pensiones solo pueden someterse a imposicion en el otro Estado Contratante si la persona fisica fuera residente y nacional de este Estado.\n3. Lo dispuesto en los articulos 15, 16 y 18 se aplica a las remuneraciones y pensiones pagadas por razon de servicios prestados dentro del marco de una actividad industrial o comercial realizada por un Estado Contratante o una de sus subdivisiones politicas o entidades locales.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

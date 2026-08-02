@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3021-2007.html",
+  "source_sha256": "fa1c5567224617c0ad57d06ff5e140d12dba416b0067309c81938775e62376a4",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden EHA/3021/2007, de 11 de octubre, por la que se aprueba el modelo 182 (BOE-A-2007-18192) - Modelo 182\nOrden EHA/3021/2007, de 11 de octubre, por la que se aprueba el modelo 182.\nArticulo 1. Aprobacion del modelo 182.\nSe aprueba el modelo 182 «Impuesto sobre la Renta de las Personas Físicas, Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas».\nArticulo 5. Plazo de presentacion.\nLa presentación de la declaración informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas, modelo 182, se realizará en el mes de enero de cada año.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2007-18192) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

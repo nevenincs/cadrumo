@@ -191,8 +191,9 @@ def resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
     """
     from ..google import load_drive_config
 
-    if settings.cadrumo_google_drive_root_folder_id:
-        return str(settings.cadrumo_google_drive_root_folder_id).strip()
+    override = str(settings.cadrumo_google_drive_root_folder_id or "").strip()
+    if override:
+        return override
     config = load_drive_config(profile)
     if config is not None:
         return config.root_folder_id.strip()

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-3290-2008-art-6.html",
+  "source_sha256": "739f104b9d9cc4bcfd8857794ee9bcf7f48bc048c856da8292f8ce8d20e78310",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se aprueba el modelo 296 «Impuesto sobre la Renta de no Residentes. No residentes sin establecimiento permanente. Declaración anual de retenciones e ingresos a cuenta», que figura como anexo II de la presente Orden.\n2. El modelo 296 consta de:\na) Hoja resumen, que comprende dos ejemplares, uno para la Administración y otro para el interesado.\nb) Hoja de relación nominativa de perceptores, cada una de las cuales consta asimismo, de dos ejemplares, uno para la Administración y otro para el interesado.\nc) Hoja de declaración complementaria por modificación o anulación de datos, que consta de dos ejemplares, uno para la Administración y otro para el interesado.\nd) Sobre de retorno.\nEl número identificativo que habrá de figurar en el modelo 296 para su presentación telemática o en impreso será un número secuencial cuyos tres primeros dígitos se correspondan con el código 296. No obstante, las declaraciones complementarias presentadas por vía telemática que modifiquen el contenido de datos declarados en otra declaración del mismo ejercicio, presentada anteriormente, se realizarán desde el servicio de consulta y modificación de declaraciones informativas en la Oficina Virtual de la Agencia Tributaria (www.agenciatributaria.es). En este caso, la declaración complementaria quedará identificada por el código electrónico de su presentación, no siendo necesario indicar ningún número identificativo.\n3. Serán igualmente válidas las declaraciones que, ajustándose a los contenidos del modelo aprobado en la presente Orden, se realicen con el módulo de impresión en papel blanco que, en su caso y a estos efectos, elabore la Agencia Estatal de Administración Tributaria.\nPara estas declaraciones deberá utilizarse el sobre de retorno «Programa de ayuda», aprobado en la Orden EHA/702/2006, de 9 de marzo, por la que se aprueban los modelos de declaración del Impuesto sobre la Renta de las Personas Físicas y del Impuesto sobre el Patrimonio, ejercicio 2005, se establecen el procedimiento de remisión del borrador de declaración del Impuesto sobre la Renta de las Personas Físicas y las condiciones para su confirmación o suscripción, se determinan el lugar, forma y plazos de presentación de los mismos, así como las condiciones generales y el procedimiento para su presentación por medios telemáticos o telefónicos.\nLos datos impresos en estas declaraciones prevalecerán sobre las alteraciones o correcciones manuales que pudieran producirse sobre los mismos, por lo que éstas no producirán efectos ante la Administración tributaria.",
+      "title": "Artículo 6. Aprobación del modelo 296.",
+      "section": "Artículo 6. Aprobación del modelo 296.",
+      "anchor": "#a6"
+    }
+  ]
+}

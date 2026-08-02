@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rdleg-1-2004-art-6.html",
+  "source_sha256": "0dd588bf2bfd0af4272e9a36ad9f84521b079222183869cec1baf276a0edd629",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. A los exclusivos efectos catastrales, tiene la consideración de bien inmueble la parcela o porción de suelo de una misma naturaleza, enclavada en un término municipal y cerrada por una línea poligonal que delimita, a tales efectos, el ámbito espacial del derecho de propiedad de un propietario o de varios pro indiviso y, en su caso, las construcciones emplazadas en dicho ámbito, cualquiera que sea su dueño, y con independencia de otros derechos que recaigan sobre el inmueble.\n3. A cada bien inmueble se le asignará como identificador una referencia catastral, constituida por un código alfanumérico que permite situarlo inequívocamente en la cartografía oficial del Catastro.\nDicha identificación deberá figurar en todos los documentos que reflejen relaciones de naturaleza económica o con trascendencia tributaria vinculadas al inmueble, conforme establece el título V de esta Ley.\nSe modifica el apartado 3 por la disposición final 18.2 de la Ley 2/2011, de 4 de marzo. Ref. BOE-A-2011-4117.",
+      "title": "Artículo 6. Concepto y clases de bienes inmuebles.",
+      "section": "Artículo 6. Concepto y clases de bienes inmuebles.",
+      "anchor": "#a6"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-ma-1978-art-11.html",
+  "source_sha256": "e5eb41cc150880354e56ace43b6227564b9a9f4879ec215ecdb497d73f003315",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los intereses procedentes de un Estado Contratante y pagados a un residente del otro Estado Contratante pueden someterse a imposicion en este otro Estado.\n2. Sin embargo, estos intereses pueden someterse a imposicion en el Estado Contratante del que procedan y de acuerdo con la legislacion de este estado, pero el impuesto asi exigido no puede exceder del 10 por 100 del importe bruto de los intereses.\n3. El termino intereses empleado en el presente articulo comprende las rentas de fondos publicos, de los bonos u obligaciones, de prestamos, con o sin garantia hipotecaria o de clausula de participacion en los beneficios, y de creditos de toda naturaleza.",
+      "title": "Articulo 11. Intereses.",
+      "section": "Articulo 11. Intereses.",
+      "anchor": "#a11"
+    }
+  ]
+}

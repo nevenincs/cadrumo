@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-1197-2025.html",
+  "source_sha256": "5cef229b4a1acaea811d4bf72ebbd929274735ad4387b430aa95d6a36cde3b21",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/1197/2025, de 21 de octubre, por la que se aprueba el modelo 185 (BOE-A-2025-21726) - Modelo 185\nOrden HAC/1197/2025, de 21 de octubre, por la que se aprueba el modelo 185.\nArticulo 1. Aprobacion del modelo 185.\nSe aprueba el modelo 185, «Declaración informativa mensual de cotizaciones de afiliados y mutualistas».\nArticulo 4. Plazo de presentacion.\nLa presentación del modelo 185, Declaración informativa mensual de cotizaciones de afiliados y mutualistas, tendrá carácter mensual, y se realizará en el plazo de los diez días naturales siguientes a la finalización del mes al que se refiera la declaración.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2025-21726) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

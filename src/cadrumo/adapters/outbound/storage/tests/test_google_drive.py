@@ -16,8 +16,8 @@ import pytest
 
 from .....core.errors import resolve_error_message
 from .....core.i18n import tr
-from .. import OutboundStorageNetworkError, OutboundStorageValidationError
-from .._google_drive import GoogleDriveProvider
+from .. import OutboundStorageIntegrityError, OutboundStorageNetworkError, OutboundStorageValidationError
+from .._google_drive import GoogleDriveProvider, _drive_storage_content_hash
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -106,6 +106,11 @@ def test_google_drive_provider_refuses_the_former_product_vault_before_service_c
     assert exc.context == {"vault_folder_name": "aeat-vault"}
     assert exc.context is not None
     assert resolve_error_message(exc) == tr(exc.translated_message, **exc.context)
+
+
+def test_google_drive_read_metadata_requires_the_same_typed_app_properties_contract() -> None:
+    with pytest.raises(OutboundStorageIntegrityError, match="appProperties"):
+        _drive_storage_content_hash({"id": "drive-file", "appProperties": {"content_hash": "sha256-x"}})
 
 
 @pytest.mark.parametrize(

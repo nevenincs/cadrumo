@@ -37,3 +37,77 @@ required_text = [
     "10 por ciento",
     "4 por ciento",
 ]
+
+[sources."eu-eprs-vat-rates-2025-07-01"]
+evidence_tier = "official_source_guidance"
+authority = "eu"
+kind = "manual_pdf"
+corpus_path = "corpus/eu_official/vat/eprs-vat-rates-eu-2025-07-01.pdf"
+sha256 = "0c4a74d475a22b1f5186c357fb5d002f40dfbf874853e405442993bba6671648"
+bytes = 901491
+retrieved_at = 2026-08-01
+applies_from = 2025-07-01
+source_url = "https://www.europarl.europa.eu/RegData/etudes/BRIE/2026/782613/EPRS_BRI(2026)782613_EN.pdf"
+review_status = "reviewed"
+
+[sources."eu-your-europe-vat-rates-2026-07-13"]
+evidence_tier = "official_source_guidance"
+authority = "eu"
+kind = "instructions"
+corpus_path = "corpus/eu_official/vat/your-europe-vat-rates-2026-07-13.html"
+sha256 = "26e688a3abf2e8fe6f4bd6e98d1252c1e88f5dceaf7a66a4749f0cd3f648ad09"
+bytes = 215334
+retrieved_at = 2026-08-01
+applies_from = 2026-07-13
+source_url = "https://europa.eu/youreurope/business/finance-and-tax/vat/vat-rules-rates/indexamp_en.htm"
+review_status = "reviewed"
+
+[sources."ee-emta-vat-rate-change-2025"]
+evidence_tier = "official_source_guidance"
+authority = "other"
+kind = "instructions"
+corpus_path = "corpus/eu_official/vat/estonia-vat-rate-change-2025.html"
+sha256 = "a603cb165840216e47dec0db8484329a0e3bcac462de121b2ebb41ae7e8b6005"
+bytes = 247454
+retrieved_at = 2026-08-01
+applies_from = 2024-01-01
+source_url = "https://www.emta.ee/en/business-client/taxes-and-payment/value-added-tax"
+review_status = "reviewed"
+
+[sources."fi-vero-vat-rate-change-2026"]
+evidence_tier = "official_source_guidance"
+authority = "other"
+kind = "instructions"
+corpus_path = "corpus/eu_official/vat/finland-vat-rate-change-2026.html"
+sha256 = "dcb124d04dc369b802dba45a6dbb3d645e54461b4092df712fd9b875fbe954fd"
+bytes = 116343
+retrieved_at = 2026-08-01
+published_at = 2026-01-01
+applies_from = 2025-01-01
+source_url = "https://www.vero.fi/en/businesses-and-corporations/taxes-and-charges/vat/rates-of-vat/"
+review_status = "reviewed"
+
+[sources."lt-vmi-vat-rate-change-2026"]
+evidence_tier = "official_source_guidance"
+authority = "other"
+kind = "instructions"
+corpus_path = "corpus/eu_official/vat/lithuania-vat-rate-change-2026.html"
+sha256 = "189921452a0f7158d630710da8fd7f3245f57e62be0752fe21a885072ffc0a0c"
+bytes = 273599
+retrieved_at = 2026-08-01
+applies_from = 2025-01-01
+source_url = "https://www.vmi.lt/evmi/pvm-tarifai"
+review_status = "reviewed"
+
+[sources."ro-anaf-vat-rate-change-2025"]
+evidence_tier = "official_source_guidance"
+authority = "other"
+kind = "manual_pdf"
+corpus_path = "corpus/eu_official/vat/romania-vat-rate-change-2025.pdf"
+sha256 = "38aa44108893e80726428bc9cab9d799e62a51d68207c897d44c2c3ab2101310"
+bytes = 195087
+retrieved_at = 2026-08-01
+published_at = 2025-08-07
+applies_from = 2025-01-01
+source_url = "https://static.anaf.ro/static/10/Galati/Vrancea/Modif-TVA-Legea-141-25.pdf"
+review_status = "reviewed"

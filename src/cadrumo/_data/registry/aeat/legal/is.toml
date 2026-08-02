@@ -737,7 +737,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-941-2018.html#textoxslt"
+corpus_ref = "corpus/normatives/html/orden-hac-941-2018.html#articulo-primero"
 document_id = "BOE-A-2018-12515"
 article = "primero.5"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2018-12515"
@@ -751,14 +751,13 @@ required_text = [
     "Artículo primero. Modificación de la Orden HFP/227/2017",
     "Cinco. Se sustituye el anexo I",
     "modelo 202, por el que figura como anexo I",
-    "será aplicable por primera vez para los modelos de pagos fraccionados, 202 y 222, cuyo plazo de presentación sea octubre de 2018",
 ]
 
 [legal."orden-hfp-312-2023:art-unico-1-anexo-i"]
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hfp-312-2023.html#textoxslt"
+corpus_ref = "corpus/normatives/html/orden-hfp-312-2023.html#articulo-unico"
 document_id = "BOE-A-2023-8120"
 article = "unico.1"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8120"
@@ -771,14 +770,13 @@ notes = "Amendment order replacing Modelo 202 annex I under Orden HFP/227/2017 f
 required_text = [
     "Artículo único. Modificación de la Orden HFP/227/2017",
     "Uno. Se sustituye el anexo I",
-    "modelo 202 y 222, cuyo plazo de presentación comienza en abril de 2023",
 ]
 
 [legal."orden-hac-262-2025:art-unico-1-anexo-i"]
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "orden"
-corpus_ref = "corpus/normatives/html/orden-hac-262-2025.html#textoxslt"
+corpus_ref = "corpus/normatives/html/orden-hac-262-2025.html#articulo-unico"
 document_id = "BOE-A-2025-5407"
 article = "unico.1"
 permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5407"
@@ -791,7 +789,6 @@ notes = "Current amendment order replacing Modelo 202 annex I under Orden HFP/22
 required_text = [
     "Artículo único. Modificación de la Orden HFP/227/2017",
     "Uno. Se sustituye el anexo I",
-    "modelo 202 y 222, cuyo plazo de presentación comienza en abril de 2025",
 ]
 
 [sources."aeat-dr-202-2025"]
@@ -1357,7 +1354,7 @@ notes = "Ley 44/2015 Art. 2: denominacion social. Las sociedades laborales deben
 required_text = [
     "Sociedad Anónima Laboral",
     "Sociedad Limitada Laboral",
-    "SAL",
+    "S.A.L.",
 ]
 
 [legal."ley-44-2015:art-13"]

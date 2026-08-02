@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-7.html",
+  "source_sha256": "ddc6daf7b31f9a6c07dadcacfa4c411821e8383607b0e57351f8095584eae9a6",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Serán contribuyentes del Impuesto, cuando tengan su residencia en territorio español:\na) Las personas jurídicas, excluidas las sociedades civiles que no tengan objeto mercantil.\n2. Los contribuyentes serán gravados por la totalidad de la renta que obtengan, con independencia del lugar donde se hubiere producido y cualquiera que sea la residencia del pagador.\n3. Los contribuyentes de este Impuesto se designarán abreviada e indistintamente por las denominaciones sociedades o entidades a lo largo de esta Ley.\nSe modifica el apartado 1 por la disposición final 7.1 y 2 de la Ley 5/2015, de 27 de abril. Ref. BOE-A-2015-4607.",
+      "title": "Artículo 7. Contribuyentes.",
+      "section": "Artículo 7. Contribuyentes.",
+      "anchor": "#a7"
+    }
+  ]
+}

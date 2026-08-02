@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.config import load_settings
-from .._browser_constants import default_viewport, selector_probe_timeout_ms
+from ......core.config import load_settings, override_settings
+from .._browser_constants import default_viewport, navigation_timeout_ms, selector_probe_timeout_ms
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -28,3 +28,9 @@ def test_default_viewport_matches_settings() -> None:
 def test_selector_probe_timeout_matches_settings() -> None:
     """``selector_probe_timeout_ms`` returns the configured probe timeout."""
     assert selector_probe_timeout_ms() == load_settings().cadrumo_browser_selector_probe_timeout_ms
+
+
+def test_navigation_timeout_uses_the_settings_override() -> None:
+    """Declarations navigation observes the shared settings-backed timeout."""
+    with override_settings(cadrumo_browser_navigation_timeout_ms=321):
+        assert navigation_timeout_ms() == 321

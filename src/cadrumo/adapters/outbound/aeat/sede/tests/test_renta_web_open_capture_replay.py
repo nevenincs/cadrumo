@@ -29,6 +29,7 @@ from ......domain.calculations.registry import (
     CasillaId,
     RentaWebOpenLivePayload,
     RentaWebOpenSyntheticProfile,
+    serialize_renta_web_open_replay_decimal,
     validated_casilla_id,
 )
 from ......tests.live_gate import requires_live_enabled
@@ -216,11 +217,13 @@ def test_capture_profile_variant_replay_payload(
     # only apply to the default-profile capture; CCAA variants produce
     # different autonomic mínimos.)
     expected_by_label = {
-        label: _parse_spanish_decimal(observed[casilla_id])
+        label: serialize_renta_web_open_replay_decimal(observed[casilla_id])
         for casilla_id, label in _CASILLA_TO_LABEL.items()
         if casilla_id in observed
     }
-    expected_by_casilla_id = {casilla_id: _parse_spanish_decimal(value) for casilla_id, value in observed.items()}
+    expected_by_casilla_id = {
+        casilla_id: serialize_renta_web_open_replay_decimal(value) for casilla_id, value in observed.items()
+    }
     observed_by_label = {
         label: observed[casilla_id] for casilla_id, label in _CASILLA_TO_LABEL.items() if casilla_id in observed
     }
@@ -235,9 +238,3 @@ def test_capture_profile_variant_replay_payload(
     }
     payload_path.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")
     assert payload_path.exists()
-
-
-def _parse_spanish_decimal(value: str) -> str:
-    """Convert a Spanish-formatted decimal ("5.956,65") to plain form ("5956.65")."""
-
-    return value.replace(".", "").replace(",", ".")

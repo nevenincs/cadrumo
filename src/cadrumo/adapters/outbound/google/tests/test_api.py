@@ -118,6 +118,19 @@ def test_execute_request_returns_dict_typed_as_google_api_response_body() -> Non
     assert result["kind"] == "drive#file"
 
 
+@pytest.mark.parametrize("payload", ([], None, "not-a-mapping", 7))
+def test_execute_request_refuses_non_mapping_success_responses(payload: object) -> None:
+    """A real Google client cannot leak scalar/list/null 2xx bodies downstream."""
+    body = json.dumps(payload).encode("utf-8")
+    with (
+        _local_google_request((200, body)) as (req, _paths),
+        pytest.raises(OutboundStorageNetworkError, match="non-mapping response body") as excinfo,
+    ):
+        execute_request(req, action="drive.files.list")
+
+    assert excinfo.value.context == {"action": "drive.files.list", "response_type": type(payload).__name__}
+
+
 def test_execute_request_passes_nested_dict_payload_intact() -> None:
     """Nested dicts in the response survive the execute_request boundary."""
 

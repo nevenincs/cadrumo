@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-be-1995-art-10.html",
+  "source_sha256": "a881e16a803e61f35ed79ae61795a3ffed6c9382f3f2b299475f56b0bc0fa5b6",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los dividendos pagados por una sociedad residente de un Estado contratante a un residente del otro Estado contratante pueden someterse a imposición en ese otro Estado.\n2. a) Sin embargo, tales dividendos pueden también someterse a imposición en el Estado contratante en que resida la sociedad que paga los dividendos y según la legislación de ese Estado, pero si el beneficiario efectivo de los dividendos es un residente del otro Estado contratante el impuesto así exigido no podrá exceder del 15 por 100 del importe bruto de los dividendos.\nb) No obstante cuando una sociedad que es residente de un Estado contratante detente directamente al menos el 25 por 100 del capital de una sociedad que es residente del otro Estado contratante, los dividendos que se pagan por esta última sociedad están exentos de impuesto en el Estado donde la sociedad que distribuye los mismos sea residente si la legislación interna de este Estado aplicable al caso lo permite.",
+      "title": "Artículo 10. Dividendos.",
+      "section": "Artículo 10. Dividendos.",
+      "anchor": "#a10"
+    }
+  ]
+}

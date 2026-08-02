@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-fr-1995-art-12.html",
+  "source_sha256": "b32251e45aa9ce4d6ac1264bec3cead89cfedddd2d8a3ca3bfb56fab69cdb77e",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los cánones procedentes de un Estado contratante y pagados a un residente del otro Estado contratante pueden someterse a imposición en este otro Estado.\n2. a) Estos cánones pueden, sin embargo, someterse a imposición en el Estado contratante del que procedan y de acuerdo con la legislación de este Estado, pero si el perceptor de los cánones es el beneficiario efectivo, el impuesto así establecido no puede exceder del 5 por 100 del importe bruto de los cánones.\nb) No obstante lo dispuesto en el apartado a), los cánones pagados por el uso o la concesión de uso de un derecho de autor sobre una obra literaria o artística sólo pueden someterse a imposición en el Estado contratante del que el perceptor es residente, si dicho perceptor es el beneficiario efectivo.",
+      "title": "Artículo 12. Cánones.",
+      "section": "Artículo 12. Cánones.",
+      "anchor": "#a12"
+    }
+  ]
+}

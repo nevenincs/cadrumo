@@ -10,10 +10,11 @@ provider-agnostic. Adapters live in sibling modules under
 from __future__ import annotations
 
 import logging
+import math
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .._errors import LLMProviderError, LLMRateLimitError
 from .._models import LLMProvider
@@ -110,15 +111,16 @@ def parse_retry_after(value: str | None) -> float | None:
         value: Raw header value, or ``None`` when the header is absent.
 
     Returns:
-        Number of seconds to wait, or ``None`` when the value is missing or
-        not a plain numeric string.
+        Finite, non-negative seconds to wait, or ``None`` when the value is
+        missing or cannot represent a safe delay.
     """
     if value is None:
         return None
     try:
-        return float(value.strip())
+        parsed = float(value.strip())
     except ValueError:
         return None
+    return parsed if math.isfinite(parsed) and parsed >= 0 else None
 
 
 def raise_rate_limit(message: str, retry_after: str | None) -> None:
@@ -134,12 +136,61 @@ def raise_rate_limit(message: str, retry_after: str | None) -> None:
     raise LLMRateLimitError(message, retry_after_seconds=parse_retry_after(retry_after))
 
 
+def parse_provider_response[ProviderResponse: BaseModel](
+    response: httpx.Response,
+    *,
+    provider_name: str,
+    response_model: type[ProviderResponse],
+) -> ProviderResponse:
+    """Validate a successful provider response at the outbound boundary.
+
+    Args:
+        response: Successful HTTP response whose JSON body must match the provider schema.
+        provider_name: Human-readable provider label for the public error.
+        response_model: Strict Pydantic model for the provider response envelope.
+
+    Returns:
+        The validated provider response.
+
+    Raises:
+        LLMProviderError: When a 2xx response body is malformed for its provider.
+    """
+    try:
+        return response_model.model_validate_json(response.text)
+    except ValidationError as exc:
+        raise LLMProviderError(f"{provider_name} returned an invalid response.") from exc
+
+
+def require_provider_response_item[ProviderResponseItem](
+    items: tuple[ProviderResponseItem, ...],
+    *,
+    provider_name: str,
+    item_name: str,
+) -> ProviderResponseItem:
+    """Return the first required response item or raise a declared provider error.
+
+    Args:
+        items: Provider response collection expected to contain a primary item.
+        provider_name: Human-readable provider label for the public error.
+        item_name: Plural provider-specific item name used in diagnostics.
+
+    Returns:
+        The first response item.
+
+    Raises:
+        LLMProviderError: When a successful provider response has no primary item.
+    """
+    if not items:
+        raise LLMProviderError(f"{provider_name} returned no {item_name}.")
+    return items[0]
+
+
 def check_http_error(response: httpx.Response, *, provider_name: str, model: str, logger: logging.Logger) -> None:
     """Raise a normalized error for a non-2xx LLM HTTP response.
 
     A 429 raises a rate-limit error carrying the parsed ``Retry-After`` hint;
-    any other 5xx or 4xx status raises a provider error. Shared by the OpenAI
-    and Gemini adapters, whose status-dispatch was otherwise identical.
+    any other non-2xx status raises a provider error. Shared by the OpenAI,
+    Gemini, and local adapters, whose status-dispatch is otherwise identical.
 
     Args:
         response: Provider HTTP response to inspect.
@@ -149,15 +200,16 @@ def check_http_error(response: httpx.Response, *, provider_name: str, model: str
 
     Raises:
         LLMRateLimitError: On HTTP 429.
-        LLMProviderError: On any other 5xx or 4xx status.
+        LLMProviderError: On any other non-2xx status.
     """
     status = response.status_code
     if status == 429:
         logger.warning("%s: rate limit response status=%d model=%s", provider_name, status, model)
         raise_rate_limit(f"{provider_name} rate limit exceeded.", response.headers.get("retry-after"))
+    if 200 <= status < 300:
+        return
     if status >= 500:
         logger.error("%s: server error status=%d model=%s", provider_name, status, model)
         raise LLMProviderError(f"{provider_name} API failure ({status}).")
-    if status >= 400:
-        logger.warning("%s: client error status=%d model=%s", provider_name, status, model)
-        raise LLMProviderError(f"{provider_name} API failure ({status}).")
+    logger.warning("%s: unexpected HTTP status=%d model=%s", provider_name, status, model)
+    raise LLMProviderError(f"{provider_name} API failure ({status}).")

@@ -93,7 +93,9 @@ Se incluye el modelo 232 de «Declaración informativa de operaciones vinculadas
 
 La presente orden entrará en vigor el día siguiente al de su publicación en el «Boletín Oficial del Estado» y será de aplicación para las declaraciones correspondientes a los períodos impositivos iniciados a partir del 1 de enero de 2016.
 Madrid, 28 de agosto de 2017.–El Ministro de Hacienda y Función Pública, Cristóbal Montoro Romero.
-ANEXO
+
+# ANEXO
+
 Formato electrónico
 Análisis
 ANÁLISIS

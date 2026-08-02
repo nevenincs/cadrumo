@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hap-1608-2014-art-1.html",
+  "source_sha256": "0bab093746c8fafa29ef1698c303e8c895f34a7abd50bb7d81d8a44c7c93db35",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Se aprueba el modelo 187, «Declaración informativa de acciones o participaciones representativas del capital o del patrimonio de las instituciones de inversión colectiva y del resumen anual de retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas Físicas, del Impuesto sobre Sociedades y del Impuesto sobre la Renta de no Residentes, en relación con las rentas o ganancias patrimoniales obtenidas como consecuencia de las transmisiones o reembolsos de esas acciones o participaciones», que figura en el anexo I de la presente Orden.\nDicho modelo de declaración informativa se compone de una hoja-resumen, que comprende dos ejemplares, uno para la Administración y otro para el interesado.\nEl número identificativo que habrá de figurar en el modelo 187 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 187.\nEl número identificativo que habrá de figurar en el modelo 187 en el caso de tratarse de una declaración sustitutiva o complementaria que incorpore registros no declarados previamente será un número secuencial cuyos tres primeros dígitos se correspondan con el código 187.\nLa presentación de declaraciones complementarias que modifiquen el contenido de los datos incluidos en otra declaración presentada anteriormente y que se refieran al mismo ejercicio, se realizará desde el servicio de consulta y modificación de declaraciones informativas, dentro de los trámites asociados al modelo 187, que se encuentra disponible en la Sede Electrónica de la Agencia Estatal de Administración Tributaria, en la dirección electrónica https://www.agenciatributaria.gob.es. En este caso la declaración complementaria quedará identificada por el código electrónico de su presentación, no siendo necesario indicar ningún número identificativo.\n2. Se aprueban los diseños físicos a los que deberán ajustarse los soportes directamente legibles por ordenador y los diseños lógicos a los que deberán ajustarse los ficheros que contengan la información a suministrar, tanto en el supuesto de presentación mediante soporte directamente legible por ordenador, como por vía electrónica por Internet. Ambos diseños, físicos y lógicos, figuran en el anexo II de la presente Orden.",
+      "title": "Artículo 1. Aprobación del modelo 187 y de los diseños físicos y lógicos.",
+      "section": "Artículo 1. Aprobación del modelo 187 y de los diseños físicos y lógicos.",
+      "anchor": "#a1"
+    }
+  ]
+}

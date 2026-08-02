@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...storage import OutboundStoragePermissionError
+from ...storage import OutboundStorageNetworkError, OutboundStoragePermissionError
 from .._document_link_resolver import list_drive_folder_documents
 from ._drive_media_server import drive_files_list_endpoint
 
@@ -80,6 +80,44 @@ def test_follows_pagination_until_exhausted() -> None:
 
     assert {document.file_id for document in listing.documents} == {"file-1", "file-2"}
     assert len(endpoint.requested_queries) == 2
+
+
+def test_repeated_page_token_refuses_before_an_unbounded_drive_sweep() -> None:
+    """A real generated client sees two pages before the repeated token is refused."""
+    repeated_page = {"files": [], "nextPageToken": "again"}
+    with (
+        drive_files_list_endpoint(pages=[repeated_page, repeated_page]) as endpoint,
+        pytest.raises(OutboundStorageNetworkError, match="repeated nextPageToken"),
+    ):
+        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+    assert len(endpoint.requested_queries) == 2
+
+
+@pytest.mark.parametrize(
+    "entry",
+    (
+        {"name": "invoice.pdf", "mimeType": "application/pdf"},
+        {"id": None, "name": "invoice.pdf", "mimeType": "application/pdf"},
+        {"id": "", "name": "invoice.pdf", "mimeType": "application/pdf"},
+        {"id": "file-1", "mimeType": "application/pdf"},
+        {"id": "file-1", "name": "", "mimeType": "application/pdf"},
+        {"id": "file-1", "name": "invoice.pdf"},
+        {"id": "file-1", "name": "invoice.pdf", "mimeType": ""},
+    ),
+)
+def test_malformed_successful_file_entry_refuses_at_the_drive_boundary(entry: dict[str, object]) -> None:
+    """A real generated client maps malformed 2xx file rows to a typed error."""
+    with (
+        drive_files_list_endpoint(pages=[{"files": [entry]}]) as endpoint,
+        pytest.raises(OutboundStorageNetworkError, match="malformed file entry") as excinfo,
+    ):
+        list_drive_folder_documents(folder_id=_FOLDER_ID, credentials=None, service=endpoint.service)
+
+    assert excinfo.value.context == {
+        "action": "drive.files.list",
+        "folder_id": _FOLDER_ID,
+        "entry_index": "0",
+    }
 
 
 def test_empty_folder_returns_no_documents() -> None:

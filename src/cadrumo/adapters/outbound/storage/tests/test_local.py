@@ -408,6 +408,33 @@ def test_get_raises_storage_corruption_error_when_sidecar_byte_length_is_wrong_t
     assert resolve_error_message(raised.value) == tr(raised.value.translated_message, **(raised.value.context or {}))
 
 
+def test_get_refuses_sidecar_byte_length_that_disagrees_with_payload(
+    provider: LocalFileSystemProvider,
+) -> None:
+    """The real read path rejects a numeric sidecar length that misstates payload bytes."""
+
+    payload = b"byte-length-integrity"
+    metadata = provider.put(
+        "ledger_transaction",
+        "aabbccdd00112233",
+        payload,
+        content_hash=_hash(payload),
+        label="byte-length",
+    )
+    object_path = Path(metadata.provider_object_id)
+    sidecar_path = object_path.with_name(object_path.stem + ".meta.json")
+    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    sidecar["byte_length"] = len(payload) + 1
+    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+
+    with pytest.raises(OutboundStorageIntegrityError) as raised:
+        provider.get("ledger_transaction", "aabbccdd00112233")
+
+    assert raised.value.context is not None
+    assert raised.value.context["stored_byte_length"] == str(len(payload) + 1)
+    assert raised.value.context["actual_byte_length"] == str(len(payload))
+
+
 # ---------------------------------------------------------------------------
 # WIN-003: Windows MAX_PATH (long-path) classification on the write boundary
 # ---------------------------------------------------------------------------

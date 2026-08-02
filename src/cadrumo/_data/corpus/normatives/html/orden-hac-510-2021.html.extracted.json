@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-510-2021.html",
+  "source_sha256": "e7af2c40d06c459fcd17b0ae9ce08c6c6e04813107ecebd53d40b65b453ee38f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Orden HAC/510/2021, de 26 de mayo, por la que se aprueba el modelo 604 (BOE-A-2021-8878) - Modelo 604\nOrden HAC/510/2021, de 26 de mayo, por la que se aprueba el modelo 604.\nArticulo 1. Aprobacion del modelo 604.\nSe aprueba el modelo 604 «Impuesto sobre las Transacciones Financieras. Autoliquidación».\nArticulo 3. Plazo de presentacion.\nEl modelo 604 deberá presentarse e ingresarse por el depositario central de valores o por el sujeto pasivo entre los días diez y veinte del mes siguiente al correspondiente periodo de liquidación mensual.\nProvenance: verbatim excerpt transcribed from the BOE consolidated text (https://www.boe.es/buscar/act.php?id=BOE-A-2021-8878) via agent web fetch during the obligation-enrollment campaign, under explicit operator authorization. Pending operator re-verification.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

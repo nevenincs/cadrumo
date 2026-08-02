@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-101.html",
+  "source_sha256": "235e35fb9596e9f38504dcb9285a6b845d41bcfb29a02bf730b58da4b5a7728e",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. Los incentivos fiscales establecidos en este capítulo se aplicarán siempre que el importe neto de la cifra de negocios habida en el período impositivo inmediato anterior sea inferior a 10 millones de euros.\nNo obstante, dichos incentivos no resultarán de aplicación cuando la entidad tenga la consideración de entidad patrimonial en los términos establecidos en el apartado 2 del artículo 5 de esta Ley.\n2. Cuando la entidad fuere de nueva creación, el importe de la cifra de negocios se referirá al primer período impositivo en que se desarrolle efectivamente la actividad. Si el período impositivo inmediato anterior hubiere tenido una duración inferior al año, o la actividad se hubiere desarrollado durante un plazo también inferior, el importe neto de la cifra de negocios se elevará al año.\n3. Cuando la entidad forme parte de un grupo de sociedades en el sentido del artículo 42 del Código de Comercio, con independencia de la residencia y de la obligación de formular cuentas anuales consolidadas, el importe neto de la cifra de negocios se referirá al conjunto de entidades pertenecientes a dicho grupo, teniendo en cuenta las eliminaciones e incorporaciones que correspondan por aplicación de la normativa contable.",
+      "title": "Artículo 101. Ámbito de aplicación. Cifra de negocios.",
+      "section": "Artículo 101. Ámbito de aplicación. Cifra de negocios.",
+      "anchor": "#a101"
+    }
+  ]
+}

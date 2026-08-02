@@ -20,7 +20,7 @@ from .._record_spec import (
     record_field,
     validate_segment_specs,
 )
-from .._serialise import serialise_envelope
+from .._serialise import serialise, serialise_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _ENVELOPE_AMOUNT_CASILLA: CasillaId = validated_casilla_id("01", surface="_ENVELOPE_AMOUNT_CASILLA")
@@ -202,6 +202,30 @@ class TestEnvelopeSerialise:
                 segments=segments,
                 encoding=ISO_8859_1_ENCODING,
                 required_field_ids=frozenset({"FIELD_IDENTITY"}),
+            )
+
+    @pytest.mark.parametrize("headers", ({"FIELD_YEAR": "2024"}, {"FIELD_YEAR": "2024", "FIELD_IDENTITY": ""}))
+    def test_payload_and_envelope_share_missing_or_empty_header_refusal(self, headers: dict[str, str]) -> None:
+        """Both serializers reject each required-header absence through one authority."""
+        segments = _build_envelope_mini()
+        required = frozenset({"FIELD_IDENTITY"})
+
+        with pytest.raises(ValueError, match="fichero-BOE payload"):
+            serialise(
+                casilla_values={_ENVELOPE_AMOUNT_CASILLA: Decimal("0.00")},
+                headers=headers,
+                specs=segments[1].specs,
+                encoding=ISO_8859_1_ENCODING,
+                total_length=segments[1].total_length,
+                required_field_ids=required,
+            )
+        with pytest.raises(ValueError, match="fichero-BOE envelope"):
+            serialise_envelope(
+                casilla_values={_ENVELOPE_AMOUNT_CASILLA: Decimal("0.00")},
+                headers=headers,
+                segments=segments,
+                encoding=ISO_8859_1_ENCODING,
+                required_field_ids=required,
             )
 
     def test_envelope_length_mismatch_raises(self) -> None:

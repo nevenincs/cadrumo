@@ -95,7 +95,7 @@ notes = "Orden HFP/1415/2023 articulo 5: establece la presentacion electronica d
 required_text = [
     "Articulo 5. Forma de presentacion",
     "se efectuara por via telematica",
-    "Sede electronica de la Agencia Estatal de Administracion Tributaria",
+    "código seguro de verificación de 16 caracteres",
 ]
 
 [sources."aeat-modelo-379-procedure"]

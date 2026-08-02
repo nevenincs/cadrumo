@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-58-2003-art-5.html",
+  "source_sha256": "8041cdd3f0c85d717212354314db86f6ab17dedc32cb27f154373cc179794329",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "1. A los efectos de esta Ley, la Administración Tributaria estará integrada por los órganos y entidades de derecho público que desarrollen las funciones reguladas en sus títulos III, IV, V, VI y VII.\n2. En el ámbito de competencias del Estado, la aplicación de los tributos, el ejercicio de la potestad sancionadora y la función revisora en vía administrativa corresponde al Ministerio de Economía y Hacienda, en tanto no haya sido expresamente encomendada por Ley a otro órgano o entidad de derecho público. En los términos previstos en su Ley de creación, dichas competencias corresponden a la Agencia Estatal de Administración Tributaria, salvo la declaración de nulidad de pleno derecho regulada en el artículo 217 y las reclamaciones económico-administrativas reguladas en el capítulo IV del título V de la presente Ley.",
+      "title": "Artículo 5. La Administración tributaria.",
+      "section": "Artículo 5. La Administración tributaria.",
+      "anchor": "#a5"
+    }
+  ]
+}

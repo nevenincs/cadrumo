@@ -1,0 +1,11 @@
+# Quinto. Aprobación de los modelos 188 en pesetas y en euros.
+
+Uno. Se aprueban los modelos 188 en pesetas y en euros «Impuesto sobre la Renta de las Personas Físicas, Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes). Retenciones e ingresos a cuenta. Rentas o rendimientos del capital mobiliario procedentes de operaciones de capitalización y de contratos de seguro de vida o invalidez. Resumen anual». Dichos modelos que figuran en los anexos III y IV, respectivamente, de esta Orden, se componen, cada uno, de lo siguientes documentos:
+a) Hoja resumen, que comprende dos ejemplares, uno para la Administración y otro para el interesado.
+b) Hojas interiores de relación de perceptores, cada una de las cuales consta, asimismo, de dos ejemplares, uno para la Administración y otro para el interesado.
+c) Sobre anual.
+d) Sobre anual PROGRAMA DE AYUDA, para las declaraciones generadas mediante el módulo de impresión elaborado por la Agencia Estatal de Administración Tributaria.
+Dos. Serán igualmente válidas las declaraciones que, ajustándose a los contenidos de los modelos aprobados en el presente apartado de esta Orden, se realicen con el módulo de impresión en papel blanco que, en su caso y a estos efectos, elabore la Agencia Estatal de Administración Tributaria.
+Tres. El modelo 188 en pesetas, que figura como anexo III de la presente Orden deberá ser utilizado por aquellos obligados tributarios que hayan presentado sus declaraciones-documentos de ingreso modelo 128 en pesetas, correspondientes al ejercicio a que se refiere el resumen anual, conforme a lo establecido en el número dos del apartado primero de esta Orden.
+Cuatro. El modelo 188 en euros que figura como anexo IV de la presente Orden deberá ser utilizado por aquellos obligados tributarios que hayan ejercitado la opción de utilización del modelo 128 en euros, conforme a lo establecido en el número tres del apartado primero de la presente Orden.
+El número de justificante que habrá de figurar en el modelo 188 en euros será un número secuencial cuyos tres primeros dígitos se correspondan con el código 189.

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-27-2014-da-14.html",
+  "source_sha256": "8c3beb71cb3664ae8ebf4dd7b4ab3a9e5df05bb5cd905cc59c710a3ff9f76a25",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.0",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Para los contribuyentes cuyo importe neto de la cifra de negocios, en los doce meses anteriores a la fecha en que se inicien los períodos impositivos, sea al menos diez millones de euros, la cantidad a ingresar no podrá ser inferior, en ningún caso, al 23 por ciento (25 por ciento para contribuyentes a los que resulte de aplicación el tipo de gravamen previsto en el primer párrafo del apartado 6 del artículo 29 de esta Ley) del resultado positivo de la cuenta de pérdidas y ganancias del ejercicio de los 3, 9 u 11 primeros meses de cada año natural, determinado de acuerdo con el Código de Comercio, minorado exclusivamente en los pagos fraccionados realizados con anterioridad correspondientes al mismo período impositivo.",
+      "title": "Disposición adicional decimocuarta. Modificaciones en el régimen legal de los pagos fraccionados.",
+      "section": "Disposición adicional decimocuarta. Modificaciones en el régimen legal de los pagos fraccionados.",
+      "anchor": null
+    }
+  ]
+}

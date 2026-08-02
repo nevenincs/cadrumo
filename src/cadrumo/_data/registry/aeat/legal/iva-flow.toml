@@ -22,7 +22,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
-corpus_ref = "corpus/normatives/html/ley-37-1992.html#a9-2"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#articulo-9-bis-acuerdo-de-ventas-de-bienes-en-consigna"
 document_id = "BOE-A-1992-28740"
 article = "9 bis"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9-2"

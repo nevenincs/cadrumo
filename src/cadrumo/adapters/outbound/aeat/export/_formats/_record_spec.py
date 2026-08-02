@@ -44,7 +44,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ......core import STRICT_FROZEN_CONFIG
 from ......core.money import round_to_cents as _round_to_cents
-from ......domain.calculations.registry import CasillaId
+from ......domain.calculations.registry import CasillaId, OneBasedExportOffset
 from .._errors import AeatExportFormatError
 
 # FicheroBoeEncoding must stay as a Literal for static type-checking, but the
@@ -174,7 +174,7 @@ class RecordFieldSpec(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    offset: Annotated[int, Field(ge=1)]
+    offset: OneBasedExportOffset
     """1-based byte offset per BOE convention."""
 
     length: Annotated[int, Field(ge=1)]
