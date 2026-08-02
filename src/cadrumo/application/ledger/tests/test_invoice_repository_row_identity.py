@@ -35,12 +35,14 @@ from .._business_operation_invoice import (
     BusinessOperationInvoiceDirection,
     BusinessOperationInvoiceDocument,
     BusinessOperationInvoiceRepository,
+    PayableInvoiceService,
 )
 from .._evidence import (
     MediaKind,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceDocument,
     PurchaseInvoiceEvidenceRepository,
+    PurchaseInvoiceEvidenceService,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -232,3 +234,85 @@ def test_the_two_directions_do_not_share_a_key(secure_objects: SecureObjectRepos
     assert payable_key != collectible_key
     assert payable_key.startswith(_BUCKET_A)
     assert collectible_key.startswith(_BUCKET_A)
+
+
+# ---------------------------------------------------------------------------
+# The operator-facing surfaces the audit actually named
+# ---------------------------------------------------------------------------
+#
+# The repository tests above prove the shared load contract fires. These prove
+# the leak the audit reported is closed at the surface an operator sees:
+# ``list_all`` on each service. Both read through ``load``, so the refusal
+# propagates -- but that is an inference until it is measured, and it is the
+# inference that would silently stop holding if either service were rewired to
+# a scan.
+
+
+def _misfile_evidence_under_bucket_a(secure_objects: SecureObjectRepository) -> None:
+    repository = PurchaseInvoiceEvidenceRepository(objects=secure_objects)
+    write = repository.to_secure_object_write(_evidence_document(_BUCKET_B))
+    secure_objects.save(
+        namespace=write.namespace,
+        object_key=_BUCKET_A,
+        classification=write.classification,
+        schema_version=write.schema_version,
+        written_at=write.written_at,
+        payload=write.payload,
+    )
+
+
+def test_evidence_service_list_all_does_not_leak_a_foreign_bucket(
+    runtime_profile: TestRuntimeProfile,
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """``PurchaseInvoiceEvidenceService.list_all(A)`` must not return B's records."""
+    _misfile_evidence_under_bucket_a(secure_objects)
+
+    with pytest.raises(SecureObjectRowIdentityError):
+        PurchaseInvoiceEvidenceService(settings=runtime_profile.settings).list_all(bucket_id=_BUCKET_A)
+
+
+def test_evidence_service_list_all_still_returns_its_own_bucket(
+    runtime_profile: TestRuntimeProfile,
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Positive control at the surface: A's own records must still list."""
+    PurchaseInvoiceEvidenceRepository(objects=secure_objects).save(_evidence_document(_BUCKET_A))
+
+    listed = PurchaseInvoiceEvidenceService(settings=runtime_profile.settings).list_all(bucket_id=_BUCKET_A)
+
+    assert tuple(record.bucket_id for record in listed) == (_BUCKET_A,)
+
+
+def test_payable_service_list_all_does_not_leak_a_foreign_bucket(
+    runtime_profile: TestRuntimeProfile,
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """``PayableInvoiceService.list_all(A)`` must not return B's invoices."""
+    kind = BusinessOperationInvoiceDirection.PAYABLE_INVOICE
+    repository = BusinessOperationInvoiceRepository(objects=secure_objects)
+    write = repository.to_secure_object_write(_invoice_document(_BUCKET_B, kind))
+    secure_objects.save(
+        namespace=write.namespace,
+        object_key=repository.extract_identifier(_invoice_document(_BUCKET_A, kind)),
+        classification=write.classification,
+        schema_version=write.schema_version,
+        written_at=write.written_at,
+        payload=write.payload,
+    )
+
+    with pytest.raises(SecureObjectRowIdentityError):
+        PayableInvoiceService(settings=runtime_profile.settings).list_all(bucket_id=_BUCKET_A)
+
+
+def test_payable_service_list_all_still_returns_its_own_bucket(
+    runtime_profile: TestRuntimeProfile,
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Positive control at the surface: A's own invoices must still list."""
+    kind = BusinessOperationInvoiceDirection.PAYABLE_INVOICE
+    BusinessOperationInvoiceRepository(objects=secure_objects).save(_invoice_document(_BUCKET_A, kind))
+
+    listed = PayableInvoiceService(settings=runtime_profile.settings).list_all(bucket_id=_BUCKET_A)
+
+    assert tuple(record.bucket_id for record in listed) == (_BUCKET_A,)
