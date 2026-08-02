@@ -20,6 +20,7 @@ _BUCKET_ID = "google-session"
 def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: Path) -> None:
     profile = "operator-google"
     issued_at = datetime(2026, 5, 26, 9, 0, 0, tzinfo=UTC)
+    opaque_refresh_token = " 1//refresh-token\t"
     client = OAuthClient(
         client_id="desktop-client.apps.googleusercontent.com",
         client_secret="gcp-client-secret",
@@ -30,7 +31,7 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
         redirect_uris=("http://127.0.0.1:8765/callback",),
     )
     token = OAuthToken(
-        refresh_token="1//refresh-token",
+        refresh_token=opaque_refresh_token,
         token_uri="https://oauth2.googleapis.com/token",
     )
     metadata = OAuthMetadata(
@@ -48,7 +49,10 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
         _session_store.save_drive_config(profile, drive_config)
 
         assert _session_store.load_client(profile) == client
-        assert _session_store.load_token(profile) == token
+        loaded_token = _session_store.load_token(profile)
+        assert loaded_token == token
+        assert loaded_token is not None
+        assert loaded_token.refresh_token == opaque_refresh_token
         loaded_metadata = _session_store.load_metadata(profile)
         assert loaded_metadata == metadata
         assert loaded_metadata is not None

@@ -169,6 +169,14 @@ def test_oauth_token_rejects_empty_refresh() -> None:
         OAuthToken(refresh_token="", token_uri="https://oauth2.googleapis.com/token")
 
 
+@pytest.mark.parametrize("refresh_token", (" ", "\t\r\n"))
+def test_oauth_token_rejects_whitespace_only_refresh(refresh_token: str) -> None:
+    """A refresh credential must carry opaque token bytes, not only whitespace."""
+
+    with pytest.raises(ValidationError, match="non-whitespace"):
+        OAuthToken(refresh_token=refresh_token, token_uri="https://oauth2.googleapis.com/token")
+
+
 def test_oauth_metadata_round_trip() -> None:
     metadata = OAuthMetadata(**_valid_metadata_kwargs())
     reloaded = OAuthMetadata.model_validate_json(metadata.model_dump_json())

@@ -132,6 +132,13 @@ class OAuthToken(BaseModel):
     refresh_token: str = Field(min_length=1)
     token_uri: str = Field(min_length=1)
 
+    @field_validator("refresh_token")
+    @classmethod
+    def _validate_refresh_token(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("refresh_token must contain a non-whitespace token")
+        return value
+
     @field_validator("token_uri")
     @classmethod
     def _validate_token_uri(cls, value: str) -> str:

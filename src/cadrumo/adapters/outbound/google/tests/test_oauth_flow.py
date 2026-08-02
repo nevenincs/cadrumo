@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.config import override_settings
 from .....core.i18n import tr
@@ -59,6 +60,19 @@ def test_credentials_to_records_preserves_utc_metadata_projection() -> None:
     assert metadata.last_refresh_at == issued_at
     assert metadata.model_dump(mode="json")["issued_at"] == "2026-05-26T09:00:00Z"
     assert metadata.model_dump(mode="json")["last_refresh_at"] == "2026-05-26T09:00:00Z"
+
+
+def test_credentials_to_records_refuses_whitespace_only_refresh_token() -> None:
+    """The consent-flow boundary refuses a refresh value that cannot authenticate."""
+
+    with pytest.raises(ValidationError, match="non-whitespace"):
+        credentials_to_records(
+            refresh_token=" \t\r\n",
+            token_uri="https://oauth2.googleapis.com/token",
+            account_email="operator@example.com",
+            granted_scopes=REQUIRED_SCOPES,
+            issued_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        )
 
 
 def test_local_server_error_classifier_routes_browser_failures() -> None:
