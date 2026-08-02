@@ -1,0 +1,88 @@
+# The machine that waits out the release-candidate soak.
+#
+# The 48-72 hour soak is a wall-clock constraint on an immutable cohort, not a
+# human-review constraint: the policy asks for elapsed time against bytes that
+# did not change, and never for a person. No workflow run spans that window, so
+# the orchestrator seals a candidate and ENDS, and this workflow is what crosses
+# the boundary afterwards.
+#
+# Each tick is short-lived and cheap by design. The fleet is four self-hosted
+# runners shared across products; a job that held a slot for the length of a
+# soak would starve it for days per release, so this reads the sealed candidates,
+# decides, and exits.
+#
+# WHAT THIS DISPATCHES, AND WHAT IT CANNOT DO. It presses exactly the button an
+# operator would: a workflow_dispatch of publish-release.yml carrying the run ids
+# the candidate recorded at seal time. It adds no trust path - Gate 2 verifies
+# every supplied run independently, exactly as it verifies a hand-typed one.
+#
+# There is deliberately NO input that can shorten a window. The hotfix carve-out
+# is authorised ON THE CANDIDATE (an incident reference plus a release-owner
+# approval, refused at construction without both), so an emergency is recorded
+# where it can be audited rather than typed into a dispatch form where it cannot.
+# A manual `promote_now`-style input would reintroduce the human act this design
+# removes, and would do it on the one axis - time - that the soak exists to hold.
+#
+# Publishing LATE is self-reporting; publishing EARLY is silent. A missed tick
+# only delays a promotion to the next one, which is why the cadence is hourly
+# rather than clever.
+name: Cadrumo Release Soak Promoter
+
+on:
+  schedule:
+    # Hourly. The soak window is measured in days, so hourly resolution is far
+    # finer than the decision needs, and each tick costs one short job.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      report_only:
+        description: Report the promotion decision without dispatching the publication
+        required: false
+        default: false
+        type: boolean
+
+# Product-scoped and never cancelled. A tick that is mid-dispatch must finish:
+# cancelling between the publication dispatch and the candidate's consumption
+# would leave a promoted cohort still selectable, and the next tick would
+# re-dispatch it.
+concurrency:
+  group: release-soak-promoter-cadrumo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    name: Cadrumo / promote the first candidate whose soak has closed
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
+    permissions:
+      # actions: write dispatches publish-release.yml; contents: write retags a
+      # consumed candidate draft. Neither publishes anything itself - the
+      # publication authority holds the OIDC and channel credentials, and it
+      # alone runs inside the release environment.
+      actions: write
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Promote the first candidate whose soak window has closed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT_ONLY: ${{ inputs.report_only }}
+        run: |
+          # The decision, the readiness re-verification, and the dispatch all
+          # live in dev.release.soak_promoter, so they are unit-tested against a
+          # real clock rather than expressed as shell arithmetic on dates.
+          uv run --frozen python -m dev.release.soak_promoter \
+            --repository "${GITHUB_REPOSITORY}" \
+            ${REPORT_ONLY:+--report-only}

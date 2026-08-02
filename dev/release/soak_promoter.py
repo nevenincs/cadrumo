@@ -22,12 +22,29 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import argparse
+import shutil
+import tarfile
+import tempfile
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
+from pathlib import Path
 
-from dev.release.readiness import ReadinessReport
-from dev.release.release_candidate import ReleaseCandidate
+from dev.packaging.evidence_release import (
+    EvidenceLane,
+    download_release_assets,
+    evidence_tag,
+    resolve_gh,
+    run_gh_with_retry,
+)
+from dev.release.readiness import ReadinessReport, build_report
+from dev.release.release_candidate import (
+    ReleaseCandidate,
+    fetch_candidate,
+    list_sealed_candidate_tags,
+    mark_candidate_consumed,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,7 +101,10 @@ def promote_once(
     now: datetime,
     readiness_for: Callable[[ReleaseCandidate], ReadinessReport],
     dispatch: Callable[[ReleaseCandidate], None],
-    consume: Callable[[ReleaseCandidate], None] | None = None,
+    # Return type is `object`, not `None`: the real consumer returns the retired
+    # tag it moved the candidate to, and the promoter has no use for it. Pinning
+    # `None` here would force a callsite to discard a genuinely useful value.
+    consume: Callable[[ReleaseCandidate], object] | None = None,
 ) -> PromotionDecision:
     """Run one promoter tick: select, RE-VERIFY, then dispatch.
 
@@ -126,4 +146,150 @@ def promote_once(
     return PromotionDecision(candidate, f"{candidate.version} promoted after a clean re-verification")
 
 
-__all__ = ["PromotionDecision", "promote_once", "select_promotable"]
+def readiness_for_sealed_cohort(
+    candidate: ReleaseCandidate,
+    *,
+    repository: str,
+    workspace: Path,
+    repo_root: Path,
+    gh_executable: str | None = None,
+) -> ReadinessReport:
+    """Re-run the readiness gate against the candidate's SEALED bytes.
+
+    The cohort and its evidence rows are re-downloaded from the smoke run's
+    evidence draft and the gate is pointed at those, never at the working tree:
+    the question is whether the exact bytes that will ship are still sound, and
+    a working-tree default would answer a different question with the same
+    green.
+    """
+    rows = workspace / "rows"
+    cohort = workspace / "cohort"
+    raw = workspace / "raw"
+    for directory in (rows, cohort, raw):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    gh = resolve_gh(gh_executable)
+    download_release_assets(
+        gh,
+        repository=repository,
+        tag=evidence_tag(EvidenceLane.SMOKE, candidate.packaging_run_id),
+        patterns=[],
+        directory=raw,
+    )
+    tarball = raw / "cadrumo-release-cohort.tar.gz"
+    with tarfile.open(tarball) as archive:
+        archive.extractall(cohort, filter="data")
+    for row in raw.glob("*.json"):
+        if row.name != "evidence-manifest.json" and not row.name.startswith("debug-"):
+            shutil.copy(row, rows / row.name)
+
+    return build_report(
+        repo_root,
+        gh_executable=gh_executable,
+        cohort_directory=cohort,
+        evidence_directory=rows,
+    )
+
+
+def dispatch_publication(candidate: ReleaseCandidate, *, repository: str, gh_executable: str | None = None) -> None:
+    """Dispatch the publication authority with the run ids the candidate recorded.
+
+    This presses exactly the button an operator would. It adds no trust path:
+    Gate 2 verifies every supplied run independently, exactly as it verifies a
+    hand-typed one, and it cannot be mistyped here because nothing retypes it.
+    """
+    gh = resolve_gh(gh_executable)
+    arguments = [
+        "workflow",
+        "run",
+        "publish-release.yml",
+        "--repo",
+        repository,
+        "--ref",
+        "main",
+        "-f",
+        f"packaging_run_id={candidate.packaging_run_id}",
+        "-f",
+        f"dry_run={'true' if candidate.dry_run else 'false'}",
+    ]
+    for field, value in (
+        ("scoop_run_id", candidate.scoop_run_id),
+        ("homebrew_run_id", candidate.homebrew_run_id),
+        ("claude_evidence_release", candidate.claude_evidence_release),
+    ):
+        if value:
+            arguments.extend(["-f", f"{field}={value}"])
+    run_gh_with_retry(gh, arguments)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Run one promoter tick against the live forge.
+
+    Exit status is 0 for any DECIDED tick, including one that promotes nothing:
+    most ticks land inside some candidate's window, and making the ordinary
+    case non-zero would train whoever reads the alerting channel to ignore it.
+    """
+    parser = argparse.ArgumentParser(description="Promote the first sealed candidate whose soak window has closed.")
+    parser.add_argument("--repository", required=True)
+    parser.add_argument("--report-only", action="store_true")
+    parser.add_argument("--gh", default=None)
+    args = parser.parse_args(argv)
+
+    repo_root = Path(__file__).resolve().parents[2]
+    tags = list_sealed_candidate_tags(repository=args.repository, gh_executable=args.gh)
+
+    with tempfile.TemporaryDirectory() as scratch:
+        workspace = Path(scratch)
+        candidates = tuple(
+            fetch_candidate(
+                tag,
+                repository=args.repository,
+                download_directory=workspace / "records" / tag,
+                gh_executable=args.gh,
+            )
+            for tag in tags
+        )
+
+        if args.report_only:
+            decision = select_promotable(candidates, now=datetime.now(UTC))
+            print(decision.reason)
+            return 0
+
+        decision = promote_once(
+            candidates,
+            now=datetime.now(UTC),
+            readiness_for=lambda candidate: readiness_for_sealed_cohort(
+                candidate,
+                repository=args.repository,
+                workspace=workspace / "verify" / candidate.packaging_run_id,
+                repo_root=repo_root,
+                gh_executable=args.gh,
+            ),
+            dispatch=lambda candidate: dispatch_publication(
+                candidate,
+                repository=args.repository,
+                gh_executable=args.gh,
+            ),
+            consume=lambda candidate: mark_candidate_consumed(
+                candidate.tag,
+                repository=args.repository,
+                gh_executable=args.gh,
+            ),
+        )
+
+    print(decision.reason)
+    return 0
+
+
+__all__ = [
+    "PromotionDecision",
+    "dispatch_publication",
+    "main",
+    "promote_once",
+    "readiness_for_sealed_cohort",
+    "select_promotable",
+]
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
