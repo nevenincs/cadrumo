@@ -22,12 +22,14 @@ from dev.packaging.cohort_manifest import (
 )
 from dev.packaging.evidence import (
     AcquisitionIdentity,
+    ClientIdentity,
     CommandTranscript,
     DestinationIdentity,
     EvidenceStatus,
     ExecutionIsolation,
     InstalledExecutableIdentity,
     ResultIdentity,
+    RuntimeIdentity,
     create_distribution_evidence,
     current_runtime_identity,
     write_distribution_evidence,
@@ -119,12 +121,14 @@ def _record(
     *,
     status: EvidenceStatus = EvidenceStatus.PASSED,
     row_id: str = _ROW,
+    runtime: RuntimeIdentity | None = None,
+    client: ClientIdentity | None = None,
 ):
     return create_distribution_evidence(
         row_id=row_id,
         cohort=cohort,
-        runtime=current_runtime_identity(),
-        client=None,
+        runtime=runtime if runtime is not None else current_runtime_identity(),
+        client=client,
         isolation=ExecutionIsolation(
             checkout_imports_removed=True,
             ambient_product_executables_removed=True,
@@ -267,3 +271,67 @@ def test_client_required_row_without_client_identity_blocks(tmp_path: Path) -> N
 
     assert check.passed is False
     assert "lack real client identity" in check.detail
+
+
+def test_two_consistent_passing_captures_of_one_row_still_pass(tmp_path: Path) -> None:
+    """A legitimate re-run writing a second immutable passing capture does not block.
+
+    The two records differ in evidence_id, observed_at, and command
+    transcript (an inherent re-run difference) but agree on runtime,
+    client, and destination kind -- the identity axes that matter.
+    """
+    repo, cohort, evidence = _ready_tree(tmp_path)
+    first = _record(repo, cohort)
+    second = _record(repo, cohort)
+    assert first.evidence_id != second.evidence_id, "the two captures must be genuinely distinct evidence"
+    write_distribution_evidence(evidence, first)
+    write_distribution_evidence(evidence, second)
+
+    check = check_distribution_evidence_set(repo, required_rows=(_ROW,))
+
+    assert check.passed is True
+
+
+def test_two_conflicting_passing_captures_of_one_row_block(tmp_path: Path) -> None:
+    """Two passing captures of the same row disagreeing on runtime identity block.
+
+    The set-based collapse this test guards against would silently accept
+    either capture as evidence for the row with no signal that they
+    disagree on which platform actually produced it.
+    """
+    repo, cohort, evidence = _ready_tree(tmp_path)
+    linux_runtime = RuntimeIdentity(
+        operating_system="Linux",
+        operating_system_release="6.8.0",
+        architecture="x86_64",
+        python="3.13.0",
+        python_implementation="CPython",
+    )
+    write_distribution_evidence(evidence, _record(repo, cohort))
+    write_distribution_evidence(evidence, _record(repo, cohort, runtime=linux_runtime))
+
+    check = check_distribution_evidence_set(repo, required_rows=(_ROW,))
+
+    assert check.passed is False
+    assert "conflicting passing evidence" in check.detail
+    assert _ROW in check.detail
+
+
+def test_two_conflicting_client_identities_for_one_row_block(tmp_path: Path) -> None:
+    """Two passing captures of a client row naming different clients block."""
+    repo, cohort, evidence = _ready_tree(tmp_path)
+    claude_client = ClientIdentity(name="claude-code", version="1.0.0", executable="claude")
+    codex_client = ClientIdentity(name="codex-cli", version="1.0.0", executable="codex")
+    write_distribution_evidence(
+        evidence,
+        _record(repo, cohort, row_id="claude-code-plugin", client=claude_client),
+    )
+    write_distribution_evidence(
+        evidence,
+        _record(repo, cohort, row_id="claude-code-plugin", client=codex_client),
+    )
+
+    check = check_distribution_evidence_set(repo, required_rows=("claude-code-plugin",))
+
+    assert check.passed is False
+    assert "conflicting passing evidence" in check.detail
