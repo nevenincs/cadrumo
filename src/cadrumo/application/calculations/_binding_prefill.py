@@ -63,10 +63,30 @@ from ...domain.calculations.registry import (
     expression_casilla_refs,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
-    validated_casilla_id,
 )
 from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ._errors import BindingPrefillTypeError
+from ._iva_compensation_casillas import (
+    M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
+)
 from ._iva_compensation_history import IvaCompensationHistoryRepository
 from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
@@ -102,24 +122,6 @@ _LOCAL_FILING_PROVENANCE: Final = "local_filing"
 _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND: Final = "pre_activity_no_prior_obligation"
 _IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_history"
 _MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="binding-prefill casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"binding-prefill casilla constant {value!r} is not a CasillaId") from exc
-
-
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores"
-)
-_M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
-_M303_RESULTADO_FINAL_CASILLA: Final[CasillaId] = _casilla_id("71")
-_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
-_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
 def _revision_carry_outcome(payload: ObservationEnvelopePayload) -> bool:

@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import ClassVar, Final, override
+from typing import ClassVar, override
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -51,7 +51,6 @@ from ...domain.calculations.registry import (
     CasillaId,
     RegistryModeloObservation,
     undeclared_casilla_ids,
-    validated_casilla_id,
 )
 from ...domain.iva_compensation import (
     IvaCompensationCarryForwardReport,
@@ -64,33 +63,36 @@ from ...domain.iva_compensation import (
     iva_compensation_period_sort_key,
 )
 from ._errors import IvaCompensationModeloError
+from ._iva_compensation_casillas import (
+    M303_COMPENSACION_APLICADA_CASILLA as _M303_COMPENSACION_APLICADA_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA as _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_DISPONIBLE_CASILLA as _M303_DISPONIBLE_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_GENERADA_CASILLA as _M303_GENERADA_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_POSTERIOR_CASILLA as _M303_POSTERIOR_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_RESULTADO_CASILLA as _M303_RESULTADO_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M303_RESULTADO_FINAL_CASILLA as _M303_RESULTADO_FINAL_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA as _M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA,
+)
+from ._iva_compensation_casillas import (
+    M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
+)
 from ._ports import FiledDeclaracionObservationProtocol
 
 _ZERO = Decimal("0")
-
-
-def _casilla_id(value: object) -> CasillaId:
-    try:
-        return validated_casilla_id(value, surface="IVA compensation history casilla constant")
-    except ValueError as exc:
-        raise RuntimeError(f"IVA compensation history casilla constant {value!r} is not a CasillaId") from exc
-
-
-_M303_RESULTADO_CASILLA: Final[CasillaId] = _casilla_id("iva.resultado")
-_M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generada-periodo")
-_M303_POSTERIOR_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-pendiente-periodos-posteriores")
-_M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
-_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Final[CasillaId] = _casilla_id(
-    "iva.compensacion-pendiente-periodos-anteriores"
-)
-_M303_COMPENSACION_APLICADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-aplicada-periodo")
-_M303_RESULTADO_FINAL_CASILLA: Final[CasillaId] = _casilla_id("71")
-_M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA: Final[CasillaId] = _casilla_id(
-    "iva.anual.compensacion-ultimo-periodo-97",
-)
-_M390_COMPENSACION_GENERADA_EJERCICIO_NO_97_CASILLA: Final[CasillaId] = _casilla_id(
-    "iva.anual.compensacion-generada-ejercicio-no-97",
-)
 
 
 class IvaCompensationAnnualSummary(BaseModel):
