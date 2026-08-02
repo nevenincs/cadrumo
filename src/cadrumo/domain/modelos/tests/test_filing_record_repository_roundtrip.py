@@ -46,7 +46,11 @@ _FILING_NAMESPACE = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace
 _FILING_OBJECT_KEY = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.require_default_object_key()
 _FILING_CATALOGUE_VERSION = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.schema_version
 _BUCKET_ID = "30330300-0000-4000-8000-000000000700"
-_RECORD_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
+# The catalogue is one encrypted object per bucket and the repository refuses
+# records from another bucket, so the fixture's records carry the same bucket
+# the repository is bound to. _FOREIGN_BUCKET_ID is the isolation probe.
+_RECORD_BUCKET_ID = _BUCKET_ID
+_FOREIGN_BUCKET_ID = "30330300-0000-4000-8000-000000000701"
 _P_2024_2T = Period.from_year_and_code(2024, "2T")
 _P_2026_01 = Period.from_year_and_code(2026, "01")
 _CORRUPT_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 10, 55, 0, tzinfo=UTC)
@@ -894,3 +898,80 @@ def test_canonical_source_transaction_footprint_survives_encrypted_storage(tmp_p
     assert loaded == original
     assert loaded.get(record.filing_record_id) is not None
     assert loaded.get(record.filing_record_id).source_transaction_ids == footprint
+
+
+def _foreign_bucket_catalogue() -> ModeloRecordCatalogue:
+    """Build a catalogue whose single record belongs to another taxpayer's bucket."""
+    work_unit_id = _hex("a")
+    revision_id = _hex("c")
+    record = ModeloRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            filed_by="aeat.cli.modelo.file",
+        ),
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=_FOREIGN_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=2024,
+        period=_P_2024_2T,
+        filed_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        filed_by="aeat.cli.modelo.file",
+        status=ModeloRecordStatus.VIGENTE,
+    )
+    return ModeloRecordCatalogue(records={record.filing_record_id: record})
+
+
+def test_foreign_bucket_filing_record_is_refused_at_save(tmp_path: Path) -> None:
+    """A receipt from another taxpayer's bucket must not enter this catalogue."""
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
+        pytest.raises(ModeloRecordPersistenceError) as raised,
+    ):
+        ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).save(_foreign_bucket_catalogue())
+
+    assert raised.value.context == {
+        "reason": "foreign_bucket_record",
+        "boundary": "save",
+        "expected_bucket_id": _BUCKET_ID,
+        "record_bucket_ids": [_FOREIGN_BUCKET_ID],
+    }
+
+
+def test_foreign_bucket_filing_record_is_refused_at_load(tmp_path: Path) -> None:
+    """Anti-tautology proof: the isolation is durable, not a caller convention.
+
+    Writes the foreign-bucket catalogue straight through the secure-object
+    substrate, bypassing the repository's write guard, then asserts the read
+    path refuses it. Without this the save-side check would only hold for
+    callers that go through the repository.
+    """
+    from ....adapters.persistence.storage import Envelope
+
+    catalogue = _foreign_bucket_catalogue()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[ModeloRecordCatalogue](
+            schema_version=_FILING_CATALOGUE_VERSION,
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
+            classification=SensitivityClass.FINANCIAL,
+            payload=catalogue,
+        )
+        profile.repository.save(
+            namespace=_FILING_NAMESPACE,
+            object_key=_FILING_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_FILING_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(ModeloRecordPersistenceError) as raised:
+            ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.context == {
+        "reason": "foreign_bucket_record",
+        "boundary": "load",
+        "expected_bucket_id": _BUCKET_ID,
+        "record_bucket_ids": [_FOREIGN_BUCKET_ID],
+    }
