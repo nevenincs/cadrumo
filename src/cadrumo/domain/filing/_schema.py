@@ -7,7 +7,7 @@ records the rest of the project pins against — keep them stable.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
@@ -18,6 +18,7 @@ from ...core.errors import BaseSeverity
 from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
+from ...core.time import UtcInstant
 from ..calculations.registry import BindingId, CasillaId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
 from ._errors import FilingValidationError
@@ -232,11 +233,15 @@ class ModeloDraft(BaseModel):
     binding_values: tuple[ModeloBindingValue, ...] = Field(default_factory=tuple)
     casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     findings: tuple[ModeloValidationFinding, ...] = Field(default_factory=tuple)
-    created_at: datetime
-    updated_at: datetime
+    # Lifecycle instants are typed, not bare datetimes: draft ordering and the
+    # approval decision compare them, and a naive or offset value makes those
+    # comparisons ambiguous. ``UtcInstant`` is the shared core contract, so the
+    # refusal lives in the type rather than in a fourth hand-rolled validator.
+    created_at: UtcInstant
+    updated_at: UtcInstant
     schema_version: str
     notes: str = ""
-    approved_at: datetime | None = None
+    approved_at: UtcInstant | None = None
     approved_by: str | None = None
     review_checksum: str | None = None
     approval_basis: ModeloApprovalBasis | None = None
@@ -275,7 +280,65 @@ class ModeloDraft(BaseModel):
                 f"{expected_schema_version!r} derived from snapshot_ref "
                 f"(modelo={self.snapshot_ref.modelo!r}, revision={self.snapshot_ref.revision_id!r})",
             )
+        self._enforce_snapshot_period_coherence()
+        self._enforce_collection_coordinate_uniqueness()
         return self
+
+    def _enforce_snapshot_period_coherence(self) -> None:
+        """Confirm ``period`` and ``snapshot_ref`` name the same filing period.
+
+        Scoped to the year and period axes only: the modelo axis is already
+        checked above, so this closes the remaining half of the coordinate
+        contract rather than restating it.
+
+        The builder derives both from one value --
+        ``filing_year, registry_period = period.filing_year, period.registry_token``
+        feeds ``modelo_year`` and ``period`` on the ref it constructs -- so
+        equality is the invariant, not an approximation of one. Direct
+        construction and repository rehydration could otherwise accept a draft
+        for 2026/1T carrying a snapshot reference for 2025/4T, and that
+        mismatch reaches review, approval, and downstream registry re-resolution
+        unchanged, because every later consumer trusts whichever coordinate it
+        happens to read.
+        """
+        if self.snapshot_ref.modelo_year != self.period.filing_year:
+            raise FilingValidationError(
+                f"draft period filing year {self.period.filing_year!r} does not match its "
+                f"snapshot_ref modelo_year {self.snapshot_ref.modelo_year!r}",
+            )
+        if self.snapshot_ref.period != self.period.registry_token:
+            raise FilingValidationError(
+                f"draft period token {self.period.registry_token!r} does not match its "
+                f"snapshot_ref period {self.snapshot_ref.period!r}",
+            )
+
+    def _enforce_collection_coordinate_uniqueness(self) -> None:
+        """Confirm no casilla or binding coordinate is claimed twice.
+
+        The draft builders reject duplicate inputs before constructing a draft,
+        but that guards only the build path: the persisted tuples had no
+        uniqueness rule, so direct construction and rehydration accepted two
+        rows for one casilla, or two for one ``(binding_id, row_index)``. Lookup
+        then resolves to whichever row comes first and the last writer wins
+        silently -- ambiguity inside an otherwise strictly typed aggregate, and
+        one that also makes ``draft_id`` a hash over a value whose meaning
+        depends on tuple order.
+
+        ``row_index`` is part of the binding coordinate, so a repeating record
+        legitimately carries the same ``binding_id`` many times; only a repeated
+        pair is a duplicate.
+        """
+        casilla_ids = [value.casilla_id for value in self.values]
+        duplicate_casillas = sorted({key for key in casilla_ids if casilla_ids.count(key) > 1})
+        if duplicate_casillas:
+            listed = ", ".join(repr(key) for key in duplicate_casillas)
+            raise FilingValidationError(f"draft values claim a casilla more than once: {listed}")
+
+        binding_keys = [(value.binding_id, value.row_index) for value in self.binding_values]
+        duplicate_bindings = sorted({key for key in binding_keys if binding_keys.count(key) > 1})
+        if duplicate_bindings:
+            listed = ", ".join(f"{binding_id!r} row {row_index!r}" for binding_id, row_index in duplicate_bindings)
+            raise FilingValidationError(f"draft binding_values claim a coordinate more than once: {listed}")
 
 
 def compute_modelo_draft_id(
