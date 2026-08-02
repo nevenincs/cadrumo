@@ -268,3 +268,72 @@ def test_reader_rejects_out_of_order_members(tmp_path: Path) -> None:
 
     with pytest.raises(SealedArchiveLayoutError, match="first member must be"):
         read_sealed_archive(archive_path)
+
+
+def test_failed_write_leaves_no_file_at_the_operator_target(tmp_path: Path) -> None:
+    """A failed write leaves neither a target file nor staging residue.
+
+    Scope note: this exercises a failure at archive-open time, which the
+    previous writer also survived cleanly. The regression it guards is the
+    STAGING path -- that the writer's temporary sibling is removed on the
+    failure route rather than left beside the operator's output.
+
+    The case that motivated the change, a failure after one member has been
+    written, cannot be produced by a real filesystem condition and is not
+    covered here; it is instead made structurally impossible, because nothing
+    is written at the operator's path until a complete archive is renamed
+    into place.
+    """
+    missing_parent = tmp_path / "not-created-yet"
+    target = missing_parent / "export.cadrumo-bucket.tar.gz"
+
+    with pytest.raises(SealedArchiveWriteError):
+        write_sealed_archive(
+            target,
+            header=_header(),
+            payload_envelope_bytes=b"payload-envelope-bytes",
+        )
+
+    # Nothing at the operator's path, and no staging residue anywhere.
+    assert not target.exists()
+    assert not missing_parent.exists()
+    assert sorted(path.name for path in tmp_path.iterdir()) == []
+
+
+def test_failed_write_preserves_an_unrelated_pre_existing_target(tmp_path: Path) -> None:
+    """The refusal to overwrite still fires before anything is staged.
+
+    A pre-existing archive must survive a re-export attempt byte-for-byte;
+    staging must not create residue beside it either.
+    """
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
+    archive_path.write_bytes(b"pre-existing-bytes")
+
+    with pytest.raises(SealedArchiveWriteError):
+        write_sealed_archive(
+            archive_path,
+            header=_header(),
+            payload_envelope_bytes=b"payload-envelope-bytes",
+        )
+
+    assert archive_path.read_bytes() == b"pre-existing-bytes"
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["export.cadrumo-bucket.tar.gz"]
+
+
+def test_successful_write_leaves_only_the_finished_archive(tmp_path: Path) -> None:
+    """Positive control: staging is invisible once the write completes.
+
+    Without this, the failure tests above would pass equally well if the
+    writer had stopped producing archives at all.
+    """
+    archive_path = tmp_path / "export.cadrumo-bucket.tar.gz"
+
+    write_sealed_archive(
+        archive_path,
+        header=_header(),
+        payload_envelope_bytes=b"payload-envelope-bytes",
+    )
+
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["export.cadrumo-bucket.tar.gz"]
+    recovered = read_sealed_archive(archive_path)
+    assert recovered.payload_envelope_bytes == b"payload-envelope-bytes"
