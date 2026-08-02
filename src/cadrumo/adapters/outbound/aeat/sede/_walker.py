@@ -38,6 +38,7 @@ from .....domain.calculations.registry import (
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
+from ._adapter_utils import assert_read_landing, landed_origin
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_TIMEOUT_SHORT_MS as _TIMEOUT_SHORT_MS,
@@ -105,6 +106,71 @@ def _assert_read_http(method: str, url: str) -> None:
     )
 
 
+# The one page whose CONTENT this walker interprets. Expediente detail URLs
+# are deliberately absent: they come off an ``href`` on the resumen page, so
+# their paths are not knowable here and an allow-list over them would be
+# invented rather than grounded. Those navigations keep the policy check
+# alone -- host plus write-token scan -- which is the honest strength for a
+# page-supplied target.
+_RESUMEN_READ_PATH_PREFIXES: tuple[str, ...] = (
+    urlsplit(_EXTERNAL.aeat.sede_paths.expedientes_resumen).path,
+)
+
+
+def assert_resumen_landing(landing_url: str) -> None:
+    """Refuse a landing that is not the expedientes resumen page.
+
+    Called after the branch expansion, which JS-clicks every
+    ``mostrarListado`` anchor in the tree. Those anchors are AJAX
+    expanders, so the page is expected not to move -- but nothing
+    established that it had not. The walker then snapshots the DOM and
+    parses it AS the expedientes tree, so a navigation during expansion
+    would be read as a tree with no error anywhere: the parser would
+    simply find no rows, and an empty result is indistinguishable from a
+    taxpayer with no expedientes.
+
+    Args:
+        landing_url: The URL AEAT actually served, read off the page.
+
+    Raises:
+        SedeNavigationError: When the walker is not on the resumen page.
+    """
+    assert_read_landing(
+        landing_url,
+        surface="expedientes walker",
+        policy=_READ_GUARD_POLICY,
+        allowed_path_prefixes=_RESUMEN_READ_PATH_PREFIXES,
+    )
+
+
+def assert_landed_url_readable(landed_url: str, *, requested_url: str) -> str:
+    """Return the landed URL, refusing a navigation that produced no readable one.
+
+    The re-assertion after a ``goto`` used to be skipped entirely when the
+    landed URL was empty, so the one case where the outcome could not be
+    established was the one case that was not checked -- fail-open in
+    exactly the position the re-assertion exists to cover.
+
+    Args:
+        landed_url: ``page.url`` after the navigation.
+        requested_url: The URL the navigation asked for, for diagnostics.
+
+    Returns:
+        The landed URL, once established as readable.
+
+    Raises:
+        SedeNavigationError: When the navigation produced no readable URL.
+    """
+    if landed_origin(landed_url) is None:
+        raise SedeNavigationError(
+            "sede walker navigation produced no readable landing URL, so where the "
+            "authenticated session ended up cannot be established; the read is refused "
+            f"rather than continued blind. requested_url={requested_url!r}",
+            context={"requested_url": requested_url, "landing_url": landed_url or "<empty>"},
+        )
+    return landed_url
+
+
 async def _goto_guarded(page: Any, url: str) -> None:
     """Navigate to ``url`` only if the policy admits it, then re-assert the landing.
 
@@ -116,9 +182,8 @@ async def _goto_guarded(page: Any, url: str) -> None:
     """
     _assert_read_http("GET", url)
     await page.goto(url, wait_until=_WAIT_DOMCONTENTLOADED)
-    landed = getattr(page, "url", "") or ""
-    if landed:
-        _assert_read_http("GET", landed)
+    landed = assert_landed_url_readable(getattr(page, "url", "") or "", requested_url=url)
+    _assert_read_http("GET", landed)
 
 
 @asynccontextmanager
@@ -201,6 +266,7 @@ async def walk_expedientes_tree(
             raise SedeNavigationError(f"goto {_RESUMEN_URL!r} failed: {exc}") from exc
 
         await _expand_matching_branches(page, modelo=modelo)
+        assert_resumen_landing(getattr(page, "url", "") or "")
         html = await _snapshot_html(page)
         expedientes = parse_resumen_tree(html, base_url=_SEDE_BASE)
         if modelo is not None:
@@ -478,6 +544,8 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
 
 
 __all__ = [
+    "assert_landed_url_readable",
+    "assert_resumen_landing",
     "capture_justificante",
     "find_expediente",
     "resolve_justificante_ref",
