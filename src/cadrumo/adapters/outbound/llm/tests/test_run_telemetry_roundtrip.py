@@ -14,10 +14,11 @@ aggregates duration and outcome correctly across providers.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 
@@ -46,6 +47,30 @@ def _record(
         error_kind=error_kind,
         started_at=when,
     )
+
+
+@pytest.mark.parametrize(
+    ("started_at", "message"),
+    (
+        (datetime(2026, 5, 28, 12, 40, 0), "timezone-aware UTC"),
+        (datetime(2026, 5, 28, 13, 40, 0, tzinfo=timezone(timedelta(hours=1))), "must be in UTC"),
+    ),
+    ids=("naive", "plus-one-offset"),
+)
+def test_llm_run_record_refuses_non_utc_started_at_before_storage(
+    started_at: datetime,
+    message: str,
+) -> None:
+    """The encrypted recorder never receives timestamps with an unknown or non-UTC offset."""
+    with pytest.raises(ValidationError, match=message):
+        _record(
+            started_at,
+            run_id="invalid-instant",
+            caller="cadrumo.application.ledger.llm_classification",
+            provider="claude",
+            duration_ms=1000,
+            succeeded=True,
+        )
 
 
 def test_llm_run_records_survive_encrypted_storage_roundtrip(tmp_path: Path) -> None:
@@ -77,6 +102,7 @@ def test_llm_run_records_survive_encrypted_storage_roundtrip(tmp_path: Path) -> 
     assert len(all_loaded) == 2
     # Identity preserved across the encrypted append-only sink.
     assert frozenset(all_loaded) == frozenset([record_today, record_yesterday])
+    assert all(item.started_at.utcoffset() == timedelta(0) for item in all_loaded)
 
     # Date-axis filter must yield exactly the today-side record.
     only_today = recorder.load_records(since=today.date(), until=today.date())
