@@ -1,7 +1,7 @@
 """Canonical lifecycle service for the schema-driven user-profile backend.
 
 This service is the single sanctioned write path for live user-profile
-values. It routes every register / edit / remove / duplicate / list /
+values. It routes every register / edit / remove / rename / reactivate /
 read operation through the secure-DB repository and the schema-aware
 validation service. CLI thin adapters and downstream consumers call
 this surface; no caller should construct :class:`UserProfileRecord`
@@ -39,8 +39,6 @@ from . import (
     CompleteSetupCommand,
     EditProfileFieldCommand,
     ProfileLifecycleResult,
-    ProfileListing,
-    ProfileListResult,
     ReactivateProfileCommand,
     RegisterProfileCommand,
     RemoveProfileCommand,
@@ -80,7 +78,7 @@ class ProfileLifecycleService:
         self._validator = validator
         self._events = events or BucketEventHistoryRepository()
 
-    # ── register / list / read ─────────────────────────────────────
+    # ── register / read ────────────────────────────────────────────
 
     def register(self, command: RegisterProfileCommand) -> ProfileLifecycleResult:
         """Register a new active profile aggregate.
@@ -127,25 +125,6 @@ class ProfileLifecycleService:
     def read(self, profile_id: str) -> UserProfileRecord:
         """Return the live :class:`UserProfileRecord` aggregate or raise :class:`ProfileNotFoundError`."""
         return self._repository.load(profile_id)
-
-    def list_profiles(self) -> ProfileListResult:
-        """List every profile currently visible in the active bucket.
-
-        Returns a :class:`ProfileListResult` with all non-tombstoned profiles.
-        """
-        listings: list[ProfileListing] = []
-        for record in self._iter_profiles():
-            listings.append(
-                ProfileListing(
-                    profile_id=record.profile_id,
-                    display_name=record.display_name,
-                    status=record.status,
-                    created_at=record.created_at,
-                    updated_at=record.updated_at,
-                ),
-            )
-        listings.sort(key=lambda row: row.profile_id)
-        return ProfileListResult(profiles=tuple(listings))
 
     # ── edit / remove / duplicate ──────────────────────────────────
 
@@ -439,16 +418,6 @@ class ProfileLifecycleService:
             payload=dict(payload or {}),
             payload_version=_PROFILE_EVENT_PAYLOAD_VERSION,
         )
-
-    def _iter_profiles(self) -> Iterable[UserProfileRecord]:
-        """Yield every live profile record by delegating to the repository.
-
-        Walking the secure-object index lives on
-        :class:`UserProfileLifecycleRepository.iter_records` so the
-        service consumes a public surface instead of reaching for the
-        repository's private secure-object reference.
-        """
-        return self._repository.iter_records()
 
 
 def _profile_already_exists_error(*, profile_id: str, bucket_id: str) -> ProfileAlreadyExistsError:

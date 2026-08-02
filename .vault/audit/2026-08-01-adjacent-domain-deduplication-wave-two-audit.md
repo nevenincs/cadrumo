@@ -1,4 +1,13 @@
----\n\ntags:\n  - '#audit'\n  - '#adjacent-domain-deduplication'\ndate: '2026-08-02'\nmodified: '2026-08-02'\nbody_schema: 'body-v1'\nbody_hash: 'sha256:083b0c5ed5cd1dd046aee64bd5e5901037fbdf11b575df60416e98ae73063214'\n---\n
+---
+tags:
+  - '#audit'
+  - '#adjacent-domain-deduplication'
+date: '2026-08-02'
+modified: '2026-08-02'
+body_schema: 'body-v1'
+body_hash: 'sha256:206c9770000dbe50cbe9057f5d0ab79f64fbfd69782d96c114eaeacb14cdbef1'
+---
+
 # `adjacent-domain-deduplication` triage register
 
 ## Scope
