@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:12a61c3743131904f1f658726f4b7407df48faf6e43f780b9ec01fb5e1940dc6'
+body_hash: 'sha256:6723859abaf55dc6489a28d4d3aca605f7822c84d1c8329cb1114939562d019f'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -279,9 +279,22 @@ verbs:
   it visible rather than audit-discoverable.
 - `show CATEGORY` — one category in full, the argument typed as the enum so the
   accepted set renders at the boundary.
-- `check` — verifies the tree against the taxonomy: missing directories, a file
-  where a directory belongs and the reverse, permission drift on the root.
-  Read-only; reports, never repairs.
+- `check` — verifies the tree against the taxonomy. Read-only; reports, never
+  repairs. **Its reach is narrower from the command line than this ruling
+  originally implied, and the narrowing is correct.** The CLI materialises the
+  declared tree during bootstrap, before any verb runs, so two of its four
+  findings cannot arise through the CLI: a *missing* directory is created by
+  bootstrap, and an *occupied* path makes bootstrap refuse first, naming the
+  path. What survives to `check` through the CLI is a directory sitting where a
+  file-valued member's leaf belongs — which passes precisely because the
+  materialiser creates that member's parent and not its leaf. All four findings
+  remain reachable in-process and are covered at the service layer.
+  This is a condition *resolved*, not a finding suppressed: self-healing beats
+  reporting where the remedy is safe and automatic, and an occupied path already
+  produces an operator-facing refusal, so reporting it again would make `check` a
+  second voice for one condition. `check` is therefore not the general drift
+  detector for the tree; it is the reporter for the drift bootstrap does not
+  already resolve or refuse.
 - `init` — materialises the declared tree, idempotent, preserving existing
   content. It may never remove-and-recreate for a "clean state".
 - `reclaim CATEGORY` — deletes regenerable content, refusing on any category
@@ -608,6 +621,48 @@ it. Production does not.
 Its retirement is blocked by the same coupling that blocks new path fields (see
 Constraints), and it dies when the lifecycle gate is rewritten — not before, and
 not by deriving it.
+
+**R21 — `config storage` is bootstrap-exempt, so `reclaim` rests on one guard,
+and that guard carries a standing condition.** The family sits in the
+bootstrap-exempt verb paths, not the profile-bound guarded catalogue. Two
+measured reasons, both verified:
+
+- Guarding it would break the surface's own purpose: `init` exists to
+  materialise the tree on a machine that has none, and a profile-bound guard
+  makes it refuse exactly there — a bootstrap verb failing at its only job.
+- The entry would never be read anyway. `inspect_storage_write_policy` returns
+  `BOOTSTRAP_EXEMPT` and returns *before* it consults the guarded catalogue, so
+  a catalogue entry for a bootstrap-exempt path is unreachable. **A dead
+  allowlist entry that reads as protection is worse than no entry**, because a
+  later reviewer checking "is `reclaim` guarded?" finds the name and stops.
+
+The consequence must be stated rather than left implicit: **`reclaim` is
+protected by its lifecycle refusal alone, not by two independent guards.** That
+single guard therefore carries a standing condition — a containment proof that
+with no active profile, no category `reclaim` accepts resolves inside a bucket,
+keystore, or financial-sensitivity location. The proof must be **derived from
+the declared axes rather than listing today's members**, so a future member
+declared prunable at bucket scope cannot silently join the accepted set. A
+listed set would pass forever while the real risk changed underneath it.
+
+**R22 — When one surface pre-empts another, pin the pre-emption.** R7's `check`
+correction exists because a first test asserted a condition the CLI can no
+longer reach, and failed with a key error. The discipline that produced the
+finding is the part worth generalising: the implementer **traced the failure
+instead of adjusting the assertion to match observed output**. Adjusting it
+would have produced a green test named for `check` that actually exercised the
+bootstrap refusal — a test measuring a different mechanism than its name claims,
+and invisible in review precisely because it is green and plausibly named. That
+is the same failure family as R14's tautological migration and R16's one-sided
+gate: an assertion that passes for a reason other than the one its name asserts.
+
+So the rule: where one surface pre-empts another, **pin the pre-emption
+itself**, not only the surviving behaviour. Relocating materialisation out of
+bootstrap then reds loudly instead of silently redistributing which surface
+answers a condition — a redistribution that would otherwise leave every existing
+test green while the operator-facing behaviour changed. This applies well beyond
+storage: any self-healing or refuse-early layer in front of a reporting layer
+has the same shape.
 
 ## Rationale
 
