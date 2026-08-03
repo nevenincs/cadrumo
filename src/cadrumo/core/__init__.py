@@ -91,7 +91,9 @@ from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_m
 from ._concept_lifecycle import ConceptLifecycle
 from ._config_state_root import (
     FormerProductStateError,
+    StateRootInputs,
     live_state_root_inputs,
+    platform_user_data_root,
 )
 from ._credentials import (
     LENGTH_ALONE_IS_STRONG,
@@ -327,6 +329,7 @@ __all__: list[str] = [
     "SecureObjectWrite",
     "ServiceCapability",
     "StandardPeriodCode",
+    "StateRootInputs",
     "TaxDomain",
     "TipoRentaGroundingTier",
     "TipoRentaIrnr",
@@ -360,6 +363,7 @@ __all__: list[str] = [
     "parse_toml_text",
     "permitted_amendment_kind_values",
     "pid_is_alive",
+    "platform_user_data_root",
     "pointer_path",
     "post_filing_event_is_actionable",
     "project_m210_tipo_renta_code",

@@ -18,13 +18,14 @@ environment (``env_scope.isolated_aeat_env``), never through a dotenv-bound
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 from types import UnionType
 from typing import Union, get_args, get_origin
 
 import pytest
 
-from ..core import PRODUCT_IDENTITY, AuthProviderKind
+from ..core import AuthProviderKind, StateRootInputs, platform_user_data_root
 from ..core.config import (
     Settings,
     StorageRouteKind,
@@ -120,6 +121,51 @@ def test_certificate_backend_and_verify_url_are_not_settings_surfaces() -> None:
     assert "AEAT_CERTIFICATE_VERIFY_URL" not in Settings.env_var_names()
 
 
+def _isolated_live_platform_anchor(base: Path) -> tuple[str, str, StateRootInputs]:
+    """Pin the running platform's live anchor variable to ``base``, isolated.
+
+    ``core.paths._relative_path_anchor`` (and the ``Settings``
+    ``_normalize_repo_relative_paths`` validator built on it) has no
+    ``StateRootInputs`` injection point of its own: both always call with
+    ``state_root_inputs=None``, which captures the LIVE process shape via
+    ``live_state_root_inputs()`` (real ``sys.platform``, real
+    ``os.environ``, real ``Path.home()``). A ``Settings``-level test that
+    exercises a relative per-field env override therefore cannot inject a
+    synthetic platform the way the pure-function tests in
+    ``core/tests/test_paths.py`` and ``core/tests/test_config_state_root.py``
+    do; it can only pin the one REAL environment variable the running
+    platform's branch of ``platform_user_data_root`` actually consults, to
+    an isolated location, so the live capture never touches (or asserts
+    against) the real machine's application-data directory.
+
+    Returns the ``(env_var_name, env_var_value)`` pair to pin via
+    :func:`~cadrumo.tests.env_scope.scoped_env_var`, plus a
+    :class:`~cadrumo.core.StateRootInputs` mirroring exactly what the live
+    capture will observe once that variable is pinned — so the caller
+    computes its expected anchor by calling the SAME injectable
+    ``platform_user_data_root`` the production code uses, rather than
+    hand-rolling a platform-specific path shape inline.
+
+    Windows consults ``%LOCALAPPDATA%`` directly. macOS consults no
+    environment variable at all (``platform_user_data_root`` always anchors
+    under ``home / "Library" / "Application Support"`` there), so ``$HOME`` —
+    which ``Path.home()`` reads — is pinned instead. Every other platform
+    consults ``$XDG_DATA_HOME``. Only one variable is pinned per platform,
+    matching the single real channel each branch of
+    ``platform_user_data_root`` reads.
+    """
+    if sys.platform == "win32":
+        env_name, env_value = "LOCALAPPDATA", str(base)
+        inputs = StateRootInputs(platform=sys.platform, environ={env_name: env_value}, home=base / "unused-home")
+    elif sys.platform == "darwin":
+        env_name, env_value = "HOME", str(base)
+        inputs = StateRootInputs(platform=sys.platform, environ={}, home=base)
+    else:
+        env_name, env_value = "XDG_DATA_HOME", str(base)
+        inputs = StateRootInputs(platform=sys.platform, environ={env_name: env_value}, home=base / "unused-home")
+    return env_name, env_value, inputs
+
+
 class TestStatusDetailUrlTemplate:
     """#227 validator: template must contain ``{expediente_id}``."""
 
@@ -185,18 +231,24 @@ class TestStatusDetailUrlTemplate:
 
         ``core.paths._relative_path_anchor`` has no source-checkout arm: a
         relative override always resolves under the platform user-data root,
-        never a repo-root walk. LOCALAPPDATA is pinned to an isolated
-        tmp_path subtree so the test never touches the real machine's
-        application-data directory.
+        never a repo-root walk. The running platform's live anchor variable
+        is pinned to an isolated tmp_path subtree (see
+        ``_isolated_live_platform_anchor``) so the test never touches or
+        asserts against the real machine's application-data directory, and
+        the expected anchor is computed through the same injectable
+        ``StateRootInputs`` / ``platform_user_data_root`` seam
+        ``core/tests/test_paths.py`` and
+        ``core/tests/test_config_state_root.py`` use — never a hand-rolled,
+        platform-specific path shape — so this test is correct on Windows,
+        macOS, and Linux alike, even though only the host's own branch is
+        actually executed by any single run.
         """
         isolated_app_data = tmp_path / "app-data"
-        with scoped_env_var("LOCALAPPDATA", str(isolated_app_data)):
+        env_name, env_value, inputs = _isolated_live_platform_anchor(isolated_app_data)
+        with scoped_env_var(env_name, env_value):
             with _isolated_aeat_env(CADRUMO_WORKFLOW_RUNS_DIR="env/workflow/runs"):
                 settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        assert (
-            settings.cadrumo_workflow_runs_dir
-            == isolated_app_data / PRODUCT_IDENTITY.python_package / "env" / "workflow" / "runs"
-        )
+        assert settings.cadrumo_workflow_runs_dir == platform_user_data_root(inputs) / "env" / "workflow" / "runs"
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
@@ -283,20 +335,25 @@ class TestRepoRelativePathNormalisationCoverage:
         """End-to-end: relative env values for the three audit-flagged paths anchor to
         the platform user-data root (not the process cwd).
 
-        LOCALAPPDATA is pinned to an isolated tmp_path subtree so the test
-        never touches the real machine's application-data directory, per
-        ``core.paths._relative_path_anchor`` — there is no source-checkout
-        arm.
+        The running platform's live anchor variable is pinned to an isolated
+        tmp_path subtree (see ``_isolated_live_platform_anchor``) so the test
+        never touches or asserts against the real machine's application-data
+        directory, per ``core.paths._relative_path_anchor`` — there is no
+        source-checkout arm. The expected anchor is computed through the
+        same injectable ``StateRootInputs`` / ``platform_user_data_root``
+        seam the pure-function tests use, never a hand-rolled
+        platform-specific path shape.
         """
         isolated_app_data = tmp_path / "app-data"
-        with scoped_env_var("LOCALAPPDATA", str(isolated_app_data)):
+        env_name, env_value, inputs = _isolated_live_platform_anchor(isolated_app_data)
+        with scoped_env_var(env_name, env_value):
             with _isolated_aeat_env(
                 CADRUMO_INVOICES_DIR="var/financial/invoices",
                 CADRUMO_ATTACHMENTS_DIR="var/financial/attachments",
                 CADRUMO_RUNS_DIR="var/runs",
             ):
                 settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        app_root = isolated_app_data / PRODUCT_IDENTITY.python_package
+        app_root = platform_user_data_root(inputs)
         assert settings.cadrumo_invoices_dir == app_root / "var" / "financial" / "invoices"
         assert settings.cadrumo_attachments_dir == app_root / "var" / "financial" / "attachments"
         assert settings.cadrumo_runs_dir == app_root / "var" / "runs"
