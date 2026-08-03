@@ -15,6 +15,8 @@ row tuple end-to-end.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 from pydantic import ValidationError
 
@@ -46,7 +48,7 @@ def _populated_row(item_id: str = "review-001") -> ReviewQueueRowPayload:
         reason="missing required casilla",
         current_owner_surface="app modelo",
         canonical_next_command="aeat app modelo work calculate draft-abc",
-        since="2025-04-20T12:00:00+00:00",
+        since=datetime(2025, 4, 20, 12, 0, 0, tzinfo=UTC),
         summary="modelo 303 draft is missing iva.devengado",
         legal_refs=("ley-37-1992:art-21", "ley-37-1992:art-94"),
     )
