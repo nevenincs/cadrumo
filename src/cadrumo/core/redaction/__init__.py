@@ -310,10 +310,6 @@ def default_rules() -> Mapping[str, _RedactionRule]:
 def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ...]:
     """Resolve the rule references on a policy to concrete rule instances.
 
-    Args:
-        policy: A :class:`core.classification.ClassificationPolicy`
-            whose ``redaction_rules`` field carries rule names.
-
     A name the registry cannot resolve is REFUSED, not skipped. Skipping
     was the previous behaviour and it made this fail open: a typo in a
     policy's rule tuple dropped that arm of the policy, and the only
