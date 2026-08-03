@@ -157,6 +157,110 @@ class ExternalPathRole(StrEnum):
     OPERATOR_DIRECTED_OUTPUT = "operator_directed_output"
 
 
+class ExternalPathDeclaration(BaseModel):
+    """One path-valued setting that legitimately sits outside the taxonomy.
+
+    Frozen and strict for the same reason the location declarations are: an
+    escape is an authority about where data does *not* land, and a mutable one
+    would let a consumer widen it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    settings_field: str = Field(min_length=1)
+    role: ExternalPathRole
+    reason: str = Field(min_length=1)
+    """Why this field fails the choose test, the write test, or both.
+
+    Required and non-empty: the whole point of declaring an escape rather than
+    omitting a field is that the reason is written down where the next reader
+    finds it.
+    """
+
+
+STORAGE_ROOT_SETTINGS_FIELD: Final[str] = "cadrumo_local_storage_root"
+"""The settings field naming the anchor every root-scoped member resolves against.
+
+Neither a member nor an escape, and given its own name so it cannot be mistaken
+for either. It is not a member because the taxonomy declares locations
+*relative to* it -- a member for the root would be a member whose subpath is
+itself. It is not an escape because the application both chooses it and writes
+beneath it, so it passes both of :class:`ExternalPathRole`'s questions; calling
+it external would be false. Every field is therefore exactly one of three
+things, and the binding gate asserts the three are total and disjoint rather
+than letting the anchor fall through an unnamed gap.
+"""
+
+
+EXTERNAL_PATH_SETTINGS_FIELDS: Final[dict[str, ExternalPathDeclaration]] = {
+    declaration.settings_field: declaration
+    for declaration in (
+        ExternalPathDeclaration(
+            settings_field="aeat_manuals_root",
+            role=ExternalPathRole.BUNDLED_RESOURCE,
+            reason=(
+                "The bundled AEAT Manual practico corpus ships inside the package and is read "
+                "only. The application never writes there, so it fails the write test."
+            ),
+        ),
+        ExternalPathDeclaration(
+            settings_field="aeat_normatives_root",
+            role=ExternalPathRole.BUNDLED_RESOURCE,
+            reason=(
+                "The bundled legal normatives corpus ships inside the package and is read only. "
+                "Legal grounding reads it; nothing writes it."
+            ),
+        ),
+        ExternalPathDeclaration(
+            settings_field="cadrumo_iva_catalogue_root",
+            role=ExternalPathRole.BUNDLED_RESOURCE,
+            reason=(
+                "The hand-reviewed IVA taxonomy catalogue ships inside the package and is read "
+                "only; it is revised in source, never at runtime."
+            ),
+        ),
+        ExternalPathDeclaration(
+            settings_field="cadrumo_certificate_path",
+            role=ExternalPathRole.OPERATOR_INPUT,
+            reason=(
+                "The operator's own PKCS#12 bundle, which they place wherever they keep their "
+                "credentials. The application reads it to authenticate and must never write to "
+                "it, so it fails both the choose test and the write test."
+            ),
+        ),
+        ExternalPathDeclaration(
+            settings_field="cadrumo_libreoffice_executable",
+            role=ExternalPathRole.EXTERNAL_EXECUTABLE,
+            reason=(
+                "A third-party binary installed by the platform or the operator. The application "
+                "executes it and does not choose where it lives. Classified nowhere before the "
+                "taxonomy existed, and invisible to a name-suffix selector because it ends in "
+                "none of _dir, _path, or _root -- which is why the binding gate selects by "
+                "annotation."
+            ),
+        ),
+        ExternalPathDeclaration(
+            settings_field="cadrumo_wallet_diagnostic_dump_dir",
+            role=ExternalPathRole.OPERATOR_DIRECTED_OUTPUT,
+            reason=(
+                "Unset, the diagnostic capture is off and there is no application-chosen "
+                "location at all; set, the operator names the destination and the application "
+                "writes there on request. Neither state is the application choosing a location, "
+                "so it escapes -- and it fits none of the four original roles, which is the "
+                "correction re-applying the escape test to a real field surfaced."
+            ),
+        ),
+    )
+}
+"""Path-valued settings that are legitimately outside the taxonomy, with reasons.
+
+A location enrolls when the application both chooses it and writes data there.
+Failing either question puts a field here -- as a positive declaration carrying
+its role and its reason, never as mere absence from a frozenset, so no field
+can fall outside the taxonomy by being overlooked.
+"""
+
+
 class StorageCategory(StrEnum):
     """Every application-chosen on-disk location, identified by scope and name.
 
@@ -816,11 +920,14 @@ def _effective_settings(settings: Settings | None) -> Settings:
 
 
 __all__ = [
+    "EXTERNAL_PATH_SETTINGS_FIELDS",
     "FINGERPRINT_EXCLUDED_STORAGE_FIELDS",
     "ROOT_DERIVED_STORAGE_FIELDS",
     "ROOT_DERIVED_STORAGE_LOCATIONS",
     "STORAGE_FIELD_CATEGORIES",
+    "STORAGE_ROOT_SETTINGS_FIELD",
     "STORAGE_TAXONOMY",
+    "ExternalPathDeclaration",
     "ExternalPathRole",
     "FingerprintParticipation",
     "StorageCategory",

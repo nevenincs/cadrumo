@@ -175,10 +175,13 @@ from ._result_disposition import (
 )
 from ._revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from ._storage_taxonomy import (
+    EXTERNAL_PATH_SETTINGS_FIELDS,
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
     STORAGE_FIELD_CATEGORIES,
+    STORAGE_ROOT_SETTINGS_FIELD,
     STORAGE_TAXONOMY,
+    ExternalPathDeclaration,
     ExternalPathRole,
     FingerprintParticipation,
     StorageCategory,
@@ -270,6 +273,7 @@ __all__: list[str] = [
     "BROWSER_EXTRA",
     "COMPATIBILITY_REGIME",
     "DEFAULT_WRITE_PROVENANCE",
+    "EXTERNAL_PATH_SETTINGS_FIELDS",
     "FETCH_GATED_M210_TIPO_RENTA_CODES",
     "FINGERPRINT_EXCLUDED_STORAGE_FIELDS",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
@@ -298,6 +302,7 @@ __all__: list[str] = [
     "REVIEWED_REVISION_REVIEW_STATUSES",
     "ROOT_DERIVED_STORAGE_FIELDS",
     "STORAGE_FIELD_CATEGORIES",
+    "STORAGE_ROOT_SETTINGS_FIELD",
     "STORAGE_TAXONOMY",
     "STRICT_FROZEN_CONFIG",
     "UNMODELED_OBLIGATIONS",
@@ -315,6 +320,7 @@ __all__: list[str] = [
     "CorpusAnchorResolutionError",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
+    "ExternalPathDeclaration",
     "ExternalPathRole",
     "FingerprintParticipation",
     "ForeignAssetObligationGroup",
