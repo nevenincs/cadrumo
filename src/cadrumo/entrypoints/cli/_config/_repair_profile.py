@@ -128,6 +128,11 @@ def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: b
     _emit_envelope(ctx, command="config.repair.profile", result=repair_payload, lines=lines)
 
 
+# The repair envelope carries a heterogeneous operator-facing payload (strings,
+# bools, nested health records). Naming a concrete value type here would either
+# exclude a field the envelope legitimately carries or restate the envelope's
+# shape from a second place; the redaction contract governs the values.
+# ANY-RETURN-RATIONALE-REPAIR-PAYLOAD-REDACTION: pass-through to the redaction funnel.
 def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
     """Return a paste-safe repair payload with internal profile ids removed."""
     redacted = redact_structured_for_cli_output(payload)
