@@ -6724,8 +6724,9 @@ flows:
       value: Érték
     edit:
       cancel: Mégse
-      clear: flows.manager.edit.clear
-      masked_kept: flows.manager.edit.masked_kept
+      clear: Törlés
+      masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
+        megőrzéshez, vagy írj be egy újat a cseréhez.
       path: 'Belső azonosító: %{path}'
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.

@@ -6840,8 +6840,9 @@ flows:
       value: Valor
     edit:
       cancel: Cancel·la
-      clear: flows.manager.edit.clear
-      masked_kept: flows.manager.edit.masked_kept
+      clear: Esborra
+      masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
+        buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
       path: 'Identificador intern: %{path}'
       required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
         un valor o cancel·la per deixar-lo sense canvis.'
