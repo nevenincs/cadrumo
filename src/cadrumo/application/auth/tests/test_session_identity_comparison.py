@@ -306,9 +306,10 @@ class TestClaveIdentityIsComparedCanonically:
 
     ``profile_tax_id`` and ``dni_nie`` are unconstrained ``str`` fields, and the
     guard compared them with a bare ``!=``. That was wrong in two opposite
-    directions at once, and an accepted decision record
-    (``2026-07-25-censal-profile-autofill-adr`` D1b) rests its safety argument
-    on this guard holding.
+    directions at once: a case or check-digit mismatch could wrongly deny a
+    genuine match, and a spurious byte-for-byte match on malformed input could
+    wrongly grant one — a hazard the censal-autofill safety argument depends on
+    this guard closing.
 
     Both sides now go through :func:`validate_spanish_tax_id`, the same
     authority the censal-read ownership guard uses for the same question.

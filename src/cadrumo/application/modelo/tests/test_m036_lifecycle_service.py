@@ -193,6 +193,7 @@ def test_record_refuses_a_command_profile_that_does_not_own_the_bucket(
         with pytest.raises(LiveApplicationInputError) as exc_info:
             record_m036_declaration(command, bucket_id=runtime.bucket_id)
 
+        assert exc_info.value.context is not None
         assert exc_info.value.context["profile_id"] == foreign_profile
         assert exc_info.value.context["bucket_id"] == _PROFILE_ID
         assert list_m036_declarations(bucket_id=runtime.bucket_id) == ()

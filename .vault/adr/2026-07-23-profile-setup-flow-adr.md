@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#profile-setup-flow'
 date: '2026-07-23'
-modified: '2026-07-23'
-body_hash: 'sha256:280e1659fe4bad1a3c18ab7e7888166629ef2f723fc5a5f5941d9f0c2c7c5f73'
+modified: '2026-08-02'
+body_hash: 'sha256:4a9808eda1c120a5b4f260b14a212d7bfa6e24375bb46c98de042a1a6b709076'
 related:
   - "[[2026-07-23-profile-setup-flow-setup-flow-design-hypothesis-research]]"
 ---
@@ -445,6 +445,35 @@ never a live snapshot:
   envelope; hard failures checkpoint-then-abort through the standard error
   envelope. The non-interactive path shares the same per-question and
   cross-field validators — one contract.
+
+**Scope reconciliation (2026-08-02) — which surface the modify ruling binds.**
+The modify-mode ruling above ("NO mid-flow persistence... stages answers in
+`FlowState` only and commits ONCE at review") binds the **paged flow surface**,
+and only that surface. Every term it uses is a flow term — `FlowState`, review,
+navigation, submit-only-from-review — and the safety it buys is the safety of a
+multi-page interactive walk over a live, valid profile.
+
+It does NOT bind the profile manager. The manager is a distinct surface with no
+pages, no `FlowState`, no navigation and no review step; it replaced the wizard's
+review page rather than inheriting its contract. Its own contract is per-field
+persistence plus a no-optimistic-render re-read, pinned by
+`tui/tests/test_manager_screen.py` and `test_manager_required_field_refusal.py`.
+
+On the code as it stands the two are not in tension, and the ruling is satisfied
+rather than excepted. `manager_is_the_right_frontend` routes EVERY interactive
+invocation to the manager, so the interactive paged modify walk this ruling
+governs is retired. What remains of modify is the non-interactive path
+(`--quiet` / `--accept-defaults` / explicit field flags), and that path performs
+exactly one atomic `persist_patch` inside a single `repository.update(...)`
+(`_commands.py::_run_patch_edit`, whose docstring names it non-interactive) —
+literally "commits ONCE", with no mid-flow state to half-apply.
+
+The reconciliation is therefore a scope statement, not a reversal: no decision
+recorded above is withdrawn or weakened. The practical consequence is that the
+manager's per-edit persistence must be justified against the manager's own
+contract and guard tests, never read as a violation of this ruling; and if an
+interactive modify walk is ever reintroduced, this ruling binds it again
+unchanged.
 
 ## Rationale
 

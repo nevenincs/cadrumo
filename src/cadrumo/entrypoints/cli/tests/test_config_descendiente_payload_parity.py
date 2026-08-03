@@ -107,7 +107,7 @@ def test_payload_refuses_values_the_canonical_record_refuses(
     fields.update(field_overrides)
 
     with pytest.raises(ValidationError):
-        ProfileDescendientePayload(**fields)  # type: ignore[arg-type]
+        ProfileDescendientePayload.model_validate(fields)
 
 
 def test_payload_refuses_an_adoption_predating_birth() -> None:

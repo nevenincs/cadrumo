@@ -196,3 +196,7 @@ def _evolution_covers_field(evolution: CasillaContinuidadEvolutionDefinition | N
     if evolution.evolution_kind == "label_and_legal_refs_evolved":
         return field in {"label", "legal_refs"}
     return evolution.evolution_kind == "repurposed"
+
+
+revisions_overlap = _revisions_overlap
+iter_cross_revision_casilla_divergences = _iter_cross_revision_casilla_divergences

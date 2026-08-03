@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 
 import pytest
 import typer
-
 from pydantic import ValidationError
 
 from .....domain.buckets import (
@@ -120,11 +119,13 @@ def test_bucket_history_event_payload_carries_payload_version() -> None:
 def test_bucket_history_event_payload_requires_payload_version() -> None:
     """A row missing the discriminator is refused, not silently defaulted."""
     with pytest.raises(ValidationError):
-        BucketHistoryEventPayload(
-            event_id="e" * 64,
-            event_type=BucketEventType.PROFILE_SELECTED,
-            occurred_at=datetime(2026, 1, 15, tzinfo=UTC),
-            actor="cadrumo.config.profile.history",
-            object_type=BucketEventObjectType.PROFILE,
-            object_id="profile-1",
+        BucketHistoryEventPayload.model_validate(
+            {
+                "event_id": "e" * 64,
+                "event_type": BucketEventType.PROFILE_SELECTED,
+                "occurred_at": datetime(2026, 1, 15, tzinfo=UTC),
+                "actor": "cadrumo.config.profile.history",
+                "object_type": BucketEventObjectType.PROFILE,
+                "object_id": "profile-1",
+            },
         )

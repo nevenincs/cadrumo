@@ -17,7 +17,7 @@ import binascii
 from collections.abc import Iterable, Mapping
 from datetime import datetime
 from types import MappingProxyType
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
@@ -129,7 +129,7 @@ class CoverageManifest(BaseModel):
             raise ValueError("namespaces must be iterable")
         normalized: list[str] = []
         seen: set[str] = set()
-        for item in value:
+        for item in cast(Iterable[object], value):
             if not isinstance(item, str):
                 raise ValueError("namespaces must contain strings only")
             namespace = _clean_required_text(item, field_name="namespace")
@@ -146,7 +146,7 @@ class CoverageManifest(BaseModel):
         if not isinstance(value, Mapping):
             raise ValueError("row_counts_by_namespace must be a mapping")
         row_counts: dict[str, int] = {}
-        for raw_namespace, raw_count in value.items():
+        for raw_namespace, raw_count in cast(Mapping[object, object], value).items():
             if not isinstance(raw_namespace, str):
                 raise ValueError("row count namespaces must be strings")
             namespace = _clean_required_text(raw_namespace, field_name="row count namespace")

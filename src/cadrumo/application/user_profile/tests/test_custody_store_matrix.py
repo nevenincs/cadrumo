@@ -110,15 +110,16 @@ def _seed_submission(bucket_id: str) -> None:
         make_submission_id,
     )
 
+    submission_id = make_submission_id("draft-1", 1)
     attempt = SubmissionAttempt(
-        attempt_id="draft-1.1",
+        attempt_id=f"{submission_id}.1",
         started_at=_NOW,
         ended_at=_NOW,
         status=SubmissionStatus.PENDIENTE_DE_PRESENTAR,
     )
     SubmissionRepository().save(
         ModeloPresentado(
-            submission_id=make_submission_id("draft-1", 1),
+            submission_id=submission_id,
             draft_id="draft-1",
             modelo="303",
             period=Period.from_year_and_code(2024, "4T"),

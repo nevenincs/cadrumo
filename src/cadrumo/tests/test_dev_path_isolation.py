@@ -91,7 +91,7 @@ from dev.import_hygiene_scan import (
     wheel_exclude_globs,
 )
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -99,7 +99,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # Repo layout constants
 # ---------------------------------------------------------------------------
 
-_SRC_ROOT: Final[Path] = PROJECT_ROOT / "src"
+_SRC_ROOT: Final[Path] = REPO_ROOT / "src"
 _PKG_ROOT: Final[Path] = _SRC_ROOT / "cadrumo"
 
 _UTF_8: Final[str] = "utf-8"
@@ -209,7 +209,7 @@ def test_no_shipped_module_reaches_a_dev_path() -> None:
     """No shipped module under ``src/cadrumo`` may build a path into ``dev/``.
 
     This is the metadata-loophole complement to the import check: a shipped
-    module can reference dev/ artifacts through ``PROJECT_ROOT / "dev" /
+    module can reference dev/ artifacts through ``REPO_ROOT / "dev" /
     "baseline.json"`` without any ``import dev`` statement.  Both forms make the
     shipped module depend on development infrastructure that is absent from the
     installed wheel — the import check catches the code dependency; this check
@@ -364,16 +364,16 @@ def test_path_scanner_catches_relative_and_windows_separator_forms(tmp_path: Pat
 
 
 def test_path_scanner_catches_project_root_anchored_join(tmp_path: Path) -> None:
-    """``PROJECT_ROOT / "dev" / "file"`` MUST fire — this is the realistic violation.
+    """``REPO_ROOT / "dev" / "file"`` MUST fire — this is the realistic violation.
 
     An earlier revision of this gate pinned this exact form as NOT a violation,
     on the reasoning that ``"dev"`` here is a bare segment rather than a
     ``"dev/"``-prefixed literal.  That reasoning inverted the risk: a bare
     ``open("dev/baseline.json")`` is CWD-relative and breaks on the first run
     from any other directory, so nobody writes it, while the
-    ``PROJECT_ROOT``-anchored join works perfectly in the repo checkout and
+    ``REPO_ROOT``-anchored join works perfectly in the repo checkout and
     breaks only once installed as a wheel — silently, for users only.
-    ``PROJECT_ROOT`` is exported from ``cadrumo.core.paths``, which this very
+    ``REPO_ROOT`` is exported from ``cadrumo.core.paths``, which this very
     module imports, so the form is one line away at all times.
 
     The scanner must therefore fire here, and this test is the pin that keeps
@@ -382,9 +382,9 @@ def test_path_scanner_catches_project_root_anchored_join(tmp_path: Path) -> None
     violations = _scan_planted_paths(
         tmp_path,
         "cadrumo/anchored_join.py",
-        "from cadrumo.core.paths import PROJECT_ROOT\n"
+        "from cadrumo.core.paths import REPO_ROOT\n"
         "\n"
-        'CONFORMANCE_BASELINE = PROJECT_ROOT / "dev" / "conformance_baseline.json"\n'
+        'CONFORMANCE_BASELINE = REPO_ROOT / "dev" / "conformance_baseline.json"\n'
         "\n"
         "def load_baseline() -> str:\n"
         "    return CONFORMANCE_BASELINE.read_text(encoding='utf-8')\n",
@@ -392,7 +392,7 @@ def test_path_scanner_catches_project_root_anchored_join(tmp_path: Path) -> None
 
     assert len(violations) == 1, f"expected exactly 1 reach for the anchored join; got {violations!r}"
     assert violations[0].form is DevPathForm.PATH_JOIN, (
-        f"the PROJECT_ROOT-anchored dev join was not reported as a path join: {violations!r}"
+        f"the REPO_ROOT-anchored dev join was not reported as a path join: {violations!r}"
     )
     assert violations[0].lineno == 3
 
@@ -410,7 +410,7 @@ def test_path_scanner_catches_the_reversed_join_operand(tmp_path: Path) -> None:
     violations = _scan_planted_paths(
         tmp_path,
         "cadrumo/reversed_join.py",
-        'from cadrumo.core.paths import PROJECT_ROOT\n\nBASELINE = "dev" / PROJECT_ROOT\n',
+        'from cadrumo.core.paths import REPO_ROOT\n\nBASELINE = "dev" / REPO_ROOT\n',
     )
 
     assert [v.form for v in violations] == [DevPathForm.PATH_JOIN], (
@@ -648,10 +648,10 @@ def test_path_scanner_does_not_fire_on_excluded_test_module(tmp_path: Path) -> N
         tmp_path,
         "cadrumo/tests/test_with_dev_path.py",
         "from pathlib import Path\n"
-        "from cadrumo.core.paths import PROJECT_ROOT\n"
+        "from cadrumo.core.paths import REPO_ROOT\n"
         "\n"
         'BASELINE = Path("dev/import_hygiene_baseline.json")\n'
-        'ANCHORED = PROJECT_ROOT / "dev" / "import_hygiene_baseline.json"\n'
+        'ANCHORED = REPO_ROOT / "dev" / "import_hygiene_baseline.json"\n'
         "\n"
         "def composed(root):\n"
         '    return f"{root}/dev/size_budget_baseline.json"\n',
@@ -680,7 +680,7 @@ def test_both_families_catch_a_planted_shipped_conftest(tmp_path: Path) -> None:
     proven for one half and not the other, and this test holds both halves to
     it on the same file.
     """
-    body = 'import dev\nfrom cadrumo.core.paths import PROJECT_ROOT\n\nBASELINE = PROJECT_ROOT / "dev" / "x.json"\n'
+    body = 'import dev\nfrom cadrumo.core.paths import REPO_ROOT\n\nBASELINE = REPO_ROOT / "dev" / "x.json"\n'
     planted = _planted_module(tmp_path, "cadrumo/conftest.py", body)
 
     import_violations = find_dev_tooling_import_violations(

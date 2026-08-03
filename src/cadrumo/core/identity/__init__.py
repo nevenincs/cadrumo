@@ -32,6 +32,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator, BeforeValidator
 
+from .._hex import Hex64Str as _Hex64Str
 from ._bucket import BucketId
 from ._digest import ContentDigest, ContentDigestOrAbsent
 from ._documents import (
@@ -49,9 +50,33 @@ from ._nif_iva import (
 )
 from ._profile import ProfileId
 from ._profile_label import ProfileLabel
-from ._snapshot import SnapshotId
 from ._tax_id import nif_check_letter, tax_id_identity_token, validate_spanish_tax_id
-from ._transaction import TransactionId
+
+SnapshotId = _Hex64Str
+"""Hex-64 content-addressed snapshot identity.
+
+A snapshot identity is the SHA-256 hex digest of the canonical JSON form of
+the underlying snapshot payload. Two equal snapshots serialise to identical
+ids, so consumers can deduplicate captures cheaply and verify content
+addressing offline without contacting AEAT. Declared here directly (rather
+than as a bridge module) because it adds no constraint beyond
+:data:`Hex64Str` itself.
+
+Surfaces that mint a snapshot id with a non-hex shape (notably the censo
+snapshot, which derives its id from a JSON-canonical ``content_hash_hex``
+family) do not consume this alias; they are referential identities outside
+the content-addressed-hex family.
+"""
+
+TransactionId = _Hex64Str
+"""Hex-64 content-addressed ledger-transaction identity.
+
+Minted by the transaction domain when a ledger entry is persisted. Declared
+here directly (rather than as a bridge module) because it adds no
+constraint beyond :data:`Hex64Str` itself; the constraint shape is consumed
+by sibling domains (notably :mod:`domain.invoices` for reconciliation
+models), the application ledger service, and the persistence adapters.
+"""
 
 
 def _subject_tax_id_validator(value: str) -> str:

@@ -559,7 +559,7 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         return envelope.payload
 
     def _envelope_cls(self) -> type[Envelope[TPayload]]:
-        return Envelope.for_payload_type(self._payload_model)
+        return Envelope[TPayload].for_payload_type(self._payload_model)
 
 
 def _snapshot_id_of(payload: BaseModel) -> str:

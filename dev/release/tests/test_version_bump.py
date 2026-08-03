@@ -71,8 +71,7 @@ def _write_mcpb_manifest(root: Path, version: str = "0.0.0") -> None:
 
 def _write_changelog(root: Path, *, prior_version: str = "1.2.3", prior_date: str = "2026-07-04") -> None:
     (root / "CHANGELOG.md").write_text(
-        "# Changelog\n\n## [Unreleased]\n\n"
-        f"## [{prior_version}] - {prior_date}\n\n### Features\n- thing\n",
+        f"# Changelog\n\n## [Unreleased]\n\n## [{prior_version}] - {prior_date}\n\n### Features\n- thing\n",
         encoding="utf-8",
     )
 
@@ -225,12 +224,7 @@ def _write_probe_uv(bin_dir: Path, *, fail_on: str | None = None) -> Path:
     else:
         script = bin_dir / "uv"
         script.write_text(
-            "#!/usr/bin/env bash\n"
-            'if [ "$2" = "--check" ]; then\n'
-            f"  exit {check_exit}\n"
-            "else\n"
-            f"  exit {lock_exit}\n"
-            "fi\n",
+            f'#!/usr/bin/env bash\nif [ "$2" = "--check" ]; then\n  exit {check_exit}\nelse\n  exit {lock_exit}\nfi\n',
             encoding="utf-8",
         )
         script.chmod(script.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)

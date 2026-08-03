@@ -97,7 +97,7 @@ def test_reconciliation_history_row_enforces_the_canonical_entry_contract() -> N
         actor="operator",
         reconciled_at=datetime(2026, 1, 1, tzinfo=UTC),
     )
-    row = ModeloReconciliationHistoryRowPayload(**base)
+    row = ModeloReconciliationHistoryRowPayload.model_validate(base)
     assert row.source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE
     assert row.verdict is ModeloReconciliationVerdict.MATCHES
 
@@ -116,7 +116,7 @@ def test_reconciliation_history_row_enforces_the_canonical_entry_contract() -> N
         ("malformed timestamp", {"reconciled_at": "not-date"}),
     ):
         try:
-            ModeloReconciliationHistoryRowPayload(**(base | override))
+            ModeloReconciliationHistoryRowPayload.model_validate(base | override)
         except ValidationError:
             continue
         pytest.fail(f"{label} was accepted by the transport row")

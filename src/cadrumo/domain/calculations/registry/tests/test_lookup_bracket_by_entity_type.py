@@ -225,15 +225,20 @@ def test_lookup_bracket_by_entity_type_raises_when_enum_binding_is_unset() -> No
 
 
 def test_lookup_bracket_by_entity_type_requires_three_args() -> None:
-    """The op must declare exactly base / binding / dispatch_table."""
-    expression = FormulaExpression.model_validate(
-        {
-            "op": "lookup_bracket_by_entity_type",
-            "args": (
-                {"literal": Decimal("100000")},
-                {"binding": "test-legal-entity-form"},
-            ),
-        },
+    """The op must declare exactly base / binding / dispatch_table.
+
+    FormulaExpression.model_validate() now enforces op arity centrally
+    (require_formula_operator_arity, at construction), so a 2-arg expression
+    can no longer reach _evaluate's own arity check via normal validation.
+    model_construct() bypasses that model-level validator to exercise this
+    op's defense-in-depth check directly.
+    """
+    expression = FormulaExpression.model_construct(
+        op="lookup_bracket_by_entity_type",
+        args=(
+            FormulaExpression.model_validate({"literal": Decimal("100000")}),
+            FormulaExpression.model_validate({"binding": "test-legal-entity-form"}),
+        ),
     )
     with pytest.raises(RegistryValidationError, match="expects 3 args"):
         _evaluate(

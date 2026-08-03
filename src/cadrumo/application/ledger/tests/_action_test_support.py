@@ -483,9 +483,9 @@ _UPDATED_FIELD_EXPECTATIONS = (
 _PRESERVED_CREATE_AUDIT_FIELDS = ("created_by", "source_command", "created_event_id")
 
 _POST_UPDATE_EVENT_PAYLOADS = (
-    (1, "mutation_kind", "edit"),
-    (2, "mutation_kind", "classification"),
-    (3, "mutation_kind", "allocation"),
+    (BucketEventType.LEDGER_TRANSACTION_UPDATED, "mutation_kind", "edit"),
+    (BucketEventType.LEDGER_TRANSACTION_CLASSIFIED, "mutation_kind", "classification"),
+    (BucketEventType.LEDGER_TRANSACTION_ALLOCATED, "mutation_kind", "allocation"),
 )
 
 POST_UPDATE_EVENT_PAYLOADS = _POST_UPDATE_EVENT_PAYLOADS

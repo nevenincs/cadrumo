@@ -20,6 +20,7 @@ from __future__ import annotations
 import ast
 import inspect
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 
@@ -33,6 +34,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _PDF_BYTES = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n"
 _SUBJECT = "CSV='FIXTURECSV1234X7'"
+
+
+class _PdfResponseKwargs(TypedDict):
+    status: int
+    content_type: str
+    body: bytes
 
 
 # Header values that are NOT ``application/pdf`` but survive a substring
@@ -117,13 +124,14 @@ class TestPdfResponseContract:
 
     def test_the_subject_handle_reaches_every_failure_message(self) -> None:
         """Each capture path keeps its own diagnostic handle in the message."""
-        for kwargs in (
+        cases: tuple[_PdfResponseKwargs, ...] = (
             {"status": 500, "content_type": PDF_MIME_TYPE, "body": _PDF_BYTES},
             {"status": 200, "content_type": PDF_MIME_TYPE, "body": b""},
             {"status": 200, "content_type": "text/html", "body": _PDF_BYTES},
-        ):
+        )
+        for kwargs in cases:
             with pytest.raises(JustificanteFetchError) as exc_info:
-                assert_pdf_response(subject="CSV='DISTINCTHANDLE9'", **kwargs)  # type: ignore[arg-type]
+                assert_pdf_response(subject="CSV='DISTINCTHANDLE9'", **kwargs)
             assert "CSV='DISTINCTHANDLE9'" in str(exc_info.value)
 
 

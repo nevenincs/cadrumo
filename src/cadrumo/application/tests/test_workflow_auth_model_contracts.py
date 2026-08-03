@@ -54,7 +54,7 @@ def _cleanup(**overrides: object) -> AuthCleanupIntent:
         "started_at": _AWARE,
     }
     fields.update(overrides)
-    return AuthCleanupIntent(**fields)  # type: ignore[arg-type]
+    return AuthCleanupIntent.model_validate(fields)
 
 
 def _mutation(**overrides: object) -> CertificateSecretMutationIntent:
@@ -67,7 +67,7 @@ def _mutation(**overrides: object) -> CertificateSecretMutationIntent:
         "prior_present": False,
     }
     fields.update(overrides)
-    return CertificateSecretMutationIntent(**fields)  # type: ignore[arg-type]
+    return CertificateSecretMutationIntent.model_validate(fields)
 
 
 class TestOperationIdentity:
@@ -135,9 +135,9 @@ class TestInstantContracts:
 
     @pytest.mark.parametrize("field", ["configured_at", "authenticated_at"])
     def test_auth_state_instants_are_gated(self, field: str) -> None:
-        assert getattr(AuthState(**{field: _AWARE}), field) == _AWARE
+        assert getattr(AuthState.model_validate({field: _AWARE}), field) == _AWARE
         with pytest.raises(ValidationError):
-            AuthState(**{field: _NAIVE})
+            AuthState.model_validate({field: _NAIVE})
 
     def test_empty_auth_state_remains_valid(self) -> None:
         """A state carrying no instants is still constructible."""

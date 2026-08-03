@@ -9,21 +9,26 @@ from __future__ import annotations
 
 import re
 import warnings
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import lru_cache
 from io import BufferedReader, BytesIO
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-import pdfplumber
-import pypdfium2 as pdfium
-import xlrd
-from openpyxl import load_workbook
-from openpyxl.worksheet.worksheet import Worksheet
-from pdfplumber.page import Page
-from xlrd.sheet import Sheet as XlrdSheet
+from pydantic import ConfigDict, TypeAdapter, ValidationError
+
+if TYPE_CHECKING:
+    # Annotation-only: ``from __future__ import annotations`` above makes every
+    # annotation a string, so these never need to exist at runtime. The parser
+    # backends themselves (openpyxl, pdfplumber, pypdfium2, xlrd) are among the
+    # heaviest third-party imports in the tree and are deferred into the
+    # extraction functions that actually call them -- importing the registry
+    # must not pay for a PDF/XLS parser stack no calculation touches.
+    from openpyxl.worksheet.worksheet import Worksheet
+    from pdfplumber.page import Page
+    from xlrd.sheet import Sheet as XlrdSheet
 
 from ....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
 from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
@@ -47,6 +52,9 @@ _log = get_logger(__name__)
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
 _OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"
+_NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
+    tuple[int | float, ...], config=ConfigDict(strict=True)
+)
 
 
 @dataclass(frozen=True)
@@ -122,6 +130,8 @@ def _extract_record_design_workbook_cached(
     modified_ns: int,
 ) -> tuple[RecordDesignSheet, ...]:
     del byte_count, modified_ns
+    from openpyxl import load_workbook
+
     source_path = Path(path)
     with _ignore_openpyxl_header_footer_metadata_warnings():
         workbook = load_workbook(source_path, read_only=True, data_only=True)
@@ -152,6 +162,8 @@ def _extract_record_design_xls_workbook_cached(
     modified_ns: int,
 ) -> tuple[RecordDesignSheet, ...]:
     del byte_count, modified_ns
+    import xlrd
+
     source_path = Path(path)
     workbook = xlrd.open_workbook(str(source_path), on_demand=True)
     try:
@@ -176,7 +188,7 @@ def _extract_record_design_xls_workbook_cached(
 
 
 @contextmanager
-def _ignore_openpyxl_header_footer_metadata_warnings() -> Iterator[None]:
+def _ignore_openpyxl_header_footer_metadata_warnings() -> Generator[None]:
     with warnings.catch_warnings():
         warnings.filterwarnings(
             "ignore",
@@ -232,6 +244,8 @@ def _extract_record_design_pdf_stream(
     *,
     source_label: str,
 ) -> tuple[RecordDesignSheet, ...]:
+    import pdfplumber
+
     pdf_bytes = stream.read()
     lines = _extract_pdf_text_lines(pdf_bytes, source_label=source_label)
     if _uses_page_record_layout(lines):
@@ -644,6 +658,8 @@ class _VisualChartFragment:
 
 
 def _extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
+    import pypdfium2 as pdfium
+
     try:
         document = pdfium.PdfDocument(pdf_bytes)
     except Exception as exc:  # pragma: no cover - pdfium parser surface
@@ -663,6 +679,8 @@ def _extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str
 
 
 def _extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
+    import pdfplumber
+
     try:
         with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
             return tuple(line for page in pdf.pages for line in _extract_pdf_page_lines(page))
@@ -1065,8 +1083,12 @@ def _is_black_fill(fill: object | None) -> bool:
     """
     if isinstance(fill, int | float):
         return fill == 0.0
-    if isinstance(fill, tuple) and fill and all(isinstance(component, int | float) for component in fill):
-        return all(component == 0.0 for component in fill)
+    if isinstance(fill, tuple):
+        try:
+            components = _NUMERIC_TUPLE_ADAPTER.validate_python(fill)
+        except ValidationError:
+            return False
+        return bool(components) and all(component == 0.0 for component in components)
     return False
 
 

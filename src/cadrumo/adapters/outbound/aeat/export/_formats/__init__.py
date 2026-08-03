@@ -13,8 +13,8 @@ validate byte-level round trips. This module re-exports:
 :class:`RecordFieldSpec`, :class:`SegmentSpec`, :class:`FieldKind`,
 :class:`Justification`, :class:`DateFmt`, :class:`SignedMode`,
 :func:`record_field`, :func:`encode_currency`, :func:`encode_date`,
-:func:`encode_text`, :func:`validate_record_specs`, and
-:func:`validate_segment_specs`.
+:func:`encode_text`, :func:`validate_record_specs`,
+:func:`validate_segment_specs`, and :func:`render_record_body`.
 
 See Also:
     :mod:`adapters.outbound.aeat.export`
@@ -43,6 +43,7 @@ from ._record_spec import (
     validate_record_specs,
     validate_segment_specs,
 )
+from ._serialise import render_record_body
 
 __all__ = [
     "DateFmt",
@@ -56,6 +57,7 @@ __all__ = [
     "encode_date",
     "encode_text",
     "record_field",
+    "render_record_body",
     "validate_record_specs",
     "validate_segment_specs",
 ]

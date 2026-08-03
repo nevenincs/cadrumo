@@ -32,11 +32,11 @@ from .....application.aggregation import (
 )
 
 # The live enrolled-source set is the single authoritative declaration in
-# `_calculation_actions` (the union of every active resolver's owned_sources, the
-# pre-mesh tiers, and `manual_input`). It is consumed read-only here; the gate
+# `_calculation_source_policy` (the union of every active resolver's owned_sources,
+# the pre-mesh tiers, and `manual_input`). It is consumed read-only here; the gate
 # asserts disposition coverage, not enrollment membership, so it tracks the live
 # truth without re-declaring it.
-from .....application.modelo._calculation_actions import _ENROLLED_SOURCE_KINDS
+from .....application.modelo._calculation_source_policy import _ENROLLED_SOURCE_KINDS
 from .....core import BindingSourceKind
 from .. import InputKind, PeriodSelector
 from .._authority import bundled_authority

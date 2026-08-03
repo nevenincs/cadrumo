@@ -489,3 +489,11 @@ def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _Provide
         result=ProviderProbeResult.OK,
         summary=tr("application.auth.operator.probe.clave_movil_identity_ok"),
     )
+
+
+classify_identity_alignment = _classify_identity_alignment
+live_auth_identity_kind = _live_auth_identity_kind
+live_auth_identity_state = _live_auth_identity_state
+live_auth_mode = _live_auth_mode
+probe_local_session = _probe_local_session
+probe_certificate_bundle = _probe_certificate_bundle

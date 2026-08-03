@@ -62,7 +62,7 @@ def _totals(**overrides: object) -> dict[str, object]:
 def test_m130_totals_refuse_non_canonical_decimal_text(bad: str) -> None:
     """A total that is not a canonical decimal string must not reach the wire."""
     with pytest.raises(ValidationError):
-        M130AccumulatedPayload(**_totals(rendimiento_neto=bad))  # type: ignore[arg-type]
+        M130AccumulatedPayload.model_validate(_totals(rendimiento_neto=bad))
 
 
 def test_m130_rendimiento_neto_accepts_a_loss_quarter() -> None:
@@ -71,14 +71,14 @@ def test_m130_rendimiento_neto_accepts_a_loss_quarter() -> None:
     The canonical projection model applies no non-negative bound, so neither
     does the boundary.
     """
-    payload = M130AccumulatedPayload(**_totals(rendimiento_neto="-500.00"))  # type: ignore[arg-type]
+    payload = M130AccumulatedPayload.model_validate(_totals(rendimiento_neto="-500.00"))
 
     assert payload.rendimiento_neto == "-500.00"
 
 
 def test_m130_totals_keep_their_string_wire_form() -> None:
     """The validated wire type must not turn the totals into JSON numbers."""
-    wire = M130AccumulatedPayload(**_totals()).model_dump(mode="json")  # type: ignore[arg-type]
+    wire = M130AccumulatedPayload.model_validate(_totals()).model_dump(mode="json")
 
     assert wire["ingresos"] == "1000.00"
     assert isinstance(wire["gastos"], str)
@@ -103,12 +103,12 @@ def test_m130_totals_keep_their_string_wire_form() -> None:
 def test_history_event_refuses_values_bucket_event_refuses(overrides: dict[str, object]) -> None:
     """Every identity/time/actor value the canonical event rejects is rejected here."""
     with pytest.raises(ValidationError):
-        ModeloLifecycleEventPayload(**_event(**overrides))  # type: ignore[arg-type]
+        ModeloLifecycleEventPayload.model_validate(_event(**overrides))
 
 
 def test_history_event_wire_form_is_unchanged() -> None:
     """Enum members and datetimes must render as the strings the CLI already emitted."""
-    wire = ModeloLifecycleEventPayload(**_event()).model_dump(mode="json")  # type: ignore[arg-type]
+    wire = ModeloLifecycleEventPayload.model_validate(_event()).model_dump(mode="json")
 
     assert wire["event_type"] == "modelo.filed"
     assert wire["object_type"] == BucketEventObjectType.WORK_UNIT.value
@@ -131,7 +131,7 @@ def test_history_envelope_refuses_impossible_filters_and_counts(overrides: dict[
     fields.update(overrides)
 
     with pytest.raises(ValidationError):
-        ModeloHistoryResult(**fields)  # type: ignore[arg-type]
+        ModeloHistoryResult.model_validate(fields)
 
 
 def test_history_envelope_accepts_a_censo_lifecycle_period_token() -> None:

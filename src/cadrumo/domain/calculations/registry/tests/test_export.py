@@ -20,7 +20,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.outbound.aeat.export._formats._record_spec import RecordFieldSpec
+from .....adapters.outbound.aeat.export import RecordFieldSpec
 from .....core import BindingSourceKind
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import bundled_path

@@ -39,7 +39,7 @@ def _validate_kwargs(**overrides: object) -> dict[str, object]:
 
 def test_validate_result_accepts_a_real_projection() -> None:
     """A genuine profile-validation projection validates cleanly."""
-    result = ConfigProfileValidateResult(**_validate_kwargs())
+    result = ConfigProfileValidateResult.model_validate(_validate_kwargs())
 
     assert result.status is UserProfileStatus.ACTIVE
 
@@ -47,7 +47,7 @@ def test_validate_result_accepts_a_real_projection() -> None:
 def test_validate_result_rejects_a_blank_profile_id() -> None:
     """A blank profile id is refused, matching the canonical ``ProfileId`` constraint."""
     with pytest.raises(ValidationError):
-        ConfigProfileValidateResult(**_validate_kwargs(profile_id=""))
+        ConfigProfileValidateResult.model_validate(_validate_kwargs(profile_id=""))
 
 
 def test_validate_result_rejects_an_unknown_status() -> None:
@@ -59,13 +59,13 @@ def test_validate_result_rejects_an_unknown_status() -> None:
 def test_validate_result_rejects_a_non_positive_schema_version() -> None:
     """A schema version below 1 is refused, matching ``ProfileValidationReport``."""
     with pytest.raises(ValidationError):
-        ConfigProfileValidateResult(**_validate_kwargs(schema_version=0))
+        ConfigProfileValidateResult.model_validate(_validate_kwargs(schema_version=0))
 
 
 def test_validate_result_rejects_a_blank_display_name() -> None:
     """A blank display name is refused."""
     with pytest.raises(ValidationError):
-        ConfigProfileValidateResult(**_validate_kwargs(display_name=""))
+        ConfigProfileValidateResult.model_validate(_validate_kwargs(display_name=""))
 
 
 def _login_kwargs(**overrides: object) -> dict[str, object]:
@@ -85,7 +85,7 @@ def _login_kwargs(**overrides: object) -> dict[str, object]:
 
 def test_login_result_accepts_a_real_projection() -> None:
     """A genuine login outcome projects and validates cleanly."""
-    result = ConfigLoginResult(**_login_kwargs())
+    result = ConfigLoginResult.model_validate(_login_kwargs())
 
     assert result.backend_kind is SecretStoreBackend.KEYRING
 
@@ -93,7 +93,7 @@ def test_login_result_accepts_a_real_projection() -> None:
 def test_login_result_rejects_a_blank_active_profile() -> None:
     """A blank ``profile_id`` is refused."""
     with pytest.raises(ValidationError):
-        ConfigLoginResult(**_login_kwargs(profile_id=""))
+        ConfigLoginResult.model_validate(_login_kwargs(profile_id=""))
 
 
 def test_login_result_rejects_an_unknown_backend_kind() -> None:
@@ -124,7 +124,7 @@ def _preflight_kwargs(**overrides: object) -> dict[str, object]:
 
 def test_preflight_result_accepts_a_real_projection() -> None:
     """A genuine preflight coordinate projects and validates cleanly."""
-    result = ConfigProfilePreflightResult(**_preflight_kwargs())
+    result = ConfigProfilePreflightResult.model_validate(_preflight_kwargs())
 
     assert result.modelo == "303"
 
@@ -132,15 +132,15 @@ def test_preflight_result_accepts_a_real_projection() -> None:
 def test_preflight_result_rejects_a_blank_profile_id() -> None:
     """A blank profile id is refused."""
     with pytest.raises(ValidationError):
-        ConfigProfilePreflightResult(**_preflight_kwargs(profile_id=""))
+        ConfigProfilePreflightResult.model_validate(_preflight_kwargs(profile_id=""))
 
 
 def test_preflight_result_rejects_blank_modelo_and_revision() -> None:
     """A blank modelo or revision id is refused."""
     with pytest.raises(ValidationError):
-        ConfigProfilePreflightResult(**_preflight_kwargs(modelo=""))
+        ConfigProfilePreflightResult.model_validate(_preflight_kwargs(modelo=""))
     with pytest.raises(ValidationError):
-        ConfigProfilePreflightResult(**_preflight_kwargs(revision_id=""))
+        ConfigProfilePreflightResult.model_validate(_preflight_kwargs(revision_id=""))
 
 
 def test_preflight_result_rejects_an_out_of_range_filing_year() -> None:
@@ -154,6 +154,6 @@ def test_preflight_result_rejects_an_out_of_range_filing_year() -> None:
 def test_preflight_result_rejects_a_filing_year_period_mismatch() -> None:
     """A filing_year that disagrees with period.filing_year is refused."""
     with pytest.raises(ValidationError):
-        ConfigProfilePreflightResult(
-            **_preflight_kwargs(filing_year=2025, period=Period.from_year_and_code(2026, "1T")),
+        ConfigProfilePreflightResult.model_validate(
+            _preflight_kwargs(filing_year=2025, period=Period.from_year_and_code(2026, "1T")),
         )

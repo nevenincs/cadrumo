@@ -4235,8 +4235,8 @@ cli:
         help: Informa de la postura de consentimiento de telemetría remota. Nunca
           emite nada.
         off_hint: La telemetría permanece totalmente local por defecto. Para activarla,
-          define CADRUMO_TELEMETRY_OPT_IN=true y CADRUMO_TELEMETRY_TIER a crash_only
-          o full en env/.env.
+          define las variables de entorno CADRUMO_TELEMETRY_OPT_IN y CADRUMO_TELEMETRY_TIER
+          (CADRUMO_TELEMETRY_OPT_IN=true, CADRUMO_TELEMETRY_TIER=crash_only o full).
       tier_help: Previsualiza/envía como si CADRUMO_TELEMETRY_TIER tuviera este valor
         (off / crash_only / full) solo para esta ejecución; omítelo para usar el nivel
         configurado realmente.
@@ -6831,7 +6831,8 @@ flows:
       write_failed: No se ha podido guardar el campo. Vuelve a intentarlo.
       write_in_flight: Se está guardando el campo anterior. Espera a que termine y
         vuelve a intentarlo.
-    language: {}
+    language:
+      unavailable: Este perfil no ofrece un ajuste de idioma.
     progress: '{present} de {total} campos rellenados, faltan {missing} para presentar'
     section_title: '{title} — {present}/{total}'
     title: 'Perfil: {profile}'

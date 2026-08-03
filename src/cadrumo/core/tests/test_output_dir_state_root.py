@@ -1,11 +1,11 @@
 """State-root derivation for every generated-output directory.
 
-Durable state must not default under ``PROJECT_ROOT`` on an installed run:
+Durable state must not default under ``REPO_ROOT`` on an installed run:
 every output directory derives its default from
 ``cadrumo_local_storage_root`` through the ``_STATE_ROOT_DERIVED_DIRS``
 taxonomy, and an explicit per-field override still wins. These tests pin the
 derivation for the whole table so a new output dir cannot silently reintroduce
-a ``PROJECT_ROOT/var/...`` default.
+a ``REPO_ROOT/var/...`` default.
 """
 
 from __future__ import annotations
@@ -14,8 +14,9 @@ from pathlib import Path
 
 import pytest
 
+from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
-from ..config import _STATE_ROOT_DERIVED_DIRS, PROJECT_ROOT, Settings
+from ..config import _STATE_ROOT_DERIVED_DIRS, Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -40,13 +41,13 @@ def test_every_derived_output_dir_roots_under_storage_root(tmp_path: Path) -> No
 
 def test_no_derived_output_dir_defaults_under_project_root_var(tmp_path: Path) -> None:
     """With the root pointed away from the checkout, no derived dir escapes to
-    ``PROJECT_ROOT/var`` — proving the effective default is root-derived, not
-    the ``PROJECT_ROOT/var/...`` placeholder each field still carries."""
+    ``REPO_ROOT/var`` — proving the effective default is root-derived, not
+    the ``REPO_ROOT/var/...`` placeholder each field still carries."""
     storage_root = tmp_path / "state"
 
     settings = _settings_from_env(CADRUMO_LOCAL_STORAGE_ROOT=str(storage_root))
 
-    project_var = PROJECT_ROOT / "var"
+    project_var = REPO_ROOT / "var"
     for field_name in _STATE_ROOT_DERIVED_DIRS:
         value = getattr(settings, field_name)
         assert value is not None, field_name

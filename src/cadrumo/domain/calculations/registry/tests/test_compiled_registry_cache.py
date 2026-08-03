@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
+from .....core.config import override_settings
 from .....core.resources import bundled_path
-from .....tests.env_scope import scoped_env_var
 from .._compiled_cache import (
     CompiledRegistryPayload,
     _encode_frame,
@@ -29,7 +29,6 @@ from .._loader import (
     clear_fingerprint_cache,
     load_registry_tree,
 )
-from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -50,7 +49,13 @@ def test_store_then_load_roundtrips_the_bundled_compiled_registry(tmp_path: Path
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
 
-    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(cache_dir)):
+    # ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` backs the Settings field
+    # ``cadrumo_registry_disk_cache_dir``; ``load_settings()`` caches the
+    # constructed ``Settings`` per active-profile pointer, so a plain
+    # ``os.environ`` mutation is invisible to the in-process resolver once an
+    # earlier call already built and cached a ``Settings`` instance.
+    # ``override_settings`` is the mechanism that actually takes effect here.
+    with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
         assert load_compiled_registry_cache(root, fingerprints) is None
 
         store_compiled_registry_cache(root, fingerprints, payload)
@@ -70,7 +75,13 @@ def test_a_byte_mutation_is_refused_and_the_file_deleted(tmp_path: Path) -> None
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
 
-    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(cache_dir)):
+    # ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` backs the Settings field
+    # ``cadrumo_registry_disk_cache_dir``; ``load_settings()`` caches the
+    # constructed ``Settings`` per active-profile pointer, so a plain
+    # ``os.environ`` mutation is invisible to the in-process resolver once an
+    # earlier call already built and cached a ``Settings`` instance.
+    # ``override_settings`` is the mechanism that actually takes effect here.
+    with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
         store_compiled_registry_cache(root, fingerprints, payload)
         path = compiled_cache_path(root, fingerprints)
 
@@ -93,7 +104,13 @@ def test_a_foreign_shaped_payload_is_refused_and_deleted(tmp_path: Path) -> None
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
 
-    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(cache_dir)):
+    # ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` backs the Settings field
+    # ``cadrumo_registry_disk_cache_dir``; ``load_settings()`` caches the
+    # constructed ``Settings`` per active-profile pointer, so a plain
+    # ``os.environ`` mutation is invisible to the in-process resolver once an
+    # earlier call already built and cached a ``Settings`` instance.
+    # ``override_settings`` is the mechanism that actually takes effect here.
+    with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
         path = compiled_cache_path(root, fingerprints)
         path.parent.mkdir(parents=True, exist_ok=True)
         # A frame with a valid schema version and a matching digest, but a foreign
@@ -119,7 +136,13 @@ def test_mutating_the_cache_through_the_loader_rebuilds_byte_equivalently_from_t
     cache_dir = tmp_path / "compiled-cache"
     cache_dir.mkdir()
 
-    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(cache_dir)):
+    # ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` backs the Settings field
+    # ``cadrumo_registry_disk_cache_dir``; ``load_settings()`` caches the
+    # constructed ``Settings`` per active-profile pointer, so a plain
+    # ``os.environ`` mutation is invisible to the in-process resolver once an
+    # earlier call already built and cached a ``Settings`` instance.
+    # ``override_settings`` is the mechanism that actually takes effect here.
+    with override_settings(cadrumo_registry_disk_cache_dir=cache_dir):
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
         root = bundled_path("registry", "aeat").resolve()

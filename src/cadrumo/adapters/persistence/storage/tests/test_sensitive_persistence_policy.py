@@ -77,6 +77,11 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "shared best-effort-tier atomic-write primitive (no fsync); writes caller-supplied bytes only, no data of its own",
     (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_stream",
+        "tempfile.NamedTemporaryFile",
+    ): "shared streaming atomic-write primitive; writes caller-supplied chunks only, no data of its own",
+    (
         "src/cadrumo/entrypoints/cli/_config/_secure_input.py",
         "write_to_controlling_terminal",
         "open",
@@ -115,11 +120,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.open",
     ): "auth acquisition lock file; non-sensitive lock metadata only",
     (
-        "src/cadrumo/application/filing/_export.py",
-        "export_draft",
-        "output_path.write_bytes",
-    ): "explicit user-directed declaration export",
-    (
         "src/cadrumo/core/_fsync.py",
         "fsync_parent_dir",
         "os.open",
@@ -136,11 +136,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "redacted diagnostic event sink",
     (
         "src/cadrumo/core/observability/_store.py",
-        "save_trace",
-        "target.write_text",
-    ): "redacted diagnostic trace store",
-    (
-        "src/cadrumo/core/observability/_store.py",
         "save_events_append",
         "target.open",
     ): "redacted diagnostic event store",
@@ -154,16 +149,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "save_parity_tape",
         "path.write_text",
     ): "registry parity tape generation",
-    (
-        "src/cadrumo/domain/manuals/_fetch.py",
-        "_stream_to_file",
-        "destination.open",
-    ): "official manual corpus download",
-    (
-        "src/cadrumo/domain/manuals/_fetch.py",
-        "write_manifest",
-        "manifest_path.write_text",
-    ): "official manual corpus manifest",
     (
         "src/cadrumo/application/registry/__init__.py",
         "verify_registry_workbooks",
@@ -210,16 +195,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "cached_path.write_bytes",
     ): "registry workbook-parity conversion cache; non-user AEAT reference workbook bytes",
     (
-        "src/cadrumo/application/ledger/_actions_export.py",
-        "export_ledger_transactions",
-        "command.output_path.write_bytes",
-    ): "explicit operator-directed ledger transaction export to a caller-chosen path",
-    (
-        "src/cadrumo/core/observability/_store.py",
-        "save_envelope",
-        "target.write_text",
-    ): "determinism-replay golden-capture surface persists already-CLI-redacted envelope documents only",
-    (
         "src/cadrumo/agent/_workspace.py",
         "_write",
         "write_text",
@@ -239,11 +214,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "build_review_package",
         "write_text",
     ): "explicit operator-directed review-package export stages revision evidence and manifest JSON only long enough to create its checksum archive",
-    (
-        "src/cadrumo/core/corpus_manifest/_bundle_signing.py",
-        "generate_corpus_signing_keypair",
-        "resolved.write_text",
-    ): "maintainer-directed corpus signing-key export writes a private keypair before applying restrictive file permissions",
     (
         "src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py",
         "review_package_sign",

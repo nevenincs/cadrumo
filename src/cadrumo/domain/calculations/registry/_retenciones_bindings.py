@@ -128,6 +128,10 @@ def _retenciones_selector_value(
 
 
 __all__ = [
+    "RetencionesAggregationSelector",
     "resolve_retenciones_aggregation_binding_values",
     "validate_retenciones_aggregation_binding",
 ]
+
+
+RetencionesAggregationSelector = _RetencionesAggregationSelector

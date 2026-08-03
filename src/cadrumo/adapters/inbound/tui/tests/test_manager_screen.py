@@ -334,6 +334,11 @@ async def test_an_action_that_changed_the_record_redraws_the_page(tmp_path) -> N
             await pilot.pause()
             assert _rows(refreshing)[_EDITED_PATH][2] == "Before"
             await pilot.click("#action-rename")
+            # An action runs on a worker thread, so the page is repainted from
+            # ``on_worker_state_changed`` rather than inline with the click.
+            # ``pause`` only drains the event loop and would let this assert
+            # race the write, reading the pre-action value.
+            await refreshing.workers.wait_for_complete()
             await pilot.pause()
             assert _rows(refreshing)[_EDITED_PATH][2] == "After"
             refreshing.exit(None)

@@ -25,17 +25,17 @@ from .._harness_tools import HarnessFloorPayload, WhoamiIdentity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_DECLARED_STATUSES = typing.get_args(ProfileHealthStatus)
+_DECLARED_STATUSES = typing.cast(tuple[ProfileHealthStatus, ...], typing.get_args(ProfileHealthStatus))
 
 
 @pytest.mark.parametrize("bad", ["bogus", "", "READY", "ready ", "unknown_status"])
 def test_readiness_outside_the_taxonomy_is_refused(bad: str) -> None:
     with pytest.raises(ValidationError):
-        WhoamiIdentity(readiness=bad)  # type: ignore[arg-type]
+        WhoamiIdentity.model_validate({"readiness": bad})
 
 
 @pytest.mark.parametrize("status", _DECLARED_STATUSES)
-def test_every_declared_health_status_is_accepted(status: str) -> None:
+def test_every_declared_health_status_is_accepted(status: ProfileHealthStatus) -> None:
     """The identity block must admit exactly the taxonomy, not a subset of it.
 
     A degraded-pointer status is as legitimate a readiness as ``ready``: the
@@ -51,13 +51,13 @@ def test_the_taxonomy_is_the_health_projections_own() -> None:
         assert WhoamiIdentity(readiness=health.status).readiness == health.status
 
     with pytest.raises(ValidationError):
-        ActiveProfileHealth(active_profile=None, source="none", status="bogus")  # type: ignore[arg-type]
+        ActiveProfileHealth.model_validate({"active_profile": None, "source": "none", "status": "bogus"})
 
 
 def test_readiness_stays_required() -> None:
     """Narrowing the type must not silently give the field a default."""
     with pytest.raises(ValidationError):
-        WhoamiIdentity()  # type: ignore[call-arg]
+        WhoamiIdentity.model_validate({})
 
 
 def test_client_deserialization_refuses_a_widened_readiness() -> None:
@@ -82,8 +82,10 @@ def test_the_nested_floor_identity_inherits_the_contract() -> None:
     assert floor.identity.readiness == "ready"
 
     with pytest.raises(ValidationError):
-        HarnessFloorPayload(
-            off_host_consent="consent",
-            operator_rules="rules",
-            identity={"readiness": "bogus"},  # type: ignore[arg-type]
+        HarnessFloorPayload.model_validate(
+            {
+                "off_host_consent": "consent",
+                "operator_rules": "rules",
+                "identity": {"readiness": "bogus"},
+            },
         )

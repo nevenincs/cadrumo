@@ -232,7 +232,7 @@ def resolve_relation_values(
                 raise RegistryValidationError(f"relation {relation.id!r} copy requires one Decimal")
             resolved[relation.id] = raw_value
         else:
-            if not isinstance(raw_value, tuple) or not all(isinstance(value, Decimal) for value in raw_value):
+            if not isinstance(raw_value, tuple):
                 raise RegistryValidationError(f"relation {relation.id!r} sum requires a tuple of Decimal values")
             resolved[relation.id] = sum(raw_value, Decimal("0"))
     return resolved
@@ -312,8 +312,6 @@ def materialize_relation_binding_values(
         if relation.id not in relation_values:
             continue
         value = relation_values[relation.id]
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError(f"relation {relation.id!r} materialization requires a Decimal value")
         existing = values.get(relation.target_binding)
         if existing is not None and existing != value:
             raise RegistryValidationError(
@@ -361,3 +359,6 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
             f"relation {relation.id!r} source_period_offset_from_target "
             f"cannot interpret target period {target_period!r}",
         ) from exc
+
+
+derive_offset_source_period = _derive_offset_source_period

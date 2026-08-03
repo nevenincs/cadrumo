@@ -39,7 +39,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -51,6 +51,11 @@ from ._casilla_projection import project_casilla_search_records
 from ._concept_cards import ConceptCardRecord
 from ._search_record import SearchRecordKind
 from ._unified_record import SearchRecord, to_search_record
+
+# Dev tooling runs from a source checkout by definition, so it owns its own
+# repo-root anchor. Production code has no repository concept and must never
+# export one (see cadrumo.core._config_state_root for the runtime data root).
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 __all__ = [
     "ChunkHit",
@@ -515,9 +520,7 @@ def _declared_legal_ids(project_relpath: str, known_ids: frozenset[str]) -> tupl
     every provision. Returns an empty tuple when the file is unreadable or
     declares no catalogue-known id.
     """
-    from cadrumo.core.config import PROJECT_ROOT
-
-    absolute = PROJECT_ROOT / PurePosixPath(project_relpath.replace("\\", "/"))
+    absolute = _REPO_ROOT / PurePosixPath(project_relpath.replace("\\", "/"))
     try:
         text = absolute.read_text(encoding=_UTF_8)
     except OSError:

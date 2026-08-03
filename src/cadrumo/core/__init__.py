@@ -89,7 +89,12 @@ from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._concept_lifecycle import ConceptLifecycle
-from ._config_state_root import FormerProductStateError
+from ._config_state_root import (
+    FormerProductStateError,
+    RunMode,
+    detect_run_mode,
+    live_state_root_inputs,
+)
 from ._credentials import (
     LENGTH_ALONE_IS_STRONG,
     LENGTH_FAIR_FLOOR,
@@ -226,7 +231,6 @@ if TYPE_CHECKING:
         FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
         MODELO_720_FOREIGN_ASSET_CLASS_CODES,
         ForeignAssetObligationGroup,
-        foreign_asset_declaration_threshold,
         foreign_asset_obligation_group,
     )
     from ._fsync import fsync_parent_dir
@@ -321,6 +325,7 @@ __all__: list[str] = [
     "RescateType",
     "ResultDisposition",
     "RevisionReviewStatus",
+    "RunMode",
     "SectorDiferenciadoLetra",
     "SecureObjectWrite",
     "ServiceCapability",
@@ -337,9 +342,9 @@ __all__: list[str] = [
     "classify_post_filing_event_kind",
     "clear_pointer",
     "derive_result_disposition",
+    "detect_run_mode",
     "exclusive_file_lock",
     "expected_floor",
-    "foreign_asset_declaration_threshold",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
@@ -348,6 +353,7 @@ __all__: list[str] = [
     "iban_mod_97",
     "is_aeat_csv",
     "lineage_obligations",
+    "live_state_root_inputs",
     "misclassified_floor_keys",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
@@ -408,7 +414,6 @@ def __getattr__(name: str) -> object:
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
         "ForeignAssetObligationGroup",
-        "foreign_asset_declaration_threshold",
         "foreign_asset_obligation_group",
     ):
         from . import _foreign_asset_obligation

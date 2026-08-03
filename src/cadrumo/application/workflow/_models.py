@@ -49,7 +49,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING, Annotated, cast
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
@@ -175,8 +175,6 @@ class DeclaracionPointer(BaseModel):
 
 def _period_identity_segment(period: Period) -> str:
     """Return the stable non-combined identity segment for ``period``."""
-    if not isinstance(period, Period):
-        raise TypeError(f"period must be cadrumo.core.Period, got {type(period).__name__}")
     return f"{period.filing_year}:{period.registry_token}"
 
 
@@ -347,10 +345,10 @@ def update_declaration_pointer(
         declarations[key] = current.model_copy(update=update_fields)
     else:
         declarations[key] = DeclaracionPointer(
-            modelo=modelo,
+            modelo=_parse_declaration_modelo(modelo),
             period=period,
             draft_id=draft_id,
-            status=status,
+            status=_parse_declaration_status(status) if status is not None else None,
             exported_path=exported_path,
             verified=verified,
             updated_at=now,
@@ -456,7 +454,7 @@ def _coerce_workflow_step_details(value: object) -> object:
     if value is None or isinstance(value, WorkflowStepDetails):
         return value
     if isinstance(value, Mapping):
-        return WorkflowStepDetails.model_validate(dict(value))
+        return WorkflowStepDetails.model_validate(dict(cast(Mapping[str, object], value)))
     return value
 
 

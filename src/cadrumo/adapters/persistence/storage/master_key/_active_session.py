@@ -70,7 +70,7 @@ class NoActiveBucketSessionError(SecretStoreError):
 
     @override
     def __str__(self) -> str:
-        """Render the locale-backed remediation message while keeping positional args empty."""
+        """Render the locale-backed remediation message rather than the raw translation key."""
         return resolve_error_message(self)
 
 

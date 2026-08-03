@@ -122,12 +122,12 @@ def test_malformed_transport_fields_are_refused(field: str, value: object) -> No
     fields[field] = value
 
     with pytest.raises(ValidationError):
-        ModeloAggregateResult(**fields)
+        ModeloAggregateResult.model_validate(fields)
 
 
 def test_valid_transport_fields_are_accepted() -> None:
     """The positive control for the refusals above."""
-    payload = ModeloAggregateResult(**_valid_payload_fields())
+    payload = ModeloAggregateResult.model_validate(_valid_payload_fields())
 
     assert payload.provider is PerModeloAggregationContributor.COUNTERPART
     assert payload.observation_count >= 0

@@ -54,7 +54,7 @@ def _valid_kwargs(**overrides: object) -> dict[str, object]:
 
 
 def test_work_amend_wizard_result_round_trips_valid_row() -> None:
-    result = WorkAmendWizardResult(**_valid_kwargs())
+    result = WorkAmendWizardResult.model_validate(_valid_kwargs())
 
     assert result.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
     assert result.status is ModeloRecordStatus.VIGENTE
@@ -84,4 +84,4 @@ def test_work_amend_wizard_result_refuses_malformed_field(field: str, bad_value:
     have accepted every one of these.
     """
     with pytest.raises(ValidationError):
-        WorkAmendWizardResult(**_valid_kwargs(**{field: bad_value}))
+        WorkAmendWizardResult.model_validate(_valid_kwargs(**{field: bad_value}))

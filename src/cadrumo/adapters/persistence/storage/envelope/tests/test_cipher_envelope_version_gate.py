@@ -26,8 +26,10 @@ from __future__ import annotations
 
 import json
 import secrets
+from contextlib import AbstractContextManager
 from datetime import UTC, datetime
 from pathlib import Path
+from types import TracebackType
 
 import pytest
 from pydantic import BaseModel
@@ -36,6 +38,7 @@ from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import ClassificationError, EnvelopeVersionError
+from ...master_key import BucketSession
 from .._envelope import (
     CIPHER_ENVELOPE_SCHEMA_VERSION,
     Envelope,
@@ -128,11 +131,30 @@ def test_the_outer_version_is_refused_before_the_master_key_is_consulted(tmp_pat
     reaching it at all would surface that error instead of the version error.
     """
 
-    class _RefusingProvider:
+    class _TripwireProvider:
         """Master-key provider that fails loudly if the gate lets execution reach it."""
+
+        def __init__(self) -> None:
+            self._session: BucketSession | None = None
+            self._activation_cm: AbstractContextManager[None] | None = None
 
         def get_master_key(self) -> bytes:
             raise AssertionError("master key consulted before the outer version gate refused")
+
+        def provision_master_key(self) -> bytes:
+            raise AssertionError("master key provisioned before the outer version gate refused")
+
+        def __enter__(self) -> _TripwireProvider:
+            return self
+
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc: BaseException | None,
+            tb: TracebackType | None,
+        ) -> None:
+            self._session = None
+            self._activation_cm = None
 
     provider = _provider()
     path = tmp_path / "ordering.envelope.json"
@@ -144,7 +166,7 @@ def test_the_outer_version_is_refused_before_the_master_key_is_consulted(tmp_pat
             path,
             Envelope[_Payload],
             expected_class=SensitivityClass.FINANCIAL,
-            master_key_provider=_RefusingProvider(),
+            master_key_provider=_TripwireProvider(),
             hkdf_context=_HKDF_CONTEXT,
             max_supported_version=_INNER_VERSION,
         )

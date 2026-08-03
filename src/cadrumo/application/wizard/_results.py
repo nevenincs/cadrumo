@@ -45,6 +45,7 @@ class ProfileWizardStatus(StrEnum):
     CREATED = "created"
     UPDATED = "updated"
     SAVED = "saved"
+    ABANDONED = "abandoned"
 
 
 @register_schema("config.profile.create")

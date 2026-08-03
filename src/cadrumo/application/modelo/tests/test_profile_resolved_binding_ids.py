@@ -18,14 +18,14 @@ from decimal import Decimal
 
 import pytest
 
-from ...aggregation._source_mesh import CalculationSourceResolution
+from ...aggregation import CalculationSourceResolution
 from .._profile_binding import profile_resolved_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _resolution(**channels: object) -> CalculationSourceResolution:
-    return CalculationSourceResolution(resolver_id="test-profile", **channels)  # type: ignore[arg-type]
+    return CalculationSourceResolution.model_validate({"resolver_id": "test-profile", **channels})
 
 
 class TestAccessor:

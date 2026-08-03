@@ -35,7 +35,7 @@ def _delete_kwargs(**overrides: object) -> dict[str, object]:
 
 
 def test_config_profile_delete_result_round_trips_valid_row() -> None:
-    result = ConfigProfileDeleteResult(**_delete_kwargs())
+    result = ConfigProfileDeleteResult.model_validate(_delete_kwargs())
 
     assert result.status is UserProfileStatus.TOMBSTONED
 
@@ -50,7 +50,7 @@ def test_config_profile_delete_result_round_trips_valid_row() -> None:
 )
 def test_config_profile_delete_result_refuses_malformed_field(field: str, bad_value: object) -> None:
     with pytest.raises(ValidationError):
-        ConfigProfileDeleteResult(**_delete_kwargs(**{field: bad_value}))
+        ConfigProfileDeleteResult.model_validate(_delete_kwargs(**{field: bad_value}))
 
 
 def _duplicate_kwargs(**overrides: object) -> dict[str, object]:
@@ -64,7 +64,7 @@ def _duplicate_kwargs(**overrides: object) -> dict[str, object]:
 
 
 def test_config_profile_duplicate_result_round_trips_valid_row() -> None:
-    result = ConfigProfileDuplicateResult(**_duplicate_kwargs())
+    result = ConfigProfileDuplicateResult.model_validate(_duplicate_kwargs())
 
     assert result.display_name == "Copy"
 
@@ -72,7 +72,7 @@ def test_config_profile_duplicate_result_round_trips_valid_row() -> None:
 @pytest.mark.parametrize("field", ("source_profile_id", "target_profile_id", "display_name"))
 def test_config_profile_duplicate_result_refuses_blank_field(field: str) -> None:
     with pytest.raises(ValidationError):
-        ConfigProfileDuplicateResult(**_duplicate_kwargs(**{field: ""}))
+        ConfigProfileDuplicateResult.model_validate(_duplicate_kwargs(**{field: ""}))
 
 
 def _rename_kwargs(**overrides: object) -> dict[str, object]:
@@ -86,7 +86,7 @@ def _rename_kwargs(**overrides: object) -> dict[str, object]:
 
 
 def test_config_profile_rename_result_round_trips_valid_row() -> None:
-    result = ConfigProfileRenameResult(**_rename_kwargs())
+    result = ConfigProfileRenameResult.model_validate(_rename_kwargs())
 
     assert result.display_name == "new"
 
@@ -94,4 +94,4 @@ def test_config_profile_rename_result_round_trips_valid_row() -> None:
 @pytest.mark.parametrize("field", ("profile_id", "previous_display_name", "display_name"))
 def test_config_profile_rename_result_refuses_blank_field(field: str) -> None:
     with pytest.raises(ValidationError):
-        ConfigProfileRenameResult(**_rename_kwargs(**{field: ""}))
+        ConfigProfileRenameResult.model_validate(_rename_kwargs(**{field: ""}))

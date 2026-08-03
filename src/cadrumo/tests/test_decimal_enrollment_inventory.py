@@ -59,11 +59,6 @@ _STRING_PARSE_LAYERS: tuple[str, ...] = ("entrypoints", "application")
 """Layers rule 3 governs: the operator-facing boundary and the services behind it."""
 
 _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
-    ("application/modelo/_decimal_parsing.py", "decimal_from_string"): (
-        "Canonical implementation. This module is the owning home for the "
-        "string-to-Decimal parse of AEAT-produced borrador snapshot values, the "
-        "same category of exemption core/decimal/_coerce.py carries."
-    ),
     ("application/modelo/_calculate_input.py", "_validated_declarante_selector"): (
         "Inverted use: the constructor is a numeric-ness PREDICATE, not a parse. "
         "Success means REFUSE (an amount was typed into a declarante-selector "
@@ -75,10 +70,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "Spanish-separator normalisation; returns None on failure and feeds only "
         "a non-blocking advisory. The tolerant coerce posture, not the strict one."
     ),
-    ("application/ledger/_evidence_draft.py", "_parse_labelled_amount"): (
-        "Consumes normalize_decimal_separators output — already the canonical "
-        "tolerant helper for machine-produced evidence text."
-    ),
     ("application/ledger/_evidence_draft.py", "_find_iva_rate"): (
         "Deliberately tolerant OCR rate scrape; returns None on failure. Same "
         "machine-produced-text posture as _parse_labelled_amount above."
@@ -86,11 +77,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     ("application/invoices/_bulk_import.py", "_parse_row_decimal"): (
         "CSV bulk-import transport, not a hand-typed boundary: already carries an "
         "is_finite() guard and a typed per-row refusal naming row and field."
-    ),
-    ("application/modelo/_local_observation_spreadsheet.py", "parse_casilla_value_spreadsheet"): (
-        "Spreadsheet transport with deliberate European-separator tolerance "
-        "(comma to dot); a strict grammar here would refuse the very files this "
-        "reader exists to accept."
     ),
     ("application/aggregation/_atribucion_member.py", "_decimal"): (
         "Typed isinstance dispatch over an already-persisted profile fact; the "

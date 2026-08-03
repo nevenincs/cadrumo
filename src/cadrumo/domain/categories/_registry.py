@@ -14,9 +14,9 @@ from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
-from ...core import read_toml, to_str_keyed_dict
+from ...core import read_toml
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import file_stat_fingerprint
@@ -33,6 +33,9 @@ from ._proportionality import (
     parse_http_url,
 )
 from ._spending_category import SpendingCategory
+
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
+_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
 
 
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
@@ -64,11 +67,11 @@ def _load_category_profile_file_cached(
         raise CategoryValidationError(f"{target}: missing [[profiles]] entries")
 
     profiles: dict[SpendingCategory, CategoryProfile] = {}
-    for index, raw_profile in enumerate(raw_profiles, start=1):
-        if not isinstance(raw_profile, dict):
+    for index, raw_profile in enumerate(_OBJECT_SEQUENCE.validate_python(raw_profiles), start=1):
+        if not isinstance(raw_profile, Mapping):
             raise CategoryValidationError(f"{target}: profiles[{index}] must be a table")
         try:
-            profile = _parse_profile(raw_profile)
+            profile = _parse_profile(_STRING_OBJECT_MAPPING.validate_python(raw_profile))
         except (ValidationError, ValueError) as exc:
             raise CategoryValidationError(f"{target}: invalid profiles[{index}]: {exc}") from exc
         if profile.category in profiles:
@@ -135,7 +138,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
     if not isinstance(raw_profile, dict):
         raise CategoryValidationError("profile entry must be a table")
     # CAST-RATIONALE-TOML-INVARIANT-DICT:
-    data = to_str_keyed_dict(dict(raw_profile.items()), error_factory=CategoryValidationError)
+    data = _STRING_OBJECT_MAPPING.validate_python(raw_profile)
     category = SpendingCategory(str(data.get("category")))
     raw_rule = data.get("proportionality")
     if not isinstance(raw_rule, dict):
@@ -154,7 +157,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
 def _parse_rule(raw_rule: object) -> ProportionalityRule:
     if not isinstance(raw_rule, dict):
         raise CategoryValidationError("proportionality rule must be a table")
-    data = to_str_keyed_dict(dict(raw_rule.items()), error_factory=CategoryValidationError)
+    data = _STRING_OBJECT_MAPPING.validate_python(raw_rule)
     raw_variants = data.get("statutory_cap_variants", ())
     if not isinstance(raw_variants, list | tuple):
         raise CategoryValidationError("statutory_cap_variants must be a list")
@@ -170,8 +173,10 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
             "statutory_cap_eur_per_day": _decimal_or_none(data.get("statutory_cap_eur_per_day")),
             "statutory_cap_eur": _decimal_or_none(data.get("statutory_cap_eur")),
             "statutory_cap_period": _cap_period_or_none(data.get("statutory_cap_period")),
-            "statutory_cap_variants": tuple(_parse_cap_variant(raw_variant) for raw_variant in raw_variants),
-            "citations": tuple(_parse_citation(raw_citation) for raw_citation in raw_citations),
+            "statutory_cap_variants": tuple(
+                _parse_cap_variant(raw_variant) for raw_variant in _OBJECT_SEQUENCE.validate_python(raw_variants)
+            ),
+            "citations": tuple(_parse_citation(raw_citation) for raw_citation in _OBJECT_SEQUENCE.validate_python(raw_citations)),
             "notes": tr(str(data.get("notes"))),
         },
     )
@@ -180,7 +185,7 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
 def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
     if not isinstance(raw_variant, dict):
         raise CategoryValidationError("statutory_cap_variants entries must be tables")
-    data = to_str_keyed_dict(dict(raw_variant.items()), error_factory=CategoryValidationError)
+    data = _STRING_OBJECT_MAPPING.validate_python(raw_variant)
     return StatutoryCapVariant.model_validate(
         {
             "id": data.get("id"),
@@ -193,7 +198,7 @@ def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
 def _parse_citation(raw_citation: object) -> CategoryCitation:
     if not isinstance(raw_citation, dict):
         raise CategoryValidationError("citations entries must be tables")
-    data = to_str_keyed_dict(dict(raw_citation.items()), error_factory=CategoryValidationError)
+    data = _STRING_OBJECT_MAPPING.validate_python(raw_citation)
     url = data.get("url")
     if not isinstance(url, str):
         raise CategoryValidationError("citation url must be a string")

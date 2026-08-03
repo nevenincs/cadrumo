@@ -95,7 +95,7 @@ def _layer(**overrides: object) -> InventoryStockLayerPayload:
         "source_movement_id": "opening-1",
     }
     fields.update(overrides)
-    return InventoryStockLayerPayload(**fields)  # type: ignore[arg-type]
+    return InventoryStockLayerPayload.model_validate(fields)
 
 
 def _movement(**overrides: object) -> InventoryMovementPayload:
@@ -111,7 +111,7 @@ def _movement(**overrides: object) -> InventoryMovementPayload:
         "schema_version": "1",
     }
     fields.update(overrides)
-    return InventoryMovementPayload(**fields)  # type: ignore[arg-type]
+    return InventoryMovementPayload.model_validate(fields)
 
 
 def _ledger_row(**overrides: object) -> InventoryLedgerPayload:
@@ -123,7 +123,7 @@ def _ledger_row(**overrides: object) -> InventoryLedgerPayload:
         "schema_version": "1",
     }
     fields.update(overrides)
-    return InventoryLedgerPayload(**fields)  # type: ignore[arg-type]
+    return InventoryLedgerPayload.model_validate(fields)
 
 
 class TestCanonicalBridge:
@@ -217,7 +217,7 @@ class TestMovementBounds:
             "deductible_iva_ratio": Decimal("1.00"),
         }
         with pytest.raises(ValidationError):
-            MovementRecord(**canonical_kwargs)  # type: ignore[arg-type]
+            MovementRecord.model_validate(canonical_kwargs)
 
     def test_zero_quantity_is_refused(self) -> None:
         with pytest.raises(ValidationError):

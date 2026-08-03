@@ -23,6 +23,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import cast
 
 import httpx
 from pydantic import BaseModel, Field
@@ -92,11 +93,19 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
             payload = response.json()
             if not isinstance(payload, dict):
                 raise ValueError("Ollama tags response must be a JSON object")
-            models = payload.get("models")
-            if not isinstance(models, list) or any(
-                not isinstance(entry, dict) or not isinstance(entry.get("name"), str) for entry in models
-            ):
+            payload_object = cast(dict[str, object], payload)
+            models = payload_object.get("models")
+            if not isinstance(models, list):
                 raise ValueError("Ollama tags response must contain model objects with string names")
+            models = cast(list[object], models)
+            names: set[str] = set()
+            for entry in models:
+                if not isinstance(entry, dict):
+                    raise ValueError("Ollama tags response must contain model objects with string names")
+                name = cast(dict[str, object], entry).get("name")
+                if not isinstance(name, str):
+                    raise ValueError("Ollama tags response must contain model objects with string names")
+                names.add(name)
     except (httpx.HTTPError, ValueError):
         return DependencyStatus(
             service="ollama-vision",
@@ -104,7 +113,6 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
             detail=f"Ollama is not reachable at {url}",
             remediation="start Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url",
         )
-    names = {entry["name"] for entry in models}
     # Ollama lists names with the tag (e.g. "qwen2.5vl:3b"); match the configured
     # model exactly or by its untagged stem.
     present = model in names or any(name.split(":", 1)[0] == model.split(":", 1)[0] for name in names)

@@ -836,3 +836,14 @@ def _iva_wallet_decision_covers_cross_period_dependency(
     if selected_authority in {"aeat_wallet", "taxpayer_override"}:
         return bool(source_kinds & {"aeat_wallet", "taxpayer_override"})
     return False
+
+
+CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS = _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
+CROSS_PERIOD_DEPENDENCY_LEGAL_REFS = _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
+IVA_COMPENSATION_CARRY_LEGAL_REF = _IVA_COMPENSATION_CARRY_LEGAL_REF
+cross_period_clean_state_findings = _cross_period_clean_state_findings
+cross_period_clean_state_next_action = _cross_period_clean_state_next_action
+cross_period_clean_state_verdict_for_work_unit = _cross_period_clean_state_verdict_for_work_unit
+modelo_202_incomplete_modality_finding = _modelo_202_incomplete_modality_finding
+require_cross_period_clean_state = _require_cross_period_clean_state
+zero_value_previous_filing_binding_ids = _zero_value_previous_filing_binding_ids

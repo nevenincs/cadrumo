@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import ValidationError
+from pydantic import ConfigDict, TypeAdapter, ValidationError
 
 from ....core import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
@@ -119,10 +119,11 @@ def _normalise_required_text(text: str) -> str:
     return normalise_corpus_text(text)
 
 
-_DISK_CACHE: dict[str, str] | None = None
-_DISK_CACHE_DIRTY: bool = False
+_disk_cache: dict[str, str] | None = None
+_disk_cache_dirty: bool = False
 # Disk-cache writes since reset; observability for the validation-verdict pin.
-_DISK_CACHE_WRITE_COUNT: int = 0
+_disk_cache_write_count: int = 0
+_DISK_CACHE_ADAPTER: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], config=ConfigDict(strict=True))
 
 
 def _corpus_text_cache_path() -> Path:
@@ -137,10 +138,10 @@ def _corpus_text_cache_path() -> Path:
 
 def reset_corpus_text_cache() -> None:
     """Drop the in-process corpus-text cache memos (test isolation only)."""
-    global _DISK_CACHE, _DISK_CACHE_DIRTY, _DISK_CACHE_WRITE_COUNT
-    _DISK_CACHE = None
-    _DISK_CACHE_DIRTY = False
-    _DISK_CACHE_WRITE_COUNT = 0
+    global _disk_cache, _disk_cache_dirty, _disk_cache_write_count
+    _disk_cache = None
+    _disk_cache_dirty = False
+    _disk_cache_write_count = 0
     _NORMALISED_SOURCE_TEXT_CACHE.clear()
 
 
@@ -153,37 +154,37 @@ def flush_corpus_text_cache() -> None:
     that grows to tens of megabytes, which alone cost ~13 seconds of the
     first-touch registry validation on an end-user machine.
     """
-    global _DISK_CACHE_DIRTY
-    if not _DISK_CACHE_DIRTY or _DISK_CACHE is None:
+    global _disk_cache_dirty
+    if not _disk_cache_dirty or _disk_cache is None:
         return
-    _write_disk_cache(_DISK_CACHE)
-    _DISK_CACHE_DIRTY = False
+    _write_disk_cache(_disk_cache)
+    _disk_cache_dirty = False
 
 
 def _load_disk_cache() -> dict[str, str]:
-    global _DISK_CACHE
-    if _DISK_CACHE is not None:
-        return _DISK_CACHE
+    global _disk_cache
+    if _disk_cache is not None:
+        return _disk_cache
     cache_path = _corpus_text_cache_path()
     if not cache_path.is_file():
-        _DISK_CACHE = {}
-        return _DISK_CACHE
+        _disk_cache = {}
+        return _disk_cache
     try:
         with open(cache_path, encoding="utf-8") as f:
-            loaded: dict[str, str] = json.load(f)
-            _DISK_CACHE = loaded
+            loaded = _DISK_CACHE_ADAPTER.validate_python(json.load(f))
+            _disk_cache = loaded
             return loaded
     except Exception:
         # Degrade to a cache miss (the entries recompute deterministically),
         # but surface the anomaly rather than swallowing it silently.
         _LOGGER.warning("Ignoring unreadable corpus text cache at %s; recomputing", cache_path, exc_info=True)
-        _DISK_CACHE = {}
-        return _DISK_CACHE
+        _disk_cache = {}
+        return _disk_cache
 
 
 def _write_disk_cache(data: dict[str, str]) -> None:
-    global _DISK_CACHE_WRITE_COUNT
-    _DISK_CACHE_WRITE_COUNT += 1
+    global _disk_cache_write_count
+    _disk_cache_write_count += 1
     cache_path = _corpus_text_cache_path()
     try:
         # Read-merge-before-write narrows the multi-process last-writer-wins
@@ -197,9 +198,8 @@ def _write_disk_cache(data: dict[str, str]) -> None:
         if cache_path.is_file():
             try:
                 with open(cache_path, encoding="utf-8") as f:
-                    on_disk = json.load(f)
-                if isinstance(on_disk, dict):
-                    merged.update(on_disk)
+                    on_disk = _DISK_CACHE_ADAPTER.validate_python(json.load(f))
+                merged.update(on_disk)
             except Exception:
                 _LOGGER.debug("Ignoring unreadable corpus text cache while merging at %s", cache_path, exc_info=True)
         merged.update(data)
@@ -379,6 +379,6 @@ class EvidenceValidator:
         _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
         self._source_text_cache[source.id] = normalised
         disk_cache[cache_key_str] = normalised
-        global _DISK_CACHE_DIRTY
-        _DISK_CACHE_DIRTY = True
+        global _disk_cache_dirty
+        _disk_cache_dirty = True
         return normalised

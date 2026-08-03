@@ -88,6 +88,9 @@ def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
     return secure_object_repository_for_bucket(bucket_id, load_settings())
 
 
+secure_objects_for_bucket = _secure_objects_for_bucket
+
+
 def _clear_output_language_cache() -> None:
     """Invalidate cached i18n output-language resolution after a profile write.
 
@@ -106,6 +109,44 @@ def _clear_output_language_cache() -> None:
 
 def _record_output_language(record: UserProfileRecord) -> str | None:
     return record_to_path_values(record).get(_OUTPUT_LANGUAGE_FACT_PATH)
+
+
+def _output_language_is_already_current(*, bucket_id: str, record: UserProfileRecord) -> bool:
+    """Whether the persisted hint already names ``record``'s output language.
+
+    The bucket-local hint is written by every refresh, so it is the durable
+    record of the language the last write settled on. When it already equals
+    this record's language, the write cannot have moved the language, so
+    neither the hint nor the in-process i18n cache needs touching.
+
+    That matters because the invalidation is far from free: the next
+    :func:`~cadrumo.core.i18n.tr` call after a clear resolves cold through
+    :func:`resolve_active_profile_output_language`, which loads and decrypts
+    the whole workflow state -- state the profile write had just persisted.
+    Invalidating on every fact write therefore forced a full decrypt to
+    re-read a language no write had changed.
+
+    Fails toward invalidating: an unreadable hint (absent, drifted, or an
+    unsupported language the writer refused to persist) is reported as not
+    current, so the refresh runs and the cache is cleared. The gate can only
+    ever skip work it has positively proven redundant.
+    """
+    from ...adapters.persistence.storage.bucket import (
+        normalize_output_language_hint,
+        read_bucket_output_language_hint,
+    )
+    from ...core.config import load_settings
+
+    language = normalize_output_language_hint(_record_output_language(record))
+    if language is None:
+        return False
+    return (
+        read_bucket_output_language_hint(
+            storage_root=load_settings().cadrumo_local_storage_root,
+            bucket_id=bucket_id,
+        )
+        == language
+    )
 
 
 def _refresh_output_language_hint(*, bucket_id: str, record: UserProfileRecord) -> None:
@@ -387,9 +428,10 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         sensitivity classification for profile data, then stores it under the
         key derived from ``record.profile_id``. A profile bucket holds exactly
         one live profile record, so this overwrites any prior aggregate for
-        the same ``profile_id``. Afterwards it clears the cached output
-        language, because a write may have changed the active profile's
-        preferred language for command-line output.
+        the same ``profile_id``. Afterwards it runs the post-commit
+        output-language refresh through :meth:`refresh_output_language_cache`,
+        because a write may have changed the active profile's preferred
+        language for command-line output.
 
         Args:
             record: The live :class:`UserProfileRecord` aggregate to encrypt and store.
@@ -413,8 +455,7 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
-        _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
-        _clear_output_language_cache()
+        self.refresh_output_language_cache(record)
 
     def to_secure_object_write(self, record: UserProfileRecord) -> SecureObjectWrite:
         """Return the prepared upsert for ``record`` without committing it.
@@ -492,17 +533,24 @@ class UserProfileLifecycleRepository(_BucketBoundRepository):
         self.refresh_output_language_cache(record)
 
     def refresh_output_language_cache(self, record: UserProfileRecord) -> None:
-        """Apply the post-commit cache refresh :meth:`save` performs inline.
+        """Apply the post-commit output-language refresh a committed write owes.
 
         Paired with :meth:`to_secure_object_write` so a batching caller can
         reproduce :meth:`save`'s full behaviour: prepare, commit alongside its
         siblings, then refresh. Separating them is what keeps the cache from
-        being invalidated for a write that never lands.
+        being invalidated for a write that never lands. :meth:`save` routes
+        through here too, so the one post-commit contract has one home.
+
+        A write that provably did not move the language does nothing: see
+        :func:`_output_language_is_already_current` for why re-clearing the
+        cache is expensive rather than merely redundant.
 
         Args:
             record: The live :class:`UserProfileRecord` aggregate whose
                 output-language preference the cache should now reflect.
         """
+        if _output_language_is_already_current(bucket_id=self._bucket_id, record=record):
+            return
         _refresh_output_language_hint(bucket_id=self._bucket_id, record=record)
         _clear_output_language_cache()
 
@@ -712,6 +760,7 @@ __all__ = [
     "USER_PROFILE_VALUE_NAMESPACE",
     "UserProfileLifecycleRepository",
     "UserProfileSnapshotRepository",
+    "secure_objects_for_bucket",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
 ]

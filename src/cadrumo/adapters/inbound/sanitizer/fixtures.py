@@ -78,7 +78,7 @@ SANITIZED_SHAS: frozenset[str] = frozenset(
         # 193: 2024-0A.pdf
         "a3483a59f47a9b70c717dcdd99c7ecce9f6febf8afefb54758f7c11d8f9d60f7",
         # 202: 2025-1P.pdf
-        "17f8dc56f54e670ff3cc0d29daa1feebe1d05a6b1c91fac58e15624fb75bf745",
+        "96b099e104f8e9910292ec226f6dc409ecd1e4d0e1a80ae53d1f785299cc83f9",
         # 232: 2016-0A.pdf, 2018-0A.pdf
         "70e972741f559c87c254e7fcbd406366adcec72e65d1fd16becf08912f6aa4b0",
         "f751ed778d98fbaf21e2b0c40fdbd24a0543476cb5fa0efdf6bf65a43602f1ad",

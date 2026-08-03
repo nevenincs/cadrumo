@@ -406,8 +406,6 @@ def build_planned_operations(
         Tuple of :class:`RemoteOperation` steps planned by the oracle.
     """
     operations = oracle.planned_operations(payload, expected=expected)
-    if not isinstance(operations, tuple):
-        raise RegistryValidationError(f"oracle {oracle.oracle_id!r} planned_operations must return a tuple")
     return operations
 
 

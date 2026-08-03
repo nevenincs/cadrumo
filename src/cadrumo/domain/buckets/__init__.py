@@ -38,6 +38,9 @@ Public surface:
   ``payload_version`` is required: each domain versions its own payload,
   and that field alone is outside the derived id, so it cannot be
   defaulted here without silently misdeclaring some domain's contract.
+* :func:`emit_bucket_events` — the plural append-save primitive, for one
+  atomic mutation that records several transitions. N events still become
+  N catalogue entries; only the number of round-trips collapses.
 * :func:`build_bucket_event` — the derive half alone, for a caller that must
   commit the event in the same unit of work as the state change it records.
 
@@ -107,6 +110,7 @@ from ._event_repository import (
     bucket_event_history_write,
     build_bucket_event,
     emit_bucket_event,
+    emit_bucket_events,
 )
 from ._protocols import BucketEventHistoryRepositoryProtocol
 
@@ -136,5 +140,6 @@ __all__ = [
     "build_bucket_event",
     "derive_bucket_event_id",
     "emit_bucket_event",
+    "emit_bucket_events",
     "payload_value_fits",
 ]

@@ -24,7 +24,6 @@ from pydantic import Field, SecretStr
 
 from ._config_integration_fields import CadrumoIntegrationSettings
 from ._config_support import LLMProviderSetting
-from .paths import PROJECT_ROOT
 
 
 class CadrumoLlmSettings(CadrumoIntegrationSettings):
@@ -52,15 +51,15 @@ class CadrumoLlmSettings(CadrumoIntegrationSettings):
         description="Google Gemini API key (optional)",
     )
     cadrumo_llm_cache_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "llm-cache",
+        default=Path("var") / "llm-cache",
         description="Directory for on-disk LLM cache entries",
     )
     cadrumo_llm_usage_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "llm-usage",
+        default=Path("var") / "llm-usage",
         description="Directory for append-only LLM usage JSONL logs",
     )
     cadrumo_llm_run_telemetry_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "llm-run-telemetry",
+        default=Path("var") / "llm-run-telemetry",
         description="Directory for append-only local LLM run-timing telemetry logs",
     )
     cadrumo_llm_run_telemetry_retention_days: int = Field(

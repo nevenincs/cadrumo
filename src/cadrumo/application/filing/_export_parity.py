@@ -419,9 +419,13 @@ def _format_missing_casilla(casilla_id: CasillaId, metadata: tuple[str, str | No
     return f"{casilla_id} (casilla {number})"
 
 
+did_page_suppressed = _did_page_suppressed
+
+
 __all__ = [
     "assert_export_mirrors_manifest",
     "boe_representable_casilla_ids",
+    "did_page_suppressed",
     "rendered_casilla_ids",
     "required_applicable_casilla_ids",
 ]

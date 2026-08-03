@@ -22,14 +22,14 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG
-from ..config import PROJECT_ROOT, load_settings
+from ..config import load_settings
 from ..identity import ContentDigest, ContentDigestOrAbsent
 from ..logging import attach_run_sink, detach_run_sink, get_logger
 from ..time import now
 from ._capture import _CAPTURE_SINK
 from ._fingerprint import (
     compute_corpus_sha256,
-    compute_db_sha256,
+    compute_data_root_sha256,
     read_cert_fingerprint,
 )
 from ._models import (
@@ -63,10 +63,11 @@ class RunContextInfo(BaseModel):
             enter.
         arguments: Tuple of :class:`ArgumentRecord` capturing the CLI
             flags / positional values for replay.
-        corpus_sha256: Fingerprint of the effective configuration —
-            :class:`Settings` plus ``env/.env`` — at enter time.
-        db_sha256: Fingerprint of the local ``var/`` state tree at
-            enter time, excluding cache subdirectories.
+        corpus_sha256: Fingerprint of the effective :class:`Settings`
+            configuration at enter time.
+        db_sha256: Fingerprint of the canonical application data root
+            (``Settings.cadrumo_local_storage_root``) at enter time,
+            excluding regenerable cache subdirectories.
         cert_fingerprint: SHA-256 of the configured PKCS#12 certificate,
             or ``""`` when no cert path is configured.
         initial_step_id: Step identifier emitted with the first
@@ -136,7 +137,7 @@ def _build_initial_context(
         started_at=started_at,
         arguments=tuple(arguments),
         corpus_sha256=compute_corpus_sha256(settings),
-        db_sha256=compute_db_sha256(PROJECT_ROOT / "var"),
+        db_sha256=compute_data_root_sha256(settings),
         cert_fingerprint=read_cert_fingerprint(),
         initial_step_id=step_id or _DEFAULT_INITIAL_STEP,
     )

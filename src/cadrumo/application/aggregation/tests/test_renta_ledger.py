@@ -979,7 +979,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
                     source=CategoryCitationSource.MANUAL_RENTA,
                     reference="Regla de prueba territorial",
                     locator="test",
-                    url=parse_http_url("https://example.com/regimen"),
+                    url=parse_http_url("https://sede.agenciatributaria.gob.es/regimen"),
                     quote=tr("Texto de prueba para override territorial."),
                 ),
             ),

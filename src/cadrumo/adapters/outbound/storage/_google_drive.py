@@ -39,10 +39,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from ....core.config import FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME, load_settings
+from ....core.errors import CoreValidationError
 from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
-from ....core.time import parse_iso_datetime
+from ....core.time import parse_iso_datetime, validate_utc_aware
 from ._drive_pagination import next_drive_page_token
 from ._errors import (
     OutboundStorageConflictError,
@@ -60,7 +61,7 @@ from ._object_name import build_provider_object_name, provider_object_hmac_prefi
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 if TYPE_CHECKING:
-    from ..google._records import DriveAppProperties
+    from ..google import DriveAppProperties
 
 _FOLDER_MIME = "application/vnd.google-apps.folder"
 _FILE_EXTENSION = ".bin"
@@ -532,7 +533,7 @@ class GoogleDriveProvider:
         existing = self._find_file(namespace_folder_id, hmac_clean)
 
         media_body = _build_media_body(payload)
-        from ..google._records import DriveAppProperties
+        from ..google import DriveAppProperties
 
         app_properties = DriveAppProperties(
             cadrumo_vault_app=_OWNERSHIP_VALUE,
@@ -1050,15 +1051,20 @@ def _parse_drive_modified_time(value: object, *, provider_object_id: str) -> dat
             context={"provider_object_id": provider_object_id, "actual_value": value},
             translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
         ) from None
-    if written_at.tzinfo is None or written_at.tzinfo.utcoffset(written_at) is None:
+    try:
+        validate_utc_aware(written_at)
+    except CoreValidationError:
         raise OutboundStorageIntegrityError(
             "drive object modifiedTime carries no timezone",
             context={"provider_object_id": provider_object_id, "actual_value": value},
             translated_message="adapters.outbound.storage.google_drive.errors.modified_time_invalid",
-        )
+        ) from None
     return written_at
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: dict[str, Any] is the
+# irreducible Drive API boundary shape; google-api-python-client stubs
+# surface entry metadata as Any, so narrowing breaks string-key lookups.
 def _metadata_from_drive_entry(
     entry: dict[str, Any],
     *,
@@ -1086,11 +1092,13 @@ def _metadata_from_drive_entry(
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: see
+# _metadata_from_drive_entry above.
 def _drive_storage_app_properties(entry: dict[str, Any]) -> DriveAppProperties:
     """Return the validated app-owned metadata for a Drive storage object."""
     from pydantic import ValidationError
 
-    from ..google._records import DriveAppProperties
+    from ..google import DriveAppProperties
 
     try:
         return DriveAppProperties.model_validate(entry.get("appProperties"))
@@ -1102,6 +1110,8 @@ def _drive_storage_app_properties(entry: dict[str, Any]) -> DriveAppProperties:
         ) from exc
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: see
+# _metadata_from_drive_entry above.
 def _drive_storage_content_hash(entry: dict[str, Any]) -> str:
     """Return the validated storage content hash for a Drive read."""
     return _drive_storage_app_properties(entry).content_hash

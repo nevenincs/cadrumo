@@ -37,7 +37,8 @@ import time
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Literal
+from importlib import import_module
+from typing import TYPE_CHECKING, Any, Literal, Protocol, cast
 
 if TYPE_CHECKING:
     # The `googleapiclient._apis.*` namespace exists only inside the
@@ -79,6 +80,19 @@ from ._records import (
     SheetCellAddress,
     SheetExportPlan,
 )
+
+
+class _SheetsDiscoveryBuilder(Protocol):
+    """Typed boundary for the dynamic Sheets discovery factory."""
+
+    def __call__(
+        self,
+        service_name: Literal["sheets"],
+        version: Literal["v4"],
+        *,
+        credentials: object,
+        cache_discovery: bool,
+    ) -> SheetsResource: ...
 
 
 class CasillaParity(BaseModel):
@@ -435,9 +449,15 @@ def verify_modelo_parity(
     # inputs are emitted as blank. We re-write the scenario inputs
     # explicitly to handle the case where another caller had previously
     # set them to stale values.
-    from googleapiclient.discovery import build  # local import per project convention
-
-    sheets_service = build("sheets", "v4", credentials=credentials, cache_discovery=False)
+    # google-api-python-client publishes a large overload set whose generic
+    # fallback contains unknowns; this adapter pins the exact service/version
+    # contract consumed by the parity harness at the dynamic boundary.
+    discovery_module = import_module("googleapiclient.discovery")
+    # CAST-RATIONALE-GOOGLE-DISCOVERY-BUILD: discovery is an optional,
+    # dynamically imported third-party module; the local protocol above pins
+    # the exact Sheets factory contract consumed by this harness.
+    discovery_builder = cast(_SheetsDiscoveryBuilder, discovery_module.build)
+    sheets_service = discovery_builder("sheets", "v4", credentials=credentials, cache_discovery=False)
     _seed_inputs_into_sheet(sheets_service, apply_result.spreadsheet_id, plan, scenario, snapshot)
 
     # Give Sheets time to propagate dependent-cell recalculation.

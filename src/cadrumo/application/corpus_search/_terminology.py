@@ -34,7 +34,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, TypeAdapter
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import ConceptLifecycle
@@ -62,6 +62,8 @@ _DEFAULT_LIFECYCLES = (ConceptLifecycle.APPROVED,)
 _DEFAULT_LIMIT = 8
 
 _WHITESPACE_RE = re.compile(r"\s+")
+_STRING_OBJECT_DICT = TypeAdapter(dict[str, object])
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 
 
 class TerminologyConcept(BaseModel):
@@ -112,7 +114,7 @@ def _as_str_object_dict(value: object) -> dict[str, object] | None:
     """
     if not isinstance(value, dict):
         return None
-    return {str(key): item for key, item in value.items()}
+    return _STRING_OBJECT_DICT.validate_python(value)
 
 
 def _validated_concept_id(token: str) -> str:
@@ -159,21 +161,26 @@ def _resolve_language(concept: dict[str, object], locale: str, *, concept_id: st
 
 def _terms_and_preferred(language_block: dict[str, object]) -> tuple[str, tuple[str, ...]]:
     raw_terms = language_block.get("term")
-    entries = raw_terms if isinstance(raw_terms, list) else []
+    entries = _OBJECT_SEQUENCE.validate_python(raw_terms) if isinstance(raw_terms, list) else ()
     labels: list[str] = []
     preferred: str | None = None
     for entry in entries:
-        if not isinstance(entry, dict):
+        entry_data = _as_str_object_dict(entry)
+        if entry_data is None:
             continue
-        label = entry.get("label")
+        label = entry_data.get("label")
         if not isinstance(label, str) or not label.strip():
             continue
         labels.append(label.strip())
-        if entry.get("term_status") == "preferred" and preferred is None:
+        if entry_data.get("term_status") == "preferred" and preferred is None:
             preferred = label.strip()
-        hidden = entry.get("hidden_search_forms")
+        hidden = entry_data.get("hidden_search_forms")
         if isinstance(hidden, list):
-            labels.extend(form.strip() for form in hidden if isinstance(form, str) and form.strip())
+            labels.extend(
+                form.strip()
+                for form in _OBJECT_SEQUENCE.validate_python(hidden)
+                if isinstance(form, str) and form.strip()
+            )
     resolved_preferred = preferred or (labels[0] if labels else "")
     return resolved_preferred, tuple(dict.fromkeys(labels))
 
@@ -206,8 +213,8 @@ def _hydrated_lifecycle(token: str, *, concept_id: str) -> ConceptLifecycle:
 
 
 def _project_concept(payload: dict[str, object], *, locale: str) -> TerminologyConcept | None:
-    concept = payload.get("concept")
-    if not isinstance(concept, dict):
+    concept = _as_str_object_dict(payload.get("concept"))
+    if concept is None:
         return None
     concept_id = concept.get("concept_id")
     domain = concept.get("domain")
@@ -231,7 +238,11 @@ def _project_concept(payload: dict[str, object], *, locale: str) -> TerminologyC
         short_description=_as_text(language_block.get("short_description")),
         definition=_as_text(language_block.get("definition")),
         scope_note=_as_optional_text(language_block.get("scope_note")),
-        legal_refs=tuple(ref for ref in legal_refs if isinstance(ref, str)) if isinstance(legal_refs, list) else (),
+        legal_refs=(
+            tuple(ref for ref in _OBJECT_SEQUENCE.validate_python(legal_refs) if isinstance(ref, str))
+            if isinstance(legal_refs, list)
+            else ()
+        ),
     )
 
 

@@ -71,6 +71,9 @@ def _fichero_encoding(encoding: str) -> FicheroBoeEncoding:
     # accepts, so anything without an alias is already a valid member. A value
     # from outside that set is refused by render_record_body rather than
     # silently mis-encoding the payload.
+    # CAST-RATIONALE-FICHERO-ENCODING: registry `encoding` is a plain str;
+    # narrowing to the encoder's closed Literal here is safe because
+    # render_record_body itself refuses any value outside that set.
     return cast(FicheroBoeEncoding, encoding)
 
 

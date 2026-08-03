@@ -44,7 +44,7 @@ def _metadata(**overrides: object) -> PersistedSessionMetadata:
         "storage_state_sha256": _SHA,
     }
     fields.update(overrides)
-    return PersistedSessionMetadata(**fields)  # type: ignore[arg-type]
+    return PersistedSessionMetadata.model_validate(fields)
 
 
 def test_utc_aware_instants_are_accepted() -> None:

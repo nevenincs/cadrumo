@@ -58,8 +58,8 @@ from ._filed_data import (
     select_declarations_for_capture,
 )
 from ._filed_observation_persistence import (
-    _filed_observation_identity_key,
     enroll_filed_justificante_evidence,
+    filed_observation_identity_key,
 )
 from ._remote_state_models import (
     BulkFiledDataCaptureReport,
@@ -262,7 +262,7 @@ class _CaptureAccumulator:
         )
         enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
         self.justificante_csvs.extend(enrollment.justificante_csvs)
-        self.justificante_csvs_by_observation[_filed_observation_identity_key(observation)] = (
+        self.justificante_csvs_by_observation[filed_observation_identity_key(observation)] = (
             enrollment.justificante_csvs
         )
         self.filing_record_ids.extend(enrollment.filing_record_ids)

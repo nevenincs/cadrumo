@@ -531,42 +531,52 @@ def validate_registered_envelope_document(document: object) -> dict[str, object]
     """Strictly validate one emitted CLI success or error JSON document."""
     if not isinstance(document, dict):
         raise OutputSchemaError("operator JSON envelope must be an object")
-    status = document.get("status")
+    if not all(isinstance(key, str) for key in document):
+        raise OutputSchemaError("operator JSON envelope keys must be strings")
+    typed_document: dict[str, object] = {key: value for key, value in document.items() if isinstance(key, str)}
+    status = typed_document.get("status")
     if status == EnvelopeStatus.ERROR.value:
         required_keys = {"schema_version", "command", "active_profile", "status", "error", "notices"}
-        if set(document) != required_keys:
+        if set(typed_document) != required_keys:
             raise OutputSchemaError("operator JSON error envelope has an invalid outer shape")
-        if document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
+        if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
             raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
-        command = document.get("command")
-        active_profile = document.get("active_profile")
+        command = typed_document.get("command")
+        active_profile = typed_document.get("active_profile")
         if command is not None and (not isinstance(command, str) or not command):
             raise OutputSchemaError("operator JSON error envelope has an invalid command")
         if active_profile is not None and not isinstance(active_profile, str):
             raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
         try:
-            ErrorEnvelope.model_validate(document["error"])
-            TypeAdapter(list[Notice]).validate_python(document["notices"])
+            ErrorEnvelope.model_validate(typed_document["error"])
+            TypeAdapter(list[Notice]).validate_python(typed_document["notices"])
         except ValidationError as error:
             raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
-        return document
+        return typed_document
 
-    command = document.get("command")
+    command = typed_document.get("command")
     if not isinstance(command, str) or not command:
         raise OutputSchemaError("operator JSON envelope has no usable command")
     required_keys = {"schema_version", "command", "active_profile", "status", "result", "notices"}
-    if set(document) != required_keys:
+    if set(typed_document) != required_keys:
         raise OutputSchemaError("operator JSON success envelope has an invalid outer shape")
-    if document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
+    if typed_document.get("schema_version") != ENVELOPE_SCHEMA_VERSION:
         raise OutputSchemaError("operator JSON envelope has an unsupported schema version")
     schema = SCHEMA_REGISTRY.get(command)
     if schema is None:
         raise OutputSchemaError(f"operator JSON command {command!r} has no registered output schema")
+    # CAST-RATIONALE-ENVELOPE-GENERIC: __class_getitem__ returns a bare `type`
+    # at runtime; `schema` was just looked up from SCHEMA_REGISTRY, which
+    # only stores OutputSchema subclasses, so the parameterized generic is
+    # exactly SchemaEnvelope[OutputSchema].
     envelope_model = cast("type[SchemaEnvelope[OutputSchema]]", SchemaEnvelope.__class_getitem__(schema))
     try:
-        validated = envelope_model.model_validate_json(json.dumps(document))
+        validated = envelope_model.model_validate_json(json.dumps(typed_document))
     except ValidationError as error:
         raise OutputSchemaError("operator JSON success envelope failed strict validation") from error
+    # CAST-RATIONALE-ENVELOPE-DUMP: model_dump(mode="json") is typed
+    # dict[str, Any] by pydantic; the envelope's own strict schema already
+    # constrains every value to JSON-safe scalars/containers.
     return cast(dict[str, object], validated.model_dump(mode="json"))
 
 

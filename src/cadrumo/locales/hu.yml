@@ -4145,8 +4145,9 @@ cli:
         help: A jelenlegi távoli telemetria hozzájárulási állapotának jelentése. Soha
           nem küld semmit.
         off_hint: A telemetria alapértelmezetten teljesen helyi marad. A bekapcsoláshoz
-          állítsd be az CADRUMO_TELEMETRY_OPT_IN=true értéket és az CADRUMO_TELEMETRY_TIER-t
-          crash_only vagy full értékre az env/.env fájlban.
+          állítsd be a CADRUMO_TELEMETRY_OPT_IN és a CADRUMO_TELEMETRY_TIER környezeti
+          változókat (CADRUMO_TELEMETRY_OPT_IN=true, CADRUMO_TELEMETRY_TIER=crash_only
+          vagy full).
       tier_help: Előnézet/küldés úgy, mintha az CADRUMO_TELEMETRY_TIER ezt az értéket
         venné fel (off / crash_only / full) csak ehhez a futtatáshoz; hagyd el a ténylegesen
         beállított szinthez.

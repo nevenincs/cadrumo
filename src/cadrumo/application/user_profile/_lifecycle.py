@@ -11,7 +11,7 @@ operation emits a typed bucket event to :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import date, datetime
 from typing import Literal
 
@@ -25,6 +25,7 @@ from ...domain.buckets import (
     BucketEventType,
     build_bucket_event,
     emit_bucket_event,
+    emit_bucket_events,
 )
 from ...domain.user_profile import (
     ProfileAlreadyExistsError,
@@ -54,6 +55,23 @@ _PROFILE_ALREADY_EXISTS_MESSAGE = "profile already exists in the active bucket"
 _PROFILE_TOMBSTONED_RENAME_MESSAGE = "tombstoned profile cannot be renamed"
 _PROFILE_NOT_TOMBSTONED_MESSAGE = "profile is not tombstoned; reactivate refuses a live profile"
 _PROFILE_SCHEMA_VALIDATION_MESSAGE = "profile facts failed schema validation"
+_EMPTY_FIELD_BATCH_MESSAGE = "edit_fields requires at least one field command"
+_MIXED_PROFILE_FIELD_BATCH_MESSAGE = "edit_fields refuses commands naming more than one profile"
+
+
+def _last_fact_per_merge_key(facts: tuple[UserProfileFact, ...]) -> tuple[UserProfileFact, ...]:
+    """Return the facts that actually land, in first-seen order.
+
+    :meth:`ProfileLifecycleService._merge_facts` keys on
+    ``(path, valid_from, valid_to)``, so a batch naming the same key twice
+    stores only the last value. Emitting an event per SUBMITTED command
+    would then claim more transitions than the aggregate records; emitting
+    one per landed fact keeps the audit trail one-to-one with the change.
+    """
+    landed: dict[tuple[str, date | None, date | None], UserProfileFact] = {}
+    for fact in facts:
+        landed[(fact.path, fact.valid_from, fact.valid_to)] = fact
+    return tuple(landed.values())
 
 
 def _paths_payload(facts: tuple[UserProfileFact, ...]) -> dict[str, str]:
@@ -158,6 +176,99 @@ class ProfileLifecycleService:
             object_id=record.profile_id,
             occurred_at=result.applied_at,
             payload={"path": new_fact.path},
+        )
+        return result
+
+    def edit_fields(self, commands: Sequence[EditProfileFieldCommand]) -> ProfileLifecycleResult:
+        """Upsert several effective-dated facts into one aggregate in ONE write.
+
+        The batched counterpart of :meth:`edit_field`, for a caller applying a
+        patch of several fields as one change -- the setup wizard's page
+        commit, the cotejo apply, the descendant-count reconciliation. Driving
+        those through :meth:`edit_field` in a loop ran the ENTIRE cascade once
+        per field: N aggregate decrypts, N schema validations, N re-encrypts,
+        and N event-catalogue round-trips, for a patch the caller already
+        considered atomic. Only the last of those N writes could be observed
+        by anything else, so the intermediate N-1 were pure cost.
+
+        The audit trail is unchanged: one event is emitted per fact that
+        lands, carrying the same type and payload :meth:`edit_field` would
+        have produced. They share the batch's single ``applied_at`` because
+        they were, in fact, applied by one write; :func:`emit_bucket_events`
+        appends each one individually, so N facts remain N catalogue entries.
+
+        Completeness is judged once, from the status the aggregate held when
+        the batch opened -- the same rule :meth:`edit_field` applies, and the
+        reason a partially-filled SETUP_INCOMPLETE profile can be patched at
+        all.
+
+        Args:
+            commands: The per-field upserts to apply. Every command must name
+                the same ``profile_id``. An empty sequence is refused rather
+                than silently writing nothing, since a caller reaching this
+                door believes it has a change to make.
+
+        Returns:
+            A :class:`ProfileLifecycleResult` carrying the aggregate as it
+            stands after the whole batch.
+
+        Raises:
+            ProfileSchemaValidationError: When the POST-BATCH fact set fails
+                validation. The batch is judged as a whole, so a patch is
+                never left half-applied by a later field's refusal.
+        """
+        if not commands:
+            raise ProfileSchemaValidationError(
+                _EMPTY_FIELD_BATCH_MESSAGE,
+                context={"issue_count": 0, "issue_codes": (), "issue_paths": ()},
+                translated_message="application.user_profile.errors.lifecycle_schema_validation_failed",
+            )
+        profile_ids = {command.profile_id for command in commands}
+        if len(profile_ids) != 1:
+            raise ProfileSchemaValidationError(
+                _MIXED_PROFILE_FIELD_BATCH_MESSAGE,
+                context={
+                    "issue_count": len(profile_ids),
+                    "issue_codes": (),
+                    "issue_paths": tuple(sorted(profile_ids)),
+                },
+                translated_message="application.user_profile.errors.lifecycle_schema_validation_failed",
+            )
+        profile_id = profile_ids.pop()
+
+        record = self._repository.load(profile_id)
+        incoming = tuple(
+            UserProfileFact(
+                path=command.path,
+                value=command.value,
+                valid_from=command.valid_from,
+                valid_to=command.valid_to,
+                source=command.source,
+            )
+            for command in commands
+        )
+        next_facts = self._merge_facts(record.facts, incoming)
+        self._reject_invalid(
+            profile_id,
+            next_facts,
+            require_complete=record.status is not UserProfileStatus.SETUP_INCOMPLETE,
+        )
+        result = self._save_updated(record, next_facts)
+        emit_bucket_events(
+            repository=self._events,
+            events=tuple(
+                self._build_event(
+                    event_type=(
+                        BucketEventType.PROFILE_VALUES_CLEARED
+                        if fact.value is None
+                        else BucketEventType.PROFILE_VALUES_UPDATED
+                    ),
+                    object_id=record.profile_id,
+                    occurred_at=result.applied_at,
+                    payload={"path": fact.path},
+                )
+                for fact in _last_fact_per_merge_key(incoming)
+            ),
         )
         return result
 
@@ -356,7 +467,14 @@ class ProfileLifecycleService:
         record: UserProfileRecord,
         facts: tuple[UserProfileFact, ...],
     ) -> ProfileLifecycleResult:
-        now = utc_now()
+        # Inside a CAS update the enclosing operation's instant stands in for a
+        # fresh clock read. The bucket event this result stamps derives its id
+        # from ``applied_at``, so a retry that re-read the clock would mint a
+        # second id for one logical edit and land a duplicate audit row rather
+        # than collapsing onto the entry the first attempt prepared.
+        from ..workflow import current_operation_instant
+
+        now = current_operation_instant() or utc_now()
         updated = record.model_copy(update={"facts": facts, "updated_at": now})
         self._repository.save(updated)
         return ProfileLifecycleResult(profile=updated, applied_at=now)

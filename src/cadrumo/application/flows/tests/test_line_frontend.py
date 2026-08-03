@@ -56,6 +56,7 @@ from .. import (
     LineFlowFrontend,
     ReviewProjection,
     answer,
+    assemble_section_titles,
     start_flow,
 )
 
@@ -323,7 +324,18 @@ def test_secret_answer_is_masked_in_the_reprompt_header_and_never_captured() -> 
     # page (its position marker present) AND that the current-answer line
     # rendered the masked marker, THEN assert the raw secret is absent — an
     # absence check against an empty or wrong capture would pass vacuously.
-    assert tr("flows.progress.page_header", position=1, total=1, section="s") in captured
+    # The header carries the section's RESOLVED title, never its internal
+    # slug ("s"), so this control is written against the same resolution the
+    # frontend performs.
+    assert (
+        tr(
+            "flows.progress.page_header",
+            position=1,
+            total=1,
+            section=assemble_section_titles(definition)["s"],
+        )
+        in captured
+    )
     assert tr("flows.progress.current_answer_secret") in captured
     assert "hunter2" not in captured
 

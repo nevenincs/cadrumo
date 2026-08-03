@@ -18,6 +18,7 @@ gated key's legal basis; it is deliberately excluded.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import cast
 
 from pydantic import BaseModel, Field
 
@@ -25,7 +26,7 @@ from ....core import STRICT_FROZEN_CONFIG, Modelo
 from ....core.aggregation import BindingSourceKind
 from ._authority import ValidatedRegistryAuthority
 from ._binding_selector_utils import selector_as_dict
-from ._bindings import _ProfileSelector
+from ._bindings import ProfileSelector
 from ._schema import DataBindingDefinition
 
 
@@ -83,7 +84,7 @@ def build_profile_grounding_index(
 def _selector_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
     """Return the value-consuming profile keys named by a profile binding's selector."""
     selector = binding.selector
-    if isinstance(selector, _ProfileSelector):
+    if isinstance(selector, ProfileSelector):
         scalar = (selector.profile_key,) if selector.profile_key is not None else ()
         return scalar + tuple(selector.profile_keys)
     mapping = selector_as_dict(binding)
@@ -93,7 +94,7 @@ def _selector_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
     if isinstance(scalar_raw, str) and scalar_raw:
         keys.append(scalar_raw)
     if isinstance(composite_raw, (list, tuple)):
-        keys.extend(str(item) for item in composite_raw if item)
+        keys.extend(str(item) for item in cast(list[object] | tuple[object, ...], composite_raw) if item)
     return tuple(keys)
 
 

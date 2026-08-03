@@ -33,7 +33,7 @@ from ._schema import (
     WorkbookParityReference,
 )
 from ._schema_verification import VerificationExpectationDefinition
-from ._validate_revision_identity import _collect_record_id_lists
+from ._validate_revision_identity import collect_record_id_lists
 
 
 @dataclass(frozen=True)
@@ -123,7 +123,7 @@ class RevisionValidationContext:
 
 
 def build_revision_validation_context(revision: ModeloRevision) -> RevisionValidationContext:
-    ids_by_kind = _collect_record_id_lists(revision)
+    ids_by_kind = collect_record_id_lists(revision)
     formula_by_id = {formula.id: formula for formula in revision.formulas}
     binding_by_id = {binding.id: binding for binding in revision.bindings}
     relation_by_id = {relation.id: relation for relation in revision.relations}

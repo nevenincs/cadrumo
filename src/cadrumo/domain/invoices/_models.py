@@ -18,7 +18,7 @@ from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Self, override
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import IntracomOperationType
@@ -41,6 +41,9 @@ from ._validators import (
     validate_country_code,
     validate_iva_number,
 )
+
+_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
 
 _LINE_TOLERANCE = Decimal("0.01")
 
@@ -260,7 +263,7 @@ def _normalise_invoice_collections(payload: dict[str, object]) -> dict[str, obje
     if "linked_transaction_ids" in payload:
         payload["linked_transaction_ids"] = _normalise_linked_transaction_ids(payload["linked_transaction_ids"])
     if "lines" in payload and isinstance(payload["lines"], Sequence) and not isinstance(payload["lines"], str | bytes):
-        payload["lines"] = tuple(payload["lines"])
+        payload["lines"] = _OBJECT_SEQUENCE.validate_python(payload["lines"])
     return payload
 
 
@@ -299,7 +302,7 @@ class InvoiceLine(BaseModel):
             return data
         if not isinstance(data, Mapping):
             return data
-        payload = dict(data)
+        payload = _STRING_OBJECT_MAPPING.validate_python(data)
         for key in ("quantity", "unit_price", "subtotal", "iva_amount"):
             if key in payload and not isinstance(payload[key], Decimal):
                 payload[key] = coerce_decimal(payload[key])
@@ -433,7 +436,7 @@ class Invoice(BaseModel):
             return data
         if not isinstance(data, Mapping):
             return data
-        payload = dict(data)
+        payload = _STRING_OBJECT_MAPPING.validate_python(data)
         payload = _normalise_invoice_enum_fields(payload)
         payload = _normalise_invoice_string_fields(payload)
         payload = _normalise_invoice_dates(payload)
@@ -563,7 +566,7 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     if not isinstance(value, Iterable):
         raise InvoiceValidationError("linked_transaction_ids must be iterable")
     seen: dict[str, None] = {}
-    for item in value:
+    for item in _OBJECT_SEQUENCE.validate_python(value):
         if not isinstance(item, str):
             raise InvoiceValidationError("each linked_transaction_id must be a string")
         normalized = item.strip().lower()
@@ -587,13 +590,13 @@ class InvoiceCatalogue(BaseModel):
         if isinstance(data, cls):
             return data
         if isinstance(data, Mapping):
-            if "invoices" in data:
-                return data
-            if all(isinstance(key, str) for key in data):
-                return {"invoices": dict(data)}
+            payload = _STRING_OBJECT_MAPPING.validate_python(data)
+            if "invoices" in payload:
+                return payload
+            return {"invoices": payload}
         if isinstance(data, Iterable) and not isinstance(data, str | bytes):
             invoices: dict[str, Invoice] = {}
-            for item in data:
+            for item in _OBJECT_SEQUENCE.validate_python(data):
                 invoice = item if isinstance(item, Invoice) else Invoice.model_validate(item)
                 if invoice.invoice_id in invoices:
                     raise InvoiceValidationError(f"duplicate invoice_id: {invoice.invoice_id}")
@@ -630,7 +633,7 @@ class InvoiceCatalogue(BaseModel):
         return cls.model_validate(tuple(invoices))
 
     @override
-    def __iter__(self) -> Iterator[Invoice]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields Invoice records, not BaseModel field-value tuples
         """Iterate over catalogue invoices."""
         return iter(self.invoices.values())
 

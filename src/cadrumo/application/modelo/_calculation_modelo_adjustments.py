@@ -123,6 +123,8 @@ def _m131_objective_estimation_data_base_inputs(
                         porcentaje=current.porcentaje,
                         resultado=value,
                     )
+                case _:
+                    pass
             continue
         if record == "DPA" and _M131_DPA_MODULE_RENDIMIENTO_RE.match(field) is not None:
             dpa_rendimientos.append(value)
@@ -281,3 +283,10 @@ def _detail_row_binding_values_for_calculation(
         _M349_NUMERO_RECTIFICACIONES_BINDING: Decimal(len(rectification_rows)),
         _M349_IMPORTE_RECTIFICACIONES_BINDING: importe_rectificaciones,
     }
+
+
+calculated_decimal = _calculated_decimal
+detail_row_binding_values_for_calculation = _detail_row_binding_values_for_calculation
+m131_objective_estimation_data_base_inputs = _m131_objective_estimation_data_base_inputs
+raise_if_m390_303_reconciliation_would_save_silent_zero = _raise_if_m390_303_reconciliation_would_save_silent_zero
+suppress_m349_row_field_template_outputs = _suppress_m349_row_field_template_outputs

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
-from typing import Annotated, TypedDict
+from typing import Annotated, Literal, TypedDict
 
 import typer
 
@@ -33,7 +33,7 @@ class _BorradorRow(TypedDict):
     captured_at: str
     source_url: str
     binding_count: int
-    state: str
+    state: Literal["active", "superseded", "discarded"]
 
 
 borrador_app = typer.Typer(
@@ -84,10 +84,17 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
         :class:`Borrador100SnapshotSummaryPayload`.
         """
         bucket_id = active_bucket_id()
-        try:
-            state_filter = None if state == "all" else SnapshotLifecycleState(state)
-        except ValueError as exc:
-            raise typer.BadParameter(tr("cli.app.live.borrador.invalid_state")) from exc
+        match state:
+            case "all":
+                state_filter = None
+            case "active":
+                state_filter = SnapshotLifecycleState.ACTIVE
+            case "superseded":
+                state_filter = SnapshotLifecycleState.SUPERSEDED
+            case "discarded":
+                state_filter = SnapshotLifecycleState.DISCARDED
+            case _:
+                raise typer.BadParameter(tr("cli.app.live.borrador.invalid_state"))
         rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(state=state_filter)
         result = Borrador100ListResult(
             bucket_id=bucket_id,
@@ -195,7 +202,7 @@ def register_borrador_commands(app: typer.Typer, *, active_bucket_id: Callable[[
             period=str(record.period),
             source_url=record.source_url,
             binding_count=len(record.binding_values),
-            state=record.state.value,
+            state=_active_borrador_state(record.state),
         )
         lines = [
             f"bucket\t{bucket_id}",
@@ -217,8 +224,26 @@ def _borrador_row(snapshot) -> _BorradorRow:
         captured_at=snapshot.captured_at.isoformat(),
         source_url=snapshot.source_url,
         binding_count=len(snapshot.binding_values),
-        state=snapshot.state.value,
+        state=_borrador_state(snapshot.state),
     )
+
+
+def _borrador_state(state: SnapshotLifecycleState) -> Literal["active", "superseded", "discarded"]:
+    """Project the lifecycle enum onto the exact summary-payload vocabulary."""
+    match state:
+        case SnapshotLifecycleState.ACTIVE:
+            return "active"
+        case SnapshotLifecycleState.SUPERSEDED:
+            return "superseded"
+        case SnapshotLifecycleState.DISCARDED:
+            return "discarded"
+
+
+def _active_borrador_state(state: SnapshotLifecycleState) -> Literal["active"]:
+    """Require the service's latest-snapshot contract to return an active record."""
+    if state is not SnapshotLifecycleState.ACTIVE:
+        raise ValueError("latest Borrador snapshot must be active")
+    return "active"
 
 
 __all__ = ["borrador_100_app", "borrador_app", "register_borrador_commands"]

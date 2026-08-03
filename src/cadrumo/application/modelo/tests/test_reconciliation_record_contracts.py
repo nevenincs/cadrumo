@@ -71,7 +71,7 @@ def _record(**overrides: object) -> ModeloReconciliationRecord:
         "reconciled_at": _UTC_INSTANT,
     }
     fields.update(overrides)
-    return ModeloReconciliationRecord(**fields)  # type: ignore[arg-type]
+    return ModeloReconciliationRecord.model_validate(fields)
 
 
 def _history_entry(**overrides: object) -> ModeloReconciliationHistoryEntry:
@@ -88,7 +88,7 @@ def _history_entry(**overrides: object) -> ModeloReconciliationHistoryEntry:
         "reconciled_at": _UTC_INSTANT,
     }
     fields.update(overrides)
-    return ModeloReconciliationHistoryEntry(**fields)  # type: ignore[arg-type]
+    return ModeloReconciliationHistoryEntry.model_validate(fields)
 
 
 def test_valid_record_and_history_entry_construct() -> None:

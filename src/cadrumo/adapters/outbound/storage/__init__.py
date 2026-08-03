@@ -12,8 +12,9 @@ manifest helpers (:func:`build_remote_mirror_namespace_manifest`,
 :func:`compare_remote_mirror_manifests`,
 :func:`inspect_remote_mirror_upload`,
 :func:`inspect_remote_mirror_download`, and
-:func:`remote_mirror_object_key_hmac`), and the typed
-:class:`OutboundStorageError` hierarchy.
+:func:`remote_mirror_object_key_hmac`), the Drive pagination guard
+:func:`next_drive_page_token`, and the typed :class:`OutboundStorageError`
+hierarchy.
 
 Concrete backends in :mod:`adapters.outbound.storage._local` and
 :mod:`adapters.outbound.storage._google_drive` remain private
@@ -36,6 +37,7 @@ from ._errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
+from ._drive_pagination import next_drive_page_token
 from ._factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
 from ._mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,
@@ -90,6 +92,7 @@ __all__ = [
     "get_storage_provider",
     "inspect_remote_mirror_download",
     "inspect_remote_mirror_upload",
+    "next_drive_page_token",
     "put_remote_mirror_namespace_manifest",
     "remote_mirror_object_key_hmac",
     "resolve_drive_root_folder_id",

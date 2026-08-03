@@ -276,7 +276,7 @@ def _valid_prompted_casilla_kwargs() -> dict[str, object]:
 
 
 def test_wizard_prompted_casilla_payload_round_trips_valid_row() -> None:
-    row = WizardPromptedCasillaPayload(**_valid_prompted_casilla_kwargs())
+    row = WizardPromptedCasillaPayload.model_validate(_valid_prompted_casilla_kwargs())
 
     assert row.channel == "casilla"
     assert row.legal_refs == ("ley-35-2006:art-27",)
@@ -302,7 +302,7 @@ def test_wizard_prompted_casilla_payload_refuses_malformed_field(field: str, bad
     kwargs = {**_valid_prompted_casilla_kwargs(), field: bad_value}
 
     with pytest.raises(ValidationError):
-        WizardPromptedCasillaPayload(**kwargs)
+        WizardPromptedCasillaPayload.model_validate(kwargs)
 
 
 def test_binding_grounding_lookup_covers_a_real_m130_binding() -> None:

@@ -46,6 +46,11 @@ from ._resolution import ChunkHit, GroundingSurface, TargetResolver, resolve_chu
 from ._search_record import SearchRecordKind
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, wrangle
 
+# Dev tooling runs from a source checkout by definition, so it owns its own
+# repo-root anchor. Production code has no repository concept and must never
+# export one (see cadrumo.core._config_state_root for the runtime data root).
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+
 __all__ = [
     "RagSearchClient",
     "ServiceRagSearchClient",
@@ -536,6 +541,4 @@ def _seed_concept_card(
 
 
 def _default_repo_root() -> Path:
-    from cadrumo.core.config import PROJECT_ROOT
-
-    return PROJECT_ROOT
+    return _REPO_ROOT

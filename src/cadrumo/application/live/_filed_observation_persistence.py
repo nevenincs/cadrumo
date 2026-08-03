@@ -488,10 +488,10 @@ def _filed_justificante_can_stamp_filing(
     observation: FiledDeclaracionObservation,
     filing: ModeloRecord,
 ) -> bool:
-    from ._justificante import _expected_tax_id_for_filing_record, _justificante_matches_filing_record
+    from ._justificante import expected_tax_id_for_filing_record, justificante_matches_filing_record
 
     try:
-        expected_tax_id = _expected_tax_id_for_filing_record(filing)
+        expected_tax_id = expected_tax_id_for_filing_record(filing)
     except LiveApplicationInputError:
         logger.warning(
             "filed observation: could not resolve profile tax identity for filing record %s",
@@ -501,7 +501,7 @@ def _filed_justificante_can_stamp_filing(
         return False
     if observation.authenticated_identity.strip().upper() != expected_tax_id.strip().upper():
         return False
-    return _justificante_matches_filing_record(
+    return justificante_matches_filing_record(
         justificante,
         filing,
         expected_tax_id=expected_tax_id,
@@ -550,6 +550,10 @@ def _justificante_csvs_for_observation(
     if justificante_csvs_by_observation is None:
         return ()
     return justificante_csvs_by_observation.get(_filed_observation_identity_key(observation), ())
+
+
+filed_observation_identity_key = _filed_observation_identity_key
+justificante_csvs_for_observation = _justificante_csvs_for_observation
 
 
 @dataclass(frozen=True)

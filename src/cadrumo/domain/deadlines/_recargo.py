@@ -32,7 +32,7 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ...core import Period, read_toml
 from ...core.decimal import coerce_decimal
@@ -41,6 +41,8 @@ from ._errors import DeadlineValidationError
 from ._models import RecargoBand, Recovery
 
 _DEFAULT_BRACKET_PATH = bundled_path("registry", "aeat", "legal", "ley-58-2003-recargo-bands.toml")
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
+_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
 
 
 def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
@@ -84,9 +86,8 @@ def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> 
     assert isinstance(raw_band, list)
     try:
         built: list[RecargoBand] = []
-        for raw_row in raw_band:
-            assert isinstance(raw_row, dict)
-            row: dict[str, object] = {str(k): v for k, v in raw_row.items()}
+        for raw_row in _OBJECT_SEQUENCE.validate_python(raw_band):
+            row = _STRING_OBJECT_MAPPING.validate_python(raw_row)
             row_min = row.get("min_completed_months")
             row_max = row.get("max_completed_months")
             assert isinstance(row_min, int)

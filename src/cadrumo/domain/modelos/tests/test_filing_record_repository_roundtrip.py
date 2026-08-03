@@ -959,8 +959,9 @@ def test_canonical_source_transaction_footprint_survives_encrypted_storage(tmp_p
         loaded = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
     assert loaded == original
-    assert loaded.get(record.filing_record_id) is not None
-    assert loaded.get(record.filing_record_id).source_transaction_ids == footprint
+    loaded_record = loaded.get(record.filing_record_id)
+    assert loaded_record is not None
+    assert loaded_record.source_transaction_ids == footprint
 
 
 def _foreign_bucket_catalogue() -> ModeloRecordCatalogue:

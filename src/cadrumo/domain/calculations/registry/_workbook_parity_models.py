@@ -27,6 +27,7 @@ from ._workbook_parity_types import (
 # alias is declared here and pinned to the central constants below.
 _WorkbookExtension = Literal[".xlsx", ".xls"]
 _ConvertedExtension = Literal[".xlsx"]
+WorkbookExtension = _WorkbookExtension
 assert _XLSX_EXTENSION == ".xlsx" and _XLS_EXTENSION == ".xls"
 
 __all__ = [
@@ -36,6 +37,7 @@ __all__ = [
     "WorkbookBackendVerificationReport",
     "WorkbookCellRef",
     "WorkbookConversionReport",
+    "WorkbookExtension",
     "WorkbookModeloCoverage",
     "WorkbookParityComparison",
     "WorkbookParityModel",

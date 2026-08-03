@@ -31,7 +31,7 @@ from __future__ import annotations
 import secrets
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, close_active_bucket_session
 from ...adapters.persistence.storage.bucket import (
@@ -75,15 +75,15 @@ if TYPE_CHECKING:
     from ..workflow import WorkflowState
 
 _log = get_logger(__name__)
-_SHARED_SCHEMA: ProfileSchemaDefinition | None = None
+_shared_schema_cache: ProfileSchemaDefinition | None = None
 
 
 def _shared_schema() -> ProfileSchemaDefinition:
     """Return the canonical schema, loaded once per process."""
-    global _SHARED_SCHEMA
-    if _SHARED_SCHEMA is None:
-        _SHARED_SCHEMA = load_user_profile_schema()
-    return _SHARED_SCHEMA
+    global _shared_schema_cache
+    if _shared_schema_cache is None:
+        _shared_schema_cache = load_user_profile_schema()
+    return _shared_schema_cache
 
 
 def build_lifecycle_service(
@@ -114,10 +114,10 @@ def build_lifecycle_service(
     ``register`` then crashed before its first event landed.
     """
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-    from ._repository import _secure_objects_for_bucket
+    from ._repository import secure_objects_for_bucket
 
     schema = schema or _shared_schema()
-    objects = secure_objects or _secure_objects_for_bucket(bucket_id)
+    objects = secure_objects or secure_objects_for_bucket(bucket_id)
     return ProfileLifecycleService(
         repository=UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects),
         validator=ProfileValidationService(schema=schema),
@@ -280,6 +280,9 @@ def _profile_export_runtime(
         return
     with profile_storage_session(profile_id):
         yield BucketEventHistoryRepository()
+
+
+profile_export_runtime = _profile_export_runtime
 
 
 @contextmanager
@@ -757,21 +760,7 @@ def set_active_field(
     Returns:
         The updated :class:`~cadrumo.application.workflow.WorkflowState`.
     """
-    profile_id = _require_active(state)
-    with _profile_mutation_span(profile_id):
-        service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-        service.edit_field(
-            EditProfileFieldCommand(
-                profile_id=profile_id,
-                path=fact.path,
-                value=fact.value,
-                valid_from=fact.valid_from,
-                valid_to=fact.valid_to,
-                source=fact.source,
-            ),
-        )
-    action = "profile.values.cleared" if fact.value is None else "profile.values.updated"
-    return _append_workflow_event(state, action=action, bucket_id=profile_id, object_id=fact.path)
+    return apply_active_profile_facts(state, (fact,), secure_objects=secure_objects, schema=schema).state
 
 
 def set_active_fields(
@@ -787,12 +776,105 @@ def set_active_fields(
     :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
     override.
 
+    The whole patch is one storage transaction: one bucket-lock span, one
+    aggregate decrypt, one schema validation, one re-encrypt, and one
+    event-catalogue round-trip, regardless of how many facts it carries.
+    Looping :func:`set_active_field` instead ran that entire cascade once per
+    field, so a wizard page committing five answers paid five of everything
+    -- and held, then released, the cross-process bucket lock five times,
+    leaving four windows in which another process could interleave a write
+    into a patch the caller had declared atomic.
+
+    One workflow event is still appended per fact, matching the per-fact
+    bucket events the lifecycle service emits.
+
+    Args:
+        state: The current :class:`~cadrumo.application.workflow.WorkflowState`.
+        facts: The facts to upsert. An empty iterable returns ``state``
+            unchanged without opening the bucket lock.
+        secure_objects: Optional secure-object repository override.
+        schema: Optional profile schema definition override.
+
     Returns a :class:`~cadrumo.application.workflow.WorkflowState`.
     """
+    return apply_active_profile_facts(state, facts, secure_objects=secure_objects, schema=schema).state
+
+
+class ProfileFactsApplied(NamedTuple):
+    """One fact patch's outcome: the new workflow state and the committed record.
+
+    Carrying the record out matters because the aggregate the write path
+    already holds IS the committed truth — a strict save-then-load equality
+    proof covers this
+    (``test_saved_record_is_byte_equivalent_to_a_fresh_load``). A caller that
+    needs to render the profile after writing it can project from this record
+    instead of issuing a second full decrypt of what it just committed, which
+    is the whole cost of the post-write redraw.
+
+    It is NOT an optimistic view: the record is returned only after the write
+    succeeded, so rendering it still shows stored state rather than what the
+    operator typed.
+    """
+
+    state: WorkflowState
+    record: UserProfileRecord
+
+
+def apply_active_profile_facts(
+    state: WorkflowState,
+    facts: Iterable[UserProfileFact],
+    *,
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> ProfileFactsApplied:
+    """Upsert a fact patch and report both the new state and the stored record.
+
+    The single write path behind :func:`set_active_field` and
+    :func:`set_active_fields`; both discard the record and keep only the
+    state. One patch is one storage transaction — one bucket-lock span, one
+    aggregate decrypt, one validation, one re-encrypt, one event-catalogue
+    round-trip — however many facts it carries, and one bucket event per fact
+    that lands.
+
+    Args:
+        state: The current :class:`~cadrumo.application.workflow.WorkflowState`.
+        facts: The facts to upsert. Empty returns ``state`` with the profile
+            read back unchanged rather than writing.
+        secure_objects: Optional :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
+            override.
+        schema: Optional profile schema definition override.
+
+    Returns:
+        A :class:`ProfileFactsApplied` carrying the updated state and the
+        committed :class:`~cadrumo.domain.user_profile.UserProfileRecord`.
+    """
+    pending = tuple(facts)
+    profile_id = _require_active(state)
+    if not pending:
+        # No write, so no mutation lock: an empty patch must not contend for the
+        # cross-process bucket lock with a caller that has real work to do.
+        service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+        return ProfileFactsApplied(state=state, record=service.read(profile_id))
+    with _profile_mutation_span(profile_id):
+        service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+        result = service.edit_fields(
+            tuple(
+                EditProfileFieldCommand(
+                    profile_id=profile_id,
+                    path=fact.path,
+                    value=fact.value,
+                    valid_from=fact.valid_from,
+                    valid_to=fact.valid_to,
+                    source=fact.source,
+                )
+                for fact in pending
+            ),
+        )
     updated = state
-    for fact in facts:
-        updated = set_active_field(updated, fact, secure_objects=secure_objects, schema=schema)
-    return updated
+    for fact in pending:
+        action = "profile.values.cleared" if fact.value is None else "profile.values.updated"
+        updated = _append_workflow_event(updated, action=action, bucket_id=profile_id, object_id=fact.path)
+    return ProfileFactsApplied(state=updated, record=result.profile)
 
 
 def remove_active_profile(
@@ -923,6 +1005,7 @@ __all__ = [
     "fact_value",
     "logout_active_profile",
     "profile_create_storage_span",
+    "profile_export_runtime",
     "profile_storage_session",
     "reactivate_profile_with_lifecycle_span",
     "register_active_profile",

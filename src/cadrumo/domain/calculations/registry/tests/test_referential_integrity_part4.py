@@ -541,7 +541,7 @@ def test_dangling_revision_orden_aplicabilidad_refs() -> None:
     """revision.orden_aplicabilidad must be represented in the snapshot legal map."""
     revision = minimal_revision().model_copy(update={"orden_aplicabilidad": (_MISSING_LEGAL_ID,)})
 
-    with pytest.raises(RegistryValidationError, match=r"revision\.orden_aplicabilidad"):
+    with pytest.raises(RegistryValidationError, match=r"orden_aplicabilidad entry .* does not resolve"):
         build_minimal_snapshot(revision)
 
 

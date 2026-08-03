@@ -33,7 +33,7 @@ from .._manager_frontend import persist_active_profile_field
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.hex_inbound_adapter,
+    pytest.mark.hex_entrypoint,
 ]
 
 _TERMINAL_SIZE = (160, 60)

@@ -61,22 +61,18 @@ def collect_official_box_unpopulated_diagnostics(
         :func:`~cadrumo.application.modelo._verification_actions._evaluate_predicate_expression`:
             Verification-side evaluator for the same predicate DSL.
     """
-    # Lazy import to avoid a module-load cycle: _verification_actions imports from
-    # _calculation_actions, which imports this module at top level. The predicate
-    # regex + parser are the single source of truth for the predicate DSL shape.
-    from ._verification_actions import (
-        _PREDICATE_IMPLIES_ANY_NONZERO,
-        _parse_predicate_casilla_ids,
-    )
+    # Lazy import avoids the calculate/verification action cycle. The predicate
+    # module owns the public DSL matcher and parser contract.
+    from ._verification_predicates import PREDICATE_IMPLIES_ANY_NONZERO, parse_predicate_casilla_ids
 
     diagnostics: list[CalculationSourceDiagnostic] = []
     for predicate in revision.verification_predicates:
         if predicate.finding_kind != "ADVISORY":
             continue
-        match = _PREDICATE_IMPLIES_ANY_NONZERO.match(predicate.expression.strip())
+        match = PREDICATE_IMPLIES_ANY_NONZERO.match(predicate.expression.strip())
         if match is None:
             continue
-        ids = _parse_predicate_casilla_ids(match.group("ids"))
+        ids = parse_predicate_casilla_ids(match.group("ids"))
         if len(ids) < 2:
             continue
         antecedent_id = ids[0]

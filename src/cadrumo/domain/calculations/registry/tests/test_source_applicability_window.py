@@ -23,7 +23,7 @@ import pytest
 from .....core.resources import bundled_path
 from .._errors import RegistryValidationError
 from .._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
-from .._snapshot import _collect_snapshot_ref_ids, build_snapshot
+from .._snapshot import _SUBSTANTIVE_LAW_KINDS, _collect_snapshot_ref_ids, build_snapshot
 from .._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
 
@@ -68,6 +68,25 @@ def _revision_scoped_source_id(modelo: ModeloDefinition) -> str:
     scoped = _revision_scoped_source_ids(modelo)
     assert scoped, "the M100 2025 revision must own at least one source ref of its own"
     return sorted(scoped)[0]
+
+
+def _revision_scoped_procedural_legal_id(modelo: ModeloDefinition, catalogues: RegistryCatalogues) -> str:
+    """Return one non-substantive-law scoped legal id (e.g. an orden ministerial).
+
+    ``_legal_window_covers_devengo`` checks a substantive-law reference
+    (``kind`` in ``_SUBSTANTIVE_LAW_KINDS`` -- a rate scale, a deduction limit)
+    against the revision's own devengo date (``revision.valid_to``), never the
+    presentation-tolerant :class:`RevisionLegalApplicabilityWindow`. The
+    applicability-window boundary tests exercise that presentation-tolerant
+    window specifically, so they need a procedural/administrative reference
+    (an ``orden``, not a ``ley``), not merely any revision-scoped id.
+    """
+    scoped = _revision_scoped_legal_ids(modelo)
+    procedural = sorted(
+        legal_id for legal_id in scoped if catalogues.legal[legal_id].kind not in _SUBSTANTIVE_LAW_KINDS
+    )
+    assert procedural, "the M100 2025 revision must own at least one procedural legal ref of its own"
+    return procedural[0]
 
 
 def _rebuild_with_legal_window(
@@ -164,8 +183,8 @@ def test_snapshot_accepts_legal_windows_that_touch_the_applicability_boundary(
     effective_to: date | None,
 ) -> None:
     """A legal window touching either applicability boundary still overlaps it."""
-    modelo, _catalogues = _modelo_and_catalogues()
-    legal_id = _revision_scoped_legal_id(modelo)
+    modelo, catalogues = _modelo_and_catalogues()
+    legal_id = _revision_scoped_procedural_legal_id(modelo, catalogues)
     applicability_window = RevisionLegalApplicabilityWindow.from_revision(modelo.revisions[_REVISION])
     assert applicability_window.closes_on is not None
     if effective_to is None:

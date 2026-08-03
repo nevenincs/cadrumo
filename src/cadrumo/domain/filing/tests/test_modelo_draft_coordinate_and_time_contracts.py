@@ -89,7 +89,7 @@ def _draft(**overrides: object) -> ModeloDraft:
         "schema_version": "registry:130:2019-y-siguientes",
     }
     kwargs.update(overrides)
-    return ModeloDraft(**kwargs)  # type: ignore[arg-type]
+    return ModeloDraft.model_validate(kwargs)
 
 
 def test_the_coherent_builder_shape_still_constructs() -> None:

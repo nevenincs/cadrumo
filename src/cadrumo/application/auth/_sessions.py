@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, TypeAdapter, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
 from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
@@ -64,6 +64,7 @@ if TYPE_CHECKING:
     from . import AuthProvider
 
 _logger = get_logger(__name__)
+_JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
 @runtime_checkable
@@ -538,6 +539,7 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
         raise CorruptAuthSessionError(
             translated_message="application.auth.sessions.errors.corrupt_session",
         )
+    raw = _JSON_OBJECT.validate_python(raw)
 
     try:
         session = _provider_neutral_session_metadata(raw)

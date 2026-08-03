@@ -45,6 +45,7 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
+from importlib import import_module as _import_module
 from pathlib import Path
 from typing import NamedTuple
 
@@ -62,7 +63,6 @@ from ...core.resources import bundled_path as _bundled_path
 
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
-from ...domain import renta as _renta_snapshot_checks  # noqa: F401 - snapshot-check registration side effect
 from ...domain.calculations.registry import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
 from ...domain.calculations.registry import CasillaId as _CasillaId
 from ...domain.calculations.registry import (
@@ -191,6 +191,8 @@ from ._diff import (
     diff_registry_revisions,
 )
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
+
+_import_module("cadrumo.domain.renta")
 
 _ORACLE_ENVIRONMENT_VALUES: tuple[str, ...] = tuple(sorted(member.value for member in _OracleEnvironment))
 
@@ -491,7 +493,7 @@ def verify_filed_state(
         period=filing_period_token,
     )
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
-    input_casilla_ids = set()
+    input_casilla_ids: set[_CasillaId] = set()
     for casilla in snapshot.revision.casillas:
         if casilla.input_kind == _InputKind.COMPUTED:
             continue

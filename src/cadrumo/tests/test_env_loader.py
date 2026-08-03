@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
 
-from ._env_loader import load_env_file, parse_env_text
+from ..core.config import Settings
+from ._env_loader import bridge_env_file_into_environ, load_env_file, parse_env_text
+from .env_scope import scoped_env_var
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -52,3 +55,43 @@ class TestLoadEnvFile:
         loaded = load_env_file(env)
         assert loaded["CADRUMO_LIVE_TESTS_ENABLED"] == "1"
         assert loaded["CADRUMO_CERTIFICATE_PATH"] == str(cert_path)
+
+
+class TestBridgeEnvFileIntoEnviron:
+    """The pytest-collection-time bridge from a dotfile into ``os.environ``.
+
+    Production ``Settings`` carries no dotenv source of its own; these
+    prove the bridge is the sole channel that makes a dotfile's values
+    reach a real ``Settings`` instance, and that it never outranks a real
+    ambient environment variable.
+    """
+
+    def test_missing_file_is_a_clean_no_op(self, tmp_path: Path) -> None:
+        before = dict(os.environ)
+        applied = bridge_env_file_into_environ(tmp_path / "does-not-exist" / ".env")
+        assert applied == {}
+        assert dict(os.environ) == before
+
+    def test_dotfile_only_field_reaches_settings(self, tmp_path: Path) -> None:
+        """A field with no ambient environment variable is populated purely by the dotfile."""
+        env_file = tmp_path / ".env"
+        env_file.write_text("CADRUMO_CLAVE_MOVIL_NIE_SOPORTE=Z9988776F\n", encoding="utf-8")
+        with scoped_env_var("CADRUMO_CLAVE_MOVIL_NIE_SOPORTE", None):
+            applied = bridge_env_file_into_environ(env_file)
+            assert applied == {"CADRUMO_CLAVE_MOVIL_NIE_SOPORTE": "Z9988776F"}
+            assert os.environ["CADRUMO_CLAVE_MOVIL_NIE_SOPORTE"] == "Z9988776F"
+            settings = Settings()
+            assert settings.cadrumo_clave_movil_nie_soporte is not None
+            assert settings.cadrumo_clave_movil_nie_soporte.get_secret_value() == "Z9988776F"
+
+    def test_a_real_ambient_environment_variable_wins_over_the_dotfile(self, tmp_path: Path) -> None:
+        """``setdefault`` semantics: an already-set env var is never overridden."""
+        env_file = tmp_path / ".env"
+        env_file.write_text("CADRUMO_CLAVE_MOVIL_DNI_NIE=99999999R\n", encoding="utf-8")
+        with scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "11111111H"):
+            applied = bridge_env_file_into_environ(env_file)
+            assert applied == {"CADRUMO_CLAVE_MOVIL_DNI_NIE": "99999999R"}
+            assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "11111111H"
+            settings = Settings()
+            assert settings.cadrumo_clave_movil_dni_nie is not None
+            assert settings.cadrumo_clave_movil_dni_nie.get_secret_value() == "11111111H"

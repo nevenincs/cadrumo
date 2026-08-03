@@ -13,7 +13,7 @@ from textwrap import dedent
 import pytest
 
 from ....core.config import load_settings
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -548,7 +548,7 @@ def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
     }
     offenders: list[str] = []
     for relative_path, forbidden_tokens in scanned.items():
-        text = (PROJECT_ROOT / relative_path).read_text(encoding="utf-8")
+        text = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
         for token in forbidden_tokens:
             if token in text:
                 offenders.append(f"{relative_path}: {token}")

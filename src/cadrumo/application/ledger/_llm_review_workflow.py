@@ -176,11 +176,6 @@ def execute_reviewed_decision(
     passed. A ``decision``/``suggestion`` shape mismatch (e.g. ``SPLIT`` on a
     non-split suggestion) raises :class:`TransactionValidationError`.
     """
-    repos = {
-        "transaction_repository": transaction_repository,
-        "bucket_event_repository": bucket_event_repository,
-        "occurred_at": occurred_at,
-    }
     source_command = origin.source_command
 
     if decision is LlmReviewDecision.REJECT:
@@ -190,7 +185,9 @@ def execute_reviewed_decision(
             reason=reason,
             actor=actor,
             source_command=source_command,
-            **repos,
+            transaction_repository=transaction_repository,
+            bucket_event_repository=bucket_event_repository,
+            occurred_at=occurred_at,
         )
 
     if decision is LlmReviewDecision.APPLY:
@@ -201,7 +198,9 @@ def execute_reviewed_decision(
                 business_pct=business_pct,
                 actor=actor,
                 source_command=source_command,
-                **repos,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=bucket_event_repository,
+                occurred_at=occurred_at,
             )
         if isinstance(suggestion, LLMClassificationSuggestion):
             return apply_llm_classification(
@@ -210,7 +209,9 @@ def execute_reviewed_decision(
                 business_pct=business_pct,
                 actor=actor,
                 source_command=source_command,
-                **repos,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=bucket_event_repository,
+                occurred_at=occurred_at,
             )
         raise TransactionValidationError(
             "APPLY decision requires a classification or saturated suggestion, not a split proposal",
@@ -224,7 +225,9 @@ def execute_reviewed_decision(
                 bucket_id=bucket_id,
                 actor=actor,
                 source_command=source_command,
-                **repos,
+                transaction_repository=transaction_repository,
+                bucket_event_repository=bucket_event_repository,
+                occurred_at=occurred_at,
             )
         raise TransactionValidationError(
             "SPLIT decision requires an evidence split proposal",

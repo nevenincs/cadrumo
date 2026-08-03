@@ -72,7 +72,7 @@ class AmbiguousSemanticRoleCasillaError(ModeloError, ValueError):
 
     def __init__(self, ambiguity: SemanticRoleCasillaAmbiguity) -> None:
         self.ambiguity = ambiguity
-        scope = []
+        scope: list[str] = []
         if ambiguity.modelo_id is not None:
             scope.append(f"modelo {ambiguity.modelo_id}")
         if ambiguity.revision_id is not None:

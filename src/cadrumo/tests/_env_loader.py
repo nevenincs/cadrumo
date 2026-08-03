@@ -2,8 +2,14 @@
 
 This module is test-infrastructure (not a production module) and is
 imported by the repo-root ``conftest.py`` to populate ``os.environ``
-from ``env/.env`` so the ``CADRUMO_LIVE_TESTS_ENABLED`` gate matches the
-value the rest of the project's pydantic-settings stack reads.
+from ``env/.env`` so the ``CADRUMO_LIVE_TESTS_ENABLED`` gate (and every
+other ``Settings`` field an operator configures for local live-test runs)
+matches the value the rest of the project's environment-only ``Settings``
+stack reads. Production ``Settings`` carries no dotenv source of its own
+(``core.config.Settings.settings_customise_sources`` never returns a
+dotenv source); ``env/.env`` is development/test-only configuration, and
+this module is the bridge that makes it visible to a process that
+constructs ``Settings`` from ``os.environ``.
 
 Pure: no I/O beyond reading the file passed in. No shell expansion,
 no substitution, no pyproject magic — by design. The parser deliberately
@@ -25,6 +31,7 @@ here with a colocated test.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from ..core.external_constants import UTF_8_ENCODING
@@ -78,4 +85,30 @@ def load_env_file(path: Path) -> dict[str, str]:
     return parse_env_text(path.read_text(encoding=UTF_8_ENCODING))
 
 
-__all__ = ["load_env_file", "parse_env_text"]
+def bridge_env_file_into_environ(path: Path) -> dict[str, str]:
+    """Load ``path`` and apply every pair to ``os.environ`` via ``setdefault``.
+
+    A real ambient environment variable already present in ``os.environ``
+    before this call always wins: the dotfile only fills gaps a shell or
+    CI environment left unset, it never overrides one. This mirrors the
+    precedence pydantic-settings' own ``DotEnvSettingsSource`` gives a
+    dotenv file relative to the process environment, so the bridged
+    values behave the same way production ``Settings`` used to treat
+    ``env/.env`` before dotenv support was removed from production.
+
+    A no-op — returns ``{}``, mutates nothing — when ``path`` does not
+    exist (a fresh clone, CI, an installed run). Never raises on a
+    missing file; never fabricates a value.
+
+    Returns the full mapping ``path`` declared, regardless of whether a
+    given key actually took effect (i.e. even keys shadowed by an
+    ambient override are included), so a caller can inspect what the
+    file offered without a second parse.
+    """
+    pairs = load_env_file(path)
+    for key, value in pairs.items():
+        os.environ.setdefault(key, value)
+    return pairs
+
+
+__all__ = ["bridge_env_file_into_environ", "load_env_file", "parse_env_text"]

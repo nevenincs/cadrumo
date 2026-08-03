@@ -429,7 +429,21 @@ class ProfileRepository:
                 translated_message="application.user_profile.errors.profile_manifest_missing",
                 context={"profile": profile_id, "bucket_dir": paths.bucket_dir},
             )
-        manifest = read_manifest(paths)
+        try:
+            manifest = read_manifest(paths)
+        except StorageValidationError as exc:
+            # The storage-layer directory-identity check
+            # (`_require_manifest_claims_its_directory`) can refuse before
+            # `verify_profile_integrity` below gets a chance to run its own
+            # manifest_bucket_id-vs-directory comparison. Translate it into
+            # the same identity-drift ProfileIntegrityError so callers keep
+            # one exception contract regardless of which layer caught the
+            # mismatch first.
+            raise ProfileIntegrityError(
+                "profile physical stores disagree on identity",
+                translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
+                context={"mismatches": ("manifest_bucket_id",)},
+            ) from exc
         record = self._lifecycle_repository(profile_id).load(profile_id)
 
         verify_profile_integrity(
@@ -836,7 +850,11 @@ class ProfileRepository:
                     redact_for_cli_output(entry.name),
                     type(exc).__name__,
                 )
-                _log.debug("profile inventory skipped unreadable bucket manifest", exc_info=True)
+                # No exc_info here: the underlying StorageValidationError's own
+                # message embeds the raw (unredacted) bucket id and directory
+                # name, so surfacing its traceback would leak past the
+                # redaction the warning above already applied.
+                _log.debug("profile inventory skipped unreadable bucket manifest")
                 continue
             summaries.append(
                 ProfileSummary(

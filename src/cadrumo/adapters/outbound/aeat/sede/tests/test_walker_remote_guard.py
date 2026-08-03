@@ -231,7 +231,7 @@ class TestLegitimateAeatReadsStillPass:
         AEAT load-balances the authenticated surface across its numbered pool,
         so pinning one host would refuse a legitimate dispatch.
         """
-        _walker._assert_read_http("GET", f"{origin}/wlpl/TEWV-CORE/ResumenVlt")
+        _walker._assert_read_http("GET", f"{origin}{Settings.external_constants().aeat.sede_paths.expedientes_resumen}")
 
     @pytest.mark.asyncio
     async def test_an_allowed_url_navigates(self) -> None:

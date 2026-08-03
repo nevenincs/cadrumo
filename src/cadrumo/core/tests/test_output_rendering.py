@@ -186,7 +186,10 @@ def test_render_command_output_errors_use_registered_error_contract() -> None:
         with pytest.raises(error_type) as excinfo:
             render_command_output(format_name=format_name, payload=payload, lines=lines)
         error = excinfo.value
-        assert error.args == ()
+        # args intentionally carries the translated_message key as fallback
+        # text (CadrumoError.__init__), not the empty tuple -- see
+        # test_error_message_never_blank.py for the pinned base-class contract.
+        assert error.args == (error.translated_message,)
         assert error.context == expected_context
         with override_settings(cadrumo_output_language="en"):
             assert render_error_text(error).startswith(english_prefix)

@@ -113,9 +113,7 @@ def _assert_read_http(method: str, url: str) -> None:
 # invented rather than grounded. Those navigations keep the policy check
 # alone -- host plus write-token scan -- which is the honest strength for a
 # page-supplied target.
-_RESUMEN_READ_PATH_PREFIXES: tuple[str, ...] = (
-    urlsplit(_EXTERNAL.aeat.sede_paths.expedientes_resumen).path,
-)
+_RESUMEN_READ_PATH_PREFIXES: tuple[str, ...] = (urlsplit(_EXTERNAL.aeat.sede_paths.expedientes_resumen).path,)
 
 
 def assert_resumen_landing(landing_url: str) -> None:
@@ -174,6 +172,9 @@ def assert_landed_url_readable(landed_url: str, *, requested_url: str) -> str:
     return landed_url
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-PAGE: page is a Playwright
+# Page-like object; typed loosely so both sync and async Playwright pages
+# satisfy this shared helper without importing either concrete type here.
 async def _goto_guarded(page: Any, url: str) -> None:
     """Navigate to ``url`` only if the policy admits it, then re-assert the landing.
 

@@ -45,6 +45,10 @@ def _recovery_json() -> dict[str, object]:
     return _canonical_recovery().model_dump(mode="json")
 
 
+def _recargo_band_json() -> dict[str, object]:
+    return _canonical_recovery().recargo_band.model_dump(mode="json")
+
+
 def test_canonical_recovery_projects_into_the_payload_field_for_field() -> None:
     """Every canonical field survives the CLI boundary with its value."""
     payload = OverviewRecoveryPayload.model_validate(_recovery_json())
@@ -80,8 +84,7 @@ def test_an_empty_recovery_mapping_is_refused() -> None:
 @pytest.mark.parametrize("dropped", ["recargo_band", "next_command"])
 def test_a_recovery_missing_a_legal_obligation_is_refused(dropped: str) -> None:
     """Neither the recargo band nor the operator's next command is optional."""
-    payload = _recovery_json()
-    del payload[dropped]
+    payload = {key: value for key, value in _recovery_json().items() if key != dropped}
 
     with pytest.raises(ValidationError):
         OverviewRecoveryPayload.model_validate(payload)
@@ -90,10 +93,10 @@ def test_a_recovery_missing_a_legal_obligation_is_refused(dropped: str) -> None:
 @pytest.mark.parametrize("dropped", ["id", "surcharge_pct", "legal_ref"])
 def test_a_band_missing_its_grounding_is_refused(dropped: str) -> None:
     """A band without its identity, rate, or legal reference is not a band."""
-    payload = _recovery_json()
-    band = payload["recargo_band"]
-    assert isinstance(band, dict)
-    del band[dropped]
+    payload = {
+        **_recovery_json(),
+        "recargo_band": {key: value for key, value in _recargo_band_json().items() if key != dropped},
+    }
 
     with pytest.raises(ValidationError):
         OverviewRecoveryPayload.model_validate(payload)
@@ -110,11 +113,10 @@ def test_a_blank_next_command_is_refused() -> None:
 
 def test_an_inverted_band_window_is_refused_at_the_boundary_too() -> None:
     """The canonical window invariant holds on the transport shape as well."""
-    payload = _recovery_json()
-    band = payload["recargo_band"]
-    assert isinstance(band, dict)
+    band = _recargo_band_json()
     band["min_completed_months"] = 6
     band["max_completed_months"] = 3
+    payload = {**_recovery_json(), "recargo_band": band}
 
     with pytest.raises(ValidationError):
         OverviewRecoveryPayload.model_validate(payload)

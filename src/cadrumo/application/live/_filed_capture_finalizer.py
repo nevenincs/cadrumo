@@ -24,7 +24,7 @@ from enum import StrEnum
 from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation, SedeParseError
 from ._errors import LiveApplicationError, LiveApplicationInputError
 from ._filed_observation_persistence import (
-    _justificante_csvs_for_observation,
+    justificante_csvs_for_observation,
     persist_filed_calculation_observation,
     select_latest_filed_observations_in_history_order,
 )
@@ -72,7 +72,7 @@ def finalize_filed_capture(
             keys.append(
                 persist_filed_calculation_observation(
                     observation,
-                    justificante_csvs=_justificante_csvs_for_observation(
+                    justificante_csvs=justificante_csvs_for_observation(
                         observation,
                         justificante_csvs_by_observation,
                     ),

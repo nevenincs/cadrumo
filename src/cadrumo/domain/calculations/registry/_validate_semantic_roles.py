@@ -17,14 +17,19 @@ from collections.abc import Iterable, Mapping
 from . import _validate_semantic_role_typos as _semantic_role_typos
 from ._ids import CasillaId
 from ._schema import CasillaDefinition, ModeloDefinition
-from ._validate_semantic_role_required import (
-    _REQUIRED_ROLE_LABEL_PATTERNS as _REQUIRED_ROLE_LABEL_PATTERNS,
-)
-from ._validate_semantic_role_required import (
-    _validate_required_role_declarations as _validate_required_role_declarations,
-)
+from ._validate_semantic_role_required import REQUIRED_ROLE_LABEL_PATTERNS, required_role_declaration_failures
 from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
+)
+
+__all__ = (
+    "REQUIRED_ROLE_LABEL_PATTERNS",
+    "collect_casillas_by_semantic_role",
+    "emit_semantic_role_typo_twin_warnings",
+    "required_role_declaration_failures",
+    "semantic_role_cardinality_failures",
+    "semantic_role_consistency_failures",
+    "semantic_role_typo_twin_failures",
 )
 
 
@@ -171,3 +176,9 @@ def _validate_semantic_role_typo_twins(
 ) -> tuple[str, ...]:
     """Fail when an unreviewed singleton ``semantic_role`` looks like a typo."""
     return _semantic_role_typos.grouped_semantic_role_typo_twin_failures(_collect_role_observations(modelos))
+
+
+semantic_role_cardinality_failures = _validate_semantic_role_cardinality
+semantic_role_consistency_failures = _validate_semantic_role_consistency
+semantic_role_typo_twin_failures = _validate_semantic_role_typo_twins
+emit_semantic_role_typo_twin_warnings = _emit_semantic_role_typo_twin_warnings

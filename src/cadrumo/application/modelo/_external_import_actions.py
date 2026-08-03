@@ -75,9 +75,9 @@ from ...domain.modelos import (
 from ._action_errors import ExternalModeloImportError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
-from ._revision_persistence import _supersede_prior_current_filing
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
+from ._revision_persistence import supersede_prior_current_filing as _supersede_prior_current_filing
 
 _JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
     {

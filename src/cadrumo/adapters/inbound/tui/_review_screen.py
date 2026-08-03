@@ -29,8 +29,8 @@ from textual.widgets import Button, DataTable, Footer, Static
 
 from ....application.flows import (
     assemble_page_copy,
+    assemble_section_titles,
     checkpoint_available,
-    resolve_copy,
     review,
     visible_sequence,
 )
@@ -196,7 +196,7 @@ class ReviewScreen(Screen[None]):
     @staticmethod
     def _section_titles(app: FlowTuiApp) -> dict[str, str]:
         """Resolved section-title copy per section id, for the grouping headings."""
-        return {section.id: resolve_copy(section.title) for section in app.definition.sections}
+        return assemble_section_titles(app.definition)
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         page_key = event.row_key.value

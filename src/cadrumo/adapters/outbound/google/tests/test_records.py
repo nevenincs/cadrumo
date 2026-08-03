@@ -11,7 +11,7 @@ or the import would raise at module load.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta, timezone
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -114,11 +114,13 @@ def test_oauth_client_rejects_non_https_auth_uri() -> None:
         ("auth_provider_x509_cert_url", "https://evil.example/certs"),
     ),
 )
-def test_oauth_client_refuses_malformed_or_untrusted_endpoints(field: str, endpoint: str) -> None:
+def test_oauth_client_refuses_malformed_or_untrusted_endpoints(
+    field: Literal["auth_uri", "token_uri", "auth_provider_x509_cert_url"], endpoint: str
+) -> None:
     """Persisted client endpoints must remain canonical Google HTTPS origins."""
 
     kwargs = _valid_client_kwargs()
-    kwargs[field] = endpoint  # type: ignore[literal-required]  # dynamic field selected by parameterized boundary probe
+    kwargs[field] = endpoint
 
     with pytest.raises(ValidationError):
         OAuthClient(**kwargs)

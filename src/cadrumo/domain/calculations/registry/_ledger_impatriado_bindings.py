@@ -255,3 +255,6 @@ def unsupported_ledger_impatriado_income_observations(
 # ``ledger_renta_gastos_estimacion_directa_aggregation``, whose annual /
 # invoice-evidence / category-profile machinery is constraint-shape-divergent
 # from this simple cumulative sum.
+
+
+ImpatriadoLedgerIncomeSelector = _ImpatriadoLedgerIncomeSelector

@@ -25,7 +25,7 @@ from collections.abc import Mapping
 from ._ids import CasillaId
 from ._schema import AlgorithmProviderDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import _missing_refs
+from ._validate_helpers import missing_refs as _missing_refs
 
 
 def _format_schema_keys(values: set[str]) -> str:

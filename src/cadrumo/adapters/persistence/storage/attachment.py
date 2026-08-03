@@ -29,7 +29,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
@@ -64,6 +64,7 @@ _ATTACHMENT_MANIFEST_SENSITIVITY = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.sensiti
 _ATTACHMENT_BLOB_NAMESPACE = ATTACHMENT_BLOB_STORAGE_NAMESPACE.namespace
 _ATTACHMENT_MANIFEST_NAMESPACE = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.namespace
 _ATTACHMENT_ERROR_CONTEXT = {"surface": "attachment_store"}
+_JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
 def _attachment_validation_error(message: str, *, violation: str) -> AttachmentValidationError:
@@ -131,9 +132,11 @@ def _decode_manifest_envelope(payload: bytes, *, attachment_id: str | None = Non
         raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
     if not isinstance(payload_dict, dict):
         raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
-    manifest_payload = payload_dict.get("payload")
-    if not isinstance(manifest_payload, dict):
+    typed_payload_dict = _JSON_OBJECT.validate_python(payload_dict)
+    raw_manifest_payload = typed_payload_dict.get("payload")
+    if not isinstance(raw_manifest_payload, dict):
         raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
+    manifest_payload = _JSON_OBJECT.validate_python(raw_manifest_payload)
     if attachment_id is None:
         manifest_sha256 = manifest_payload.get("sha256")
         if not isinstance(manifest_sha256, str):
@@ -141,7 +144,7 @@ def _decode_manifest_envelope(payload: bytes, *, attachment_id: str | None = Non
         attachment_id = _require_digest(manifest_sha256, field_name="sha256")
     manifest_payload["attachment_id"] = attachment_id
     try:
-        envelope_json = json.dumps(payload_dict)
+        envelope_json = json.dumps(typed_payload_dict)
         envelope = Envelope[Attachment].model_validate_json(envelope_json)
     except ValidationError as exc:
         raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload") from exc
@@ -168,7 +171,7 @@ def _wrap_blob_payload(data: bytes) -> bytes:
     return _ATTACHMENT_BLOB_ENVELOPE_PREFIX + data
 
 
-def _unwrap_blob_payload(stored: bytes) -> bytes:
+def unwrap_blob_payload(stored: bytes) -> bytes:
     """Strip the envelope prefix from a stored blob; refuse an un-enveloped payload.
 
     Every blob is wrapped by :func:`_wrap_blob_payload` at write time, so a
@@ -185,11 +188,6 @@ def _unwrap_blob_payload(stored: bytes) -> bytes:
 
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
     """Reject any digest input that is not a 64-char lowercase hex string."""
-    if not isinstance(value, str):
-        raise _attachment_validation_error(
-            f"{field_name} must be a 64-character lowercase hex digest",
-            violation=f"{field_name}_invalid_digest",
-        )
     if len(value) != 64 or any(char not in _HEX_DIGITS for char in value):
         raise _attachment_validation_error(
             f"{field_name} must be a 64-character lowercase hex digest",
@@ -316,7 +314,7 @@ class AttachmentStore(BaseModel):
         )
         if record is None:
             raise _attachment_not_found_error("attachment blob not found", object_kind="blob")
-        return _unwrap_blob_payload(record.payload)
+        return unwrap_blob_payload(record.payload)
 
     def open_bytes(self, sha256: str) -> BinaryIO:
         """Open the blob for ``sha256`` as a streaming binary handle."""

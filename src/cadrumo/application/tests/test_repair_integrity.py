@@ -191,9 +191,10 @@ class TestBuildListReport:
 
     def test_list_opens_active_bucket_session_for_bootstrap_exempt_repair(self, tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path):
+            assert WORKFLOW_STATE_NAMESPACE.default_object_key is not None
             secure_object_repository_for_active_bucket().save(
                 namespace=WORKFLOW_STATE_NAMESPACE.namespace,
-                object_key="workflow:repair-list",
+                object_key=WORKFLOW_STATE_NAMESPACE.default_object_key,
                 classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
                 schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
                 written_at=_BOOTSTRAP_WRITTEN_AT,

@@ -16,6 +16,7 @@ accepted, so a validator that simply made the field required also fails.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -94,9 +95,9 @@ def test_the_two_declarations_agree_on_every_candidate(candidate: str | None) ->
     edit that re-loosens one of them.
     """
 
-    def accepts(build: object, value: str | None) -> bool:
+    def accepts(build: Callable[[str | None], object], value: str | None) -> bool:
         try:
-            build(value)  # type: ignore[operator]
+            build(value)
         except ValidationError:
             return False
         return True
@@ -122,9 +123,9 @@ def test_annual_summary_refuses_a_malformed_subject_identity(malformed: str) -> 
 def test_both_authorities_agree_on_the_subject_identity() -> None:
     """The period and annual declarations must accept and refuse the same subjects."""
 
-    def accepts(build: object, value: str) -> bool:
+    def accepts(build: Callable[[str], object], value: str) -> bool:
         try:
-            build(value)  # type: ignore[operator]
+            build(value)
         except ValidationError:
             return False
         return True

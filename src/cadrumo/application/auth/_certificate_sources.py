@@ -60,6 +60,9 @@ def _auth_state(state: WorkflowState) -> AuthState:
     return auth
 
 
+auth_state = _auth_state
+
+
 def _with_auth_state(state: WorkflowState, auth: AuthState) -> WorkflowState:
     return state.model_copy(update={"auth": auth, "updated_at": now()})
 
@@ -172,6 +175,7 @@ __all__ = [
     "CertificateSourceNoActiveBucketError",
     "CertificateSourceNotFoundError",
     "active_certificate_source",
+    "auth_state",
     "list_certificate_sources",
     "register_certificate_source",
     "remove_certificate_source",

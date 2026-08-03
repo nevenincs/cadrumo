@@ -20,16 +20,18 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
-from typing import Literal
+from typing import Literal, TypeGuard
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, CounterpartSourceKind
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
-    _PreviousModeloSelector,
+    PreviousModeloSelector as _PreviousModeloSelector,
+)
+from ._bindings_previous_filing import (
     previous_filing_observation_requirements,
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
@@ -48,12 +50,6 @@ from ._detail_record_bindings import (
     Modelo720RowObservation,
     RefundOperationObservation,
     RelatedPartyOperationObservation,
-    _AtributionSelector,
-    _build_foreign_asset_rows,
-    _build_related_party_rows,
-    _ForeignAssetSelector,
-    _RefundSelector,
-    _RelatedPartySelector,
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
     resolve_refund_binding_row_values,
@@ -63,11 +59,31 @@ from ._detail_record_bindings import (
     validate_refund_binding,
     validate_related_party_binding,
 )
+from ._detail_record_bindings import (
+    AtributionSelector as _AtributionSelector,
+)
+from ._detail_record_bindings import (
+    ForeignAssetSelector as _ForeignAssetSelector,
+)
+from ._detail_record_bindings import (
+    RefundSelector as _RefundSelector,
+)
+from ._detail_record_bindings import (
+    RelatedPartySelector as _RelatedPartySelector,
+)
+from ._detail_record_bindings import (
+    build_foreign_asset_rows as _build_foreign_asset_rows,
+)
+from ._detail_record_bindings import (
+    build_related_party_rows as _build_related_party_rows,
+)
 from ._donativo_bindings import (
     DonativoDonorObservation,
-    _DonativoSelector,
     resolve_donativo_binding_row_values,
     validate_donativo_binding,
+)
+from ._donativo_bindings import (
+    DonativoSelector as _DonativoSelector,
 )
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
@@ -77,13 +93,15 @@ from ._invoice_bindings import (
     InvoiceObservationRequirement,
     Modelo349OperadorClaveTotal,
     Modelo349OperadorTotalsParity,
-    _InvoiceSelector,
     compute_modelo_349_operador_totals_parity,
     invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
     validate_invoice_binding,
     validate_invoice_binding_definition,
+)
+from ._invoice_bindings import (
+    InvoiceSelector as _InvoiceSelector,
 )
 from ._irnr_ledger_bindings import (
     IrnrIncomeObservationProtocol,
@@ -100,11 +118,6 @@ from ._ledger_bindings import (
     RentaGastosEstimacionDirectaObservationProtocol,
     RentaGastosPagoFraccionadoObservationProtocol,
     RentaIncomeObservationProtocol,
-    _IvaLedgerSelector,
-    _OssIossLedgerSelector,
-    _RentaLedgerGastosEstimacionDirectaSelector,
-    _RentaLedgerGastosPagoFraccionadoSelector,
-    _RentaLedgerIncomeSelector,
     renta_first_slice_binding_target_casillas,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_oss_aggregation_binding_values,
@@ -127,17 +140,36 @@ from ._ledger_bindings import (
     validate_ledger_renta_income_aggregation_binding,
     validate_ledger_renta_income_aggregation_binding_definition,
 )
+from ._ledger_bindings import (
+    IvaLedgerSelector as _IvaLedgerSelector,
+)
+from ._ledger_bindings import (
+    OssIossLedgerSelector as _OssIossLedgerSelector,
+)
+from ._ledger_bindings import (
+    RentaLedgerGastosEstimacionDirectaSelector as _RentaLedgerGastosEstimacionDirectaSelector,
+)
+from ._ledger_bindings import (
+    RentaLedgerGastosPagoFraccionadoSelector as _RentaLedgerGastosPagoFraccionadoSelector,
+)
+from ._ledger_bindings import (
+    RentaLedgerIncomeSelector as _RentaLedgerIncomeSelector,
+)
 from ._ledger_impatriado_bindings import (
     ImpatriadoIncomeObservationProtocol,
-    _ImpatriadoLedgerIncomeSelector,
     resolve_ledger_impatriado_income_aggregation_binding_values,
     unsupported_ledger_impatriado_income_observations,
     validate_ledger_impatriado_income_aggregation_binding,
     validate_ledger_impatriado_income_aggregation_binding_definition,
 )
+from ._ledger_impatriado_bindings import (
+    ImpatriadoLedgerIncomeSelector as _ImpatriadoLedgerIncomeSelector,
+)
 from ._period_selector_match import selector_period_matches_request
 from ._retenciones_bindings import (
-    _RetencionesAggregationSelector,
+    RetencionesAggregationSelector as _RetencionesAggregationSelector,
+)
+from ._retenciones_bindings import (
     resolve_retenciones_aggregation_binding_values,
     validate_retenciones_aggregation_binding,
 )
@@ -147,13 +179,15 @@ from ._withholding_bindings import (
     WithholdingObservation,
     WithholdingObservationRequirement,
     WithholdingTotalsParity,
-    _WithholdingSelector,
     aggregate_withholding_by_clave,
     compute_withholding_totals_parity,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
     validate_withholding_binding_selector_shape,
     withholding_binding_requirements,
+)
+from ._withholding_bindings import (
+    WithholdingSelector as _WithholdingSelector,
 )
 
 __all__ = [
@@ -247,11 +281,17 @@ __all__ = [
 #: One per-family ``validate(binding) -> list[str]`` accumulating validator. Every
 #: source family registers exactly one in :data:`_BINDING_VALIDATOR_REGISTRY`.
 _BindingFamilyValidator = Callable[[DataBindingDefinition], list[str]]
+_OBJECT_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
+
+
+def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Narrow an unparameterized runtime mapping to untrusted object entries."""
+    return isinstance(value, Mapping)
 
 
 def _tuple_from_json_array(value: object) -> object:
     if isinstance(value, list):
-        return tuple(value)
+        return _OBJECT_TUPLE_ADAPTER.validate_python(value)
     return value
 
 
@@ -266,7 +306,7 @@ def _decimal_from_json_string(value: object) -> object:
 
 def _decimal_tuple_from_json_array(value: object) -> object:
     if isinstance(value, list):
-        return tuple(_decimal_from_json_string(item) for item in value)
+        return tuple(_decimal_from_json_string(item) for item in _OBJECT_TUPLE_ADAPTER.validate_python(value))
     return value
 
 
@@ -320,8 +360,6 @@ class CasillaObservation(BaseModel):
     @field_validator("value")
     @classmethod
     def _decimal_value(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("casilla observation value must be Decimal")
         return value
 
     @field_validator("operand_refs", "operand_casilla_refs", "legal_refs", "source_refs", mode="before")
@@ -365,17 +403,22 @@ class RegistryModeloObservation(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _hydrate_filing_period(cls, data: object) -> object:
-        if not isinstance(data, Mapping) or "filing_period" in data:
+        if not _is_object_mapping(data) or "filing_period" in data:
             return data
-        filing_year = data.get("filing_year")
-        period = data.get("period")
+        payload: dict[str, object] = {}
+        for key, value in data.items():
+            if not isinstance(key, str):
+                return data
+            payload[key] = value
+        filing_year = payload.get("filing_year")
+        period = payload.get("period")
         if not isinstance(filing_year, int) or not isinstance(period, str):
             return data
         try:
             filing_period = Period.from_year_and_code(filing_year, period)
         except ValueError as exc:
             raise RegistryValidationError("observation period must be a bare registry period token") from exc
-        return {**data, "filing_period": filing_period}
+        return {**payload, "filing_period": filing_period}
 
     @field_validator("observations", mode="before")
     @classmethod
@@ -485,9 +528,6 @@ def resolve_bound_inputs_by_casilla_id(
             :class:`~domain.calculations.registry.BindingId` to the factual
             :class:`decimal.Decimal` value.
     """
-    for key, value in facts.items():
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError(f"binding fact {key!r} must be a Decimal")
     binding_ids = {binding.id for binding in revision.bindings}
     unknown = sorted(set(facts).difference(binding_ids))
     if unknown:
@@ -754,6 +794,10 @@ class _ProfileSelector(BaseModel):
                 "profile selector required_when_profile_key and required_when_value must be declared together",
             )
         return self
+
+
+ProfileSelector = _ProfileSelector
+"""Public typed facade for the profile-source selector model."""
 
 
 _MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", "offset", "length"))

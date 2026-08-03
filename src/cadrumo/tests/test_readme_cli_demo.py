@@ -8,7 +8,7 @@ import sys
 import pytest
 from dev.readme import prepare_cli_demo, render_cli_demo
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -18,14 +18,14 @@ def test_demo_authorities_use_only_cadrumo_product_paths_and_commands() -> None:
     assert prepare_cli_demo._CLI_BOOTSTRAP == "from cadrumo.entrypoints.cli import main; main()"
     assert render_cli_demo._CLI_BOOTSTRAP == prepare_cli_demo._CLI_BOOTSTRAP
     assert render_cli_demo.DISPLAY_COMMAND.startswith("aeat app quickfile ")
-    assert prepare_cli_demo.DEMO_ROOT == PROJECT_ROOT / "var" / "readme-demo"
+    assert prepare_cli_demo.DEMO_ROOT == REPO_ROOT / "var" / "readme-demo"
 
 
 def test_demo_bootstrap_runs_the_real_cadrumo_help_surface() -> None:
     """The exact subprocess bootstrap used by the demo reaches the live Cadrumo CLI."""
     completed = subprocess.run(  # noqa: S603 - executable and bootstrap are repository-owned constants
         [sys.executable, "-c", prepare_cli_demo._CLI_BOOTSTRAP, "--help"],
-        cwd=PROJECT_ROOT,
+        cwd=REPO_ROOT,
         env=prepare_cli_demo.demo_environment(),
         capture_output=True,
         text=True,

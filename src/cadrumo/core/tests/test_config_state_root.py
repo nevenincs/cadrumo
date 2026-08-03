@@ -2,7 +2,7 @@
 
 The :mod:`cadrumo.core._config_state_root` seam decides where
 :attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root` defaults: a source
-checkout keeps ``PROJECT_ROOT / "var" / "storage"`` while an installed
+checkout keeps ``REPO_ROOT / "var" / "storage"`` while an installed
 distribution roots under the platform user-data directory. These tests exercise
 the real resolver and the real :class:`~cadrumo.core.config.Settings` validator
 chain — no mocks, no monkeypatching of the unit under test. The
@@ -13,7 +13,7 @@ deterministically, and env-provided base directories use the host-absolute
 The tests cover both the derived-substrate cascade and the fresh-install
 roundtrip: token, log, secret, blob, and audit roots follow the installed base,
 installed storage resolves off the platform directory, and checkout storage
-remains under ``PROJECT_ROOT``.
+remains under ``REPO_ROOT``.
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from .._config_state_root import (
     FormerProductStateError,
@@ -32,7 +33,6 @@ from .._config_state_root import (
     platform_user_data_root,
     resolve_state_root,
 )
-from ..paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -66,7 +66,7 @@ def test_installed_storage_root_derives_every_substrate_dir(tmp_path: Path) -> N
     Rooting ``cadrumo_local_storage_root`` at an installed platform-user-data
     directory must cascade through the existing state-root validators so every
     derived substrate directory lives under the same installed base, not under
-    ``PROJECT_ROOT``.
+    ``REPO_ROOT``.
     """
     resolution = resolve_state_root(_installed_inputs_under(tmp_path))
     assert resolution.run_mode is RunMode.INSTALLED
@@ -96,7 +96,7 @@ def test_installed_storage_root_derives_every_substrate_dir(tmp_path: Path) -> N
         # narrowing hack.
         assert derived is not None
         assert root in derived.parents
-        assert PROJECT_ROOT not in derived.parents
+        assert REPO_ROOT not in derived.parents
 
 
 def test_explicit_substrate_override_still_wins_over_installed_base(tmp_path: Path) -> None:
@@ -122,13 +122,13 @@ def test_explicit_substrate_override_still_wins_over_installed_base(tmp_path: Pa
 
 
 def test_live_default_is_the_checkout_var_storage_root() -> None:
-    """The running checkout keeps the historical ``PROJECT_ROOT/var/storage`` default.
+    """The running checkout keeps the historical ``REPO_ROOT/var/storage`` default.
 
     The state-root resolution must be behaviour-preserving for the dev loop:
     this test suite runs from a source checkout, so the live default factory
     must resolve exactly to the pre-change value and classify as a checkout.
     """
-    assert default_storage_root() == PROJECT_ROOT / "var" / "storage"
+    assert default_storage_root() == REPO_ROOT / "var" / "storage"
 
 
 def test_checkout_markers_beat_a_present_platform_env(tmp_path: Path) -> None:
@@ -164,7 +164,7 @@ def test_installed_resolution_lands_off_project_root(tmp_path: Path) -> None:
     A marker-free candidate under a fake ``site-packages`` classifies installed
     and the storage root lands under the platform user-data base, never under
     the project-root candidate it was detected from and never under the repo
-    ``PROJECT_ROOT``.
+    ``REPO_ROOT``.
     """
     failures: list[str] = []
     for platform in ("win32", "linux", "darwin"):
@@ -176,8 +176,8 @@ def test_installed_resolution_lands_off_project_root(tmp_path: Path) -> None:
             failures.append(f"{platform}: user_data_root={resolution.platform_user_data_root}")
         if resolution.storage_root != resolution.platform_user_data_root / "storage":
             failures.append(f"{platform}: storage_root={resolution.storage_root}")
-        if PROJECT_ROOT in resolution.storage_root.parents:
-            failures.append(f"{platform}: storage root landed under PROJECT_ROOT")
+        if REPO_ROOT in resolution.storage_root.parents:
+            failures.append(f"{platform}: storage root landed under REPO_ROOT")
         if inputs.project_root_candidate in resolution.storage_root.parents:
             failures.append(f"{platform}: storage root landed under detected project candidate")
 
@@ -248,7 +248,7 @@ def test_installed_resolution_refuses_former_product_state_without_touching_it(t
 
 
 def test_fresh_install_settings_tree_never_lands_under_project_root(tmp_path: Path) -> None:
-    """A fresh installed run's full Settings state tree resolves off ``PROJECT_ROOT``.
+    """A fresh installed run's full Settings state tree resolves off ``REPO_ROOT``.
 
     The roundtrip proof: resolve an installed storage root, build a real
     ``Settings`` from it, and confirm the encrypted-store root and every derived
@@ -274,5 +274,5 @@ def test_fresh_install_settings_tree_never_lands_under_project_root(tmp_path: Pa
         # note in test_installed_storage_root_derives_every_substrate_dir above.
         assert path is not None
         assert resolution.platform_user_data_root in path.parents or path == resolution.storage_root
-        assert PROJECT_ROOT not in path.parents
-        assert path != PROJECT_ROOT / "var" / "storage"
+        assert REPO_ROOT not in path.parents
+        assert path != REPO_ROOT / "var" / "storage"

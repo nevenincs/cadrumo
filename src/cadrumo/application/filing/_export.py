@@ -83,7 +83,7 @@ from ...domain.filing import (
     ModeloDraft,
 )
 from ...domain.submission import ModeloDraftStatus
-from ._export_parity import _did_page_suppressed, assert_export_mirrors_manifest
+from ._export_parity import assert_export_mirrors_manifest, did_page_suppressed
 from ._export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
     read_xml_dictionary_root_identity,
@@ -596,7 +596,7 @@ def _render_layout(layout: ExportLayoutDefinition, *, draft: ModeloDraft, header
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
     }
     for record in sorted(layout.records, key=lambda item: item.order):
-        if _did_page_suppressed(record, headers=normalized_headers):
+        if did_page_suppressed(record, headers=normalized_headers):
             continue
         for row in _record_render_rows(record, binding_values):
             _guard_record_export(record, casilla_values=casilla_values)

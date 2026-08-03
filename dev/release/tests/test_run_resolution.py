@@ -33,7 +33,7 @@ _HEAD_SHA = "a" * 40
 _OTHER_SHA = "b" * 40
 
 
-class _FakeClock:
+class _DeterministicClock:
     """A deterministic clock/sleep pair: ``sleep`` advances ``now`` by the requested amount.
 
     No real waiting occurs anywhere in this module's poll tests; the budget
@@ -255,7 +255,7 @@ def test_resolve_rejects_a_malformed_head_sha() -> None:
 def test_wait_for_run_retries_until_the_dispatch_run_becomes_visible() -> None:
     """A run absent on the first polls resolves once it appears, backing off in between."""
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
-    clock = _FakeClock(created_after)
+    clock = _DeterministicClock(created_after)
     own = _run_record(run_id=42, created_at=created_after + timedelta(seconds=1))
     calls = {"n": 0}
 
@@ -285,7 +285,7 @@ def test_wait_for_run_refuses_immediately_when_a_competing_run_appears_between_d
     rather than retrying it away or promoting either candidate.
     """
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
-    clock = _FakeClock(created_after)
+    clock = _DeterministicClock(created_after)
     mine = _run_record(run_id=42, created_at=created_after + timedelta(seconds=1))
     competitor = _run_record(run_id=43, created_at=created_after + timedelta(seconds=2))
     calls = {"n": 0}
@@ -314,7 +314,7 @@ def test_wait_for_run_refuses_immediately_when_a_competing_run_appears_between_d
 def test_wait_for_run_exhausts_its_budget_and_names_the_watched_dispatch() -> None:
     """A dispatch that never becomes visible times out naming the workflow and commit."""
     created_after = datetime(2026, 8, 2, tzinfo=UTC)
-    clock = _FakeClock(created_after)
+    clock = _DeterministicClock(created_after)
     with pytest.raises(rr.PollBudgetExhaustedError) as excinfo:
         rr.wait_for_run(
             workflow_path=_WORKFLOW,
@@ -343,7 +343,7 @@ def _resolved_run() -> rr.DispatchedRun:
 @pytest.mark.parametrize("conclusion", ["success", "failure", "cancelled"])
 def test_wait_for_conclusion_reports_every_terminal_conclusion(conclusion: str) -> None:
     """Success, failure, and cancellation all resolve normally on the first poll."""
-    clock = _FakeClock(datetime(2026, 8, 2, tzinfo=UTC))
+    clock = _DeterministicClock(datetime(2026, 8, 2, tzinfo=UTC))
     outcome = rr.wait_for_conclusion(
         _resolved_run(),
         budget=rr.PollBudget(total_seconds=60),
@@ -357,7 +357,7 @@ def test_wait_for_conclusion_reports_every_terminal_conclusion(conclusion: str) 
 
 def test_wait_for_conclusion_retries_while_the_run_is_still_in_progress() -> None:
     """An in-progress run is polled again rather than treated as concluded."""
-    clock = _FakeClock(datetime(2026, 8, 2, tzinfo=UTC))
+    clock = _DeterministicClock(datetime(2026, 8, 2, tzinfo=UTC))
     calls = {"n": 0}
 
     def fetch() -> dict[str, object]:
@@ -380,7 +380,7 @@ def test_wait_for_conclusion_retries_while_the_run_is_still_in_progress() -> Non
 
 def test_wait_for_conclusion_exhausts_its_budget_and_names_the_watched_run() -> None:
     """A run that never concludes times out naming its id, workflow, and URL."""
-    clock = _FakeClock(datetime(2026, 8, 2, tzinfo=UTC))
+    clock = _DeterministicClock(datetime(2026, 8, 2, tzinfo=UTC))
     run = _resolved_run()
     with pytest.raises(rr.RunResolutionError) as excinfo:
         rr.wait_for_conclusion(

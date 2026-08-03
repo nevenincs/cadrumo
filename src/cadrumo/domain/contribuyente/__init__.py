@@ -13,7 +13,7 @@ personal local state needed to parameterize RENTA verification.
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -143,7 +143,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
     @classmethod
     def _parse_change_history(cls, value: object) -> object:
         if isinstance(value, list):
-            return tuple(value)
+            return tuple(cast(list[object], value))
         return value
 
     @field_validator("tax_residence_since", mode="before")

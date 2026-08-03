@@ -79,8 +79,12 @@ def test_link_help_names_catalogue_create_for_invoice_id() -> None:
     result = invoke_cached_cli(["app", "ledger", "link", "--help"], env={"COLUMNS": "240"})
 
     assert result.exit_code == 0, result.output
-    assert "aeat app ledger invoice catalogue create" in result.output
-    assert "aeat app ledger invoice add" in result.output
+    # Whitespace-normalized: Click's plain help formatter wraps prose to the
+    # real terminal width, so a multi-word phrase can legitimately span a
+    # line break at a word boundary.
+    flat = " ".join(result.output.split())
+    assert "aeat app ledger invoice catalogue create" in flat
+    assert "aeat app ledger invoice add" in flat
 
 
 def test_check_empty_catalogue_is_ready() -> None:

@@ -104,6 +104,12 @@ class ProfileFieldView(BaseModel):
     value: str | None
     masked: bool
     required: bool
+    enum_values: tuple[str, ...] = Field(default=())
+    """Closed tokens declared by the schema for an enum field.
+
+    The manager receives the declaration rather than guessing from the
+    current value, so an unanswered enum is still presented as a choice.
+    """
 
     @property
     def present(self) -> bool:
@@ -260,6 +266,7 @@ def build_profile_overview(
                     value=MASKED_PLACEHOLDER if (masked and present) else raw,
                     masked=masked,
                     required=field.required,
+                    enum_values=field.enum_values,
                 ),
             )
         sections.append(

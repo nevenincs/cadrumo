@@ -74,6 +74,8 @@ from collections.abc import Iterator, Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from pydantic import TypeAdapter
+
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import Period as _Period
 from ...core.errors import BaseSeverity as _BaseSeverity
@@ -667,10 +669,10 @@ def _filing_binding_values(
             # they carry no fichero-BOE addressing and must not be coerced to
             # Decimal here.
             continue
-        if binding_id not in inputs or inputs[binding_id] is None:
+        if binding_id not in inputs:
             continue
-        source, legal_refs, source_refs = _binding_provenance(binding)
         raw_value = inputs[binding_id]
+        source, legal_refs, source_refs = _binding_provenance(binding)
         if isinstance(raw_value, list | tuple):
             values.extend(
                 ModeloBindingValue(
@@ -746,13 +748,20 @@ _ROW_FIELD_DATA_TYPES: dict[str, str] = {
     "valuation_amount": "money",
 }
 
+_SELECTOR_METADATA = TypeAdapter(dict[str, object])
+
 
 def _binding_data_type(binding: object) -> str:
-    selector = getattr(binding, "selector", None)
-    raw_data_type = selector.get("data_type") if isinstance(selector, Mapping) else getattr(selector, "data_type", None)
+    selector: object = getattr(binding, "selector", None)
+    if isinstance(selector, Mapping):
+        metadata = _SELECTOR_METADATA.validate_python(selector)
+        raw_data_type = metadata.get("data_type")
+        row_field = metadata.get("row_field")
+    else:
+        raw_data_type = getattr(selector, "data_type", None)
+        row_field = getattr(selector, "row_field", None)
     if raw_data_type is not None:
         return str(raw_data_type)
-    row_field = selector.get("row_field") if isinstance(selector, Mapping) else getattr(selector, "row_field", None)
     if isinstance(row_field, str) and row_field in _ROW_FIELD_DATA_TYPES:
         return _ROW_FIELD_DATA_TYPES[row_field]
     return "decimal"
@@ -905,6 +914,8 @@ __all__ = [
     "APPROVAL_BASIS_VERSION",
     "CasillaDelta",
     "CasillaInputs",
+    "CasillaSchemaProvider",
+    "DeadlineChecker",
     "DeclaracionCalculateNextAction",
     "DeclaracionCalculateSummary",
     "DeclaracionExportFormat",
@@ -914,14 +925,24 @@ __all__ = [
     "JustificanteImportResult",
     "ModeloApplicationError",
     "ModeloApprovalStaleReason",
+    "ModeloBindingValue",
+    "ModeloBuilderError",
     "ModeloCalculateError",
+    "ModeloCasillaProvenance",
     "ModeloCode",
+    "ModeloDraft",
+    "ModeloDraftStatus",
     "ModeloHistory",
     "ModeloHistoryEntry",
     "ModeloHistoryRepository",
     "ModeloInputs",
     "ModeloOperatorProfile",
+    "ModeloProfile",
     "ModeloScalar",
+    "ModeloValidationFinding",
+    "ModeloValidator",
+    "ModeloValue",
+    "ModeloValueKind",
     "apply_validation",
     "approval_stale_reasons",
     "approve_draft",
@@ -939,6 +960,7 @@ __all__ = [
     "export_draft",
     "export_layout_renderability_reason",
     "filing_profile_from_taxpayer",
+    "format_noncanonical_casilla_reference",
     "import_filing_from_justificante",
     "iter_findings",
     "list_amendments",
@@ -946,6 +968,7 @@ __all__ = [
     "load_default_filing_profile",
     "make_amendment_id",
     "refresh_review_status",
+    "registry_schema_version",
     "render_layout",
     "required_applicable_casilla_ids",
     "summarise_calculation",

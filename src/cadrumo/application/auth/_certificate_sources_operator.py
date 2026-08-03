@@ -33,7 +33,7 @@ See Also:
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -57,20 +57,20 @@ from ._certificate_sources import (
     CertificateSourceNotFoundError as _StateCertificateSourceNotFoundError,
 )
 from ._certificate_sources import (
-    _auth_state,
+    active_certificate_source as _active_certificate_source,
+)
+from ._certificate_sources import (
+    auth_state,
     list_certificate_sources,
     register_certificate_source,
     remove_certificate_source,
     select_certificate_source,
 )
-from ._certificate_sources import (
-    active_certificate_source as _active_certificate_source,
-)
 from ._credential_resolution import (
     resolve_certificate_source_secret,
 )
 from ._mutation import AuthBucketEventSpec, build_auth_bucket_events
-from ._operator_probes import ProviderProbeResult, _probe_certificate_bundle
+from ._operator_probes import ProviderProbeResult, probe_certificate_bundle
 from ._operator_results import (
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
@@ -140,7 +140,7 @@ def _gate_active_bucket() -> str:
 
 
 @contextmanager
-def _certificate_mutation_span(*, resume_certificate_secret: bool = False) -> Iterator[str]:
+def _certificate_mutation_span(*, resume_certificate_secret: bool = False) -> Generator[str]:
     """Open the active bucket and serialize one certificate auth mutation."""
     settings = load_settings()
     with active_profile_storage_span(settings) as bucket_id:
@@ -402,7 +402,7 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
                 friendly_name=record.friendly_name,
                 source_name=record.name,
             )
-            outcome = _probe_certificate_bundle(
+            outcome = probe_certificate_bundle(
                 record.certificate_path,
                 settings=resolved_settings,
                 certificate_credentials=credentials,
@@ -526,7 +526,7 @@ def remove_operator_certificate_source_secret(*, name: str) -> CertificateSource
 
 
 def _auth_state_certificate_sources(state: WorkflowState) -> dict[str, object]:
-    return dict(_auth_state(state).certificate_sources)
+    return dict(auth_state(state).certificate_sources)
 
 
 def _pending_intent_resumes(

@@ -247,13 +247,21 @@ class PerModeloAggregationResult(BaseModel):
                 translated_message="aggregation.service.errors.envelope_period_mismatch",
                 context={"aggregation_period": self.aggregation.period, "result_period": self.period},
             )
-        expected_payload_types = {
-            PerModeloAggregationContributor.RETENCIONES: RetencionesAggregation,
-            PerModeloAggregationContributor.COUNTERPART: CounterpartAggregation,
-            PerModeloAggregationContributor.FOREIGN_ASSETS: ForeignAssetsAggregation,
-        }
-        expected_type = expected_payload_types[self.provider]
-        if not isinstance(self.aggregation, expected_type):
+        provider_matches_payload = (
+            (
+                self.provider is PerModeloAggregationContributor.RETENCIONES
+                and isinstance(self.aggregation, RetencionesAggregation)
+            )
+            or (
+                self.provider is PerModeloAggregationContributor.COUNTERPART
+                and isinstance(self.aggregation, CounterpartAggregation)
+            )
+            or (
+                self.provider is PerModeloAggregationContributor.FOREIGN_ASSETS
+                and isinstance(self.aggregation, ForeignAssetsAggregation)
+            )
+        )
+        if not provider_matches_payload:
             raise AggregationConfigError(
                 f"provider {self.provider.value!r} does not match aggregation payload "
                 f"{type(self.aggregation).__name__!r}",

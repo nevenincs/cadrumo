@@ -59,11 +59,11 @@ from ._credential_resolution import (
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from ._mutation import build_auth_bucket_events as _build_bucket_events
 from ._operator_probes import (
-    _classify_identity_alignment,
-    _live_auth_identity_kind,
-    _live_auth_identity_state,
-    _live_auth_mode,
-    _probe_local_session,
+    classify_identity_alignment as _classify_identity_alignment,
+    live_auth_identity_kind as _live_auth_identity_kind,
+    live_auth_identity_state as _live_auth_identity_state,
+    live_auth_mode as _live_auth_mode,
+    probe_local_session as _probe_local_session,
     probe_clave_credentials,
 )
 from ._operator_results import (

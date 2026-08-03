@@ -9,7 +9,7 @@ from functools import cache
 import pytest
 
 from .....core import ExportLayoutFormat, normalise_corpus_text
-from .....core.paths import PROJECT_ROOT
+from .....tests import REPO_ROOT
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from .. import (
@@ -251,7 +251,7 @@ def test_committed_modelo_349_gb_xi_country_prefix_rules_are_cited_to_aeat_instr
     assert source.sha256 == "735dc0b1be1bed8997bd77a97fb0cb54e54d77a083082f5b72cf6aa236717adf"
     assert source.bytes == 69284
     assert source.source_url.endswith("/GI28/instr_mod_349.pdf")
-    verify_source_file(PROJECT_ROOT, source)
+    verify_source_file(REPO_ROOT, source)
 
     source_text = normalise_corpus_text((bundled_path() / source.corpus_path).read_text(encoding="utf-8"))
     for required_text in _M349_GB_XI_ORDINARY_REQUIRED_TEXT + _M349_GB_XI_RECTIFICATION_REQUIRED_TEXT:

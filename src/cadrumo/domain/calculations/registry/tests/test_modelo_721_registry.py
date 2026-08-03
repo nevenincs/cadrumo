@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from .....core.paths import PROJECT_ROOT
+from .....tests import REPO_ROOT
 from .....core.resources import bundled_path
 from .._corpus_catalogue import verify_source_file
 from .._legal import verify_legal_catalogue
@@ -98,7 +98,7 @@ def test_modelo_721_revision_uses_boe_layout_sources_and_applicability_chain() -
         assert source.evidence_tier == "layout_authority"
         assert source.kind == "form_spec"
         assert source.corpus_path.endswith(".pdf")
-        verify_source_file(PROJECT_ROOT, source)
+        verify_source_file(REPO_ROOT, source)
 
 
 def test_modelo_721_deadline_windows_cite_article_4_not_content_article_3() -> None:

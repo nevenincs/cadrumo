@@ -773,7 +773,7 @@ def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> Non
     candidates = (
         OssIossLedgerCandidate(
             ledger_id="oss-ledger-1",
-            transaction_date=date(2025, 6, 15),
+            transaction_date=date(2025, 7, 15),
             regime=OssIossRegime.UNION_SCHEME,
             destination_member_state=EUMemberState.DE,
             rate_kind=IvaRateKind.GENERAL,
@@ -814,7 +814,7 @@ def test_oss_source_mesh_resolver_surfaces_advisory_for_unrouted_observation() -
     candidates = (
         OssIossLedgerCandidate(
             ledger_id="oss-it-unrouted",
-            transaction_date=date(2025, 6, 15),
+            transaction_date=date(2025, 7, 15),
             regime=OssIossRegime.UNION_SCHEME,
             destination_member_state=EUMemberState.IT,
             rate_kind=IvaRateKind.GENERAL,

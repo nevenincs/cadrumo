@@ -210,7 +210,7 @@ class TestEnvelopeSerialise:
         segments = _build_envelope_mini()
         required = frozenset({"FIELD_IDENTITY"})
 
-        with pytest.raises(ValueError, match="fichero-BOE payload"):
+        with pytest.raises(ValueError, match="fichero-BOE record"):
             serialise(
                 casilla_values={_ENVELOPE_AMOUNT_CASILLA: Decimal("0.00")},
                 headers=headers,

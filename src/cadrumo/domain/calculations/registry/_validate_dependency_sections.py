@@ -32,11 +32,11 @@ from ._schema import (
     ModeloRevision,
     RelationDefinition,
     SourceReference,
-    _filing_schedule_period_kind_mismatches,
+    filing_schedule_period_kind_mismatches,
 )
 from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import _missing_refs
-from ._validate_revision_identity import _duplicates
+from ._validate_helpers import missing_refs
+from ._validate_revision_identity import duplicates
 
 
 def validate_relation_section(
@@ -60,8 +60,8 @@ def validate_relation_section(
     """
     for relation in revision.relations:
         owner = f"relation {relation.id}"
-        failures.extend(_missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, relation.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, relation.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, relation.source_refs, source_refs, "source"))
         failures.extend(evidence.require_source_tier(prefix, owner, relation.source_refs, "official_source_guidance"))
         if relation.target_binding not in bindings:
             failures.append(f"{prefix}: relation {relation.id!r} targets unknown binding {relation.target_binding!r}")
@@ -118,7 +118,7 @@ def validate_dependency_classification_section(
             evidence=evidence,
         )
 
-    for duplicate in sorted(_duplicates([item.source_modelo for item in revision.dependency_classifications])):
+    for duplicate in sorted(duplicates([item.source_modelo for item in revision.dependency_classifications])):
         failures.append(f"{prefix}: duplicate dependency classification source modelo {duplicate!r}")
     classifications_by_source = {
         classification.source_modelo: classification for classification in revision.dependency_classifications
@@ -164,8 +164,8 @@ def _validate_single_dependency_classification(
     mirror the source-modelo plus refs of each referenced relation.
     """
     owner = f"dependency classification {classification.id}"
-    failures.extend(_missing_refs(prefix, owner, classification.legal_refs, legal_refs, "legal"))
-    failures.extend(_missing_refs(prefix, owner, classification.source_refs, source_refs, "source"))
+    failures.extend(missing_refs(prefix, owner, classification.legal_refs, legal_refs, "legal"))
+    failures.extend(missing_refs(prefix, owner, classification.source_refs, source_refs, "source"))
     failures.extend(
         evidence.require_source_tier(prefix, owner, classification.source_refs, "official_source_guidance"),
     )
@@ -219,8 +219,8 @@ def validate_filing_schedule_section(
     selector_periods = set(revision.period_selector.periods)
     for schedule in revision.filing_schedules:
         owner = f"filing schedule {schedule.id}"
-        failures.extend(_missing_refs(prefix, owner, schedule.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, schedule.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, schedule.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, schedule.source_refs, source_refs, "source"))
         failures.extend(evidence.require_source_tier(prefix, owner, schedule.source_refs, "official_source_guidance"))
         unknown_periods = sorted(set(schedule.periods).difference(selector_periods))
         if unknown_periods:
@@ -228,7 +228,7 @@ def validate_filing_schedule_section(
                 f"{prefix}: filing schedule {schedule.id!r} declares periods outside revision selector "
                 f"{unknown_periods!r}",
             )
-        cadence_mismatches = _filing_schedule_period_kind_mismatches(schedule.period_kind, schedule.periods)
+        cadence_mismatches = filing_schedule_period_kind_mismatches(schedule.period_kind, schedule.periods)
         if cadence_mismatches:
             failures.append(
                 f"{prefix}: filing schedule {schedule.id!r} period_kind {schedule.period_kind!r} "
@@ -236,8 +236,8 @@ def validate_filing_schedule_section(
             )
         for condition in schedule.profile_conditions:
             condition_owner = f"filing schedule {schedule.id} condition {condition.field}"
-            failures.extend(_missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
-            failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
+            failures.extend(missing_refs(prefix, condition_owner, condition.legal_refs, legal_refs, "legal"))
+            failures.extend(missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
             failures.extend(
                 evidence.require_source_tier(
                     prefix,

@@ -36,7 +36,7 @@ def _success_kwargs(**overrides: object) -> dict[str, object]:
 
 
 def test_config_profile_show_result_round_trips_valid_success_row() -> None:
-    result = ConfigProfileShowResult(**_success_kwargs())
+    result = ConfigProfileShowResult.model_validate(_success_kwargs())
 
     assert result.status is UserProfileStatus.ACTIVE
     assert result.schema_version == 3
@@ -81,4 +81,4 @@ def test_config_profile_show_result_round_trips_missing_record_branch() -> None:
 def test_config_profile_show_result_refuses_malformed_field(field: str, bad_value: object) -> None:
     """A blank identity, unknown status, or non-positive schema version is refused."""
     with pytest.raises(ValidationError):
-        ConfigProfileShowResult(**_success_kwargs(**{field: bad_value}))
+        ConfigProfileShowResult.model_validate(_success_kwargs(**{field: bad_value}))

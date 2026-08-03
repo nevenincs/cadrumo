@@ -38,6 +38,7 @@ from ......core.config import SecretStoreBackend
 from ......core.identity import BucketId
 from ...errors import DecryptionError, EncryptionError, StorageValidationError
 from .._persisted_session import (
+    PROFILE_SESSION_SCHEMA_VERSION,
     PersistedProfileSession,
     delete_profile_session_key,
     unwrap_profile_session_dek,
@@ -112,7 +113,7 @@ def test_the_record_model_refuses_a_noncanonical_bucket_identity(bucket_id: str)
     """
     with pytest.raises(ValidationError):
         PersistedProfileSession(
-            schema_version=1,
+            schema_version=PROFILE_SESSION_SCHEMA_VERSION,
             bucket_id=bucket_id,
             backend_kind=SecretStoreBackend.KEYRING,
             authenticated_at=_AUTHENTICATED_AT,

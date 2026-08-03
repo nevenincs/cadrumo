@@ -82,16 +82,10 @@ class FlowTuiApp(App[None]):
         background: $surface;
         color: $text-muted;
     }
-    #page-body {
-        border: round $primary;
-        border-title-color: $accent;
-        border-title-style: bold;
-        background: $surface;
-        padding: 1 3;
-        margin: 1 2;
-        width: 100%;
-        height: auto;
-    }
+    /* #page-body carries no bespoke box rules: it is a `.cadrumo-panel`
+       inside the shared `.cadrumo-scroll` host and `.cadrumo-column`, so
+       its border, padding, margin and auto height come from the one panel
+       definition every surface shares. */
     #page-prompt { text-style: bold; margin: 0 0 1 0; }
     #page-badge {
         background: $warning 30%;
@@ -133,7 +127,12 @@ class FlowTuiApp(App[None]):
         border: round $primary;
         background: $surface;
         margin: 1 2;
-        height: auto;
+        /* 1fr, not auto. A DataTable is its own scroll container and is a
+           real control the operator drives with the arrow keys, so it must
+           be the one thing that scrolls here. At `height: auto` it grew to
+           its full row count instead, so the Screen scrolled as well and
+           the operator saw two vertical scrollbars for one list. */
+        height: 1fr;
         width: 100%;
     }
     #review-blocking {

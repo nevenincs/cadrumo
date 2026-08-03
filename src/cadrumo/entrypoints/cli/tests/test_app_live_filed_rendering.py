@@ -13,7 +13,7 @@ from ....application.live import (
     FiledDataCaptureReport,
     SourceFiledDataCaptureReport,
 )
-from ....application.live._remote_state_models import IvaCompensationHistoryCaptureReport
+from ....application.live import IvaCompensationHistoryCaptureReport
 from ....core import Period
 from .._app_live_payloads import IvaWalletCaptureHistoryResult
 from .._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines

@@ -35,17 +35,18 @@ from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Annotated, cast
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
-from ...adapters.outbound.aeat.export._errors import AeatExportFormatError
-from ...adapters.outbound.aeat.export._formats._record_spec import (
+from ...adapters.outbound.aeat.export import (
+    AeatExportFormatError,
     FicheroBoeEncoding,
     FieldKind,
     Justification,
+    RecordFieldSpec,
     SignedMode,
     record_field,
+    render_record_body,
 )
-from ...adapters.outbound.aeat.export._formats._serialise import render_record_body
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, validated_casilla_id_map
@@ -255,7 +256,7 @@ class M145CommunicationCreateCommand(BaseModel):
     def _validate_field_value_keys(cls, value: object) -> object:
         if isinstance(value, Mapping):
             return validated_casilla_id_map(
-                dict(value.items()),
+                TypeAdapter(dict[object, object]).validate_python(value),
                 surface="m145 communication field_values",
             )
         return value
@@ -508,7 +509,7 @@ def _build_m145_communication_event(
 
 
 def _save_m145_record_with_event(
-    repository,
+    repository: SecureSnapshotRepository[M145CommunicationRecord],
     record: M145CommunicationRecord,
     event: BucketEvent,
     *,
@@ -716,15 +717,18 @@ def _m145_fichero_encoding(encoding: str) -> FicheroBoeEncoding:
     """Map the registry's Latin-1 spelling to the shared encoder vocabulary."""
     if encoding == "latin-1":
         return "iso-8859-1"
+    # CAST-RATIONALE-M145-ENCODING: the registry declares `encoding` from the
+    # same closed FicheroBoeEncoding vocabulary; only the latin-1 spelling
+    # needs remapping, so every other value is already a valid member.
     return cast(FicheroBoeEncoding, encoding)
 
 
 def _m145_export_inputs(
     record_definition: ExportRecordDefinition,
     record: M145CommunicationRecord,
-) -> tuple[tuple[object, ...], dict[str, str], dict[CasillaId, object], int]:
+) -> tuple[tuple[RecordFieldSpec, ...], dict[str, str], dict[CasillaId, Decimal], int]:
     """Adapt one M145 registry record into canonical fixed-width encoder inputs."""
-    specs = []
+    specs: list[RecordFieldSpec] = []
     headers: dict[str, str] = {}
     casilla_values: dict[CasillaId, Decimal] = {}
     for field in sorted(
@@ -771,7 +775,7 @@ def _m145_export_inputs(
         if field.data_type == "money":
             if value.strip():
                 try:
-                    casilla_values[field.casilla_id] = Decimal(value.strip())
+                    casilla_values[field.casilla_id] = coerce_decimal_strict(value.strip())
                 except InvalidOperation as exc:
                     raise M145CommunicationRecordExportError(
                         f"Modelo 145 export field {field.id!r} has an invalid money value",

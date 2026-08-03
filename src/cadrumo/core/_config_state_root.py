@@ -3,7 +3,7 @@
 The central settings facade (:class:`~core.config.Settings`) roots the
 encrypted profile store at ``cadrumo_local_storage_root``, from which the token,
 log, secret, blob and audit roots derive. A source checkout uses
-``PROJECT_ROOT / "var" / "storage"``. That location is wrong for an installed
+the checkout's ``var/storage``. That location is wrong for an installed
 distribution. Under a wheel it can resolve inside the virtualenv; under ``uvx``
 it can resolve inside uv's ephemeral cache. A cache prune could silently destroy
 the taxpayer's encrypted store.
@@ -12,7 +12,7 @@ This module owns the two decisions that fix that defect without disturbing the
 dev loop: whether the process runs from a source checkout or an installed
 distribution (:func:`detect_run_mode`), and where the platform user-data base
 lives per operating system (:func:`platform_user_data_root`). A checkout keeps
-the ``PROJECT_ROOT / "var" / "storage"`` default; an installed run lands under
+the the checkout's ``var/storage`` default; an installed run lands under
 the platform user-data directory (``%LOCALAPPDATA%`` on Windows,
 ``$XDG_DATA_HOME`` with the ``~/.local/share`` fallback on Linux,
 ``~/Library/Application Support`` on macOS).
@@ -27,8 +27,6 @@ the live entry point :class:`~core.config.Settings` binds as its
 See Also:
     :class:`~core.config.Settings`
         Central settings aggregate whose storage-root default is resolved here.
-    :data:`~core.config.PROJECT_ROOT`
-        Checkout-root anchor mirrored when source-tree defaults are preserved.
     :class:`StateRootInputs`
         Frozen seam that captures every environmental input used by resolution.
     :func:`detect_run_mode`
@@ -53,9 +51,9 @@ from .product_identity import PRODUCT_IDENTITY
 
 # Project-root candidate: four levels up from this module
 # (file → core/ → cadrumo/ → src/ → REPO_ROOT), mirroring
-# :data:`~core.config.PROJECT_ROOT` exactly so the checkout default is
+# the historical checkout-root walk exactly, so the checkout default is
 # byte-identical to the historical value.
-_MODULE_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+_CHECKOUT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 _WINDOWS_PLATFORM = "win32"
 _MACOS_PLATFORM = "darwin"
@@ -70,7 +68,7 @@ _STORAGE_DIRNAME = "storage"
 PRODUCT_DATABASE_FILENAME = f"{PRODUCT_IDENTITY.python_package}.db"
 #: Retired ``aeat`` database filename inspected only for refusal.
 FORMER_PRODUCT_DATABASE_FILENAME = "aeat.db"
-#: Checkout state-root layout: ``PROJECT_ROOT / "var" / "storage"``.
+#: Checkout state-root layout: the checkout's ``var/storage``.
 _CHECKOUT_STATE_SUBDIRS = ("var", "storage")
 
 
@@ -156,7 +154,7 @@ def live_state_root_inputs() -> StateRootInputs:
     :class:`StateRootInputs` for :func:`resolve_state_root`.
     """
     return StateRootInputs(
-        project_root_candidate=_MODULE_PROJECT_ROOT,
+        project_root_candidate=_CHECKOUT_ROOT,
         platform=sys.platform,
         environ=dict(os.environ),
         home=Path.home(),
@@ -228,7 +226,7 @@ def _refuse_former_product_state(user_data_root: Path) -> None:
 def resolve_state_root(inputs: StateRootInputs) -> StateRootResolution:
     """Resolve the effective storage state root for the given inputs.
 
-    A checkout keeps the historical ``PROJECT_ROOT / "var" / "storage"``
+    A checkout keeps the historical the checkout's ``var/storage``
     default; an installed run lands at ``<platform-user-data>/cadrumo/storage`` so
     the encrypted store never resolves inside a virtualenv or uv cache.
     """
@@ -251,7 +249,7 @@ def default_storage_root() -> Path:
     """Return the ``cadrumo_local_storage_root`` default for the live process.
 
     Bound as the :class:`~core.config.Settings` ``cadrumo_local_storage_root``
-    default factory: a checkout resolves to ``PROJECT_ROOT / "var" / "storage"``
+    default factory: a checkout resolves to the checkout's ``var/storage``
     (unchanged), an installed run to the platform user-data storage directory.
     """
     return resolve_state_root(live_state_root_inputs()).storage_root

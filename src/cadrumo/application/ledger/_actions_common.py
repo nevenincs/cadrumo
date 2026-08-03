@@ -946,3 +946,44 @@ def _result(
         bucket_event_ids=bucket_event_ids,
         stale_finalized_revisions=stale_finalized_revisions,
     )
+
+
+# Public supporting contract for sibling ledger action services.
+attachment_store = _attachment_store
+persist_bucket_event = _append_bucket_event
+persist_bucket_events = _append_bucket_events
+blocking_modelo_references = _blocking_modelo_references
+blockers_by_source_transaction_id = _blockers_by_source_transaction_id
+bucket_event_repository = _bucket_event_repository
+build_bucket_event = _build_bucket_event
+catalogue_modelo_source_ids = _catalogue_modelo_source_ids
+command_matches_current = _command_matches_current
+decimal_to_string = _decimal_to_string
+display_decimal = _display_decimal
+draft_revision_advisories = _draft_revision_advisories
+EventSpec = _EventSpec
+evidence_event_ids = _evidence_event_ids
+invoice_repository = _invoice_repository
+is_evidence_only_command = _is_evidence_only_command
+merge_identifier_tuple = _merge_identifier_tuple
+mutation_signature = _mutation_signature
+normalise_attachment_patch_ids = _normalise_attachment_patch_ids
+normalise_timestamp = _normalise_timestamp
+optional_decimal = _optional_decimal
+optional_patched = _optional_patched
+primary_lineage_event_id = _primary_lineage_event_id
+raise_finalized_modelo_blocked = _raise_finalized_modelo_blocked
+replace_transaction = _replace_transaction
+remove_transaction = _remove_transaction
+require_actor = _require_actor
+require_source_command = _require_source_command
+require_transaction = _require_transaction
+required_patched = _required_patched
+result = _result
+save_transaction_catalogue_and_events = _save_transaction_catalogue_and_events
+save_transaction_catalogue_invoices_and_events = _save_transaction_catalogue_invoices_and_events
+transaction_modelo_source_ids = _transaction_modelo_source_ids
+transaction_repository = _transaction_repository
+upsert_transaction = _upsert_transaction
+verify_evidence_references = _verify_evidence_references
+verify_usage_ratio_reference = _verify_usage_ratio_reference

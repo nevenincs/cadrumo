@@ -27,6 +27,7 @@ import pytest
 
 from ....core.time import frozen_clock
 from ....domain.buckets import (
+    BucketEvent,
     BucketEventObjectType,
     BucketEventType,
     BucketEventValidationError,
@@ -67,7 +68,7 @@ def _event_repository():
     return BucketEventHistoryRepository()
 
 
-def _events_of(event_type: BucketEventType) -> tuple[object, ...]:
+def _events_of(event_type: BucketEventType) -> tuple[BucketEvent, ...]:
     with profile_storage_session(_BUCKET_ID):
         catalogue = _event_repository().load()
         return tuple(e for e in catalogue if e.event_type is event_type)

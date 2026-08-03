@@ -78,7 +78,7 @@ def record_operator_local_observation[CasillaKey](
     modelo: str,
     filing_year: int,
     period: Period,
-    casilla_values: Mapping[CasillaKey, Decimal],
+    casilla_values: Mapping[CasillaKey, object],
     actor: str = "operator-manual",
     repository: CalculationObservationRepository | None = None,
     clock: datetime | None = None,
@@ -154,7 +154,7 @@ def _load_snapshot(*, modelo: str, filing_year: int, period: Period) -> Registry
 def _canonical_casilla_values[CasillaKey](
     *,
     snapshot: RegistrySnapshot,
-    casilla_values: Mapping[CasillaKey, Decimal],
+    casilla_values: Mapping[CasillaKey, object],
 ) -> dict[CasillaId, Decimal]:
     if not casilla_values:
         raise ModeloLocalObservationError("local observation requires at least one --set CASILLA=DECIMAL value")

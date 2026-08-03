@@ -10,7 +10,12 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ...adapters.persistence.storage import activate_session, has_active_bucket_session, suspend_active_session
+from ...adapters.persistence.storage import (
+    SECURE_OBJECT_WORKFLOW_STATE_KEY,
+    activate_session,
+    has_active_bucket_session,
+    suspend_active_session,
+)
 from ...adapters.persistence.storage.master_key import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import dispose_engine
@@ -512,7 +517,7 @@ def test_quarantine_preview_opens_session_for_bootstrap_exempt_repair(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path):
         secure_object_repository_for_active_bucket().save(
             namespace=namespace,
-            object_key="workflow:repair-preview",
+            object_key=SECURE_OBJECT_WORKFLOW_STATE_KEY,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
             written_at=datetime.now(UTC),
@@ -531,7 +536,7 @@ def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) ->
     with isolated_runtime_profile(tmp_path=tmp_path):
         secure_object_repository_for_active_bucket().save(
             namespace=namespace,
-            object_key="workflow:repair-quarantine",
+            object_key=SECURE_OBJECT_WORKFLOW_STATE_KEY,
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
             written_at=datetime.now(UTC),

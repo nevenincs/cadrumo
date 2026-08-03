@@ -80,6 +80,11 @@ from ...domain.calculations.registry import (
 from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError, registry_schema_version
 
 
+def _empty_source_references() -> dict[SourceRefId, SourceReference]:
+    """Create the typed empty source-reference map used by the runtime accessor."""
+    return {}
+
+
 class TaxpayerProfileIdentity(Protocol):
     """Structural identity surface accepted by the filing profile projector."""
 
@@ -257,7 +262,7 @@ class RegistrySchemaAccessor:
     collections: dict[str, RegistryCasillaCollection]
     subviews: dict[str, RegistryModeloSubview]
     source_root: Path | None = None
-    sources: Mapping[SourceRefId, SourceReference] = field(default_factory=dict)
+    sources: Mapping[SourceRefId, SourceReference] = field(default_factory=_empty_source_references)
 
     def get_collection(self, modelo: str) -> CasillaCollection:
         """Return the casilla collection for ``modelo``.

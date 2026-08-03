@@ -9,9 +9,18 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Literal, Self, override
+from typing import Literal, Self, TypeGuard, override
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    TypeAdapter,
+    ValidationError,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
 from pydantic_core import core_schema
 
 from ...core import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
@@ -46,22 +55,40 @@ from ._irpf_categories import (
 )
 from ._m210_income_classification import M210IncomeClassification
 from ._model_validation import (
-    _coerce_raw_transaction,
-    _normalize_identifier_tuple,
-    _parse_datetime,
-    _parse_required_aware_datetime,
-    _require_aware_datetime,
-    _trim_lineage_text,
-    _validate_business_pct_coupling,
-    _validate_classified_by_shape,
-    _validate_confidence_range,
-    _validate_non_negative_decimal,
+    coerce_raw_transaction,
+    normalize_identifier_tuple,
+    parse_datetime,
+    parse_required_aware_datetime,
+    require_aware_datetime,
+    trim_lineage_text,
+    validate_business_pct_coupling,
+    validate_classified_by_shape,
+    validate_confidence_range,
+    validate_non_negative_decimal,
 )
 from ._raw_transaction import RawTransaction
 
 # LIRPF art. 101.5 / RIRPF art. 95: supported professional activity
 # withholding rates are 15% or lower reduced rates, not the 21% IVA delta.
 _MAX_SUPPORTED_ACTIVITY_WITHHOLDING_RATE = Decimal("0.15")
+_OBJECT_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
+_STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
+    dict[str, object],
+    config=ConfigDict(strict=True),
+)
+
+
+def _string_keyed_mapping(data: object) -> dict[str, object]:
+    """Materialize an untrusted mapping after enforcing JSON-object keys."""
+    try:
+        return _STRING_KEYED_MAPPING_ADAPTER.validate_python(data)
+    except ValidationError as exc:
+        raise TransactionValidationError("transaction payload keys must be strings") from exc
+
+
+def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Narrow an unparameterized runtime mapping to untrusted object entries."""
+    return isinstance(value, Mapping)
 
 
 def derive_transaction_id(raw: RawTransaction) -> str:
@@ -217,24 +244,25 @@ class DecisionProvenance(BaseModel):
         """Parse JSON-mode confidence strings back into ``Decimal`` on load."""
         if isinstance(data, cls):
             return data
-        if not isinstance(data, Mapping):
+        if not _is_object_mapping(data):
             return data
-        payload = dict(data)
-        if isinstance(payload.get("confidence"), str):
-            payload["confidence"] = Decimal(payload["confidence"])
+        payload = _string_keyed_mapping(data)
+        raw_confidence = payload.get("confidence")
+        if isinstance(raw_confidence, str):
+            payload["confidence"] = Decimal(raw_confidence)
         return payload
 
     @field_validator("decided_by")
     @classmethod
     def _validate_decided_by(cls, value: str) -> str:
         """Restrict ``decided_by`` to the approved classifier shapes."""
-        return _validate_classified_by_shape(value)
+        return validate_classified_by_shape(value)
 
     @field_validator("decided_at", mode="before")
     @classmethod
     def _parse_decided_at(cls, value: object) -> datetime:
         """Reject naive or blank decision timestamps."""
-        return _parse_required_aware_datetime(value, field_name="decided_at")
+        return parse_required_aware_datetime(value, field_name="decided_at")
 
     @field_validator("reason")
     @classmethod
@@ -246,7 +274,7 @@ class DecisionProvenance(BaseModel):
     @classmethod
     def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
         """Restrict confidence to the inclusive 0..1 range when not None."""
-        return _validate_confidence_range(value)
+        return validate_confidence_range(value)
 
 
 class ClassificationHistoryEntry(BaseModel):
@@ -297,31 +325,34 @@ class ClassificationHistoryEntry(BaseModel):
         """Parse JSON-mode strings back into strict Python types on load."""
         if isinstance(data, cls):
             return data
-        if not isinstance(data, Mapping):
+        if not _is_object_mapping(data):
             return data
-        payload = dict(data)
+        payload = _string_keyed_mapping(data)
         raw_state = payload.get("business_classification")
         if isinstance(raw_state, str):
             payload["business_classification"] = BusinessClassification(raw_state)
-        if isinstance(payload.get("business_pct"), str):
-            payload["business_pct"] = Decimal(payload["business_pct"])
-        if isinstance(payload.get("classified_at"), str):
-            payload["classified_at"] = _parse_datetime(payload["classified_at"])
-        if isinstance(payload.get("confidence"), str):
-            payload["confidence"] = Decimal(payload["confidence"])
+        raw_business_pct = payload.get("business_pct")
+        if isinstance(raw_business_pct, str):
+            payload["business_pct"] = Decimal(raw_business_pct)
+        raw_classified_at = payload.get("classified_at")
+        if isinstance(raw_classified_at, str):
+            payload["classified_at"] = parse_datetime(raw_classified_at)
+        raw_confidence = payload.get("confidence")
+        if isinstance(raw_confidence, str):
+            payload["confidence"] = Decimal(raw_confidence)
         return payload
 
     @field_validator("classified_at")
     @classmethod
     def _require_aware_timestamp(cls, value: datetime) -> datetime:
         """Reject naive classification timestamps."""
-        return _require_aware_datetime(value)
+        return require_aware_datetime(value)
 
     @field_validator("classified_by")
     @classmethod
     def _validate_classified_by(cls, value: str) -> str:
         """Restrict ``classified_by`` to the approved shapes."""
-        return _validate_classified_by_shape(value)
+        return validate_classified_by_shape(value)
 
     @field_validator("reason")
     @classmethod
@@ -350,12 +381,12 @@ class ClassificationHistoryEntry(BaseModel):
     @classmethod
     def _validate_confidence(cls, value: Decimal | None) -> Decimal | None:
         """Restrict confidence to the inclusive 0..1 range when not None."""
-        return _validate_confidence_range(value)
+        return validate_confidence_range(value)
 
     @model_validator(mode="after")
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling for a history entry."""
-        _validate_business_pct_coupling(self.business_classification, self.business_pct)
+        validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
 
@@ -374,12 +405,12 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
     @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        return _trim_lineage_text(value)
+        return trim_lineage_text(value)
 
     @field_validator("linked_at", mode="before")
     @classmethod
     def _parse_linked_at(cls, value: object) -> datetime:
-        return _parse_required_aware_datetime(value, field_name="linked_at")
+        return parse_required_aware_datetime(value, field_name="linked_at")
 
 
 class TransactionEditLineageEntry(BaseModel):
@@ -396,12 +427,12 @@ class TransactionEditLineageEntry(BaseModel):
     @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        return _trim_lineage_text(value)
+        return trim_lineage_text(value)
 
     @field_validator("edited_at", mode="before")
     @classmethod
     def _parse_edited_at(cls, value: object) -> datetime:
-        return _parse_required_aware_datetime(value, field_name="edited_at")
+        return parse_required_aware_datetime(value, field_name="edited_at")
 
 
 class TransactionLifecycleLineageEntry(BaseModel):
@@ -420,18 +451,19 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _coerce_lifecycle_states(cls, data: object) -> object:
-        if not isinstance(data, Mapping):
+        if not _is_object_mapping(data):
             return data
-        payload = dict(data)
+        payload = _string_keyed_mapping(data)
         for key in ("previous_state", "state"):
-            if isinstance(payload.get(key), str):
-                payload[key] = TransactionLifecycleState(payload[key])
+            raw_state = payload.get(key)
+            if isinstance(raw_state, str):
+                payload[key] = TransactionLifecycleState(raw_state)
         return payload
 
     @field_validator("actor", "source_command", "bucket_event_id")
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
-        return _trim_lineage_text(value)
+        return trim_lineage_text(value)
 
     @field_validator("reason")
     @classmethod
@@ -441,7 +473,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
     @field_validator("changed_at", mode="before")
     @classmethod
     def _parse_changed_at(cls, value: object) -> datetime:
-        return _parse_required_aware_datetime(value, field_name="changed_at")
+        return parse_required_aware_datetime(value, field_name="changed_at")
 
     @model_validator(mode="after")
     def _reject_noop_transition(self) -> Self:
@@ -476,11 +508,12 @@ class SplitLineage(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _coerce_role(cls, data: object) -> object:
-        if not isinstance(data, Mapping):
+        if not _is_object_mapping(data):
             return data
-        payload = dict(data)
-        if isinstance(payload.get("role"), str):
-            payload["role"] = SplitRole(payload["role"])
+        payload = _string_keyed_mapping(data)
+        raw_role = payload.get("role")
+        if isinstance(raw_role, str):
+            payload["role"] = SplitRole(raw_role)
         return payload
 
     @field_validator("split_group_id")
@@ -498,9 +531,9 @@ class SplitLineage(BaseModel):
     @classmethod
     def _coerce_siblings(cls, value: object) -> tuple[object, ...]:
         if isinstance(value, tuple):
-            return value
+            return _OBJECT_TUPLE_ADAPTER.validate_python(value)
         if isinstance(value, Sequence) and not isinstance(value, str | bytes):
-            return tuple(value)
+            return _OBJECT_TUPLE_ADAPTER.validate_python(value)
         raise TransactionValidationError("sibling_transaction_ids must be a sequence")
 
     @field_validator("sibling_transaction_ids")
@@ -781,7 +814,7 @@ class Transaction(BaseModel):
     def _coerce_raw_field(cls, value: object) -> object:
         """Accept a ``RawTransaction`` or a JSON-shaped/python-native mapping.
 
-        Delegates to :func:`_coerce_raw_transaction`, which validates through
+        Delegates to :func:`coerce_raw_transaction`, which validates through
         ``RawTransaction``'s own validators -- never ``Transaction``'s -- so
         this carries no re-entrant recursion risk (unlike a model-level
         ``Transaction`` before-validator that called back into
@@ -789,7 +822,7 @@ class Transaction(BaseModel):
         re-invokes this exact model-level hook on the still string-shaped
         JSON-decoded dict).
         """
-        return _coerce_raw_transaction(value)
+        return coerce_raw_transaction(value)
 
     @field_validator(
         "direction",
@@ -857,7 +890,7 @@ class Transaction(BaseModel):
     def _coerce_datetime_field(cls, value: object) -> object:
         """Accept a JSON-decoded ISO-8601 datetime string alongside a real ``datetime``."""
         if isinstance(value, str):
-            return _parse_datetime(value)
+            return parse_datetime(value)
         return value
 
     @field_validator(
@@ -882,7 +915,7 @@ class Transaction(BaseModel):
         if value is None:
             return ()
         if isinstance(value, list):
-            return tuple(value)
+            return _OBJECT_TUPLE_ADAPTER.validate_python(value)
         return value
 
     @model_validator(mode="after")
@@ -917,13 +950,13 @@ class Transaction(BaseModel):
     @classmethod
     def _validate_identifier_tuple(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Trim and freeze attachment identifiers."""
-        return _normalize_identifier_tuple(value)
+        return normalize_identifier_tuple(value)
 
     @field_validator("taxable_base", "iva_rate", "iva_amount", "recargo_amount")
     @classmethod
     def _validate_tax_amounts(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative tax substrate values."""
-        return _validate_non_negative_decimal(value, field_name=info.field_name or "")
+        return validate_non_negative_decimal(value, field_name=info.field_name or "")
 
     @field_validator("notes", "classification_reason")
     @classmethod
@@ -935,7 +968,7 @@ class Transaction(BaseModel):
     @classmethod
     def _validate_classified_by(cls, value: str) -> str:
         """Restrict ``classified_by`` to the approved shapes."""
-        return _validate_classified_by_shape(value)
+        return validate_classified_by_shape(value)
 
     @field_validator("classified_at", "created_at", "modified_at")
     @classmethod
@@ -943,19 +976,19 @@ class Transaction(BaseModel):
         """Reject naive classification/lifecycle timestamps; ``None`` remains valid here."""
         if value is None:
             return None
-        return _require_aware_datetime(value)
+        return require_aware_datetime(value)
 
     @field_validator("classification_confidence")
     @classmethod
     def _validate_classification_confidence(cls, value: Decimal | None) -> Decimal | None:
         """Restrict classification_confidence to the inclusive 0..1 range when not None."""
-        return _validate_confidence_range(value)
+        return validate_confidence_range(value)
 
     @field_validator("fx_rate", "value_in_eur")
     @classmethod
     def _validate_fx_fields(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative FX rate or converted amounts."""
-        return _validate_non_negative_decimal(value, field_name=info.field_name or "")
+        return validate_non_negative_decimal(value, field_name=info.field_name or "")
 
     @field_validator("source_jurisdiction")
     @classmethod
@@ -981,7 +1014,7 @@ class Transaction(BaseModel):
     @model_validator(mode="after")
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling."""
-        _validate_business_pct_coupling(self.business_classification, self.business_pct)
+        validate_business_pct_coupling(self.business_classification, self.business_pct)
         return self
 
     @model_validator(mode="after")
@@ -1270,14 +1303,14 @@ class TransactionCatalogue(BaseModel):
         """Accept either a bare mapping or an iterable of transactions."""
         if isinstance(data, cls):
             return data
-        if isinstance(data, Mapping):
-            if "transactions" in data:
-                return data
-            if all(isinstance(key, str) for key in data):
-                return {"transactions": dict(data)}
+        if _is_object_mapping(data):
+            payload = _string_keyed_mapping(data)
+            if "transactions" in payload:
+                return payload
+            return {"transactions": payload}
         if isinstance(data, Iterable) and not isinstance(data, str | bytes):
             transactions: dict[str, Transaction] = {}
-            for item in data:
+            for item in _OBJECT_TUPLE_ADAPTER.validate_python(data):
                 transaction = item if isinstance(item, Transaction) else Transaction.model_validate(item)
                 if transaction.transaction_id in transactions:
                     raise TransactionValidationError(f"duplicate transaction_id: {transaction.transaction_id}")
@@ -1319,7 +1352,7 @@ class TransactionCatalogue(BaseModel):
         return cls.model_validate(tuple(transactions))
 
     @override
-    def __iter__(self) -> Iterator[Transaction]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Transaction]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields Transaction records, not BaseModel field-value tuples
         """Iterate over catalogue transactions."""
         return iter(self.transactions.values())
 

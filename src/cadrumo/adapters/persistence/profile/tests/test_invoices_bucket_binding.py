@@ -91,8 +91,10 @@ def test_saving_a_foreign_bucket_invoice_is_refused() -> None:
     with pytest.raises(InvoicePersistenceError) as excinfo:
         repo.save(_catalogue(_invoice("INV-FOREIGN", bucket_id=_BUCKET_B)))
 
-    assert excinfo.value.context["bucket_id"] == _BUCKET_A
-    assert excinfo.value.context["foreign_bucket_ids"] == _BUCKET_B
+    context = excinfo.value.context
+    assert context is not None
+    assert context["bucket_id"] == _BUCKET_A
+    assert context["foreign_bucket_ids"] == _BUCKET_B
 
 
 def test_the_co_commit_write_path_is_refused_too() -> None:

@@ -52,6 +52,20 @@ def _sheet_ids(plan: SheetExportPlan) -> dict[str, int]:
     return {tab: index for index, tab in enumerate(sorted(tabs))}
 
 
+def _require_concrete_bounds(
+    *,
+    start_row: int | None,
+    end_row: int | None,
+    start_column: int | None,
+    end_column: int | None,
+    tab: str,
+) -> tuple[int, int, int, int]:
+    """Return the concrete bounds an offline-protected range must carry."""
+    if start_row is None or end_row is None or start_column is None or end_column is None:
+        raise AssertionError(f"protected range {tab!r} must have concrete bounds")
+    return start_row, end_row, start_column, end_column
+
+
 def test_every_styled_range_carries_vertical_alignment_online() -> None:
     plan = _plan()
 
@@ -133,10 +147,26 @@ def test_written_cells_outside_every_planned_range_stay_editable() -> None:
 
     for protected in plan.protected_ranges:
         worksheet = workbook[protected.tab.value]
+        bounds = _require_concrete_bounds(
+            start_row=protected.start_row,
+            end_row=protected.end_row,
+            start_column=protected.start_column,
+            end_column=protected.end_column,
+            tab=protected.tab.value,
+        )
+        start_row, end_row, start_column, end_column = bounds
+        assert isinstance(start_row, int)
+        assert isinstance(end_row, int)
+        assert isinstance(start_column, int)
+        assert isinstance(end_column, int)
         for row in worksheet.iter_rows():
             for cell in row:
-                inside_rows = protected.start_row <= cell.row <= protected.end_row
-                inside_columns = protected.start_column <= cell.column <= protected.end_column
+                row_index = cell.row
+                column_index = cell.column
+                assert isinstance(row_index, int)
+                assert isinstance(column_index, int)
+                inside_rows = start_row <= row_index <= end_row
+                inside_columns = start_column <= column_index <= end_column
                 if inside_rows and inside_columns:
                     continue
                 assert cell.protection.locked is False, f"{protected.tab.value}!{cell.coordinate}"

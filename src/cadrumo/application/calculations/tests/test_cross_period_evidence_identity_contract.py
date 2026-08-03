@@ -56,7 +56,7 @@ def _valid_fields() -> dict[str, object]:
 
 def test_canonical_evidence_is_admitted_and_clean() -> None:
     """The positive control: real identities validate and carry no blockers."""
-    evidence = CrossPeriodDependencyEvidence(**_valid_fields())
+    evidence = CrossPeriodDependencyEvidence.model_validate(_valid_fields())
 
     assert evidence.clean
     assert evidence.observation_source_kind is ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE
@@ -70,8 +70,8 @@ def test_stored_string_tokens_lift_to_their_closed_taxonomies() -> None:
     lifting is explicit — and an unknown token raises there rather than
     surviving as free-form provenance.
     """
-    evidence = CrossPeriodDependencyEvidence(
-        **{
+    evidence = CrossPeriodDependencyEvidence.model_validate(
+        {
             **_valid_fields(),
             "observation_source_kind": "aeat_sede_justificante",
             "external_evidence_kind": "aeat_justificante_pdf",
@@ -109,7 +109,7 @@ def test_evidence_that_could_not_exist_is_refused(field: str, value: object) -> 
     fields[field] = value
 
     with pytest.raises(ValidationError):
-        CrossPeriodDependencyEvidence(**fields)
+        CrossPeriodDependencyEvidence.model_validate(fields)
 
 
 def test_absent_evidence_stays_representable() -> None:

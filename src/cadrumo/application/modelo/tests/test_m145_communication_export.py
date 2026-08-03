@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.export._formats._serialise import render_record_body
+from ....adapters.outbound.aeat.export import render_record_body
 from ....core.resources import resources
 from ....domain.calculations.registry import ExportFieldDefinition, ResolvedExportLayout, resolve_export_layout
 from ....tests.secure_sql import isolated_runtime_profile

@@ -558,11 +558,11 @@ class TestVerificationVocabulariesAreClosed:
     def test_an_unknown_rounding_token_is_refused(self, bad: str) -> None:
         """``integer`` is a FORMULA mode; it is not a verification-comparison mode."""
         with pytest.raises((ValidationError, ValueError)):
-            VerificationExpectationDefinition(**self._fields(rounding=bad))
+            VerificationExpectationDefinition.model_validate(self._fields(rounding=bad))
 
     @pytest.mark.parametrize("rounding", [code.value for code in VerificationRoundingCode])
     def test_every_declared_rounding_mode_is_accepted(self, rounding: str) -> None:
-        expectation = VerificationExpectationDefinition(**self._fields(rounding=rounding))
+        expectation = VerificationExpectationDefinition.model_validate(self._fields(rounding=rounding))
 
         assert expectation.rounding is VerificationRoundingCode(rounding)
 
@@ -584,11 +584,11 @@ class TestVerificationVocabulariesAreClosed:
     @pytest.mark.parametrize("bad", ["invented", "", "ROUNDING"])
     def test_an_unknown_discrepancy_cause_is_refused(self, bad: str) -> None:
         with pytest.raises((ValidationError, ValueError)):
-            VerificationExpectationDefinition(**self._fields(discrepancy_causes=(bad,)))
+            VerificationExpectationDefinition.model_validate(self._fields(discrepancy_causes=(bad,)))
 
     @pytest.mark.parametrize("cause", [cause.value for cause in VerificationDiscrepancyCause])
     def test_every_declared_cause_is_accepted(self, cause: str) -> None:
-        expectation = VerificationExpectationDefinition(**self._fields(discrepancy_causes=(cause,)))
+        expectation = VerificationExpectationDefinition.model_validate(self._fields(discrepancy_causes=(cause,)))
 
         assert expectation.discrepancy_causes == (VerificationDiscrepancyCause(cause),)
 

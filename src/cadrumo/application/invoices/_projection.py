@@ -134,7 +134,7 @@ def invoice_display_amounts(
                 _log.debug("invoice review iva.rate %r is not a valid decimal; ignoring rate override", rate_raw)
     if "iva.amount" in review.fields:
         iva = Decimal(review.fields["iva.amount"])
-    elif rate_decimal is not None and base is not None:
+    elif rate_decimal is not None:
         iva = _round_to_cents(base * rate_decimal)
     return base, iva
 

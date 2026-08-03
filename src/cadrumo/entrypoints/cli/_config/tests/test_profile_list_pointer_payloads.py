@@ -32,7 +32,7 @@ def _pointer_kwargs(**overrides: object) -> dict[str, object]:
 
 def test_profile_pointer_payload_round_trips_valid_row() -> None:
     """A valid pointer row carries the real enum and bounded identity."""
-    row = ProfilePointerPayload(**_pointer_kwargs())
+    row = ProfilePointerPayload.model_validate(_pointer_kwargs())
 
     assert row.status is UserProfileStatus.ACTIVE
     assert row.bucket_id == "b" * 32
@@ -40,12 +40,12 @@ def test_profile_pointer_payload_round_trips_valid_row() -> None:
 
 def test_profile_pointer_payload_refuses_blank_name() -> None:
     with pytest.raises(ValidationError):
-        ProfilePointerPayload(**_pointer_kwargs(name=""))
+        ProfilePointerPayload.model_validate(_pointer_kwargs(name=""))
 
 
 def test_profile_pointer_payload_refuses_blank_bucket_id() -> None:
     with pytest.raises(ValidationError):
-        ProfilePointerPayload(**_pointer_kwargs(bucket_id=""))
+        ProfilePointerPayload.model_validate(_pointer_kwargs(bucket_id=""))
 
 
 def test_profile_pointer_payload_refuses_unknown_status_value() -> None:
@@ -55,9 +55,9 @@ def test_profile_pointer_payload_refuses_unknown_status_value() -> None:
     :class:`ProfileBucketPointer` does -- not a permissive string.
     """
     with pytest.raises(ValidationError):
-        ProfilePointerPayload(**_pointer_kwargs(status="active"))
+        ProfilePointerPayload.model_validate(_pointer_kwargs(status="active"))
     with pytest.raises(ValidationError):
-        ProfilePointerPayload(**_pointer_kwargs(status="bogus"))
+        ProfilePointerPayload.model_validate(_pointer_kwargs(status="bogus"))
 
 
 def test_config_list_result_accepts_no_active_profile() -> None:
@@ -76,7 +76,7 @@ def test_config_list_result_refuses_empty_active_profile_label() -> None:
 def test_config_list_result_round_trips_valid_row() -> None:
     result = ConfigListResult(
         active_profile="alice",
-        profiles=[ProfilePointerPayload(**_pointer_kwargs())],
+        profiles=[ProfilePointerPayload.model_validate(_pointer_kwargs())],
     )
 
     assert result.active_profile == "alice"

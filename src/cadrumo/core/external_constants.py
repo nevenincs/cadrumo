@@ -470,9 +470,6 @@ SANDBOX_LABEL_PREFIX: Final[str] = "sandbox:"
 #: Environment variable name used to override the CLI output language at runtime.
 OUTPUT_LANGUAGE_ENV_VAR: Final[str] = "CADRUMO_OUTPUT_LANGUAGE"
 
-#: POSIX / Windows environment variable that Rich uses to determine console column width.
-COLUMNS_ENV_VAR: Final[str] = "COLUMNS"
-
 
 class OutputLanguage(StrEnum):
     """Closed enumeration of CLI / API output language BCP-47 tags.

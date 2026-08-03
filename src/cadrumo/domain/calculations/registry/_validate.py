@@ -18,6 +18,10 @@ See Also:
         Cross-model relation and registry-scope validation invoked here.
     :mod:`cadrumo.domain.calculations.registry._validate_cache`
         Identity-keyed failure caches used by this validator.
+    :func:`cadrumo.domain.calculations.registry._source_evidence_fingerprint.derive_justificante_corpus_candidate`
+        Checkout-gated derivation of the dev-only declaracion_pdf specimen
+        corpus; :attr:`RegistryValidator.justificante_corpus_unavailable_advisory`
+        surfaces a non-blocking, introspectable signal when it fails.
 """
 
 from __future__ import annotations
@@ -26,18 +30,24 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ....core.paths import StateRootInputs
 from ._corpus_catalogue import verify_source_catalogue
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ._source_evidence_fingerprint import SourceEvidenceFingerprint, collect_source_evidence_fingerprints
+from ._source_evidence_fingerprint import (
+    JustificanteCorpusUnavailableAdvisory,
+    SourceEvidenceFingerprint,
+    collect_source_evidence_fingerprints,
+    derive_justificante_corpus_candidate,
+)
 from ._validate_cache import (
     CATALOGUE_FAILURE_CACHE,
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
 from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import _missing_refs
+from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
     validate_informative_class_invariant,
@@ -70,6 +80,7 @@ class RegistryValidator:
         justificante_corpus_root: Path | None = None,
         user_profile_schema: ProfileSchemaDefinition | None = None,
         source_evidence_fingerprint: SourceEvidenceFingerprint | None = None,
+        state_root_inputs: StateRootInputs | None = None,
     ) -> None:
         self._legal = catalogues.legal
         self._sources = catalogues.sources
@@ -81,17 +92,21 @@ class RegistryValidator:
             source_root=self._source_root,
         )
         self._catalogue_failures: tuple[str, ...] | None = None
-        # Corpus root for declaracion_pdf specimen gate:
-        # caller may supply it directly; when not supplied, derive from
-        # source_root by navigating to the co-located tests/fixtures/justificantes
-        # directory.  Production callers pass source_root=bundled_path() which
-        # resolves to src/cadrumo/_data, so parents[0] = src/cadrumo, and the corpus
-        # lives at src/cadrumo/tests/fixtures/justificantes.
+        # Corpus root for declaracion_pdf specimen gate: caller may supply it
+        # directly (an explicit opt-out of derivation, never a silent gap); when
+        # not supplied, derive_justificante_corpus_candidate() resolves it from
+        # source_root, gated on RunMode.CHECKOUT so an installed distribution
+        # (which ships no tests/ tree) never blindly probes a repo-shaped path.
+        # A failed derivation is captured as a non-blocking, introspectable
+        # advisory rather than an unexplained None; see
+        # justificante_corpus_unavailable_advisory.
+        self._justificante_corpus_unavailable_advisory: JustificanteCorpusUnavailableAdvisory | None = None
         if justificante_corpus_root is not None:
             self._justificante_corpus_root: Path | None = justificante_corpus_root
         elif source_root is not None:
-            candidate = source_root.resolve().parents[0] / "tests" / "fixtures" / "justificantes"
-            self._justificante_corpus_root = candidate if candidate.is_dir() else None
+            self._justificante_corpus_root, self._justificante_corpus_unavailable_advisory = (
+                derive_justificante_corpus_candidate(source_root, state_root_inputs=state_root_inputs)
+            )
         else:
             self._justificante_corpus_root = None
         self._source_evidence_fingerprint = (
@@ -100,6 +115,7 @@ class RegistryValidator:
             else collect_source_evidence_fingerprints(
                 self._source_root,
                 justificante_corpus_root=self._justificante_corpus_root,
+                state_root_inputs=state_root_inputs,
             )
         )
 
@@ -119,6 +135,21 @@ class RegistryValidator:
     @property
     def justificante_corpus_root(self) -> Path | None:
         return self._justificante_corpus_root
+
+    @property
+    def justificante_corpus_unavailable_advisory(self) -> JustificanteCorpusUnavailableAdvisory | None:
+        """Return why the declaracion_pdf specimen corpus could not be derived, if it could not.
+
+        ``None`` means either a corpus root was resolved (the specimen and
+        round-trip gates in ``_validate_extraction_profiles`` ran for this
+        validation pass) or the caller explicitly injected
+        ``justificante_corpus_root`` at construction (an explicit opt-out, not a
+        silent gap). A non-``None`` value means derivation was attempted and
+        failed — the gates did not run — and carries the reason so a caller can
+        surface it through its own operator-facing diagnostic channel; this
+        validator does not raise for the condition itself.
+        """
+        return self._justificante_corpus_unavailable_advisory
 
     def _source_root_key(self) -> str | None:
         return str(self._source_root.expanduser().resolve()) if self._source_root is not None else None

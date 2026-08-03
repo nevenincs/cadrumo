@@ -30,6 +30,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy.engine import Engine
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -84,7 +85,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
 class _Fixture:
     """The live engine plus the four catalogue repositories sharing it."""
 
-    engine: object
+    engine: Engine
     work_units: WorkUnitCatalogueRepository
     calculations: CalculationRevisionCatalogueRepository
     filings: ModeloRecordCatalogueRepository

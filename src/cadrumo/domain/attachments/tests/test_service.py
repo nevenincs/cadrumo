@@ -265,18 +265,29 @@ def test_repeated_identical_ingestion_is_a_stable_no_op(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SERVICE_BUCKET_ID):
         store = AttachmentStore()
         data = b"%PDF-1.4\nidempotent same-byte evidence\n%%EOF"
-        kwargs = {
-            "kind": AttachmentKind.INVOICE_PDF,
-            "source": AttachmentSource.LOCAL_FILE,
-            "source_reference": "source-A",
-            "mime_type": "application/pdf",
-            "captured_at": datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
-            "bucket_id": _SERVICE_BUCKET_ID,
-            "link_transaction_ids": ("tx-A",),
-        }
-        add_attachment_bytes(store, data=data, **kwargs)
-        after_first = load_attachment(store, add_attachment_bytes(store, data=data, **kwargs).attachment_id)
-        add_attachment_bytes(store, data=data, **kwargs)
+        first = add_attachment_bytes(
+            store,
+            data=data,
+            kind=AttachmentKind.INVOICE_PDF,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference="source-A",
+            mime_type="application/pdf",
+            captured_at=datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
+            bucket_id=_SERVICE_BUCKET_ID,
+            link_transaction_ids=("tx-A",),
+        )
+        after_first = load_attachment(store, first.attachment_id)
+        add_attachment_bytes(
+            store,
+            data=data,
+            kind=AttachmentKind.INVOICE_PDF,
+            source=AttachmentSource.LOCAL_FILE,
+            source_reference="source-A",
+            mime_type="application/pdf",
+            captured_at=datetime(2026, 3, 1, 9, 0, tzinfo=UTC),
+            bucket_id=_SERVICE_BUCKET_ID,
+            link_transaction_ids=("tx-A",),
+        )
         after_third = load_attachment(store, after_first.attachment_id)
 
     assert after_third == after_first

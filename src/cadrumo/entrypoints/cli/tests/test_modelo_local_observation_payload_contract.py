@@ -44,7 +44,7 @@ def _kwargs(**overrides: object) -> dict[str, object]:
 
 def test_accepts_a_real_projection() -> None:
     """A genuine local-observation result projects and validates cleanly."""
-    result = FilingRecordLocalObservationResult(**_kwargs())
+    result = FilingRecordLocalObservationResult.model_validate(_kwargs())
 
     assert result.source_kind is ObservationSourceKind.OPERATOR_MANUAL
 

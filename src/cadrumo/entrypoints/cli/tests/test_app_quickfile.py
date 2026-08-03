@@ -29,6 +29,7 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.state_projection import ProjectionModeloReadiness
 from ....core import Period
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.transactions import (
@@ -488,9 +489,7 @@ def test_quickfile_result_payload_refuses_unknown_stopped_stage() -> None:
         )
 
 
-def _readiness(**overrides: object) -> object:
-    from ....application.state_projection import ProjectionModeloReadiness
-
+def _readiness(**overrides: object) -> ProjectionModeloReadiness:
     period = Period.from_year_and_code(2026, "1T")
     base: dict[str, object] = {
         "profile_id": "11111111-1111-4111-8111-111111111111",
@@ -502,7 +501,7 @@ def _readiness(**overrides: object) -> object:
         "ready": True,
     }
     base.update(overrides)
-    return ProjectionModeloReadiness(**base)
+    return ProjectionModeloReadiness.model_validate(base)
 
 
 def test_quickfile_result_payload_carries_the_typed_readiness_report_when_ready() -> None:

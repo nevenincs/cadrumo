@@ -18,13 +18,13 @@ from dev.docs.preprocess import (
 )
 from dev.docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
 # Absolute, string-form import by necessity: `_data/` and `_data/corpus/` carry
 # no `__init__.py` (they are a data tree, not a package chain), so this module
 # is imported in rootdir mode and a relative import cannot reach `cadrumo`.
 # The sibling `dev.*` imports above are absolute for the same reason.
 normalise_corpus_text = importlib.import_module("cadrumo.core").normalise_corpus_text
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 # src/cadrumo/_data/corpus/tests/test_extraction_sidecar_freshness.py -> parents[5] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[5]
@@ -59,6 +59,22 @@ def _sha256_of(path: Path) -> str:
 def _matches_origin_name(sidecar_name: str, origin_name: str) -> bool:
     stand_in_name = sidecar_name.removesuffix(EXTRACTED_JSON_SUFFIX)
     return stand_in_name == origin_name or _PART_SUFFIX.sub("", stand_in_name) == origin_name
+
+
+def _is_legal_citation_evidence_sidecar(json_path: Path) -> bool:
+    """A doubly-suffixed sidecar (``*.extracted.md.extracted.json``) is legal-citation evidence.
+
+    ``verify_legal_reference`` resolves a ``corpus_ref`` whose path already ends in
+    ``.extracted.md`` (a rendered corpus-text file, not an original source document)
+    by appending ``.extracted.json`` to it (``_legal_corpus_text`` in
+    ``domain.calculations.registry._legal``). The result is a small, hand-curated
+    sidecar carrying only the anchored ``units`` a specific legal reference cites —
+    consumed exclusively by ``resolve_anchored_extracted_unit``, which reads
+    ``units`` directly and neither requires nor validates against the full
+    ``PreprocessOutput`` schema. It is a distinct, narrower contract from the
+    source-file sidecars this test polices, not drift from either.
+    """
+    return json_path.name.removesuffix(EXTRACTED_JSON_SUFFIX).endswith(EXTRACTED_TEXT_SUFFIX)
 
 
 def test_normative_html_sources_use_canonical_lf_bytes() -> None:
@@ -100,6 +116,8 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
     sidecars = sorted(_CORPUS_ROOT.rglob(f"*{EXTRACTED_JSON_SUFFIX}"))
 
     for json_path in sidecars:
+        if _is_legal_citation_evidence_sidecar(json_path):
+            continue
         rel_json = json_path.relative_to(_REPO_ROOT).as_posix()
         output = PreprocessOutput.model_validate_json(json_path.read_text(encoding="utf-8"))
         origin = (_REPO_ROOT / output.source_relpath).resolve()

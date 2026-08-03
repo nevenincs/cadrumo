@@ -45,6 +45,7 @@ Submodules
    cadrumo.domain.calculations.registry._external_grounding
    cadrumo.domain.calculations.registry._filed_state
    cadrumo.domain.calculations.registry._formula_initial_values
+   cadrumo.domain.calculations.registry._formula_operator_contracts
    cadrumo.domain.calculations.registry._formula_runtime
    cadrumo.domain.calculations.registry._formula_runtime_irnr
    cadrumo.domain.calculations.registry._formula_runtime_m131

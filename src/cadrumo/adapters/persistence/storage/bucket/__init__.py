@@ -73,6 +73,7 @@ from ._manifest_io import (
 )
 from ._output_language_hint import (
     clear_bucket_output_language_hint,
+    normalize_output_language_hint,
     read_bucket_output_language_hint,
     write_bucket_output_language_hint,
 )
@@ -108,6 +109,7 @@ __all__ = [
     "keystore_root",
     "lock_path",
     "manifest_path",
+    "normalize_output_language_hint",
     "provision_bucket_directory",
     "read_bucket_output_language_hint",
     "read_manifest",

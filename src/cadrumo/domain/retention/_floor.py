@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from datetime import date, datetime
-from typing import Final, Protocol, cast, runtime_checkable
+from typing import Final, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
 
@@ -124,9 +124,9 @@ def add_prescription_years[CalendarMoment: date](moment: CalendarMoment, years: 
     redeclaring date arithmetic.
     """
     try:
-        return cast("CalendarMoment", moment.replace(year=moment.year + years))
+        return moment.replace(year=moment.year + years)
     except ValueError:
-        return cast("CalendarMoment", moment.replace(year=moment.year + years, month=2, day=28))
+        return moment.replace(year=moment.year + years, month=2, day=28)
 
 
 def earliest_safe_erase_date(

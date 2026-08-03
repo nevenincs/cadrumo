@@ -15,9 +15,11 @@ import json
 
 import pytest
 
+from ....adapters.persistence.storage.master_key import close_active_bucket_session
 from ....application.wizard import WIZARD_FLOWS
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401
+from .. import _prefer_complete_verb_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -38,6 +40,120 @@ def test_interactive_create_without_a_console_refuses_instructively() -> None:
     result = invoke_cached_cli(_CREATE_ARGS)
     assert result.exit_code != 0
     assert "Traceback" not in result.output
+
+
+def test_create_without_a_name_reaches_runtime_dispatch() -> None:
+    """The registration TUI owns name collection for a naked create."""
+    result = invoke_cached_cli(["config", "profile", "create"])
+
+    assert result.exit_code != 0
+    assert "Missing argument" not in result.output
+    assert "Traceback" not in result.output
+
+
+def test_create_does_not_require_an_existing_active_session() -> None:
+    """A second profile can start while the selected profile is locked.
+
+    The first create leaves its pointer selected but the process has no live
+    bucket session. The next create is still a bootstrap path: its own create
+    span provisions and opens the new bucket before writing it. A root callback
+    that accidentally active-gates ``create`` turns this into the misleading
+    "run config login" storage refusal.
+    """
+    first = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "create",
+            "existing",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Existing",
+            "--surnames",
+            "Profile",
+            "--activity",
+            "design",
+        ],
+    )
+    assert first.exit_code == 0, first.output
+    close_active_bucket_session()
+
+    second = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "create",
+            "new",
+            "--quiet",
+            "--tax-id",
+            "87654321X",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "New",
+            "--surnames",
+            "Profile",
+            "--activity",
+            "design",
+        ],
+    )
+    assert second.exit_code == 0, second.output
+
+
+def test_bare_create_bypasses_a_locked_existing_profile() -> None:
+    """The TUI route must be reachable before any old bucket is unlocked.
+
+    The test host cannot draw the manager, so the command reaches its
+    documented non-console refusal. The important boundary is that it does
+    not fail earlier with the storage runtime's no-active-session refusal.
+    """
+    created = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "create",
+            "existing",
+            "--quiet",
+            "--tax-id",
+            "12345678Z",
+            "--entity-type",
+            "natural_person",
+            "--name",
+            "Existing",
+            "--surnames",
+            "Profile",
+            "--activity",
+            "design",
+        ],
+    )
+    assert created.exit_code == 0, created.output
+    close_active_bucket_session()
+
+    result = invoke_cached_cli(["config", "profile", "create"])
+
+    assert result.exit_code != 0
+    assert "No active bucket session" not in result.output
+    assert "Traceback" not in result.output
+
+
+def test_partial_click_path_cannot_mask_the_profile_create_leaf() -> None:
+    """A group prefix must not remove the create bootstrap exemption.
+
+    The root callback may see only ``config profile`` from Click while the
+    real console argv still names ``config profile create``. Retaining the
+    shorter path reproduces the live login refusal before the TUI opens.
+    """
+    assert (
+        _prefer_complete_verb_path(
+            context_path="config profile",
+            argv_path="config profile create",
+        )
+        == "config profile create"
+    )
 
 
 def test_interactive_create_under_json_keeps_stdout_parseable() -> None:

@@ -11,7 +11,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
@@ -58,6 +58,9 @@ _WithholdingFact = Literal[
     "percibido_sum",
     "retencion_sum",
 ]
+_CLAVE_TOKEN_SEQUENCE_ADAPTER: TypeAdapter[list[object] | tuple[object, ...]] = TypeAdapter(
+    list[object] | tuple[object, ...], config=ConfigDict(strict=True)
+)
 
 
 class WithholdingObservation(BaseModel):
@@ -106,8 +109,6 @@ class WithholdingObservation(BaseModel):
     @field_validator("percibido_dinerario", "percibido_especie", "retencion_practicada", "ingreso_a_cuenta")
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("withholding amounts must be Decimal")
         if value < Decimal("0"):
             raise RegistryValidationError("withholding amounts must be non-negative")
         return value
@@ -125,12 +126,14 @@ class WithholdingObservationRequirement(BaseModel):
     @classmethod
     def _coerce_claves(cls, value: object) -> object:
         """Hydrate each raw clave token to its :class:`RetencionClave` member (strict config)."""
-        if isinstance(value, (tuple, list)):
-            return tuple(
-                RetencionClave(item) if isinstance(item, str) and not isinstance(item, RetencionClave) else item
-                for item in value
-            )
-        return value
+        try:
+            tokens = _CLAVE_TOKEN_SEQUENCE_ADAPTER.validate_python(value)
+        except ValidationError:
+            return value
+        return tuple(
+            RetencionClave(item) if isinstance(item, str) and not isinstance(item, RetencionClave) else item
+            for item in tokens
+        )
 
     _values_unique = field_validator("binding_ids", "claves")(unique_tuple("withholding requirement tuple"))
 
@@ -515,3 +518,6 @@ def compute_withholding_totals_parity(
         tolerance=tolerance,
         is_consistent=is_consistent,
     )
+
+
+WithholdingSelector = _WithholdingSelector

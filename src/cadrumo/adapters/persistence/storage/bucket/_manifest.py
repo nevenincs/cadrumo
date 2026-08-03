@@ -31,9 +31,6 @@ from .....core.identity import BucketId, ProfileLabel
 from .....core.time import validate_utc_aware
 from .....domain.user_profile import UserProfileStatus
 from .._kdf_bounds import (
-    MAX_MEMORY_COST_KIB,
-    MAX_PARALLELISM,
-    MAX_TIME_COST,
     MIN_MEMORY_COST_KIB,
     MIN_PARALLELISM,
     MIN_TIME_COST,
@@ -47,27 +44,34 @@ class ManifestKdfParams(BaseModel):
     """Argon2id parameters and salt as carried in the bucket manifest.
 
     Strict pydantic v2 record holding whatever parameters the bucket was
-    enrolled under, so a future cost-bump can be non-breaking. "Whatever
-    parameters" means anywhere inside the one :mod:`.._kdf_bounds` window --
-    the same window the canonical enrollment record
-    :class:`~..master_key._kdf_params.KdfParams` accepts, read from the same
-    constants rather than restated here.
+    enrolled under, so a future cost-bump can be non-breaking. The floor
+    (``ge=MIN_*``) is the one :mod:`.._kdf_bounds` window the canonical
+    enrollment record :class:`~..master_key._kdf_params.KdfParams` also
+    enforces, read from the same constants rather than restated here -- a
+    weak enrolled artefact (e.g. an 8 KiB single-iteration parameter set)
+    must still be refused. There is deliberately no matching ceiling: the
+    enrollment record's ``le=MAX_*`` bounds what THIS application mints
+    today, while a manifest may legitimately carry parameters stronger than
+    today's ceiling (a future cost bump, or an operator-configured stronger
+    archive) and reading must not refuse those. Binding the read side to the
+    mint-time ceiling would make importing a legitimately-stronger archive
+    indistinguishable from importing a corrupted one.
 
     It previously declared only ``ge=1`` lower bounds and a free-form
     ``algorithm``, so this record accepted an 8 KiB single-iteration parameter
     set, a non-Argon2id algorithm name, and a 16-byte output that enrollment
     refuses outright -- while the enrollment record's module documented that a
     tampered manifest could not drive the KDF into a weaker regime at unlock.
-    Only one of the two could be right about the same numbers.
+    Only one of the two could be right about the same lower bound.
     """
 
     model_config = _STRICT_FROZEN
 
     algorithm: Literal["argon2id"]
     version: Argon2Version
-    memory_cost: int = Field(ge=MIN_MEMORY_COST_KIB, le=MAX_MEMORY_COST_KIB)
-    time_cost: int = Field(ge=MIN_TIME_COST, le=MAX_TIME_COST)
-    parallelism: int = Field(ge=MIN_PARALLELISM, le=MAX_PARALLELISM)
+    memory_cost: int = Field(ge=MIN_MEMORY_COST_KIB)
+    time_cost: int = Field(ge=MIN_TIME_COST)
+    parallelism: int = Field(ge=MIN_PARALLELISM)
     salt: bytes
     output_length: KdfOutputLength
 

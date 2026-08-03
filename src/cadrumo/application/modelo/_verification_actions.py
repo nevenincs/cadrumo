@@ -147,25 +147,33 @@ from ._required_binding_gate import (
 )
 from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 from ._verification_cross_period import (
-    _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS as _CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
+    CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
+    CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
+    cross_period_clean_state_next_action,
 )
 from ._verification_cross_period import (
-    _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS as _CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
+    IVA_COMPENSATION_CARRY_LEGAL_REF as _IVA_COMPENSATION_CARRY_LEGAL_REF,
 )
 from ._verification_cross_period import (
-    _IVA_COMPENSATION_CARRY_LEGAL_REF,
-    _cross_period_clean_state_findings,
-    _cross_period_clean_state_verdict_for_work_unit,
-    _cross_period_expected_member_sets_from_profile,
-    _modelo_202_incomplete_modality_finding,
-    _require_cross_period_clean_state,
-    _zero_value_previous_filing_binding_ids,
+    cross_period_clean_state_findings as _cross_period_clean_state_findings,
 )
 from ._verification_cross_period import (
-    _cross_period_clean_state_next_action as _cross_period_clean_state_next_action,
+    cross_period_clean_state_verdict_for_work_unit as _cross_period_clean_state_verdict_for_work_unit,
+)
+from ._verification_cross_period import (
+    cross_period_expected_member_sets_from_profile as _cross_period_expected_member_sets_from_profile,
 )
 from ._verification_cross_period import (
     cross_period_expected_member_sets_from_profile as cross_period_expected_member_sets_from_profile,
+)
+from ._verification_cross_period import (
+    modelo_202_incomplete_modality_finding as _modelo_202_incomplete_modality_finding,
+)
+from ._verification_cross_period import (
+    require_cross_period_clean_state as _require_cross_period_clean_state,
+)
+from ._verification_cross_period import (
+    zero_value_previous_filing_binding_ids as _zero_value_previous_filing_binding_ids,
 )
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
@@ -176,103 +184,15 @@ if TYPE_CHECKING:
     from ..calculations import IvaWalletDecisionRepository
 
 from ._verification_predicates import (
-    _BALANCE_CENT_TOLERANCE as _BALANCE_CENT_TOLERANCE,
+    M349_IMPORTE_RECTIFICACIONES_CASILLA as _M349_IMPORTE_RECTIFICACIONES_CASILLA,
 )
 from ._verification_predicates import (
-    _M210_UNRESOLVED_RATE_REASONS as _M210_UNRESOLVED_RATE_REASONS,
+    M349_NUMERO_RECTIFICACIONES_CASILLA as _M349_NUMERO_RECTIFICACIONES_CASILLA,
 )
 from ._verification_predicates import (
-    _M349_IMPORTE_RECTIFICACIONES_CASILLA as _M349_IMPORTE_RECTIFICACIONES_CASILLA,
-)
-from ._verification_predicates import (
-    _M349_NUMERO_RECTIFICACIONES_CASILLA as _M349_NUMERO_RECTIFICACIONES_CASILLA,
-)
-from ._verification_predicates import (
-    _PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES as _PREDICATE_ADVISORY_WHEN_COMPUTED_DIVERGES,
-)
-from ._verification_predicates import (
-    _PREDICATE_ADVISORY_WHEN_POSITIVE as _PREDICATE_ADVISORY_WHEN_POSITIVE,
-)
-from ._verification_predicates import (
-    _PREDICATE_ADVISORY_WHEN_RATIO_GE as _PREDICATE_ADVISORY_WHEN_RATIO_GE,
-)
-from ._verification_predicates import (
-    _PREDICATE_ALL_NONZERO as _PREDICATE_ALL_NONZERO,
-)
-from ._verification_predicates import (
-    _PREDICATE_ANY_NONZERO as _PREDICATE_ANY_NONZERO,
-)
-from ._verification_predicates import (
-    _PREDICATE_AT_MOST_ONE_POSITIVE as _PREDICATE_AT_MOST_ONE_POSITIVE,
-)
-from ._verification_predicates import (
-    _PREDICATE_CAP_LE_WHEN_POSITIVE as _PREDICATE_CAP_LE_WHEN_POSITIVE,
-)
-from ._verification_predicates import (
-    _PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES as _PREDICATE_CASILLA_EQUALS_IMPLIES_DIVERGES,
-)
-from ._verification_predicates import (
-    _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO as _PREDICATE_CASILLA_EQUALS_IMPLIES_NONZERO,
-)
-from ._verification_predicates import (
-    _PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG as _PREDICATE_CASILLA_EQUALS_IMPLIES_PROFILE_FLAG,
-)
-from ._verification_predicates import (
-    _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE as _PREDICATE_DEDUCCION_REQUIRES_ADQUISICION_BEFORE,
-)
-from ._verification_predicates import (
-    _PREDICATE_EQUALS as _PREDICATE_EQUALS,
-)
-from ._verification_predicates import (
-    _PREDICATE_IMPLIES_ANY_NONZERO as _PREDICATE_IMPLIES_ANY_NONZERO,
-)
-from ._verification_predicates import (
-    _PREDICATE_IMPLIES_NONZERO as _PREDICATE_IMPLIES_NONZERO,
-)
-from ._verification_predicates import (
-    _PREDICATE_PROFILE_FIELD_REQUIRED as _PREDICATE_PROFILE_FIELD_REQUIRED,
-)
-from ._verification_predicates import (
-    _PREDICATE_PROFILE_FLAG_ENABLED as _PREDICATE_PROFILE_FLAG_ENABLED,
-)
-from ._verification_predicates import (
-    _PREDICATE_ROLL_FORWARD_BALANCES as _PREDICATE_ROLL_FORWARD_BALANCES,
-)
-from ._verification_predicates import (
-    _evaluate_advisory_predicate_fires as _evaluate_advisory_predicate_fires,
-)
-from ._verification_predicates import (
-    _evaluate_applicability_filter as _evaluate_applicability_filter,
-)
-from ._verification_predicates import (
-    _evaluate_predicate_expression as _evaluate_predicate_expression,
-)
-from ._verification_predicates import (
-    _evaluate_verification_predicates as _evaluate_verification_predicates,
-)
-from ._verification_predicates import (
-    _m210_unresolved_outcome_findings as _m210_unresolved_outcome_findings,
-)
-from ._verification_predicates import (
-    _parse_predicate_casilla_ids as _parse_predicate_casilla_ids,
-)
-from ._verification_predicates import (
-    _parse_predicate_date as _parse_predicate_date,
-)
-from ._verification_predicates import (
-    _parse_predicate_raw_tokens as _parse_predicate_raw_tokens,
-)
-from ._verification_predicates import (
-    _resolve_advisory_message_default as _resolve_advisory_message_default,
-)
-from ._verification_predicates import (
-    _resolve_predicate_next_action as _resolve_predicate_next_action,
-)
-from ._verification_predicates import (
-    _roll_forward_balance_reconciles as _roll_forward_balance_reconciles,
-)
-from ._verification_predicates import (
-    _validated_predicate_casilla_id as _validated_predicate_casilla_id,
+    PREDICATE_IMPLIES_ANY_NONZERO,
+    evaluate_applicability_filter,
+    parse_predicate_casilla_ids,
 )
 from ._verification_predicates import (
     evaluate_advisory_predicate_fires as evaluate_advisory_predicate_fires,
@@ -281,8 +201,24 @@ from ._verification_predicates import (
     evaluate_predicate_expression as evaluate_predicate_expression,
 )
 from ._verification_predicates import (
+    evaluate_verification_predicates as _evaluate_verification_predicates,
+)
+from ._verification_predicates import (
     evaluate_verification_predicates as evaluate_verification_predicates,
 )
+from ._verification_predicates import (
+    m210_unresolved_outcome_findings as _m210_unresolved_outcome_findings,
+)
+
+# Retain pinned verification-actions test imports while consuming public helper contracts.
+_CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS = CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS
+_CROSS_PERIOD_DEPENDENCY_LEGAL_REFS = CROSS_PERIOD_DEPENDENCY_LEGAL_REFS
+_cross_period_clean_state_next_action = cross_period_clean_state_next_action
+_PREDICATE_IMPLIES_ANY_NONZERO = PREDICATE_IMPLIES_ANY_NONZERO
+_evaluate_advisory_predicate_fires = evaluate_advisory_predicate_fires
+_evaluate_applicability_filter = evaluate_applicability_filter
+_evaluate_predicate_expression = evaluate_predicate_expression
+_parse_predicate_casilla_ids = parse_predicate_casilla_ids
 
 
 def _normalised_observation_refs(observations: Iterable[CasillaObservation | None], field_name: str) -> tuple[str, ...]:

@@ -371,7 +371,7 @@ def _classify_impatriado_income_transaction(
         )
 
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
-    if filing_date is None or not (window_start <= filing_date <= window_end):
+    if not (window_start <= filing_date <= window_end):
         return ImpatriadoIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=ImpatriadoIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD,

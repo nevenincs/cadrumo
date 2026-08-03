@@ -26,12 +26,14 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.telemetry import TelemetryEventPayload, TelemetryTier
 from ...core.time import validate_inclusive_iso_date_range
-from ._decimal_wire import DecimalWireText, bounded_decimal_wire_text
+from ._decimal_wire import DecimalWireText
 from ._schemas import OutputSchema, register_schema
+
 
 # The canonical run-health models express these bounds on real int/Decimal
 # fields; the transport carries rendered strings for the decimals, so the same
@@ -39,7 +41,14 @@ from ._schemas import OutputSchema, register_schema
 # deliberately left unbounded because the canonical models leave them so --
 # the transport mirrors the canonical contract rather than inventing a
 # stricter one.
-_SuccessRateText = bounded_decimal_wire_text(minimum=Decimal("0"), maximum=Decimal("1"))
+def _validate_success_rate(value: str) -> str:
+    """Keep successful-run ratios within the canonical closed 0..1 interval."""
+    parsed = try_parse_canonical_decimal(value, signed=True)
+    if parsed is None:
+        raise ValueError(f"{value!r} is not a canonical decimal string")
+    if not Decimal("0") <= parsed <= Decimal("1"):
+        raise ValueError(f"{value!r} must be between 0 and 1")
+    return value
 
 
 class LlmRunProviderPayload(OutputSchema):
@@ -86,6 +95,7 @@ class RunHealthResult(OutputSchema):
         """
         validate_inclusive_iso_date_range(self.since, self.until)
         return self
+
     has_run_data: bool
     auth_provider: str
     auth_configured: bool
@@ -260,7 +270,12 @@ class LlmUsageModelPayload(OutputSchema):
     max_duration_ms: int | None = None
     mean_duration_ms: DecimalWireText | None = None
     total_duration_ms: int = Field(default=0, ge=0)
-    success_rate: _SuccessRateText  # type: ignore[valid-type]
+    success_rate: DecimalWireText
+
+    @field_validator("success_rate")
+    @classmethod
+    def _success_rate_is_bounded(cls, value: str) -> str:
+        return _validate_success_rate(value)
 
 
 class LlmUsageProviderPayload(OutputSchema):
@@ -277,8 +292,13 @@ class LlmUsageProviderPayload(OutputSchema):
     max_duration_ms: int | None = None
     mean_duration_ms: DecimalWireText | None = None
     total_duration_ms: int = Field(default=0, ge=0)
-    success_rate: _SuccessRateText  # type: ignore[valid-type]
+    success_rate: DecimalWireText
     models: list[LlmUsageModelPayload]
+
+    @field_validator("success_rate")
+    @classmethod
+    def _success_rate_is_bounded(cls, value: str) -> str:
+        return _validate_success_rate(value)
 
 
 @register_schema("diagnostics.llm_usage")
@@ -312,6 +332,7 @@ class LlmUsageResult(OutputSchema):
         """
         validate_inclusive_iso_date_range(self.since, self.until)
         return self
+
     total_runs: int
     total_succeeded: int
     total_failed: int

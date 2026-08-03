@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import date
+
 import pytest
 import typer
 from pydantic import ValidationError
@@ -21,14 +24,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 @pytest.mark.parametrize("parser", (parse_diagnostics_date, parse_ledger_date))
-def test_supplied_blank_date_bound_refuses(parser: object) -> None:
+def test_supplied_blank_date_bound_refuses(parser: Callable[[str | None, str], date | None]) -> None:
     """A blank supplied --since is never widened into an unbounded query."""
     with pytest.raises(typer.BadParameter):
         parser("", "--since")
 
 
 @pytest.mark.parametrize("parser", (parse_diagnostics_date, parse_ledger_date))
-def test_absent_date_bound_remains_optional(parser: object) -> None:
+def test_absent_date_bound_remains_optional(parser: Callable[[str | None, str], date | None]) -> None:
     """Only an omitted date option remains an unbounded query."""
     assert parser(None, "--since") is None
 
@@ -47,7 +50,7 @@ class TestWireWindowInvariant:
     def _runs(self, **overrides: object) -> RunsListResult:
         fields: dict[str, object] = {"runs": [], "total_runs": 0, "has_run_data": False}
         fields.update(overrides)
-        return RunsListResult(**fields)  # type: ignore[arg-type]
+        return RunsListResult.model_validate(fields)
 
     def _envelopes(self) -> tuple[tuple[type, dict[str, object]], ...]:
         return (

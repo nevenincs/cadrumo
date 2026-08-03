@@ -8,6 +8,7 @@ measurable independently of corpus state.
 from __future__ import annotations
 
 import ast
+from collections.abc import Callable
 from pathlib import Path
 from typing import Final
 
@@ -50,23 +51,37 @@ def test_same_revision_in_two_periods_gets_distinct_identifiers() -> None:
 
 
 @pytest.mark.parametrize(
-    ("field", "changed"),
+    ("field", "changed_identifier"),
     [
-        ("modelo", {"modelo": "131"}),
-        ("revision_id", {"revision_id": "2024-y-siguientes"}),
-        ("filing_year", {"filing_year": 2026}),
-        ("period", {"period": "4T"}),
+        (
+            "modelo",
+            lambda: registry_snapshot_id(
+                modelo="131", revision_id="2019-y-siguientes", filing_year=2025, period="1T"
+            ),
+        ),
+        (
+            "revision_id",
+            lambda: registry_snapshot_id(modelo="130", revision_id="2024-y-siguientes", filing_year=2025, period="1T"),
+        ),
+        (
+            "filing_year",
+            lambda: registry_snapshot_id(modelo="130", revision_id="2019-y-siguientes", filing_year=2026, period="1T"),
+        ),
+        (
+            "period",
+            lambda: registry_snapshot_id(modelo="130", revision_id="2019-y-siguientes", filing_year=2025, period="4T"),
+        ),
     ],
 )
-def test_every_coordinate_changes_the_identifier(field: str, changed: dict[str, object]) -> None:
+def test_every_coordinate_changes_the_identifier(field: str, changed_identifier: Callable[[], str]) -> None:
     """No coordinate may be decorative.
 
     Asserting only that two known-different snapshots differ would still pass
     if one coordinate were dropped from the format, so each is varied alone.
     """
-    baseline = {"modelo": "130", "revision_id": "2019-y-siguientes", "filing_year": 2025, "period": "1T"}
+    baseline = registry_snapshot_id(modelo="130", revision_id="2019-y-siguientes", filing_year=2025, period="1T")
 
-    assert registry_snapshot_id(**baseline) != registry_snapshot_id(**{**baseline, **changed}), field
+    assert baseline != changed_identifier(), field
 
 
 def test_identifier_is_the_four_coordinates_in_order() -> None:

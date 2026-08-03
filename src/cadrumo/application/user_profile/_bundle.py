@@ -36,6 +36,8 @@ import json
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Final
 
+from pydantic import TypeAdapter
+
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core.errors import CadrumoError
 from ...core.time import now
@@ -69,6 +71,7 @@ BUNDLE_DURABILITY_FLOOR: Final[int] = 3
 #: boundary. Empty while the floor equals the current version; a version
 #: bump MUST land its hop here in the same change or the lineage gate fails.
 BUNDLE_PAYLOAD_UPGRADERS: Mapping[int, Callable[[dict[str, object]], dict[str, object]]] = {}
+_JSON_OBJECT = TypeAdapter(dict[str, object])
 
 #: Versions the import path accepts: the complete floor-to-current range.
 SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset(
@@ -149,6 +152,7 @@ def validate_bundle_payload(
     payload = json.loads(raw_json)
     if not isinstance(payload, dict):
         raise UnsupportedBundleSchemaVersionError("bundle payload is not a JSON object")
+    payload = _JSON_OBJECT.validate_python(payload)
     written_version = _stamped_bundle_version(payload, expected_written_version=expected_written_version)
     _refuse_unreadable_bundle_version(written_version)
     for hop in range(written_version, BUNDLE_SCHEMA_VERSION):

@@ -52,10 +52,10 @@ class _RecordedCall:
         return self.payload.get("_result", {})
 
 
-class _FakeFiles:
+class _RecordedFiles:
     """Drive ``files()`` resource returning scripted listings."""
 
-    def __init__(self, owner: _FakeDrive) -> None:
+    def __init__(self, owner: _RecordedDrive) -> None:
         self._owner = owner
 
     def list(self, *, q: str, fields: str, pageSize: int) -> _RecordedCall:  # noqa: N803 - Drive API kwarg name
@@ -70,7 +70,7 @@ class _FakeFiles:
         return _RecordedCall("create", {"_result": {"id": "created-id", "name": body["name"]}})
 
 
-class _FakeDrive:
+class _RecordedDrive:
     """Minimal Drive service double capturing queries and backfill updates."""
 
     def __init__(self, entries: list[dict[str, Any]]) -> None:
@@ -78,8 +78,8 @@ class _FakeDrive:
         self.queries: list[str] = []
         self.updates: list[str] = []
 
-    def files(self) -> _FakeFiles:  # type: ignore[misc] - mirrors the Drive resource shape
-        return _FakeFiles(self)
+    def files(self) -> _RecordedFiles:  # type: ignore[misc] - mirrors the Drive resource shape
+        return _RecordedFiles(self)
 
 
 def _owned(entry_id: str | None, name: str = "target") -> dict[str, Any]:
@@ -105,7 +105,7 @@ def test_backslash_is_escaped_before_the_apostrophe_escape() -> None:
 
 def test_folder_lookup_escapes_the_configured_name_on_the_real_call_path() -> None:
     """The escaping reaches the query the production lookup actually sends."""
-    drive = _FakeDrive([])
+    drive = _RecordedDrive([])
     _find_folder(drive, parent_id="root", name="va'ult")
     assert drive.queries == [build_owned_entry_query(parent_id="root", name="va'ult", mime_type=_FOLDER_MIME)]
     assert "va\\'ult" in drive.queries[0]
@@ -113,7 +113,7 @@ def test_folder_lookup_escapes_the_configured_name_on_the_real_call_path() -> No
 
 def test_spreadsheet_lookup_escapes_the_configured_name_identically() -> None:
     """Both lookups escape through the one shared query builder."""
-    drive = _FakeDrive([])
+    drive = _RecordedDrive([])
     _find_spreadsheet(drive, parent_id="folder", name="plan's book")
     assert "plan\\'s book" in drive.queries[0]
     assert _SPREADSHEET_MIME in drive.queries[0]
@@ -122,7 +122,7 @@ def test_spreadsheet_lookup_escapes_the_configured_name_identically() -> None:
 @pytest.mark.parametrize("bad_id", [None, "", "   "])
 def test_owned_entry_without_a_usable_id_is_refused_not_indexed(bad_id: str | None) -> None:
     """An id-less owned entry raises a typed storage error, never ``KeyError``."""
-    drive = _FakeDrive([_owned(bad_id)])
+    drive = _RecordedDrive([_owned(bad_id)])
     with pytest.raises(OutboundStorageValidationError) as excinfo:
         _find_folder(drive, parent_id="root", name="target")
     assert "without a usable id" in str(excinfo.value)
@@ -130,21 +130,21 @@ def test_owned_entry_without_a_usable_id_is_refused_not_indexed(bad_id: str | No
 
 def test_ensure_folder_refuses_an_id_less_owned_entry() -> None:
     """The caller that previously raised ``KeyError('id')`` now refuses cleanly."""
-    drive = _FakeDrive([_owned(None)])
+    drive = _RecordedDrive([_owned(None)])
     with pytest.raises(OutboundStorageValidationError):
         _ensure_folder(drive, parent_id="root", name="target")
 
 
 def test_spreadsheet_lookup_refuses_an_id_less_owned_entry() -> None:
     """The spreadsheet path enforces the same identity contract as the folder path."""
-    drive = _FakeDrive([_owned(None)])
+    drive = _RecordedDrive([_owned(None)])
     with pytest.raises(OutboundStorageValidationError):
         _find_spreadsheet(drive, parent_id="folder", name="target")
 
 
 def test_backfill_does_not_issue_an_update_for_an_id_less_entry() -> None:
     """Identity is validated before the marker-backfill call is issued."""
-    drive = _FakeDrive([{"name": "target"}])
+    drive = _RecordedDrive([{"name": "target"}])
     with pytest.raises(OutboundStorageValidationError):
         _find_folder(drive, parent_id="root", name="target")
     assert drive.updates == []
@@ -152,7 +152,7 @@ def test_backfill_does_not_issue_an_update_for_an_id_less_entry() -> None:
 
 def test_unmarked_entry_is_backfilled_and_adopted() -> None:
     """A pre-marker entry this app created is stamped, then returned."""
-    drive = _FakeDrive([{"id": "legacy-1", "name": "target"}])
+    drive = _RecordedDrive([{"id": "legacy-1", "name": "target"}])
     found = _find_folder(drive, parent_id="root", name="target")
     assert found is not None
     assert found["id"] == "legacy-1"
@@ -163,14 +163,14 @@ def test_foreign_owned_entry_is_refused_on_both_lookups() -> None:
     """Foreign Drive content is never adopted, by either lookup."""
     foreign = [{"id": "foreign-1", "name": "target", "appProperties": {"someone_else": "yes"}}]
     with pytest.raises(OutboundStorageConflictError):
-        _find_folder(_FakeDrive(list(foreign)), parent_id="root", name="target")
+        _find_folder(_RecordedDrive(list(foreign)), parent_id="root", name="target")
     with pytest.raises(OutboundStorageConflictError):
-        _find_spreadsheet(_FakeDrive(list(foreign)), parent_id="folder", name="target")
+        _find_spreadsheet(_RecordedDrive(list(foreign)), parent_id="folder", name="target")
 
 
 def test_owned_entry_with_a_usable_id_round_trips() -> None:
     """The positive control: a well-formed owned entry is returned unchanged."""
-    drive = _FakeDrive([_owned("owned-1")])
+    drive = _RecordedDrive([_owned("owned-1")])
     found = _find_folder(drive, parent_id="root", name="target")
     assert found is not None
     assert require_drive_entry_id(found, name="target", parent_id="root") == "owned-1"
@@ -179,5 +179,5 @@ def test_owned_entry_with_a_usable_id_round_trips() -> None:
 
 def test_missing_entry_returns_none() -> None:
     """An empty listing is a legitimate absence, not a refusal."""
-    assert _find_folder(_FakeDrive([]), parent_id="root", name="target") is None
-    assert _find_spreadsheet(_FakeDrive([]), parent_id="folder", name="target") is None
+    assert _find_folder(_RecordedDrive([]), parent_id="root", name="target") is None
+    assert _find_spreadsheet(_RecordedDrive([]), parent_id="folder", name="target") is None

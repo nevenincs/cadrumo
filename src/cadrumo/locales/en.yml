@@ -3908,8 +3908,9 @@ cli:
       status:
         header: 'Remote telemetry posture:'
         help: Report the current remote-telemetry consent posture. Never emits anything.
-        off_hint: Telemetry stays fully local by default. To opt in, set CADRUMO_TELEMETRY_OPT_IN=true
-          and CADRUMO_TELEMETRY_TIER to crash_only or full in env/.env.
+        off_hint: Telemetry stays fully local by default. To opt in, set the CADRUMO_TELEMETRY_OPT_IN
+          and CADRUMO_TELEMETRY_TIER environment variables (CADRUMO_TELEMETRY_OPT_IN=true,
+          CADRUMO_TELEMETRY_TIER=crash_only or full).
       tier_help: Preview/send as if CADRUMO_TELEMETRY_TIER were this value (off /
         crash_only / full) for this invocation only; omit to use the deployment's
         actual configured tier.
@@ -6348,7 +6349,8 @@ flows:
       write_failed: The field could not be saved. Try again.
       write_in_flight: Saving the previous field. Wait for it to finish, then try
         again.
-    language: {}
+    language:
+      unavailable: This profile does not offer a language setting.
     progress: '{present} of {total} fields filled in, {missing} still needed for filing'
     section_title: '{title} — {present}/{total}'
     title: 'Profile: {profile}'

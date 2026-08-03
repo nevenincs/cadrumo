@@ -22,3 +22,6 @@ def _missing_refs(
         elif ref_kind == "legal" and entry.evidence_tier != "legal_authority":
             failures.append(f"{scope}: {owner} legal ref {ref!r} is not legal authority")
     return failures
+
+
+missing_refs = _missing_refs

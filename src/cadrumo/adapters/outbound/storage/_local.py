@@ -22,11 +22,12 @@ from datetime import datetime
 from pathlib import Path
 
 from ....core.atomic_write import atomic_write_hardened_bytes, atomic_write_text
+from ....core.errors import CoreValidationError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.paths import is_windows_long_path_error
-from ....core.time import now
+from ....core.time import now, validate_utc_aware
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
@@ -143,12 +144,14 @@ def _parse_sidecar_written_at(value: object) -> datetime:
             context={"actual_value": value},
             translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
         ) from None
-    if written_at.tzinfo is None or written_at.tzinfo.utcoffset(written_at) is None:
+    try:
+        validate_utc_aware(written_at)
+    except CoreValidationError:
         raise StorageCorruptionError(
             f"sidecar written_at carries no timezone: {value!r}",
             context={"actual_value": value},
             translated_message="adapters.outbound.storage.local.errors.written_at_invalid",
-        )
+        ) from None
     return written_at
 
 

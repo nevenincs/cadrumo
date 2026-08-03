@@ -790,6 +790,8 @@ def persist_filed_revision(
     return new_filing
 
 
+supersede_prior_current_filing = _supersede_prior_current_filing
+
 __all__ = [
     "build_modelo_bucket_event",
     "emit_modelo_bucket_event",

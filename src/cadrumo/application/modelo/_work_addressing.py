@@ -317,9 +317,7 @@ def work_address_for_modelo_target(target: ModeloWorkTarget) -> ModeloWorkAddres
         return target
     if isinstance(target, ModeloVisibleFilingTarget):
         return target.to_work_address()
-    if isinstance(target, ModeloExactWorkUnitTarget):
-        return target.to_work_address()
-    raise TypeError(f"expected modelo work target, got {type(target).__name__}")
+    return target.to_work_address()
 
 
 def _modelo_work_period_from_core(year: int, period: Period, *, modelo: str | None = None) -> Period:

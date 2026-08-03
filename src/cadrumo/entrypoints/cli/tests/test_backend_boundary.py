@@ -21,7 +21,7 @@ import pytest
 import typer
 
 from ....application.review import LedgerReviewFilterKey
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import discover_modelo_sources
 from ....tests.cli_runner import invoke_cached_cli
@@ -29,7 +29,7 @@ from .. import _ledger
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_CLI_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
+_CLI_ROOT = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
 _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "aspirational",
     "backwards-compat",
@@ -85,7 +85,7 @@ _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
 
 
 def _parse_source(relative_path: str) -> ast.Module:
-    path = PROJECT_ROOT / relative_path
+    path = REPO_ROOT / relative_path
     return ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
 
 
@@ -173,7 +173,7 @@ def test_boundary_inventory_rows_have_live_source_anchors() -> None:
 
     offences: list[str] = []
     for finding in _KNOWN_FINDINGS:
-        path = PROJECT_ROOT / finding.source
+        path = REPO_ROOT / finding.source
         if not path.exists():
             offences.append(f"source missing: {finding.source}")
             continue
@@ -187,7 +187,7 @@ def test_boundary_inventory_rows_have_live_source_anchors() -> None:
 def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None:
     """Manual ledger import and review logic must not move back into the CLI."""
 
-    ledger_cli = (PROJECT_ROOT / "src/cadrumo/entrypoints/cli/_ledger.py").read_text(encoding="utf-8")
+    ledger_cli = (REPO_ROOT / "src/cadrumo/entrypoints/cli/_ledger.py").read_text(encoding="utf-8")
     # The monolithic ``_actions.py`` was decomposed into sibling backend modules
     # (``_actions_import.py``, ``_actions_common.py``, ``_actions_manual.py``,
     # ``_models.py``, ...); ``_actions.py`` now re-exports them. Scan the whole
@@ -195,7 +195,7 @@ def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None
     # decomposition relocated them.
     ledger_backend = "\n".join(
         path.read_text(encoding="utf-8")
-        for path in sorted((PROJECT_ROOT / "src/cadrumo/application/ledger").glob("*.py"))
+        for path in sorted((REPO_ROOT / "src/cadrumo/application/ledger").glob("*.py"))
     )
     forbidden_cli_tokens = (
         "CsvProvider",
@@ -342,7 +342,7 @@ def test_removed_workflow_shim_modules_stay_absent() -> None:
         "src/cadrumo/entrypoints/cli/filing/conftest.py",
         "src/cadrumo/entrypoints/cli/filing/test_filing_cli.py",
     )
-    assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
+    assert [path for path in removed if (REPO_ROOT / path).exists()] == []
 
 
 def test_cadrumo_workflow_root_command_is_unknown() -> None:
@@ -392,7 +392,7 @@ def test_profile_backend_schema_duplicate_branch_stays_removed() -> None:
         "src/cadrumo/application/profile/test_actions.py",
         "src/cadrumo/application/profile/test_validate.py",
     )
-    assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
+    assert [path for path in removed if (REPO_ROOT / path).exists()] == []
 
 
 def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> None:
@@ -406,8 +406,8 @@ def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> No
         "set_profile_values",
     )
     search_roots = (
-        PROJECT_ROOT / "src" / "cadrumo" / "application",
-        PROJECT_ROOT / "src" / "cadrumo" / "entrypoints",
+        REPO_ROOT / "src" / "cadrumo" / "application",
+        REPO_ROOT / "src" / "cadrumo" / "entrypoints",
     )
     scanned_files = [path for root in search_roots for path in sorted(root.rglob("*.py")) if path != Path(__file__)]
     assert len(scanned_files) > 500, (
@@ -420,7 +420,7 @@ def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> No
         text = path.read_text(encoding="utf-8")
         for token in forbidden_tokens:
             if token in text:
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: {token}")
     assert offenders == [], "retired application-profile references survive:\n  " + "\n  ".join(offenders)
 
 
@@ -436,7 +436,7 @@ def test_per_modelo_aggregation_placeholder_paths_stay_removed() -> None:
     forbidden_tokens = ("NotImplementedError", "not implemented")
     offenders: list[str] = []
     for relative_path in scoped_files:
-        text = (PROJECT_ROOT / relative_path).read_text(encoding="utf-8")
+        text = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
         for token in forbidden_tokens:
             if token in text:
                 offenders.append(f"{relative_path}: {token}")
@@ -458,10 +458,10 @@ def test_per_modelo_aggregation_duplicate_cli_surfaces_stay_absent() -> None:
             continue
         text = path.read_text(encoding="utf-8")
         if path != canonical_cli and "aggregate_per_modelo" in text:
-            offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: aggregate_per_modelo")
+            offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: aggregate_per_modelo")
         for token in forbidden_family_calls:
             if token in text:
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: {token}")
     assert offenders == [], "parallel per-modelo aggregation CLI surfaces survive:\n  " + "\n  ".join(offenders)
 
 
@@ -484,7 +484,7 @@ def test_censo_modelo_foundation_stays_backend_owned() -> None:
         text = path.read_text(encoding="utf-8")
         for token in forbidden_cli_tokens:
             if token in text:
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: {token}")
     assert offenders == [], "censo modelo foundation logic leaked into CLI:\n  " + "\n  ".join(offenders)
 
 
@@ -496,14 +496,14 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
     # input aliases under test — not censo shim language.
     # scopes.toml is excluded: the CENSO apoderamiento scope legitimately carries
     # "036, 037" and modelo_codes = ["036", "037"] as live AEAT catalogue data.
-    registry_dir = PROJECT_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
+    registry_dir = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
     registry_tests = registry_dir / "tests"
     scanned_files = (
         _CLI_ROOT / "_modelo.py",
-        PROJECT_ROOT / "src" / "cadrumo" / "locales" / "en.yml",
-        PROJECT_ROOT / "src" / "cadrumo" / "locales" / "es.yml",
-        PROJECT_ROOT / "src" / "cadrumo" / "locales" / "ca.yml",
-        PROJECT_ROOT / "src" / "cadrumo" / "locales" / "hu.yml",
+        REPO_ROOT / "src" / "cadrumo" / "locales" / "en.yml",
+        REPO_ROOT / "src" / "cadrumo" / "locales" / "es.yml",
+        REPO_ROOT / "src" / "cadrumo" / "locales" / "ca.yml",
+        REPO_ROOT / "src" / "cadrumo" / "locales" / "hu.yml",
         registry_dir / "_censo_modelos.py",
         registry_dir / "_queries.py",
         registry_tests / "test_censo_modelo_foundation.py",
@@ -545,14 +545,14 @@ def test_censo_modelo_removed_shims_and_stubs_stay_removed() -> None:
             if is_extraction_profile and token in extraction_profile_exempt_tokens:
                 continue
             if token in text:
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: {token}")
     assert offenders == [], "removed censo modelo shim/stub surfaces returned:\n  " + "\n  ".join(offenders)
 
 
 def test_modelo_145_shims_stubs_and_compatibility_aliases_stay_absent() -> None:
     """Modelo 145 must stay a real local communication surface, not a compatibility shell."""
 
-    application_dir = PROJECT_ROOT / "src" / "cadrumo" / "application" / "modelo"
+    application_dir = REPO_ROOT / "src" / "cadrumo" / "application" / "modelo"
     scanned_files = (
         _CLI_ROOT / "_modelo_m145_cli.py",
         _CLI_ROOT / "_modelo_m145_parsing.py",
@@ -582,14 +582,14 @@ def test_modelo_145_shims_stubs_and_compatibility_aliases_stay_absent() -> None:
         text = path.read_text(encoding="utf-8")
         for token in forbidden_tokens:
             if token in text:
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}: {token}")
     assert offenders == [], "modelo 145 shim/stub/compatibility surfaces returned:\n  " + "\n  ".join(offenders)
 
 
 def test_legacy_application_aggregation_test_tree_stays_absent() -> None:
     """Retired top-level aggregation tests must not shadow package-owned tests."""
 
-    legacy_tree = PROJECT_ROOT / "tests" / "application" / "aggregation"
+    legacy_tree = REPO_ROOT / "tests" / "application" / "aggregation"
     assert not legacy_tree.exists()
 
 
@@ -609,14 +609,14 @@ def test_registry_corpus_cli_ownership_is_registry_only() -> None:
             continue
         text = path.read_text(encoding="utf-8")
         if any(pattern in text for pattern in forbidden_patterns):
-            offenders.append(path.relative_to(PROJECT_ROOT).as_posix())
+            offenders.append(path.relative_to(REPO_ROOT).as_posix())
     assert offenders == []
 
 
 def test_cli_observability_wrapper_module_is_absent_from_command_tree() -> None:
     """Generic run tracing is not part of the accepted CLI surface."""
 
-    wrapper_path = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_observability.py"
+    wrapper_path = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "_observability.py"
     assert not wrapper_path.exists()
 
     offences: list[str] = []
@@ -625,7 +625,7 @@ def test_cli_observability_wrapper_module_is_absent_from_command_tree() -> None:
             continue
         text = path.read_text(encoding="utf-8")
         if "cli_run_context" in text or "build_arguments" in text or "._observability" in text:
-            offences.append(path.relative_to(PROJECT_ROOT).as_posix())
+            offences.append(path.relative_to(REPO_ROOT).as_posix())
     assert offences == []
 
 
@@ -636,7 +636,7 @@ def test_cli_unit_tests_do_not_contain_process_state_or_xfail_language() -> None
     for path in _iter_cli_test_files():
         if path == Path(__file__):
             continue
-        rel = path.relative_to(PROJECT_ROOT).as_posix()
+        rel = path.relative_to(REPO_ROOT).as_posix()
         if rel in _LIVE_TEST_FILES:
             continue
         text = path.read_text(encoding="utf-8").lower()

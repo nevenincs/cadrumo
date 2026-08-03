@@ -22,12 +22,18 @@ from ._errors import RegistryValidationError
 from ._ids import BindingId
 from ._invoice_bindings import (
     InvoiceObservation,
-    _invoice_selector,
-    _InvoiceSelector,
-    _RectificationScope,
     resolve_invoice_family_row_values,
     resolve_invoice_family_scalar_values,
     validate_invoice_family_fact_and_aggregation,
+)
+from ._invoice_bindings import (
+    InvoiceSelector as _InvoiceSelector,
+)
+from ._invoice_bindings import (
+    RectificationScope as _RectificationScope,
+)
+from ._invoice_bindings import (
+    invoice_selector as _invoice_selector,
 )
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -78,8 +84,6 @@ class CounterpartAggregationObservation(BaseModel):
     def _decimal_amount(cls, value: Decimal | None) -> Decimal | None:
         if value is None:
             return None
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("counterpart amounts must be Decimal")
         return value
 
     @model_validator(mode="after")

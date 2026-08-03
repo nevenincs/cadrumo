@@ -48,8 +48,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.bucket import bucket_paths
-from ....adapters.persistence.storage.bucket._manifest_io import read_manifest, write_manifest
+from ....adapters.persistence.storage.bucket import bucket_paths, read_manifest, write_manifest
 from ....core.flows import FlowMode
 from ....domain.user_profile import ProfileNotFoundError, UserProfileStatus, new_profile_id
 from ....tests.secure_sql import isolated_profile_storage_root

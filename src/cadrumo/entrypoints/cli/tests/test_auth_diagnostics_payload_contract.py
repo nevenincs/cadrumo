@@ -34,7 +34,7 @@ def _summary(**overrides: object) -> AuthDiagnosticSummary:
         "screenshot_captured": False,
     }
     base.update(overrides)
-    return AuthDiagnosticSummary(**base)
+    return AuthDiagnosticSummary.model_validate(base)
 
 
 def _detail(**overrides: object) -> AuthDiagnosticDetail:
@@ -47,7 +47,7 @@ def _detail(**overrides: object) -> AuthDiagnosticDetail:
         "screenshot_captured": False,
     }
     base.update(overrides)
-    return AuthDiagnosticDetail(**base)
+    return AuthDiagnosticDetail.model_validate(base)
 
 
 def test_list_result_accepts_real_summary_rows() -> None:

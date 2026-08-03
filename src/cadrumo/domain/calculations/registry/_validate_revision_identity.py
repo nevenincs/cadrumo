@@ -23,6 +23,9 @@ def _duplicates(values: Iterable[str]) -> set[str]:
     return dupes
 
 
+duplicates = _duplicates
+
+
 _RECORD_ID_KINDS: tuple[tuple[str, str], ...] = (
     ("casilla", "casillas"),
     ("formula", "formulas"),
@@ -47,6 +50,9 @@ _RECORD_ID_KINDS: tuple[tuple[str, str], ...] = (
 
 def _collect_record_id_lists(revision: ModeloRevision) -> dict[str, list[str]]:
     return {kind: [record.id for record in getattr(revision, attr)] for kind, attr in _RECORD_ID_KINDS}
+
+
+collect_record_id_lists = _collect_record_id_lists
 
 
 def _emit_per_kind_duplicate_failures(
@@ -214,3 +220,6 @@ def _emit_revision_payload_failures(
         f"{prefix}: revision must declare at least one casilla; zero-casilla "
         "revisions are unsupported placeholder definitions",
     )
+
+
+emit_revision_payload_failures = _emit_revision_payload_failures

@@ -14,7 +14,7 @@ domain error, the pure helper, and the primitive that composes them.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -219,9 +219,48 @@ def emit_bucket_event(
     return event
 
 
+def emit_bucket_events(
+    *,
+    repository: BucketEventHistoryRepositoryProtocol,
+    events: Sequence[BucketEvent],
+) -> None:
+    """Append every event in ``events`` to the catalogue in ONE round-trip.
+
+    The plural counterpart of :func:`emit_bucket_event`, for a caller that
+    records several transitions belonging to one atomic mutation. Emitting
+    them one at a time costs a full catalogue load and save per event, and
+    the catalogue grows without bound, so an N-event mutation paid N
+    decrypt/encrypt cycles over a monotonically larger payload.
+
+    This does NOT collapse the audit trail: each event is appended
+    individually through :func:`append_bucket_event`, so N distinct
+    transitions remain N distinct catalogue entries with their own
+    content-addressed ids. Only the number of catalogue round-trips
+    changes. Two byte-identical events still collapse onto one id, exactly
+    as they do when emitted separately -- that is the content-addressing
+    contract, not an effect of batching.
+
+    Events are derived by the caller (through :func:`build_bucket_event`)
+    rather than here: a batch's events differ in type and payload, so there
+    is no single set of derive arguments to accept.
+
+    Args:
+        repository: Port over the bucket-event-history catalogue.
+        events: The already-derived events to append. An empty sequence is
+            a no-op and does not touch the catalogue.
+    """
+    if not events:
+        return
+    catalogue = repository.load()
+    for event in events:
+        catalogue = append_bucket_event(catalogue, event)
+    repository.save(catalogue)
+
+
 __all__ = [
     "BucketEventHistoryPersistenceError",
     "append_bucket_event",
     "build_bucket_event",
     "emit_bucket_event",
+    "emit_bucket_events",
 ]

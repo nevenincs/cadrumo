@@ -1,0 +1,211 @@
+"""Changing the page's language from the page itself.
+
+The language the manager is written in is an ordinary profile field, so it
+was editable in principle: find its row among all the others and change a
+two-letter token. That is the wrong place for it. An operator whose page
+is in a language they do not read is exactly the one who cannot go looking
+for a row, and ``hu`` is not a word they can recognise when they get there.
+
+These tests pin the two halves of the fix: the setting is named in the
+footer, so it is reachable without reading the table, and taking it
+re-words the page down to the chrome.
+
+Expectations are resolved from the catalogues beside each assertion, in an
+explicitly named language, rather than captured once at import. A helper
+that resolved them under the active language would compare the page after
+the switch against strings that had moved with it, which is the one
+comparison that cannot fail.
+"""
+
+from __future__ import annotations
+
+import pytest
+from textual.widgets import DataTable, OptionList
+from textual.widgets._footer import FooterKey
+
+from .....application.user_profile import (
+    ProfileRepository,
+    build_profile_overview,
+    register_profile_with_credentials,
+)
+from .....core import require_active_bucket_id
+from .....core.i18n import tr
+from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+from .....tests.secure_sql import isolated_profile_storage_root
+from .. import ProfileManagerApp
+from .._manager_screen import _LANGUAGE_KEY, _OUTPUT_LANGUAGE_PATH
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_inbound_adapter,
+]
+
+_TERMINAL_SIZE = (160, 60)
+_PASSWORD = "manager-language-operator-secret"  # noqa: S105 - synthetic test fixture
+_LABEL = "Language Subject"
+_STARTING_LANGUAGE = "en"
+_TARGET_LANGUAGE = "es"
+
+_LANGUAGE_LABEL_KEY = "profile.schema.field.preferences.output_language.label"
+"""The catalogue leaf naming the language setting for the operator.
+
+The footer names the key with the same words its row does, so this is the
+one key both surfaces resolve.
+"""
+
+_COLUMN_KEYS = (
+    "flows.manager.column.state",
+    "flows.manager.column.field",
+    "flows.manager.column.value",
+)
+"""The table's column headings: chrome the incremental repaint never touches."""
+
+
+def _register_in(language: str) -> None:
+    """Create the profile already carrying a language, as registration does."""
+    from .....domain.user_profile import UserProfileFact
+
+    register_profile_with_credentials(
+        label=_LABEL,
+        passphrase=_PASSWORD,
+        facts=(UserProfileFact(path=_OUTPUT_LANGUAGE_PATH, value=language),),
+    )
+
+
+def _manager() -> ProfileManagerApp:
+    aggregate = ProfileRepository().load(require_active_bucket_id())
+    return ProfileManagerApp(
+        build_profile_overview(aggregate.record, label=_LABEL),
+        persist=lambda path, value: persist_active_profile_field(path, value, label=_LABEL),
+    )
+
+
+def _footer_description(app: ProfileManagerApp, key: str) -> str | None:
+    """What the footer says one key does, or ``None`` when it names no such key.
+
+    Read off the rendered footer rather than the binding table, because a
+    binding can be declared shown and still be dropped from the footer —
+    which is how the key came to be invisible in the first place.
+    """
+    for entry in app.query(FooterKey):
+        if entry.key == key:
+            return entry.description
+    return None
+
+
+def _column_headings(app: ProfileManagerApp) -> list[str]:
+    """Every table's column headings, in the words currently on screen."""
+    return [str(column.label) for table in app.query(DataTable) for column in table.columns.values()]
+
+
+async def _settle(pilot, app: ProfileManagerApp) -> None:
+    """Wait for the page to finish reacting to a write.
+
+    Two waits, because a write lands in two steps. The worker finishing is
+    the first: it reaches storage on a thread, so the press only starts it.
+    But the redraw does not happen there — the worker's completion is
+    delivered as a message and the page repaints while handling it, so a
+    test that stopped at "no worker is running" would read the page one
+    beat before it caught up, and see the language it had just changed.
+    """
+    await app.workers.wait_for_complete()
+    await pilot.pause()
+    await pilot.pause()
+
+
+@pytest.mark.asyncio
+async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_path) -> None:
+    """The one setting an unreadable page must not hide behind itself.
+
+    Named in the footer rather than left as a row like any other, because
+    finding a row means reading the table this setting exists to fix. The
+    footer has to carry the words, not just the key: an operator cannot
+    guess what an unlabelled function key would do.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _register_in(_STARTING_LANGUAGE)
+        app = _manager()
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+
+            offered = _footer_description(app, _LANGUAGE_KEY)
+            assert offered == tr(_LANGUAGE_LABEL_KEY, locale=_STARTING_LANGUAGE), (
+                f"the footer must name the language chooser in the page's own language, but said {offered!r}"
+            )
+
+            await pilot.press(_LANGUAGE_KEY)
+            await pilot.pause()
+
+            options = app.screen.query_one("#edit-options", OptionList)
+            rendered = [str(options.get_option_at_index(index).prompt) for index in range(options.option_count)]
+            tokens = _language_tokens(app)
+            assert len(tokens) > 1, "a profile offering one language cannot prove a chooser"
+            assert not set(rendered) & set(tokens), (
+                f"the chooser must name languages, not stored tokens, but showed {rendered}"
+            )
+            assert rendered == [
+                tr(f"wizard.setup.profile.output-language.choices.{token}.label", locale=_STARTING_LANGUAGE)
+                for token in tokens
+            ], f"each row must name its own language, in the page's language, but showed {rendered}"
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tmp_path) -> None:
+    """The switch reaches the whole page, and writes like any other field.
+
+    The chrome assertions are what make this more than a cell repaint: the
+    column headings and the footer's own label are not table content, so a
+    page that only refreshed the rows would keep them in the language the
+    operator has just left.
+
+    The record assertion is the other half: the language must travel the
+    same write door every other edit uses, so a second path that only
+    restyled the screen would fail here even while the page looked right.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _register_in(_STARTING_LANGUAGE)
+        app = _manager()
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+
+            started_in = tr(_COLUMN_KEYS[0], locale=_STARTING_LANGUAGE)
+            assert started_in != tr(_COLUMN_KEYS[0], locale=_TARGET_LANGUAGE), (
+                "the two languages must word this heading differently, or the test cannot see a change"
+            )
+            assert started_in in _column_headings(app), (
+                f"the page must start in {_STARTING_LANGUAGE}, but showed {_column_headings(app)}"
+            )
+
+            await pilot.press(_LANGUAGE_KEY)
+            await pilot.pause()
+            options = app.screen.query_one("#edit-options", OptionList)
+            options.highlighted = _language_tokens(app).index(_TARGET_LANGUAGE)
+            await pilot.click("#btn-edit-save")
+            await _settle(pilot, app)
+
+            headings = _column_headings(app)
+            expected = [tr(key, locale=_TARGET_LANGUAGE) for key in _COLUMN_KEYS]
+            assert set(headings) == set(expected), (
+                f"the column headings must be rewritten in {_TARGET_LANGUAGE}, but read {sorted(set(headings))}"
+            )
+            offered = _footer_description(app, _LANGUAGE_KEY)
+            assert offered == tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE), (
+                f"the footer must be rewritten too, but still said {offered!r}"
+            )
+            app.exit(None)
+
+        record = ProfileRepository().load(require_active_bucket_id()).record
+        stored = {fact.path: fact.value for fact in record.facts}
+        assert stored.get(_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
+            "the choice must reach the encrypted record through the ordinary write door"
+        )
+
+
+def _language_tokens(app: ProfileManagerApp) -> tuple[str, ...]:
+    """The stored tokens behind the chooser's rows, in the order shown."""
+    for section in app.overview.sections:
+        for field in section.fields:
+            if field.path == _OUTPUT_LANGUAGE_PATH:
+                return field.enum_values
+    return ()

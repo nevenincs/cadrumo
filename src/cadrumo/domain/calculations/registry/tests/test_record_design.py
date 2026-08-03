@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -275,3 +277,43 @@ def test_registered_record_design_sources_are_discovered_and_parseable() -> None
     assert all(parsed.values())
     assert {path.suffix.lower() for path in sources.values()} >= {".pdf", ".xls", ".xlsx"}
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(sources)
+
+
+# Run out-of-process: any sibling test that parses a workbook or PDF imports these
+# backends into the shared session, so an in-process check cannot observe absence.
+_PARSER_BACKEND_IMPORT_PROBE = """
+import sys
+
+import cadrumo.domain.calculations.registry  # noqa: F401
+
+deferred = [name for name in ("openpyxl", "pdfplumber", "pypdfium2", "xlrd") if name in sys.modules]
+print(",".join(deferred) if deferred else "clean")
+"""
+
+
+def test_registry_import_does_not_load_the_pdf_and_xls_parser_backends() -> None:
+    """Importing the registry must not drag in the spreadsheet/PDF parser stack.
+
+    ``_record_design`` and ``_workbook_parity`` are both imported eagerly by the
+    registry facade, so a module-scope ``import openpyxl`` / ``pdfplumber`` /
+    ``pypdfium2`` / ``xlrd`` in either makes every registry consumer -- every
+    taxpayer calculation -- pay for a parser stack it never calls. They are
+    deferred into the functions that call them; hoisting any one back to module
+    scope reds this test.
+
+    All four are asserted together because they mask each other: openpyxl had
+    TWO eager importers, so deferring only one of them freed nothing. A partial
+    fix here is indistinguishable from no fix unless every importer is covered.
+    """
+    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv with in-test script.
+        [sys.executable, "-c", _PARSER_BACKEND_IMPORT_PROBE],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert completed.stdout.strip() == "clean", (
+        f"importing the registry loaded deferred parser backends: {completed.stdout.strip()}; "
+        "keep these imports inside the extraction functions that call them"
+    )

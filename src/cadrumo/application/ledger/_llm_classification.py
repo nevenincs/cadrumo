@@ -77,10 +77,16 @@ from ...domain.transactions import (
     set_classification,
 )
 from ._actions_common import (
-    _build_bucket_event,
-    _result,
-    _save_transaction_catalogue_and_events,
-    _transaction_repository,
+    build_bucket_event as _build_bucket_event,
+)
+from ._actions_common import (
+    result as _result,
+)
+from ._actions_common import (
+    save_transaction_catalogue_and_events as _save_transaction_catalogue_and_events,
+)
+from ._actions_common import (
+    transaction_repository as _transaction_repository,
 )
 from ._actions_manual import update_manual_transaction_fields
 from ._actions_split_merge import split_transaction_with_classified_children

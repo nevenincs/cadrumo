@@ -19,7 +19,7 @@ from ....application.modelo import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
-from .._payloads_modelo_reconcile import ModeloReconciliationDiffPayload, ModeloReconcileResult
+from .._payloads_modelo_reconcile import ModeloReconcileResult, ModeloReconciliationDiffPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -29,7 +29,7 @@ def _result_kwargs(**overrides: object) -> dict[str, object]:
         "work_unit_id": "a" * 64,
         "bucket_id": "b" * 32,
         "source_kind": ModeloReconciliationEvidenceKind.JUSTIFICANTE,
-        "source_path": "/tmp/receipt.pdf",
+        "source_path": "receipt.pdf",
         "verdict": ModeloReconciliationVerdict.MATCHES,
         "diffs": (),
         "reconciled_at": datetime(2026, 6, 1, 12, 0, tzinfo=UTC),
@@ -40,7 +40,7 @@ def _result_kwargs(**overrides: object) -> dict[str, object]:
 
 
 def test_modelo_reconcile_result_round_trips_valid_payload() -> None:
-    result = ModeloReconcileResult(**_result_kwargs())
+    result = ModeloReconcileResult.model_validate(_result_kwargs())
 
     assert result.verdict is ModeloReconciliationVerdict.MATCHES
     assert result.source_kind is ModeloReconciliationEvidenceKind.JUSTIFICANTE
@@ -56,7 +56,7 @@ def test_modelo_reconcile_result_round_trips_valid_payload() -> None:
 )
 def test_modelo_reconcile_result_refuses_malformed_field(field: str, bad_value: object) -> None:
     with pytest.raises(ValidationError):
-        ModeloReconcileResult(**_result_kwargs(**{field: bad_value}))
+        ModeloReconcileResult.model_validate(_result_kwargs(**{field: bad_value}))
 
 
 def _diff_kwargs(**overrides: object) -> dict[str, object]:
@@ -74,15 +74,15 @@ def _diff_kwargs(**overrides: object) -> dict[str, object]:
 
 
 def test_modelo_reconciliation_diff_payload_round_trips_valid_row() -> None:
-    row = ModeloReconciliationDiffPayload(**_diff_kwargs())
+    row = ModeloReconciliationDiffPayload.model_validate(_diff_kwargs())
 
     assert row.diff_kind is ModeloReconciliationDiffKind.HEADER_FIELD
 
 
 def test_modelo_reconciliation_diff_payload_round_trips_a_grounded_total_diff() -> None:
     """A ``total`` diff keeps its legal/source grounding, unlike a header diff."""
-    row = ModeloReconciliationDiffPayload(
-        **_diff_kwargs(
+    row = ModeloReconciliationDiffPayload.model_validate(
+        _diff_kwargs(
             field_name="0027",
             kind="total_ingresar_mismatch",
             diff_kind=ModeloReconciliationDiffKind.TOTAL,
@@ -105,4 +105,4 @@ def test_modelo_reconciliation_diff_payload_round_trips_a_grounded_total_diff() 
 )
 def test_modelo_reconciliation_diff_payload_refuses_malformed_field(field: str, bad_value: object) -> None:
     with pytest.raises(ValidationError):
-        ModeloReconciliationDiffPayload(**_diff_kwargs(**{field: bad_value}))
+        ModeloReconciliationDiffPayload.model_validate(_diff_kwargs(**{field: bad_value}))

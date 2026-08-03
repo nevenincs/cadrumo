@@ -93,9 +93,9 @@ def _summary_fields(**overrides: object) -> dict[str, object]:
 
 def test_a_valid_capture_projects_onto_all_three_transports() -> None:
     """Positive control: the shape the projector actually emits must validate."""
-    capture = JustificanteCaptureResult(**_capture_fields())  # type: ignore[arg-type]
-    view = JustificanteViewResult(**_view_fields())  # type: ignore[arg-type]
-    summary = JustificanteSnapshotSummaryPayload(**_summary_fields())  # type: ignore[arg-type]
+    capture = JustificanteCaptureResult.model_validate(_capture_fields())
+    view = JustificanteViewResult.model_validate(_view_fields())
+    summary = JustificanteSnapshotSummaryPayload.model_validate(_summary_fields())
 
     assert capture.modelo is Modelo.M130
     assert capture.period == "1T"
@@ -149,7 +149,7 @@ def test_none_of_the_transports_carry_the_receipt_body() -> None:
 )
 def test_the_capture_result_refuses_ungrounded_receipt_state(overrides: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        JustificanteCaptureResult(**_capture_fields(**overrides))  # type: ignore[arg-type]
+        JustificanteCaptureResult.model_validate(_capture_fields(**overrides))
 
 
 @pytest.mark.parametrize(
@@ -166,7 +166,7 @@ def test_the_capture_result_refuses_ungrounded_receipt_state(overrides: dict[str
 )
 def test_the_view_result_refuses_ungrounded_receipt_state(overrides: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        JustificanteViewResult(**_view_fields(**overrides))  # type: ignore[arg-type]
+        JustificanteViewResult.model_validate(_view_fields(**overrides))
 
 
 @pytest.mark.parametrize(
@@ -182,10 +182,10 @@ def test_the_view_result_refuses_ungrounded_receipt_state(overrides: dict[str, o
 )
 def test_the_summary_payload_refuses_ungrounded_receipt_state(overrides: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        JustificanteSnapshotSummaryPayload(**_summary_fields(**overrides))  # type: ignore[arg-type]
+        JustificanteSnapshotSummaryPayload.model_validate(_summary_fields(**overrides))
 
 
 @pytest.mark.parametrize("token", ["1T", "2T", "3T", "4T", "0A"])
 def test_real_registry_period_tokens_are_accepted(token: str) -> None:
     """Normalisation must not narrow the catalogue it validates against."""
-    assert JustificanteSnapshotSummaryPayload(**_summary_fields(period=token)).period == token  # type: ignore[arg-type]
+    assert JustificanteSnapshotSummaryPayload.model_validate(_summary_fields(period=token)).period == token

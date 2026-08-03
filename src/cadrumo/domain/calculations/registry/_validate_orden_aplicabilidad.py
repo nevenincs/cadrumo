@@ -48,7 +48,7 @@ class RevisionLegalApplicabilityWindow:
 
     @classmethod
     def from_revision(cls, revision: ModeloRevision) -> RevisionLegalApplicabilityWindow:
-        """Derive the inclusive revision-plus-presentation interval."""
+        """Derive the inclusive revision-plus-presentation interval for a :class:`ModeloRevision`."""
         if revision.valid_to is None:
             return cls(starts_on=revision.valid_from, closes_on=None)
         closes_on_candidates = [

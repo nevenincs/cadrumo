@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#declaracion-real-render-verification'
 date: '2026-07-26'
-modified: '2026-07-27'
-body_hash: 'sha256:fe3353654a71af7e2880d0e1ad87034e6d75e1ff31d301c24f65ab95779858ce'
+modified: '2026-08-03'
+body_hash: 'sha256:2d906f8e322fddb9c1a8529b242408b771c4cf7ee57b5b0739e3efebc7139e0b'
 related:
   - "[[2026-07-25-declaracion-profile-printed-box-scope-adr]]"
   - "[[2026-07-26-declaracion-real-render-verification-plan]]"
@@ -13,6 +13,7 @@ related:
   - '[[2026-07-26-declaracion-real-render-verification-adversarial-verification-of-campaign-claims-audit]]'
   - '[[2026-07-26-declaracion-real-render-verification-campaign-close-honesty-review-audit]]'
   - '[[2026-07-27-declaracion-real-render-verification-modelo-100-manifest-reconciliation-gap-audit]]'
+  - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
 ---
 
 # `declaracion-real-render-verification` adr: `what grounds a declaracion_pdf profile's claims` | (**status:** `accepted`)
@@ -215,6 +216,17 @@ The grounding for all of the above is the companion static route audit and the
 printed-box scope audits recorded under this feature and its predecessor, which carry
 the per-profile measurements and the method that produced each number.
 
+**(F) Ship the verification specimen corpus to installed users so the specimen gate
+runs there.** Rejected, and the two objections that first suggested rejecting it both
+fail on measurement: the gated set is uniformly synthetic, so no licensing or redaction
+hazard rides along, and at roughly a quarter of a megabyte of PDF bytes the size is
+three orders of magnitude below the cap that motivated the corpus split. It is rejected
+instead because the check has no addressee on an installed machine, per D6. The
+companion route would also need a new directory-resolving locator seam, since the
+existing companion resolver returns files rather than directories. A hybrid shipping
+only a minimal subset was considered and rejected for inheriting that same machinery in
+exchange for a fraction of a check that cannot currently fail.
+
 ## Decisions
 
 **D1 — The printed box number is `form_number`. `number` is record-design metadata.**
@@ -292,6 +304,82 @@ touch the ordering argument, which rests on M130 rather than on the span, but a 
 number sitting beside a sound conclusion lends it unearned precision — and this one
 was caught only by an adversarial pass that re-derived it from git rather than
 re-reading the claim.)
+
+**D6 — The `declaracion_pdf` specimen corpus is a checkout-time authoring input and
+does not ship. What an installed build needs from it already ships as a precompiled
+projection.**
+
+The specimen gate's verdict is a pure function of two release-frozen inputs: the
+profile's registry flags, and whether a per-modelo specimen directory holds a PDF. It
+cannot return anything on an installed build that the build did not already determine,
+and its remedies — acquire a specimen, or set `provisional_pending_specimen` —
+address a registry author rather than a taxpayer. The companion round-trip check is not
+even live: every profile sets `corpus_round_trip_verified`, so it returns before
+reaching the corpus at all.
+
+The corpus is not, however, without a shipped consumer, and it would be wrong to
+justify this decision by saying it is. A wheel-shipped module carries a frozen SHA-256
+digest of every committed specimen and uses it to refuse re-sanitising an already
+sanitised document. That is the correct shape and it is already in place: the heavy
+artefact stays out of the wheel while a light, reviewable projection ships under a
+drift gate. It is the same boundary the semantic-search precompile decision draws for
+retrieval and the `shipped-search-licence-clean` rule draws for the docs index.
+Shipping the PDFs would depart from that pattern rather than complete it.
+
+D3 is not in tension with this. D3 governs a profile whose claims cannot be decided for
+want of evidence. Here the evidence exists and the claim was decided — at authoring
+time, in the checkout. What is absent on an installed build is the re-execution of a
+settled check, which is a different thing and is not recorded as an evidence gap.
+
+The `RunMode.CHECKOUT` gating of the single derivation is the structural expression of
+this, and is what the hardened one-way boundary of the conformance-cli decision
+requires of shipped code reaching a wheel-excluded path. The
+`JustificanteCorpusUnavailableAdvisory` it returns is the operator-facing surface, so
+the skip is introspectable rather than silent. Enforcement is not abandoned but
+relocated: the specimen check belongs in the installed-cohort CI lane against the built
+artefact, where its inputs live.
+
+**On the reclassification the alternative would force.** Shipping these files would
+convert a category the packaging exclusion sheds *by category* (`tests/**`, on the
+stated rationale that it serves no installed consumer) into shipped corpus. That does
+not conflict with `fixture-provenance-declared-in-sidecar` or with the fixture-roles
+decision, both of which govern how a fixture declares and proves its provenance and are
+silent on distribution; a shipped fixture would still declare provenance in its sidecar
+and still be cross-checked against its `/Producer` evidence. The conflict is narrower
+and real: the sidecar vocabulary, its reader, and the `/Producer` cross-check all live
+under `tests/` and are themselves wheel-excluded, so a shipped corpus would travel
+without the machinery that keeps its provenance honest.
+
+**Guard, required before any future revisit.** No artefact declaring `real_corpus` or
+`aeat_published_facsimile` may ship. Today's gated set is uniformly
+`synthetic_generated`, so nothing turns on it now, but the fixture-roles decision
+explicitly contemplates real sanitised anchors and four third-party licensed
+`real_corpus` artefacts already exist elsewhere in the tree; a packaging change alone
+would otherwise carry one silently. Because the provenance constants, the sidecar
+reader, and the `/Producer` cross-check are all wheel-excluded, this guard cannot be an
+assertion in shipped code. It must be a checkout-side gate over the packaging manifest,
+or a build-time assertion over the built artefact. No such gate exists today, and
+building one is a precondition of shipping, not a follow-up to it.
+
+**Where this ruling lives, and why it is an amendment rather than a new record.** The
+grounding is
+`2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research`,
+which carries every measurement cited above and is not restated here. Two other
+accepted records were weighed as the home. The corpus-registry-packaging decision
+governs how the curated `corpus/` and `registry/` trees reach an installed
+distribution; test fixtures were never in its scope, and because this ruling ships
+nothing it changes no packaging fact — amending it would widen its subject to any
+file production code might read. The corpus binaries themselves moved to companion
+distributions without amending it, which is the precedent. The verification-fixture-
+roles decision governs how a fixture declares and proves its provenance; the guard
+above attaches to that machinery and cites it, but distribution is not a refinement of
+that schema. What is actually decided here is what a grounding claim means when its
+check does not re-execute — the same subject as D1 through D5, and the direct
+neighbour of D3. A separate record for one ruling extending this series would be
+refinement by new document. Had the decision gone the other way and shipped the corpus,
+the placement would differ: it would then also amend the corpus-registry-packaging
+decision, because it would add a shipped data category and require a directory-
+resolving locator seam that does not exist.
 
 ## Constraints
 

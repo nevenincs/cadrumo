@@ -38,6 +38,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import NIST_PASSPHRASE_MIN_LENGTH, PassphraseStrength, assess_passphrase_strength
 from ...core.errors import CadrumoError
+from ...core.i18n import clear_output_language_cache
 from ...domain.user_profile import UserProfileStatus, new_profile_id
 from ..workflow import workflow_state_repository
 from ._login_session import login_profile
@@ -194,6 +195,13 @@ def register_profile_with_credentials(
     # here) keeps one authentication path, and with it the throttle, the
     # pointer transaction, and the persisted-session semantics.
     login_profile(name=resolved_label, passphrase_callback=lambda: passphrase)
+    # Registration can have persisted ``preferences.output_language`` while
+    # the credential screen was rendering in the settings default.  The
+    # resolver cache is deliberately insensitive to session opening, so clear
+    # it only after the canonical login has made the new profile readable.
+    # The manager that follows therefore resolves its very first chrome and
+    # content render through the operator's just-selected language.
+    clear_output_language_cache()
 
     return ProfileRegistrationOutcome(
         profile_id=profile_id,

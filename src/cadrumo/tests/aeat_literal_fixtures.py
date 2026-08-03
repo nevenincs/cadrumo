@@ -79,6 +79,34 @@ CENSAL_WRITE_SURFACE_PATH_CANARIES = (
     CENSAL_MODIF_DOMICILIO_NOTIF_PATH_CANARY,
     CENSAL_M036_FILING_TOOL_PATH_CANARY,
 )
+ACCESO_DR_DETAIL_PATH_FIXTURE = "/wlpl/DASR-CORE/AccesoDR2023RVlt"
+KATA_COTEJO_ID_PATH_FIXTURE = "/wlpl/KATA-APLI/cotejo/CotejoIdSv"
+KATA_COTEJO_DOC_ID_PATH_FIXTURE = "/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
+AEAT_HOST_WITH_USERINFO_AUTHORITY_CANARY = "ignored@sede.agenciatributaria.gob.es"
+AEAT_HOST_WITH_PORT_AUTHORITY_CANARY = "sede.agenciatributaria.gob.es:443"
+AEAT_HOST_WITH_INVALID_PORT_AUTHORITY_CANARY = "sede.agenciatributaria.gob.es:not-a-port"
+AEAT_NON_HOST_AUTHORITY_CANARIES = (
+    AEAT_HOST_WITH_USERINFO_AUTHORITY_CANARY,
+    AEAT_HOST_WITH_PORT_AUTHORITY_CANARY,
+    AEAT_HOST_WITH_INVALID_PORT_AUTHORITY_CANARY,
+)
+#: A host trailing the real AEAT apex as a substring rather than a suffix, in
+#: the opposite arrangement from ``AEAT_SUFFIX_LOOKALIKE_HOST_CANARY`` above
+#: (apex-then-lookalike-tail rather than lookalike-then-apex-tail).
+AEAT_APEX_EVIL_SUFFIX_URL_CANARY = "https://agenciatributaria.gob.es.evil.test/phish"
+#: A host merely prefixed onto the real AEAT apex, no dot boundary.
+AEAT_APEX_NOT_PREFIX_URL_CANARY = "https://not-agenciatributaria.gob.es/x"
+AEAT_NONCANONICAL_HTTP_MANUAL_URL_CANARY = "http://sede.agenciatributaria.gob.es/manual.pdf"
+CITATION_MANUAL_PDF_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/manual.pdf"
+#: A host merely ENDING in the official apex as a substring, used to prove a
+#: category-citation origin check anchors suffix matching on a dot boundary.
+CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY = "https://evil-agenciatributaria.gob.es/a"
+CITATION_SEDE_HTTP_DOWNGRADE_URL_CANARY = "http://sede.agenciatributaria.gob.es/a"
+CITATION_SEDE_AYUDA_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/Sede/ayuda.html"
+CITATION_APEX_URL_FIXTURE = "https://agenciatributaria.gob.es/apex"
+CITATION_SEDE_BARE_HOST_FIXTURE = "sede.agenciatributaria.gob.es"
+JUSTIFICANTE_FILING_TARGET_VERIFY_URL_FIXTURE = "https://www.agenciatributaria.gob.es/verify"
+BORRADOR_PAYLOAD_WWW2_ORIGIN_FIXTURE = "https://www2.agenciatributaria.gob.es/"
 JUSTIFICANTE_AYUDA_PATH_FIXTURE = "/ayuda"
 JUSTIFICANTE_COTEJO_PATH_PREFIX_FIXTURE = "/Sede/cotejo/CSV="
 JUSTIFICANTE_VERIFY_PATH_FIXTURE = "/verify"

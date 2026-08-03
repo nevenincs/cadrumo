@@ -37,6 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 from ...adapters.persistence.storage import (
     AUTH_APODERADO_CONFIGURATION_NAMESPACE,
     SecureBoundRepository,
+    SecureObjectRepository,
     SecureObjectRowIdentityError,
     SensitivityClass,
     safe_repository_id,
@@ -151,9 +152,15 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     sensitivity: ClassVar[SensitivityClass] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.schema_version
 
-    def __init__(self, *, bucket_id: str | None = None, **kwargs: object) -> None:
+    def __init__(
+        self,
+        *,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+        settings: Settings | None = None,
+    ) -> None:
         """Bind the repository to ``bucket_id`` so writes cannot cross buckets."""
-        super().__init__(bucket_id=bucket_id, **kwargs)  # type: ignore[arg-type]
+        super().__init__(bucket_id=bucket_id, objects=objects, settings=settings)
         self._bound_bucket_id = None if bucket_id is None else _canonical_bucket_id(bucket_id)
 
     @override
@@ -167,30 +174,20 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
         return safe_repository_id(payload.bucket_id, context="bucket_id")
 
     @override
-    def load(self, identifier: str) -> ApoderadoConfiguration | None:
-        """Return the configuration stored under ``identifier``, or ``None``.
+    def _translate_row_identity_error(self, error: SecureObjectRowIdentityError) -> Exception:
+        """Translate the shared gate's row-identity refusal into this domain's error.
 
         The object key is the only durable statement of which bucket this
         configuration belongs to, so a row whose payload names a different
         bucket than the key it was read from is refused rather than returned:
         the two disagree, so neither can be trusted as the record's owner.
-
-        That comparison now lives in the base repository, which applies it to
-        every secure-bound consumer. This override no longer repeats it -- a
-        second copy would drift -- and instead translates the substrate's
-        refusal into this domain's error, so callers keep the typed failure
-        they handle rather than a storage-layer one leaking through.
-
-        Raises:
-            ApoderadoConfigurationIdentityError: When the stored payload's
-                ``bucket_id`` does not derive the key it was read from.
+        That comparison lives solely in the base repository's shared envelope
+        gate; this hook only relabels the exception so callers keep the typed
+        failure they handle rather than a storage-layer one leaking through.
         """
-        try:
-            return super().load(identifier)
-        except SecureObjectRowIdentityError as exc:
-            raise ApoderadoConfigurationIdentityError(
-                "stored apoderado configuration does not belong to the bucket it was read from",
-            ) from exc
+        return ApoderadoConfigurationIdentityError(
+            "stored apoderado configuration does not belong to the bucket it was read from",
+        )
 
     @override
     def save(self, payload: ApoderadoConfiguration) -> None:

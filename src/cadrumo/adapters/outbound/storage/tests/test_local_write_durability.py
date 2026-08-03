@@ -100,7 +100,7 @@ class TestProbeCleanupHonesty:
 
         # Replace the provider's own delete on this instance so the sentinel
         # cleanup genuinely fails; the write half still runs for real.
-        provider.delete = _failing_delete  # type: ignore[method-assign]
+        object.__setattr__(provider, "delete", _failing_delete)
 
         report = provider.probe()
         assert report.writable is False, "probe claimed writable after the sentinel delete failed"

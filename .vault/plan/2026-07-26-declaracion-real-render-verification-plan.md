@@ -9,8 +9,8 @@ tier: L2
 related:
   - '[[2026-07-25-declaracion-profile-printed-box-scope-adr]]'
   - '[[2026-07-25-declaracion-profile-printed-box-scope-real-render-gate-and-naming-honesty-audit]]'
+  - '[[2026-08-03-declaracion-real-render-verification-specimen-corpus-distribution-research]]'
 ---
-
 # `declaracion-real-render-verification` plan
 
 ### Phase `P01` - Evidence-backed profiles

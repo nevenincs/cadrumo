@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -46,7 +46,7 @@ _FENCE_RE = re.compile(r"```[^\n]*\n(.*?)```", re.DOTALL)
 def _edu_docs() -> list[Path]:
     docs: list[Path] = []
     for d in _EDU_DIRS:
-        docs.extend(sorted((PROJECT_ROOT / d).rglob("*.md")))
+        docs.extend(sorted((REPO_ROOT / d).rglob("*.md")))
     return docs
 
 
@@ -89,7 +89,7 @@ def test_cited_aeat_verbs_resolve() -> None:
         text = doc.read_text(encoding="utf-8")
         for tokens in sorted(_cited_commands(text)):
             if _longest_resolving_prefix(tokens) is None:
-                unresolved.append(f"{doc.relative_to(PROJECT_ROOT)}: aeat {' '.join(tokens)}")
+                unresolved.append(f"{doc.relative_to(REPO_ROOT)}: aeat {' '.join(tokens)}")
     assert not unresolved, "educational docs cite aeat commands whose leading verb does not resolve:\n" + "\n".join(
         unresolved,
     )
@@ -115,11 +115,11 @@ def test_relative_links_resolve() -> None:
                 # pure-anchor link: a real in-page anchor (#section) is fine; an
                 # empty target ("" or "#") is a dead placeholder myst rejects.
                 if not anchor:
-                    broken.append(f"{doc.relative_to(PROJECT_ROOT)}: {target or '(empty)'}")
+                    broken.append(f"{doc.relative_to(REPO_ROOT)}: {target or '(empty)'}")
                 continue
             resolved = (doc.parent / path_part).resolve()
             # Must resolve to a FILE (a documented page), not a bare directory:
             # myst cannot cross-reference a directory link such as ``../cli/``.
             if not resolved.is_file():
-                broken.append(f"{doc.relative_to(PROJECT_ROOT)}: {target}")
+                broken.append(f"{doc.relative_to(REPO_ROOT)}: {target}")
     assert not broken, "educational docs have unresolved relative links:\n" + "\n".join(broken)

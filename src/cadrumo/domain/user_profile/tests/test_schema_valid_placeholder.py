@@ -65,10 +65,19 @@ def test_a_field_with_no_declared_set_gets_the_sentinel() -> None:
 
     Deriving from the definition means an unconstrained field is left
     alone rather than given something clever, so the filler stays legible
-    where it does not need to be careful.
+    where it does not need to be careful. The one documented exception is
+    ``tax_id``: its schema type is a plain string, but the downstream
+    ``SubjectTaxId`` projection enforces the AEAT checksum the schema does
+    not express, so the filler returns a real valid NIF for it instead of
+    the generic sentinel (see :func:`schema_valid_placeholder`'s docstring).
     """
     schema = load_user_profile_schema()
-    plain = [field for section in schema.sections for field in section.fields if not field.enum_values]
+    plain = [
+        field
+        for section in schema.sections
+        for field in section.fields
+        if not field.enum_values and field.key != "tax_id"
+    ]
 
     assert plain, "the schema is expected to declare unconstrained fields too"
     assert all(schema_valid_placeholder(field) == "placeholder" for field in plain)

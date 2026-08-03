@@ -224,9 +224,9 @@ def test_run_health_payloads_mirror_their_canonical_bounds() -> None:
         ("zero error count", ErrorKindCountPayload,
          {"error_kind": "timeout", "provider": "claude", "count": 1}, {"count": 0}),
     ):
-        model(**base)  # positive control: the base must be accepted
+        model.model_validate(base)  # positive control: the base must be accepted
         try:
-            model(**(base | override))
+            model.model_validate(base | override)
         except ValidationError:
             continue
         pytest.fail(f"{label} was accepted by the transport row")
@@ -238,7 +238,7 @@ def test_run_health_payloads_mirror_their_canonical_bounds() -> None:
 
 def test_run_record_timestamp_round_trips_and_refuses_malformed_text() -> None:
     """``started_at`` is a real datetime on the canonical record, not free text."""
-    row = RunRecordPayload(**_RUN_RECORD_BASE)
+    row = RunRecordPayload.model_validate(_RUN_RECORD_BASE)
     rendered = row.model_dump_json()
     assert '"started_at":"2026-01-01T00:00:00Z"' in rendered
     assert RunRecordPayload.model_validate_json(rendered) == row

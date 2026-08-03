@@ -4,7 +4,23 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from pydantic import ConfigDict, TypeAdapter, ValidationError
+
 from ....core import Period
+
+_SCENARIO_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
+    dict[str, object], config=ConfigDict(strict=True)
+)
+
+
+def _scenario_mapping(value: object) -> dict[str, object] | None:
+    """Return a strictly typed scenario mapping when ``value`` is one."""
+    if not isinstance(value, Mapping):
+        return None
+    try:
+        return _SCENARIO_MAPPING_ADAPTER.validate_python(value)
+    except ValidationError:
+        return None
 
 
 def hydrate_scenario_filing_period(data: object) -> object:
@@ -17,14 +33,15 @@ def hydrate_scenario_filing_period(data: object) -> object:
     ``filing_year``/``period`` pair, or the pair does not form a valid
     :class:`~cadrumo.core.Period`.
     """
-    if not isinstance(data, Mapping) or "filing_period" in data:
+    payload = _scenario_mapping(data)
+    if payload is None or "filing_period" in payload:
         return data
-    filing_year = data.get("filing_year")
-    period = data.get("period")
+    filing_year = payload.get("filing_year")
+    period = payload.get("period")
     if not isinstance(filing_year, int) or not isinstance(period, str):
         return data
     try:
         filing_period = Period.from_year_and_code(filing_year, period)
     except ValueError:
         return data
-    return {**data, "filing_period": filing_period}
+    return {**payload, "filing_period": filing_period}

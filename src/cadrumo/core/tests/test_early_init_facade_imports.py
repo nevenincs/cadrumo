@@ -23,6 +23,7 @@ import ast
 import importlib.abc
 import sys
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -72,9 +73,7 @@ def test_the_late_binding_premise_still_holds() -> None:
     source = (_CORE_DIR / "__init__.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     getattr_line = next(
-        node.lineno
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == "__getattr__"
+        node.lineno for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "__getattr__"
     )
     first_submodule_import = min(
         node.lineno
@@ -97,12 +96,25 @@ def test_core_survives_settings_construction_during_its_own_init() -> None:
     behaviour rather than the import spelling, so it still holds if the fix is
     later restructured.
     """
-    for name in [key for key in sys.modules if key.startswith("cadrumo")]:
+    # Every other test in this worker process imported `cadrumo.*` before this
+    # one ran, and every class object those tests hold (pydantic model schemas,
+    # module-level singletons, cached instances) is bound to THOSE module
+    # objects. Deleting the cadrumo.* entries here forces a genuinely fresh
+    # import for the assertion below, but without restoring the original
+    # entries afterward, every later test in this worker sees fresh re-imports
+    # that mint NEW class objects sharing the OLD ones' qualified names --
+    # e.g. a pydantic strict-model isinstance check on `ManifestKdfParams`
+    # then fails against an instance built from the pre-wipe class. Save the
+    # original entries and restore them in `finally` so no other test in this
+    # process observes any effect of the wipe.
+    original_modules = {key: module for key, module in sys.modules.items() if key.startswith("cadrumo")}
+    for name in original_modules:
         del sys.modules[name]
 
     class _MidInitSettingsTrigger(importlib.abc.MetaPathFinder):
         fired = False
 
+        @override
         def find_spec(self, fullname: str, path: object = None, target: object = None) -> None:
             if fullname == "cadrumo.core.secure_object_write" and not _MidInitSettingsTrigger.fired:
                 _MidInitSettingsTrigger.fired = True
@@ -124,5 +136,8 @@ def test_core_survives_settings_construction_during_its_own_init() -> None:
         importlib.import_module("cadrumo.core")  # importing IS the assertion
     finally:
         sys.meta_path.remove(trigger)
+        for name in [key for key in sys.modules if key.startswith("cadrumo")]:
+            del sys.modules[name]
+        sys.modules.update(original_modules)
 
     assert _MidInitSettingsTrigger.fired, "the trigger never ran; this test measured nothing"

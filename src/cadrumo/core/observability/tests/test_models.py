@@ -285,15 +285,21 @@ class TestTraceFingerprints:
             "initial_step_id": "step-0",
         }
         fields.update(overrides)
-        return RunContextInfo(**fields)  # type: ignore[arg-type]
+        return RunContextInfo.model_validate(fields)
+
+    def _trace_with_fingerprint(self, field: str, value: str) -> RunTrace:
+        """Re-validate a real trace payload after changing one fingerprint field."""
+        payload = _make_trace().model_dump(mode="python")
+        payload[field] = value
+        return RunTrace.model_validate(payload)
 
     @pytest.mark.parametrize("field", ["corpus_sha256", "db_sha256"])
     def test_trace_refuses_malformed_replay_fingerprints(self, field: str) -> None:
         """A replay gate fingerprint must be lowercase hex-64 or nothing at all."""
         for bad in self._MALFORMED:
             with pytest.raises(ValidationError):
-                _make_trace(**{field: bad})  # type: ignore[arg-type]
-        assert getattr(_make_trace(**{field: self._CANONICAL}), field) == self._CANONICAL  # type: ignore[arg-type]
+                self._trace_with_fingerprint(field, bad)
+        assert getattr(self._trace_with_fingerprint(field, self._CANONICAL), field) == self._CANONICAL
 
     def test_trace_cert_fingerprint_admits_only_absent_or_digest(self) -> None:
         """The documented "no cert configured" case is ``""`` — not any other junk."""

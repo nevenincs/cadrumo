@@ -95,6 +95,12 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text(r"justificantes/.*\.pdf"),
     ),
     AllowlistRule(
+        path=_path(r"^src/cadrumo/adapters/persistence/profile/tests/test_secure_bound_key_identity_binding\.py$"),
+        reason="key-identity binding fixture uses a representative justificante PDF filename",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"justificantes/.*\.pdf"),
+    ),
+    AllowlistRule(
         path=_path(r"^src/cadrumo/application/modelo/tests/test_reconciliation_record_store\.py$"),
         reason="reconciliation-record roundtrip fixture uses a representative justificante PDF filename",
         pattern_names=frozenset({"calendar quarter token"}),
@@ -150,10 +156,32 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
             r"application/modelo/tests/test_prorrata_regularizacion_source_timing|"
             r"application/modelo/tests/test_review_package(?:_collab_audit|_counter_sign|_feedback|_recipient_encryption|_review_only_workspace|_signing)?|"
             r"application/overview/tests/test_data_prep|"
+            r"application/modelo/tests/test_filed_observation_storage_context|"
+            r"application/modelo/tests/test_import_flow_mutation_guards|"
+            r"application/modelo/tests/test_work_lifecycle_bucket_scope|"
             r"entrypoints/cli/tests/test_modelo_review_package_verb"
             r")\.py$"
         ),
         reason="test-only WorkUnit display labels are paired with typed Period values; no period parsing depends on the label",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/application/filing/tests/test_export_receipt_artifact_binding\.py$"),
+        reason="export-receipt binding fixture names a tmp_path output artefact by a representative filename; no period parsing depends on it",
+        pattern_names=frozenset({"calendar quarter token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/domain/iva_compensation/tests/test_carry_forward_taxpayer_identity\.py$"),
+        reason="test-only expediente_id label is paired with a typed Period value; no period parsing depends on the label",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_app_live_filed_rendering\.py$"),
+        reason=(
+            "IVA history capture result fixture carries opaque observation-path, "
+            "artefact-ref, and failed-declaration log-message strings; none is "
+            "parsed as a period boundary"
+        ),
         pattern_names=frozenset({"year-qualified quarterly token"}),
     ),
     AllowlistRule(

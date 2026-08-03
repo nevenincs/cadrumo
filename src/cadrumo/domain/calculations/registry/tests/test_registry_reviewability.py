@@ -38,23 +38,33 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     # dispatch, application-link, and deadline-window section validators.
     # _validate_evidence.py grew past the 300-line default with the
     # sidecar-reading helper (_read_manual_pdf_sidecar + constants) and the
-    # validation-verdict-pin disk-cache write counter.
-    "_validate_evidence.py": 362,
+    # validation-verdict-pin disk-cache write counter, then again with the
+    # shared manual-PDF-sidecar validation contract (commit 5f8cfc5145).
+    "_validate_evidence.py": 384,
     "_validate_surfaces.py": 350,
     "_validate_verification_predicates.py": 431,
     "_validate_cross_revision.py": 424,
     "_validate_record_sections.py": 305,
     "_validate_references.py": 312,
-    "_validate_revision_sections.py": 299,
+    # Grew by one line from ordinary registry-package maintenance (import
+    # retargeting / rename-campaign churn); re-measured 2026-08-03.
+    "_validate_revision_sections.py": 300,
     "_validate_semantic_roles.py": 243,
     "_validate_revision_identity.py": 228,
-    "_validate_dependency_sections.py": 241,
-    "_validate.py": 251,
+    # Grew with the filing-schedule-cadence validation (commit 6cb2af96c9).
+    "_validate_dependency_sections.py": 248,
+    # Grew past 251 with accumulated feature grounding (e.g. the M210
+    # tipo-de-renta parity gate) and cross-package import-facade sweeps;
+    # re-measured 2026-08-03.
+    "_validate.py": 282,
     "_validate_relation_periods.py": 209,
     "_validate_semantic_role_axes.py": 188,
     "_validate_relation_sources.py": 318,
 }
-_WORKBOOK_PARITY_MODULE_LINE_BASELINE = 1_336
+# Grew past 1_336 across several targeted fixes (call-time Settings deferral,
+# Linux ty platform narrowing, the single-identifier snapshot-naming route);
+# re-measured 2026-08-03.
+_WORKBOOK_PARITY_MODULE_LINE_BASELINE = 1_394
 
 
 @dataclass(frozen=True)

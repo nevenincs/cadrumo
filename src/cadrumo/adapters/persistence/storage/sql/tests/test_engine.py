@@ -19,7 +19,8 @@ from typing import Any
 import pytest
 from sqlalchemy import text
 
-from ......core.config import PROJECT_ROOT, Settings
+from ......core.config import Settings
+from ......tests import REPO_ROOT
 from ...errors import StorageError
 from .. import create_engine_from_settings, dispose_engine
 
@@ -204,9 +205,9 @@ def test_engine_refuses_creating_a_database_with_former_product_filename(tmp_pat
 
 
 def test_engine_anchors_relative_sqlite_urls_to_project_root(tmp_path: Path) -> None:
-    """Relative SQLite URLs must resolve against PROJECT_ROOT, not the process cwd."""
+    """Relative SQLite URLs must resolve against REPO_ROOT, not the process cwd."""
     relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
-    anchored_db = PROJECT_ROOT / relative_db
+    anchored_db = REPO_ROOT / relative_db
     settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
     original_cwd = Path.cwd()
     os.chdir(tmp_path)
@@ -222,7 +223,7 @@ def test_engine_anchors_relative_sqlite_urls_to_project_root(tmp_path: Path) -> 
         if anchored_db.exists():
             anchored_db.unlink()
         parent = anchored_db.parent
-        while parent != PROJECT_ROOT and parent.exists():
+        while parent != REPO_ROOT and parent.exists():
             try:
                 parent.rmdir()
             except OSError:

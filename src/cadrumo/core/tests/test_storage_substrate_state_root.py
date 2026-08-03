@@ -6,8 +6,9 @@ from pathlib import Path
 
 import pytest
 
+from ...tests import REPO_ROOT
 from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
-from ..config import PROJECT_ROOT, Settings
+from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -29,7 +30,7 @@ def test_secure_storage_dirs_default_under_local_storage_root(tmp_path: Path) ->
 
     assert settings.cadrumo_secret_store_dir == storage_root / "secrets"
     _assert_shared_storage_dirs(settings, storage_root)
-    assert settings.cadrumo_secret_store_dir != PROJECT_ROOT / "var" / "secrets"
+    assert settings.cadrumo_secret_store_dir != REPO_ROOT / "var" / "secrets"
 
 
 def test_explicit_secret_store_dir_env_override_wins(tmp_path: Path) -> None:

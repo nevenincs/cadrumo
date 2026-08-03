@@ -119,3 +119,7 @@ def collect_casillas_by_semantic_role(
                     continue
                 grouped[casilla.semantic_role].append((modelo.id, revision.id, casilla.id))
     return {role: tuple(occs) for role, occs in grouped.items()}
+
+
+required_role_declaration_failures = _validate_required_role_declarations
+REQUIRED_ROLE_LABEL_PATTERNS = _REQUIRED_ROLE_LABEL_PATTERNS

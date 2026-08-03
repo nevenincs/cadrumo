@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-"""Signal-only type-check harness wrapping ty and pyrefly.
+"""Signal-only type-check harness wrapping ty, pyrefly, and BasedPyright.
 
-Runs the two project type checkers (``ty`` across ``src`` and ``pyrefly``
-across the strict ``domain`` + ``application`` subset), then reports only
-actionable signal:
+Runs the three project type checkers (``ty`` across ``src`` and ``pyrefly`` /
+``basedpyright`` across the strict ``domain`` + ``application`` subset), then
+reports only actionable signal:
 
 * On success (zero diagnostics): silent, exit 0. Green is not reported.
 * On failure: a compact summary grouped by rule and by file — never the
@@ -167,6 +167,41 @@ def collect_pyrefly() -> list[Diagnostic]:
     return diagnostics
 
 
+def collect_basedpyright() -> list[Diagnostic]:
+    """Run BasedPyright and parse its JSON diagnostics."""
+    # Select the strict production-only configuration explicitly.  A legacy
+    # root ``pyrightconfig.json`` also exists for the editor and would
+    # otherwise win discovery, re-admitting the entire ``src/cadrumo`` tree
+    # (including tests) and making this gate report a different surface than
+    # the documented basedpyright boundary in ``pyproject.toml``.
+    result = _run(["basedpyright", "--project", "pyproject.toml", "--threads", "8", "--outputjson"])
+    payload = result.stdout.strip()
+    if not payload:
+        sys.stderr.write(result.stderr)
+        raise RuntimeError("basedpyright produced no report; see the captured stderr above")
+    try:
+        report = json.loads(payload)
+    except json.JSONDecodeError:
+        sys.stderr.write(result.stdout)
+        sys.stderr.write(result.stderr)
+        raise
+    diagnostics: list[Diagnostic] = []
+    for row in report.get("generalDiagnostics", []):
+        if row.get("severity") != "error":
+            continue
+        start = row.get("range", {}).get("start", {})
+        diagnostics.append(
+            Diagnostic(
+                checker="basedpyright",
+                rule=str(row.get("rule") or "error"),
+                path=_norm(str(row.get("file") or "?")),
+                line=int(start.get("line", -1)) + 1,
+                message=str(row.get("message") or "").splitlines()[0],
+            )
+        )
+    return diagnostics
+
+
 def _print_group(diagnostics: list[Diagnostic], checker: str) -> None:
     """Print the grouped rule/file breakdown for one checker."""
     subset = [d for d in diagnostics if d.checker == checker]
@@ -194,8 +229,8 @@ def _print_full(diagnostics: list[Diagnostic]) -> None:
 
 
 def main() -> int:
-    """Run both type checkers and emit signal-only output."""
-    parser = argparse.ArgumentParser(description="Signal-only ty + pyrefly harness.")
+    """Run all type checkers and emit signal-only output."""
+    parser = argparse.ArgumentParser(description="Signal-only ty + pyrefly + basedpyright harness.")
     parser.add_argument(
         "--full",
         action="store_true",
@@ -203,7 +238,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    collected = collect_ty() + collect_pyrefly()
+    collected = collect_ty() + collect_pyrefly() + collect_basedpyright()
     suppressed = [d for d in collected if _is_irreducible_external_gap(d)]
     diagnostics = [d for d in collected if not _is_irreducible_external_gap(d)]
 
@@ -231,9 +266,15 @@ def main() -> int:
 
     ty_count = sum(1 for d in diagnostics if d.checker == "ty")
     pyrefly_count = sum(1 for d in diagnostics if d.checker == "pyrefly")
-    print(f"check-types: {len(diagnostics)} diagnostics ({ty_count} ty, {pyrefly_count} pyrefly)")
+    basedpyright_count = sum(1 for d in diagnostics if d.checker == "basedpyright")
+    print(
+        "check-types: "
+        f"{len(diagnostics)} diagnostics "
+        f"({ty_count} ty, {pyrefly_count} pyrefly, {basedpyright_count} basedpyright)"
+    )
     _print_group(diagnostics, "ty")
     _print_group(diagnostics, "pyrefly")
+    _print_group(diagnostics, "basedpyright")
     print("\nFull detail: just audit-types")
     return 1
 

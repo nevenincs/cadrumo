@@ -9,7 +9,7 @@ evaluators; this module owns the operator-wide argument-count contract only.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import Final
 
 from ._errors import RegistryValidationError
 from ._schema_base import FormulaOperator
@@ -85,7 +85,7 @@ def require_formula_operator_arity(op: str, count: int) -> None:
     """Refuse an argument count outside the canonical contract for ``op``."""
     if op not in FORMULA_OPERATOR_ARITIES:
         raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
-    contract = FORMULA_OPERATOR_ARITIES[cast(FormulaOperator, op)]
+    contract = FORMULA_OPERATOR_ARITIES[op]
     if contract.accepts(count):
         return
     if contract.maximum == contract.minimum:

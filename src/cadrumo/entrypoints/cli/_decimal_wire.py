@@ -24,7 +24,7 @@ See Also:
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import AfterValidator
 
@@ -62,7 +62,7 @@ def bounded_decimal_wire_text(
     minimum: Decimal | None = None,
     maximum: Decimal | None = None,
     exclusive_minimum: bool = False,
-) -> object:
+) -> Any:
     """Return a wire-decimal type additionally bounded to a range.
 
     Canonical models express these bounds on a real

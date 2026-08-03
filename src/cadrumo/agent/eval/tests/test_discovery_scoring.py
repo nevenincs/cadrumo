@@ -21,6 +21,7 @@ under test (``no-tautological-calculation-tests``, ``aeat-quality-gates``).
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TypedDict, Unpack
 
 import pytest
 
@@ -295,8 +296,30 @@ def test_comparison_rejects_two_scores_targeting_different_verbs() -> None:
         )
 
 
-def _reached_kwargs(**overrides: object) -> dict[str, object]:
-    kwargs: dict[str, object] = {
+class _DiscoveryScoreKwargs(TypedDict):
+    persona: str
+    session_id: str
+    target_command_key: str
+    reached: bool
+    rounds_to_correct_verb: int
+    discovery_calls: int
+    misselections: int
+    failures: tuple[str, ...]
+
+
+class _DiscoveryScoreOverrides(TypedDict, total=False):
+    persona: str
+    session_id: str
+    target_command_key: str
+    reached: bool
+    rounds_to_correct_verb: int
+    discovery_calls: int
+    misselections: int
+    failures: tuple[str, ...]
+
+
+def _reached_kwargs(**overrides: Unpack[_DiscoveryScoreOverrides]) -> _DiscoveryScoreKwargs:
+    kwargs: _DiscoveryScoreKwargs = {
         "persona": "cadrumo-modelo-preparer",
         "session_id": "s-1",
         "target_command_key": _TARGET,
@@ -304,6 +327,7 @@ def _reached_kwargs(**overrides: object) -> dict[str, object]:
         "rounds_to_correct_verb": 1,
         "discovery_calls": 0,
         "misselections": 0,
+        "failures": (),
     }
     kwargs.update(overrides)
     return kwargs
@@ -336,4 +360,4 @@ def test_discovery_score_is_a_frozen_strict_model() -> None:
     )
     assert isinstance(score, DiscoveryScore)
     with pytest.raises(ValueError, match="frozen"):
-        score.reached = False  # type: ignore[misc]
+        score.__setattr__("reached", False)

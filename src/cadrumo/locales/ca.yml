@@ -4203,8 +4203,8 @@ cli:
         help: Informa de la postura de consentiment de telemetria remota. Mai emet
           res.
         off_hint: La telemetria roman totalment local per defecte. Per activar-la,
-          defineix CADRUMO_TELEMETRY_OPT_IN=true i CADRUMO_TELEMETRY_TIER a crash_only
-          o full a env/.env.
+          defineix les variables d'entorn CADRUMO_TELEMETRY_OPT_IN i CADRUMO_TELEMETRY_TIER
+          (CADRUMO_TELEMETRY_OPT_IN=true, CADRUMO_TELEMETRY_TIER=crash_only o full).
       tier_help: Previsualitza/envia com si CADRUMO_TELEMETRY_TIER tingués aquest
         valor (off / crash_only / full) només per aquesta execució; omet-ho per usar
         el nivell configurat realment.

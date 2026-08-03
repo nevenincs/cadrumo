@@ -35,12 +35,12 @@ sub-app payload families).
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from pydantic import Field, field_validator, model_validator
 
 from ...core import LinkInconsistencyDirection, Period
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.identity import BucketId, SnapshotId, TransactionId
 from ._ledger_business_payloads import (
     BusinessInvoiceListResult,
@@ -87,7 +87,7 @@ from ._ledger_rule_payloads import (
     RuleApplyResult,
     RuleListResult,
 )
-from ._schemas import OutputSchema, register_schema
+from ._schemas import OutputRootSchema, OutputSchema, register_schema
 
 _LEDGER_BUSINESS_PAYLOAD_EXPORTS = (
     BusinessInvoiceListResult,
@@ -416,7 +416,6 @@ class LedgerUpdateResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger update``."""
 
 
-@register_schema("ledger.classify")
 class LedgerClassifySingleResult(_LedgerMutationResult):
     """JSON envelope for the single-transaction ``aeat app ledger classify`` path.
 
@@ -430,16 +429,28 @@ class LedgerClassifySingleResult(_LedgerMutationResult):
 class LedgerClassifyBulkResult(OutputSchema):
     """JSON result for the bulk ``aeat app ledger classify --file`` path.
 
-    A discriminated branch of the single ``classify`` CLI leaf; it shares the
-    leaf's registered ``ledger.classify`` command key (the conformance gate maps
-    one schema per leaf), so it is an unregistered branch type emitted under that
-    key rather than a separate registry entry.
+    Structurally distinct from :class:`LedgerClassifySingleResult`: a bulk run
+    reports row counts across many transactions, not one mutation quintet.
     """
 
     total: int
     applied: int
     skipped: int
     failures: list[BulkClassifyFailurePayload] = []
+
+
+@register_schema("ledger.classify")
+class LedgerClassifyResult(OutputRootSchema[LedgerClassifySingleResult | LedgerClassifyBulkResult]):
+    """JSON envelope for ``aeat app ledger classify``, either branch.
+
+    The one CLI leaf emits two structurally distinct shapes depending on
+    ``--file``: the single-transaction mutation quintet
+    (:class:`LedgerClassifySingleResult`) or the bulk row-count summary
+    (:class:`LedgerClassifyBulkResult`). The JSON-schema conformance gate maps
+    exactly one registered schema per CLI leaf, so this discriminated root
+    validates either branch under the one ``ledger.classify`` command key;
+    ``model_dump`` serialises the flat branch shape, not a wrapped root.
+    """
 
 
 @register_schema("ledger.allocate")
@@ -836,11 +847,11 @@ class LedgerExportRowPayload(OutputSchema):
     def _require_non_negative_decimal(cls, value: str) -> str:
         if not value:
             return value
-        try:
-            if Decimal(value) < 0:
-                raise ValueError("must be a non-negative decimal")
-        except InvalidOperation as exc:
-            raise ValueError("must be a canonical decimal") from exc
+        parsed = try_parse_canonical_decimal(value)
+        if parsed is None:
+            raise ValueError("must be a canonical decimal")
+        if parsed < 0:
+            raise ValueError("must be a non-negative decimal")
         return value
 
 

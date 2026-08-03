@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.flows import CopyRefKind
 from ...core.i18n import tr
-from ._definition import CopyRef, FlowPage
+from ._definition import CopyRef, FlowDefinition, FlowPage
 from ._errors import FlowCopyResolutionError
 
 CopySourceResolver = Callable[[str], "str | None"]
@@ -156,12 +156,26 @@ def assemble_page_copy(page: FlowPage) -> PageCopy:
     )
 
 
+def assemble_section_titles(definition: FlowDefinition) -> dict[str, str]:
+    """Resolve every section's title copy, keyed by section id.
+
+    A section id is an internal slug (``residence``, ``identidad``) that
+    is never display copy; :attr:`FlowSection.title` is the reference
+    that carries the operator-facing, locale-resolved title. Every
+    frontend that shows a section — the question panel's group-box
+    title, the progress header, the review grouping — resolves it here
+    so no surface can fall back to rendering the slug.
+    """
+    return {section.id: resolve_copy(section.title) for section in definition.sections}
+
+
 __all__ = [
     "ChoiceCopy",
     "CopySourceResolver",
     "LegalRefCopy",
     "PageCopy",
     "assemble_page_copy",
+    "assemble_section_titles",
     "register_copy_source",
     "resolve_copy",
     "resolve_optional_copy",

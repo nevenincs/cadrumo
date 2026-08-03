@@ -13,7 +13,7 @@ from ._ids import CasillaId
 from ._schema import LegalReference, ModeloRevision, SourceReference
 from ._schema_verification import KNOWN_VERIFICATION_PREDICATE_OPERATORS
 from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import _missing_refs
+from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_verification_predicates import (
     _CASILLA_LIST_OPERATORS,
     _casilla_equals_implies_diverges_predicate_failures,

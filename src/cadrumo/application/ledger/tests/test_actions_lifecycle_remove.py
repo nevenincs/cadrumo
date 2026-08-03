@@ -79,19 +79,25 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     detached = invoice_repository.load().get(purchase_evidence.invoice_id)
     assert detached is not None
     assert detached.linked_transaction_ids == ()
+    # The detach and the removal share the same removal instant, so their
+    # relative order is the content-addressed event_id tie-break
+    # (bucket_event_order_key), not a meaningful contract — only membership
+    # among the two same-instant events is.
     events = event_repository.load().for_bucket(_BUCKET_ID)
-    assert [event.event_type for event in events] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED,
+    assert events[0].event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
+    assert {event.event_type for event in events[1:]} == {
         BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
         BucketEventType.LEDGER_TRANSACTION_REMOVED,
-    ]
-    assert events[-1].payload["purchase_invoice_evidence_count"] == "1"
-    assert events[-1].payload["attachment_count"] == "0"
-    assert events[-1].payload["cascade_count"] == "1"
-    assert events[-1].payload["reason"] == "wrong account import"
+    }
+    events_by_type = {event.event_type: event for event in events}
+    removal = events_by_type[BucketEventType.LEDGER_TRANSACTION_REMOVED]
+    assert removal.payload["purchase_invoice_evidence_count"] == "1"
+    assert removal.payload["attachment_count"] == "0"
+    assert removal.payload["cascade_count"] == "1"
+    assert removal.payload["reason"] == "wrong account import"
     # The detached id itself is carried by its own event, not by the summary.
-    assert events[1].event_type is BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED
-    assert events[1].object_id == purchase_evidence.invoice_id
+    detachment = events_by_type[BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED]
+    assert detachment.object_id == purchase_evidence.invoice_id
 
 
 def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objects: SecureObjectRepository) -> None:
@@ -194,9 +200,11 @@ def test_remove_manual_transaction_with_eight_attachments_can_construct_its_own_
 
     assert removed.removed is True
     assert transaction_repository.load().transactions == {}
+    # The removal summary and the per-attachment detach events share the same
+    # removal instant, so their relative order is the content-addressed
+    # event_id tie-break (bucket_event_order_key), not a positional contract.
     events = event_repository.load().for_bucket(_BUCKET_ID)
-    removal = events[-1]
-    assert removal.event_type is BucketEventType.LEDGER_TRANSACTION_REMOVED
+    removal = next(event for event in events if event.event_type is BucketEventType.LEDGER_TRANSACTION_REMOVED)
     assert removal.payload["cascade_count"] == "8"
     # No payload slot may carry the joined list, whatever it is named.
     assert all(len(value) <= 500 for value in removal.payload.values())

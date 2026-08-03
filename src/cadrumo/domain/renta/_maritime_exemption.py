@@ -237,12 +237,8 @@ def calculate_art_7p_exemption(
     """
     if not art_7p_eligible(facts):
         raise RentaValidationError("art_7p_eligible predicate is False; cannot calculate Art. 7.p) exemption")
-    if not isinstance(annual_salary, Decimal) or isinstance(annual_salary, bool):
-        raise RentaValidationError("annual_salary must be a Decimal")
     if not annual_salary.is_finite() or annual_salary <= Decimal("0"):
         raise RentaValidationError("annual_salary must be a positive finite Decimal")
-    if not isinstance(qualifying_days, int) or isinstance(qualifying_days, bool):
-        raise RentaValidationError("qualifying_days must be an int")
     if not (1 <= qualifying_days <= 365):
         raise RentaValidationError("qualifying_days must be in [1, 365]")
 
@@ -291,8 +287,6 @@ def calculate_rebeca_exemption(
     """
     if not rebeca_eligible(facts):
         raise RentaValidationError("rebeca_eligible predicate is False; cannot calculate REBECA exemption")
-    if not isinstance(gross_navigation_income, Decimal) or isinstance(gross_navigation_income, bool):
-        raise RentaValidationError("gross_navigation_income must be a Decimal")
     if not gross_navigation_income.is_finite() or gross_navigation_income <= Decimal("0"):
         raise RentaValidationError("gross_navigation_income must be a positive finite Decimal")
 

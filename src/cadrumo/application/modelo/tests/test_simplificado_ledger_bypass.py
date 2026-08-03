@@ -46,7 +46,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
 from .. import ModeloAggregationBindingError
-from .._calculation_actions import _raise_if_ledger_preflight_blocks_calculation
+from .._calculation_preparation import _raise_if_ledger_preflight_blocks_calculation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -1,9 +1,9 @@
 """Shared path normalization and containment helpers.
 
 Centralises the small set of :class:`~pathlib.Path` primitives that every other
-``aeat`` module needs: resolving repo-relative paths against
-:data:`PROJECT_ROOT` via :func:`resolve_project_path`, normalising user-provided
-settings with :func:`normalize_project_relative_path`, and safely resolving
+``aeat`` module needs: resolving repo-relative paths against a RunMode-aware
+anchor via :func:`resolve_project_path`, normalising user-provided settings
+with :func:`normalize_project_relative_path`, and safely resolving
 caller-provided sub-paths under a fixed root without allowing path-traversal
 escapes.
 
@@ -31,14 +31,46 @@ from __future__ import annotations
 import sys
 from pathlib import Path, PurePosixPath
 
+from ._config_state_root import (
+    RunMode,
+    StateRootInputs,
+    detect_run_mode,
+    live_state_root_inputs,
+    platform_user_data_root,
+)
 from .errors import CoreValidationError
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-"""Absolute filesystem path to the repository root.
 
-Used to anchor repo-relative defaults. It is not the process cwd and not a
-runtime storage root selected from settings.
-"""
+def _relative_path_anchor(state_root_inputs: StateRootInputs | None = None) -> Path:
+    """Return the RunMode-aware base for resolving a relative operator path.
+
+    Sourced entirely from the application-data-root authority in
+    :mod:`cadrumo.core._config_state_root` — never from the local
+    repo-root walk. A source checkout anchors at
+    ``inputs.project_root_candidate`` (the checkout-root candidate the
+    state-root authority already computes). An installed distribution
+    anchors under the platform user-data directory
+    (:func:`cadrumo.core._config_state_root.platform_user_data_root`)
+    instead, so a relative override of a ``var/``-style operator setting
+    (storage root, cache dir, log dir, financial catalogue dir, ...) can
+    never resolve inside a virtualenv or an ephemeral package cache — the
+    same hazard :func:`cadrumo.core._config_state_root.resolve_state_root`
+    already closes for the ``cadrumo_local_storage_root`` default.
+
+    Args:
+        state_root_inputs: Injectable :class:`~cadrumo.core._config_state_root.StateRootInputs`
+            seam. ``None`` (the live default) captures the running process's
+            inputs via :func:`~cadrumo.core._config_state_root.live_state_root_inputs`
+            — the same seam :func:`~cadrumo.core._config_state_root.default_storage_root`
+            reads, so a relative override and the unset default resolve
+            consistently. Tests inject a deterministic ``installed`` or
+            ``checkout`` context without mutating the ambient process.
+    """
+    inputs = state_root_inputs if state_root_inputs is not None else live_state_root_inputs()
+    if detect_run_mode(inputs) is RunMode.CHECKOUT:
+        return inputs.project_root_candidate
+    return platform_user_data_root(inputs)
+
 
 # ── Windows MAX_PATH (260-character) hardening ────────────────────────────
 
@@ -161,18 +193,25 @@ def windows_storage_root_long_path_margin(root: Path) -> int:
     return WINDOWS_MAX_PATH - resolved_length - WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH
 
 
-def resolve_project_path(value: str | Path) -> Path:
-    """Resolve a repo-relative path against :data:`PROJECT_ROOT`.
+def resolve_project_path(value: str | Path, *, state_root_inputs: StateRootInputs | None = None) -> Path:
+    """Resolve a relative path against the RunMode-aware anchor.
 
     Absolute paths are returned as absolute resolved paths. Relative paths
-    are interpreted as repository-relative, not cwd-relative, which keeps
-    config defaults stable regardless of where the CLI process starts.
-    This helper is not a containment guard: callers that accept subpaths
-    under an owning root should use :func:`resolve_relative_subpath`.
+    are interpreted against :func:`_relative_path_anchor` — never the
+    process cwd, which keeps config defaults stable regardless of where the
+    CLI process starts, and never a bare checkout-root walk, which keeps an
+    installed run's relative override out of a virtualenv or ephemeral
+    package cache. This helper is not a containment guard: callers that
+    accept subpaths under an owning root should use
+    :func:`resolve_relative_subpath`.
 
     Args:
-        value: An absolute or repo-relative path; user-style ``~``
-            references are expanded.
+        value: An absolute or relative path; user-style ``~`` references
+            are expanded.
+        state_root_inputs: Optional injectable
+            :class:`~cadrumo.core._config_state_root.StateRootInputs` seam
+            forwarded to :func:`_relative_path_anchor`. ``None`` (the
+            default) resolves the live process's RunMode.
 
     Returns:
         The fully resolved absolute :class:`pathlib.Path`.
@@ -180,11 +219,15 @@ def resolve_project_path(value: str | Path) -> Path:
     candidate = Path(value).expanduser()
     if candidate.is_absolute():
         return candidate.resolve()
-    return (PROJECT_ROOT / candidate).resolve()
+    return (_relative_path_anchor(state_root_inputs) / candidate).resolve()
 
 
-def normalize_project_relative_path(value: Path | None) -> Path | None:
-    """Normalise an optional path setting to an absolute repo-rooted path.
+def normalize_project_relative_path(
+    value: Path | None,
+    *,
+    state_root_inputs: StateRootInputs | None = None,
+) -> Path | None:
+    """Normalise an optional path setting to an absolute, RunMode-anchored path.
 
     Used by settings validators for optional path fields. It preserves
     ``None`` and delegates path semantics to :func:`resolve_project_path`;
@@ -192,6 +235,10 @@ def normalize_project_relative_path(value: Path | None) -> Path | None:
 
     Args:
         value: Optional configured path, or ``None``.
+        state_root_inputs: Optional injectable
+            :class:`~cadrumo.core._config_state_root.StateRootInputs` seam
+            forwarded to :func:`resolve_project_path`. ``None`` (the
+            default) resolves the live process's RunMode.
 
     Returns:
         ``None`` when ``value`` is ``None``; otherwise the resolved
@@ -199,7 +246,7 @@ def normalize_project_relative_path(value: Path | None) -> Path | None:
     """
     if value is None:
         return None
-    return resolve_project_path(value)
+    return resolve_project_path(value, state_root_inputs=state_root_inputs)
 
 
 def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) -> Path:

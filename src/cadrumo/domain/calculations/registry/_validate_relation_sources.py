@@ -20,9 +20,9 @@ from collections.abc import Iterable, Mapping
 from typing import Final
 
 from ....core.aggregation import BindingSourceKind
-from ._bindings_previous_filing import _is_direct_previous_filing_binding
+from ._bindings_previous_filing import is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
-from ._relations import _derive_offset_source_period
+from ._relations import derive_offset_source_period
 from ._schema import (
     DataBindingDefinition,
     ModeloDefinition,
@@ -277,7 +277,7 @@ def _validate_slot_binding_source(
     is_relation_targeted = binding.id in relation_targets
     iva_wallet_owned = binding.id in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
     # Gate (a): a previous_filing binding must carry a DIRECT selector.
-    if is_previous_filing and not iva_wallet_owned and not _is_direct_previous_filing_binding(binding):
+    if is_previous_filing and not iva_wallet_owned and not is_direct_previous_filing_binding(binding):
         failures.append(
             f"{binding_scope} declares source 'previous_filing' with a non-direct selector "
             f"(no period/source_periods/offset anchor); a relation-materialisation slot must "
@@ -302,7 +302,7 @@ def _relation_source_periods_for_validation(relation: RelationDefinition) -> tup
     failures: list[str] = []
     for target_period in relation.target_periods:
         try:
-            source_period = _derive_offset_source_period(relation, target_period=target_period)
+            source_period = derive_offset_source_period(relation, target_period=target_period)
         except RegistryValidationError as exc:
             failures.append(str(exc))
             continue

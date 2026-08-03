@@ -36,6 +36,7 @@ from ....adapters.persistence.storage.bucket import (
     read_manifest,
     write_manifest,
 )
+from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.storage.master_key import KdfParams
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....domain.user_profile import (
@@ -261,6 +262,13 @@ def test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile(
     an entirely different taxpayer from being registered. The scan skips
     the unreadable profile with a warning and continues against the
     readable ones. The new profile is written and loads correctly.
+
+    A directory-identity-mismatched manifest (this test's corruption) is
+    now caught by ``list()``'s own manifest-read guard before the tax-id
+    scan's loop ever sees the profile, so the torn bucket is skipped one
+    layer earlier than the scan's own catch clause (which still fires for
+    other unreadable-profile causes, e.g. a decrypt failure surfaced only
+    once the bucket session is open).
     """
 
     repository = ProfileRepository()
@@ -283,8 +291,8 @@ def test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile(
     assert new_profile.label == "Different NIF"
     loaded = _load(repository, new_profile.profile_id)
     assert loaded.label == "Different NIF"
-    assert "tax-id uniqueness scan: skipping unreadable profile" in caplog.text
-    assert "tax-id uniqueness scan skipped unreadable profile" in caplog.text
+    assert "profile inventory: skipping unreadable bucket manifest" in caplog.text
+    assert "profile inventory skipped unreadable bucket manifest" in caplog.text
     assert "error_type=" in caplog.text
     assert created.profile_id not in caplog.text
     assert "<profile-id>" in caplog.text
@@ -346,9 +354,14 @@ def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
     The companion roundtrip asserts a clean create / load cycle. This
     test mutates one on-disk store — the plaintext manifest's
     ``bucket_id`` — so the three identity claims (directory name,
-    manifest, secure record) no longer agree. ``load`` must raise
-    :class:`ProfileIntegrityError`; if it returned an aggregate the
-    drift would be served silently and every load is tautological.
+    manifest, secure record) no longer agree. ``_load`` opens the bucket's
+    master-key session before calling ``repository.load``, and the
+    storage-layer manifest reader now refuses a directory-identity
+    mismatch before any key material is touched, so the drift surfaces as
+    :class:`StorageValidationError` at session-open time rather than as
+    :class:`ProfileIntegrityError` from ``repository.load`` itself; if it
+    returned an aggregate the drift would be served silently and every
+    load is tautological.
     """
 
     repository = ProfileRepository()
@@ -363,7 +376,7 @@ def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
     assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
     target.write_text(corrupted, encoding="utf-8")
 
-    with pytest.raises(ProfileIntegrityError):
+    with pytest.raises(StorageValidationError):
         _load(repository, created.profile_id)
 
 
@@ -418,14 +431,15 @@ def test_delete_tombstones_and_clears_the_pointer(_backend: Path) -> None:
 def test_failed_delete_leaves_no_torn_state(_backend: Path) -> None:
     """A real failure inside delete leaves both stores in their pre-delete state.
 
-    ``delete`` integrity-checks the profile via ``load`` before touching
-    any store. Corrupting the on-disk manifest UUID makes that ``load``
-    raise :class:`ProfileIntegrityError` — a genuine induced failure, no
-    mock. The contract: a failed delete is all-or-nothing. Neither store
-    is mutated — the record stays live (not tombstoned) and the
-    active-profile pointer still aims at the profile — so there is no
-    torn "pointer cleared but record live" or "record tombstoned but
-    pointer stranded" intermediate.
+    ``_delete`` opens the bucket's master-key session before ``delete``
+    ever runs its own ``load``-based integrity check. Corrupting the
+    on-disk manifest UUID now makes that earlier session-open step raise
+    :class:`StorageValidationError` — a genuine induced failure, no mock,
+    caught even before ``delete`` reads either store. The contract: a
+    failed delete is all-or-nothing. Neither store is mutated — the
+    record stays live (not tombstoned) and the active-profile pointer
+    still aims at the profile — so there is no torn "pointer cleared but
+    record live" or "record tombstoned but pointer stranded" intermediate.
     """
 
     repository = ProfileRepository()
@@ -441,7 +455,7 @@ def test_failed_delete_leaves_no_torn_state(_backend: Path) -> None:
     assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
     target.write_text(corrupted, encoding="utf-8")
 
-    with pytest.raises(ProfileIntegrityError):
+    with pytest.raises(StorageValidationError):
         _delete(repository, created.profile_id)
 
     # No torn state: the pointer is untouched and the record is still

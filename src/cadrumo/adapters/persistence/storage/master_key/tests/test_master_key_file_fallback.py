@@ -206,7 +206,7 @@ class TestFileFallbackProvider:
                 assert first_session is not None
                 assert has_active_bucket_session() is True
                 assert get_active_master_key() == expected_dek
-                first_engine = first_session.acquire_engine(active_settings)
+                first_engine = first_session.acquire_engine(lambda: active_settings)
                 with first_engine.connect() as connection:
                     assert connection.execute(text("SELECT 1")).scalar_one() == 1
 
@@ -223,7 +223,7 @@ class TestFileFallbackProvider:
                 assert second_session.sealed is False
                 assert has_active_bucket_session() is True
                 assert get_active_master_key() == expected_dek
-                second_engine = second_session.acquire_engine(active_settings)
+                second_engine = second_session.acquire_engine(lambda: active_settings)
                 assert second_engine is not first_engine
                 with second_engine.connect() as connection:
                     assert connection.execute(text("SELECT 1")).scalar_one() == 1

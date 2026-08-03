@@ -31,16 +31,21 @@ See Also:
 
 from __future__ import annotations
 
+from contextlib import ExitStack
+from contextvars import copy_context
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, ClassVar, Final, Protocol, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical
-from textual.widgets import Button, Footer, Input, Label, Static
+from textual.widgets import Button, Footer, Input, Label, LoadingIndicator, Select, Static
+from textual.worker import Worker, WorkerState
 
 from ....core import PassphraseStrength
-from ....core.i18n import tr
+from ....core.config import override_settings
+from ....core.external_constants import UTF_8_ENCODING
+from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
@@ -119,6 +124,18 @@ _STRENGTH_CLASSES: Final[dict[PassphraseStrength, str]] = {
 words carry the meaning, and the class only reinforces it."""
 
 
+def _language_options() -> list[tuple[str, str]]:
+    """The chooser's rows, named under whichever language is on screen.
+
+    Resolved on each call rather than once at import, because this is the
+    one widget whose own rows have to follow the choice made in it.
+    """
+    return [
+        (tr(f"wizard.setup.profile.output-language.choices.{language}.label"), language)
+        for language in SUPPORTED_OUTPUT_LANGUAGES
+    ]
+
+
 class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
     """Full-screen credential entry that creates and unlocks one profile."""
 
@@ -140,6 +157,8 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
     .strength-fair { color: $accent; }
     .strength-strong { color: $success; }
     #registration-refusal { color: $error; margin: 0 0 1 0; }
+    #registration-busy { display: none; height: 1; margin: 0 0 1 0; }
+    #registration-busy.busy { display: block; }
     #registration-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
     """
     )
@@ -153,7 +172,7 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         self,
         *,
         assess: Callable[[str], PassphraseVerdict],
-        register: Callable[[str, str], RegistrationAttempt],
+        register: Callable[[str, str, str], RegistrationAttempt],
         suggested_name: str | None = None,
     ) -> None:
         super().__init__()
@@ -177,6 +196,22 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         """The created profile, or ``None`` when the operator abandoned the
         screen. The caller distinguishes the two by this, never by an
         exception, because abandoning registration is an ordinary choice."""
+        self.error: BaseException | None = None
+        """Unexpected registration failure, re-raised by the synchronous runner."""
+        self._registration_worker: Worker[RegistrationAttempt] | None = None
+        """The one in-flight profile mutation; duplicate submissions are refused."""
+        self._active_language = output_language()
+        """The language the screen is currently written in.
+
+        Held rather than re-read because the chooser has to be able to
+        recognise its own writes: rewriting its rows re-seeds its value
+        and reports that back as a selection, and this is what tells the
+        two apart."""
+        self._language_overrides = ExitStack()
+        """Holds the settings override the screen is rendering under.
+
+        A stack rather than a bare handle so each choice closes the one
+        before it instead of nesting another block for every selection."""
 
     @override
     def compose(self) -> ComposeResult:
@@ -190,38 +225,133 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
             yield Static(id="registration-intro")
             yield Static(id="registration-why")
 
-            yield Label(tr("flows.registration.username_label"), classes="field-label")
-            yield Static(tr("flows.registration.username_hint"), classes="field-hint")
+            # Every translated string on this page is written by
+            # :meth:`_render_localised_copy` rather than here, because the
+            # operator chooses the page's language on the page itself and
+            # each of these has to be able to change without the widget
+            # holding it being rebuilt — a rebuild would discard what has
+            # already been typed into the fields between them. Composing
+            # them empty keeps one place that decides what they say.
+            yield Label(id="label-username", classes="field-label")
+            yield Static(id="hint-username", classes="field-hint")
             yield Input(id="field-username", value=self._suggested_name)
 
-            yield Label(tr("flows.registration.password_label"), classes="field-label")
-            # The hint names the floor, so it has to be told what the floor
-            # is; the assessor already reports it, and asking it for the
-            # empty string is how this surface learns it without importing
-            # the policy that owns it.
-            yield Static(
-                tr("flows.registration.password_hint", minimum_length=self._assess_passphrase("").minimum_length),
-                classes="field-hint",
-            )
+            yield Label(id="label-password", classes="field-label")
+            yield Static(id="hint-password", classes="field-hint")
             yield Input(id="field-password", password=True)
             yield Static(id="strength-line")
 
-            yield Label(tr("flows.registration.confirm_label"), classes="field-label")
+            yield Label(id="label-confirm", classes="field-label")
             yield Input(id="field-confirm", password=True)
 
+            yield Label(id="label-output-language", classes="field-label")
+            # The one widget that cannot be composed empty: a chooser that
+            # refuses a blank selection also refuses an empty option set.
+            yield Select[str](
+                _language_options(),
+                value=self._active_language,
+                allow_blank=False,
+                id="field-output-language",
+            )
+
             yield Static(id="registration-refusal")
+            yield LoadingIndicator(id="registration-busy")
             with Vertical(id="registration-actions"):
                 yield Button(tr("flows.registration.create_button"), id="btn-create", classes="-primary")
         yield Footer()
 
     def on_mount(self) -> None:
         install_cadrumo_themes(self)
-        self.query_one("#registration-banner", Static).update(tr("flows.registration.title"))
+        self._render_localised_copy()
+        self.query_one("#field-username", Input).focus()
+
+    # ── language ────────────────────────────────────────────────────────
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Re-word the whole page in the language the operator just picked.
+
+        The choice has to reach the screen and not only the profile it
+        will create: this is the first surface of the application, so an
+        operator who cannot read the language it opened in has nothing
+        else to go to. Applying it here is also what makes the chooser
+        legible as a chooser — the page answering in the chosen language
+        is the confirmation that the setting took.
+        """
+        if event.select.id != "field-output-language":
+            return
+        language = event.value
+        if not isinstance(language, str):
+            return
+        # Rewriting the chooser's own rows re-seeds its value, so the
+        # widget reports its own rewrite back here. An event carrying
+        # anything but the widget's current value has been superseded,
+        # and one naming the language already on screen has nothing left
+        # to do; both are that echo rather than an operator's choice.
+        if language != event.select.value or language == self._active_language:
+            return
+        self._activate_output_language(language)
+        self._render_localised_copy()
+
+    def _activate_output_language(self, language: str) -> None:
+        """Make ``tr()`` resolve in the chosen language for this screen.
+
+        Registration is the one surface with no profile behind it, so the
+        profile-owned language preference the rest of the application
+        reads does not exist yet. The settings-level override is the
+        remaining door — the same one a ``--output-language`` flag opens
+        for a single invocation — and it drops the resolver's language
+        cache at both of its own boundaries, so nothing further is
+        needed to make the next ``tr()`` see the change.
+
+        The override lives in the message pump's context, which is why it
+        is opened and closed from handlers running there and never from a
+        caller outside them.
+        """
+        self._language_overrides.close()
+        self._language_overrides.enter_context(override_settings(cadrumo_output_language=language))
+        self._active_language = language
+
+    def _render_localised_copy(self) -> None:
+        """Resolve every operator-facing string under the active language.
+
+        One pass over the page, re-runnable, so a language change re-words
+        the chrome and the labels in place while the fields keep what the
+        operator has already typed into them.
+        """
+        title = tr("flows.registration.title")
+        self.title = title
+        self.sub_title = tr("flows.registration.section")
+        self.query_one("#registration-banner", Static).update(title)
         self.query_one("#registration-intro", Static).update(tr("flows.registration.intro"))
         self.query_one("#registration-why", Static).update(tr("flows.registration.why_password"))
-        body = self.query_one("#registration-body", Vertical)
-        body.border_title = tr("flows.registration.section")
-        self.query_one("#field-username", Input).focus()
+        self.query_one("#registration-body", Vertical).border_title = tr("flows.registration.section")
+        self.query_one("#label-username", Label).update(tr("flows.registration.username_label"))
+        self.query_one("#hint-username", Static).update(tr("flows.registration.username_hint"))
+        self.query_one("#label-password", Label).update(tr("flows.registration.password_label"))
+        # The hint names the floor, so it has to be told what the floor
+        # is; the assessor already reports it, and asking it for the
+        # empty string is how this surface learns it without importing
+        # the policy that owns it.
+        self.query_one("#hint-password", Static).update(
+            tr("flows.registration.password_hint", minimum_length=self._assess_passphrase("").minimum_length)
+        )
+        self.query_one("#label-confirm", Label).update(tr("flows.registration.confirm_label"))
+        self.query_one("#label-output-language", Label).update(tr("wizard.setup.profile.output-language.prompt"))
+        self.query_one("#btn-create", Button).label = tr("flows.registration.create_button")
+        self._render_language_choices()
+        self._render_strength(self.query_one("#field-password", Input).value)
+
+    def _render_language_choices(self) -> None:
+        """Re-word the chooser's own rows, keeping the current selection.
+
+        Textual offers no way to re-word options in place, and replacing
+        them re-seeds the selection, so the selection is put back
+        afterwards — the echo that causes is what
+        :meth:`on_select_changed` guards against.
+        """
+        chooser = self.query_one("#field-output-language", Select)
+        chooser.set_options(_language_options())
+        chooser.value = self._active_language
 
     # ── live feedback ───────────────────────────────────────────────────
 
@@ -240,6 +370,11 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         assessment = self._assess_passphrase(candidate)
         line.add_class(_STRENGTH_CLASSES[assessment.strength])
         line.update(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
+
+    def selected_output_language(self) -> str:
+        """Return the closed language selection for the profile being created."""
+        selected = self.query_one("#field-output-language", Select).value
+        return selected if isinstance(selected, str) else output_language()
 
     # ── intents ─────────────────────────────────────────────────────────
 
@@ -267,6 +402,9 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         re-derived, so the screen never becomes a second authority on what
         a valid registration is.
         """
+        if self._registration_worker is not None:
+            return
+
         username = self.query_one("#field-username", Input).value.strip()
         password = self.query_one("#field-password", Input).value
         confirm = self.query_one("#field-confirm", Input).value
@@ -285,17 +423,82 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
             self.query_one("#field-confirm", Input).focus()
             return
 
-        attempt = self._create_profile(username, password)
+        selected_language = self.selected_output_language()
+        self._set_busy(True)
+        registration_context = copy_context()
+        password_buffer = bytearray(password, UTF_8_ENCODING)
+
+        def _register() -> RegistrationAttempt:
+            try:
+                return registration_context.run(
+                    self._create_profile,
+                    username,
+                    password_buffer.decode(UTF_8_ENCODING),
+                    selected_language,
+                )
+            finally:
+                password_buffer[:] = b"\x00" * len(password_buffer)
+
+        self._registration_worker = self.run_worker(
+            _register,
+            name="profile-registration",
+            group="profile-registration",
+            exit_on_error=False,
+            exclusive=True,
+            thread=True,
+        )
+
+    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """Finish the one registration attempt back on Textual's UI task."""
+        worker = self._registration_worker
+        if worker is None or event.worker is not worker or event.state not in {WorkerState.SUCCESS, WorkerState.ERROR}:
+            return
+        self._registration_worker = None
+        if event.state is WorkerState.ERROR:
+            self.error = worker.error or RuntimeError("profile registration worker failed")
+            self._leave(None)
+            return
+        attempt = worker.result
+        if attempt is None:
+            self.error = RuntimeError("profile registration worker returned no result")
+            self._leave(None)
+            return
         if attempt.outcome is None:
+            self._set_busy(False)
             self._refuse(attempt.refusal or tr("flows.registration.refusal.username_required"))
             return
         self.outcome = attempt.outcome
-        self.exit(self.outcome)
+        self._leave(self.outcome)
+
+    def _leave(self, outcome: ProfileRegistrationOutcome | None) -> None:
+        """Close the screen, releasing the language it was rendering under.
+
+        Released here rather than at teardown because the override is
+        bound to the message pump's context, and every caller of this is
+        a handler running there. The created profile carries the chosen
+        language of its own, so nothing downstream needs the override to
+        survive the screen.
+        """
+        self._language_overrides.close()
+        self.exit(outcome)
+
+    def _set_busy(self, busy: bool) -> None:
+        """Render registration progress and freeze inputs while storage mutates."""
+        self.query_one("#registration-refusal", Static).update("")
+        self.query_one("#registration-busy", LoadingIndicator).set_class(busy, "busy")
+        for field_id in ("field-username", "field-password", "field-confirm"):
+            self.query_one(f"#{field_id}", Input).disabled = busy
+        self.query_one("#field-output-language", Select).disabled = busy
+        self.query_one("#btn-create", Button).disabled = busy
 
     def action_abandon(self) -> None:
         """Leave without creating anything; the caller sees ``None``."""
+        if self._registration_worker is not None:
+            # A thread-backed mutation cannot be cancelled safely: cancellation
+            # would only detach its result while encrypted storage may still land.
+            return
         self.outcome = None
-        self.exit(None)
+        self._leave(None)
 
     def action_toggle_appearance(self) -> None:
         toggle_appearance(self)
@@ -307,7 +510,7 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
 def run_registration_tui(
     *,
     assess: Callable[[str], PassphraseVerdict],
-    register: Callable[[str, str], RegistrationAttempt],
+    register: Callable[[str, str, str], RegistrationAttempt],
     suggested_name: str | None = None,
 ) -> ProfileRegistrationOutcome | None:
     """Run the registration screen and return the created profile, or ``None``.
@@ -318,6 +521,8 @@ def run_registration_tui(
     """
     app = RegistrationApp(assess=assess, register=register, suggested_name=suggested_name)
     app.run()
+    if app.error is not None:
+        raise app.error
     return app.outcome
 
 

@@ -40,12 +40,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 from ....tests import ast_for_path, leaf_name, package_python_files
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_CLI_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
+_CLI_ROOT = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
 _MODELO_MODULE_PREFIX = "_modelo"
 _MODELO_LEGACY_ROOT = "_modelo.py"
 _MODELO_PAYLOADS = "_modelo_payloads.py"
@@ -102,7 +102,7 @@ def _production_modelo_cli_modules() -> tuple[Path, ...]:
 def _tree_for_path(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:
     tree = ast_for_path(path, source_tree_ast)
     if tree is None:
-        raise AssertionError(f"unable to parse {path.relative_to(PROJECT_ROOT).as_posix()}")
+        raise AssertionError(f"unable to parse {path.relative_to(REPO_ROOT).as_posix()}")
     return tree
 
 
@@ -171,7 +171,7 @@ def test_extracted_modelo_cli_modules_do_not_import_legacy_modelo_root(
     for path in _production_modelo_cli_modules():
         for line_number, _level, module in _import_from_modules(path, source_tree_ast):
             if module == "_modelo":
-                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_number}")
+                offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{line_number}")
 
     assert offenders == [], "extracted modelo modules import _modelo.py:\n  " + "\n  ".join(offenders)
 
@@ -205,7 +205,7 @@ def test_extracted_modelo_cli_modules_do_not_define_raw_id_regexes_outside_suppo
         if path.name in _RAW_ID_REGEX_HELPERS:
             continue
         for line_number in _raw_id_regex_lines(path, source_tree_ast):
-            offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{line_number}")
+            offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{line_number}")
 
     assert offenders == [], "modelo CLI modules define raw id regexes outside shared support:\n  " + "\n  ".join(
         offenders,
@@ -225,7 +225,7 @@ def test_extracted_modelo_cli_modules_do_not_reintroduce_legacy_selector_calls(
             if isinstance(node, ast.Call):
                 name = leaf_name(node.func)
                 if name in _LEGACY_SELECTOR_CALL_NAMES:
-                    offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: {name}")
+                    offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}: {name}")
 
     assert offenders == [], "modelo CLI modules reintroduced local selector policy:\n  " + "\n  ".join(offenders)
 
@@ -242,11 +242,11 @@ def test_modelo_cli_uses_centralized_operator_addressing_facades(source_tree_ast
                 for alias in node.names:
                     if alias.name in _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES:
                         offenders.append(
-                            f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: import {alias.name}",
+                            f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}: import {alias.name}",
                         )
             if isinstance(node, ast.Call):
                 name = leaf_name(node.func)
                 if name in _CENTRALIZED_ADDRESSING_FORBIDDEN_NAMES:
-                    offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}:{node.lineno}: {name}")
+                    offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{node.lineno}: {name}")
 
     assert offenders == [], "modelo CLI bypasses centralized operator-addressing facades:\n  " + "\n  ".join(offenders)

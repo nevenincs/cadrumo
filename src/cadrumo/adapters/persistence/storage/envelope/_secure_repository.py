@@ -250,12 +250,25 @@ class SecureBoundRepository[T: BaseModel]:
         payload = cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-LOAD
         payload_identifier = self.extract_identifier(payload)
         if payload_identifier != identifier:
-            raise SecureObjectRowIdentityError(
+            identity_error = SecureObjectRowIdentityError(
                 self.namespace,
                 expected_identifier=identifier,
                 payload_identifier=payload_identifier,
             )
+            translated = self._translate_row_identity_error(identity_error)
+            if translated is identity_error:
+                raise translated
+            raise translated from identity_error
         return payload
+
+    def _translate_row_identity_error(self, error: SecureObjectRowIdentityError) -> Exception:
+        """Return the exception `load` should raise for a row-identity mismatch.
+
+        Identity: returns `error` unchanged. A subclass overrides this hook
+        (not `load`) to surface its own domain-specific error type while the
+        shared gate keeps sole ownership of detecting the mismatch.
+        """
+        return error
 
     def save(self, payload: T) -> None:
         """Persist ``payload`` as an encrypted envelope row.

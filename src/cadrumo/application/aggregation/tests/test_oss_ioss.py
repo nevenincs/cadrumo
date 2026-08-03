@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     ModeloRevision,
@@ -62,7 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 
-_SUPPLY_DATE = date(2025, 6, 15)
+_SUPPLY_DATE = date(2025, 7, 15)
 
 
 @cache
@@ -391,7 +391,7 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
     IOSS aggregation pipeline competes with the canonical wrapper and
     must be removed."""
 
-    source_root = PROJECT_ROOT / "src" / "cadrumo"
+    source_root = REPO_ROOT / "src" / "cadrumo"
     canonical = source_root / "application" / "aggregation" / "_oss_ioss.py"
     forbidden_pattern = "resolve_ledger_oss_aggregation_binding_values"
     offenders: list[Path] = []
@@ -423,7 +423,7 @@ def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
     register an ``oss``, ``ioss``, ``cadrumo oss``, ``cadrumo ioss``,
     ``app iva oss``, or ``app iva ioss`` command."""
 
-    cli_root = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
+    cli_root = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     forbidden_command_names = (
         '"oss"',
         '"ioss"',

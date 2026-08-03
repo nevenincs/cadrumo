@@ -11,10 +11,13 @@ from __future__ import annotations
 import pytest
 
 from .....core import AEAT_CSV_MAX_LENGTH, is_aeat_csv
+from .....core.config import Settings
 from .....domain.justificante import JustificanteCsvNotFoundError
 from .._extract import _extract_csv
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
+
+_SEDE_ORIGIN = Settings.external_constants().aeat.domains.sede
 
 _CSV_24 = "A1B2C3D4E5F6G7H8J9K0L1M2"
 _CSV_32 = "A1B2C3D4E5F6G7H8J9K0L1M2N3P4Q5R6"
@@ -23,7 +26,7 @@ _CSV_32 = "A1B2C3D4E5F6G7H8J9K0L1M2N3P4Q5R6"
 def _footer(csv: str) -> str:
     return (
         "La autenticidad de este documento puede ser comprobada mediante "
-        f"el Código Seguro de Verificación {csv} en https://sede.agenciatributaria.gob.es"
+        f"el Código Seguro de Verificación {csv} en {_SEDE_ORIGIN}"
     )
 
 

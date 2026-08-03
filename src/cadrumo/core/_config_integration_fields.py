@@ -35,7 +35,6 @@ from pydantic import Field, field_validator
 
 from ._config_runtime_fields import CadrumoRuntimeSettings
 from .external_constants import DEFAULT_CURRENCY
-from .paths import PROJECT_ROOT
 
 FORMER_PRODUCT_GOOGLE_DRIVE_VAULT_FOLDER_NAME: Final = "aeat-vault"
 
@@ -79,7 +78,7 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
         description="Subprocess timeout (seconds) for the LibreOffice binary XLS conversion fall-back",
     )
     cadrumo_registry_parity_store_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "audit" / "registry" / "parity",
+        default=Path("var") / "audit" / "registry" / "parity",
         description="Directory where registry parity tape artifacts are archived by default",
     )
     cadrumo_registry_disk_cache_dir: Path | None = Field(
@@ -118,19 +117,19 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
         description="Preferred encoding attempted first when decoding financial CSV sources",
     )
     cadrumo_financial_txs_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "transactions",
+        default=Path("var") / "financial" / "transactions",
         description="Directory where the transaction catalogue JSON file is stored",
     )
     cadrumo_invoices_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "invoices",
+        default=Path("var") / "financial" / "invoices",
         description="Directory where the invoice catalogue JSON file is stored",
     )
     cadrumo_attachments_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "attachments",
+        default=Path("var") / "financial" / "attachments",
         description="Root directory for the attachment byte and manifest store",
     )
     cadrumo_usage_ratios_path: Path = Field(
-        default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
+        default=Path("var") / "financial" / "usage-ratios.json",
         description="User-configured per-category usage ratio overrides",
     )
 

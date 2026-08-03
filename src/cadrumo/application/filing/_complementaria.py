@@ -132,7 +132,7 @@ def _submitted_original(original: object) -> _SubmittedOriginal:
         raise ModeloBuilderError("original submission does not conform to the expected protocol shape")
     submitted: _SubmittedOriginal = original
     csv = submitted.justificante_csv
-    if not isinstance(csv, str) or not csv.strip():
+    if not csv.strip():
         raise ModeloBuilderError("original submission must include an official justificante CSV")
     return submitted
 

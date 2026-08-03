@@ -38,6 +38,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_calc_sheets_apply.py",
         "_calc_sheets_pull.py",
         "_calc_sheets_support.py",  # shared modelo-130 registry snapshot fixture builder
+        "test_calc_sheets_transport_facet_parity.py",  # contract: offline/online transports render the same plan facets (alignment, protection)
         "_document_link_resolver.py",  # follow-up contract: scope-compatible Drive doclink resolution
         "_drive_entries.py",  # shared Drive owned-entry query escaping, lookup/backfill policy, and id validation
         "_drive_media_server.py",  # contract: real local Drive media endpoint for resolver roundtrips

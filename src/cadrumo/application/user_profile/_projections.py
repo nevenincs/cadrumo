@@ -35,14 +35,14 @@ stated one, so a windowed fact supersedes an unwindowed one at the same
 path. Matches the sentinel the record resolvers already sort on.
 """
 
-_DEFAULT_SCHEMA: ProfileSchemaDefinition | None = None
+_default_schema_cache: ProfileSchemaDefinition | None = None
 
 
 def _default_schema() -> ProfileSchemaDefinition:
-    global _DEFAULT_SCHEMA
-    if _DEFAULT_SCHEMA is None:
-        _DEFAULT_SCHEMA = load_user_profile_schema()
-    return _DEFAULT_SCHEMA
+    global _default_schema_cache
+    if _default_schema_cache is None:
+        _default_schema_cache = load_user_profile_schema()
+    return _default_schema_cache
 
 
 def _render_fact_value(value: object) -> str:
@@ -168,6 +168,9 @@ def _in_window_order(facts: Sequence[UserProfileFact]) -> tuple[UserProfileFact,
     return tuple(sorted(facts, key=lambda fact: fact.valid_from or _WINDOWLESS_SENTINEL))
 
 
+in_window_order = _in_window_order
+
+
 def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
     """Project a :class:`UserProfileRecord` (or snapshot) into a schema-path-keyed string mapping.
 
@@ -261,8 +264,9 @@ def projection_for_taxpayer(
     # The deadline-domain projection reads core registration slots populated by
     # the application wizard layer. Import the concrete modules here so service
     # callers outside the CLI startup path get the same canonical projection.
-    from ..wizard import _catalogue as _wizard_catalogue  # noqa: F401
-    from ..wizard import _persistence as _wizard_persistence  # noqa: F401
+    from ..wizard import ensure_profile_keys_registered
+
+    ensure_profile_keys_registered()
 
     if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
         mapping = _merged_taxpayer_values(facts, schema=schema)

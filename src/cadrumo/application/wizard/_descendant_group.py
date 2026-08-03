@@ -44,6 +44,7 @@ from ..flows import (
     FlowDefinition,
     FlowPage,
     FlowRepeatingGroup,
+    FlowSection,
     ValidationVerdict,
     register_answer_validator,
     register_cross_field_validator,
@@ -413,7 +414,7 @@ def attach_descendant_group(definition: FlowDefinition) -> FlowDefinition:
     absent -- a silent no-op would drop the whole descendant surface.
     Idempotent on the flow validator id: re-applying does not duplicate it.
     """
-    sections = []
+    sections: list[FlowSection] = []
     attached = False
     for section in definition.sections:
         if section.id == _FAMILIA_SECTION_ID:

@@ -45,6 +45,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .....tests.env_scope import scoped_env_var
 from .._loader import (
@@ -273,7 +274,14 @@ def test_bundled_root_disk_cache_is_shared_across_processes(
     """
     isolated_cache_dir = tmp_path / "registry-disk-cache"
     isolated_cache_dir.mkdir()
-    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir)):
+    # ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` backs the Settings field
+    # ``cadrumo_registry_disk_cache_dir``; ``load_settings()`` caches the
+    # constructed ``Settings`` per active-profile pointer, so a plain
+    # ``os.environ`` mutation via ``scoped_env_var`` is invisible to the
+    # in-process resolver once any earlier call has already built and cached
+    # a ``Settings`` instance. ``override_settings`` is the mechanism that
+    # actually takes effect for this in-process load.
+    with override_settings(cadrumo_registry_disk_cache_dir=isolated_cache_dir):
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
 

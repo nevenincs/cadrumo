@@ -1259,3 +1259,10 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding(binding: D
         "ledger_renta_gastos_pago_fraccionado_aggregation",
         validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
     )
+
+
+IvaLedgerSelector = _IvaLedgerSelector
+OssIossLedgerSelector = _OssIossLedgerSelector
+RentaLedgerGastosEstimacionDirectaSelector = _RentaLedgerGastosEstimacionDirectaSelector
+RentaLedgerGastosPagoFraccionadoSelector = _RentaLedgerGastosPagoFraccionadoSelector
+RentaLedgerIncomeSelector = _RentaLedgerIncomeSelector

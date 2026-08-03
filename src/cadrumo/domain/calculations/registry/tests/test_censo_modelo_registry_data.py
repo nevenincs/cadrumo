@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.paths import PROJECT_ROOT
+from .....tests import REPO_ROOT
 from .....core.resources import bundled_path
 from .. import build_snapshot, discover_modelo_sources
 from .._binding_selector_utils import selector_as_dict
@@ -82,7 +82,7 @@ def test_committed_modelo_036_record_design_source_matches_manifest() -> None:
     )
     assert source.sha256 == "791479fbf9e905faf1e43fa0bfbff974d5edaf85d198495892fa8446a1da2ebd"
     assert source.bytes == 126664
-    verify_source_file(PROJECT_ROOT, source)
+    verify_source_file(REPO_ROOT, source)
 
 
 def test_modelo_037_is_historical_catalogue_metadata_not_active_registry_model() -> None:
@@ -94,7 +94,7 @@ def test_modelo_037_is_historical_catalogue_metadata_not_active_registry_model()
     source = catalogues.sources["boe-modelo-037-historical-suppression"]
     assert source.kind == "suppression_notice"
     assert source.evidence_tier == "official_source_guidance"
-    verify_source_file(PROJECT_ROOT, source)
+    verify_source_file(REPO_ROOT, source)
 
 
 def test_modelo_036_rejects_unknown_censo_event_period() -> None:

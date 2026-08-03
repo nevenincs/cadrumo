@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import threading
 from contextvars import copy_context
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, ClassVar, override
 
 from textual.app import App, ComposeResult
@@ -120,6 +120,17 @@ _OUTPUT_LANGUAGE_PATH = "preferences.output_language"
 Named here because the page reaches for it directly, which it does for no
 other field: changing it changes every label on screen including the ones
 that would lead an operator to it.
+"""
+
+_LANGUAGE_KEY = "f2"
+"""The key that opens the language chooser."""
+
+_LANGUAGE_ACTION = "choose_language"
+"""The action that key runs.
+
+Named because the footer entry for the key is written at render time
+rather than declared beside it, and the two halves have to find each
+other.
 """
 
 
@@ -259,7 +270,13 @@ class ProfileManagerApp(App[None]):
         # is the one setting an operator may need to change before they can
         # read the page well enough to find it, so it cannot be one more
         # row in a table they are struggling with.
-        Binding("f2", "choose_language", "", show=True),
+        #
+        # Neither half of that showing is settled here, though: Textual
+        # hides a binding carrying no description, and a description
+        # written in a class body would be resolved once at import in
+        # whichever language the process started in. Both are written by
+        # :meth:`_offer_language_in_footer` on every render instead.
+        Binding(_LANGUAGE_KEY, _LANGUAGE_ACTION, "", show=True),
         Binding("q", "quit", "", show=False),
         Binding("escape", "quit", "", show=False),
     ]
@@ -482,11 +499,63 @@ class ProfileManagerApp(App[None]):
         self.title = title
         self.sub_title = ""
         self.query_one("#manager-banner", Static).update(title)
+        self._offer_language_in_footer()
         if not self._actions:
             return
         self.query_one("#manager-actions-panel", Vertical).border_title = tr("flows.manager.actions.section")
         for action in self._actions:
             self.query_one(f"#action-{action.key}", Button).label = self._action_label(action)
+
+    def _language_field(self) -> ProfileFieldView | None:
+        """The field holding the page's language, if the schema declares one.
+
+        Read from the overview rather than the rendered row index because
+        the chrome is written before the tables are rebuilt, and because
+        the footer and the chooser must agree on whether there is anywhere
+        to put an answer.
+        """
+        for section in self.overview.sections:
+            for field in section.fields:
+                if field.path == _OUTPUT_LANGUAGE_PATH:
+                    return field
+        return None
+
+    def _offer_language_in_footer(self) -> None:
+        """Name the language key in the footer, in the language now on screen.
+
+        The binding declares itself shown, but Textual forces ``show`` off
+        for a binding carrying no description, so the one key meant to be
+        visible was bound and invisible — and an invisible key is exactly
+        the reachability it exists to provide. The description cannot be
+        declared beside the binding either: a class body runs once at
+        import, so the footer would name the setting in whichever language
+        the process started in, on a page the operator has just switched
+        away from it.
+
+        So the entry is composed here, from the field's own label, and
+        recomposed by every render. The key is offered only while the
+        schema declares somewhere to put the answer; advertising it
+        otherwise would promise a chooser that could only refuse.
+
+        The key's entry is replaced rather than added to, and replaced by
+        assignment rather than edited in place. Textual's own ``bind`` and
+        ``BindingsMap.merge`` both append, and this runs on every redraw,
+        so either would show the key once more each time the page was
+        rebuilt. The instance's binding table is a shallow copy of the
+        class's, sharing the very lists it holds, so editing one in place
+        would re-describe the key for every manager the process opens;
+        putting a new list in this instance's table cannot.
+        """
+        field = self._language_field()
+        label = field.label if field is not None else ""
+        bindings = self._bindings.key_to_bindings.get(_LANGUAGE_KEY)
+        if bindings is None:
+            return
+        self._bindings.key_to_bindings[_LANGUAGE_KEY] = [
+            replace(binding, description=label, show=bool(label)) if binding.action == _LANGUAGE_ACTION else binding
+            for binding in bindings
+        ]
+        self.refresh_bindings()
 
     @staticmethod
     def _action_label(action: ManagerAction) -> str:
@@ -833,10 +902,12 @@ class ProfileManagerApp(App[None]):
         page is in a language they do not read is exactly the one who
         cannot be asked to recognise ``hu``.
         """
-        field = self._field_by_key.get(_OUTPUT_LANGUAGE_PATH)
+        field = self._language_field()
         if field is None:
             # A profile schema that declares no language field is not a
-            # failure; the page simply has nothing to offer here.
+            # failure; the page simply has nothing to offer here. The
+            # footer does not name the key in that case, so this answers
+            # only an operator who pressed it unprompted.
             self._refuse(tr("flows.manager.language.unavailable"))
             return
         if self._pending_write is not None or self._pending_action is not None:

@@ -111,11 +111,11 @@ def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
         expediente_id=declaration.expediente_id,
         status=declaration.estado,
         presented_at=declaration.presented_at,
-        has_submitted_file=bool(declaration.archive_link_text and declaration.archive_cell_index is not None),
+        has_submitted_file=bool(declaration.archive_link_text),
         has_declaration_copy=bool(
-            declaration.declaration_copy_link_text and declaration.declaration_copy_cell_index is not None,
+            declaration.declaration_copy_link_text,
         ),
-        has_justificante=bool(declaration.justificante_link_text and declaration.justificante_cell_index is not None),
+        has_justificante=bool(declaration.justificante_link_text),
     )
 
 

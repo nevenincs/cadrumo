@@ -227,6 +227,10 @@ class ManualLedgerTransactionCommand(BaseModel):
             raise TransactionValidationError(f"INTERNAL_TRANSFER rows must not carry tax or evidence fields: {joined}")
 
 
+    normalise_currency = _normalise_currency
+    normalise_identifier_tuple = _normalise_identifier_tuple
+
+
 class ManualLedgerTransactionPatch(BaseModel):
     """Typed partial update for one bucket-scoped ledger transaction."""
 
@@ -286,14 +290,14 @@ class ManualLedgerTransactionPatch(BaseModel):
     def _normalise_optional_currency(cls, value: object) -> str | None:
         if value is None:
             return None
-        return ManualLedgerTransactionCommand._normalise_currency(value)
+        return ManualLedgerTransactionCommand.normalise_currency(value)
 
     @field_validator("attachment_ids")
     @classmethod
     def _normalise_optional_identifier_tuple(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
         if value is None:
             return None
-        return ManualLedgerTransactionCommand._normalise_identifier_tuple(value)
+        return ManualLedgerTransactionCommand.normalise_identifier_tuple(value)
 
     @model_validator(mode="after")
     def _require_change(self) -> Self:

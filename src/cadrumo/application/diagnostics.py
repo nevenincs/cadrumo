@@ -52,9 +52,15 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import AnyHttpUrl, BaseModel, TypeAdapter, model_validator
 
 from .. import __version__
-from ..core import STRICT_FROZEN_CONFIG, Modelo
+from ..core import (
+    STRICT_FROZEN_CONFIG,
+    Modelo,
+    RunMode,
+    detect_run_mode,
+    live_state_root_inputs,
+)
 from ..core.async_cleanup import close_async_resources
-from ..core.config import PROJECT_ROOT, Settings
+from ..core.config import Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
 from ..core.logging import default_log_file_path, get_logger
@@ -274,9 +280,12 @@ def _ensure_models_rebuilt() -> None:
     if _models_rebuilt:
         return
     from ..adapters.persistence.storage import (
-        SecureObjectNamespaceIntegrity,  # noqa: F401  # model_rebuild local namespace
+        SecureObjectNamespaceIntegrity,
     )
-    from .wizard import WizardStatusReport  # noqa: F401  # model_rebuild local namespace
+    from .wizard import WizardStatusReport
+
+    # Keep the lazy model-rebuild namespace imports statically accessed as well.
+    _model_rebuild_types = (SecureObjectNamespaceIntegrity, WizardStatusReport)
 
     SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
     ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
@@ -1056,8 +1065,16 @@ def _windows_stale_sync_check() -> DiagnosticCheck | None:
     """
     if sys.platform != "win32":
         return None
-    pyproject = PROJECT_ROOT / "pyproject.toml"
-    venv_marker = PROJECT_ROOT / ".venv" / "pyvenv.cfg"
+    # Checkout-only by construction: a stale-venv warning is meaningless for an
+    # installed distribution, which has neither a `pyproject.toml` nor a
+    # `.venv`. Gating on RunMode makes that explicit instead of silently
+    # probing a repo-shaped path that never exists off a checkout.
+    inputs = live_state_root_inputs()
+    if detect_run_mode(inputs) is not RunMode.CHECKOUT:
+        return None
+    checkout_root = inputs.project_root_candidate
+    pyproject = checkout_root / "pyproject.toml"
+    venv_marker = checkout_root / ".venv" / "pyvenv.cfg"
     if not pyproject.is_file() or not venv_marker.is_file():
         return None
     if pyproject.stat().st_mtime <= venv_marker.stat().st_mtime:

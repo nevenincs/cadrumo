@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.paths import PROJECT_ROOT
+from .....tests import REPO_ROOT
 from .....core.resources import bundled_path
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage
@@ -38,7 +38,7 @@ def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
     assert len(catalogues.legal) > 0, "shared legal catalogue must be non-empty"
     assert len(catalogues.sources) > 0, "shared sources catalogue must be non-empty"
     verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
-    verify_source_catalogue(PROJECT_ROOT, catalogues.sources)
+    verify_source_catalogue(REPO_ROOT, catalogues.sources)
     validator = RegistryValidator(catalogues, source_root=bundled_path())
     validator.validate_registry(modelos)
 
@@ -184,7 +184,7 @@ def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
             continue
         # corpus_path is stored relative to the bundled corpus root
         # (src/cadrumo/_data/), so resolve via bundled_path rather than
-        # PROJECT_ROOT to find the on-disk manifest.
+        # REPO_ROOT to find the on-disk manifest.
         modelo_dir = bundled_path(*parts[:4])
         manifest_path = modelo_dir / "manifest.json"
         assert manifest_path.is_file(), f"{source.id} missing corpus manifest {manifest_path}"
@@ -246,7 +246,7 @@ def test_modelo_100_record_design_sources_match_manifest() -> None:
         assert source.source_url == artefact["url"]
         assert source.evidence_tier == "layout_authority"
         assert source.kind in {"dictionary", "xsd"}
-        verify_source_file(PROJECT_ROOT, source)
+        verify_source_file(REPO_ROOT, source)
         checked.append(source.id)
 
     assert len(checked) == 18
@@ -331,7 +331,7 @@ def test_renta_manual_sources_match_manifest() -> None:
         pdf_path = root / manifest["relative_pdf_path"]
         # corpus_path on registry sources is bundled-corpus-relative
         # (i.e. begins with ``corpus/...``), so relativise against the
-        # bundle root rather than PROJECT_ROOT.
+        # bundle root rather than REPO_ROOT.
         corpus_path = pdf_path.relative_to(bundled_path()).as_posix()
         source = sources_by_path.get(corpus_path)
 
@@ -343,7 +343,7 @@ def test_renta_manual_sources_match_manifest() -> None:
         assert source.source_url == manifest["source_pdf_url"]
         assert source.evidence_tier == "official_source_guidance"
         assert source.kind == "manual_pdf"
-        verify_source_file(PROJECT_ROOT, source)
+        verify_source_file(REPO_ROOT, source)
         checked.append(source.id)
 
     assert checked == [

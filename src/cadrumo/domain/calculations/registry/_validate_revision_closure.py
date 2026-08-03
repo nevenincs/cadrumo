@@ -29,7 +29,7 @@ from ._validate_application_links import validate_application_link_closure
 from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
 from ._validate_evidence import EvidenceValidator
 from ._validate_formulas import validate_formula_dag
-from ._validate_helpers import _missing_refs
+from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_orden_aplicabilidad import orden_aplicabilidad_hard_failures
 from ._validate_revision_context import RevisionValidationContext
 from ._validate_revision_rules import (
@@ -134,3 +134,7 @@ def _validate_revision_reference_surfaces(
         failures.extend(
             evidence.require_any_source_tier(prefix, owner, evolution.source_refs, _REVISION_REFERENCE_SOURCE_TIERS),
         )
+
+
+validate_revision_closure_sections = _validate_revision_closure_sections
+validate_revision_reference_surfaces = _validate_revision_reference_surfaces

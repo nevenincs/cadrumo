@@ -755,9 +755,7 @@ def _topic_projection(topic: Topic, *, locale: str) -> RegistryTopicProjection:
 def _registry_topic_locale(locale: str | None) -> str:
     if locale is None:
         return output_language()
-    normalized = (
-        coerce_output_language_setting(locale) if isinstance(locale, str) and not isinstance(locale, bool) else None
-    )
+    normalized = coerce_output_language_setting(locale)
     if normalized is None:
         _LOGGER.warning(
             "registry.topic locale refused",

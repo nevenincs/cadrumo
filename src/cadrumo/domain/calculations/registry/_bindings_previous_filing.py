@@ -610,3 +610,7 @@ def _aggregate_prior_pagos_fraccionados(
         positive_part_total += positive_casilla_value if positive_casilla_value > zero else zero
         minoracion_total += minoracion_casilla_value
     return positive_part_total - minoracion_total
+
+
+PreviousModeloSelector = _PreviousModeloSelector
+is_direct_previous_filing_binding = _is_direct_previous_filing_binding

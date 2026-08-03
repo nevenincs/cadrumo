@@ -37,6 +37,7 @@ from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING
 
+from ...core import Modelo as _Modelo
 from ...core import PostFilingEventKind as _PostFilingEventKind
 from ...core import classify_post_filing_event_kind as _classify_post_filing_event_kind
 from ...core import post_filing_event_is_actionable as _post_filing_event_is_actionable
@@ -60,17 +61,31 @@ from ...domain.deadlines import shift_deadline as _shift_deadline
 from ...domain.modelos import WorkUnit as _WorkUnit
 from ...domain.modelos import WorkUnitState as _WorkUnitState
 from ._calendar_evidence import (
-    _authenticated_identity_matches_expected,
-    _calendar_entry_filing_evidence,
-    _calendar_events_with_filing_evidence,
-    _dedupe_calendar_events,
-    _filing_axes_from_modelo_record,
-    _filing_evidence_from_justificante_capture_snapshot,
-    _is_active_aeat_filing_status,
-    _justificantes_by_csv,
+    authenticated_identity_matches_expected as _authenticated_identity_matches_expected,
+)
+from ._calendar_evidence import (
+    calendar_entry_filing_evidence as _calendar_entry_filing_evidence,
+)
+from ._calendar_evidence import (
+    calendar_events_with_filing_evidence as _calendar_events_with_filing_evidence,
 )
 from ._calendar_evidence import (
     calendar_filing_evidence_from_sources as calendar_filing_evidence_from_sources,
+)
+from ._calendar_evidence import (
+    dedupe_calendar_events as _dedupe_calendar_events,
+)
+from ._calendar_evidence import (
+    filing_axes_from_modelo_record as _filing_axes_from_modelo_record,
+)
+from ._calendar_evidence import (
+    filing_evidence_from_justificante_capture_snapshot as _filing_evidence_from_justificante_capture_snapshot,
+)
+from ._calendar_evidence import (
+    is_active_aeat_filing_status as _is_active_aeat_filing_status,
+)
+from ._calendar_evidence import (
+    justificantes_by_csv as _justificantes_by_csv,
 )
 from ._calendar_models import (
     CalendarCompleteness,
@@ -253,7 +268,7 @@ def _calendar_entry_from_work_unit(
     opens_on, closes_on, payment_cutoff_on = _work_unit_window_dates(unit)
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, filing_evidence)
     obligation = _ModeloDeadline(
-        modelo=str(unit.modelo),
+        modelo=_Modelo(str(unit.modelo)),
         period=unit.period,
         opens_on=opens_on,
         closes_on=closes_on,

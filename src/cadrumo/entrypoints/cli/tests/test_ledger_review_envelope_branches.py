@@ -39,7 +39,7 @@ def _row_fields(**overrides: object) -> dict[str, object]:
 
 def test_a_canonical_row_projects_onto_the_transport_row() -> None:
     """Positive control: the shape the backend actually produces must validate."""
-    canonical = LedgerReviewRow(**_row_fields())  # type: ignore[arg-type]
+    canonical = LedgerReviewRow.model_validate(_row_fields())
     payload = LedgerReviewRowPayload(
         id=canonical.id,
         date=canonical.date,
@@ -68,9 +68,9 @@ def test_a_canonical_row_projects_onto_the_transport_row() -> None:
 )
 def test_the_transport_row_refuses_what_the_canonical_row_refuses(overrides: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        LedgerReviewRowPayload(**_row_fields(**overrides))  # type: ignore[arg-type]
+        LedgerReviewRowPayload.model_validate(_row_fields(**overrides))
     with pytest.raises(ValidationError):
-        LedgerReviewRow(**_row_fields(**overrides))  # type: ignore[arg-type]
+        LedgerReviewRow.model_validate(_row_fields(**overrides))
 
 
 def test_the_list_branch_validates() -> None:

@@ -40,10 +40,9 @@ from .._manifest import (
 )
 from .._manifest_io import ensure_manifest_schema_readable, manifest_path, read_manifest, write_manifest
 
-_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _FORMAT_KEY = "bucket_manifest"
 
 

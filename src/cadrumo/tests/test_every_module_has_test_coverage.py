@@ -95,6 +95,14 @@ _EXEMPTIONS: frozenset[str] = frozenset(
         # reachable through that same dynamically-dispatched command module.
         "src/cadrumo/entrypoints/cli/_app_maintenance.py",
         "src/cadrumo/entrypoints/cli/_app_maintenance_payloads.py",
+        # Structural Protocol-only module: FicheroBoeRecordRenderer declares a
+        # shape (render_record_body) for adapter classes to satisfy by duck
+        # typing, per the same pattern as application.calculations._ports. It
+        # carries no executable logic of its own, so there is nothing for a
+        # real-behavior test to exercise; the concrete renderer that satisfies
+        # the shape (adapters.outbound.aeat.export._registry_record_renderer)
+        # is independently tested there.
+        "src/cadrumo/application/modelo/_ports.py",
     },
 )
 

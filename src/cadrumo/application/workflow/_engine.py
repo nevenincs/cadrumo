@@ -18,7 +18,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import NoReturn
 
-from ...core import Period
+from ...core import Modelo, Period
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.i18n import describe_auth_provider_operator_impact
@@ -626,7 +626,7 @@ class WorkflowEngine:
                 "verify workflow requires an explicit (modelo, period) target",
             )
         synthetic = ModeloDeadline(
-            modelo=target_modelo,
+            modelo=Modelo(target_modelo),
             period=target_period,
             opens_on=today,
             closes_on=today,
@@ -1138,7 +1138,6 @@ class WorkflowEngine:
                     "EXPIRED",
                     "CRITICAL",
                 )
-                and cert_severity is not None
             ):
                 expiry_summary = _summary_text(
                     f"Certificate pre-expiry gate: severity={cert_severity} "

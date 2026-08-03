@@ -109,8 +109,6 @@ class DonativoDonorObservation(BaseModel):
     @field_validator("amount_donated")
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("amount_donated must be Decimal")
         if value < Decimal("0"):
             raise RegistryValidationError("amount_donated must be non-negative")
         return value
@@ -118,8 +116,6 @@ class DonativoDonorObservation(BaseModel):
     @field_validator("deduction_percentage")
     @classmethod
     def _percentage_within_bounds(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("deduction_percentage must be Decimal")
         if value < Decimal("0") or value > Decimal("100"):
             raise RegistryValidationError("deduction_percentage must be within [0, 100]")
         return value
@@ -244,3 +240,6 @@ def _build_donativo_rows(
             },
         )
     return tuple(rows)
+
+
+DonativoSelector = _DonativoSelector

@@ -149,15 +149,30 @@ def _active_profile_manager_storage(
     performs the same encrypted SQL writes, validation, revision checks, and
     audit-event commit for every edit.
 
-    The returned overview is still rebuilt from a post-commit database read.
-    That preserves the manager's no-optimistic-render contract while avoiding
-    only repeated route discovery, not persistence or integrity verification.
+    The page after an edit is projected from the
+    :class:`~cadrumo.domain.user_profile.UserProfileRecord` the write path
+    committed, not from a second read of it. That is still post-commit truth
+    -- the record is returned only once the write succeeded, so the
+    no-optimistic-render contract holds -- but it retires a full aggregate
+    decrypt of data this process had just encrypted and stored, which was
+    roughly a third of the persist half at a well-populated profile. That the
+    committed record equals what a fresh load yields is proved, not assumed,
+    by ``test_saved_record_is_byte_equivalent_to_a_fresh_load`` and its paired
+    divergence-catcher.
+
+    The manifest label is resolved once for the session rather than per edit.
+    Only a rename moves it, and the manager exposes no rename action, so it
+    cannot drift while this screen is open.
     """
     from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
-    from ....application.user_profile import ProfileRepository, build_profile_overview, set_active_field
-    from ....application.workflow import WorkflowStateRepository
+    from ....application.user_profile import (
+        ProfileRepository,
+        apply_active_profile_facts,
+        build_profile_overview,
+    )
+    from ....application.workflow import WorkflowState, WorkflowStateRepository
     from ....core import require_active_bucket_id
-    from ....domain.user_profile import UserProfileFact, load_user_profile_schema
+    from ....domain.user_profile import UserProfileFact, UserProfileRecord, load_user_profile_schema
 
     profile_id = require_active_bucket_id()
     secure_objects = secure_object_repository_for_active_bucket()
@@ -165,27 +180,32 @@ def _active_profile_manager_storage(
     profiles = ProfileRepository(secure_objects=secure_objects, schema=schema)
     workflow = WorkflowStateRepository(objects=secure_objects)
 
-    def _overview() -> ProfileOverview:
-        aggregate = profiles.load(profile_id)
-        return build_profile_overview(
-            aggregate.record,
-            label=label if label is not None else aggregate.label,
-            schema=schema,
-        )
+    opening = profiles.load(profile_id)
+    resolved_label = label if label is not None else opening.label
+
+    def _page(record: UserProfileRecord) -> ProfileOverview:
+        return build_profile_overview(record, label=resolved_label, schema=schema)
 
     def _persist(path: str, value: str) -> ProfileOverview:
         fact = UserProfileFact(path=path, value=value.strip() or None)
-        workflow.update(
-            lambda state: set_active_field(
+        committed: list[UserProfileRecord] = []
+
+        def _apply(state: WorkflowState) -> WorkflowState:
+            applied = apply_active_profile_facts(
                 state,
-                fact,
+                (fact,),
                 secure_objects=secure_objects,
                 schema=schema,
-            ),
-        )
-        return _overview()
+            )
+            # A revision conflict re-runs this callback, so keep the LAST
+            # record: that is the one whose write is the surviving state.
+            committed.append(applied.record)
+            return applied.state
 
-    return _overview(), _persist
+        workflow.update(_apply)
+        return _page(committed[-1])
+
+    return _page(opening.record), _persist
 
 
 def present_profile_manager(*, label: str | None = None) -> None:

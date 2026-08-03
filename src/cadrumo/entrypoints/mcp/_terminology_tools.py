@@ -122,7 +122,7 @@ def build_terminology_search_tool() -> Tool:
             "its preferred label, short description, and concept id, so you explain the "
             "concept in the taxpayer's own vocabulary rather than inventing a definition."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "query": {
@@ -141,9 +141,9 @@ def build_terminology_search_tool() -> Tool:
         },
         annotations=ToolAnnotations(
             title="Search the tax terminology handbook",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=True,
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=True,
         ),
     )
 

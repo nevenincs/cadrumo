@@ -17,13 +17,14 @@ from __future__ import annotations
 
 import hashlib
 import os
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from .....core.hashing import sha256_hex
 from .. import parse_declaracion, parse_declaracion_bytes
-from ._parser_boundary_support import FIXTURES_DIR, _write_declaration_pdf
+from ._parser_boundary_support import FIXTURES_DIR, _modelo_snapshot, _write_declaration_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -69,13 +70,28 @@ def test_parsed_observation_stamps_the_standard_library_digest_of_its_source_byt
 
 
 def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tmp_path: Path) -> None:
-    """A same-size, same-mtime replacement cannot inherit cached text or provenance."""
+    """A same-size, same-mtime replacement cannot inherit cached text or provenance.
+
+    Modelo 123 is used (rather than the default modelo 130) because its
+    ``numeric_casilla`` targets match on printed label text alone; modelo 130's
+    ``bbox_anchored`` targets additionally require the box number to sit in a
+    specific x-coordinate band that the generic ``_write_declaration_pdf``
+    layout never populates, so no amount of ``values`` could clear its
+    coverage floor. The values themselves are incidental to this test, which
+    exercises cache/digest identity, not extraction fidelity.
+    """
+    snapshot = _modelo_snapshot("123", filing_year=2024, period="1T")
+    profile = snapshot.extraction_profiles["modelo-123-declaracion-pdf"]
+    values = {
+        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
+        for index, target in enumerate(profile.target_casillas, start=1)
+    }
 
     first_pdf = tmp_path / "first.pdf"
     second_pdf = tmp_path / "second.pdf"
     target_pdf = tmp_path / "declaracion.pdf"
-    _write_declaration_pdf(first_pdf, values={}, tax_id="00000000T")
-    _write_declaration_pdf(second_pdf, values={}, tax_id="00000001R")
+    _write_declaration_pdf(first_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000000T")
+    _write_declaration_pdf(second_pdf, modelo="123", ejercicio="2024", period="1T", values=values, tax_id="00000001R")
 
     first_bytes = first_pdf.read_bytes()
     second_bytes = second_pdf.read_bytes()
@@ -90,7 +106,7 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     os.utime(target_pdf, ns=(fixed_ns, fixed_ns))
     first = parse_declaracion(
         target_pdf,
-        modelo_override="130",
+        modelo_override="123",
         año_override=2024,
         period_override="1T",
     )
@@ -101,7 +117,7 @@ def test_path_parser_reloads_equal_metadata_replacement_and_stamps_its_digest(tm
     replacement_stat = target_pdf.stat()
     replacement = parse_declaracion(
         target_pdf,
-        modelo_override="130",
+        modelo_override="123",
         año_override=2024,
         period_override="1T",
     )

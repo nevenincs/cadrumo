@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 import socket
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -222,7 +222,7 @@ def acquire_auth_acquisition_lock(
     *,
     ttl_seconds: int,
     operation: str = "auth-login",
-) -> Iterator[AuthAcquisitionLockRecord]:
+) -> Generator[AuthAcquisitionLockRecord]:
     """Acquire a crash-recoverable auth lock or raise a typed conflict.
 
     Yields an :class:`AuthAcquisitionLockRecord` while the lock is held.

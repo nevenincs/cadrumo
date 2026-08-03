@@ -30,10 +30,10 @@ from .._models import LLMProvider, UsageRecord
 from .._run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder
 from .._usage import UsageRecorder
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
 if TYPE_CHECKING:
     from sqlalchemy import Engine
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _RECENT = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
 _OLD = _RECENT - timedelta(days=400)

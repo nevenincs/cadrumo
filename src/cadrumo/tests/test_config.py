@@ -6,6 +6,13 @@ environment variable the application reads.  These tests enforce that:
 1. Every Settings field has a matching line in ``env/.env.example``.
 2. Every variable in ``env/.env.example`` has a matching Settings field.
 3. Settings can be instantiated with no env vars at all (all fields have defaults).
+
+There is no ``.env`` file support: production reads configuration from the process
+environment only. ``env/.env.example`` documents the accepted variable names for a
+developer's own shell/``uv --env-file`` workflow; it is never read by ``Settings``
+itself. Tests that need a variable in force construct it through the real process
+environment (``env_scope.isolated_aeat_env``), never through a dotenv-bound
+``Settings`` subclass.
 """
 
 from __future__ import annotations
@@ -15,24 +22,22 @@ from pathlib import Path
 from types import UnionType
 from typing import Union, get_args, get_origin
 
-import pydantic
 import pytest
-from pydantic_settings import SettingsConfigDict
 
 from ..core import AuthProviderKind
 from ..core.config import (
-    PROJECT_ROOT,
     Settings,
     StorageRouteKind,
     classify_storage_route,
 )
 from ..core.external_constants import load_external_constants
+from . import REPO_ROOT
 from .env_scope import isolated_aeat_env as _isolated_aeat_env
 from .env_scope import settings_without_env_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
+ENV_EXAMPLE_PATH = REPO_ROOT / "env" / ".env.example"
 
 
 def _parse_env_example_vars() -> set[str]:
@@ -137,95 +142,49 @@ class TestStatusDetailUrlTemplate:
             Settings(aeat_status_detail_url_template="/x/no-placeholder/y")
 
     def test_blank_env_values_are_ignored(self, tmp_path: Path) -> None:
-        """Blank values in env/.env must not coerce optional settings into live values."""
-        env_path = tmp_path / ".env"
-        env_path.write_text(
-            "\n".join(
-                (
-                    "CADRUMO_CERTIFICATE_PATH=",
-                    "CADRUMO_CERTIFICATE_PASSWORD_SECRET=",
-                ),
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-
-        class BlankEnvSettings(Settings):
-            """Settings variant bound to a temp env file that contains blank assignments."""
-
-            model_config = SettingsConfigDict(
-                env_file=env_path,
-                env_file_encoding="utf-8",
-                env_ignore_empty=True,
-            )
-
-        with _isolated_aeat_env():
-            settings = BlankEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+        """Blank env values must not coerce optional settings into live values."""
+        with _isolated_aeat_env(
+            CADRUMO_CERTIFICATE_PATH="",
+            CADRUMO_CERTIFICATE_PASSWORD_SECRET="",
+        ):
+            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_certificate_path is None
         assert settings.cadrumo_certificate_password_secret is None
 
-    def test_a_former_product_dotenv_key_is_refused_like_any_other_unknown_key(self, tmp_path: Path) -> None:
-        """A stale ``AEAT_*`` product key in a dotenv refuses; it is not silently dropped.
+    def test_unknown_env_var_name_is_silently_ignored_not_refused(self, tmp_path: Path) -> None:
+        """A stale/mistyped env var name is ignored, never refused.
 
         Former-product settings names (``AEAT_LOCAL_STORAGE_ROOT``,
         ``AEAT_SECRET_PASSPHRASE`` and their siblings) once had a dedicated
-        exclusion list filtering them out of the settings sources. That list was
-        deleted deliberately, so the names now meet the model's ordinary
-        ``extra="forbid"`` boundary like any other key mapping to no field.
+        exclusion list filtering them out of the settings sources; that list
+        was deleted deliberately once dotenv support was removed. The
+        pydantic-settings env source only reads the process environment for
+        names matching a DECLARED field (``field_name.upper()``); it never
+        enumerates the ambient environment, so an unmapped name is simply
+        never looked up and cannot trip the model's ``extra="forbid"``
+        boundary. That exhaustive-scan-and-refuse behaviour was dotenv-only
+        (``DotEnvSettingsSource`` forwards every key found in the file, known
+        or not) and has no equivalent left once dotenv reading is gone.
 
-        Worth pinning because the two behaviours are easy to confuse and only
-        one is honest: silently dropping the key leaves an operator believing a
-        setting is in force while nothing reads it, whereas refusing names the
-        stale key at startup. Authority-owned ``AEAT_*`` settings are
-        unaffected — they map to real fields — and the closing case proves a
-        valid key is still read once the stale ones are gone, so the refusal is
-        about the unknown name rather than the ``AEAT_`` prefix.
+        Pinning the current (weaker) contract deliberately: a stale key is a
+        silent no-op, not a startup refusal. A neighbouring, correctly-named
+        key is asserted alongside it so the test cannot pass by accident (a
+        wholesale env-reading failure would also leave the valid field unset).
         """
-        env_path = tmp_path / ".env"
-
-        class FormerProductEnvSettings(Settings):
-            """Settings variant bound to a real dotenv file under test."""
-
-            model_config = SettingsConfigDict(
-                env_file=env_path,
-                env_file_encoding="utf-8",
-                env_ignore_empty=True,
-            )
-
-        for stale in ("AEAT_LOCAL_STORAGE_ROOT=legacy-state-root", "AEAT_SECRET_PASSPHRASE=legacy-secret-value"):
-            env_path.write_text(f"{stale}\nCADRUMO_AUTH_PROVIDER=certificate\n", encoding="utf-8")
-            with _isolated_aeat_env(), pytest.raises(pydantic.ValidationError):
-                FormerProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-
-        env_path.write_text("UNRELATED_CADRUMO_TYPO=1\n", encoding="utf-8")
-        with _isolated_aeat_env(), pytest.raises(pydantic.ValidationError):
-            FormerProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-
-        env_path.write_text("CADRUMO_AUTH_PROVIDER=certificate\n", encoding="utf-8")
-        with _isolated_aeat_env():
-            settings = FormerProductEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+        with _isolated_aeat_env(
+            AEAT_LOCAL_STORAGE_ROOT="legacy-state-root",
+            AEAT_SECRET_PASSPHRASE="legacy-secret-value",  # noqa: S106 - synthetic test fixture, not a secret
+            UNRELATED_CADRUMO_TYPO="1",
+            CADRUMO_AUTH_PROVIDER="certificate",
+        ):
+            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         assert settings.cadrumo_auth_provider is AuthProviderKind.CERTIFICATE
 
     def test_relative_env_paths_resolve_from_project_root(self, tmp_path: Path) -> None:
-        """Relative env-backed paths must anchor to PROJECT_ROOT, not the process cwd."""
-        env_path = tmp_path / ".env"
-        env_path.write_text(
-            "CADRUMO_WORKFLOW_RUNS_DIR=env/workflow/runs\n",
-            encoding="utf-8",
-        )
-
-        class RelativeEnvSettings(Settings):
-            """Settings variant bound to a temp env file with relative path assignments."""
-
-            model_config = SettingsConfigDict(
-                env_file=env_path,
-                env_file_encoding="utf-8",
-                env_ignore_empty=True,
-            )
-
-        with _isolated_aeat_env():
-            settings = RelativeEnvSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        assert settings.cadrumo_workflow_runs_dir == PROJECT_ROOT / "env" / "workflow" / "runs"
+        """Relative env-backed paths must anchor to the repository root, not the process cwd."""
+        with _isolated_aeat_env(CADRUMO_WORKFLOW_RUNS_DIR="env/workflow/runs"):
+            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+        assert settings.cadrumo_workflow_runs_dir == REPO_ROOT / "env" / "workflow" / "runs"
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
@@ -310,34 +269,36 @@ class TestRepoRelativePathNormalisationCoverage:
 
     def test_relative_audit_flagged_paths_resolve_under_project_root(self, tmp_path: Path) -> None:
         """End-to-end: relative env values for the three audit-flagged paths anchor to
-        ``PROJECT_ROOT`` (not the process cwd)."""
-        env_path = tmp_path / ".env"
-        env_path.write_text(
-            "\n".join(
-                (
-                    "CADRUMO_INVOICES_DIR=var/financial/invoices",
-                    "CADRUMO_ATTACHMENTS_DIR=var/financial/attachments",
-                    "CADRUMO_RUNS_DIR=var/runs",
-                ),
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+        the repository root (not the process cwd)."""
+        with _isolated_aeat_env(
+            CADRUMO_INVOICES_DIR="var/financial/invoices",
+            CADRUMO_ATTACHMENTS_DIR="var/financial/attachments",
+            CADRUMO_RUNS_DIR="var/runs",
+        ):
+            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+        assert settings.cadrumo_invoices_dir == REPO_ROOT / "var" / "financial" / "invoices"
+        assert settings.cadrumo_attachments_dir == REPO_ROOT / "var" / "financial" / "attachments"
+        assert settings.cadrumo_runs_dir == REPO_ROOT / "var" / "runs"
 
-        class RelativeAuditSettings(Settings):
-            """Settings variant bound to a temp env file with the audit-flagged paths."""
 
-            model_config = SettingsConfigDict(
-                env_file=env_path,
-                env_file_encoding="utf-8",
-                env_ignore_empty=True,
-            )
+def _parse_env_example_kv() -> dict[str, str]:
+    """Extract ``NAME=value`` pairs from ``env/.env.example``.
 
-        with _isolated_aeat_env():
-            settings = RelativeAuditSettings(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        assert settings.cadrumo_invoices_dir == PROJECT_ROOT / "var" / "financial" / "invoices"
-        assert settings.cadrumo_attachments_dir == PROJECT_ROOT / "var" / "financial" / "attachments"
-        assert settings.cadrumo_runs_dir == PROJECT_ROOT / "var" / "runs"
+    Mirrors :func:`_parse_env_example_vars` but keeps the value, so a test can
+    replay the shipped template through the real process environment — the
+    only channel a developer's own ``uv run --env-file env/.env`` (or an
+    exported shell profile) actually uses. There is no dotenv reading inside
+    ``Settings`` itself to bind a subclass to.
+    """
+    pairs: dict[str, str] = {}
+    for line in ENV_EXAMPLE_PATH.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        match = re.match(r"^([A-Z_][A-Z0-9_]*)=(.*)$", stripped)
+        if match:
+            pairs[match.group(1)] = match.group(2)
+    return pairs
 
 
 class TestDatabaseUrlDerivation:
@@ -350,31 +311,13 @@ class TestDatabaseUrlDerivation:
     clean no-active-profile refusal.
     """
 
-    @staticmethod
-    def _isolated(env_file_path: Path) -> type[Settings]:
-        class IsolatedSettings(Settings):
-            """Settings variant bound to a temp env file for test isolation."""
-
-            model_config = SettingsConfigDict(
-                env_file=env_file_path,
-                env_file_encoding="utf-8",
-                env_ignore_empty=True,
-            )
-
-        return IsolatedSettings
-
     def test_storage_root_alone_derives_root_level_fallback_url(self, tmp_path: Path) -> None:
         """Storage root without an explicit URL or active profile derives the
         ``sqlite:///<root>/cadrumo.db`` fallback rather than staying empty."""
         storage_root = tmp_path / "aeat-state"
-        env_path = tmp_path / ".env"
-        env_path.write_text(
-            f"CADRUMO_LOCAL_STORAGE_ROOT={storage_root.as_posix()}\n",
-            encoding="utf-8",
-        )
 
-        with _isolated_aeat_env():
-            settings = self._isolated(env_path)()
+        with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
+            settings = settings_without_env_file()
 
         expected = f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}"
         assert settings.cadrumo_database_url == expected
@@ -383,20 +326,12 @@ class TestDatabaseUrlDerivation:
     def test_explicit_database_url_overrides_storage_root_derivation(self, tmp_path: Path) -> None:
         """An explicit ``CADRUMO_DATABASE_URL`` wins over the derived fallback."""
         explicit_url = f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}"
-        env_path = tmp_path / ".env"
-        env_path.write_text(
-            "\n".join(
-                (
-                    f"CADRUMO_LOCAL_STORAGE_ROOT={(tmp_path / 'aeat-state').as_posix()}",
-                    f"CADRUMO_DATABASE_URL={explicit_url}",
-                ),
-            )
-            + "\n",
-            encoding="utf-8",
-        )
 
-        with _isolated_aeat_env():
-            settings = self._isolated(env_path)()
+        with _isolated_aeat_env(
+            CADRUMO_LOCAL_STORAGE_ROOT=(tmp_path / "aeat-state").as_posix(),
+            CADRUMO_DATABASE_URL=explicit_url,
+        ):
+            settings = settings_without_env_file()
 
         assert settings.cadrumo_database_url == explicit_url
 
@@ -408,34 +343,29 @@ class TestDatabaseUrlDerivation:
         flag writes, because no environment source populates it.
         """
         storage_root = tmp_path / "aeat-state"
-        env_path = tmp_path / ".env"
-        env_path.write_text(
-            f"CADRUMO_LOCAL_STORAGE_ROOT={storage_root.as_posix()}\n",
-            encoding="utf-8",
-        )
 
-        with _isolated_aeat_env():
-            settings = self._isolated(env_path)(cadrumo_active_profile="acme")
+        with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
+            settings = settings_without_env_file(cadrumo_active_profile="acme")
 
         expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'cadrumo.db').as_posix()}"
         assert settings.cadrumo_database_url == expected
 
     def test_env_example_leaves_normal_profile_storage_on_the_bucket_route(self, tmp_path: Path) -> None:
-        """The shipped environment template must not force a global database route."""
+        """The shipped environment template must not force a global database route.
 
-        class ExampleSettings(Settings):
-            """Settings loaded from the same template copied by ``just env-setup``."""
-
-            model_config = SettingsConfigDict(
-                env_file=ENV_EXAMPLE_PATH,
-                env_file_encoding="utf-8",
-                env_ignore_empty=True,
-            )
-
+        Replays every ``NAME=value`` pair from ``env/.env.example`` through the
+        real process environment (the only channel a developer's own
+        ``uv run --env-file env/.env`` actually populates), then confirms the
+        template's blank ``CADRUMO_DATABASE_URL`` still leaves storage on the
+        per-bucket route rather than forcing a global database.
+        """
         storage_root = tmp_path / "cadrumo-state"
         bucket_id = "profile-bucket"
-        with _isolated_aeat_env():
-            settings = ExampleSettings(
+        template_vars = _parse_env_example_kv()
+        assert template_vars, "env/.env.example must declare at least one variable"
+
+        with _isolated_aeat_env(**template_vars):
+            settings = settings_without_env_file(
                 cadrumo_local_storage_root=storage_root,
                 cadrumo_active_profile=bucket_id,
             )

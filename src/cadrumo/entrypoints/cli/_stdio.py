@@ -1,4 +1,4 @@
-"""Force the CLI's standard streams onto UTF-8.
+"""Force the CLI's standard streams onto UTF-8, and its help/error rendering to plain text.
 
 Default Windows terminals expose stdout / stderr as cp1252; emoji
 flag characters, CJK ideographs, the U+2192 right arrow used by the
@@ -23,104 +23,44 @@ which is strictly worse than leaving the stream as-is.
 
 from __future__ import annotations
 
-import contextlib
-
 # LOGGING-STDLIB-RATIONALE-STDIO-PLATFORM-FALLBACK:
 # stdlib logging used for debug-level platform diagnostic on Windows ctypes
 # failure; core logging is unavailable at stream-bootstrap time.
 import logging
-import os
-import shutil
 import sys
-from collections.abc import Iterator
-from typing import Final, TextIO
+from typing import TextIO
 
-from ...core.external_constants import COLUMNS_ENV_VAR
-
-# Minimum render width for the help surface. The wizard `profile
-# create` / `edit` verbs expose ~40 flags, including long negatable
-# boolean flag pairs that carry both `--x` and `--no-x` in one
-# options-column cell. Rich's help formatter ellipsises a flag name
-# (`--address-postco…`) when the console is too narrow to fit it,
-# and piped / redirected output defaults to an 80-column console.
-# Bumping the width floor for help rendering keeps full flag names
-# readable. The widening is scoped to `--help` invocations only, so
-# ordinary command output keeps the real terminal width.
-#
-# The floor must clear the widest flag-pair cell: the longest pair
-# (`--iva-intracommunity-operations-exceed-50000-eur/--no-...`) runs
-# to ~100 chars, and Rich splits the table width between the options
-# and help columns — a 200-column floor still ellipsised three pairs,
-# whereas 240 fits every flag name in full.
-_MIN_HELP_RENDER_COLUMNS = 240
-
-#: Environment variable key Rich uses to determine console column width.
-_COLUMNS_ENV_VAR: Final[str] = COLUMNS_ENV_VAR
-
-#: argv tokens that request the help surface.
-_HELP_TOKENS = frozenset({"--help", "-h"})
+import typer
+import typer.core
 
 
-def _help_surface_requested() -> bool:
-    """Return whether the current invocation renders a ``--help`` surface."""
-    return any(token in _HELP_TOKENS for token in sys.argv[1:])
+def _disable_rich_cli_rendering() -> None:
+    """Force Typer/Click's plain-text formatter for help, errors, and tracebacks.
 
+    Rich's boxed help panels derive their width from the ``COLUMNS``
+    environment variable or the detected terminal size, and both are
+    unreliable across the CLI's real invocation surfaces: piped /
+    redirected output, non-tty CI runners, and narrow terminals all
+    make Rich pick a box width wider than what actually renders,
+    wrapping the box-drawing border characters mid-line into unreadable
+    output. Cadrumo's wizard verbs additionally expose long negatable
+    flag pairs (``--iva-intracommunity-operations-exceed-50000-eur`` /
+    ``--no-...``) that Rich's fixed-width options table ellipsises
+    (``--address-postco…``) once its chosen width runs out, which a
+    prior version of this module worked around by force-widening
+    ``COLUMNS`` for help surfaces — masking the box-wrapping failure
+    mode instead of removing it.
 
-@contextlib.contextmanager
-def _ensure_help_render_width() -> Iterator[None]:
-    """Context manager that widens the console width floor for ``--help`` surfaces.
-
-    Rich (used by Typer for ``--help``) derives its console width from
-    the ``COLUMNS`` environment variable, falling back to the terminal
-    size. When output is piped the fallback is 80 columns, which
-    ellipsises long option names in the wizard help tables. This sets
-    ``COLUMNS`` to
-    :data:`_MIN_HELP_RENDER_COLUMNS` only when a help
-    surface is being rendered and the resolved width is below the
-    floor, so ordinary command output and genuinely wide terminals
-    keep their real width.
-
-    The mutation is scoped to the ``with`` block: the original value of
-    ``COLUMNS`` (or its absence) is restored on exit so the environment
-    mutation does not leak into sibling processes or tests.
-
-    Tests that exercise the decision branches scope ``sys.argv`` and
-    ``os.environ[COLUMNS]`` via the centralized backend helpers in
-    ``cadrumo.tests.env_scope`` (``scoped_sys_argv`` /
-    ``scoped_env_var``) rather than rebinding process state directly.
-    Rich reads the env var from the live environment at render time,
-    so a DI-seam that bypassed the os.environ write would misrepresent
-    the production contract.
+    ``typer.core.HAS_RICH`` is read live by every Typer/Click render
+    call (help, parse errors, tracebacks) rather than captured once
+    per ``Typer()`` instance, so flipping it here — before or after any
+    of the project's ``Typer()`` apps are constructed — disables Rich
+    rendering across the whole command tree from this single call.
+    Click's plain formatter wraps prose to the real terminal width
+    (capped at 80 columns) instead of truncating option names, so no
+    width floor is needed for it.
     """
-    _original = os.environ.get(_COLUMNS_ENV_VAR)
-
-    if not _help_surface_requested():
-        yield
-        return
-
-    resolved = _original
-    if resolved is not None:
-        try:
-            current = int(resolved)
-        except ValueError:
-            current = 0
-        if current >= _MIN_HELP_RENDER_COLUMNS:
-            yield
-            return
-    else:
-        current = shutil.get_terminal_size(fallback=(80, 24)).columns
-        if current >= _MIN_HELP_RENDER_COLUMNS:
-            yield
-            return
-
-    os.environ[_COLUMNS_ENV_VAR] = str(_MIN_HELP_RENDER_COLUMNS)
-    try:
-        yield
-    finally:
-        if _original is None:
-            os.environ.pop(_COLUMNS_ENV_VAR, None)
-        else:
-            os.environ[_COLUMNS_ENV_VAR] = _original
+    typer.core.HAS_RICH = False
 
 
 def _set_windows_console_utf8() -> None:
@@ -219,9 +159,8 @@ def configure_stdio_for_utf8(
     monkeypatching ``sys``.
     """
     _set_windows_console_utf8()
-    with _ensure_help_render_width():
-        _reconfigure_stream(sys.stdout if stdout is None else stdout)
-        _reconfigure_stream(sys.stderr if stderr is None else stderr)
+    _reconfigure_stream(sys.stdout if stdout is None else stdout)
+    _reconfigure_stream(sys.stderr if stderr is None else stderr)
 
 
 __all__ = ["configure_stdio_for_utf8"]

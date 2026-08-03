@@ -208,7 +208,7 @@ def _seed_reconciliation_record(bucket_id: str) -> str:
                 kind="casilla_value_mismatch",
                 diff_kind=ModeloReconciliationDiffKind.CASILLA,
                 legal_refs=("ley-35-2006:art-79",),
-                source_refs=("aeat:manual-renta-2024",),
+                source_refs=("aeat-manual-renta-2024",),
             ),
         ),
         advisories=(
@@ -266,6 +266,6 @@ def test_reconciliation_records_survive_the_custody_carry_with_grounding(tmp_pat
             entries = list_modelo_reconciliations(bucket_id=source_bucket)
             assert len(entries) == 1
             assert entries[0].diffs[0].legal_refs == ("ley-35-2006:art-79",)
-            assert entries[0].diffs[0].source_refs == ("aeat:manual-renta-2024",)
+            assert entries[0].diffs[0].source_refs == ("aeat-manual-renta-2024",)
             # Advisories survive too, read off the restored record itself.
             assert restored[0].advisories[0].context == {"reason": "no_persisted_revision"}

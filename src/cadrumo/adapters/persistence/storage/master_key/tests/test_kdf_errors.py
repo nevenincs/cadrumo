@@ -17,6 +17,8 @@ record, and asserting that requires bypassing it here too.
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 from pydantic import ValidationError
 
@@ -31,46 +33,59 @@ _VALID_SALT = b"\x00" * 16
 _PASSPHRASE = b"correct horse battery staple"
 
 
-def _unvalidated(**overrides: object) -> ManifestKdfParams:
+class _UnvalidatedManifestKdfFields(TypedDict):
+    algorithm: str
+    version: int
+    memory_cost: int
+    time_cost: int
+    parallelism: int
+    salt: bytes
+    output_length: int
+
+
+def _unvalidated(*, algorithm: str = "argon2id", output_length: int = 32) -> ManifestKdfParams:
     """Build a record that skips validation, to reach the backstop beneath it."""
-    fields: dict[str, object] = {
-        "algorithm": "argon2id",
+    fields: _UnvalidatedManifestKdfFields = {
+        "algorithm": algorithm,
         "version": 19,
         "memory_cost": 19 * 1024,
         "time_cost": 2,
         "parallelism": 1,
         "salt": _VALID_SALT,
-        "output_length": 32,
+        "output_length": output_length,
     }
-    fields.update(overrides)
     return ManifestKdfParams.model_construct(**fields)
 
 
 def test_record_refuses_the_unsupported_algorithm_before_derivation() -> None:
     """The record is the authority; the backstop below is not where this is caught."""
     with pytest.raises(ValidationError):
-        ManifestKdfParams(
-            algorithm="bcrypt",
-            version=19,
-            memory_cost=19 * 1024,
-            time_cost=2,
-            parallelism=1,
-            salt=_VALID_SALT,
-            output_length=32,
+        ManifestKdfParams.model_validate(
+            {
+                "algorithm": "bcrypt",
+                "version": 19,
+                "memory_cost": 19 * 1024,
+                "time_cost": 2,
+                "parallelism": 1,
+                "salt": _VALID_SALT,
+                "output_length": 32,
+            }
         )
 
 
 def test_record_refuses_the_unsupported_output_length_before_derivation() -> None:
     """Same authority, on the output length."""
     with pytest.raises(ValidationError):
-        ManifestKdfParams(
-            algorithm="argon2id",
-            version=19,
-            memory_cost=19 * 1024,
-            time_cost=2,
-            parallelism=1,
-            salt=_VALID_SALT,
-            output_length=16,
+        ManifestKdfParams.model_validate(
+            {
+                "algorithm": "argon2id",
+                "version": 19,
+                "memory_cost": 19 * 1024,
+                "time_cost": 2,
+                "parallelism": 1,
+                "salt": _VALID_SALT,
+                "output_length": 16,
+            }
         )
 
 

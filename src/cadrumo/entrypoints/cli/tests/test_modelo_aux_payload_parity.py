@@ -127,7 +127,7 @@ class TestModeloAuditShowResult:
             "created_at": _WHEN,
         }
         fields.update(overrides)
-        return ModeloAuditShowResult(**fields)  # type: ignore[arg-type]
+        return ModeloAuditShowResult.model_validate(fields)
 
     def test_well_formed_bundle_renders_wire_shape(self) -> None:
         wire = self._bundle().model_dump(mode="json")

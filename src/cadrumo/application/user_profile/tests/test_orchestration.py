@@ -233,7 +233,7 @@ def test_logout_closes_real_storage_clears_pointer_releases_lock_and_is_idempote
         session = current_active_bucket_session()
         assert session is not None
         assert session.bucket_id == _DEFAULT_PROFILE_ID
-        engine = session.acquire_engine(settings)
+        engine = session.acquire_engine(lambda: settings)
         with engine.connect() as connection:
             assert connection.exec_driver_sql("SELECT 1").scalar_one() == 1
         pool_before_logout = engine.pool
@@ -284,7 +284,7 @@ def test_logout_closes_real_storage_clears_pointer_releases_lock_and_is_idempote
         assert session.sealed is True
         assert engine.pool is not pool_before_logout
         with pytest.raises(BucketLockedError):
-            session.acquire_engine(settings)
+            session.acquire_engine(lambda: settings)
         assert released_pointer is None
 
     assert resolve_active_bucket_id() is None

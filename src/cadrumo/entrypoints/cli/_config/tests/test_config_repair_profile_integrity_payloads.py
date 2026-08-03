@@ -25,14 +25,14 @@ from ..._config_payloads import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _pointer_repair_payload() -> dict[str, object]:
+def _pointer_repair_payload(*, status: object = "none", source: object = "none") -> dict[str, object]:
     return {
         "dry_run": True,
         "cleared_pointer": False,
         "before": {
             "active_profile": None,
-            "source": "none",
-            "status": "none",
+            "source": source,
+            "status": status,
             "registered_bucket": False,
             "profile_record_present": False,
             "profile_record_error": "",
@@ -82,8 +82,7 @@ def test_repair_profile_result_projects_profile_record_status_branch() -> None:
 @pytest.mark.parametrize("bad_status", ("bogus", "", 1))
 def test_repair_profile_result_refuses_malformed_health_status(bad_status: object) -> None:
     """A nested health row with an unknown ``status`` value is refused."""
-    payload = _pointer_repair_payload()
-    payload["before"]["status"] = bad_status  # type: ignore[index]
+    payload = _pointer_repair_payload(status=bad_status)
 
     with pytest.raises(ValidationError):
         RepairProfileResult.model_validate(payload)
@@ -91,8 +90,7 @@ def test_repair_profile_result_refuses_malformed_health_status(bad_status: objec
 
 def test_repair_profile_result_refuses_malformed_health_source() -> None:
     """A nested health row with an unknown ``source`` value is refused."""
-    payload = _pointer_repair_payload()
-    payload["before"]["source"] = "bogus"  # type: ignore[index]
+    payload = _pointer_repair_payload(source="bogus")
 
     with pytest.raises(ValidationError):
         RepairProfileResult.model_validate(payload)
@@ -174,4 +172,4 @@ def test_workflow_fingerprint_payload_round_trips_valid_row() -> None:
 def test_workflow_fingerprint_payload_refuses_out_of_bounds_fields(kwargs: dict[str, object]) -> None:
     """A non-positive schema version, negative byte length, or blank reason is refused."""
     with pytest.raises(ValidationError):
-        WorkflowFingerprintPayload(**kwargs)
+        WorkflowFingerprintPayload.model_validate(kwargs)

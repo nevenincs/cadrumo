@@ -63,7 +63,7 @@ def _iter_pages(definition: FlowDefinition) -> tuple[FlowPage, ...]:
         for item in section.items:
             if isinstance(item, FlowRepeatingGroup):
                 pages.extend(item.pages)
-            elif isinstance(item, FlowPage):
+            else:
                 pages.append(item)
     return tuple(pages)
 

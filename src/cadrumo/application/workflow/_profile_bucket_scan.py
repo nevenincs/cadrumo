@@ -53,6 +53,7 @@ from ...adapters.persistence.storage.bucket import (
     read_manifest,
 )
 from ...core.logging import get_logger
+from ...core.redaction import redact_for_cli_output
 from ...domain.user_profile import UserProfileStatus
 from ._errors import ProfileLabelAmbiguousError
 from ._profile_bucket_models import ProfileBucketPointer
@@ -289,10 +290,14 @@ def _read_manifest_or_none(paths: BucketPaths) -> BucketManifest | None:
     try:
         return read_manifest(paths)
     except _MANIFEST_SCAN_EXCEPTIONS as exc:
+        # No exc_info: a manifest-identity StorageValidationError embeds the
+        # raw (unredacted) bucket id and directory name in its own message,
+        # so surfacing its traceback would leak past the redaction applied
+        # to the bucket_id parameter above.
         _log.debug(
-            "profile bucket scan: skipping unreadable bucket manifest bucket_id=%s",
-            paths.bucket_id,
-            exc_info=exc,
+            "profile bucket scan: skipping unreadable bucket manifest bucket_id=%s error_type=%s",
+            redact_for_cli_output(paths.bucket_id),
+            type(exc).__name__,
         )
         return None
 

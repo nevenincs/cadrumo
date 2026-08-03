@@ -197,13 +197,13 @@ def prepare_profile_export(
     hold the recorded digest, clears the staged path it names (whether that file
     exists, is half-written, or was never created), and emits no event.
     """
-    from ._orchestration import _profile_export_runtime
+    from ._orchestration import profile_export_runtime
 
     repository = journal or ProfileBundleExportJournalRepository()
     target = ProfileBundleExportTarget(destination=request.destination)
     pointer = _resolve_export_profile(request.profile_name)
     _refuse_link_target(request.destination)
-    with _profile_export_runtime(pointer.bucket_id):
+    with profile_export_runtime(pointer.bucket_id):
         bundle = _serialize_export_bundle(pointer.bucket_id)
         payload = _render_export_payload(bundle, request=request)
     payload_bytes = payload.encode(UTF_8_ENCODING)
@@ -620,9 +620,9 @@ def _emit_export_event(operation: ProfileBundleExportOperation) -> None:
     entry.
     """
     from ...domain.buckets import BucketEventObjectType, BucketEventType, emit_bucket_event
-    from ._orchestration import _profile_export_runtime
+    from ._orchestration import profile_export_runtime
 
-    with _profile_export_runtime(operation.profile_id) as event_repository:
+    with profile_export_runtime(operation.profile_id) as event_repository:
         emit_bucket_event(
             repository=event_repository,
             bucket_id=operation.profile_id,

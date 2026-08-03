@@ -94,4 +94,6 @@ class TestUnreadableLandingIsRefused:
         requested = f"{_AEAT.domains.www6}{_RESUMEN_PATH}"
         with pytest.raises(SedeNavigationError) as excinfo:
             assert_landed_url_readable("", requested_url=requested)
-        assert excinfo.value.context["requested_url"] == requested
+        context = excinfo.value.context
+        assert context is not None
+        assert context["requested_url"] == requested

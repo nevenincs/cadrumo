@@ -9,18 +9,18 @@ from dev import _build_evidence_corpus
 from dev.audit import report, semantic
 from dev.audit.complexity import collect_cc, load_baseline
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_code_health_scanners_target_the_live_cadrumo_tree_non_vacuously() -> None:
     """The composed report scans real Cadrumo modules rather than a retired empty root."""
-    source_root = PROJECT_ROOT / report._PRODUCT_SOURCE_ROOT
+    source_root = REPO_ROOT / report._PRODUCT_SOURCE_ROOT
     production_files = tuple(source_root.rglob("*.py"))
     cyclomatic = collect_cc(report._PRODUCTION_EXCLUDE)
 
-    assert source_root == PROJECT_ROOT / "src" / "cadrumo"
+    assert source_root == REPO_ROOT / "src" / "cadrumo"
     assert len(production_files) > 1_000
     assert len(cyclomatic) > 100
     assert all(finding.path.startswith("src/cadrumo/") for finding in cyclomatic)
@@ -28,7 +28,7 @@ def test_code_health_scanners_target_the_live_cadrumo_tree_non_vacuously() -> No
 
 def test_complexity_baseline_keys_use_only_current_product_paths() -> None:
     """The ratchet preserves its debt values while every source key follows the move."""
-    baseline_path = PROJECT_ROOT / "dev" / "audit" / "complexity_baseline.json"
+    baseline_path = REPO_ROOT / "dev" / "audit" / "complexity_baseline.json"
     document = json.loads(baseline_path.read_text(encoding="utf-8"))
     serialized = json.dumps(document)
     production = load_baseline(is_test_run=False, path=baseline_path)
@@ -59,16 +59,16 @@ def test_semantic_leak_classifier_uses_cadrumo_paths_and_keeps_aeat_as_authority
 
 def test_evidence_builder_targets_the_live_cadrumo_fixture_corpus() -> None:
     """A corpus build writes only beneath the current product test tree."""
-    corpus = PROJECT_ROOT / _build_evidence_corpus._CORPUS
+    corpus = REPO_ROOT / _build_evidence_corpus._CORPUS
 
-    assert corpus == PROJECT_ROOT / "src" / "cadrumo" / "application" / "ledger" / "tests" / "_evidence_corpus"
+    assert corpus == REPO_ROOT / "src" / "cadrumo" / "application" / "ledger" / "tests" / "_evidence_corpus"
     assert corpus.is_dir()
     assert _build_evidence_corpus._UA.startswith("cadrumo-fixtures/")
 
 
 def test_vulture_whitelist_references_current_modules_only() -> None:
     """Whitelist rationale cannot keep retired product module paths alive."""
-    whitelist = (PROJECT_ROOT / "dev" / "vulture_whitelist.py").read_text(encoding="utf-8")
+    whitelist = (REPO_ROOT / "dev" / "vulture_whitelist.py").read_text(encoding="utf-8")
 
     assert "aeat." not in whitelist
     assert "cadrumo.adapters.outbound.google._api" in whitelist

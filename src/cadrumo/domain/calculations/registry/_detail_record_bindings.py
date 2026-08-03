@@ -95,8 +95,6 @@ class RelatedPartyOperationObservation(BaseModel):
     @field_validator("amount")
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("related-party amount must be Decimal")
         return value
 
 
@@ -231,8 +229,6 @@ class Modelo720RowObservation(BaseModel):
     @field_validator("valuation_amount")
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("foreign asset valuation must be Decimal")
         if value < Decimal("0"):
             raise RegistryValidationError("foreign asset valuation must be non-negative")
         return value
@@ -365,8 +361,6 @@ class AtributionMemberObservation(BaseModel):
     @field_validator("share_percentage")
     @classmethod
     def _share_within_bounds(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("share_percentage must be Decimal")
         if value < Decimal("0") or value > Decimal("100"):
             raise RegistryValidationError("share_percentage must be within [0, 100]")
         return value
@@ -374,8 +368,6 @@ class AtributionMemberObservation(BaseModel):
     @field_validator("base_imponible_assigned")
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("base_imponible_assigned must be Decimal")
         return value
 
 
@@ -486,8 +478,6 @@ class RefundOperationObservation(BaseModel):
     @field_validator("refund_amount")
     @classmethod
     def _decimal_amount(cls, value: Decimal) -> Decimal:
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError("refund_amount must be Decimal")
         if value < Decimal("0"):
             raise RegistryValidationError("refund_amount must be non-negative")
         return value
@@ -500,6 +490,14 @@ class _RefundSelector(BaseModel):
     row_field: _RefundRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+AtributionSelector = _AtributionSelector
+ForeignAssetSelector = _ForeignAssetSelector
+RefundSelector = _RefundSelector
+RelatedPartySelector = _RelatedPartySelector
+build_foreign_asset_rows = _build_foreign_asset_rows
+build_related_party_rows = _build_related_party_rows
 
 
 def _validated_refund_selector(binding: DataBindingDefinition) -> _RefundSelector:

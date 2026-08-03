@@ -38,6 +38,7 @@ from ....core import Period
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import RevisionId
 from ...user_profile import UserProfileFact, UserProfileRecord
+from .._codes import ModeloCode
 from .._errors import ModeloValidationError
 from .._repository import (
     remove_work_unit,
@@ -561,9 +562,8 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
     other module that declares a Pydantic class named
     ``WorkUnit`` competes with the canonical surface."""
 
-    from ....core.paths import PROJECT_ROOT
-
-    source_root = PROJECT_ROOT / "src" / "cadrumo"
+    from ....tests import REPO_ROOT
+    source_root = REPO_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "_work_unit.py"
     forbidden = "class WorkUnit("
     offenders = []
@@ -583,9 +583,8 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     module referencing a competing namespace string is a shadow
     storage location."""
 
-    from ....core.paths import PROJECT_ROOT
-
-    source_root = PROJECT_ROOT / "src" / "cadrumo"
+    from ....tests import REPO_ROOT
+    source_root = REPO_ROOT / "src" / "cadrumo"
     canonical = source_root / "domain" / "modelos" / "_repository.py"
     # _namespace_registry.py is the centralised namespace declaration table;
     # it legitimately holds every storage namespace string as a registry entry
@@ -761,7 +760,7 @@ def _work_unit_with_revision(revision_id: str) -> WorkUnit:
         ),
         bucket_id=bucket_id,
         name="130-2026-1T",
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period=period,
         revision_id=revision_id,

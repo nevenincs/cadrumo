@@ -96,13 +96,13 @@ from dev.import_hygiene_scan import (
     wheel_exclude_globs,
 )
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import REPO_ROOT
 from ._inventory import repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_BASELINE_PATH: Final[Path] = PROJECT_ROOT / "dev" / "import_hygiene_baseline.json"
-_TEST_DEBT_PATH: Final[Path] = PROJECT_ROOT / "dev" / "import_hygiene_test_debt.json"
+_BASELINE_PATH: Final[Path] = REPO_ROOT / "dev" / "import_hygiene_baseline.json"
+_TEST_DEBT_PATH: Final[Path] = REPO_ROOT / "dev" / "import_hygiene_test_debt.json"
 
 
 @dataclass(frozen=True)

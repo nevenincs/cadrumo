@@ -23,7 +23,7 @@ from ...domain.calculations.registry import LegalRefId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError
-from ._models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
+from ._models import InvoiceReviewItem, ReviewItem, TransactionReviewItem
 
 
 class ReviewQueueRow(BaseModel):
@@ -206,7 +206,7 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
     if isinstance(item, InvoiceReviewItem):
         source_kind = (
             BindingSourceKind.COLLECTIBLE_INVOICE
-            if item.source.kind.value == "ISSUED"
+            if item.source.kind.value == "issued"
             else BindingSourceKind.PAYABLE_INVOICE
         )
         return ReviewQueueRow(
@@ -226,7 +226,7 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             since=item.since,
             summary=_render_summary(item.summary),
         )
-    if isinstance(item, FindingReviewItem):
+    else:
         legal_refs = item.source.references_rules if item.source is not None else ()
         return ReviewQueueRow(
             item_id=item.item_id,

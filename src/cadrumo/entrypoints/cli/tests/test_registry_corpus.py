@@ -24,7 +24,7 @@ from click.testing import Result
 from typer._click.core import Context as TyperContext
 from typer.core import TyperGroup
 
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -241,7 +241,7 @@ def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
     rejected. This test asserts no source file under
     ``entrypoints/cli/`` registers either name at the root level."""
 
-    cli_root = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
+    cli_root = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     forbidden_root_names = (
         'name="normatives"',
         "name='normatives'",
@@ -333,7 +333,7 @@ def test_no_aeat_normatives_or_manual_fetch_verb_under_app_registry() -> None:
     evented. Assert that neither ``citations fetch`` nor ``manuals
     fetch`` is registered."""
 
-    cli_root = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
+    cli_root = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
     forbidden_command_names = (
         '@citations_app.command("fetch"',
         "@citations_app.command('fetch'",

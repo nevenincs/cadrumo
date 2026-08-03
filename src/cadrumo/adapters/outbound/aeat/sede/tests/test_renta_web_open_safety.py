@@ -16,7 +16,7 @@ import re
 
 import pytest
 
-from ......core.paths import PROJECT_ROOT
+from ......tests import REPO_ROOT
 from ......domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from .._renta_web_open_safety import (
     ALLOWED_CLICK_OVERRIDES,
@@ -43,7 +43,7 @@ def test_click_tokens_include_canonical_write_verb_tokens() -> None:
     assert not missing, f"FORBIDDEN_CLICK_TOKENS is missing canonical write verbs: {sorted(missing)}"
 
 
-_SEDE_DIR = PROJECT_ROOT / "src" / "cadrumo" / "adapters" / "outbound" / "aeat" / "sede"
+_SEDE_DIR = REPO_ROOT / "src" / "cadrumo" / "adapters" / "outbound" / "aeat" / "sede"
 _DRIVER_FILE = _SEDE_DIR / "_renta_web_open.py"
 
 

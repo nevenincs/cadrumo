@@ -30,7 +30,7 @@ def _page(*fields: FormField) -> FormPage:
     return FormPage(title="TITLE", section="SECTION", fields=fields)
 
 
-def _form(app: App[object]) -> FormScreen:
+def _form[AppResult](app: App[AppResult]) -> FormScreen:
     """The form page, wherever it currently sits in the screen stack.
 
     The page is a screen the host pushes rather than the host's own body,
@@ -41,7 +41,7 @@ def _form(app: App[object]) -> FormScreen:
     return next(screen for screen in reversed(app.screen_stack) if isinstance(screen, FormScreen))
 
 
-def _rows(app: App[object]) -> dict[str, str]:
+def _rows[AppResult](app: App[AppResult]) -> dict[str, str]:
     table: DataTable[str] = _form(app).query_one("#form-table", DataTable)
     return {str(row_key.value): str(table.get_row(row_key)[1]) for row_key in table.rows}
 

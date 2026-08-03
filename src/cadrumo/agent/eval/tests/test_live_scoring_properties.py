@@ -12,7 +12,7 @@ lifecycle predicate is a pure function checked against hand-built position
 maps, and the corpus property is read off the arguments the scorer passes to
 its injected faithfulness port, not off any verdict the scorer computed.
 
-``_RecordingFaithfulnessCheck`` is an implementation of the caller-injected
+``_ObservedFaithfulnessCheck`` is an implementation of the caller-injected
 ``FaithfulnessCheckFn`` port, not a double of the code under test. The scorer's
 own contract is that the caller supplies this callable
 (``cadrumo.agent.eval`` never imports ``entrypoints.mcp``), so providing one
@@ -47,7 +47,7 @@ class _FaithfulnessVerdict:
         self.flagged_values: tuple[str, ...] = ()
 
 
-class _RecordingFaithfulnessCheck:
+class _ObservedFaithfulnessCheck:
     """A real implementation of the injected port that records what it was asked."""
 
     def __init__(self) -> None:
@@ -119,7 +119,7 @@ def test_narration_corpus_is_cumulative_across_the_narration_walk() -> None:
             LiveNarrationRecord(step=_EXPORT, text="the quarter result casilla 07 is 500.00"),
         ),
     )
-    recorder = _RecordingFaithfulnessCheck()
+    recorder = _ObservedFaithfulnessCheck()
 
     _score_narration_faithfulness(
         trajectory,
@@ -149,7 +149,7 @@ def test_the_handoff_narration_is_the_blocking_one() -> None:
     )
     scoring = _score_narration_faithfulness(
         trajectory,
-        faithfulness_check_fn=_RecordingFaithfulnessCheck(),
+        faithfulness_check_fn=_ObservedFaithfulnessCheck(),
         handoff_leaves=frozenset({"export"}),
     )
 

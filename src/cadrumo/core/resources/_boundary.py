@@ -8,9 +8,9 @@ same prefix resolves to the in-tree top-level ``corpus/`` and
 honours the force-include mapping for both targets.
 
 Callers MUST go through :func:`packaged_data` rather than computing the location
-from ``__file__`` or a ``PROJECT_ROOT`` walk. Use :func:`bundled_path` when a
+from ``__file__`` or a repo-root walk. Use :func:`bundled_path` when a
 process-lifetime :class:`~pathlib.Path` is required, and :func:`as_path` for a
-scoped materialised path. The ``PROJECT_ROOT`` walk is reserved for ``var/``
+scoped materialised path. The data-root anchor is reserved for ``var/``
 operator outputs in :mod:`cadrumo.core.config` and is not a valid resolution path
 for read-only bundled data.
 

@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Final
 
 from .errors import CoreError
+from .external_constants import UTF_8_ENCODING
 
 __all__ = ["CorpusAnchorResolutionError", "normalise_corpus_text", "resolve_anchored_extracted_unit"]
 
@@ -112,7 +113,7 @@ def resolve_anchored_extracted_unit(
     if not target:
         raise CorpusAnchorResolutionError("anchor must be non-empty")
     try:
-        payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        payload = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
     except (OSError, json.JSONDecodeError) as exc:
         raise CorpusAnchorResolutionError(f"cannot read extracted sidecar {sidecar_path}") from exc
     raw_units = payload.get("units")

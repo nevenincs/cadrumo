@@ -31,6 +31,7 @@ from re import compile
 from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
+from pydantic import AnyUrl
 from pydantic import ValidationError as PydanticValidationError
 
 if TYPE_CHECKING:
@@ -160,7 +161,7 @@ def assert_renta_web_open_app_url(app_url: str) -> None:
     try:
         assert_remote_operation_allowed(
             _READ_GUARD_POLICY,
-            RemoteOperation(kind="http", method="GET", url=app_url),
+            RemoteOperation(kind="http", method="GET", url=AnyUrl(app_url)),
         )
     except (RegistryValidationError, PydanticValidationError) as exc:
         raise SedeNavigationError(

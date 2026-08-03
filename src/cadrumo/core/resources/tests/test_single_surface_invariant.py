@@ -30,6 +30,7 @@ See Also:
 
 from __future__ import annotations
 
+import pathlib
 import re
 from pathlib import Path
 
@@ -119,47 +120,60 @@ def test_allowlist_only_contains_files_that_actually_offend() -> None:
     assert not stale, f"the pending-retirement allow-list contains entries that no longer offend; remove them: {stale}"
 
 
-_PROJECT_ROOT_IMPORT_RE = re.compile(
-    r"^from\s+(?:aeat\.core\.paths|\.{1,4}core\.paths)\s+import\s+([^\n]+)$",
-    re.MULTILINE,
+_FILE_WALK_RE = re.compile(
+    r"Path\(__file__\)\.resolve\(\)((?:\.parent)+)|Path\(__file__\)\.resolve\(\)\.parents\[(\d+)\]",
+)
+
+_SANCTIONED_CHECKOUT_ROOT_OWNERS = frozenset(
+    {
+        # The ONE module allowed to know a source checkout exists. It gates that
+        # knowledge behind ``RunMode.CHECKOUT`` and owns the installed-vs-checkout
+        # decision for the whole application.
+        "src/cadrumo/core/_config_state_root.py",
+    },
 )
 
 
-def test_no_dead_project_root_imports() -> None:
-    """Every file importing ``PROJECT_ROOT`` from ``cadrumo.core.paths`` must reference it.
+def test_no_production_module_walks_out_of_the_package() -> None:
+    """No production module may walk ``__file__`` out of the ``cadrumo`` package.
 
-    ``PROJECT_ROOT`` is the legitimate resolver for ``var/``
-    operator outputs and ``env/.env`` operator config (and for
-    source-tree audit walks). When a module migrates a bundled-data
-    read to :func:`bundled_path` it MUST drop the now-unused
-    ``PROJECT_ROOT`` import — leaving the dead symbol on the import
-    line creates false signal that PROJECT_ROOT is still relevant
-    to that module.
+    Cadrumo ships as an installed application: at runtime there is no
+    repository and no "project", only an application data root. Walking
+    far enough up from ``__file__`` to escape the package reconstructs a
+    source-checkout layout, which on an installed build lands in
+    ``site-packages`` — or inside a packaging tool's ephemeral cache,
+    where a prune can destroy whatever was written there. That is exactly
+    the hazard :mod:`cadrumo.core._config_state_root` exists to close, so
+    precisely one module may compute it, behind ``RunMode.CHECKOUT``.
 
-    Scans every ``.py`` file in the tree, parses the
-    ``from ...core.paths import ...`` lines, and asserts that any
-    file importing ``PROJECT_ROOT`` references it at least once
-    elsewhere in the body.
+    Walking *within* the package is fine and is NOT flagged: a wheel ships
+    ``cadrumo/``'s own modules, so e.g. ``application/wizard`` reaching
+    ``entrypoints/cli`` resolves correctly in every run mode. The gate is
+    therefore depth-aware — it compares hop count against how deep the
+    file sits — rather than banning ``__file__`` arithmetic outright.
+
+    This is an eradication ratchet. It replaced a guard that policed
+    *unused* ``PROJECT_ROOT`` imports, which turned vacuous the moment the
+    constant was deleted; the property still worth defending is that the
+    concept never comes back.
     """
-    dead_imports: list[str] = []
+    offenders: list[str] = []
     for path in package_python_files(include_data=True):
-        text = path.read_text(encoding="utf-8")
-        for match in _PROJECT_ROOT_IMPORT_RE.finditer(text):
-            imported = {name.strip() for name in match.group(1).split(",")}
-            if "PROJECT_ROOT" not in imported:
-                continue
-            # Strip the import line itself before searching for usage so
-            # that a single-line import does not satisfy its own gate.
-            body = text[: match.start()] + text[match.end() :]
-            if "PROJECT_ROOT" not in body:
-                dead_imports.append(repo_relative(path))
-    assert not dead_imports, (
-        "modules that import PROJECT_ROOT but never reference it "
-        "(drop the dead import; bundled-data reads go through "
-        f"cadrumo.core.resources.bundled_path instead): {dead_imports}"
+        rel = repo_relative(path)
+        if rel in _SANCTIONED_CHECKOUT_ROOT_OWNERS or "/tests/" in rel:
+            continue
+        # Depth inside the package: src/cadrumo/a/b/mod.py sits 2 dirs below the
+        # root, so depth+1 hops reach `cadrumo/` itself and anything beyond escapes.
+        depth = len(pathlib.PurePosixPath(rel).parts) - 3
+        for match in _FILE_WALK_RE.finditer(path.read_text(encoding="utf-8")):
+            hops = match.group(1).count(".parent") if match.group(1) else int(match.group(2)) + 1
+            if hops > depth + 1:
+                offenders.append(f"{rel} (walks {hops} up from depth {depth})")
+    assert not offenders, (
+        "production modules walking __file__ out of the cadrumo package "
+        "(resolve operator paths through the application data root instead — "
+        f"Settings.cadrumo_local_storage_root): {offenders}"
     )
-
-
 def test_resources_package_re_exports_boundary() -> None:
     """The boundary functions stay accessible through the package init."""
 

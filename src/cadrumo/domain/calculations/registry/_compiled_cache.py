@@ -45,7 +45,7 @@ import time
 import typing
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Final, NamedTuple
+from typing import Any, Final, NamedTuple, TypeGuard, cast
 
 from pydantic import BaseModel
 
@@ -157,7 +157,7 @@ def _iter_annotation_types(annotation: object) -> Iterator[type]:
         yield annotation
 
 
-def _classify_foreign_type(candidate: type) -> _EmbeddedForeignType | None:
+def _classify_foreign_type(candidate: object) -> _EmbeddedForeignType | None:
     """Return ``candidate`` as an embedded foreign type, or ``None`` if it is not one.
 
     ``None`` for anything without source on disk (a builtin, a C extension) and
@@ -165,6 +165,8 @@ def _classify_foreign_type(candidate: type) -> _EmbeddedForeignType | None:
     ``cadrumo`` package altogether: the former is already hashed wholesale, the
     latter is not ours to invalidate on.
     """
+    if not isinstance(candidate, type):
+        return None
     try:
         source_file = inspect.getsourcefile(candidate)
     except (TypeError, OSError):
@@ -210,7 +212,7 @@ def _derive_embedded_foreign_types(
             for candidate in _iter_annotation_types(field.annotation):
                 if issubclass(candidate, BaseModel):
                     pending.append(candidate)
-                foreign = _classify_foreign_type(candidate)
+                foreign = _classify_foreign_type(cast(Any, candidate))
                 if foreign is not None:
                     found[foreign.marker] = foreign
     return tuple(found[marker] for marker in sorted(found))
@@ -456,13 +458,28 @@ def _is_compiled_registry_payload(payload: object) -> bool:
     The structural gate that keeps a foreign or truncated-shape pickle -- even
     one that deserialises cleanly -- from being served as the compiled authority.
     """
+    if not _is_two_object_tuple(payload):
+        return False
+    modelos_raw, catalogues_raw = payload
+    if not _is_object_tuple(modelos_raw):
+        return False
     return (
-        isinstance(payload, tuple)
-        and len(payload) == 2
-        and isinstance(payload[0], tuple)
-        and all(isinstance(modelo, ModeloDefinition) for modelo in payload[0])
-        and isinstance(payload[1], RegistryCatalogues)
+        all(isinstance(modelo, ModeloDefinition) for modelo in modelos_raw)
+        and isinstance(catalogues_raw, RegistryCatalogues)
     )
+
+
+def _is_object_tuple(value: object) -> TypeGuard[tuple[object, ...]]:
+    """Narrow an untyped pickle tuple to an object-valued tuple."""
+    return isinstance(value, tuple)
+
+
+def _is_two_object_tuple(value: object) -> TypeGuard[tuple[object, object]]:
+    """Narrow an untyped pickle tuple to the expected two-item envelope."""
+    if not isinstance(value, tuple):
+        return False
+    value_tuple = cast(tuple[Any, ...], value)
+    return len(value_tuple) == 2
 
 
 def _read_cache_bytes(path: Path) -> bytes | None:

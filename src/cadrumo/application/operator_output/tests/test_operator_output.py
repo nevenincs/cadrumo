@@ -25,7 +25,7 @@ import pytest
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity, OutputSchemaError
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...wizard import ConfigProfileCreateResult
+from ...wizard import ConfigProfileCreateResult, ProfileWizardStatus
 from .. import emit_operator_json_success, sandbox_banner_line, sandbox_notice_for_active_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -131,7 +131,7 @@ def test_emit_operator_json_success_prepends_sandbox_notice_when_active(
 
     bucket_id = "9a1b2c3d-4e5f-6071-8293-a4b5c6d7e8f9"
     caller_notice = Notice(severity=NoticeSeverity.INFO, code="probe.caller_notice", message="caller-supplied")
-    result = ConfigProfileCreateResult(profile_name="probe", status="created", active_profile="probe")
+    result = ConfigProfileCreateResult(profile_name="probe", status=ProfileWizardStatus.CREATED, active_profile="probe")
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="sandbox:emit-probe")
@@ -158,7 +158,7 @@ def test_emit_operator_json_success_omits_sandbox_notice_when_not_sandbox(
 
     bucket_id = "1c2d3e4f-5061-7283-94a5-b6c7d8e9f0a1"
     caller_notice = Notice(severity=NoticeSeverity.INFO, code="probe.caller_notice", message="caller-supplied")
-    result = ConfigProfileCreateResult(profile_name="probe", status="created", active_profile="probe")
+    result = ConfigProfileCreateResult(profile_name="probe", status=ProfileWizardStatus.CREATED, active_profile="probe")
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         _write_bucket_manifest(storage_root, bucket_id=bucket_id, label="operator")
@@ -179,7 +179,7 @@ def test_emit_operator_json_success_refuses_an_unregistered_command(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """The operator funnel cannot wrap an arbitrary result under a command key."""
-    result = ConfigProfileCreateResult(profile_name="probe", status="created", active_profile="probe")
+    result = ConfigProfileCreateResult(profile_name="probe", status=ProfileWizardStatus.CREATED, active_profile="probe")
 
     with pytest.raises(OutputSchemaError, match="has no registered output schema"):
         emit_operator_json_success("operator_output.tests.probe", result)

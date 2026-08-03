@@ -52,7 +52,7 @@ def _payload(**overrides: object) -> IvaWalletBalanceResult:
         "unallocated_applied_amount": "0.00",
     }
     base.update(overrides)
-    return IvaWalletBalanceResult(**base)  # type: ignore[arg-type]
+    return IvaWalletBalanceResult.model_validate(base)
 
 
 def test_a_valid_report_projects_onto_the_payload() -> None:

@@ -7,7 +7,7 @@ engine lifetime can follow the bucket-session lifecycle; the database URL
 is an implementation detail of engine construction. Explicit database URLs
 and the root-fallback database keep their URL-keyed direct path. The
 factory normalises SQLite URLs against
-:data:`core.paths.PROJECT_ROOT`, ensures the parent directory exists,
+the application data root, ensures the parent directory exists,
 and attaches a ``connect`` listener that configures each SQLite
 connection: ``foreign_keys=ON`` (cascade enforcement) and a
 ``busy_timeout`` (so concurrent invocations on one bucket no longer fail
@@ -65,7 +65,7 @@ def _route_marker(url: str) -> str:
 
 
 def _normalize_sqlite_url(url: str) -> str:
-    """Anchor relative SQLite database files to ``PROJECT_ROOT``.
+    """Anchor relative SQLite database files to the application data root.
 
     Args:
         url: SQLAlchemy URL. No-op for non-SQLite URLs and in-memory databases.

@@ -30,10 +30,9 @@ boundary mirroring the :class:`CalculationRevision` catalogue repository at
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, TypeAdapter, ValidationError, model_validator
 
 from ...core import Period
 from ...core.identity import TransactionId
@@ -49,6 +48,9 @@ _RevisionState = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
 ]
+_STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
+    dict[str, object], config=ConfigDict(strict=True)
+)
 
 
 def derive_participation_index_id(transaction_id: str) -> str:
@@ -90,17 +92,15 @@ class TransactionRevisionParticipation(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _coerce_modelo(cls, data: object) -> object:
-        if isinstance(data, Mapping) and "modelo" in data:
-            mapping: dict[str, object] = {}
-            for key, item in data.items():
-                if not isinstance(key, str):
-                    return data
-                mapping[key] = item
+        try:
+            mapping = _STRING_KEYED_MAPPING_ADAPTER.validate_python(data)
+        except ValidationError:
+            return data
+        if "modelo" in mapping:
             value = mapping["modelo"]
             if isinstance(value, str) and not isinstance(value, ModeloCode):
-                mutable = dict(mapping)
-                mutable["modelo"] = ModeloCode(value)
-                return mutable
+                mapping["modelo"] = ModeloCode(value)
+            return mapping
         return data
 
     @model_validator(mode="after")

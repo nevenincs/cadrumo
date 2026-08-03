@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from ....core import BindingSourceKind, Modelo, Period, TaxDomain
 from ._authority import ValidatedRegistryAuthority
@@ -53,6 +53,12 @@ from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, Relati
 from ._schema_input_kind import InputKind
 from ._support_matrix import build_support_matrix
 from ._temporal import select_revision_for_year
+
+_PUBLIC_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(
+    dict[object, object],
+    config=ConfigDict(strict=True),
+)
+_PUBLIC_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 
 #: Bare registry period tokens (``0A``, ``1T``-``4T``, ``01``-``12``,
 #: ``1P``-``4P``, ``EXT-1T``-``EXT-4T``, ``AD-HOC``, ``EVENT-N``) carry
@@ -873,13 +879,10 @@ def _query_filing_period(filing_year: int | None, period: str | None) -> Period 
 def _public_selector(source: str, selector: object) -> BindingSelectorQueryProjection:
     if isinstance(selector, BaseModel):
         selector = selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
-    if not isinstance(selector, Mapping):
-        raise RegistryValidationError(
-            f"binding selector projection requires a mapping or model, got {type(selector).__name__}",
-        )
+    selector_mapping = _public_mapping_items(selector)
     entries = tuple(
         BindingSelectorQueryEntry(key=str(key), value=_public_selector_value(value))
-        for key, value in sorted(selector.items(), key=lambda item: str(item[0]))
+        for key, value in sorted(selector_mapping.items(), key=lambda item: str(item[0]))
     )
     return BindingSelectorQueryProjection(
         source=str(source),
@@ -889,18 +892,42 @@ def _public_selector(source: str, selector: object) -> BindingSelectorQueryProje
 
 
 def _public_mapping(value: object) -> dict[str, object]:
+    return {str(key): _public_value(item) for key, item in _public_mapping_items(value).items()}
+
+
+def _public_mapping_items(value: object) -> dict[object, object]:
+    """Validate an untyped mapping before projecting it onto the public query API."""
+    mapping = _try_public_mapping(value)
+    if mapping is not None:
+        return mapping
+    raise RegistryValidationError(f"unsupported public mapping value {value!r}")
+
+
+def _try_public_mapping(value: object) -> dict[object, object] | None:
+    """Return a checked public mapping, or ``None`` when the value is not one."""
     if not isinstance(value, Mapping):
-        raise RegistryValidationError(f"unsupported public mapping value {value!r}")
-    return {str(key): _public_value(item) for key, item in value.items()}
+        return None
+    try:
+        return _PUBLIC_MAPPING_ADAPTER.validate_python(value)
+    except ValidationError:
+        return None
+
+
+def _public_tuple(value: object) -> tuple[object, ...] | None:
+    """Narrow a runtime tuple to object entries for recursive public projection."""
+    if not isinstance(value, tuple):
+        return None
+    return _PUBLIC_TUPLE_ADAPTER.validate_python(value)
 
 
 def _public_selector_value(value: object) -> BindingSelectorQueryValue:
     public_value = _public_value(value)
     if isinstance(public_value, str | int | bool):
         return public_value
-    if isinstance(public_value, tuple):
+    tuple_value = _public_tuple(public_value)
+    if tuple_value is not None:
         string_items: list[str] = []
-        for item in public_value:
+        for item in tuple_value:
             if not isinstance(item, str):
                 break
             string_items.append(item)
@@ -912,10 +939,12 @@ def _public_selector_value(value: object) -> BindingSelectorQueryValue:
 def _public_value(value: object) -> object:
     if isinstance(value, Decimal):
         return format(value, "f")
-    if isinstance(value, tuple):
-        return tuple(_public_value(item) for item in value)
-    if isinstance(value, Mapping):
-        return _public_mapping(value)
+    tuple_value = _public_tuple(value)
+    if tuple_value is not None:
+        return tuple(_public_value(item) for item in tuple_value)
+    mapping = _try_public_mapping(value)
+    if mapping is not None:
+        return {str(key): _public_value(item) for key, item in mapping.items()}
     return value
 
 

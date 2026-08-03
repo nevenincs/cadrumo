@@ -786,6 +786,10 @@ def _justificante_matches_filing_record(
     )
 
 
+expected_tax_id_for_filing_record = _expected_tax_id_for_filing_record
+justificante_matches_filing_record = _justificante_matches_filing_record
+
+
 def _existing_capture_evidence_matches_current_csv(filing: ModeloRecord, csv: str) -> bool:
     evidence = filing.external_evidence
     if evidence is None:

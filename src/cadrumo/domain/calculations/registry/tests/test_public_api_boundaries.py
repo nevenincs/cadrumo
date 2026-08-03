@@ -24,14 +24,14 @@ from pathlib import Path
 
 import pytest
 
-from .....core.paths import PROJECT_ROOT
+from .....tests import REPO_ROOT
 from ... import registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PRIVATE_REGISTRY_PREFIX = "cadrumo.domain.calculations.registry._"
-_REGISTRY_SOURCE_ROOT = PROJECT_ROOT / "src" / "cadrumo"
-_REGISTRY_TEST_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
+_REGISTRY_SOURCE_ROOT = REPO_ROOT / "src" / "cadrumo"
+_REGISTRY_TEST_ROOT = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
 _LEDGER_BINDING_PUBLIC_NAMES = (
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
@@ -94,7 +94,7 @@ def test_registry_parameter_resolution_is_public_api() -> None:
 
 def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
     offenders = sorted(
-        f"{path.relative_to(PROJECT_ROOT)} imports {module_name}"
+        f"{path.relative_to(REPO_ROOT)} imports {module_name}"
         for path in _REGISTRY_SOURCE_ROOT.rglob("*.py")
         for module_name in _absolute_registry_private_imports(path)
     )

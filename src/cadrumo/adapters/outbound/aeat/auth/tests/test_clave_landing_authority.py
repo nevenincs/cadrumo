@@ -17,6 +17,7 @@ surface. Nothing is stubbed: no browser is reached by the decision under test.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Protocol
 
 import pytest
 
@@ -53,7 +54,13 @@ def _permanente(tmp_path: Path) -> ClavePermanenteAuthProvider:
     )
 
 
-def _is_landing(provider: object, landing_url: str) -> bool:
+class _AuthenticatedLandingProvider(Protocol):
+    """Provider surface whose landing predicate this contract exercises."""
+
+    def _is_authenticated_aeat_landing(self, *, landing_url: str, target_path: str) -> bool: ...
+
+
+def _is_landing(provider: _AuthenticatedLandingProvider, landing_url: str) -> bool:
     """Ask a provider's authenticated-landing predicate about ``landing_url``."""
     return provider._is_authenticated_aeat_landing(landing_url=landing_url, target_path=_TARGET_PATH)
 
@@ -61,17 +68,17 @@ def _is_landing(provider: object, landing_url: str) -> bool:
 #: Authorities the PRE-FIX ``parsed.netloc`` comparison ACCEPTED, because the
 #: whole authority string still ends in the AEAT host suffix. These are the
 #: discriminating fixtures: the defect is exactly that they got through.
-_PREVIOUSLY_ACCEPTED_HOSTILE = (
-    pytest.param(f"https://evil@{_WWW6_HOST}{_TARGET_PATH}", id="username-only"),
-    pytest.param(f"https://evil:secret@{_WWW6_HOST}{_TARGET_PATH}", id="username-and-password"),
-    pytest.param(f"http://{_WWW6_HOST}{_TARGET_PATH}", id="cleartext-http"),
+_PREVIOUSLY_ACCEPTED_HOSTILE: tuple[str, ...] = (
+    f"https://evil@{_WWW6_HOST}{_TARGET_PATH}",
+    f"https://evil:secret@{_WWW6_HOST}{_TARGET_PATH}",
+    f"http://{_WWW6_HOST}{_TARGET_PATH}",
 )
 
 #: Authorities the pre-fix comparison ALREADY refused, because appending a port
 #: stops the string ending in the suffix. Refusing them is a regression guard,
 #: NOT evidence for this change — a distinction the layer control below
 #: enforces mechanically so the two sets cannot be quietly merged.
-_ALREADY_REFUSED_HOSTILE = (pytest.param(f"https://{_WWW6_HOST}:8443{_TARGET_PATH}", id="explicit-non-default-port"),)
+_ALREADY_REFUSED_HOSTILE: tuple[str, ...] = (f"https://{_WWW6_HOST}:8443{_TARGET_PATH}",)
 
 
 # --------------------------------------------------------------------------
@@ -79,7 +86,7 @@ _ALREADY_REFUSED_HOSTILE = (pytest.param(f"https://{_WWW6_HOST}:8443{_TARGET_PAT
 # --------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("landing_url", _PREVIOUSLY_ACCEPTED_HOSTILE)
+@pytest.mark.parametrize("landing_url", _PREVIOUSLY_ACCEPTED_HOSTILE, ids=("username-only", "username-and-password", "cleartext-http"))
 def test_movil_refuses_a_hostile_authority_that_ends_in_the_aeat_suffix(
     tmp_path: Path,
     landing_url: str,
@@ -92,7 +99,7 @@ def test_movil_refuses_a_hostile_authority_that_ends_in_the_aeat_suffix(
     assert _is_landing(_movil(tmp_path), landing_url) is False
 
 
-@pytest.mark.parametrize("landing_url", _PREVIOUSLY_ACCEPTED_HOSTILE)
+@pytest.mark.parametrize("landing_url", _PREVIOUSLY_ACCEPTED_HOSTILE, ids=("username-only", "username-and-password", "cleartext-http"))
 def test_permanente_refuses_a_hostile_authority_that_ends_in_the_aeat_suffix(
     tmp_path: Path,
     landing_url: str,
@@ -110,14 +117,13 @@ def test_both_providers_agree_on_every_hostile_authority(tmp_path: Path) -> None
     movil = _movil(tmp_path)
     permanente = _permanente(tmp_path)
 
-    for param in (*_PREVIOUSLY_ACCEPTED_HOSTILE, *_ALREADY_REFUSED_HOSTILE):
-        landing_url = param.values[0]
+    for landing_url in (*_PREVIOUSLY_ACCEPTED_HOSTILE, *_ALREADY_REFUSED_HOSTILE):
         assert _is_landing(movil, landing_url) == _is_landing(permanente, landing_url) is False, (
             f"providers disagree on {landing_url!r}"
         )
 
 
-@pytest.mark.parametrize("landing_url", _ALREADY_REFUSED_HOSTILE)
+@pytest.mark.parametrize("landing_url", _ALREADY_REFUSED_HOSTILE, ids=("explicit-non-default-port",))
 def test_an_explicit_port_landing_stays_refused(tmp_path: Path, landing_url: str) -> None:
     """SUPPORTING (regression guard). Passes under mutation.
 
@@ -159,8 +165,8 @@ def test_the_discriminating_fixtures_pass_the_old_suffix_test() -> None:
     """
     from urllib.parse import urlsplit
 
-    for param in _PREVIOUSLY_ACCEPTED_HOSTILE:
-        netloc = urlsplit(param.values[0]).netloc.casefold()
+    for landing_url in _PREVIOUSLY_ACCEPTED_HOSTILE:
+        netloc = urlsplit(landing_url).netloc.casefold()
 
         assert netloc.endswith(f".{_HOST_SUFFIX.casefold()}") or netloc == _HOST_SUFFIX.casefold(), (
             f"fixture {netloc!r} would be refused by the suffix check anyway; it proves nothing"
@@ -176,8 +182,8 @@ def test_the_already_refused_fixtures_fail_the_old_suffix_test() -> None:
     """
     from urllib.parse import urlsplit
 
-    for param in _ALREADY_REFUSED_HOSTILE:
-        netloc = urlsplit(param.values[0]).netloc.casefold()
+    for landing_url in _ALREADY_REFUSED_HOSTILE:
+        netloc = urlsplit(landing_url).netloc.casefold()
 
         assert not (netloc.endswith(f".{_HOST_SUFFIX.casefold()}") or netloc == _HOST_SUFFIX.casefold())
 
@@ -188,5 +194,5 @@ def test_the_canonical_helper_is_what_refuses_these_authorities() -> None:
     Names the mechanism the predicates delegate to, so a later reader can see
     the refusal ground rather than inferring it from a boolean.
     """
-    for param in (*_PREVIOUSLY_ACCEPTED_HOSTILE, *_ALREADY_REFUSED_HOSTILE):
-        assert canonical_remote_hostname(param.values[0]) is None
+    for landing_url in (*_PREVIOUSLY_ACCEPTED_HOSTILE, *_ALREADY_REFUSED_HOSTILE):
+        assert canonical_remote_hostname(landing_url) is None

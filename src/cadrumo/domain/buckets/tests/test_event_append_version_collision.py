@@ -47,7 +47,7 @@ def _event(payload_version: int) -> BucketEvent:
         "payload": {"previous_display_name": "old"},
     }
     return BucketEvent(
-        event_id=derive_bucket_event_id(**shared),  # ty: ignore[missing-argument]
+        event_id=derive_bucket_event_id(**shared),
         payload_version=payload_version,
         **shared,
     )
@@ -97,7 +97,7 @@ def test_distinct_events_still_accumulate() -> None:
         "payload": {},
     }
     other = BucketEvent(
-        event_id=derive_bucket_event_id(**other_body),  # ty: ignore[missing-argument]
+        event_id=derive_bucket_event_id(**other_body),
         payload_version=1,
         **other_body,
     )

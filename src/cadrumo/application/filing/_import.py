@@ -45,7 +45,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
 from ...adapters.inbound.justificante import parse_justificante
-from ...core import Period, PeriodError
+from ...core import Modelo, Period, PeriodError
 from ...core.logging import get_logger
 from ...core.time import MADRID_TZ
 from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
@@ -256,7 +256,7 @@ def _build_submission_record(
     from ...domain.submission import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
 
     presented_at = justificante.presented_at
-    if presented_at.tzinfo is None:
+    if presented_at.utcoffset() is None:
         presented_at = presented_at.replace(tzinfo=MADRID_TZ)
     submitted_at = presented_at.astimezone(UTC)
     attempt_ordinal = 1
@@ -270,7 +270,7 @@ def _build_submission_record(
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft.draft_id,
-        modelo=draft.modelo,
+        modelo=Modelo(draft.modelo),
         period=draft.period,
         profile_tax_id=draft.profile_tax_id,
         status=SubmissionStatus.PRESENTADA,

@@ -341,12 +341,12 @@ class TestApoderadoEnvelopeContractParity:
     _CANONICAL_BUCKET = "26262626-2626-4262-8262-262626262626"
     _INSTANT = datetime(2026, 5, 14, 12, 0, tzinfo=UTC)
 
-    def _status(self, **overrides: object) -> object:
+    def _status(self, **overrides: object) -> ApoderadoStatusResult:
         fields: dict[str, object] = {"bucket_id": self._CANONICAL_BUCKET, "configured": False}
         fields.update(overrides)
-        return ApoderadoStatusResult(**fields)  # type: ignore[arg-type]
+        return ApoderadoStatusResult.model_validate(fields)
 
-    def _configure(self, **overrides: object) -> object:
+    def _configure(self, **overrides: object) -> ApoderadoConfigureResult:
         fields: dict[str, object] = {
             "bucket_id": self._CANONICAL_BUCKET,
             "represented_nif": "12345678Z",
@@ -354,7 +354,7 @@ class TestApoderadoEnvelopeContractParity:
             "configured_at": self._INSTANT,
         }
         fields.update(overrides)
-        return ApoderadoConfigureResult(**fields)  # type: ignore[arg-type]
+        return ApoderadoConfigureResult.model_validate(fields)
 
     @pytest.mark.parametrize("bad", ["", "   ", "x" * 129])
     def test_every_envelope_refuses_a_non_canonical_bucket(self, bad: str) -> None:

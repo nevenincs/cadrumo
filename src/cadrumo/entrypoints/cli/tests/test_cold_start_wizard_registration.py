@@ -29,7 +29,8 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import PROJECT_ROOT, SecretStoreBackend, Settings
+from ....tests import REPO_ROOT
+from ....core.config import SecretStoreBackend, Settings
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -50,7 +51,7 @@ _SECRET_STORE_FILES: tuple[str, ...] = (
 
 
 def _workspace_secret_store_fingerprint() -> dict[str, tuple[int, int] | None]:
-    secret_root = PROJECT_ROOT / "var" / "secrets"
+    secret_root = REPO_ROOT / "var" / "secrets"
     fingerprint: dict[str, tuple[int, int] | None] = {}
     for filename in _SECRET_STORE_FILES:
         path = secret_root / filename
