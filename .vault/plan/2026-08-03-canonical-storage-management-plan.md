@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:0d69ff91d942fd1d430a1112b9cb2dc54497608b6618d4644e64c20e9abdc5d2'
+body_hash: 'sha256:38a218d9bc7ca9cfb5c6e36f055b2a7fbecf1ecba15f04f3152b20b4ac6235ad'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -66,6 +66,7 @@ Moves the bucket-layout and keystore names into the core taxonomy so the namespa
 - [ ] `W01.P03.S24` - Re-point the active-profile pointer filename onto its taxonomy member, gated by a test asserting the pointer round-trips through the taxonomy-resolved path; `src/cadrumo/core/_bucket_pointer_io.py`.
 - [ ] `W01.P03.S25` - Collapse the twin reset-journal directory-name declaration onto the taxonomy member, gated by the existing parity pin rewritten to compare the application constant against the taxonomy rather than against a second constant; `src/cadrumo/application/_config_reset_repository.py`.
 - [ ] `W01.P03.S26` - Re-point the Windows worst-case object-path suffix constant onto the now-core bucket-layout members, retiring the documented layering-wall literal, gated by the existing suffix-shape assertions in the layout and local-provider tests; `src/cadrumo/core/paths.py`.
+- [ ] `W01.P03.S64` - Delete the fifth unpinned buckets literal in the journal repository's containment check and read the taxonomy member instead, a copy found after the plan was authored and covered by no existing row, gated by the journal repository suite plus the name-unification gate seeing the module; `src/cadrumo/application/_journal_repository.py`.
 
 ### Phase `W01.P04` - semantic convergences independent of the taxonomy
 
@@ -177,16 +178,24 @@ Registers the config storage noun-group, authors its five verbs plus the refuse-
 
 Registers the lifecycle-operations-only noun-group and authors its five read and materialise verbs plus the refuse-and-instruct relocation response, each on the envelope spine with a registered strict schema.
 
+- [ ] `W04.P17.S56` - Add the storage-management application service exposing read over the declared tree plus a lifecycle-guarded reclaim that refuses on any category whose declared lifecycle forbids deletion, gated by a mutation proof that the refusal fires and a positive control that a prunable category is accepted; `src/cadrumo/application/storage_management/`.
+- [ ] `W04.P17.S57` - Register the config storage noun-group and its five verbs as a lifecycle-operations-only entry in the CRUD catalogue, gated by the catalogue conformance suite resolving the new path; `src/cadrumo/entrypoints/cli/_config/_storage_cli.py`.
+- [ ] `W04.P17.S58` - Declare the config storage family bootstrap-exempt rather than profile-bound, because the guard returns its exemption before consulting the guarded catalogue and a guarded entry would both be unreachable and make init refuse on a fresh machine, gated by a test asserting the exemption and one asserting init succeeds with no active profile; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
+- [ ] `W04.P17.S59` - Add the containment proof that with no active profile no category reclaim accepts resolves inside a bucket, keystore, or financial-sensitivity location, derived from the declared axes rather than listing today's members so a future prunable bucket-scoped member cannot silently join the accepted set; `src/cadrumo/application/storage_management/tests/`.
 
 ### Phase `W04.P18` - operator-facing strings, reference, and conformance
 
 Wires locale keys through the locales CLI in all four catalogues, regenerates the CLI reference, and clears the schema, documented-command, and reviewed-write gates the new leaf must pass.
 
+- [ ] `W04.P18.S60` - Declare the typed result payloads for the five verbs on the envelope spine with no bespoke advisory or next or suggestion field, gated by the registered-schema and no-bespoke-notice-field conformance tests; `src/cadrumo/entrypoints/cli/_config/_storage_payloads.py`.
+- [ ] `W04.P18.S61` - Pin the config storage surface through the real command tree rather than by calling handlers directly, gated by the documented-command conformance suite resolving every cited verb against the live CLI; `src/cadrumo/entrypoints/cli/_config/tests/`.
+- [ ] `W04.P18.S62` - Pin the bootstrap pre-emption itself so relocating tree materialisation out of bootstrap reds loudly rather than silently redistributing which surface answers a missing or occupied path, gated by a test naming the pre-emption as its subject; `src/cadrumo/entrypoints/cli/_config/tests/`.
 
 ### Phase `W04.P19` - dev tooling, packaging, and documentation sweep
 
 Retires the storage names restated in dev scripts, the justfile, and the packaging manifest, adds the drift gate the manifest lacks, and rewrites the operator documentation the CRUD surface makes stale.
 
+- [ ] `W04.P19.S63` - Scaffold the storage-management API reference stubs through the docs CLI rather than by hand, staging only the stubs naming the new modules, gated by the scaffold drift check exiting clean; `docs/api/`.
 
 ## Wave `W05` - completeness proof, honesty review, and closure
 
