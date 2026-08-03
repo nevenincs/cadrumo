@@ -32,8 +32,8 @@ from ...core import (
     restore_pointer,
     write_pointer,
 )
-from ...core.config import load_settings
 from ...core.errors import CadrumoError
+from ...core.paths import effective_storage_root
 
 
 class ActiveProfilePointerTransactionError(CadrumoError):
@@ -107,8 +107,7 @@ _THREAD_OWNERSHIP = threading.local()
 
 
 def _canonical_root(root: Path | None) -> Path:
-    configured = load_settings().cadrumo_local_storage_root if root is None else root
-    return configured.expanduser().resolve(strict=False)
+    return effective_storage_root(root)
 
 
 @contextmanager
