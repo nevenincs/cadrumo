@@ -24,7 +24,7 @@ from textual.widgets._select import SelectOverlay
 
 from .....application.user_profile import ProfileRepository, assess_passphrase, login_profile
 from .....core import require_active_bucket_id
-from .....core.i18n import tr
+from .....core.i18n import output_language, tr
 from .....entrypoints.cli._config._manager_frontend import attempt_registration
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import RegistrationApp
@@ -215,4 +215,48 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
         stored = {fact.path: fact.value for fact in record.facts}
         assert stored.get(_OUTPUT_LANGUAGE_PATH) == _TARGET_LANGUAGE, (
             "the profile must be created in the language the chooser was left on"
+        )
+
+
+@pytest.mark.asyncio
+async def test_the_chosen_language_does_not_outlive_the_screen(tmp_path) -> None:
+    """The override the screen renders under must not colour anything after it.
+
+    This is the hazard the sanctioned-override inventory in
+    ``locales/tests/test_dynamic_prefix_registry_coverage.py`` exists to
+    bound: an override held outside a command's own settings scope keeps
+    rendering once the command unwinds, and the operator gets a closing
+    notice in a language they did not ask that command to speak. The
+    registration screen is listed there as reviewed rather than
+    ctx-scoped, because a Textual app has no command context to scope to.
+
+    What this pins is the outcome, not the means. The screen closes its
+    override on the way out, but removing that close does not fail this
+    test and is not what makes the screen safe: the override is entered
+    on the app's own message-pump task, whose context the caller does not
+    share. What does fail this test is moving the site to a mechanism
+    that reaches past the task — an environment variable and a
+    settings-cache reset — which is the substitution worth catching.
+
+    The mid-screen assertion is the control: without proof that the
+    override was live inside the screen, an unchanged caller language
+    would be equally consistent with a chooser that never worked at all.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        before = output_language()
+        assert before != _TARGET_LANGUAGE, (
+            "the caller must not already be speaking the target language, or this test proves nothing"
+        )
+
+        app = _screen()
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await _choose(pilot, _TARGET_LANGUAGE)
+            assert app.title == tr("flows.registration.title", locale=_TARGET_LANGUAGE), (
+                "the override must be live inside the screen, or the assertion below is vacuous"
+            )
+            await pilot.press("escape")
+
+        assert output_language() == before, (
+            "the screen's language override must not survive it and reach the caller's rendering"
         )
