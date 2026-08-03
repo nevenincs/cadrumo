@@ -27,13 +27,43 @@ shell or CI environment left unset, and the bridge is a clean no-op when
 ``env/.env`` is absent. The single ``cadrumo.tests.live_gate`` gate
 remains the only live-opt-in reader.
 
+The storage-root ``setdefault`` below is deliberately spelled out with
+pure-stdlib calls (``tempfile.gettempdir()`` / ``os.getpid()``) rather than
+imported from :func:`cadrumo.tests.collection_storage_root`, even though
+the two compute the identical path. Importing ANY name from
+``cadrumo.tests`` -- even a genuinely pure-stdlib submodule such as
+``_collection_storage_root`` -- unconditionally executes
+``cadrumo/tests/__init__.py``'s own module body first (Python always
+initialises a parent package before a submodule access can complete), and
+that package's import surface has, in practice, drifted to reach
+production modules carrying module-level ``get_logger(__name__)`` calls.
+Any such call fires ``configure_logging()``, which binds its
+``RotatingFileHandler`` exactly once per process; if that firing happens
+before this line runs, it binds to the operator's real log rather than
+this process's isolated root, and nothing later in the process can
+re-bind it. Spelling the derivation out here removes the dependency on
+``cadrumo/tests/__init__.py`` staying import-light for THIS one
+safety-critical line -- the guarantee this docstring's next paragraph
+already claimed, now enforced structurally instead of by convention.
+Verified by instrumenting ``configure_logging`` to dump its first real
+call stack: importing ``cadrumo.tests`` alone no longer triggers it, and
+the residual triggers found only fire from session-scoped fixtures that
+run after this line has already set the environment variable.
+
 See ``src/cadrumo/tests/README.md`` and charter ``#116`` for the full taxonomy.
 """
 
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
+
+# Pure stdlib, deliberately not `from cadrumo.tests import collection_storage_root`
+# -- see the docstring above. Mirrors `_collection_storage_root.collection_storage_root`'s
+# own derivation (`<gettempdir()>/cadrumo-pytest-<pid>`) exactly; the two module docstrings
+# cross-reference each other so a future edit to one is not made deaf to the other.
+os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"))
 
 from cadrumo.tests import collection_storage_root
 from cadrumo.tests._env_loader import bridge_env_file_into_environ
@@ -42,31 +72,11 @@ from cadrumo.tests._env_loader import bridge_env_file_into_environ
 # BEFORE any Cadrumo import resolves Settings (production Settings carries
 # no dotenv source of its own — see core.config.Settings). setdefault
 # semantics inside the bridge keep a real ambient environment variable
-# authoritative; the dotfile only fills gaps. Importing `_env_loader` here
-# is safe pre-Settings-resolution for the same reason importing
-# `collection_storage_root` below is: `cadrumo/__init__.py` and
-# `cadrumo/tests/__init__.py` are both documented import-light (no
-# logging, registry, or storage side effects).
+# authoritative; the dotfile only fills gaps. Safe to import cadrumo.tests
+# here (unlike the storage-root line above): the storage-root env var this
+# module's own import surface might trigger a premature configure_logging()
+# against is already set by the pure-stdlib line above.
 bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
-
-# Mirror src/cadrumo/conftest.py: point the Cadrumo storage root at a
-# process-private temp directory BEFORE any Cadrumo import resolves Settings.
-# The repo root also collects dev/** test trees that never traverse the
-# src/cadrumo conftest; without this, their module imports resolve the real
-# platform state root (which may hold retired former-product state and trip
-# the FormerProductStateError guard at collection time). Importing the
-# derivation helper itself is safe pre-Settings-resolution: `cadrumo/__init__.py`
-# and `cadrumo/tests/__init__.py` are both documented import-light (no logging,
-# registry, or storage side effects), and `src/cadrumo/conftest.py` already
-# imports from `.tests` before this same env var is set on its own path. A
-# single bare `os.environ.setdefault` call (ruff's tolerated pre-import idiom)
-# used to keep this block free of the import-not-at-top lint against the
-# imports below; the dotenv bridge above is a second pre-import statement
-# ruff does not recognise under that idiom, so the imports below carry an
-# explicit per-line suppression instead — they must still run AFTER both env
-# vars are set, so cleanup registration happens after the import block
-# below, not here.
-os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(collection_storage_root()))
 
 from typing import TYPE_CHECKING  # noqa: E402
 
