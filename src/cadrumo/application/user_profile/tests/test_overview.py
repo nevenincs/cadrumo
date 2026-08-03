@@ -178,52 +178,111 @@ def test_sections_keep_their_schema_declaration_order() -> None:
     assert [section.key for section in overview.sections] == ["identity", "access"]
 
 
-def test_the_clave_credential_inputs_mask_without_the_keyword_arm(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The shipped Cl@ve inputs mask by DECLARATION, not by their wording.
+def _shipped_decisions() -> dict[str, bool]:
+    """Masking decision for every field the real shipped schema declares."""
+    from ....domain.user_profile import load_user_profile_schema
+    from .. import mask_profile_field
 
-    DISCRIMINATING, and against the schema really shipped rather than the
-    stand-in above. The sibling gates show these three fields mask; none
-    of them can show WHY, and for a long time the why was an accident.
-    Not one profile schema field declared ``secret``, so every masked
-    field reached the mask through the keyword arm — "credential" happens
-    to sit in each description. The confidentiality of a Cl@ve credential
-    was therefore a property of prose nobody was required to keep, and
-    rewording a description would have unmasked it silently.
+    return {
+        f"{section.key}.{field.key}": mask_profile_field(
+            path=f"{section.key}.{field.key}",
+            label=field.description,
+            sensitivity=field.sensitivity,
+        )
+        for section in load_user_profile_schema().sections
+        for field in section.fields
+    }
 
-    The measurement empties the keyword set at runtime and re-asks. That
-    mutates the policy DATA, not the decision under test: with no
-    keywords left, ``mask_profile_field`` has only the declaration to go
-    on, so a field that still masks masks because the schema says so.
 
-    ``censo.divergencia`` is the positive control. It masks today only on
-    the word "token" in "provenance token", so it MUST stop masking under
-    the mutation. If both halves still masked, the mutation never took
-    and the first half would prove nothing.
+def test_a_shipped_field_masks_exactly_when_the_schema_says_secret() -> None:
+    """Masking a declared field is its classification and nothing else.
+
+    DISCRIMINATING, and the property rather than today's masked set --
+    pinning the set would re-freeze the accident it replaces. Every field
+    the schema declares must mask if and only if it is classed
+    ``secret``, so the assertion is derived per field instead of listed.
+
+    It failed before the declaration became authoritative: no field
+    declared ``secret`` at all, yet five masked, each of them through the
+    keyword arm reading its own description. It fails again the day that
+    arm is widened back over classified fields.
     """
     from ....domain.user_profile import load_user_profile_schema
     from .. import mask_profile_field
-    from .._overview import _MASK_KEYWORDS
 
     schema = load_user_profile_schema()
-
-    def decision(path: str) -> bool:
-        field_def = schema.field(path)
-        return mask_profile_field(
-            path=path,
-            label=field_def.description or path,
-            sensitivity=field_def.sensitivity,
+    divergent = {
+        f"{section.key}.{field.key}": (decision, field.sensitivity.value)
+        for section in schema.sections
+        for field in section.fields
+        if (
+            decision := mask_profile_field(
+                path=f"{section.key}.{field.key}",
+                label=field.description,
+                sensitivity=field.sensitivity,
+            )
         )
+        is not (field.sensitivity is SensitivityClass.SECRET)
+    }
+    assert not divergent, f"masking disagrees with the declaration for: {divergent}"
 
-    keyword_reliant = "censo.divergencia"
-    assert _MASK_KEYWORDS, "the keyword arm must be non-empty before the mutation"
-    assert decision(keyword_reliant), "the control field must mask before the mutation"
+
+@pytest.mark.parametrize("path", ["auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"])
+def test_a_credential_description_cannot_mask_a_field_declared_non_secret(path: str) -> None:
+    """A field's wording carries no authority over its classification.
+
+    DISCRIMINATING, and the sharpest form of the guarantee: it re-asks
+    the decision for the REAL shipped description under a classification
+    that is not ``secret``, and requires the answer to be no. Each of
+    these descriptions contains the word "credential", which is exactly
+    what used to mask them -- so if prose still had any power, this would
+    mask and fail.
+
+    The ``secret`` half is the positive control. Without it a
+    mask_profile_field that simply never masked would satisfy the first
+    assertion while protecting nothing.
+    """
+    from ....domain.user_profile import load_user_profile_schema
+    from .. import mask_profile_field
+
+    description = load_user_profile_schema().field(path).description
+    assert "credential" in description.casefold(), "this proof needs a description the keyword arm would have matched"
+
+    assert not mask_profile_field(path=path, label=description, sensitivity=SensitivityClass.IDENTITY), (
+        f"{path!r} masks on its wording, not on its declaration"
+    )
+    assert mask_profile_field(path=path, label=description, sensitivity=SensitivityClass.SECRET)
+
+
+def test_no_shipped_field_depends_on_the_keyword_arm(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Emptying the keywords must change no shipped field's masking.
+
+    DISCRIMINATING. Every field the schema declares is decided by its
+    declaration, so removing the keyword set entirely must be inert over
+    the shipped schema. Under the previous behaviour it was not:
+    ``auth.provider`` and ``censo.divergencia`` masked only through the
+    keywords, so both would flip here.
+
+    The undeclared path is the positive control, and it does double duty.
+    It proves the mutation actually took -- without it, a run where
+    nothing changed would be indistinguishable from a monkeypatch that
+    silently missed -- and it pins the keyword arm's remaining purpose,
+    which is the one case it is for: a fact arriving under a path no
+    schema field declares. A fix over-applied into "never mask anything
+    unclassified" would pass the first assertion and fail here.
+    """
+    from .. import mask_profile_field
+
+    stray = "unknown.api_credential"
+    before = _shipped_decisions()
+    assert mask_profile_field(path=stray, label=stray, sensitivity=None), (
+        "the keyword arm must cover an undeclared credential-shaped fact before the mutation"
+    )
 
     monkeypatch.setattr("cadrumo.application.user_profile._overview._MASK_KEYWORDS", frozenset())
 
-    for path in ("auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"):
-        assert decision(path), f"credential input {path!r} masks on its wording, not on its declaration"
-    assert not decision(keyword_reliant), (
-        "the keyword arm was not actually removed, so the declared fields above prove nothing"
+    changed = {path: (was, now) for path, was in before.items() if (now := _shipped_decisions()[path]) is not was}
+    assert not changed, f"these shipped fields mask through the keyword arm, not their declaration: {changed}"
+    assert not mask_profile_field(path=stray, label=stray, sensitivity=None), (
+        "the keyword arm was not actually removed, so the assertion above proves nothing"
     )

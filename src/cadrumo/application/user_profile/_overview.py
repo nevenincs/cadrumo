@@ -78,13 +78,23 @@ _MASK_KEYWORDS: Final[frozenset[str]] = frozenset(
         "key",
     },
 )
-"""Substrings that mark a field secret-shaped even when the schema does
-not class it ``SECRET``. Defence in depth: a field added without the
-right sensitivity still masks if it is named like a credential.
+"""Substrings that mark a credential-shaped fact the schema has NOT
+classified. Defence in depth for exactly that case: a fact reaching a
+surface under a path no schema field declares still masks if it is named
+like a credential.
 
-Both English and Spanish stems are carried because profile field
-descriptions are authored in either language, and a surface that only
-knew one of them would unmask the other's fields.
+They are not consulted for a field the schema HAS classified. Reading
+them over a declared field let authored prose override an explicit
+declaration, which is how ``auth.provider`` came to mask: its
+description mentions a password only to say that no password is stored
+there, and the heuristic could not tell the difference. A heuristic
+pointed at text this project writes is answerable to an editorial
+change nobody would review as a security change -- in both directions,
+since deleting a word would equally have unmasked a real credential.
+
+Both English and Spanish stems are carried because an undeclared fact's
+path may be authored in either language, and a surface that only knew
+one of them would leave the other's facts in the clear.
 
 Bare ``key`` deliberately subsumes the compound key names --
 ``api_key``, ``apikey``, ``private_key``, ``private key`` -- so they are
@@ -179,14 +189,28 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     and the direction that divergence takes is a surface exposing a value
     its sibling protects.
 
-    A field masks when the schema classes it ``SECRET``, or -- defence in
-    depth -- when its path or label reads like a credential.
+    A field the schema classifies is decided by its declaration alone: it
+    masks when classed ``SECRET`` and not otherwise. Only a fact the
+    schema does not declare falls through to :data:`_MASK_KEYWORDS`,
+    which is what "defence in depth" means here -- a net under the
+    unclassified, not a second opinion on the classified.
+
+    That fall-through used to run for every non-``SECRET`` field, which
+    is the opposite of what this docstring promised and let a field's
+    own description decide its confidentiality. It masked
+    ``auth.provider`` -- a closed enum naming the authentication mode,
+    no more secret than a username -- because the description says a
+    password is *not* stored there, while no field in the schema
+    declared ``SECRET`` at all. Prose documenting the absence of a
+    credential is not evidence of one, and a declaration the schema
+    makes explicitly must not be silently overridden by wording.
 
     Args:
         path: Dotted schema path of the field, e.g. ``auth.dni_nie``.
         label: Operator-facing description, or the path when none exists.
+            Read only when ``sensitivity`` is ``None``.
         sensitivity: Declared :class:`SensitivityClass`, or ``None`` for a
-            field the schema does not know (masking then rests on the
+            fact the schema does not know (masking then rests on the
             keywords).
 
     Returns:
@@ -195,6 +219,8 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     """
     if sensitivity is SensitivityClass.SECRET:
         return True
+    if sensitivity is not None:
+        return False
     haystack = f"{path} {label}".casefold()
     return any(keyword in haystack for keyword in _MASK_KEYWORDS)
 
