@@ -51,10 +51,10 @@ from ..classification import (
 from ..errors import RedactionError
 from ..redaction import default_rules, default_rules_for, default_rules_for_class
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _named_by_every_policy() -> dict[str, tuple[str, ...]]:

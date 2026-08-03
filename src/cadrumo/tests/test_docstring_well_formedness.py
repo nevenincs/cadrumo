@@ -60,10 +60,10 @@ from sphinx.ext.napoleon.docstring import GoogleDocstring
 
 from ._inventory import production_ast_items, repo_relative
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 def _napoleon_section_names() -> frozenset[str]:
