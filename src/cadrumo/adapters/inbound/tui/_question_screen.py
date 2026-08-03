@@ -43,6 +43,7 @@ from ....application.flows import (
 )
 from ....core.flows import DEFER_TOKEN, FlowWidgetKind
 from ....core.i18n import tr
+from ....core.parsing import parse_bool
 from ._theme import ContentScroll
 
 if TYPE_CHECKING:
@@ -268,8 +269,8 @@ class QuestionScreen(Screen[None]):
             return
         if widget_kind is FlowWidgetKind.CONFIRM:
             radio = RadioSet(
-                RadioButton(tr("flows.confirm.yes"), value=current == "true", name="true"),
-                RadioButton(tr("flows.confirm.no"), value=current == "false", name="false"),
+                RadioButton(tr("flows.confirm.yes"), value=parse_bool(current) is True, name="true"),
+                RadioButton(tr("flows.confirm.no"), value=parse_bool(current) is False, name="false"),
             )
             area.mount(radio)
             radio.focus()

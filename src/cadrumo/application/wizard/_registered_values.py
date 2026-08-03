@@ -36,6 +36,7 @@ from typing import TYPE_CHECKING
 
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
+from ...core.parsing import parse_bool
 from ._format_hints import REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY
 from ._models import WizardQuestion
 
@@ -75,7 +76,7 @@ def _render_display_value(question: WizardQuestion, raw: str) -> str:
     if question.choices:
         return _render_choice_label(question, raw)
     if question.answer_type is bool:
-        return tr(_CONFIRM_TRUE_LOCALE_KEY) if raw == "true" else tr(_CONFIRM_FALSE_LOCALE_KEY)
+        return tr(_CONFIRM_TRUE_LOCALE_KEY) if parse_bool(raw) is True else tr(_CONFIRM_FALSE_LOCALE_KEY)
     return raw
 
 
