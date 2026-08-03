@@ -183,16 +183,43 @@ def _root(
         _normalize_root_active_profile(ctx)
     if ctx.invoked_subcommand is None:
         _emit_bare_invocation_and_exit(ctx)
-    # A subcommand is being invoked. Activate the bucket session here
-    # so verbs that need it have access to the active profile's
-    # encrypted records. This is deferred after the bare-invocation
-    # path to keep it out of the state-free surfaces (--version,
-    # --help, bare invocation). Help and usage-error renderings are
-    # introspection surfaces too: they must never require the master
-    # key, or a newcomer without CADRUMO_SECRET_PASSPHRASE cannot browse
-    # the command tree and an unknown-command typo is masked by a
+    # A subcommand is being invoked, so the state tree is about to be written
+    # to. Build it once here rather than leaving each consumer to create its
+    # own corner on first write: that left a fresh machine holding whichever
+    # directories had happened to be reached, and made "where does my data
+    # live" unanswerable before the fact.
+    #
+    # Placed after every state-free fast path has already returned or exited.
+    # --version, --help, bare invocation and introspection must not touch the
+    # filesystem at all: someone browsing the command tree should not have a
+    # storage tree created for them, and these surfaces are the ones a
+    # newcomer meets first.
+    _ensure_storage_tree_for_invocation()
+    # Activate the bucket session here so verbs that need it have access to
+    # the active profile's encrypted records. Deferred after the
+    # bare-invocation path for the same reason as above. Help and usage-error
+    # renderings are introspection surfaces too: they must never require the
+    # master key, or a newcomer without CADRUMO_SECRET_PASSPHRASE cannot
+    # browse the command tree and an unknown-command typo is masked by a
     # master-key refusal instead of the usage error.
     _activate_active_bucket_session(ctx)
+
+
+def _ensure_storage_tree_for_invocation() -> None:
+    """Materialise the state tree, translating a refusal into an operator error.
+
+    The refusal carries the offending path, which is the whole of what the
+    operator needs: a directory occupied by a file, or a root that cannot be
+    created. Letting it escape as a traceback would bury that line under a
+    stack the operator cannot act on.
+    """
+    from ...core.config import ensure_storage_tree
+    from ...core.errors import CoreValidationError
+
+    try:
+        ensure_storage_tree()
+    except CoreValidationError as refusal:
+        raise typer.BadParameter(str(refusal)) from refusal
 
 
 def _emit_version_report_and_exit(*, detail: bool) -> None:

@@ -8,12 +8,20 @@ authority referenced by the filing and live-read boundaries on this page.
 `CADRUMO_LOCAL_STORAGE_ROOT` selects the root of Cadrumo-owned local state. The
 default depends on how Cadrumo runs:
 
-| Run mode | Default storage root |
+| Platform | Default storage root |
 | --- | --- |
-| Source checkout | `<repository>/var/storage` |
-| Installed on Windows | `%LOCALAPPDATA%/cadrumo/storage` |
-| Installed on Linux | `$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage` |
-| Installed on macOS | `~/Library/Application Support/cadrumo/storage` |
+| Windows | `%LOCALAPPDATA%/cadrumo/storage` |
+| Linux | `$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage` |
+| macOS | `~/Library/Application Support/cadrumo/storage` |
+
+The root is the same whether Cadrumo runs from a source checkout or an
+installed distribution. Running from a checkout does not move it: set
+`CADRUMO_LOCAL_STORAGE_ROOT` to put the tree inside the checkout.
+
+Cadrumo creates the root and the directories below it when a command that
+uses them runs. The state-free surfaces — `--help`, `--version`, and a bare
+invocation — do not create anything, so browsing the command tree leaves no
+state behind.
 
 Profile state is bucket-scoped under
 `<root>/buckets/<bucket-id>/`. The bucket contains `db/cadrumo.db`, encrypted

@@ -94,6 +94,14 @@ LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_G
 LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
 
 _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
+    # NOT the authority. ``core._storage_taxonomy`` declares every location,
+    # and settings derivation, tree materialisation, and the override rebuild
+    # all read it. This literal table survives only as the independent oracle
+    # the parity gate pins that declaration against, and as the surface the
+    # test modules that have not yet migrated still import. It is deleted with
+    # them; until then a subpath edited here without editing the taxonomy (or
+    # the reverse) reds the gate rather than silently moving operator data.
+    #
     # Every output directory whose default is not an explicit operator override
     # derives from ``cadrumo_local_storage_root`` under one category taxonomy.
     # That root is the platform user-data location in every run mode: a source
@@ -380,13 +388,12 @@ class Settings(CadrumoMcpServingSettings):
         description=(
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
             "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
-            "paired with a `.meta.json` sidecar. The default is installed-run aware: a "
-            "source checkout resolves to the checkout's `var/storage`, while an installed "
-            "distribution roots at the platform user-data directory "
-            "(`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` or "
-            "`~/Library/Application Support/cadrumo/storage`) so the encrypted store never "
-            "lands inside a virtualenv or uv cache. An explicit `CADRUMO_LOCAL_STORAGE_ROOT` "
-            "override wins over the derived default."
+            "paired with a `.meta.json` sidecar. The default is the platform user-data "
+            "directory (`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` "
+            "or `~/Library/Application Support/cadrumo/storage`) in every run mode, so the "
+            "encrypted store never lands inside a virtualenv or uv cache. A source checkout "
+            "does not redirect it: a developer who wants the tree inside their checkout "
+            "sets this variable, and that explicit override wins over the derived default."
         ),
     )
     cadrumo_google_drive_root_folder_id: str | None = Field(
@@ -1373,19 +1380,29 @@ def reset_settings_cache() -> None:
 def ensure_storage_tree(settings: Settings | None = None) -> Path:
     """Materialise the state root and its declared directories, and return the root.
 
-    :data:`_STATE_ROOT_DERIVED_DIRS` declares where every derived output
-    lands, and the validator above turns those declarations into absolute
-    paths -- but nothing built them. Directories appeared only when some
-    consumer happened to write: the local provider made its root on first
-    write, the journal repository made its own, bucket provisioning made a
-    bucket's tree. A fresh machine therefore held whichever subset of the
-    taxonomy had been reached, and "where does my data live" had no answer
-    that could be given before the fact.
+    The taxonomy declares where every derived output lands and the validator
+    above turns those declarations into absolute paths -- but nothing built
+    them. Directories appeared only when some consumer happened to write: the
+    local provider made its root on first write, the journal repository made
+    its own, bucket provisioning made a bucket's tree. A fresh machine
+    therefore held whichever subset of the taxonomy had been reached, and
+    "where does my data live" had no answer that could be given before the
+    fact.
 
-    This is that answer. It creates the root and every declared directory,
-    returns the root, and is safe to call repeatedly -- so a caller that
-    needs the tree can say so, instead of relying on having written
-    something first.
+    This is that answer: it creates the root and every declared directory,
+    returns the root, and is safe to call repeatedly -- so a caller that needs
+    the tree can say so, instead of relying on having written something first.
+
+    Which directories those are is not decided here.
+    :func:`~core._storage_taxonomy.storage_tree_targets` derives them from the
+    typed declaration, so this materialiser cannot drift from the taxonomy by
+    carrying a second list of its own. That matters most for the distinction a
+    second list gets wrong: file-valued members contribute their parent and
+    explicitly not their leaf, and which members those are is a typed fact on
+    the declaration rather than a guess from a field-name suffix -- a suffix
+    guess cannot reach the per-bucket file names no naming convention governs,
+    and putting a directory where a document must be written fails much later,
+    at the write.
 
     Restrictive permissions are requested on the root because the tree holds
     encrypted taxpayer records, their key material, and the audit trail over
@@ -1406,22 +1423,12 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
             refusal names the offending path: a half-built tree is worse than
             an absent one, because the gap only surfaces later, at a write.
     """
+    from ._storage_taxonomy import storage_tree_targets
+
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)
 
-    targets = [root]
-    for field_name, _subpath in _STATE_ROOT_DERIVED_DIRS.items():
-        value = getattr(resolved, field_name, None)
-        if value is None:
-            continue
-        candidate = Path(value)
-        # The taxonomy names one file among the directories
-        # (``cadrumo_usage_ratios_path``). Its field name says so, and the
-        # directory that has to exist is its parent -- creating the leaf
-        # itself would put a directory where a JSON document belongs.
-        targets.append(candidate.parent if field_name.endswith("_path") else candidate)
-
-    for target in targets:
+    for target in (root, *storage_tree_targets(resolved)):
         if target.exists() and not target.is_dir():
             raise CoreValidationError(
                 f"Cadrumo state directory {target} is occupied by a file; "
