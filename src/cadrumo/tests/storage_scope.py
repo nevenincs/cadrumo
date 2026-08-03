@@ -41,7 +41,7 @@ from ..core.errors import CoreValidationError
 if TYPE_CHECKING:
     from pathlib import Path
 
-__all__ = ["storage_env_overrides", "storage_overrides"]
+__all__ = ["relocated_storage_path", "storage_env_overrides", "storage_overrides"]
 
 
 def storage_overrides(anchor: Path, *categories: StorageCategory) -> dict[str, Path]:
@@ -91,6 +91,32 @@ def storage_overrides(anchor: Path, *categories: StorageCategory) -> dict[str, P
             )
         overrides[location.settings_field] = anchor / location.relative_path()
     return overrides
+
+
+def relocated_storage_path(anchor: Path, category: StorageCategory) -> Path:
+    """Return where :func:`storage_overrides` puts ``category`` under ``anchor``.
+
+    For the common shape where a test needs the location as well as the
+    override -- it seeds files there before entering the block, or asserts on
+    it after leaving. Resolving through :func:`~core.storage_path` covers
+    neither: it needs a ``Settings`` the test has not built yet, or one that
+    has already gone out of scope.
+
+    Both this and :func:`storage_overrides` read the one declaration, so a
+    caller using them together cannot end up with a path and an override that
+    disagree.
+
+    Args:
+        anchor: Directory to relocate beneath, ordinarily a test's ``tmp_path``.
+        category: A root-scoped, operator-overridable member.
+
+    Returns:
+        The absolute path the matching override would put ``category`` at.
+
+    Raises:
+        CoreValidationError: For anything :func:`storage_overrides` refuses.
+    """
+    return next(iter(storage_overrides(anchor, category).values()))
 
 
 def storage_env_overrides(anchor: Path, *categories: StorageCategory) -> dict[str, str]:

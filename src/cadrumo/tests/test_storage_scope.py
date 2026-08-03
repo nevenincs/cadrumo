@@ -22,7 +22,7 @@ from ..core import STORAGE_TAXONOMY, StorageCategory, StorageOverridePolicy, Sto
 from ..core.config import Settings, override_settings
 from ..core.errors import CoreValidationError
 from .env_scope import isolated_aeat_env, settings_without_env_file
-from .storage_scope import storage_env_overrides, storage_overrides
+from .storage_scope import relocated_storage_path, storage_env_overrides, storage_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -112,6 +112,29 @@ def test_the_refusal_probes_would_otherwise_succeed(tmp_path: Path) -> None:
     would satisfy all three and isolate nothing.
     """
     assert storage_overrides(tmp_path, StorageCategory.SECRETS) == {"cadrumo_secret_store_dir": tmp_path / "secrets"}
+
+
+def test_the_single_category_accessor_agrees_with_the_override_it_pairs_with(tmp_path: Path) -> None:
+    """The path a test seeds is the path the override sends production to.
+
+    These are used together — seed the directory, then enter the block — so a
+    disagreement between them would have a test writing files somewhere the
+    system under test never looks, and passing for the wrong reason. Checked
+    end to end through :func:`storage_path` under a live override rather than
+    against the mapping, which would only prove one function calls the other.
+    """
+    seeded = relocated_storage_path(tmp_path, StorageCategory.FINANCIAL_TRANSACTIONS)
+
+    with override_settings(**storage_overrides(tmp_path, StorageCategory.FINANCIAL_TRANSACTIONS)) as settings:
+        assert storage_path(StorageCategory.FINANCIAL_TRANSACTIONS, settings=settings) == seeded
+
+    assert seeded == tmp_path / "financial" / "transactions"
+
+
+def test_the_single_category_accessor_refuses_what_the_mapping_refuses(tmp_path: Path) -> None:
+    """It inherits the refusals rather than quietly widening them."""
+    with pytest.raises(CoreValidationError, match="fixed layout"):
+        relocated_storage_path(tmp_path, StorageCategory.BUCKETS)
 
 
 def test_the_environment_form_names_a_variable_the_settings_model_reads(tmp_path: Path) -> None:

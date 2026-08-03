@@ -29,7 +29,9 @@ from pathlib import Path
 import pytest
 
 from ....tests.path_obstruction import obstructed_path
-from ...config import Settings, override_settings
+from ....tests.storage_scope import storage_overrides
+from ... import StorageCategory, storage_path
+from ...config import override_settings
 from .. import (
     NavigationPayload,
     RunEvent,
@@ -65,7 +67,7 @@ class TestJsonlStoreRoundTrip:
         )
 
     def test_append_and_load(self, tmp_path: Path) -> None:
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             events = tuple(self._make_event(i) for i in range(3))
             for evt in events:
                 save_events_append(evt.run_id, evt)
@@ -87,7 +89,7 @@ class TestJsonlStoreRoundTrip:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             evt = self._make_event(1)
             save_events_append(evt.run_id, evt)
             target = runs_dir() / evt.run_id / _EVENTS_FILENAME
@@ -100,7 +102,7 @@ class TestJsonlStoreRoundTrip:
         """Concurrent real writers retain every independently addressable event."""
 
         event_count = 1_000
-        with override_settings(cadrumo_runs_dir=str(tmp_path)) as settings:
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
             events = tuple(self._make_event(ordinal % 60) for ordinal in range(event_count))
             events = tuple(
                 event.model_copy(update={"step_id": f"concurrent-{ordinal}"}) for ordinal, event in enumerate(events)
@@ -205,7 +207,7 @@ class TestStoreRunIdValidation:
             "..",
         )
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             for bad_run_id in bad_run_ids:
                 with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                     _validate_run_id(bad_run_id)
@@ -220,7 +222,7 @@ class TestStoreRunIdValidation:
     ) -> None:
         from .. import load_trace
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                 load_trace("not-a-valid-run")
             # The crafted run_id must never have resulted in a new directory.
@@ -232,11 +234,21 @@ class TestStoreRunIdValidation:
     ) -> None:
         from .. import load_trace
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
+            runs_root = storage_path(StorageCategory.RUNS, settings=settings)
             # 16 hex chars — passes validation, but nothing on disk.
             with pytest.raises(RunTraceValidationError, match=r"trace\.json not found"):
                 load_trace("0" * 16)
-            assert not any(tmp_path.iterdir()), "missing trace lookup must not create dirs"
+
+            # Asserted against the runs root rather than the enclosing
+            # directory. While the two were the same path this could not
+            # observe the resolver materialising the root, because the
+            # fixture had already created it -- relocating the category is
+            # what made that visible. The property being defended is
+            # unchanged: a lookup that finds nothing must not leave a
+            # directory for the run it looked for.
+            assert runs_root.exists(), "the resolver materialises the runs root on read"
+            assert list(runs_root.iterdir()) == [], "missing trace lookup must not create a run dir"
 
 
 class TestStorePersistenceErrors:
@@ -254,12 +266,13 @@ class TestStorePersistenceErrors:
         )
 
     def test_save_trace_wraps_unusable_runs_root(self, tmp_path: Path) -> None:
-        runs_root = tmp_path / "runs"
-        runs_root.write_text("not a directory", encoding="utf-8")
-        settings = Settings(cadrumo_runs_dir=runs_root)
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
+            runs_root = storage_path(StorageCategory.RUNS, settings=settings)
+            runs_root.parent.mkdir(parents=True, exist_ok=True)
+            runs_root.write_text("not a directory", encoding="utf-8")
 
-        with pytest.raises(RunTracePersistenceError) as excinfo:
-            save_trace(self._trace(), settings=settings)
+            with pytest.raises(RunTracePersistenceError) as excinfo:
+                save_trace(self._trace(), settings=settings)
 
         error = excinfo.value
         assert error.operation == "runs_dir"
@@ -268,12 +281,12 @@ class TestStorePersistenceErrors:
 
     def test_load_trace_wraps_unreadable_trace_file(self, tmp_path: Path) -> None:
         run_id = "abcdef0123456789"
-        runs_root = tmp_path / "runs"
-        trace_path = runs_root / run_id / "trace.json"
-        settings = Settings(cadrumo_runs_dir=runs_root)
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
+            runs_root = storage_path(StorageCategory.RUNS, settings=settings)
+            trace_path = runs_root / run_id / "trace.json"
 
-        with obstructed_path(trace_path), pytest.raises(RunTracePersistenceError) as excinfo:
-            load_trace(run_id, settings=settings)
+            with obstructed_path(trace_path), pytest.raises(RunTracePersistenceError) as excinfo:
+                load_trace(run_id, settings=settings)
 
         error = excinfo.value
         assert error.operation == "load_trace"
@@ -284,7 +297,7 @@ class TestStorePersistenceErrors:
         """A valid trace copied from run B cannot be replayed through run A."""
         run_a = "0123456789abcdef"
         run_b = "abcdef0123456789"
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             trace_b = self._trace(run_b)
             source = save_trace(trace_b)
             target = runs_dir() / run_a / "trace.json"
@@ -303,7 +316,7 @@ class TestStorePersistenceErrors:
         """Run enumeration retains B and skips its copied trace under directory A."""
         run_a = "0123456789abcdef"
         run_b = "abcdef0123456789"
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             trace_b = self._trace(run_b)
             source = save_trace(trace_b)
             target = runs_dir() / run_a / "trace.json"
@@ -320,16 +333,16 @@ class TestStorePersistenceErrors:
         )
 
     def test_iter_runs_logs_skipped_entries(self, tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-        runs_root = tmp_path / "runs"
-        runs_root.mkdir()
-        (runs_root / "plain.txt").write_text("not a run", encoding="utf-8")
-        (runs_root / "not-a-run").mkdir()
-        (runs_root / "0123456789abcdef").mkdir()
-        settings = Settings(cadrumo_runs_dir=runs_root)
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
+            runs_root = storage_path(StorageCategory.RUNS, settings=settings)
+            runs_root.mkdir(parents=True)
+            (runs_root / "plain.txt").write_text("not a run", encoding="utf-8")
+            (runs_root / "not-a-run").mkdir()
+            (runs_root / "0123456789abcdef").mkdir()
 
-        caplog.set_level(logging.DEBUG, logger="cadrumo.core.observability._store")
+            caplog.set_level(logging.DEBUG, logger="cadrumo.core.observability._store")
 
-        assert list(iter_runs(settings=settings)) == []
+            assert list(iter_runs(settings=settings)) == []
         messages = [record.getMessage() for record in caplog.records]
         assert any("skipping non-directory entry" in message and "plain.txt" in message for message in messages)
         assert any("skipping non-run directory not-a-run" in message for message in messages)
@@ -359,7 +372,7 @@ class TestIterEvents:
         from .. import iter_events
 
         with (
-            override_settings(cadrumo_runs_dir=str(tmp_path)),
+            override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)),
             pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
         ):
             # No .iter(), no .__next__() — the call itself must raise.
@@ -372,7 +385,7 @@ class TestIterEvents:
         """Consuming n events pulls exactly n lines off disk."""
         from .. import iter_events
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             run_id = "0123456789abcdef"
             for i in range(5):
                 save_events_append(run_id, self._event(run_id, i))
@@ -393,7 +406,7 @@ class TestIterEvents:
         """A validation error fires during iteration, not at call time."""
         from .. import iter_events
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             run_id = "abcdef0123456789"
             save_events_append(run_id, self._event(run_id, 0))
             # Append a malformed line after the valid one.
