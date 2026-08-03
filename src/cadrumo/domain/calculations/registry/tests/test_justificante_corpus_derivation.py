@@ -22,10 +22,10 @@ import pytest
 from .....core.resources import bundled_path
 from .. import RegistryCatalogues, RegistryValidator
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
 if TYPE_CHECKING:
     from pathlib import Path
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _catalogues() -> RegistryCatalogues:

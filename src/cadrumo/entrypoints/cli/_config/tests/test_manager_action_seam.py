@@ -46,13 +46,13 @@ from .....tests.secure_sql import isolated_profile_storage_root
 from .._manager_actions import manager_actions
 from .._manager_frontend import persist_active_profile_field, present_form
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.hex_entrypoint,
 ]
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _TERMINAL_SIZE = (160, 60)
 _PASSWORD = "manager-action-seam-operator-secret"  # noqa: S105 - synthetic test fixture

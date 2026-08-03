@@ -31,6 +31,24 @@
         "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries above."
       },
       {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_login_screen.py",
+        "lineno": 24,
+        "target_mod": "cadrumo.entrypoints.cli._config._login_frontend",
+        "imported_names": [
+          "attempt_login"
+        ],
+        "reason": "White-box test reach: the login screen is unlocked with the REAL login callback so the screen is exercised against actual Argon2id derivation, AEAD unwrap, and session minting rather than a double. `attempt_login` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._login_frontend itself. Deliberately NOT promoted, for the same reason recorded on the `attempt_registration` entries above: a presenter seam minted onto the public CLI facade to serve tests alone would legitimise the adapter-to-entrypoint inversion rather than record it."
+      },
+      {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_login_screen.py",
+        "lineno": 25,
+        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
+        "imported_names": [
+          "attempt_registration"
+        ],
+        "reason": "White-box test reach: the login screen's fixture registers a profile with the REAL register callback so the screen is exercised against actual application behaviour rather than a double. `attempt_registration` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, for the reason recorded on the other `attempt_registration` entries above."
+      },
+      {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_registration_screen.py",
         "lineno": 26,
         "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
@@ -461,12 +479,12 @@
       },
       {
         "importer_path": "src/cadrumo/domain/calculations/registry/tests/test_binding_coverage_breadth.py",
-        "lineno": 37,
-        "target_mod": "cadrumo.application.modelo._calculation_actions",
+        "lineno": 39,
+        "target_mod": "cadrumo.application.modelo._calculation_source_policy",
         "imported_names": [
           "_ENROLLED_SOURCE_KINDS"
         ],
-        "reason": "White-box breadth test reading the private enrolled-source-kind set to confirm every registry binding source is routed or explicitly deferred (no-dormant-source-resolvers rule). The set is deliberately private so only the calculate-time gate consumes it as an enforcement mechanism, not a browsable public registry."
+        "reason": "White-box breadth test reading the private enrolled-source-kind set to confirm every registry binding source is routed or explicitly deferred (no-dormant-source-resolvers rule). The set is deliberately private so only the calculate-time gate consumes it as an enforcement mechanism, not a browsable public registry. Target module relocated from _calculation_actions to _calculation_source_policy; this entry tracks the relocation."
       },
       {
         "importer_path": "src/cadrumo/domain/renta/tests/test_first_slice_routing.py",
