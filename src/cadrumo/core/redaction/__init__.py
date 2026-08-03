@@ -314,14 +314,47 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
         policy: A :class:`core.classification.ClassificationPolicy`
             whose ``redaction_rules`` field carries rule names.
 
+    A name the registry cannot resolve is REFUSED, not skipped. Skipping
+    was the previous behaviour and it made this fail open: a typo in a
+    policy's rule tuple dropped that arm of the policy, and the only
+    evidence was sensitive data arriving unredacted somewhere nobody was
+    looking. A confidentiality boundary has to fail the other way, so an
+    unresolvable name now stops the caller instead of quietly narrowing
+    what gets redacted.
+
+    The skip was documented as deliberate — room for per-domain policies
+    to name custom rules registered by other modules. That extension
+    point has no user and no mechanism: every policy is built in the
+    default table in :mod:`core.classification`, this function's only
+    caller is :func:`default_rules_for_class`, and the registry is a
+    frozen mapping with nothing to register through. It was therefore
+    paying a fail-open confidentiality risk for a flexibility nothing
+    used. Should per-domain rules ever be wanted, they need a real
+    registration path, and this refusal is what would make its absence
+    obvious rather than silent.
+
+    Args:
+        policy: A :class:`core.classification.ClassificationPolicy`
+            whose ``redaction_rules`` field carries rule names.
+
     Returns:
         A tuple of :class:`core.classification.RedactionRule`
         instances in the order they were declared on the policy.
-        Names that are not in the default registry are silently
-        skipped: this is deliberate so per-domain policies can
-        reference custom rules registered by other modules.
+
+    Raises:
+        RedactionError: If the policy names a rule the registry does not
+            declare.
     """
-    return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules if name in _DEFAULT_RULES)
+    from ..errors import RedactionError
+
+    unresolvable = [name for name in policy.redaction_rules if name not in _DEFAULT_RULES]
+    if unresolvable:
+        known = ", ".join(sorted(_DEFAULT_RULES))
+        raise RedactionError(
+            f"policy for {policy.sensitivity.value!r} names redaction rule(s) that do not exist: "
+            f"{', '.join(repr(name) for name in unresolvable)}; declared rules are: {known}"
+        )
+    return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules)
 
 
 def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionRule, ...]:

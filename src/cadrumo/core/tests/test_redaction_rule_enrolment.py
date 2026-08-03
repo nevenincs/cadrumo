@@ -39,6 +39,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ..classification import (
+    ClassificationPolicy,
     OutputSensitivityClass,
     RedactionRule,
     RedactionStrategy,
@@ -46,7 +47,8 @@ from ..classification import (
     default_output_policy_for,
     default_policy_for,
 )
-from ..redaction import default_rules
+from ..errors import RedactionError
+from ..redaction import default_rules, default_rules_for, default_rules_for_class
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -207,6 +209,55 @@ def test_the_applies_to_check_catches_a_declaration_that_understates_its_reach()
     assert disagreements[0].startswith("nif-hash: enrolled-but-undeclared=[")
     assert "financial" in disagreements[0]
     assert "declared-but-unenrolled=[]" in disagreements[0]
+
+
+def _policy_naming(*names: str) -> ClassificationPolicy:
+    """The shipped IDENTITY policy with its rule names swapped.
+
+    Derived from the real policy rather than assembled here, so these
+    cases cannot drift from the shape the table actually uses: only the
+    field under test differs from something in production.
+    """
+    return default_policy_for(SensitivityClass.IDENTITY).model_copy(update={"redaction_rules": names})
+
+
+def test_resolving_a_policy_that_names_an_unknown_rule_refuses() -> None:
+    """The runtime half: resolution must stop rather than narrow itself.
+
+    The gates above catch a bad name in CI. This catches one that reaches
+    a running process anyway — a policy assembled somewhere the gate does
+    not walk — and it is the difference between failing closed and
+    leaking. Skipping the name would return a SHORTER rule tuple and
+    redact less, reporting nothing.
+    """
+    with pytest.raises(RedactionError) as refusal:
+        default_rules_for(_policy_naming("nif-hash", "nif-hsah"))
+
+    message = str(refusal.value)
+    assert "nif-hsah" in message, f"the refusal must name the rule that did not resolve: {message}"
+    assert "nif-hash" in message, f"the refusal must list what it does know, to make the typo obvious: {message}"
+
+
+def test_resolving_a_policy_whose_names_all_resolve_returns_them_in_order() -> None:
+    """The negative half: refusal must be scoped to names that do not exist.
+
+    Without this the guard could be satisfied by refusing every policy,
+    which would take redaction down entirely rather than making it strict.
+    Order is asserted because callers apply the rules in sequence.
+    """
+    resolved = default_rules_for(_policy_naming("cif-hash", "nif-hash"))
+    assert [rule.name for rule in resolved] == ["cif-hash", "nif-hash"]
+
+
+def test_every_shipped_sensitivity_class_still_resolves_through_the_refusing_path() -> None:
+    """The real tables must pass the stricter resolver, not merely the gate.
+
+    A refusal that the shipped policies themselves tripped would be found
+    the moment anything redacted; this asserts the two halves agree, so
+    the strictness cannot have been bought by breaking live resolution.
+    """
+    for sensitivity in SensitivityClass:
+        default_rules_for_class(sensitivity)
 
 
 def test_the_applies_to_check_catches_a_declaration_that_overstates_its_reach() -> None:
