@@ -4082,9 +4082,9 @@ cli:
         help: Crea todos los directorios declarados conservando lo que ya exista
       list:
         help: Muestra cada categoría de almacenamiento, su ruta y si contiene algo
-        relocation_is_manual: Para mover el árbol, detén Cadrumo, cópialo tú mismo
-          y luego apunta %{variable} a la nueva ubicación. Ningún comando lo mueve,
-          porque una copia que termina para los registros pero no para el material
+        relocation_is_manual: Para mover el árbol, detén la aplicación, cópialo tú
+          mismo y luego apunta %{variable} a la nueva ubicación. Ningún comando lo
+          mueve, porque una copia que termina para los registros pero no para el material
           de claves deja ambos inservibles.
       reclaim:
         category_help: Categoría de almacenamiento que se va a liberar
@@ -6881,6 +6881,9 @@ flows:
       value: Valor
     edit:
       cancel: Cancelar
+      clear: Borrar
+      masked_kept: Este valor está oculto, por eso el campo empieza vacío. Déjalo
+        vacío para conservar el valor guardado o escribe uno nuevo para sustituirlo.
       path: 'Identificador interno: %{path}'
       required_blank: '{field} es obligatorio, así que no puede quedar en blanco.
         Introduce un valor o cancela para dejarlo sin cambios.'

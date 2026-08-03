@@ -3780,10 +3780,10 @@ cli:
         help: Create every declared directory, preserving everything already there
       list:
         help: Show every storage category, its path, and whether it holds anything
-        relocation_is_manual: To move the tree, stop Cadrumo, copy it yourself, then
-          point %{variable} at the new location. No command moves it, because a copy
-          that completes for the records but not for the key material leaves neither
-          usable.
+        relocation_is_manual: To move the tree, stop the application, copy it yourself,
+          then point %{variable} at the new location. No command moves it, because
+          a copy that completes for the records but not for the key material leaves
+          neither usable.
       reclaim:
         category_help: Storage category to reclaim
         help: Delete a storage category's regenerable contents
@@ -6397,6 +6397,9 @@ flows:
       value: Value
     edit:
       cancel: Cancel
+      clear: Clear
+      masked_kept: This value is hidden, so the box starts empty. Leave it empty to
+        keep the value on record, or type a new one to replace it.
       path: 'Internal identifier: %{path}'
       required_blank: '{field} is required, so it cannot be left blank. Enter a value,
         or cancel to leave it unchanged.'

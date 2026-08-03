@@ -4050,7 +4050,7 @@ cli:
         help: Crea tots els directoris declarats conservant el que ja hi hagi
       list:
         help: Mostra cada categoria d'emmagatzematge, la seva ruta i si conté res
-        relocation_is_manual: Per moure l'arbre, atura Cadrumo, copia'l tu mateix
+        relocation_is_manual: Per moure l'arbre, atura l'aplicació, copia'l tu mateix
           i després apunta %{variable} a la nova ubicació. Cap ordre no el mou, perquè
           una còpia que acaba per als registres però no per al material de claus deixa
           tots dos inservibles.
@@ -6840,6 +6840,8 @@ flows:
       value: Valor
     edit:
       cancel: Cancel·la
+      clear: flows.manager.edit.clear
+      masked_kept: flows.manager.edit.masked_kept
       path: 'Identificador intern: %{path}'
       required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
         un valor o cancel·la per deixar-lo sense canvis.'
