@@ -1197,6 +1197,68 @@ STORAGE_PATH_DEFINITIONS = (
         owner="cadrumo.adapters.persistence.storage.blob_store",
         schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
     ),
+    # The three entries below declare parameterised fan-out SHAPES, not
+    # enumerable locations: a content hash prefix, a namespace, and a per-run
+    # id cannot each get their own StorageCategory member, but the shape they
+    # fan out into can be declared here exactly as ``blob_manifest`` above
+    # already does -- and, for that entry, the grammar string is not merely
+    # descriptive: ``blob_store/_blob_store.py`` parses it at import time to
+    # derive its own shard-directory name and manifest suffix. Each new entry
+    # below is pinned by a test that produces a REAL path through the real
+    # write path and asserts it against a regex derived from this grammar, so
+    # the declaration and production behaviour cannot silently drift apart.
+    StoragePathDefinition(
+        key="blob_content_plaintext",
+        kind=StoragePathKind.BLOB_OBJECT,
+        grammar="<root>/blobs/<sha256[:2]>/<sha256>",
+        owner="cadrumo.adapters.persistence.storage.blob_store",
+    ),
+    StoragePathDefinition(
+        key="blob_content_ciphertext",
+        kind=StoragePathKind.BLOB_OBJECT,
+        grammar="<root>/blobs/<sha256[:2]>/<sha256>.enc",
+        owner="cadrumo.adapters.persistence.storage.blob_store",
+    ),
+    StoragePathDefinition(
+        # The Google-Drive-alternative local filesystem provider fans out one
+        # directory per outbound-attachment namespace beneath the bucket's
+        # blobs directory, then writes the HMAC-addressed payload alongside
+        # an integrity sidecar. Two entries because the payload and its
+        # sidecar are two distinct on-disk artefacts sharing one stem.
+        key="local_provider_object",
+        kind=StoragePathKind.BLOB_OBJECT,
+        grammar="<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.bin",
+        owner="cadrumo.adapters.outbound.storage",
+    ),
+    StoragePathDefinition(
+        key="local_provider_object_sidecar",
+        kind=StoragePathKind.BLOB_OBJECT,
+        grammar="<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.meta.json",
+        owner="cadrumo.adapters.outbound.storage",
+    ),
+    StoragePathDefinition(
+        # The observability run-trace directory fans out one subdirectory per
+        # 16-lowercase-hex run id beneath RUNS; the category's own docstring
+        # already reasons about this per-run structure (it is why the
+        # category is fingerprint-excluded), the id itself was just never
+        # promoted to a declared shape until now.
+        key="run_trace",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/runs/<run_id>/trace.json",
+        owner="cadrumo.core.observability",
+    ),
+    StoragePathDefinition(
+        key="run_events",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/runs/<run_id>/events.jsonl",
+        owner="cadrumo.core.observability",
+    ),
+    StoragePathDefinition(
+        key="run_envelope",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/runs/<run_id>/envelope.json",
+        owner="cadrumo.core.observability",
+    ),
 )
 
 STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(

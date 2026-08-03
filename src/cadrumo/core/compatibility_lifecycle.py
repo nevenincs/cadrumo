@@ -121,6 +121,14 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     # lands here -- it is a placeholder nothing real writes through, and
     # delete-and-refuse costs nothing.
     "root_fallback_database": PersistedFormatClass.REGENERABLE,
+    # A run trace, its event log, and its captured envelope are diagnostic and
+    # replay tooling, not filing evidence: the RUNS category itself is
+    # RETENTION lifecycle and fingerprint-EXCLUDED because per-run churn is
+    # the point. Losing one means a stale run cannot be replayed for
+    # debugging; it never strands taxpayer data.
+    "run_trace": PersistedFormatClass.REGENERABLE,
+    "run_events": PersistedFormatClass.REGENERABLE,
+    "run_envelope": PersistedFormatClass.REGENERABLE,
 }
 
 
