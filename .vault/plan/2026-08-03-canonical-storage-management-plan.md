@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:e568bb4c514137d22640ff2acabcbd39c8c0e1be51d1e4d04bb7e99bcb843fee'
+body_hash: 'sha256:f0c058bc368b4c78a1876d1a37fb7183e1e9b6c8214fe11bad4bbbae4353ae7c'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -128,7 +128,7 @@ Declares every application-chosen segment written one and two levels beneath an 
 - [x] `W02.P06.S107` - Declare the five filename-template grammars using the now-landed StoragePathDefinition mechanism, which the blob-store, local-provider, and run-trace families already prove handles exactly this shape with no model change and no ADR ruling required, closing the open question this Step originally posed rather than answering it: llm-usage slash usage-star.jsonl, llm-run-telemetry slash run-telemetry-star.jsonl, tokens slash star-star-auth.lock, cache slash registry-verdict slash prefix-digest.json, and llm-cache slash provider slash model slash star-star.json; `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`.
 - [ ] `W02.P06.S108` - Delete the duplicate CONFIG_RESET_JOURNAL_DIRNAME literal in the config-reset repository and re-point its journal-directory join onto the already-declared config_reset_journal grammar, closing the gap the new directory-grammar agreement gate found: the repository joins its own reset-operations constant onto the raw storage root, bypassing storage_path entirely, even though StoragePathDefinition already declares this exact shape; `src/cadrumo/application/_config_reset_repository.py`.
 - [x] `W02.P06.S110` - Delete the dead secret-tempfile bridge (materialise_secret, export_to_temp_path) rather than pin it with a dir= fix, confirmed zero production callers and zero dynamic reference across the tree, keeping the live secret-store factory it sat beside; `src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py`.
-- [ ] `W02.P06.S114` - Interpolate the fourteen STORAGE_PATH_DEFINITIONS grammars' hand-typed directory-run literals off storage_location(StorageCategory.X).subpath the same way the adjacent segment field on the same model already does, retiring the directory-agreement gate by construction rather than leaving it green by comparison, optional and lower priority than the anchor and namespace-segment fixes since the gate does hold today for the sixteen storage-root-anchored entries, but real duplication under the campaign's own no-duplication standard; `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`.
+- [x] `W02.P06.S114` - Interpolate the fourteen STORAGE_PATH_DEFINITIONS grammars' hand-typed directory-run literals off storage_location(StorageCategory.X).subpath the same way the adjacent segment field on the same model already does, retiring the directory-agreement gate by construction rather than leaving it green by comparison, optional and lower priority than the anchor and namespace-segment fixes since the gate does hold today for the sixteen storage-root-anchored entries, but real duplication under the campaign's own no-duplication standard; `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`.
 
 ### Phase `W02.P07` - effective storage root call-site migration
 
