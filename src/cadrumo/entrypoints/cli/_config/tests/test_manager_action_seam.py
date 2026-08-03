@@ -8,10 +8,15 @@ Textual's was already running, so pressing any button reported
 ``asyncio.run() cannot be called from a running event loop`` into a muted
 label and did nothing.
 
-These tests press the REAL actions from
-:func:`cadrumo.entrypoints.cli._config._manager_actions.manager_actions`
-inside a running application, because a stub action cannot reproduce the
-defect: what failed was owning a loop, and a stub owns none.
+What every test here shares is the seam, not the action. Some press the
+real actions from
+:func:`cadrumo.entrypoints.cli._config._manager_actions.manager_actions`,
+because a stub cannot reproduce that defect: what failed was owning a
+loop, and a stub owns none. Others declare a purpose-built action to
+reach a shape no shipped one can be driven into from a test — a live
+browser session, or an application that is already gone. Either way the
+button, the worker and the presenter are the production ones, and each
+test says in its own docstring which kind it uses and why.
 """
 
 from __future__ import annotations
