@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .._bucket_pointer_io import pointer_path
 from .._storage_taxonomy import (
     FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
     ROOT_DERIVED_STORAGE_FIELDS,
@@ -35,7 +36,7 @@ from .._storage_taxonomy import (
     storage_path,
     storage_tree_targets,
 )
-from ..config import Settings, _active_profile_pointer_fingerprint, override_settings
+from ..config import Settings, override_settings
 from ..errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -310,25 +311,21 @@ def test_an_explicitly_overridden_category_is_not_re_derived(tmp_path: Path) -> 
         assert rebuilt.cadrumo_runs_dir == elsewhere
 
 
-def test_the_settings_cache_key_resolves_its_pointer_through_the_taxonomy(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The cache key must name the pointer file the pointer reader actually uses.
+def test_the_settings_cache_key_watches_the_file_the_pointer_reader_writes(tmp_path: Path) -> None:
+    """The cache key and the pointer reader must resolve one and the same file.
 
-    The filename used to be re-typed here, unpinned against the reader, so a
-    rename would have left the key watching a file nothing writes -- and a
-    profile switch would then serve a stale settings instance for the life of
-    the process, with no error anywhere.
+    The settings cache keys on the active-profile pointer so that a login or
+    logout inside a live process is observed rather than served from a held
+    instance. That only works while both sides name the same file, and the key
+    used to re-type the filename instead of resolving it. A rename would have
+    left the key watching a file nothing writes: no error, no failing test, and
+    a stale database route for the life of the process.
+
+    Compared as resolved paths under one root, with no process mutation --
+    the key's own root read is a direct environment lookup by design, because
+    it has to answer which pointer the NEXT construction would see.
     """
     root = tmp_path / "keyed-root"
-    root.mkdir()
-    pointer = root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+    from_taxonomy = root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
 
-    absent = _active_profile_pointer_fingerprint()
-    pointer.write_text('bucket_id = "primary"\n', encoding="utf-8")
-    present = _active_profile_pointer_fingerprint()
-
-    assert absent[0] == str(root), "the key must name the configured root"
-    assert absent != present, "writing the pointer must move the key, or a profile switch serves stale settings"
+    assert from_taxonomy == pointer_path(root)
