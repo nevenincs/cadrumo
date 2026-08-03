@@ -50,7 +50,7 @@ def test_a_real_put_lands_at_the_declared_namespace_fan_out_shape(
         "abcdef0123456789",
         payload,
         content_hash=_hash(payload),
-        label="payroll-2026Q1",
+        label="payroll-march-batch",
     )
 
     payload_path = Path(metadata.provider_object_id)
@@ -71,7 +71,7 @@ def test_a_non_conforming_path_is_rejected_by_the_grammar(
     per-namespace fan-out collapsed away -- is exactly the drift this
     grammar exists to catch.
     """
-    flattened = provider.root / "abcdef01--payroll-2026Q1.bin"
+    flattened = provider.root / "abcdef01--payroll-march-batch.bin"
 
     with pytest.raises(AssertionError):
         assert_path_matches_grammar(key="local_provider_object", root=storage_root, produced=flattened)
