@@ -27,7 +27,7 @@ from ...core.i18n import tr
 from ...core.json_contract import strict_round_trip
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import OracleEnvironment as _OracleEnvironment
-from ._common import _emit_envelope
+from ._common import _emit_envelope, resolve_optional_root
 from ._registry_corpus import citations_app, manuals_app
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
@@ -138,35 +138,13 @@ def _registry_tree_metric_lines(report: RegistryTreeReport) -> tuple[str, ...]:
     )
 
 
-def _resolve_registry_root(value: Path | None) -> Path:
-    return value if value is not None else bundled_path("registry", "aeat")
-
-
-def _resolve_workbook_root(value: Path | None) -> Path:
-    return value if value is not None else bundled_path("corpus", "aeat_official", "disenos_registro")
-
-
-def _resolve_source_root(value: Path | None) -> Path:
-    """Resolve the corpus/source root, defaulting to the bundled data root.
-
-    Source citations carry corpus-root-relative paths (``corpus/...``);
-    they only resolve against the bundled data root, never the operator's
-    current working directory.
-    """
-    return value if value is not None else bundled_path()
-
-
-def _resolve_parity_store_root(value: Path | None) -> Path:
-    return value if value is not None else load_settings().cadrumo_registry_parity_store_dir
-
-
 @app.command("inspect", help=tr("cli.registry.inspect_help"))
 def inspect_registry_cmd(
     ctx: typer.Context,
     registry_root: _RegistryRootOpt = None,
 ) -> None:
     """Load the read-only registry tree and report inventory counts."""
-    registry_root = _resolve_registry_root(registry_root)
+    registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
     report = inspect_registry_tree(registry_root)
     _emit_envelope(
         ctx,
@@ -183,8 +161,8 @@ def verify_registry_cmd(
     source_root: _SourceRootOpt = None,
 ) -> None:
     """Validate every registry modelo against shared legal/source catalogues."""
-    registry_root = _resolve_registry_root(registry_root)
-    resolved_source_root = _resolve_source_root(source_root)
+    registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
+    resolved_source_root = resolve_optional_root(source_root, bundled_path)
     report = verify_registry_tree(registry_root, source_root=resolved_source_root)
     _emit_envelope(
         ctx,
@@ -217,7 +195,7 @@ def audit_oracles_cmd(
     underlying catalogue error. Exit code is non-zero when failures
     exist so CI / pre-deploy pipelines can gate on a clean audit.
     """
-    registry_root = _resolve_registry_root(registry_root)
+    registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
     report = audit_registry_oracles(registry_root, environment=environment)
     lines = [
         _metric_line("environment", report.environment),
@@ -281,8 +259,8 @@ def verify_filed_state_cmd(
     report = verify_filed_state(
         observation_path=observation_path,
         source_observation_paths=tuple(source_observation_paths or ()),
-        registry_root=_resolve_registry_root(registry_root),
-        source_root=_resolve_source_root(source_root),
+        registry_root=resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat")),
+        source_root=resolve_optional_root(source_root, bundled_path),
         required_casilla_ids=tuple(required_casilla_refs or ()),
     )
     comparison = report.comparison
@@ -345,8 +323,8 @@ def diff_revisions_cmd(
         modelo,
         from_year=from_year,
         to_year=to_year,
-        registry_root=_resolve_registry_root(registry_root),
-        source_root=_resolve_source_root(source_root),
+        registry_root=resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat")),
+        source_root=resolve_optional_root(source_root, bundled_path),
     )
     _emit_envelope(
         ctx,
@@ -453,7 +431,7 @@ def verify_workbooks_cmd(
 ) -> None:
     """Run the read-only workbook parity backend verification."""
     report = verify_registry_workbooks(
-        root=_resolve_workbook_root(root),
+        root=resolve_optional_root(root, lambda: bundled_path("corpus", "aeat_official", "disenos_registro")),
         limit=limit,
         per_file_timeout_seconds=per_file_timeout_seconds,
         resume_from=resume_from,
@@ -525,13 +503,13 @@ def run_parity_cmd(
     ] = None,
 ) -> None:
     """Run one stored parity scenario and archive the resulting tape."""
-    resolved_registry_root = _resolve_registry_root(registry_root)
-    resolved_source_root = _resolve_source_root(source_root)
+    resolved_registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
+    resolved_source_root = resolve_optional_root(source_root, bundled_path)
     tape, target = run_registry_parity(
         scenario_path=scenario_path,
         registry_root=resolved_registry_root,
         source_root=resolved_source_root,
-        store_root=_resolve_parity_store_root(store_root),
+        store_root=resolve_optional_root(store_root, lambda: load_settings().cadrumo_registry_parity_store_dir),
         output=output,
     )
     _emit_envelope(
@@ -574,8 +552,8 @@ def replay_parity_cmd(
     source_root: _SourceRootOpt = None,
 ) -> None:
     """Replay one archived parity tape against the current registry runtime."""
-    resolved_registry_root = _resolve_registry_root(registry_root)
-    resolved_source_root = _resolve_source_root(source_root)
+    resolved_registry_root = resolve_optional_root(registry_root, lambda: bundled_path("registry", "aeat"))
+    resolved_source_root = resolve_optional_root(source_root, bundled_path)
     report = replay_registry_parity(
         tape_path=tape_path,
         registry_root=resolved_registry_root,

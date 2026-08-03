@@ -11,10 +11,10 @@ import pytest
 from ....application.registry import (
     RegistryTreeReport,
 )
-from ....core.config import override_settings
+from ....core.config import load_settings, override_settings
 from ....core.resources import bundled_path
 from ....tests.cli_runner import cadrumo_click_command
-from ..registry import _resolve_parity_store_root
+from .._common import resolve_optional_root
 from ._registry_cli_fixtures import (
     _isolated_registry_cli_backend,
     _isolated_secure_backend,
@@ -361,8 +361,11 @@ def test_registry_parity_default_store_root_comes_from_settings(tmp_path: Path) 
     explicit_root = tmp_path / "explicit-parity"
 
     with override_settings(cadrumo_registry_parity_store_dir=configured_root):
-        assert _resolve_parity_store_root(None) == configured_root
-        assert _resolve_parity_store_root(explicit_root) == explicit_root
+        assert resolve_optional_root(None, lambda: load_settings().cadrumo_registry_parity_store_dir) == configured_root
+        assert (
+            resolve_optional_root(explicit_root, lambda: load_settings().cadrumo_registry_parity_store_dir)
+            == explicit_root
+        )
 
 
 def test_registry_retained_commands_reject_command_local_json_flag() -> None:

@@ -51,7 +51,7 @@ from ._app_live_notifications_cli import notifications_app, register_notificatio
 from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._app_live_verify_cli import register_verify_commands, verify_app
-from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_pull_year_range
+from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_optional_root, resolve_pull_year_range
 
 if TYPE_CHECKING:
     from ...application.live import VerifyVerdict
@@ -96,25 +96,6 @@ iva_wallet_app = typer.Typer(
     add_completion=False,
 )
 app.add_typer(iva_wallet_app, name="iva-wallet")
-
-
-def _resolve_live_output_root(value: Path | None, setting_name: str) -> Path:
-    """Resolve an ``--output-root`` to its enrolled data-root default.
-
-    An explicit operator value wins; otherwise the location comes from
-    :class:`~cadrumo.core.config.Settings`, so the evidence lands inside the
-    declared data-root taxonomy and moves with an operator's
-    ``CADRUMO_LOCAL_STORAGE_ROOT``. These roots were previously hardcoded
-    ``var/cadrumo/...`` literals on the option itself, which put regulated
-    filing evidence outside that taxonomy and beyond any override — the
-    default was not a setting at all, so nothing could redirect it.
-    """
-    if value is not None:
-        return value
-    from ...core.config import load_settings
-
-    resolved: Path = getattr(load_settings(), setting_name)
-    return resolved
 
 
 def _live_period_option(period: str | None, *, year: int) -> Period | None:
@@ -487,13 +468,17 @@ def iva_wallet_pull_history_cmd(
     submit AEAT form choices.
     """
     from ...application.live import capture_iva_compensation_history
+    from ...core.config import load_settings
 
     _emit_live_auth_preflight()
     report = asyncio.run(
         capture_iva_compensation_history(
             year_from=year_from,
             year_to=year_to,
-            output_root=_resolve_live_output_root(output_root, "cadrumo_iva_compensation_history_dir"),
+            output_root=resolve_optional_root(
+                output_root,
+                lambda: load_settings().cadrumo_iva_compensation_history_dir,
+            ),
         ),
     )
     lines = (
@@ -582,6 +567,7 @@ def iva_wallet_pull_evidence_cmd(
     never performs AEAT filing, payment, or representative submission actions.
     """
     from ...application.live import capture_iva_remote_state
+    from ...core.config import load_settings
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
     _emit_live_auth_preflight()
@@ -593,7 +579,7 @@ def iva_wallet_pull_evidence_cmd(
                 target_year=target_year,
                 target_period=resolved_target_period,
                 taxpayer_nif=taxpayer_nif,
-                output_root=_resolve_live_output_root(output_root, "cadrumo_iva_read_evidence_dir"),
+                output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_iva_read_evidence_dir),
             ),
             timeout_ms=_live_iva_evidence_pull_command_timeout_ms(year_from=year_from, year_to=year_to),
         ),
@@ -1106,6 +1092,7 @@ def filed_pull_cmd(
     :class:`ModeloRecord` evidence when an existing current filing record
     matches.
     """
+    from ...core.config import load_settings
     from ._app_live_payloads import FiledCaptureFailurePayload, FiledCaptureResult
 
     _emit_live_auth_preflight()
@@ -1116,7 +1103,7 @@ def filed_pull_cmd(
             capture_filed_data(
                 modelo=selected_modelos[0],
                 year=year,
-                output_root=_resolve_live_output_root(output_root, "cadrumo_filed_declarations_dir"),
+                output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
                 period=resolved_period,
                 expediente_id=expediente_id,
                 limit=limit,
@@ -1150,7 +1137,7 @@ def filed_pull_cmd(
         capture_filed_data_bulk(
             year_from=resolved_from,
             year_to=resolved_to,
-            output_root=_resolve_live_output_root(output_root, "cadrumo_filed_declarations_dir"),
+            output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
             modelos=selected_modelos or None,
             limit=limit,
         ),
@@ -1241,6 +1228,7 @@ def filed_pull_sources_cmd(
     The emitted :class:`FiledCaptureSourcesResult` is local evidence only; the
     command does not submit or mutate AEAT state.
     """
+    from ...core.config import load_settings
     from ._app_live_payloads import FiledCaptureSourcesResult
 
     _emit_live_auth_preflight()
@@ -1249,7 +1237,7 @@ def filed_pull_sources_cmd(
             modelo=modelo,
             year=year,
             period=_required_live_period_option(period, year=year),
-            output_root=_resolve_live_output_root(output_root, "cadrumo_filed_declarations_dir"),
+            output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
             registry_root=registry_root,
             source_root=source_root,
         ),

@@ -25,12 +25,17 @@ an ``ast.Attribute`` load of the category member, **or** the field name as a
 non-docstring string constant.
 
 The third shape was added on measurement, not on principle, and omitting it
-would have been a serious error. The two live-evidence roots reach their
-settings through ``_resolve_live_output_root(output_root,
+would have been a serious error. The two live-evidence roots used to reach
+their settings through ``_resolve_live_output_root(output_root,
 "cadrumo_iva_read_evidence_dir")`` -- the field named as a string and resolved
-dynamically. An attribute walk cannot see that, so an attribute-only gate
-reports both as writer-less, and someone acting on the report deletes a live
-category holding regulated filing evidence.
+dynamically. An attribute walk alone cannot see that, so an attribute-only
+gate would have reported both as writer-less, and someone acting on the
+report would have deleted a live category holding regulated filing evidence.
+That call site has since collapsed onto a shared resolver that takes the
+default as a callable rather than a field-name string, so today's claims are
+all backed by attribute-load evidence -- but the third shape stays, proven by
+the discrimination test below, because a future dynamic-name lookup is
+exactly the pattern that motivated it in the first place.
 
 That shape is the mirror image of the trap this gate is most careful about, so
 admitting it must not admit the trap: ``core/auth_session_keys.py`` names a
