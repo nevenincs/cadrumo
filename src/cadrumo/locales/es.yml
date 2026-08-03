@@ -5004,8 +5004,7 @@ cli:
         auth_configure: Configurar el proveedor de autenticación con la AEAT.
         auth_logout: Cerrar sesiones locales y conservar la configuración del proveedor.
         auth_providers: Listar los proveedores de autenticación disponibles.
-        auth_reset: Retirar la configuración local de autenticación y las credenciales
-          guardadas.
+        auth_reset: Retirar la configuración de autenticación y credenciales guardadas.
         auth_status: Mostrar el estado actual de la autenticación con la AEAT.
         auth_test: Probar la autenticación con la AEAT.
         certificate_check: Comprueba la credencial de certificado activa.
