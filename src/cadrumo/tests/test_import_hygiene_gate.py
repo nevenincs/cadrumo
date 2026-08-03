@@ -47,7 +47,7 @@ Three ratcheting/pinned checks, backed by the checked-in
   scope for this pin; they are not asserted here because they shrink as that
   sweep lands, not as a Family-3 fix.
 
-A fourth, TEST-ONLY pair of checks backed by the checked-in
+A fourth, TEST-ONLY trio of checks backed by the checked-in
 ``dev/import_hygiene_test_debt.json`` governs the remainder that
 survives after every mechanically-facadable test-only site has been rewritten
 onto its owning package's public export: a private evaluator, repository
@@ -57,10 +57,14 @@ declined for promotion because doing so would contradict a
 package's documented architecture (e.g. ``LocalFileSystemProvider``, whose
 owning package docstring states its concrete backend modules are
 intentionally private behind a ``StorageProvider`` Protocol boundary). These
-two checks mirror the production Family-1 shape (count ratchet plus named-set
-equality) but are governed entirely SEPARATELY from the production baseline:
-a production (non-test) violation is NEVER tolerated by the test-debt file,
-and the production assertions above are unaffected by its contents.
+first two mirror the production Family-1 shape (count ratchet plus named-set
+equality); the third compares PER-TRIPLE occurrence counts, closing the blind
+spot the other two share -- both collapse or total away repeated occurrences of
+one reach, so a dead entry becomes a spare slot that hides an unnamed
+occurrence of an already-named triple. All three are governed entirely
+SEPARATELY from the production baseline: a production (non-test) violation is
+NEVER tolerated by the test-debt file, and the production assertions above are
+unaffected by its contents.
 
 A fifth, hard-zero check (**Family 4: underscore-named entries in
 ``__all__``**) asserts the live ``src/cadrumo`` tree carries no facade export
@@ -77,6 +81,7 @@ straight failure with no allowlist escape hatch.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, TypedDict
@@ -111,8 +116,16 @@ class _BaselineSite:
     importer_path: str
     # Excluded from equality/hash: the line number is volatile (any peer edit that
     # shifts a documented import's line would otherwise break the gate). A site's
-    # identity is (importer_path, target_mod, imported_names); lineno is kept only
-    # for human-readable diagnostics.
+    # identity is (importer_path, target_mod, imported_names).
+    #
+    # What the number then means depends on where the site came from. Scanner-built
+    # sites carry a line read from the live AST, and that is the one every
+    # diagnostic below prints. Sites loaded from the checked-in files carry a line
+    # nothing compares and nothing prints, so it is documentation, true only as of
+    # its last edit -- and it had drifted on roughly half the entries before the
+    # occurrence gate below was added. It is recorded rather than dropped because
+    # one triple can occur several times in a file, each occurrence reasoned
+    # separately, and the line is what tells those entries apart for a reader.
     lineno: int = field(compare=False)
     target_mod: str
     imported_names: tuple[str, ...]
@@ -360,6 +373,53 @@ def test_test_only_underscore_reaches_are_exactly_the_named_test_debt_set() -> N
     assert unnamed == [], (
         "new, undocumented test-only underscore-named cross-package private import(s) found "
         f"(not present in {repo_relative(_TEST_DEBT_PATH)}):\n  " + "\n  ".join(unnamed)
+    )
+
+
+def _site_triples(sites: tuple[_BaselineSite, ...]) -> Counter[tuple[str, str, tuple[str, ...]]]:
+    """How many times each identity triple occurs in a site collection."""
+    return Counter((s.importer_path, s.target_mod, s.imported_names) for s in sites)
+
+
+def test_every_test_debt_entry_answers_a_live_occurrence() -> None:
+    """The debt file must record each reach exactly as many times as it occurs.
+
+    The two checks above are both blind in the same direction. Set equality
+    collapses repeated occurrences of one triple, and the count ratchet
+    compares totals, so an entry whose reach no longer exists is not merely
+    stale -- it is a spare slot that lets an undocumented occurrence of an
+    already-named triple pass both. That is not hypothetical: five entries
+    had gone dead (the symbol promoted to a facade, the module renamed,
+    the reach rewritten onto a public name), and the padding they left
+    concealed a second undocumented reach in test_google_payloads.py.
+
+    Comparing per-triple counts closes it from both sides at once, and does
+    so without the fragility that keeps ``lineno`` out of site identity: a
+    triple survives any edit that merely moves the import down the file.
+    """
+    debt = _site_triples(_test_debt_sites(_load_test_debt()))
+    current = _site_triples(_current_test_only_underscore_sites())
+
+    dead = sorted(
+        f"{k[0]} <- {k[1]} {list(k[2])} (recorded {debt[k]}x, occurs {current[k]}x)"
+        for k in debt
+        if debt[k] > current[k]
+    )
+    undocumented = sorted(
+        f"{k[0]} <- {k[1]} {list(k[2])} (occurs {current[k]}x, recorded {debt[k]}x)"
+        for k in current
+        if current[k] > debt[k]
+    )
+
+    assert dead == [], (
+        f"test-debt entr(ies) in {repo_relative(_TEST_DEBT_PATH)} no longer answer a live reach. "
+        "If the reach was promoted onto a facade or rewritten, delete the entry in the same "
+        "commit; a spare slot silently widens the ratchet:\n  " + "\n  ".join(dead)
+    )
+    assert undocumented == [], (
+        f"test-only private reach(es) occur more often than {repo_relative(_TEST_DEBT_PATH)} records, "
+        "so an occurrence is unnamed. Add one reasoned entry per occurrence, or rewrite the extra "
+        "reach onto the owning package's facade:\n  " + "\n  ".join(undocumented)
     )
 
 
