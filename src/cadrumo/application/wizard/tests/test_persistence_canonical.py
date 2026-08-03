@@ -1,11 +1,11 @@
 """Focused unit tests for wizard._persistence canonical-token helpers.
 
-`_persistence` ships three private helpers that gate the canonical-
-token round-trip between typed answers models and the profile-record
-string-dict storage:
+`_persistence` ships helpers that gate the canonical-token round-trip
+between typed answers models and the profile-record string-dict
+storage:
 
 - ``_canonicalise(question, value)`` — typed value → canonical token.
-- ``_parse_canonical(question, raw)`` — canonical token → typed value.
+- ``parse_canonical(question, raw)`` — canonical token → typed value.
 - ``_resolve_canonical(question, values)`` — choose the token to
   project (values entry vs. descriptor default).
 
@@ -31,7 +31,7 @@ from pydantic import BaseModel
 from ....core.i18n import Translatable as tr
 from ...workflow import WorkflowInputMismatchError, WorkflowState
 from .._models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
-from .._persistence import _canonicalise, _parse_canonical, _resolve_canonical, persist_patch
+from .._persistence import _canonicalise, _resolve_canonical, parse_canonical, persist_patch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -114,14 +114,14 @@ def test_canonicalise_empty_string_passes_through_as_empty() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _parse_canonical
+# parse_canonical
 # ---------------------------------------------------------------------------
 
 
 def test_parse_canonical_bool_declared_tokens_return_bool() -> None:
     question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
     for raw_value, expected in (("true", True), ("false", False)):
-        assert _parse_canonical(question, raw_value) is expected
+        assert parse_canonical(question, raw_value) is expected
 
 
 def test_parse_canonical_bool_non_true_token_returns_false() -> None:
@@ -129,15 +129,15 @@ def test_parse_canonical_bool_non_true_token_returns_false() -> None:
     False; this guards against partial-match drift (e.g., accepting
     ``"True"`` or ``"TRUE"`` would silently corrupt the round-trip)."""
     question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
-    assert _parse_canonical(question, "True") is False
-    assert _parse_canonical(question, "") is False
-    assert _parse_canonical(question, "yes") is False
+    assert parse_canonical(question, "True") is False
+    assert parse_canonical(question, "") is False
+    assert parse_canonical(question, "yes") is False
 
 
 def test_parse_canonical_int_returns_int_value() -> None:
     question = _question(answer_type=int, widget=WizardWidget.INTEGER)
-    assert _parse_canonical(question, "42") == 42
-    assert _parse_canonical(question, "-7") == -7
+    assert parse_canonical(question, "42") == 42
+    assert parse_canonical(question, "-7") == -7
 
 
 def test_parse_canonical_int_empty_string_returns_zero() -> None:
@@ -145,29 +145,29 @@ def test_parse_canonical_int_empty_string_returns_zero() -> None:
     ValueError — supports the "field never collected" round-trip
     where the persisted dict has no value for this question."""
     question = _question(answer_type=int, widget=WizardWidget.INTEGER)
-    assert _parse_canonical(question, "") == 0
+    assert parse_canonical(question, "") == 0
 
 
 def test_parse_canonical_path_returns_path_value() -> None:
     question = _question(answer_type=Path, widget=WizardWidget.PATH)
-    assert _parse_canonical(question, "project/data/example.txt") == Path("project/data/example.txt")
+    assert parse_canonical(question, "project/data/example.txt") == Path("project/data/example.txt")
 
 
 def test_parse_canonical_path_empty_string_returns_empty_path() -> None:
     """Empty canonical token returns ``Path()`` rather than
     ``Path("")`` — ``Path()`` is the canonical no-path sentinel."""
     question = _question(answer_type=Path, widget=WizardWidget.PATH)
-    assert _parse_canonical(question, "") == Path()
+    assert parse_canonical(question, "") == Path()
 
 
 def test_parse_canonical_str_passes_through_unchanged() -> None:
     question = _question(answer_type=str)
-    assert _parse_canonical(question, "madrid") == "madrid"
+    assert parse_canonical(question, "madrid") == "madrid"
 
 
 def test_parse_canonical_str_empty_string_passes_through_as_empty() -> None:
     question = _question(answer_type=str)
-    assert _parse_canonical(question, "") == ""
+    assert parse_canonical(question, "") == ""
 
 
 # ---------------------------------------------------------------------------
@@ -218,7 +218,7 @@ def test_parse_canonical_optional_bool_blank_projects_to_undeclared() -> None:
     This is the typed boundary that preserves the three-state
     invariant: a profile whose operator never declared the boolean
     fact must reload with the typed projection at ``None``, never
-    collapsed onto declared-``False``. If ``_parse_canonical`` ever
+    collapsed onto declared-``False``. If ``parse_canonical`` ever
     returns ``False`` here, the serialise → persist → reload cycle
     materialises a ``"false"`` token and the downstream LIS Art. 29
     gate misreads every undeclared-quiet-create profile as a positive
@@ -233,7 +233,7 @@ def test_parse_canonical_optional_bool_blank_projects_to_undeclared() -> None:
         required=False,
         answer_type=bool,
     )
-    assert _parse_canonical(question, "") == ""
+    assert parse_canonical(question, "") == ""
 
 
 def test_parse_canonical_optional_bool_declared_tokens_project_to_bool() -> None:
@@ -249,7 +249,7 @@ def test_parse_canonical_optional_bool_declared_tokens_project_to_bool() -> None
         answer_type=bool,
     )
     for raw_value, expected in (("true", True), ("false", False)):
-        assert _parse_canonical(question, raw_value) is expected
+        assert parse_canonical(question, raw_value) is expected
 
 
 def test_canonicalise_blank_string_for_optional_bool_stays_blank() -> None:
