@@ -190,7 +190,12 @@ def write_target(node: ast.Call) -> tuple[str, ast.AST | None] | None:
     if name in RECEIVER_PRIMITIVES:
         return name, func.value
     if name in ARITY_ONE_PRIMITIVES:
-        return (name, func.value) if len(node.args) == 1 else None
+        # Exactly one positional argument AND no keywords. Counting positional
+        # arity alone admitted three domain renames --
+        # ``repository.rename(profile_id, new_label=...)`` and friends -- which
+        # pass a bare ``len(args) == 1`` test. ``Path.rename`` / ``Path.replace``
+        # never take keywords, so requiring their absence costs no true positive.
+        return (name, func.value) if len(node.args) == 1 and not node.keywords else None
     if name == "open":
         return ("open", func.value) if _opens_for_write(node, receiver_form=True) else None
     if name == "save":

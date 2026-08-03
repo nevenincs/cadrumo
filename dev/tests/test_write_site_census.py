@@ -56,6 +56,10 @@ def test_a_real_file_producing_call_is_counted(source: str, expected: str) -> No
         ("repository.save(record)", "a secure-object save writes an encrypted SQL row, not a file"),
         ("buffer.save(stream)", "an in-memory buffer save touches no filesystem"),
         ("text.replace('a', 'b')", "str.replace takes two arguments; Path.replace takes one"),
+        (
+            "repository.rename(profile_id, new_label=label)",
+            "a domain rename passes a bare positional-arity test; Path.rename takes no keywords",
+        ),
         ("open(path, 'r')", "a read-mode open produces nothing"),
         ("open(path)", "the default mode is read"),
         ("path.exists()", "a predicate is not a write"),
