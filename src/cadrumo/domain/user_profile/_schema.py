@@ -230,3 +230,83 @@ class ProfileSchemaDefinition(BaseModel):
             if field.key == field_key:
                 return field
         raise UserProfileNotFoundError(f"unknown user-profile field {path!r}")
+
+
+NUMERIC_PROFILE_FIELD_TYPES: frozenset[ProfileFieldType] = frozenset(
+    {ProfileFieldType.INTEGER, ProfileFieldType.DECIMAL, ProfileFieldType.MONEY},
+)
+"""The field types whose values are numbers, and whose bounds therefore bind.
+
+Mirrors the set :meth:`ProfileFieldDefinition._validate_enum_values` already
+uses to decide where ``minimum`` / ``maximum`` may be declared, so the types
+that may CARRY a bound and the types that are CHECKED against one cannot
+drift apart.
+"""
+
+
+def numeric_value_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
+    """Return why ``value`` fails ``field``'s numeric declaration, or ``None``.
+
+    The single authority for "is this a legal value for this numeric field".
+    It exists because the declaration was inert: ``minimum`` and ``maximum``
+    were validated for their own coherence at schema build and then never
+    compared to anything, so a participation percentage declared ``0..100``
+    accepted ``999`` on write and carried it into an attribution calculation
+    unchallenged. Both the write door and the readers that consume these
+    facts ask this one function, rather than each forming its own opinion.
+
+    Numbers are :class:`~decimal.Decimal` (or :class:`int`), never
+    :class:`float`. These are financial quantities -- a participation
+    percentage and an assigned base that divide a taxable amount between
+    members -- so binary floating point is the wrong carrier: its rounding
+    is invisible at the point of entry and shows up as a cent that does not
+    reconcile in a filing. ``bool`` is rejected despite being an ``int``
+    subclass, because ``True`` is an answer to a different question and
+    would otherwise silently satisfy a numeric field as ``1``.
+
+    Absence is not this rule's business. A ``None`` value is a cleared or
+    unanswered field, which the required-field check judges; refusing it
+    here would report one missing field as two unrelated faults.
+
+    Non-finite values need no check: the fact carrier's own union rejects a
+    ``NaN`` or infinite :class:`~decimal.Decimal` before it can be
+    constructed, so an unorderable value cannot reach a bound comparison.
+
+    Args:
+        field: The declaration the value must satisfy.
+        value: The value carried by the fact, after the fact carrier has
+            restored its type.
+
+    Returns:
+        An instructive message naming the field and the range it accepts,
+        or ``None`` when the value is admissible or the field is not
+        numeric.
+    """
+    if field.type not in NUMERIC_PROFILE_FIELD_TYPES or value is None:
+        return None
+    accepted = _accepted_range_clause(field)
+    if isinstance(value, bool) or not isinstance(value, (int, Decimal)):
+        return f"{field.key} must be a number{accepted}; got {value!r}"
+    if field.minimum is not None and value < field.minimum:
+        return f"{field.key} must be a number{accepted}; got {value}"
+    if field.maximum is not None and value > field.maximum:
+        return f"{field.key} must be a number{accepted}; got {value}"
+    return None
+
+
+def _accepted_range_clause(field: ProfileFieldDefinition) -> str:
+    """Render the declared bounds as an operator-facing phrase.
+
+    Both bounds are INCLUSIVE, and the wording says so: a percentage
+    declared ``0..100`` must accept exactly ``0`` and exactly ``100``, and
+    a refusal that does not state which end is included leaves the operator
+    guessing at the boundary that just refused them.
+    """
+    minimum, maximum = field.minimum, field.maximum
+    if minimum is not None and maximum is not None:
+        return f" from {minimum} to {maximum} inclusive"
+    if minimum is not None:
+        return f" no less than {minimum}"
+    if maximum is not None:
+        return f" no greater than {maximum}"
+    return ""

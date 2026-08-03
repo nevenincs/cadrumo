@@ -11,7 +11,11 @@ from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANC
 from ..core.hashing import sha256_hex
 from ..core.identity import nif_check_letter
 from ..domain.deadlines import IVARegime
-from ..domain.user_profile import ProfileAlreadyExistsError, UserProfileFact
+from ..domain.user_profile import (
+    NUMERIC_PROFILE_FIELD_TYPES,
+    ProfileAlreadyExistsError,
+    UserProfileFact,
+)
 
 if TYPE_CHECKING:
     from ..adapters.persistence.storage import SecureObjectRepository
@@ -62,7 +66,30 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
         return field.enum_values[0]
     if field.key == "tax_id":
         return _PLACEHOLDER_TAX_ID
+    if field.type in NUMERIC_PROFILE_FIELD_TYPES:
+        return _numeric_placeholder(field)
     return "placeholder"
+
+
+def _numeric_placeholder(field: ProfileFieldDefinition) -> str:
+    """Return a number this numeric field's declaration admits.
+
+    The sentinel is not one: a numeric field now refuses the word
+    ``placeholder`` the same way an enum field refuses it, so the branch
+    that made enums legal has to exist for numbers too.
+
+    The declared bounds are honoured rather than sidestepped, because the
+    value has to satisfy the very check this exists to keep tests clear of.
+    The minimum is preferred when one is declared -- it is admissible by
+    definition and needs no arithmetic -- and the fallbacks stay inside a
+    declared ceiling. As with the enum branch, the value means nothing
+    beyond being legal; a test needing a PARTICULAR number should say so.
+    """
+    if field.minimum is not None:
+        return str(field.minimum)
+    if field.maximum is not None and field.maximum < 1:
+        return str(field.maximum)
+    return "1"
 
 
 def _distinct_valid_nif(profile_id: str) -> str:
