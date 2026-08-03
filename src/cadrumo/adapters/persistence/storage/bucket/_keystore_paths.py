@@ -113,4 +113,29 @@ def validate_keystore_separation(
         )
 
 
-__all__ = ["keystore_path", "keystore_root", "validate_keystore_separation"]
+def keystore_sidecar_path(*, storage_root: Path, bucket_id: str, filename: str) -> Path:
+    """Return ``<root>/keystore/<bucket_id>/<filename>``, refusing an unseparated keystore.
+
+    Validates the keystore-separation invariant via
+    :func:`validate_keystore_separation` before joining ``filename`` onto the
+    bucket's keystore directory, so a violation raises before any sidecar
+    path is returned to the caller. Canonical join point for every
+    keystore-resident sidecar (the persisted session record, the wrapped
+    bucket DEK, the login-throttle cache).
+
+    Args:
+        storage_root: The Cadrumo storage root.
+        bucket_id: Bucket identifier whose keystore directory to resolve.
+        filename: The sidecar filename to join onto the keystore directory.
+
+    Returns:
+        The keystore-separated sidecar path.
+
+    Raises:
+        BucketValidationError: When the keystore path violates separation.
+    """
+    validate_keystore_separation(storage_root, bucket_id)
+    return keystore_path(storage_root, bucket_id) / filename
+
+
+__all__ = ["keystore_path", "keystore_root", "keystore_sidecar_path", "validate_keystore_separation"]
