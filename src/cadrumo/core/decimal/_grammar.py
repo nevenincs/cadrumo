@@ -121,3 +121,48 @@ def try_parse_canonical_decimal(
     if not parsed.is_finite():
         return None
     return parsed
+
+
+#: A dot followed by exactly three digits, with a lead group that could open a
+#: Spanish thousands run: one to three digits and no leading zero. ``1.234`` and
+#: ``100.000`` match; ``0.333`` does not (nobody writes a thousands run whose
+#: first group is ``0``), and neither does ``1000.000`` (a lead group of four
+#: digits would itself have been grouped).
+_AMBIGUOUS_THOUSANDS_RE = re.compile(r"^[1-9][0-9]{0,2}\.[0-9]{3}$")
+
+
+def european_thousands_reading_is_ambiguous(text: str) -> bool:
+    """Return whether a dot in *text* could equally mean thousands or decimals.
+
+    Spanish writes one thousand two hundred and thirty-four as ``1.234`` and
+    English writes one point two three four the same way. When that is the
+    whole token there is no evidence in it to choose by, and a parser that
+    picks anyway is not parsing — it is guessing, at a thousandfold error, on
+    a number headed for a tax return.
+
+    The ambiguity is narrow and this predicate keeps it that way, returning
+    ``False`` for every token that carries its own evidence:
+
+    * A comma anywhere settles it. Spanish uses the comma as the decimal mark,
+      so ``1.234,56`` and ``1234,56`` are unambiguous and stay readable.
+    * One or two digits after the dot cannot be a thousands group, which is
+      always exactly three — ``1234.56`` and ``0.5`` are plainly decimals.
+    * Four or more cannot be one either: ``1.2345`` is a decimal, since a
+      grouped number would have broken it as ``12.345``.
+    * A lead group that could not open a thousands run settles it too. A
+      leading zero (``0.333``, an ordinary coefficient) or a lead longer than
+      three digits (``1000.000``) means the token was never grouped.
+
+    So the caller refuses ``1.234``, ``10.500`` and ``100.000`` and accepts
+    everything else it accepted before. Coefficients and percentages written
+    ``0.333`` keep working, which matters where this is used on values whose
+    kind is not yet known.
+
+    Returns:
+        ``True`` when the token is genuinely two-way readable and the caller
+        must refuse rather than choose.
+    """
+    candidate = text.strip().lstrip("+-")
+    if "," in candidate:
+        return False
+    return _AMBIGUOUS_THOUSANDS_RE.fullmatch(candidate) is not None

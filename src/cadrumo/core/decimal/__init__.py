@@ -30,12 +30,13 @@ from __future__ import annotations
 
 from ._coerce import coerce_decimal, coerce_decimal_strict, coerce_finite_european_decimal, normalize_decimal_separators
 from ._format import format_decimal
-from ._grammar import try_parse_canonical_decimal
+from ._grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
 
 __all__ = [
     "coerce_decimal",
     "coerce_decimal_strict",
     "coerce_finite_european_decimal",
+    "european_thousands_reading_is_ambiguous",
     "format_decimal",
     "normalize_decimal_separators",
     "try_parse_canonical_decimal",

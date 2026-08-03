@@ -221,3 +221,50 @@ def test_parse_rejects_non_finite_value(tmp_path: Path, raw_value: str) -> None:
 
     with pytest.raises(ModeloLocalObservationError, match="must be finite"):
         parse_casilla_value_spreadsheet(path)
+
+
+def test_parse_refuses_the_two_way_readable_thousands_amount(tmp_path: Path) -> None:
+    """``1.234`` on a casilla row is refused, not read as one euro twenty-three.
+
+    The parser already reads every unambiguous Spanish spelling correctly --
+    ``1.234,56`` and ``12.345.678,90`` both land right -- because a comma tells
+    it which mark is which. Without one it was choosing the English reading in
+    silence, so a gestor typing the ordinary Spanish form for 1234 put 1.234
+    on the return. These are casilla values: the figures a human submits.
+    """
+    path = tmp_path / "m303-2025q4.csv"
+    path.write_text("casilla_code,value\n01,1.234\n", encoding="utf-8")
+
+    with pytest.raises(ModeloLocalObservationError) as caught:
+        parse_casilla_value_spreadsheet(path)
+
+    message = str(caught.value)
+    assert "1.234" in message, "the refusal must echo the offending value"
+    assert "thousands" in message, "and say what the ambiguity is"
+    assert "01" in message, "and name the casilla"
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    (
+        pytest.param("1.234,56", Decimal("1234.56"), id="spanish-grouped-with-comma"),
+        pytest.param("1234,56", Decimal("1234.56"), id="spanish-bare-comma"),
+        pytest.param("12.345.678,90", Decimal("12345678.90"), id="spanish-fully-grouped"),
+        pytest.param("1234.56", Decimal("1234.56"), id="canonical-dot-decimal"),
+        pytest.param("0.333", Decimal("0.333"), id="three-decimal-coefficient"),
+        pytest.param("1000.000", Decimal("1000.000"), id="long-lead-decimal"),
+        pytest.param("100", Decimal("100"), id="plain-integer"),
+    ),
+)
+def test_parse_still_reads_every_unambiguous_spelling(raw: str, expected: Decimal, tmp_path: Path) -> None:
+    """The refusal is narrow: everything carrying its own evidence still parses.
+
+    ``0.333`` is the case that matters most here. This parser runs before
+    registry canonicalisation, so it does not yet know which casillas are euro
+    amounts and which are coefficients -- a rule that refused three decimals
+    outright would reject valid coefficient rows to catch amount rows.
+    """
+    path = tmp_path / "sheet.csv"
+    path.write_text(f'casilla_code,value\n01,"{raw}"\n', encoding="utf-8")
+
+    assert parse_casilla_value_spreadsheet(path) == {"01": expected}
