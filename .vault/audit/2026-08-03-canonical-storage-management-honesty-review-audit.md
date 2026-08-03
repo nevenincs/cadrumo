@@ -1068,6 +1068,61 @@ protection whose failure is swallowed at debug-only logging, and a protection wh
 failure is indistinguishable from a benign true negative — survive outside the Step
 records that happened to surface them.
 
+### s109-and-s111-independently-verified | none | Both hold; the S109 plan row suggested a tautology and the implementer correctly declined it
+
+Verify-or-refute on two rows claimed landed by the lanes that did them. **Both hold.**
+Pinned object `6286744492` throughout; every claim below read with `git show <sha>:<file>`
+and every gate run from an archive of that object.
+
+**`S109` — the compatibility-lifecycle gate was updated, not tautologised.** The
+parametrised cases feed synthetic `floors` mappings and assert
+`unfloored_durable_formats(floors, PERSISTED_FORMATS) == expected` against **literal
+hand-written tuples**
+(`tests/test_compatibility_lifecycle_gate.py:177-210`). The expectation is independent
+data, not predicate output, so a wrong classification in `PERSISTED_FORMATS` still reds
+it. A companion, `test_the_enrollment_predicate_accepts_a_complete_freeze`, supplies the
+other half of non-vacuity by proving the predicate is not simply always-failing. **17
+passed.** The classification the update depends on carries real reasoning rather than a
+paste: `core/compatibility_lifecycle.py:100-105` argues `bucket_database_file` is DURABLE
+because the rows inside are already DURABLE under `secure_object` and the file carrying
+them is the same obligation at the container level.
+
+**The notable part is what the implementer refused to do.** The plan row for `S109` itself
+suggests *"deriving the expectation from the declared formats rather than restating it by
+hand, since a hardcoded census of uncovered formats is the gate shape this project forbids
+elsewhere."* **Following that suggestion would have gutted the gate.** Deriving the
+expectation from `PERSISTED_FORMATS` — the same table the predicate reads — makes the
+assertion compare the code against itself, which is R14's failed-migration shape and R20's
+reason for keeping an independent pinning oracle alive. The hand-maintained tuple *is* the
+oracle, and the maintenance cost of updating three of them when a durable format is added
+is what buys the independence. The row's instinct (hardcoded censuses are usually a smell)
+is a good general prior applied to the one case where it inverts. Recorded because the
+row's text survives in the exec record's scope bullets without noting it was declined, so
+the next reader meets the suggestion and not the reasoning against it.
+
+**`S111` — the anchor field landed and both tests are non-vacuous.** `StoragePathAnchor`
+(`_namespace_taxonomy.py:78`) declares `STORAGE_ROOT` and `BLOB_STORE_ROOT`; the `anchor`
+field carries a `model_validator` that guards **both** directions
+(`_storage_path_definitions.py:108-121`) — a `LOGICAL_SQL` `db://` entry must *not*
+declare an anchor, every other kind *must*. The exclusion test asserts **set equality**
+against the three named blob keys, so an empty set and a full set both fail: exactly the
+non-vacuity property its name claims. Its sibling reproduces the original false positive
+and, better, asserts the coincidence still exists as an explicit *fixture assumption*, so
+the test announces itself if it ever stops demonstrating anything. **34 passed.**
+
+**Two corrections to the report, neither material to the verdict.** The registry holds
+**29** path definitions, not 28 — 25 `STORAGE_ROOT`, 3 `BLOB_STORE_ROOT`, and 1
+`LOGICAL_SQL` correctly carrying no anchor. And the `anchor` field is **conditionally**
+required rather than required; the conditional form is the better design and is worth
+describing accurately rather than simplified.
+
+**One small real defect.** `StoragePathAnchor`'s own docstring
+(`_namespace_taxonomy.py:81-83`) states *"Sixteen of the nineteen `<root>`-anchored
+filesystem entries mean the top-level storage root"*. The live figures are **25 of 28**.
+The prose describes the data declared directly beneath it and no longer matches — the
+same class as R16's stale excluded-member enumeration, cheap to correct, and the kind of
+count a future reader would reasonably trust.
+
 ### verified-sound | none | What the record claims and the code supports
 
 Stated because a clean result is a result, and because several of these were the
