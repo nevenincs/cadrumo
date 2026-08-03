@@ -66,10 +66,10 @@ def test_explicit_substrate_override_still_wins(tmp_path: Path) -> None:
     target is not simply where derivation would have put the directory anyway.
 
     Where the derived location lands is deliberately not restated here. That
-    is :mod:`test_output_dir_state_root`'s subject, checked against the
-    retained derivation table -- an oracle independent of the taxonomy, so the
-    on-disk name is pinned somewhere that cannot pass by comparing the
-    declaration with itself.
+    is :mod:`test_output_dir_state_root`'s subject, which owns the hand-written
+    ``DERIVED_OUTPUT_SUBPATHS`` oracle and pins it against the declaration in
+    both directions. Restating a subpath here would be a third copy of a name
+    that already has one authority and one oracle.
     """
     resolution = resolve_state_root(_state_root_inputs_under(tmp_path))
     explicit_secret_dir = tmp_path / "operator-secrets"
