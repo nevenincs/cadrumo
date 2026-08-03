@@ -35,7 +35,8 @@ file-producing call sites, one over path-composition expressions), targeted read
 in-process resolution of the taxonomy against the settings model, a serial run of the
 six storage gates, and a smoke of the delivered operator surface.
 
-**Verdict: the closure criterion is not met.** Four findings block; five do not. The
+**Verdict: the closure criterion is not met.** Four findings block; seven do not,
+of which one (the ungated locale value-constraint class) is high and should not wait. The
 verdict is not close — it is established three independent ways, and the campaign's own
 open Steps establish it before any independent measurement is considered.
 
@@ -247,6 +248,80 @@ would pass.
 text, not missing work — recorded only because it cost a verification cycle and would
 cost the next reader the same.
 
+### locale-value-constraint-class-is-ungated | high | The help-length regression is fixed at the boundary and nothing would catch its return
+
+**Claimed:** three over-cap Spanish and Hungarian help descriptions broke the whole
+`aeat config --help` surface in those locales, invisible in English; found and fixed
+hours after shipping. The open question posed: does anything else this campaign put on
+an operator-facing surface carry a constraint no gate checks?
+
+**Verified — the fix, then the gap, then the margin.** Building the help document across
+all four locales and all three surfaces at HEAD: 12 of 12 succeed, nothing over the cap.
+The specific regression is genuinely closed.
+
+The class is not. Both tests whose subject is the help surface —
+`operator_surface/tests/test_contract.py` and `cli/tests/test_config_help_payload_contract.py`
+— pin `cadrumo_output_language="en"`, and **English is the locale in which this defect is
+invisible by construction.** No test anywhere in the tree builds the config-root help
+document in Spanish, Catalan or Hungarian; the two non-English `--help` tests that exist
+(`test_auth_round5_surface.py`, `test_overview_calendar_verb.py`) invoke *subcommands*,
+and building one subcommand does not validate the root — which is the same reason
+`config storage list` kept working while the root was broken.
+
+Proven by mutation rather than by reading: lengthening one Catalan description by two
+words in a scratch HEAD snapshot makes `build_help_document(CONFIG)` raise
+`ValidationError` in Catalan while English still succeeds — the shipped failure exactly
+reproduced. Against that broken catalogue the two dedicated help contract tests return
+**20 passed**, and a wider run over the root-help, root-payload and locale suites returns
+**103 passed** with the only failure an unrelated version-string artifact of running from
+a snapshot. Nothing in the tree sees it. The locale parity and honesty gates do not
+compare a value against the bound of the field that consumes it — as reported.
+
+**Gap, and why this is high rather than medium:** the corrected strings landed *at the
+boundary*. Of 464 constrained strings rendered across the four locales, one Hungarian
+`config` description sits at exactly **80 of 80 characters — zero margin**, two Catalan at
+79, and ten within ten characters. One of the 79s is this campaign's own
+`config storage check`. The next re-wording of any of those — or a translator adding one
+accented word — re-ships the identical operator-facing breakage, in a locale no test
+exercises. The campaign did not create this gate gap, but it did add strings into its
+blast radius and left them with the least headroom in the catalogue.
+
+### size-budget-regeneration-is-sound-but-couples-campaigns | low | The anti-laundering guard holds mechanically; the property that actually raised the pin is different
+
+**Claimed:** the tree-wide baseline regeneration in *"extract the filesystem
+path-hierarchy contracts into a sibling module"* raised exactly one entry,
+`entrypoints/cli/__init__.py` 1385 → 1414; the file never broke through its pin, so the
+band scaled with legitimate growth; and the gate's failure text says a plain
+`--write-baseline` will not lift a ceiling you broke through.
+
+**Verified, independently, and the claim holds in every part.** The baseline diff across
+that commit is 1 raised, 3 lowered, 1 dropped, 0 added on modules and no change on
+callables — the ratchet net-tightened. The file measures 1346 lines at HEAD, under its
+1385 pin, so it never broke through. The new pin reproduces arithmetically from the
+measured size: `1346 + max(25, ceil(1346 × 0.05))` = 1414, exactly the observed value.
+The baseline records a **derived band**, not a measured size.
+
+The anti-laundering guard is mechanical, not merely prose. `build_limits` resolves
+`ceiling if actual > ceiling else limit`, so a subject over its prior ceiling keeps that
+ceiling and stays red; `dev/audit/size_budget.py` passes `previous=existing.modules` on
+the real `--write-baseline` path, so the guard is not inert. Proven by construction with
+a positive control: a subject at 1500 against a prior pin of 1385 regenerates to **1385**
+(kept, stays red) with a plain regeneration, and to 1575 only with an explicit
+`accept_growth`. A tree-wide regeneration is therefore **not** a laundering mechanism for
+a campaign's overage.
+
+**The property the check did not reach**, stated because it is the reason the number
+moved at all: a regeneration re-bands every module that is *inside* its pin **upward**, to
+`actual + ~5%`. That is not laundering — no ceiling was broken — but it is loosening, and
+because the baseline is regenerated tree-wide, **one campaign's module split grants fresh
+headroom to another campaign's unrelated file.** `cli/__init__.py` gained 29 lines of
+allowance because a storage module was split. Downward the band self-corrects (the
+staleness check forces a re-measure once slack exceeds `max(60, 10%)`); upward it does
+not, so repeated regenerations can walk a module up in ~5% steps indefinitely provided it
+never exceeds its current pin before the next regeneration. Nothing counts regenerations.
+Low severity and not this campaign's defect — recorded so the next reader asking "why did
+our file's pin rise?" finds the mechanism rather than re-deriving it.
+
 ### verified-sound | none | What the record claims and the code supports
 
 Stated because a clean result is a result, and because several of these were the
@@ -300,17 +375,22 @@ Blocking, in the order that makes the next measurement cheapest:
 
 Non-blocking:
 
-5. Add a gate asserting every bound settings field's default equals its member's
+5. Parametrise the two help-surface contract tests over all four locales, or add one
+   test that builds every `HelpSurface` in every locale. It is the cheapest possible
+   gate for the class, and without it the corrected strings sit one edit from
+   re-shipping. Separately, give the ten near-cap strings real headroom rather than
+   leaving the tightest at zero.
+6. Add a gate asserting every bound settings field's default equals its member's
    `relative_path()`, and correct the five `var/`-prefixed defaults. A dead literal that
    already disagrees with the authority is the campaign's own subject matter.
-6. Re-stamp `R16` with the current count of nine and remove the two deleted members from
+7. Re-stamp `R16` with the current count of nine and remove the two deleted members from
    its enumeration.
-7. Backfill the five empty exec records, and prefer a content check over a filename
+8. Backfill the five empty exec records, and prefer a content check over a filename
    check when asserting `plan-closure-requires-exec-records` in future.
-8. Extend the containment proof with an assertion over the *resolved subtree* rather
+9. Extend the containment proof with an assertion over the *resolved subtree* rather
    than the declared set — or, more cheaply, assert that no reclaimable category has any
    undeclared child, which finding two shows is currently true and is worth locking.
-9. Correct `S69`'s cited path.
+10. Correct `S69`'s cited path.
 
 One methodological note for whoever runs the next pass. Every finding above that matters
 came from executing something — a serial gate run, an in-process comparison of the
