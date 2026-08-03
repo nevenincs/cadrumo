@@ -349,7 +349,15 @@ class DeadlineEngine:
         revision: ModeloRevision,
         window: DeadlineWindowDefinition,
     ) -> bool:
-        """Return whether a validated filing schedule applies to ``profile``."""
+        """Return whether a validated filing schedule applies to ``profile``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` whose declared facts are
+                checked against the schedule.
+            revision: The :class:`ModeloRevision` whose filing schedules are
+                consulted.
+            window: The deadline window under evaluation.
+        """
         return self._schedule_applies(profile, revision, window)
 
     @staticmethod
@@ -378,7 +386,14 @@ class DeadlineEngine:
         *,
         mode: str,
     ) -> str | None:
-        """Evaluate one registry applicability-condition tuple."""
+        """Evaluate one registry applicability-condition tuple.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` the conditions are checked
+                against.
+            conditions: The registry-declared predicate tuple to evaluate.
+            mode: The evaluation mode forwarded to the registry evaluator.
+        """
         return self._evaluate_conditions(profile, conditions, mode=mode)
 
 

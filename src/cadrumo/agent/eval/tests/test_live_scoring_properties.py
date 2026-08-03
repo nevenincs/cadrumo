@@ -22,6 +22,10 @@ handed rather than any answer it returned.
 
 from __future__ import annotations
 
+# INTENTIONAL: unit because it exercises `_live_scoring`'s structural
+# properties (narration-corpus cumulativity, lifecycle ordering) against a
+# caller-injected faithfulness port and hand-built fixtures, never a live
+# AEAT surface. "Live" here names the module under test, not external I/O.
 import pytest
 
 from .._live_scoring import _score_narration_faithfulness
