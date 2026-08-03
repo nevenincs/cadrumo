@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:b3530fb33097f1ea316162e7439407c69dba734d5da39ee1f869d13fbf3468e2'
+body_hash: 'sha256:453d5d2b7548064ec067e7d77beac50022310317676e5497de590f97626dc23f'
 related: []
 ---
 
@@ -38,8 +38,8 @@ claim reproduced below was re-verified directly, not carried from a ledger.
 
 ### F1 — Four parallel location authorities, mutually unaware
 
-The Settings-derived taxonomy is one of four. The others were confirmed by
-direct read:
+The Settings-derived taxonomy is one of four. All were confirmed by direct
+read:
 
 - **Settings taxonomy.** `src/cadrumo/core/config.py:96` declares
   `_STATE_ROOT_DERIVED_DIRS: dict[str, str]`, 28 entries keyed by settings-field
@@ -64,54 +64,73 @@ direct read:
   (`src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py:22`).
   `buckets/` and `keystore/` are real top-level directories under the storage
   root, structurally peer to `tokens/` and `secrets/`, with no settings field,
-  no environment override, and no `ensure_storage_tree` coverage.
+  no environment override, and no `ensure_storage_tree` coverage. That absence
+  of an override is deliberate, not an oversight: an operator must not be able
+  to relocate a keystore out from under the bucket it unlocks.
 - **Module-local constants.** `src/cadrumo/application/corpus_search/_runtime.py:28`
   declares `_INDEX_SUBDIR = "corpus-search"` and resolves
   `cadrumo_local_storage_root / _INDEX_SUBDIR`;
-  `src/cadrumo/entrypoints/mcp/_telemetry.py` declares
+  `src/cadrumo/entrypoints/mcp/_telemetry.py:44` declares
   `_TELEMETRY_DIRNAME = "telemetry"` and resolves it the same way;
   `src/cadrumo/core/_bucket_pointer_io.py:42` declares
   `_POINTER_FILENAME = "active-profile"` for the top-level pointer file. Each is
   root-anchored (so no escape), each is invisible to every gate and to the
   operator's override surface.
-- **Inline literals duplicating the registry.** `src/cadrumo/core/config.py:1088`
-  builds `cadrumo_local_storage_root / "buckets" / bucket_id / "db" / PRODUCT_DATABASE_FILENAME`
-  from bare strings rather than importing the constants, and
-  `src/cadrumo/core/_config_storage_route.py:127` matches
-  `parts[0] == "buckets" and parts[2:] == ("db", PRODUCT_DATABASE_FILENAME)`
-  the same way. Neither is pinned to the namespace-registry constants by a
-  parity test, unlike `CONFIG_RESET_JOURNAL_DIRNAME`, whose deliberate
-  duplicate in `src/cadrumo/application/_config_reset_repository.py:27` is
-  pinned at `src/cadrumo/tests/test_persisted_format_enrollment.py:143`.
-  A rename of either constant silently breaks the SQLite fallback URL and the
-  route classifier.
+- **Inline literals duplicating the registry — three copies, not two.**
+  `src/cadrumo/core/config.py:1088` builds
+  `cadrumo_local_storage_root / "buckets" / bucket_id / "db" / PRODUCT_DATABASE_FILENAME`
+  from bare strings; `src/cadrumo/core/_config_storage_route.py:127` matches
+  `parts[0] == "buckets" and parts[2:] == ("db", PRODUCT_DATABASE_FILENAME)`;
+  and `src/cadrumo/core/tests/test_storage_route_classification.py` restates the
+  same two names in five separate assertions (lines 25, 51, 81, 98, 120),
+  confirmed by direct grep. None references the namespace-registry constants,
+  and none would catch the other two drifting. The contrast is
+  `CONFIG_RESET_JOURNAL_DIRNAME`, whose deliberate duplicate in
+  `src/cadrumo/application/_config_reset_repository.py:27` **is** pinned at
+  `src/cadrumo/tests/test_persisted_format_enrollment.py:143` — the shipped
+  precedent for a parity gate.
 
 Consequence for the option space: an authority scoped to "the settings fields"
 is a smaller thing than an authority scoped to "the locations". The ADR must
 choose which it is building, and if the former, must say what governs the rest.
+F11 establishes why the choice is forced rather than free.
 
 ### F2 — The existing anti-literal gate is structurally blind to every site in F1
 
-`test_no_production_module_names_an_operator_data_location_by_literal`
-(`src/cadrumo/core/tests/test_settings_lifecycle_gate.py`) sweeps production
-modules with the regex `Path\(\s*"([^"]*/[^"]*)"` and flags a literal whose
-segments intersect the taxonomy vocabulary. Two properties of that predicate
-bound its reach hard:
+**Provenance correction, load-bearing: the gate analysed here is not at HEAD.**
+It exists only as uncommitted peer working-tree edit to
+`src/cadrumo/core/tests/test_settings_lifecycle_gate.py`. Verified by
+`git show HEAD:` on that file: the entire
+`test_no_production_module_names_an_operator_data_location_by_literal` section,
+with its `_TAXONOMY_VOCABULARY`, `_LITERAL_OWNERS`, and `_production_modules`
+support code, is absent from the committed tree. The analysis below therefore
+describes a gate that is about to land, not one this campaign inherits.
+
+The gate sweeps production modules with the regex `Path\(\s*"([^"]*/[^"]*)"` and
+flags a literal whose segments intersect the taxonomy vocabulary. Two
+properties of that predicate bound its reach hard:
 
 - It matches only a `Path("…")` call whose literal **contains a slash**. The
   ad-hoc sites build paths by operator join — `root / "buckets" / bucket_id / "db"`,
   `cadrumo_local_storage_root / _INDEX_SUBDIR` — which the regex cannot see.
-- Its vocabulary is derived from `_STATE_ROOT_DERIVED_DIRS.values()`, so a
-  segment that was never enrolled (`buckets`, `keystore`, `corpus-search`,
-  `telemetry`, `active-profile`) is not in the vocabulary and cannot be flagged
-  even if it did appear in a slashed literal.
+- Its vocabulary derives from `_STATE_ROOT_DERIVED_DIRS.values()`, so a segment
+  that was never enrolled (`buckets`, `keystore`, `corpus-search`, `telemetry`,
+  `active-profile`) is not in the vocabulary and cannot be flagged even if it
+  did appear in a slashed literal.
+- It excludes test trees entirely (`"/tests/" in rel` is skipped), so a test
+  restating a governed name — the five assertions in
+  `test_storage_route_classification.py` — is invisible to it.
 
-The gate therefore certifies exactly the sites that are already enrolled, and
-is silent on the class it was written to catch. This is the single most
-important input to the ADR's gate ruling: a literal-census gate cannot close
-this, and a stricter regex would only chase a syntax the offenders do not use.
-A property-shaped gate — every produced location resolves through the typed
-accessor — is the only shape that reaches join-built paths.
+The gate therefore certifies exactly the sites already enrolled and is silent
+on the class it was written to catch. A literal-census gate cannot close this,
+and a stricter regex would only chase a syntax the offenders do not use.
+
+**Companion trap for any name-counting gate.**
+`src/cadrumo/core/auth_session_keys.py:13` mentions `cadrumo_token_dir` in a
+docstring that exists precisely to state the module does *not* use it. A gate
+that counts name occurrences inherits this false-positive class. The property
+to assert is that resolution goes through the typed accessor, not that a name
+is absent from a file.
 
 ### F3 — Lifecycle classification is a second hand-maintained axis over the same fields
 
@@ -296,17 +315,176 @@ obligation — this campaign inherits no red test on this axis.
 
 ### What was not investigated
 
-Per-flag enumeration of every `typer.Option` taking a `Path` was sampled, not
-exhausted; the plan's enrollment site list needs a full sweep of CLI defaults
-reading `load_settings().cadrumo_*`. `dev/docs/tests/test_env_reference.py` was
-not read, and it gates drift between the generated environment reference and
-the settings fields — a field rename would trip it. The nesting of two
-OS-temp staging directories in the review-package flow
-(`src/cadrumo/application/modelo/_review_package.py:270` and
-`src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py:287`) is an existing
-reviewed exception whose *destination choice*, as opposed to its write call,
-has not been reviewed; it is adjacent to this campaign but is a
-sensitive-data-staging question rather than a taxonomy question.
+### F11 — The duplicate literals are a layering symptom, and they foreclose the obvious fix
+
+The canonical bucket-layout constants live in
+`src/cadrumo/adapters/persistence/storage/_namespace_registry.py:31`. All three
+unpinned copies live in `src/cadrumo/core/`. "Just import the constants" would
+make **core import from adapters**, inverting the hexagonal direction
+`aeat-architecture-boundaries` mandates. That is almost certainly why the
+literals were retyped: someone hit the layering wall and typed the string.
+
+The wall is real and consciously maintained, not incidental:
+`src/cadrumo/core/secure_object_write.py:9` documents that it names a storage
+concept "without importing the `cadrumo.adapters` layer", i.e. the codebase
+already treats core-to-adapters as a boundary it works around by design.
+
+This makes the duplication a symptom of the names living in the wrong layer
+rather than sloppiness for a burndown to tidy, and it constrains the
+representation ruling directly. `aeat-architecture-boundaries` requires the
+closed value set to be declared in `core/`; if the taxonomy lives in core and
+the bucket-layout names do not, the three copies stay unfixable without an
+upward import. Federating the two layers while leaving the bucket names in
+`adapters/` therefore leaves both the layering violation and the duplication
+standing.
+
+### F12 — Lifecycle is not one axis but three, and folding it naively narrows a gate
+
+The 28 taxonomy entries partition cleanly across the five lifecycle frozensets,
+which superficially supports folding the classification onto a category member.
+Two measured cross-cuts defeat it:
+
+- **Scope mismatch.** The gate classifies every `_dir`/`_path`/`_root`
+  `Path`-typed `Settings` field, a strictly larger set than the 28: it also
+  covers 2 opt-in retention fields and 5 exempt-input fields, 35 in total. A
+  field on a category member cannot classify a non-category field. A naive fold
+  would silently narrow the gate's coverage from 35 fields to 28 **and the gate
+  would still pass**, which is why this must be ruled explicitly rather than
+  left to the implementer.
+- **An independent third axis.** `data_root_cache_exclusions`
+  (`src/cadrumo/core/observability/_fingerprint.py:163`) selects 8 fields by
+  name for exclusion from the drift fingerprint. That set equals neither
+  retention, nor retention united with TTL, nor any other existing
+  classification: it drops `cadrumo_registry_disk_cache_dir` and
+  `cadrumo_wallet_diagnostic_dump_dir` (which are pruned but still count toward
+  drift detection) and adds `cadrumo_corpus_text_cache_dir`,
+  `cadrumo_validation_verdict_cache_dir`, and `cadrumo_storage_backup_dir`
+  (which are unbounded-by-design yet excluded). No single axis predicts it.
+
+So the typed model needs category membership, lifecycle class, and
+fingerprint-exclusion as three orthogonal axes, and the lifecycle gate must
+keep enumerating `Path`-typed settings fields rather than taxonomy members.
+Deriving the exclusion set from any existing axis would silently change what
+the replay-refusal safety mechanism treats as real state drift.
+
+### F13 — The lifecycle gate is red at committed HEAD, and a peer owns the fix
+
+`src/cadrumo/core/config.py` at HEAD declares `cadrumo_filed_declarations_dir`,
+`cadrumo_iva_compensation_history_dir`, and `cadrumo_iva_read_evidence_dir` in
+the taxonomy (9 occurrences confirmed via `git show HEAD:`), while HEAD's
+lifecycle gate classifies none of them (0 occurrences, same method). HEAD's
+coverage assertion therefore fails naming exactly those three.
+
+The peer's uncommitted edit adds precisely those three classifications, with
+their justifying rationale, plus the literal gate of F2. It is an active fix
+for a currently-red committed gate, not a stylistic improvement. **Consequence
+for planning: no implementation lane may edit that file** — a peer owns it
+mid-flight, and an edit over it would collide with work already in progress.
+
+### F14 — The taxonomy governs the top of a category, not what is written beneath it
+
+Production code nests further ad-hoc subdirectories under enrolled categories:
+`src/cadrumo/application/live/_iva_remote_state.py:677,736` writes
+`cadrumo_audit_dir / "live" / "iva-wallet"` and `… / "live" / "iva-remote-state"`;
+the rotation planner reaches `"amendments"` and `"amendment-results"` under
+submissions and `"manifests"` under attachments. None is a taxonomy entry.
+
+A typed top level with an ungoverned free-for-all one directory down is the
+same defect at a different depth, and it also bears on the CRUD surface: a
+prune or relocate verb must account for content nested arbitrarily deep beneath
+a category by code the taxonomy cannot see.
+
+### F15 — Three data-safety findings are already being fixed in-flight by peers
+
+Each was real at HEAD and each is now corrected in the working tree, verified
+by diffing HEAD against the working copy:
+
+- **Review-package staging.** At HEAD both
+  `src/cadrumo/application/modelo/_review_package.py:270` and
+  `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py:287` call
+  `TemporaryDirectory` with no `dir=`, staging plaintext fichero-BOE bytes, the
+  full calculation revision JSON, and the ledger filing evidence JSON in the OS
+  temp directory. The working tree pins both to `output.parent` /
+  `output_path.parent` with a comment citing the sensitive-data rule, and
+  creates the parent first so a failure refuses loudly rather than falling back
+  to OS temp.
+- **Submitted-declaration download.** At HEAD
+  `src/cadrumo/adapters/outbound/aeat/sede/_declarations_fetch.py` reads
+  `await download.path()` and then the file, so Playwright materialises
+  taxpayer-filed bytes to its own temp location. The working tree cancels the
+  download as soon as its URL is known and re-fetches the bytes in memory
+  through the authenticated request context — the same shape the sibling
+  justificante capture already used.
+- **Lifecycle classification.** F13.
+
+These are the correct fixes and the correct rationale. They are recorded here
+so the campaign ratifies them rather than commissioning them a second time, and
+so no lane edits the owning files.
+
+### F16 — The test surface is the larger half of the migration
+
+201 test files call `override_settings(`; 24 project conftests participate; 28
+`dev/` files reference the storage root; the confirmed literal table is 10 rows
+across 8 files with an untriaged tail of roughly 77 to 121 further files.
+
+The canonical isolation mechanism is a two-tier root-redirection chain: a
+pure-stdlib module (`src/cadrumo/tests/_collection_storage_root.py:35`) derives
+a per-pid root under the OS temp directory, the repo-root conftest applies it
+with `overwrite=False` before anything can resolve settings, and
+`src/cadrumo/conftest.py:41` re-applies it with `overwrite=True`. It exists so
+collection-time imports never resolve the real platform root and trip the
+retired-product cold-start guard. It is the mechanism tests should be migrating
+*to*, not an ad-hoc declaration to migrate away from.
+
+Against that, the fixtures themselves already carry drift:
+`isolated_cli_runtime_profile` in `src/cadrumo/tests/secure_sql.py` pins
+`cadrumo_financial_txs_dir` to `tmp_path / "txs"`, which does not match the
+taxonomy's own `financial/transactions`. This is a per-field override
+duplicating the taxonomy at a call site rather than deriving from it — the
+exact shape the migration must retire.
+
+A further documented divergence: `cadrumo_secret_store_dir` is a **sibling** of
+the storage root in the three most-used isolation fixtures, though production
+nests it. The coverage gate had to widen its own assertion boundary to
+accommodate this. Any relocate or inspect operation that assumes every
+category is literally `<root>/<subpath>` is wrong under those fixtures.
+
+### F17 — Twelve migration invariants a naive refactor would silently break
+
+Recorded compactly because each has a dependent site and a concrete failure
+mode; the sharpest are:
+
+- Relative overrides anchor to the platform user-data root, **one level above**
+  the storage root, not to the root itself — conflating the two moves real
+  operator data for anyone using a relative override.
+- Absolute overrides pass through unchanged, with no containment check.
+- An explicit override wins via `model_fields_set`, never via a `None` or
+  sentinel comparison; a typed accessor that unconditionally reassigns derived
+  paths clobbers every operator override.
+- `ensure_storage_tree` is idempotent and non-destructive, and its refusal names
+  the path *and* diagnoses "occupied by a file"; a CRUD verb that removes and
+  recreates for a "clean state" destroys content on second call.
+- `override_settings` pops derived fields not explicitly overridden when the
+  root changes, so they re-derive under the new root. Every isolation fixture
+  depends on this; if the key space changes without updating that loop, other
+  fields stay frozen at the previous root and each test still "passes" against
+  a stale path.
+- The settings cache keys on a pointer fingerprint that re-reads the root env
+  var directly, a second independent root resolution.
+- The pointer-file import inside the database-URL validator must stay deferred
+  and submodule-qualified, or a half-initialised package raises intermittently.
+- Root permission hardening applies to the root only and has **no test
+  asserting the mode bits** — a refactor could drop it silently.
+
+### What was not investigated
+
+The untriaged tail of test files in F16 was not individually confirmed; an
+estimate is not an acceptable closing state for the migration mandate and that
+triage is being run separately. `dev/docs/tests/test_env_reference.py` was not
+read, and it gates drift between the generated environment reference and the
+settings fields, so a field rename would trip it. Whether the `blobs` and
+`audit` name collision across depths has ever caused a real defect was not
+investigated; both work correctly today.
 
 ## Sources
 
