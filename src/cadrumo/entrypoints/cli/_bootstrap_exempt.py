@@ -112,6 +112,28 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     "app live portals view",
     "config auth providers",
     "config auth apoderado scopes list",
+    # The rest of the bundled-registry read surface, on the same grounds as
+    # ``app modelo list`` above: these project the compiled registry snapshot
+    # and the bundled corpus, never a taxpayer's records. The whole ``app
+    # registry`` family is declared read-only in the operator-surface contract
+    # and reads only the bundled registry/corpus tree or an operator-supplied
+    # plaintext file, so the prefix is exempt as a unit; the ``app modelo``
+    # entries are named leaf by leaf because that group also carries the
+    # profile-bound ``work`` / ``export`` / ``reconcile`` verbs, which must
+    # stay gated. ``review-package verify*`` is deliberately included: it
+    # exists for a third-party reviewer who has no Cadrumo profile at all.
+    "app registry",
+    "app modelo describe",
+    "app modelo casilla",
+    "app modelo casillas",
+    "app modelo formulas",
+    "app modelo support-matrix",
+    "app modelo review-package verify",
+    "app modelo review-package verify-signature",
+    "app modelo review-package verify-receipt",
+    # Telemetry STATUS reads Settings fields only. Its sibling ``flush`` does
+    # decrypt, hence the leaf entry rather than the ``telemetry`` prefix.
+    "app diagnostics telemetry status",
     # Engineer surface: lives under a separate module entrypoint
     # and is not bound by the session-gate either, but the
     # registry includes it explicitly so the active-gate check at
