@@ -23,7 +23,7 @@
       },
       {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_screen.py",
-        "lineno": 24,
+        "lineno": 27,
         "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
         "imported_names": [
           "persist_active_profile_field"
@@ -86,7 +86,7 @@
       },
       {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_visual_verification.py",
-        "lineno": 54,
+        "lineno": 64,
         "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
         "imported_names": [
           "attempt_registration"
@@ -95,7 +95,7 @@
       },
       {
         "importer_path": "src/cadrumo/adapters/outbound/aeat/export/_formats/tests/test_record_specs.py",
-        "lineno": 28,
+        "lineno": 29,
         "target_mod": "cadrumo.domain.calculations.registry._export",
         "imported_names": [
           "_verify_record_offsets"
@@ -113,7 +113,7 @@
       },
       {
         "importer_path": "src/cadrumo/adapters/persistence/storage/tests/test_bundle_crash_windows.py",
-        "lineno": 150,
+        "lineno": 151,
         "target_mod": "cadrumo.application.bucket_maintenance._service",
         "imported_names": [
           "_archive_associated_data"
@@ -130,17 +130,8 @@
         "reason": "White-box test walking the private lazy-suggestion registry to confirm every registered rule cites a real CLI verb. Internal caching structure, not a public contract."
       },
       {
-        "importer_path": "src/cadrumo/application/aggregation/tests/test_ledger_filing_evidence.py",
-        "lineno": 47,
-        "target_mod": "cadrumo.application.modelo._verification_actions",
-        "imported_names": [
-          "_assert_evidence_covers_snapshot"
-        ],
-        "reason": "White-box test of the private evidence-coverage assertion helper that guards ledger-derived revision bundling. Internal defensive check, not a reusable public primitive."
-      },
-      {
         "importer_path": "src/cadrumo/application/aggregation/tests/test_period_boundary_authority.py",
-        "lineno": 24,
+        "lineno": 38,
         "target_mod": "cadrumo.entrypoints.cli._common",
         "imported_names": [
           "_canonical_period",
@@ -177,7 +168,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
-        "lineno": 188,
+        "lineno": 212,
         "target_mod": "cadrumo.application.user_profile._bundle",
         "imported_names": [
           "_assert_full_custody_coverage"
@@ -186,7 +177,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
-        "lineno": 211,
+        "lineno": 236,
         "target_mod": "cadrumo.application.user_profile._bundle",
         "imported_names": [
           "_build_secure_object_custody_payload"
@@ -195,7 +186,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/bucket_maintenance/tests/test_custody_completeness.py",
-        "lineno": 247,
+        "lineno": 272,
         "target_mod": "cadrumo.application.user_profile._custody_carry",
         "imported_names": [
           "_natural_key_resolvers"
@@ -204,7 +195,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/calculations/tests/test_modelo_100_base_negativa_general_compensation.py",
-        "lineno": 63,
+        "lineno": 45,
         "target_mod": "cadrumo.application.modelo._verification_actions",
         "imported_names": [
           "_evaluate_verification_predicates"
@@ -231,7 +222,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/command_search/tests/test_command_ranking_golden.py",
-        "lineno": 28,
+        "lineno": 33,
         "target_mod": "cadrumo.entrypoints.mcp._meta_tools",
         "imported_names": [
           "build_command_search_index",
@@ -268,7 +259,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/modelo/tests/test_actions.py",
-        "lineno": 824,
+        "lineno": 1069,
         "target_mod": "cadrumo.application.wizard._commands",
         "imported_names": [
           "_IVA_REGIME_CHOICE_VALUES"
@@ -276,26 +267,8 @@
         "reason": "White-box test cross-checking the private CLI IVA-regime choice set against the wizard's operator-selectable values. Internal CLI choice-enumeration constant, not a public contract."
       },
       {
-        "importer_path": "src/cadrumo/application/modelo/tests/test_cross_period_clean_state_enforcement.py",
-        "lineno": 40,
-        "target_mod": "cadrumo.application.calculations._cross_period_clean_state",
-        "imported_names": [
-          "_OFFICIAL_SOURCE_KINDS"
-        ],
-        "reason": "Safety-load-bearing white-box test asserting app_filing (local-only evidence) is NEVER a member of the private official-source-kind set (local-filed-observations-are-non-official-evidence rule). The constant is deliberately private so no production caller can widen it without editing this guarded test."
-      },
-      {
-        "importer_path": "src/cadrumo/application/modelo/tests/test_local_cross_period_carry.py",
-        "lineno": 59,
-        "target_mod": "cadrumo.application.calculations._cross_period_clean_state",
-        "imported_names": [
-          "_OFFICIAL_SOURCE_KINDS"
-        ],
-        "reason": "Same safety-load-bearing official-source-kind guard as test_cross_period_clean_state_enforcement.py, exercised from the local cross-period carry suite."
-      },
-      {
         "importer_path": "src/cadrumo/application/modelo/tests/test_participation_co_emission.py",
-        "lineno": 22,
+        "lineno": 24,
         "target_mod": "cadrumo.application.ledger._actions_common",
         "imported_names": [
           "_blocking_modelo_references"
@@ -314,7 +287,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
-        "lineno": 93,
+        "lineno": 100,
         "target_mod": "cadrumo.application.auth._sessions",
         "imported_names": [
           "_session_metadata_datetime"
@@ -323,7 +296,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/tests/test_error_class_registration.py",
-        "lineno": 164,
+        "lineno": 171,
         "target_mod": "cadrumo.application.auth._diagnostics",
         "imported_names": [
           "_payload"
@@ -332,7 +305,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "lineno": 412,
+        "lineno": 425,
         "target_mod": "cadrumo.application.live._notifications",
         "imported_names": [
           "_notifications_repository"
@@ -341,7 +314,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "lineno": 427,
+        "lineno": 440,
         "target_mod": "cadrumo.application.live._notifications",
         "imported_names": [
           "_notifications_repository"
@@ -350,7 +323,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "lineno": 435,
+        "lineno": 448,
         "target_mod": "cadrumo.application.live._expedientes",
         "imported_names": [
           "_expedientes_repository"
@@ -359,7 +332,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "lineno": 450,
+        "lineno": 463,
         "target_mod": "cadrumo.application.live._expedientes",
         "imported_names": [
           "_expedientes_repository"
@@ -368,7 +341,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "lineno": 457,
+        "lineno": 470,
         "target_mod": "cadrumo.application.auth._apoderado",
         "imported_names": [
           "_ApoderadoConfigRepository"
@@ -377,7 +350,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "lineno": 471,
+        "lineno": 484,
         "target_mod": "cadrumo.application.auth._apoderado",
         "imported_names": [
           "_ApoderadoConfigRepository"
@@ -386,7 +359,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "lineno": 621,
+        "lineno": 635,
         "target_mod": "cadrumo.application.modelo._m036_lifecycle",
         "imported_names": [
           "_m036_declaration_repository"
@@ -395,7 +368,7 @@
       },
       {
         "importer_path": "src/cadrumo/application/user_profile/tests/test_custody_store_matrix.py",
-        "lineno": 643,
+        "lineno": 657,
         "target_mod": "cadrumo.application.modelo._m036_lifecycle",
         "imported_names": [
           "_m036_declaration_repository"
@@ -422,7 +395,7 @@
       },
       {
         "importer_path": "src/cadrumo/conftest.py",
-        "lineno": 85,
+        "lineno": 180,
         "target_mod": "cadrumo.domain.calculations.registry._loader",
         "imported_names": [
           "_load_registry_tree_cached"
@@ -440,7 +413,7 @@
       },
       {
         "importer_path": "src/cadrumo/core/tests/test_logging.py",
-        "lineno": 377,
+        "lineno": 379,
         "target_mod": "cadrumo.adapters.inbound.pdf._pdfplumber",
         "imported_names": [
           "__all__"
@@ -449,7 +422,7 @@
       },
       {
         "importer_path": "src/cadrumo/core/tests/test_paths.py",
-        "lineno": 128,
+        "lineno": 198,
         "target_mod": "cadrumo.adapters.outbound.storage._local",
         "imported_names": [
           "_SIDECAR_EXTENSION"
@@ -458,24 +431,13 @@
       },
       {
         "importer_path": "src/cadrumo/core/tests/test_paths.py",
-        "lineno": 129,
+        "lineno": 199,
         "target_mod": "cadrumo.adapters.outbound.storage._object_name",
         "imported_names": [
           "_HMAC_PREFIX_LENGTH",
           "sanitize_provider_object_label"
         ],
         "reason": "Anti-tautology test recomputes the Windows worst-case object-path suffix length from the real HMAC-prefix width and label-sanitizing rules shared by every storage provider, so a change to either shape is caught here rather than silently under-counting the margin."
-      },
-      {
-        "importer_path": "src/cadrumo/core/tests/test_paths.py",
-        "lineno": 206,
-        "target_mod": "cadrumo.adapters.outbound.storage._local",
-        "imported_names": [
-          "_HMAC_PREFIX_LEN",
-          "_SIDECAR_EXTENSION",
-          "_validate_label"
-        ],
-        "reason": "White-box test of the private local-filesystem-provider path-length and label-clamping constants/helpers used by the core path-length diagnostics. Internal formatting details of one storage backend; the public Protocol boundary (StorageProvider) intentionally hides them."
       },
       {
         "importer_path": "src/cadrumo/core/time/tests/test_clock.py",
@@ -497,7 +459,7 @@
       },
       {
         "importer_path": "src/cadrumo/domain/renta/tests/test_first_slice_routing.py",
-        "lineno": 102,
+        "lineno": 145,
         "target_mod": "cadrumo.domain.calculations.registry._validate_references",
         "imported_names": [
           "_CROSS_DOMAIN_SNAPSHOT_CHECKS"
@@ -506,7 +468,7 @@
       },
       {
         "importer_path": "src/cadrumo/entrypoints/cli/_config/tests/test_google_sync_push.py",
-        "lineno": 20,
+        "lineno": 23,
         "target_mod": "cadrumo.adapters.outbound.storage._local",
         "imported_names": [
           "LocalFileSystemProvider"
@@ -515,21 +477,12 @@
       },
       {
         "importer_path": "src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py",
-        "lineno": 172,
+        "lineno": 186,
         "target_mod": "cadrumo.application.user_profile._overview",
         "imported_names": [
           "mask_profile_field"
         ],
         "reason": "Deliberate identity cross-check: the test imports both the public `application.user_profile.mask_profile_field` re-export and the private `._overview.mask_profile_field` definition side by side to prove the status frontend's masking decision never forks from the overview builder's decision. The private import is the point of the test, not an oversight."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_app_maintenance_export_reconcile.py",
-        "lineno": 28,
-        "target_mod": "cadrumo.application.user_profile._bundle_export",
-        "imported_names": [
-          "_STAGED_TEMP_SUFFIX"
-        ],
-        "reason": "White-box reach for the private staged-temp filename suffix, used only to assert that no cleartext staged file survives the maintenance reconcile verb. The suffix is an internal staging-layout detail of the publication service, not a contract any consumer depends on; promoting it would put a filename fragment on the public facade for a single directory-scan assertion. The publication service's operator-facing symbols (the journal repository, the typed reconciliation) ARE promoted and this same test imports them from the facade."
       },
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_app_maintenance_export_reconcile.py",
@@ -542,7 +495,7 @@
       },
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_config_reset_payload_contract.py",
-        "lineno": 16,
+        "lineno": 17,
         "target_mod": "cadrumo.application._config_reset_models",
         "imported_names": [
           "ConfigResetOperation",
@@ -557,6 +510,15 @@
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_google_payloads.py",
         "lineno": 218,
+        "target_mod": "cadrumo.adapters.outbound.google._calc_sheets_pull",
+        "imported_names": [
+          "RelationEdit"
+        ],
+        "reason": "White-box test of the Google Sheets pull adapter's private relation-edit record shape used to assert the CLI payload projection matches the adapter's internal edit representation."
+      },
+      {
+        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_google_payloads.py",
+        "lineno": 258,
         "target_mod": "cadrumo.adapters.outbound.google._calc_sheets_pull",
         "imported_names": [
           "RelationEdit"
@@ -583,7 +545,7 @@
       },
       {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",
-        "lineno": 65,
+        "lineno": 64,
         "target_mod": "cadrumo.core.i18n._render",
         "imported_names": [
           "_locale_map"
@@ -619,7 +581,7 @@
       },
       {
         "importer_path": "src/cadrumo/tests/test_diagnostics_and_sidecar_rationale.py",
-        "lineno": 21,
+        "lineno": 29,
         "target_mod": "cadrumo.adapters.outbound.storage._local",
         "imported_names": [
           "LocalFileSystemProvider"
@@ -664,7 +626,7 @@
       },
       {
         "importer_path": "src/cadrumo/tests/test_wizard_catalogue_error_narrowing.py",
-        "lineno": 127,
+        "lineno": 120,
         "target_mod": "cadrumo.application.modelo._verification_actions",
         "imported_names": [
           "_evaluate_advisory_predicate_fires"
@@ -673,7 +635,7 @@
       },
       {
         "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "lineno": 167,
+        "lineno": 171,
         "target_mod": "cadrumo.entrypoints.cli._config._google",
         "imported_names": [
           "_OAuthClientWrapper"
@@ -682,7 +644,7 @@
       },
       {
         "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "lineno": 186,
+        "lineno": 190,
         "target_mod": "cadrumo.entrypoints.cli._config._google",
         "imported_names": [
           "_OAuthClientWrapper"
@@ -691,7 +653,7 @@
       },
       {
         "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "lineno": 196,
+        "lineno": 200,
         "target_mod": "cadrumo.entrypoints.cli._config._google",
         "imported_names": [
           "_OAuthClientWrapper"
@@ -700,7 +662,7 @@
       },
       {
         "importer_path": "src/cadrumo/tests/test_wizard_locale_and_typed_payloads.py",
-        "lineno": 219,
+        "lineno": 223,
         "target_mod": "cadrumo.application.invoices._importing",
         "imported_names": [
           "_decode_invoice_payload"
