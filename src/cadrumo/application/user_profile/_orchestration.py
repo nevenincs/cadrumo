@@ -488,7 +488,36 @@ def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
         profile_storage_session(profile_id),
     ):
         aggregate = ProfileRepository().delete(profile_id)
+    # A tombstoned profile can never be logged into again, so its session
+    # artefacts are dead the moment the record flips — and the keychain entry
+    # is the one that does NOT disappear with the bucket. Reaped AFTER the
+    # span rather than inside it: the mutation above runs under this profile's
+    # own storage session, and tearing that down mid-write would abort it.
+    _reap_profile_session_artefacts(profile_id)
     return aggregate.record
+
+
+def _reap_profile_session_artefacts(profile_id: str) -> None:
+    """Delete ``profile_id``'s session artefacts on a destroy path (idempotent).
+
+    Login mints a keychain entry per bucket, and only ``logout`` and the
+    login-time handover ever removed one. Nothing reaped on destroy, so every
+    profile deleted, reset, or rolled back without an explicit logout left its
+    entry behind forever — the OS credential store is finite, and a saturated
+    one makes ``CredWrite`` fail, which silently downgrades every later login
+    to process-scoped (``session_persisted: false``). Destroying a bucket must
+    therefore take its session key with it.
+
+    Routed through the one teardown authority rather than calling the keychain
+    directly, so destroy converges on the same logged-out state as logout.
+    Best-effort by construction: the underlying deletes treat a missing
+    artefact as a clean no-op and never raise on backend failure, so this can
+    never turn a successful removal into a reported failure.
+    """
+    close_profile_session_artefacts(
+        storage_root=load_settings().cadrumo_local_storage_root,
+        bucket_id=profile_id,
+    )
 
 
 def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
@@ -666,6 +695,13 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
 
     root = load_settings().cadrumo_local_storage_root
     target = bucket_paths(root, profile_id).bucket_dir
+    # Reaped BEFORE the existence check, not after: the keychain entry lives
+    # outside the bucket directory, so it survives every path that leaves the
+    # directory already gone — an interrupted removal, a re-run, or an
+    # atomic-create rollback that never finished provisioning. Returning early
+    # on a missing directory would strand exactly those keys, which is the
+    # shape that accumulated hundreds of orphans.
+    _reap_profile_session_artefacts(profile_id)
     if not target.exists():
         return
     # Dispose this bucket's cached SQLAlchemy engine before removing the
