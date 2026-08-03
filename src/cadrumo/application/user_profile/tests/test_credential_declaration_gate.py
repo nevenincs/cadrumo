@@ -185,14 +185,11 @@ def test_the_shipped_schema_declares_every_presumed_credential_secret() -> None:
     """No presumed credential may ship classed as anything but ``secret``.
 
     DISCRIMINATING, and it is the structural arm that gives it purchase
-    on the shipped schema: across every declared field the lexical arm
-    finds only the two contraste fields, which the schema already
-    declares correctly, and one live false positive
-    (``censo.divergencia``). It therefore refuses nothing on its own
-    here, and every field it would newly reach is one the structural arm
-    already covers. The controls below prove each arm bites
-    independently, because a predicate matching nothing would pass this
-    just as happily.
+    on the shipped schema: the lexical arm alone finds exactly one live
+    subject across every declared field, and that one is a false
+    positive. The controls below prove each arm bites on its own,
+    because a predicate matching nothing would pass this just as
+    happily.
     """
     misdeclared = _misdeclared(load_user_profile_schema())
     assert not misdeclared, (

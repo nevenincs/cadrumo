@@ -115,26 +115,48 @@ sensitivity = "identity"
 description = "How this taxpayer identifies to AEAT. Cl@ve Movil and Cl@ve Permanente authenticate the person directly and need their DNI/NIE; the certificate provider authenticates with an installed electronic certificate instead. The choice decides which of the fields below are required."
 enum_values = ["certificate", "clave_movil", "clave_permanente"]
 
+# THE THREE FIELDS BELOW SPLIT ACROSS TWO SENSITIVITY CLASSES, and the split is
+# the point rather than an oversight. dni_nie NAMES the taxpayer; the contraste
+# pair PROVES possession of their physical document. Only the second is
+# authentication material, so only the second is secret.
+#
+# dni_nie carries the same identifier as identity.tax_id, which renders in the
+# clear one section above, so masking this copy concealed nothing an operator
+# reading that screen could not already see. It confers no capability on its
+# own either: reaching a session also needs the contraste plus a Cl@ve PIN or
+# app that is never stored here. The classes themselves say so - SECRET is
+# declared for long-lived authentication material while IDENTITY names the NIF
+# explicitly - and classing this field secret dropped nif-hash, the one
+# redaction rule that hashes a NIF, from the policy resolved for it.
+#
+# The agreement between dni_nie and identity.tax_id is enforced ONCE, at the
+# entry to a live session. No validator refuses the divergent write, so a
+# profile holding two different identifiers can be created and read back; it
+# simply cannot authenticate. Anything upstream of a session reads whichever
+# field it names and will not notice the disagreement.
+#
+# Descriptions here stay short on purpose: the status page renders them
+# verbatim as row labels, so rationale belongs in comments like this one.
 [[sections.fields]]
 key = "dni_nie"
 type = "string"
 required = false
 sensitivity = "identity"
-description = "DNI or NIE presented to Cl@ve. Holds the same identifier as identity.tax_id; live authentication compares the two and refuses when they diverge, but nothing enforces the match at write time. Classed identity because it names the taxpayer rather than authenticating them: what authenticates is the contraste below, plus a PIN this profile never stores."
+description = "DNI or NIE presented to Cl@ve. Holds the same identifier as identity.tax_id; live authentication refuses when the two diverge."
 
 [[sections.fields]]
 key = "numero_soporte"
 type = "string"
 required = false
 sensitivity = "secret"
-description = "Numero de soporte printed on a NIE document. Cl@ve asks a NIE holder for this and a DNI holder for fecha_validez, reading exactly one of the two, and only on the non-QR route. Secret because this is contraste material: it is what proves the holder possesses the document, where the DNI/NIE only names them."
+description = "Numero de soporte printed on a NIE document. Cl@ve asks a NIE holder for this and a DNI holder for fecha_validez, reading exactly one of the two, and only on the non-QR route."
 
 [[sections.fields]]
 key = "fecha_validez"
 type = "date"
 required = false
 sensitivity = "secret"
-description = "Validity date printed on a DNI document. Cl@ve asks a DNI holder for this and a NIE holder for numero_soporte, reading exactly one of the two, and only on the non-QR route. Secret because this is contraste material: it is what proves the holder possesses the document, where the DNI/NIE only names them."
+description = "Validity date printed on a DNI document. Cl@ve asks a DNI holder for this and a NIE holder for numero_soporte, reading exactly one of the two, and only on the non-QR route."
 
 [[sections]]
 key = "contact"
