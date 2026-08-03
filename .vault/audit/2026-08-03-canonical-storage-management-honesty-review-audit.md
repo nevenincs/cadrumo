@@ -762,40 +762,52 @@ settles both residues in one run.
 recollection.** Object `6ce5a3d4dc`, wall clock 19:34, five files, 82,150,682 bytes, log at
 4,912,669.
 
-**Reproduced on demand, which settles it.** Rather than infer the writer from timestamps,
-I drove it: baseline the real log, run one test file, measure again.
+**Writes observed in the window; NOT attributable to the command.** I first recorded this
+as "reproduced on demand" and that claim was wrong. Corrected here.
+
+What I measured: baseline the real log, run one test file, measure again.
 
 ```
-pytest src/cadrumo/core/tests/test_storage_taxonomy.py        delta      0 bytes
-pytest src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py   delta    258 bytes
+pytest src/cadrumo/core/tests/test_storage_taxonomy.py             delta     0 bytes
+pytest src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py   delta   258 bytes
 ```
 
-The second run appended two records to the **operator's real diagnostic log** at 19:39,
-naming their own emitters — `cadrumo.core.wizard_catalogue` and
-`cadrumo.core.setup_answers`, both module-level `get_logger` holders firing on
-registration side effects. **The leak is live at HEAD and reproducible on demand.** Not a
-residue, not a pre-fix process draining.
+Two records appeared inside the second window, naming `cadrumo.core.wizard_catalogue` and
+`cadrumo.core.setup_answers`. I read that as my command causing them. **A before/after
+delta on this machine cannot support that reading.** Eight agents run pytest here
+continuously — eighteen Python processes were live while I wrote this paragraph — so the
+window belongs to the box, not to the command. The delta establishes only that *something*
+wrote during it.
 
-**The first run is the more instructive of the two, because I nearly reported it.** A
-delta of zero on a narrow storage test is a claim about the *selection*, not about the
-world: that file never imports the wizard catalogue, so it cannot leak. Had I stopped
-there I would have reported "closed" on the strength of a selection that structurally
-could not have shown otherwise — the same shape as the false zero on the user home, one
-layer along. **It also supplies a simpler explanation for the flat before/after results
-reported elsewhere than any argument about measurement windows: a slice that does not
-reach the emitters does not leak, whatever the window.** That is testable by re-running
-those slices against a selection that does reach them.
+Refuted directly: five sequential launches of that same file produced a cumulative **0
+bytes**, and a timestamp mark showed the last log line *predating* the mark, so those runs
+emitted no line at all. Of that evidence the **timestamp check is the load-bearing half**
+— an absence of lines in a window is sound whoever was running — while a cumulative-zero
+across five runs is subject to the same shared-box noise in the opposite direction.
 
-**And the sharper question the reproduction raises.** A separate probe — set
-`CADRUMO_LOCAL_STORAGE_ROOT` to a scratch directory, then import the package tree —
-wrote **0 bytes** to the real root and created the log under the redirected root instead.
-So redirection *works* when the variable is set before import. Under pytest it is supposed
-to be: tier-one collection bootstrapping (R15) exists precisely to point the root at a
-process-private temporary directory before any import resolves settings. It is not
-holding for the logging path. **The defect is therefore better described as "the
-collection-time isolation does not cover the logging path" than as "three more modules
-call `get_logger` too"** — which is an argument for the structural fix over
-caller-by-caller retirement, and it now rests on a measurement rather than a preference.
+**And attribution is structurally impossible with the current record format.** Verified:
+`"%(asctime)s [%(levelname)s] %(name)s: %(message)s"` — timestamp, level, logger name,
+message. **No PID, no process identifier of any kind.** Two agents running the same CLI
+test emit byte-identical records, so neither content nor content-plus-timing can separate
+them retroactively. Any future attempt needs the format to carry a PID first, or the fleet
+quiesced.
+
+**The eighth mechanism, and the one this document ends on.** Pinning an object fixes
+*when* a measurement refers to. On a shared machine you must also fix **who**, and a size
+delta carries no attribution whatsoever. My earlier —350 bytes/minute was a real
+observation of the box; it was never an observation of any command, including my own.
+
+**What survives, and it is the part that matters.** The leak is real — the log contains
+`_parse_bool: unrecognised token 'banana'` and `FileNotFoundError` under a
+`cli-sequence-*` temp root, which are test data and test scaffolding, so peer test runs
+are writing to the operator's real diagnostic log. Both parties were wrong about *who*,
+not about *whether*. And the structural conclusion is untouched, because it never rested
+on a delta: the redirect probe — set `CADRUMO_LOCAL_STORAGE_ROOT` before importing the
+package tree, observe **0 bytes** to the real root and the log created under the
+redirected root instead — is a **positive result about a redirect working**, not a
+negative one about an absence. Nothing a peer process does can manufacture that, which is
+why it is the load-bearing evidence for **"collection-time isolation does not cover the
+logging path"** rather than "three more modules hold a logger".
 
 ### the-site-gate-b-found-that-i-missed | medium | My enumeration missed a tracked site, and the reason is procedural as well as technical
 
