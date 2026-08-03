@@ -31,7 +31,6 @@ from .. import (
     create_catalogue_invoice,
 )
 
-
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 

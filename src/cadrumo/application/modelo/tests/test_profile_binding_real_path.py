@@ -35,7 +35,6 @@ from typing import Any
 
 import pytest
 
-from ....tests import REPO_ROOT
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.user_profile import (
@@ -44,6 +43,7 @@ from ....domain.user_profile import (
     load_user_profile_schema,
     profile_binding_selectors,
 )
+from ....tests import REPO_ROOT
 from .._profile_binding import (
     inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,

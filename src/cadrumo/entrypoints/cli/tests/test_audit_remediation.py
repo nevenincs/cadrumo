@@ -11,8 +11,7 @@ import click
 import pytest
 from click.testing import Result
 
-from ....tests import REPO_ROOT
-from ....tests import leaf_name
+from ....tests import REPO_ROOT, leaf_name
 from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 

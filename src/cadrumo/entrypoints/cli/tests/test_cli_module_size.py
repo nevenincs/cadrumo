@@ -24,10 +24,10 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import REPO_ROOT
 from ....tests import (
     CALLABLE_POLICY,
     MODULE_POLICY,
+    REPO_ROOT,
     ast_for_path,
     load_size_budget_baseline,
     package_python_files,

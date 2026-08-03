@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....tests import REPO_ROOT
 from .....core.resources import bundled_path
+from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage
 from .._legal import verify_legal_catalogue

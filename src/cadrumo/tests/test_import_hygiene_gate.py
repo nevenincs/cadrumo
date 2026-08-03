@@ -96,8 +96,7 @@ from dev.import_hygiene_scan import (
     wheel_exclude_globs,
 )
 
-from ._inventory import REPO_ROOT
-from ._inventory import repo_relative
+from ._inventory import REPO_ROOT, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

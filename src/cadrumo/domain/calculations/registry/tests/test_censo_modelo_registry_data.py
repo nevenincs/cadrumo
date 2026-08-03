@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from .....tests import REPO_ROOT
 from .....core.resources import bundled_path
+from .....tests import REPO_ROOT
 from .. import build_snapshot, discover_modelo_sources
 from .._binding_selector_utils import selector_as_dict
 from .._corpus_catalogue import verify_source_file

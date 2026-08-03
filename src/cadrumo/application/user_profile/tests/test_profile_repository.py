@@ -26,6 +26,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.storage.bucket import (
     BucketKeySchedule,
     BucketManifest,
@@ -36,7 +37,6 @@ from ....adapters.persistence.storage.bucket import (
     read_manifest,
     write_manifest,
 )
-from ....adapters.persistence.storage import StorageValidationError
 from ....adapters.persistence.storage.master_key import KdfParams
 from ....core import BucketPointer, read_pointer, write_pointer
 from ....domain.user_profile import (

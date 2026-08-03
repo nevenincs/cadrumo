@@ -16,8 +16,8 @@ import re
 
 import pytest
 
-from ......tests import REPO_ROOT
 from ......domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
+from ......tests import REPO_ROOT
 from .._renta_web_open_safety import (
     ALLOWED_CLICK_OVERRIDES,
     FORBIDDEN_CLICK_TOKENS,

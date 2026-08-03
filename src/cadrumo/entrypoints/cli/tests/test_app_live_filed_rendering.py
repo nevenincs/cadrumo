@@ -11,9 +11,9 @@ from ....application.live import (
     BulkFiledDataCaptureReport,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,
+    IvaCompensationHistoryCaptureReport,
     SourceFiledDataCaptureReport,
 )
-from ....application.live import IvaCompensationHistoryCaptureReport
 from ....core import Period
 from .._app_live_payloads import IvaWalletCaptureHistoryResult
 from .._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _filed_observation_path(modelo: str, year: int, period: str) -> str:
-    return f"var/cadrumo/filed-declarations/{modelo}-{year}-{period}.json"
+    return f"filed-declarations/{modelo}-{year}-{period}.json"
 
 
 def _filing_record_id(modelo: str, year: int, period: str) -> str:
@@ -31,7 +31,7 @@ def _filing_record_id(modelo: str, year: int, period: str) -> str:
 
 def test_live_filed_pull_text_reports_mode_failures_and_evidence_counts() -> None:
     report = FiledDataCaptureReport(
-        output_root="var/cadrumo/filed-declarations",
+        output_root="filed-declarations",
         modelo="303",
         year=2026,
         captured_count=1,
@@ -70,7 +70,7 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
         message="bounded register timeout",
     )
     report = BulkFiledDataCaptureReport(
-        output_root="var/cadrumo/filed-declarations",
+        output_root="filed-declarations",
         modelos=("303", "390"),
         year_from=2026,
         year_to=2026,
@@ -109,7 +109,7 @@ def test_live_filed_bulk_pull_text_reports_failures_without_pull_all() -> None:
 
 def test_live_filed_pull_sources_text_reports_target_period_and_evidence_counts() -> None:
     report = SourceFiledDataCaptureReport(
-        output_root="var/cadrumo/filed-declarations",
+        output_root="filed-declarations",
         target_modelo="130",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "1T"),
@@ -151,7 +151,7 @@ def test_capture_history_result_names_its_failed_declarations() -> None:
     failed to read some declarations was indistinguishable from a complete one.
     """
     report = IvaCompensationHistoryCaptureReport(
-        output_root="var/cadrumo/iva-history",
+        output_root="live/iva-compensation-history",
         year_from=2023,
         year_to=2024,
         captured_count=5,
@@ -197,7 +197,7 @@ def test_capture_history_result_refuses_a_failure_count_without_its_names() -> N
     """A bare failure number would reinstate the defect the named list closes."""
     with pytest.raises(ValidationError, match="failed_declaration_count"):
         IvaWalletCaptureHistoryResult(
-            output_root="var/cadrumo/iva-history",
+            output_root="live/iva-compensation-history",
             year_from=2024,
             year_to=2024,
             captured_count=0,

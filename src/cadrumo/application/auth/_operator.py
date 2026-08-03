@@ -60,11 +60,21 @@ from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from ._mutation import build_auth_bucket_events as _build_bucket_events
 from ._operator_probes import (
     classify_identity_alignment as _classify_identity_alignment,
+)
+from ._operator_probes import (
     live_auth_identity_kind as _live_auth_identity_kind,
+)
+from ._operator_probes import (
     live_auth_identity_state as _live_auth_identity_state,
+)
+from ._operator_probes import (
     live_auth_mode as _live_auth_mode,
-    probe_local_session as _probe_local_session,
+)
+from ._operator_probes import (
     probe_clave_credentials,
+)
+from ._operator_probes import (
+    probe_local_session as _probe_local_session,
 )
 from ._operator_results import (
     AuthConfigureDanglingActiveProfileError,

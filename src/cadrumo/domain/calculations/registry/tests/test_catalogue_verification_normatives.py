@@ -6,8 +6,8 @@ from datetime import date
 
 import pytest
 
-from .....tests import REPO_ROOT
 from .....core.resources import bundled_path
+from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_file
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue

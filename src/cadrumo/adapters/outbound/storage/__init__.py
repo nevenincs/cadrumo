@@ -24,6 +24,7 @@ manifest helpers, and the factory.
 
 from __future__ import annotations
 
+from ._drive_pagination import next_drive_page_token
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -37,7 +38,6 @@ from ._errors import (
     OutboundStorageValidationError,
     StorageCorruptionError,
 )
-from ._drive_pagination import next_drive_page_token
 from ._factory import build_google_credentials, get_storage_provider, resolve_drive_root_folder_id
 from ._mirror_manifest import (
     REMOTE_MIRROR_MANIFEST_NAMESPACE,

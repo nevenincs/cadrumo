@@ -32,7 +32,6 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import REPO_ROOT
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     ModeloRevision,
@@ -46,6 +45,7 @@ from ....domain.iva import (
     OssIossRegime,
     TransactionKind,
 )
+from ....tests import REPO_ROOT
 from .. import (
     OssIossLedgerCandidate,
     aggregate_oss_ioss_bindings,

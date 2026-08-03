@@ -9,8 +9,8 @@ from functools import cache
 import pytest
 
 from .....core import ExportLayoutFormat, normalise_corpus_text
-from .....tests import REPO_ROOT
 from .....core.resources import bundled_path
+from .....tests import REPO_ROOT
 from .....tests.aeat_literal_fixtures import AEAT_HOST_SUFFIX_EXPECTED
 from .. import (
     CasillaFieldKind,

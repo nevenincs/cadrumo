@@ -40,8 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import REPO_ROOT
-from ....tests import ast_for_path, leaf_name, package_python_files
+from ....tests import REPO_ROOT, ast_for_path, leaf_name, package_python_files
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
