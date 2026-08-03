@@ -111,7 +111,7 @@ from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.decimal import coerce_finite_european_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...core.identity import IdentityError, validate_spanish_tax_id
+from ...core.identity import IdentityError, tax_id_identity_token, validate_spanish_tax_id
 from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice
 from ...domain.invoices import Invoice, InvoiceCatalogueRepositoryProtocol
@@ -488,6 +488,70 @@ class InvoiceConfirmationResult(BaseModel):
     created: bool
 
 
+def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) -> str | None:
+    """Resolve the counterparty tax id, refusing a supplied/extracted disagreement.
+
+    Every other field here layers an operator value over the extracted one and
+    lets the operator win silently. This one does not, because the extracted
+    value is the only field on the draft that nothing else checks: the
+    counterparty NAME is supplied by the operator, so a misread name is caught
+    by them typing it, while a misread tax id was accepted unseen.
+
+    That matters past tidiness. A received invoice's supplier tax id drives
+    deductibility and feeds Modelo 347 per counterparty, so a wrong one reaches
+    a filing a human submits. The checksum on
+    :func:`~cadrumo.domain.invoices.validate_spanish_tax_id` is the PRIMARY
+    defence and it is a strong one -- a transposed digit breaks the check
+    character and is refused outright. What it cannot catch is a misread that
+    happens to be a different VALID identifier, which belongs to a different
+    real taxpayer. This closes that residue.
+
+    Supplying the value is therefore an ASSERTION rather than an override, and
+    the difference is what makes it safe: typing to CHECK is not typing to SET.
+    A typo here produces a refusal, never a wrong value on a filing -- unlike
+    the transcription hazard that was removed from the extract hint, where what
+    the operator typed silently became the data.
+
+    Neither value is named in the refusal. The operator already knows the one
+    they typed, and the machine only has to answer whether the extractor agrees;
+    printing either would put a tax identity into a pasteable artefact for no
+    gain.
+
+    Comparison is on :func:`~cadrumo.core.identity.tax_id_identity_token`, the
+    canonical "are these the same identifier" form, rather than a local
+    trim-and-uppercase. It deliberately asserts no checksum -- a counterparty
+    may be non-resident and carry a foreign identifier -- which is exactly right
+    here: this answers "same identifier?", and the separate validation gate on
+    the invoice model answers "valid Spanish identifier?".
+
+    Args:
+        supplied: The operator's ``--counterparty-nif``, or ``None``.
+        extracted: What the on-host extractor read, or ``None``.
+
+    Returns:
+        The value to confirm with, or ``None`` when neither side has one.
+
+    Raises:
+        PurchaseInvoiceEvidenceInputError: When both sides carry a value and
+            they are not the same identifier.
+    """
+    if supplied is None:
+        return extracted
+    if extracted is None:
+        # Extraction found nothing, so there is nothing to disagree with and
+        # the operator's value is authoritative. This is the override case the
+        # flag has always served, and it stays.
+        return supplied
+    if tax_id_identity_token(supplied) != tax_id_identity_token(extracted):
+        raise PurchaseInvoiceEvidenceInputError(
+            "cannot confirm an invoice: the counterparty_tax_id supplied does not match the one "
+            "extracted from the document. Check the tax id printed on the invoice; re-run the "
+            "extract to see what was read, or correct the evidence record.",
+            suggestion="aeat app ledger evidence extract --evidence-id <id>",
+        )
+    return supplied
+
+
 def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Decimal | str:
     if value is None:
         raise PurchaseInvoiceEvidenceInputError(
@@ -593,7 +657,7 @@ def confirm_invoice_draft_from_evidence(
     )
 
     resolved_counterparty_tax_id = _require_confirmed_field(
-        counterparty_tax_id if counterparty_tax_id is not None else draft.supplier_tax_id,
+        _agreed_counterparty_tax_id(supplied=counterparty_tax_id, extracted=draft.supplier_tax_id),
         field="counterparty_tax_id",
     )
     assert isinstance(resolved_counterparty_tax_id, str)
