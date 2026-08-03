@@ -31,7 +31,12 @@ from pydantic import BaseModel, ValidationError
 
 from ......core import Period
 from ......core.identity import ContentDigest
-from ......tests.aeat_literal_fixtures import aeat_url
+from ......tests.aeat_literal_fixtures import (
+    ACCESO_DR_DETAIL_PATH_FIXTURE,
+    KATA_COTEJO_DOC_ID_PATH_FIXTURE,
+    KATA_COTEJO_ID_PATH_FIXTURE,
+    aeat_url,
+)
 from .._schema import (
     Expediente,
     FiledDeclaracionArtefact,
@@ -45,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _DIGEST = "3a" * 32
 _CAPTURED_AT = datetime(2026, 1, 2, 12, 0, tzinfo=UTC)
 _EXPEDIENTE_ID = "202310013522456T"
-_DETAIL_URL = aeat_url("sede", "/wlpl/DASR-CORE/AccesoDR2023RVlt")
+_DETAIL_URL = aeat_url("sede", ACCESO_DR_DETAIL_PATH_FIXTURE)
 
 _EXPEDIENTE = Expediente(
     expediente_id=_EXPEDIENTE_ID,
@@ -57,8 +62,8 @@ _EXPEDIENTE = Expediente(
 _REF = JustificanteRef(
     csv="ABCDEFGHIJKLMNOP",
     expediente_id=_EXPEDIENTE_ID,
-    cotejo_url=aeat_url("sede", "/wlpl/KATA-APLI/cotejo/CotejoIdSv"),
-    pdf_url=aeat_url("sede", "/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"),
+    cotejo_url=aeat_url("sede", KATA_COTEJO_ID_PATH_FIXTURE),
+    pdf_url=aeat_url("sede", KATA_COTEJO_DOC_ID_PATH_FIXTURE),
 )
 
 _SEDE_CAPTURE_BASE: Mapping[str, Any] = {

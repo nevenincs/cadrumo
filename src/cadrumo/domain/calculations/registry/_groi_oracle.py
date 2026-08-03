@@ -47,7 +47,7 @@ from pydantic import AnyUrl, Field, field_validator
 
 from ....core.config import Settings
 from ._checker_oracle_flow import (
-    _CheckerBaseModel,
+       CheckerBaseModel,
     compare_verdict_field,
     decode_replay_observation,
     normalize_expected_verdicts,
@@ -69,7 +69,7 @@ from ._remote_state_guard import RemoteOperation
 GROI_ORACLE_ID: OracleId = "aeat-groi-spanish-roi-checker"
 
 
-class GroiObservation(_CheckerBaseModel):
+class GroiObservation(CheckerBaseModel):
     """Observed Spanish-ROI verdicts returned by an executable adapter.
 
     ``values`` keys are upper-cased Spanish NIFs; ``values`` values are

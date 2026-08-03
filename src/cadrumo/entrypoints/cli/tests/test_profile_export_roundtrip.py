@@ -781,9 +781,9 @@ def test_config_profile_export_result_refuses_malformed_transport_and_reconcile_
     # A bare string equal to a valid member's value is still refused: the
     # field demands the canonical enum instance, not a permissive str.
     with pytest.raises(ValidationError):
-        ConfigProfileExportResult(**{**base_kwargs, "purpose": "portable_transfer"})
+        ConfigProfileExportResult.model_validate({**base_kwargs, "purpose": "portable_transfer"})
     with pytest.raises(ValidationError):
-        ConfigProfileExportResult(**{**base_kwargs, "transport": "cleartext_local"})
+        ConfigProfileExportResult.model_validate({**base_kwargs, "transport": "cleartext_local"})
     with pytest.raises(ValidationError):
         ConfigProfileExportReconcileFailurePayload(journal_id="", destination=None, reason="SomeError")
     with pytest.raises(ValidationError):

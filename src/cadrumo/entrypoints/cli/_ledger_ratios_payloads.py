@@ -16,10 +16,9 @@ validate results.
 
 from __future__ import annotations
 
-from decimal import Decimal, InvalidOperation
-
 from pydantic import Field, field_validator
 
+from ...core.decimal import try_parse_canonical_decimal
 from ...domain.categories import ProportionalityKind, SpendingCategory
 from ...domain.usage_ratios import UsageRatioValidationError, validate_usage_ratio_bound
 from ._schemas import OutputSchema, register_schema
@@ -34,12 +33,9 @@ def _validated_ratio_text(value: str, *, field: str) -> str:
     :func:`~domain.usage_ratios.validate_usage_ratio_bound`, the one
     authority the persisted :class:`UsageRatioProfile` also uses.
     """
-    try:
-        parsed = Decimal(value)
-    except InvalidOperation as exc:
-        raise ValueError(f"{field} must be a decimal string (got {value!r})") from exc
-    if not parsed.is_finite():
-        raise ValueError(f"{field} must be a finite decimal (got {value!r})")
+    parsed = try_parse_canonical_decimal(value)
+    if parsed is None:
+        raise ValueError(f"{field} must be a decimal string (got {value!r})")
     try:
         validate_usage_ratio_bound(parsed, label=field)
     except UsageRatioValidationError as exc:

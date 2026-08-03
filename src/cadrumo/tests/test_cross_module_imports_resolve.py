@@ -242,7 +242,6 @@ _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
     # gate ratchets shut as packages clean up their __all__ exports.
     # Decrement the cap (never increment) as imports get listed.
     "cadrumo/adapters/outbound/aeat/auth/__init__.py": 1,
-    "cadrumo/application/filing/__init__.py": 12,
     "cadrumo/core/corpus_manifest/__init__.py": 1,
     "cadrumo/entrypoints/cli/__init__.py": 1,
 }

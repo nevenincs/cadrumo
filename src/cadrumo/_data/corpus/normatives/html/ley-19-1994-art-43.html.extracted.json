@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-19-1994-art-43.html",
   "source_sha256": "f96c20f61c9eb29cce437f6c42f9c9bd20a52d6c33763634f9ecee7a9fe7c308",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.0",
+  "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {

@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-789-2010-art-4.html",
   "source_sha256": "6017b257008dd603aee9898d6aa08bc0d9be56ba1ca68103d780c729d30a90b6",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.0",
+  "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {

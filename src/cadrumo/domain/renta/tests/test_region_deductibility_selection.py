@@ -53,7 +53,7 @@ def _citation() -> CategoryCitation:
         source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual practico Renta 2025",
         locator="test",
-        url=parse_http_url("https://example.com/renta"),
+        url=parse_http_url("https://sede.agenciatributaria.gob.es/renta"),
         quote=tr("Texto de prueba para una regla de deducibilidad."),
     )
 

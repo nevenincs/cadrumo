@@ -19,7 +19,8 @@ from ...domain.transactions import (
     TransactionCatalogue,
 )
 from ..review import LedgerReviewStatus
-from ._actions_common import _display_decimal, _require_transaction
+from ._actions_common import display_decimal as _display_decimal
+from ._actions_common import require_transaction as _require_transaction
 from ._models import LedgerReviewQuery, LedgerReviewQueryResult, LedgerReviewRow, LedgerTransactionPayload
 
 

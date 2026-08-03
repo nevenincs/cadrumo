@@ -36,7 +36,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from ...domain.transactions import Transaction, TransactionCatalogue, TransactionIdPrefixError
-from ._actions_common import _transaction_modelo_source_ids
+from ._actions_common import transaction_modelo_source_ids
 
 MINIMUM_DISPLAY_ID_WIDTH = 8
 _FULL_ID_LENGTH = 64
@@ -121,7 +121,7 @@ def _lineage_handles(transaction: Transaction) -> tuple[str, ...]:
     ``previous_transaction_id`` recorded in its
     :class:`cadrumo.domain.transactions.TransactionEditLineageEntry` chain.
     """
-    return _transaction_modelo_source_ids(transaction)
+    return transaction_modelo_source_ids(transaction)
 
 
 def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue) -> str:

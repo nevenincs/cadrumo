@@ -26,7 +26,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Literal, NamedTuple, Protocol, Self, runtime_checkable
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind, M210GrossIncomeSourceMode, Period
@@ -49,6 +49,14 @@ from ._errors import AggregationValidationError, t
 
 RowBindingKey = tuple[BindingId, int]
 RowBindingValue = str | Decimal
+
+_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
+_ROW_BINDING_VALUES = TypeAdapter(dict[RowBindingKey, RowBindingValue])
+
+
+def _empty_row_binding_values() -> dict[RowBindingKey, RowBindingValue]:
+    return {}
 
 
 class SourceMeshError(CoreValidationError):
@@ -111,10 +119,11 @@ def _infer_binding_source(payload: object) -> object:
     """Hydrate ``binding_source`` when the free ``source_kind`` token is canonical."""
     if not isinstance(payload, Mapping):
         return payload
-    data = dict(payload)
+    data = _STRING_OBJECT_MAPPING.validate_python(payload)
     source = _binding_source_for_token(data.get("source_kind"))
-    if isinstance(data.get("source_kind"), BindingSourceKind):
-        data["source_kind"] = data["source_kind"].value
+    source_kind = data.get("source_kind")
+    if isinstance(source_kind, BindingSourceKind):
+        data["source_kind"] = source_kind.value
 
     explicit = data.get("binding_source")
     if explicit is None:
@@ -472,7 +481,7 @@ class CalculationSourceResolution(BaseModel):
     binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict)
     enum_binding_values: Mapping[BindingId, str] = Field(default_factory=dict)
     date_binding_values: Mapping[BindingId, date] = Field(default_factory=dict)
-    row_binding_values: Mapping[RowBindingKey, RowBindingValue] = Field(default_factory=dict)
+    row_binding_values: Mapping[RowBindingKey, RowBindingValue] = Field(default_factory=_empty_row_binding_values)
     relation_values: Mapping[RelationId, Decimal] = Field(default_factory=dict)
     unresolved_relation_ids: tuple[RelationId, ...] = Field(default_factory=tuple)
     unresolved_binding_ids: tuple[BindingId, ...] = Field(default_factory=tuple)
@@ -506,7 +515,7 @@ class CalculationSourceResolution(BaseModel):
         if not isinstance(value, (tuple, list)):
             return value
         coerced: list[object] = []
-        for item in value:
+        for item in _OBJECT_SEQUENCE.validate_python(value):
             if isinstance(item, BindingSourceKind):
                 coerced.append(item)
                 continue
@@ -552,18 +561,22 @@ class CalculationSourceResolution(BaseModel):
     @field_validator("row_binding_values", mode="before")
     @classmethod
     def _coerce_row_binding_values(cls, value: object) -> object:
-        if isinstance(value, Mapping) or not isinstance(value, (list, tuple)):
+        if isinstance(value, Mapping):
+            return _ROW_BINDING_VALUES.validate_python(value)
+        if not isinstance(value, (list, tuple)):
             return value
+        items = _OBJECT_SEQUENCE.validate_python(value)
         normalized: dict[tuple[object, object], object] = {}
-        for item in value:
+        for item in items:
             if not isinstance(item, Mapping):
-                return value
-            row_value = item.get("value")
-            if item.get("value_kind") == "decimal":
+                return items
+            row = _STRING_OBJECT_MAPPING.validate_python(item)
+            row_value = row.get("value")
+            if row.get("value_kind") == "decimal":
                 row_value = coerce_decimal(row_value)
                 if row_value is None:
                     raise SourceMeshError("aggregation.source_mesh.errors.row_binding_value_invalid")
-            normalized[(item.get("binding_id"), item.get("row_index"))] = row_value
+            normalized[(row.get("binding_id"), row.get("row_index"))] = row_value
         return normalized
 
     @field_validator("row_binding_values")

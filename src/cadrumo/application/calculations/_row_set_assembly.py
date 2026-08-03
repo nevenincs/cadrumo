@@ -202,7 +202,7 @@ def _cells_by_row(cells: Iterable[_RowCellShape]) -> dict[int, dict[str, Decimal
     for cell in cells:
         binding = str(cell.binding)
         row_index_raw = cell.row_index
-        if not isinstance(row_index_raw, int) or row_index_raw < 1:
+        if row_index_raw < 1:
             raise RegistryValidationError(f"row-set cell row_index must be a positive int, got {row_index_raw!r}")
         value = cell.value
         grouped.setdefault(row_index_raw, {})[binding] = value

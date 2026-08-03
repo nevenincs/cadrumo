@@ -147,7 +147,7 @@ def test_cli_payload_refuses_out_of_range_values(field: str, value: int) -> None
     fields[field] = value
 
     with pytest.raises(ValidationError):
-        ModeloDescribeResult(**fields)  # type: ignore[arg-type]
+        ModeloDescribeResult.model_validate(fields)
 
 
 def test_boundary_filing_years_remain_valid() -> None:

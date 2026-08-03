@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from .....core import BindingSourceKind
@@ -10,6 +12,7 @@ from .._binding_selector_utils import BindingFixedExportSelector
 from .._schema import (
     CasillaAlias,
     CasillaConstraints,
+    DatedValue,
     ModeloDefinition,
     ProfilePredicateDefinition,
 )
@@ -360,6 +363,7 @@ def test_dangling_parameter_source_refs() -> None:
         id="test.param",
         data_type="decimal",
         unit="EUR",
+        values=(DatedValue(value=Decimal("0"), date_axis="filing_period", valid_from=date(2020, 1, 1)),),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID, _extra),
     )

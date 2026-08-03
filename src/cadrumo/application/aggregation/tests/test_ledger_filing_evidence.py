@@ -269,7 +269,7 @@ def test_no_silent_omission_guard_refuses_uncovered_evidence() -> None:
 
 def test_evidence_row_strict_json_roundtrip_all_fields() -> None:
     row = LedgerEvidenceRow(
-        transaction_id="t1",
+        transaction_id="1" * 64,
         fingerprint="a" * 64,
         booked_date="2025-02-10",
         value_date="2025-02-11",

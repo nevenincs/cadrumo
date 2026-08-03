@@ -14,7 +14,7 @@ module importing only what ``core`` owns.
 See Also:
     :mod:`~core._hex`
         Primitive definition under test.
-    :mod:`~core.identity._snapshot`, :mod:`~core.identity._transaction`,
+    :data:`~core.identity.SnapshotId`, :data:`~core.identity.TransactionId`,
     :mod:`~core.identity._digest`
         The three ``core.identity`` semantic aliases derived from it.
 """

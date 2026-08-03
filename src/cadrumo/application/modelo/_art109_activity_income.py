@@ -161,8 +161,6 @@ def _classify_current_period_row(transaction: Transaction, *, period: Period) ->
     if transaction.direction is not TransactionDirection.INCOMING:
         return _RowKind.IGNORE
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
-    if filing_date is None:
-        return _RowKind.INSUFFICIENT
     if not period.contains(filing_date):
         return _RowKind.IGNORE
     if transaction.irpf_category == IRPF_CATEGORY_TRABAJO:

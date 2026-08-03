@@ -14,6 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.i18n import Translatable as tr
+from ....tests.aeat_literal_fixtures import CITATION_MANUAL_PDF_URL_FIXTURE
 from .. import (
     CategoryCitation,
     CategoryCitationSource,
@@ -32,7 +33,7 @@ def _citation() -> CategoryCitation:
         source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual práctico Renta 2025",
         locator="test",
-        url=parse_http_url("https://sede.agenciatributaria.gob.es/manual.pdf"),
+        url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
         quote=tr("Texto de prueba suficientemente concreto."),
     )
 
@@ -43,7 +44,7 @@ def test_category_citation_rejects_blank_quote_at_schema_boundary() -> None:
             source=CategoryCitationSource.MANUAL_RENTA,
             reference="Manual práctico Renta 2025",
             locator="test",
-            url=parse_http_url("https://sede.agenciatributaria.gob.es/manual.pdf"),
+            url=parse_http_url(CITATION_MANUAL_PDF_URL_FIXTURE),
             quote=tr("   "),
         )
 

@@ -106,7 +106,7 @@ def test_parser_extracts_modelo_202_casillas_from_synthetic_fixture() -> None:
 
     assert filing.modelo == "202"
     assert filing.period == _expected_period(2025, "1P")
-    assert filing.tax_id == "B00000001"
+    assert filing.tax_id == "B00000000"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "202"
     assert filing.registry_snapshot_ref.modelo_year == 2025

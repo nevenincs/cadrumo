@@ -243,12 +243,12 @@ def build_harness_floor_tool() -> Tool:
             "Load the aeat operator operating rules and the active persona document as text - "
             "the universal harness floor that reaches any tools-only MCP client."
         ),
-        inputSchema={"type": "object", "properties": {}, "additionalProperties": False},
+        input_schema={"type": "object", "properties": {}, "additionalProperties": False},
         annotations=ToolAnnotations(
             title="Load the operator harness",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=True,
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=True,
         ),
     )
 
@@ -329,12 +329,12 @@ def build_whoami_tool() -> Tool:
             "profiles - a filing must never run under the wrong identity (Erika must not file while "
             "Erik is the active profile)."
         ),
-        inputSchema={"type": "object", "properties": {}, "additionalProperties": False},
+        input_schema={"type": "object", "properties": {}, "additionalProperties": False},
         annotations=ToolAnnotations(
             title="Confirm the active taxpayer identity",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=True,
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=True,
         ),
     )
 

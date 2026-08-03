@@ -27,7 +27,7 @@ from decimal import Decimal
 from ....core import BindingSourceKind
 from ._binding_selector_utils import selector_as_dict as _binding_selector_as_dict
 from ._bindings import CasillaObservation, bound_casilla_binding_ids, resolve_bound_casilla_binding_value
-from ._bindings_previous_filing import _PreviousModeloSelector
+from ._bindings_previous_filing import PreviousModeloSelector
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId
@@ -349,7 +349,7 @@ def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_perio
     if binding.source != BindingSourceKind.PREVIOUS_FILING:
         return False
     try:
-        selector = _PreviousModeloSelector.model_validate(_binding_selector_as_dict(binding))
+        selector = PreviousModeloSelector.model_validate(_binding_selector_as_dict(binding))
     except ValueError:
         return False
     if not _previous_filing_selector_has_period_anchor(selector):
@@ -357,7 +357,7 @@ def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_perio
     return selector.required_period_anchors_for_target(target_period) == ()
 
 
-def _previous_filing_selector_has_period_anchor(selector: _PreviousModeloSelector) -> bool:
+def _previous_filing_selector_has_period_anchor(selector: PreviousModeloSelector) -> bool:
     """Check whether a previous-filing selector is anchored to target periods."""
     return (
         selector.period is not None

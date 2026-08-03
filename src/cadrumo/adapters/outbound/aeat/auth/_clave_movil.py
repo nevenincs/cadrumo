@@ -545,6 +545,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             selector_url_for=self._selector_url,
         )
 
+    @override
     def _is_authenticated_aeat_landing(self, *, landing_url: str, target_path: str) -> bool:
         """Return True for a protected AEAT page reached after Cl@ve dispatch."""
         external = self._settings.external_constants()
@@ -744,8 +745,9 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         profile = require_active_bucket_id()
         return aeat_auth_session_storage_state_path(profile, "clave-movil-storage")
 
-    @staticmethod
+    @override
     def _persist_session(
+        self,
         storage_state_path: Path,
         *,
         storage_state: Mapping[str, object],

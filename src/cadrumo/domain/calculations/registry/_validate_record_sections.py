@@ -36,8 +36,8 @@ from ._validate_extraction_profiles import (
     validate_extraction_profile_artefacts,
 )
 from ._validate_formulas import validate_formula_expression
-from ._validate_helpers import _missing_refs
-from ._validate_revision_identity import _duplicates
+from ._validate_helpers import missing_refs
+from ._validate_revision_identity import duplicates
 from ._validate_revision_rules import validate_dated_values
 
 _CASILLA_METADATA_SOURCE_TIERS = ("official_source_guidance", "layout_authority")
@@ -65,18 +65,18 @@ def validate_casilla_section(
     """
     for casilla in revision.casillas:
         owner = f"casilla {casilla.id}"
-        failures.extend(_missing_refs(prefix, owner, casilla.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, casilla.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, casilla.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, casilla.source_refs, source_refs, "source"))
         failures.extend(
             evidence.require_any_source_tier(prefix, owner, casilla.source_refs, _CASILLA_METADATA_SOURCE_TIERS)
         )
         if casilla.constraints is not None:
             constraint_owner = f"casilla {casilla.id} constraints"
             failures.extend(
-                _missing_refs(prefix, constraint_owner, casilla.constraints.legal_refs, legal_refs, "legal"),
+                missing_refs(prefix, constraint_owner, casilla.constraints.legal_refs, legal_refs, "legal"),
             )
             failures.extend(
-                _missing_refs(prefix, constraint_owner, casilla.constraints.source_refs, source_refs, "source"),
+                missing_refs(prefix, constraint_owner, casilla.constraints.source_refs, source_refs, "source"),
             )
             failures.extend(
                 evidence.require_any_source_tier(
@@ -88,8 +88,8 @@ def validate_casilla_section(
             )
         for alias in casilla.aliases:
             alias_owner = f"casilla {casilla.id} alias {alias.label!r}"
-            failures.extend(_missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
-            failures.extend(_missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
+            failures.extend(missing_refs(prefix, alias_owner, alias.legal_refs, legal_refs, "legal"))
+            failures.extend(missing_refs(prefix, alias_owner, alias.source_refs, source_refs, "source"))
             failures.extend(
                 evidence.require_any_source_tier(
                     prefix,
@@ -145,8 +145,8 @@ def validate_formula_section(
     """
     for formula in revision.formulas:
         owner = f"formula {formula.id}"
-        failures.extend(_missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, formula.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, formula.source_refs, source_refs, "source"))
         failures.extend(evidence.require_source_tier(prefix, owner, formula.source_refs, "official_source_guidance"))
         failures.extend(
             evidence.validate_source_citations(
@@ -171,7 +171,7 @@ def validate_formula_section(
             ),
         )
 
-    for target in sorted(_duplicates([formula.target_casilla_id for formula in revision.formulas])):
+    for target in sorted(duplicates([formula.target_casilla_id for formula in revision.formulas])):
         failures.append(f"{prefix}: duplicate formula target {target!r}")
 
 
@@ -193,8 +193,8 @@ def validate_parameter_section(
     """
     for parameter in revision.parameters:
         owner = f"parameter {parameter.id}"
-        failures.extend(_missing_refs(prefix, owner, parameter.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, parameter.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, parameter.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, parameter.source_refs, source_refs, "source"))
         failures.extend(evidence.require_source_tier(prefix, owner, parameter.source_refs, "official_source_guidance"))
         failures.extend(
             evidence.validate_source_citations(
@@ -229,8 +229,8 @@ def validate_binding_section(
         failures.extend(f"{prefix}: {fail}" for fail in validate_binding_selector_shape(binding))
     for binding in revision.bindings:
         owner = f"binding {binding.id}"
-        failures.extend(_missing_refs(prefix, owner, binding.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, binding.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, binding.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, binding.source_refs, source_refs, "source"))
         if _is_layout_binding(binding):
             failures.extend(evidence.require_source_tier(prefix, owner, binding.source_refs, "layout_authority"))
         else:
@@ -282,8 +282,8 @@ def validate_extraction_profile_section(
     """
     for profile in revision.extraction_profiles:
         owner = f"extraction profile {profile.id}"
-        failures.extend(_missing_refs(prefix, owner, profile.legal_refs, legal_refs, "legal"))
-        failures.extend(_missing_refs(prefix, owner, profile.source_refs, source_refs, "source"))
+        failures.extend(missing_refs(prefix, owner, profile.legal_refs, legal_refs, "legal"))
+        failures.extend(missing_refs(prefix, owner, profile.source_refs, source_refs, "source"))
         failures.extend(evidence.require_source_tier(prefix, owner, profile.source_refs, "layout_authority"))
         failures.extend(validate_dotted_callable(prefix, owner, profile.parser))
         target_casilla_ids = tuple(t.casilla_id for t in profile.target_casillas)

@@ -111,7 +111,6 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "core/_bucket_pointer_io.py",
         "core/config.py",
         "core/corpus_manifest/__init__.py",
-        "core/env_io.py",
         "core/i18n/_render.py",
         "core/json_contract.py",
         "core/observability/_fingerprint.py",

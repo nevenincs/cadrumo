@@ -31,6 +31,7 @@ from __future__ import annotations
 import inspect
 from collections.abc import Iterator
 from contextlib import contextmanager
+from typing import TypedDict
 
 import pytest
 
@@ -141,6 +142,47 @@ def _load(db_path: Path) -> object | None:
         )
 
 
+class _RevisionInputs(TypedDict):
+    namespace: str
+    object_key: bytes
+    schema_version: int
+    written_at: datetime
+    payload_hash: str
+    ciphertext_hash: str
+    previous_revision_id: str
+    previous_payload_hash: str
+
+
+def _revision_id(*, varied: str | None = None) -> str:
+    values: _RevisionInputs = {
+        "namespace": _NAMESPACE,
+        "object_key": b"\x11" * 32,
+        "schema_version": 1,
+        "written_at": datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
+        "payload_hash": "a" * 64,
+        "ciphertext_hash": "b" * 64,
+        "previous_revision_id": "c" * 64,
+        "previous_payload_hash": "d" * 64,
+    }
+    if varied == "namespace":
+        values["namespace"] = _NAMESPACE + ".other"
+    elif varied == "object_key":
+        values["object_key"] = b"\x22" * 32
+    elif varied == "schema_version":
+        values["schema_version"] = 2
+    elif varied == "written_at":
+        values["written_at"] = datetime(2026, 1, 2, 3, 4, 6, tzinfo=UTC)
+    elif varied == "payload_hash":
+        values["payload_hash"] = "1" * 64
+    elif varied == "ciphertext_hash":
+        values["ciphertext_hash"] = "2" * 64
+    elif varied == "previous_revision_id":
+        values["previous_revision_id"] = "3" * 64
+    elif varied == "previous_payload_hash":
+        values["previous_payload_hash"] = "4" * 64
+    return derive_revision_id(**values)
+
+
 def test_derivation_accepts_exactly_the_documented_inputs() -> None:
     """The signature is the documented input set, no wider and no narrower."""
     assert tuple(inspect.signature(derive_revision_id).parameters) == _DERIVATION_INPUTS
@@ -155,29 +197,8 @@ def test_every_documented_input_actually_changes_the_digest(varied: str) -> None
     Varying one input at a time and demanding a different digest measures the
     mixing itself, so an input dropped from the tuple fails here.
     """
-    baseline = dict(
-        namespace=_NAMESPACE,
-        object_key=b"\x11" * 32,
-        schema_version=1,
-        written_at=datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC),
-        payload_hash="a" * 64,
-        ciphertext_hash="b" * 64,
-        previous_revision_id="c" * 64,
-        previous_payload_hash="d" * 64,
-    )
-    variations: dict[str, object] = {
-        "namespace": _NAMESPACE + ".other",
-        "object_key": b"\x22" * 32,
-        "schema_version": 2,
-        "written_at": datetime(2026, 1, 2, 3, 4, 6, tzinfo=UTC),
-        "payload_hash": "1" * 64,
-        "ciphertext_hash": "2" * 64,
-        "previous_revision_id": "3" * 64,
-        "previous_payload_hash": "4" * 64,
-    }
-    varied_kwargs = {**baseline, varied: variations[varied]}
-    assert varied_kwargs[varied] != baseline[varied]
-    assert derive_revision_id(**varied_kwargs) != derive_revision_id(**baseline)  # type: ignore[arg-type]
+    baseline = _revision_id()
+    assert _revision_id(varied=varied) != baseline
 
 
 def test_untampered_row_reads_after_two_writes(tmp_path: Path) -> None:

@@ -10,7 +10,7 @@ HOME_OFFICE ratio computation.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from decimal import Decimal
 from pathlib import Path
@@ -104,7 +104,7 @@ def _usage_ratio_lock_target(bucket_id: str) -> Path:
 
 
 @contextmanager
-def usage_ratio_bucket_lock(bucket_id: str) -> Iterator[None]:
+def usage_ratio_bucket_lock(bucket_id: str) -> Generator[None]:
     """Serialise the load-modify-save of one bucket's usage-ratio row.
 
     The usage-ratio profile is a single :class:`SecureObjectRepository` row per

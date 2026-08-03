@@ -21,9 +21,14 @@ would have caught by looking.
 from __future__ import annotations
 
 import pytest
+from pydantic import BaseModel
+from textual.containers import ScrollableContainer
 from textual.widgets import Button, Input
 
+from .....application.flows import CopyRef, FlowDefinition, FlowPage, FlowSection
+from .....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from .. import (
+    FlowTuiApp,
     FormApp,
     FormField,
     FormPage,
@@ -38,6 +43,11 @@ pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_inbound_adapter,
 ]
+
+
+class _VisualAnswers(BaseModel):
+    """Trivial answers model; only its type identity is consumed."""
+
 
 _SIZES = [(80, 24), (120, 40), (200, 50)]
 """A minimum-size terminal, an ordinary one, and a wide one.
@@ -75,10 +85,84 @@ def _status() -> StatusApp:
     )
 
 
+def _question() -> FlowTuiApp:
+    """The wizard question screen, carrying more content than a short terminal holds.
+
+    Enrolled here because it is the surface the operator sees on every page
+    of every flow, and it was the one full-screen surface these gates did
+    not cover: it had collapsed the scroll host and the bordered panel into
+    a single auto-height ``VerticalScroll``, which cannot scroll, so the
+    overflow fell through to the Screen and the host sat in the tab order
+    as a dead stop — the exact two defects the gates below already pin on
+    every other surface.
+    """
+    copy = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="wizard.setup.title")
+    page = FlowPage(
+        id="p0",
+        widget=FlowWidgetKind.TEXT,
+        prompt=copy,
+        help=copy,
+        failure_modes=tuple(copy for _ in range(14)),
+        answer_type=str,
+    )
+    definition = FlowDefinition(
+        id="flows.test.visual",
+        title=copy,
+        description=copy,
+        sections=(FlowSection(id="s1", title=copy, items=(page,)),),
+        answers_model=_VisualAnswers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+    return FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
+
+
+def _many_page_flow() -> FlowTuiApp:
+    """A flow long enough that both the question page and the review table
+    overflow their container at every size in ``_SIZES``.
+
+    Sixty optional pages put the review table's row count past the
+    viewport at every size. That alone says nothing about the question
+    page: only the cursor's current page is rendered there, so each page
+    also carries enough failure-mode lines to overflow the question
+    panel's own scroll host — forty lines clears the widest fixture
+    size (200x50) with margin, measured directly against
+    ``ContentScroll.virtual_size`` vs ``container_size``.
+    """
+    copy = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="wizard.setup.title")
+    pages = tuple(
+        FlowPage(
+            id=f"p{index}",
+            widget=FlowWidgetKind.TEXT,
+            prompt=copy,
+            help=copy,
+            failure_modes=tuple(copy for _ in range(40)),
+            answer_type=str,
+            required=False,
+        )
+        for index in range(60)
+    )
+    definition = FlowDefinition(
+        id="flows.test.visual.long",
+        title=copy,
+        description=copy,
+        sections=(FlowSection(id="s1", title=copy, items=pages),),
+        answers_model=_VisualAnswers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+    return FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
+
+
 _SURFACES = [
     pytest.param(_registration, id="registration"),
     pytest.param(_form, id="form"),
     pytest.param(_status, id="status"),
+    pytest.param(_question, id="question"),
 ]
 
 
@@ -206,7 +290,7 @@ async def test_a_focused_button_is_painted_differently_from_an_unfocused_one(the
     async with app.run_test(size=(120, 40)) as pilot:
         app.theme = theme
         await pilot.pause()
-        buttons = list(app.query(Button))
+        buttons = list(app.screen.query(Button))
         assert len(buttons) >= 2, "this surface needs two buttons to compare"
 
         target, other = buttons[0], buttons[1]
@@ -241,4 +325,61 @@ async def test_a_password_field_never_paints_its_secret() -> None:
         app.query_one("#field-password", Input).value = "SENTINEL-SECRET-VALUE"
         await pilot.pause()
         assert "SENTINEL-SECRET-VALUE" not in app.export_screenshot()
+        app.exit(None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("width", "height"), _SIZES)
+@pytest.mark.parametrize("review", [False, True], ids=["question", "review"])
+async def test_the_screen_itself_never_scrolls_on_a_flow_surface(
+    width: int,
+    height: int,
+    review: bool,
+) -> None:
+    """Scrolling belongs to one designated host, never to the Screen.
+
+    A Screen that scrolls is the signature of a surface whose own scroll
+    container cannot: an ``auto`` height grows to fit its content, so the
+    overflow falls through to the Screen and the operator sees a second
+    vertical scrollbar stacked outside the first. Both flow surfaces hit
+    this — the question page had collapsed its scroll host into its
+    bordered panel, and the review table grew to its full row count beside
+    the Screen's own bar.
+
+    The definition carries many pages deliberately. A short flow cannot
+    overflow the review table at any terminal size, so a small fixture
+    would pass with the defect present and prove nothing; the precondition
+    is asserted below rather than assumed.
+    """
+    app = _many_page_flow()
+    async with app.run_test(size=(width, height)) as pilot:
+        await pilot.pause()
+        if review:
+            await pilot.press("f2")
+            await pilot.pause()
+        screen = app.screen
+
+        # Positive control: the surface must actually have more content
+        # than the viewport, or "the Screen does not scroll" is vacuous.
+        # ScrollableContainer is the common base of both designated scroll
+        # hosts on these surfaces: the question page's ContentScroll and
+        # the review table's DataTable (a DataTable is its own scroll
+        # container, never wrapped in a ContentScroll — see #review-table's
+        # CSS comment).
+        overflowing = [
+            widget
+            for widget in screen.walk_children()
+            if isinstance(widget, ScrollableContainer)
+            and widget.display
+            and widget.virtual_size.height > widget.container_size.height
+        ]
+        assert overflowing, (
+            f"fixture cannot detect the defect at {width}x{height}: nothing overflows its "
+            f"container, so a non-scrolling Screen proves nothing"
+        )
+
+        assert not screen.show_vertical_scrollbar, (
+            f"{type(screen).__name__} is scrolling at {width}x{height}: its content overflows a "
+            f"container that cannot scroll, so the operator sees two stacked vertical scrollbars"
+        )
         app.exit(None)

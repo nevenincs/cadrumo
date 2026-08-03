@@ -29,6 +29,9 @@ class _CheckerBaseModel(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
+CheckerBaseModel = _CheckerBaseModel
+
+
 def normalize_verdict_mapping(values: Mapping[str, str], *, blank_message: str) -> dict[str, str]:
     """Normalize identifier/verdict mappings and reject blank entries."""
     cleaned: dict[str, str] = {}

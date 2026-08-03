@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final
 
+from pydantic import ConfigDict, TypeAdapter, ValidationError
+
 from ._errors import RegistryValidationError
 from ._schema import ModeloRevision, ModeloScheduleDefinition, ProfilePredicateDefinition
 
@@ -22,6 +24,10 @@ __all__ = [
 _IVA_REGIME_PATH: Final[str] = "iva.regime"
 _IRPF_ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
 _TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"
+_PROFILE_FACT_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
+    dict[str, object],
+    config=ConfigDict(strict=True),
+)
 
 
 def applicable_filing_schedules(
@@ -89,19 +95,22 @@ def profile_condition_matches(
 
 
 def _resolve_profile_fact(profile_facts: object, field: str) -> object:
-    if isinstance(profile_facts, Mapping) and field in profile_facts:
-        return next(v for k, v in profile_facts.items() if k == field)
+    top_level_facts = _profile_fact_mapping(profile_facts)
+    if top_level_facts is not None and field in top_level_facts:
+        return top_level_facts[field]
     # Schema predicate path "iva.regime" maps to the TaxpayerProfile.iva_regime
     # attribute.  The dotted path form is what the TOML registry declares; the
     # attribute name is what the Python dataclass exposes without nesting.
     if field == _IVA_REGIME_PATH and hasattr(profile_facts, "iva_regime"):
         _attr = "iva_regime"
-        observed = getattr(profile_facts, _attr)
-        return getattr(observed, "value", observed)
+        observed: object = getattr(profile_facts, _attr)
+        value: object = getattr(observed, "value", observed)
+        return value
     if field == _IRPF_ESTIMATION_REGIME_PATH and hasattr(profile_facts, "irpf_estimation_regime"):
         _attr = "irpf_estimation_regime"
         observed = getattr(profile_facts, _attr)
-        return getattr(observed, "value", observed)
+        value = getattr(observed, "value", observed)
+        return value
     # Schema predicate path "taxpayer.entity_type" maps to
     # TaxpayerProfile.entity_type.  The "taxpayer." prefix is the namespace used
     # in the registry TOML; the attribute is a flat field on the profile object.
@@ -110,12 +119,23 @@ def _resolve_profile_fact(profile_facts: object, field: str) -> object:
         return getattr(profile_facts, _attr)
     current: object = profile_facts
     for part in field.split("."):
-        if isinstance(current, Mapping):
-            if part not in current:
+        current_mapping = _profile_fact_mapping(current)
+        if current_mapping is not None:
+            if part not in current_mapping:
                 raise RegistryValidationError(f"profile facts missing {field!r}")
-            current = next(v for k, v in current.items() if k == part)
+            current = current_mapping[part]
             continue
         if not hasattr(current, part):
             raise RegistryValidationError(f"profile facts missing {field!r}")
         current = getattr(current, part)
     return current
+
+
+def _profile_fact_mapping(value: object) -> Mapping[str, object] | None:
+    """Validate a profile mapping before using values from its dynamic boundary."""
+    if not isinstance(value, Mapping):
+        return None
+    try:
+        return _PROFILE_FACT_MAPPING_ADAPTER.validate_python(value)
+    except ValidationError:
+        return None

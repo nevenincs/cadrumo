@@ -652,6 +652,9 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
     )
 
 
+_legacy_m210_tipo_renta_validator = _validated_m210_tipo_renta_code
+
+
 def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_def: CasillaDefinition) -> str:
     """Refuse a purely-numeric value routed to a declarante-selector text casilla.
 
@@ -1081,6 +1084,9 @@ def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> CasillaI
         translated_message="application.modelo.errors.calculate_semantic_role_missing",
     )
 
+
+decimal_binding_value = _decimal_binding_value
+validated_binding_input_channel = _validated_binding_input_channel
 
 __all__ = [
     "Modelo202ModalitySummary",

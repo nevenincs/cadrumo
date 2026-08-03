@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-25.html",
   "source_sha256": "ce87bcf1652a90a23ca1b24eb684a433a150c063bf5bb704b9a4d640fb5b046c",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.0",
+  "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {

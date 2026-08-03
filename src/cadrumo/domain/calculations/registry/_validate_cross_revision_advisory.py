@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from ._cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
-    _iter_cross_revision_casilla_divergences,
+    iter_cross_revision_casilla_divergences,
 )
 from ._errors import RegistryValidationError
 from ._ids import CasillaId
@@ -63,7 +63,7 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
         raise RegistryValidationError("example_limit must be at least 1")
 
     grouped: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
-    for divergence in _iter_cross_revision_casilla_divergences(modelos):
+    for divergence in iter_cross_revision_casilla_divergences(modelos):
         if divergence.revisions_overlap:
             continue
         key = (

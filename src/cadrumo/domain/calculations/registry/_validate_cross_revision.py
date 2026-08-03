@@ -15,8 +15,8 @@ from itertools import pairwise
 
 from ._cross_revision_divergence import (
     CrossRevisionCasillaDivergence,
-    _iter_cross_revision_casilla_divergences,
-    _revisions_overlap,
+    iter_cross_revision_casilla_divergences,
+    revisions_overlap,
 )
 from ._errors import RegistryValidationError
 from ._ids import CasillaId
@@ -69,7 +69,7 @@ def _validate_cross_revision_casilla_consistency(
     reconcile-to-canonical-form), never silent acceptance.
     """
     failures: dict[tuple[str, CasillaId, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
-    for divergence in _iter_cross_revision_casilla_divergences(modelos):
+    for divergence in iter_cross_revision_casilla_divergences(modelos):
         if not divergence.revisions_overlap:
             continue
         key = (
@@ -99,7 +99,7 @@ def _validate_strict_cross_revision_casilla_continuity(
     for modelo in modelos:
         semantic_failures.extend(_validate_strict_continuity_evolution_references(modelo))
         semantic_failures.extend(_validate_strict_retired_continuity_surfaces(modelo))
-        for divergence in _iter_cross_revision_casilla_divergences((modelo,)):
+        for divergence in iter_cross_revision_casilla_divergences((modelo,)):
             if divergence.revisions_overlap:
                 continue
             left_revision = modelo.revisions[divergence.left_revision_id]
@@ -242,7 +242,7 @@ def _is_strict_non_overlapping_revision_pair(
 ) -> bool:
     return (
         left_revision.continuidad_validation == "strict" or right_revision.continuidad_validation == "strict"
-    ) and not _revisions_overlap(left_revision, right_revision)
+    ) and not revisions_overlap(left_revision, right_revision)
 
 
 def _has_retired_evolution(
@@ -322,3 +322,7 @@ def _format_cross_revision_failure(
         f"{casilla_id!r} canonical revision {left_revision_id!r} "
         f"divergences {divergence_tuples!r}"
     )
+
+
+cross_revision_casilla_consistency_failures = _validate_cross_revision_casilla_consistency
+strict_cross_revision_casilla_continuity_failures = _validate_strict_cross_revision_casilla_continuity

@@ -69,35 +69,39 @@ def _write_object(runtime: TestRuntimeProfile, namespace: str, object_key: str) 
 
 # Use already-registered domain namespaces so the registry-validated
 # repository accepts the writes without ad-hoc namespace registration.
-_EVENT_HISTORY_NAMESPACE = "cadrumo.domain.buckets.event_history"
-_INVOICE_NAMESPACE = "cadrumo.domain.invoices"
+# Both declare a templated (multi-key) object_key_grammar -- unlike a
+# "catalogue"/"state" singleton namespace, which admits only its one
+# declared literal key and so cannot hold the multiple distinct rows
+# these tests need to prove per-namespace counting.
+_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = "cadrumo.application.ledger.purchase_invoice_evidence"
+_FILING_DRAFTS_NAMESPACE = "cadrumo.domain.filing.drafts"
 
 
 def test_browse_returns_one_row_per_namespace_with_counts(runtime: TestRuntimeProfile) -> None:
     """Namespace inventory returns each populated namespace with its row count."""
-    _write_object(runtime, namespace=_EVENT_HISTORY_NAMESPACE, object_key="key-a1")
-    _write_object(runtime, namespace=_EVENT_HISTORY_NAMESPACE, object_key="key-a2")
-    _write_object(runtime, namespace=_INVOICE_NAMESPACE, object_key="key-b1")
+    _write_object(runtime, namespace=_PURCHASE_INVOICE_EVIDENCE_NAMESPACE, object_key="key-a1")
+    _write_object(runtime, namespace=_PURCHASE_INVOICE_EVIDENCE_NAMESPACE, object_key="key-a2")
+    _write_object(runtime, namespace=_FILING_DRAFTS_NAMESPACE, object_key="key-b1")
 
     result = BucketMaintenanceService().browse(BrowseBucketCommand(bucket_id=runtime.bucket_id))
 
     row_by_ns = {row.namespace: row.row_count for row in result.rows}
-    assert row_by_ns.get(_EVENT_HISTORY_NAMESPACE) == 2
-    assert row_by_ns.get(_INVOICE_NAMESPACE) == 1
+    assert row_by_ns.get(_PURCHASE_INVOICE_EVIDENCE_NAMESPACE) == 2
+    assert row_by_ns.get(_FILING_DRAFTS_NAMESPACE) == 1
 
 
 def test_browse_namespace_filter_restricts_returned_rows(runtime: TestRuntimeProfile) -> None:
     """The substring filter limits the inventory to matching namespaces only."""
-    _write_object(runtime, namespace=_EVENT_HISTORY_NAMESPACE, object_key="key-a1")
-    _write_object(runtime, namespace=_INVOICE_NAMESPACE, object_key="key-b1")
+    _write_object(runtime, namespace=_PURCHASE_INVOICE_EVIDENCE_NAMESPACE, object_key="key-a1")
+    _write_object(runtime, namespace=_FILING_DRAFTS_NAMESPACE, object_key="key-b1")
 
     result = BucketMaintenanceService().browse(
-        BrowseBucketCommand(bucket_id=runtime.bucket_id, namespace_filter="buckets"),
+        BrowseBucketCommand(bucket_id=runtime.bucket_id, namespace_filter="purchase_invoice"),
     )
 
     returned_namespaces = {row.namespace for row in result.rows}
-    assert _EVENT_HISTORY_NAMESPACE in returned_namespaces
-    assert _INVOICE_NAMESPACE not in returned_namespaces
+    assert _PURCHASE_INVOICE_EVIDENCE_NAMESPACE in returned_namespaces
+    assert _FILING_DRAFTS_NAMESPACE not in returned_namespaces
 
 
 def test_browse_on_empty_bucket_returns_empty_rows(runtime: TestRuntimeProfile) -> None:

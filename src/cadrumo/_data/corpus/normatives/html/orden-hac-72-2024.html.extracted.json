@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-72-2024.html",
   "source_sha256": "03abd4d5b6446e5fc12c54861b43782aaf394bbfb54822a1865add7d557c2a33",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.0",
+  "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {

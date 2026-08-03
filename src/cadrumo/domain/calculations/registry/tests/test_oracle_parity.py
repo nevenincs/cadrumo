@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW6_HOST = aeat_host("www6")
 
 
-class _CannedOracle:
+class _ScriptedOracle:
     """Real :class:`LiveParityOracle` implementation backed by canned operations.
 
     Feeds operator-supplied ``planned_operations`` into the real
@@ -118,7 +118,7 @@ def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:
     predecessor -- ``pre_flight_oracle_operations`` stayed exported in
     ``_live_parity.__all__`` with zero test coverage in the interim.
     """
-    oracle = _CannedOracle(
+    oracle = _ScriptedOracle(
         oracle_id="pre-flight-read-only",
         surface_kind="iva_id_check",
         operations=(_read_only_get(LIVE_PARITY_GENERIC_CHECK_PATH_FIXTURE),),
@@ -129,7 +129,7 @@ def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:
 
 def test_pre_flight_blocks_oracle_with_post_operation() -> None:
     """A planned POST is refused before any network call, naming the offending step."""
-    oracle = _CannedOracle(
+    oracle = _ScriptedOracle(
         oracle_id="pre-flight-post",
         surface_kind="pre_filing_validator",
         operations=(
@@ -149,7 +149,7 @@ def test_evaluate_planned_operations_returns_blocked_result_for_static_only_poli
     than raising, which this test proves by inspecting the returned value
     instead of catching an exception.
     """
-    oracle = _CannedOracle(
+    oracle = _ScriptedOracle(
         oracle_id="static-only-oracle",
         surface_kind="file_validator",
         operations=(_read_only_get(LIVE_PARITY_STATIC_REMOTE_PATH_FIXTURE),),

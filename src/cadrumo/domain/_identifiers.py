@@ -38,7 +38,7 @@ class ModeloIdentifier(str):
     __slots__ = ()
 
     def __new__(cls, value: str) -> ModeloIdentifier:
-        if not isinstance(value, str) or not _MODELO_RE.match(value):
+        if not _MODELO_RE.match(value):
             raise DomainValidationError(f"Invalid modelo identifier: {value!r}")
         return super().__new__(cls, value)
 

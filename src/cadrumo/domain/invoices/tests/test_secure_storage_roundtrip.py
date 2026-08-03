@@ -139,7 +139,7 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
 ) -> None:
     """Every optional Invoice field round-trips through encrypted SQL."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"):
         original = _populated_catalogue()
         repo = InvoiceCatalogueRepository()
         repo.save(original)

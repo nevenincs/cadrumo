@@ -34,15 +34,22 @@ from pydantic import BaseModel, Field, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....domain.period import calculation_filing_date
-from . import _formula_initial_values as _formula_inputs
 from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_m131 as _m131
-from . import _formula_runtime_ops as _ops
 from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._casilla_membership import duplicate_casilla_ids
 from ._convenio import ConvenioAuthority
 from ._errors import CasillaConstraintViolationError, RegistryValidationError
+from ._formula_initial_values import (
+    binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
+)
+from ._formula_initial_values import (
+    initial_values as _initial_values,
+)
+from ._formula_initial_values import (
+    materialise_observations as _materialise_observations,
+)
 from ._formula_operator_contracts import require_formula_operator_arity
 from ._formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
@@ -54,7 +61,37 @@ from ._formula_runtime_ops import (
     UnresolvedFormulaOutcomeError as _UnresolvedFormulaOutcomeError,
 )
 from ._formula_runtime_ops import (
+    apply_rounding as _apply_rounding,
+)
+from ._formula_runtime_ops import (
+    evaluate_args_op as _evaluate_args_op,
+)
+from ._formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,
+)
+from ._formula_runtime_ops import (
+    read_parameter as _read_parameter,
+)
+from ._formula_runtime_ops import (
+    reject_non_decimal as _reject_non_decimal,
+)
+from ._formula_runtime_ops import (
+    reject_non_string as _reject_non_string,
+)
+from ._formula_runtime_ops import (
+    reject_unknown_external_values as _reject_unknown_external_values,
+)
+from ._formula_runtime_ops import (
+    resolve_bracket as _resolve_bracket,
+)
+from ._formula_runtime_ops import (
+    resolve_keyed_bracket as _resolve_keyed_bracket,
+)
+from ._formula_runtime_ops import (
+    resolve_scalar_parameter as _resolve_scalar_parameter,
+)
+from ._formula_runtime_ops import (
+    validated_decimal_input_casilla_ids as _validated_decimal_input_casilla_ids,
 )
 from ._formula_text_inputs import validate_text_input_targets as _validate_text_input_targets
 from ._formula_text_inputs import validated_text_input_casilla_ids as _validated_text_input_casilla_ids
@@ -73,7 +110,7 @@ from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
-read_parameter, _resolve_bracket = _ops.read_parameter, _ops.resolve_bracket
+read_parameter = _read_parameter
 
 
 @dataclass(frozen=True, slots=True)
@@ -358,7 +395,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             id; consumed by text-routed ops.
     """
     revision = snapshot.revision
-    resolved_inputs = _ops.validated_decimal_input_casilla_ids(
+    resolved_inputs = _validated_decimal_input_casilla_ids(
         inputs,
         revision=revision,
     )
@@ -370,17 +407,17 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     )
     resolved_date_context.setdefault("filing_period", default_filing_date)
     supplied_bindings = binding_values or {}
-    _ops.reject_non_decimal(supplied_bindings, "binding")
-    resolved_bindings = _formula_inputs.binding_values_with_absent_by_design_defaults(
+    _reject_non_decimal(supplied_bindings, "binding")
+    resolved_bindings = _binding_values_with_absent_by_design_defaults(
         revision,
         supplied_bindings,
         target_period=snapshot.period,
     )
-    _ops.reject_non_decimal(resolved_bindings, "binding")
+    _reject_non_decimal(resolved_bindings, "binding")
     resolved_enum_bindings = enum_binding_values or {}
-    _ops.reject_non_string(resolved_enum_bindings, "enum_binding")
+    _reject_non_string(resolved_enum_bindings, "enum_binding")
     resolved_relations = relation_values or {}
-    _ops.reject_non_decimal(resolved_relations, "relation")
+    _reject_non_decimal(resolved_relations, "relation")
     resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
     resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(resolved_bindings)
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
@@ -393,7 +430,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         resolved_unresolved_relations=resolved_unresolved_relations,
         resolved_unresolved_bindings=resolved_unresolved_bindings,
     )
-    values, absent_by_design_casilla_ids = _formula_inputs.initial_values(
+    values, absent_by_design_casilla_ids = _initial_values(
         revision,
         resolved_inputs,
         binding_values=supplied_bindings,
@@ -463,7 +500,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             except _UnresolvedFormulaDependencyError:
                 unresolved_casilla_ids.add(target)
                 continue
-            value = _ops.apply_rounding(value, formula.rounding)
+            value = _apply_rounding(value, formula.rounding)
             target_casilla_def = casillas_by_id.get(target)
             if target_casilla_def is not None and target_casilla_def.constraints is not None:
                 violation = target_casilla_def.constraints.violates(value)
@@ -495,7 +532,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                 source_refs=tuple(formula.source_refs),
             )
 
-    observations = _formula_inputs.materialise_observations(
+    observations = _materialise_observations(
         values=values,
         computed_provenance=computed_provenance,
         casillas_by_id=casillas_by_id,
@@ -526,14 +563,14 @@ def _validate_external_value_ids(
         for relation in revision.relations
         if not relation.target_periods or snapshot.period in relation.target_periods
     }
-    _ops.reject_unknown_external_values(resolved_bindings, binding_ids, "binding")
-    _ops.reject_unknown_external_values(resolved_relations, relation_ids, "relation")
-    _ops.reject_unknown_external_values(
+    _reject_unknown_external_values(resolved_bindings, binding_ids, "binding")
+    _reject_unknown_external_values(resolved_relations, relation_ids, "relation")
+    _reject_unknown_external_values(
         {relation_id: _ZERO for relation_id in resolved_unresolved_relations},
         relation_ids,
         "unresolved_relation",
     )
-    _ops.reject_unknown_external_values(
+    _reject_unknown_external_values(
         {binding_id: _ZERO for binding_id in resolved_unresolved_bindings},
         binding_ids,
         "unresolved_binding",
@@ -657,7 +694,7 @@ def _evaluate_expression(
     if op == "m303_resolve_modulos_iva_cuota_minima_pct":
         return _evaluate_m303_resolve_modulos_iva_cuota_minima_pct(expression, ctx)
     args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
-    return _ops.evaluate_args_op(op, args)
+    return _evaluate_args_op(op, args)
 
 
 @dataclass(frozen=True)
@@ -684,7 +721,7 @@ class _EvalContext:
     date_binding_values: Mapping[BindingId, date]
     filing_year: int
     unresolved_binding_ids: frozenset[BindingId] = frozenset()
-    text_values: Mapping[CasillaId, str] = field(default_factory=dict)
+    text_values: Mapping[CasillaId, str] = field(default_factory=lambda: dict[CasillaId, str]())
     convenio: ConvenioAuthority = field(default_factory=ConvenioAuthority.empty)
 
 
@@ -726,7 +763,7 @@ def _evaluate_lookup_bracket(expression: FormulaExpression, ctx: _EvalContext) -
         )
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(bracket_arg.parameter)
-    result = _ops.resolve_bracket(bracket_param, base, ctx.date_context)
+    result = _resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -765,7 +802,7 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(bracket_param_id)
-    result = _ops.resolve_bracket(bracket_param, base, ctx.date_context)
+    result = _resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -825,7 +862,7 @@ def _evaluate_m100_resolve_renta_inmobiliaria_imputada(
         return _ZERO
 
     effective_days = mixed_use_days if mixed_use else disposal_days
-    year_days = _ops.resolve_scalar_parameter(args.year_days_parameter, ctx, op=op)
+    year_days = _resolve_scalar_parameter(args.year_days_parameter, ctx, op=op)
     _m100_validate_imputation_days(
         effective_days,
         casilla_id=args.mixed_use_days_casilla_id if mixed_use else args.disposal_days_casilla_id,
@@ -855,8 +892,8 @@ def _evaluate_m100_resolve_renta_inmobiliaria_imputada(
             )
         share = disposal_percentage / Decimal("100")
 
-    recent_rate = _ops.resolve_scalar_parameter(args.recent_rate_parameter, ctx, op=op)
-    old_rate = _ops.resolve_scalar_parameter(args.old_rate_parameter, ctx, op=op)
+    recent_rate = _resolve_scalar_parameter(args.recent_rate_parameter, ctx, op=op)
+    old_rate = _resolve_scalar_parameter(args.old_rate_parameter, ctx, op=op)
     rate = recent_rate if is_revised else old_rate
     return catastral_value * rate * (effective_days / year_days) * share
 
@@ -1187,7 +1224,7 @@ def _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression: FormulaExpres
         units = _numeric_casilla_value(modulo_casilla_id, ctx)
         if units == _ZERO:
             continue
-        coefficient = _ops.resolve_keyed_bracket(
+        coefficient = _resolve_keyed_bracket(
             parameter,
             key=f"{epigrafe}:{modulo_index}",
             filing_year=ctx.filing_year,
@@ -1265,7 +1302,7 @@ def _evaluate_m303_resolve_modulos_iva_cuota_minima_pct(expression: FormulaExpre
     parameter = ctx.parameters.get(args.percentage_parameter)
     if not epigrafe or parameter is None:
         return _ZERO
-    value = _ops.resolve_keyed_bracket(parameter, key=epigrafe, filing_year=ctx.filing_year)
+    value = _resolve_keyed_bracket(parameter, key=epigrafe, filing_year=ctx.filing_year)
     if value is None:
         return _ZERO
     ctx.operand_values.append(value)
@@ -1323,7 +1360,7 @@ def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx
         )
     scalar_param_id = dispatch_table[dispatch_key]
     ctx.operand_refs.append(binding_arg.binding)
-    return _ops.resolve_scalar_parameter(scalar_param_id, ctx, op=op)
+    return _resolve_scalar_parameter(scalar_param_id, ctx, op=op)
 
 
 def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -1398,7 +1435,7 @@ def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: 
     base = _evaluate_with_ctx(expression.args[0], ctx)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(bracket_param_id)
-    result = _ops.resolve_bracket(bracket_param, base, ctx.date_context)
+    result = _resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
@@ -1495,7 +1532,7 @@ def _evaluate_leaf(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
             context={"binding_id": str(expression.date_binding)},
         )
     if expression.parameter is not None:
-        return _ops.resolve_scalar_parameter(expression.parameter, ctx, op="formula_parameter")
+        return _resolve_scalar_parameter(expression.parameter, ctx, op="formula_parameter")
     if expression.relation is not None:
         if expression.relation not in ctx.relation_values:
             if expression.relation in ctx.unresolved_relation_ids:
@@ -1513,3 +1550,6 @@ def _evaluate_leaf(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
         "empty formula expression",
         translated_message="errors.calc.empty_expression",
     )
+
+
+EvalContext = _EvalContext

@@ -141,8 +141,9 @@ def diagnostics_telemetry_status(
             tr(
                 "cli.diagnostics.telemetry.status.off_hint",
                 default=(
-                    "Telemetry stays fully local by default. To opt in, set CADRUMO_TELEMETRY_OPT_IN=true "
-                    "and CADRUMO_TELEMETRY_TIER to crash_only or full in env/.env."
+                    "Telemetry stays fully local by default. To opt in, set the "
+                    "CADRUMO_TELEMETRY_OPT_IN and CADRUMO_TELEMETRY_TIER environment variables "
+                    "(CADRUMO_TELEMETRY_OPT_IN=true, CADRUMO_TELEMETRY_TIER=crash_only or full)."
                 ),
             ),
         )

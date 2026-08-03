@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     M145CommunicationCreateCommand,
@@ -65,6 +66,7 @@ def test_m145_communication_service_flow_creates_validates_exports_delivers_and_
         exported = export_m145_communication_record(
             created.communication_record_id[:12],
             bucket_id=runtime.bucket_id,
+            renderer=RegistryFixedWidthRecordRenderer(),
             actor="service-flow-test",
         )
         delivered = mark_m145_communication_record_delivered_to_payer(

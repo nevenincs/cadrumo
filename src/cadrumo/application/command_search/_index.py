@@ -24,7 +24,7 @@ from __future__ import annotations
 import re
 import sqlite3
 from collections.abc import Iterable, Sequence
-from typing import Protocol, cast
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -98,10 +98,7 @@ def _spanish_stemmer() -> _SpanishStemmer:
 
     # CAST-RATIONALE-SPANISH-STEMMER-PROTOCOL: snowballstemmer ships no static
     # return protocol, while this boundary consumes only its stemWords method.
-    return cast(  # nosemgrep: no-cast-in-domain-application reason: untyped library result satisfies _SpanishStemmer.
-        "_SpanishStemmer",
-        snowballstemmer.stemmer("spanish"),
-    )
+    return snowballstemmer.stemmer("spanish")
 
 
 def _stem_terms(stemmer: _SpanishStemmer, terms: Sequence[str]) -> list[str]:

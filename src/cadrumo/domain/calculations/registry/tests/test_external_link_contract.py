@@ -7,6 +7,7 @@ from datetime import date
 import pytest
 from pydantic import ValidationError
 
+from .....tests.aeat_literal_fixtures import AEAT_NONCANONICAL_HTTP_MANUAL_URL_CANARY
 from .._schema_references import LegalReference, SourceReference
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -50,7 +51,7 @@ def test_legal_reference_refuses_noncanonical_permalink(permalink: str) -> None:
         )
 
 
-@pytest.mark.parametrize("source_url", ("not-a-url", "http://sede.agenciatributaria.gob.es/manual.pdf"))
+@pytest.mark.parametrize("source_url", ("not-a-url", AEAT_NONCANONICAL_HTTP_MANUAL_URL_CANARY))
 def test_source_reference_refuses_noncanonical_source_url(source_url: str) -> None:
     with pytest.raises(ValidationError, match="source_url"):
         SourceReference(

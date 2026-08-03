@@ -124,7 +124,7 @@ def _valid_basis(**overrides: object) -> ModeloApprovalBasis:
         "schema_formula_fingerprint": _HEX64,
     }
     fields.update(overrides)
-    return ModeloApprovalBasis(**fields)  # type: ignore[arg-type]
+    return ModeloApprovalBasis.model_validate(fields)
 
 
 def test_real_approval_basis_has_the_shapes_this_module_pins(tmp_path: Path) -> None:
@@ -251,7 +251,8 @@ def test_untampered_approved_draft_survives_refresh(tmp_path: Path) -> None:
         )
 
     assert refreshed.status is ModeloDraftStatus.APROBADO
-    assert refreshed.review_checksum == compute_review_checksum(approved.approval_basis)  # type: ignore[arg-type]
+    assert approved.approval_basis is not None
+    assert refreshed.review_checksum == compute_review_checksum(approved.approval_basis)
 
 
 def test_approved_at_is_utc(tmp_path: Path) -> None:

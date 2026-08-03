@@ -20,6 +20,7 @@ from ......domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from ......tests.aeat_literal_fixtures import (
+    AEAT_NON_HOST_AUTHORITY_CANARIES,
     AEAT_SUFFIX_LOOKALIKE_HOST_CANARY,
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
     PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
@@ -730,14 +731,7 @@ class TestWalletReadPolicy:
         external = Settings.external_constants()
         assert not is_aeat_wallet_read_url(f"https://{host}{external.aeat.sede_paths.iva_compensation_wallet}")
 
-    @pytest.mark.parametrize(
-        "authority",
-        [
-            "ignored@sede.agenciatributaria.gob.es",
-            "sede.agenciatributaria.gob.es:443",
-            "sede.agenciatributaria.gob.es:not-a-port",
-        ],
-    )
+    @pytest.mark.parametrize("authority", AEAT_NON_HOST_AUTHORITY_CANARIES)
     def test_non_host_authorities_are_refused(self, authority: str) -> None:
         """User-info and ports cannot bypass the wallet read policy."""
         external = Settings.external_constants()

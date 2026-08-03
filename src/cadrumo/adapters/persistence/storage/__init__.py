@@ -190,7 +190,7 @@ from ._rotation import (
     rotate_master_key,
 )
 from ._schema_lineage import inner_envelope_version_is_current
-from .attachment import AttachmentStore
+from .attachment import AttachmentStore, unwrap_blob_payload
 from .blob_store import (
     BlobManifest,
     BlobReference,
@@ -575,6 +575,7 @@ __all__ = [
     "secure_object_repository_for_cold_bootstrap_state",
     "session_scope",
     "suspend_active_session",
+    "unwrap_blob_payload",
     "unwrap_master_key",
     "unwrap_recovery_envelope",
     "verify_corpus_manifest",

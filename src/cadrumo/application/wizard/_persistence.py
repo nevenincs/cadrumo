@@ -222,7 +222,7 @@ def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
         if canonical is None:
             continue
         field_name = question.id.replace("-", "_")
-        typed[field_name] = _parse_canonical(question, canonical)
+        typed[field_name] = parse_canonical(question, canonical)
     return flow.answers_model.model_validate(typed)
 
 
@@ -235,7 +235,7 @@ def _resolve_canonical(question: WizardQuestion, values: Mapping[str, str]) -> s
     return question.default
 
 
-def _parse_canonical(question: WizardQuestion, raw: str) -> object:
+def parse_canonical(question: WizardQuestion, raw: str) -> object:
     """Parse a canonical token into the question's declared answer type.
 
     For an optional CONFIRM, a blank canonical projects to the empty
@@ -435,6 +435,7 @@ __all__ = [
     "WizardPersistMode",
     "descendant_answers_from_record",
     "descendant_facts_from_answers",
+    "parse_canonical",
     "persist_answers",
     "persist_patch",
     "profile_values_from_patch",

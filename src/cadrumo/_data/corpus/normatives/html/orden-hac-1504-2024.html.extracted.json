@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-1504-2024.html",
   "source_sha256": "a457ba5c3f0d154ec58bb5347275765b4e930c70b462bd8ba93d560070f2cad8",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.0",
+  "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2024-27528",
   "units": [
     {

@@ -29,6 +29,8 @@ deliberate parameter change):
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 from argon2.exceptions import HashingError
 from pydantic import ValidationError
@@ -93,7 +95,22 @@ def test_derive_kek_differs_for_different_passphrases() -> None:
     assert a != b
 
 
-def _unvalidated(**overrides: object) -> ManifestKdfParams:
+class _UnvalidatedManifestKdfFields(TypedDict):
+    algorithm: str
+    version: int
+    memory_cost: int
+    time_cost: int
+    parallelism: int
+    salt: bytes
+    output_length: int
+
+
+def _unvalidated(
+    *,
+    algorithm: str = "argon2id",
+    memory_cost: int = 19 * 1024,
+    output_length: int = 32,
+) -> ManifestKdfParams:
     """Build a record that skips validation, to reach the backstop beneath it.
 
     Every parameter set below is now refused by ``ManifestKdfParams`` itself
@@ -102,16 +119,15 @@ def _unvalidated(**overrides: object) -> ManifestKdfParams:
     guards inside ``derive_kek`` must keep raising a TYPED storage error for a
     caller that bypasses the record, and proving that requires bypassing it.
     """
-    fields: dict[str, object] = {
-        "algorithm": "argon2id",
+    fields: _UnvalidatedManifestKdfFields = {
+        "algorithm": algorithm,
         "version": 19,
-        "memory_cost": 19 * 1024,
+        "memory_cost": memory_cost,
         "time_cost": 2,
         "parallelism": 1,
         "salt": _REFERENCE_SALT,
-        "output_length": 32,
+        "output_length": output_length,
     }
-    fields.update(overrides)
     return ManifestKdfParams.model_construct(**fields)
 
 
@@ -147,9 +163,9 @@ def test_manifest_record_refuses_what_the_enrollment_record_refuses(overrides: d
     fields.update(overrides)
 
     with pytest.raises(ValidationError):
-        ManifestKdfParams(**fields)  # type: ignore[arg-type]
+        ManifestKdfParams.model_validate(fields)
     with pytest.raises(ValidationError):
-        KdfParams(**fields)  # type: ignore[arg-type]
+        KdfParams.model_validate(fields)
 
 
 def test_canonical_params_project_into_an_accepted_manifest_record() -> None:

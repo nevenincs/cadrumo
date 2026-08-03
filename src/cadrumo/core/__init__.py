@@ -89,7 +89,12 @@ from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._concept_lifecycle import ConceptLifecycle
-from ._config_state_root import FormerProductStateError
+from ._config_state_root import (
+    FormerProductStateError,
+    StateRootInputs,
+    live_state_root_inputs,
+    platform_user_data_root,
+)
 from ._credentials import (
     LENGTH_ALONE_IS_STRONG,
     LENGTH_FAIR_FLOOR,
@@ -226,7 +231,6 @@ if TYPE_CHECKING:
         FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
         MODELO_720_FOREIGN_ASSET_CLASS_CODES,
         ForeignAssetObligationGroup,
-        foreign_asset_declaration_threshold,
         foreign_asset_obligation_group,
     )
     from ._fsync import fsync_parent_dir
@@ -325,6 +329,7 @@ __all__: list[str] = [
     "SecureObjectWrite",
     "ServiceCapability",
     "StandardPeriodCode",
+    "StateRootInputs",
     "TaxDomain",
     "TipoRentaGroundingTier",
     "TipoRentaIrnr",
@@ -339,7 +344,6 @@ __all__: list[str] = [
     "derive_result_disposition",
     "exclusive_file_lock",
     "expected_floor",
-    "foreign_asset_declaration_threshold",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
@@ -348,6 +352,7 @@ __all__: list[str] = [
     "iban_mod_97",
     "is_aeat_csv",
     "lineage_obligations",
+    "live_state_root_inputs",
     "misclassified_floor_keys",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
@@ -358,6 +363,7 @@ __all__: list[str] = [
     "parse_toml_text",
     "permitted_amendment_kind_values",
     "pid_is_alive",
+    "platform_user_data_root",
     "pointer_path",
     "post_filing_event_is_actionable",
     "project_m210_tipo_renta_code",
@@ -408,7 +414,6 @@ def __getattr__(name: str) -> object:
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
         "ForeignAssetObligationGroup",
-        "foreign_asset_declaration_threshold",
         "foreign_asset_obligation_group",
     ):
         from . import _foreign_asset_obligation

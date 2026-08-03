@@ -28,12 +28,18 @@ import sys
 from typing import TYPE_CHECKING
 
 import questionary
+from pydantic import TypeAdapter
 
 from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
 from ...core.i18n import tr
 from ._capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
 from ._checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
-from ._copy import PageCopy, assemble_page_copy, resolve_copy, resolve_optional_copy
+from ._copy import (
+    PageCopy,
+    assemble_page_copy,
+    assemble_section_titles,
+    resolve_optional_copy,
+)
 from ._definition import FlowDefinition
 from ._engine import (
     SECTION_VERDICT_PREFIX,
@@ -61,6 +67,7 @@ _REVIEW_ACTION_SUBMIT = "submit"
 _REVIEW_ACTION_EDIT = "edit"
 _REVIEW_ACTION_RESTART = "restart"
 _REVIEW_ACTION_SAVE_EXIT = "save_exit"
+_CHECKBOX_VALUES = TypeAdapter(list[object])
 
 
 class LineFlowFrontend:
@@ -189,7 +196,10 @@ class LineFlowFrontend:
                 "flows.progress.page_header",
                 position=position + 1,
                 total=len(sequence),
-                section=entry.section_id,
+                # The resolved title, never the internal slug: line mode and
+                # the full-screen header read identically in the profile's
+                # language.
+                section=assemble_section_titles(self._definition).get(entry.section_id, entry.section_id),
             ),
         )
         self._render_page_copy(copy)
@@ -295,7 +305,7 @@ class LineFlowFrontend:
         )
         if not isinstance(result, list):
             return ""
-        return ",".join(str(item) for item in result)
+        return ",".join(str(item) for item in _CHECKBOX_VALUES.validate_python(result))
 
     def _select_one(self, prompt: str, default: str, choices: list[questionary.Choice]) -> str:
         """Run a single-choice select over already-rendered choices."""
@@ -376,7 +386,7 @@ class LineFlowFrontend:
         prompts = {
             entry.key: assemble_page_copy(entry.page).prompt for entry in visible_sequence(self._definition, state)
         }
-        section_titles = {section.id: resolve_copy(section.title) for section in self._definition.sections}
+        section_titles = assemble_section_titles(self._definition)
         rows_by_number: dict[str, str] = {}
         current_section: str | None = None
         for number, row in enumerate(projection.rows, start=1):

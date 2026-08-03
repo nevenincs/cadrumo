@@ -410,9 +410,6 @@ def filing_record_observe_local(
         casilla_count=len(local_observation.casilla_values),
         captured_at=local_observation.captured_at,
         captured_by=local_observation.captured_by,
-        official_evidence=local_observation.official_evidence,
-        filing_record_created=local_observation.filing_record_created,
-        aeat_accepted=local_observation.aeat_accepted,
     )
     notice_message = (
         "Operator-supplied local observation recorded for calculation prefill only; "

@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/real-decreto-ley-4-2024-art-3.html",
   "source_sha256": "8279c94a3bd99328dd3174b2161bc78ed153ca8029dfe3d1bd6e1325e89ab6ca",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.0",
+  "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {

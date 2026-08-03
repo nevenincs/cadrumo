@@ -5,3 +5,33 @@
 # <<< vaultspec-managed <<<
 
 src/cadrumo/_data/corpus/aeat_official/** -text
+
+# Binary content, by extension rather than by location.
+#
+# `* text=auto` above asks git to GUESS which files are text and normalise
+# their line endings. The guess is a heuristic over the first few kilobytes,
+# and it is wrong often enough to matter here: a PDF or workbook whose bytes
+# happen to look textual gets its CRLF pairs rewritten on checkout or on a
+# renormalise, which silently changes content-addressed evidence. Several of
+# these fixtures declare their own sha256 in a sidecar and are graded against
+# it, so a rewritten byte is not a cosmetic difference -- it invalidates the
+# artefact and whatever conclusion was drawn from it.
+#
+# The path rule above covers one corpus directory. These cover the rest of
+# the repository's binary inventory wherever it lives: AEAT specimens and
+# manual annexes, official workbooks, evidence-corpus images, and shipped
+# fonts. `binary` is `-text -diff`, so git neither rewrites the bytes nor
+# tries to render a textual diff of them.
+*.pdf binary
+*.xls binary
+*.xlsx binary
+*.xlsm binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary

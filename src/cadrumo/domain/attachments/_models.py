@@ -13,7 +13,7 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Self, override
 
-from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_serializer, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CoreValidationError
@@ -25,6 +25,11 @@ from ._ids import AttachmentId
 
 _HEX_DIGITS = frozenset("0123456789abcdef")
 _LINK_ONLY_MIME_TYPE = "text/uri-list"
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
+_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
+_STRING_METADATA_MAPPING: TypeAdapter[dict[str, str]] = TypeAdapter(
+    dict[str, str], config=ConfigDict(strict=True)
+)
 
 
 def normalize_media_type(value: str) -> str:
@@ -213,7 +218,7 @@ class Attachment(BaseModel):
             raise AttachmentValidationError("linked_transaction_ids must be an iterable of strings, not a scalar")
         if not isinstance(value, Iterable):
             raise AttachmentValidationError("linked_transaction_ids must be iterable")
-        return _dedupe_preserve_order(value, field_name="linked_transaction_ids")
+        return _dedupe_preserve_order(_OBJECT_SEQUENCE.validate_python(value), field_name="linked_transaction_ids")
 
     @field_validator("linked_invoice_ids", mode="before")
     @classmethod
@@ -225,7 +230,7 @@ class Attachment(BaseModel):
             raise AttachmentValidationError("linked_invoice_ids must be an iterable of strings, not a scalar")
         if not isinstance(value, Iterable):
             raise AttachmentValidationError("linked_invoice_ids must be iterable")
-        return _dedupe_preserve_order(value, field_name="linked_invoice_ids")
+        return _dedupe_preserve_order(_OBJECT_SEQUENCE.validate_python(value), field_name="linked_invoice_ids")
 
     @field_validator("metadata", mode="before")
     @classmethod
@@ -236,14 +241,14 @@ class Attachment(BaseModel):
         if not isinstance(value, Mapping):
             raise AttachmentValidationError("metadata must be a mapping of string keys to string values")
         normalized: dict[str, str] = {}
-        for raw_key, raw_val in value.items():
-            if not isinstance(raw_key, str):
-                raise AttachmentValidationError("metadata keys must be strings")
+        try:
+            metadata = _STRING_METADATA_MAPPING.validate_python(value)
+        except ValueError as exc:
+            raise AttachmentValidationError("metadata must be a mapping of string keys to string values") from exc
+        for raw_key, raw_val in metadata.items():
             key = raw_key.strip()
             if not key:
                 raise AttachmentValidationError("metadata keys must not be blank")
-            if not isinstance(raw_val, str):
-                raise AttachmentValidationError(f"metadata value for {key!r} must be a string")
             if not raw_val:
                 raise AttachmentValidationError(f"metadata value for {key!r} must not be blank")
             normalized[key] = raw_val
@@ -286,13 +291,13 @@ class AttachmentCatalogue(BaseModel):
         if isinstance(data, cls):
             return data
         if isinstance(data, Mapping):
-            if "attachments" in data:
-                return data
-            if all(isinstance(key, str) for key in data):
-                return {"attachments": dict(data)}
+            payload = _STRING_OBJECT_MAPPING.validate_python(data)
+            if "attachments" in payload:
+                return payload
+            return {"attachments": payload}
         if isinstance(data, Iterable) and not isinstance(data, str | bytes):
             attachments: dict[str, Attachment] = {}
-            for item in data:
+            for item in _OBJECT_SEQUENCE.validate_python(data):
                 attachment = item if isinstance(item, Attachment) else Attachment.model_validate(item)
                 if attachment.attachment_id in attachments:
                     raise AttachmentValidationError(f"duplicate attachment_id: {attachment.attachment_id}")
@@ -334,7 +339,7 @@ class AttachmentCatalogue(BaseModel):
         return cls.model_validate(tuple(attachments))
 
     @override
-    def __iter__(self) -> Iterator[Attachment]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Attachment]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields Attachment records, not BaseModel field-value tuples
         """Iterate over catalogue attachments."""
         return iter(self.attachments.values())
 

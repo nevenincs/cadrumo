@@ -15,7 +15,6 @@ records should contain only synthetic values, hashes, surface names, and counts.
 
 from __future__ import annotations
 
-from hashlib import sha256
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -28,6 +27,7 @@ from pydantic import (
     model_validator,
 )
 
+from ....core.hashing import sha256_hex
 from ....core.identity import validate_spanish_tax_id
 from ._errors import SanitizerValidationError
 
@@ -472,7 +472,7 @@ class SanitizationResult(BaseModel):
             SanitizerValidationError: When the digest or the size disagrees
                 with ``output_bytes``.
         """
-        actual_sha256 = sha256(self.output_bytes).hexdigest()
+        actual_sha256 = sha256_hex(self.output_bytes)
         if self.output_sha256 != actual_sha256:
             raise SanitizerValidationError(
                 f"output_sha256 does not describe output_bytes: declared {self.output_sha256}, "

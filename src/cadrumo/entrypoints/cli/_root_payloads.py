@@ -27,29 +27,66 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from pydantic import BaseModel, model_validator
 
 from ._schemas import OutputSchema, register_schema
 
 
+def _help_document_branch() -> type[BaseModel]:
+    """Resolve the ``HelpDocument`` branch DTO from its public facade."""
+    from ...application.operator_surface import HelpDocument
+
+    return HelpDocument
+
+
+def _root_landing_report_branch() -> type[BaseModel]:
+    """Resolve the ``RootLandingReport`` branch DTO from its public facade."""
+    from ...application.operator_surface import RootLandingReport
+
+    return RootLandingReport
+
+
+def _overview_status_report_branch() -> type[BaseModel]:
+    """Resolve the ``OverviewStatusReport`` branch DTO from its public facade.
+
+    Deliberately deferred behind a thunk: importing
+    :mod:`cadrumo.application.overview` materialises the calculation, ledger, and
+    registry import graph. The help and cold-start landing branches are tried
+    first and match without it, so ``aeat --help`` must never pay that cost.
+    """
+    from ...application.overview import OverviewStatusReport
+
+    return OverviewStatusReport
+
+
 def _canonical_branch_payload(
     value: object,
     *,
-    branches: tuple[type[BaseModel], ...],
+    branches: tuple[Callable[[], type[BaseModel]], ...],
 ) -> dict[str, object]:
-    """Return a JSON payload validated by one of the canonical branch DTOs."""
+    """Return a JSON payload validated by one of the canonical branch DTOs.
+
+    Branches are supplied as thunks and resolved one at a time, in declaration
+    order, so a payload matching an earlier branch never imports the modules
+    backing the later ones. Acceptance and refusal are unchanged: the first
+    branch that validates still wins, and a payload matching none still raises
+    naming every candidate.
+    """
     if not isinstance(value, Mapping):
         raise ValueError("root result must be a mapping")
 
     serialized = json.dumps(dict(value))
-    for branch in branches:
+    attempted: list[str] = []
+    for resolve_branch in branches:
+        branch = resolve_branch()
+        attempted.append(branch.__name__)
         try:
             return branch.model_validate_json(serialized).model_dump(mode="json")
         except ValueError:
             continue
-    expected = ", ".join(branch.__name__ for branch in branches)
+    expected = ", ".join(attempted)
     raise ValueError(f"root result must match one canonical branch: {expected}")
 
 
@@ -77,12 +114,13 @@ class RootStatusResult(OutputSchema):
     @model_validator(mode="before")
     @classmethod
     def _validate_canonical_branch(cls, value: object) -> dict[str, object]:
-        from ...application.operator_surface import HelpDocument, RootLandingReport
-        from ...application.overview import OverviewStatusReport
-
         return _canonical_branch_payload(
             value,
-            branches=(HelpDocument, RootLandingReport, OverviewStatusReport),
+            branches=(
+                _help_document_branch,
+                _root_landing_report_branch,
+                _overview_status_report_branch,
+            ),
         )
 
 
@@ -106,6 +144,4 @@ class AppRootResult(OutputSchema):
     @model_validator(mode="before")
     @classmethod
     def _validate_help_document(cls, value: object) -> dict[str, object]:
-        from ...application.operator_surface import HelpDocument
-
-        return _canonical_branch_payload(value, branches=(HelpDocument,))
+        return _canonical_branch_payload(value, branches=(_help_document_branch,))

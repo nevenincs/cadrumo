@@ -54,7 +54,7 @@ from ..aggregation import (
     merge_source_resolutions,
 )
 from ..calculations import BienesInversionRegularizacionSourceResolver, ProrrataRegularizacionSourceResolver
-from ._calculation_modelo_adjustments import _m131_objective_estimation_data_base_inputs
+from ._calculation_modelo_adjustments import m131_objective_estimation_data_base_inputs
 from ._calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 
 
@@ -278,7 +278,7 @@ def materialise_registry_values_for_source_resolution(
         binding_id for binding_id in unresolved_binding_ids if binding_id not in effective_binding_values
     )
     resolved_backend_inputs = {
-        **_m131_objective_estimation_data_base_inputs(
+        **m131_objective_estimation_data_base_inputs(
             work_unit=work_unit,
             revision=revision,
             binding_values=effective_binding_values,

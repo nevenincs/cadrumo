@@ -12,6 +12,7 @@ is unit-tested.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -94,6 +95,13 @@ def _cli_form(verb_schema: VerbInputSchema) -> str:
     return "aeat " + " ".join(verb_schema.cli_path)
 
 
+def _schema_definitions(value: object) -> dict[str, Any]:
+    """Return one JSON Schema definitions mapping, or no definitions."""
+    if not isinstance(value, Mapping):
+        return {}
+    return {str(key): item for key, item in value.items()}
+
+
 def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
     """Build the exposed MCP tool descriptors from the live manifest + registry.
 
@@ -155,9 +163,9 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     # The advertised output and emitted structuredContent therefore stay
     # identical while preserving the CLI's command/status/notices contract.
     result_schema = thin_output_schema(command_key, schema.model_json_schema())
-    definitions = result_schema.pop("$defs", {})
+    definitions = _schema_definitions(result_schema.pop("$defs", {}))
     error_schema = ErrorEnvelope.model_json_schema()
-    error_definitions = error_schema.pop("$defs", {})
+    error_definitions = _schema_definitions(error_schema.pop("$defs", {}))
     notices_schema = {
         "type": "array",
         "items": {

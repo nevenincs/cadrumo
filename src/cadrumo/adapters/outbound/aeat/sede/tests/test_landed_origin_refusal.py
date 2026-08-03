@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -142,14 +143,15 @@ class TestTheExtractionIsOneSharedPredicate:
         "module",
         [_declarations_fetch, _iva_compensation_wallet],
     )
-    def test_the_retired_inline_extraction_is_absent(self, module: object) -> None:
+    def test_the_retired_inline_extraction_is_absent(self, module: ModuleType) -> None:
         """IDENTITY: the old two-line urlsplit shape is gone from the module.
 
         Scans for the retired construction -- reading ``.scheme`` and
         ``.netloc`` off a urlsplit result to build an origin string -- rather
         than trusting that the call sites were the only copies.
         """
-        source = Path(module.__file__).read_text(encoding="utf-8")  # type: ignore[attr-defined]
+        assert module.__file__ is not None
+        source = Path(module.__file__).read_text(encoding="utf-8")
         tree = ast.parse(source)
         offenders = [
             ast.unparse(node)

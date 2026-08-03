@@ -14,7 +14,7 @@ from ....application.storage_write_policy import (
     PROFILE_BOUND_WRITE_VERB_PATHS,
     is_profile_bound_write_verb_path,
 )
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 from .._bootstrap_exempt import is_bootstrap_exempt
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -386,7 +386,7 @@ def test_invoice_mutations_are_profile_bound_writes() -> None:
 def test_cli_root_delegates_route_classification_to_backend_policy() -> None:
     """The CLI root must not own the storage-route write policy."""
 
-    root_source = (PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "__init__.py").read_text(encoding="utf-8")
+    root_source = (REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli" / "__init__.py").read_text(encoding="utf-8")
 
     assert "classify_storage_route" not in root_source
     assert "StorageRouteKind" not in root_source

@@ -35,7 +35,7 @@ from dev.audit.report import (
     build_report,
 )
 
-from ..core.paths import PROJECT_ROOT
+from ._inventory import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -146,7 +146,7 @@ def test_audit_shadowing_red_findings_are_never_in_the_tolerated_baseline() -> N
     """
     import json
 
-    baseline_path = PROJECT_ROOT / "dev" / "import_hygiene_baseline.json"
+    baseline_path = REPO_ROOT / "dev" / "import_hygiene_baseline.json"
     tolerated = {
         entry["symbol"]
         for entry in json.loads(baseline_path.read_text(encoding="utf-8"))["family3_pinned_duplicate_symbols"][
@@ -184,7 +184,7 @@ def test_audit_layering_evaluates_every_declared_contract() -> None:
     many contracts as ``.importlinter`` DECLARES. A run reporting nothing is
     not a clean run.
     """
-    declared = _declared_contract_count(PROJECT_ROOT)
+    declared = _declared_contract_count(REPO_ROOT)
     assert declared > 0, ".importlinter declares no contracts; the layering signal has no subject"
 
     # Availability is asserted, not tolerated. An early return on the
@@ -196,7 +196,7 @@ def test_audit_layering_evaluates_every_declared_contract() -> None:
         "evaluating anything; install the dev dependencies rather than skipping this"
     )
 
-    result = audit_layering(PROJECT_ROOT)
+    result = audit_layering(REPO_ROOT)
 
     assert result.name == "layering"
     assert result.status is not Status.AMBER, (
@@ -225,7 +225,7 @@ def test_audit_layering_reports_an_aborted_run_distinctly_from_a_breach(tmp_path
     reads as GREEN. Both are wrong in the same direction, so the dimension has
     to compare evaluated against declared and say which failure it is.
     """
-    config = (PROJECT_ROOT / ".importlinter").read_text(encoding="utf-8", errors="replace")
+    config = (REPO_ROOT / ".importlinter").read_text(encoding="utf-8", errors="replace")
     marker = "ignore_imports ="
     assert marker in config, "expected at least one ignore_imports block to inject into"
     cut = config.index(marker) + len(marker)
@@ -264,7 +264,7 @@ def test_audit_duplication_reports_the_live_trees_real_duplication_state() -> No
     clones. The live tree does carry clones, so AMBER with a measured count is
     the only honest verdict here; GREEN would mean the runner scanned nothing.
     """
-    result = audit_duplication(PROJECT_ROOT)
+    result = audit_duplication(REPO_ROOT)
 
     assert result.name == "duplication"
     assert result.status is Status.AMBER
@@ -273,7 +273,7 @@ def test_audit_duplication_reports_the_live_trees_real_duplication_state() -> No
 
 def test_build_report_composes_all_four_dimensions_in_order() -> None:
     """``build_report`` returns exactly the four named dimensions, in a fixed order."""
-    report = build_report(PROJECT_ROOT)
+    report = build_report(REPO_ROOT)
 
     assert [d.name for d in report.dimensions] == ["shadowing", "duplication", "layering", "complexity"]
     assert report.overall in {Status.RED, Status.AMBER, Status.GREEN}
@@ -281,5 +281,5 @@ def test_build_report_composes_all_four_dimensions_in_order() -> None:
 
 def test_project_root_points_at_the_real_repository_root() -> None:
     """Sanity: the fixture path used by the end-to-end tests is the real repo root."""
-    assert (PROJECT_ROOT / ".importlinter").is_file()
-    assert (Path(PROJECT_ROOT) / "dev" / "audit" / "report.py").is_file()
+    assert (REPO_ROOT / ".importlinter").is_file()
+    assert (Path(REPO_ROOT) / "dev" / "audit" / "report.py").is_file()

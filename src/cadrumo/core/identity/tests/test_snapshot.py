@@ -6,7 +6,7 @@ storage adapters. It accepts the canonical SHA-256 digest shape and rejects
 uppercase, wrong-length, and non-hex values at the pydantic boundary.
 
 See Also:
-    :mod:`~core.identity._snapshot`
+    :data:`~core.identity.SnapshotId`
         Alias definition under test.
     :class:`~application.live.PersistedNotificationsSnapshot`
         Bucket-scoped live snapshot payload that stores a ``SnapshotId``.

@@ -554,52 +554,72 @@ class TestAmbientEnvNeutralisation:
             assert secret not in frame.output
             assert secret not in frame.stderr
 
-    def test_operator_dotenv_never_reaches_frame_execution(
+    def test_bridged_dotenv_value_never_reaches_frame_execution(
         self,
         tmp_path: Path,
     ) -> None:
-        """The second operator-state channel: the project dotenv (env/.env,
-        loaded by pydantic-settings via an ABSOLUTE path) must not reach
-        sandboxed settings. The REAL dotenv source is redirected to a poisoned
-        temp file; the channel is proven live outside the sandbox
-        (anti-vacuity), then the sandbox scope resolves settings as if no
-        dotenv existed, and a real sequence run never carries the value."""
-        from cadrumo.core.config import Settings, load_settings
+        """The historical second operator-state channel — the project dotenv
+        (``env/.env``, once loaded by pydantic-settings via an ABSOLUTE path
+        independent of ``os.environ``) — no longer exists in production:
+        ``Settings.settings_customise_sources`` never returns a dotenv source,
+        regardless of ``model_config["env_file"]``. The one surviving route for
+        an ``env/.env``-declared value to reach a process is the repo-root
+        ``conftest.py`` bridge (:func:`cadrumo.tests._env_loader.bridge_env_file_into_environ`),
+        which parses a real dotenv file and applies each pair to ``os.environ``
+        via ``setdefault`` before any test runs. This drives that REAL bridge
+        function against a synthetic dotenv file (anti-vacuity: the bridge is
+        proven to genuinely land the pair in ``os.environ``, not assumed), then
+        proves the bridged value — now indistinguishable from a genuinely
+        ambient ``CADRUMO_*`` variable — is scrubbed by the same
+        ``_neutralized_ambient_env`` seam :class:`TestAmbientEnvNeutralisation`'s
+        other probes exercise directly, end to end through a real sequence run."""
+        import os
+
+        from cadrumo.tests._env_loader import bridge_env_file_into_environ
 
         from .._runner import sequence_sandbox
 
-        poison_marker = str(tmp_path / "poisoned-operator-runs")
-        poisoned_dotenv = tmp_path / "poisoned.env"
-        poisoned_dotenv.write_text(f"CADRUMO_RUNS_DIR={poison_marker}\n", encoding="utf-8")
+        secret = "fake-operator-dni-77777777H"  # noqa: S105 - synthetic test value
+        env_var_name = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
+        scripted_dotenv = tmp_path / "scripted.env"
+        scripted_dotenv.write_text(f"{env_var_name}={secret}\n", encoding="utf-8")
 
-        # Redirect the dotenv source on the class-level model_config, restoring
-        # the prior entry (present-or-absent) on exit — a scoped mutation with no
-        # monkeypatch machinery.
-        had_env_file = "env_file" in Settings.model_config
-        prior_env_file = Settings.model_config.get("env_file")
-        Settings.model_config["env_file"] = poisoned_dotenv
+        # A real host may already carry this var (bridged from the host's own
+        # env/.env), so the prior value — present or absent — is saved and
+        # restored rather than assumed clean, exactly as scoped_env_var does.
+        had_prior = env_var_name in os.environ
+        prior_value = os.environ.get(env_var_name)
+        os.environ.pop(env_var_name, None)
         try:
-            # Anti-vacuity: outside a sandbox, the poisoned dotenv IS a live source.
-            assert str(load_settings().cadrumo_runs_dir) == poison_marker
+            # Anti-vacuity: the bridge is a real parser + os.environ writer, not
+            # a stand-in — prove it genuinely lands the pair before trusting
+            # anything downstream of it. ``setdefault`` semantics mean this
+            # only takes effect because the slot was just cleared above.
+            bridged = bridge_env_file_into_environ(scripted_dotenv)
+            assert bridged == {env_var_name: secret}
+            assert os.environ[env_var_name] == secret
 
-            with sequence_sandbox(sequence_id="dotenv-probe", sandbox_root=tmp_path / "scope"):
-                assert str(load_settings().cadrumo_runs_dir) != poison_marker
+            with sequence_sandbox(sequence_id="dotenv-bridge-probe", sandbox_root=tmp_path / "scope"):
+                assert os.environ.get(env_var_name) is None
 
-            # Restored outside the scope: the dotenv source reads again.
-            assert str(load_settings().cadrumo_runs_dir) == poison_marker
+            # Restored outside the sandbox scope: the bridged value persists in
+            # the ambient environment exactly like a real operator export would.
+            assert os.environ[env_var_name] == secret
 
             # End to end: a real sequence executes green and no frame observes it.
             sequence = _result_sequence(
-                "@result aeat --format json config profile list\n" + '@expect status == "success"\n',
-                sequence_id="runner-dotenv-scrub",
+                "aeat --format json config profile list\n"
+                "@result aeat --format json config profile list\n"
+                '@expect status == "success"\n',
+                sequence_id="runner-dotenv-bridge-scrub",
             )
             transcript = execute_sequence(sequence, sandbox_root=tmp_path / "run")
             for frame in transcript.frames:
                 assert frame.exit_code == 0
-                assert poison_marker not in frame.output
-                assert poison_marker not in frame.stderr
+                assert secret not in frame.output
+                assert secret not in frame.stderr
         finally:
-            if had_env_file:
-                Settings.model_config["env_file"] = prior_env_file
+            if had_prior:
+                os.environ[env_var_name] = prior_value  # type: ignore[assignment]
             else:
-                Settings.model_config.pop("env_file", None)
+                os.environ.pop(env_var_name, None)

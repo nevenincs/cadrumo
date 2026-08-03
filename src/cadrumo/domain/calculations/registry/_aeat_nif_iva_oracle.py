@@ -28,7 +28,7 @@ from pydantic import AnyUrl, Field, field_validator
 
 from ....core.config import Settings
 from ._checker_oracle_flow import (
-    _CheckerBaseModel,
+       CheckerBaseModel,
     compare_verdict_field,
     decode_replay_observation,
     normalize_expected_verdicts,
@@ -50,7 +50,7 @@ from ._remote_state_guard import RemoteOperation
 ORACLE_ID: OracleId = "aeat-nif-iva-checker"
 
 
-class AeatNifIvaObservation(_CheckerBaseModel):
+class AeatNifIvaObservation(CheckerBaseModel):
     """Observed NIF-IVA verdicts returned by an executable adapter."""
 
     values: dict[str, str] = Field(default_factory=dict)

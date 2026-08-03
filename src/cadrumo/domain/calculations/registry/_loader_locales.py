@@ -21,12 +21,24 @@ from __future__ import annotations
 from collections.abc import Iterable
 from pathlib import Path
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from ....core import freeze_toml, read_toml
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._ids import CasillaId, validated_casilla_id
 from ._toml_helpers import as_toml_table
+
+_TOML_ARRAY_ADAPTER: TypeAdapter[list[object] | tuple[object, ...]] = TypeAdapter(
+    list[object] | tuple[object, ...], config=ConfigDict(strict=True)
+)
+
+
+def _toml_array(value: object) -> tuple[object, ...] | None:
+    """Return a strictly typed TOML array without changing its item values."""
+    try:
+        return tuple(_TOML_ARRAY_ADAPTER.validate_python(value))
+    except ValidationError:
+        return None
 
 
 class RegistryLocaleTranslation(BaseModel):
@@ -127,8 +139,8 @@ def _collect_valid_locale_ids(
         raw_rev_table = as_toml_table(raw_rev)
         if raw_rev_table is None:
             continue
-        casillas_list = raw_rev_table.get("casillas", ())
-        if not isinstance(casillas_list, (list, tuple)):
+        casillas_list = _toml_array(raw_rev_table.get("casillas", ()))
+        if casillas_list is None:
             continue
         rev_casilla_ids: set[CasillaId] = set()
         for casilla in casillas_list:
@@ -239,8 +251,8 @@ def _inject_localized_translations(
         raw_rev_table = as_toml_table(raw_rev)
         if raw_rev_table is None:
             continue
-        casillas_list = raw_rev_table.get("casillas", ())
-        if not isinstance(casillas_list, (list, tuple)):
+        casillas_list = _toml_array(raw_rev_table.get("casillas", ()))
+        if casillas_list is None:
             continue
         raw_rev_table["casillas"] = tuple(
             _localize_casilla(casilla, revision_id, modelo_translations, revision_translations)

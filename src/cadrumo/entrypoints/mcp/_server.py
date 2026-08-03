@@ -316,14 +316,14 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
             Tool(
                 name=descriptor.name,
                 description=descriptor.description,
-                inputSchema=descriptor.input_schema,
-                outputSchema=descriptor.output_schema,
+                input_schema=descriptor.input_schema,
+                output_schema=descriptor.output_schema,
                 annotations=ToolAnnotations(
                     title=annotations.title,
-                    readOnlyHint=annotations.read_only_hint,
-                    destructiveHint=annotations.destructive_hint,
-                    idempotentHint=annotations.idempotent_hint,
-                    openWorldHint=annotations.open_world_hint,
+                    read_only_hint=annotations.read_only_hint,
+                    destructive_hint=annotations.destructive_hint,
+                    idempotent_hint=annotations.idempotent_hint,
+                    open_world_hint=annotations.open_world_hint,
                 ),
                 _meta=meta,
             ),
@@ -352,7 +352,7 @@ def build_meta_sdk_tools() -> list[Tool]:
                 "Pass a hit to describe for its full schema before you run it, or activate a toolset to "
                 "advertise a whole domain's verbs directly."
             ),
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "query": {
@@ -370,7 +370,7 @@ def build_meta_sdk_tools() -> list[Tool]:
                 "Execute one Cadrumo command by key with named arguments, through the same safety gates. "
                 "Call describe first to read the command's full input schema before you build the arguments."
             ),
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "command_key": {
@@ -391,7 +391,7 @@ def build_meta_sdk_tools() -> list[Tool]:
                 "Activate a toolset when you will do repeated work in that domain, so its verbs are advertised "
                 "directly instead of reached one at a time through search and execute."
             ),
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "action": {
@@ -414,7 +414,7 @@ def build_meta_sdk_tools() -> list[Tool]:
                 "Return one Cadrumo command's full descriptor by key: schema, annotations, confirmation "
                 "tier, risk, owning toolset, and which personas may call it."
             ),
-            inputSchema={
+            input_schema={
                 "type": "object",
                 "properties": {
                     "command_key": {
@@ -1217,7 +1217,10 @@ def _run_server(
     # Then run the ordinary exit functions, which release process-global state
     # such as the bucket lockfiles that would otherwise be stranded and block
     # the operator's next session.
-    register_pre_exit_hook(close_all_live_bucket_sessions)
+    def _close_live_sessions_before_exit() -> None:
+        close_all_live_bucket_sessions()
+
+    register_pre_exit_hook(_close_live_sessions_before_exit)
     register_pre_exit_hook(atexit._run_exitfuncs)
     arm_stdio_lifetime_watchdog()
 

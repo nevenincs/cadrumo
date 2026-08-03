@@ -31,6 +31,8 @@ from .. import (
     create_catalogue_invoice,
 )
 
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
 
 class _CanonicalOnlyRateProvider:
     """Real :class:`ExchangeRateProvider` implementation returning a rate ONLY
@@ -41,7 +43,6 @@ class _CanonicalOnlyRateProvider:
         del rate_date
         return Decimal("1.2") if currency == "GBP" else None
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _BUCKET_ID = "19191919-1919-4191-8191-191919191919"
 

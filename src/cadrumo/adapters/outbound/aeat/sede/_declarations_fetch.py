@@ -14,7 +14,6 @@ fetch path that forgets the guard.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
@@ -287,50 +286,74 @@ async def _capture_row_pdf_artefact(
 
 async def _capture_submitted_file_artefact(
     *,
+    context: BrowserContext,
     page: Page,
     row_locator,
     declaration: Declaracion,
     cell_index: int,
     read_policy: RemoteStateGuardPolicy,
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
+    # The click triggers a real browser download (AEAT serves the archive
+    # with a Content-Disposition attachment header). Two independent things
+    # keep the taxpayer's bytes off disk entirely:
+    #  1. `BrowserSession._build_context_kwargs` pins `accept_downloads`
+    #     False on this context, so Chromium refuses to persist the
+    #     attachment at all -- measured directly:
+    #     `browser/tests/test_accept_downloads_disabled.py` proves
+    #     `download.path()` raises on the real production context (its own
+    #     error names the flag this adapter deliberately does not set).
+    #     `download.cancel()` alone would NOT be enough here: Chromium
+    #     starts writing bytes to its own temp folder the instant the
+    #     download begins, and cancelling only stops an in-flight transfer
+    #     -- it does not retroactively un-write what already landed.
+    #  2. Even so, this function never reads a download via a filesystem
+    #     path (defense in depth, and the honest reason it stays cheap to
+    #     re-fetch): `download.url` is read, the transfer is best-effort
+    #     cancelled, and the SAME URL is fetched again in-memory through the
+    #     authenticated request context -- the identical shape
+    #     `_capture_row_pdf_artefact` uses for the cotejo PDF.
+    # (sensitive-financial-data-secure-storage-only)
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with page.expect_download(timeout=_get_ver_click_timeout_ms()) as download_info:
             _assert_read_browser_action("download-filed-data-file", policy=read_policy)
             await button.click(timeout=_get_form_interaction_timeout_ms())
         download = await download_info.value
-        path = await download.path()
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"submitted-file download for {declaration.expediente_id!r} failed: {exc}",
         ) from exc
 
-    if path is None:
-        raise SedeNavigationError(
-            f"submitted-file download for {declaration.expediente_id!r} did not expose a local path",
+    download_url = getattr(download, "url", None)
+    try:
+        await download.cancel()
+    except PlaywrightError as exc:
+        # Best-effort: cancellation is safe to call even on a finished or
+        # already-cancelled download, so a failure here is diagnostic only
+        # and must never mask the real fetch below.
+        log.debug(
+            "submitted-file download cancel failed for %s: %s",
+            declaration.expediente_id,
+            exc,
+            exc_info=True,
         )
-    body = Path(path).read_bytes()
+
+    if not isinstance(download_url, str) or not download_url:
+        raise SedeNavigationError(
+            f"submitted-file download for {declaration.expediente_id!r} exposed no source URL",
+        )
+    source_url = AnyHttpUrl(download_url)
+    _assert_read_http("GET", str(source_url), policy=read_policy)
+    response = await context.request.get(str(source_url))
+    body = await response.body()
     if not body:
         raise JustificanteFetchError(
             f"submitted-file download for {declaration.expediente_id!r} returned an empty body",
         )
-    download_url = getattr(download, "url", None)
-    source_url = download_url if isinstance(download_url, str) else None
-    if not source_url:
-        source_url = str(
-            AnyHttpUrl(
-                _listing_url_for(
-                    _origin_of(getattr(page, "url", None)),
-                    modelo=declaration.modelo,
-                    ejercicio=declaration.ejercicio,
-                ),
-            ),
-        )
-    _assert_read_http("GET", source_url, policy=read_policy)
     return (
         FiledDeclaracionArtefact(
             kind="submitted_file",
-            source_url=AnyHttpUrl(source_url),
+            source_url=source_url,
             content_type=_BINARY_MIME_TYPE,
             byte_count=len(body),
             sha256=sha256_hex(body),

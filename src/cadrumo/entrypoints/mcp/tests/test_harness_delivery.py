@@ -181,6 +181,8 @@ def test_floor_tool_and_resources_are_wired_into_the_built_server() -> None:
     server = cast("Any", build_server(descriptors, persona=AgentPersona.VERIFIER))
 
     async def _drive() -> None:
+        from mcp.types import TextResourceContents
+
         async with connect(server) as session:
             tools = (await session.list_tools()).tools
             assert HARNESS_LOAD_TOOL in {tool.name for tool in tools}
@@ -196,8 +198,10 @@ def test_floor_tool_and_resources_are_wired_into_the_built_server() -> None:
             contents = (
                 await session.read_resource(resource_uri(HarnessResourceKind.PERSONA, "cadrumo-verifier"))
             ).contents
-            assert contents[0].mime_type == "text/markdown"
-            assert contents[0].text == _shipped_persona_text("cadrumo-verifier")
+            content = contents[0]
+            assert isinstance(content, TextResourceContents)
+            assert content.mime_type == "text/markdown"
+            assert content.text == _shipped_persona_text("cadrumo-verifier")
 
     anyio.run(_drive)
 
@@ -214,13 +218,17 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
     server = cast("Any", build_server(descriptors, persona=AgentPersona.VERIFIER))
 
     async def _drive() -> None:
+        from mcp.types import TextContent
+
         async with connect(server) as session:
             result = await session.call_tool(HARNESS_LOAD_TOOL, {})
         assert result.is_error is False
         assert result.structured_content is not None
         assert result.structured_content["operator_rules"] == operator_rules_text()
         assert result.structured_content["active_persona"]["text"] == _shipped_persona_text("cadrumo-verifier")
-        assert operator_rules_text() in result.content[0].text
+        content = result.content[0]
+        assert isinstance(content, TextContent)
+        assert operator_rules_text() in content.text
 
     anyio.run(_drive)
 
@@ -309,13 +317,17 @@ def test_whoami_tool_call_returns_the_active_profile_label(tmp_path: Any) -> Non
         server = cast("Any", build_server(descriptors, persona=None))
 
         async def _drive() -> None:
+            from mcp.types import TextContent
+
             async with connect(server) as session:
                 result = await session.call_tool(WHOAMI_TOOL, {})
             assert result.is_error is False
             assert result.structured_content is not None
             assert result.structured_content["active_profile"] == "Erika"
             assert result.structured_content["active_profile"] != profile.bucket_id
-            assert "Erika" in result.content[0].text
+            content = result.content[0]
+            assert isinstance(content, TextContent)
+            assert "Erika" in content.text
 
         anyio.run(_drive)
 

@@ -132,17 +132,20 @@ def test_committed_modelo_202_order_chain_is_boe_corpus_backed() -> None:
     assert base.consolidated_as_of == date(2025, 3, 19)
     assert "Se aprueba el modelo 202" in base.required_text
 
+    # The first-application clause ("aplicable por primera vez... octubre de
+    # 2018" etc.) lives in each order's disposición final, outside the
+    # articulo-primero/unico anchor these references are deliberately scoped
+    # to (commit d07696cc73), so it is no longer part of required_text here.
     amendment_expectations = {
-        _M202_2018_ORDER_REF: ("BOE-A-2018-12515", date(2018, 9, 15), "octubre de 2018"),
-        _M202_2023_ORDER_REF: ("BOE-A-2023-8120", date(2023, 4, 1), "abril de 2023"),
-        _M202_2025_ORDER_REF: ("BOE-A-2025-5407", date(2025, 3, 20), "abril de 2025"),
+        _M202_2018_ORDER_REF: ("BOE-A-2018-12515", date(2018, 9, 15)),
+        _M202_2023_ORDER_REF: ("BOE-A-2023-8120", date(2023, 4, 1)),
+        _M202_2025_ORDER_REF: ("BOE-A-2025-5407", date(2025, 3, 20)),
     }
-    for ref_id, (document_id, effective_from, required_fragment) in amendment_expectations.items():
+    for ref_id, (document_id, effective_from) in amendment_expectations.items():
         reference = legal[ref_id]
         assert reference.document_id == document_id
         assert reference.article in {"primero.5", "unico.1"}
         assert reference.effective_from == effective_from
-        assert any(required_fragment in text for text in reference.required_text)
 
     for source_id, (corpus_path, sha256, byte_count, applies_from) in _M202_SOURCE_EXPECTATIONS.items():
         source = catalogues.sources[source_id]

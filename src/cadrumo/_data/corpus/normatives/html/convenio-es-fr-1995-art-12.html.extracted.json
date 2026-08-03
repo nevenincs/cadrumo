@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/convenio-es-fr-1995-art-12.html",
   "source_sha256": "b32251e45aa9ce4d6ac1264bec3cead89cfedddd2d8a3ca3bfb56fab69cdb77e",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.0",
+  "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
   "units": [
     {

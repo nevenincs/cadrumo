@@ -60,39 +60,99 @@ from ...domain.usage_ratios import (
 )
 from ..review import LedgerReviewStatus
 from ._actions_common import (
-    _attachment_store,
-    _blocking_modelo_references,
-    _bucket_event_repository,
-    _build_bucket_event,
-    _command_matches_current,
-    _decimal_to_string,
-    _display_decimal,
-    _EventSpec,
-    _evidence_event_ids,
-    _invoice_repository,
-    _is_evidence_only_command,
-    _merge_identifier_tuple,
-    _mutation_signature,
-    _normalise_attachment_patch_ids,
-    _normalise_timestamp,
-    _optional_decimal,
-    _optional_patched,
-    _primary_lineage_event_id,
-    _raise_finalized_modelo_blocked,
-    _replace_transaction,
-    _require_actor,
-    _require_source_command,
-    _require_transaction,
-    _required_patched,
-    _result,
-    _save_transaction_catalogue_and_events,
-    _transaction_modelo_source_ids,
-    _transaction_repository,
-    _upsert_transaction,
-    _verify_evidence_references,
-    _verify_usage_ratio_reference,
+    EventSpec as _EventSpec,
 )
-from ._actions_import import _apply_fx_conversion
+from ._actions_common import (
+    attachment_store as _attachment_store,
+)
+from ._actions_common import (
+    blocking_modelo_references as _blocking_modelo_references,
+)
+from ._actions_common import (
+    bucket_event_repository as _bucket_event_repository,
+)
+from ._actions_common import (
+    build_bucket_event as _build_bucket_event,
+)
+from ._actions_common import (
+    command_matches_current as _command_matches_current,
+)
+from ._actions_common import (
+    decimal_to_string as _decimal_to_string,
+)
+from ._actions_common import (
+    display_decimal as _display_decimal,
+)
+from ._actions_common import (
+    evidence_event_ids as _evidence_event_ids,
+)
+from ._actions_common import (
+    invoice_repository as _invoice_repository,
+)
+from ._actions_common import (
+    is_evidence_only_command as _is_evidence_only_command,
+)
+from ._actions_common import (
+    merge_identifier_tuple as _merge_identifier_tuple,
+)
+from ._actions_common import (
+    mutation_signature as _mutation_signature,
+)
+from ._actions_common import (
+    normalise_attachment_patch_ids as _normalise_attachment_patch_ids,
+)
+from ._actions_common import (
+    normalise_timestamp as _normalise_timestamp,
+)
+from ._actions_common import (
+    optional_decimal as _optional_decimal,
+)
+from ._actions_common import (
+    optional_patched as _optional_patched,
+)
+from ._actions_common import (
+    primary_lineage_event_id as _primary_lineage_event_id,
+)
+from ._actions_common import (
+    raise_finalized_modelo_blocked as _raise_finalized_modelo_blocked,
+)
+from ._actions_common import (
+    replace_transaction as _replace_transaction,
+)
+from ._actions_common import (
+    require_actor as _require_actor,
+)
+from ._actions_common import (
+    require_source_command as _require_source_command,
+)
+from ._actions_common import (
+    require_transaction as _require_transaction,
+)
+from ._actions_common import (
+    required_patched as _required_patched,
+)
+from ._actions_common import (
+    result as _result,
+)
+from ._actions_common import (
+    save_transaction_catalogue_and_events as _save_transaction_catalogue_and_events,
+)
+from ._actions_common import (
+    transaction_modelo_source_ids as _transaction_modelo_source_ids,
+)
+from ._actions_common import (
+    transaction_repository as _transaction_repository,
+)
+from ._actions_common import (
+    upsert_transaction as _upsert_transaction,
+)
+from ._actions_common import (
+    verify_evidence_references as _verify_evidence_references,
+)
+from ._actions_common import (
+    verify_usage_ratio_reference as _verify_usage_ratio_reference,
+)
+from ._actions_import import apply_fx_conversion as _apply_fx_conversion
 from ._models import (
     LedgerReviewQuery,
     LedgerReviewQueryResult,
@@ -1288,11 +1348,11 @@ def _evidence_provenance(
     existing: tuple[TransactionEvidenceProvenanceEntry, ...],
     evidence_event_ids: Mapping[tuple[str, str], str],
 ) -> tuple[TransactionEvidenceProvenanceEntry, ...]:
-    wanted = (
-        {("purchase_invoice_evidence", command.purchase_invoice_evidence_id)}
-        if command.purchase_invoice_evidence_id is not None
-        else set()
-    ) | {("attachment", attachment_id) for attachment_id in command.attachment_ids}
+    wanted: set[tuple[Literal["purchase_invoice_evidence", "attachment"], str]] = {
+        ("attachment", attachment_id) for attachment_id in command.attachment_ids
+    }
+    if command.purchase_invoice_evidence_id is not None:
+        wanted.add(("purchase_invoice_evidence", command.purchase_invoice_evidence_id))
     retained = tuple(entry for entry in existing if (entry.evidence_kind, entry.evidence_id) in wanted)
     seen = {(entry.evidence_kind, entry.evidence_id) for entry in retained}
     created: list[TransactionEvidenceProvenanceEntry] = []
@@ -1353,3 +1413,7 @@ def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
     if command.idempotency_key is not None:
         values["idempotency_key"] = command.idempotency_key
     return values
+
+
+command_from_patch = _command_from_patch
+prepare_manual_transaction_update = _prepare_manual_transaction_update

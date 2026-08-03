@@ -33,9 +33,12 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.paths import PROJECT_ROOT
-
 pytestmark = [pytest.mark.integration, pytest.mark.docs, pytest.mark.hex_entrypoint]
+
+# Dev tooling runs from a source checkout by definition, so it owns its own
+# repo-root anchor. Production code has no repository concept and must never
+# export one (see cadrumo.core._config_state_root for the runtime data root).
+_REPO_ROOT = Path(__file__).resolve().parents[4]
 
 # User-docs prose surfaces. The generated glossary (which legitimately DEFINES
 # every term) and the generated CLI / API references are excluded - they are
@@ -107,8 +110,8 @@ def _strip_non_prose(text: str) -> str:
 def _user_docs() -> list[Path]:
     docs: list[Path] = []
     for pattern in _DOC_GLOBS:
-        for path in sorted(PROJECT_ROOT.glob(pattern)):
-            rel = path.relative_to(PROJECT_ROOT).as_posix()
+        for path in sorted(_REPO_ROOT.glob(pattern)):
+            rel = path.relative_to(_REPO_ROOT).as_posix()
             if not rel.startswith(_EXCLUDED_PREFIXES):
                 docs.append(path)
     return docs
@@ -177,13 +180,13 @@ def test_negative_fixture_passes_legitimate_prose() -> None:
         assert not found, f"false positive on legitimate prose: {snippet!r} -> {found}"
 
 
-@pytest.mark.parametrize("doc", _user_docs(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
+@pytest.mark.parametrize("doc", _user_docs(), ids=lambda p: str(p.relative_to(_REPO_ROOT)))
 def test_no_inline_redeclaration_of_enrolled_terms(doc: Path) -> None:
     """No user-docs prose inline-redefines an approved enrolled term."""
     text = doc.read_text(encoding="utf-8")
     found = _redeclarations_in(text, _approved_anchor_terms())
     messages = [
-        f"{doc.relative_to(PROJECT_ROOT)}:{line} inline-redefines the enrolled "
+        f"{doc.relative_to(_REPO_ROOT)}:{line} inline-redefines the enrolled "
         f"term '{term}'; reference it with {{term}}`{term}` instead "
         f"(definitions live in the Handbook). Matched: {snippet!r}"
         for term, line, snippet in found

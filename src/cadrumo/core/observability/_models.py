@@ -385,11 +385,12 @@ class RunTrace(BaseModel):
             before exit.
         entrypoint: Stable CLI entrypoint string.
         arguments: Tuple of :class:`ArgumentRecord` captured for replay.
-        corpus_sha256: Fingerprint of the effective configuration —
-            :class:`cadrumo.core.config.Settings` plus ``env/.env`` — at
-            enter time; gates :func:`replay_run`.
-        db_sha256: Fingerprint of the local ``var/`` state tree at
-            enter time.
+        corpus_sha256: Fingerprint of the effective
+            :class:`cadrumo.core.config.Settings` configuration at enter
+            time; gates :func:`replay_run`. Production reads no dotenv, so
+            the Settings snapshot is the whole configuration surface.
+        db_sha256: Fingerprint of the canonical application data root
+            (``Settings.cadrumo_local_storage_root``) at enter time.
         cert_fingerprint: SHA-256 of the configured PKCS#12 cert, or
             ``""`` when no cert is configured.
         outcome: Terminal run outcome; see :class:`RunOutcome`.

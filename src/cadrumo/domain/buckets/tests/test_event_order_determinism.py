@@ -48,7 +48,7 @@ def _event(actor: str, occurred_at: datetime = _SAME_INSTANT) -> BucketEvent:
         "payload": {},
     }
     return BucketEvent(
-        event_id=derive_bucket_event_id(**shared),  # ty: ignore[missing-argument]
+        event_id=derive_bucket_event_id(**shared),
         payload_version=1,
         **shared,
     )

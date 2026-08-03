@@ -14,10 +14,12 @@ from pathlib import Path
 
 import pytest
 
+from .._config_state_root import StateRootInputs, platform_user_data_root
 from ..paths import (
     WINDOWS_MAX_PATH,
     WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH,
     is_windows_long_path_error,
+    resolve_project_path,
     resolve_relative_subpath,
     windows_long_paths_enabled,
     windows_storage_root_long_path_margin,
@@ -55,6 +57,74 @@ def test_resolve_relative_subpath_accepts_nested_path(root: Path) -> None:
     resolved = resolve_relative_subpath(root, "sub/dir/file.txt", context="path")
     assert resolved.is_relative_to(root.resolve())
     assert resolved.name == "file.txt"
+
+
+# ----------------------------------------------------------------- #
+# resolve_project_path — relative-path anchoring (no run-mode branch)  #
+# ----------------------------------------------------------------- #
+
+
+def _inputs_under(base: Path, *, platform: str = "win32") -> StateRootInputs:
+    """Build a deterministic context whose platform base is ``base``.
+
+    Carries no project-root candidate: production no longer has one. The
+    per-platform environment variable points at ``base`` — a host-absolute
+    ``tmp_path`` — so the resolver's absolute-path acceptance holds on any host.
+    """
+    if platform == "win32":
+        environ = {"LOCALAPPDATA": str(base)}
+    elif platform == "linux":
+        environ = {"XDG_DATA_HOME": str(base)}
+    else:
+        environ = {}
+    return StateRootInputs(platform=platform, environ=environ, home=base / "home")
+
+
+def test_a_relative_override_anchors_under_the_platform_user_data_root(tmp_path: Path) -> None:
+    """A relative override anchors under the platform user-data root, always.
+
+    This closes two defects in sequence. The first was anchoring every
+    relative override at a naive repo-root walk, so an installed
+    distribution's relative ``CADRUMO_LOCAL_STORAGE_ROOT`` could resolve
+    inside a virtualenv or an ephemeral package cache. The second was the
+    fix's own shape: it branched on whether the process ran from a source
+    checkout, which made a source-layout guess decide where operator data
+    was written. There is now no branch to take.
+    """
+    inputs = _inputs_under(tmp_path)
+
+    resolved = resolve_project_path("some-relative-dir", state_root_inputs=inputs)
+
+    expected_base = platform_user_data_root(inputs)
+    assert resolved == (expected_base / "some-relative-dir").resolve()
+    assert "site-packages" not in resolved.parts
+
+
+def test_the_anchor_does_not_change_beside_repository_markers(tmp_path: Path) -> None:
+    """A ``pyproject.toml`` and ``.git`` beside the process change nothing.
+
+    The discriminating case. The retired implementation classified a context
+    carrying these two markers as a checkout and anchored somewhere else
+    entirely; production must now be blind to them. Creating them and
+    observing an unchanged answer is what proves the detection is gone
+    rather than merely unused on this host.
+    """
+    (tmp_path / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+    (tmp_path / ".git").mkdir()
+    inputs = _inputs_under(tmp_path)
+
+    resolved = resolve_project_path("some-relative-dir", state_root_inputs=inputs)
+
+    assert resolved == (platform_user_data_root(inputs) / "some-relative-dir").resolve()
+
+
+def test_an_absolute_override_resolves_unchanged(tmp_path: Path) -> None:
+    """An absolute override is returned resolved as-is; only relatives anchor."""
+    absolute = tmp_path / "explicit-storage"
+    inputs = _inputs_under(tmp_path)
+
+    assert resolve_project_path(absolute) == absolute.resolve()
+    assert resolve_project_path(absolute, state_root_inputs=inputs) == absolute.resolve()
 
 
 # ----------------------------------------------------------------- #
@@ -125,14 +195,15 @@ def test_windows_worst_case_suffix_covers_the_real_bucket_layout_shape() -> None
     sidecar extension) so a change to either shape is caught here instead
     of silently under-counting the margin.
     """
-    from ...adapters.outbound.storage._local import _HMAC_PREFIX_LEN, _SIDECAR_EXTENSION, _validate_label
+    from ...adapters.outbound.storage._local import _SIDECAR_EXTENSION
+    from ...adapters.outbound.storage._object_name import _HMAC_PREFIX_LENGTH, sanitize_provider_object_label
     from ...adapters.persistence.storage import (
         BUCKET_BLOBS_DIRNAME,
         BUCKETS_DIRNAME,
     )
     from ...domain.user_profile import new_profile_id
 
-    worst_label = _validate_label("x" * 200)  # clamps to 64 chars
+    worst_label = sanitize_provider_object_label("x" * 200)  # clamps to 64 chars
     recomputed = (
         "\\"
         + BUCKETS_DIRNAME
@@ -141,7 +212,7 @@ def test_windows_worst_case_suffix_covers_the_real_bucket_layout_shape() -> None
         + "\\"
         + BUCKET_BLOBS_DIRNAME
         + "\\"
-        + ("a" * _HMAC_PREFIX_LEN)
+        + ("a" * _HMAC_PREFIX_LENGTH)
         + "--"
         + worst_label
         + _SIDECAR_EXTENSION

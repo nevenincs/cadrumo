@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, cast
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -309,14 +309,14 @@ class RentaFamilyProfile(BaseModel):
     @classmethod
     def _tuple_from_list(cls, value: object) -> object:
         if isinstance(value, list):
-            return tuple(value)
+            return tuple(cast("list[object]", value))
         return value
 
     @field_validator("descendientes", mode="before")
     @classmethod
     def _descendientes_from_list(cls, value: object) -> object:
         if isinstance(value, list):
-            return tuple(value)
+            return tuple(cast("list[object]", value))
         return value
 
     # ------------------------------------------------------------------

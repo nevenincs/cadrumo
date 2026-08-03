@@ -9,6 +9,7 @@ ad-hoc.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 
@@ -206,7 +207,8 @@ def snapshot_classification_state(
     fallback for callers that want to cap the synthesised timestamp
     (e.g. ``set_classification`` uses the canonical clock helper).
     """
-    snapshot_at = transaction.classified_at or transaction.raw.provenance.ingested_at or fallback_at
+    ingested_at = getattr(transaction.raw.provenance, "ingested_at", None)
+    snapshot_at = transaction.classified_at or ingested_at or fallback_at
     if snapshot_at is None:
         raise TransactionCatalogueError("cannot synthesise a classification snapshot without a timestamp")
     return ClassificationHistoryEntry(
@@ -236,7 +238,7 @@ def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -
     return transaction
 
 
-def _validate_transaction_update(payload: dict[str, object], *, context: str) -> Transaction:
+def _validate_transaction_update(payload: Mapping[str, object], *, context: str) -> Transaction:
     """Validate one transaction update payload and raise typed domain errors."""
     try:
         return Transaction.model_validate(payload)

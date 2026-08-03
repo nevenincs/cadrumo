@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1007-2023.html",
   "source_sha256": "110bd8910af4cd5cb0fcc12f79b682f9bb6b8fa8a0bf91ba0db4619b6b5f71da",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.0",
+  "preprocessor_version": "1.1",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/act.php?id=BOE-A-2023-24840",
   "units": [
     {

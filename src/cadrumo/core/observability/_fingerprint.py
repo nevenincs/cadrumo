@@ -7,6 +7,18 @@ any recorded hash has drifted relative to the current on-disk state.
 Auditability is prioritised over time-travel: a drift refusal forces
 the operator to acknowledge the change rather than silently re-running
 a recorded command against a moved-on environment.
+
+``db_sha256`` fingerprints :attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root`
+— the single canonical application data root every persisted category
+(encrypted state, caches, durable generated outputs) derives from, per
+:class:`~cadrumo.core.config.Settings` and
+:mod:`cadrumo.core._config_state_root`. This is deliberate: on an
+installed distribution the historical ``REPO_ROOT / "var"`` location
+resolves inside the virtualenv or the packaging tool's ephemeral cache
+and typically does not exist, which previously made ``db_sha256``
+degrade to the constant empty-tree digest for every installed operator
+and permanently defeat drift detection rather than merely reporting "no
+state yet" once.
 """
 
 from __future__ import annotations
@@ -101,102 +113,131 @@ def _hash_tree(
     return digest.hexdigest()
 
 
-def compute_corpus_sha256(
-    settings: Settings,
-    *,
-    env_path: Path | None = None,
-) -> str:
+def compute_corpus_sha256(settings: Settings) -> str:
     """Compute a deterministic fingerprint of the effective configuration.
 
-    The hash folds the two channels through which the effective
-    configuration can change between record and replay:
-
-    1. ``settings.model_dump_json()`` — the currently-loaded Settings
-       snapshot (includes env-var-sourced overrides).
-    2. The raw bytes of ``env/.env`` if present — catches dotfile
-       edits the operator made after process start that won't be
-       reflected in the already-instantiated ``Settings()``.
-
-    Combining the two is deliberate: (1) alone misses post-startup
-    ``.env`` edits; (2) alone misses shell-exported env vars and
-    test-fixture overrides. Together they close the drift hole.
+    Hashes ``settings.model_dump_json()`` — the currently-loaded
+    :class:`Settings` snapshot, which already folds every
+    environment-variable-sourced override. Production ``Settings`` carries
+    no dotenv source of its own (see
+    :meth:`~cadrumo.core.config.Settings.settings_customise_sources`): an
+    operator's ``env/.env`` is development/test-only configuration bridged
+    into the process environment before ``Settings`` resolves, so its
+    values are already reflected in the snapshot hashed here and it needs
+    no separate hashing channel.
 
     Args:
-        settings: Active :class:`Settings` instance to fold into the hash.
-        env_path: Path to the ``.env`` dotfile. Defaults to
-            ``PROJECT_ROOT/env/.env``; passed explicitly by tests so the
-            dotfile channel can be exercised against a temp file without
-            patching the ``PROJECT_ROOT`` module constant.
+        settings: Active :class:`Settings` instance to fingerprint.
 
     Returns:
-        SHA-256 hex digest of the Settings snapshot + ``.env`` bytes pair.
+        SHA-256 hex digest of the Settings snapshot.
     """
-    from ..config import PROJECT_ROOT
-
-    settings_blob = settings.model_dump_json().encode("utf-8")
-    resolved_env_path = env_path if env_path is not None else PROJECT_ROOT / "env" / ".env"
-    env_digest = _file_sha256(resolved_env_path) if resolved_env_path.exists() else sha256_hex(b"")
-    h = hashlib.sha256()
-    h.update(b"|settings|")
-    h.update(sha256_hex(settings_blob).encode("ascii"))
-    h.update(b"|env|")
-    h.update(env_digest.encode("ascii"))
-    return h.hexdigest()
+    return sha256_hex(settings.model_dump_json().encode("utf-8"))
 
 
-def compute_db_sha256(var_dir: Path) -> str:
-    """Compute a deterministic fingerprint of the local ``var/`` state.
+def compute_db_sha256(root: Path, *, excluded_dirs: frozenset[Path] = frozenset()) -> str:
+    """Compute a deterministic fingerprint of a directory tree.
 
-    Excludes caches, build artefacts, and self-referencing observability
-    outputs so the hash is stable across observability writes and
-    LLM/status lookups that would otherwise flap on every read.
-    The curated list covers every ``var/`` subdirectory that
-    :class:`cadrumo.core.config.Settings` treats as a cache, log, or
-    replay-internal artefact, plus every ``var/`` subdirectory the
-    release / packaging pipeline materialises as a transient virtualenv:
-
-    - ``var/runs/`` — observability's own output (self-reference).
-    - ``var/browser-traces/`` — Playwright session traces.
-    - ``var/llm-cache/``, ``var/llm-usage/``, ``var/llm-run-telemetry/`` — LLM
-      prompt cache, usage meters, and run-timing telemetry; drift on every
-      model call.
-    - ``var/status-cache/`` — AEAT status-reader cache.
-    - ``var/backups/`` — storage layer backups (non-canonical copies).
-    - ``var/packaging-smoke/``, ``var/editable-smoke/`` — release
-      pipeline scratch virtualenvs (thousands of site-packages files).
-    - ``var/divergences/``, ``var/i18n/`` — release / i18n diff
-      artefacts; not part of the user-state surface.
-
-    Core state (``var/cadrumo.db``, ``var/workflow-runs/``, ``var/inbox/``,
-    ``var/drafts/``, ``var/filing-history/``, ``var/justificantes/``)
-    is included because changes there represent real state drift that
-    a replay must detect.
+    A generic, domain-agnostic content-addressed directory hash. Two
+    callers use it for different purposes: :func:`compute_data_root_sha256`
+    fingerprints the live application data root with the exclusion set
+    :func:`data_root_cache_exclusions` computes from :class:`Settings`,
+    and a determinism-conformance test fingerprints an arbitrary snapshot
+    directory of committed database files with no exclusions at all. This
+    function itself knows nothing about ``Settings`` or the storage-root
+    taxonomy.
 
     Args:
-        var_dir: Path to the local ``var/`` directory.
+        root: Directory to walk.
+        excluded_dirs: Absolute or relative paths whose entire subtree is
+            skipped; resolved internally before comparison so callers may
+            pass either form.
 
     Returns:
         SHA-256 hex digest of the curated tree.
     """
-    excluded = frozenset(
-        {
-            (var_dir / name).resolve()
-            for name in (
-                "runs",
-                "browser-traces",
-                "llm-cache",
-                "llm-usage",
-                "llm-run-telemetry",
-                "status-cache",
-                "backups",
-                "packaging-smoke",
-                "editable-smoke",
-                "divergences",
-                "i18n",
-            )
-        },
+    resolved_excluded = frozenset(path.resolve() for path in excluded_dirs)
+    return _hash_tree(root, excluded_dirs=resolved_excluded)
+
+
+def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
+    """Return the regenerable/self-referential directories under the data root.
+
+    Every entry here is read from ``settings`` itself — the same instance
+    whose :attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root`
+    :func:`compute_data_root_sha256` hashes — rather than a hardcoded
+    subpath string, so an operator override of any one of these
+    directories (e.g. a redirected LLM cache) is still excluded correctly
+    regardless of where it actually resolves:
+
+    - ``cadrumo_runs_dir`` — observability's own output (self-reference);
+      hashing it would make every run's ``db_sha256`` depend on the
+      immediately preceding run's trace files.
+    - ``cadrumo_llm_cache_dir``, ``cadrumo_llm_usage_dir``,
+      ``cadrumo_llm_run_telemetry_dir`` — LLM prompt cache, usage meters,
+      and run-timing telemetry; these drift on every model call and carry
+      no taxpayer state.
+    - ``cadrumo_status_cache_dir`` — AEAT status-reader cache.
+    - ``cadrumo_corpus_text_cache_dir``, ``cadrumo_validation_verdict_cache_dir``
+      — regenerable, evictable caches unrelated to real taxpayer state.
+    - ``cadrumo_storage_backup_dir`` — storage-layer backups (non-canonical
+      copies of state already fingerprinted at its primary location).
+
+    Core state (the encrypted profile/bucket database, ``workflow-runs``,
+    ``inbox``, ``drafts``, ``filing-history``, ``justificantes``,
+    ``financial/*``) is deliberately absent from this set: changes there
+    are real state drift that a replay must detect.
+    """
+    return frozenset(
+        path.resolve()
+        for path in (
+            settings.cadrumo_runs_dir,
+            settings.cadrumo_llm_cache_dir,
+            settings.cadrumo_llm_usage_dir,
+            settings.cadrumo_llm_run_telemetry_dir,
+            settings.cadrumo_status_cache_dir,
+            settings.cadrumo_corpus_text_cache_dir,
+            settings.cadrumo_validation_verdict_cache_dir,
+            settings.cadrumo_storage_backup_dir,
+        )
     )
-    return _hash_tree(var_dir, excluded_dirs=excluded)
+
+
+def compute_data_root_sha256(settings: Settings) -> str:
+    """Compute :func:`compute_db_sha256` over the canonical application data root.
+
+    Hashes ``settings.cadrumo_local_storage_root`` — the single root every
+    persisted category (encrypted state, caches, durable generated
+    outputs) derives from in both a source checkout
+    (``REPO_ROOT/var/storage``) and an installed distribution (the
+    platform user-data directory) — excluding the regenerable caches and
+    observability's own output via :func:`data_root_cache_exclusions`.
+
+    A data root that does not exist yet (a pristine install with no
+    profile created) hashes to the same digest as an empty tree: this is
+    a legitimate, expected, self-resolving state (it disappears the
+    moment any state is written) rather than the historical defect, where
+    a *wrong* root was hashed unconditionally on every installed run and
+    every operator's ``db_sha256`` stayed the empty-tree constant forever,
+    permanently defeating drift detection. A missing root is logged at
+    debug level so the condition remains traceable without being
+    disruptive on an otherwise-successful first invocation.
+
+    Args:
+        settings: Active :class:`Settings` instance supplying both the
+            root to hash and the exclusions to apply.
+
+    Returns:
+        SHA-256 hex digest of the curated application data root.
+    """
+    root = settings.cadrumo_local_storage_root
+    if not root.exists():
+        _log.debug(
+            "observability fingerprint: cadrumo_local_storage_root %s does not exist yet "
+            "(no profile/state created); hashing as an empty tree",
+            root,
+        )
+    return compute_db_sha256(root, excluded_dirs=data_root_cache_exclusions(settings))
 
 
 def read_cert_fingerprint() -> str:
@@ -223,6 +264,8 @@ def read_cert_fingerprint() -> str:
 
 __all__ = [
     "compute_corpus_sha256",
+    "compute_data_root_sha256",
     "compute_db_sha256",
+    "data_root_cache_exclusions",
     "read_cert_fingerprint",
 ]

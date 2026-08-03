@@ -22,6 +22,7 @@ __all__ = [
     "binding_export_selector",
     "binding_row_set_selector",
     "boolean_binding_encoded_values",
+    "canonical_selector_key_hint",
     "intracommunity_clave_validator",
     "invariant_diagnostics",
     "selector_against_model",
@@ -285,7 +286,7 @@ def selector_against_model(
     try:
         selector_model.model_validate(selector)
     except ValueError as exc:
-        hint = _canonical_selector_key_hint(selector, selector_model)
+        hint = canonical_selector_key_hint(selector, selector_model)
         return [
             f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: "
             f"{exc}{hint}",
@@ -293,7 +294,7 @@ def selector_against_model(
     return []
 
 
-def _canonical_selector_key_hint(selector: Mapping[str, object], selector_model: type[BaseModel]) -> str:
+def canonical_selector_key_hint(selector: Mapping[str, object], selector_model: type[BaseModel]) -> str:
     if "source_casillas" in selector and "source_casilla_ids" in selector_model.model_fields:
         return "; use source_casilla_ids, not source_casillas"
     if "source_output" in selector and "source_casilla_id" in selector_model.model_fields:

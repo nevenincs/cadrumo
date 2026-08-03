@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 
+from pydantic import TypeAdapter
+
 from ...application.auth import AuthenticatedAeatSessionResult
 from ...core.classification import SensitivityClass
 from ...core.hashing import sha256_hex
@@ -22,6 +24,21 @@ from ._remote_state_models import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
 )
+
+_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
+
+
+def _string_object_mapping(value: object) -> dict[str, object] | None:
+    if not isinstance(value, Mapping):
+        return None
+    return _STRING_OBJECT_MAPPING.validate_python(value)
+
+
+def _object_sequence(value: object) -> tuple[object, ...] | None:
+    if not isinstance(value, tuple | list):
+        return None
+    return _OBJECT_SEQUENCE.validate_python(value)
 
 
 def surface_outcome(
@@ -128,18 +145,19 @@ def bounded_context_text(value: object, *, max_length: int = 160) -> str:
 
 def _redacted_failure_context(error: BaseException) -> dict[str, object] | None:
     context = getattr(error, "context", None)
-    if not isinstance(context, Mapping):
+    typed_context = _string_object_mapping(context)
+    if typed_context is None:
         return None
-    redacted = _redacted_context_mapping(context)
+    redacted = _redacted_context_mapping(typed_context)
     return redacted or None
 
 
 def _redacted_context_mapping(context: object) -> dict[str, object]:
-    if not isinstance(context, Mapping):
+    typed_context = _string_object_mapping(context)
+    if typed_context is None:
         return {}
     redacted: dict[str, object] = {}
-    for raw_key, raw_value in context.items():
-        key = str(raw_key)
+    for key, raw_value in typed_context.items():
         if not key or key.startswith("_"):
             continue
         value = _redacted_context_value(raw_value, key=key)
@@ -156,12 +174,14 @@ def _redacted_context_value(value: object, *, key: str) -> object | None:
     if isinstance(value, str):
         text = _redact_url_like_context_value(value, key=key)
         return text if text else None
-    if isinstance(value, Mapping):
-        return _redacted_context_mapping(value)
-    if isinstance(value, tuple | list):
+    mapping = _string_object_mapping(value)
+    if mapping is not None:
+        return _redacted_context_mapping(mapping)
+    sequence = _object_sequence(value)
+    if sequence is not None:
         items = tuple(
             item
-            for item in (_redacted_sequence_context_value(entry, key=key) for entry in value[:8])
+            for item in (_redacted_sequence_context_value(entry, key=key) for entry in sequence[:8])
             if item is not None
         )
         return items
@@ -259,13 +279,15 @@ def _redacted_sensitive_context_value(value: object, *, key: str) -> object | No
     if isinstance(value, str):
         text = _redact_diagnostic_context_text(value)
         return _evidence_ref(text) if text else None
-    if isinstance(value, Mapping):
-        redacted = _redacted_sensitive_context_mapping(value)
+    mapping = _string_object_mapping(value)
+    if mapping is not None:
+        redacted = _redacted_sensitive_context_mapping(mapping)
         return redacted or None
-    if isinstance(value, tuple | list):
+    sequence = _object_sequence(value)
+    if sequence is not None:
         items = tuple(
             item
-            for item in (_redacted_sensitive_context_value(entry, key=key) for entry in value[:8])
+            for item in (_redacted_sensitive_context_value(entry, key=key) for entry in sequence[:8])
             if item is not None
         )
         return items
@@ -273,11 +295,11 @@ def _redacted_sensitive_context_value(value: object, *, key: str) -> object | No
 
 
 def _redacted_sensitive_context_mapping(context: object) -> dict[str, object]:
-    if not isinstance(context, Mapping):
+    typed_context = _string_object_mapping(context)
+    if typed_context is None:
         return {}
     redacted: dict[str, object] = {}
-    for raw_key, raw_value in context.items():
-        key = str(raw_key)
+    for key, raw_value in typed_context.items():
         if not key or key.startswith("_"):
             continue
         value = _redacted_sensitive_context_value(raw_value, key=key)
@@ -316,9 +338,10 @@ def _redact_diagnostic_context_text(value: object) -> str:
 
 def _auth_diagnostic_ref(error: BaseException) -> str | None:
     context = getattr(error, "context", None)
-    if not isinstance(context, dict):
+    typed_context = _string_object_mapping(context)
+    if typed_context is None:
         return None
-    diagnostic_id = context.get("diagnostic_id")
+    diagnostic_id = typed_context.get("diagnostic_id")
     if not isinstance(diagnostic_id, str) or not diagnostic_id.strip():
         return None
     return _evidence_ref(diagnostic_id)

@@ -22,14 +22,14 @@ Decimal magnitudes have the same problem and are handled by the sibling
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Any
 
 from pydantic import AfterValidator
 
 from ...core.parsing import require_iso8601_date
 
 
-def enum_value_text(enum_cls: type[StrEnum]) -> object:
+def enum_value_text(enum_cls: type[StrEnum]) -> Any:
     """Return a wire-string type constrained to ``enum_cls``'s accepted values.
 
     Args:

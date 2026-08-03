@@ -17,8 +17,11 @@ This module enforces the following invariants at collection time:
    selected live tests fail at their shared prerequisite gate when the required
    opt-in is absent.
 
-The ``env/.env`` auto-load happens at module-load time in the repo-root
-``conftest.py``.
+The ``env/.env`` dotfile bridge into ``os.environ`` happens at module-load
+time in the repo-root ``conftest.py``, via
+:func:`cadrumo.tests._env_loader.bridge_env_file_into_environ`. Production
+``Settings`` carries no dotenv source of its own; ``env/.env`` reaches a
+test process only through that bridge.
 
 Banned-import hits are hard ``pytest.exit`` rather than warnings.
 

@@ -11,8 +11,11 @@ prompts, command flags, and `aeat config` commands. Set an override only when
 you administer a deployment and know why the default does not fit.
 
 An annotated template with the same variables lives at `env/.env.example` in
-the repository; the runtime also reads them from `env/.env`. A value set in
-the process environment wins over the `.env` file.
+the repository. The application itself reads only the process environment;
+`env/.env` is not a production source. For local development and the test
+suite, the repository's `conftest.py` bridges `env/.env` into the process
+environment before tests run, filling only variables not already set — a
+value already present in your shell always wins.
 
 | Variable | Type | Default | What it controls |
 | --- | --- | --- | --- |
@@ -124,7 +127,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_LLM_USAGE_MAX_RECORDS` | int | `5000` | Maximum number of LLM usage records retained; oldest excess records are pruned |
 | `CADRUMO_LLM_USAGE_RETENTION_DAYS` | int | `30` | Retention window in days for LLM usage records; older records are pruned |
 | `CADRUMO_LLM_VISION_READ_TIMEOUT_S` | int | `300` | Per-request timeout for the on-host local vision read; larger than the general LLM timeout because a local vision model on consumer hardware (CPU or a modest GPU) can take one to several minutes to read an invoice |
-| `CADRUMO_LOCAL_STORAGE_ROOT` | Path | (derived) | Root directory for the LocalFileSystemProvider backend. Each namespace becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file paired with a `.meta.json` sidecar. The default is installed-run aware: a source checkout resolves to `PROJECT_ROOT/var/storage`, while an installed distribution roots at the platform user-data directory (`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` or `~/Library/Application Support/cadrumo/storage`) so the encrypted store never lands inside a virtualenv or uv cache. An explicit `CADRUMO_LOCAL_STORAGE_ROOT` override wins over the derived default. |
+| `CADRUMO_LOCAL_STORAGE_ROOT` | Path | (derived) | Root directory for the LocalFileSystemProvider backend. Each namespace becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file paired with a `.meta.json` sidecar. The default is installed-run aware: a source checkout resolves to the checkout's `var/storage`, while an installed distribution roots at the platform user-data directory (`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` or `~/Library/Application Support/cadrumo/storage`) so the encrypted store never lands inside a virtualenv or uv cache. An explicit `CADRUMO_LOCAL_STORAGE_ROOT` override wins over the derived default. |
 | `CADRUMO_LOG_DIR` | Path | unset | Diagnostic-log root directory. The ``None`` default here is a placeholder: when the field is not explicitly set, the model validator roots it at ``<cadrumo_local_storage_root>/logs`` so the diagnostic log lives under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, isolating each workspace's log. An explicit ``CADRUMO_LOG_DIR`` override wins over the derived default. |
 | `CADRUMO_LOG_FILE_BACKUP_COUNT` | int | `5` | Number of rotated cadrumo.log backups retained by the rotating file handler |
 | `CADRUMO_LOG_FILE_LEVEL` | str | `DEBUG` | Log level for the file handler installed by ``cadrumo.core.logging`` |
@@ -165,7 +168,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_TELEMETRY_GESTOR_MODE` | bool | `false` | Gestor/professional deployment flag. When True, remote telemetry emission is categorically refused regardless of cadrumo_telemetry_opt_in, cadrumo_telemetry_tier, or per-invocation consent. |
 | `CADRUMO_TELEMETRY_OPT_IN` | bool | `false` | Whether this deployment permits transmitting remote telemetry at all. Default off: all telemetry stays local. When True, a per-invocation operator consent acknowledgement is still required for each emit, and cadrumo_telemetry_tier must not be 'off'. |
 | `CADRUMO_TELEMETRY_TIER` | TelemetryTier | `off` | Remote telemetry tier: 'off' (no remote emission regardless of opt-in), 'crash_only' (error/outcome counters only), or 'full' (counters plus timing percentiles). Only remote_allowed=True metric keys are ever eligible for transmission at any tier. |
-| `CADRUMO_TOKEN_DIR` | Path | (derived) | Directory for cached authentication token and lock files. The ``PROJECT_ROOT`` default here is a placeholder: when the field is not explicitly set, the model validator roots it at ``<cadrumo_local_storage_root>/tokens`` so every profile store, token and lock files included, lives under one state root. An explicit ``CADRUMO_TOKEN_DIR`` override wins over the derived default. |
+| `CADRUMO_TOKEN_DIR` | Path | (derived) | Directory for cached authentication token and lock files. The the relative default here is a placeholder: when the field is not explicitly set, the model validator roots it at ``<cadrumo_local_storage_root>/tokens`` so every profile store, token and lock files included, lives under one state root. An explicit ``CADRUMO_TOKEN_DIR`` override wins over the derived default. |
 | `CADRUMO_TUI_APPEARANCE` | TuiAppearance | `auto` | Appearance for the full-screen terminal surfaces. auto = follow the host terminal. light = the warm-paper appearance. dark = the low-light appearance. |
 | `CADRUMO_USAGE_RATIOS_PATH` | Path | (derived) | User-configured per-category usage ratio overrides |
 | `CADRUMO_VALIDATION_VERDICT_CACHE_DIR` | Path | (derived) | Directory for the persistent registry-validation verdict cache (a fingerprint-keyed proof that validate_registry ran green, so a matching immutable tree skips runtime re-validation) |

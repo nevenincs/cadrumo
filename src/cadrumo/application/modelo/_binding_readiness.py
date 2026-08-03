@@ -90,7 +90,6 @@ def profile_resolvable_binding_ids(
             filing_year=filing_year,
             period=resolved_period,
             on=as_of,
-            revision_id=revision_id,
         )
     except RegistrySnapshotError as exc:
         _log.debug(
@@ -101,6 +100,17 @@ def profile_resolvable_binding_ids(
             resolved_period,
             type(exc).__name__,
             exc,
+        )
+        return frozenset()
+    if revision_id is not None and snapshot.revision.id != revision_id:
+        _log.debug(
+            "binding-readiness: law-determined revision %s does not match supplied revision_id %s "
+            "for modelo=%s filing_year=%s period=%s; treating profile bindings as unresolved",
+            snapshot.revision.id,
+            revision_id,
+            modelo,
+            filing_year,
+            resolved_period,
         )
         return frozenset()
     try:
@@ -116,9 +126,7 @@ def profile_resolvable_binding_ids(
             exc,
         )
         return frozenset()
-    return frozenset(
-        str(binding_id) for binding_id in profile_resolved_binding_ids(result)
-    )
+    return frozenset(str(binding_id) for binding_id in profile_resolved_binding_ids(result))
 
 
 def _annual_period_for_year(

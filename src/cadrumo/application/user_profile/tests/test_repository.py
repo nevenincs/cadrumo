@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -441,3 +442,128 @@ def test_snapshot_load_rejects_inner_version_without_identifier_leak(
 def test_lifecycle_namespace_uses_storage_registry() -> None:
     assert USER_PROFILE_VALUE_STORAGE_NAMESPACE.namespace == USER_PROFILE_VALUE_NAMESPACE
     assert USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace == USER_PROFILE_SNAPSHOT_NAMESPACE
+
+
+def _language_cache_generation() -> int:
+    """Read the i18n cache's invalidation counter.
+
+    ``clear_output_language_cache`` bumps this on every call, so comparing
+    it across a write is a direct observation of whether the write cleared
+    the cache -- no interception, no substitute for the real i18n module.
+    """
+    from ....core.i18n import _render
+
+    return _render._OUTPUT_LANGUAGE_CACHE_VERSION
+
+
+def test_save_that_cannot_move_the_language_leaves_the_i18n_cache_alone(tmp_path: Path) -> None:
+    """A write that does not touch the language must not force the next tr() cold.
+
+    Clearing the cache is not free: the next resolution reloads and decrypts
+    the whole workflow state. Doing that on every fact write meant a profile
+    write forced a re-read of state it had just persisted.
+    """
+    profile_id = "4a9b7f8a-8bd0-4f2f-9d18-2a4d0dd4c0c1"
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_id):
+        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
+        record = UserProfileRecord(
+            profile_id=profile_id,
+            display_name="Operator",
+            facts=(UserProfileFact(path="preferences.output_language", value="en"),),
+        )
+        repository.save(record)
+
+        settled = _language_cache_generation()
+        repository.save(record.model_copy(update={"display_name": "Renamed"}))
+
+        assert _language_cache_generation() == settled
+
+
+def test_save_that_moves_the_language_still_invalidates_the_i18n_cache(tmp_path: Path) -> None:
+    """The gate may only skip work it has proven redundant.
+
+    Paired with the test above: without this one, a gate that never
+    invalidated would look correct.
+    """
+    profile_id = "4a9b7f8a-8bd0-4f2f-9d18-2a4d0dd4c0c2"
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_id):
+        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
+        record = UserProfileRecord(
+            profile_id=profile_id,
+            display_name="Operator",
+            facts=(UserProfileFact(path="preferences.output_language", value="en"),),
+        )
+        repository.save(record)
+
+        settled = _language_cache_generation()
+        repository.save(
+            record.model_copy(update={"facts": (UserProfileFact(path="preferences.output_language", value="es"),)}),
+        )
+
+        assert _language_cache_generation() > settled
+
+
+def test_saved_record_is_byte_equivalent_to_a_fresh_load(tmp_path: Path) -> None:
+    """The in-memory post-save record equals what storage yields back.
+
+    This is the precondition for sourcing a post-write projection from the
+    aggregate the save path already holds instead of issuing a second full
+    decrypt of data just committed. If any field were normalised on write or
+    populated on read, the in-memory object would be a subtly different
+    object and the second read would be load-bearing rather than redundant.
+
+    Every defaultable field carried here is set to a NON-default value, per
+    the roundtrip discipline: a save-drops-field / load-re-defaults-field
+    divergence is invisible when the fixture leaves the default in place.
+    """
+    profile_id = "4a9b7f8a-8bd0-4f2f-9d18-2a4d0dd4c0c3"
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_id):
+        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
+        in_memory = UserProfileRecord(
+            profile_id=profile_id,
+            display_name="Operator",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="identity.name", value="Operator"),
+                UserProfileFact(path="preferences.output_language", value="es"),
+                UserProfileFact(
+                    path="identity.surnames",
+                    value="Effective Dated",
+                    valid_from=date(2026, 1, 1),
+                    valid_to=date(2026, 12, 31),
+                ),
+            ),
+        )
+        repository.save(in_memory)
+
+        reloaded = repository.load(profile_id)
+
+        assert reloaded == in_memory
+        assert reloaded.updated_at == in_memory.updated_at
+        assert reloaded.facts == in_memory.facts
+
+
+def test_the_equality_proof_would_catch_a_divergence(tmp_path: Path) -> None:
+    """Anti-tautology: the proof above fails when the stored bytes differ.
+
+    Without this, ``test_saved_record_is_byte_equivalent_to_a_fresh_load``
+    could pass against a load path that silently returned the object it was
+    handed, proving nothing about storage.
+    """
+    profile_id = "4a9b7f8a-8bd0-4f2f-9d18-2a4d0dd4c0c4"
+    with isolated_profile_storage_root(tmp_path=tmp_path), profile_create_storage_span(profile_id):
+        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
+        in_memory = UserProfileRecord(
+            profile_id=profile_id,
+            display_name="Operator",
+            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+        )
+        repository.save(in_memory)
+
+        diverged = in_memory.model_copy(
+            update={"facts": (UserProfileFact(path="identity.tax_id", value="87654321X"),)},
+        )
+        repository.save(diverged)
+
+        assert repository.load(profile_id) != in_memory
+        assert repository.load(profile_id) == diverged

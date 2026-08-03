@@ -57,7 +57,7 @@ def declared_modelo_period_tokens(modelo: str | None) -> tuple[str, ...]:
 
 def registry_modelo_codes() -> tuple[str, ...]:
     """Return registry-backed modelo codes in authority order."""
-    return tuple(str(modelo.id) for modelo in _service()._authority.modelos)
+    return tuple(row.code for row in _service().list_modelos().modelos)
 
 
 def registry_support_matrix() -> ModeloSupportMatrixReport:

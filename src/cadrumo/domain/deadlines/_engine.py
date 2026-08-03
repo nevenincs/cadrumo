@@ -13,6 +13,7 @@ from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
+from ...core import Modelo
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...core.time import now, today_madrid
@@ -250,7 +251,7 @@ class DeadlineEngine:
             return None
         obligation_status = classify_obligation_status(window.closes_on, reference_today, self.due_soon_days)
         return ModeloDeadline(
-            modelo=modelo,
+            modelo=Modelo(modelo),
             period=window.period,
             opens_on=window.opens_on,
             closes_on=window.closes_on,
@@ -325,6 +326,15 @@ class DeadlineEngine:
     def _has_deadline_windows(self, year: int) -> bool:
         return bool(self._deadline_windows(year))
 
+    def deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+        """Return validated registry deadline windows for ``year``.
+
+        This read-only facade lets application projections inspect the same
+        registry surface used by :meth:`compute` without reaching into engine
+        implementation details.
+        """
+        return self._deadline_windows(year)
+
     @staticmethod
     def _schedule_applies(profile: TaxpayerProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
         from ..calculations.registry import applicable_filing_schedules
@@ -332,6 +342,23 @@ class DeadlineEngine:
         if not revision.filing_schedules:
             return True
         return bool(applicable_filing_schedules(revision, profile, period=_window_registry_period(window)))
+
+    def schedule_applies(
+        self,
+        profile: TaxpayerProfile,
+        revision: ModeloRevision,
+        window: DeadlineWindowDefinition,
+    ) -> bool:
+        """Return whether a validated filing schedule applies to ``profile``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` whose declared facts are
+                checked against the schedule.
+            revision: The :class:`ModeloRevision` whose filing schedules are
+                consulted.
+            window: The deadline window under evaluation.
+        """
+        return self._schedule_applies(profile, revision, window)
 
     @staticmethod
     def _evaluate_conditions(
@@ -351,6 +378,23 @@ class DeadlineEngine:
         if explanations is None:
             return None
         return " ".join(explanations)
+
+    def evaluate_conditions(
+        self,
+        profile: TaxpayerProfile,
+        conditions: tuple[ProfilePredicateDefinition, ...],
+        *,
+        mode: str,
+    ) -> str | None:
+        """Evaluate one registry applicability-condition tuple.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` the conditions are checked
+                against.
+            conditions: The registry-declared predicate tuple to evaluate.
+            mode: The evaluation mode forwarded to the registry evaluator.
+        """
+        return self._evaluate_conditions(profile, conditions, mode=mode)
 
 
 def _overdue_recovery_or_none(

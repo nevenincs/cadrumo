@@ -65,8 +65,8 @@ def test_direct_registry_validator_performs_zero_corpus_cache_writes(tmp_path: P
 
         validator.validate_registry(modelos)
 
-        assert ve._DISK_CACHE_WRITE_COUNT == 0, "the direct validator must not flush the corpus cache"
-        assert ve._DISK_CACHE_DIRTY is True, "real extraction must have marked the cache dirty without flushing"
+        assert ve._disk_cache_write_count == 0, "the direct validator must not flush the corpus cache"
+        assert ve._disk_cache_dirty is True, "real extraction must have marked the cache dirty without flushing"
         assert not ve._corpus_text_cache_path().exists(), "no corpus cache file may be written by the direct validator"
 
 
@@ -81,8 +81,8 @@ def test_authority_validation_writes_once_then_a_verdict_hit_skips_revalidation(
 
         authority = bundled_authority()
         assert authority._registry_validated is True
-        assert ve._DISK_CACHE_WRITE_COUNT == 1, "the authority boundary must batch to exactly one flush"
-        assert ve._DISK_CACHE_DIRTY is False, "the authority must have flushed the batched corpus cache"
+        assert ve._disk_cache_write_count == 1, "the authority boundary must batch to exactly one flush"
+        assert ve._disk_cache_dirty is False, "the authority must have flushed the batched corpus cache"
         assert ve._corpus_text_cache_path().is_file()
 
         verdict_path = verdict_cache_path(root)
@@ -97,13 +97,13 @@ def test_authority_validation_writes_once_then_a_verdict_hit_skips_revalidation(
         skipped_authority = bundled_authority()
 
         assert skipped_authority._registry_validated is True, "the verdict hit must construct as validated"
-        assert ve._DISK_CACHE_WRITE_COUNT == 0, "a verdict hit must not re-extract or flush"
+        assert ve._disk_cache_write_count == 0, "a verdict hit must not re-extract or flush"
         assert not ve._corpus_text_cache_path().exists(), "validation was skipped, so no corpus file is rewritten"
         assert verdict_path.stat().st_mtime_ns == verdict_mtime_before, "a skip must not rewrite the verdict"
 
         # The per-modelo path modelo list uses is short-circuited too.
         skipped_authority.validate_modelo(skipped_authority.modelos[0].id)
-        assert ve._DISK_CACHE_WRITE_COUNT == 0, "modelo list validation must also be skipped on a verdict hit"
+        assert ve._disk_cache_write_count == 0, "modelo list validation must also be skipped on a verdict hit"
 
 
 def test_fingerprint_mismatch_deletes_the_stale_verdict_and_revalidates(tmp_path: Path) -> None:
@@ -128,7 +128,7 @@ def test_fingerprint_mismatch_deletes_the_stale_verdict_and_revalidates(tmp_path
         authority = bundled_authority()
 
         assert authority._registry_validated is True
-        assert ve._DISK_CACHE_WRITE_COUNT >= 1, "the mismatch must trigger a real cold re-validation"
+        assert ve._disk_cache_write_count >= 1, "the mismatch must trigger a real cold re-validation"
         rewritten = read_verdict(verdict_path)
         assert rewritten is not None
         assert rewritten.verdict_key != "superseded-fingerprint", "the stale verdict must be replaced, not trusted"
@@ -136,4 +136,4 @@ def test_fingerprint_mismatch_deletes_the_stale_verdict_and_revalidates(tmp_path
         # The rewritten verdict now certifies the tree: a fresh load hits it and skips.
         _reset_all_caches()
         bundled_authority()
-        assert ve._DISK_CACHE_WRITE_COUNT == 0, "the rewritten verdict must certify the current tree"
+        assert ve._disk_cache_write_count == 0, "the rewritten verdict must certify the current tree"

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections import Counter
+
 import pytest
 
 from ._action_test_support import (
@@ -83,18 +85,26 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
     detached = invoice_repository.load().get(purchase_evidence.invoice_id)
     assert detached is not None
     assert detached.linked_transaction_ids == ()
+    # The two creates land at distinct instants (9:30/9:31) so they sort
+    # first, in order. The detach, both removals, and the reset summary all
+    # share the single reset instant (10:00), so their relative order is the
+    # content-addressed event_id tie-break (bucket_event_order_key), not a
+    # positional contract — only their multiset of types is.
     events = event_repository.load().for_bucket(_BUCKET_ID)
-    assert [event.event_type for event in events] == [
+    assert [event.event_type for event in events[:2]] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_CREATED,
-        BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
-        BucketEventType.LEDGER_TRANSACTION_REMOVED,
-        BucketEventType.LEDGER_TRANSACTION_REMOVED,
-        BucketEventType.LEDGER_CATALOGUE_RESET,
     ]
-    assert events[-1].event_type is BucketEventType.LEDGER_CATALOGUE_RESET
-    assert events[-1].payload["removed_transaction_count"] == "2"
-    assert events[-1].payload["reason"] == "contaminated import batch"
+    assert Counter(event.event_type for event in events[2:]) == Counter(
+        {
+            BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED: 1,
+            BucketEventType.LEDGER_TRANSACTION_REMOVED: 2,
+            BucketEventType.LEDGER_CATALOGUE_RESET: 1,
+        },
+    )
+    reset_event = next(event for event in events if event.event_type is BucketEventType.LEDGER_CATALOGUE_RESET)
+    assert reset_event.payload["removed_transaction_count"] == "2"
+    assert reset_event.payload["reason"] == "contaminated import batch"
 
 
 def test_reset_ledger_catalogue_clears_a_large_ledger_without_payload_overflow(

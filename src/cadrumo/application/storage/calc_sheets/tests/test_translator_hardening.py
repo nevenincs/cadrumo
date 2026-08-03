@@ -22,7 +22,13 @@ def _m130_layout():
 
 def test_unsupported_translation_op_does_not_render_raw_op() -> None:
     unsupported_op = "irnr_resolve_tipo_gravamen"
-    expression = FormulaExpression(op=unsupported_op, args=(FormulaExpression(literal=Decimal("1")),))
+    # The registry declares this op with an exact 5-arg contract; the args'
+    # values are irrelevant here since the assertions below only exercise the
+    # calc-sheets translator's op-name rejection, never the args themselves.
+    expression = FormulaExpression(
+        op=unsupported_op,
+        args=tuple(FormulaExpression(literal=Decimal("1")) for _ in range(5)),
+    )
 
     with pytest.raises(TranslationError) as raised:
         translate_formula(expression, layout=_m130_layout())

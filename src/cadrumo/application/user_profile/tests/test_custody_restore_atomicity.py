@@ -56,7 +56,7 @@ def _carried(object_key: str, classification: SensitivityClass) -> CarriedSecure
     )
 
 
-def _stored(object_key: str) -> object | None:
+def _stored(object_key: str):
     return secure_object_repository_for_bucket(_BUCKET_ID).load(
         _NAMESPACE,
         object_key,

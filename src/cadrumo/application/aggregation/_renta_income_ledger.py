@@ -453,7 +453,7 @@ def _classify_income_transaction(
         )
 
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
-    if filing_date is None or not (cumulative_start <= filing_date <= cumulative_end):
+    if not (cumulative_start <= filing_date <= cumulative_end):
         return RentaIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD,

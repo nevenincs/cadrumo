@@ -33,12 +33,24 @@ Cross-package consumers MUST import from this module
 from __future__ import annotations
 
 from ._applicability import (
-    _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
-    _INCOMPLETE_LEGAL_REFS,
-    _INCOMPLETE_UNDECLARED_REASON,
-    _INCOMPLETE_UNDETERMINED_REASON,
-    _INCOMPLETE_UNRULED_REASON,
-    _MODELO_APPLICABILITY_RULES,
+    ATTRIBUTION_PASS_THROUGH_LEGAL_REFS as _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
+)
+from ._applicability import (
+    INCOMPLETE_LEGAL_REFS as _INCOMPLETE_LEGAL_REFS,
+)
+from ._applicability import (
+    INCOMPLETE_UNDECLARED_REASON as _INCOMPLETE_UNDECLARED_REASON,
+)
+from ._applicability import (
+    INCOMPLETE_UNDETERMINED_REASON as _INCOMPLETE_UNDETERMINED_REASON,
+)
+from ._applicability import (
+    INCOMPLETE_UNRULED_REASON as _INCOMPLETE_UNRULED_REASON,
+)
+from ._applicability import (
+    MODELO_APPLICABILITY_RULES as _MODELO_APPLICABILITY_RULES,
+)
+from ._applicability import (
     ApplicabilityVerdict,
     Modelo202Modality,
     Modelo202ModalityVerdict,

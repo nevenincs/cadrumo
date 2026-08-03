@@ -68,7 +68,7 @@ from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session, dispose_engine
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.config import load_settings, override_settings, suppress_operator_dotenv
+from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time import frozen_clock
 from cadrumo.domain.user_profile import UserProfileFact
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_text
@@ -373,12 +373,16 @@ def _neutralized_ambient_env() -> Iterator[None]:
     Settings resolution inside the sandbox re-reads the process environment on
     every :class:`Settings` instantiation, so any operator-exported variable
     would otherwise flow straight into sandboxed frame executions. Everything
-    removed is restored verbatim on exit. BOTH operator-state channels are now
-    closed for the sandbox scope: this scrub covers the ambient environment,
-    and the settings-level :func:`~cadrumo.core.config.suppress_operator_dotenv`
-    seam (engaged alongside it in :func:`sequence_sandbox`) drops the
-    project-root ``env/.env`` dotenv source, which pydantic-settings loads via
-    an ABSOLUTE path regardless of the working directory.
+    removed is restored verbatim on exit. This is now the SOLE operator-state
+    channel this sandbox must close: production :class:`~cadrumo.core.config.Settings`
+    carries no dotenv source of its own (``settings_customise_sources`` never
+    returns one), so the only remaining route for a development ``env/.env``
+    value to reach a test process is the repo-root ``conftest.py`` bridge
+    (:func:`~cadrumo.tests._env_loader.bridge_env_file_into_environ`), which
+    applies each pair to ``os.environ`` via ``setdefault`` at collection time.
+    By the time this scope runs, a bridged value is byte-for-byte
+    indistinguishable from a real ambient ``CADRUMO_*`` / ``AEAT_*`` variable —
+    so scrubbing the ambient environment here closes that route too.
     """
     removed: dict[str, str] = {}
     for key in list(os.environ):
@@ -538,7 +542,6 @@ def sequence_sandbox(
         _neutralized_ambient_env(),
         _isolated_external_tool_env(sandbox_root),
         _absent_credential_vault(),
-        suppress_operator_dotenv(),
         # The docs sandbox runs genuinely zero-auth: per the operator ruling,
         # auth-provider readiness binds only live/AEAT-touching purposes, never
         # the local build/calculate/verify/file/export flow the sequences drive.

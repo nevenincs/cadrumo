@@ -49,8 +49,8 @@ def detect_frontend_capability(*, override: FrontendCapability | None = None) ->
     """Classify how richly the current host can present an interactive flow.
 
     ``override`` short-circuits detection (an operator flag, a test). A
-    host whose stdin or stdout is not a real TTY — or that advertises a
-    dumb terminal (``TERM=dumb``, the CI default) — is
+    host whose stdin or stdout is not a real TTY, or that advertises a dumb
+    terminal (``TERM=dumb``, the CI default) is
     :attr:`~cadrumo.core.flows.FrontendCapability.NON_INTERACTIVE`. A host
     with a TTY where the full-screen console buffer cannot start (the
     ``NoConsoleScreenBufferError`` class, git-bash on Windows) degrades to
@@ -59,9 +59,9 @@ def detect_frontend_capability(*, override: FrontendCapability | None = None) ->
     """
     if override is not None:
         return override
-    if not sys.stdin.isatty() or not sys.stdout.isatty():
-        return FrontendCapability.NON_INTERACTIVE
     if os.environ.get("TERM", "").strip().lower() == "dumb":
+        return FrontendCapability.NON_INTERACTIVE
+    if not sys.stdin.isatty() or not sys.stdout.isatty():
         return FrontendCapability.NON_INTERACTIVE
     try:
         from prompt_toolkit.output.defaults import create_output

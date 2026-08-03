@@ -14,11 +14,18 @@ relies on.
 
 The live-test opt-in is read exclusively through
 :attr:`cadrumo.core.config.Settings.live_tests_enabled` (and its Google
-companion), which sources ``env/.env`` via pydantic-settings. The single
-``cadrumo.tests.live_gate`` gate is the only live-opt-in reader, so no
-``os.environ`` bridging is needed here — the former env-promotion shim was
-removed when the scattered raw ``os.environ`` live-gate reads were
-centralised onto that Settings-derived surface.
+companion), which reads only ``os.environ`` — production ``Settings``
+carries no dotenv source of its own
+(``Settings.settings_customise_sources`` never returns a dotenv source).
+``env/.env`` is development/test-only configuration (an operator's local
+live-test credentials), so this conftest bridges it into ``os.environ``
+itself, before any Cadrumo import can resolve ``Settings``, via
+:func:`cadrumo.tests._env_loader.bridge_env_file_into_environ`.
+``os.environ.setdefault`` semantics keep a real ambient environment
+variable authoritative over the dotfile — the file only fills gaps a
+shell or CI environment left unset, and the bridge is a clean no-op when
+``env/.env`` is absent. The single ``cadrumo.tests.live_gate`` gate
+remains the only live-opt-in reader.
 
 See ``src/cadrumo/tests/README.md`` and charter ``#116`` for the full taxonomy.
 """
@@ -26,8 +33,21 @@ See ``src/cadrumo/tests/README.md`` and charter ``#116`` for the full taxonomy.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from cadrumo.tests import collection_storage_root
+from cadrumo.tests._env_loader import bridge_env_file_into_environ
+
+# Bridge the operator's development-only env/.env dotfile into os.environ
+# BEFORE any Cadrumo import resolves Settings (production Settings carries
+# no dotenv source of its own — see core.config.Settings). setdefault
+# semantics inside the bridge keep a real ambient environment variable
+# authoritative; the dotfile only fills gaps. Importing `_env_loader` here
+# is safe pre-Settings-resolution for the same reason importing
+# `collection_storage_root` below is: `cadrumo/__init__.py` and
+# `cadrumo/tests/__init__.py` are both documented import-light (no
+# logging, registry, or storage side effects).
+bridge_env_file_into_environ(Path(__file__).resolve().parent / "env" / ".env")
 
 # Mirror src/cadrumo/conftest.py: point the Cadrumo storage root at a
 # process-private temp directory BEFORE any Cadrumo import resolves Settings.
@@ -38,21 +58,24 @@ from cadrumo.tests import collection_storage_root
 # derivation helper itself is safe pre-Settings-resolution: `cadrumo/__init__.py`
 # and `cadrumo/tests/__init__.py` are both documented import-light (no logging,
 # registry, or storage side effects), and `src/cadrumo/conftest.py` already
-# imports from `.tests` before this same env var is set on its own path. A bare
-# `os.environ.setdefault` call (ruff's tolerated pre-import idiom) keeps this
-# block free of E402 "import not at top" against the imports below, which must
-# still run AFTER the env var is set; cleanup registration therefore happens
-# after the import block instead of here.
+# imports from `.tests` before this same env var is set on its own path. A
+# single bare `os.environ.setdefault` call (ruff's tolerated pre-import idiom)
+# used to keep this block free of the import-not-at-top lint against the
+# imports below; the dotenv bridge above is a second pre-import statement
+# ruff does not recognise under that idiom, so the imports below carry an
+# explicit per-line suppression instead — they must still run AFTER both env
+# vars are set, so cleanup registration happens after the import block
+# below, not here.
 os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(collection_storage_root()))
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING  # noqa: E402
 
-import pytest
+import pytest  # noqa: E402
 
-from cadrumo.tests import register_collection_storage_root_cleanup
-from cadrumo.tests._deselection_hook import apply as _report_deselection
-from cadrumo.tests._marker_hook import apply as _apply_marker_contract
-from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers
+from cadrumo.tests import register_collection_storage_root_cleanup  # noqa: E402
+from cadrumo.tests._deselection_hook import apply as _report_deselection  # noqa: E402
+from cadrumo.tests._marker_hook import apply as _apply_marker_contract  # noqa: E402
+from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers  # noqa: E402
 
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter

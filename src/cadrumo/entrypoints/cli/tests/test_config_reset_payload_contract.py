@@ -9,6 +9,7 @@ already refuses, and must accept the same journal a real reset run produces.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -73,6 +74,12 @@ def _payload_kwargs(**overrides: object) -> dict[str, object]:
     return base
 
 
+def _mutable_payload_mapping(value: object) -> dict[str, object]:
+    """Narrow a JSON object before a malformed-input test mutates it."""
+    assert isinstance(value, dict)
+    return cast(dict[str, object], value)
+
+
 def test_malformed_operation_id_is_refused() -> None:
     """A non hex-64 operation id crosses the canonical journal's own identity shape."""
     with pytest.raises(ValidationError):
@@ -111,12 +118,12 @@ def test_unsorted_paused_target_ids_are_refused() -> None:
         ConfigResetOperationPayload.model_validate(payload)
 
 
-def test_malformed_target_phase_is_refused() -> None:
-    """A target row's phase must stay within the canonical closed vocabulary."""
+def test_malformed_target_lifecycle_stage_is_refused() -> None:
+    """A target row's lifecycle stage must stay within the canonical closed vocabulary."""
     payload = _payload_kwargs()
     targets = payload["targets"]
     assert isinstance(targets, list)
-    targets[0]["phase"] = "bogus"
+    _mutable_payload_mapping(targets[0])["phase"] = "bogus"
     with pytest.raises(ValidationError):
         ConfigResetOperationPayload.model_validate(payload)
 
@@ -126,7 +133,7 @@ def test_blank_target_bucket_id_is_refused() -> None:
     payload = _payload_kwargs()
     targets = payload["targets"]
     assert isinstance(targets, list)
-    targets[0]["bucket_id"] = ""
+    _mutable_payload_mapping(targets[0])["bucket_id"] = ""
     with pytest.raises(ValidationError):
         ConfigResetOperationPayload.model_validate(payload)
 
@@ -141,8 +148,7 @@ def test_mismatched_completion_counts_are_refused() -> None:
     the mismatch.
     """
     payload = _payload_kwargs()
-    summary = payload["summary"]
-    assert isinstance(summary, dict)
+    summary = _mutable_payload_mapping(payload["summary"])
     summary["deleted_count"] = 1
     summary["already_absent_count"] = 0
     with pytest.raises(ValidationError):

@@ -51,7 +51,7 @@ def _build_kwargs(tmp_path: Path, **overrides: object) -> dict[str, object]:
 
 def test_build_result_accepts_a_real_projection(tmp_path: Path) -> None:
     """A genuine build result projects and validates cleanly."""
-    result = ModeloReviewPackageBuildResult(**_build_kwargs(tmp_path))
+    result = ModeloReviewPackageBuildResult.model_validate(_build_kwargs(tmp_path))
 
     assert result.modelo == "130"
 

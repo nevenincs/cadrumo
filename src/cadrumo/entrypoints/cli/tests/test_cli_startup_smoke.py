@@ -10,7 +10,7 @@ from textwrap import dedent
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,7 +51,7 @@ def _run_startup_smoke(tmp_path: Path, *args: str) -> subprocess.CompletedProces
     env.update({"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"})
     return subprocess.run(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
         [sys.executable, "-c", _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS, str(tmp_path), *args],
-        cwd=PROJECT_ROOT,
+        cwd=REPO_ROOT,
         env=env,
         text=True,
         encoding="utf-8",

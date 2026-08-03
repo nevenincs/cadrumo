@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import cast
 
 import pytest
 
@@ -30,6 +31,6 @@ def test_deadline_posture_refuses_contradictory_or_negative_day_counts(
 def test_deadline_posture_requires_a_concrete_date() -> None:
     with pytest.raises(ValueError, match="closes_on"):
         ModeloWorkDeadlinePosture(
-            closes_on="not-a-date",  # type: ignore[arg-type]
+            closes_on=cast(date, "not-a-date"),
             days_remaining=0,
         )

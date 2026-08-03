@@ -8,6 +8,7 @@ rather than silently shipping a link that resolves nothing.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import cast
 
 import pytest
@@ -26,6 +27,8 @@ from .._result_thinning import (
 from .._tools import build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+type JsonValue = bool | int | float | str | list[JsonValue] | Mapping[str, JsonValue] | None
 
 
 @pytest.fixture(autouse=True)
@@ -55,6 +58,18 @@ def _object_mapping(value: object) -> dict[str, object]:
     """Narrow a JSON object while preserving the real payload under test."""
     assert isinstance(value, dict)
     return cast(dict[str, object], value)
+
+
+def _mapping(value: object) -> Mapping[str, object]:
+    """Narrow a read-only JSON object for schema assertions."""
+    assert isinstance(value, Mapping)
+    return cast(Mapping[str, object], value)
+
+
+def _json_mapping(value: object) -> Mapping[str, JsonValue]:
+    """Narrow an emitted runtime result for the JSON Schema validator."""
+    assert isinstance(value, Mapping)
+    return cast(Mapping[str, JsonValue], value)
 
 
 def test_thin_envelope_moves_the_bulk_array_to_a_link_and_leaves_a_summary_marker() -> None:
@@ -105,7 +120,7 @@ def test_thin_envelope_ignores_an_error_envelope_without_a_result_mapping() -> N
 
 
 def test_thin_output_schema_models_inline_and_linked_result_branches() -> None:
-    schema = {
+    schema: dict[str, object] = {
         "type": "object",
         "properties": {
             "observations": {"type": "array"},
@@ -120,7 +135,7 @@ def test_thin_output_schema_models_inline_and_linked_result_branches() -> None:
     inline_branch, linked_branch = branches
     assert isinstance(inline_branch, dict)
     assert isinstance(linked_branch, dict)
-    props = _object_mapping(linked_branch["properties"])
+    props = _mapping(_mapping(linked_branch)["properties"])
     assert "observations" not in props
     assert _object_mapping(props["observations_resource"])["type"] == "string"
     assert _object_mapping(props["observations_count"])["type"] == "integer"
@@ -130,7 +145,7 @@ def test_thin_output_schema_models_inline_and_linked_result_branches() -> None:
         {"result": {"observations": [], "calculation_revision_id": "rev-abc123"}},
     )
     assert empty_links == ()
-    assert list(validator.iter_errors(_object_mapping(empty_runtime["result"]))) == []
+    assert list(validator.iter_errors(_json_mapping(empty_runtime["result"]))) == []
     assert list(
         validator.iter_errors(
             {
@@ -149,7 +164,7 @@ def test_thin_output_schema_models_inline_and_linked_result_branches() -> None:
         },
     )
     assert len(linked_refs) == 1
-    assert list(validator.iter_errors(_object_mapping(linked_runtime["result"]))) == []
+    assert list(validator.iter_errors(_json_mapping(linked_runtime["result"]))) == []
     assert list(
         validator.iter_errors(
             {
@@ -168,7 +183,7 @@ def test_thin_output_schema_retains_only_the_empty_inline_array_shape() -> None:
         assert isinstance(branches, list) and len(branches) == 2
         inline_branch = branches[0]
         assert isinstance(inline_branch, dict)
-        inline_properties = _object_mapping(inline_branch["properties"])
+        inline_properties = _mapping(_mapping(inline_branch)["properties"])
         for spec in THINNED_VERBS[command_key]:
             assert inline_properties[spec.result_key] == {"type": "array", "maxItems": 0}, command_key
 
@@ -192,7 +207,7 @@ def test_thin_output_schema_drops_the_property_from_required() -> None:
     assert isinstance(branches, list)
     linked_branch = branches[1]
     assert isinstance(linked_branch, dict)
-    required = linked_branch["required"]
+    required = _mapping(linked_branch)["required"]
     assert isinstance(required, list)
     assert "observations" not in required
     assert "calculation_revision_id" in required

@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
 from ....tests.secure_sql import isolated_runtime_profile
@@ -100,6 +101,7 @@ def test_m145_communication_lifecycle_emits_communication_specific_events(tmp_pa
         exported = export_m145_communication_record(
             created.communication_record_id,
             bucket_id=runtime.bucket_id,
+            renderer=RegistryFixedWidthRecordRenderer(),
             actor=_ACTOR,
             bucket_event_repository=event_repository,
         )

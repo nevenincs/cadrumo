@@ -95,9 +95,69 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # as "unknown profile" rather than as a session diagnostic, and ``--yes``
     # remains mandatory.
     "config profile delete",
+    # The rest of the target-scoped profile verbs, on the same grounds as
+    # ``delete`` above: each names the profile it operates on and opens that
+    # bucket's own session, so blocking on the ACTIVE bucket's session was a
+    # precondition mismatch rather than a security boundary. ``rename`` goes
+    # through BucketMaintenanceService, which wraps it in
+    # ``profile_storage_session``; ``duplicate`` reads its source through the
+    # same self-scoped span; ``validate NAME`` is the read-only twin of
+    # ``show NAME``, which the root callback already carves out by hand.
+    # Credentials are still required — they are just supplied to the target
+    # rather than demanded as a prior login into an unrelated profile.
+    #
+    # ``config profile archive export`` is DELIBERATELY ABSENT and must stay
+    # that way. It is target-scoped like its siblings, so it would qualify on
+    # the mechanical reading — but it is the one verb here that emits a
+    # PORTABLE COPY of the profile's financial records, and the login gate is
+    # the control the operator wants on that. Recency is the point: the gate
+    # demands a currently-valid session (one whose idle and absolute deadlines
+    # have not elapsed), which a target-scoped unlock does not establish.
+    # Mechanical qualification is not sufficient for a verb whose output
+    # leaves the encrypted store; see
+    # ``test_archive_export_must_stay_login_gated``.
+    "config profile duplicate",
+    "config profile rename",
+    "config profile validate",
     # Bundled-registry discovery: lists public modelo metadata and must stay
     # reachable before a profile has been unlocked.
     "app modelo list",
+    # Catalogue discovery. Each of these answers "what can this tool do", not
+    # "what is in my profile": the ledger pair reads a hardcoded IRPF category
+    # catalogue and PATH/localhost probes for optional LLM providers, the
+    # portal pair reads the in-memory AEAT portal registry, and the auth pair
+    # reads the bundled provider and apoderado-scope catalogues. None resolves
+    # a bucket or touches the secure store, so none can answer differently for
+    # a logged-in operator — refusing them taught the operator to log in to
+    # read a constant.
+    "app ledger providers",
+    "app ledger categories",
+    "app live portals list",
+    "app live portals view",
+    "config auth providers",
+    "config auth apoderado scopes list",
+    # The rest of the bundled-registry read surface, on the same grounds as
+    # ``app modelo list`` above: these project the compiled registry snapshot
+    # and the bundled corpus, never a taxpayer's records. The whole ``app
+    # registry`` family is declared read-only in the operator-surface contract
+    # and reads only the bundled registry/corpus tree or an operator-supplied
+    # plaintext file, so the prefix is exempt as a unit; the ``app modelo``
+    # entries are named leaf by leaf because that group also carries the
+    # profile-bound ``work`` / ``export`` / ``reconcile`` verbs, which must
+    # stay gated. ``review-package verify*`` is deliberately included: it
+    # exists for a third-party reviewer who has no Cadrumo profile at all.
+    "app registry",
+    "app modelo describe",
+    "app modelo casilla",
+    "app modelo casillas",
+    "app modelo formulas",
+    "app modelo support-matrix",
+    "app modelo review-package verify",
+    "app modelo review-package verify-signature",
+    "app modelo review-package verify-receipt",
+    # Telemetry STATUS reads Settings fields only. Its sibling ``flush`` does
+    # decrypt, hence the leaf entry rather than the ``telemetry`` prefix.
+    "app diagnostics telemetry status",
     # Engineer surface: lives under a separate module entrypoint
     # and is not bound by the session-gate either, but the
     # registry includes it explicitly so the active-gate check at

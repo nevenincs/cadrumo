@@ -26,10 +26,10 @@ import pytest
 
 from .....core import Period
 from .....domain.modelos import (
+    ModeloCode,
     TransactionRevisionParticipation,
     TransactionRevisionParticipationIndex,
 )
-from .....domain.modelos._codes import ModeloCode
 from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, Envelope, SecureObjectRowIdentityError
 from ...storage.sql.secure_objects import SecureObjectRepository

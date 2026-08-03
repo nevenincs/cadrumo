@@ -45,7 +45,7 @@ __all__ = [
 ]
 
 
-from ._ledger_bindings import _casilla_id_set
+from ._ledger_bindings import casilla_id_set
 
 # Ledger Modelo 151 impatriado (Ley Beckham, art. 93 LIRPF) Spanish-source
 # base aggregation source bindings.
@@ -89,7 +89,7 @@ class _ImpatriadoLedgerIncomeSelector(BaseModel):
 # The single Modelo 151 base casilla this aggregation may feed. Validated at
 # registry load so a binding targeting any other casilla surfaces before any
 # calculation.
-_IMPATRIADO_BASE_CASILLAS: frozenset[CasillaId] = _casilla_id_set(
+_IMPATRIADO_BASE_CASILLAS: frozenset[CasillaId] = casilla_id_set(
     "_IMPATRIADO_BASE_CASILLAS",
     "impatriado.base-liquidable-general",
 )
@@ -255,3 +255,6 @@ def unsupported_ledger_impatriado_income_observations(
 # ``ledger_renta_gastos_estimacion_directa_aggregation``, whose annual /
 # invoice-evidence / category-profile machinery is constraint-shape-divergent
 # from this simple cumulative sum.
+
+
+ImpatriadoLedgerIncomeSelector = _ImpatriadoLedgerIncomeSelector

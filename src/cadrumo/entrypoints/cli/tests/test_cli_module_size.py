@@ -24,10 +24,10 @@ from pathlib import Path
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
 from ....tests import (
     CALLABLE_POLICY,
     MODULE_POLICY,
+    REPO_ROOT,
     ast_for_path,
     load_size_budget_baseline,
     package_python_files,
@@ -35,7 +35,7 @@ from ....tests import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CLI_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
+_CLI_ROOT = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
 _CLI_PREFIX = "src/cadrumo/entrypoints/cli/"
 _DEFAULT_MODULE_LINE_LIMIT = MODULE_POLICY.default_limit
 _DEFAULT_COMMAND_LINE_LIMIT = CALLABLE_POLICY.default_limit

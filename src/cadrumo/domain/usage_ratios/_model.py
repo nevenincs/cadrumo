@@ -105,7 +105,9 @@ class UsageRatioProfile(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    ratios: Mapping[SpendingCategory, Decimal] = Field(default_factory=dict)
+    ratios: Mapping[SpendingCategory, Decimal] = Field(
+        default_factory=lambda: dict[SpendingCategory, Decimal](),
+    )
 
     @field_validator("ratios", mode="after")
     @classmethod

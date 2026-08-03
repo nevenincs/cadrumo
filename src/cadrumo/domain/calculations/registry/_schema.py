@@ -26,10 +26,6 @@ from ....core import Period, PeriodKind, RevisionReviewStatus, TaxDomain
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
-
-# Scalar and annotated value types live in `_schema_scalars`; these assignments
-# preserve the historical `_schema` import surface for tests and consumers.
-from . import _schema_scalars as _scalars
 from ._aeat_hosts import first_aeat_host
 from ._errors import RegistryValidationError
 from ._ids import (
@@ -65,11 +61,81 @@ from ._schema_governance import (
 from ._schema_input_kind import InputKind, InputKindValue
 from ._schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from ._schema_rounding import RegistryRoundingCodeValue
+from ._schema_scalars import (
+    BicString as _BicString,
+)
+from ._schema_scalars import (
+    BindingSelector as _BindingSelector,
+)
+from ._schema_scalars import (
+    BindingSelectorMap as _BindingSelectorMap,
+)
+from ._schema_scalars import (
+    BindingSelectorValue as _BindingSelectorValue,
+)
+from ._schema_scalars import (
+    CalendarDate as _CalendarDate,
+)
+from ._schema_scalars import (
+    CCAACode as _CCAACode,
+)
+from ._schema_scalars import (
+    CountryCode as _CountryCode,
+)
+from ._schema_scalars import (
+    DecimalValue as _DecimalValue,
+)
+from ._schema_scalars import (
+    IbanString as _IbanString,
+)
+from ._schema_scalars import (
+    ModeloYear as _ModeloYear,
+)
+from ._schema_scalars import (
+    MunicipalityCode as _MunicipalityCode,
+)
+from ._schema_scalars import (
+    NifIvaString as _NifIvaString,
+)
+from ._schema_scalars import (
+    NifString as _NifString,
+)
+from ._schema_scalars import (
+    PeriodCode as _PeriodCode,
+)
+from ._schema_scalars import (
+    PersonOrEntityName as _PersonOrEntityName,
+)
+from ._schema_scalars import (
+    PostalCode as _PostalCode,
+)
+from ._schema_scalars import (
+    ProvinceCode as _ProvinceCode,
+)
+from ._schema_scalars import (
+    WorkbookCellRefStr as _WorkbookCellRefStr,
+)
+from ._schema_scalars import (
+    coerce_modelo_year as _coerce_modelo_year_impl,
+)
+from ._schema_scalars import (
+    validate_country_code as _validate_country_code_impl,
+)
+from ._schema_scalars import (
+    validate_iban_string as _validate_iban_string_impl,
+)
+from ._schema_scalars import (
+    validate_nif_string as _validate_nif_string_impl,
+)
+from ._schema_scalars import (
+    validate_period_code as _validate_period_code_impl,
+)
 from ._schema_verification import (
     RegistryVerificationPolicy,
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
 )
+from ._toml_helpers import as_toml_table as _as_toml_table
 
 __all__ = [
     "AlgorithmBindingDefinition",
@@ -198,29 +264,31 @@ from ._schema_surfaces import (
     RelationRevisionSelector,
 )
 
-DecimalValue = _scalars.DecimalValue
-NifString = _scalars.NifString
-ModeloYear = _scalars.ModeloYear
-PeriodCode = _scalars.PeriodCode
-CountryCode = _scalars.CountryCode
-IbanString = _scalars.IbanString
-PersonOrEntityName = _scalars.PersonOrEntityName
-NifIvaString = _scalars.NifIvaString
-CCAACode = _scalars.CCAACode
-ProvinceCode = _scalars.ProvinceCode
-PostalCode = _scalars.PostalCode
-MunicipalityCode = _scalars.MunicipalityCode
-BicString = _scalars.BicString
-CalendarDate = _scalars.CalendarDate
-WorkbookCellRefStr = _scalars.WorkbookCellRefStr
-BindingSelectorValue = _scalars.BindingSelectorValue
-BindingSelectorMap = _scalars.BindingSelectorMap
-BindingSelector = _scalars.BindingSelector
-_coerce_modelo_year = _scalars._coerce_modelo_year
-_validate_country_code = _scalars._validate_country_code
-_validate_iban_string = _scalars._validate_iban_string
-_validate_nif_string = _scalars._validate_nif_string
-_validate_period_code = _scalars._validate_period_code
+# Scalar and annotated value types live in ``_schema_scalars``; retaining these
+# assignments keeps the historical ``_schema`` import surface authoritative.
+DecimalValue = _DecimalValue
+NifString = _NifString
+ModeloYear = _ModeloYear
+PeriodCode = _PeriodCode
+CountryCode = _CountryCode
+IbanString = _IbanString
+PersonOrEntityName = _PersonOrEntityName
+NifIvaString = _NifIvaString
+CCAACode = _CCAACode
+ProvinceCode = _ProvinceCode
+PostalCode = _PostalCode
+MunicipalityCode = _MunicipalityCode
+BicString = _BicString
+CalendarDate = _CalendarDate
+WorkbookCellRefStr = _WorkbookCellRefStr
+BindingSelectorValue = _BindingSelectorValue
+BindingSelectorMap = _BindingSelectorMap
+BindingSelector = _BindingSelector
+_coerce_modelo_year = _coerce_modelo_year_impl
+_validate_country_code = _validate_country_code_impl
+_validate_iban_string = _validate_iban_string_impl
+_validate_nif_string = _validate_nif_string_impl
+_validate_period_code = _validate_period_code_impl
 
 
 ProfileFactValue = bool | int | str
@@ -692,6 +760,10 @@ def _filing_schedule_period_kind_mismatches(period_kind: str, periods: tuple[str
     return tuple(mismatches)
 
 
+filing_schedule_period_kind_mismatches = _filing_schedule_period_kind_mismatches
+"""Public facade for the filing-schedule period-kind consistency predicate."""
+
+
 class ModeloScheduleDefinition(RegistryModel):
     id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9_.-]+$")
     period_kind: Literal["monthly", "quarterly", "annual", "ad_hoc"]
@@ -786,10 +858,9 @@ class DataBindingDefinition(RegistryModel):
         """Hydrate a raw selector mapping into its source-family model."""
         if isinstance(value, BaseModel):
             return value
-        source = info.data.get("source") if isinstance(info.data, Mapping) else None
-        binding_id = info.data.get("id") if isinstance(info.data, Mapping) else "<unknown>"
-
-        from ._binding_selector_utils import _canonical_selector_key_hint
+        source: object = info.data.get("source")
+        binding_id: object = info.data.get("id", "<unknown>")
+        from ._binding_selector_utils import canonical_selector_key_hint
         from ._bindings import selector_model_for_source
 
         selector_model = selector_model_for_source(source)
@@ -802,8 +873,8 @@ class DataBindingDefinition(RegistryModel):
         try:
             return selector_model.model_validate(value)
         except ValueError as exc:
-            selector = {str(key): item for key, item in value.items()} if isinstance(value, Mapping) else {}
-            hint = _canonical_selector_key_hint(selector, selector_model)
+            selector = _as_toml_table(value) or {}
+            hint = canonical_selector_key_hint(selector, selector_model)
             raise RegistryValidationError(
                 f"binding {binding_id!r} (source={source!r}) selector violates {selector_model.__name__}: {exc}{hint}",
             ) from exc
@@ -820,8 +891,6 @@ class DataBindingDefinition(RegistryModel):
                     exclude_unset=True,
                 ).items()
             }
-        if isinstance(selector, Mapping):
-            return {str(key): value for key, value in selector.items() if key != "source"}
         raise RegistryValidationError(
             f"binding {self.id!r} selector serializer requires a mapping or model, got {type(selector).__name__}",
         )

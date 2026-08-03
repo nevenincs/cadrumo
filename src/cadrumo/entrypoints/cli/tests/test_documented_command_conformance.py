@@ -89,7 +89,7 @@ from typing import cast
 import click
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....tests import REPO_ROOT
 from ....tests.cli_runner import cadrumo_click_command
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -131,10 +131,10 @@ _LINE_CONTINUATION_RE = re.compile(r"\\\s*$")
 def _flat_docs() -> list[Path]:
     docs: list[Path] = []
     for pat in _FLAT_DOC_GLOBS:
-        docs.extend(sorted(PROJECT_ROOT.glob(pat)))
+        docs.extend(sorted(REPO_ROOT.glob(pat)))
     for d in _TREE_DOC_DIRS:
-        docs.extend(sorted((PROJECT_ROOT / d).rglob("*.md")))
-    readme = PROJECT_ROOT / "README.md"
+        docs.extend(sorted((REPO_ROOT / d).rglob("*.md")))
+    readme = REPO_ROOT / "README.md"
     if readme.is_file():
         docs.append(readme)
     return docs
@@ -142,7 +142,7 @@ def _flat_docs() -> list[Path]:
 
 def _sequence_contracts() -> list[Path]:
     """Return every private CLI sequence contract in stable path order."""
-    return sorted((PROJECT_ROOT / "docs" / "_sequences" / "contracts").rglob("*.seq"))
+    return sorted((REPO_ROOT / "docs" / "_sequences" / "contracts").rglob("*.seq"))
 
 
 def _command_surfaces() -> list[Path]:
@@ -529,12 +529,12 @@ _USER_DOC_FLAT_FILES = ("index.md", "workstation-setup.md", "updates.md", "discl
 # is a rendered command, not sample data). A bare fence (no info string) counts.
 _PLAIN_SHELL_FENCE_LANGS = frozenset({"bash", "sh", "pwsh", "shell", "console", "powershell", ""})
 
-_AEAT_FENCE_BASELINE_PATH = PROJECT_ROOT / "src/cadrumo/entrypoints/cli/tests/aeat_plain_fence_baseline.json"
+_AEAT_FENCE_BASELINE_PATH = REPO_ROOT / "src/cadrumo/entrypoints/cli/tests/aeat_plain_fence_baseline.json"
 
 
 def _user_doc_pages() -> list[Path]:
     """Return the user-docs pages the mandatory-display gate governs."""
-    docs = PROJECT_ROOT / "docs"
+    docs = REPO_ROOT / "docs"
     pages: list[Path] = []
     for tree in _USER_DOC_TREE_DIRS:
         pages.extend(sorted((docs / tree).rglob("*.md")))
@@ -570,7 +570,7 @@ def _aeat_plain_fences(text: str) -> list[int]:
 
 def _current_aeat_fence_counts() -> dict[str, int]:
     """Return the live per-page count of plain ``aeat`` fences, keyed by docs-relative path."""
-    docs = PROJECT_ROOT / "docs"
+    docs = REPO_ROOT / "docs"
     counts: dict[str, int] = {}
     for page in _user_doc_pages():
         fences = _aeat_plain_fences(page.read_text(encoding="utf-8"))
@@ -579,7 +579,7 @@ def _current_aeat_fence_counts() -> dict[str, int]:
     return counts
 
 
-_INLINE_AEAT_SPAN_BASELINE_PATH = PROJECT_ROOT / "src/cadrumo/entrypoints/cli/tests/inline_aeat_span_baseline.json"
+_INLINE_AEAT_SPAN_BASELINE_PATH = REPO_ROOT / "src/cadrumo/entrypoints/cli/tests/inline_aeat_span_baseline.json"
 
 
 def _inline_command_complexity(span: str) -> int | None:
@@ -703,7 +703,7 @@ def _inline_aeat_command_spans(text: str) -> list[str]:
 
 def _current_inline_aeat_span_counts() -> dict[str, int]:
     """Return the live per-page count of complex inline ``aeat`` spans, keyed by docs-relative path."""
-    docs = PROJECT_ROOT / "docs"
+    docs = REPO_ROOT / "docs"
     counts: dict[str, int] = {}
     for page in _user_doc_pages():
         spans = _inline_aeat_command_spans(page.read_text(encoding="utf-8"))
@@ -899,14 +899,14 @@ def test_value_consuming_option_value_is_not_a_dead_subcommand() -> None:
     assert "totally-fake-subcommand" in flagged[0]
 
 
-@pytest.mark.parametrize("surface", _command_surfaces(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
+@pytest.mark.parametrize("surface", _command_surfaces(), ids=lambda p: str(p.relative_to(REPO_ROOT)))
 def test_documented_commands_conform(surface: Path) -> None:
     """Every cited ``aeat`` command resolves with valid options and arguments."""
     violations: list[str] = []
     for cited in _surface_commands(surface):
         violations.extend(_validate_command(cited))
     assert not violations, (
-        f"{surface.relative_to(PROJECT_ROOT)} cites aeat commands that do not conform "
+        f"{surface.relative_to(REPO_ROOT)} cites aeat commands that do not conform "
         f"to the live CLI:\n  " + "\n  ".join(violations)
     )
 
@@ -986,7 +986,7 @@ def test_shipped_enrolled_page_scan_is_not_vacuous() -> None:
     enrolled surface ever silently collapses back to zero.
     """
     enrolled = [
-        doc.relative_to(PROJECT_ROOT) for doc in _flat_docs() if _page_is_enrolled(doc.read_text(encoding="utf-8"))
+        doc.relative_to(REPO_ROOT) for doc in _flat_docs() if _page_is_enrolled(doc.read_text(encoding="utf-8"))
     ]
     assert enrolled, (
         "no shipped page carries a `{cli-sequence}` directive — the enrolled doc "
@@ -1066,7 +1066,7 @@ def test_no_new_aeat_plain_fences_in_user_docs() -> None:
     """
     baseline: dict[str, int] = json.loads(_AEAT_FENCE_BASELINE_PATH.read_text(encoding="utf-8"))
     current = _current_aeat_fence_counts()
-    docs = PROJECT_ROOT / "docs"
+    docs = REPO_ROOT / "docs"
     problems: list[str] = []
     for page in sorted(current):
         count = current[page]
@@ -1101,7 +1101,7 @@ def test_no_new_inline_aeat_command_spans_in_user_docs() -> None:
     """
     baseline: dict[str, int] = json.loads(_INLINE_AEAT_SPAN_BASELINE_PATH.read_text(encoding="utf-8"))
     current = _current_inline_aeat_span_counts()
-    docs = PROJECT_ROOT / "docs"
+    docs = REPO_ROOT / "docs"
     problems: list[str] = []
     for page in sorted(current):
         count = current[page]

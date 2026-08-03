@@ -397,13 +397,13 @@ class PreviousFilingSourceResolver:
                 period=context.period.registry_token,
             )
         from ._binding_prefill import resolve_bindings_from_local_store
-        from ._relation_prefill import _activity_start_date_for_bucket
+        from ._relation_prefill import activity_start_date_for_bucket
 
         try:
             report = resolve_bindings_from_local_store(
                 snapshot,
                 repository=self._repository,
-                activity_start_date=_activity_start_date_for_bucket(str(context.bucket_id)),
+                   activity_start_date=activity_start_date_for_bucket(str(context.bucket_id)),
                 excluded_binding_ids=self._excluded_binding_ids,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:

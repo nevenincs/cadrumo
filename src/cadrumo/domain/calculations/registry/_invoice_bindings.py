@@ -1042,4 +1042,9 @@ def _aggregate_invoice_binding(
     raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
 
 
+InvoiceSelector = _InvoiceSelector
+RectificationScope = _RectificationScope
+invoice_selector = _invoice_selector
+
+
 # ---------------------------------------------------------------------------

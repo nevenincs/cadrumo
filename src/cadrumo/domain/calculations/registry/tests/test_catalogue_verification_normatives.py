@@ -6,8 +6,8 @@ from datetime import date
 
 import pytest
 
-from .....core.paths import PROJECT_ROOT
 from .....core.resources import bundled_path
+from .....tests import REPO_ROOT
 from .._corpus_catalogue import verify_source_file
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
@@ -228,7 +228,7 @@ def test_orden_hac_242_2025_art_8_deadline_links_to_full_boe_corpus() -> None:
     )
     assert source.corpus_path == "corpus/normatives/html/orden-hac-242-2025.html"
     verify_legal_catalogue({reference.id: reference}, source_root=bundled_path())
-    verify_source_file(PROJECT_ROOT, source)
+    verify_source_file(REPO_ROOT, source)
 
 
 @pytest.mark.parametrize(

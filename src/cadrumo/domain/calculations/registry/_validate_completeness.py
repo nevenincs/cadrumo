@@ -141,3 +141,6 @@ def _emit_completeness_gate_failures(
                 declared_by_id.get(manifest_casilla.casilla_id),
             ),
         )
+
+
+emit_completeness_gate_failures = _emit_completeness_gate_failures

@@ -38,7 +38,12 @@ __all__ = [
     "_validate_iban_string",
     "_validate_nif_string",
     "_validate_period_code",
+    "coerce_modelo_year",
     "registry_scalar_value_type",
+    "validate_country_code",
+    "validate_iban_string",
+    "validate_nif_string",
+    "validate_period_code",
     "validate_registry_text_scalar",
 ]
 
@@ -417,7 +422,12 @@ def validate_registry_text_scalar(data_type: str, value: object) -> str:
     if not isinstance(value, str):
         raise RegistryValidationError(f"{data_type} value must be a string, got {type(value).__name__}")
     stripped = value.strip()
-    if not stripped:
+    # The generic "text" family is the free-form escape hatch (identity
+    # validator, no semantic contract) and covers AEAT fixed-width fields the
+    # DR declares optional (space-padded when not applicable, e.g. Modelo
+    # 720's persona-con-quien-relacionarse). Every other text-family type has
+    # a real validator for which blank is genuinely invalid.
+    if not stripped and data_type != "text":
         raise RegistryValidationError(f"{data_type} value must not be blank")
     validator = _REGISTRY_TEXT_SCALAR_VALIDATORS[data_type]
     result = validator(stripped)
@@ -474,3 +484,11 @@ registered by ``selector_model_for_source``. ``SerializeAsAny`` preserves the
 concrete model's fields during ``model_dump``/``model_dump_json`` instead of
 serialising through the empty ``BaseModel`` surface.
 """
+
+# Public-internal names let the schema facade preserve its historical private
+# aliases without coupling its implementation to this module's private helpers.
+coerce_modelo_year = _coerce_modelo_year
+validate_country_code = _validate_country_code
+validate_iban_string = _validate_iban_string
+validate_nif_string = _validate_nif_string
+validate_period_code = _validate_period_code

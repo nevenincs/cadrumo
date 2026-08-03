@@ -43,11 +43,13 @@ def _facts() -> tuple[UserProfileFact, ...]:
 
 
 def _record(**overrides: object) -> UserProfileRecord:
-    return UserProfileRecord(
-        profile_id=_PROFILE_ID,
-        display_name="schema-identity-operator",
-        facts=_facts(),
-        **overrides,
+    return UserProfileRecord.model_validate(
+        {
+            "profile_id": _PROFILE_ID,
+            "display_name": "schema-identity-operator",
+            "facts": _facts(),
+            **overrides,
+        },
     )
 
 

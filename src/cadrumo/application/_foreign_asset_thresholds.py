@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 
-from ..core import ForeignAssetObligationGroup
+from ..core import ForeignAssetObligationGroup, Modelo
 from ..core.resources import resources
 from ..domain.calculations.registry import (
     ModeloRevision,
@@ -19,20 +19,20 @@ from ..domain.calculations.registry import (
 
 _ANNUAL_PERIOD = "0A"
 _INITIAL_PARAMETER_IDS = {
-    "720": "modelo-720-asset-declaration-threshold-eur",
-    "721": "modelo-721-asset-declaration-threshold-eur",
+    Modelo.M720: "modelo-720-asset-declaration-threshold-eur",
+    Modelo.M721: "modelo-721-asset-declaration-threshold-eur",
 }
 _REDECLARATION_PARAMETER_IDS = {
-    "720": "modelo-720-redeclaration-increment-threshold-eur",
-    "721": "modelo-721-redeclaration-increment-threshold-eur",
+    Modelo.M720: "modelo-720-redeclaration-increment-threshold-eur",
+    Modelo.M721: "modelo-721-redeclaration-increment-threshold-eur",
 }
 _GROUPS_BY_MODELO = {
-    "720": (
+    Modelo.M720: (
         ForeignAssetObligationGroup.CUENTAS,
         ForeignAssetObligationGroup.VALORES_DERECHOS_SEGUROS,
         ForeignAssetObligationGroup.INMUEBLES,
     ),
-    "721": (ForeignAssetObligationGroup.MONEDAS_VIRTUALES,),
+    Modelo.M721: (ForeignAssetObligationGroup.MONEDAS_VIRTUALES,),
 }
 
 
@@ -81,9 +81,13 @@ def foreign_asset_declaration_thresholds_for_revision(
             threshold values.
         filing_date: The date used to resolve a date-scoped parameter value.
     """
-    groups = _GROUPS_BY_MODELO.get(modelo)
-    initial_parameter_id = _INITIAL_PARAMETER_IDS.get(modelo)
-    redeclaration_parameter_id = _REDECLARATION_PARAMETER_IDS.get(modelo)
+    try:
+        modelo_member = Modelo(modelo)
+    except ValueError as exc:
+        raise RegistryValidationError(f"modelo {modelo!r} has no foreign-asset threshold parameter contract") from exc
+    groups = _GROUPS_BY_MODELO.get(modelo_member)
+    initial_parameter_id = _INITIAL_PARAMETER_IDS.get(modelo_member)
+    redeclaration_parameter_id = _REDECLARATION_PARAMETER_IDS.get(modelo_member)
     if groups is None or initial_parameter_id is None or redeclaration_parameter_id is None:
         raise RegistryValidationError(f"modelo {modelo!r} has no foreign-asset threshold parameter contract")
 

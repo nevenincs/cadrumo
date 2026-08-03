@@ -36,6 +36,7 @@ from pydantic import ValidationError
 from .._login_throttle import (
     LOGIN_THROTTLE_SCHEMA_VERSION,
     LoginThrottleState,
+    ThrottleEvaluation,
     evaluate_login_throttle,
     login_throttle_path,
     record_login_failure,
@@ -77,7 +78,7 @@ def _write_sidecar(root: Path, stamp: str) -> Path:
     return path
 
 
-def _evaluate(root: Path, now: datetime) -> object:
+def _evaluate(root: Path, now: datetime) -> ThrottleEvaluation:
     return evaluate_login_throttle(storage_root=root, bucket_id=_BUCKET_ID, now=now)
 
 

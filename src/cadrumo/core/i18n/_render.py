@@ -22,7 +22,7 @@ import i18n
 import yaml
 
 from .._config_state_root import FormerProductStateError
-from ..config import PROJECT_ROOT, _settings_override, coerce_output_language_setting, load_settings
+from ..config import _settings_override, coerce_output_language_setting, load_settings
 from ..errors import CoreError
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OUTPUT_LANGUAGE_ENV_VAR, SUPPORTED_OUTPUT_LANGUAGES
 from ..logging import get_logger
@@ -170,33 +170,35 @@ def _output_language_cache_key() -> tuple[object, ...]:
     override = _settings_override.get()
     if override is not None:
         return ("override", id(override), _OUTPUT_LANGUAGE_CACHE_VERSION)
-    env_file = PROJECT_ROOT / "env" / ".env"
-    try:
-        env_mtime_ns = env_file.stat().st_mtime_ns
-    except OSError:
-        env_mtime_ns = None
-    # The cache key is computed from raw ``os.environ`` plus the ``.env``
-    # file mtime — the two inputs Pydantic merges into ``Settings``. The
-    # prior implementation constructed a full ``Settings`` instance on
-    # every ``tr()`` call purely to read four field values; a help-screen
-    # render fires ~100 ``tr()`` calls, so that was ~100 Settings builds
-    # and a measurable ``--help`` slowdown.
-    # Sampling the raw env vars + the ``.env`` mtime varies the key
-    # whenever either input changes, so a cache miss still rebuilds
-    # ``Settings`` inside ``_cached_output_language`` with the correct
-    # .env+os.environ merge order. The key only needs to *change* when
-    # the effective value could change; it does not need the merged value.
-    # os.environ.get allowlist: the reads below compute a cache-key signature,
-    # not a settings value.  Constructing a full Settings instance on every
-    # tr() call is prohibitively expensive (~100 calls per --help render).
-    # The variables sampled here are exactly those Pydantic-settings merges
-    # from os.environ; reading them raw to detect *change* does not bypass the
-    # merge order — the cache miss path still builds Settings normally.
+    # The key is built from in-memory inputs ONLY — no filesystem call. It
+    # samples the raw env vars Pydantic merges into ``Settings`` so a cache
+    # miss still rebuilds ``Settings`` normally (with the correct
+    # .env+os.environ merge order); the key only needs to *change* when the
+    # effective value could change, never to carry the merged value itself.
+    #
+    # This deliberately does NOT stat ``env/.env``. An earlier revision put
+    # that file's mtime in the key as a freshness probe, which cost one
+    # ``stat`` syscall per ``tr()`` call — measured at 77% of all time spent
+    # in ``tr()``, on a function whose own catalogue lookup is 0.4us. A
+    # translated string is rendered dozens of times per TUI frame and ~100
+    # times per ``--help``, so the probe dominated every rendering path in
+    # the app.
+    #
+    # Dropping it is safe because a ``.env`` edit cannot change the effective
+    # language without one of: an ``override_settings`` block (keyed above by
+    # override identity, and invalidated at both boundaries), a mutation of
+    # the stored profile language, or a process restart. The first two call
+    # ``clear_output_language_cache`` explicitly — registration, the profile
+    # repository, workflow persistence, CLI init, and language activation all
+    # do — and nothing else in the app hot-reloads ``.env`` mid-process
+    # either, so honouring it here alone was an inconsistency, not a feature.
+    #
+    # os.environ.get allowlist: these reads compute a cache-key signature, not
+    # a settings value, and do not bypass the Pydantic merge order.
     env_signature = tuple(os.environ.get(name) for name in _OUTPUT_LANGUAGE_KEY_ENV_VARS)
     return (
         "env",
         *env_signature,
-        env_mtime_ns,
         _OUTPUT_LANGUAGE_CACHE_VERSION,
     )
 

@@ -19,6 +19,4 @@ Submodules
    cadrumo.core.identity._nif_iva
    cadrumo.core.identity._profile
    cadrumo.core.identity._profile_label
-   cadrumo.core.identity._snapshot
    cadrumo.core.identity._tax_id
-   cadrumo.core.identity._transaction

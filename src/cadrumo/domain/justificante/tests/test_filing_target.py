@@ -9,6 +9,7 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from ....core import Period
+from ....tests.aeat_literal_fixtures import JUSTIFICANTE_FILING_TARGET_VERIFY_URL_FIXTURE
 from .._schema import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -26,7 +27,7 @@ def _receipt(**updates: object) -> Justificante:
         "presentation_id": "EXP-2025-1T",
         "presented_at": _PRESENTED_AT,
         "tax_id": "X1234567L",
-        "verification_url": TypeAdapter(AnyHttpUrl).validate_python("https://www.agenciatributaria.gob.es/verify"),
+        "verification_url": TypeAdapter(AnyHttpUrl).validate_python(JUSTIFICANTE_FILING_TARGET_VERIFY_URL_FIXTURE),
         "source_pdf_path": Path("var/justificantes/just-303.pdf"),
         "source_pdf_sha256": "a" * 64,
         "parsed_at": _PRESENTED_AT,

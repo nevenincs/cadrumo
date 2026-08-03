@@ -12,6 +12,8 @@ pydantic validation, with no fixtures or doubles.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 import pytest
 from pydantic import ValidationError
 
@@ -94,7 +96,7 @@ def _detail(
     )
 
 
-def _pattern_failures(error: ValidationError, field: str) -> list[dict[str, object]]:
+def _pattern_failures(error: ValidationError, field: str) -> list[Mapping[str, object]]:
     """Return the pattern-mismatch entries this error raised for *field*."""
     return [
         entry

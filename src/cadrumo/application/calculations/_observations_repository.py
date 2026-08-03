@@ -180,7 +180,7 @@ def _decision_payload_digest(decision: IvaCompensationReconciliationDecision) ->
 
 def _require_observation_period(period: Period) -> Period:
     if not isinstance(period, Period):
-        raise ObservationKeyError("observation period must be an cadrumo.core.Period")
+        raise ObservationKeyError(f"period must be a cadrumo.core.Period instance, got {type(period).__name__}")
     return period
 
 
@@ -377,7 +377,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         self,
         observation: RegistryModeloObservation,
         *,
-        source_kind: ObservationSourceKind,
+        source_kind: ObservationSourceKind | str,
         captured_at: datetime | None = None,
         member_nif: str | None = None,
         stamped_revision_id: str | None = None,
@@ -407,11 +407,12 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         consumed by the cross-period clean-state proof.
         """
         law_revision_id = _validate_observation_casilla_ids(observation)
+        resolved_source_kind = ObservationSourceKind(source_kind)
         when = captured_at if captured_at is not None else now()
         payload = ObservationEnvelopePayload(
             observation=observation,
             captured_at=when,
-            source_kind=source_kind,
+            source_kind=resolved_source_kind,
             member_nif=member_nif,
             stamped_revision_id=law_revision_id if stamped_revision_id is None else stamped_revision_id,
             source_metadata=dict(source_metadata or {}),

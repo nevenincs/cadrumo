@@ -42,7 +42,7 @@ from ._schema import (
     SourceReference,
 )
 from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import _missing_refs
+from ._validate_helpers import missing_refs as _missing_refs
 
 
 def validate_export_layout_section(

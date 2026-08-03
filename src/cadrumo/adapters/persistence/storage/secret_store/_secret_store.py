@@ -4,8 +4,8 @@ Layered on top of :class:`adapters.persistence.storage.blob_store.EncryptedBlobS
 and :func:`core.locks.exclusive_file_lock`, the store persists
 short-lived bearer state and long-lived authentication material under a
 stable string key. ``SECRET_STORE_CLASSES`` below is the one statement of
-which sensitivity classes those are; every refusal and docstring here reads
-it rather than restating it. Each record is wrapped in an
+which :class:`SensitivityClass` members those are; every refusal and
+docstring here reads it rather than restating it. Each record is wrapped in an
 :class:`adapters.persistence.storage.envelope.Envelope` of
 :class:`SecretRecord`, encrypted via the blob store's per-record DEK wrapped
 by the active :class:`MasterKeyProvider` using AES-256-GCM, and indexed by

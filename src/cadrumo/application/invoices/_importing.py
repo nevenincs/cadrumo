@@ -12,7 +12,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import NotRequired, TypedDict, cast
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, TypeAdapter
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
@@ -21,6 +21,8 @@ from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueReposi
 from ...domain.iva import InvoiceKind
 
 _log = get_logger(__name__)
+_JSON_OBJECT = TypeAdapter(dict[str, object])
+_JSON_ARRAY = TypeAdapter(tuple[object, ...])
 
 
 class InvoiceRowPayload(TypedDict, total=False):
@@ -154,7 +156,7 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
     raw_stripped = raw.lstrip()
     if raw_stripped.startswith("[") or raw_stripped.startswith("{"):
         try:
-            decoded = json.loads(raw)
+            decoded: object = json.loads(raw)
         except json.JSONDecodeError as exc:
             raise InvoiceValidationError(
                 "invoice JSON payload is not valid JSON",
@@ -168,24 +170,27 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
                 # authoritative Invoice.model_validate call validates it next.
                 cast(  # nosemgrep: no-cast-in-domain-application reason: Invoice validates the decoded JSON object.
                     InvoiceRowPayload,
-                    dict(decoded),
+                    _JSON_OBJECT.validate_python(decoded),
                 ),
             )
-        if isinstance(decoded, list) and all(isinstance(item, Mapping) for item in decoded):
-            return tuple(
-                # CAST-RATIONALE-INVOICE-JSON-ARRAY-TYPEDDICT-BOUNDARY: Python
-                # cannot narrow each Mapping to a structural TypedDict; the
-                # authoritative Invoice.model_validate call validates it next.
-                cast(  # nosemgrep: no-cast-in-domain-application reason: Invoice validates each decoded JSON row.
-                    InvoiceRowPayload,
-                    dict(item),
+        if isinstance(decoded, list):
+            decoded_items = _JSON_ARRAY.validate_python(decoded)
+            if all(isinstance(item, Mapping) for item in decoded_items):
+                return tuple(
+                    # CAST-RATIONALE-INVOICE-JSON-ARRAY-TYPEDDICT-BOUNDARY: Python
+                    # cannot narrow each Mapping to a structural TypedDict; the
+                    # authoritative Invoice.model_validate call validates each decoded JSON row.
+                    cast(  # nosemgrep: no-cast-in-domain-application reason: Invoice validates each decoded JSON row.
+                        InvoiceRowPayload,
+                        _JSON_OBJECT.validate_python(item),
+                    )
+                    for item in decoded_items
                 )
-                for item in decoded
-            )
+        payload_type_name = "list" if isinstance(decoded, list) else type(decoded).__name__
         raise InvoiceValidationError(
             "invoice JSON payload must be an object or a list of objects",
             translated_message="application.invoices.importing.errors.invalid_json_shape",
-            context={"payload_type": type(decoded).__name__},
+            context={"payload_type": payload_type_name},
         )
 
     raise InvoiceValidationError(

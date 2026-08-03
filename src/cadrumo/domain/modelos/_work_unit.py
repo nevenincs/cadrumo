@@ -26,7 +26,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, override
+from typing import Annotated, cast, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
@@ -116,8 +116,6 @@ def derive_work_unit_id(
     same four-axis key see the same identifier without
     round-tripping through storage.
     """
-    if not isinstance(period, Period):
-        raise ModeloValidationError(f"expected Period, got {type(period).__name__}")
     if period.filing_year != int(filing_year):
         raise ModeloValidationError(
             f"filing_year {filing_year!r} does not match period year {period.filing_year!r}",
@@ -322,9 +320,8 @@ class WorkUnitCatalogue(BaseModel):
         """Build a :class:`WorkUnitCatalogue` from an iterable / mapping of work units."""
         if isinstance(units, tuple):
             mapping: dict[str, WorkUnit] = {}
-            for unit in units:
-                if not isinstance(unit, WorkUnit):
-                    raise ModeloValidationError(f"expected WorkUnit, got {type(unit).__name__}")
+            units_tuple = cast(tuple[WorkUnit, ...], units)  # pyright: ignore[reportUnnecessaryCast]  # ty narrows the tuple union conservatively
+            for unit in units_tuple:
                 if unit.work_unit_id in mapping:
                     raise ModeloValidationError(f"duplicate work_unit_id {unit.work_unit_id!r}")
                 mapping[unit.work_unit_id] = unit
@@ -332,7 +329,7 @@ class WorkUnitCatalogue(BaseModel):
         return cls(work_units={str(k): v for k, v in units.items()})
 
     @override
-    def __iter__(self) -> Iterator[WorkUnit]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[WorkUnit]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields WorkUnit records, not BaseModel field-value tuples
         """Iterate the loaded work units (not the keys)."""
         return iter(self.work_units.values())
 

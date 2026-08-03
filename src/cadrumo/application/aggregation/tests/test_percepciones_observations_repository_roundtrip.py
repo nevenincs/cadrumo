@@ -377,7 +377,7 @@ def test_window_scan_refuses_a_row_filed_under_another_perceptors_key(tmp_path: 
         # Positive control: the untouched window projects both rows.
         assert len(repo.load_observations("190", period)) == 2
 
-        def _payload(observation: WithholdingObservation) -> object:
+        def _payload(observation: WithholdingObservation):
             return repo.build_observation_payload(
                 modelo="190",
                 filing_year=2024,

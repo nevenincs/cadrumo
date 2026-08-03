@@ -15,7 +15,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal, get_args, get_origin
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ....core import freeze_toml, read_toml
 from . import _loader_locales
@@ -44,6 +44,7 @@ from ._validate_revision_identity import revision_reference_identity_failures
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
 _REVISION_COMPLETENESS_MANIFEST = "completeness_manifest"
+_TOML_ARRAY_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 _REVISION_SPECIAL_MERGE_FIELDS = frozenset({_REVISION_EXPORT_LAYOUTS, _REVISION_CONSTRUCTS})
 _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
     field_name
@@ -138,6 +139,13 @@ def _toml_table_id(value: object) -> str | None:
     return table_id if isinstance(table_id, str) else None
 
 
+def _as_toml_array(value: object) -> tuple[object, ...] | None:
+    """Narrow a frozen TOML array to object entries, or return ``None``."""
+    if not isinstance(value, tuple):
+        return None
+    return _TOML_ARRAY_ADAPTER.validate_python(value)
+
+
 def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:
     forbidden = {"source", "sources", "legal", "legal_refs_catalogue"}
     present = sorted(forbidden.intersection(data))
@@ -175,21 +183,20 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
     _reject_local_catalogues(source_path, data)
     if "modelo" not in data:
         raise RegistryLoadError(f"{source_path}: missing [modelo] table")
-    modelo_table = data["modelo"]
-    if not isinstance(modelo_table, dict):
+    modelo_table = _as_toml_table(data["modelo"])
+    if modelo_table is None:
         raise RegistryLoadError(f"{source_path}: [modelo] must be a table")
     modelo_id = modelo_table.get("id")
     modelo_id_for_context = modelo_id if isinstance(modelo_id, str) else source_path.as_posix()
-    raw_revisions = data.get("revisions")
-    if not isinstance(raw_revisions, dict) or not raw_revisions:
+    raw_revisions = _as_toml_table(data.get("revisions"))
+    if not raw_revisions:
         raise RegistryLoadError(f"{source_path}: missing [revisions.<id>] tables")
     revisions: dict[str, ModeloRevision] = {}
     for revision_id, raw_revision in raw_revisions.items():
-        if not isinstance(revision_id, str):
-            raise RegistryLoadError(f"{source_path}: revision key must be a string")
-        if not isinstance(raw_revision, dict):
+        raw_revision_table = _as_toml_table(raw_revision)
+        if raw_revision_table is None:
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
-        payload = {"id": revision_id, **raw_revision}
+        payload: dict[str, object] = {"id": revision_id, **raw_revision_table}
         try:
             revision = ModeloRevision.model_validate(payload)
         except ValidationError as exc:
@@ -352,12 +359,10 @@ def _merge_revision_file(path: Path, merged_revisions: dict[str, object]) -> Non
     _reject_local_catalogues(path, rev_data)
     if "modelo" in rev_data:
         raise RegistryLoadError(f"{path}: revision file must not declare [modelo]; that lives in manifest.toml")
-    file_revisions = rev_data.get("revisions")
-    if not isinstance(file_revisions, dict) or not file_revisions:
+    file_revisions = _as_toml_table(rev_data.get("revisions"))
+    if not file_revisions:
         raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
     for revision_id, raw_revision in file_revisions.items():
-        if not isinstance(revision_id, str):
-            raise RegistryLoadError(f"{path}: revision key must be a string")
         if revision_id in merged_revisions:
             raise RegistryLoadError(
                 f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file",
@@ -395,14 +400,12 @@ def _read_single_revision_table(path: Path, expected_revision_id: str) -> dict[s
     _reject_local_catalogues(path, fragment_data)
     if "modelo" in fragment_data:
         raise RegistryLoadError(f"{path}: revision fragment must not declare [modelo]; that lives in manifest.toml")
-    file_revisions = fragment_data.get("revisions")
-    if not isinstance(file_revisions, dict) or not file_revisions:
+    file_revisions = _as_toml_table(fragment_data.get("revisions"))
+    if not file_revisions:
         raise RegistryLoadError(f"{path}: revision fragment must declare [revisions.<id>]")
     if len(file_revisions) != 1:
         raise RegistryLoadError(f"{path}: revision fragment must declare exactly one revision")
     revision_id, raw_revision = next(iter(file_revisions.items()))
-    if not isinstance(revision_id, str):
-        raise RegistryLoadError(f"{path}: revision key must be a string")
     if revision_id != expected_revision_id:
         raise RegistryLoadError(
             f"{path}: revision fragment declares {revision_id!r}, expected {expected_revision_id!r}",
@@ -472,36 +475,39 @@ def _merge_revision_fragment_field(
             f"readable in one place",
         )
     if key == _REVISION_CONSTRUCTS:
-        if not isinstance(value, tuple):
+        incoming = _as_toml_array(value)
+        if incoming is None:
             raise RegistryLoadError(f"{path}: revision fragment field 'constructs' must be an array")
-        existing = merged_revision.get(key, ())
-        if not isinstance(existing, tuple):
+        existing = _as_toml_array(merged_revision.get(key, ()))
+        if existing is None:
             raise RegistryLoadError(f"{path}: revision fragment field 'constructs' conflicts with a non-array field")
         merged_revision[key] = _merge_table_array_fragments(
             path,
             existing,
-            value,
+            incoming,
             item_label="construct",
             append_array_fields=_CONSTRUCT_APPEND_ARRAYS,
         )
         return
     if key in _REVISION_APPEND_ARRAYS:
-        if not isinstance(value, tuple):
+        incoming = _as_toml_array(value)
+        if incoming is None:
             raise RegistryLoadError(f"{path}: revision fragment field {key!r} must be an array")
-        existing = merged_revision.get(key, ())
-        if not isinstance(existing, tuple):
+        existing = _as_toml_array(merged_revision.get(key, ()))
+        if existing is None:
             raise RegistryLoadError(f"{path}: revision fragment field {key!r} conflicts with a non-array field")
-        merged_revision[key] = (*existing, *value)
+        merged_revision[key] = (*existing, *incoming)
         return
     if key == _REVISION_EXPORT_LAYOUTS:
-        if not isinstance(value, tuple):
+        incoming = _as_toml_array(value)
+        if incoming is None:
             raise RegistryLoadError(f"{path}: revision fragment field 'export_layouts' must be an array")
-        existing = merged_revision.get(key, ())
-        if not isinstance(existing, tuple):
+        existing = _as_toml_array(merged_revision.get(key, ()))
+        if existing is None:
             raise RegistryLoadError(
                 f"{path}: revision fragment field 'export_layouts' conflicts with a non-array field",
             )
-        merged_revision[key] = _merge_export_layout_fragments(path, existing, value)
+        merged_revision[key] = _merge_export_layout_fragments(path, existing, incoming)
         return
     if key == _REVISION_COMPLETENESS_MANIFEST:
         existing = merged_revision.get(key)
@@ -541,14 +547,15 @@ def _merge_singleton_table_fragment(
     merged = dict(existing_table)
     for key, value in incoming_table.items():
         if key in append_array_fields:
-            if not isinstance(value, tuple):
+            incoming = _as_toml_array(value)
+            if incoming is None:
                 raise RegistryLoadError(f"{path}: revision fragment field {field_name!r}.{key!r} must be an array")
-            existing_values = merged.get(key, ())
-            if not isinstance(existing_values, tuple):
+            existing_values = _as_toml_array(merged.get(key, ()))
+            if existing_values is None:
                 raise RegistryLoadError(
                     f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with a non-array field",
                 )
-            merged[key] = (*existing_values, *value)
+            merged[key] = (*existing_values, *incoming)
             continue
         if key in merged and merged[key] != value:
             raise RegistryLoadError(
@@ -599,15 +606,16 @@ def _merge_export_layout_by_id(
         if key == "id":
             continue
         if key == "records":
-            if not isinstance(value, tuple):
+            incoming_records = _as_toml_array(value)
+            if incoming_records is None:
                 raise RegistryLoadError(f"{path}: export layout {layout_id!r} records must be an array")
-            existing_records = merged.get("records", ())
-            if not isinstance(existing_records, tuple):
+            existing_records = _as_toml_array(merged.get("records", ()))
+            if existing_records is None:
                 raise RegistryLoadError(f"{path}: export layout {layout_id!r} existing records are not an array")
             merged["records"] = _merge_table_array_fragments(
                 path,
                 existing_records,
-                value,
+                incoming_records,
                 item_label=f"export layout {layout_id!r} record",
                 append_array_fields=frozenset({"fields"}),
             )
@@ -674,15 +682,16 @@ def _merge_table_fragment_by_id(
         if key == "id":
             continue
         if key in append_array_fields:
-            if not isinstance(value, tuple):
+            incoming_values = _as_toml_array(value)
+            if incoming_values is None:
                 raise RegistryLoadError(f"{path}: {item_label} {item_id!r} field {key!r} must be an array")
-            existing_values = merged.get(key, ())
-            if not isinstance(existing_values, tuple):
+            existing_values = _as_toml_array(merged.get(key, ()))
+            if existing_values is None:
                 raise RegistryLoadError(
                     f"{path}: {item_label} {item_id!r} field {key!r} conflicts with a non-array fragment",
                 )
-            _reject_duplicate_appended_table_ids(path, existing_values, value, item_label, item_id, key)
-            merged[key] = (*existing_values, *value)
+            _reject_duplicate_appended_table_ids(path, existing_values, incoming_values, item_label, item_id, key)
+            merged[key] = (*existing_values, *incoming_values)
             continue
         if key in merged and merged[key] != value:
             raise RegistryLoadError(f"{path}: {item_label} {item_id!r} field {key!r} conflicts with another fragment")
@@ -773,14 +782,16 @@ def _validate_catalogue_section[T: BaseModel](
     mode stays uniform across the three sections (legal, sources,
     parameters).
     """
-    if not isinstance(raw, dict):
+    table = _as_toml_table(raw)
+    if table is None:
         return {}
     out: dict[str, T] = {}
-    for ref_id, payload in raw.items():
-        if not isinstance(ref_id, str) or not isinstance(payload, dict):
+    for ref_id, payload in table.items():
+        payload_table = _as_toml_table(payload)
+        if payload_table is None:
             raise RegistryLoadError(f"{source_path}: malformed {kind} entry")
         try:
-            out[ref_id] = model.model_validate({"id": ref_id, **payload})
+            out[ref_id] = model.model_validate({"id": ref_id, **payload_table})
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid {kind} {ref_id!r}: {exc}") from exc
     return out
@@ -1315,3 +1326,6 @@ def _toml_fingerprint(path: Path) -> _RegistryPathFingerprint:
     loader) while the read-only bundled tree keeps the cheap stat-only form.
     """
     return toml_file_fingerprint(path)
+
+
+collect_registry_tree_fingerprints = _collect_registry_tree_fingerprints

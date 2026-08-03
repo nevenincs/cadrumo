@@ -31,6 +31,7 @@ import pytest
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output.plain_text import PlainTextOutput
 from pydantic import BaseModel
+from textual.containers import Vertical
 
 from ....adapters.inbound.tui import FlowTuiApp
 from ....core.flows import (
@@ -52,6 +53,7 @@ from .. import (
     LineFlowFrontend,
     ReviewProjection,
     answer,
+    assemble_section_titles,
     run_scripted_flow,
     start_flow,
 )
@@ -244,3 +246,40 @@ def test_three_frontends_report_the_same_invalid_token_verdict_key() -> None:
     assert scripted_keys == (invalid_key,)
     assert tui_key == invalid_key
     assert line_rendered_verdict in captured
+
+
+async def _tui_section_group_box_title(definition: FlowDefinition) -> str:
+    """Read the question panel's group-box title on the first page."""
+    app = FlowTuiApp(definition, mode=FlowMode.MODIFY, registered_values={})
+    async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        return str(app.screen.query_one("#page-body", Vertical).border_title)
+
+
+def test_no_frontend_renders_a_section_slug_as_operator_facing_copy() -> None:
+    """A section's group-box title and header are resolved copy, never its id.
+
+    ``FlowSection.id`` is an internal slug and ``FlowSection.title`` is the
+    reference carrying the operator-facing, locale-resolved title. Rendering
+    the slug leaks an untranslated identifier into the interface — it stays
+    fixed while the rest of the surface follows the profile language. This
+    pins both surfaces that show a section outside review: the full-screen
+    question panel's group-box border title, and the line-mode page header.
+    """
+    definition = _definition()
+    resolved = assemble_section_titles(definition)["s1"]
+
+    # Precondition: the fixture can actually distinguish the two. A section
+    # whose resolved title happened to equal its slug would make every
+    # assertion below pass vacuously.
+    assert resolved != "s1", "fixture cannot detect the defect: resolved title equals the slug"
+
+    group_box_title = asyncio.run(_tui_section_group_box_title(definition))
+    assert group_box_title == resolved
+    assert group_box_title != "s1"
+
+    # On the opening page the gated ``p_dep`` is not yet visible, so the
+    # sequence the header counts against is four pages, not five.
+    _state, _projection, captured = _run_line(definition, "ada\r42\r1\r\rdetail\r\r")
+    assert tr("flows.progress.page_header", position=1, total=4, section=resolved) in captured
+    assert tr("flows.progress.page_header", position=1, total=4, section="s1") not in captured

@@ -358,7 +358,7 @@ def _out_of_plazo_warning(
     """
     deadline_engine = DeadlineEngine()
     try:
-        windows = deadline_engine._deadline_windows(year)
+        windows = deadline_engine.deadline_windows(year)
     except NoDeadlineWindowsError:
         return None
     matching_windows = tuple(
@@ -393,9 +393,9 @@ def _deadline_window_matches(
     revision: ModeloRevision,
     window: DeadlineWindowDefinition,
 ) -> bool:
-    if not deadline_engine._schedule_applies(profile, revision, window):
+    if not deadline_engine.schedule_applies(profile, revision, window):
         return False
-    condition_text = deadline_engine._evaluate_conditions(
+    condition_text = deadline_engine.evaluate_conditions(
         profile,
         window.applicability_conditions,
         mode=window.applicability_condition_mode,

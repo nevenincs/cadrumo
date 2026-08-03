@@ -25,12 +25,12 @@ documents and validates the transport shape emitted by :mod:`_overview`.
 
 from __future__ import annotations
 
-from datetime import date
 from typing import Literal, Self
 
 from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
+from ...core.parsing import require_iso8601_date
 from ._decimal_wire import NonNegativeDecimalWireText
 from ._ledger_payloads import LedgerStatusResult
 from ._schemas import OutputSchema, register_schema
@@ -236,8 +236,8 @@ class OverviewCalendarRangePayload(OutputSchema):
     @model_validator(mode="after")
     def _enforce_inclusive_date_order(self) -> OverviewCalendarRangePayload:
         try:
-            from_date = date.fromisoformat(self.from_date)
-            to_date = date.fromisoformat(self.to_date)
+            from_date = require_iso8601_date(self.from_date)
+            to_date = require_iso8601_date(self.to_date)
         except ValueError as exc:
             raise ValueError("calendar range dates must be ISO-8601 dates") from exc
         if from_date > to_date:

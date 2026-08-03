@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, override
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding, BindingsMap
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.widgets import (
     Button,
@@ -35,9 +35,15 @@ from textual.widgets import (
 )
 from textual.widgets.option_list import Option
 
-from ....application.flows import assemble_page_copy, validate_widget_shape, visible_sequence
+from ....application.flows import (
+    assemble_page_copy,
+    assemble_section_titles,
+    validate_widget_shape,
+    visible_sequence,
+)
 from ....core.flows import DEFER_TOKEN, FlowWidgetKind
 from ....core.i18n import tr
+from ._theme import ContentScroll
 
 if TYPE_CHECKING:
     from textual.events import Key
@@ -75,10 +81,22 @@ class QuestionScreen(Screen[None]):
 
     @override
     def compose(self) -> ComposeResult:
-        """Yield the question screen's widgets: header, progress, prompt, and answer input."""
+        """Yield the question screen's widgets: header, progress, prompt, and answer input.
+
+        The body follows the shared three-part scaffold every other
+        full-screen surface uses: one ``ContentScroll`` host (``height:
+        1fr``, so it is the single thing that scrolls), the fluid centred
+        column, then the bordered panel (``height: auto``). Collapsing the
+        host and the panel into one auto-height scroll container makes that
+        container unable to scroll and pushes the overflow onto the Screen.
+        """
         yield Static(id="flow-header")
         yield ProgressBar(id="flow-progress", show_eta=False)
-        with VerticalScroll(id="page-body"):
+        with (
+            ContentScroll(id="page-scroll", classes="cadrumo-scroll"),
+            Vertical(classes="cadrumo-column"),
+            Vertical(id="page-body", classes="cadrumo-panel"),
+        ):
             yield Label("", id="page-prompt")
             yield Static("", id="page-badge")
             yield Static("", id="page-help")
@@ -144,19 +162,23 @@ class QuestionScreen(Screen[None]):
     def _render_header(self, app: FlowTuiApp, entry: VisiblePage) -> None:
         sequence = visible_sequence(app.definition, app.state)
         position = next((index for index, item in enumerate(sequence) if item.key == entry.key), 0)
+        # The section id is an internal slug; the operator-facing title is the
+        # section's resolved copy, so both the header and the panel below read
+        # in the active profile's language.
+        section_title = assemble_section_titles(app.definition).get(entry.section_id, entry.section_id)
         self.query_one("#flow-header", Static).update(
             tr(
                 "flows.tui.header",
                 flow=app.definition.id,
                 position=position + 1,
                 total=len(sequence),
-                section=entry.section_id,
+                section=section_title,
             ),
         )
         self.query_one("#flow-progress", ProgressBar).update(total=len(sequence), progress=position + 1)
         # The bordered question panel carries the section as its title so the
         # operator always sees which part of the flow they are in.
-        self.query_one("#page-body", VerticalScroll).border_title = entry.section_id
+        self.query_one("#page-body", Vertical).border_title = section_title
 
     def _render_body(self, app: FlowTuiApp, entry: VisiblePage, copy: PageCopy) -> None:
         self.query_one("#page-prompt", Label).update(copy.prompt)

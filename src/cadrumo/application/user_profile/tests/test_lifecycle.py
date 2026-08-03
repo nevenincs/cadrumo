@@ -306,6 +306,153 @@ def test_rename_refuses_a_tombstoned_profile(
     assert error.context == {"profile_id": _PROFILE_BUCKET_ID, "action": "rename"}
 
 
+def test_edit_fields_applies_the_whole_patch_in_one_write(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
+    """A batch lands every fact, and every event shares one applied_at.
+
+    The shared timestamp is the observable signature of ONE write: the
+    per-field loop this replaced stamped each fact with its own
+    ``utc_now()``, so a run of distinct timestamps would mean the cascade
+    still ran once per field.
+    """
+    svc = _service(secure_objects, schema)
+    events_repo = BucketEventHistoryRepository(objects=secure_objects)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+    before = {event_id for event_id in events_repo.load().events}
+
+    result = svc.edit_fields(
+        (
+            EditProfileFieldCommand(profile_id=_PROFILE_BUCKET_ID, path="identity.email", value="op@example.test"),
+            EditProfileFieldCommand(profile_id=_PROFILE_BUCKET_ID, path="identity.surnames", value="Operator Surname"),
+        ),
+    )
+
+    values = {fact.path: fact.value for fact in result.profile.facts}
+    assert values["identity.email"] == "op@example.test"
+    assert values["identity.surnames"] == "Operator Surname"
+
+    reloaded = {fact.path: fact.value for fact in svc.read(_PROFILE_BUCKET_ID).facts}
+    assert reloaded["identity.email"] == "op@example.test"
+    assert reloaded["identity.surnames"] == "Operator Surname"
+
+    emitted = [event for event_id, event in events_repo.load().events.items() if event_id not in before]
+    assert {event.occurred_at for event in emitted} == {result.applied_at}
+
+
+def test_edit_fields_keeps_one_bucket_event_per_fact(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
+    """Batching the storage round-trip must not batch the audit trail."""
+    svc = _service(secure_objects, schema)
+    events_repo = BucketEventHistoryRepository(objects=secure_objects)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+    svc.edit_field(
+        EditProfileFieldCommand(profile_id=_PROFILE_BUCKET_ID, path="identity.surnames", value="Operator Surname")
+    )
+    before = {event_id for event_id in events_repo.load().events}
+
+    svc.edit_fields(
+        (
+            EditProfileFieldCommand(profile_id=_PROFILE_BUCKET_ID, path="identity.email", value="op@example.test"),
+            EditProfileFieldCommand(profile_id=_PROFILE_BUCKET_ID, path="identity.surnames", value=None),
+        ),
+    )
+
+    emitted = [event for event_id, event in events_repo.load().events.items() if event_id not in before]
+    assert len(emitted) == 2
+    assert {event.event_type for event in emitted} == {
+        BucketEventType.PROFILE_VALUES_UPDATED,
+        BucketEventType.PROFILE_VALUES_CLEARED,
+    }
+    assert {event.payload["path"] for event in emitted} == {"identity.email", "identity.surnames"}
+
+
+def test_edit_fields_refuses_an_empty_batch(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
+    """A caller reaching this door believes it has a change to make."""
+    svc = _service(secure_objects, schema)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+
+    with pytest.raises(ProfileSchemaValidationError):
+        svc.edit_fields(())
+
+
+def test_edit_fields_refuses_commands_naming_two_profiles(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
+    """One batch is one aggregate; a mixed batch has no single record to write."""
+    svc = _service(secure_objects, schema)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+
+    with pytest.raises(ProfileSchemaValidationError):
+        svc.edit_fields(
+            (
+                EditProfileFieldCommand(profile_id=_PROFILE_BUCKET_ID, path="identity.email", value="a@example.test"),
+                EditProfileFieldCommand(profile_id=_RUNTIME_BUCKET_ID, path="identity.email", value="b@example.test"),
+            ),
+        )
+
+
+def test_edit_fields_leaves_the_aggregate_untouched_when_the_batch_is_invalid(
+    secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition
+) -> None:
+    """A later field's refusal must not leave earlier fields half-applied.
+
+    This is what the per-field loop could not promise: it committed each
+    field before validating the next, so an invalid tail left a partially
+    written aggregate behind.
+    """
+    svc = _service(secure_objects, schema)
+    svc.register(
+        RegisterProfileCommand(
+            profile_id=_PROFILE_BUCKET_ID,
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        ),
+    )
+    original = {fact.path: fact.value for fact in svc.read(_PROFILE_BUCKET_ID).facts}
+
+    with pytest.raises(ProfileSchemaValidationError):
+        svc.edit_fields(
+            (
+                EditProfileFieldCommand(profile_id=_PROFILE_BUCKET_ID, path="identity.name", value="Operator"),
+                EditProfileFieldCommand(
+                    profile_id=_PROFILE_BUCKET_ID,
+                    path="preferences.output_language",
+                    value="not-a-language",
+                ),
+            ),
+        )
+
+    assert {fact.path: fact.value for fact in svc.read(_PROFILE_BUCKET_ID).facts} == original
+
+
 def test_lifecycle_emits_bucket_events(secure_objects: SecureObjectRepository, schema: ProfileSchemaDefinition) -> None:
     svc = _service(secure_objects, schema)
     events_repo = BucketEventHistoryRepository(objects=secure_objects)

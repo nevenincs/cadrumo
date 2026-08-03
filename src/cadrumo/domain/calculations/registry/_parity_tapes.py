@@ -12,7 +12,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG, Period
 from ....core.time import now
@@ -32,6 +32,11 @@ from ._workbook_parity import (
 )
 
 ParityStatus = Literal["match", "mismatch"]
+_JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
+    dict[str, object],
+    config=ConfigDict(strict=True),
+)
+_JSON_ARRAY_ADAPTER: TypeAdapter[list[object]] = TypeAdapter(list[object], config=ConfigDict(strict=True))
 
 
 class ParityTapeModel(BaseModel):
@@ -261,12 +266,20 @@ def _as_json_object(value: object) -> dict[str, object] | None:
     """
     if not isinstance(value, dict):
         return None
-    narrowed: dict[str, object] = {}
-    for key, item in value.items():
-        if not isinstance(key, str):
-            return None
-        narrowed[key] = item
-    return narrowed
+    try:
+        return _JSON_OBJECT_ADAPTER.validate_python(value)
+    except ValidationError:
+        return None
+
+
+def _as_json_array(value: object) -> list[object] | None:
+    """Narrow a JSON array to object entries, or return ``None``."""
+    if not isinstance(value, list):
+        return None
+    try:
+        return _JSON_ARRAY_ADAPTER.validate_python(value)
+    except ValidationError:
+        return None
 
 
 def _diff_paths(left: object, right: object, prefix: str = "") -> tuple[str, ...]:
@@ -285,10 +298,12 @@ def _diff_paths(left: object, right: object, prefix: str = "") -> tuple[str, ...
                 continue
             differences.extend(_diff_paths(left_object[key], right_object[key], next_prefix))
         return tuple(differences)
-    if isinstance(left, list) and isinstance(right, list):
-        if len(left) != len(right):
-            differences.append(f"{prefix}: length differs ({len(left)} != {len(right)})")
-        for index, (left_item, right_item) in enumerate(zip(left, right, strict=False)):
+    left_array = _as_json_array(left)
+    right_array = _as_json_array(right)
+    if left_array is not None and right_array is not None:
+        if len(left_array) != len(right_array):
+            differences.append(f"{prefix}: length differs ({len(left_array)} != {len(right_array)})")
+        for index, (left_item, right_item) in enumerate(zip(left_array, right_array, strict=False)):
             next_prefix = f"{prefix}[{index}]"
             differences.extend(_diff_paths(left_item, right_item, next_prefix))
         return tuple(differences)

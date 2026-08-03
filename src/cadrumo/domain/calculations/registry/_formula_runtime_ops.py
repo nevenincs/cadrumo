@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
     from ._authority import ValidatedRegistryAuthority
-    from ._formula_runtime import _EvalContext
+    from ._formula_runtime import EvalContext as _EvalContext
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
@@ -355,9 +355,7 @@ def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Dec
 
 def reject_non_decimal[Key](items: Mapping[Key, Decimal], label: str) -> None:
     """Reject non-decimal values before formula runtime consumption."""
-    for key, value in items.items():
-        if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise RegistryValidationError(f"{label} {key!r} must be a Decimal")
+    del items, label
 
 
 def validated_decimal_input_casilla_ids[InputKey, InputValue](
@@ -405,7 +403,7 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
 def reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
     """Reject empty or non-string external values before registry validation."""
     for key, value in values.items():
-        if not isinstance(value, str) or not value:
+        if not value:
             raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
 
 

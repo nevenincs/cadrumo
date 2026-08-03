@@ -33,16 +33,29 @@ from typing import TYPE_CHECKING, NoReturn
 
 from ....core import ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente import UE_EEA_COUNTRY_CODES
-from . import _formula_runtime_ops as _ops
 from ._convenio import ConvenioOverride
 from ._errors import RegistryValidationError
-from ._formula_runtime_ops import RegistryUnresolvedOutcomeReason, UnresolvedFormulaOutcomeError
+from ._formula_runtime_ops import (
+    RegistryUnresolvedOutcomeReason,
+    UnresolvedFormulaOutcomeError,
+)
 from ._formula_runtime_ops import numeric_casilla_value as _numeric_casilla_value
+from ._formula_runtime_ops import (
+    resolve_bracket as _resolve_bracket,
+)
+from ._formula_runtime_ops import (
+    resolve_keyed_bracket as _resolve_keyed_bracket,
+)
+from ._formula_runtime_ops import (
+    resolve_scalar_parameter as _resolve_scalar_parameter,
+)
 from ._ids import BindingId, CasillaId, ParameterId
 from ._schema import FormulaExpression
 
 if TYPE_CHECKING:
-    from ._formula_runtime import _EvalContext
+    from ._formula_runtime import EvalContext
+
+    _EvalContext = EvalContext
 
 _ZERO = Decimal("0")
 
@@ -114,7 +127,7 @@ def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Eva
 
     baseline_param = ctx.parameters.get(args.baseline_parameter)
     ctx.operand_refs.extend((args.baseline_parameter, args.country_binding))
-    baseline_rate = _ops.resolve_keyed_bracket(baseline_param, key=tipo_renta, filing_year=ctx.filing_year)
+    baseline_rate = _resolve_keyed_bracket(baseline_param, key=tipo_renta, filing_year=ctx.filing_year)
     country = ctx.enum_binding_values.get(args.country_binding) or ""
     override = _resolve_convenio_override(ctx, country=country, tipo_renta=tipo_renta)
 
@@ -288,7 +301,7 @@ def _m210_effective_rate_from_tariff(
             context={"parameter_id": tariff_parameter_id, "op": "irnr_resolve_tipo_gravamen"},
         )
     ctx.operand_refs.append(tariff_parameter_id)
-    cuota = _ops.resolve_bracket(tariff_parameter, base, ctx.date_context)
+    cuota = _resolve_bracket(tariff_parameter, base, ctx.date_context)
     ctx.operand_values.append(cuota)
     if base == _ZERO:
         return _ZERO
@@ -348,12 +361,12 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
     days_fraction = days / Decimal(_m210_days_in_filing_year(ctx.filing_year))
     catastral_value = _numeric_casilla_value(args.catastral_value_casilla_id, ctx)
     if catastral_value > _ZERO:
-        recent_rate = _ops.resolve_scalar_parameter(
+        recent_rate = _resolve_scalar_parameter(
             args.recent_rate_parameter,
             ctx,
             op="m210_resolve_base_imponible",
         )
-        old_rate = _ops.resolve_scalar_parameter(
+        old_rate = _resolve_scalar_parameter(
             args.old_rate_parameter,
             ctx,
             op="m210_resolve_base_imponible",
@@ -384,12 +397,12 @@ def evaluate_m210_resolve_base_imponible(expression: FormulaExpression, ctx: _Ev
                 "administrative_casilla_id": args.administrative_value_casilla_id,
             },
         )
-    no_catastral_fraction = _ops.resolve_scalar_parameter(
+    no_catastral_fraction = _resolve_scalar_parameter(
         args.no_catastral_fraction_parameter,
         ctx,
         op="m210_resolve_base_imponible",
     )
-    recent_rate = _ops.resolve_scalar_parameter(
+    recent_rate = _resolve_scalar_parameter(
         args.recent_rate_parameter,
         ctx,
         op="m210_resolve_base_imponible",

@@ -15,7 +15,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator, model_validator
 
 from ...core import IBAN_SHAPE_RE, Modelo, Period, iban_mod_97
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -30,6 +30,8 @@ from ..contribuyente import (
     FiscalResidency,
 )
 from ._errors import DeadlineValidationError
+
+_OBJECT_TUPLE_ADAPTER: TypeAdapter[tuple[object, ...]] = TypeAdapter(tuple[object, ...])
 
 
 class IVARegime(StrEnum):
@@ -346,6 +348,18 @@ class ModeloIVAProfile(BaseModel):
     refund_account: RefundAccount | None = None
 
 
+def _parse_modelo_identifier(value: object) -> Modelo:
+    """Coerce a canonical modelo token into the closed Modelo enum."""
+    if isinstance(value, Modelo):
+        return value
+    if isinstance(value, str):
+        try:
+            return Modelo(value)
+        except ValueError as exc:
+            raise DeadlineValidationError(f"modelo identifier {value!r} is not a supported AEAT modelo") from exc
+    raise DeadlineValidationError(f"modelo identifier must be a string or Modelo, got {type(value).__name__}")
+
+
 class CrossPeriodGroupMemberRoster(BaseModel):
     """Expected member roster for a grouped cross-period dependency.
 
@@ -366,9 +380,11 @@ class CrossPeriodGroupMemberRoster(BaseModel):
     @classmethod
     def _coerce_member_nifs(cls, value: object) -> object:
         if isinstance(value, tuple):
-            return value
+            tuple_validated: tuple[object, ...] = _OBJECT_TUPLE_ADAPTER.validate_python(value)
+            return tuple_validated
         if isinstance(value, list | set | frozenset):
-            return tuple(value)
+            sequence_validated: tuple[object, ...] = _OBJECT_TUPLE_ADAPTER.validate_python(value)
+            return sequence_validated
         return value
 
     @field_validator("member_nifs")
@@ -650,7 +666,7 @@ class TaxpayerProfile(BaseModel):
             nif_missing = self.representante_fiscal_nif is None
             nombre_missing = self.representante_fiscal_nombre is None
             if nif_missing or nombre_missing:
-                missing = []
+                missing: list[str] = []
                 if nif_missing:
                     missing.append("representante_fiscal_nif")
                 if nombre_missing:
@@ -841,30 +857,6 @@ class Recovery(BaseModel):
     still_filable: bool = True
     recargo_band: RecargoBand
     next_command: str = Field(min_length=1, max_length=256)
-
-
-def _parse_modelo_identifier(value: object) -> Modelo:
-    """Coerce a canonical modelo token into the closed :class:`Modelo` enum.
-
-    The models here are strict, so an enum-typed field would refuse the plain
-    ``"303"`` that callers and persisted JSON both use. This validator keeps
-    that ergonomics while closing the set: an unknown identifier or a
-    whitespace-divergent spelling is refused rather than carried into registry
-    matching and downstream projections, which would otherwise interpret it
-    differently from every other surface.
-    """
-    if isinstance(value, Modelo):
-        return value
-    if isinstance(value, str):
-        try:
-            return Modelo(value)
-        except ValueError as exc:
-            raise DeadlineValidationError(
-                f"modelo identifier {value!r} is not a supported AEAT modelo",
-            ) from exc
-    raise DeadlineValidationError(
-        f"modelo identifier must be a string or Modelo, got {type(value).__name__}",
-    )
 
 
 def _parse_modelo_deadline_period(value: object) -> Period:

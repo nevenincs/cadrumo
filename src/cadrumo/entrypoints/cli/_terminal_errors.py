@@ -234,19 +234,37 @@ def _drop_empty(facts: dict[str, str | None]) -> dict[str, str]:
 
 
 def _render_click_exception_text(exc: BaseException) -> None:
-    """Render ``exc`` the way Typer's standalone main would (Rich, else plain)."""
-    try:
-        from typer import rich_utils
+    """Render ``exc`` the way Typer's standalone main would (Rich, else plain).
 
-        # The vendored fork's ClickException satisfies the structural
-        # contract rich_format_error reads (message, ctx, format_message).
-        rich_utils.rich_format_error(exc)  # ty: ignore[invalid-argument-type]  # reason: structural typing across the two Click runtimes (the vendored fork's ClickException is not an upstream click.ClickException instance)
-    except Exception:  # pragma: no cover - rich unavailable or incompatible
-        show = getattr(exc, "show", None)
-        if callable(show):
-            show()
-        else:
-            sys.stderr.write(str(exc) + "\n")
+    Reads ``typer.core.HAS_RICH`` live rather than assuming Rich is available:
+    the CLI package globally disables Rich rendering at import
+    (:func:`cadrumo.entrypoints.cli._stdio._disable_rich_cli_rendering`), and
+    this funnel must honour that the same way Typer's own standalone ``main``
+    does, instead of unconditionally preferring Rich.
+    """
+    import typer.core as _typer_core
+
+    if _typer_core.HAS_RICH:
+        try:
+            from typer import rich_utils
+
+            # The vendored fork's ClickException satisfies the structural
+            # contract rich_format_error reads (message, ctx, format_message).
+            rich_utils.rich_format_error(exc)  # ty: ignore[invalid-argument-type]  # reason: structural typing across the two Click runtimes (the vendored fork's ClickException is not an upstream click.ClickException instance)
+            return
+        except Exception as rich_error:  # pragma: no cover - rich unavailable or incompatible
+            from ...core.logging import get_logger
+
+            get_logger(__name__).debug(
+                "rich_format_error failed, falling back to plain exc.show(): %s: %s",
+                type(rich_error).__name__,
+                rich_error,
+            )
+    show = getattr(exc, "show", None)
+    if callable(show):
+        show()
+    else:
+        sys.stderr.write(str(exc) + "\n")
 
 
 def _emit_click_exception(exc: BaseException) -> NoReturn:
@@ -354,13 +372,28 @@ def _emit_crash(exc: Exception) -> NoReturn:
 
 
 def _emit_abort() -> NoReturn:
-    """Render the interactive abort the way Typer's standalone main would."""
-    try:
-        from typer import rich_utils
+    """Render the interactive abort the way Typer's standalone main would.
 
-        rich_utils.rich_abort_error()
-    except Exception:  # pragma: no cover - rich unavailable
-        sys.stderr.write("Aborted.\n")
+    Reads ``typer.core.HAS_RICH`` live for the same reason
+    :func:`_render_click_exception_text` does — see its docstring.
+    """
+    import typer.core as _typer_core
+
+    if _typer_core.HAS_RICH:
+        try:
+            from typer import rich_utils
+
+            rich_utils.rich_abort_error()
+            sys.exit(_ABORTED_EXIT_CODE)
+        except Exception as rich_error:  # pragma: no cover - rich unavailable
+            from ...core.logging import get_logger
+
+            get_logger(__name__).debug(
+                "rich_abort_error failed, falling back to plain abort text: %s: %s",
+                type(rich_error).__name__,
+                rich_error,
+            )
+    sys.stderr.write("Aborted.\n")
     sys.exit(_ABORTED_EXIT_CODE)
 
 

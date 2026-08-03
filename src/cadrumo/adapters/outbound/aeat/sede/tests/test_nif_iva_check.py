@@ -23,6 +23,7 @@ from ......domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from ......tests.aeat_literal_fixtures import (
+    AEAT_NON_HOST_AUTHORITY_CANARIES,
     CENSAL_WRITE_SURFACE_PATH_CANARIES,
     PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE,
     aeat_url,
@@ -174,14 +175,7 @@ def test_auth_gate_detector_rejects_non_aeat_hosts() -> None:
     assert not is_aeat_auth_gate_redirect("")
 
 
-@pytest.mark.parametrize(
-    "authority",
-    [
-        "ignored@sede.agenciatributaria.gob.es",
-        "sede.agenciatributaria.gob.es:443",
-        "sede.agenciatributaria.gob.es:not-a-port",
-    ],
-)
+@pytest.mark.parametrize("authority", AEAT_NON_HOST_AUTHORITY_CANARIES)
 def test_auth_gate_detector_rejects_non_host_authorities(authority: str) -> None:
     """A credential or port-shaped authority cannot impersonate the AEAT host."""
     assert not is_aeat_auth_gate_redirect(f"https://{authority}{_AEAT.sede_paths.auth_gate_4033}")

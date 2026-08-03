@@ -560,7 +560,7 @@ def censal_datos_url(taxpayer_nif: str, *, origin: str) -> str:
     return f"{origin}{_CENSAL_PATH}?nifRepresentado={quote(taxpayer_nif, safe='')}&E_HNR=&EJERCICIO=0"
 
 
-def _censal_landing_url(page: Page, *, requested_url: str) -> str:
+def _censal_landing_url(page: object, *, requested_url: str) -> str:
     """Return the URL AEAT actually served, refusing an unreadable landing.
 
     Mirrors :func:`_walker.assert_landed_url_readable`: an empty or otherwise

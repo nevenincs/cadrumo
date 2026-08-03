@@ -155,6 +155,7 @@ def test_foreign_history_repository_is_refused_before_either_row_lands(
 
             assert tuple(foreign_history.iter_records()) == ()
 
+        assert exc_info.value.context is not None
         assert exc_info.value.context["history_backend"] != exc_info.value.context["observation_backend"]
         assert tuple(CalculationObservationRepository(objects=profile_a.repository).iter_records()) == ()
 

@@ -14,8 +14,8 @@ actions.
 
 from __future__ import annotations
 
+import datetime as _datetime
 from collections.abc import Iterable
-from datetime import timedelta
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -115,7 +115,7 @@ def import_ledger_with_diagnostics(
         return LedgerImportResult(imported_count=0, skipped_count=0, diagnostics=tuple(diagnostics))
 
     # Duplicate check & import logic
-    dates = []
+    dates: list[_datetime.date] = []
     for raw, fingerprint in zip(rows, row_fingerprints, strict=True):
         tx_id = derive_transaction_id(raw)
 
@@ -153,7 +153,7 @@ def import_ledger_with_diagnostics(
     if dates:
         dates.sort()
         for i in range(1, len(dates)):
-            if (dates[i] - dates[i - 1]) > timedelta(days=35):
+            if (dates[i] - dates[i - 1]) > _datetime.timedelta(days=35):
                 diagnostics.append(
                     build_ledger_import_diagnostic(
                         kind=LedgerImportDiagnosticKind.GAP,

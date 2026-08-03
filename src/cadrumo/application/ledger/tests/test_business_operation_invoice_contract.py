@@ -51,7 +51,7 @@ def _invoice(**overrides: object) -> BusinessOperationInvoice:
         "updated_at": _NOW,
     }
     payload.update(overrides)
-    return BusinessOperationInvoice(**payload)  # type: ignore[arg-type]
+    return BusinessOperationInvoice.model_validate(payload)
 
 
 def test_a_well_formed_invoice_is_still_accepted() -> None:
@@ -89,7 +89,7 @@ class TestCurrency:
 
     @pytest.mark.parametrize("raw", ["EU", "EUROS", "12X", "E U"])
     def test_a_non_iso4217_token_is_refused(self, raw: str) -> None:
-        with pytest.raises(Exception):  # noqa: B017 - core validation error or ValidationError
+        with pytest.raises(ValidationError):
             _invoice(currency=raw)
 
 

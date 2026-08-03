@@ -258,7 +258,7 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
     decision tested here is byte-for-byte the one the operator's screen
     gets.
     """
-    from .....application.user_profile import profile_storage_session
+    from .....application.user_profile import mask_profile_field, profile_storage_session
     from .....application.workflow import read_profile_bucket, workflow_state_repository
 
     _create_profile()
@@ -273,14 +273,18 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
     assert nif_row is not None, f"the NIF fact must surface; labels: {sorted(row.label for row in rows)}"
     assert nif_row.masked is False
 
-    # No unmasked row may carry a password/key-like label — the keyword
-    # branch of the real masking decision, checked over every real row.
+    # No unmasked row may carry a credential-shaped label. The question is
+    # put to the canonical policy rather than restated here: this carried a
+    # hand-listed copy of it that had drifted to five of the nine keywords,
+    # missing "credential" and "key", so a net named for the policy quietly
+    # covered less than the policy did. Passing sensitivity=None is what
+    # selects the keyword arm, which is exactly the reading wanted of a
+    # label -- the row's own masking has already been decided above.
     for row in rows:
         if row.masked:
             continue
-        haystack = row.label.casefold()
-        assert not any(keyword in haystack for keyword in ("passphrase", "password", "clave", "token", "secret")), (
-            f"password/key-like row {row.label!r} rendered unmasked"
+        assert not mask_profile_field(path=row.label, label=row.label, sensitivity=None), (
+            f"credential-shaped row {row.label!r} rendered unmasked"
         )
 
 

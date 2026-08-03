@@ -58,18 +58,18 @@ def _json_default(value: object) -> str:
     return str(value)
 
 
-def _parse_datetime(value: str) -> datetime:
+def parse_datetime(value: str) -> datetime:
     return parse_iso_datetime(value)
 
 
-def _require_aware_datetime(value: datetime) -> datetime:
+def require_aware_datetime(value: datetime) -> datetime:
     try:
         return validate_utc_aware(value)
     except CoreValidationError as exc:
         raise TransactionValidationError(str(exc)) from exc
 
 
-def _validate_classified_by_shape(value: str) -> str:
+def validate_classified_by_shape(value: str) -> str:
     normalized = value.strip()
     if normalized in {CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL}:
         return normalized
@@ -81,7 +81,7 @@ def _validate_classified_by_shape(value: str) -> str:
     )
 
 
-def _validate_confidence_range(value: Decimal | None) -> Decimal | None:
+def validate_confidence_range(value: Decimal | None) -> Decimal | None:
     if value is None:
         return None
     if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
@@ -89,7 +89,7 @@ def _validate_confidence_range(value: Decimal | None) -> Decimal | None:
     return value
 
 
-def _validate_business_pct_coupling(
+def validate_business_pct_coupling(
     state: BusinessClassification,
     pct: Decimal | None,
 ) -> None:
@@ -103,7 +103,7 @@ def _validate_business_pct_coupling(
         raise TransactionValidationError("business_pct must be None unless classification is MIXED")
 
 
-def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
+def normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     normalized = tuple(item.strip() for item in value if item.strip())
     if len(normalized) != len(value):
         raise TransactionValidationError("identifier fields must not contain blank values")
@@ -112,7 +112,7 @@ def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
     return normalized
 
 
-def _trim_lineage_text(value: str | None) -> str | None:
+def trim_lineage_text(value: str | None) -> str | None:
     if value is None:
         return None
     trimmed = value.strip()
@@ -121,15 +121,15 @@ def _trim_lineage_text(value: str | None) -> str | None:
     return trimmed
 
 
-def _parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
+def parse_required_aware_datetime(value: object, *, field_name: str) -> datetime:
     if isinstance(value, str):
-        value = _parse_datetime(value)
+        value = parse_datetime(value)
     if not isinstance(value, datetime):
         raise TransactionValidationError(f"{field_name} must be a datetime")
-    return _require_aware_datetime(value)
+    return require_aware_datetime(value)
 
 
-def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
+def validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
     if value is not None and value < Decimal("0"):
         raise TransactionValidationError(
             _NON_NEGATIVE_DECIMAL_HINTS.get(field_name, f"{field_name} must be non-negative"),
@@ -137,7 +137,7 @@ def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) ->
     return value
 
 
-def _coerce_raw_transaction(raw: object) -> RawTransaction:
+def coerce_raw_transaction(raw: object) -> RawTransaction:
     if isinstance(raw, RawTransaction):
         return raw
     try:

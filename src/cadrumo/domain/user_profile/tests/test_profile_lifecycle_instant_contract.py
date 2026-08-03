@@ -44,11 +44,13 @@ def test_record_refuses_a_non_utc_lifecycle_instant(field: str, instant: datetim
     values = {"created_at": _UTC_INSTANT, "updated_at": _UTC_INSTANT, field: instant}
 
     with pytest.raises(ValidationError):
-        UserProfileRecord(
-            profile_id=_PROFILE_ID,
-            display_name="lifecycle-instant-operator",
-            facts=_facts(),
-            **values,
+        UserProfileRecord.model_validate(
+            {
+                "profile_id": _PROFILE_ID,
+                "display_name": "lifecycle-instant-operator",
+                "facts": _facts(),
+                **values,
+            },
         )
 
 

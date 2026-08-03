@@ -159,9 +159,11 @@ def coerce_output_language_setting(value: str) -> OutputLanguage | None:
     """Coerce an env-var output-language string to an :class:`OutputLanguage`.
 
     Returns ``None`` for invalid input so :class:`~core.config.Settings`
-    validation can decide how to fall back or report the bad value.
+    validation can decide how to fall back or report the bad value. A
+    non-string value (e.g. a bare ``bool``, which is a subtype of ``int`` and
+    would otherwise reach ``.lower()``) is invalid input, not a crash.
     """
-    if not value:
+    if not isinstance(value, str) or not value:
         return None
     normalized = value.lower().strip()
     try:

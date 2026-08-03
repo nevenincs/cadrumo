@@ -131,7 +131,7 @@ def test_m145_export_rendering_decodes_payload_once_for_text_and_json() -> None:
         encoding="utf-8",
         record_count=1,
         byte_length=9,
-        payload_sha256="0" * 64,
+        payload_sha256="b6e7ebe9065f93e52bed04ddc0d3032b5126dc3d122ca7a5f9b31a6a1acf294d",
         payload=b"<T145010>",
         legal_refs=("boe-a-2011-208",),
         source_refs=("aeat-dr145-v20",),
@@ -148,6 +148,6 @@ def test_m145_export_rendering_decodes_payload_once_for_text_and_json() -> None:
         "encoding\tutf-8",
         "record_count\t1",
         "byte_length\t9",
-        f"payload_sha256\t{'0' * 64}",
+        f"payload_sha256\t{'b6e7ebe9065f93e52bed04ddc0d3032b5126dc3d122ca7a5f9b31a6a1acf294d'}",
         "payload_text\t<T145010>",
     ]

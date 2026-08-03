@@ -25,12 +25,15 @@ in-prose concept recall.
 
 from __future__ import annotations
 
+import importlib
 import json
 import re
 import sqlite3
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Protocol
+
+from pydantic import TypeAdapter
 
 from ...core import fts_or_group
 from ...core.external_constants import UTF_8_ENCODING
@@ -49,6 +52,7 @@ _CHUNK_TARGET = 1200
 _CHUNK_HARD_MAX = 1500
 
 _WORD_RE = re.compile(r"\w+", re.UNICODE)
+_JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
 def bundled_corpus_html_root() -> Path:
@@ -109,7 +113,9 @@ def _chunks_for_source(json_path: Path) -> Iterator[CorpusChunk]:
 
 def _document_title(units: Iterable[object], *, fallback: str) -> str:
     for unit in units:
-        title = _clean_optional(unit.get("title") if isinstance(unit, dict) else None)
+        if not isinstance(unit, dict):
+            continue
+        title = _clean_optional(_JSON_OBJECT.validate_python(unit).get("title"))
         if title:
             return title
     return fallback
@@ -181,9 +187,10 @@ class _SpanishStemmer(Protocol):
 
 
 def _spanish_stemmer() -> _SpanishStemmer:
-    import snowballstemmer
-
-    return snowballstemmer.stemmer("spanish")
+    module = importlib.import_module("snowballstemmer")
+    if not hasattr(module, "stemmer"):
+        raise RuntimeError("snowballstemmer module does not expose the typed stemmer factory")
+    return module.stemmer("spanish")
 
 
 def _stem_text(stemmer: _SpanishStemmer, text: str) -> str:

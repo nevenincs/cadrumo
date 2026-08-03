@@ -59,18 +59,22 @@ def test_irnr_resolve_tipo_gravamen_args_rejects_retired_convenio_parameter_cont
     # The retired six-arg contract carried an M210-local convenio-rates parameter
     # leaf at args[3]; the generalised op reads treaty overrides from the
     # ConvenioAuthority snapshot projection instead, so the arg count is now 5.
-    retired_expression = FormulaExpression.model_validate(
-        {
-            "op": "irnr_resolve_tipo_gravamen",
-            "args": (
-                {"casilla_id": "tipo_renta"},
-                {"casilla_id": "base_imponible"},
-                {"parameter": "m210-tipo-gravamen-2025"},
-                {"parameter": "m210-convenio-rates"},
-                {"parameter": "m210-pension-tarifa-2025"},
-                {"binding": _M210_COUNTRY_BINDING},
-            ),
-        }
+    #
+    # FormulaExpression.model_validate() now enforces op arity centrally
+    # (require_formula_operator_arity, at construction), so a 6-arg expression
+    # can no longer reach this resolver's own arity check via normal
+    # validation. model_construct() bypasses that model-level validator to
+    # exercise this function's defense-in-depth check directly.
+    retired_expression = FormulaExpression.model_construct(
+        op="irnr_resolve_tipo_gravamen",
+        args=(
+            FormulaExpression.model_validate({"casilla_id": "tipo_renta"}),
+            FormulaExpression.model_validate({"casilla_id": "base_imponible"}),
+            FormulaExpression.model_validate({"parameter": "m210-tipo-gravamen-2025"}),
+            FormulaExpression.model_validate({"parameter": "m210-convenio-rates"}),
+            FormulaExpression.model_validate({"parameter": "m210-pension-tarifa-2025"}),
+            FormulaExpression.model_validate({"binding": _M210_COUNTRY_BINDING}),
+        ),
     )
 
     with pytest.raises(RegistryValidationError, match=r"expects 5 args, got 6"):

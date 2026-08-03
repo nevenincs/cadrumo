@@ -8,6 +8,7 @@ import re
 import shutil
 from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import Final
 
 from dev.deploy.docs_static_site import (
     _CI_MARKERS,
@@ -27,6 +28,7 @@ from dev.deploy.docs_static_site import (
     _verify_distribution_alias,
 )
 
+_UTF_8: Final[str] = "utf-8"
 CANONICAL_SITE_URL = f"https://{CANONICAL_SITE_DOMAIN}"
 _PAGE_CACHE_CONTROL = "public, max-age=300, must-revalidate"
 # Vite content-hashes everything under assets/, so those objects never change
@@ -89,7 +91,7 @@ def _validate_site_artifacts(dist_root: Path) -> None:
     # long as any .js and .css are present -- including leftovers from an
     # earlier build -- and then serves a blank page. The references are what the
     # browser actually requests, so they are what must resolve.
-    referenced = _referenced_asset_names((dist_root / "index.html").read_text(encoding="utf-8", errors="replace"))
+    referenced = _referenced_asset_names((dist_root / "index.html").read_text(encoding=_UTF_8, errors="replace"))
     if not referenced:
         raise SystemExit(
             f"Landing page index.html references no bundled assets under {_DEPLOYMENT_BUILD_OUTPUT}/assets/; "
@@ -214,7 +216,7 @@ def _verify_served_page_is_the_built_page(dist_root: Path, *, page: str) -> None
     so the check cannot rot when the page copy changes.
     """
     built = dist_root / "index.html"
-    expected = _referenced_asset_names(built.read_text(encoding="utf-8", errors="replace"))
+    expected = _referenced_asset_names(built.read_text(encoding=_UTF_8, errors="replace"))
     if not expected:
         raise SystemExit(
             f"Built landing page {built} references no bundled assets; there is nothing to verify "

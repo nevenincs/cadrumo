@@ -125,26 +125,32 @@ def test_update_manual_transaction_records_edit_lineage_entry(secure_objects: Se
 
 
 def test_update_manual_transaction_emits_expected_event_chain(secure_objects: SecureObjectRepository) -> None:
+    """The created event is chronologically first; the three same-instant
+    update events (edit/classification/allocation) are tie-broken by
+    content-addressed ``event_id`` per ``bucket_event_order_key``, so their
+    relative order is not a meaningful contract — only membership is.
+    """
     outcome = _drive_update_manual_transaction(secure_objects)
-    assert [event.event_type for event in outcome.events] == [
-        BucketEventType.LEDGER_TRANSACTION_CREATED,
+    assert outcome.events[0].event_type == BucketEventType.LEDGER_TRANSACTION_CREATED
+    assert {event.event_type for event in outcome.events[1:]} == {
         BucketEventType.LEDGER_TRANSACTION_UPDATED,
         BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
         BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
-    ]
+    }
 
 
 def test_update_manual_transaction_links_update_events_to_result(secure_objects: SecureObjectRepository) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
-    assert [event.event_id for event in outcome.events[1:]] == list(outcome.updated.bucket_event_ids)
+    assert {event.event_id for event in outcome.events[1:]} == set(outcome.updated.bucket_event_ids)
 
 
 def test_update_manual_transaction_event_payload_marks_mutation_kind(
     secure_objects: SecureObjectRepository,
 ) -> None:
     outcome = _drive_update_manual_transaction(secure_objects)
-    for event_index, payload_key, expected in POST_UPDATE_EVENT_PAYLOADS:
-        assert outcome.events[event_index].payload[payload_key] == expected, (event_index, payload_key)
+    events_by_type = {event.event_type: event for event in outcome.events}
+    for event_type, payload_key, expected in POST_UPDATE_EVENT_PAYLOADS:
+        assert events_by_type[event_type].payload[payload_key] == expected, (event_type, payload_key)
 
 
 def test_update_manual_transaction_edit_event_references_previous_transaction(

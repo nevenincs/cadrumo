@@ -89,7 +89,7 @@ from ._modelo_work_options import (
     _WorkUnitIdArg,
     _YearOpt,
 )
-from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
+from ._modelo_work_wizard_payloads import WizardPromptChannel, WizardPromptedCasillaPayload, WorkWizardResult
 
 if TYPE_CHECKING:
     from ...application.modelo import ModeloWorkCalculationServiceResult
@@ -148,7 +148,7 @@ class _WizardDeps:
 class _WizardStep:
     """One outstanding question the wizard asks, resolved to a CLI input channel."""
 
-    channel: str  # "casilla" | "binding" | "relation"
+    channel: WizardPromptChannel
     key: str
     casilla_id: str
     number: str

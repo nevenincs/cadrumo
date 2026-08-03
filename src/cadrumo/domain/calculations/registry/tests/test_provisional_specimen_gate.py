@@ -24,6 +24,10 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DATA_ROOT = bundled_path()
+# The validator never derives this path (see test_justificante_corpus_derivation.py,
+# which pins that one-way property); it must be supplied explicitly, exactly as an
+# authoring tool would supply the real fixture tree.
+_JUSTIFICANTE_CORPUS_ROOT = _DATA_ROOT.parent / "tests" / "fixtures" / "justificantes"
 
 
 @cache
@@ -126,27 +130,25 @@ def test_fixture_present_round_trip_verified_validates(tmp_path: Path) -> None:
     validator.validate_modelo(mutated_modelo)
 
 
-# --- Production path: corpus derivation from source_root ----------------------
+# --- Explicit injection: the real fixture corpus, supplied verbatim -----------
 
 
-def test_corpus_root_derived_from_bundled_path() -> None:
-    """RegistryValidator must derive a valid corpus root from bundled_path().
+def test_corpus_root_resolves_when_explicitly_supplied() -> None:
+    """The real fixture corpus root is honoured verbatim when explicitly supplied.
 
-    This exercises the production code path where justificante_corpus_root is
-    NOT injected directly.  The derivation must resolve to
-    src/cadrumo/tests/fixtures/justificantes, which exists on disk, so
-    justificante_corpus_root must not be None.
+    RegistryValidator never derives justificante_corpus_root from source_root
+    (test_justificante_corpus_derivation.py pins that one-way property); an
+    authoring tool that wants the specimen gate to run supplies the real
+    src/cadrumo/tests/fixtures/justificantes tree explicitly, exactly as this
+    test does.
     """
     _modelo, catalogues = _committed_130()
-    validator = _validator(catalogues)
+    validator = _validator(catalogues, justificante_corpus_root=_JUSTIFICANTE_CORPUS_ROOT)
     corpus_root = _assert_justificante_corpus_root(
         validator,
-        missing_message=(
-            "corpus root derivation from bundled_path() returned None; "
-            "the provisional specimen gate is disabled in production"
-        ),
+        missing_message="explicitly supplied corpus root was not honoured",
     )
-    assert corpus_root.is_dir(), f"derived corpus root {corpus_root} is not a directory"
+    assert corpus_root.is_dir(), f"supplied corpus root {corpus_root} is not a directory"
     assert corpus_root.name == "justificantes"
 
 
@@ -179,19 +181,20 @@ def test_gate_fires_no_fixture_no_flag(tmp_path: Path) -> None:
         validator.validate_modelo(mutated_modelo)
 
 
-def test_gate_fires_via_production_path() -> None:
-    """Specimen gate exercises: pure-production wiring with source_root=bundled_path() only.
+def test_gate_silent_against_the_real_corpus_for_provisional_and_verified_profiles() -> None:
+    """Specimen gate exercises against the real fixture corpus, explicitly injected.
 
     NOTE ON COVERAGE BOUNDARY: The specimen gate fires when no corpus fixture exists
     for a model with a declaracion_pdf profile and provisional_pending_specimen=False.
     All real modelos with declaracion_pdf profiles have at least one real fixture
     under tests/fixtures/justificantes/, so the specimen-gate "fires" scenario
-    (no fixture + no flag) cannot be triggered via pure-production wiring without
-    direct corpus_root injection.  This is a structural property of the fixture
-    inventory, not a gap in derivation logic.
+    (no fixture + no flag) cannot be triggered against the real corpus without
+    swapping in an empty corpus_root.  This is a structural property of the fixture
+    inventory, not a gap in the (removed) derivation logic.
 
-    What pure-production wiring CAN assert about the specimen gate:
-      - The derivation resolves to a real directory (guarding against silent None).
+    What exercising against the real corpus CAN assert about the specimen gate:
+      - The supplied root resolves to a real directory (guarding against a silent
+        empty corpus going unnoticed).
       - The gate is silent for M130 when provisional_pending_specimen=True (Scenario B).
       - The gate is silent for M130 when corpus + round_trip_verified satisfies both
         gates (Scenario C), confirming no spurious specimen-gate firing on verified
@@ -202,12 +205,12 @@ def test_gate_fires_via_production_path() -> None:
     """
     modelo, catalogues = _committed_130()
 
-    validator = _validator(catalogues)
+    validator = _validator(catalogues, justificante_corpus_root=_JUSTIFICANTE_CORPUS_ROOT)
     corpus_root = _assert_justificante_corpus_root(
         validator,
-        missing_message="corpus root derivation returned None; specimen gate is silently disabled in production",
+        missing_message="explicitly supplied corpus root was not honoured; specimen gate would be silently disabled",
     )
-    assert corpus_root.is_dir(), f"derived corpus root {corpus_root} is not a directory"
+    assert corpus_root.is_dir(), f"supplied corpus root {corpus_root} is not a directory"
 
     # Scenario B via production wiring: provisional flag opts out → no error
     revision = modelo.revisions["2019-y-siguientes"]

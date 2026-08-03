@@ -107,6 +107,7 @@ def test_a_malformed_concept_id_is_refused() -> None:
     payload = tomllib.loads(_MALFORMED_CONCEPT_ID_FRAGMENT)
     with pytest.raises(CorpusSearchInputError) as excinfo:
         _project_concept(payload, locale="es")
+    assert excinfo.value.context is not None
     assert excinfo.value.context["concept_id"] == "A"
 
 

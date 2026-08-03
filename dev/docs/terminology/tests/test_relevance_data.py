@@ -31,7 +31,6 @@ from typing import TypedDict
 
 import pytest
 
-from cadrumo.core.config import PROJECT_ROOT
 from cadrumo.domain.calculations.registry import bundled_authority
 from dev.docs.terminology._search_record import SearchRecordKind
 from dev.docs.terminology._sweep import SweepResult, enumerate_query_vocabulary
@@ -40,7 +39,12 @@ from ...terminology_handbook import load_terminology_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
-_RELEVANCE_PATH = PROJECT_ROOT / "src" / "cadrumo" / "_data" / "terminology" / "relevance" / "relevance.json"
+# Dev tooling runs from a source checkout by definition, so it owns its own
+# repo-root anchor. Production code has no repository concept and must never
+# export one (see cadrumo.core._config_state_root for the runtime data root).
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+
+_RELEVANCE_PATH = _REPO_ROOT / "src" / "cadrumo" / "_data" / "terminology" / "relevance" / "relevance.json"
 _PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")
 
 
@@ -191,12 +195,12 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
 
 def _module_exists(dotted: str) -> bool:
     rel = Path(*dotted.split("."))
-    src = PROJECT_ROOT / "src"
+    src = _REPO_ROOT / "src"
     return (src / rel.with_suffix(".py")).is_file() or (src / rel / "__init__.py").is_file()
 
 
 def _docs_source_exists(rel: str) -> bool:
-    docs = PROJECT_ROOT / "docs"
+    docs = _REPO_ROOT / "docs"
     # The built page comes from a .md or .rst source (or is a generated cli/api page).
     if (docs / f"{rel}.md").is_file() or (docs / f"{rel}.rst").is_file():
         return True

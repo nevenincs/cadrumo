@@ -75,11 +75,9 @@ def build_owned_entry_query(*, parent_id: str, name: str, mime_type: str) -> str
     return f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{mime_type}' and trashed = false"
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
-# ``dict[str, Any]`` is the irreducible Google Drive API boundary shape:
-# ``drive.files().list()`` returns heterogeneous typed metadata (id, name,
-# mimeType, appProperties) that the google-api-python-client stubs surface
-# as ``Any``. Narrowing breaks downstream lookups by string key.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: dict[str, Any] is the
+# irreducible Drive API boundary shape; google-api-python-client stubs
+# surface entry metadata as Any, so narrowing breaks string-key lookups.
 def require_drive_entry_id(
     entry: dict[str, Any],
     *,
@@ -115,10 +113,8 @@ def require_drive_entry_id(
     return raw_id
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE:
-# ``drive`` is a googleapiclient Resource; no stub type ships with
-# google-api-python-client. The entry mapping is the Drive boundary shape
-# documented on ``require_drive_entry_id``.
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-GOOGLE-RESOURCE: drive is a
+# googleapiclient Resource; no stub type ships with google-api-python-client.
 def find_owned_drive_entry(
     drive: Any,
     *,

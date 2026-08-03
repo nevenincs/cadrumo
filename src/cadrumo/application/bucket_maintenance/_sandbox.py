@@ -605,8 +605,8 @@ def merge_sandbox(command: MergeSandboxCommand) -> MergeSandboxResult:
     Composes the SAME typed-catalogue repositories and domain upsert
     primitives the portable-bundle import path
     (:func:`~application.user_profile.deserialize_profile_bundle`) uses
-    for ledger/work-unit/calculation-revision/filing-record restore
-    (``composition-service-no-parallel-write-path``): this function does not
+    for ledger/work-unit/:class:`CalculationRevision`/:class:`ModeloRecord`
+    filing-record restore (``composition-service-no-parallel-write-path``): this function does not
     reimplement a write path, it selects which of those existing upserts to
     run for the requested scope. Every upsert keys on the row's own
     content-addressed or natural id, so re-running a merge against unchanged

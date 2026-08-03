@@ -388,4 +388,6 @@ class TestCensalLandingIsRefusedWhenUnreadable:
     def test_the_refusal_names_the_requested_url(self) -> None:
         with pytest.raises(SedeNavigationError) as excinfo:
             _censal_landing_url(_LandedPage(""), requested_url=_CENSAL_URL)
-        assert excinfo.value.context["requested_url"] == _CENSAL_URL
+        context = excinfo.value.context
+        assert context is not None
+        assert context["requested_url"] == _CENSAL_URL

@@ -11,7 +11,6 @@ import asyncio
 from pathlib import Path
 
 import pytest
-from pydantic_settings import SettingsConfigDict
 
 from .....core.config import Settings
 from .....tests.live_gate import requires_live_enabled
@@ -20,15 +19,16 @@ from .. import LLMClient, LLMRequest
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
 
-class _LiveSettings(Settings):
-    model_config = SettingsConfigDict(env_file=Settings.model_config.get("env_file"), env_file_encoding="utf-8")
-
-
 def test_live_anthropic_round_trip(tmp_path: Path) -> None:
-    """Run a tiny Anthropic round trip when live testing is explicitly enabled."""
+    """Run a tiny Anthropic round trip when live testing is explicitly enabled.
+
+    There is no ``.env`` file support: ``CADRUMO_LLM_ANTHROPIC_API_KEY`` must be
+    a real process environment variable (e.g. via ``uv run --env-file env/.env``)
+    for this opt-in live test to find credentials.
+    """
 
     requires_live_enabled()
-    settings = _LiveSettings(
+    settings = Settings(
         cadrumo_llm_cache_dir=tmp_path / "cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
     )

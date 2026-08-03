@@ -27,7 +27,7 @@ from pathlib import Path
 
 from ._schema import LegalReference, ModeloDefinition, ModeloRevision, SourceReference
 from ._validate_algorithms import validate_algorithm_binding_section, validate_algorithm_provider_section
-from ._validate_completeness import _emit_completeness_gate_failures
+from ._validate_completeness import emit_completeness_gate_failures as _emit_completeness_gate_failures
 from ._validate_dependency_sections import (
     validate_dependency_classification_section,
     validate_filing_schedule_section,
@@ -35,7 +35,7 @@ from ._validate_dependency_sections import (
 )
 from ._validate_evidence import EvidenceValidator
 from ._validate_exports import validate_export_layout_section
-from ._validate_helpers import _missing_refs
+from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_record_sections import (
     validate_binding_section,
     validate_casilla_section,
@@ -44,12 +44,16 @@ from ._validate_record_sections import (
     validate_parameter_section,
 )
 from ._validate_revision_closure import (
-    _validate_revision_closure_sections,
-    _validate_revision_reference_surfaces,
+    validate_revision_closure_sections as _validate_revision_closure_sections,
+)
+from ._validate_revision_closure import (
+    validate_revision_reference_surfaces as _validate_revision_reference_surfaces,
 )
 from ._validate_revision_context import RevisionValidationContext, build_revision_validation_context
 from ._validate_revision_identity import (
-    _emit_revision_payload_failures,
+    emit_revision_payload_failures as _emit_revision_payload_failures,
+)
+from ._validate_revision_identity import (
     revision_reference_identity_failures,
 )
 from ._validate_surfaces import (

@@ -377,7 +377,7 @@ def _classify_irnr_income_transaction(
         return None
 
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
-    if filing_date is None or not period.contains(filing_date):
+    if not period.contains(filing_date):
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=IrnrIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD,

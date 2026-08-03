@@ -481,9 +481,9 @@ def _relation_period_scoped_out(
         return True
     if activity_start_date is None:
         return False
-    from ._cross_period_clean_state import _period_strictly_before_activity_start
+    from ._cross_period_models import period_strictly_before_activity_start
 
-    return _period_strictly_before_activity_start(
+    return period_strictly_before_activity_start(
         Period.from_year_and_code(filing_year, period_token),
         activity_start_date,
     )
@@ -962,6 +962,8 @@ def _modelo_202_first_period_previous_payment_defaults(
         )
     }
 
+
+activity_start_date_for_bucket = _activity_start_date_for_bucket
 
 __all__ = [
     "RelationPrefillSourceResolver",

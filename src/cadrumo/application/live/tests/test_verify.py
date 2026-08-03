@@ -491,7 +491,7 @@ class TestObservationIdentityAndInstantContracts:
         return base
 
     def test_canonical_lowercase_hex_digest_is_accepted(self) -> None:
-        observation = VerifyObservation(**self._fields())
+        observation = VerifyObservation.model_validate(self._fields())
 
         assert observation.observation_id == "a" * 64
         assert observation.checked_at.utcoffset() == timedelta(0)
@@ -504,7 +504,7 @@ class TestObservationIdentityAndInstantContracts:
     )
     def test_non_digest_observation_id_is_refused(self, malformed: str) -> None:
         with pytest.raises(ValidationError):
-            VerifyObservation(**self._fields(observation_id=malformed))
+            VerifyObservation.model_validate(self._fields(observation_id=malformed))
 
     @pytest.mark.parametrize("field", ["checked_at", "persisted_at"])
     @pytest.mark.parametrize(
@@ -517,13 +517,11 @@ class TestObservationIdentityAndInstantContracts:
     )
     def test_naive_or_non_utc_instant_is_refused(self, field: str, instant: datetime) -> None:
         with pytest.raises(ValidationError):
-            VerifyObservation(**self._fields(**{field: instant}))
+            VerifyObservation.model_validate(self._fields(**{field: instant}))
 
     def test_mixed_awareness_pair_is_refused(self) -> None:
         with pytest.raises(ValidationError):
-            VerifyObservation(
-                **self._fields(persisted_at=datetime(2025, 3, 15, 11, 0)),
-            )
+            VerifyObservation.model_validate(self._fields(persisted_at=datetime(2025, 3, 15, 11, 0)))
 
     def test_derived_identity_round_trips_through_the_encrypted_store(
         self,

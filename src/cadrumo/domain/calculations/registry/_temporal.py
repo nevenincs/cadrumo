@@ -29,6 +29,10 @@ def select_revision_for_year(
     Args:
         modelo: The :class:`ModeloDefinition` whose declared revisions are
             searched for the one matching ``filing_year`` and ``on``.
+        filing_year: AEAT filing year used to narrow revisions by their
+            ``period_selector``.
+        on: Optional reference date that must fall within the revision's
+            ``valid_from`` / ``valid_to`` window.
     """
     candidates = [
         revision
@@ -72,7 +76,7 @@ def select_revision(
         revision_id: Optional explicit revision id; restricts candidates to
             the matching revision when supplied.
     """
-    candidates = []
+    candidates: list[ModeloRevision] = []
     for revision in modelo.revisions.values():
         if revision_id is not None and revision.id != revision_id:
             continue

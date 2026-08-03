@@ -38,6 +38,7 @@ from .....application.live import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     SnapshotLifecycleState,
+    derive_borrador_100_snapshot_id,
 )
 from .....application.repair_integrity import (
     RepairRemediationDecision,
@@ -81,6 +82,7 @@ from .....domain.filing import (
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
+    compute_modelo_draft_id,
     make_amendment_id,
     registry_schema_version,
 )
@@ -420,27 +422,38 @@ def _invoice(label: str) -> Invoice:
 
 def _modelo_draft(label: str) -> ModeloDraft:
     now = datetime.now(UTC).replace(microsecond=0)
-    return ModeloDraft(
-        draft_id=_hex(f"draft-{label}"),
+    period = _Period.from_year_and_code(2026, "1T")
+    profile_tax_id = "12345678Z"
+    snapshot_ref = RegistrySnapshotRef(
         modelo="303",
-        period=_Period.from_year_and_code(2026, "1T"),
-        profile_tax_id="12345678Z",
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
+        period="1T",
+    )
+    values = (
+        ModeloValue(
+            casilla_id=_casilla_id(f"iva.devengado.{label}"),
+            value=Decimal("100.00"),
+            kind=ModeloValueKind.LITERAL,
+            source="runtime attached repository test",
+        ),
+    )
+    draft_id = compute_modelo_draft_id(
+        modelo="303",
+        period=period,
+        profile_tax_id=profile_tax_id,
+        snapshot_ref=snapshot_ref,
+        values=values,
+    )
+    return ModeloDraft(
+        draft_id=draft_id,
+        modelo="303",
+        period=period,
+        profile_tax_id=profile_tax_id,
         subject_tax_id="12345678Z",
-        snapshot_ref=RegistrySnapshotRef(
-            modelo="303",
-            revision_id="2026-y-siguientes",
-            modelo_year=2026,
-            period="1T",
-        ),
+        snapshot_ref=snapshot_ref,
         status=ModeloDraftStatus.BORRADOR,
-        values=(
-            ModeloValue(
-                casilla_id=_casilla_id(f"iva.devengado.{label}"),
-                value=Decimal("100.00"),
-                kind=ModeloValueKind.LITERAL,
-                source="runtime attached repository test",
-            ),
-        ),
+        values=values,
         binding_values=(),
         findings=(),
         created_at=now,
@@ -546,17 +559,27 @@ def _work_unit(bucket_id: str, label: str) -> WorkUnit:
     )
 
 
+def _calculation_revision_id_for(label: str) -> str:
+    """Return the same content-addressed revision id `_calculation_catalogue` persists.
+
+    `_verification_catalogue` must reference this exact id: the verification-report
+    save path resolves `calculation_revision_id` against the bucket's real
+    calculation-revision catalogue, so an unrelated invented id is refused.
+    """
+    return derive_calculation_revision_id(
+        work_unit_id=_hex(f"work-unit-{label}"),
+        input_values_by_casilla_id={_CALCULATION_INPUT_CASILLA: "100.00"},
+        binding_overrides={},
+        casilla_values={_CALCULATION_OUTPUT_CASILLA: Decimal("100.00")},
+        source_transaction_ids=(),
+    )
+
+
 def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
     work_unit_id = _hex(f"work-unit-{label}")
     input_values_by_casilla_id = {_CALCULATION_INPUT_CASILLA: "100.00"}
     values = {_CALCULATION_OUTPUT_CASILLA: Decimal("100.00")}
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id=input_values_by_casilla_id,
-        binding_overrides={},
-        casilla_values=values,
-        source_transaction_ids=(),
-    )
+    revision_id = _calculation_revision_id_for(label)
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
@@ -611,7 +634,7 @@ def _filing_record_catalogue(bucket_id: str, label: str) -> ModeloRecordCatalogu
 
 def _verification_catalogue(label: str) -> VerificationReportCatalogue:
     run_at = datetime(2026, 5, 26, 12, 0, tzinfo=UTC)
-    revision_id = _hex(f"verification-revision-{label}")
+    revision_id = _calculation_revision_id_for(label)
     report_id = derive_verification_report_id(
         calculation_revision_id=revision_id,
         completeness_status=VerificationCompletenessStatus.COMPLETE,
@@ -756,17 +779,29 @@ def _sede_artefact(label: str) -> tuple[FiledDeclaracionArtefact, bytes]:
     )
 
 
-def _borrador_snapshot(bucket_id: str, label: str) -> Borrador100Snapshot:
+def _borrador_snapshot(bucket_id: str) -> Borrador100Snapshot:
+    filing_year = 2026
+    period = _Period.from_year_and_code(2026, "0A")
+    captured_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
+    source_url = aeat_url("sede", BORRADOR_STORAGE_PATH_FIXTURE)
+    binding_values = {"casilla-001": Decimal("1.00")}
+    snapshot_id = derive_borrador_100_snapshot_id(
+        filing_year=filing_year,
+        period=period,
+        captured_at=captured_at,
+        source_url=source_url,
+        binding_values=binding_values,
+    )
     return Borrador100Snapshot(
-        snapshot_id=f"snapshot-{label}",
+        snapshot_id=snapshot_id,
         bucket_id=bucket_id,
         modelo="100",
-        filing_year=2026,
-        period=_Period.from_year_and_code(2026, "0A"),
-        captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
-        source_url=aeat_url("sede", BORRADOR_STORAGE_PATH_FIXTURE),
+        filing_year=filing_year,
+        period=period,
+        captured_at=captured_at,
+        source_url=source_url,
         state=SnapshotLifecycleState.ACTIVE,
-        binding_values={"casilla-001": Decimal("1.00")},
+        binding_values=binding_values,
     )
 
 

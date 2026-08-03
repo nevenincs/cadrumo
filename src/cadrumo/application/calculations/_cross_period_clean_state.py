@@ -35,6 +35,7 @@ from ...domain.modelos import (
     CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    ExternalEvidenceKind,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -55,8 +56,8 @@ from ._cross_period_models import (
     CrossPeriodExpectedMemberSet,
     NoPriorObligationProvenance,
     NoPriorObligationProvenanceKind,
-    _ObservationPayload,
-    _period_strictly_before_activity_start,
+    ObservationPayload,
+    period_strictly_before_activity_start,
 )
 from ._m111_no_retenciones import is_m111_no_retenciones_period
 from ._observations_repository import (
@@ -134,7 +135,7 @@ def partition_cross_period_requirements_by_activity_start(
     in_scope: list[CrossPeriodDependencyRequirement] = []
     suppressed: list[CrossPeriodDependencyRequirement] = []
     for requirement in requirements:
-        if _period_strictly_before_activity_start(requirement.period, activity_start_date):
+        if period_strictly_before_activity_start(requirement.period, activity_start_date):
             suppressed.append(requirement)
         else:
             in_scope.append(requirement)
@@ -605,12 +606,12 @@ def _requirements_from_relation(
 
 
 class _CrossPeriodSource(NamedTuple):
-    value_member_payloads: tuple[_ObservationPayload, ...]
+    value_member_payloads: tuple[ObservationPayload, ...]
     observed_member_nifs: tuple[str, ...]
     expected_member_nifs: tuple[str, ...]
     missing_member_nifs: tuple[str, ...]
     unexpected_member_nifs: tuple[str, ...]
-    payload: _ObservationPayload | None
+    payload: ObservationPayload | None
     blockers: tuple[CrossPeriodCleanStateBlocker, ...]
 
 
@@ -620,7 +621,7 @@ class _MemberHistory(NamedTuple):
     calculation_revision_state: CalculationRevisionState | None
     verification_status: VerificationCompletenessStatus | None
     aeat_accepted: bool | None
-    external_evidence_kind: str | None
+    external_evidence_kind: ExternalEvidenceKind | None
     blockers: list[CrossPeriodCleanStateBlocker]
 
 
@@ -652,7 +653,7 @@ def _revision_carry_check(
 
 
 def _aeat_register_provenance_blockers(
-    payload: _ObservationPayload,
+    payload: ObservationPayload,
     *,
     expected_tax_id: str | None,
 ) -> list[CrossPeriodCleanStateBlocker]:
@@ -685,12 +686,12 @@ def _resolve_cross_period_source(
     taxpayer_tax_id: str | None,
 ) -> _CrossPeriodSource:
     blockers: list[CrossPeriodCleanStateBlocker] = []
-    value_member_payloads: tuple[_ObservationPayload, ...] = ()
+    value_member_payloads: tuple[ObservationPayload, ...] = ()
     observed_member_nifs: tuple[str, ...] = ()
     expected_member_nifs: tuple[str, ...] = ()
     missing_member_nifs: tuple[str, ...] = ()
     unexpected_member_nifs: tuple[str, ...] = ()
-    payload: _ObservationPayload | None = None
+    payload: ObservationPayload | None = None
     if requirement.requires_member_fan_in:
         member_payloads = tuple(
             item
@@ -707,7 +708,7 @@ def _resolve_cross_period_source(
             value_member_payloads = tuple(
                 # CAST-RATIONALE-CROSS-PERIOD-MEMBER-ITEM: iter_modelo records are typed envelopes at runtime.
                 cast(  # nosemgrep: no-cast-in-domain-application reason: repository rows satisfy _ObservationPayload.
-                    _ObservationPayload,
+                    ObservationPayload,
                     item,
                 )
                 for item in member_payloads
@@ -726,7 +727,7 @@ def _resolve_cross_period_source(
             value_member_payloads = tuple(
                 # CAST-RATIONALE-CROSS-PERIOD-FILTERED-ITEM: roster filtering retains the typed repository envelope.
                 cast(  # nosemgrep: no-cast-in-domain-application reason: roster rows satisfy _ObservationPayload.
-                    _ObservationPayload,
+                    ObservationPayload,
                     item,
                 )
                 for item in member_payloads
@@ -746,7 +747,7 @@ def _resolve_cross_period_source(
         # CAST-RATIONALE-CROSS-PERIOD-SINGLE-PAYLOAD: load_observation returns the same envelope contract as iteration.
         # CAST-RATIONALE-CROSS-PERIOD-SINGLE-RESULT: load_observation returns the same envelope contract as iteration.
         payload = cast(  # nosemgrep: no-cast-in-domain-application reason: lookup returns this Protocol or None.
-            _ObservationPayload | None,
+            ObservationPayload | None,
             observation_repository.load_observation(
                 requirement.source_modelo,
                 requirement.period,
@@ -775,11 +776,11 @@ def _resolve_cross_period_source(
 
 def _resolve_observation_values(
     requirement: CrossPeriodDependencyRequirement,
-    value_member_payloads: tuple[_ObservationPayload, ...],
-    payload: _ObservationPayload | None,
-) -> tuple[str | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
+    value_member_payloads: tuple[ObservationPayload, ...],
+    payload: ObservationPayload | None,
+) -> tuple[ObservationSourceKind | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
     blockers: list[CrossPeriodCleanStateBlocker] = []
-    observation_source_kind: str | None = None
+    observation_source_kind: ObservationSourceKind | None = None
     observation_values: dict[CasillaId, object] = {}
     if requirement.requires_member_fan_in and value_member_payloads:
         observation_source_kind = _combined_source_kind(item.source_kind for item in value_member_payloads)
@@ -811,8 +812,8 @@ def _aggregate_member_history(
     verification_catalogue: VerificationReportCatalogue,
     justificante_repository: JustificanteRepository,
     taxpayer_tax_id: str | None,
-    observation_source_kind: str | None,
-    value_member_payloads: tuple[_ObservationPayload, ...],
+    observation_source_kind: ObservationSourceKind | None,
+    value_member_payloads: tuple[ObservationPayload, ...],
     expected_member_nifs: tuple[str, ...],
     observed_member_nifs: tuple[str, ...],
 ) -> _MemberHistory:
@@ -824,7 +825,7 @@ def _aggregate_member_history(
     revision_state: CalculationRevisionState | None = None
     verification_status: VerificationCompletenessStatus | None = None
     aeat_accepted: bool | None = None
-    external_evidence_kind: str | None = None
+    external_evidence_kind: ExternalEvidenceKind | None = None
     for member_nif in members_to_check:
         member_payload = member_payload_by_nif.get(member_nif)
         member_values = dict(member_payload.observation.casilla_values) if member_payload is not None else {}
@@ -1084,7 +1085,7 @@ class _FilingHistory(NamedTuple):
     calculation_revision_state: CalculationRevisionState | None
     verification_status: VerificationCompletenessStatus | None
     aeat_accepted: bool | None
-    external_evidence_kind: str | None
+    external_evidence_kind: ExternalEvidenceKind | None
     blockers: list[CrossPeriodCleanStateBlocker]
 
 
@@ -1097,7 +1098,7 @@ def _evaluate_filing_history(
     verification_catalogue: VerificationReportCatalogue,
     justificante_repository: JustificanteRepository,
     taxpayer_tax_id: str | None,
-    observation_source_kind: str | None,
+    observation_source_kind: ObservationSourceKind | None,
     observation_source_metadata: Mapping[str, str] | None,
     observation_values: Mapping[CasillaId, object],
     member_nif: str | None,
@@ -1146,7 +1147,7 @@ def _evaluate_filing_history(
         revision_state,
         verification_status,
         filing.aeat_accepted,
-        filing.external_evidence.kind.value if filing.external_evidence is not None else None,
+        filing.external_evidence.kind if filing.external_evidence is not None else None,
         blockers,
     )
 
@@ -1163,11 +1164,11 @@ def _unique_blockers(
     return tuple(dict.fromkeys(blockers))
 
 
-def _combined_source_kind(source_kinds: Iterable[str]) -> str:
+def _combined_source_kind(source_kinds: Iterable[ObservationSourceKind]) -> ObservationSourceKind | None:
     unique = tuple(dict.fromkeys(source_kinds))
     if len(unique) == 1:
         return unique[0]
-    return "mixed"
+    return None
 
 
 filing_external_evidence_blockers = _filing_external_evidence_blockers

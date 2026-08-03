@@ -15,7 +15,7 @@ import os
 import shlex
 from collections.abc import Callable
 
-from ..config import PROJECT_ROOT, Settings
+from ..config import Settings
 from ..product_identity import PRODUCT_IDENTITY
 from ._errors import AeatCorpusDriftError, CadrumoObservabilityError
 from ._fingerprint import compute_corpus_sha256
@@ -146,12 +146,14 @@ def replay_run(
             re-entered invocation's emitted envelope, and assert they match
             after masking.
         assert_db_state: When ``True`` (and ``invoke`` is provided), the
-            OPTIONAL post-state tier: recompute the ``var/`` fingerprint
-            after re-entry and assert it equals the recorded
-            ``db_sha256``. This proves state-transition determinism (a
-            retried write is a true no-op) and is meaningful only for a
-            scenario that runs against a hermetic synthetic ``var/`` root;
-            the shared ``var/`` would flap it, which is why it is opt-in
+            OPTIONAL post-state tier: recompute the application
+            data-root fingerprint after re-entry and assert it equals
+            the recorded ``db_sha256``. This proves state-transition
+            determinism (a retried write is a true no-op) and is
+            meaningful only for a scenario that runs against a hermetic
+            synthetic data root (a test-scoped
+            ``cadrumo_local_storage_root`` override); the shared
+            operator data root would flap it, which is why it is opt-in
             and never a hard gate for all replays.
 
     Returns:
@@ -161,8 +163,8 @@ def replay_run(
         CadrumoObservabilityError: When the trace carries removed write-era
             flags, when ``assert_envelope`` is set but the re-entered
             invocation emitted no envelope to compare, or when
-            ``assert_db_state`` is set and the post-state ``var/``
-            fingerprint drifts from the recorded one.
+            ``assert_db_state`` is set and the post-state application
+            data-root fingerprint drifts from the recorded one.
         AeatCorpusDriftError: When the current corpus hash differs
             from the recorded one.
         GoldenReplayMismatchError: When ``assert_envelope`` is set and the
@@ -230,17 +232,17 @@ def replay_run(
     if expected_envelope is not None:
         _assert_replayed_envelope(run_id, expected_envelope, captured)
     if assert_db_state:
-        from ._fingerprint import compute_db_sha256
+        from ._fingerprint import compute_data_root_sha256
 
-        observed_db = compute_db_sha256(PROJECT_ROOT / "var")
+        observed_db = compute_data_root_sha256(settings)
         _assert_db_state_unchanged(run_id, original.db_sha256, observed_db)
     return original
 
 
 def _assert_db_state_unchanged(run_id: str, recorded: str, observed: str) -> None:
-    """Assert the post-replay ``var/`` fingerprint matches the recorded one.
+    """Assert the post-replay application data-root fingerprint matches the recorded one.
 
-    The optional post-state tier: for a hermetic synthetic ``var/``
+    The optional post-state tier: for a hermetic synthetic data-root
     scenario, a drift means the re-entered invocation was NOT the no-op
     the recorded state asserts (e.g. a retried ledger add that was
     expected to be idempotent mutated state).
@@ -250,7 +252,7 @@ def _assert_db_state_unchanged(run_id: str, recorded: str, observed: str) -> Non
             f"db-state drift on replay of run {run_id!r}: "
             f"recorded={recorded[:12]}... observed={observed[:12]}...; the "
             "re-entered invocation was expected to be a no-op against a "
-            "hermetic synthetic var/ root",
+            "hermetic synthetic application data root",
         )
 
 

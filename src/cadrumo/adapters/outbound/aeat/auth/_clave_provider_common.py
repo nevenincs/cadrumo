@@ -34,6 +34,9 @@ def verification_probe_url(
     return resolved_target_url or selector_url_for(target_path)
 
 
+# KWARGS-ANY-RATIONALE-LOGGER-DUCK-TYPE: callers pass either a stdlib
+# logging.Logger or a structured logger wrapper that is duck-type
+# compatible but does not satisfy the Logger protocol statically.
 async def close_clave_context(
     context: BrowserContextLike | None,
     *,
@@ -50,6 +53,7 @@ async def close_clave_context(
     )
 
 
+# KWARGS-ANY-RATIONALE-LOGGER-DUCK-TYPE: see close_clave_context above.
 async def close_clave_browser_session(
     session: BrowserSessionLike | None,
     *,

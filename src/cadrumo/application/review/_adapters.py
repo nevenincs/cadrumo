@@ -188,7 +188,6 @@ def _to_transaction_item(
         source=transaction,
     )
 
-
 # ── invoices ──────────────────────────────────────────────────────
 
 
@@ -413,7 +412,6 @@ def _to_finding_item(
     finding: ModeloValidationFinding,
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
-    _first_translation(finding.message) or finding.code
     summary = tr("review.filing.finding_summary")
     severity = _classify_finding(finding.severity)
     return FindingReviewItem(
@@ -458,8 +456,3 @@ def _to_stale_approval_item(*, draft: ModeloDraft, path_str: str) -> FindingRevi
         draft_id=draft.draft_id,
         draft_path=path_str,
     )
-
-
-def _first_translation(message: str) -> str | None:
-    """Return the first non-empty slot in the AEAT-canonical-first order."""
-    return message

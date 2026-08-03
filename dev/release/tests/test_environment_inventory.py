@@ -284,11 +284,11 @@ def _write_stderr_probe_gh(bin_dir: Path, *, stdout: str, stderr: str, exit_code
     bin_dir.mkdir(parents=True, exist_ok=True)
     if sys.platform.startswith("win"):
         script = bin_dir / "gh.bat"
-        escaped_out = stdout.replace("%", "%%").replace("^", "^^").replace(">", "^>").replace("<", "^<").replace(
-            "|", "^|"
+        escaped_out = (
+            stdout.replace("%", "%%").replace("^", "^^").replace(">", "^>").replace("<", "^<").replace("|", "^|")
         )
-        escaped_err = stderr.replace("%", "%%").replace("^", "^^").replace(">", "^>").replace("<", "^<").replace(
-            "|", "^|"
+        escaped_err = (
+            stderr.replace("%", "%%").replace("^", "^^").replace(">", "^>").replace("<", "^<").replace("|", "^|")
         )
         script.write_text(
             f"@echo off\r\necho {escaped_out}\r\necho {escaped_err} 1>&2\r\nexit /b {exit_code}\r\n",
@@ -305,7 +305,7 @@ def _write_stderr_probe_gh(bin_dir: Path, *, stdout: str, stderr: str, exit_code
 
 
 # ---------------------------------------------------------------------------
-# fetch_label / LabelRecord — S43: verify the release-alert label, not assume it
+# fetch_label / LabelRecord — verify the release-alert label, not assume it
 # ---------------------------------------------------------------------------
 
 

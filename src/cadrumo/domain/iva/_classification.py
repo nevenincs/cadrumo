@@ -59,7 +59,7 @@ from ._schema import (
     IvaExemptionArticle,
     IvaRateKind,
     IvaRateRecord,
-    _IvaStrictFrozen,
+    IvaStrictFrozen,
 )
 
 _logger = get_logger(__name__)
@@ -199,7 +199,7 @@ class TransactionKind(StrEnum):
 # -- Criteria and classification records ----------------------------------
 
 
-class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
+class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
     """Input record for :func:`classify_iva`.
 
     Carries every axis the closed decision table inspects. The record is
@@ -291,7 +291,7 @@ class IvaInvoiceClassificationCriteria(_IvaStrictFrozen):
         return self
 
 
-class IvaClassificationResult(_IvaStrictFrozen):
+class IvaClassificationResult(IvaStrictFrozen):
     """Output record returned by :func:`classify_iva`.
 
     Exposes the matched :class:`cadrumo.domain.iva.IvaCategory`, the resolved

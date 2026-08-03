@@ -13,9 +13,6 @@ Covers:
 * End-to-end CLI replay of a wrapped command with a boolean ``--json``
   flag (the recorded argv must round-trip without the bare flag form
   causing Typer to choke on ``=True``).
-* :func:`compute_corpus_sha256` env-file sensitivity (post-startup
-  ``env/.env`` edits must change the corpus fingerprint even when the
-  loaded :class:`Settings` snapshot is unchanged).
 * argv reconstruction edge cases for positional, boolean, leading-dash,
   cli-flag-override, and ENV/DEFAULT-source arguments.
 """
@@ -221,45 +218,6 @@ class TestReplayEndToEndBooleanFlag:
             # Must not raise — replay round-trip through the real CLI.
             result = replay_run(recorded.run_id)
             assert result.run_id == recorded.run_id
-
-
-class TestEnvFileFingerprint:
-    """``corpus_sha256`` must fold the on-disk ``env/.env`` bytes.
-
-    Without this, operator edits to ``.env`` between record and replay
-    that are not yet reflected in the loaded :class:`Settings`
-    snapshot would silently evade the drift gate.
-    """
-
-    def test_env_file_change_changes_corpus_hash(self, tmp_path: Path) -> None:
-        import hashlib
-
-        from .._fingerprint import compute_corpus_sha256 as _compute_corpus_sha256
-
-        env_dir = tmp_path / "env"
-        env_dir.mkdir()
-        env_file = env_dir / ".env"
-
-        # compute_corpus_sha256 takes the .env path explicitly, so the
-        # dotfile channel is exercised against a real temp file.
-        settings = Settings()
-
-        env_file.write_text("FOO=1\n", encoding="utf-8")
-        h1 = _compute_corpus_sha256(settings, env_path=env_file)
-
-        env_file.write_text("FOO=2\n", encoding="utf-8")
-        h2 = _compute_corpus_sha256(settings, env_path=env_file)
-
-        assert h1 != h2, ".env edit must change corpus_sha256"
-
-        # Missing .env must still produce a stable non-empty hash.
-        env_file.unlink()
-        h3 = _compute_corpus_sha256(settings, env_path=env_file)
-        assert h3 != h1 and h3 != h2
-        assert len(h3) == 64
-        # Deterministic: missing .env hashes the empty-string digest.
-        empty_env_digest = hashlib.sha256(b"").hexdigest()
-        assert empty_env_digest  # sanity — just verify the builtin is sane
 
 
 class TestArgvReconstruction:

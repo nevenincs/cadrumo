@@ -18,11 +18,12 @@ application functions and pydantic records.
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import IO, TYPE_CHECKING, Any, Protocol, cast
 
 import typer
 
@@ -36,9 +37,10 @@ if TYPE_CHECKING:
     # eager registry-parse import cost at runtime -- this line never executes.
     from ._app_contract import command_schema_refs as command_schema_refs
     from ._config._google import OAuthClientPayload as OAuthClientPayload
+    from ._modelo_rendering import calculation_revision_lines, calculation_revision_payload
 from typer._types import TyperChoice as _TyperChoice
 
-from ._stdio import _ensure_help_render_width as _ensure_help_render_width
+from ._stdio import _disable_rich_cli_rendering as _disable_rich_cli_rendering
 from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
 # Force UTF-8 on stdout / stderr before any echo, log, or Rich console
@@ -47,6 +49,13 @@ from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 # in some IVA citations all crash typer.echo on cp1252. See
 # :mod:`._stdio` for the rationale.
 _configure_stdio_for_utf8()
+
+# Disable Typer/Click's Rich-based help, error, and traceback rendering
+# for every Typer() app in the command tree (module-level, read live by
+# every render call — see :func:`._stdio._disable_rich_cli_rendering`).
+# Plain text keeps option/argument tables readable regardless of the
+# invoking terminal's real width.
+_disable_rich_cli_rendering()
 
 from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core import ProfileSessionRefusalReason as _ProfileSessionRefusalReason
@@ -234,7 +243,7 @@ def _normalize_root_active_profile(ctx: typer.Context) -> None:
     """
     from ._bootstrap_exempt import is_bootstrap_exempt
 
-    verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
+    verb_path = _resolve_invocation_verb_path(ctx)
     explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
     if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
         from ...core import FormerProductStateError
@@ -445,7 +454,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     from ._command_suggestions import INVOCATION_REMAINDER_META_KEY
     from ._errors import CliRefusedBoundaryError
 
-    verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
+    verb_path = _resolve_invocation_verb_path(ctx)
     exempt = is_bootstrap_exempt(verb_path)
     explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
     argv_tokens = _full_invocation_tokens() or tuple(
@@ -467,14 +476,18 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
         # (handled by the caller) intact. Bootstrap-exempt verbs also
         # return — they run cleanly with no profile by design.
         return
+    # Bootstrap verbs establish their own storage span after dispatch.  They
+    # must leave before even the wizard-catalogue registration below: loading
+    # that application path can resolve profile-bound runtime collaborators
+    # while the selected bucket is deliberately locked.
+    if exempt:
+        return
     if explicit_profile_show:
         return
     if _is_unregistered_profile_status_probe(verb_path, active_bucket_id):
         return
     _register_wizard_catalogue_for_profile_keys()
     if has_active_bucket_session():
-        return
-    if exempt:
         return
     _resume_profile_session_or_refuse(ctx, active_bucket_id)
     # The active profile's encrypted record is only decryptable once the
@@ -735,6 +748,38 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     return " ".join(tokens)
 
 
+def _resolve_invocation_verb_path(ctx: typer.Context) -> str | None:
+    """Return the most complete reliable verb path for root routing.
+
+    Click can expose only an already-resolved group prefix while the root
+    callback runs (``config profile``), even though the console argv still
+    carries the leaf (``config profile create``). A prefix is not sufficient
+    for the bootstrap registry: treating it as authoritative turns profile
+    creation into a profile-bound command and raises the misleading login
+    refusal before the registration TUI can open. Conversely, test runners
+    have no console argv, so their reconstructed Click path remains the only
+    source. When both describe one invocation, prefer the longer path; when
+    they conflict, argv is the operator's literal command and wins.
+    """
+    return _prefer_complete_verb_path(
+        context_path=_verb_path_from_context(ctx),
+        argv_path=_full_invocation_verb_path(),
+    )
+
+
+def _prefer_complete_verb_path(*, context_path: str | None, argv_path: str | None) -> str | None:
+    """Choose the complete console path without losing test-runner support."""
+    if context_path is None:
+        return argv_path
+    if argv_path is None:
+        return context_path
+    if argv_path.startswith(f"{context_path} "):
+        return argv_path
+    if context_path.startswith(f"{argv_path} "):
+        return context_path
+    return argv_path
+
+
 def _full_invocation_verb_path() -> str | None:
     """Return the operator-typed verb path stripped of top-level flags.
 
@@ -984,37 +1029,48 @@ def __getattr__(name: str) -> object:
 
 
 def _localise_help_section_headers() -> None:
-    """Localise Typer's Rich ``--help`` section headers to the resolved locale.
+    """Localise Click's plain-text ``--help`` section headings to the resolved locale.
 
-    Typer renders the ``Options`` / ``Commands`` / ``Arguments`` panel titles
-    (the ``--help`` section headers) and the parse-error ``Try '... --help' for
-    help.`` hint from module-level constants in :mod:`typer.rich_utils` that are
-    frozen to English at import. The already-``tr()``-bound option *descriptions*
-    localise via the :func:`_apply_language_argv_to_environment` env promotion,
-    but the framework-owned section headers stayed English — the residual gap the
-    operator-surface ``--language`` help-honesty contract leaves open.
-    This rebinds those constants to the operator's resolved output language.
+    Click's plain-text help formatter renders the ``Arguments`` / ``Options`` /
+    ``Commands`` section headings through ``gettext.gettext`` bound to the name
+    ``_`` inside :mod:`typer.core` (``with formatter.section(_("Options")): ...``),
+    but Typer/Click ship no translation catalogue for any locale, so the call
+    resolves to the literal English string regardless of the process locale. The
+    already-``tr()``-bound option *descriptions* localise via the
+    :func:`_apply_language_argv_to_environment` env promotion, but the
+    framework-owned section headings stayed English — the residual gap the
+    operator-surface ``--language`` help-honesty contract leaves open. This
+    rebinds :mod:`typer.core`'s ``_`` name to a small dispatch table so those
+    three headings resolve through Cadrumo's own locale catalogue; every other
+    string Click passes through ``_()`` (which this project does not translate)
+    renders unchanged.
 
     Invocation-scoped, no cross-invocation leak: it runs once per console
     process from :func:`main` after the language flag has been promoted, always
-    sets every header to *this* invocation's locale (never a partial/stale set),
+    sets every heading to *this* invocation's locale (never a partial/stale set),
     and is never reached by the in-process test runner (which does not call
     :func:`main`). Real ``aeat`` runs are one process per invocation, so the
     module-global rebind reflects only the current process's locale.
     """
-    import typer.rich_utils as _rich_utils
+    import typer.core as _typer_core
 
-    _rich_utils.OPTIONS_PANEL_TITLE = tr("cli.help.panel.options", default="Options")
-    _rich_utils.COMMANDS_PANEL_TITLE = tr("cli.help.panel.commands", default="Commands")
-    _rich_utils.ARGUMENTS_PANEL_TITLE = tr("cli.help.panel.arguments", default="Arguments")
-    _rich_utils.ERRORS_PANEL_TITLE = tr("cli.help.panel.error", default="Error")
-    # RICH_HELP keeps the ``[blue]…[/]`` Rich markup and the ``{command_path}`` /
-    # ``{help_option}`` positional placeholders Typer ``.format()``s; tr() uses
-    # ``%{name}`` interpolation so it passes these ``{…}`` tokens through intact.
-    _rich_utils.RICH_HELP = tr(
-        "cli.help.try_for_help",
-        default="Try [blue]'{command_path} {help_option}'[/] for help.",
-    )
+    headings = {
+        "Arguments": tr("cli.help.panel.arguments", default="Arguments"),
+        "Options": tr("cli.help.panel.options", default="Options"),
+        "Commands": tr("cli.help.panel.commands", default="Commands"),
+    }
+
+    def _localised_gettext(message: str) -> str:
+        return headings.get(message, message)
+
+    _typer_core.__dict__["_"] = _localised_gettext
+
+
+#: Strips a Rich console markup tag (``[blue]``, ``[/]``, ``[bold red]``, ...).
+#: The ``cli.help.try_for_help`` catalogue entry carries Rich markup in its
+#: default value (written for the now-disabled Rich renderer); this pattern
+#: lets the plain-text error path reuse the same catalogue entry unstyled.
+_RICH_MARKUP_TAG_RE = re.compile(r"\[/?[a-zA-Z_ ]*\]")
 
 
 def _localise_typer_parse_error_messages() -> None:
@@ -1024,6 +1080,13 @@ def _localise_typer_parse_error_messages() -> None:
     ``Missing option`` and ``Invalid value`` strings emitted during argument
     parsing.  Rebind only those presentation prefixes here, after the root
     language flag has been resolved and before the command tree is invoked.
+
+    Also rebinds ``ClickException.show`` / ``UsageError.show`` — the plain-text
+    error renderer every parse/usage failure falls back to now that Rich
+    rendering is disabled (see :func:`._stdio._disable_rich_cli_rendering`).
+    Both hardcode ``"Error: ..."`` and ``"Try '{cmd} {opt}' for help."``
+    verbatim with no gettext hook at all, so this is a from-scratch
+    reimplementation of each method's body rather than a wrapped delegate.
     """
     from typer._click import exceptions as _typer_exceptions
     from typer._click import formatting as _typer_formatting
@@ -1085,9 +1148,70 @@ def _localise_typer_parse_error_messages() -> None:
             tr("cli.help.usage_prefix", default="Usage: ") if prefix is None else prefix,
         )
 
+    def _localised_error_prefix() -> str:
+        return tr("cli.help.panel.error", default="Error")
+
+    # ADAPTER-INTERNAL-ALIAS-RATIONALE-CLICK-SHOW: mirrors Click's own
+    # untyped ClickException.show(file: IO[Any] | None) signature so this
+    # monkeypatched override stays substitutable for the original method.
+    def localised_click_exception_show(
+        self: _typer_exceptions.ClickException,
+        file: IO[Any] | None = None,
+    ) -> None:
+        from typer._click._compat import get_text_stderr
+        from typer._click.utils import echo
+
+        if file is None:
+            file = get_text_stderr()
+        echo(
+            f"{_localised_error_prefix()}: {self.format_message()}",
+            file=file,
+            color=self.show_color,
+        )
+
+    # ADAPTER-INTERNAL-ALIAS-RATIONALE-CLICK-SHOW: mirrors Click's own
+    # untyped UsageError.show(file: IO[Any] | None) signature so this
+    # monkeypatched override stays substitutable for the original method.
+    def localised_usage_error_show(
+        self: _typer_exceptions.UsageError,
+        file: IO[Any] | None = None,
+    ) -> None:
+        from typer._click._compat import get_text_stderr
+        from typer._click.utils import echo
+
+        if file is None:
+            file = get_text_stderr()
+        color = None
+        hint = ""
+        if self.ctx is not None and self.ctx.command.get_help_option(self.ctx) is not None:
+            command = self.ctx.command_path
+            option = self.ctx.help_option_names[0]
+            # RICH_HELP's stored value carries Rich's ``[blue]…[/]`` markup for
+            # the (now-dead) Rich renderer; strip any ``[tag]`` bracket before
+            # using it as plain stderr text so a translated catalogue entry
+            # copied from the Rich default doesn't leak literal brackets.
+            hint_template = _RICH_MARKUP_TAG_RE.sub(
+                "",
+                tr(
+                    "cli.help.try_for_help",
+                    default="Try '{command_path} {help_option}' for help.",
+                ),
+            )
+            hint = f"{hint_template.format(command_path=command, help_option=option)}\n"
+        if self.ctx is not None:
+            color = self.ctx.color
+            echo(f"{self.ctx.get_usage()}\n{hint}", file=file, color=color)
+        echo(
+            f"{_localised_error_prefix()}: {self.format_message()}",
+            file=file,
+            color=color,
+        )
+
     _typer_exceptions.MissingParameter.format_message = localised_missing_parameter_format_message
     _typer_exceptions.BadParameter.format_message = localised_bad_parameter_format_message
     _typer_formatting.HelpFormatter.write_usage = localised_write_usage
+    _typer_exceptions.ClickException.show = localised_click_exception_show
+    _typer_exceptions.UsageError.show = localised_usage_error_show
     typer_exceptions_state = cast(  # CAST-RATIONALE-TYPER-EXCEPTIONS-STATE: module attribute is Cadrumo-owned.
         "_TyperExceptionsState", _typer_exceptions
     )
@@ -1128,7 +1252,7 @@ def main() -> None:
         from ...adapters.outbound.aeat import operator_progress_sink
 
         progress_sink = operator_progress_sink(_emit_operator_progress)
-    with _metadata_state_isolation(arguments), _ensure_help_render_width(), progress_sink:
+    with _metadata_state_isolation(arguments), progress_sink:
         app(prog_name=_PRODUCT_IDENTITY.cli_executable)
 
 

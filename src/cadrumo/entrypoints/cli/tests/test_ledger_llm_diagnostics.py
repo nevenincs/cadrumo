@@ -282,16 +282,16 @@ def test_llm_diagnostics_payloads_mirror_their_canonical_bounds() -> None:
         ("negative low confidence", LlmConfidenceProviderPayload, confidence_base, {"low_confidence_count": -1}),
         ("non-decimal mean", LlmConfidenceProviderPayload, confidence_base, {"mean_confidence": "bogus"}),
     ):
-        model(**base)  # positive control: the base must be accepted
+        model.model_validate(base)  # positive control: the base must be accepted
         try:
-            model(**(base | override))
+            model.model_validate(base | override)
         except ValidationError:
             continue
         pytest.fail(f"{label} was accepted by the transport row")
 
     # Decimal magnitudes stay unbounded, matching the canonical models.
-    LlmUsageProviderPayload(**(usage_base | {"cost_estimate_usd": "-1.00"}))
-    LlmConfidenceProviderPayload(**(confidence_base | {"mean_confidence": "-1"}))
+    LlmUsageProviderPayload.model_validate(usage_base | {"cost_estimate_usd": "-1.00"})
+    LlmConfidenceProviderPayload.model_validate(confidence_base | {"mean_confidence": "-1"})
 
 
 def test_llm_diagnostics_result_refuses_negative_totals() -> None:

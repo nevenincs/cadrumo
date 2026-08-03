@@ -76,7 +76,7 @@ def _kdf_params(**overrides: object) -> ManifestKdfParams:
         if "output_length" in overrides and isinstance(overrides["output_length"], int):
             params["output_length"] = overrides["output_length"]
 
-    return ManifestKdfParams(**params)
+    return ManifestKdfParams.model_validate(params)
 
 
 def _kdf() -> ManifestKdfParams:

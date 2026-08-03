@@ -241,6 +241,7 @@ def _register_iva_wallet_seed_command(iva_wallet_app: typer.Typer, *, active_buc
                 ),
             ) from exc
 
+        assert state.taxpayer_nif is not None, "seeded IVA wallet state must retain its taxpayer NIF"
         seed_result = IvaWalletSeedResult(
             filing_year=state.filing_year,
             period=state.period,
@@ -407,6 +408,7 @@ def _register_iva_wallet_correct_command(iva_wallet_app: typer.Typer, *, active_
                 ),
             ) from exc
 
+        assert state.taxpayer_nif is not None, "corrected IVA wallet state must retain its taxpayer NIF"
         correct_result = IvaWalletCorrectResult(
             filing_year=state.filing_year,
             period=state.period,

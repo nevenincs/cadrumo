@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING
 import pytest
 import yaml
 from pydantic import BaseModel
-from textual.containers import VerticalScroll
+from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Input, Label, OptionList, ProgressBar, Static
 
 from .....application.flows import (
@@ -41,7 +41,7 @@ from .....application.flows import (
     page_status,
     start_flow,
 )
-from .....core.config import TuiAppearance
+from .....core.config import TuiAppearance, reset_settings_cache
 from .....core.flows import (
     CheckpointAvailability,
     CopyRefKind,
@@ -63,6 +63,7 @@ from .. import (
     install_cadrumo_themes,
     run_flow_tui,
 )
+from .._theme import ContentScroll
 
 pytestmark = [
     pytest.mark.unit,
@@ -926,6 +927,16 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
     saved = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
     try:
         os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
+        # ``load_settings()`` holds a process-wide ``Settings`` singleton
+        # cached by the active-profile pointer, not by env var, so a raw
+        # ``os.environ`` mutation is invisible to it once that singleton
+        # exists; ``clear_output_language_cache`` alone only invalidates
+        # the output-language memo layered on top. ``reset_settings_cache``
+        # is the sanctioned way to make a process-environment change
+        # observed (see its docstring), and — unlike ``override_settings``'s
+        # contextvar — it is a plain cache, so it stays valid across the
+        # asyncio Task boundary the Textual pilot's message pump runs on.
+        reset_settings_cache()
         clear_output_language_cache()
         with locales_root_scope(root):
             app = FlowTuiApp(_definition(), mode=FlowMode.MODIFY, registered_values={})
@@ -934,6 +945,7 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
                 assert "en-copy" in str(app.screen.query_one("#page-prompt", Label).render())
 
                 os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "es"
+                reset_settings_cache()
                 clear_output_language_cache()
                 app.rebuild_for_locale()
                 await pilot.pause()
@@ -946,6 +958,7 @@ async def test_rebuild_for_locale_reassembles_copy_under_the_new_language(
             os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
         else:
             os.environ[OUTPUT_LANGUAGE_ENV_VAR] = saved
+        reset_settings_cache()
         clear_output_language_cache()
 
 
@@ -980,12 +993,22 @@ async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
     def _switch_to_spanish(page_key: str, _value: str) -> None:
         if page_key == "p_name":
             os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "es"
+            # See ``reset_settings_cache`` note in
+            # ``test_rebuild_for_locale_reassembles_copy_under_the_new_language``:
+            # ``override_settings``'s contextvar cannot be entered here and
+            # exited from the test's own coroutine — this hook runs inside
+            # Textual's message-pump Task, a different asyncio Context, and a
+            # contextvar Token cannot be reset outside the Context that
+            # created it. The plain ``reset_settings_cache`` memo has no such
+            # boundary.
+            reset_settings_cache()
             clear_output_language_cache()
             holder["app"].rebuild_for_locale()
 
     saved = os.environ.get(OUTPUT_LANGUAGE_ENV_VAR)
     try:
         os.environ[OUTPUT_LANGUAGE_ENV_VAR] = "en"
+        reset_settings_cache()
         clear_output_language_cache()
         with locales_root_scope(root):
             app = FlowTuiApp(
@@ -1014,6 +1037,7 @@ async def test_locale_switch_hook_renders_the_next_page_under_the_new_language(
             os.environ.pop(OUTPUT_LANGUAGE_ENV_VAR, None)
         else:
             os.environ[OUTPUT_LANGUAGE_ENV_VAR] = saved
+        reset_settings_cache()
         clear_output_language_cache()
 
 
@@ -1176,8 +1200,12 @@ async def test_flow_mounts_and_activates_the_configured_appearance(
         await pilot.pause()
         assert app.theme == expected_theme
         # The body lives on the pushed QuestionScreen, not the default
-        # screen, and is the scrollable container rather than a Static.
-        assert app.screen.query_one("#page-body", VerticalScroll)
+        # screen. Scrolling and the bordered box are two widgets, not one:
+        # the ContentScroll host is what scrolls, and #page-body is the
+        # panel inside it. Collapsing them gave the panel `height: auto`,
+        # which cannot scroll and pushed the overflow onto the Screen.
+        assert app.screen.query_one("#page-scroll", ContentScroll)
+        assert app.screen.query_one("#page-body", Vertical)
 
 
 @pytest.mark.asyncio

@@ -25,6 +25,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -74,6 +75,8 @@ class BucketSession:
         "_kek_available",
         "_kek_buffer",
         "_opened_at",
+        "_routed_settings",
+        "_routed_settings_key",
         "_sealed",
         "_storage_root",
         "_unsecured_backend",
@@ -105,6 +108,10 @@ class BucketSession:
         self._unsecured_backend = unsecured_backend
         self._sealed = False
         self._engine: Engine | None = None
+        # One-entry memo behind :meth:`routed_settings`; see that method for
+        # why the scope is the session and not the process.
+        self._routed_settings_key: str | None = None
+        self._routed_settings: Settings | None = None
         # Registered at construction, not at binding: a session owns key buffers
         # from this point on, and the emergency-zeroisation path must cover it
         # whether or not it is ever bound to a context (and whichever thread
@@ -343,7 +350,57 @@ class BucketSession:
         now = validate_utc_aware(now)
         return now >= self._idle_deadline or now >= self._absolute_deadline
 
-    def acquire_engine(self, settings: Settings) -> Engine:
+    def routed_settings(self, source: Settings) -> Settings:
+        """Return ``source`` re-routed to this bucket's database, memoised.
+
+        Deriving the bucket route is not cheap: it re-validates the whole
+        settings model, and the path validators resolve every configured
+        directory against the filesystem -- on Windows, over a hundred
+        path-canonicalisation syscalls per derivation. A single profile
+        write resolves the route three times (the workflow store, the
+        lifecycle store, the profile store each ask for a repository), so
+        the same derivation was recomputed from scratch three times over.
+
+        The memo is scoped to the SESSION, not the process, because its
+        value is bucket-scoped: the substrate invariant is that no
+        module-global mutable state may outlive a bucket switch, and a
+        process-lifetime cache keyed on a bucket-scoped value is exactly
+        what that forbids. Held here, the derivation dies with the session
+        that owns the bucket -- the same lifetime, and the same reasoning,
+        as the engine handle :meth:`acquire_engine` registers.
+
+        Keyed on the serialised source rather than its identity: callers
+        reach this through :func:`~core.config.load_settings`, which
+        returns a fresh instance whenever no override is in scope, so
+        identity would miss every time. Serialising costs about a
+        thousandth of the derivation it avoids, and equal settings
+        provably derive an equal route. One entry is kept, because the
+        access pattern is the same source asked repeatedly; a source that
+        differs simply replaces it.
+
+        Args:
+            source: The live :class:`~core.config.Settings` whose non-route
+                fields the derived settings preserve.
+
+        Returns:
+            A :class:`~core.config.Settings` routed to this session's bucket.
+
+        Raises:
+            BucketLockedError: When the session has already been sealed.
+        """
+        if self._sealed:
+            raise BucketLockedError(bucket_id=self._bucket_id)
+        from .....core.config import settings_for_active_profile_bucket
+
+        key = source.model_dump_json()
+        if self._routed_settings_key == key and self._routed_settings is not None:
+            return self._routed_settings
+        derived = settings_for_active_profile_bucket(self._bucket_id, source)
+        self._routed_settings_key = key
+        self._routed_settings = derived
+        return derived
+
+    def acquire_engine(self, settings_factory: Callable[[], Settings]) -> Engine:
         """Lazily acquire and register this bucket's engine on first storage access.
 
         The session is the single owner of the SQLAlchemy engine
@@ -353,10 +410,19 @@ class BucketSession:
         session close or profile switch. Subsequent accesses return the
         already-registered handle.
 
+        The route arrives as a factory rather than a value because the
+        handle is cached: every access after the first discards the
+        settings it is handed. Building a :class:`~core.config.Settings`
+        eagerly to satisfy a call that will not look at it costs a full
+        model validation, and the caller has no way to know from the
+        outside whether this session has an engine yet. Deferring the
+        construction into this method puts that decision where the answer
+        is known.
+
         Args:
-            settings: The :class:`~core.config.Settings` routing to
-                this bucket's database, passed through to
-                :func:`~adapters.persistence.storage.sql.engine.get_engine`.
+            settings_factory: Returns the :class:`~core.config.Settings`
+                routing to this bucket's database. Invoked at most once,
+                and only when an engine must actually be resolved.
 
         Returns:
             The :class:`~sqlalchemy.engine.Engine` bound to this session.
@@ -369,7 +435,7 @@ class BucketSession:
         if self._engine is None:
             from ..sql.engine import get_engine
 
-            self._engine = get_engine(settings)
+            self._engine = get_engine(settings_factory())
         return self._engine
 
     def invalidate_engine(self) -> None:
@@ -388,6 +454,11 @@ class BucketSession:
         must call both. A no-op when no engine has been acquired yet or
         the session is already sealed.
         """
+        # The memoised route resolves configured paths against the filesystem,
+        # so a caller re-materialising this bucket's directory invalidates that
+        # derivation for the same reason it invalidates the engine handle.
+        self._routed_settings_key = None
+        self._routed_settings = None
         if self._sealed or self._engine is None:
             return
         from ..sql.engine import dispose_engine_handle
@@ -420,6 +491,8 @@ class BucketSession:
         _zeroise(self._kek_buffer)
         _zeroise(self._dek_buffer)
         self._sealed = True
+        self._routed_settings_key = None
+        self._routed_settings = None
         self._dispose_engine()
 
     def _dispose_engine(self) -> None:

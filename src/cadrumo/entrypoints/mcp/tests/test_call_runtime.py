@@ -27,6 +27,14 @@ from .._call_runtime import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+def _typed_error_envelope(envelope: dict[str, object]) -> dict[str, object]:
+    """Return the validated error payload as a string-keyed mapping."""
+    error = envelope["error"]
+    if not isinstance(error, dict) or not all(isinstance(key, str) for key in error):
+        raise AssertionError("validated error envelope must carry a string-keyed error object")
+    return {key: value for key, value in error.items() if isinstance(key, str)}
+
+
 def test_tier_is_derived_from_annotations() -> None:
     assert tier_for(read_only=True, open_world=False) is CallTier.READ
     assert tier_for(read_only=False, open_world=False) is CallTier.MUTATE
@@ -93,12 +101,12 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     from .._transport import _cli_resolution_refusal_envelope, _timeout_refusal_envelope
 
     envelope = _timeout_refusal_envelope(command_key="app.live.expedientes.pull", tier=CallTier.LIVE, timeout_s=420.0)
-    assert validate_registered_envelope_document(envelope) == envelope
-    assert envelope["schema_version"] == ENVELOPE_SCHEMA_VERSION
-    assert envelope["command"] == "app.live.expedientes.pull"
-    assert envelope["status"] == "error"
-    error = envelope["error"]
-    assert isinstance(error, dict)
+    validated = validate_registered_envelope_document(envelope)
+    assert validated == envelope
+    assert validated["schema_version"] == ENVELOPE_SCHEMA_VERSION
+    assert validated["command"] == "app.live.expedientes.pull"
+    assert validated["status"] == "error"
+    error = _typed_error_envelope(validated)
     assert error["code"] == "mcp.transport.timeout"
     assert error["context"] == {"tier": "live", "timeout_seconds": "420", "timed_out": "true"}
     refusal = error["message"]
@@ -112,10 +120,10 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
         command_key="contract",
         error=FileNotFoundError("Installed Cadrumo CLI executable is missing"),
     )
-    assert validate_registered_envelope_document(installation) == installation
-    assert installation["command"] == "contract"
-    installation_error = installation["error"]
-    assert isinstance(installation_error, dict)
+    validated_installation = validate_registered_envelope_document(installation)
+    assert validated_installation == installation
+    assert validated_installation["command"] == "contract"
+    installation_error = _typed_error_envelope(validated_installation)
     assert installation_error["code"] == "mcp.transport.installation_incomplete"
     assert installation_error["context"] == {"installation_incomplete": "true"}
 

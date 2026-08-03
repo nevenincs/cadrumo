@@ -139,4 +139,4 @@ class TestCliEnvelopeParity:
         envelope = self._envelope()
         result = envelope(providers=list(list_operator_auth_providers().providers))
 
-        assert envelope.model_validate_json(result.model_dump_json()) == result
+        assert type(result).model_validate_json(result.model_dump_json()) == result

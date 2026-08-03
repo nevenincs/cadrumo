@@ -19,7 +19,7 @@ from ....core import STRICT_FROZEN_CONFIG
 from ._errors import RegistryValidationError
 from ._ids import CrossReferenceId, LegalRefId, SourceRefId, WorkbookParityRefId
 from ._schema import EvidenceTier, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
-from ._snapshot import _build_validated_snapshot
+from ._snapshot import build_validated_snapshot
 from ._validate import RegistryValidator
 
 CoverageGateStatus = Literal["satisfied", "gap"]
@@ -120,7 +120,7 @@ def audit_registry_model_law_coverage(
     executable_parity_gaps: list[str] = []
     for modelo in modelo_tuple:
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
-            snapshot = _build_validated_snapshot(
+            snapshot = build_validated_snapshot(
                 modelo,
                 catalogues,
                 filing_year=_representative_year(revision),

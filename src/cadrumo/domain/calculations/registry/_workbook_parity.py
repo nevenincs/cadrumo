@@ -11,21 +11,26 @@ import re
 import shutil
 import subprocess
 import time
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING
 from zipfile import BadZipFile
 
-from openpyxl import load_workbook
-from openpyxl.cell.cell import Cell, MergedCell
-from openpyxl.formula import Tokenizer
-from openpyxl.formula.tokenizer import TokenizerError
-from openpyxl.utils.exceptions import InvalidFileException
-from openpyxl.worksheet.worksheet import Worksheet
+if TYPE_CHECKING:
+    # Annotation-only: ``from __future__ import annotations`` above makes every
+    # annotation a string, so these need not exist at runtime. openpyxl is one of
+    # the heaviest third-party imports in the tree and this module is imported
+    # eagerly by the registry facade, so the symbols that ARE needed at runtime
+    # (``load_workbook``, ``Tokenizer``, and the ``TokenizerError`` /
+    # ``InvalidFileException`` handler types) are imported inside the functions
+    # that use them -- a taxpayer calculation must not load a spreadsheet engine.
+    from openpyxl.cell.cell import Cell, MergedCell
+    from openpyxl.worksheet.worksheet import Worksheet
 
 from ....core.config import Settings as _Settings
 from ....core.decimal import coerce_decimal
@@ -47,12 +52,12 @@ from ._workbook_parity_models import (
     WorkbookBackendVerificationReport,
     WorkbookCellRef,
     WorkbookConversionReport,
+    WorkbookExtension,
     WorkbookModeloCoverage,
     WorkbookParityComparison,
     WorkbookParityModel,
     WorkbookParityRunReport,
     WorkbookRunnerAvailability,
-    _WorkbookExtension,
 )
 from ._workbook_parity_types import (
     ParityStatus,
@@ -132,6 +137,73 @@ class _BinaryXlsConversionError(CoreError):
     """Failure raised after a valid LibreOffice runner starts XLS conversion."""
 
 
+def _com_member(raw: object, name: str) -> object:
+    """Read one required late-bound COM member with an explicit failure mode."""
+    member: object = getattr(raw, name, None)
+    if member is None:
+        raise RegistryValidationError(f"Excel COM object is missing required member {name!r}")
+    return member
+
+
+def _com_method(raw: object, name: str) -> Callable[..., object]:
+    """Read one required callable late-bound COM member."""
+    member = _com_member(raw, name)
+    if not callable(member):
+        raise RegistryValidationError(f"Excel COM member {name!r} is not callable")
+    return member
+
+
+def _set_com_member(raw: object, name: str, value: object) -> None:
+    """Set one verified late-bound COM property."""
+    _com_member(raw, name)
+    setattr(raw, name, value)
+
+
+class _ExcelWorkbook:
+    """Typed adapter for the limited workbook operations used by parity runs."""
+
+    def __init__(self, raw: object) -> None:
+        self._raw = raw
+
+    def set_cell_value(self, cell: WorkbookCellRef, value: str | int | bool) -> None:
+        worksheet: object = _com_member(self._raw, "Worksheets")
+        sheet: object = _com_method(worksheet, "__call__")(cell.sheet)
+        range_: object = _com_method(sheet, "Range")(cell.coordinate)
+        _set_com_member(range_, "Value", value)
+
+    def cell_value(self, cell: WorkbookCellRef) -> object:
+        worksheet: object = _com_member(self._raw, "Worksheets")
+        sheet: object = _com_method(worksheet, "__call__")(cell.sheet)
+        range_: object = _com_method(sheet, "Range")(cell.coordinate)
+        return _com_member(range_, "Value")
+
+    def close_without_saving(self) -> None:
+        _com_method(self._raw, "Close")(SaveChanges=False)
+
+
+class _ExcelApplication:
+    """Typed adapter for the checked late-bound Excel recalculation surface."""
+
+    def __init__(self, raw: object) -> None:
+        self._raw = raw
+
+    def configure_read_only(self) -> None:
+        _set_com_member(self._raw, "Visible", False)
+        _set_com_member(self._raw, "DisplayAlerts", False)
+        _set_com_member(self._raw, "AskToUpdateLinks", False)
+
+    def open_read_only_workbook(self, path: Path) -> _ExcelWorkbook:
+        workbooks = _com_member(self._raw, "Workbooks")
+        workbook: object = _com_method(workbooks, "Open")(str(path), UpdateLinks=0, ReadOnly=True)
+        return _ExcelWorkbook(workbook)
+
+    def calculate_full_rebuild(self) -> None:
+        _com_method(self._raw, "CalculateFullRebuild")()
+
+    def quit(self) -> None:
+        _com_method(self._raw, "Quit")()
+
+
 @dataclass(frozen=True)
 class _BinaryXlsConversionContext:
     resolved_root: Path
@@ -166,6 +238,12 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
     Returns:
         A :class:`WorkbookArtefactReport` describing the workbook's formula coverage.
     """
+    # Imported before the ``try`` below: ``InvalidFileException`` is named in an
+    # ``except`` clause, which is evaluated as an exception propagates, so it must
+    # already be a real object by then -- a TYPE_CHECKING guard would turn a
+    # handled parse failure into a NameError on the failure path.
+    from openpyxl.utils.exceptions import InvalidFileException
+
     opts = options or WorkbookScanOptions()
     started = time.monotonic()
     resolved_root = root.resolve()
@@ -280,6 +358,8 @@ def _scan_xlsx_contents(
     started: float,
 ) -> tuple[list[str], list[WorkbookCellRef], list[WorkbookCellRef]]:
     """Open the workbook in read-only mode and collect (sheet titles, formulas, references)."""
+    from openpyxl import load_workbook
+
     workbook = load_workbook(resolved_path, data_only=False, read_only=True)
     sheets: list[str] = []
     formulas: list[WorkbookCellRef] = []
@@ -400,6 +480,8 @@ def run_workbook_with_libreoffice(
     executable: str | None = None,
 ) -> Mapping[WorkbookOutputId, Decimal | int | str | bool | None]:
     """Run a local XLSX workbook with LibreOffice headless and return outputs."""
+    from openpyxl import load_workbook
+
     _workbook_output_id_set("workbook output cells", outputs)
     runner = _resolve_libreoffice_runner(executable)
     resolved = workbook_path.resolve()
@@ -523,7 +605,7 @@ def converted_binary_xls_with_libreoffice(
     *,
     root: Path,
     executable: str | None = None,
-) -> Iterator[Path]:
+) -> Generator[Path]:
     """Yield a temporary XLSX converted from official binary XLS input."""
     context = _binary_xls_conversion_context(workbook_path, root=root)
     runner = _resolve_libreoffice_runner(executable)
@@ -558,7 +640,7 @@ def _converted_binary_xls_path(
     context: _BinaryXlsConversionContext,
     *,
     runner: Path,
-) -> Iterator[Path]:
+) -> Generator[Path]:
     with TemporaryDirectory(prefix="cadrumo-xls-conversion-") as tmp:
         tmp_path = Path(tmp)
         output_dir = tmp_path / "output"
@@ -789,28 +871,37 @@ def run_workbook_with_excel_com(
         raise RegistryValidationError("Excel COM runner currently accepts only XLSX workbooks")
 
     import pythoncom
-    import win32com.client
 
     pythoncom.CoInitialize()
-    excel = win32com.client.DispatchEx("Excel.Application")
-    workbook = None
+    excel = _dispatch_excel_application()
+    workbook: _ExcelWorkbook | None = None
     try:
-        excel.Visible = False
-        excel.DisplayAlerts = False
-        excel.AskToUpdateLinks = False
-        workbook = excel.Workbooks.Open(str(resolved), UpdateLinks=0, ReadOnly=True)
+        excel.configure_read_only()
+        workbook = excel.open_read_only_workbook(resolved)
         for cell, value in inputs.items():
-            workbook.Worksheets(cell.sheet).Range(cell.coordinate).Value = _excel_value(value)
-        excel.CalculateFullRebuild()
+            workbook.set_cell_value(cell, _excel_value(value))
+        excel.calculate_full_rebuild()
         result: dict[WorkbookOutputId, Decimal | int | str | bool | None] = {}
         for output_id, cell in outputs.items():
-            result[output_id] = _coerce_excel_result(workbook.Worksheets(cell.sheet).Range(cell.coordinate).Value)
+            result[output_id] = _coerce_excel_result(workbook.cell_value(cell))
         return result
     finally:
         if workbook is not None:
-            workbook.Close(SaveChanges=False)
-        excel.Quit()
+            workbook.close_without_saving()
+        excel.quit()
         pythoncom.CoUninitialize()
+
+
+def _dispatch_excel_application() -> _ExcelApplication:
+    """Create Excel through pywin32 and validate its late-bound COM shape."""
+    from importlib import import_module
+
+    client = import_module("win32com.client")
+    dispatch_ex = getattr(client, "DispatchEx", None)
+    if not callable(dispatch_ex):
+        raise RegistryValidationError("pywin32 does not expose win32com.client.DispatchEx")
+    candidate: object = dispatch_ex("Excel.Application")
+    return _ExcelApplication(candidate)
 
 
 def compare_registry_to_workbook(
@@ -899,7 +990,7 @@ def _workbook_output_id_set(
     values: Mapping[WorkbookOutputId, object],
 ) -> frozenset[WorkbookOutputId]:
     invalid = sorted(
-        repr(output_id) for output_id in values if not isinstance(output_id, str) or not is_registry_id(output_id)
+        repr(output_id) for output_id in values if not is_registry_id(output_id)
     )
     if invalid:
         raise RegistryValidationError(f"{surface} contains invalid workbook output ids: {invalid!r}")
@@ -1050,8 +1141,7 @@ def _raise_if_timed_out(started: float, timeout_seconds: float, relative: str) -
 
 
 def _elapsed_decimal(started: float) -> Decimal:
-    elapsed = coerce_decimal(round(time.monotonic() - started, 6), default=Decimal("0"))
-    return elapsed if elapsed is not None else Decimal("0")
+    return coerce_decimal(round(time.monotonic() - started, 6), default=Decimal("0"))
 
 
 def _classify_xlsx(relative: str, formulas: Iterable[WorkbookCellRef]) -> WorkbookKind:
@@ -1088,6 +1178,11 @@ def _evidence_for_workbook_kind(kind: WorkbookKind) -> tuple[EvidenceTier | None
 def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[WorkbookCellRef, ...]:
     if remaining <= 0:
         return ()
+    # Both imported before the ``try``: ``TokenizerError`` is named in the
+    # ``except`` clause and must be a real object when the exception propagates.
+    from openpyxl.formula import Tokenizer
+    from openpyxl.formula.tokenizer import TokenizerError
+
     refs: list[WorkbookCellRef] = []
     try:
         tokens = Tokenizer(formula).items
@@ -1129,7 +1224,7 @@ def _failed_report(
     *,
     relative: str,
     modelo: str | None,
-    suffix: _WorkbookExtension,
+    suffix: WorkbookExtension,
     byte_count: int,
     digest: str,
     status: WorkbookScanStatus,
@@ -1196,6 +1291,8 @@ def _inspect_converted_xlsx(
     original_relative: str,
     started: float,
 ) -> tuple[tuple[str, ...], tuple[WorkbookCellRef, ...], tuple[WorkbookCellRef, ...]]:
+    from openpyxl import load_workbook
+
     workbook = load_workbook(path, data_only=False, read_only=True)
     try:
         sheets: list[str] = []

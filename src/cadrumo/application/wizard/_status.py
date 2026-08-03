@@ -22,8 +22,10 @@ from ..user_profile import (
     validate_profile_values,
 )
 from ..workflow import WorkflowState
-from . import _compiler as _compiler  # side-effect: registers PROFILE_KEYS before _keys_validation
+from ._compiler import ensure_profile_keys_registered
 from ._errors import WizardError
+
+ensure_profile_keys_registered()
 
 _ENROLMENT_KEY = "iva.regime"
 """Profile key whose presence flips an IVA-liable operator profile into

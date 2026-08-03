@@ -29,9 +29,10 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, TypedDict, cast
 
 import typer
+from typer._click.core import Context as _TyperClickContext
 
 from ....core.i18n import tr
 from ....core.json_contract import Notice as _Notice
@@ -77,6 +78,7 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
     @functools.wraps(wizard_command)
     def _dispatch(*args: object, **kwargs: object):
         from ._manager_frontend import (
+            has_explicit_profile_fields,
             host_can_run_full_screen,
             manager_is_the_right_frontend,
             present_profile_manager,
@@ -86,17 +88,13 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
         if not manager_is_the_right_frontend(
             mode=mode,
             scripted=bool(kwargs.get("quiet")) or bool(kwargs.get("accept_defaults")),
-            explicit_fields=any(
-                value is not None
-                for key, value in kwargs.items()
-                if key not in {"ctx", "profile_name", "quiet", "accept_defaults"}
-            ),
+            explicit_fields=has_explicit_profile_fields(kwargs),
             full_screen=host_can_run_full_screen(),
         ):
             return wizard_command(*args, **kwargs)
 
         ctx = kwargs.get("ctx")
-        if not isinstance(ctx, typer.Context):
+        if not isinstance(ctx, _TyperClickContext):
             # No Typer context to emit an envelope through; the wizard owns
             # its own output path, so hand the call straight back rather
             # than rendering a manager whose result could not be reported.
@@ -109,6 +107,15 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             if outcome is None:
                 emit_registration_abandoned(ctx)
                 return None
+            # Textual runs button handlers in an asyncio task.  The registration
+            # door authenticates there, but ContextVar bindings made by that
+            # child task cannot flow back into this synchronous CLI context.
+            # Resume the just-persisted login through the same authority used by
+            # the root callback before the manager performs its first read.
+            from .. import _resume_profile_session_or_refuse
+
+            # CAST-RATIONALE-TYPER-CLICK-CONTEXT: see emit_manager_closed below.
+            _resume_profile_session_or_refuse(cast(typer.Context, ctx), outcome.bucket_id)
             present_profile_manager(label=outcome.label)
             emit_manager_closed(ctx, outcome.label, created=True)
             return None
@@ -128,19 +135,23 @@ def active_profile_label() -> str:
     return ProfileRepository().load(require_active_bucket_id()).label
 
 
-def emit_registration_abandoned(ctx: typer.Context) -> None:
+def emit_registration_abandoned(ctx: _TyperClickContext) -> None:
     """Report a registration the operator left without completing.
 
     Not an error: leaving the first screen without creating a profile is an
     ordinary choice, so it emits a success envelope carrying an info notice
     rather than a refusal.
     """
-    from ....application.wizard import ConfigProfileCreateResult
+    from ....application.wizard import ConfigProfileCreateResult, ProfileWizardStatus
 
     _emit_envelope(
-        ctx,
+        # CAST-RATIONALE-TYPER-CLICK-CONTEXT: ctx is typed as the vendored
+        # typer._click.core.Context this module accepts at its own boundary;
+        # _emit_envelope's signature wants the public typer.Context alias for
+        # the same runtime object.
+        cast(typer.Context, ctx),
         command="config.profile.create",
-        result=ConfigProfileCreateResult(profile_name="", status="abandoned"),
+        result=ConfigProfileCreateResult(profile_name="", status=ProfileWizardStatus.ABANDONED),
         lines=[tr("cli.config.profile.registration_abandoned")],
         notices=[
             _Notice(
@@ -152,7 +163,7 @@ def emit_registration_abandoned(ctx: typer.Context) -> None:
     )
 
 
-def emit_manager_closed(ctx: typer.Context, label: str, *, created: bool) -> None:
+def emit_manager_closed(ctx: _TyperClickContext, label: str, *, created: bool) -> None:
     """Report the manager session, naming the profile it operated on.
 
     The manager persists every edit as it is made, so this envelope closes
@@ -179,7 +190,11 @@ def emit_manager_closed(ctx: typer.Context, label: str, *, created: bool) -> Non
         else ConfigProfileEditResult(profile_name=label, status=ProfileWizardStatus.UPDATED)
     )
     _emit_envelope(
-        ctx,
+        # CAST-RATIONALE-TYPER-CLICK-CONTEXT: ctx is typed as the vendored
+        # typer._click.core.Context this module accepts at its own boundary;
+        # _emit_envelope's signature wants the public typer.Context alias for
+        # the same runtime object.
+        cast(typer.Context, ctx),
         command="config.profile.create" if created else "config.profile.edit",
         result=result,
         lines=[message],

@@ -362,12 +362,13 @@ def assert_pdf_response(
 
     The media-type comparison is equality on the parameter-stripped header
     rather than a substring test. A substring test admits any type that merely
-    CONTAINS the token: ``application/notpdf`` and ``text/pdf`` satisfy
-    ``"pdf" in ...``, and ``x-application/pdf-trap`` satisfies even
-    ``"application/pdf" in ...``. None of those is a PDF, and a captured
-    artefact is stored as filing evidence, so admitting one records a non-PDF
-    body under a PDF ``kind``. Equality on the media type still admits the
-    parameterised ``application/pdf; charset=binary`` AEAT actually sends.
+    CONTAINS the token: ``application/notpdf`` and ``text/pdf`` satisfy a
+    ``pdf in ...`` substring check, and ``x-application/pdf-trap`` satisfies
+    even a substring check against :data:`~core.external_constants.PDF_MIME_TYPE`
+    itself. None of those is a PDF, and a captured artefact is stored as
+    filing evidence, so admitting one records a non-PDF body under a PDF
+    ``kind``. Equality on the media type still admits the parameterised
+    ``application/pdf; charset=binary`` AEAT actually sends.
 
     Args:
         status: HTTP status code of the PDF response.

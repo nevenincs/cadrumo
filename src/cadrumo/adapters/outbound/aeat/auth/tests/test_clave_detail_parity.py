@@ -16,7 +16,7 @@ constraints, while the discriminant stays explicitly narrowed per provider.
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 from pydantic.fields import FieldInfo
 
 from ......core import AuthProviderKind
@@ -32,6 +32,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _SESSION_SHARED_FIELDS = ("dni_nie", "landing_url")
 _ASSERTION_SHARED_FIELDS = ("session_cookie_present", "landing_url")
 _DNI_NIE = "X1234567L"
+
+type ClaveSessionDetail = ClaveMovilSessionDetail | ClavePermanenteSessionDetail
+type ClaveLoginAssertionDetail = ClaveMovilLoginAssertionDetail | ClavePermanenteLoginAssertionDetail
 
 
 def _constraint_signature(field: FieldInfo) -> tuple[object, ...]:
@@ -67,8 +70,8 @@ def _constraint_signature(field: FieldInfo) -> tuple[object, ...]:
     ],
 )
 def test_shared_cleve_fields_have_identical_constraints_across_providers(
-    movil: type,
-    permanente: type,
+    movil: type[BaseModel],
+    permanente: type[BaseModel],
     shared_fields: tuple[str, ...],
 ) -> None:
     """Every provider-neutral field validates identically on both providers."""
@@ -98,8 +101,8 @@ def test_shared_cleve_fields_have_identical_constraints_across_providers(
     ],
 )
 def test_shared_cleve_fields_come_from_one_declaration(
-    movil: type,
-    permanente: type,
+    movil: type[BaseModel],
+    permanente: type[BaseModel],
     shared_fields: tuple[str, ...],
 ) -> None:
     """The shared fields are inherited from one common base, not re-declared.
@@ -139,7 +142,10 @@ def test_shared_cleve_fields_come_from_one_declaration(
         ),
     ],
 )
-def test_each_detail_narrows_the_discriminant_to_its_own_provider(detail: type, expected_kind: AuthProviderKind) -> None:
+def test_each_detail_narrows_the_discriminant_to_its_own_provider(
+    detail: type[BaseModel],
+    expected_kind: AuthProviderKind,
+) -> None:
     """Sharing a base must not blur which provider a detail belongs to."""
     field = detail.model_fields["kind"]
 
@@ -155,7 +161,7 @@ def test_each_detail_narrows_the_discriminant_to_its_own_provider(detail: type, 
         pytest.param(ClavePermanenteSessionDetail, id="permanente"),
     ],
 )
-def test_session_detail_refuses_an_empty_identity_on_both_providers(detail: type) -> None:
+def test_session_detail_refuses_an_empty_identity_on_both_providers(detail: type[ClaveSessionDetail]) -> None:
     """The non-empty identity constraint cannot hold on one provider only."""
     with pytest.raises(ValidationError):
         detail(dni_nie="")
@@ -168,7 +174,7 @@ def test_session_detail_refuses_an_empty_identity_on_both_providers(detail: type
         pytest.param(ClavePermanenteSessionDetail, id="permanente"),
     ],
 )
-def test_session_detail_accepts_an_identity_and_defaults_the_landing_url(detail: type) -> None:
+def test_session_detail_accepts_an_identity_and_defaults_the_landing_url(detail: type[ClaveSessionDetail]) -> None:
     """The shared happy path still holds after the factoring."""
     record = detail(dni_nie=_DNI_NIE)
 
@@ -197,7 +203,7 @@ def test_movil_session_detail_keeps_its_provider_specific_fields() -> None:
         pytest.param(ClavePermanenteLoginAssertionDetail, id="permanente"),
     ],
 )
-def test_login_assertion_detail_defaults_to_no_live_cookie(detail: type) -> None:
+def test_login_assertion_detail_defaults_to_no_live_cookie(detail: type[ClaveLoginAssertionDetail]) -> None:
     """The cookie signal defaults closed on both providers."""
     record = detail()
 
@@ -214,7 +220,7 @@ def test_login_assertion_detail_defaults_to_no_live_cookie(detail: type) -> None
         pytest.param(ClavePermanenteLoginAssertionDetail, id="permanente-assertion"),
     ],
 )
-def test_details_stay_strict_and_frozen(detail: type) -> None:
+def test_details_stay_strict_and_frozen(detail: type[BaseModel]) -> None:
     """Inheriting the shared base must not relax the strict-frozen config."""
     assert detail.model_config.get("frozen") is True
     assert detail.model_config.get("extra") == "forbid"

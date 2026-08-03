@@ -39,14 +39,16 @@ def test_registry_contract_issue_uses_base_severity_but_refuses_info() -> None:
 
     assert issue.severity is BaseSeverity.WARNING
     with pytest.raises(ValueError, match="Input should be"):
-        UserProfileRegistryContractIssue(
-            severity=BaseSeverity.INFO,
-            modelo_id="303",
-            revision_id="2025",
-            surface="binding",
-            construct_id="binding-iva-regime",
-            selector="iva.regime",
-            message="informational findings are not part of this contract",
+        UserProfileRegistryContractIssue.model_validate(
+            {
+                "severity": BaseSeverity.INFO,
+                "modelo_id": "303",
+                "revision_id": "2025",
+                "surface": "binding",
+                "construct_id": "binding-iva-regime",
+                "selector": "iva.regime",
+                "message": "informational findings are not part of this contract",
+            },
         )
 
 

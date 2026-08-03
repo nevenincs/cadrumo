@@ -315,6 +315,9 @@ class _IvaStrictFrozen(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
+IvaStrictFrozen = _IvaStrictFrozen
+
+
 class _IvaStrictMutable(BaseModel):
     """Strict validation mixin with mutable config for incrementally populated catalogues."""
 
@@ -513,7 +516,7 @@ class IvaCatalogue(_IvaStrictMutable):
         return self
 
     @override
-    def __iter__(self) -> Iterator[IvaRegulation]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[IvaRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields IvaRegulation records, not BaseModel field-value tuples
         """Iterate over every loaded :class:`IvaRegulation`."""
         return iter(self.regulations.values())
 

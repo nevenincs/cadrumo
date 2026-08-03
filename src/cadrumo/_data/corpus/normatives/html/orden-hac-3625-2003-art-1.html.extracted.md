@@ -1,4 +1,5 @@
-Primero.
+# Primero.
+
 Primero. Aprobación del modelo 309.
 Uno. Se aprueba el modelo 309 «Declaración-liquidación no periódica del Impuesto sobre el Valor Añadido», que figura como anexo I en la presente Orden y que consta de cuatro ejemplares: Ejemplar para el sujeto pasivo, Ejemplar para la Administración, Ejemplar para la entidad colaboradora y Ejemplar para la matriculación. El número de justificante que habrá de figurar en dicho modelo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 305.
 Asimismo, se aprueba el sobre que figura como anexo II en la presente Orden.

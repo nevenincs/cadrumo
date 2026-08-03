@@ -266,7 +266,7 @@ def _read_xlsx_rows(path: Path) -> Iterator[tuple[int, Mapping[str, object]]]:
                 context={"missing_columns": ", ".join(sorted(missing_required))},
             )
         for row_number, row in enumerate(rows_iter, start=2):  # header is row 1
-            if row is None or not any(cell is not None and str(cell).strip() for cell in row):
+            if not any(cell is not None and str(cell).strip() for cell in row):
                 continue
             raw_row: dict[str, object] = {}
             for index, header in enumerate(headers):

@@ -210,18 +210,21 @@ def test_enum_consumed_binding_ids_ignores_retired_irnr_six_arg_country_arg() ->
 
     revision = _m210_2025_revision()
     formula = next(formula for formula in revision.formulas if formula.id == _M210_RATE_FORMULA_ID)
-    retired_expression = FormulaExpression.model_validate(
-        {
-            "op": "irnr_resolve_tipo_gravamen",
-            "args": (
-                {"casilla_id": "tipo_renta"},
-                {"casilla_id": "base_imponible"},
-                {"parameter": "m210-tipo-gravamen-2025"},
-                {"parameter": "m210-convenio-rates"},
-                {"parameter": "m210-pension-tarifa-2025"},
-                {"binding": _M210_COUNTRY_BINDING},
-            ),
-        }
+    # FormulaExpression.model_validate() now enforces op arity centrally
+    # (require_formula_operator_arity, at construction), so this retired
+    # 6-arg shape can no longer be built via normal validation.
+    # model_construct() bypasses that model-level validator so the retired
+    # shape can still be exercised here.
+    retired_expression = FormulaExpression.model_construct(
+        op="irnr_resolve_tipo_gravamen",
+        args=(
+            FormulaExpression.model_validate({"casilla_id": "tipo_renta"}),
+            FormulaExpression.model_validate({"casilla_id": "base_imponible"}),
+            FormulaExpression.model_validate({"parameter": "m210-tipo-gravamen-2025"}),
+            FormulaExpression.model_validate({"parameter": "m210-convenio-rates"}),
+            FormulaExpression.model_validate({"parameter": "m210-pension-tarifa-2025"}),
+            FormulaExpression.model_validate({"binding": _M210_COUNTRY_BINDING}),
+        ),
     )
     retired_formula = formula.model_copy(update={"expression": retired_expression})
     retired_revision = revision.model_copy(update={"formulas": (retired_formula,)})

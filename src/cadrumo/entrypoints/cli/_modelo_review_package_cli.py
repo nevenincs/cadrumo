@@ -284,7 +284,14 @@ def review_package_build(
     resolved_actor = actor or resolve_default_actor()
     work_unit = load_work_unit(selected_revision.work_unit_id)
 
-    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-draft-") as staging_name:
+    # Pin staging beside the final destination rather than the OS-shared
+    # temp directory: the fichero-BOE draft staged here is plaintext filing
+    # data (``sensitive-financial-data-secure-storage-only``). ``mkdir``
+    # runs before ``TemporaryDirectory`` because the latter requires ``dir``
+    # to already exist; a destination whose parent cannot be created refuses
+    # loudly here rather than silently falling back to the OS temp dir.
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-draft-", dir=output.parent) as staging_name:
         draft_path = Path(staging_name) / "draft.fichero-boe"
         try:
             export_result = export_modelo_revision(

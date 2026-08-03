@@ -155,8 +155,8 @@ class InventoryStockLayerPayload(OutputSchema):
     """One :class:`StockLayer` transport row."""
 
     sku: str = Field(default="default", min_length=1)
-    quantity: _PositiveQuantity  # type: ignore[valid-type]
-    unit_cost: _NonNegativeAmount  # type: ignore[valid-type]
+    quantity: _PositiveQuantity  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    unit_cost: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     source_movement_id: str = Field(min_length=1)
 
 
@@ -165,14 +165,14 @@ class InventoryMovementPayload(OutputSchema):
 
     movement_id: str = Field(min_length=1)
     movement_date: IsoDateText
-    kind: _MovementKindText  # type: ignore[valid-type]
+    kind: _MovementKindText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     sku: str = Field(default="default", min_length=1)
-    quantity: _PositiveQuantity  # type: ignore[valid-type]
-    unit_cost: _NonNegativeAmount | None = None  # type: ignore[valid-type]
-    taxable_base: _NonNegativeAmount | None = None  # type: ignore[valid-type]
-    iva_rate: _IvaRatePct  # type: ignore[valid-type]
-    iva_amount: _NonNegativeAmount | None = None  # type: ignore[valid-type]
-    deductible_iva_ratio: _DeductibleRatio  # type: ignore[valid-type]
+    quantity: _PositiveQuantity  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    unit_cost: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    taxable_base: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    iva_rate: _IvaRatePct  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    iva_amount: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    deductible_iva_ratio: _DeductibleRatio  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     schema_version: _InventorySchemaVersion
 
 
@@ -186,10 +186,10 @@ class InventoryLedgerPayload(OutputSchema):
 
     actividad_id: str = Field(min_length=1)
     year: int = Field(ge=1900)
-    valuation_method: _ValuationMethodText  # type: ignore[valid-type]
-    opening_stock: _NonNegativeAmount  # type: ignore[valid-type]
+    valuation_method: _ValuationMethodText  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
+    opening_stock: _NonNegativeAmount  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     opening_layers: list[InventoryStockLayerPayload] = []
-    closing_stock: _NonNegativeAmount | None = None  # type: ignore[valid-type]
+    closing_stock: _NonNegativeAmount | None = None  # type: ignore[valid-type]  # TYPE-IGNORE-RATIONALE-DYNAMIC-BOUNDED-DECIMAL: dynamically constructed wire-text type mypy cannot statically validate as a field annotation
     period_movements: list[InventoryMovementPayload] = []
     schema_version: _InventorySchemaVersion
     bucket_event_ids: list[str] = []

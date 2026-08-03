@@ -36,12 +36,16 @@ from ...domain.period import calculation_filing_date
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..calculations import IvaWalletDecisionRepository
 from ..live import Borrador100SnapshotRepository
-from . import _iva_wallet_gate
 from ._action_errors import ModeloAggregationBindingError
 from ._calculation_helpers import load_work_unit_for_calculation as _load_work_unit_for_calculation
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._calculation_resolution import ResolvedCalculationChannels
 from ._calculation_resolution import resolve_calculation_binding_channels as _resolve_calculation_binding_channels
+from ._iva_wallet_gate import (
+    apply_iva_compensation_decision_binding,
+    resolve_iva_compensation_decision_for_calculation,
+    taxpayer_nif_for_bucket,
+)
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._required_binding_gate import (
     require_modelo_required_bindings_resolved as _require_modelo_required_bindings_resolved,
@@ -50,9 +54,8 @@ from ._required_binding_gate import (
     resolved_required_profile_binding_values as _resolved_required_profile_binding_values,
 )
 
-_apply_iva_compensation_decision_binding = _iva_wallet_gate.apply_iva_compensation_decision_binding
-_taxpayer_nif_for_bucket = _iva_wallet_gate.taxpayer_nif_for_bucket
-resolve_iva_compensation_decision_for_calculation = _iva_wallet_gate.resolve_iva_compensation_decision_for_calculation
+_apply_iva_compensation_decision_binding = apply_iva_compensation_decision_binding
+_taxpayer_nif_for_bucket = taxpayer_nif_for_bucket
 
 
 @dataclass(frozen=True, slots=True)
@@ -397,3 +400,7 @@ def _m200_accounting_ledger_transaction_count(
         if period.contains(effective_date):
             count += 1
     return count
+
+
+IVA_LEDGER_EXEMPT_REGIMES = _IVA_LEDGER_EXEMPT_REGIMES
+raise_if_ledger_preflight_blocks_calculation = _raise_if_ledger_preflight_blocks_calculation

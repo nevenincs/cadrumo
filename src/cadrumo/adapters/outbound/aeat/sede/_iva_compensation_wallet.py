@@ -843,7 +843,7 @@ def prune_wallet_diagnostic_dumps(
     return removed
 
 
-def _landed_wallet_url(page: Page) -> str:
+def _landed_wallet_url(page: object) -> str:
     """Return the wallet URL naming the host that actually served this read.
 
     AEAT dispatches an authenticated session to one of its numbered sede

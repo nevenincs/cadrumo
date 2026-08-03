@@ -31,14 +31,26 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from . import _formula_runtime_ops as _ops
 from ._errors import RegistryValidationError
-from ._formula_runtime_ops import numeric_casilla_value as _numeric_casilla_value
+from ._formula_runtime_ops import (
+    numeric_casilla_value as _numeric_casilla_value,
+)
+from ._formula_runtime_ops import (
+    resolve_bracket as _resolve_bracket,
+)
+from ._formula_runtime_ops import (
+    resolve_keyed_bracket as _resolve_keyed_bracket,
+)
+from ._formula_runtime_ops import (
+    resolve_scalar_parameter as _resolve_scalar_parameter,
+)
 from ._ids import CasillaId, ParameterId
 from ._schema import FormulaExpression
 
 if TYPE_CHECKING:
-    from ._formula_runtime import _EvalContext
+    from ._formula_runtime import EvalContext
+
+    _EvalContext = EvalContext
 
 _ZERO = Decimal("0")
 
@@ -161,7 +173,7 @@ def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _Ev
         units = _numeric_casilla_value(modulo_casilla_id, ctx)
         if units == _ZERO:
             continue
-        coefficient = _ops.resolve_keyed_bracket(
+        coefficient = _resolve_keyed_bracket(
             parameter,
             key=f"{epigrafe}:{modulo_index}",
             filing_year=ctx.filing_year,
@@ -295,7 +307,7 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     ctx.operand_refs.append(args.coefficient_parameter)
     if not epigrafe or coefficient_parameter is None:
         return _ZERO
-    modulo_1_coefficient = _ops.resolve_keyed_bracket(
+    modulo_1_coefficient = _resolve_keyed_bracket(
         coefficient_parameter,
         key=f"{epigrafe}:1",
         filing_year=ctx.filing_year,
@@ -306,7 +318,7 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     actual = _numeric_casilla_value(args.modulo_1_actual_casilla_id, ctx)
     anterior = _numeric_casilla_value(args.modulo_1_anterior_casilla_id, ctx)
     incremento = actual - anterior if anterior > _ZERO and actual > anterior else _ZERO
-    incremento_rate = _ops.resolve_scalar_parameter(
+    incremento_rate = _resolve_scalar_parameter(
         args.incremento_rate_parameter,
         ctx,
         op="m131_resolve_modulos_minoracion_empleo",
@@ -318,7 +330,7 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     if tramos_parameter is None or base_tramos <= _ZERO:
         coeficiente_tramos = _ZERO
     else:
-        coeficiente_tramos = _ops.resolve_bracket(tramos_parameter, base_tramos, ctx.date_context)
+        coeficiente_tramos = _resolve_bracket(tramos_parameter, base_tramos, ctx.date_context)
         ctx.operand_values.append(coeficiente_tramos)
     coeficiente_minoracion = coeficiente_incremento + coeficiente_tramos
     return coeficiente_minoracion * modulo_1_coefficient
@@ -430,11 +442,11 @@ def evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, c
     ctx.operand_refs.append(args.cuantia_parameter)
     if not epigrafe or cuantia_parameter is None or minorado <= _ZERO:
         return minorado
-    cuantia = _ops.resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
+    cuantia = _resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
     if cuantia is None or minorado <= cuantia:
         return minorado
     ctx.operand_values.append(cuantia)
-    indice = _ops.resolve_scalar_parameter(
+    indice = _resolve_scalar_parameter(
         args.indice_exceso_parameter,
         ctx,
         op="m131_resolve_modulos_indice_exceso",
@@ -636,10 +648,10 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
         cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
         ctx.operand_refs.append(args.cuantia_parameter)
         if cuantia_parameter is not None and rendimiento > _ZERO:
-            cuantia = _ops.resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
+            cuantia = _resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
             if cuantia is not None and rendimiento > cuantia:
                 ctx.operand_values.append(cuantia)
-                indice = _ops.resolve_scalar_parameter(
+                indice = _resolve_scalar_parameter(
                     args.indice_exceso_parameter,
                     ctx,
                     op="m131_resolve_modulos_indices_generales",

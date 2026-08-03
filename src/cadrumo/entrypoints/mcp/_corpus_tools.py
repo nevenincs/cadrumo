@@ -88,7 +88,7 @@ class CorpusSearchPayload(BaseModel):
     citation: CorpusCitationResult | None = None
 
     @model_validator(mode="after")
-    def _mode_and_result_agree(self) -> "CorpusSearchPayload":
+    def _mode_and_result_agree(self) -> CorpusSearchPayload:
         if self.mode is RetrievalMode.CITATION:
             if self.citation is None:
                 raise ValueError("a CITATION payload must carry a citation")
@@ -199,7 +199,7 @@ def build_corpus_search_tool() -> Tool:
             "Returns ranked hits with a verbatim snippet and a cadrumo://corpus/{ref} URI "
             "resolving the full authoritative text; an exact citation id resolves directly."
         ),
-        inputSchema={
+        input_schema={
             "type": "object",
             "properties": {
                 "query": {
@@ -218,9 +218,9 @@ def build_corpus_search_tool() -> Tool:
         },
         annotations=ToolAnnotations(
             title="Search the legal corpus",
-            readOnlyHint=True,
-            destructiveHint=False,
-            idempotentHint=True,
+            read_only_hint=True,
+            destructive_hint=False,
+            idempotent_hint=True,
         ),
     )
 

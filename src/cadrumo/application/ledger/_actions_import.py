@@ -55,12 +55,22 @@ from ...domain.transactions import (
 )
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._actions_common import (
-    _append_bucket_events,
-    _bucket_event_repository,
-    _build_bucket_event,
-    _normalise_timestamp,
-    _save_transaction_catalogue_and_events,
-    _transaction_repository,
+    bucket_event_repository as _bucket_event_repository,
+)
+from ._actions_common import (
+    build_bucket_event as _build_bucket_event,
+)
+from ._actions_common import (
+    normalise_timestamp as _normalise_timestamp,
+)
+from ._actions_common import (
+    persist_bucket_events as _append_bucket_events,
+)
+from ._actions_common import (
+    save_transaction_catalogue_and_events as _save_transaction_catalogue_and_events,
+)
+from ._actions_common import (
+    transaction_repository as _transaction_repository,
 )
 from ._models import (
     LedgerImportDiagnosticReport,
@@ -604,3 +614,6 @@ def _import_batch_id(
         separators=(",", ":"),
     ).encode("utf-8")
     return sha256_hex(encoded)
+
+
+apply_fx_conversion = _apply_fx_conversion

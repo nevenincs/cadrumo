@@ -21,18 +21,17 @@ import logging
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import date
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Final, override
 
 from pydantic import BeforeValidator, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import (
     BaseSettings,
-    DotEnvSettingsSource,
     EnvSettingsSource,
     PydanticBaseSettingsSource,
     SettingsConfigDict,
 )
-from pydantic_settings.sources import EnvPrefixTarget
 
 from . import _config_live_tests as _live_test_config
 from ._auth_provider import AuthProviderKind as _AuthProviderKind
@@ -84,7 +83,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # Project root: four levels up from src/cadrumo/core/config.py
 # (file → core/ → cadrumo/ → src/ → REPO_ROOT).
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"
 """Shared development/test password for database-backed secure-storage tests."""
 DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "CADRUMO_DEV_TEST_DATABASE_PASSWORD"
@@ -97,9 +95,11 @@ LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_O
 
 _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     # Every output directory whose default is not an explicit operator override
-    # derives from ``cadrumo_local_storage_root`` under one category taxonomy, so
-    # a checkout keeps everything under ``PROJECT_ROOT/var/storage`` while an
-    # installed run keeps it under the platform user-data root. The value is the
+    # derives from ``cadrumo_local_storage_root`` under one category taxonomy.
+    # That root is the platform user-data location in every run mode: a source
+    # checkout no longer redirects it, and a developer who wants the store
+    # inside their checkout says so with ``CADRUMO_LOCAL_STORAGE_ROOT``. The
+    # value is the
     # POSIX-style relative subpath under the root; ``cache/`` is the sole on-disk
     # category prefix (the encrypted-state substrate, diagnostic logs, and
     # durable outputs keep bare, self-describing leaf names, matching the
@@ -132,6 +132,13 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_runs_dir": "runs",
     "cadrumo_justificantes_dir": "justificantes",
     "cadrumo_filing_history_dir": "filing-history",
+    # Live AEAT read-evidence roots. Previously hardcoded as CLI option defaults
+    # (``var/cadrumo/...``), which placed regulated filing evidence outside this
+    # taxonomy AND outside operator control: no override reached them because
+    # they were never settings at all.
+    "cadrumo_filed_declarations_dir": "filed-declarations",
+    "cadrumo_iva_compensation_history_dir": "live/iva-compensation-history",
+    "cadrumo_iva_read_evidence_dir": "live/iva-read-evidence",
     # Financial file-envelope catalogues and the registry parity-tape archive
     # (declared by the integration-fields mixin). The parity archive nests under
     # the derived audit directory, matching its historical layout.
@@ -167,24 +174,7 @@ def _without_severed_names(env_vars: Mapping[str, str | None]) -> dict[str, str 
 
 
 class _CadrumoEnvSettingsSource(EnvSettingsSource):
-    """Ignore severed names in the process environment.
-
-    The dotenv sibling below filters the same set; both are needed because a
-    name present in either source would otherwise repopulate the field.
-    """
-
-    @override
-    def __call__(self) -> dict[str, Any]:
-        original_env_vars = self.env_vars
-        self.env_vars = _without_severed_names(original_env_vars)
-        try:
-            return super().__call__()
-        finally:
-            self.env_vars = original_env_vars
-
-
-class _CadrumoDotEnvSettingsSource(DotEnvSettingsSource):
-    """Ignore former product dotenv keys without relaxing unknown-key checks."""
+    """Ignore severed names in the process environment."""
 
     @override
     def __call__(self) -> dict[str, Any]:
@@ -197,10 +187,13 @@ class _CadrumoDotEnvSettingsSource(DotEnvSettingsSource):
 
 
 class Settings(CadrumoMcpServingSettings):
-    """Application settings populated from environment variables and ``.env``.
+    """Application settings populated from process environment variables.
 
     Field names map directly to env var names (uppercased). For example,
-    ``aeat_base_url`` reads ``AEAT_BASE_URL``. The model is declarative: it
+    ``aeat_base_url`` reads ``AEAT_BASE_URL``. There is no ``.env`` file
+    support: the process environment is the sole external override channel,
+    alongside the in-process ``init_settings`` source that ``--profile`` and
+    :func:`override_settings` write through. The model is declarative: it
     carries operator choices, timeouts, storage roots, live-read opt-ins, and
     provider selectors, but does not open secret stores, build outbound
     providers, or execute AEAT browser flows.
@@ -213,8 +206,6 @@ class Settings(CadrumoMcpServingSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=PROJECT_ROOT / "env" / ".env",
-        env_file_encoding="utf-8",
         env_ignore_empty=True,
     )
 
@@ -228,15 +219,19 @@ class Settings(CadrumoMcpServingSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
-        """Keep the hard-cut dotenv filter while preserving strict unknown-key validation.
+        """Sever forbidden names from the process environment; no dotenv source.
 
-        Both environment sources are replaced by filtering subclasses so a
-        severed name (see :data:`_NON_ENVIRONMENT_SELECTION_NAMES`) cannot
-        reach the model from the process environment or the dotenv file.
-        ``init_settings`` is deliberately untouched: it is the in-process
-        channel ``--profile`` and :func:`override_settings` write through.
+        There is no ``.env`` support: production configuration comes from the
+        process environment only. ``env_settings`` is replaced by a filtering
+        subclass so a severed name (see :data:`_NON_ENVIRONMENT_SELECTION_NAMES`)
+        cannot reach the model from the process environment.
+        ``dotenv_settings`` is accepted because ``pydantic_settings`` always
+        constructs it, but it is never returned: no source reads a dotenv
+        file. ``init_settings`` is deliberately untouched: it is the
+        in-process channel ``--profile`` and :func:`override_settings` write
+        through.
         """
-        assert isinstance(dotenv_settings, DotEnvSettingsSource)
+        del dotenv_settings
         assert isinstance(env_settings, EnvSettingsSource)
         filtered_env_settings = _CadrumoEnvSettingsSource(
             settings_cls,
@@ -248,42 +243,14 @@ class Settings(CadrumoMcpServingSettings):
             env_parse_none_str=env_settings.env_parse_none_str,
             env_parse_enums=env_settings.env_parse_enums,
         )
-        env_prefix_target: EnvPrefixTarget
-        match dotenv_settings.env_prefix_target:
-            case "variable":
-                env_prefix_target = "variable"
-            case "alias":
-                env_prefix_target = "alias"
-            case "all":
-                env_prefix_target = "all"
-            case invalid_target:
-                raise CoreValidationError(f"invalid environment prefix target: {invalid_target!r}")
-        filtered_dotenv_settings = _CadrumoDotEnvSettingsSource(
-            settings_cls,
-            env_file=dotenv_settings.env_file,
-            env_file_encoding=dotenv_settings.env_file_encoding,
-            case_sensitive=dotenv_settings.case_sensitive,
-            env_prefix=dotenv_settings.env_prefix,
-            env_prefix_target=env_prefix_target,
-            env_nested_delimiter=dotenv_settings.env_nested_delimiter,
-            env_nested_max_split=dotenv_settings.env_nested_max_split,
-            env_ignore_empty=dotenv_settings.env_ignore_empty,
-            env_parse_none_str=dotenv_settings.env_parse_none_str,
-            env_parse_enums=dotenv_settings.env_parse_enums,
-        )
-        if _operator_dotenv_suppressed.get():
-            # A sandboxed scope behaves as if no operator dotenv existed
-            # (see suppress_operator_dotenv); ambient env vars are the
-            # scope owner's concern, so only the dotenv source is dropped.
-            return init_settings, filtered_env_settings, file_secret_settings
-        return init_settings, filtered_env_settings, filtered_dotenv_settings, file_secret_settings
+        return init_settings, filtered_env_settings, file_secret_settings
 
     # ── Token Storage ───────────────────────────────────────────────────────
     cadrumo_token_dir: Path = Field(
-        default=PROJECT_ROOT,
+        default=Path("tokens"),
         description=(
             "Directory for cached authentication token and lock files. The "
-            "``PROJECT_ROOT`` default here is a placeholder: when the field "
+            "the relative default here is a placeholder: when the field "
             "is not explicitly set, the model validator roots it at "
             "``<cadrumo_local_storage_root>/tokens`` so every profile store, "
             "token and lock files included, lives under one state root. An "
@@ -349,7 +316,7 @@ class Settings(CadrumoMcpServingSettings):
         ),
     )
     cadrumo_storage_backup_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "backups",
+        default=Path("backups"),
         description="Directory where the storage layer writes database backups",
     )
     cadrumo_secret_store_backend: SecretStoreBackend = Field(
@@ -382,7 +349,7 @@ class Settings(CadrumoMcpServingSettings):
         ),
     )
     cadrumo_secret_store_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "secrets",
+        default=Path("secrets"),
         description="Directory for the encrypted secret-store master-key file and ciphertext records",
     )
     cadrumo_dev_test_database_password: SecretStr = Field(
@@ -390,11 +357,11 @@ class Settings(CadrumoMcpServingSettings):
         description="Development/test-only password used by secure-storage subprocess tests.",
     )
     cadrumo_blob_store_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "blobs",
+        default=Path("blobs"),
         description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
     )
     cadrumo_audit_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "audit",
+        default=Path("audit"),
         description="Directory for the governed audit sink (redacted, classification-aware)",
     )
 
@@ -414,7 +381,7 @@ class Settings(CadrumoMcpServingSettings):
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
             "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
             "paired with a `.meta.json` sidecar. The default is installed-run aware: a "
-            "source checkout resolves to `PROJECT_ROOT/var/storage`, while an installed "
+            "source checkout resolves to the checkout's `var/storage`, while an installed "
             "distribution roots at the platform user-data directory "
             "(`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` or "
             "`~/Library/Application Support/cadrumo/storage`) so the encrypted store never "
@@ -576,14 +543,14 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Registry corpus-text validation cache ───────────────────────────────
     cadrumo_corpus_text_cache_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "cache" / "corpus-text",
+        default=Path("cache") / "corpus-text",
         description=(
             "Directory for the registry corpus source-text validation cache "
             "(normalised text keyed by content fingerprint)"
         ),
     )
     cadrumo_validation_verdict_cache_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "cache" / "registry-verdict",
+        default=Path("cache") / "registry-verdict",
         description=(
             "Directory for the persistent registry-validation verdict cache "
             "(a fingerprint-keyed proof that validate_registry ran green, so a "
@@ -899,17 +866,17 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Submission engine ───────────────────────────────────────────────────
     cadrumo_submissions_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "submissions",
+        default=Path("submissions"),
         description="Directory where ModeloPresentado JSON audit records are persisted",
     )
 
     # ── Notifications inbox ─────────────────────────────────────────────────
     cadrumo_inbox_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "inbox",
+        default=Path("inbox"),
         description="Directory where the persisted Inbox JSON file lives",
     )
     cadrumo_inbox_pdf_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "inbox" / "pdfs",
+        default=Path("inbox") / "pdfs",
         description="Directory where downloaded notification PDFs are stored",
     )
     cadrumo_inbox_alert_lead_days: int = Field(
@@ -922,12 +889,12 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Workflow engine ─────────────────────────────────────────────────────
     cadrumo_workflow_runs_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "workflow-runs",
+        default=Path("workflow-runs"),
         description="Directory where WorkflowResult JSON audit records are persisted",
     )
     # ── Filing draft engine ─────────────────────────────────────────────────
     cadrumo_drafts_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "drafts",
+        default=Path("drafts"),
         description="Directory where filing drafts are written as JSON files",
     )
     cadrumo_draft_fail_on_warning: bool = Field(
@@ -949,7 +916,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Status reader ───────────────────────────────────────────────────────
     cadrumo_status_cache_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "status-cache",
+        default=Path("status-cache"),
         description="Directory for the short-lived AEAT status-page cache",
     )
     cadrumo_status_cache_ttl_s: int = Field(
@@ -975,7 +942,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Observability ──────────────────────────────────────────────────────
     cadrumo_runs_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "runs",
+        default=Path("runs"),
         description=(
             "Directory where run traces and JSONL event logs are persisted "
             "(one subdirectory per run_id, containing trace.json + events.jsonl)"
@@ -993,8 +960,29 @@ class Settings(CadrumoMcpServingSettings):
     )
     # ── Justificante parser ─────────────────────────────────────────────────
     cadrumo_justificantes_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "justificantes",
+        default=Path("justificantes"),
         description="Directory where parsed justificante PDFs and metadata are stored",
+    )
+    cadrumo_filed_declarations_dir: Path = Field(
+        default=Path("filed-declarations"),
+        description=(
+            "Directory for filed-declaration observations captured from AEAT. "
+            "Derived under cadrumo_local_storage_root unless explicitly set."
+        ),
+    )
+    cadrumo_iva_compensation_history_dir: Path = Field(
+        default=Path("live") / "iva-compensation-history",
+        description=(
+            "Directory for Modelo 303 compensation-history capture reports. "
+            "Derived under cadrumo_local_storage_root unless explicitly set."
+        ),
+    )
+    cadrumo_iva_read_evidence_dir: Path = Field(
+        default=Path("live") / "iva-read-evidence",
+        description=(
+            "Directory for IVA remote-state read-evidence reports. "
+            "Derived under cadrumo_local_storage_root unless explicitly set."
+        ),
     )
     cadrumo_justificante_parser_backend: JustificanteParserBackendSetting = Field(
         default=JustificanteParserBackendSetting.PDFPLUMBER,
@@ -1003,7 +991,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Filing history ──────────────────────────────────────────────────────
     cadrumo_filing_history_dir: Path = Field(
-        default=PROJECT_ROOT / "var" / "filing-history",
+        default=Path("filing-history"),
         description="Directory where the persisted ModeloHistory JSON file lives",
     )
     cadrumo_filing_history_cache_ttl_s: int = Field(
@@ -1113,11 +1101,11 @@ class Settings(CadrumoMcpServingSettings):
         blob, audit), the append-only telemetry logs, the regenerable caches,
         and the durable generated-output directories all default to a subpath
         under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, per
-        the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy. A checkout keeps them under
-        ``PROJECT_ROOT/var/storage``; an installed run keeps them under the
-        platform user-data root — never inside a virtualenv or uv cache, which
-        is the hazard a ``PROJECT_ROOT/var/...`` default carries on an installed
-        distribution.
+        the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy. That root is the platform
+        user-data location in every run mode, never inside a virtualenv or uv
+        cache — the hazard a checkout-relative ``var/...`` default carries on
+        an installed distribution. A developer who wants the tree inside their
+        checkout sets ``CADRUMO_LOCAL_STORAGE_ROOT``.
 
         An explicit per-field env override (``CADRUMO_TOKEN_DIR``,
         ``CADRUMO_RUNS_DIR``, …) or a value supplied via an ``override_settings``
@@ -1277,11 +1265,14 @@ class Settings(CadrumoMcpServingSettings):
         "cadrumo_justificantes_dir",
         "cadrumo_filing_history_dir",
         "cadrumo_wallet_diagnostic_dump_dir",
+        "cadrumo_filed_declarations_dir",
+        "cadrumo_iva_compensation_history_dir",
+        "cadrumo_iva_read_evidence_dir",
         mode="after",
     )
     @classmethod
     def _normalize_repo_relative_paths(cls, value: Path | None) -> Path | None:
-        """Anchor repo-relative path settings to ``PROJECT_ROOT``."""
+        """Anchor repo-relative path settings to the application data root."""
         return normalize_project_relative_path(value)
 
 
@@ -1289,36 +1280,6 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
     "_settings_override",
     default=None,
 )
-
-_operator_dotenv_suppressed: contextvars.ContextVar[bool] = contextvars.ContextVar(
-    "_operator_dotenv_suppressed",
-    default=False,
-)
-"""Scope flag consulted by ``Settings.settings_customise_sources``: when
-set, every :class:`Settings` construction skips the operator dotenv source."""
-
-
-@contextmanager
-def suppress_operator_dotenv() -> Iterator[None]:
-    """Construct every :class:`Settings` in scope as if no operator dotenv existed.
-
-    Sandboxed execution scopes (the docs cli-sequence sandbox, hermetic test
-    environments) must never observe operator machine state. The sandbox
-    scrubs the ambient environment itself; this seam closes the second
-    channel — the project-root ``env/.env`` dotenv, which pydantic-settings
-    loads via an ABSOLUTE path regardless of the working directory. The flag
-    is honoured inside ``Settings.settings_customise_sources``, so every
-    construction path (:func:`load_settings` and direct ``Settings()``
-    instantiation) drops the dotenv source for the scope's duration.
-    Context-var scoped and DEFAULT-OFF: production behaviour is unchanged,
-    exactly like the :func:`~cadrumo.core.time.frozen_clock` seam this
-    mirrors.
-    """
-    token = _operator_dotenv_suppressed.set(True)
-    try:
-        yield
-    finally:
-        _operator_dotenv_suppressed.reset(token)
 
 
 def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
@@ -1347,17 +1308,151 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
     return settings_for_bucket_route(bucket_id, source or load_settings())
 
 
+def _active_profile_pointer_fingerprint() -> tuple[object, ...]:
+    """Identify the current active-profile pointer without parsing it.
+
+    Settings construction is not a pure function of the environment: when
+    ``cadrumo_database_url`` is unset, the post-validator below reads the
+    ``active-profile`` pointer file and derives the bucket's database route
+    from it. That makes the pointer a construction INPUT, and it moves
+    whenever ``config login``/``logout`` writes it — inside a live process,
+    for a long-running TUI or MCP session.
+
+    Holding one settings instance across such a switch would keep serving the
+    previous profile's database route, so the pointer's identity is folded
+    into the cache key. A stat is roughly four orders of magnitude cheaper
+    than the construction it guards, so correctness here costs nothing worth
+    measuring. A missing pointer is a distinct, legitimate state (logged out)
+    and gets its own key.
+    """
+    import os
+
+    root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT") or str(default_storage_root())
+    pointer = Path(root) / "active-profile"
+    try:
+        stat = pointer.stat()
+    except OSError:
+        return (root, None)
+    return (root, stat.st_mtime_ns, stat.st_size)
+
+
+@lru_cache(maxsize=8)
+def _constructed_settings(_pointer_fingerprint: tuple[object, ...]) -> Settings:
+    """Build the settings for one active-profile pointer state and hold them.
+
+    Construction is expensive out of proportion to what it produces: the model
+    validates 92 fields and resolves 28 configured paths, and on Windows each
+    of those resolutions is a filesystem round trip. Measured on a developer
+    machine it costs roughly 300 ms, and :func:`load_settings` is called from
+    over two hundred production sites — around ten times for a single profile
+    field edit, which is how a keystroke came to cost seconds.
+
+    The argument is not read; it is the cache key. Keying on the pointer keeps
+    the hold from outliving a bucket switch, which is what the profile-bucket
+    lifecycle requires of any cache that could otherwise strand a stale route.
+    A handful of entries is enough for the few profiles one process touches.
+
+    Tests that exercise environment parsing construct :class:`Settings`
+    directly and so never reach this cache; tests that need different values
+    use :func:`override_settings`, which is consulted ahead of it.
+    """
+    return Settings()
+
+
+def reset_settings_cache() -> None:
+    """Drop every held settings instance so the next load rebuilds.
+
+    The pointer key already covers profile switches. This is for the rare
+    caller that changes the process environment and needs it observed;
+    prefer :func:`override_settings`, which scopes the change to a block and
+    does not disturb the cache at all.
+    """
+    _constructed_settings.cache_clear()
+
+
+def ensure_storage_tree(settings: Settings | None = None) -> Path:
+    """Materialise the state root and its declared directories, and return the root.
+
+    :data:`_STATE_ROOT_DERIVED_DIRS` declares where every derived output
+    lands, and the validator above turns those declarations into absolute
+    paths -- but nothing built them. Directories appeared only when some
+    consumer happened to write: the local provider made its root on first
+    write, the journal repository made its own, bucket provisioning made a
+    bucket's tree. A fresh machine therefore held whichever subset of the
+    taxonomy had been reached, and "where does my data live" had no answer
+    that could be given before the fact.
+
+    This is that answer. It creates the root and every declared directory,
+    returns the root, and is safe to call repeatedly -- so a caller that
+    needs the tree can say so, instead of relying on having written
+    something first.
+
+    Restrictive permissions are requested on the root because the tree holds
+    encrypted taxpayer records, their key material, and the audit trail over
+    both. Platforms that do not implement POSIX modes ignore it, which is why
+    this asks rather than verifies; on such a host the filesystem's own
+    access control is the boundary.
+
+    Args:
+        settings: Settings to read the taxonomy from. Defaults to
+            :func:`load_settings`.
+
+    Returns:
+        The state root, guaranteed to exist when this returns.
+
+    Raises:
+        CoreValidationError: When the root or one of its directories cannot
+            be created, or a path in the taxonomy is occupied by a file. The
+            refusal names the offending path: a half-built tree is worse than
+            an absent one, because the gap only surfaces later, at a write.
+    """
+    resolved = settings if settings is not None else load_settings()
+    root = Path(resolved.cadrumo_local_storage_root)
+
+    targets = [root]
+    for field_name, _subpath in _STATE_ROOT_DERIVED_DIRS.items():
+        value = getattr(resolved, field_name, None)
+        if value is None:
+            continue
+        candidate = Path(value)
+        # The taxonomy names one file among the directories
+        # (``cadrumo_usage_ratios_path``). Its field name says so, and the
+        # directory that has to exist is its parent -- creating the leaf
+        # itself would put a directory where a JSON document belongs.
+        targets.append(candidate.parent if field_name.endswith("_path") else candidate)
+
+    for target in targets:
+        if target.exists() and not target.is_dir():
+            raise CoreValidationError(
+                f"Cadrumo state directory {target} is occupied by a file; "
+                "the storage tree cannot be materialised over it.",
+            )
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            raise CoreValidationError(
+                f"Cadrumo could not create the state directory {target}: {exc}",
+            ) from exc
+
+    try:
+        root.chmod(0o700)
+    except (OSError, NotImplementedError):  # pragma: no cover - platform-dependent
+        _LOGGER.debug("could not restrict permissions on %s; relying on filesystem ACLs", root)
+
+    return root
+
+
 def load_settings() -> Settings:
     """Return the effective :class:`Settings` instance.
 
     Context-local overrides installed by :func:`override_settings` win inside
-    their block; otherwise this constructs a fresh model from the configured
-    environment sources.
+    their block; otherwise this returns the process-wide settings built once by
+    :func:`_constructed_settings`.
     """
     override = _settings_override.get()
     if override is not None:
         return override
-    return Settings()
+    return _constructed_settings(_active_profile_pointer_fingerprint())
 
 
 @contextmanager

@@ -18,11 +18,11 @@ from ..core.config import Settings, load_settings
 from ..core.errors import CadrumoError
 from ..core.logging import get_logger
 from .auth import (
+    ProviderProbeResult,
     probe_provider_credentials,
     project_active_certificate_credentials,
     select_provider,
 )
-from .auth._probe_result import ProviderProbeResult
 from .auth_credentials import ActiveCertificateCredentials
 from .workflow import WorkflowState
 

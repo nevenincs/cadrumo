@@ -51,17 +51,41 @@ from ...domain.transactions import (
     is_classified,
 )
 from ._actions_common import (
-    _blockers_by_source_transaction_id,
-    _bucket_event_repository,
-    _normalise_timestamp,
-    _raise_finalized_modelo_blocked,
-    _replace_transaction,
-    _require_transaction,
-    _save_transaction_catalogue_and_events,
-    _transaction_modelo_source_ids,
-    _transaction_repository,
+    blockers_by_source_transaction_id as _blockers_by_source_transaction_id,
 )
-from ._actions_manual import _command_from_patch, _prepare_manual_transaction_update, update_manual_transaction_fields
+from ._actions_common import (
+    bucket_event_repository as _bucket_event_repository,
+)
+from ._actions_common import (
+    normalise_timestamp as _normalise_timestamp,
+)
+from ._actions_common import (
+    raise_finalized_modelo_blocked as _raise_finalized_modelo_blocked,
+)
+from ._actions_common import (
+    replace_transaction as _replace_transaction,
+)
+from ._actions_common import (
+    require_transaction as _require_transaction,
+)
+from ._actions_common import (
+    save_transaction_catalogue_and_events as _save_transaction_catalogue_and_events,
+)
+from ._actions_common import (
+    transaction_modelo_source_ids as _transaction_modelo_source_ids,
+)
+from ._actions_common import (
+    transaction_repository as _transaction_repository,
+)
+from ._actions_manual import (
+    command_from_patch as _command_from_patch,
+)
+from ._actions_manual import (
+    prepare_manual_transaction_update as _prepare_manual_transaction_update,
+)
+from ._actions_manual import (
+    update_manual_transaction_fields,
+)
 from ._id_resolution import resolve_transaction_id
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,

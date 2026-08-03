@@ -108,7 +108,6 @@ def test_wizard_success_json_emits_shared_spine_and_next_step_notice(
         assert notice["suggestion"] == "aeat app modelo work create"
 
 
-
 class TestStatusTokenLocaleParity:
     """Both profile-create/edit producers emit one machine-readable status.
 
@@ -134,11 +133,17 @@ class TestStatusTokenLocaleParity:
                     profile_name="operator",
                     status=ProfileWizardStatus.UPDATED,
                 )
+                abandoned = ConfigProfileCreateResult(
+                    profile_name="",
+                    status=ProfileWizardStatus.ABANDONED,
+                )
 
                 assert created.status is ProfileWizardStatus.CREATED
                 assert updated.status is ProfileWizardStatus.UPDATED
+                assert abandoned.status is ProfileWizardStatus.ABANDONED
                 assert created.model_dump(mode="json")["status"] == "created"
                 assert updated.model_dump(mode="json")["status"] == "updated"
+                assert abandoned.model_dump(mode="json")["status"] == "abandoned"
 
     def test_a_localized_verb_is_not_a_valid_token(self) -> None:
         """The exact fragmentation this closes is now unrepresentable."""
@@ -155,8 +160,10 @@ class TestStatusTokenLocaleParity:
         assert "ProfileWizardStatus.UPDATED" in wizard_source
         assert "ProfileWizardStatus.CREATED" in manager_source
         assert "ProfileWizardStatus.UPDATED" in manager_source
+        assert "ProfileWizardStatus.ABANDONED" in manager_source
         assert 'status="created"' not in manager_source
         assert 'status="updated"' not in manager_source
+        assert 'status="abandoned"' not in manager_source
 
     def test_every_declared_status_round_trips(self) -> None:
         for status in ProfileWizardStatus:

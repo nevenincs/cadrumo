@@ -138,6 +138,68 @@ def _login_notices(outcome: ProfileLoginOutcome) -> tuple[Notice, ...]:
     return tuple(notices)
 
 
+def _login_through_the_screen() -> ProfileLoginOutcome:
+    """Log in on the full-screen surface, refusing when the operator leaves.
+
+    Leaving the screen without unlocking is an ordinary choice, but it is
+    not a successful login: ``login`` is the precondition every other verb
+    is gated on, so reporting success with no session minted would hand a
+    caller an exit code that says the gate is open when it is shut. The
+    refusal names the verb to run again, exactly as the session gate does.
+    """
+    from .._errors import CliRefusedBoundaryError
+    from ._login_frontend import present_login
+
+    outcome = present_login()
+    if outcome is None:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.login.refusal.abandoned",
+            suggestion="aeat config login",
+        )
+    return outcome
+
+
+def _login_through_the_prompt(
+    ctx: typer.Context,
+    *,
+    name: str | None,
+    secrets_stdin: bool,
+) -> ProfileLoginOutcome:
+    """Log in through the line prompt, the stdin channel, or the env secret.
+
+    The path every scripted, piped, CI, and JSON caller takes, unchanged:
+    a named target, a bounded ``--secrets-stdin`` payload, a configured
+    ``CADRUMO_SECRET_PASSPHRASE``, or the interactive ``getpass`` prompt on
+    a host with no full-screen surface — and the same refusal when none of
+    those supplied a passphrase.
+    """
+    from ....application.user_profile import login_profile
+    from ._secure_input import read_secrets_stdin
+
+    passphrase_callback: Callable[[], str] | None = None
+    if secrets_stdin:
+        secret = read_secrets_stdin(_LoginSecrets).passphrase.get_secret_value()
+
+        def passphrase_callback() -> str:
+            """Resolve the passphrase already read from the bounded stdin channel."""
+            return secret
+
+    try:
+        return login_profile(name=name, passphrase_callback=passphrase_callback)
+    except SecretStoreError:
+        # The target could not be unlocked (a wrong passphrase, a corrupt
+        # bucket DEK); render the refusal in the target's own output
+        # language rather than the previous selection's. Both a UUID and a
+        # label resolve a bucket-local hint here: login owns label
+        # resolution internally and does not surface the resolved id on the
+        # failure path, so the helper re-resolves a label through the
+        # plaintext manifest scan, which stays readable while the target's
+        # DEK is corrupt.
+        if name is not None:
+            _pin_render_language_to_target_bucket(ctx, bucket_id=name)
+        raise
+
+
 def _register_login_command(app: typer.Typer) -> None:
     """Register the profile-session login door."""
 
@@ -159,31 +221,12 @@ def _register_login_command(app: typer.Typer) -> None:
     ) -> None:
         """Authenticate one profile and mint its resumable session."""
         _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import login_profile
-        from ._secure_input import read_secrets_stdin
+        from ._login_frontend import login_screen_is_available
 
-        passphrase_callback: Callable[[], str] | None = None
-        if secrets_stdin:
-            secret = read_secrets_stdin(_LoginSecrets).passphrase.get_secret_value()
-
-            def passphrase_callback() -> str:
-                """Resolve the passphrase already read from the bounded stdin channel."""
-                return secret
-
-        try:
-            outcome = login_profile(name=name, passphrase_callback=passphrase_callback)
-        except SecretStoreError:
-            # The target could not be unlocked (a wrong passphrase, a
-            # corrupt bucket DEK); render the refusal in the target's own
-            # output language rather than the previous selection's. Both a
-            # UUID and a label resolve a bucket-local hint here: login owns
-            # label resolution internally and does not surface the resolved
-            # id on the failure path, so the helper re-resolves a label
-            # through the plaintext manifest scan, which stays readable
-            # while the target's DEK is corrupt.
-            if name is not None:
-                _pin_render_language_to_target_bucket(ctx, bucket_id=name)
-            raise
+        if login_screen_is_available(ctx, name=name, secrets_stdin=secrets_stdin):
+            outcome = _login_through_the_screen()
+        else:
+            outcome = _login_through_the_prompt(ctx, name=name, secrets_stdin=secrets_stdin)
 
         from .._config_payloads import ConfigLoginResult
 

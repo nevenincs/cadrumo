@@ -9,7 +9,7 @@ maps to a declared profile fact path.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 from pydantic import BaseModel, Field
 
@@ -302,7 +302,10 @@ def profile_binding_selectors(selector: Mapping[str, object] | BaseModel) -> tup
         selectors.append(profile_key)
     profile_keys = selector.get("profile_keys")
     if isinstance(profile_keys, tuple):
-        selectors.extend(item for item in profile_keys if isinstance(item, str))
+        selectors.extend(
+            item for item in cast(tuple[object, ...], profile_keys)  # ty: ignore[redundant-cast]
+            if isinstance(item, str)
+        )
     required_when_profile_key = selector.get("required_when_profile_key")
     if isinstance(required_when_profile_key, str):
         selectors.append(required_when_profile_key)

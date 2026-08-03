@@ -65,6 +65,11 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 
+def _empty_text_context() -> dict[str, str]:
+    """Create the typed empty error-context map used by a stage outcome."""
+    return {}
+
+
 class QuickfileStage(StrEnum):
     """The ordered stages of the quickfile filing chain."""
 
@@ -116,7 +121,7 @@ class QuickfileStageOutcome:
     status: QuickfileStageStatus
     message: str = ""
     translated_message: str | None = None
-    context: Mapping[str, str] = field(default_factory=dict)
+    context: Mapping[str, str] = field(default_factory=_empty_text_context)
 
 
 @dataclass(frozen=True, slots=True)

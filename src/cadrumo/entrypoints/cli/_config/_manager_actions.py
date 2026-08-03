@@ -395,12 +395,11 @@ def _run_certificate() -> ManagerActionOutcome:
     Everything collected lands in the encrypted profile store under the
     ``auth`` section, never a plain file.
 
-    Args:
-        present: The door that shows the page and returns what the
-            operator committed, or ``None`` for the real screen. Injected
-            so the refusal and commit branches can be driven without a
-            terminal, which is the only way to prove that a refused
-            answer writes nothing.
+    Takes no parameters, deliberately. How the page is shown is bound by
+    the caller through ``presenting_forms_through``, which is what lets
+    the refusal and commit branches be driven without a terminal — and it
+    does so without this action carrying a door of its own for someone to
+    aim elsewhere.
     """
     from ....adapters.inbound.tui import ManagerActionOutcome
     from ....application.auth import list_operator_certificate_sources
@@ -622,20 +621,22 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
     """Persist the auth section, select the certificate, activate the provider.
 
     The four profile fields go through the plural ``set_active_fields``
-    door in one call. That buys ergonomics, not atomicity: the plural
-    door is itself a loop over the singular one, persisting between
-    iterations, so a fact rejected part-way leaves the earlier ones
-    durably written. This action's defence against that is upstream - the
-    page validates each value against the same schema before any write -
-    rather than a guarantee this door does not offer.
+    door in one call, which is now one storage transaction: one aggregate
+    decrypt, one schema validation over the whole fact set, one re-encrypt.
+    A fact the page passed but the record rejects therefore leaves NONE of
+    the batch durably written, not merely the rejected one — the batch is
+    judged as a whole (see ``ProfileLifecycleService.edit_fields``). This
+    action's defence against a rejection reaching the record at all is
+    still upstream - the page validates each value against the same schema
+    before any write - but the write itself no longer half-applies.
 
-    Two failure windows therefore remain open, and are accepted here
-    rather than papered over. A fact the page passed but the record
-    rejects leaves the earlier facts written. A failure in
-    ``configure_operator_auth`` leaves the profile carrying credentials
-    for a provider workflow state never activated. Closing either needs a
-    transactional profile write, which is a question about a door shared
-    across the application rather than one this action may settle.
+    One failure window remains open, and is accepted here rather than
+    papered over: a failure in ``configure_operator_auth`` leaves the
+    profile carrying credentials for a provider workflow state never
+    activated. Closing it needs a transaction spanning the profile write
+    and the workflow-state activation together, which is a question about
+    a door shared across the application rather than one this action may
+    settle.
 
     Certificate before provider: selecting the source before making it
     the active provider means the provider is never briefly active with

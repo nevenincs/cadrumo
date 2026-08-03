@@ -165,13 +165,12 @@ def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
     docs, and the CLI sequence contracts. A retired spelling in any of those
     surfaces would hand an operator (or the agent harness) a dead instruction.
     """
-    from ....core.paths import PROJECT_ROOT
-
+    from ....tests import REPO_ROOT
     scanned: list[Path] = []
-    src_root = PROJECT_ROOT / "src" / "cadrumo"
+    src_root = REPO_ROOT / "src" / "cadrumo"
     scanned.extend(src_root.rglob("*.py"))
     scanned.extend((src_root / "locales").glob("*.yml"))
-    docs_root = PROJECT_ROOT / "docs"
+    docs_root = REPO_ROOT / "docs"
     scanned.extend(docs_root.glob("*.md"))
     for sub in ("how-to", "explanation", "reference", "verification", "architecture"):
         subdir = docs_root / sub
@@ -287,13 +286,12 @@ def test_retired_reset_and_sandbox_spellings_absent_from_source_and_docs() -> No
     and the removed `config profile sandbox use` door. A dead spelling in any of
     those surfaces would hand an operator (or the agent harness) an instruction
     the live CLI refuses."""
-    from ....core.paths import PROJECT_ROOT
-
+    from ....tests import REPO_ROOT
     scanned: list[Path] = []
-    src_root = PROJECT_ROOT / "src" / "cadrumo"
+    src_root = REPO_ROOT / "src" / "cadrumo"
     scanned.extend(src_root.rglob("*.py"))
     scanned.extend((src_root / "locales").glob("*.yml"))
-    docs_root = PROJECT_ROOT / "docs"
+    docs_root = REPO_ROOT / "docs"
     scanned.extend(docs_root.glob("*.md"))
     for sub in ("how-to", "explanation", "reference", "verification", "architecture"):
         subdir = docs_root / sub

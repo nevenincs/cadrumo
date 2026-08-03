@@ -339,7 +339,7 @@ def _parse_cross_period_group_member_rosters(canonical: dict[str, str]) -> tuple
             continue
         rosters.append(
             CrossPeriodGroupMemberRoster(
-                source_modelo=source_modelo,
+                source_modelo=Modelo(source_modelo),
                 filing_year=filing_year,
                 period=Period.from_year_and_code(filing_year, period),
                 member_nifs=member_nifs,
@@ -408,7 +408,7 @@ def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | N
     A blank string means the operator has not declared fiscal residency
     (treated as RESIDENT_IRPF by engine consumers); typed ``None`` signals that.
     """
-    if raw == "" or raw is None:
+    if raw == "":
         return None
     if isinstance(raw, FiscalResidency):
         return raw
@@ -429,7 +429,7 @@ def _resolve_special_regime(raw: IrpfSpecialRegime | str) -> IrpfSpecialRegime |
     (equivalent to the general case); the typed ``None`` signals that
     to downstream consumers.
     """
-    if raw == "" or raw is None:
+    if raw == "":
         return None
     if isinstance(raw, IrpfSpecialRegime):
         return raw

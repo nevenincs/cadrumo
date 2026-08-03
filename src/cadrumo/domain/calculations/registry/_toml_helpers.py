@@ -20,7 +20,7 @@ def as_toml_table(value: object) -> dict[str, object] | None:
     """
     if not isinstance(value, dict):
         return None
-    for key in value:
+    for key in cast("dict[object, object]", value):
         if not isinstance(key, str):
             return None
     # CAST-RATIONALE-TOML-VALIDATED-KEYS-PRESERVE-IDENTITY: every key is

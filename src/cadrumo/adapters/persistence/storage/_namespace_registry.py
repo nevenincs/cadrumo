@@ -46,6 +46,8 @@ LOGIN_THROTTLE_FILENAME = "login-throttle.json"
 CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
+SECRET_INDEX_FILENAME = "index.json"  # noqa: S105 - filename, not a credential
+SECRET_INDEX_SCHEMA_VERSION = 1
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
 
@@ -1126,6 +1128,14 @@ STORAGE_PATH_DEFINITIONS = (
         grammar="<root>/keystore/<bucket_id>/login-throttle.json",
         owner="cadrumo.adapters.persistence.storage.master_key",
         segment=LOGIN_THROTTLE_FILENAME,
+    ),
+    StoragePathDefinition(
+        key="secret_index",
+        kind=StoragePathKind.FILE,
+        grammar="<cadrumo_secret_store_dir>/index.json",
+        owner="cadrumo.adapters.persistence.storage.secret_store",
+        segment=SECRET_INDEX_FILENAME,
+        schema_version=SECRET_INDEX_SCHEMA_VERSION,
     ),
     StoragePathDefinition(
         key="config_reset_journal",

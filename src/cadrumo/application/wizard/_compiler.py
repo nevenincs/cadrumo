@@ -134,9 +134,9 @@ def ensure_profile_keys_registered() -> None:
     may call this unconditionally without ordering knowledge.
     """
     from ...domain.contribuyente import register_profile_keys
-    from . import _catalogue  # local import to avoid circular dependency at module level
+    from ._catalogue import WIZARD_FLOWS
 
-    register_profile_keys(compile_profile_keys(_catalogue.WIZARD_FLOWS))
+    register_profile_keys(compile_profile_keys(WIZARD_FLOWS))
 
 
 ensure_profile_keys_registered()

@@ -15,6 +15,7 @@ from .....tests import (
     leaf_name,
     non_test_package_python_files,
     non_test_python_files_under,
+    repo_path,
     repo_relative,
 )
 
@@ -77,6 +78,11 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "shared best-effort-tier atomic-write primitive (no fsync); writes caller-supplied bytes only, no data of its own",
     (
+        "src/cadrumo/core/atomic_write.py",
+        "atomic_write_stream",
+        "tempfile.NamedTemporaryFile",
+    ): "shared streaming atomic-write primitive; writes caller-supplied chunks only, no data of its own",
+    (
         "src/cadrumo/entrypoints/cli/_config/_secure_input.py",
         "write_to_controlling_terminal",
         "open",
@@ -115,11 +121,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "os.open",
     ): "auth acquisition lock file; non-sensitive lock metadata only",
     (
-        "src/cadrumo/application/filing/_export.py",
-        "export_draft",
-        "output_path.write_bytes",
-    ): "explicit user-directed declaration export",
-    (
         "src/cadrumo/core/_fsync.py",
         "fsync_parent_dir",
         "os.open",
@@ -136,11 +137,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
     ): "redacted diagnostic event sink",
     (
         "src/cadrumo/core/observability/_store.py",
-        "save_trace",
-        "target.write_text",
-    ): "redacted diagnostic trace store",
-    (
-        "src/cadrumo/core/observability/_store.py",
         "save_events_append",
         "target.open",
     ): "redacted diagnostic event store",
@@ -154,16 +150,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "save_parity_tape",
         "path.write_text",
     ): "registry parity tape generation",
-    (
-        "src/cadrumo/domain/manuals/_fetch.py",
-        "_stream_to_file",
-        "destination.open",
-    ): "official manual corpus download",
-    (
-        "src/cadrumo/domain/manuals/_fetch.py",
-        "write_manifest",
-        "manifest_path.write_text",
-    ): "official manual corpus manifest",
     (
         "src/cadrumo/application/registry/__init__.py",
         "verify_registry_workbooks",
@@ -210,16 +196,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "cached_path.write_bytes",
     ): "registry workbook-parity conversion cache; non-user AEAT reference workbook bytes",
     (
-        "src/cadrumo/application/ledger/_actions_export.py",
-        "export_ledger_transactions",
-        "command.output_path.write_bytes",
-    ): "explicit operator-directed ledger transaction export to a caller-chosen path",
-    (
-        "src/cadrumo/core/observability/_store.py",
-        "save_envelope",
-        "target.write_text",
-    ): "determinism-replay golden-capture surface persists already-CLI-redacted envelope documents only",
-    (
         "src/cadrumo/agent/_workspace.py",
         "_write",
         "write_text",
@@ -233,17 +209,16 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "src/cadrumo/application/modelo/_review_package.py",
         "build_review_package",
         "write_bytes",
-    ): "explicit operator-directed review-package export stages the rendered filing artefact only long enough to create its checksum archive",
+    ): "explicit operator-directed review-package export stages the rendered filing artefact only long "
+    "enough to create its checksum archive, in a directory pinned beside output_path "
+    "(dir=output_path.parent), never the OS-shared temp directory",
     (
         "src/cadrumo/application/modelo/_review_package.py",
         "build_review_package",
         "write_text",
-    ): "explicit operator-directed review-package export stages revision evidence and manifest JSON only long enough to create its checksum archive",
-    (
-        "src/cadrumo/core/corpus_manifest/_bundle_signing.py",
-        "generate_corpus_signing_keypair",
-        "resolved.write_text",
-    ): "maintainer-directed corpus signing-key export writes a private keypair before applying restrictive file permissions",
+    ): "explicit operator-directed review-package export stages revision evidence and manifest JSON only "
+    "long enough to create its checksum archive, in a directory pinned beside output_path "
+    "(dir=output_path.parent), never the OS-shared temp directory",
     (
         "src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py",
         "review_package_sign",
@@ -431,3 +406,54 @@ def test_production_file_write_inventory_is_reviewed() -> None:
 
     expected = set(_REVIEWED_PRODUCTION_FILE_WRITES)
     assert observed == expected
+
+
+_REVIEW_PACKAGE_STAGING_SITES: tuple[tuple[str, str], ...] = (
+    ("src/cadrumo/application/modelo/_review_package.py", "build_review_package"),
+    ("src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py", "review_package_build"),
+)
+"""Every known site that stages review-package plaintext filing evidence in a
+``tempfile.TemporaryDirectory`` before zipping/reading it. Each entry is
+``(repo-relative file, owning function)``.
+"""
+
+
+def test_review_package_staging_pins_dir_beside_destination() -> None:
+    """Review-package plaintext staging must never fall back to the OS-shared temp dir.
+
+    Both known staging call sites build a ``tempfile.TemporaryDirectory`` that
+    transiently holds the fichero-BOE draft, the full ``CalculationRevision``
+    JSON, and the bundled ``LedgerFilingEvidence`` JSON in plaintext for the
+    duration of the archive build. ``sensitive-financial-data-secure-storage-
+    only`` forbids that plaintext ever touching a scratch location outside the
+    operator's control, so each call MUST pass an explicit ``dir=`` keyword
+    pinning the staging directory beside the operator-chosen destination
+    (``output_path.parent`` / ``output.parent``). Dropping ``dir=`` reverts to
+    ``tempfile.gettempdir()`` -- the exact defect this test pins shut -- and
+    this test then fails.
+    """
+    found: set[tuple[str, str]] = set()
+    for relative, owning_function in _REVIEW_PACKAGE_STAGING_SITES:
+        path = repo_path(relative)
+        tree = ast_for_path(path)
+        assert tree is not None, f"{relative} must be parseable"
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            dotted = _dotted_call_name(node)
+            if dotted not in {"tempfile.TemporaryDirectory", "TemporaryDirectory"}:
+                continue
+            function_name = _function_for_line(path, node.lineno)
+            if function_name != owning_function:
+                continue
+            found.add((relative, owning_function))
+            keyword_names = {keyword.arg for keyword in node.keywords}
+            assert "dir" in keyword_names, (
+                f"{relative}:{node.lineno} ({owning_function}): TemporaryDirectory call must pass "
+                "an explicit dir= pinning staging beside the destination, never the OS-shared temp dir"
+            )
+    assert found == set(_REVIEW_PACKAGE_STAGING_SITES), (
+        "expected exactly one TemporaryDirectory call in each known review-package staging "
+        f"function; found {sorted(found)} -- a moved/renamed/removed call site means this test "
+        "is no longer covering what it claims to cover"
+    )

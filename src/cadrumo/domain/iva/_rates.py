@@ -15,7 +15,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ...core import read_toml
 from ...core.decimal import coerce_decimal
@@ -27,6 +27,9 @@ if TYPE_CHECKING:
     # Type-only: importing these at runtime would close the cycle the local
     # imports in the grounding helpers below exist to avoid.
     from ..calculations.registry import LegalReference, SourceReference
+
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
+_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
 
 _RATE_REGISTRY_MEMBER_STATES: frozenset[EUMemberState] = frozenset(
     member_state for member_state in EUMemberState if member_state is not EUMemberState.XI
@@ -72,11 +75,11 @@ def _load_iva_rate_table_cached(
         raise IvaCatalogueError(f"{target}: missing [[rates]] entries")
 
     by_member_state: dict[EUMemberState, list[IvaRateRecord]] = {}
-    for index, raw_rate in enumerate(raw_rates, start=1):
-        if not isinstance(raw_rate, dict):
+    for index, raw_rate in enumerate(_OBJECT_SEQUENCE.validate_python(raw_rates), start=1):
+        if not isinstance(raw_rate, Mapping):
             raise IvaCatalogueError(f"{target}: rates[{index}] must be a table")
         try:
-            rate = _parse_rate(raw_rate)
+            rate = _parse_rate(_STRING_OBJECT_MAPPING.validate_python(raw_rate))
         except (ValidationError, IvaValidationError, ValueError) as exc:
             raise IvaCatalogueError(f"{target}: invalid rates[{index}]: {exc}") from exc
         by_member_state.setdefault(rate.member_state, []).append(rate)
@@ -98,7 +101,7 @@ def _load_iva_rate_table_cached(
 def _parse_rate(raw_rate: object) -> IvaRateRecord:
     if not isinstance(raw_rate, dict):
         raise IvaValidationError(f"IVA rate entry must be a table, got: {type(raw_rate)!r}")
-    data: dict[str, object] = {str(k): v for k, v in raw_rate.items()}
+    data = _STRING_OBJECT_MAPPING.validate_python(raw_rate)
     try:
         member_state = EUMemberState(str(data.get("member_state")))
         kind = IvaRateKind(str(data.get("kind")))
@@ -128,7 +131,7 @@ def _reference_ids(data: Mapping[str, object], key: str) -> tuple[str, ...]:
     if not isinstance(raw, (list, tuple)):
         raise IvaValidationError(f"{key} must be an array")
     reference_ids: list[str] = []
-    for item in raw:
+    for item in _OBJECT_SEQUENCE.validate_python(raw):
         if not isinstance(item, str):
             raise IvaValidationError(f"{key} must contain only registry identity strings")
         reference_ids.append(item)

@@ -89,6 +89,9 @@ def _casilla_id_set(surface: str, *values: object) -> frozenset[CasillaId]:
     return frozenset(validated_casilla_id(value, surface=surface) for value in values)
 
 
+casilla_id_set = _casilla_id_set
+
+
 # Ledger OSS / IOSS aggregation source bindings.
 #
 # These bindings aggregate ledger lines whose IVA classification matches a
@@ -1259,3 +1262,10 @@ def validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding(binding: D
         "ledger_renta_gastos_pago_fraccionado_aggregation",
         validate_ledger_renta_gastos_pago_fraccionado_aggregation_binding_definition,
     )
+
+
+IvaLedgerSelector = _IvaLedgerSelector
+OssIossLedgerSelector = _OssIossLedgerSelector
+RentaLedgerGastosEstimacionDirectaSelector = _RentaLedgerGastosEstimacionDirectaSelector
+RentaLedgerGastosPagoFraccionadoSelector = _RentaLedgerGastosPagoFraccionadoSelector
+RentaLedgerIncomeSelector = _RentaLedgerIncomeSelector

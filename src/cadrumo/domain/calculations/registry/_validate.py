@@ -30,14 +30,17 @@ from ._corpus_catalogue import verify_source_catalogue
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ._source_evidence_fingerprint import SourceEvidenceFingerprint, collect_source_evidence_fingerprints
+from ._source_evidence_fingerprint import (
+    SourceEvidenceFingerprint,
+    collect_source_evidence_fingerprints,
+)
 from ._validate_cache import (
     CATALOGUE_FAILURE_CACHE,
     MODELO_VALIDATION_CACHE,
     REGISTRY_VALIDATION_CACHE,
 )
 from ._validate_evidence import EvidenceValidator
-from ._validate_helpers import _missing_refs
+from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
     validate_informative_class_invariant,
@@ -81,19 +84,15 @@ class RegistryValidator:
             source_root=self._source_root,
         )
         self._catalogue_failures: tuple[str, ...] | None = None
-        # Corpus root for declaracion_pdf specimen gate:
-        # caller may supply it directly; when not supplied, derive from
-        # source_root by navigating to the co-located tests/fixtures/justificantes
-        # directory.  Production callers pass source_root=bundled_path() which
-        # resolves to src/cadrumo/_data, so parents[0] = src/cadrumo, and the corpus
-        # lives at src/cadrumo/tests/fixtures/justificantes.
-        if justificante_corpus_root is not None:
-            self._justificante_corpus_root: Path | None = justificante_corpus_root
-        elif source_root is not None:
-            candidate = source_root.resolve().parents[0] / "tests" / "fixtures" / "justificantes"
-            self._justificante_corpus_root = candidate if candidate.is_dir() else None
-        else:
-            self._justificante_corpus_root = None
+        # Corpus root for the declaracion_pdf specimen gate: SUPPLIED, never
+        # derived. The specimen corpus is a checkout-time authoring input, so
+        # the authoring tool that owns it passes its location in. Production
+        # does not go looking: deriving it meant probing a repo-shaped path,
+        # which required asking whether this process runs from a source
+        # checkout -- a question a tax-filing product has no business asking.
+        # Unsupplied means the gate does not run, which is the correct and only
+        # outcome for every installed run.
+        self._justificante_corpus_root: Path | None = justificante_corpus_root
         self._source_evidence_fingerprint = (
             source_evidence_fingerprint
             if source_evidence_fingerprint is not None

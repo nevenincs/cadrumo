@@ -24,6 +24,14 @@ from pydantic import ValidationError
 
 from ....core.external_constants import load_external_constants
 from ....core.i18n import Translatable as tr
+from ....tests.aeat_literal_fixtures import (
+    AEAT_HOST_SUFFIX_EXPECTED,
+    CITATION_APEX_URL_FIXTURE,
+    CITATION_SEDE_AYUDA_URL_FIXTURE,
+    CITATION_SEDE_BARE_HOST_FIXTURE,
+    CITATION_SEDE_HTTP_DOWNGRADE_URL_CANARY,
+    CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY,
+)
 from .._proportionality import (
     CategoryCitation,
     CategoryCitationSource,
@@ -57,7 +65,7 @@ def test_shipped_profiles_still_load_under_the_constraint() -> None:
 
     assert len(citations) == 162
     assert {str(c.url).split("/")[2] for c in citations} <= {
-        "sede.agenciatributaria.gob.es",
+        CITATION_SEDE_BARE_HOST_FIXTURE,
         "www.boe.es",
     }
 
@@ -82,7 +90,7 @@ def test_a_lookalike_host_cannot_pass_by_suffix() -> None:
     the boundary anchor is removed while every other test still passes.
     """
     with pytest.raises(ValidationError):
-        _citation("https://evil-agenciatributaria.gob.es/a")
+        _citation(CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY)
 
 
 def test_an_http_origin_is_refused_as_a_downgrade() -> None:
@@ -92,15 +100,15 @@ def test_an_http_origin_is_refused_as_a_downgrade() -> None:
     independent of the host check because the host here is genuine.
     """
     with pytest.raises(ValidationError):
-        _citation("http://sede.agenciatributaria.gob.es/a")
+        _citation(CITATION_SEDE_HTTP_DOWNGRADE_URL_CANARY)
 
 
 @pytest.mark.parametrize(
     "url",
     [
-        "https://sede.agenciatributaria.gob.es/Sede/ayuda.html",
+        CITATION_SEDE_AYUDA_URL_FIXTURE,
         "https://www.boe.es/buscar/act.php",
-        "https://agenciatributaria.gob.es/apex",
+        CITATION_APEX_URL_FIXTURE,
     ],
 )
 def test_official_origins_are_accepted(url: str) -> None:
@@ -148,5 +156,5 @@ def test_origin_set_is_read_from_the_registry_at_call_time() -> None:
     source = inspect.getsource(_authoritative_citation_origins)
 
     assert "load_external_constants()" in source, source
-    for literal in ("agenciatributaria.gob.es", "boe.es"):
+    for literal in (AEAT_HOST_SUFFIX_EXPECTED, "boe.es"):
         assert literal not in source, f"hostname literal {literal!r} restated instead of derived:\n{source}"

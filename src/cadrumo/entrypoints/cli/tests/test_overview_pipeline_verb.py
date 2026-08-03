@@ -231,7 +231,7 @@ def test_pipeline_modelo_row_enforces_the_canonical_readiness_contract() -> None
         ("negative warning count", {"warning_finding_count": -1}),
     ):
         try:
-            OverviewPipelineModeloPayload(**(base | override))
+            OverviewPipelineModeloPayload.model_validate(base | override)
         except ValidationError:
             continue
         pytest.fail(f"{label} was accepted by the transport row")

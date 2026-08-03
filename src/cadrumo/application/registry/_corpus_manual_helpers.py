@@ -190,6 +190,8 @@ def manual_rule_kind(kind: str | None) -> RuleKind | None:
             return "procedural"
         case "other":
             return "other"
+        case _:
+            pass
     allowed = tuple(str(value) for value in get_args(RuleKind))
     _LOGGER.warning(
         "registry.manuals.rules refused unknown rule kind",

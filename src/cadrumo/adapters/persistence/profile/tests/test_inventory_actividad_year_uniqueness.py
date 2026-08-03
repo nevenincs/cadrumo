@@ -112,8 +112,10 @@ def test_create_still_refuses_a_second_ledger_for_the_same_pair() -> None:
     # The typed refusal carries the offending pair as structured context, which
     # is what an operator surface renders; asserted on the context rather than
     # on the message prose.
-    assert excinfo.value.context["actividad_id"] == _ACTIVIDAD
-    assert excinfo.value.context["year"] == _YEAR
+    context = excinfo.value.context
+    assert context is not None
+    assert context["actividad_id"] == _ACTIVIDAD
+    assert context["year"] == _YEAR
 
 
 def test_distinct_pairs_still_round_trip_through_bulk_save() -> None:

@@ -45,6 +45,7 @@ from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...adapters.persistence.storage import (
+    ATTACHMENT_MANIFEST_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
@@ -57,8 +58,8 @@ from ...adapters.persistence.storage import (
     SecureObjectWrite,
     StorageCustodyProfile,
     secure_object_repository_for_bucket,
+    unwrap_blob_payload,
 )
-from ...adapters.persistence.storage.attachment import _unwrap_blob_payload
 from ...adapters.persistence.storage.envelope import Envelope
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_hex
@@ -130,7 +131,7 @@ def _canonical_b64(value: bytes) -> str:
 
 
 def _envelope_payload[T: BaseModel](record: SecureObjectRecord, payload_type: type[T]) -> T:
-    envelope_cls = Envelope.for_payload_type(payload_type)
+    envelope_cls = Envelope[T].for_payload_type(payload_type)
     return envelope_cls.model_validate_json(record.payload.decode(_UTF_8)).payload
 
 
@@ -165,7 +166,7 @@ def _fixed_resolver(natural_key: str) -> NaturalKeyResolver:
 
 
 def _blob_resolver(record: SecureObjectRecord, _bucket_id: str) -> str:
-    return sha256_hex(_unwrap_blob_payload(record.payload))
+    return sha256_hex(unwrap_blob_payload(record.payload))
 
 
 def _json_field_resolver(field: str) -> NaturalKeyResolver:
@@ -532,13 +533,32 @@ def restore_carried_objects(
             classification=carried.classification,
             schema_version=carried.schema_version,
             written_at=carried.written_at,
-            payload=carried.payload,
+            payload=_rebound_payload(carried, target_bucket_id=target_bucket_id),
         )
         for carried in carried_objects
     )
     if not writes:
         return
     secure_object_repository_for_bucket(target_bucket_id).save_many(writes)
+
+
+def _rebound_payload(carried: CarriedSecureObject, *, target_bucket_id: str) -> bytes:
+    """Rebind a carried attachment manifest's ``bucket_id`` to its new home.
+
+    Every other carried namespace is transported as opaque bytes, but the
+    attachment manifest's ``bucket_id`` is a self-describing ownership claim
+    (:func:`~adapters.persistence.storage.attachment.AttachmentStore.load_manifest`
+    refuses a manifest whose ``bucket_id`` disagrees with the active bucket).
+    A custody carry is a deliberate, authorised move to a new bucket, so the
+    restored manifest must claim ``target_bucket_id`` -- the one case where
+    rewriting a carried payload's content is correct, rather than leaving a
+    manifest that faithfully, and now wrongly, still claims the source bucket.
+    """
+    if carried.namespace != ATTACHMENT_MANIFEST_NAMESPACE.namespace:
+        return carried.payload
+    envelope = json.loads(carried.payload.decode(_UTF_8))
+    envelope["payload"]["bucket_id"] = target_bucket_id
+    return json.dumps(envelope).encode(_UTF_8)
 
 
 __all__ = [

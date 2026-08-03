@@ -129,6 +129,7 @@ def test_server_lists_and_serves_every_prompt() -> None:
         assert resource_message.content.type == "resource"
         assert str(resource_message.content.resource.uri) == "cadrumo://skill/cadrumo-preparar-modelo-130"
         assert resource_message.content.resource.mime_type == "text/markdown"
+        assert hasattr(resource_message.content.resource, "text")
         assert resource_message.content.resource.text == skill_texts["cadrumo-preparar-modelo-130"]
 
     anyio.run(_drive)
@@ -147,7 +148,12 @@ def test_server_get_prompt_orientation_embeds_the_rules() -> None:
     async def _drive() -> None:
         async with connect(server) as session:
             result = await session.get_prompt(ORIENTATION_PROMPT_NAME)
-        embedded = [message.content.resource.text for message in result.messages if message.content.type == "resource"]
+        embedded = [
+            resource.text
+            for message in result.messages
+            if message.content.type == "resource"
+            and hasattr(resource := message.content.resource, "text")
+        ]
         assert operator_rules_text() in embedded
 
     anyio.run(_drive)

@@ -89,8 +89,8 @@ from ._required_binding_gate import (
 from ._result_disposition_resolution import revision_is_refund_disposition
 from ._revision_persistence import persist_filed_revision
 from ._verification_actions import (
-    _cross_period_expected_member_sets_from_profile,
-    _require_cross_period_clean_state,
+    cross_period_expected_member_sets_from_profile,
+    require_cross_period_clean_state,
 )
 from ._workflow_gate import build_revision_workflow_engine as _build_revision_workflow_engine
 from ._workflow_gate import run_revision_workflow_gate as _run_revision_workflow_gate
@@ -386,14 +386,14 @@ def _require_filing_preconditions(
         target,
         repository=iva_compensation_decision_repository,
     )
-    _require_cross_period_clean_state(
+    require_cross_period_clean_state(
         work_unit,
         observation_repository=observation_repository,
         filing_repository=filing_repository,
         calculation_repository=calculation_repository,
         verification_repository=verification_repository,
         iva_compensation_decision=iva_compensation_decision,
-        expected_member_sets=_cross_period_expected_member_sets_from_profile(
+        expected_member_sets=cross_period_expected_member_sets_from_profile(
             workflow_profile,
             cross_period_expected_member_sets,
         ),

@@ -34,7 +34,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from types import MappingProxyType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from ...core import Period as _Period
 from ...domain.modelos import is_justificante_backed_external_evidence
@@ -449,8 +449,12 @@ def _filing_evidence_from_calculation_observation(
     source_kind = str(getattr(payload, "source_kind", ""))
     if not is_official_aeat_observation_source(source_kind):
         return None
-    source_metadata = getattr(payload, "source_metadata", None)
-    source_metadata = source_metadata if isinstance(source_metadata, Mapping) else {}
+    source_metadata_raw = getattr(payload, "source_metadata", None)
+    source_metadata: Mapping[str, object]
+    if isinstance(source_metadata_raw, Mapping):
+        source_metadata = cast(Mapping[str, object], source_metadata_raw)
+    else:
+        source_metadata = {}
     if not source_metadata:
         return None
     status = str(source_metadata.get("aeat_register_status", "")).strip()
@@ -513,7 +517,7 @@ def _calculation_observation_verified_justificante(
     modelo: str,
     filing_year: int,
     period: _Period,
-    source_metadata: Mapping[object, object],
+    source_metadata: Mapping[str, object],
     justificantes_by_csv: Mapping[str, tuple[Justificante, ...]],
     expected_tax_id: str | None,
 ) -> Justificante | None:
@@ -554,8 +558,6 @@ def _filing_evidence_from_justificante_capture_snapshot(
     target.
     """
     if not _capture_snapshot_is_active(snapshot):
-        return None
-    if not isinstance(snapshot.period, _Period):
         return None
     if snapshot.period.filing_year != snapshot.filing_year:
         return None
@@ -611,7 +613,7 @@ def _capture_snapshot_verified_justificante(
     return matching[0]
 
 
-def _metadata_justificante_csv_candidates(source_metadata: Mapping[object, object]) -> tuple[str, ...]:
+def _metadata_justificante_csv_candidates(source_metadata: Mapping[str, object]) -> tuple[str, ...]:
     """Return normalized single/plural justificante CSV metadata candidates."""
     csvs: list[str] = []
     for key in ("aeat_justificante_csv", "justificante_csv"):
@@ -811,3 +813,13 @@ def _calendar_event_filing_evidence(
     for candidate in matching_refs[1:]:
         row = _stronger_filing_evidence(row, candidate)
     return row
+
+
+authenticated_identity_matches_expected = _authenticated_identity_matches_expected
+calendar_entry_filing_evidence = _calendar_entry_filing_evidence
+calendar_events_with_filing_evidence = _calendar_events_with_filing_evidence
+dedupe_calendar_events = _dedupe_calendar_events
+filing_axes_from_modelo_record = _filing_axes_from_modelo_record
+filing_evidence_from_justificante_capture_snapshot = _filing_evidence_from_justificante_capture_snapshot
+is_active_aeat_filing_status = _is_active_aeat_filing_status
+justificantes_by_csv = _justificantes_by_csv

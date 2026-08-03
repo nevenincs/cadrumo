@@ -8,7 +8,7 @@ from decimal import Decimal
 from itertools import pairwise
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from ._errors import RegistryValidationError
 from ._formula_operator_contracts import require_formula_operator_arity
@@ -25,22 +25,40 @@ __all__ = [
 ]
 
 
+_DISPATCH_TABLE_ENTRIES_ADAPTER: TypeAdapter[list[object] | tuple[object, ...]] = TypeAdapter(
+    list[object] | tuple[object, ...], config=ConfigDict(strict=True)
+)
+_STRING_KEYED_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
+    dict[str, object], config=ConfigDict(strict=True)
+)
+
+
 def _normalise_dispatch_table_entries(value: object) -> object:
-    if not isinstance(value, Mapping) or "dispatch_table_entries" not in value:
+    try:
+        mapping = _string_keyed_mapping(value, surface="formula")
+    except RegistryValidationError:
+        if isinstance(value, Mapping):
+            raise
         return value
-    mapping = _string_keyed_mapping(value, surface="formula")
+    if "dispatch_table_entries" not in mapping:
+        return mapping
     if "dispatch_table" in mapping:
         raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
 
     raw_entries = mapping["dispatch_table_entries"]
-    if not isinstance(raw_entries, tuple | list):
-        raise RegistryValidationError("dispatch_table_entries must be an array")
+    try:
+        raw_entries = _DISPATCH_TABLE_ENTRIES_ADAPTER.validate_python(raw_entries)
+    except ValidationError as exc:
+        raise RegistryValidationError("dispatch_table_entries must be an array") from exc
 
     dispatch_table: dict[str, object] = {}
     for raw_entry in raw_entries:
-        if not isinstance(raw_entry, Mapping):
-            raise RegistryValidationError("dispatch_table_entries entries must be tables")
-        entry = _string_keyed_mapping(raw_entry, surface="dispatch_table_entries entry")
+        try:
+            entry = _string_keyed_mapping(raw_entry, surface="dispatch_table_entries entry")
+        except RegistryValidationError:
+            if isinstance(raw_entry, Mapping):
+                raise
+            raise RegistryValidationError("dispatch_table_entries entries must be tables") from None
         if set(entry) != {"key", "parameter"}:
             raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
         key = entry["key"]
@@ -57,14 +75,12 @@ def _normalise_dispatch_table_entries(value: object) -> object:
 
 
 def _string_keyed_mapping(value: object, *, surface: str) -> dict[str, object]:
-    if not isinstance(value, Mapping):
-        raise RegistryValidationError(f"{surface} must be a table")
-    result: dict[str, object] = {}
-    for key, item in value.items():
-        if not isinstance(key, str):
-            raise RegistryValidationError(f"{surface} keys must be strings")
-        result[key] = item
-    return result
+    try:
+        return _STRING_KEYED_MAPPING_ADAPTER.validate_python(value)
+    except ValidationError as exc:
+        if not isinstance(value, Mapping):
+            raise RegistryValidationError(f"{surface} must be a table") from exc
+        raise RegistryValidationError(f"{surface} keys must be strings") from exc
 
 
 class FormulaExpression(RegistryModel):

@@ -113,10 +113,11 @@ def test_each_canary_is_refused_for_a_distinct_stated_reason() -> None:
             _get(path)
         reasons[path] = str(excinfo.value)
 
-    assert "tgvi" in reasons["/wlpl/TGVI/online"]
-    assert "tgvi" in reasons["/wlpl/PRET/tgvionline/upload"]
-    assert "transmision" in reasons["/wlpl/PRET/transmision-fichero"]
-    assert "transmitir" in reasons["/wlpl/PRET/transmitir"]
+    tgvi_online, pret_upload, pret_transmision, pret_transmitir = LIVE_PARITY_STATE_CREATING_PATH_CANARIES
+    assert "tgvi" in reasons[tgvi_online]
+    assert "tgvi" in reasons[pret_upload]
+    assert "transmision" in reasons[pret_transmision]
+    assert "transmitir" in reasons[pret_transmitir]
 
 
 @pytest.mark.parametrize("write_verb_witness_path", AEAT_WRITE_VERB_TOKEN_WITNESS_PATH_CANARIES)

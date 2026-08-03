@@ -10,8 +10,10 @@ from collections.abc import Iterable
 
 from ._schema import ModeloDefinition
 from ._validate_cross_revision import (
-    _validate_cross_revision_casilla_consistency,
-    _validate_strict_cross_revision_casilla_continuity,
+    cross_revision_casilla_consistency_failures as _validate_cross_revision_casilla_consistency,
+)
+from ._validate_cross_revision import (
+    strict_cross_revision_casilla_continuity_failures as _validate_strict_cross_revision_casilla_continuity,
 )
 from ._validate_label_artifacts import validate_no_label_artifacts
 from ._validate_relation_sources import (
@@ -19,12 +21,16 @@ from ._validate_relation_sources import (
     validate_relation_closure,
     validate_slot_source_hygiene,
 )
-from ._validate_revision_identity import _duplicates
-from ._validate_semantic_role_required import _validate_required_role_declarations
+from ._validate_revision_identity import duplicates as _duplicates
+from ._validate_semantic_role_required import required_role_declaration_failures as _validate_required_role_declarations
 from ._validate_semantic_roles import (
-    _validate_semantic_role_cardinality,
-    _validate_semantic_role_consistency,
-    _validate_semantic_role_typo_twins,
+    semantic_role_cardinality_failures as _validate_semantic_role_cardinality,
+)
+from ._validate_semantic_roles import (
+    semantic_role_consistency_failures as _validate_semantic_role_consistency,
+)
+from ._validate_semantic_roles import (
+    semantic_role_typo_twin_failures as _validate_semantic_role_typo_twins,
 )
 
 

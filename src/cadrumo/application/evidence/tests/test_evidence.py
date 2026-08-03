@@ -201,6 +201,7 @@ class TestShow:
             svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=shared_prefix)
 
         assert excinfo.value.translated_message == "errors.refused.refused_evidence_bundle_ambiguous"
+        assert excinfo.value.context is not None
         assert excinfo.value.context["match_count"] == 2
 
         # An unambiguous, longer prefix still resolves cleanly.

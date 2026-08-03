@@ -378,6 +378,8 @@ def _split_nif_name(raw: str) -> tuple[str, str]:
     return parts[0], parts[1].strip()
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-BS4-TAG: table is a bs4 Tag/NavigableString,
+# a third-party type this module intentionally does not import for typing.
 def _summary_table_tipo(table: Any) -> Literal["notificacion", "comunicacion"] | None:
     """Return the summary category declared by the table's preceding section heading."""
     heading = table.find_previous(["h2", "h3"])
@@ -501,6 +503,9 @@ async def _fetch_and_parse(
     )
 
 
+# ADAPTER-INTERNAL-ALIAS-RATIONALE-PLAYWRIGHT-PAGE: page is a Playwright
+# Page-like object; typed loosely so both sync and async Playwright pages
+# satisfy this shared helper without importing either concrete type here.
 def _notifications_landing_url(page: Any, *, requested_url: str) -> str:
     """Return the URL AEAT actually served, refusing an unreadable landing.
 

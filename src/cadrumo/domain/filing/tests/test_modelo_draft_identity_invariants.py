@@ -66,10 +66,12 @@ def _draft_kwargs() -> dict[str, object]:
 def test_draft_refuses_divergent_taxpayer_identity_axes() -> None:
     """A profile NIF and a different filing-subject NIF must not coexist on one draft."""
     with pytest.raises(ValidationError, match=r"draft taxpayer identity diverges"):
-        ModeloDraft(
-            profile_tax_id=_PROFILE_NIF,
-            subject_tax_id=_OTHER_NIF,
-            **_draft_kwargs(),  # type: ignore[arg-type]
+        ModeloDraft.model_validate(
+            {
+                "profile_tax_id": _PROFILE_NIF,
+                "subject_tax_id": _OTHER_NIF,
+                **_draft_kwargs(),
+            },
         )
 
 
@@ -80,10 +82,12 @@ def test_both_nifs_are_individually_valid() -> None:
     were absent and ``_OTHER_NIF`` simply had a bad control letter.
     """
     for nif in (_PROFILE_NIF, _OTHER_NIF):
-        draft = ModeloDraft(
-            profile_tax_id=nif,
-            subject_tax_id=nif,
-            **_draft_kwargs(),  # type: ignore[arg-type]
+        draft = ModeloDraft.model_validate(
+            {
+                "profile_tax_id": nif,
+                "subject_tax_id": nif,
+                **_draft_kwargs(),
+            },
         )
         assert draft.profile_tax_id == nif
         assert draft.subject_tax_id == nif
@@ -91,10 +95,12 @@ def test_both_nifs_are_individually_valid() -> None:
 
 def test_coherent_draft_rehydrates_from_its_persisted_json() -> None:
     """The builder's coherent shape survives the JSON boundary the store reads through."""
-    draft = ModeloDraft(
-        profile_tax_id=_PROFILE_NIF,
-        subject_tax_id=_PROFILE_NIF,
-        **_draft_kwargs(),  # type: ignore[arg-type]
+    draft = ModeloDraft.model_validate(
+        {
+            "profile_tax_id": _PROFILE_NIF,
+            "subject_tax_id": _PROFILE_NIF,
+            **_draft_kwargs(),
+        },
     )
 
     reloaded = ModeloDraft.model_validate_json(draft.model_dump_json())
@@ -114,10 +120,12 @@ def test_draft_refuses_a_schema_marker_naming_another_revision() -> None:
     kwargs["schema_version"] = registry_schema_version(modelo="130", revision_id="WRONG")
 
     with pytest.raises(ValidationError, match=r"does not match the registry marker"):
-        ModeloDraft(
-            profile_tax_id=_PROFILE_NIF,
-            subject_tax_id=_PROFILE_NIF,
-            **kwargs,  # type: ignore[arg-type]
+        ModeloDraft.model_validate(
+            {
+                "profile_tax_id": _PROFILE_NIF,
+                "subject_tax_id": _PROFILE_NIF,
+                **kwargs,
+            },
         )
 
 
@@ -127,10 +135,12 @@ def test_draft_refuses_a_modelo_that_contradicts_its_snapshot() -> None:
     kwargs["modelo"] = "303"
 
     with pytest.raises(ValidationError, match=r"does not match its snapshot_ref modelo"):
-        ModeloDraft(
-            profile_tax_id=_PROFILE_NIF,
-            subject_tax_id=_PROFILE_NIF,
-            **kwargs,  # type: ignore[arg-type]
+        ModeloDraft.model_validate(
+            {
+                "profile_tax_id": _PROFILE_NIF,
+                "subject_tax_id": _PROFILE_NIF,
+                **kwargs,
+            },
         )
 
 
@@ -140,20 +150,24 @@ def test_schema_marker_helper_is_the_shape_the_draft_requires() -> None:
 
     assert marker == "registry:130:2019-y-siguientes"
 
-    draft = ModeloDraft(
-        profile_tax_id=_PROFILE_NIF,
-        subject_tax_id=_PROFILE_NIF,
-        **_draft_kwargs(),  # type: ignore[arg-type]
+    draft = ModeloDraft.model_validate(
+        {
+            "profile_tax_id": _PROFILE_NIF,
+            "subject_tax_id": _PROFILE_NIF,
+            **_draft_kwargs(),
+        },
     )
     assert draft.schema_version == marker
 
 
 def test_rehydration_refuses_a_persisted_divergent_draft() -> None:
     """A draft already stored with divergent axes fails to load, rather than reading clean."""
-    coherent = ModeloDraft(
-        profile_tax_id=_PROFILE_NIF,
-        subject_tax_id=_PROFILE_NIF,
-        **_draft_kwargs(),  # type: ignore[arg-type]
+    coherent = ModeloDraft.model_validate(
+        {
+            "profile_tax_id": _PROFILE_NIF,
+            "subject_tax_id": _PROFILE_NIF,
+            **_draft_kwargs(),
+        },
     )
     tampered = json.loads(coherent.model_dump_json())
     tampered["subject_tax_id"] = _OTHER_NIF

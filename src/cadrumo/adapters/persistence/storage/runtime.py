@@ -135,14 +135,22 @@ class StorageRuntime(BaseModel):
 
         active = current_active_bucket_session()
         assert active is not None
-        settings = Settings(
-            cadrumo_local_storage_root=self.storage_root,
-            cadrumo_active_profile=self.bucket_id,
-        )
         # The active bucket session owns the engine lifecycle: acquire the
         # engine through it so the handle is registered on the session and
         # disposed on session close/switch, rather than left to a caller.
-        engine = active.acquire_engine(settings)
+        #
+        # The route is passed as a factory because the session caches its
+        # engine after the first storage access, and every later access
+        # discarded this Settings unread. Building it eagerly cost a full
+        # model validation -- which re-resolves every configured path against
+        # the filesystem -- on each of the three repository constructions a
+        # single profile write performs.
+        engine = active.acquire_engine(
+            lambda: Settings(
+                cadrumo_local_storage_root=self.storage_root,
+                cadrumo_active_profile=self.bucket_id,
+            ),
+        )
         return SecureObjectRepository(
             engine=engine,
             namespace_registry=STORAGE_NAMESPACE_REGISTRY,
@@ -403,8 +411,28 @@ def inspect_bucket_storage_runtime(
         and current_route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
     ):
         return inspect_storage_runtime(resolved, now=now)
-    bucket_settings = settings_for_active_profile_bucket(trimmed, resolved)
-    return inspect_storage_runtime(bucket_settings, now=now)
+    return inspect_storage_runtime(_bucket_route_settings(trimmed, resolved), now=now)
+
+
+def _bucket_route_settings(bucket_id: str, source: Settings) -> Settings:
+    """Return ``source`` routed to ``bucket_id``, through the session memo when one owns it.
+
+    The derivation itself stays in the core settings boundary
+    (:func:`~core.config.settings_for_active_profile_bucket`); this only
+    chooses whether to recompute it. When the live bucket session is the one
+    being routed to, it holds the previous answer for exactly the lifetime
+    that answer stays valid, so the repeated repository constructions behind
+    one write share a single derivation.
+
+    Anything else -- no session, or a session bound to a DIFFERENT bucket --
+    derives fresh. A session only ever memoises its own bucket's route, so
+    inspecting bucket B while bucket A is unlocked can never be served A's
+    answer.
+    """
+    session = current_active_bucket_session()
+    if session is not None and not session.sealed and session.bucket_id == bucket_id:
+        return session.routed_settings(source)
+    return settings_for_active_profile_bucket(bucket_id, source)
 
 
 __all__ = [

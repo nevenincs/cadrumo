@@ -42,8 +42,8 @@ _INVALID_LEGAL_REF = "NOT VALID REF"
 
 
 def _list_row(**overrides: object) -> BindingListRowPayload:
-    return BindingListRowPayload(
-        **{
+    return BindingListRowPayload.model_validate(
+        {
             "modelo": "130",
             "revision": "2019-y-siguientes",
             "filing_year": 2024,
@@ -62,8 +62,8 @@ def _list_row(**overrides: object) -> BindingListRowPayload:
 
 
 def _preview_row(**overrides: object) -> BindingPreviewRowPayload:
-    return BindingPreviewRowPayload(
-        **{
+    return BindingPreviewRowPayload.model_validate(
+        {
             "binding_id": "ledger-ingresos",
             "source": "ledger_aggregation",
             "readiness": "ready",

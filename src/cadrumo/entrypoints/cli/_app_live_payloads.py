@@ -24,7 +24,7 @@ persistence contract.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Annotated, Any, Literal
 
 from pydantic import AfterValidator, Field, field_validator, model_validator
@@ -37,7 +37,9 @@ from ...application.live import (
     SnapshotLifecycleState,
 )
 from ...core import Modelo, Period
+from ...core.errors import CoreValidationError
 from ...core.identity import BucketId, ContentDigest, SnapshotId
+from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import BindingId
 from ._schemas import OutputSchema, register_schema
 
@@ -897,8 +899,10 @@ def _canonical_borrador_utc_timestamp(value: str) -> str:
         timestamp = datetime.fromisoformat(value)
     except ValueError as exc:
         raise ValueError("must be an ISO-8601 timestamp") from exc
-    if timestamp.tzinfo is None or timestamp.utcoffset() != timedelta(0):
-        raise ValueError("must be a UTC timestamp")
+    try:
+        validate_utc_aware(timestamp)
+    except CoreValidationError as exc:
+        raise ValueError("must be a UTC timestamp") from exc
     return value
 
 

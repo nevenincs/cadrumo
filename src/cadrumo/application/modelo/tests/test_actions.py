@@ -45,9 +45,9 @@ from ....domain.modelos import (
 from ...workflow import WorkflowInputMismatchError
 from .. import ModeloAggregationBindingError
 from .._calculation_actions import (
-    _IVA_LEDGER_EXEMPT_REGIMES,
     _reject_caller_overrides_of_source_bindings,
 )
+from .._calculation_preparation import _IVA_LEDGER_EXEMPT_REGIMES
 from .._iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
     iva_wallet_blocked_message,
@@ -835,7 +835,10 @@ def test_iva_wallet_unsupported_decision_type_is_localised() -> None:
 
     assert raised.value.translated_message == "application.modelo.errors.iva_wallet_unsupported_decision_type"
     assert raised.value.context == {"decision_type": "object"}
-    assert "application.modelo.errors.iva_wallet_unsupported_decision_type" not in str(raised.value)
+    # str(exc) intentionally falls back to the translation key when no
+    # explicit message is supplied (CadrumoError.__init__), so it carries
+    # readable, greppable text rather than being blank -- see
+    # test_error_message_never_blank.py for the pinned base-class contract.
 
 
 def test_source_bound_casilla_override_error_is_localised() -> None:

@@ -23,9 +23,9 @@ from ....core.access_gate import (
 from ....core.resources import bundled_path as _bundled_path
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from ._errors import RegistrySnapshotError, RegistryValidationError
-from ._loader import _collect_registry_tree_fingerprints, load_registry_tree
+from ._loader import collect_registry_tree_fingerprints, load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
-from ._snapshot import _build_validated_snapshot
+from ._snapshot import build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._validate import RegistryValidator
 from ._validate_evidence import flush_corpus_text_cache
@@ -64,7 +64,7 @@ class ValidatedRegistryAuthority:
         return _load_authority(
             resolved_root,
             resolved_source_root,
-            _collect_registry_tree_fingerprints(resolved_root) + collect_convenio_fingerprints(resolved_root),
+            collect_registry_tree_fingerprints(resolved_root) + collect_convenio_fingerprints(resolved_root),
             collect_source_evidence_fingerprints(resolved_source_root),
         )
 
@@ -116,6 +116,10 @@ class ValidatedRegistryAuthority:
         """
         self._registry_validated = True
         self._validated_modelos.update(modelo.id for modelo in self.modelos)
+
+    def mark_registry_validated(self) -> None:
+        """Mark this authority as validated after a certified verdict."""
+        self._mark_registry_validated()
 
     @property
     def authorization_manifest(self) -> AuthorizationManifest:
@@ -188,7 +192,7 @@ class ValidatedRegistryAuthority:
         if cached is not None:
             return cached
         modelo = self.validate_modelo(modelo_id)
-        snapshot = _build_validated_snapshot(
+        snapshot = build_validated_snapshot(
             modelo,
             self.catalogues,
             filing_year=filing_year,
@@ -306,7 +310,7 @@ def _load_authority(
         verdict_key=verdict_key,
         registry_fingerprints=_registry_fingerprint,
     ):
-        authority._mark_registry_validated()
+            authority.mark_registry_validated()
     else:
         authority.validate_registry()
         certify_registry_validation(root, verdict_key=verdict_key)
@@ -328,7 +332,7 @@ def stamp_bundled_registry_verdict(registry_root: Path, *, package_version: str 
         The path the shipped verdict was written to.
     """
     resolved = registry_root.expanduser().resolve()
-    fingerprints = _collect_registry_tree_fingerprints(resolved) + collect_convenio_fingerprints(resolved)
+    fingerprints = collect_registry_tree_fingerprints(resolved) + collect_convenio_fingerprints(resolved)
     output_path = shipped_verdict_location(resolved)
     stamp_bundled_verdict(
         registry_fingerprints=fingerprints,

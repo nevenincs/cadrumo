@@ -111,8 +111,8 @@ _DiscardReason = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
-_BINDING_ID_ADAPTER = TypeAdapter(BindingId)
-_RELATION_ID_ADAPTER = TypeAdapter(RelationId)
+_BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
+_RELATION_ID_ADAPTER: TypeAdapter[RelationId] = TypeAdapter(RelationId)
 
 
 def _validated_casilla_id(value: object, *, surface: str) -> CasillaId:
@@ -187,8 +187,9 @@ def _canonical_row_binding_values(
         binding_id = _validated_binding_id(raw_binding_id, surface=surface)
         if not isinstance(raw_rows, Mapping):
             raise ModeloValidationError(f"{surface} for binding {binding_id!r} must be a row-index mapping")
+        typed_rows = TypeAdapter(dict[object, object]).validate_python(raw_rows)
         rows: dict[str, str] = {}
-        for raw_row_index, raw_value in raw_rows.items():
+        for raw_row_index, raw_value in typed_rows.items():
             row_index = _validated_row_binding_index(raw_row_index, surface=f"{surface}[{binding_id!r}]")
             if row_index in rows:
                 raise ModeloValidationError(
@@ -737,7 +738,7 @@ class CalculationRevision(BaseModel):
         if not isinstance(value, Sequence) or isinstance(value, str | bytes):
             raise ModeloValidationError("source_transaction_ids must be a sequence")
         normalized: list[str] = []
-        for item in value:
+        for item in TypeAdapter(tuple[object, ...]).validate_python(value):
             if not isinstance(item, str):
                 raise ModeloValidationError("source_transaction_ids must contain strings")
             normalized.append(item)
@@ -770,7 +771,7 @@ class CalculationRevision(BaseModel):
             return {}
         if not isinstance(value, Mapping):
             raise ModeloValidationError("row_binding_values must be a binding -> row-index mapping")
-        raw_mapping: dict[object, object] = {key: item for key, item in value.items()}
+        raw_mapping = TypeAdapter(dict[object, object]).validate_python(value)
         return _canonical_row_binding_values(
             raw_mapping,
             surface="row_binding_values",
@@ -821,7 +822,7 @@ class CalculationRevisionCatalogue(BaseModel):
         return tuple(rev for rev in self.revisions.values() if rev.work_unit_id == work_unit_id)
 
     @override
-    def __iter__(self) -> Iterator[CalculationRevision]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[CalculationRevision]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields CalculationRevision records, not BaseModel field-value tuples
         return iter(self.revisions.values())
 
     def __len__(self) -> int:

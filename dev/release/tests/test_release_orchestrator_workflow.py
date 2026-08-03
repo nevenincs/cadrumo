@@ -351,12 +351,14 @@ def test_the_seal_module_exists_and_is_runnable() -> None:
 
 
 def test_dry_run_reaches_every_stage_of_the_chain() -> None:
-    """The rehearsal proves the whole orchestration, not just its last leg.
+    """The rehearsal proves bump, campaign, acquisition, and seal.
 
-    Before this pipeline, `dry_run` proved the two publication gates and
-    nothing upstream. A rehearsal that skipped the bump, campaign, acquisition
-    and seal would leave the four stages that were newly automated as the only
-    ones never exercised without a real release.
+    A rehearsal that skipped any of the four newly-automated stages would
+    leave it exercised only by a real release. It stops at the seal rather
+    than reaching publish-release.yml's own gates -- Gate 2 there pins the
+    exact packaging-smoke.yml source, which a rehearsal's lightweight
+    campaign lane structurally cannot produce (see the campaign/seal tests
+    below), so re-proving Gate 1/2 needs a real dispatch regardless.
     """
     document = _document()
     jobs = document["jobs"]
@@ -364,8 +366,37 @@ def test_dry_run_reaches_every_stage_of_the_chain() -> None:
     # preflight resolves it once; every later stage reads that resolution
     # rather than re-reading the raw input, so they cannot disagree.
     assert "dry_run" in jobs["preflight"]["outputs"]
-    for stage in ("bump", "seal"):
+    for stage in ("bump", "campaign", "seal"):
         assert "needs.preflight.outputs.dry_run" in str(jobs[stage]), f"{stage} does not read the resolved dry_run"
+
+
+def test_a_rehearsal_uses_the_quick_campaign_not_the_full_smoke() -> None:
+    """A rehearsal proves the chain wires together, not that the campaign is green.
+
+    That's what the campaign's own CI already checks. The
+    full packaging-smoke.yml campaign has historically taken 1-6 hours; a
+    dispatch whose dry_run defaults to true must not pay that cost just to
+    exercise bump/campaign/acquire/seal wiring, or every rehearsal becomes
+    the fleet's single longest-running job.
+    """
+    surface = _run_surface(_document(), "campaign")
+
+    assert "packaging-quick.yml" in surface, "the campaign stage never mentions the lightweight lane"
+    assert 'DRY_RUN}" == "true"' in surface, "the workflow choice must branch on the resolved dry_run"
+
+
+def test_a_rehearsal_never_dispatches_the_publication_authority() -> None:
+    """The seal step must not fire publish-release.yml for a dry_run candidate.
+
+    Gate 2 there pins the packaging-smoke.yml path; a rehearsal's candidate
+    points at packaging-quick.yml and would refuse every single time -- a
+    permanent, expected-looking failure with no diagnostic value, on a
+    separate workflow run the orchestrator's own alerting can't see.
+    """
+    surface = _run_surface(_document(), "seal")
+
+    assert 'DRY_RUN}" == "true"' in surface, "the publish-dispatch step must branch on the resolved dry_run"
+    assert "not dispatching publish-release.yml" in surface, "the skip must be visible in the run log, not silent"
 
 
 _BUMP_BRANCH = re.compile(

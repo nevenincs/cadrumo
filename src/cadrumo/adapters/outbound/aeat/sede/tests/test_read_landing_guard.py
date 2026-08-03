@@ -136,7 +136,7 @@ class TestUnrecognisedLandingsFailClosed:
             _assert_landing(landing_url)
 
     def test_a_surface_declaring_no_read_pages_refuses_its_own_read_page(self) -> None:
-        """An empty allow-list refuses everything; it does not wave landings through.
+        """An empty allow-list refuses everything; it never admits a landing by default.
 
         This is the configuration most likely to arise by accident — a
         caller wiring the guard with a path tuple that resolves empty —
@@ -167,6 +167,7 @@ class TestRefusalIsDiagnostic:
         with pytest.raises(SedeNavigationError) as excinfo:
             _assert_landing(aeat_url("sede", CENSAL_MODIF_DOMICILIO_FISCAL_PATH_CANARY))
         context = excinfo.value.context
+        assert context is not None
         assert context["surface"] == _SURFACE
         assert context["landed_path"] == CENSAL_MODIF_DOMICILIO_FISCAL_PATH_CANARY
         assert context["allowed_path_prefixes"] == (_READ_PREFIX,)

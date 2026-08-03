@@ -23,9 +23,9 @@ from .._operator import (
     project_review_item,
 )
 
-_BUCKET_ID = "70707070-7070-4070-8070-707070707070"
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_BUCKET_ID = "70707070-7070-4070-8070-707070707070"
 
 
 def test_unknown_review_kind_error_omits_raw_operator_value() -> None:
@@ -167,7 +167,7 @@ def _row_fields(**overrides: object) -> dict[str, object]:
 
 
 def test_queue_row_accepts_a_utc_aware_instant() -> None:
-    row = ReviewQueueRow(**_row_fields())
+    row = ReviewQueueRow.model_validate(_row_fields())
 
     assert row.since.utcoffset() == timedelta(0)
 
@@ -188,4 +188,4 @@ def test_queue_row_refuses_a_naive_or_non_utc_instant(instant: datetime) -> None
     projection and cross-source sorting stopped being deterministic.
     """
     with pytest.raises(ValidationError):
-        ReviewQueueRow(**_row_fields(since=instant))
+        ReviewQueueRow.model_validate(_row_fields(since=instant))

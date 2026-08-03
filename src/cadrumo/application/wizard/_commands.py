@@ -42,18 +42,15 @@ from typing import TYPE_CHECKING, Annotated
 if TYPE_CHECKING:
     from ...core.errors import CadrumoError
     from ...core.json_contract import Notice
-    from ...domain.user_profile import UserProfileRecord
     from ..workflow import WorkflowState
     from ._results import ConfigProfileCreateResult, ConfigProfileEditResult
 
 import contextlib
-import re
 
 import click
-import click.types
 import typer
 import typer._click.types
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 from pydantic_core import ErrorDetails
 
 from ...core.flows import CheckpointAvailability, FlowMode
@@ -63,6 +60,7 @@ from ..flows import (
     FlowAnswerError,
     FlowDefinition,
     FlowPage,
+    FlowSection,
     FlowSubmitError,
     flow_definition_from_wizard_flow,
     run_scripted_flow,
@@ -77,6 +75,15 @@ from ._format_hints import attach_format_hints
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
 from ._setup_legal_validators import attach_setup_legal_validators
+
+_OBJECT_SEQUENCE = TypeAdapter(tuple[object, ...])
+_TRANSLATION_CONTEXT = TypeAdapter(dict[str, object])
+
+
+def _translation_context(value: object) -> dict[str, object]:
+    if not isinstance(value, Mapping):
+        return {}
+    return _TRANSLATION_CONTEXT.validate_python(value)
 
 #: Which substrate :class:`FlowMode` each wizard verb drives. ``create``
 #: registers a fresh profile, ``edit`` modifies an existing one.
@@ -226,11 +233,6 @@ _IVA_REGIME_CHOICE_VALUES: list[str] = _iva_regime_choice_values()
 def _flag_name(question: WizardQuestion) -> str:
     """Map a question id to its primary Typer flag name."""
     return f"--{question.id}"
-
-
-def _no_flag_name(question: WizardQuestion) -> str:
-    """Map a CONFIRM question to its negative flag name."""
-    return f"--no-{question.id}"
 
 
 def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
@@ -671,7 +673,7 @@ def _force_pages_visible(definition: FlowDefinition, page_ids: frozenset[str]) -
     """
     if not page_ids:
         return definition
-    new_sections = []
+    new_sections: list[FlowSection] = []
     for section in definition.sections:
         new_items = tuple(
             item.model_copy(update={"visible_when": None})
@@ -732,7 +734,7 @@ def _answers_model_from_canonical(flow: WizardFlow, committed: Mapping[str, str]
     produced identically regardless of the frontend (scripted, line, or
     full-screen) that produced ``committed``.
     """
-    from ._persistence import _parse_canonical
+    from ._persistence import parse_canonical
     from ._widgets import validate_widget_answer
 
     typed: dict[str, object] = {}
@@ -741,7 +743,7 @@ def _answers_model_from_canonical(flow: WizardFlow, committed: Mapping[str, str]
             if question.id not in committed:
                 continue
             validated = validate_widget_answer(question, committed[question.id])
-            typed[question.id.replace("-", "_")] = _parse_canonical(question, validated)
+            typed[question.id.replace("-", "_")] = parse_canonical(question, validated)
     return flow.answers_model.model_validate(typed)
 
 
@@ -801,7 +803,7 @@ def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str |
     if question.widget is WizardWidget.CHECKBOX:
         if not isinstance(value, list | tuple):
             return None
-        tokens = [str(item) for item in value if str(item)]
+        tokens = [str(item) for item in _OBJECT_SEQUENCE.validate_python(value) if str(item)]
         return ",".join(tokens) if tokens else None
     if question.widget is WizardWidget.INTEGER:
         if isinstance(value, int):
@@ -867,20 +869,38 @@ def _python_parameter(
     )
 
 
-def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
-    """Build the three fixed mode-flag parameters."""
+def _mode_parameters(flow: WizardFlow, *, mode: WizardPersistMode) -> tuple[inspect.Parameter, ...]:
+    """Build the callback context, profile-name, and fixed mode-flag parameters.
+
+    Create keeps the name optional at parse time so the interactive
+    registration screen can collect it. The programmatic path still applies
+    ``_require_profile_name`` after dispatch, so headless create retains its
+    typed missing-name refusal. The injected ``ctx`` is part of the callback
+    contract rather than a profile field: the CLI frontend seam needs it to
+    emit the manager's closing envelope after the screen returns. Edit keeps
+    its existing required-name CLI contract.
+    """
     del flow
+    ctx = inspect.Parameter(
+        name="ctx",
+        kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        annotation=typer.Context,
+    )
+    profile_name_is_optional = mode == "create"
+    profile_name_default: object = None if profile_name_is_optional else ...
+    profile_name_argument = typer.Argument(
+        ...,
+        help=tr("cli.config.setup.profile_name_help"),
+    )
+    if profile_name_is_optional:
+        profile_name_annotation = Annotated[str | None, profile_name_argument]
+    else:
+        profile_name_annotation = Annotated[str, profile_name_argument]
     profile_name = inspect.Parameter(
         name="profile_name",
         kind=inspect.Parameter.KEYWORD_ONLY,
-        default=...,
-        annotation=Annotated[
-            str,
-            typer.Argument(
-                ...,
-                help=tr("cli.config.setup.profile_name_help"),
-            ),
-        ],
+        default=profile_name_default,
+        annotation=profile_name_annotation,
     )
     quiet = inspect.Parameter(
         name="quiet",
@@ -900,7 +920,7 @@ def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
             typer.Option("--accept-defaults", help=tr("cli.config.setup.accept_defaults_help")),
         ],
     )
-    return (profile_name, quiet, accept_defaults)
+    return (ctx, profile_name, quiet, accept_defaults)
 
 
 def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
@@ -975,38 +995,6 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
 def _all_question_ids(flow: WizardFlow) -> frozenset[str]:
     """Return every question id declared by the flow."""
     return frozenset(question.id for section in flow.sections for question in section.questions)
-
-
-def _seed_flow_definition(definition: FlowDefinition, seed_by_page_id: Mapping[str, str]) -> FlowDefinition:
-    """Return a copy of ``definition`` with page defaults seeded from a value map.
-
-    The seeded value becomes each page's render-time prefill (the
-    descriptor default the frontend shows before the operator types),
-    never a committed answer — the engine's answer map still records only
-    what the operator actually confirms, which is what the patch-scope
-    (``supplied_question_ids``) derivation relies on.
-    """
-    if not seed_by_page_id:
-        return definition
-    new_sections = []
-    for section in definition.sections:
-        new_items = tuple(
-            item.model_copy(update={"default": seed_by_page_id[item.id]})
-            if isinstance(item, FlowPage) and item.id in seed_by_page_id
-            else item
-            for item in section.items
-        )
-        new_sections.append(section.model_copy(update={"items": new_items}))
-    return definition.model_copy(update={"sections": tuple(new_sections)})
-
-
-def _load_on_record(profile_id: str) -> UserProfileRecord | None:
-    """Load the active :class:`UserProfileRecord` for the on-record seed and projection."""
-    from ..user_profile import profile_storage_session
-    from ..workflow import workflow_state_repository
-
-    with profile_storage_session(profile_id):
-        return workflow_state_repository().load().active_profile_record()
 
 
 def _run_full_flow(
@@ -1163,8 +1151,8 @@ def _render_error_inside_language_override(exc: CadrumoError) -> None:
     if not isinstance(translated_key, str) or not translated_key:
         return
 
-    context = getattr(exc, "context", None) or {}
-    rendered = tr(translated_key, **{key: value for key, value in context.items()})
+    context = _translation_context(getattr(exc, "context", None))
+    rendered = tr(translated_key, **context)
     exc.args = (rendered, *exc.args[1:])
     exc.translated_message = None
 
@@ -1296,14 +1284,6 @@ def _wizard_field_flags(flow: WizardFlow) -> dict[str, str]:
         for section in flow.sections
         for question in section.questions
     }
-
-
-def _replace_validation_field_names(message: str, field_flags: dict[str, str]) -> str:
-    """Replace model field identifiers in ``message`` with operator-facing flags."""
-    rendered = message
-    for field_name, flag_name in sorted(field_flags.items(), key=lambda item: len(item[0]), reverse=True):
-        rendered = re.sub(rf"\b{re.escape(field_name)}\b", flag_name, rendered)
-    return rendered
 
 
 def _validation_location_flag(location: tuple[object, ...], field_flags: dict[str, str]) -> str:
@@ -1829,7 +1809,7 @@ def build_wizard_command(
     nor the values it needs is refused with the flag form named.
     """
     question_params = _question_parameters(flow)
-    mode_params = _mode_parameters(flow)
+    mode_params = _mode_parameters(flow, mode=mode)
     parameters = (*mode_params, *question_params)
 
     def _command(**kwargs: object) -> None:

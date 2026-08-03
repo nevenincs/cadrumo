@@ -37,8 +37,8 @@ from ..storage import (
     OutboundStorageNetworkError,
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
+    next_drive_page_token,
 )
-from ..storage._drive_pagination import next_drive_page_token
 from ._api import GoogleDriveFile, execute_request
 
 # .../d/<ID>/... (file, spreadsheets, document) | ...?id=<ID> | bare <ID>.

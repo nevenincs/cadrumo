@@ -43,7 +43,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Final
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
@@ -92,6 +92,9 @@ from ._observations_repository import CalculationObservationRepository, Observat
 from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
 
+_STRING_SEQUENCE = TypeAdapter(tuple[str, ...])
+_STRING_OBJECT_MAPPING = TypeAdapter(dict[str, object])
+
 
 def _selector_year_delta(value: object) -> int:
     """Narrow a binding-selector ``filing_year_delta`` to ``int``.
@@ -111,8 +114,11 @@ def _selector_periods(value: object) -> tuple[str, ...]:
     """Normalise a binding-selector ``source_periods`` into a tuple of strings."""
     if isinstance(value, str):
         return (value,)
-    if isinstance(value, tuple) and all(isinstance(item, str) for item in value):
-        return tuple(str(item) for item in value)
+    if isinstance(value, tuple):
+        try:
+            return _STRING_SEQUENCE.validate_python(value)
+        except ValueError as exc:
+            raise BindingPrefillTypeError("binding selector 'source_periods' must contain strings") from exc
     raise BindingPrefillTypeError(
         f"binding selector 'source_periods' must be str|tuple[str,...], got {type(value).__name__}",
     )
@@ -408,16 +414,14 @@ def _observation_from_iva_compensation_history(
         operand_refs: tuple[CasillaId, ...] = ()
         operand_values: tuple[Decimal, ...] = ()
         if casilla_id == _M303_POSTERIOR_CASILLA and (
-            state.prior_pending_amount is not None and state.applied_amount is not None
+        state.prior_pending_amount is not None and state.applied_amount is not None
         ):
             operand_refs = (_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA, _M303_COMPENSACION_APLICADA_CASILLA)
             operand_values = (state.prior_pending_amount, state.applied_amount)
         elif casilla_id == _M303_GENERADA_CASILLA and state.period_result_amount is not None:
             operand_refs = (_M303_RESULTADO_CASILLA,)
             operand_values = (state.period_result_amount,)
-        elif casilla_id == _M303_DISPONIBLE_CASILLA and (
-            state.pending_for_later_amount is not None and state.generated_amount is not None
-        ):
+        elif casilla_id == _M303_DISPONIBLE_CASILLA and state.pending_for_later_amount is not None:
             operand_refs = (_M303_POSTERIOR_CASILLA, _M303_GENERADA_CASILLA)
             operand_values = (state.pending_for_later_amount, state.generated_amount)
         return _iva_compensation_history_observation(
@@ -581,8 +585,7 @@ def _pre_activity_scoped_binding_ids(
 
 def _selector_value(selector: object, key: str, default: object) -> object:
     if isinstance(selector, dict):
-        # items() yields (Unknown, object) pairs; filter by key to preserve None-valued entries.
-        return next((v for k, v in selector.items() if k == key), default)
+        return _STRING_OBJECT_MAPPING.validate_python(selector).get(key, default)
     return getattr(selector, key, default)
 
 
