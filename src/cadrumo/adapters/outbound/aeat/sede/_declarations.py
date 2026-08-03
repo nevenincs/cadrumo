@@ -939,6 +939,7 @@ async def _capture_filed_declaration_observation_from_row(
     if declaration.archive_link_text and declaration.archive_cell_index is not None:
         try:
             submitted_artefact, submitted_body = await _capture_submitted_file_artefact(
+                context=context,
                 page=page,
                 row_locator=row_locator,
                 declaration=declaration,
