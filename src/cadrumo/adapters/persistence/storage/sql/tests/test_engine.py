@@ -2,7 +2,7 @@
 
 Exercises :func:`cadrumo.adapters.persistence.storage.sql.create_engine_from_settings`
 covering the round-trip happy path, parent-directory creation, the
-storage-root fallback derivation, and the project-root anchoring of
+storage-root fallback derivation, and the application-data-root anchoring of
 relative SQLite URLs.
 """
 
@@ -19,8 +19,8 @@ from typing import Any
 import pytest
 from sqlalchemy import text
 
+from ......core import PRODUCT_IDENTITY
 from ......core.config import Settings
-from ......tests import REPO_ROOT
 from ...errors import StorageError
 from .. import create_engine_from_settings, dispose_engine
 
@@ -204,28 +204,36 @@ def test_engine_refuses_creating_a_database_with_former_product_filename(tmp_pat
     assert not former_db.parent.exists()
 
 
-def test_engine_anchors_relative_sqlite_urls_to_project_root(tmp_path: Path) -> None:
-    """Relative SQLite URLs must resolve against REPO_ROOT, not the process cwd."""
+def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Relative SQLite URLs resolve against the application-data anchor, not cwd.
+
+    ``core.paths._relative_path_anchor`` documents that this anchor has no
+    source-checkout arm: a relative override always resolves under the
+    platform user-data root, never a repo-root walk and never the process
+    cwd, even from inside a checkout (the corpus-root decision pinned by
+    ``test_justificante_corpus_derivation.py`` is the same shape). LOCALAPPDATA
+    is pinned to an isolated tmp_path subtree so the test never touches the
+    real machine's application-data directory.
+    """
+    isolated_app_data = tmp_path / "app-data"
+    monkeypatch.setenv("LOCALAPPDATA", str(isolated_app_data))
     relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
-    anchored_db = REPO_ROOT / relative_db
+    anchored_db = isolated_app_data / PRODUCT_IDENTITY.python_package / relative_db
     settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
+
+    cwd_marker = tmp_path / "cwd"
+    cwd_marker.mkdir()
     original_cwd = Path.cwd()
-    os.chdir(tmp_path)
+    os.chdir(cwd_marker)
     try:
         with _engine_for(settings) as engine:
             with engine.connect() as conn:
                 conn.execute(text("select 1"))
             assert Path(engine.url.database or "") == anchored_db
             assert anchored_db.exists()
-            assert not (tmp_path / relative_db).exists()
+            assert not (cwd_marker / relative_db).exists()
     finally:
         os.chdir(original_cwd)
-        if anchored_db.exists():
-            anchored_db.unlink()
-        parent = anchored_db.parent
-        while parent != REPO_ROOT and parent.exists():
-            try:
-                parent.rmdir()
-            except OSError:
-                break
-            parent = parent.parent

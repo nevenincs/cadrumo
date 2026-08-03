@@ -250,8 +250,18 @@ def get_censo_modelo_foundation_contract() -> CensoModeloFoundationContract:
     return build_censo_modelo_foundation_contract()
 
 
+def _require_modelo_string(modelo: object) -> str:
+    """Reject a non-string modelo code before any equality or ``strip`` lookup."""
+    if not isinstance(modelo, str):
+        raise RegistryValidationError(
+            f"censo modelo code must be a string, got {type(modelo).__name__}: {modelo!r}",
+        )
+    return modelo
+
+
 def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
     """Return the :class:`CensoModeloOwnership` record for an exact string modelo code."""
+    modelo = _require_modelo_string(modelo)
     authority = resources().modelos.authority
     if modelo == _ACTIVE_CENSO_MODELO:
         return _active_036_ownership_from_registry(authority)
@@ -355,6 +365,7 @@ def resolve_censo_modelo_work_unit_foundation(
         A :class:`CensoModeloFoundationResult` when the modelo is a censo modelo,
         or ``None`` when the modelo is not registered as a censo modelo.
     """
+    modelo = _require_modelo_string(modelo)
     ownership = _find_censo_modelo_ownership(modelo)
     if ownership is None:
         return None
