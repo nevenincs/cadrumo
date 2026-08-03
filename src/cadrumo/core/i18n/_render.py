@@ -158,6 +158,37 @@ def clear_output_language_cache() -> None:
     _cached_output_language.cache_clear()
 
 
+def clear_output_language_cache_for_settings_override() -> None:
+    """Invalidate at an ``override_settings`` boundary the resolver does not own.
+
+    ``override_settings`` invalidates at both of its boundaries because the
+    cache keys an override block by ``id(override)`` and a GC'd block's address
+    can be reused. That is right for every block an operator or a command
+    opens, and wrong for exactly one: resolving the active profile's language
+    scopes its own read with ``override_settings(cadrumo_active_profile=...)``,
+    so the resolution invalidated the very entry it was about to store.
+
+    The version is part of the cache key, so each resolution left the next call
+    keyed to a dead version — a cache that could never serve a hit while a
+    bucket session was bound. Every ``tr()`` then paid a full encrypted profile
+    read and three ``Settings`` constructions, which is roughly 44 ms each on
+    Windows, where a construction resolves 28 configured paths. One manager
+    repaint resolves a few hundred strings, so re-wording the page after a
+    language change cost around thirteen seconds.
+
+    Suppressing the boundary only while a resolution is in flight is what
+    separates the two cases: the profile-write, registration, and CLI-init
+    invalidations all go through :func:`clear_output_language_cache` and are
+    never suppressed, so a write that genuinely moves the language is still
+    seen. The flag is a :class:`~contextvars.ContextVar`, so a resolution
+    running on one task cannot silence another's boundary, and a thread that
+    never resolved sees the default and invalidates normally.
+    """
+    if _RESOLVING_OUTPUT_LANGUAGE.get():
+        return
+    clear_output_language_cache()
+
+
 _OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
     OUTPUT_LANGUAGE_ENV_VAR,
     "CADRUMO_DATABASE_URL",
@@ -203,8 +234,25 @@ def _output_language_cache_key() -> tuple[object, ...]:
     )
 
 
+_RESOLVING_OUTPUT_LANGUAGE: ContextVar[bool] = ContextVar("cadrumo_i18n_resolving_output_language", default=False)
+"""Whether this context is inside :func:`_resolve_output_language`.
+
+Read by :func:`clear_output_language_cache_for_settings_override` to tell a
+resolution's own scoping block from every other override boundary.
+"""
+
+
 @lru_cache(maxsize=128)
 def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
+    token = _RESOLVING_OUTPUT_LANGUAGE.set(True)
+    try:
+        return _resolve_output_language()
+    finally:
+        _RESOLVING_OUTPUT_LANGUAGE.reset(token)
+
+
+def _resolve_output_language() -> str:
+    """Resolve the language from settings and the active profile, uncached."""
     try:
         settings = load_settings()
     except (CoreError, FormerProductStateError, KeyError, ValueError, AttributeError) as exc:
