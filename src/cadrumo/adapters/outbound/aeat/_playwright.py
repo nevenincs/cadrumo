@@ -25,7 +25,7 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
     from playwright.async_api import BrowserContext, Page, Playwright, Response
@@ -51,6 +51,12 @@ else:
             registry-bound error; adapter boundaries catch and wrap it in registered
             Browser/Sede errors.
             """
+
+            __bare_base_rationale__: ClassVar[str] = (
+                "optional-extra fallback alias for playwright.async_api.Error; it must match the "
+                "third-party exception shape when Playwright is absent and is only caught/wrapped by "
+                "adapter boundaries"
+            )
 
         class PlaywrightTimeoutError(PlaywrightError):
             """Fallback for ``playwright.async_api.TimeoutError`` without the browser extra.

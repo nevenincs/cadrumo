@@ -36,7 +36,7 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from ...core.time import now
 from .._workflow_auth_models import AuthState, CertificateSourceRecord
@@ -48,9 +48,17 @@ if TYPE_CHECKING:
 class CertificateSourceNoActiveBucketError(Exception):
     """Raised when a certificate-source mutation runs before an active profile bucket exists."""
 
+    __bare_base_rationale__: ClassVar[str] = (
+        "certificate-source mutation precondition signal for an uninitialised local profile bucket"
+    )
+
 
 class CertificateSourceNotFoundError(KeyError):
     """Raised when a requested certificate source name is not registered."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "mapping-style certificate-source lookup miss; inherits KeyError so callers can preserve key semantics"
+    )
 
 
 def _auth_state(state: WorkflowState) -> AuthState:

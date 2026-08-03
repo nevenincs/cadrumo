@@ -71,6 +71,7 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -150,6 +151,10 @@ def sandbox_label(name: str) -> str:
 class SandboxAlreadyExistsError(Exception):
     """Raised when ``create_sandbox`` targets a name that already has a manifest."""
 
+    __bare_base_rationale__: ClassVar[str] = (
+        "sandbox lifecycle application-service refusal; CLI boundary renders it as an operator action refusal"
+    )
+
     def __init__(self, label: str) -> None:
         super().__init__(f"a sandbox labelled {label!r} already exists")
         self.label = label
@@ -157,6 +162,10 @@ class SandboxAlreadyExistsError(Exception):
 
 class SandboxSourceNotFoundError(Exception):
     """Raised when ``create_sandbox``'s seed source names an unknown or non-live profile."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "sandbox seed-source lookup miss; intentionally local to sandbox lifecycle orchestration"
+    )
 
     def __init__(self, name: str) -> None:
         super().__init__(f"no live profile named {name!r} to seed the sandbox from")
@@ -166,6 +175,10 @@ class SandboxSourceNotFoundError(Exception):
 class SandboxNotFoundError(Exception):
     """Raised when a sandbox lookup targets an unknown bucket."""
 
+    __bare_base_rationale__: ClassVar[str] = (
+        "sandbox bucket lookup miss; intentionally local to sandbox lifecycle orchestration"
+    )
+
     def __init__(self, bucket_id: str) -> None:
         super().__init__(f"no bucket registered with id {bucket_id!r}")
         self.bucket_id = bucket_id
@@ -174,9 +187,17 @@ class SandboxNotFoundError(Exception):
 class SandboxDiscardRefusedError(Exception):
     """Raised when discarding a bucket is refused by the sandbox destructive-action gate."""
 
+    __bare_base_rationale__: ClassVar[str] = (
+        "sandbox destructive-action gate refusal; intentionally local to sandbox lifecycle orchestration"
+    )
+
 
 class SandboxNotArchivedError(Exception):
     """Raised when ``restore_sandbox`` targets a sandbox that is not currently archived."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "sandbox restore precondition refusal; intentionally local to sandbox lifecycle orchestration"
+    )
 
     def __init__(self, bucket_id: str) -> None:
         super().__init__(f"bucket {bucket_id!r} is not archived; there is nothing to restore")
@@ -185,6 +206,10 @@ class SandboxNotArchivedError(Exception):
 
 class SandboxMergeRefusedError(Exception):
     """Raised when ``merge_sandbox`` is refused (missing confirmation, unknown scope target)."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "sandbox merge confirmation/scope refusal; intentionally local to sandbox lifecycle orchestration"
+    )
 
 
 class SandboxMergeScope(StrEnum):

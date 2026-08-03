@@ -85,6 +85,8 @@ class SiteHealthStatusLike(Protocol):
 class CadrumoError(Exception):
     """Base exception for all registered Cadrumo errors."""
 
+    __bare_base_rationale__: ClassVar[str] = "central root of the registry-bound exception hierarchy"
+
     code: ClassVar[ErrorCode]
 
     def __init_subclass__(cls, **kwargs: object) -> None:
