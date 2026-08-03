@@ -24,6 +24,39 @@ the root cannot. Relocating a category the operator may not override is refused
 rather than silently honoured, so a test cannot pin a layout production
 guarantees is fixed.
 
+Three forms, by where the location is needed:
+
+- :func:`storage_overrides` -- kwargs to splat into
+  :func:`~core.config.override_settings`. The common case.
+- :func:`storage_env_overrides` -- the same thing keyed by environment
+  variable, for a test handing an environment to a subprocess.
+- :func:`relocated_storage_path` -- one resolved path, for when the location
+  is wanted before the ``Settings`` exists or after it goes out of scope.
+
+Hand the kwargs to :func:`~core.config.override_settings`, never to the
+``Settings`` constructor. ``Settings(**mapping)`` type-checks as a splat onto
+pydantic-settings' own ``_env_file``-style parameters and buries the call in
+hundreds of diagnostics; the context manager takes ``**overrides: object`` and
+stays clean. Measured at 414 diagnostics on one file before the switch.
+
+Three shapes look like they want these helpers and do not. Each was found by
+reading a real site, and re-pointing any of them removes something:
+
+- **A propagated value.** ``store = other_settings.cadrumo_secret_store_dir``
+  passed back as ``cadrumo_secret_store_dir=store`` names the field but writes
+  no literal: the test is deliberately reusing a location it did not choose,
+  and relocating it breaks the reuse.
+- **An asserted string.** ``assert "CADRUMO_SECRET_STORE_DIR" in help_text``
+  checks that a surface *documents* the variable. The literal is the subject.
+- **Synthetic fixture data.** A field name or leaf appearing inside a recorded
+  argument or a golden payload resolves nothing.
+
+A fourth case is a deliberate exception rather than a false positive: a test
+whose subject is an operator collapsing two members onto ONE directory cannot
+use these at all, because the declared subpaths are distinct by construction.
+Spell those literals out and say why, or the test silently stops exercising
+the aliasing it exists for.
+
 See Also:
     :func:`~core.storage_path`
         Resolver for where a category actually lives, override included.
