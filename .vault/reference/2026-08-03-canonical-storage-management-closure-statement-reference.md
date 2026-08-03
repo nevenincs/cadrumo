@@ -13,14 +13,25 @@ related: []
 
 ## Summary
 
-A skeleton for the eventual closure statement, drafted against known-shaped
-evidence while measurement is still in flight, so the statement can be
-assembled rather than composed under time pressure once the last piece
-lands. **The verdict is deliberately left open below.** Every section states
-what the evidence will be, which artefact carries it, and — the part a
-closure document usually omits — what would have to be true for the answer
-to that section to be "no". A skeleton with a shape only for "yes" will find
-one; this is written to be equally capable of concluding either way.
+Drafted as a skeleton against known-shaped evidence while measurement was still
+in flight, so the statement could be assembled rather than composed under time
+pressure. Every section states what the evidence will be, which artefact carries
+it, and — the part a closure document usually omits — what would have to be true
+for the answer to that section to be "no". A skeleton with a shape only for "yes"
+will find one; this was written to be equally capable of concluding either way.
+
+**The criterion element is now resolved, and it did not resolve to a number.**
+The operator's criterion — *"if we can satisfy that all file producing sites are
+enrolled we're done"* — turns out not to be decidable over the set it names,
+because nearly half of all write sites are handed their path by a caller and so
+have no enrollment answer of their own. Restated over path-*choosing* sites it is
+decidable, and it holds. Element 5 carries the measurement, element 5a the two
+instruments and their blind spots, and the verdict states the one sentence that
+can be defended in place of the one that cannot.
+
+**Read the verdict as governing the criterion element only.** The remaining
+elements keep their own statuses, and the conjunction rule below still governs
+the whole.
 
 ## How to use this document when the evidence lands
 
@@ -190,27 +201,67 @@ beneath it is a decision someone took rather than a gap nobody noticed.
 — i.e. this document ships silent on it, which is the exact failure mode
 the closure-criterion reference exists to prevent.
 
-### 5. The manual review of the corrected ~99 write sites
+### 5. The criterion is not decidable as worded, and the write-site census is why
 
-**STATUS: in progress** (per the coordinator, underway and already
-producing findings neither census could reach on its own).
+**STATUS: satisfied, with the criterion restated.** This element asked for a
+manual review of the ~99 write sites. The review was performed by census
+rather than by hand, and it returned something stronger than a classification:
+**the criterion cannot be evaluated over the set it names.**
 
-**Provenance**: not yet available as a citable artefact. When it lands,
-record here who performed the review, whether it covered all ~99 sites or
-a subset, and whether the site count itself was re-verified at a pinned
-SHA rather than inherited from the corrected-267-to-99 measurement (below)
-without re-running it.
+**Provenance**: `dev/write_site_census.py`, landed with its test at commit
+`30f2493ee1`, quantifying over write primitives in the AST rather than over the
+taxonomy — the direction that matters, since a census iterating declared
+members cannot see an *un*enrolled site. Recomputable at any revision by
+`python -m dev.write_site_census <revision>`; the figure is deliberately not
+restated here as a bare number, because a count in prose has no maintainer and
+this corpus has already lost two to that.
 
-**Evidence**: a persisted classification of every one of the ~99 production
-filesystem-mutating call sites (corrected from an inflated "267" — see the
-named measurement limits below), closing the cross-module composition class
-that static taint analysis cannot reach. **Must land in `.vault/`, not only
-the session scratchpad** — the closure-criterion reference already
-documents this exact loss risk for two earlier censuses.
+**Evidence**: classified by where the written path comes from, roughly
+**44 of the sites are pass-through** — the path arrives as a caller argument or
+as a `self` attribute set by a constructor. A primitive doing
+`path.parent.mkdir()` on a path it was handed **has no enrollment answer of its
+own**; its answer is "wherever the caller said". Asking whether such a site is
+enrolled is not a question with a truth value, and nearly half the domain is in
+that state. This element's earlier estimate of "roughly fifteen" pass-through
+primitives was low by a factor of three, and the difference changes the
+conclusion rather than refining it: at fifteen it is an edge case, at
+forty-four it is the dominant shape.
 
-**What would make this "no"**: the review stops short of all ~99 sites, or
-its findings are only ever reported in chat/scratchpad and never persisted
-as a durable artefact a future reader can check.
+**The criterion becomes well-formed over path-*choosing* sites** — the places
+that decide a location rather than the places that write to one. That set is
+strictly smaller and, unlike the write set, decidable: choosing a path means
+composing it from a root or a declared field, which is a syntactic act.
+
+**What would make this "no"**: a closure statement that quotes a site count as
+if it settled the question, without recording that nearly half the sites have
+no answer to give.
+
+### 5a. The two-instrument union, with each blind spot named beside it
+
+**STATUS: satisfied.** Restated over path-choosing sites, the criterion is
+carried by **two instruments, neither sufficient alone**, and a reader who finds
+only one will reasonably conclude the coverage is complete.
+
+**Instrument one — the provenance gate.** Walks every packaged module,
+production and test, and requires any site composing a path from the storage
+root to be a declared producer. Green, with `PENDING_ENROLLMENT` reduced to the
+empty tuple in a table declared to only ever shrink. **Blind spot:** it keys on
+the *root*. A site joining a literal onto a *category* field never touches the
+root symbol and is invisible to it.
+
+**Instrument two — the taint-based family census.** Covers exactly that
+category-composed class, and its four families are declared. **Blind spot:**
+incomplete by construction for the four classes it names — cross-module
+composition, library-named files, container-mediated flow, and fully dynamic
+expressions.
+
+**Blind to both:** writes through a retained handle, where one syntactic site
+performs unbounded real writes, and duck-typed method names that no static pass
+can separate from their filesystem namesakes without type inference.
+
+**What would make this "no"**: recording the union as though it were a proof.
+It is two partial covers whose overlap is unmeasured; that is materially better
+than either alone and materially weaker than completeness.
 
 ### 6. Runtime census cross-check
 
@@ -386,10 +437,59 @@ and as the `R16` correction, above and in the closure-criterion reference's
 fragile-spots section — the clean result does not cover them, and citing the
 clean parts should not be read as covering the open ones.
 
+## This document was itself untracked until hours before closure
+
+Recorded as a finding rather than quietly fixed, because it is the exact class
+of gap the campaign exists to surface and a reader who sees only the polished
+version would never know.
+
+**This file had never been committed.** `git log --all` on its path returned
+nothing; it existed only in one working tree. It was not alone: **104 exec
+records existed on disk and 68 were tracked**, so 36 — a third of the evidence
+every Step's completion rests on — had no git object behind them. Found by this
+campaign's own corpus audit, hours before closure was to be declared, and
+committed at `7d09fb29f0` after each was checked complete and confirmed to be a
+new-file add carrying no peer working-tree content.
+
+Three things make it worth keeping rather than erasing:
+
+**The campaign nearly closed a third short of its own evidence.** A closure
+statement citing exec records that a fresh clone does not contain cites nothing
+durable, and `plan-closure-requires-exec-records` makes those records the whole
+basis of a Step's completion.
+
+**Every corpus figure quoted before `7d09fb29f0` measured 68 records while 104
+existed.** Not wrong about what it examined — wrong about what it was examining.
+That is the untracked-file trap in its most expensive form, and it is the same
+shape as measuring a working tree and calling it HEAD, inverted: there the name
+resolved to the wrong object, here the object was a third of the corpus.
+
+**Untracked is worse than uncommitted.** A modified tracked file has a git
+object behind it and is recoverable. An untracked file has none — it is
+invisible to `git grep`, to every HEAD-anchored audit, and to recovery.
+
 ## Verdict
 
-**PENDING.** Do not fill this in until every element above has a cited
-artefact, the prominent blocker is resolved or explicitly still open, and
-the named limits are stated one way or the other. A verdict written before
-all elements are addressed is exactly the failure mode this skeleton exists
-to prevent.
+**The criterion as worded is not decidable. Restated over path-choosing sites it
+is decidable, and it holds at the pinned revision.**
+
+What can be defended, and what should be written rather than a percentage:
+
+> No unenrolled path-choosing site is detectable by either instrument at the
+> pinned revision, and the residual is bounded by three named classes rather
+> than by an assertion.
+
+What must **not** be written is *"all file-producing sites are enrolled"*. Nearly
+half of them have no enrollment answer to give, so the sentence is not true, not
+false, and not checkable — and a campaign that exists to stop a silence being
+read as coverage must not close by doing exactly that.
+
+**The plan's completion percentage neither establishes nor refutes this.** The
+plan counts Steps; Steps are a proxy. A reader arriving at this document will
+reach for that percentage first precisely because it is the one number that looks
+like an answer, which is why it is named here and set aside.
+
+**Remaining elements** keep their own statuses above. This verdict resolves the
+criterion element only; the conjunction rule stated at the top of this document
+still governs the whole, and one "not satisfied" elsewhere still makes the
+overall statement "no".

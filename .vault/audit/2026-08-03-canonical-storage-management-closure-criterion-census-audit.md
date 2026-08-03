@@ -56,7 +56,34 @@ syntactic site and unbounded real writes.
 **Cross-module composition and dynamic dispatch**, which the honesty review
 already enumerated as structurally unenumerable.
 
-### the-count-and-its-false-positive-floor | none | 92 file-producing sites, and an independent reproduction of the corrected ~99
+### the-count-and-its-false-positive-floor | CORRECTED | The site total stands; the derived "92" came from a truncated capture and is withdrawn
+
+**Correction, recorded in place.** The figure below was computed from a scratch
+capture written with `... 2>&1 > file`, which is the wrong redirection order and
+wrote only **55 of the 99** site lines to disk. The total of 99 came off the
+terminal and is sound. The *ambiguous* enumeration — "8 sites, 7 cleared by
+reading, therefore 92" — was read off the truncated file and undercounts: the
+packaged scanner reports **11** ambiguous. **The derived figure 92 is withdrawn.**
+
+Nothing downstream moves. The total, the 44 pass-through sites, and the
+provenance classification all came from the untruncated terminal output, and the
+audit's conclusion rests on those. Only the subtraction was wrong.
+
+The durable fix is the one this audit itself recommended, now applied to its own
+number: the census ships as `dev/write_site_census.py` (commit `30f2493ee1`) with
+a test pinning both selector discriminations, and the count is obtained by
+running `python -m dev.write_site_census <revision>` rather than by reading a
+figure out of prose. A count in prose has no maintainer; that is what produced
+this correction, `R16`'s three amendments, and the burndown's `28`.
+
+This is also the second published number today whose defect was in the
+*capture*, not the reasoning — the first being a working-tree read reported as
+HEAD. Both were caught by building a better instrument rather than by re-reading
+the old output, which is the argument for the tool existing.
+
+The original finding follows unedited.
+
+### the-original-count-claim | superseded | 92 file-producing sites, and an independent reproduction of the corrected ~99
 
 The corrected selector finds **99 matching sites**. Of those, 8 use the
 duck-typed names above; reading each one's traced receiver clears **7** as
