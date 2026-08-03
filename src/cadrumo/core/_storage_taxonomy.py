@@ -169,6 +169,7 @@ class ExternalPathRole(StrEnum):
     THIRD_PARTY_CACHE = "third_party_cache"
     EXTERNAL_EXECUTABLE = "external_executable"
     OPERATOR_DIRECTED_OUTPUT = "operator_directed_output"
+    MAINTAINER_TOOLING_OUTPUT = "maintainer_tooling_output"
 
 
 class ExternalPathDeclaration(BaseModel):
@@ -211,10 +212,19 @@ EXTERNAL_PATH_SETTINGS_FIELDS: Final[dict[str, ExternalPathDeclaration]] = {
     for declaration in (
         ExternalPathDeclaration(
             settings_field="aeat_manuals_root",
-            role=ExternalPathRole.BUNDLED_RESOURCE,
+            role=ExternalPathRole.MAINTAINER_TOOLING_OUTPUT,
             reason=(
-                "The bundled AEAT Manual practico corpus ships inside the package and is read "
-                "only. The application never writes there, so it fails the write test."
+                "The bundled AEAT Manual practico corpus ships inside the package and the "
+                "*running application* never writes there -- it fails the write test from the "
+                "operator's chair. But domain.manuals._fetch demonstrably does write there: it "
+                "streams a manual part's PDF plus a manifest to disk under this root. That "
+                "module has no entrypoints/ surface (grep confirms only a test references it), "
+                "so it reads as maintainer tooling that refreshes the bundled corpus before a "
+                "release, the same shape as the locales CLI writing into the package's own "
+                "source tree -- but nothing enforces that boundary at the call graph, so the "
+                "prior BUNDLED_RESOURCE declaration's 'never writes there' was false the moment "
+                "this fetcher existed. This role says what is actually true: tooling-written, "
+                "not application-written."
             ),
         ),
         ExternalPathDeclaration(

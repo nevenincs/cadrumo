@@ -95,8 +95,8 @@ def test_every_path_field_is_a_member_an_escape_or_the_root() -> None:
         "StorageCategory in the storage taxonomy if the application chooses this location and "
         "writes data there; otherwise declare it in EXTERNAL_PATH_SETTINGS_FIELDS with an "
         "ExternalPathRole (bundled resource, operator input, third-party cache, external "
-        "executable, operator-directed output) and a reason saying which of the two questions "
-        "it fails"
+        "executable, operator-directed output, maintainer-tooling output) and a reason saying "
+        "which of the two questions it fails"
     )
 
 

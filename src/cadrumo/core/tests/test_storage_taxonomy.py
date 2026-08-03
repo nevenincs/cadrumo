@@ -65,7 +65,7 @@ def test_an_undeclared_axis_value_is_rejected_at_model_validation() -> None:
         StorageLocation.model_validate(declared)
 
 
-def test_external_path_role_carries_the_five_escape_roles() -> None:
+def test_external_path_role_carries_the_six_escape_roles() -> None:
     """An escape is a positive declaration of why, not an absence from a list."""
     assert _axis_members(ExternalPathRole) == {
         "bundled_resource",
@@ -73,6 +73,7 @@ def test_external_path_role_carries_the_five_escape_roles() -> None:
         "third_party_cache",
         "external_executable",
         "operator_directed_output",
+        "maintainer_tooling_output",
     }
 
 
