@@ -668,6 +668,16 @@
           "_decode_invoice_payload"
         ],
         "reason": "White-box test confirming the private invoice-payload decoder returns InvoiceRowPayload TypedDict instances from JSON. Internal decoding helper backing parse_invoice_payload, not a standalone public entry point."
+      },
+      {
+        "importer_path": "src/cadrumo/core/tests/test_storage_fingerprint_participation_gate.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.core.observability._fingerprint",
+        "imported_names": [
+          "compute_data_root_sha256",
+          "data_root_cache_exclusions"
+        ],
+        "reason": "White-box test reach: this gate asserts that the storage taxonomy's fingerprint_participation axis and the digest that actually consumes it agree, so it has to call the settings-bound composition itself -- the generic primitive cannot answer which directories the axis excludes. `compute_data_root_sha256` and `data_root_cache_exclusions` are observability's internal wiring of compute_db_sha256 onto Settings and the storage taxonomy, producing the RunTrace.db_sha256 field; measured at HEAD, both are consumed in production ONLY inside cadrumo.core.observability itself (_context.py, _replay.py, and _fingerprint.py), with zero cross-package production consumers. Deliberately NOT promoted: the facade already exports the generic, domain-agnostic compute_db_sha256 -- whose own docstring draws exactly this line, stating it knows nothing about Settings or the storage-root taxonomy -- and that primitive is the one with a cross-package consumer. Minting the settings-bound compositions onto the public facade to serve a single test would grow the package's public contract with implementation detail no consumer needs."
       }
     ]
   }
