@@ -130,6 +130,59 @@ def test_bucket_and_keystore_layout_is_fixed_not_operator_overridable() -> None:
         assert location.settings_field is None, "a fixed member must expose no operator-facing field"
 
 
+def test_fixed_override_policy_forbids_a_settings_field() -> None:
+    """Declaration-time guard: FIXED and a settings_field cannot coexist.
+
+    The test above only asserts that today's FIXED members happen to carry no
+    settings_field -- a fact about the current declarations, not a constraint
+    on a future one. A FIXED member and an operator-facing settings_field
+    contradict each other (the guarantee that a keystore cannot be relocated
+    out from under its bucket would be undone by the very field an operator
+    overrides through), so the combination must be refused at construction,
+    not merely absent so far.
+    """
+    base_kwargs = {
+        "category": StorageCategory.TOKENS,
+        "subpath": "synthetic",
+        "node_kind": StorageNodeKind.DIRECTORY,
+        "scope": StorageScope.ROOT,
+        "lifecycle": StorageLifecycle.RETENTION,
+        "grouping": StorageGrouping.STATE,
+        "fingerprint_participation": FingerprintParticipation.PARTICIPATING,
+        "dormant_reason": "synthetic fixture built to exercise the guard, not a real declaration",
+    }
+
+    # The mutation: a FIXED member also naming the settings field an operator
+    # would override it through must be unconstructable.
+    with pytest.raises(ValidationError, match="override_policy=FIXED"):
+        StorageLocation(
+            **base_kwargs,
+            override_policy=StorageOverridePolicy.FIXED,
+            settings_field="cadrumo_registry_parity_store_dir",
+        )
+
+    # Positive control: the identical settings_field is unproblematic on an
+    # OPERATOR_OVERRIDABLE member. The guard must fire on the FIXED
+    # contradiction specifically, not on any member that merely has a field.
+    overridable = StorageLocation(
+        **base_kwargs,
+        override_policy=StorageOverridePolicy.OPERATOR_OVERRIDABLE,
+        settings_field="cadrumo_registry_parity_store_dir",
+    )
+    assert overridable.settings_field == "cadrumo_registry_parity_store_dir"
+
+    # The restoration: removing the settings_field alone (not the policy)
+    # is again a legal FIXED declaration -- proves the guard is triggered by
+    # the combination, not by FIXED alone.
+    fixed_without_field = StorageLocation(
+        **base_kwargs,
+        override_policy=StorageOverridePolicy.FIXED,
+        settings_field=None,
+    )
+    assert fixed_without_field.override_policy is StorageOverridePolicy.FIXED
+    assert fixed_without_field.settings_field is None
+
+
 def test_every_settings_field_a_member_names_exists_on_the_model() -> None:
     """A member naming a field that no longer exists is a declaration that has rotted."""
     assert STORAGE_FIELD_CATEGORIES, "the reverse index must not be empty, or this asserts nothing"
