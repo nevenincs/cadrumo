@@ -41,4 +41,5 @@ Submodules
    cadrumo.application.user_profile._projections
    cadrumo.application.user_profile._registration
    cadrumo.application.user_profile._repository
+   cadrumo.application.user_profile._section_rows
    cadrumo.application.user_profile._validation

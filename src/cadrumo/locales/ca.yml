@@ -6832,6 +6832,13 @@ flows:
         clave_movil: Cl@ve Mòbil
         clave_permanente: Cl@ve Permanent
       working: S'està executant {action}...
+      add_row: 'Afegir una fila'
+      add_row_section: 'A quina secció s''afegeix'
+      add_row_required: 'És obligatori; la fila no es pot afegir sense aquesta dada.'
+      add_row_done: 'S''ha afegit la fila %{index} de %{section}.'
+      add_row_empty: 'No s''ha emplenat res, així que no s''ha afegit cap fila.'
+      add_row_incomplete: 'A la fila li manquen dades obligatòries, així que no s''ha desat res.'
+      add_row_none: 'Aquest esquema de perfil no declara cap secció amb files.'
     actions:
       section: Accions
     column:

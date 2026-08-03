@@ -6716,6 +6716,13 @@ flows:
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
       working: '{action} folyamatban...'
+      add_row: 'Sor hozzáadása'
+      add_row_section: 'Melyik szakaszhoz'
+      add_row_required: 'Kötelező; enélkül a sor nem adható hozzá.'
+      add_row_done: 'A(z) %{section} %{index}. sora hozzáadva.'
+      add_row_empty: 'Semmi sem lett kitöltve, ezért nem jött létre új sor.'
+      add_row_incomplete: 'A sorból kötelező adatok hiányoznak, ezért semmi sem lett mentve.'
+      add_row_none: 'Ez a profilséma nem tartalmaz sorokat kezelő szakaszt.'
     actions:
       section: Műveletek
     column:

@@ -3,10 +3,17 @@
 The manager page answers "what does my profile hold". These are the
 operations an operator reaches for while looking at that answer: say how
 they identify to AEAT, fill the profile in from what AEAT already holds,
-and take a copy of it away. They are offered in that order because it is
-the order they depend on each other in - the pull cannot run until the
-authentication mode is complete, and says so rather than failing at the
-browser.
+add a row to a section that holds several, and take a copy of it away.
+They are offered in that order because it is the order they depend on each
+other in - the pull cannot run until the authentication mode is complete,
+and says so rather than failing at the browser, and a row is worth adding
+by hand once the pull has filled in what AEAT already knows.
+
+Adding a row is an action rather than a gesture on the table because a
+repeatable section's row is all-or-nothing at the write door: every
+required field of the row has to arrive in one batch, so editing a single
+cell cannot bring a row into existence. The page collects the whole row
+and commits once.
 
 Each one is a plain callable returning a
 :class:`~cadrumo.adapters.inbound.tui.ManagerActionOutcome`, so the screen
@@ -29,14 +36,22 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ....core.i18n import tr
+from ....domain.user_profile import profile_field_label, profile_section_title
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Callable, Mapping, Sequence
 
-    from ....adapters.inbound.tui import FormPage, ManagerAction, ManagerActionOutcome
+    from ....adapters.inbound.tui import (
+        FormChoice,
+        FormField,
+        FormPage,
+        ManagerAction,
+        ManagerActionOutcome,
+    )
     from ....application.auth import AuthConfigureResult
     from ....application.user_profile import CensalReconciliation, EffectiveFact, ProfileOverview
     from ....core import AuthProviderKind
+    from ....domain.user_profile import ProfileFieldDefinition, ProfileSectionDefinition
 
 _AUTH_PROVIDER_PATH = "auth.provider"
 _AUTH_DNI_NIE_PATH = "auth.dni_nie"
@@ -713,12 +728,182 @@ def _provider_label(kind: AuthProviderKind) -> str:
             return tr("flows.manager.action.provider.clave_permanente")
 
 
+#: Key carrying the section chooser's answer.
+#:
+#: Deliberately not a schema field key, so
+#: :func:`~cadrumo.application.user_profile.section_row_facts` ignores it
+#: when projecting the row: the chooser tells the page which fields to ask
+#: for, and is not itself one of them.
+_ROW_SECTION_KEY = "__row_section"
+
+
+def add_row_action() -> ManagerAction:
+    """Add one row to a repeatable section -- a socio, an activity, a property."""
+    from ....adapters.inbound.tui import ManagerAction
+
+    return ManagerAction(
+        key="add-row",
+        label=tr("flows.manager.action.add_row"),
+        label_key="flows.manager.action.add_row",
+        run=_run_add_row,
+    )
+
+
+def _run_add_row() -> ManagerActionOutcome:
+    """Collect one whole row, then write it in a single batch.
+
+    A repeatable section's row is all-or-nothing at the write door: every
+    required field arrives together or none of the row lands. Editing a
+    single cell therefore cannot create a row -- the first write would be
+    refused for the fields not yet supplied -- which is why this is a page
+    that collects the row and commits once rather than an empty line added
+    to the table.
+
+    The refusal at the end is a backstop rather than the expected path. The
+    form re-checks every field on submit, including ones the operator never
+    opened, so a blank required field is normally caught where it was typed;
+    a rule the page cannot see (a conditional requirement) would still be
+    refused by the door, and it is reported rather than raised at a screen
+    that cannot act on it.
+    """
+    from ....adapters.inbound.tui import ManagerActionOutcome
+    from ....application.user_profile import (
+        next_section_row_index,
+        section_row_facts,
+        set_active_fields,
+    )
+    from ....application.workflow import workflow_state_repository
+    from ....domain.user_profile import ProfileSchemaValidationError, load_user_profile_schema
+    from ._manager_frontend import build_active_profile_overview, present_form
+
+    schema = load_user_profile_schema()
+    sections = tuple(section for section in schema.sections if section.repeatable)
+    if not sections:
+        return ManagerActionOutcome(message=tr("flows.manager.action.add_row_none"))
+
+    def _page(values: Mapping[str, str]) -> FormPage:
+        return _row_page(sections, values)
+
+    collected = present_form(_page({}), rebuild=_page)
+    if collected is None:
+        return ManagerActionOutcome(message=tr("flows.manager.action.abandoned"))
+
+    section = _chosen_section(sections, collected)
+    # Read presence from the page the operator is looking at: its rule for
+    # "this field has a value" is the shared one, so the row this numbers
+    # against is the row set they can see.
+    before = build_active_profile_overview()
+    present = frozenset(view.path for section_view in before.sections for view in section_view.fields if view.present)
+    row_index = next_section_row_index(section.key, present)
+    facts = section_row_facts(section, row_index=row_index, values=collected)
+    if not facts:
+        return ManagerActionOutcome(message=tr("flows.manager.action.add_row_empty"))
+
+    try:
+        workflow_state_repository().update(lambda state: set_active_fields(state, facts))
+    except ProfileSchemaValidationError:
+        return ManagerActionOutcome(message=tr("flows.manager.action.add_row_incomplete"))
+
+    return ManagerActionOutcome(
+        message=tr(
+            "flows.manager.action.add_row_done",
+            section=profile_section_title(section),
+            index=row_index,
+        ),
+        overview=build_active_profile_overview(),
+    )
+
+
+def _chosen_section(
+    sections: Sequence[ProfileSectionDefinition],
+    values: Mapping[str, str],
+) -> ProfileSectionDefinition:
+    """Return the section the chooser names, defaulting to the first offered.
+
+    The default matters: the page opens on a section already selected so its
+    fields are visible immediately, and an operator who never touches the
+    chooser commits the section they were shown.
+    """
+    chosen = values.get(_ROW_SECTION_KEY, "")
+    return next((section for section in sections if section.key == chosen), sections[0])
+
+
+def _row_page(
+    sections: Sequence[ProfileSectionDefinition],
+    values: Mapping[str, str],
+) -> FormPage:
+    """Build the row page for the section currently chosen.
+
+    Rebuilt whenever an answer changes, so picking a different section
+    replaces the fields below the chooser. Field labels and the section
+    title come from the shared schema-label helpers, so this page names a
+    field exactly as the manager's own table does.
+    """
+    from ....adapters.inbound.tui import FormField, FormFieldKind, FormPage, form_choices
+
+    section = _chosen_section(sections, values)
+    fields: list[FormField] = [
+        FormField(
+            key=_ROW_SECTION_KEY,
+            label=tr("flows.manager.action.add_row_section"),
+            value=section.key,
+            kind=FormFieldKind.SINGLE_CHOICE,
+            choices=form_choices([(item.key, profile_section_title(item)) for item in sections]),
+        ),
+    ]
+    fields.extend(_row_field(section, field) for field in section.fields)
+    return FormPage(
+        title=tr("flows.manager.action.add_row"),
+        section=profile_section_title(section),
+        fields=tuple(fields),
+    )
+
+
+def _row_field(section: ProfileSectionDefinition, field: ProfileFieldDefinition) -> FormField:
+    """Build one collected field from its schema declaration.
+
+    An enum is offered as its declared tokens rather than as free text, so a
+    value outside the closed set is not typeable; the tokens are shown as
+    themselves because they are stored keys, not prose the catalogue carries.
+    A required field refuses when blank, which is what makes the row complete
+    before it reaches the write door.
+    """
+    from ....adapters.inbound.tui import FormField, FormFieldKind, form_choices
+    from ....domain.user_profile import ProfileFieldType
+
+    kind = FormFieldKind.TEXT
+    choices: tuple[FormChoice, ...] = ()
+    if field.type is ProfileFieldType.ENUM:
+        kind = FormFieldKind.SINGLE_CHOICE
+        choices = form_choices([(token, token) for token in field.enum_values])
+    elif field.type is ProfileFieldType.BOOLEAN:
+        kind = FormFieldKind.SINGLE_CHOICE
+        choices = form_choices([("true", tr("flows.confirm.yes")), ("false", tr("flows.confirm.no"))])
+    return FormField(
+        key=field.key,
+        label=profile_field_label(section.key, field),
+        kind=kind,
+        choices=choices,
+        validate=_required_check(field) if field.required else None,
+    )
+
+
+def _required_check(field: ProfileFieldDefinition) -> Callable[[str], str | None]:
+    """Refuse a blank answer for a field the schema declares required."""
+
+    def _check(value: str) -> str | None:
+        return None if value.strip() else tr("flows.manager.action.add_row_required")
+
+    return _check
+
+
 def manager_actions() -> tuple[ManagerAction, ...]:
     """Every action the manager offers, in the order it offers them."""
-    return (certificate_action(), censal_pull_action(), export_action())
+    return (certificate_action(), censal_pull_action(), add_row_action(), export_action())
 
 
 __all__ = [
+    "add_row_action",
     "censal_pull_action",
     "certificate_action",
     "export_action",

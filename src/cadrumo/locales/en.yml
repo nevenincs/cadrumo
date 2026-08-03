@@ -6389,6 +6389,13 @@ flows:
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
       working: Running {action}...
+      add_row: 'Add a row'
+      add_row_section: 'Which section to add to'
+      add_row_required: 'This is required; the row cannot be added without it.'
+      add_row_done: 'Added %{section} row %{index}.'
+      add_row_empty: 'Nothing was filled in, so no row was added.'
+      add_row_incomplete: 'The row is missing required data, so nothing was saved.'
+      add_row_none: 'This profile schema declares no section that holds rows.'
     actions:
       section: Actions
     column:

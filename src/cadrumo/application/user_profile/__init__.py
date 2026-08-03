@@ -175,7 +175,7 @@ if TYPE_CHECKING:
         RemoveProfileCommand,
         RenameProfileCommand,
     )
-    from ._completeness import iva_regime_required
+    from ._completeness import iva_regime_required, profile_section_rows
     from ._cotejo_apply import (
         CENSO_DIVERGENCE_NOTICE_CODE,
         CENSO_DIVERGENCE_PREFIX,
@@ -280,6 +280,7 @@ if TYPE_CHECKING:
         user_profile_snapshot_object_key,
         user_profile_value_object_key,
     )
+    from ._section_rows import next_section_row_index, section_row_facts
     from ._validation import ProfileValidationService
 
 # An explicit register call replaces a side-effect import so the
@@ -434,7 +435,8 @@ _LAZY_EXPORTS: dict[str, str] = {
             ),
         ),
         ("._filing_baseline", ("missing_filing_baseline_flags",)),
-        ("._completeness", ("iva_regime_required",)),
+        ("._completeness", ("iva_regime_required", "profile_section_rows")),
+        ("._section_rows", ("next_section_row_index", "section_row_facts")),
         ("._keys_validation", ("list_profile_key_records", "validate_profile_values")),
         ("._language_resolver", ("resolve_profile_output_language_hint",)),
         ("._profile_pointer_transaction", ("active_profile_pointer_transaction",)),
@@ -647,10 +649,12 @@ __all__ = [
     "logout_active_profile",
     "mask_profile_field",
     "missing_filing_baseline_flags",
+    "next_section_row_index",
     "open_censo_divergences",
     "prepare_profile_export",
     "profile_create_storage_span",
     "profile_export_runtime",
+    "profile_section_rows",
     "profile_storage_session",
     "projection_for_taxpayer",
     "publish_prepared_export",
@@ -677,6 +681,7 @@ __all__ = [
     "restore_carried_objects",
     "resume_active_profile_session",
     "rotate_recovery_code",
+    "section_row_facts",
     "select_profile",
     "select_profile_with_lifecycle_span",
     "serialize_carried_objects",
