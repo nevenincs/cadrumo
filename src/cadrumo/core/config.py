@@ -939,7 +939,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Status reader ───────────────────────────────────────────────────────
     cadrumo_status_cache_dir: Path = Field(
-        default=Path("status-cache"),
+        default=Path("cache") / "status-cache",
         description="Directory for the short-lived AEAT status-page cache",
     )
     cadrumo_status_cache_ttl_s: int = Field(
