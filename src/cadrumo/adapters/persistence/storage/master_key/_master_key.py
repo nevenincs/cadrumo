@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     from .....core.config import Settings
     from ._bucket_session import BucketSession
 
-from .....core import NIST_PASSPHRASE_MIN_LENGTH, resolve_active_bucket_id
+from .....core import NIST_PASSPHRASE_MIN_LENGTH, StorageCategory, resolve_active_bucket_id, storage_location
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
@@ -111,6 +111,17 @@ from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
 from ._provider_session import exit_provider_session
 
 _MASTER_KEY_AAD: Final[bytes] = b"cadrumo.master-key.v1"
+
+# Bare filenames, read off the taxonomy rather than declared as untethered
+# string literals. Each one still joins onto ``self._store_dir`` /
+# ``settings.cadrumo_secret_store_dir`` exactly as before -- the taxonomy
+# members these come from carry no ``settings_field`` and are not safe to
+# resolve directly, because ``SECRETS`` is operator-overridable (see the
+# members' declaration in ``core._storage_taxonomy``).
+_MASTER_KEY_FILENAME: Final[str] = Path(storage_location(StorageCategory.SECRETS_MASTER_KEY).subpath).name
+_MASTER_KDF_FILENAME: Final[str] = Path(storage_location(StorageCategory.SECRETS_MASTER_KDF).subpath).name
+_MASTER_LOCK_FILENAME: Final[str] = Path(storage_location(StorageCategory.SECRETS_MASTER_LOCK).subpath).name
+_KEYRING_LOCK_FILENAME: Final[str] = Path(storage_location(StorageCategory.SECRETS_KEYRING_LOCK).subpath).name
 
 _log = get_logger(__name__)
 
@@ -279,7 +290,7 @@ class KeyringMasterKeyProvider:
         from .....core.config import load_settings
 
         settings = load_settings()
-        lock_target = Path(settings.cadrumo_secret_store_dir) / "keyring.lock"
+        lock_target = Path(settings.cadrumo_secret_store_dir) / _KEYRING_LOCK_FILENAME
         lock_target.parent.mkdir(parents=True, exist_ok=True)
         with exclusive_file_lock(lock_target):
             self._probe_backend()
@@ -420,11 +431,11 @@ class FileFallbackMasterKeyProvider:
 
     @property
     def _kdf_params_path(self) -> Path:
-        return self._store_dir / "master.kdf"
+        return self._store_dir / _MASTER_KDF_FILENAME
 
     @property
     def _master_key_path(self) -> Path:
-        return self._store_dir / "master.key"
+        return self._store_dir / _MASTER_KEY_FILENAME
 
     def _resolve_passphrase(self) -> bytes:
         value = self._passphrase_callback()
@@ -484,7 +495,7 @@ class FileFallbackMasterKeyProvider:
         # race-write conflicting master.key + master.kdf pairs. Re-check
         # file existence inside the lock; the second caller will see
         # the artefacts the first caller wrote and route to unwrap.
-        lock_target = self._store_dir / "master.lock"
+        lock_target = self._store_dir / _MASTER_LOCK_FILENAME
         with exclusive_file_lock(lock_target):
             artefacts = (self._master_key_path, self._kdf_params_path)
             present = [p for p in artefacts if p.exists()]
@@ -534,7 +545,7 @@ class FileFallbackMasterKeyProvider:
         """
         self._store_dir.mkdir(parents=True, exist_ok=True)
         passphrase = self._resolve_passphrase()
-        lock_target = self._store_dir / "master.lock"
+        lock_target = self._store_dir / _MASTER_LOCK_FILENAME
         with exclusive_file_lock(lock_target):
             artefacts = (self._master_key_path, self._kdf_params_path)
             present = [p for p in artefacts if p.exists()]
@@ -676,7 +687,7 @@ class FileFallbackMasterKeyProvider:
         # the operator's passphrase is correct.
         self._store_dir.mkdir(parents=True, exist_ok=True)
         self._restrict_dir_permissions(self._store_dir)
-        with exclusive_file_lock(self._store_dir / "master.lock"):
+        with exclusive_file_lock(self._store_dir / _MASTER_LOCK_FILENAME):
             # Write order: ``master.key`` first (under the new KEK),
             # then ``master.kdf`` (the parameters — including the
             # canonical salt in ``salt_b64`` — that derive the new KEK).
@@ -1193,7 +1204,9 @@ def get_master_key_provider(
         # K1 sitting in the locked keychain. The operator must either
         # unlock the keychain or set ``CADRUMO_SECRET_STORE_BACKEND=file``
         # explicitly to acknowledge the file-only path.
-        file_fallback_exists = (store_dir / "master.key").exists() and (store_dir / "master.kdf").exists()
+        file_fallback_exists = (store_dir / _MASTER_KEY_FILENAME).exists() and (
+            store_dir / _MASTER_KDF_FILENAME
+        ).exists()
         if file_fallback_exists:
             _log.info(
                 "OS keychain locked (%s); routing through pre-existing file-fallback at %s",
@@ -1214,7 +1227,9 @@ def get_master_key_provider(
             "and provision a file-fallback master key with `aeat config profile create NAME`.",
         ) from exc
     except MasterKeyMaterialMissingError:
-        file_fallback_exists = (store_dir / "master.key").exists() and (store_dir / "master.kdf").exists()
+        file_fallback_exists = (store_dir / _MASTER_KEY_FILENAME).exists() and (
+            store_dir / _MASTER_KDF_FILENAME
+        ).exists()
         if file_fallback_exists:
             _log.info(
                 "OS keychain unprovisioned; routing through pre-existing file-fallback at %s",

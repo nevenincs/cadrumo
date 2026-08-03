@@ -15,6 +15,14 @@ drive a REAL write through the REAL production code path, and assert the
 REAL resulting path matches a regex derived from that grammar. A declaration
 that drifts from what production actually writes reds the calling test
 rather than passing because the test's own expectation drifted the same way.
+
+:func:`literal_directory_runs` serves a second, independent gate: a grammar's
+directory portion is a hand-written literal that duplicates a
+:class:`~cadrumo.core.StorageCategory` member's ``subpath`` spelling, and
+nothing previously compared the two spellings against each other -- a member
+rename would leave every grammar that spelled its old name out silently
+disagreeing. Extracting the literal runs lets a caller assert each one still
+equals a live taxonomy subpath.
 """
 
 from __future__ import annotations
@@ -23,7 +31,7 @@ import re
 from pathlib import Path
 from typing import Final
 
-from ..adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
+from ..adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StoragePathKind
 
 _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # Content-hash fan-out (blob store, both root- and bucket-scoped).
@@ -98,3 +106,60 @@ def assert_path_matches_grammar(*, key: str, root: Path, produced: Path) -> None
         f"{produced_posix!r} does not match the declared grammar {definition.grammar!r} "
         f"for storage-path key {key!r} (compiled pattern: {pattern.pattern!r})"
     )
+
+
+def literal_directory_runs(*, grammar: str, kind: StoragePathKind) -> tuple[str, ...]:
+    """Return ``grammar``'s directory-portion literal runs, as POSIX subpaths.
+
+    A grammar is split on ``/`` into path components. A component is a
+    placeholder run (contains a ``<...>`` token) or a pure literal. Pure
+    literals are collapsed into maximal consecutive runs and returned joined
+    by ``/`` -- exactly the shape a :class:`~cadrumo.core.StorageLocation`
+    ``subpath`` is declared in, so a caller can compare them directly.
+
+    The terminal path component is excluded from consideration for
+    :attr:`~cadrumo.adapters.persistence.storage.StoragePathKind.FILE` and
+    :attr:`~...StoragePathKind.BLOB_OBJECT` grammars, because that component
+    names the leaf itself (a filename or a content-addressed object), never a
+    directory -- ``manifest.toml`` is not a directory a category could
+    declare, and Family 3/4 filename shapes are deliberately governed by the
+    grammar alone rather than promoted to a category. For
+    :attr:`~...StoragePathKind.DIRECTORY` grammars the terminal component
+    *is* a directory name and stays eligible when it is a pure literal (a
+    parameterised terminal, e.g. ``<bucket_id>``, is never a literal and is
+    excluded regardless).
+
+    Args:
+        grammar: A ``<root>``-anchored grammar string. Never call this for a
+            :attr:`~...StoragePathKind.LOGICAL_SQL` grammar (a ``db://``
+            logical path, not a filesystem path) -- callers must filter that
+            kind out themselves.
+        kind: The definition's :class:`~...StoragePathKind`.
+
+    Returns:
+        The literal directory runs, outermost first. Empty when the grammar
+        has no directory portion at all (a bare ``<root>/<literal-file>``).
+    """
+    if not grammar.startswith("<root>"):
+        raise AssertionError(
+            f"grammar {grammar!r} is not <root>-anchored -- literal_directory_runs only "
+            "applies to filesystem-kind grammars (filter LOGICAL_SQL out before calling)",
+        )
+    remainder = grammar[len("<root>") :].strip("/")
+    if not remainder:
+        return ()
+    components = remainder.split("/")
+    is_literal = ["<" not in component for component in components]
+    if kind in (StoragePathKind.FILE, StoragePathKind.BLOB_OBJECT):
+        is_literal[-1] = False
+    runs: list[str] = []
+    current: list[str] = []
+    for component, literal in zip(components, is_literal, strict=True):
+        if literal:
+            current.append(component)
+        elif current:
+            runs.append("/".join(current))
+            current = []
+    if current:
+        runs.append("/".join(current))
+    return tuple(runs)

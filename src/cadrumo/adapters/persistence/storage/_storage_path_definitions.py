@@ -197,9 +197,16 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         segment=LOGIN_THROTTLE_FILENAME,
     ),
     StoragePathDefinition(
+        # Was ``<cadrumo_secret_store_dir>/index.json`` -- a placeholder token
+        # with no declared regex fragment, so any test pinning this key failed
+        # with the grammar compiler's own tooling error rather than a
+        # conformance result. ``cadrumo_secret_store_dir`` resolves to
+        # ``<root>/secrets`` (the ``SECRETS`` taxonomy member), so spelling
+        # that out directly makes the grammar both compilable and consistent
+        # with every other ``<root>``-anchored entry here.
         key="secret_index",
         kind=StoragePathKind.FILE,
-        grammar="<cadrumo_secret_store_dir>/index.json",
+        grammar="<root>/secrets/index.json",
         owner="cadrumo.adapters.persistence.storage.secret_store",
         segment=SECRET_INDEX_FILENAME,
         schema_version=SECRET_INDEX_SCHEMA_VERSION,
