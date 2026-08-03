@@ -1141,6 +1141,67 @@ The prose describes the data declared directly beneath it and no longer matches 
 same class as R16's stale excluded-member enumeration, cheap to correct, and the kind of
 count a future reader would reasonably trust.
 
+### real-log-writers-are-cli-not-pytest | none | Isolation holds; the operator's log is being written by live CLI invocations, which is correct behaviour
+
+**Question.** The operator's real log was growing at roughly 8 KB/min, twenty times the
+earlier rate, and the dominant loggers had changed from import-time registration to
+runtime work — `core.locks`, `keyring.backend`, `workflow._persistence`, `sql.engine`,
+`master_key`. Pytest leakage and legitimate CLI use have opposite remedies, and the logger
+names cannot discriminate: they *look* like real bucket operations, which is precisely the
+shape that invites a guess.
+
+**Anchored at `da05945b76`, fleet condition stated: 40 live Python processes, 8 of them
+pytest, two of them `aeat config profile edit` CLI invocations alive since 22:28:45.**
+
+**Discriminator, built to avoid the logger names entirely: compare *where* records land.**
+
+*Isolation demonstrably works, at scale.* 1,300 per-process isolated roots exist under the
+platform temp directory, and **146 of them carry `workflow._persistence` records** — the
+very logger dominating the real log. Pytest's writes are landing where the isolation
+intends. The same roots carry the rest of the mix: `core.locks`, `sql.engine`,
+`master_key`, `blob_store`.
+
+*Controlled negative.* Running 100 tests of the workflow package — exercising exactly
+that dominant logger — produced:
+
+```
+real log delta        0 bytes
+isolated roots     1292 -> 1300
+```
+
+*The residual traffic correlates with the CLI.* The real log's repeating tail is
+`persisted revision-aware workflow state update`, and two `aeat config profile edit`
+processes span the whole heavy-write window.
+
+**The `setdefault` hazard is not firing, and it is deliberate rather than a bug.**
+`conftest.py:66` uses `os.environ.setdefault`, whose own docstring states the semantics
+exist to respect a real ambient environment. `CADRUMO_LOCAL_STORAGE_ROOT` is not set
+ambiently here, so the no-op case does not arise.
+
+**Conclusion: not pytest. A real CLI invocation writing to the operator's real diagnostic
+log is correct behaviour, and there is nothing here to fix.**
+
+**One genuine residual.** The real log carries one line each from `wizard_catalogue` and
+`setup_answers` — import-time registration records that reach the real root when a
+process imports them before the root conftest's `setdefault` runs. The same 258-byte
+signature appears in some isolated roots, so most processes order it correctly. The root
+fix has landed; a few stragglers remain. This is also the honest explanation for the
+258-byte delta recorded earlier in this document and retracted as unattributable: that
+signature is real and reproducible in kind, but which process produced any given instance
+of it remains unattributable.
+
+**Limits, because this is a positive control rather than direct attribution.** No record
+carries a PID, so no individual line can be attributed to a process. What the controlled
+test establishes is that the isolation mechanism works for a fresh process exercising the
+dominant logger; it inverts the burden of proof rather than closing the question. A
+definitive answer still needs either a PID in the format or a quiesced box.
+
+**A refinement that changes what the census needs.** Since pytest writes land in isolated
+roots, **the real storage root is not being polluted by test leakage** — it is being
+written by real CLI use. So "quiet" for census purposes means **no live `aeat` CLI
+invocations**, not merely no pytest. That is a different gate, and it means the census is
+currently blocked by other campaigns' legitimate activity rather than by any defect.
+
 ### verified-sound | none | What the record claims and the code supports
 
 Stated because a clean result is a result, and because several of these were the
