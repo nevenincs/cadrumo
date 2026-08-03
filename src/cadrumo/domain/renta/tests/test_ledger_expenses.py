@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from ....core import BindingSourceKind
 from ....core.i18n import Translatable as tr
+from ....tests.aeat_literal_fixtures import RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE
 from ...categories import (
     CategoryCitation,
     CategoryCitationSource,
@@ -78,7 +79,7 @@ def _citation() -> CategoryCitation:
         source=CategoryCitationSource.MANUAL_RENTA,
         reference="Manual practico Renta 2025",
         locator="test",
-        url=parse_http_url("https://sede.agenciatributaria.gob.es/renta"),
+        url=parse_http_url(RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE),
         quote=tr("Texto de prueba para una regla de deducibilidad."),
     )
 

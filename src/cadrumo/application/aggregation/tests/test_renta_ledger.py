@@ -48,6 +48,7 @@ from ....domain.transactions import (
 )
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
@@ -979,7 +980,7 @@ def _region_override_profile(category: SpendingCategory) -> CategoryProfile:
                     source=CategoryCitationSource.MANUAL_RENTA,
                     reference="Regla de prueba territorial",
                     locator="test",
-                    url=parse_http_url("https://sede.agenciatributaria.gob.es/regimen"),
+                    url=parse_http_url(RENTA_REGIMEN_CITATION_URL_FIXTURE),
                     quote=tr("Texto de prueba para override territorial."),
                 ),
             ),
