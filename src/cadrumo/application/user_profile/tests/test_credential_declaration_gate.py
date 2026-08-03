@@ -35,9 +35,10 @@ which covers what, because no one of them covers all of it:
 
 * The known credential set is pinned by name in the auth schema shape
   tests, as a set equality -- stronger than any heuristic where it
-  applies. It catches a downgrade of one of the three, and a spurious
-  upgrade of ``auth.provider``. It cannot catch a field ADDED to the
-  section, because adding one leaves that set equal.
+  applies. It catches a downgrade of either contraste field, and a
+  spurious upgrade of ``auth.provider`` or ``auth.dni_nie``. It cannot
+  catch a field ADDED to the section, because adding one leaves that set
+  equal.
 * That addition is what this gate catches, on either kind of evidence,
   before it can ship.
 * A fact arriving at a surface under a path no schema field declares has
@@ -83,6 +84,21 @@ passes silently, which is the failure this module is built to prevent.
 """
 
 _EXEMPT: Final[Mapping[str, str]] = {
+    "auth.dni_nie": (
+        "In the auth section, and correctly so: every Cl@ve mode reads it. But it NAMES "
+        "the taxpayer rather than authenticating them, and the section presumption cannot "
+        "tell those apart. It carries the same identifier as identity.tax_id -- the two "
+        "are compared at live authentication and the session is refused when they diverge "
+        "-- which renders in the clear one section above, so classing this copy secret "
+        "concealed a value already on the same screen. What actually authenticates is the "
+        "contraste (numero_soporte / fecha_validez, both still secret) plus a Cl@ve PIN or "
+        "app this profile never stores; someone holding a DNI/NIE and nothing else gains no "
+        "capability. The classes themselves say so: SECRET is declared for 'long-lived "
+        "authentication material' while IDENTITY names the NIF explicitly, and classing "
+        "this field secret dropped nif-hash -- the one rule that hashes a NIF -- from the "
+        "policy resolved for it. This is a permanent member of the section rather than a "
+        "case awaiting reclassification."
+    ),
     "auth.provider": (
         "In the auth section, and correctly so: it selects the authentication mode and "
         "decides which of the other auth fields are required. But it holds WHICH method "
@@ -169,11 +185,14 @@ def test_the_shipped_schema_declares_every_presumed_credential_secret() -> None:
     """No presumed credential may ship classed as anything but ``secret``.
 
     DISCRIMINATING, and it is the structural arm that gives it purchase
-    on the shipped schema: the lexical arm alone finds exactly one live
-    subject across every declared field, and that one is a false
-    positive. The controls below prove each arm bites on its own,
-    because a predicate matching nothing would pass this just as
-    happily.
+    on the shipped schema: across every declared field the lexical arm
+    finds only the two contraste fields, which the schema already
+    declares correctly, and one live false positive
+    (``censo.divergencia``). It therefore refuses nothing on its own
+    here, and every field it would newly reach is one the structural arm
+    already covers. The controls below prove each arm bites
+    independently, because a predicate matching nothing would pass this
+    just as happily.
     """
     misdeclared = _misdeclared(load_user_profile_schema())
     assert not misdeclared, (

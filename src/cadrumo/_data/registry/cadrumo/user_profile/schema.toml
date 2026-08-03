@@ -119,22 +119,22 @@ enum_values = ["certificate", "clave_movil", "clave_permanente"]
 key = "dni_nie"
 type = "string"
 required = false
-sensitivity = "secret"
-description = "DNI or NIE presented to Cl@ve. Recorded separately from identity.tax_id, which it must match: live authentication refuses outright when the two disagree."
+sensitivity = "identity"
+description = "DNI or NIE presented to Cl@ve. Holds the same identifier as identity.tax_id; live authentication compares the two and refuses when they diverge, but nothing enforces the match at write time. Classed identity because it names the taxpayer rather than authenticating them: what authenticates is the contraste below, plus a PIN this profile never stores."
 
 [[sections.fields]]
 key = "numero_soporte"
 type = "string"
 required = false
 sensitivity = "secret"
-description = "Numero de soporte printed on a NIE document. Cl@ve asks a NIE holder for this and a DNI holder for fecha_validez, reading exactly one of the two, and only on the non-QR route."
+description = "Numero de soporte printed on a NIE document. Cl@ve asks a NIE holder for this and a DNI holder for fecha_validez, reading exactly one of the two, and only on the non-QR route. Secret because this is contraste material: it is what proves the holder possesses the document, where the DNI/NIE only names them."
 
 [[sections.fields]]
 key = "fecha_validez"
 type = "date"
 required = false
 sensitivity = "secret"
-description = "Validity date printed on a DNI document. Cl@ve asks a DNI holder for this and a NIE holder for numero_soporte, reading exactly one of the two, and only on the non-QR route."
+description = "Validity date printed on a DNI document. Cl@ve asks a DNI holder for this and a NIE holder for numero_soporte, reading exactly one of the two, and only on the non-QR route. Secret because this is contraste material: it is what proves the holder possesses the document, where the DNI/NIE only names them."
 
 [[sections]]
 key = "contact"

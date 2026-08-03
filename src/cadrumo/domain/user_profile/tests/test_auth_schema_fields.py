@@ -10,10 +10,21 @@ requirement is conditional on the chosen provider - a certificate needs
 neither Cl@ve field - so a hard schema requirement would refuse every
 certificate profile.
 
-The three Cl@ve credential inputs declare ``secret``, which is what
-makes the manager and status surfaces mask them. Before that they sat at
-``identity`` and masked only because their descriptions contain the word
-"credential" - a property of the prose, not of the schema.
+The two contraste inputs declare ``secret``, which is what makes the
+manager and status surfaces mask them. Before that every auth field sat
+at ``identity`` and masked only because their descriptions contain the
+word "credential" - a property of the prose, not of the schema.
+
+``dni_nie`` is deliberately NOT among them, and the distinction is the
+subject of this module. It carries the same identifier as
+``identity.tax_id``, which renders in the clear one section above, so
+masking it concealed a value already on the same screen. More
+importantly it is not authentication material: it NAMES the taxpayer,
+where the contraste PROVES possession of their document. ``SECRET`` is
+declared for "long-lived authentication material" and ``IDENTITY``
+names the NIF explicitly, so classing the DNI/NIE ``secret`` also
+dropped ``nif-hash`` - the one redaction rule that hashes a NIF - from
+the policy resolved for that field.
 """
 
 from __future__ import annotations
@@ -29,7 +40,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 AUTH_FIELD_KEYS: frozenset[str] = frozenset({"provider", "dni_nie", "numero_soporte", "fecha_validez"})
 CONTRASTE_FIELD_KEYS: frozenset[str] = frozenset({"numero_soporte", "fecha_validez"})
-CREDENTIAL_FIELD_KEYS: frozenset[str] = frozenset({"dni_nie", "numero_soporte", "fecha_validez"})
 
 
 @pytest.fixture
@@ -66,37 +76,47 @@ def test_no_auth_field_declares_a_plaintext_at_rest_class(
     assert default_policy_for(section.sensitivity).at_rest is AtRestTreatment.CIPHERTEXT_REQUIRED
 
 
-def test_the_clave_credential_inputs_declare_secret(
+def test_only_the_contraste_inputs_declare_secret(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    """The three Cl@ve credential inputs are ``secret`` by declaration.
+    """Exactly the two contraste inputs are ``secret`` by declaration.
 
-    DISCRIMINATING, and the schema half of the masking guarantee: the
-    masking authority masks a field the schema classes ``secret``, so
-    this declaration is what keeps the DNI/NIE and both contraste forms
-    off the manager and status surfaces. They previously masked only
-    because their descriptions contain "credential", which made the
-    confidentiality of a credential a property of its prose - reword the
-    description and the value renders in the clear.
+    DISCRIMINATING in both directions, and the schema half of the masking
+    guarantee: the masking authority masks a field the schema classes
+    ``secret``, so this set equality is what keeps both contraste forms
+    off the manager and status surfaces AND what keeps the DNI/NIE on
+    them. They previously masked only because their descriptions contain
+    "credential", which made the confidentiality of a credential a
+    property of its prose - reword the description and the value renders
+    in the clear.
 
-    ``provider`` is deliberately excluded. It holds which authentication
-    mode the taxpayer uses, a closed enum whose values the schema
-    publishes anyway; knowing it confers no authentication capability, so
-    it is not ``secret`` material.
+    Two fields are deliberately excluded, for the same underlying reason:
+    neither confers any authentication capability. ``provider`` holds
+    which mode the taxpayer uses, a closed enum whose values the schema
+    publishes anyway. ``dni_nie`` NAMES the taxpayer - it is the same
+    identifier ``identity.tax_id`` renders in the clear one section
+    above - where the contraste PROVES possession of the physical
+    document. An attacker holding a DNI/NIE and nothing else cannot
+    authenticate; the contraste and a PIN this profile never stores are
+    what stand between them and a session.
     """
 
     section = schema.section("auth")
     declared = {field.key for field in section.fields if field.sensitivity is SensitivityClass.SECRET}
-    assert declared == CREDENTIAL_FIELD_KEYS
+    assert declared == CONTRASTE_FIELD_KEYS
+    assert schema.field("auth.dni_nie").sensitivity is SensitivityClass.IDENTITY
 
 
 def test_auth_section_carries_the_provider_and_every_clave_credential(
     schema: ProfileSchemaDefinition,
 ) -> None:
     """The section carries the provider choice, the identity, and both
-    forms of contraste. ``dni_nie`` is separate from ``identity.tax_id``
-    because a credential input and a taxpayer identifier are different
-    things that happen to carry equal values today."""
+    forms of contraste. ``dni_nie`` stays a field of its own rather than
+    being derived from ``identity.tax_id``: the two carry equal values on
+    every profile the shipped paths accept, but collapsing them would
+    turn the divergence refusal into a structural impossibility and
+    foreclose a legal entity authenticating through a natural person's
+    Cl@ve, which nothing in the schema has decided."""
 
     section = schema.section("auth")
     assert {field.key for field in section.fields} == AUTH_FIELD_KEYS
