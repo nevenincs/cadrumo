@@ -793,3 +793,135 @@ def test_census_covers_leaves_the_mutation_token_heuristic_cannot_see() -> None:
         "a leaf in no catalogue and no roster must be reported unclassified; if this passes "
         "trivially the census has stopped distinguishing reviewed leaves from unread ones"
     )
+
+
+# ---------------------------------------------------------------------------
+# The hyphenated near-miss: a leaf that LOOKS covered by prefix matching
+# ---------------------------------------------------------------------------
+
+
+def _hyphenated_near_miss_findings(
+    leaves: tuple[str, ...],
+    *,
+    catalogue: tuple[str, ...] = PROFILE_BOUND_WRITE_VERB_PATHS,
+) -> tuple[tuple[str, str], ...]:
+    """Return ``(leaf, guarded_stem)`` pairs for leaves that hyphen-extend a guarded entry.
+
+    :func:`is_profile_bound_write_verb_path` continues past a catalogue entry
+    only on a SPACE, because the characters that follow a matched prefix are
+    meant to be positional arguments. A leaf that continues the same stem with
+    a HYPHEN is therefore a different verb wearing a guarded verb's name, and
+    it matches nothing -- which is invisible precisely because it reads as
+    though it were covered.
+
+    Reported, never auto-guarded. Widening the matcher to treat ``-`` as a
+    boundary would silently pull every future hyphenated verb under a refusal
+    nobody reviewed, trading a visible fail-open for an invisible fail-closed.
+    The point of surfacing the near-miss is that the next one gets a decision.
+    """
+
+    findings: list[tuple[str, str]] = []
+    for leaf in leaves:
+        if is_profile_bound_write_verb_path(leaf) or is_bootstrap_exempt(leaf):
+            continue
+        stem = next((entry for entry in catalogue if leaf.startswith(f"{entry}-")), None)
+        if stem is not None:
+            findings.append((leaf, stem))
+    return tuple(sorted(findings))
+
+
+def test_no_leaf_hyphen_extends_a_guarded_entry_without_its_own_decision() -> None:
+    """A hyphenated sibling of a guarded verb must carry its own decision.
+
+    The trap this surfaces is structural rather than a spelling mistake:
+    ``app live iva-wallet pull`` is guarded, so ``pull-evidence`` reads as
+    covered to anyone scanning the catalogue -- and is not, because the matcher
+    joins on a space. It persisted an acquisition manifest into the encrypted
+    live-IVA namespace while answerable by no storage-route refusal, and the
+    same shape put ``app modelo work amend-wizard`` outside the guard that
+    covers ``app modelo work amend``.
+
+    Both are now explicitly guarded, so this gate is EMPTY at rest. That is the
+    hazard it has to be built against: an empty finding set is what a working
+    detector and a broken one both look like, which is why
+    :func:`test_hyphenated_near_miss_detector_fires_on_a_planted_leaf` plants a
+    leaf of exactly this shape and proves it is caught.
+
+    A finding here is not automatically a fail-open -- the leaf may genuinely
+    read. It is a leaf whose coverage was decided by punctuation instead of by
+    somebody reading it, and the fix is an explicit catalogue entry or an
+    explicit roster entry, never a wider matcher.
+    """
+
+    leaves = _live_leaf_paths()
+    assert len(leaves) > 100, f"materialisation failed; only {len(leaves)} leaves walked"
+    assert len(PROFILE_BOUND_WRITE_VERB_PATHS) > 40, (
+        f"write-guard catalogue collapsed to {len(PROFILE_BOUND_WRITE_VERB_PATHS)} entries; with no "
+        "stems to extend, a green result below would mean 'nothing was screened'"
+    )
+
+    findings = _hyphenated_near_miss_findings(leaves)
+
+    assert findings == (), (
+        "leaf/leaves that hyphen-extend a guarded catalogue entry while guarded by nothing "
+        f"themselves: {[f'{leaf} (extends {stem!r})' for leaf, stem in findings]}. Prefix matching "
+        "continues only on a space, so each reads as covered and is not. Read the handler, then add "
+        "it to `PROFILE_BOUND_WRITE_VERB_PATHS` if it mutates the active bucket or to "
+        "`_REVIEWED_NON_MUTATING_APP_LEAVES` if it does not. Do NOT widen the matcher to split on "
+        "`-`: that would auto-guard every future hyphenated verb without anyone deciding it should be."
+    )
+
+
+def test_hyphenated_near_miss_detector_fires_on_a_planted_leaf() -> None:
+    """Positive control for the gate above, which is empty at rest.
+
+    Without this, the green result carries no information: a detector that
+    never matches anything and a tree that genuinely holds no near-miss are
+    indistinguishable from the outside. So a leaf of exactly the trapped shape
+    is planted into the walked set and must come back flagged.
+
+    ``app ledger add-batch`` does not exist. It is built to extend the real
+    guarded entry ``app ledger add`` with a hyphen, which is the precise
+    construction that made ``pull-evidence`` unreachable. Its preconditions are
+    asserted rather than assumed, so if a future catalogue entry ever covers it
+    this control fails loudly instead of quietly proving nothing.
+    """
+
+    planted = "app ledger add-batch"
+    stem = "app ledger add"
+
+    assert stem in PROFILE_BOUND_WRITE_VERB_PATHS, f"{stem!r} left the catalogue; the control needs a live stem"
+    assert not is_profile_bound_write_verb_path(planted), (
+        f"{planted!r} is now guarded, so planting it proves nothing; pick an unguarded hyphen-extension"
+    )
+    assert not is_bootstrap_exempt(planted)
+
+    findings = _hyphenated_near_miss_findings((*_live_leaf_paths(), planted))
+
+    assert findings == ((planted, stem),), (
+        f"the detector failed to flag a planted hyphen-extension of a guarded entry: {findings}. It "
+        "could not have flagged a real one either, so the empty result above is not evidence."
+    )
+
+
+def test_the_known_hyphenated_near_misses_carry_their_own_catalogue_entries() -> None:
+    """Regression pin on the two live members of the class.
+
+    Both were found by tracing rather than by any gate, and both are guarded
+    only because an explicit entry was added -- the stem's entry does not and
+    cannot cover them. Dropping either explicit entry silently reopens the
+    original fail-open while the stem still sits in the catalogue looking like
+    coverage, so the relationship is pinned here rather than left to be
+    rediscovered.
+    """
+
+    for leaf, stem in (
+        ("app live iva-wallet pull-evidence", "app live iva-wallet pull"),
+        ("app modelo work amend-wizard", "app modelo work amend"),
+    ):
+        assert leaf.startswith(f"{stem}-"), f"{leaf!r} no longer hyphen-extends {stem!r}"
+        assert stem in PROFILE_BOUND_WRITE_VERB_PATHS, f"{stem!r} left the catalogue"
+        assert leaf in PROFILE_BOUND_WRITE_VERB_PATHS, (
+            f"{leaf!r} lost its own catalogue entry. The {stem!r} entry does NOT cover it -- prefix "
+            "matching continues only on a space -- so it is unguarded again."
+        )
