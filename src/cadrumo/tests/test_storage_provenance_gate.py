@@ -162,29 +162,7 @@ TEST_RE_EXPRESSION: Final[str] = "test re-expression"
 PENDING_DISPOSITIONS: Final[frozenset[str]] = frozenset({PRODUCTION_ENROLLMENT, TEST_RE_EXPRESSION})
 
 
-PENDING_ENROLLMENT: Final[tuple[PendingSite, ...]] = (
-    *(
-        PendingSite(
-            module="adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py",
-            function=f"TestFileFallbackProvider.{name}",
-            site_count=count,
-            disposition=TEST_RE_EXPRESSION,
-            reason=(
-                "Reaches into a bucket's keystore by joining the root to assert the file-fallback "
-                "provider's on-disk behaviour. These are pins-by-design: the keystore layout is "
-                "what they exist to defend, so each must be re-expressed against the declared "
-                "bucket- and keystore-scoped members rather than mechanically re-pointed."
-            ),
-        )
-        for name, count in (
-            ("test_bootstrap_activation_mints_distinct_persisted_bucket_dek", 1),
-            ("test_tampered_bucket_dek_raises_localized_master_key_unavailable_without_path", 1),
-            ("test_bucket_dek_manifest_without_dek_fails_closed", 1),
-            ("test_fallback_bucket_id_does_not_authorize_dek_enrollment", 1),
-            ("test_existing_dek_without_manifest_does_not_authorize_activation", 2),
-        )
-    ),
-)
+PENDING_ENROLLMENT: Final[tuple[PendingSite, ...]] = ()
 """Pre-taxonomy join sites, each owned by a ruling. This table may only shrink.
 
 Every entry here is currently a test re-expression: the production enrollments
