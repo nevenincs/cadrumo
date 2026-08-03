@@ -130,6 +130,16 @@ def test_the_oracle_and_the_taxonomy_agree_in_both_directions() -> None:
     oracle = _oracle_fields()
     assert oracle, "the oracle is empty, so both inclusions below hold vacuously"
 
+    # Both sides must be real. Two empty sets are equal, and an empty exclusion
+    # set fails in the safer direction -- the digest becomes maximally
+    # sensitive rather than blind -- but it would still be wrong, and silently:
+    # every replay would refuse on an ordinary cache write.
+    assert len(declared) >= 5, (
+        f"the taxonomy declares only {len(declared)} excluded field(s): {sorted(declared)}. "
+        "Several regenerable categories exist, so a set this small means the participation axis "
+        "collapsed and the digest now churns on every cache write"
+    )
+
     excluded_without_a_reason = sorted(declared - oracle)
     assert not excluded_without_a_reason, (
         f"the taxonomy excludes {excluded_without_a_reason} from the drift digest, which the "

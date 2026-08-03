@@ -70,9 +70,13 @@ def docstring_nodes(tree: ast.AST) -> set[int]:
         if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
             continue
         body = node.body
-        if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
-            if isinstance(body[0].value.value, str):
-                found.add(id(body[0].value))
+        if (
+            body
+            and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)
+        ):
+            found.add(id(body[0].value))
     return found
 
 
@@ -153,7 +157,22 @@ def test_the_taxonomy_declares_a_liveness_claim_for_every_member() -> None:
         "nothing does -- a member that answers neither is a location the application creates and "
         "may never use"
     )
-    assert _members_claiming_a_consumer(), "no member claims a consumer; discovery, not the tree, is broken"
+
+    # Totality over an empty taxonomy is vacuous, and a collapsed member set
+    # would also make every consumer claim below trivially satisfied -- the
+    # gate would report a fully live tree while inspecting nothing. Bounds,
+    # not counts, so the floor survives an ordinary new member.
+    assert len(STORAGE_TAXONOMY) >= 30, (
+        f"the taxonomy declares only {len(STORAGE_TAXONOMY)} member(s); it governs dozens of "
+        "locations, so this means the declaration collapsed and every assertion here holds "
+        "vacuously"
+    )
+    claiming = _members_claiming_a_consumer()
+    assert len(claiming) >= 20, (
+        f"only {len(claiming)} member(s) claim a consumer. Most declared locations are live, so a "
+        "number this low means either the claims were stripped or nearly everything was marked "
+        "dormant -- and 'everything is dormant' passes this gate while meaning nothing"
+    )
 
 
 def test_every_named_consumer_module_exists() -> None:
