@@ -4,6 +4,26 @@ The centralized-output-redaction contract makes ``_emit_envelope`` and
 ``write_stderr`` the owned output boundaries. This test keeps direct output
 exceptions explicit so new ``typer.echo``, ``print``, or stream writes do not
 silently bypass the redacted renderer.
+
+The scan covers the CLI, diagnostics, and wizard roots below. The
+``adapters/inbound/tui`` tree is outside it deliberately. The TUI renders a
+frame the operator is looking at rather than a stream that can be redirected,
+piped, or attached, and it carries its own privacy authority: a fact row's
+``masked`` flag, decided from schema sensitivity, substitutes a mask token so
+the raw value never reaches a widget. That authority also covers the one
+durable artefact the TUI can emit — Textual's built-in ``Screenshot`` system
+command, reachable from the default command palette on every app in that
+tree, writes an SVG of the screen to the user's downloads directory, and a
+masked fact's value does not appear in it while an unmasked one does.
+
+Routing TUI rendering through ``redact_for_cli_output`` would be a regression
+rather than a hardening. That policy keys on NIF/NIE shape, not on field
+sensitivity, and the profile manager pre-fills an unmasked field's current
+value into its edit input — so a redacted ``identity.tax_id`` would put a
+``sha256:`` digest in the box, and an operator confirming it would write that
+digest into the field. Showing the operator their own tax identifier is also
+the status page's purpose: the same value is written in cleartext into the
+fichero-BOE they file.
 """
 
 from __future__ import annotations
