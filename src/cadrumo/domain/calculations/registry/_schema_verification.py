@@ -135,7 +135,7 @@ class VerificationExpectationDefinition(RegistryModel):
     reconcile_when_present_casilla_ids: tuple[CasillaId, ...] = ()
     externally_grounded_casilla_ids: tuple[CasillaId, ...] = ()
     reconciliation_total_casilla_ids: Mapping[Literal["ingresar", "devolver"], CasillaId] = Field(
-        default_factory=dict,
+        default_factory=lambda: dict[Literal["ingresar", "devolver"], CasillaId](),
     )
     tolerance: DecimalValue = Field(ge=Decimal("0"))
     rounding: VerificationRoundingCodeValue

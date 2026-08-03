@@ -89,6 +89,9 @@ def _casilla_id_set(surface: str, *values: object) -> frozenset[CasillaId]:
     return frozenset(validated_casilla_id(value, surface=surface) for value in values)
 
 
+casilla_id_set = _casilla_id_set
+
+
 # Ledger OSS / IOSS aggregation source bindings.
 #
 # These bindings aggregate ledger lines whose IVA classification matches a

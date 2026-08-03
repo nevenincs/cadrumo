@@ -42,6 +42,7 @@ from ._formats import (
     record_field,
     render_record_body,
 )
+from ._registry_record_renderer import RegistryFixedWidthRecordRenderer
 
 __all__ = [
     "AeatExportFormatError",
@@ -50,6 +51,7 @@ __all__ = [
     "FieldKind",
     "Justification",
     "RecordFieldSpec",
+    "RegistryFixedWidthRecordRenderer",
     "SignedMode",
     "record_field",
     "render_record_body",

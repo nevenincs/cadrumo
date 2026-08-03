@@ -355,7 +355,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
     from ._action_errors import WorkUnitNotFoundError
     from ._binding_resolution import (
-        _resolve_declaration_period_inputs,
+        resolve_declaration_period_inputs,
         resolve_available_bound_inputs_by_casilla_id,
     )
     from ._registry_resources import authority_via_resources as _authority_via_resources
@@ -404,7 +404,7 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     # ``compare_taxation_modes`` is Modelo 100 only, and no Modelo 100 revision
     # declares a ``filing_period`` semantic role, so the text channel of this
     # projection is empty here; only the Decimal ``filing_year`` role applies.
-    declaration_inputs = _resolve_declaration_period_inputs(
+    declaration_inputs = resolve_declaration_period_inputs(
         snapshot.revision,
         filing_year=work_unit.filing_year,
         period=work_unit.period,

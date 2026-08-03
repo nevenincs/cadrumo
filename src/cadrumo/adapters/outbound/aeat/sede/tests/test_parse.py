@@ -24,6 +24,7 @@ import pytest
 
 from ......core.config import Settings
 from ......tests import FIXTURES_DIR
+from ......tests.aeat_literal_fixtures import KATA_COTEJO_ID_PATH_FIXTURE
 from .._errors import SedeParseError
 from .._parse import parse_expediente_detail, parse_resumen_tree
 
@@ -118,7 +119,7 @@ class TestParseExpedienteDetail:
 
     def test_accepts_the_maximum_length_csv(self) -> None:
         """The detail parser and ``JustificanteRef`` accept a 32-character CSV."""
-        html = f'<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV={"A" * 32}">declaracion</a>'
+        html = f'<a href="{KATA_COTEJO_ID_PATH_FIXTURE}?CSV={"A" * 32}">declaracion</a>'
 
         ref = parse_expediente_detail(
             html,
@@ -130,7 +131,7 @@ class TestParseExpedienteDetail:
 
     def test_rejects_a_csv_longer_than_the_shared_constraint(self) -> None:
         """Do not truncate a 33-character CSV before the strict model validates it."""
-        html = f'<a href="/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV={"A" * 33}">declaracion</a>'
+        html = f'<a href="{KATA_COTEJO_ID_PATH_FIXTURE}?CSV={"A" * 33}">declaracion</a>'
 
         with pytest.raises(SedeParseError, match="does not match the AEAT shape"):
             parse_expediente_detail(

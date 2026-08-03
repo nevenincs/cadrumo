@@ -32,6 +32,10 @@ import pytest
 
 from ......core.config import Settings
 from ......domain.calculations.registry import RegistryValidationError
+from ......tests.aeat_literal_fixtures import (
+    AEAT_APEX_EVIL_SUFFIX_URL_CANARY,
+    AEAT_APEX_NOT_PREFIX_URL_CANARY,
+)
 from .. import _declarations_fetch, _walker
 from .._parse import parse_resumen_tree
 
@@ -55,8 +59,8 @@ _DISPATCH_ORIGINS: tuple[str, ...] = (
 _OFF_AEAT_URLS: tuple[str, ...] = (
     "https://evil.example.test/steal?e=1",
     "http://127.0.0.1:8080/collect",
-    "https://agenciatributaria.gob.es.evil.test/phish",
-    "https://not-agenciatributaria.gob.es/x",
+    AEAT_APEX_EVIL_SUFFIX_URL_CANARY,
+    AEAT_APEX_NOT_PREFIX_URL_CANARY,
 )
 
 

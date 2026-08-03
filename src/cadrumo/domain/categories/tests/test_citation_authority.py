@@ -24,6 +24,14 @@ from pydantic import ValidationError
 
 from ....core.external_constants import load_external_constants
 from ....core.i18n import Translatable as tr
+from ....tests.aeat_literal_fixtures import (
+    AEAT_HOST_SUFFIX_EXPECTED,
+    CITATION_APEX_URL_FIXTURE,
+    CITATION_SEDE_AYUDA_URL_FIXTURE,
+    CITATION_SEDE_BARE_HOST_FIXTURE,
+    CITATION_SEDE_HTTP_DOWNGRADE_URL_CANARY,
+    CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY,
+)
 from .._proportionality import (
     CategoryCitation,
     CategoryCitationSource,
