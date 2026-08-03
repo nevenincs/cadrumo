@@ -22,6 +22,7 @@ from .....core import STORAGE_TAXONOMY, StorageCategory, StorageScope, storage_l
 from .._namespace_registry import (
     BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,
+    BUCKET_DATABASE_FILENAME,
     BUCKET_DB_DIRNAME,
     BUCKET_DEK_FILENAME,
     BUCKET_LOCK_FILENAME,
@@ -41,6 +42,7 @@ _REGISTRY_MODULE = Path(__file__).resolve().parent.parent / "_namespace_registry
 _BOUND_CONSTANTS = (
     (BUCKETS_DIRNAME, StorageCategory.BUCKETS),
     (BUCKET_DB_DIRNAME, StorageCategory.BUCKET_DATABASE),
+    (BUCKET_DATABASE_FILENAME, StorageCategory.BUCKET_DATABASE_FILE),
     (BUCKET_BLOBS_DIRNAME, StorageCategory.BUCKET_BLOBS),
     (BUCKET_AUDIT_DIRNAME, StorageCategory.BUCKET_AUDIT),
     (BUCKET_MANIFEST_FILENAME, StorageCategory.BUCKET_MANIFEST),

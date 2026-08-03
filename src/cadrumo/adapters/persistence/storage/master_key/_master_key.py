@@ -750,18 +750,17 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
         UnsecuredModeRefusedError: When the bucket's profile cannot be
             proven synthetic, or carries a real NIF / NIE / CIF.
     """
-    from .....core.config import PRODUCT_DATABASE_FILENAME, load_settings
-    from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME, USER_PROFILE_VALUE_NAMESPACE
+    from .....core import StorageCategory, bucket_scoped_storage_path
+    from .....core.config import load_settings
+    from .._namespace_registry import USER_PROFILE_VALUE_NAMESPACE
     from ..crypto import decrypt_encrypted_bytes_column
 
     if session.bucket_id == "unsecured":
         return
-    db_path = (
-        load_settings().cadrumo_local_storage_root
-        / BUCKETS_DIRNAME
-        / session.bucket_id
-        / BUCKET_DB_DIRNAME
-        / PRODUCT_DATABASE_FILENAME
+    db_path = bucket_scoped_storage_path(
+        StorageCategory.BUCKET_DATABASE_FILE,
+        session.bucket_id,
+        settings=load_settings(),
     )
     if not db_path.is_file():
         return

@@ -51,6 +51,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ._models import STRICT_FROZEN_CONFIG
 from .errors import CoreValidationError
+from .product_identity import PRODUCT_IDENTITY
 
 if TYPE_CHECKING:
     from .config import Settings
@@ -312,9 +313,11 @@ class StorageCategory(StrEnum):
     # ── Fixed layout: the bucket container and the active-profile pointer ───
     BUCKETS = "buckets"
     ACTIVE_PROFILE_POINTER = "active-profile-pointer"
+    ROOT_FALLBACK_DATABASE = "root-fallback-database"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"
+    BUCKET_DATABASE_FILE = "bucket.db-file"
     BUCKET_BLOBS = "bucket.blobs"
     BUCKET_AUDIT = "bucket.audit"
     BUCKET_MANIFEST = "bucket.manifest"
@@ -447,6 +450,16 @@ def _location(
         settings_field=settings_field,
         derives_settings_default=derives_settings_default and settings_field is not None,
     )
+
+
+_PRODUCT_DATABASE_FILENAME: Final[str] = f"{PRODUCT_IDENTITY.python_package}.db"
+"""SQLite filename shared by the root-fallback and per-bucket database members.
+
+Computed from the one product-identity authority rather than hardcoded a
+second time, so :data:`~core.config.PRODUCT_DATABASE_FILENAME` -- which reads
+this value back off the taxonomy -- can never drift from what these two
+members actually resolve.
+"""
 
 
 _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
@@ -765,6 +778,20 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
+    _location(
+        # The cold-start database used only before any profile bucket exists.
+        # Not reclaimable and not operator-relocatable, exactly like the
+        # per-bucket database file below -- a database is not a cache that grew
+        # too large, and a database path does not move independently of the
+        # storage root.
+        StorageCategory.ROOT_FALLBACK_DATABASE,
+        _PRODUCT_DATABASE_FILENAME,
+        consumer_module="core/config.py",
+        node_kind=StorageNodeKind.FILE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
 )
 
 
@@ -773,6 +800,21 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         StorageCategory.BUCKET_DATABASE,
         "db",
         consumer_module="adapters/persistence/storage/_namespace_registry.py",
+        scope=StorageScope.BUCKET_RELATIVE,
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
+    _location(
+        # The database file beneath the BUCKET_DATABASE directory above. That
+        # member governs the directory only; before this member existed, the
+        # file inside it was an ungoverned leaf no producer resolved through
+        # the taxonomy -- exactly the nested-path gap the taxonomy exists to
+        # close.
+        StorageCategory.BUCKET_DATABASE_FILE,
+        f"db/{_PRODUCT_DATABASE_FILENAME}",
+        consumer_module="core/config.py",
+        node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,

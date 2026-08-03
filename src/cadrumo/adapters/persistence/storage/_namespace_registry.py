@@ -44,6 +44,9 @@ SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 # database keys, not filesystem paths -- and keep their own declarations.
 BUCKETS_DIRNAME = storage_location(StorageCategory.BUCKETS).subpath
 BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
+#: Relative to the bucket root, not to ``db/`` -- this is the nested file, the
+#: sibling constant above is the directory that holds it.
+BUCKET_DATABASE_FILENAME = storage_location(StorageCategory.BUCKET_DATABASE_FILE).subpath
 BUCKET_BLOBS_DIRNAME = storage_location(StorageCategory.BUCKET_BLOBS).subpath
 BUCKET_AUDIT_DIRNAME = storage_location(StorageCategory.BUCKET_AUDIT).subpath
 BUCKET_MANIFEST_FILENAME = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
@@ -1081,6 +1084,17 @@ STORAGE_PATH_DEFINITIONS = (
         segment=BUCKET_DB_DIRNAME,
     ),
     StoragePathDefinition(
+        # No single-component segment: the file sits two levels below the
+        # bucket root, inside the directory the entry above governs. ``segment``
+        # is omitted rather than given the nested value, matching the other
+        # non-single-component entries below (``secure_objects_table``,
+        # ``blob_manifest``).
+        key="bucket_database_file",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/buckets/<bucket_id>/db/cadrumo.db",
+        owner="cadrumo.core.config",
+    ),
+    StoragePathDefinition(
         key="bucket_blobs",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/blobs/",
@@ -1248,6 +1262,7 @@ __all__ = [
     "BUCKETS_DIRNAME",
     "BUCKET_AUDIT_DIRNAME",
     "BUCKET_BLOBS_DIRNAME",
+    "BUCKET_DATABASE_FILENAME",
     "BUCKET_DB_DIRNAME",
     "BUCKET_DEK_FILENAME",
     "BUCKET_LOCK_FILENAME",

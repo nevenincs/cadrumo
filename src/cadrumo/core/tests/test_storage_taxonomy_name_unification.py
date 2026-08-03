@@ -36,12 +36,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _ROUTE_MODULE = Path(__file__).resolve().parent.parent / "_config_storage_route.py"
 _STATE_ROOT_MODULE = Path(__file__).resolve().parent.parent / "_config_state_root.py"
+_SETTINGS_MODULE = Path(__file__).resolve().parent.parent / "config.py"
+_MASTER_KEY_MODULE = (
+    Path(__file__).resolve().parents[2] / "adapters" / "persistence" / "storage" / "master_key" / "_master_key.py"
+)
 
 
 def test_the_core_constants_are_the_taxonomy_not_a_second_copy() -> None:
     """A copy that merely agrees today is still a copy."""
     assert storage_location(StorageCategory.BUCKETS).subpath == BUCKETS_DIRNAME
     assert storage_location(StorageCategory.BUCKET_DATABASE).subpath == BUCKET_DB_DIRNAME
+    assert storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath == PRODUCT_DATABASE_FILENAME
 
 
 def _string_literals(module: Path) -> set[str]:
@@ -63,7 +68,11 @@ def _string_literals(module: Path) -> set[str]:
     }
 
 
-@pytest.mark.parametrize("module", [_ROUTE_MODULE, _STATE_ROOT_MODULE], ids=["storage_route", "state_root"])
+@pytest.mark.parametrize(
+    "module",
+    [_ROUTE_MODULE, _STATE_ROOT_MODULE, _SETTINGS_MODULE, _MASTER_KEY_MODULE],
+    ids=["storage_route", "state_root", "settings", "master_key"],
+)
 def test_no_core_module_re_types_a_governed_layout_name(module: Path) -> None:
     """The literals are deleted, not merely pinned.
 
@@ -74,10 +83,31 @@ def test_no_core_module_re_types_a_governed_layout_name(module: Path) -> None:
     """
     literals = _string_literals(module)
     assert literals, "the module must contain some string constants, or this asserts nothing"
-    for governed in (BUCKETS_DIRNAME, BUCKET_DB_DIRNAME):
+    for governed in (BUCKETS_DIRNAME, BUCKET_DB_DIRNAME, PRODUCT_DATABASE_FILENAME):
         assert governed not in literals, (
             f"{module.name} re-types the governed layout name {governed!r}; read the taxonomy instead"
         )
+
+
+def test_the_database_url_resolves_to_its_pre_migration_shape(tmp_path: Path) -> None:
+    """The cold-start and per-bucket database URLs are byte-identical to the old hand-built join.
+
+    Both branches of ``Settings._resolve_database_url_for_active_profile`` used
+    to join ``cadrumo_local_storage_root`` by hand; this asserts the resolved
+    URL against that literal on-disk shape directly -- not against the
+    accessor re-applied -- so a member whose subpath silently drifted from
+    what the validator used to build would red here even if the accessor and
+    the validator drifted together.
+    """
+    root = tmp_path / "state"
+
+    fallback_settings = Settings(cadrumo_local_storage_root=root)
+    expected_fallback = root / "cadrumo.db"
+    assert fallback_settings.cadrumo_database_url == f"sqlite:///{expected_fallback.as_posix()}"
+
+    bucket_settings = Settings(cadrumo_local_storage_root=root, cadrumo_active_profile="primary")
+    expected_bucket = root / "buckets" / "primary" / "db" / "cadrumo.db"
+    assert bucket_settings.cadrumo_database_url == f"sqlite:///{expected_bucket.as_posix()}"
 
 
 def test_the_route_classifier_still_recognises_a_bucket_database(tmp_path: Path) -> None:

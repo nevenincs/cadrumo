@@ -40,10 +40,7 @@ from ._config_integration_fields import (
 )
 from ._config_mcp_serving_fields import CadrumoMcpServingSettings
 from ._config_state_root import (
-    BUCKET_DB_DIRNAME,
-    BUCKETS_DIRNAME,
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
-    PRODUCT_DATABASE_FILENAME,
     default_storage_root,
     refuse_former_product_database,
 )
@@ -1098,9 +1095,11 @@ class Settings(CadrumoMcpServingSettings):
                 raise ActiveProfilePointerError(path=pointer_file) from exc
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()
+        from ._storage_taxonomy import StorageCategory, bucket_scoped_storage_path, storage_path
+
         if not bucket_id:
             refuse_former_product_database(self.cadrumo_local_storage_root)
-            fallback_db_path = self.cadrumo_local_storage_root / PRODUCT_DATABASE_FILENAME
+            fallback_db_path = storage_path(StorageCategory.ROOT_FALLBACK_DATABASE, settings=self)
             object.__setattr__(
                 self,
                 "cadrumo_database_url",
@@ -1108,17 +1107,11 @@ class Settings(CadrumoMcpServingSettings):
             )
             return self
         refuse_former_product_database(self.cadrumo_local_storage_root, bucket_id=bucket_id)
-        # The layout names come from the one core storage authority. This
-        # fallback used to re-type them, unpinned against the code that
-        # actually provisions a bucket, so a rename would have routed the
-        # cold-start database at a directory nothing else agreed on.
-        bucket_db_path = (
-            self.cadrumo_local_storage_root
-            / BUCKETS_DIRNAME
-            / bucket_id
-            / BUCKET_DB_DIRNAME
-            / PRODUCT_DATABASE_FILENAME
-        )
+        # The layout comes from the one core storage authority. This fallback
+        # used to re-type it, unpinned against the code that actually
+        # provisions a bucket, so a rename would have routed the cold-start
+        # database at a directory nothing else agreed on.
+        bucket_db_path = bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE_FILE, bucket_id, settings=self)
         object.__setattr__(
             self,
             "cadrumo_database_url",
