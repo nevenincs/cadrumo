@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:a97908db79a1bebdf3f317b010f4d6bed070a2c2273c2f644296f50a9860724c'
+body_hash: 'sha256:0d69ff91d942fd1d430a1112b9cb2dc54497608b6618d4644e64c20e9abdc5d2'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -30,22 +30,22 @@ Declares StorageCategory, StorageLocation, and STORAGE_TAXONOMY in cadrumo.core,
 
 Lands the closed enums, the frozen strict location model, and the single keyed mapping in core, with a transitional parity test proving every declared subpath is byte-identical to the shipped dict value.
 
-- [ ] `W01.P01.S01` - Declare StorageNodeKind, StorageScope, StorageLifecycle, FingerprintParticipation, and StorageOverridePolicy as StrEnums in core, gated by a test asserting each member set is closed and an unknown value is rejected at model validation; `src/cadrumo/core/_storage_taxonomy.py`.
-- [ ] `W01.P01.S02` - Declare ExternalPathRole as a StrEnum carrying the four escape roles plus OPERATOR_DIRECTED_OUTPUT, gated by a test asserting the five members and rejecting an undeclared role string; `src/cadrumo/core/_storage_taxonomy.py`.
-- [ ] `W01.P01.S03` - Declare StorageCategory as a StrEnum naming every application-chosen location identified by scope and name together, gated by a test asserting the duplicated blobs and audit names resolve to distinct members; `src/cadrumo/core/_storage_taxonomy.py`.
-- [ ] `W01.P01.S04` - Declare StorageLocation as a frozen strict pydantic model carrying subpath, node kind, scope, override policy, lifecycle, grouping, and fingerprint participation, gated by a test asserting extra fields are forbidden and mutation raises; `src/cadrumo/core/_storage_taxonomy.py`.
-- [ ] `W01.P01.S05` - Declare STORAGE_TAXONOMY as the single mapping keyed by StorageCategory with each subpath copied verbatim from the shipped table, gated by a test asserting the mapping is total over the enum; `src/cadrumo/core/_storage_taxonomy.py`.
-- [ ] `W01.P01.S06` - Add a transitional parity test asserting every key of the shipped derived-dirs dict has a taxonomy member whose subpath string is byte-identical, so the representation change cannot silently move a path; `src/cadrumo/core/tests/test_storage_taxonomy_parity.py`.
-- [ ] `W01.P01.S07` - Export StorageCategory, StorageLocation, STORAGE_TAXONOMY, and the axis enums from the core package facade using the existing deferred-attribute pattern, gated by an import test from the package top level; `src/cadrumo/core/__init__.py`.
+- [x] `W01.P01.S01` - Declare StorageNodeKind, StorageScope, StorageLifecycle, FingerprintParticipation, and StorageOverridePolicy as StrEnums in core, gated by a test asserting each member set is closed and an unknown value is rejected at model validation; `src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W01.P01.S02` - Declare ExternalPathRole as a StrEnum carrying the four escape roles plus OPERATOR_DIRECTED_OUTPUT, gated by a test asserting the five members and rejecting an undeclared role string; `src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W01.P01.S03` - Declare StorageCategory as a StrEnum naming every application-chosen location identified by scope and name together, gated by a test asserting the duplicated blobs and audit names resolve to distinct members; `src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W01.P01.S04` - Declare StorageLocation as a frozen strict pydantic model carrying subpath, node kind, scope, override policy, lifecycle, grouping, and fingerprint participation, gated by a test asserting extra fields are forbidden and mutation raises; `src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W01.P01.S05` - Declare STORAGE_TAXONOMY as the single mapping keyed by StorageCategory with each subpath copied verbatim from the shipped table, gated by a test asserting the mapping is total over the enum; `src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W01.P01.S06` - Add a transitional parity test asserting every key of the shipped derived-dirs dict has a taxonomy member whose subpath string is byte-identical, so the representation change cannot silently move a path; `src/cadrumo/core/tests/test_storage_taxonomy_parity.py`.
+- [x] `W01.P01.S07` - Export StorageCategory, StorageLocation, STORAGE_TAXONOMY, and the axis enums from the core package facade using the existing deferred-attribute pattern, gated by an import test from the package top level; `src/cadrumo/core/__init__.py`.
 
 ### Phase `W01.P02` - the accessor, the materialiser, and the twelve migration invariants
 
 Replaces the derivation validator, the tree materialiser, and the override-settings rebuild loop with taxonomy-derived equivalents, deletes the untyped dict, and adds the root-permission test the research found missing.
 
-- [ ] `W01.P02.S08` - Add storage_path returning the resolved absolute path for a root-scoped category, gated by a test asserting an absolute per-field override passes through unchanged with no containment rewrite; `src/cadrumo/core/_storage_taxonomy.py`.
-- [ ] `W01.P02.S09` - Add the bucket-scoped and keystore-scoped accessor variant taking the bucket identifier, gated by a test asserting a root-scoped member passed to it refuses rather than silently resolving; `src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W01.P02.S08` - Add storage_path returning the resolved absolute path for a root-scoped category, gated by a test asserting an absolute per-field override passes through unchanged with no containment rewrite; `src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W01.P02.S09` - Add the bucket-scoped and keystore-scoped accessor variant taking the bucket identifier, gated by a test asserting a root-scoped member passed to it refuses rather than silently resolving; `src/cadrumo/core/_storage_taxonomy.py`.
 - [ ] `W01.P02.S10` - Add effective_storage_root to the paths module returning the caller override or the settings root, normalised, gated by a test asserting a relative override anchors to the platform user-data root one level above the storage root; `src/cadrumo/core/paths.py`.
-- [ ] `W01.P02.S11` - Rewrite the derived-output validator to iterate the taxonomy instead of the dict while keeping the model-fields-set skip, gated by the existing explicit-override-wins test staying green; `src/cadrumo/core/config.py`.
+- [x] `W01.P02.S11` - Rewrite the derived-output validator to iterate the taxonomy instead of the dict while keeping the model-fields-set skip, gated by the existing explicit-override-wins test staying green; `src/cadrumo/core/config.py`.
 - [ ] `W01.P02.S12` - Rewrite ensure_storage_tree to materialise the taxonomy-derived member set and delete the path-suffix file inference, gated by the existing file-valued-setting test asserting the parent is created and the leaf is not; `src/cadrumo/core/config.py`.
 - [ ] `W01.P02.S13` - Preserve the occupied-by-a-file refusal message and its positive control through the materialiser rewrite, gated by the existing test asserting both the path substring and the occupied-by-a-file diagnosis appear; `src/cadrumo/core/config.py`.
 - [ ] `W01.P02.S14` - Rewrite the override-settings root-change pop-and-rebuild loop against the taxonomy key space, gated by a test asserting a root override re-derives every non-overridden category under the new root; `src/cadrumo/core/config.py`.
@@ -114,21 +114,26 @@ Enrolls or explicitly escapes every remaining root-anchored cache, telemetry, an
 
 Declares every application-chosen segment written one and two levels beneath an already-enrolled category, closing the ungoverned depth the research measured.
 
+
 ### Phase `W02.P07` - effective storage root call-site migration
 
 Migrates each of the six sites that re-derive the override-or-settings storage root onto the single core primitive, one file per Step so two lanes cannot collide on the same edit.
+
 
 ### Phase `W02.P08` - optional-root CLI resolver convergence
 
 Collapses the copy-pasted optional-root Typer resolvers onto one parameterised helper so the bundled-default and settings-default families stop drifting apart.
 
+
 ### Phase `W02.P09` - fingerprint participation as a declared third axis
 
 Rewrites the drift-fingerprint exclusion set to derive from the declared participation field, lands the deliberate registry-cache correction, and gates the axis with both halves of the property.
 
+
 ### Phase `W02.P10` - single-file stat cache-key convergence
 
 Adds the path-keyed sibling of the existing filename-keyed stat fingerprint and converges the loader modules that each re-derived the identical stat-and-cache-key boilerplate.
+
 
 ## Wave `W03` - enforcement gates and the whole test-surface migration
 
@@ -138,25 +143,31 @@ Rewrites the lifecycle gate onto the taxonomy behind the peer-held fix, lands th
 
 Confirms the peer's fix has landed and the gate is green at committed HEAD before any edit, then rewrites the five hand-maintained frozensets onto the taxonomy while keeping the gate enumerating path-typed settings fields rather than taxonomy members.
 
+
 ### Phase `W03.P12` - the provenance gate and its three supporting gates
 
 Lands the structural gate whose property is that the storage root has exactly one reader, plus the materialisation-parity, binding, and liveness gates that keep the taxonomy honest, each proven by a mutation that reds it.
+
 
 ### Phase `W03.P13` - dormancy decisions the liveness gate forces
 
 Turns the three declared-but-unwritten categories into an explicit wire-or-delete decision rather than an audit-discoverable condition.
 
+
 ### Phase `W03.P14` - isolation fixture drift retirement
 
 Retires per-field overrides that duplicate the taxonomy at a call site, including the fixture pinning a category to a path that disagrees with the taxonomy, while leaving the two-tier root-redirection chain verbatim.
+
 
 ### Phase `W03.P15` - pins-by-design test re-expression
 
 Re-expresses each test whose reason for existing is the on-disk name it asserts, so it still defends that property against the taxonomy rather than degenerating into an accessor-equals-itself tautology.
 
+
 ### Phase `W03.P16` - incidental test literal burndown by package
 
 Burns down the mechanically re-pointable literal corpus one test package at a time, each Step gated by the provenance gate scoped to that package plus that package's own suite.
+
 
 ## Wave `W04` - the config storage operator surface, dev tooling, and documentation
 
@@ -166,13 +177,16 @@ Registers the config storage noun-group, authors its five verbs plus the refuse-
 
 Registers the lifecycle-operations-only noun-group and authors its five read and materialise verbs plus the refuse-and-instruct relocation response, each on the envelope spine with a registered strict schema.
 
+
 ### Phase `W04.P18` - operator-facing strings, reference, and conformance
 
 Wires locale keys through the locales CLI in all four catalogues, regenerates the CLI reference, and clears the schema, documented-command, and reviewed-write gates the new leaf must pass.
 
+
 ### Phase `W04.P19` - dev tooling, packaging, and documentation sweep
 
 Retires the storage names restated in dev scripts, the justfile, and the packaging manifest, adds the drift gate the manifest lacks, and rewrites the operator documentation the CRUD surface makes stale.
+
 
 ## Wave `W05` - completeness proof, honesty review, and closure
 
@@ -182,13 +196,16 @@ Proves the mandate rather than asserting it: mutation-proves each new gate, swee
 
 Proves each new gate can actually fail by the smallest edit that should break its specific property, then sweeps the whole tree for surviving unenrolled readers and records the result as the mandate's completeness evidence.
 
+
 ### Phase `W05.P21` - open verifications inherited rather than authored
 
 Resolves the one measurement this campaign ratified without proving: whether browser-mediated download bytes reach a filesystem path before cancellation fires.
 
+
 ### Phase `W05.P22` - honesty review and closure
 
 Runs the mandatory fresh-context honesty review before any completion claim, tracks every item it surfaces, reconciles the out-of-scope register, and confirms one execution record per closed Step.
+
 
 ## Parallelization
 
