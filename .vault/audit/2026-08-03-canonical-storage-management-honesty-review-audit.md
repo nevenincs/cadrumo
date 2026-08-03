@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:3579086b87f3820cf395a79175155c31cdebb9038412e01843d817a4f0506fde'
+body_hash: 'sha256:f495e94ed3d3ab6b100be07a7073e581695a517bcca73f4cf5259a6155a724fc'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-plan]]'
@@ -989,6 +989,84 @@ condition is the right place for it and a warning on every bootstrap would be no
 **Not campaign-caused and not in scope.** Recorded so it survives outside an S81 record
 about something else, per the request — and recorded at its true severity rather than
 the one I first gave it.
+
+### rotation-guard-conflates-two-states | low | Two rotation-path existence guards cannot distinguish "never provisioned" from "vanished" — the second protection whose failure reads as success
+
+A second instance of the same shape the `chmod`-swallowed-failure finding above records:
+a protection whose failure is indistinguishable from its success, surfaced this time by
+the out-of-plan `default_blob_store_roots` doubled-path fix (commit `5fbd329fd0`) rather
+than by `S81`.
+
+**Where.** Two guard sites, identical shape, both in
+`adapters/persistence/storage/_rotation.py`:
+
+- `default_blob_store_roots` (line 579, the fixed version): `if not setting_path.exists():
+  continue` — a candidate blob-store root that does not exist is silently dropped from
+  the returned tuple before rotation ever sees it.
+- `rotate_blob_stores` (line 522): `if not root.exists(): continue` — the same check
+  again, one call deeper, for a root that reached the function some other way (an
+  operator-extended tuple, a caller that skipped the default helper).
+
+The identical shape exists a third time, for the other rotation surface, at
+`_iter_envelope_files` (line 209, `if not entry.store_dir.exists(): continue`), which
+`rotate_master_key` walks for the `*.envelope.json` consumers `default_rotation_plan`
+enumerates. All three are the same deliberate, stated design: `test_skips_missing_directories`
+records the rationale explicitly — a pre-provision installation whose consumer directory
+was never created has nothing to rotate, and reporting that as a clean `(0, 0, 0)` rather
+than an `OSError` is correct, not a bug.
+
+**Why it is nonetheless a finding.** `Path.exists()` answers one boolean question and the
+guard treats every `False` the same way, but two genuinely different states produce it:
+a directory that was **never created** (a consumer type never used — nothing to rotate,
+benign) and a directory that **existed and became unavailable** at the moment rotation ran
+(an unmounted volume, a permissions change, a transient filesystem fault — real content
+that rotation silently failed to reach). Master-key rotation exists specifically so the
+old key can be safely retired; a root that silently drops out of the walk for the second
+reason means whatever ciphertext lives under it keeps its old-key wrapping while the
+`RotationSummary` reports the same clean shape a genuinely-empty pre-provision root would
+— `errors == 0`, not merely `rotated == 0`. The operator has no signal to distinguish "there
+was nothing here" from "something was here and I could not see it."
+
+**Why it matters specifically for rotation and not for the file-envelope path the same
+guard shape also covers.** The stakes are asymmetric. A missed `RotationPlanEntry` walk
+(`_iter_envelope_files`) leaves an envelope file re-encryptable on the NEXT rotation run,
+because `rotate_master_key`'s own resume-idempotency contract (decrypt-under-new-key-first,
+fall back to old-key) means a still-old-key file is simply picked up and rotated correctly
+whenever the directory becomes reachable again — nothing is lost, only delayed. Blob-store
+rotation carries the same resume contract in principle
+(`EncryptedBlobStore.rotate_master_key` also tries the new key first), so a rotation run
+that missed a transiently-unavailable root is likewise recoverable **on its own** by a
+later run over the same root — the asymmetry is not that blob rotation is unrecoverable
+where envelope rotation is resumable; both resume correctly if run again. The asymmetry is
+operational: nothing in either path currently signals that a supposedly-covered root was
+skipped for a reason other than "this consumer was never provisioned," so an operator (or
+an automated rotation job) that treats a clean `RotationSummary` as "the old key is now
+safe to retire" has no way to tell the two `False` states apart from the summary alone.
+Retiring the old key on that belief is exactly the hazard `rotate_blob_stores`'s own
+docstring warns about for a missed blob: "the blob is unrecoverable" once the old key is
+gone — and unlike the file-envelope path's later-run recovery, once the old key material
+itself is destroyed, a root that reappears afterward cannot be rotated at all.
+
+**Severity, stated explicitly.** `low`, not `medium`, and the reason is reachability, not
+consequence: `rotate_blob_stores` / `default_blob_store_roots` have **zero production
+callers** — confirmed by grep across the whole tree outside `_rotation.py` and its tests —
+so no operator or automated job can trigger this today. The consequence *if* it fires is
+severe (an operator retiring an old master key on a false-clean summary), which is why it
+is recorded rather than dropped; the low label reflects that nothing reaches the code path
+yet, deliberately, unlike the `chmod` finding above where a partial detector already ships
+and the residual was narrowed by finding it. No such detector exists here to narrow
+against — the absence itself is the finding, not evidence the risk is smaller.
+
+**Not campaign-caused, not fixed here, and correctly left alone.** The doubled-path fix
+corrected which root the guard is applied to; it did not (and should not have, unasked)
+change what the guard does with a `False`. The guard's current behaviour is a deliberate,
+consistently-applied, module-wide design choice with a stated rationale and passing test
+coverage — reversing it inside an unrelated bug fix would be scope creep, and the
+right owner is whoever designs the eventual operator-facing rotation verb (today there is
+none). Recorded here, alongside the `chmod` finding, so both members of this pattern — a
+protection whose failure is swallowed at debug-only logging, and a protection whose
+failure is indistinguishable from a benign true negative — survive outside the Step
+records that happened to surface them.
 
 ### verified-sound | none | What the record claims and the code supports
 
