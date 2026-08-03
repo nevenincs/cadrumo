@@ -23,6 +23,7 @@ from ...application.ledger import (
     list_manual_transactions,
     resolve_transaction_id,
 )
+from ...core.decimal import format_decimal
 from ...core.i18n import tr
 from ...core.json_contract import Notice
 from ...domain.categories import SpendingCategory
@@ -170,13 +171,18 @@ def _parse_amount_magnitude(raw: str) -> Decimal:
 
 
 def _format_percent(value: Decimal) -> str:
-    """Render a 0..1 proportion as its percentage for operator context."""
-    # ``format(..., "f")`` avoids scientific notation (e.g. ``5E+3``);
-    # trim trailing zeros only when a fractional part is present.
-    text = format(value * Decimal(100), "f")
-    if "." in text:
-        text = text.rstrip("0").rstrip(".")
-    return f"{text}%"
+    """Render a 0..1 proportion as its percentage for operator context.
+
+    The trailing-zero trim is :meth:`~decimal.Decimal.normalize` inside
+    :func:`~cadrumo.core.decimal.format_decimal` rather than a local
+    ``rstrip("0").rstrip(".")``. The string form needs a guard the
+    numeric form does not: stripping zeros from ``"100"`` yields ``"1"``,
+    so the local spelling was only correct because it first tested for a
+    decimal point. Normalising the value instead removes the trap rather
+    than restating the guard, and the canonical helper is also what keeps
+    a small proportion out of scientific notation.
+    """
+    return f"{format_decimal(value * Decimal(100), normalize=True)}%"
 
 
 def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
@@ -196,7 +202,7 @@ def _validate_business_pct_range(value: Decimal | None) -> Decimal | None:
         raise _bad(
             tr(
                 "cli.ledger.errors.business_pct_out_of_range",
-                value=format(value.normalize(), "f"),
+                value=format_decimal(value, normalize=True),
                 percent=_format_percent(value),
             ),
         )
