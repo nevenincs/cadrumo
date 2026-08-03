@@ -14,6 +14,7 @@ from ..domain.deadlines import IVARegime
 from ..domain.user_profile import (
     NUMERIC_PROFILE_FIELD_TYPES,
     ProfileAlreadyExistsError,
+    ProfileFieldType,
     UserProfileFact,
 )
 
@@ -25,6 +26,15 @@ if TYPE_CHECKING:
 #: Checksum-valid NIF filler, derived through the canonical check-letter table
 #: rather than written out, so it cannot drift from the algorithm that admits it.
 _PLACEHOLDER_TAX_ID = f"12345678{nif_check_letter(12345678)}"
+
+#: Calendar-day filler for date fields, in the zero-padded layout the write door
+#: requires. Fixed rather than derived from the clock: a filler that moves with
+#: today's date makes every test using it non-reproducible, and a suite that
+#: passes in one week and fails the next reports the calendar, not the code.
+#: The particular day is arbitrary but not careless -- the date fields are mostly
+#: birth, marriage, and activity-start dates, so a plausible adult birth year
+#: avoids handing anything that later reads an age a taxpayer born last year.
+_PLACEHOLDER_DATE = "1990-01-01"
 
 
 def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
@@ -56,6 +66,14 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
     rather than added to a table of paths: one field whose downstream contract
     is stricter than its declared type, named where that is true.
 
+    A date field takes a fixed calendar day. The write door enforces
+    ``ProfileFieldType.DATE`` as narrowly as it enforces an enum's declared
+    set -- a date-typed fact must carry a real ISO-8601 day in the
+    zero-padded ``YYYY-MM-DD`` layout -- so the sentinel is refused there
+    exactly as it is in an enum field. Unlike the numeric branch there is
+    nothing to derive: the schema permits bounds only on numeric fields, so a
+    date field declares no range to honour and a constant is the whole answer.
+
     Args:
         field: The schema definition of the field being filled.
 
@@ -68,6 +86,8 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
         return _PLACEHOLDER_TAX_ID
     if field.type in NUMERIC_PROFILE_FIELD_TYPES:
         return _numeric_placeholder(field)
+    if field.type is ProfileFieldType.DATE:
+        return _PLACEHOLDER_DATE
     return "placeholder"
 
 

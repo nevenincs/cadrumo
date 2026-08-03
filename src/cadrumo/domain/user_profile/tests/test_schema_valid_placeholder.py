@@ -17,10 +17,12 @@ declares then.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....tests.user_profile import schema_valid_placeholder
-from .. import load_user_profile_schema
+from .. import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -60,24 +62,69 @@ def test_an_enum_field_gets_a_declared_value_rather_than_the_sentinel() -> None:
     )
 
 
+def test_a_date_field_gets_a_real_calendar_date_rather_than_the_sentinel() -> None:
+    """A date field constrains its value as narrowly as an enum field does.
+
+    The write door enforces :attr:`ProfileFieldType.DATE`: a date-typed
+    fact must carry a real ISO-8601 calendar day in the zero-padded
+    ``YYYY-MM-DD`` layout, and refuses anything else with an
+    ``invalid_date_value`` ERROR. The sentinel is not one, so a filler
+    returning it for a date field promises a value the field's own
+    declaration admits and hands back one the door rejects.
+
+    Asserted by parsing rather than by matching the constant, so the
+    filler stays free to choose a different day without this test having
+    an opinion about which.
+    """
+    schema = load_user_profile_schema()
+    date_fields = [
+        field for section in schema.sections for field in section.fields if field.type is ProfileFieldType.DATE
+    ]
+
+    assert date_fields, "the schema declares no date field; this test would prove nothing"
+
+    refused = []
+    for field in date_fields:
+        value = schema_valid_placeholder(field)
+        try:
+            date.fromisoformat(value)
+        except ValueError:
+            refused.append(f"{field.key} -> {value!r}")
+
+    assert refused == [], "the shared filler emitted a value the date write-door refuses:\n" + "\n".join(refused)
+
+
 def test_a_field_with_no_declared_set_gets_the_sentinel() -> None:
-    """The other half: an unconstrained field needs no special value.
+    """The other half: a genuinely unconstrained field needs no special value.
 
     Deriving from the definition means an unconstrained field is left
     alone rather than given something clever, so the filler stays legible
-    where it does not need to be careful. The one documented exception is
-    ``tax_id``: its schema type is a plain string, but the downstream
-    ``SubjectTaxId`` projection enforces the AEAT checksum the schema does
-    not express, so the filler returns a real valid NIF for it instead of
-    the generic sentinel (see :func:`schema_valid_placeholder`'s docstring).
+    where it does not need to be careful.
+
+    The exclusions below are the field classes whose declarations DO
+    constrain, each of which the filler answers with a real value: enum
+    fields (their declared set), numeric fields (their declared bounds),
+    date fields (a calendar day), and ``tax_id`` -- whose schema type is a
+    plain string, but whose downstream ``SubjectTaxId`` projection enforces
+    the AEAT checksum the schema does not express.
+
+    Adding a branch to the filler means adding its class here. That is
+    deliberate rather than a maintenance wart: a new branch is a change to
+    what "unconstrained" means, and it should have to be stated in the one
+    place that asserts the sentinel still reaches anything at all. This
+    test was left stale once already, by the numeric branch, and passed
+    the staleness on as a failure that looked like the filler's fault.
     """
     schema = load_user_profile_schema()
     plain = [
         field
         for section in schema.sections
         for field in section.fields
-        if not field.enum_values and field.key != "tax_id"
+        if not field.enum_values
+        and field.key != "tax_id"
+        and field.type not in NUMERIC_PROFILE_FIELD_TYPES
+        and field.type is not ProfileFieldType.DATE
     ]
 
-    assert plain, "the schema is expected to declare unconstrained fields too"
+    assert plain, "no unconstrained field remains; the sentinel reaches nothing and this proves nothing"
     assert all(schema_valid_placeholder(field) == "placeholder" for field in plain)
