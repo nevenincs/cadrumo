@@ -33,6 +33,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
+    from .....adapters.inbound.tui import StatusFactRow
+
 
 def _ctx_with_format(format_name: str) -> typer.Context:
     ctx = typer.Context(typer.core.TyperCommand("status"))
@@ -248,30 +250,91 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-@pytest.mark.usefixtures("_isolated_cli_backend")
-def test_build_fact_rows_masks_by_the_real_schema() -> None:
-    """Every fact row over a really created profile obeys the real schema's masking.
+_AUTH_PROVIDER_VALUE = "clave_movil"
+_AUTH_SOPORTE_VALUE = "ABC123456"
 
-    The profile is created through the real non-interactive CLI walk, the
-    record loaded through the real workflow repository, and the rows built
-    by the production builder against the shipped schema — so the masking
-    decision tested here is byte-for-byte the one the operator's screen
-    gets.
+
+def _seed_auth_facts() -> None:
+    """Give the credential-label net an ``auth.*`` subject to read.
+
+    ``config profile create`` collects no ``auth.*`` answer, so a fixture
+    built from that walk alone projects identity, contact, and activity
+    rows and NOT ONE row from the section whose labels name credentials.
+    The credential-shaped-label assertion below then ran over a row set
+    that could not contain the thing it looks for -- it passed for want
+    of a subject, which is indistinguishable from passing because the
+    labels are clean.
+
+    The two facts are chosen as a pair to cover both arms of that
+    assertion: ``auth.provider`` is declared ``identity``, so its row
+    renders UNMASKED and is read by the net, while ``auth.numero_soporte``
+    is declared ``secret``, so its row is masked and deliberately skipped.
+
+    They are written through ``set_active_fields`` -- the same plural door
+    the manager's authentication action commits through -- against the
+    real encrypted record, so the rows projected from them are the rows
+    an operator's screen is built from.
     """
-    from .....application.user_profile import mask_profile_field, profile_storage_session
+    from .....application.user_profile import set_active_fields
+    from .....application.workflow import workflow_state_repository
+    from .....domain.user_profile import UserProfileFact
+
+    set_active_fields(
+        workflow_state_repository().load(),
+        (
+            UserProfileFact(path="auth.provider", value=_AUTH_PROVIDER_VALUE),
+            UserProfileFact(path="auth.numero_soporte", value=_AUTH_SOPORTE_VALUE),
+        ),
+    )
+
+
+def _fact_rows_over_a_real_profile() -> tuple[StatusFactRow, ...]:
+    """Build the status fact rows for a really created, auth-bearing profile."""
+    from .....application.user_profile import profile_storage_session
     from .....application.workflow import read_profile_bucket, workflow_state_repository
 
     _create_profile()
     pointer = read_profile_bucket("operator")
     assert pointer is not None
     with profile_storage_session(pointer.bucket_id):
+        _seed_auth_facts()
         record = workflow_state_repository().load().active_profile_record()
-        rows = _status_frontend._build_fact_rows(record=record)
+        return _status_frontend._build_fact_rows(record=record)
+
+
+@pytest.mark.usefixtures("_isolated_cli_backend")
+def test_build_fact_rows_masks_by_the_real_schema() -> None:
+    """Every fact row over a really created profile obeys the real schema's masking.
+
+    The profile is created through the real non-interactive CLI walk, the
+    auth section written through the real plural fact door, the record
+    loaded through the real workflow repository, and the rows built by the
+    production builder against the shipped schema — so the masking
+    decision tested here is byte-for-byte the one the operator's screen
+    gets.
+    """
+    from .....application.user_profile import mask_profile_field
+
+    rows = _fact_rows_over_a_real_profile()
 
     assert rows, "a created profile must project at least one fact row"
     nif_row = next((row for row in rows if row.value == "12345678Z"), None)
     assert nif_row is not None, f"the NIF fact must surface; labels: {sorted(row.label for row in rows)}"
     assert nif_row.masked is False
+
+    # ANTI-VACUITY, and the reason the fixture writes the auth section at
+    # all: the loop below is a net over UNMASKED rows, so it measures
+    # nothing unless an unmasked auth row is really in the set. Both arms
+    # are named, so a fixture that silently stops projecting either one
+    # fails here rather than quietly emptying the net.
+    provider_row = next((row for row in rows if row.value == _AUTH_PROVIDER_VALUE), None)
+    assert provider_row is not None, (
+        f"auth.provider must project an unmasked row; labels: {sorted(row.label for row in rows)}"
+    )
+    assert provider_row.masked is False, "auth.provider is declared identity and must render in the clear"
+    soporte_row = next((row for row in rows if row.value == _AUTH_SOPORTE_VALUE), None)
+    assert soporte_row is not None, "auth.numero_soporte must project a row"
+    assert soporte_row.masked is True, "auth.numero_soporte is declared secret and must render masked"
 
     # No unmasked row may carry a credential-shaped label. The question is
     # put to the canonical policy rather than restated here: this carried a
