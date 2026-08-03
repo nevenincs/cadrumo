@@ -55,13 +55,30 @@ modelo m145 create, and modelo work resume.
 WHAT THE FIRST ATTEMPT GOT WRONG, recorded because it is the substance of the
 constraint. The gate initially classified by verb token across the whole `app`
 surface and flagged eleven further leaves - four registry `verify` verbs, two
-`export` verbs, a `wizard`, an `extract` and a `reconcile`. Those are not
-mutations. `app registry verify` reads bundled data and `app modelo export`
-writes a file rather than bucket state, exactly as the close review predicted
-when it said this is a per-verb judgement that must not be performed
-mechanically. The same token means different things in different families:
-`app modelo work verify` genuinely mutates revision state while `app registry
-verify` does not.
+`export` verbs, a `wizard`, an `extract` and a `reconcile`. Two of the eleven
+were read and are not mutations: `app registry verify` reads bundled data and
+`app modelo export` writes a file rather than bucket state, exactly as the close
+review predicted when it said this is a per-verb judgement that must not be
+performed mechanically. The same token means different things in different
+families: `app modelo work verify` genuinely mutates revision state while `app
+registry verify` does not. The other nine were not individually traced here, so
+this Step makes no claim about them - see the correction below.
+
+CORRECTED 2026-08-03, by the follow-on pass that discharged the tail. This Step
+originally read "Those are not mutations" as a blanket statement over all
+eleven, on the strength of the two examples above. Per-verb tracing refutes it
+for at least two of the untraced nine. `app modelo work wizard` reaches
+`calculate_modelo_work_revision`, whose own docstring is "Persist a draft
+calculation revision". `app maintenance reconcile` persists a BucketEvent into
+the bucket's encrypted event history. Both are real mutations and both are now
+guarded.
+
+The governing ADR did not make this error and needs no amendment: it says only
+that "several are near-certainly correct as they stand" and that every tail
+member needs a per-verb reading before it is guarded or declared read-only. The
+overstatement was this record's alone - a conclusion drawn from two checked
+cases and extended to nine unchecked ones, in a Step whose own subject was that
+such judgements must not be made mechanically.
 
 So enforcement is scoped to tokens whose meaning is not in doubt. That buys a
 TOTAL guarantee over most mutating verbs rather than a partial guarantee over
