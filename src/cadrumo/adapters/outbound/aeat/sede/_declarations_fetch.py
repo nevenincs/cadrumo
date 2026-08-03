@@ -294,16 +294,25 @@ async def _capture_submitted_file_artefact(
     read_policy: RemoteStateGuardPolicy,
 ) -> tuple[FiledDeclaracionArtefact, bytes]:
     # The click triggers a real browser download (AEAT serves the archive
-    # with a Content-Disposition attachment header), so Playwright's own
-    # download manager materialises the bytes to its temp folder as a side
-    # effect of the click -- that part of the mechanism is unavoidable and
-    # outside this process's control. This module never reads THAT file: the
-    # download is cancelled as soon as its URL is known, and the bytes this
-    # function returns are fetched again, in-memory, through the
-    # authenticated request context -- the identical shape
-    # `_capture_row_pdf_artefact` uses for the cotejo PDF -- so no
-    # taxpayer-filed bytes ever reach this process by way of a filesystem
-    # path (sensitive-financial-data-secure-storage-only).
+    # with a Content-Disposition attachment header). Two independent things
+    # keep the taxpayer's bytes off disk entirely:
+    #  1. `BrowserSession._build_context_kwargs` pins `accept_downloads`
+    #     False on this context, so Chromium refuses to persist the
+    #     attachment at all -- measured directly:
+    #     `browser/tests/test_accept_downloads_disabled.py` proves
+    #     `download.path()` raises on the real production context (its own
+    #     error names the flag this adapter deliberately does not set).
+    #     `download.cancel()` alone would NOT be enough here: Chromium
+    #     starts writing bytes to its own temp folder the instant the
+    #     download begins, and cancelling only stops an in-flight transfer
+    #     -- it does not retroactively un-write what already landed.
+    #  2. Even so, this function never reads a download via a filesystem
+    #     path (defense in depth, and the honest reason it stays cheap to
+    #     re-fetch): `download.url` is read, the transfer is best-effort
+    #     cancelled, and the SAME URL is fetched again in-memory through the
+    #     authenticated request context -- the identical shape
+    #     `_capture_row_pdf_artefact` uses for the cotejo PDF.
+    # (sensitive-financial-data-secure-storage-only)
     button = row_locator.locator(".z-listcell").nth(cell_index).locator(".z-button").first
     try:
         async with page.expect_download(timeout=_get_ver_click_timeout_ms()) as download_info:

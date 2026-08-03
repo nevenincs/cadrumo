@@ -253,6 +253,24 @@ class BrowserSession:
         context_kwargs: dict[str, Any] = {
             "locale": self.profile.locale,
             "timezone_id": self.profile.timezone_id,
+            # Chromium writes an attachment's bytes to its own OS-managed
+            # temp folder unconditionally the moment a download starts --
+            # `download.cancel()` only stops an in-flight transfer, it does
+            # not retroactively un-write bytes already streamed to disk
+            # before cancellation lands (measured: several hundred KB of a
+            # multi-MB payload landed in a `.crdownload` file within one
+            # event-loop tick of `expect_download()` yielding). Refusing
+            # downloads at the context level closes that gap outright:
+            # Playwright's download event still fires and `download.url` is
+            # still populated (measured: both survive `accept_downloads`
+            # False), but Chromium never persists a byte anywhere. No
+            # production flow in this adapter reads a browser-triggered
+            # download from disk -- the sole consumer,
+            # `_capture_submitted_file_artefact`, already re-fetches the
+            # captured URL in-memory via `context.request` -- so this is a
+            # zero-behaviour-change default project-wide
+            # (sensitive-financial-data-secure-storage-only).
+            "accept_downloads": False,
         }
         if self.profile.user_agent:
             context_kwargs["user_agent"] = self.profile.user_agent

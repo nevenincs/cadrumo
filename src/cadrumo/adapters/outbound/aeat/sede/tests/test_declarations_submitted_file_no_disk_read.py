@@ -1,27 +1,41 @@
-"""Structural gate: the submitted-file capture never reads bytes from disk.
+"""Structural gate: the submitted-file capture never READS bytes from disk.
 
 ``_capture_submitted_file_artefact`` (``_declarations_fetch.py``) used to pull
 a click-triggered Playwright download's bytes off the filesystem
-(``Path(path).read_bytes()`` on the path ``download.path()`` exposed).
-Playwright materialises a download to its own OS-managed temp folder as an
-unconditional side effect of the browser download event -- outside this
-application's control and outside ``cadrumo_local_storage_root`` -- so
+(``Path(path).read_bytes()`` on the path ``download.path()`` exposed) --
 reading that file was a breach of
-``sensitive-financial-data-secure-storage-only``: taxpayer-filed bytes
-touched an uncontrolled, unencrypted disk location before this process ever
-saw them.
+``sensitive-financial-data-secure-storage-only``.
 
-The fix keeps the click (there is no way to discover the AEAT-generated,
-per-click download URL without triggering it), reads ``download.url``,
-best-effort cancels the browser-side transfer, and re-fetches the SAME URL
-in-memory through the authenticated ``context.request`` API -- the identical
-shape ``_capture_row_pdf_artefact`` already uses for the cotejo PDF. Neither
-byte-for-byte output nor exception behaviour distinguishes "read from the
-canceled download's temp path" from "re-fetched via context.request": both
-mechanisms return the same bytes for a successful download, so this
-invariant is a MECHANISM property, not an I/O-observable behavioural one.
-It can only be pinned by inspecting the mechanism -- i.e. structurally. This
-module is therefore a structural (AST/source) gate, not a behavioural test.
+This is one of TWO layers closing that breach, and this module proves only
+the narrower one:
+
+1. **This function never reads a download via a filesystem path.** It reads
+   ``download.url``, best-effort cancels the browser-side transfer, and
+   re-fetches the SAME URL in-memory through the authenticated
+   ``context.request`` API -- the identical shape ``_capture_row_pdf_artefact``
+   already uses for the cotejo PDF. Neither byte-for-byte output nor
+   exception behaviour distinguishes "read from the canceled download's temp
+   path" from "re-fetched via context.request": both mechanisms return the
+   same bytes for a successful download, so THIS property is a MECHANISM
+   property, not an I/O-observable behavioural one, and can only be pinned by
+   inspecting the mechanism -- i.e. structurally. This module is therefore a
+   structural (AST/source) gate, not a behavioural test.
+
+2. **Chromium never persists the download's bytes to disk in the first
+   place** -- the stronger, disk-write-side property this module does NOT
+   cover. ``BrowserSession._build_context_kwargs`` pins
+   ``accept_downloads=False`` on every context this adapter creates, closing
+   the browser-engine-level write this function's own careful read-avoidance
+   cannot reach (measured: Chromium starts writing an attachment's bytes to
+   its own temp folder the instant a download begins, and ``.cancel()`` only
+   stops an in-flight transfer -- it does not un-write bytes already
+   streamed). That property IS behaviourally observable (Playwright's own
+   ``download.path()`` raises when a context refuses downloads) and is
+   verified by a REAL, non-structural test:
+   ``browser/tests/test_accept_downloads_disabled.py``.
+
+Read both files to see the full closed picture; neither alone proves "no
+taxpayer bytes ever touch disk" -- together they do.
 
 See Also:
     :func:`~adapters.outbound.aeat.sede._declarations_fetch._capture_submitted_file_artefact`
@@ -29,6 +43,9 @@ See Also:
     :func:`~adapters.outbound.aeat.sede._declarations_fetch._capture_row_pdf_artefact`
         The sibling function whose in-memory fetch shape this gate expects
         ``_capture_submitted_file_artefact`` to mirror.
+    :meth:`~adapters.outbound.aeat.browser.BrowserSession._build_context_kwargs`
+        Where ``accept_downloads=False`` closes the disk-write-side property
+        this module does not cover.
 """
 
 from __future__ import annotations
