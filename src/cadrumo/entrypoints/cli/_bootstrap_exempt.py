@@ -98,6 +98,20 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # Bundled-registry discovery: lists public modelo metadata and must stay
     # reachable before a profile has been unlocked.
     "app modelo list",
+    # Catalogue discovery. Each of these answers "what can this tool do", not
+    # "what is in my profile": the ledger pair reads a hardcoded IRPF category
+    # catalogue and PATH/localhost probes for optional LLM providers, the
+    # portal pair reads the in-memory AEAT portal registry, and the auth pair
+    # reads the bundled provider and apoderado-scope catalogues. None resolves
+    # a bucket or touches the secure store, so none can answer differently for
+    # a logged-in operator — refusing them taught the operator to log in to
+    # read a constant.
+    "app ledger providers",
+    "app ledger categories",
+    "app live portals list",
+    "app live portals view",
+    "config auth providers",
+    "config auth apoderado scopes list",
     # Engineer surface: lives under a separate module entrypoint
     # and is not bound by the session-gate either, but the
     # registry includes it explicitly so the active-gate check at
