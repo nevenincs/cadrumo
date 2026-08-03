@@ -783,9 +783,6 @@ def set_active_field(
             :class:`~cadrumo.adapters.persistence.storage.SecureObjectRepository`
             override for the encrypted profile store.
         schema: Optional profile schema definition override.
-        extra_events: Bucket events a composing surface wants committed in the
-            SAME unit of work as the relabel, so its record of the verb cannot
-            land without the change it describes (or the change without it).
 
     Returns:
         The updated :class:`~cadrumo.application.workflow.WorkflowState`.

@@ -105,9 +105,6 @@ def collect_minimo_descendientes_undeclared_diagnostics(
     Returns:
         A one-element tuple carrying the advisory, or an empty tuple when 0513 is
         nonzero or the profile already declares at least one descendiente fact.
-
-    Returns:
-        A :class:`CalculationSourceDiagnostic`.
     """
     if modelo != Modelo.M100.value:
         return ()
