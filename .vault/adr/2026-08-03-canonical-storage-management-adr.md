@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:84b997e6a3a89506e50f4d46cfba2965da1503dabd95a78034546ae7a0fd5701'
+body_hash: 'sha256:363cb0df726bbd3aa0e84704f094e2e9c360074d376439c4bf39d97b7e83392d'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -136,7 +136,9 @@ membership test, and its enforcing property are fixed.
   edit is the active fix.
 - The three data-safety corrections in research F15 are ratified, not
   commissioned: their owning files are peer-modified in the working tree and no
-  lane may edit over them.
+  lane may edit over them. The download correction has since been superseded and
+  landed at HEAD — see R12, whose earlier ratification research F20 disproved by
+  measurement; the review-package pair remains uncommitted peer WIP.
 - The two-tier root-redirection chain is the canonical isolation mechanism and
   survives verbatim; see R15.
 - Settings construction is cached because path resolution is expensive on
@@ -343,15 +345,46 @@ corrected in a peer's working tree with exactly this shape; this ruling ratifies
 that fix as the standing rule and does not re-commission the work. No lane may
 edit those files.
 
-**R12 — Browser-mediated downloads of taxpayer bytes must not transit a
-filesystem path; the in-flight fix is ratified.** A download whose bytes the
-application will read must be cancelled once its URL is known and re-fetched in
-memory through the authenticated request context, the shape the sibling
-justificante capture already used. Letting a browser automation layer
-materialise submitted-declaration bytes to its own unconfigured temp location is
-a `sensitive-financial-data-secure-storage-only` breach. Research F15 records
-this as already corrected in a peer's working tree; ratified, not
-re-commissioned.
+**R12 — Browser-mediated downloads of taxpayer bytes are refused at the context
+boundary; cancel-then-refetch is the second layer, not the control.** Letting a
+browser automation layer materialise submitted-declaration bytes to its own
+unconfigured temp location is a
+`sensitive-financial-data-secure-storage-only` breach.
+
+**This ruling previously ratified cancel-then-refetch as the fix. Measurement
+disproved that, and the earlier wording is withdrawn** — a reader who derived
+the weaker shape from it would ship the breach believing it closed. Research F20
+records the experiment: with a real headless Chromium against a local harness, a
+`.crdownload` file holding 250,000 bytes existed on disk 0.107s after a download
+began, and the server confirmed 500,000 bytes had crossed the network before
+`cancel()` aborted the connection. `cancel()` itself took 3ms, so this is not a
+slow-cancel artefact. Cancelling removes the application's *dependence* on the
+artefact; it does not prevent the artefact.
+
+The required property is **`accept_downloads=False` at the browser context**,
+set on the single context-construction path the adapter uses. Measured: the
+download event still fires and `download.url` is still populated — the only
+thing the flow needs — while `download.path()` raises and no file is ever
+created. It is behaviour-neutral (the download-consuming site is the only one in
+the codebase, and nothing listens for a download event), and a refuse-by-default
+posture is strictly safer than a silent accept-to-an-unread-temp-file default
+for any download a future change might trigger.
+
+Two layers, each proving a different property and each pointing at the other:
+
+1. **The context refuses the write** — the disk-write-side control, proven
+   behaviourally by a test asserting `download.path()` raises on the real
+   production context.
+2. **The function never reads via a path anyway** — defence in depth, proven
+   structurally: the URL is read, the transfer best-effort cancelled, and the
+   same URL re-fetched in memory through the authenticated request context, the
+   shape the sibling justificante capture already used.
+
+**The generalisable rule for any future browser-mediated fetch of sensitive
+bytes: refuse the write at the boundary; never rely on cancelling after it has
+started.** The distinction generalises past browsers — a fix that removes our
+dependence on an artefact is not a fix that prevents the artefact, and the two
+are easy to conflate precisely because the code stops mentioning the file.
 
 **R13 — Scope, not name, disambiguates the duplicated directory names.** `blobs`
 and `audit` each name both a top-level category and a per-bucket subdirectory at

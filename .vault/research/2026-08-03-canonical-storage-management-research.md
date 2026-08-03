@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:e646b01bd8abbc2ecc16f7ca6dae6c3a9338ef92634a49926b63c01d89cd493b'
+body_hash: 'sha256:41dd6c1a799df5a219c904f34afc1ed2f9a874d006a139f9bab3cf33f0fb95cb'
 related: []
 ---
 
@@ -314,6 +314,67 @@ anchoring must update these tests deliberately. What is no longer true is the
 obligation — this campaign inherits no red test on this axis.
 
 ### What was not investigated
+
+### F20 — Cancelling a browser download does not prevent the bytes reaching disk
+
+The original correction to the submitted-declaration fetch (F15) cancelled the
+download once its URL was known and re-fetched the bytes in memory. Direct
+measurement showed that shape does **not** close the breach.
+
+The harness was a local `ThreadingHTTPServer` serving synthetic bytes — no AEAT
+contact — with a real headless Chromium whose `downloads_path` was observable,
+and a 20ms poller. Serving a 6MB payload in 250KB chunks:
+
+- at t=0.354s, **0.107s after the download began**, a `.crdownload` file existed
+  on disk holding **250,000 bytes**;
+- the server log independently confirmed Chromium had pulled **500,000 bytes**
+  over the network before `cancel()` aborted the connection;
+- `cancel()` itself took **3ms**, so the window is not a slow-cancel artefact;
+- `download.failure()` returned `'canceled'`, confirming a genuine in-flight
+  abort rather than a completed download that was cleaned up afterwards.
+
+Chromium removed the file at context close, but taxpayer bytes were on disk
+during the window. **Cancel-after-the-fact removes the application's dependence
+on the artefact; it does not prevent the artefact.**
+
+The measured closure is `accept_downloads=False` on the browser context. The
+download event still fires and `download.url` is still populated — the only
+thing the flow needs — while `download.path()` raises and **no file ever
+appears**: 0 files across the run, against the transient one in the first
+experiment. The production shape (read url, cancel, re-fetch through the
+authenticated request context) was reproduced end-to-end against the harness and
+returned bytes byte-identical to the payload.
+
+It is set globally in the single context-construction path this adapter uses,
+verified at `src/cadrumo/adapters/outbound/aeat/browser/session.py:273`. The
+change is behaviour-neutral — the download-consuming site is the only one in the
+codebase and nothing listens for a download event — and refuse-by-default is
+strictly safer than the silent accept-to-an-unread-temp-file default for any
+download a future change might trigger. Landed as commit
+`fix(sede): refuse downloads at the browser context so bytes never touch disk`,
+confirmed present at HEAD with its behavioural test.
+
+**The reusable lesson, and why it was hard to see:** a fix that removes our
+*dependence* on an artefact is not a fix that *prevents* the artefact. The two
+are easy to conflate precisely because the code stops mentioning the file — the
+symptom of the weaker fix is that the artefact disappears from the source, not
+from the disk. Only measurement distinguished them; the documentation was
+ambiguous and both readings were defensible from the prose alone.
+
+### What was not investigated
+
+The untriaged tail of test files in F16 was not individually confirmed; an
+estimate is not an acceptable closing state for the migration mandate and that
+triage is being run separately. `dev/docs/tests/test_env_reference.py` was not
+read, and it gates drift between the generated environment reference and the
+settings fields, so a field rename would trip it. Whether the `blobs` and
+`audit` name collision across depths has ever caused a real defect was not
+investigated; both work correctly today. Whether the registry-disk-cache
+fingerprint churn (F18) has produced observed spurious replay refusals in
+practice was not investigated — only that the digest demonstrably moves. Whether
+any other browser-mediated flow in the tree could trigger a download was not
+exhaustively swept; F20's context-level refusal makes that safe by default
+rather than by inventory.
 
 ### F18 — No derivation reproduces the fingerprint-exclusion set, and the shipped set has a proven gap
 

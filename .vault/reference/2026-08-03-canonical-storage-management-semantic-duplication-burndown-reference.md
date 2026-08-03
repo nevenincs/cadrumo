@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ccee6efa89970b42ef1baaa664f4ef1da78939162d7060821b864647347feae2'
+body_hash: 'sha256:8a422362aead1fe4c99d3f3a0cb8d9d56d4679a1fd211c87d3f43b53f919f82d'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
@@ -356,3 +356,29 @@ not represented here. It is expected to cover test-fixture and conftest
 duplication, which the migration mandate binds identically to production. This
 document must be extended when it lands — its absence is a known gap in the
 burndown target, not a statement that the axis is clean.
+
+### Cross-cutting lesson: removing dependence is not preventing the artefact
+
+Recorded here rather than only in the decision record because it generalises
+well beyond this campaign, and because it is a verdict-shaped trap: it changes
+whether a site counts as fixed.
+
+The submitted-declaration fetch was first corrected by cancelling the browser
+download once its URL was known and re-fetching the bytes in memory. The code
+afterwards mentioned no file at all, which read as closed. Measurement showed a
+`.crdownload` file holding 250,000 bytes on disk 0.107s after the download
+began, with 500,000 bytes already across the network before `cancel()` — which
+itself took 3ms, so this was not a slow-cancel artefact. The real closure was
+refusing downloads at the browser context, after which no file is ever created.
+
+**The rule: refuse the write at the boundary; never rely on cancelling after it
+has started.** More generally, when auditing whether a site still touches disk,
+ask which of two things the fix achieved — the application no longer *reads* the
+artefact, or the artefact is no longer *created*. Only the second is closure.
+The first is easy to mistake for the second precisely because the artefact
+disappears from the source code, which is the surface an auditor reads.
+
+The practical consequence for this inventory: a CONVERGE or exclusion verdict
+reached by reading code alone is provisional wherever the property at stake is
+"no bytes reach disk". That property is only settleable by measurement, and
+this campaign has now been wrong about it once.
