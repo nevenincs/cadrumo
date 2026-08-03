@@ -8,6 +8,7 @@ it instead of leaving them asserting a name nothing writes.
 from __future__ import annotations
 
 import os
+import stat
 
 import pytest
 
@@ -18,7 +19,7 @@ from ....core import (
     StorageScope,
     storage_path,
 )
-from ....core.config import ensure_storage_tree, load_settings, override_settings
+from ....core.config import STORAGE_ROOT_MODE, ensure_storage_tree, load_settings, override_settings
 from .._models import StorageOccupancy, StorageTreeIssueKind
 from .._service import (
     collect_storage_inventory,
@@ -169,23 +170,42 @@ class TestTreeCheckReportsWithoutRepairing:
 
         assert report.healthy
 
-    @pytest.mark.skipif(os.name == "nt", reason="Windows does not implement the POSIX mode triple")
-    def test_root_permission_drift_is_reported_where_modes_are_enforced(self, tmp_path) -> None:
+    def test_root_permission_drift_is_reported_exactly_where_modes_are_enforced(self, tmp_path) -> None:
+        """Both branches of the permission axis, asserted on whichever host runs this.
+
+        Guarded inline rather than skipped, matching the materialiser's own
+        mode-bit test: a skipped test reports nothing on the host that skipped
+        it, so the branch that host DOES take goes unasserted. Everything above
+        the guard runs everywhere, and each branch asserts the claim that is
+        true there — drift is a finding where modes mean something, and the
+        report says so rather than showing a clean permission axis where they
+        do not.
+
+        The POSIX branch carries its own positive control. A platform that
+        accepts ``chmod`` and quietly ignores it would leave the mode unchanged,
+        and the drift assertion would then be proving nothing; asserting the
+        bits actually moved is what makes the finding evidence.
+        """
         with override_settings(cadrumo_local_storage_root=tmp_path):
             ensure_storage_tree(load_settings())
+            baseline = inspect_storage_tree()
+            assert baseline.healthy, [issue.model_dump(mode="json") for issue in baseline.issues]
+            assert baseline.root_mode_enforced is (os.name != "nt")
+
             tmp_path.chmod(0o755)
-            report = inspect_storage_tree()
+            drifted = inspect_storage_tree()
 
-        assert report.root_mode_enforced
-        assert any(issue.kind is StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED for issue in report.issues)
-
-    @pytest.mark.skipif(os.name != "nt", reason="the unenforced branch only exists off POSIX")
-    def test_the_mode_check_declares_itself_unenforced_rather_than_passing_silently(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            ensure_storage_tree(load_settings())
-            report = inspect_storage_tree()
-
-        assert not report.root_mode_enforced
+        found = [issue for issue in drifted.issues if issue.kind is StorageTreeIssueKind.ROOT_PERMISSIONS_DRIFTED]
+        if os.name != "nt":
+            assert stat.S_IMODE(tmp_path.stat().st_mode) != STORAGE_ROOT_MODE, (
+                "the platform accepted a mode change without applying it, so the drift assertion below "
+                "would pass against a check that never looked"
+            )
+            assert found
+            assert not drifted.healthy
+        else:
+            assert not drifted.root_mode_enforced
+            assert not found
 
 
 class TestMaterialisePreservesContent:
