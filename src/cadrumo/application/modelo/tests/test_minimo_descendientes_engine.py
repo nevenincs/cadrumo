@@ -280,7 +280,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
                     UserProfileFact(path="filing_export.declaration_type", value="1"),
                     UserProfileFact(path="renta_taxpayer.birth_date", value=date(1975, 6, 15)),
                     UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                    UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+                    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
                 ),
                 created_at=_T0,
                 updated_at=_T0,
