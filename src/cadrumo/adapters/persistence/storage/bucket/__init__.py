@@ -55,7 +55,7 @@ from ._errors import (
 )
 from ._export_header import ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, validate_keystore_separation
-from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
+from ._layout import BucketPaths, bucket_paths, provision_bucket_directory, trash_rename_and_remove
 from ._lockfile import acquire_lock, lock_path, release_lock
 from ._manifest import (
     BUCKET_MANIFEST_DURABILITY_FLOOR,
@@ -115,6 +115,7 @@ __all__ = [
     "read_manifest",
     "read_sealed_archive",
     "release_lock",
+    "trash_rename_and_remove",
     "validate_keystore_separation",
     "write_bucket_output_language_hint",
     "write_manifest",

@@ -34,7 +34,6 @@ See Also:
 
 from __future__ import annotations
 
-import secrets
 from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
@@ -58,6 +57,7 @@ from ...adapters.persistence.storage.bucket import (
     manifest_path,
     provision_bucket_directory,
     read_manifest,
+    trash_rename_and_remove,
     write_manifest,
 )
 from ...adapters.persistence.storage.master_key import KdfParams
@@ -1041,47 +1041,17 @@ class ProfileRepository:
     def _remove_bucket_directory(self, profile_id: str) -> None:
         """Trash-rename and remove a profile's on-disk bucket directory.
 
-        Used by the ``create`` unit-of-work rollback. The directory is
-        first renamed to a trash-prefixed sibling so a crashed removal
-        leaves a recoverable trace, then recursively deleted. When the
-        rename is refused — Windows denies renaming a directory whose
-        SQLite file was only just closed — the directory is removed in
-        place. A removal failure propagates so the create rollback can preserve
-        it alongside the original create failure.
+        Used by the ``create`` unit-of-work rollback. Delegates to the
+        shared
+        :func:`~cadrumo.adapters.persistence.storage.bucket.trash_rename_and_remove`
+        primitive with ``on_trash_cleanup_error="raise"`` (its default): a
+        removal failure propagates so the create rollback can preserve it
+        alongside the original create failure.
         """
-        import gc
-
         target = bucket_paths(self._root, profile_id).bucket_dir
         if not target.exists():
             return
-        trash = target.with_name(f".trash-{profile_id}-{secrets.token_hex(4)}")
-        try:
-            target.rename(trash)
-        except OSError:
-            gc.collect()
-            self._remove_tree_best_effort(target, reason="create_rollback_in_place")
-            return
-        self._remove_tree_best_effort(trash, reason="create_rollback_trash")
-
-    def _remove_tree_best_effort(self, target: Path, *, reason: str) -> None:
-        """Remove a directory, logging and re-raising ``OSError``.
-
-        The historical name is retained; the create rollback aggregates a
-        cleanup failure with the original create failure.
-        """
-        import shutil
-
-        try:
-            shutil.rmtree(target)
-        except OSError as exc:
-            _log.debug(
-                "profile bucket cleanup failed reason=%s target=%s error_type=%s",
-                reason,
-                redact_for_cli_output(str(target)),
-                type(exc).__name__,
-                exc_info=True,
-            )
-            raise
+        trash_rename_and_remove(target)
 
 
 __all__ = ["ProfileRepository", "ProfileSummary"]

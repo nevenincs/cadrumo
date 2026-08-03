@@ -15,12 +15,17 @@ never compose the layout themselves.
 
 from __future__ import annotations
 
+import gc
+import secrets
+import shutil
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.identity import BucketId
+from .....core.logging import get_logger
 from .....core.paths import is_windows_long_path_error
 from .._namespace_registry import (
     BUCKET_AUDIT_DIRNAME,
@@ -29,6 +34,8 @@ from .._namespace_registry import (
     BUCKETS_DIRNAME,
 )
 from ._errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
+
+_log = get_logger(__name__)
 
 
 class BucketPaths(BaseModel):
@@ -103,4 +110,68 @@ def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
     return paths
 
 
-__all__ = ["BucketPaths", "bucket_paths", "provision_bucket_directory"]
+def trash_rename_and_remove(
+    target: Path,
+    *,
+    on_trash_cleanup_error: Literal["raise", "ignore"] = "raise",
+) -> None:
+    """Trash-rename ``target`` then recursively remove it — the destroy sibling of :func:`provision_bucket_directory`.
+
+    The directory is first renamed to a same-parent ``.trash-<name>-<hex>``
+    sibling so a crashed removal leaves a recoverable on-disk trace, then
+    recursively deleted. When the rename itself is refused (Windows denies
+    renaming a directory whose SQLite file was only just closed), a garbage
+    collection pass releases lingering handles and the directory is removed
+    in place instead — the exact same fallback shape either way, just
+    against a different path.
+
+    ``on_trash_cleanup_error`` governs only the final ``rmtree`` step (never
+    the rename): ``"raise"`` (the default) lets a genuine :class:`OSError`
+    from the recursive removal propagate — load-bearing for a create-rollback
+    caller that must surface a cleanup failure alongside the original create
+    failure. ``"ignore"`` removes best-effort and returns normally regardless
+    of outcome — leftover trash litter is an acceptable outcome for an
+    ordinary delete. A caller on ``"ignore"`` that must still know whether the
+    directory genuinely disappeared checks ``target.exists()`` itself
+    afterward and raises its own (possibly domain-typed) error.
+
+    Callers check ``target.exists()`` before calling; this function does not
+    special-case an already-absent target.
+
+    Args:
+        target: The bucket directory (or any directory) to trash-rename and
+            remove.
+        on_trash_cleanup_error: The final-removal error policy described
+            above.
+    """
+    trash = target.with_name(f".trash-{target.name}-{secrets.token_hex(4)}")
+    try:
+        target.rename(trash)
+    except OSError:
+        # The crash-safe rename was refused (a file handle still held, most
+        # often on Windows); release lingering handles and remove the
+        # original directory in place instead of the trash sibling.
+        gc.collect()
+        _remove_tree(target, on_error=on_trash_cleanup_error)
+        return
+    _remove_tree(trash, on_error=on_trash_cleanup_error)
+
+
+def _remove_tree(path: Path, *, on_error: Literal["raise", "ignore"]) -> None:
+    """``rmtree`` under the given error policy; see :func:`trash_rename_and_remove`."""
+    if on_error == "ignore":
+        shutil.rmtree(path, ignore_errors=True)
+        return
+    try:
+        shutil.rmtree(path)
+    except OSError:
+        _log.debug("trash_rename_and_remove: could not remove %s", path, exc_info=True)
+        raise
+
+
+__all__ = [
+    "BucketPaths",
+    "bucket_paths",
+    "provision_bucket_directory",
+    "trash_rename_and_remove",
+]
