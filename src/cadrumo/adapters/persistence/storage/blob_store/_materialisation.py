@@ -69,7 +69,18 @@ def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
         # active :class:`BucketSession`) when ``master_key_provider`` is
         # absent. The CLI root callback opens the session before any
         # consumer reaches this factory.
-        blob_store = EncryptedBlobStore(root_dir=Path(resolved.cadrumo_blob_store_dir))
+        #
+        # ``EncryptedBlobStore.root_dir`` is documented as "the directory
+        # containing the blobs/ subtree" -- the PARENT of ``blobs/``, i.e.
+        # the storage root -- and the store appends its own ``blobs``
+        # segment internally (``_shard_dir_for``). Passing
+        # ``cadrumo_blob_store_dir`` here (already ``<storage_root>/blobs``)
+        # doubled that segment: every blob landed at
+        # ``<storage_root>/blobs/blobs/<hex[:2]>/<hash>`` instead of the
+        # declared ``<storage_root>/blobs/<hex[:2]>/<hash>``. Passing the
+        # storage root honours the class's existing documented contract
+        # rather than redefining what ``root_dir`` means for every caller.
+        blob_store = EncryptedBlobStore(root_dir=Path(resolved.cadrumo_local_storage_root))
         store = SecretStore(
             store_dir=Path(resolved.cadrumo_secret_store_dir),
             blob_store=blob_store,
