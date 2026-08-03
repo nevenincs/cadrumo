@@ -207,12 +207,19 @@ def test_unknown_command_renders_usage_error_without_passphrase(tmp_path: Path) 
 
 
 def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: Path) -> None:
-    """Bare `config profile` is discovery, not a profile-data read."""
+    """Bare `config profile` is discovery, not a profile-data read.
+
+    Like ``test_unknown_command_renders_usage_error_without_passphrase``, this
+    is Click's exit-2 usage-error path (missing subcommand), which writes its
+    rendered help to stderr -- unlike the exit-0 ``--help`` cases above, which
+    write to stdout. The content assertions therefore check ``combined``, not
+    ``result.stdout``.
+    """
     result = _run(["config", "profile"], tmp_path)
     combined = f"{result.stdout}\n{result.stderr}"
     assert result.returncode == 2, combined
-    assert "create" in result.stdout
-    assert "show" in result.stdout
+    assert "create" in combined, combined
+    assert "show" in combined, combined
     assert "CADRUMO_SECRET_PASSPHRASE" not in combined
 
 
