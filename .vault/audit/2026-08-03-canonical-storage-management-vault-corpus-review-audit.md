@@ -66,6 +66,13 @@ settled one. The "exactly 1 is a file" half is the clearest tell: the campaign
 spent the day declaring file leaves, so the figure could only have been true very
 early.
 
+**Re-measured forty minutes later at `ae400293a1`: 57 entries, 18 file-kind** —
+and the declarations had moved out to a new `_storage_taxonomy_locations.py` in
+the interim, so even the module a reader would open to check has changed. That
+second reading is the argument for the remedy rather than merely more evidence
+for the finding: any number written here would have been wrong twice in one
+evening.
+
 The fact has an obvious canonical home and it is not this document.
 `len(STORAGE_TAXONOMY)` is the authority; the burndown should cite it and state
 the dispute it settled without freezing a cardinality. Verdict `CONVERGE` onto
@@ -90,14 +97,30 @@ The same document's burn-down line inherits the error: "Still open: Family 1 (8
 names/14 sites, `S89`), Family 2 (7 names/7 sites, `S90`/`S91`), and Family 4 (5
 names, `S107`) — 20 names across roughly 26 sites remain, not 23/34." With
 Family 1 closed the residual is twelve names across roughly twelve sites.
-Families 2 and 4 are correctly open — `AUDIT_LIVE`, the submissions nested
-segments and the attachments manifests directory are all absent at `HEAD` and
-present only in the working tree, so those rows are accurate and were checked
-rather than assumed.
+
+**Re-measured at `ae400293a1`, and the Families-2-and-4 half of this finding has
+inverted.** When first measured at `c16bb9a0ae` those two families were genuinely
+open, and this audit said so. They are now both closed in code: all eight Family 2
+members are declared (`AUDIT_LIVE`, the three `iva-remote-state` segments, the
+`iva-wallet` segment, both submissions nested segments, the attachments manifests
+directory), and all five Family 4 filename-template grammars are declared
+(`llm_usage_record`, `llm_run_telemetry_record`, `auth_acquisition_lock`,
+`validation_verdict_cache_entry`, `llm_cache_entry`). The residual under this
+criterion is zero names, not twelve and not twenty.
+
+**The drift has therefore also changed direction, and the new direction is in the
+plan.** Rows `W02.P06.S90`, `S91` and `S107` are still unchecked at
+`ae400293a1` for work that has landed, so the plan now understates progress
+exactly as the closure-criterion reference overstated it. Marking them is not
+this audit's to do — `plan-closure-requires-exec-records` wants an exec record
+per Step first — but the three rows are named here so the verification is not
+mistaken for enrollment work still outstanding.
 
 Verdict `CONVERGE`. The canonical home for a Step's open/closed state is the
 plan, and a reference restating it should cite the Step rather than duplicate its
-status.
+status. This finding is now its own worked example: the restated copy was wrong in
+one direction at one commit and the plan wrong in the other direction forty
+minutes later, and only the code was right at both.
 
 ### deletion-record-has-no-home-in-the-schema-it-was-filed-under | medium | The dormancy audit's three required sections are all empty and its content sits under headings no validator knows
 
