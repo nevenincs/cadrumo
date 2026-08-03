@@ -76,6 +76,14 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # Diagnostic surface: must operate without a session so the
     # operator can recover from a torn workspace.
     "config repair",
+    # Profile discovery: enumerating which profiles exist is how an operator
+    # learns the label ``config login`` needs, so gating it behind that login
+    # is a deadlock — the answer is only reachable once you already know it.
+    # ``list_profile_buckets`` reads the plaintext per-bucket ``manifest.toml``
+    # files and never unlocks a bucket, so the verb decrypts nothing and needs
+    # no session; the same plaintext-only grounds as ``profile archive
+    # inspect`` above. Locked profiles still list — status is a manifest field.
+    "config profile list",
     # Bundled-registry discovery: lists public modelo metadata and must stay
     # reachable before a profile has been unlocked.
     "app modelo list",

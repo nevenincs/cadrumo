@@ -217,6 +217,53 @@ class TestSilentResume:
         assert resumed.absolute_deadline == original_absolute
 
 
+class TestProfileDiscoveryStaysReachableWhileLoggedOut:
+    """Enumerating profiles never requires the login it tells you to run.
+
+    ``config profile list`` answers "which profiles exist, and what is the
+    label ``config login`` wants". Gating it behind that login is a deadlock:
+    the answer is only reachable once you already know it. The verb reads the
+    plaintext per-bucket ``manifest.toml`` files and decrypts nothing, so it
+    needs no session to be correct.
+
+    The passphrase is cleared throughout. Without that the sanctioned headless
+    channel would unlock the profile outright and the test would pass on a
+    bypass rather than on the exemption it exists to pin.
+    """
+
+    def test_profile_list_succeeds_with_no_session(self) -> None:
+        _create_profile()
+        # Never logged in: no persisted session exists at all.
+        close_active_bucket_session()
+
+        with override_settings(cadrumo_secret_passphrase=None):
+            result = invoke_cached_cli(["--format", "json", "config", "profile", "list"])
+
+        assert result.exit_code == 0, result.output
+        document = json.loads(semantic_cli_output(result))
+        assert document["status"] != "error"
+        # The created profile is actually enumerated - an empty-but-successful
+        # listing would satisfy a bare exit-code assertion while still hiding
+        # the label the operator came for.
+        assert [row for row in document["result"]["profiles"] if row["name"] == _LABEL], document
+
+    def test_the_login_gate_still_refuses_a_decrypting_verb(self) -> None:
+        """The exemption opened one door, not the gate.
+
+        Same logged-out state as above, driven through a verb that genuinely
+        decrypts. If this ever passes, ``profile list`` is reachable because
+        the session gate stopped working rather than because the verb needs no
+        session, and the test above proves nothing.
+        """
+        _create_profile()
+        close_active_bucket_session()
+
+        result = _invoke_decrypting_verb_without_the_secret_channel()
+
+        assert result.exit_code != 0
+        assert "aeat config login" in semantic_cli_output(result)
+
+
 class TestFailClosedRefusals:
     """Absent and expired sessions refuse, naming the verb that fixes it."""
 
