@@ -654,6 +654,68 @@ every production `tempfile` call choosing an application destination passes `dir
 have caught all four. R11's existing review covered the *call* — stage briefly, then zip —
 and not the *destination*, which is how these survived a policy that already existed.
 
+### runtime-containment-result-and-the-residual | none | The containment check is clean for exercised paths, and the residual is eight sites in two modules
+
+**The measurement the closure reference called the single highest-value unrun check has now
+run.** Every filesystem-mutating primitive was wrapped — including `Path.mkdir`,
+`os.makedirs` and `os.mkdir`, which the first pass deliberately left alone and whose
+perturbation was accepted for this one — and each call recorded its **resolved
+destination** plus the innermost *production* frame that caused it, so the log answers
+"which production site wrote, and where did the bytes actually land" rather than only
+"did anything escape".
+
+Measured against snapshot HEAD `72b7b06ad3`, 39m53s, `-n 4`, four worker logs plus the
+controller: **304,638 distinct (kind, destination, frame) records**, of which 246,648 were
+production-framed across **36 distinct production modules**.
+
+**Result — nothing escaped:**
+
+| destination | production-framed writes |
+| --- | --- |
+| under a declared taxonomy subpath | 212,659 |
+| pytest tmp, no declared segment | 33,989 |
+| inside the checkout | **0** |
+| under the real user home | **0** |
+| anywhere else | **0** |
+
+For the paths the suite exercises, every production write landed under a taxonomy-declared
+root or in test scaffolding. That is the containment property, and it holds.
+
+**What this run is not.** It reported 118 failed / 22,229 passed. **Those failures are
+instrumentation artefacts and this run is not a gate measurement** — wrapping
+`builtins.open` and `Path.mkdir` perturbs tests that assert on or patch them, and the run
+carries both caveats the closure reference records anyway (parallel, and 40 minutes
+against a moving tree). It was run to capture destinations, and only the destination log
+should be read from it.
+
+**The residual, which was the point.** Intersecting the static site list against the
+observed frames: **78 of 97 static sites executed**; 19 did not; 13 sit in modules that
+never wrote at all. Filtering those to sites whose destination also arrives from
+elsewhere gives **12 raw residual sites across 6 modules** — and reading all twelve
+reduces it further, because four are false positives my census still over-matches:
+`repository.rename(...)`, `BucketMaintenanceService().rename(...)`,
+`session.touch(now)` and `session.touch(instant)` are object methods, not filesystem
+calls. The arity filter caught two-argument `str.replace`; it does not catch a
+single-argument `.rename` or `.touch` on a non-`Path`. **The static count of 97 therefore
+still carries a handful of non-filesystem calls, and the honest figure is a little lower
+again.**
+
+**The genuine residual is eight sites in two modules**, both registry parity and
+verification tooling, neither handling taxpayer data:
+
+- `domain/calculations/registry/_parity_tapes.py` — four sites in `save_parity_scenario`
+  and `save_parity_tape`, both pure transport primitives taking `path` as a parameter, so
+  their enrollment question relocates to callers that the suite also did not exercise.
+- `domain/calculations/registry/_workbook_parity.py` — four sites inside the two
+  unpinned `TemporaryDirectory` scratch areas already recorded above and queued for a
+  `dir=` anchor.
+
+**So the last unknown is closed as a list rather than as an estimate.** The class "neither
+static nor runtime can speak for" is eight sites in two dev-facing modules — small enough
+to read in a sitting, and read. Of the fourteen modules carrying static nested-ungoverned
+compositions, five were observed writing at runtime, so the static findings are not
+theoretical either.
+
 ### verified-sound | none | What the record claims and the code supports
 
 Stated because a clean result is a result, and because several of these were the
