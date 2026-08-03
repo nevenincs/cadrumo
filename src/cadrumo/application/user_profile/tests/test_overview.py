@@ -262,7 +262,7 @@ def test_no_wording_can_mask_a_field_the_schema_declares_non_secret(keyword: str
     assert mask_profile_field(path="auth.provider", label=label, sensitivity=SensitivityClass.SECRET)
 
 
-def test_no_shipped_field_depends_on_the_keyword_arm(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_no_shipped_field_depends_on_the_keyword_arm() -> None:
     """Emptying the keywords must change no shipped field's masking.
 
     DISCRIMINATING. Every field the schema declares is decided by its
@@ -279,7 +279,7 @@ def test_no_shipped_field_depends_on_the_keyword_arm(monkeypatch: pytest.MonkeyP
     schema field declares. A fix over-applied into "never mask anything
     unclassified" would pass the first assertion and fail here.
     """
-    from .. import mask_profile_field
+    from .. import _overview, mask_profile_field
 
     stray = "unknown.api_credential"
     before = _shipped_decisions()
@@ -287,10 +287,13 @@ def test_no_shipped_field_depends_on_the_keyword_arm(monkeypatch: pytest.MonkeyP
         "the keyword arm must cover an undeclared credential-shaped fact before the mutation"
     )
 
-    monkeypatch.setattr("cadrumo.application.user_profile._overview._MASK_KEYWORDS", frozenset())
-
-    changed = {path: (was, now) for path, was in before.items() if (now := _shipped_decisions()[path]) is not was}
-    assert not changed, f"these shipped fields mask through the keyword arm, not their declaration: {changed}"
-    assert not mask_profile_field(path=stray, label=stray, sensitivity=None), (
-        "the keyword arm was not actually removed, so the assertion above proves nothing"
-    )
+    original_keywords = _overview._MASK_KEYWORDS
+    _overview._MASK_KEYWORDS = frozenset()
+    try:
+        changed = {path: (was, now) for path, was in before.items() if (now := _shipped_decisions()[path]) is not was}
+        assert not changed, f"these shipped fields mask through the keyword arm, not their declaration: {changed}"
+        assert not mask_profile_field(path=stray, label=stray, sensitivity=None), (
+            "the keyword arm was not actually removed, so the assertion above proves nothing"
+        )
+    finally:
+        _overview._MASK_KEYWORDS = original_keywords
