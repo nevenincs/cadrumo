@@ -848,9 +848,16 @@ class ProfileManagerApp(App[None]):
         away with the dead action. Waiting on an event the dismissal sets
         depends on nothing ambient.
 
-        The wait ends if the application stops, so quitting with a form
-        open cannot strand this thread. It returns ``None`` in that case,
-        which every caller already treats as "the operator walked away".
+        An application that stops takes both halves of this with it, and
+        both have to say so. The wait ends when it stops; the push refuses
+        outright once the loop is gone, because ``call_from_thread`` raises
+        there rather than blocking. So neither half can strand this thread,
+        and both answer ``None``, which every caller already treats as "the
+        operator walked away".
+
+        A refusal while the application is still up means something else
+        entirely — that this was called on the UI task — and is raised, not
+        dressed up as an abandonment.
         """
         collected: Mapping[str, str] | None = None
         answered = threading.Event()
@@ -860,7 +867,17 @@ class ProfileManagerApp(App[None]):
             collected = result
             answered.set()
 
-        self.call_from_thread(self.push_screen, FormScreen(page, rebuild=rebuild), _accept)
+        try:
+            self.call_from_thread(self.push_screen, FormScreen(page, rebuild=rebuild), _accept)
+        except RuntimeError:
+            # Guarded for the same reason the wait below is: the
+            # application can stop between this action starting and its
+            # page reaching the screen. Left to propagate, that refusal
+            # would surface as the settling handler rendering an untranslated
+            # Textual internal into the notice line.
+            if self.is_running:
+                raise
+            return None
         while not answered.wait(timeout=_FORM_WAIT_POLL_SECONDS):
             if not self.is_running:
                 return None
