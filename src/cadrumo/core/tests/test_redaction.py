@@ -7,6 +7,8 @@ import pytest
 
 from ..classification import (
     OutputSensitivityClass,
+    RedactionRule,
+    RedactionStrategy,
     SensitivityClass,
     default_output_policy_for,
     default_policy_for,
@@ -377,3 +379,51 @@ def test_structured_redaction_hashes_a_cif_leaf() -> None:
         "refund_iban": _expected_sha256_prefix(_IBAN_ES),
         "note": f"invoice {_CIF_LOOKALIKE} under {_BOE_CITATION}",
     }
+
+
+def test_structured_redaction_hashes_a_tax_id_written_as_a_mapping_key() -> None:
+    """A key is as readable as a value once the JSON is on disk.
+
+    The gap this pins was latent rather than live: the walker redacted
+    dict values and skipped dict keys, and no payload model on the
+    observability or LLM-cache path declares a ``dict[str, ...]`` field,
+    so nothing exercised it. A single added field keyed by anything
+    taxpayer-derived would have written cleartext into the persisted
+    artefact while the value beside it was hashed.
+    """
+    redacted = redact_structured(
+        {_NIF: "seen", _IBAN_ES: {"nested": _CIF}},
+        rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
+    )
+    assert redacted == {
+        _expected_sha256_prefix(_NIF): "seen",
+        _expected_sha256_prefix(_IBAN_ES): {"nested": _expected_sha256_prefix(_CIF)},
+    }
+    assert _NIF not in repr(redacted)
+    assert _IBAN_ES not in repr(redacted)
+
+
+def test_structured_redaction_keeps_two_colliding_keys_distinct() -> None:
+    """A redacted log must not lose an entry to a key collision.
+
+    Hashing rules keep distinct inputs distinct, but the collapsing
+    strategies do not: ``HOST_ONLY`` maps every URL sharing a host onto
+    that host, and ``ELLIPSIS`` maps every match onto one string. Letting
+    the second key overwrite the first would silently drop a record from
+    a diagnostic artefact, so the duplicate is suffixed instead.
+    """
+    host_only = RedactionRule(
+        name="host-only",
+        pattern=r"https?://\S+",
+        strategy=RedactionStrategy.HOST_ONLY,
+    )
+    redacted = redact_structured(
+        {"https://aeat.es/expediente/a": 1, "https://aeat.es/expediente/b": 2},
+        rules=(host_only,),
+    )
+    assert len(redacted) == 2, f"a colliding key overwrote another entry: {redacted}"
+    assert set(redacted.values()) == {1, 2}
+
+    ellipsis = RedactionRule(name="ellipsis", pattern=r"secret-\w+", strategy=RedactionStrategy.ELLIPSIS)
+    collapsed = redact_structured({"secret-alpha": 1, "secret-beta": 2}, rules=(ellipsis,))
+    assert len(collapsed) == 2, f"a colliding key overwrote another entry: {collapsed}"

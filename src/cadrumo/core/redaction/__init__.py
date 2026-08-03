@@ -410,21 +410,26 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
     dict, list stays list, tuple stays tuple). The resulting object is a
     fresh copy at every container level — the input is never mutated.
 
-    Dict KEYS are deliberately not redacted, and sets are not walked at
-    all. That is safe only because of what the callers pass: every
-    production call site hands in ``model_dump(mode="json")`` of a strict
-    frozen model, so the keys are pydantic field names and the values are
-    the taxpayer-derived data. No model on this path carries a free-form
-    ``dict[str, ...]`` field — the one extension point,
-    :class:`~cadrumo.core.observability.GenericPayload`, stores its
-    ad-hoc entries as a ``tuple[tuple[str, str], ...]`` rather than a
-    mapping, which keeps both halves inside the walk.
+    Dict KEYS are redacted with the same rules as values. They were not,
+    until a measurement found a NIF or IBAN written as a key surviving
+    the observability sink in cleartext while the value beside it was
+    hashed. Nothing exercised that: no payload model on this path
+    declares a ``dict[str, ...]`` field today, so the gap was latent
+    rather than live, and one innocently-added field would have opened
+    it with nothing to catch the change.
 
-    So a future payload field typed ``dict[str, X]`` and keyed by
-    anything taxpayer-derived would pass its keys through this function
-    in cleartext, with no gate to catch it. Add such a field only with a
-    key-aware redactor — :func:`redact_structured_for_cli_output` is the
-    key-aware sibling and the model to follow.
+    Redacting keys is safe here because the diagnostic rules HASH rather
+    than substitute a fixed placeholder, so two distinct keys stay
+    distinct. Where a rule does collapse several inputs onto one
+    placeholder, :func:`_unique_mapping_key` suffixes the duplicate
+    instead of overwriting it — a redacted log may not silently lose an
+    entry to a key collision.
+
+    Sets are still not walked, and that one needs no guard: every
+    production caller passes ``model_dump(mode="json")``, which
+    serialises a set to a LIST before it ever arrives here, and lists are
+    walked. A set only reaches this function from a hand-built mapping,
+    which no caller constructs.
 
     This is the load-bearing primitive for nested audit payloads:
     submission audit events and run-trace records are nested dicts,
@@ -447,7 +452,11 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
             result_str = _apply_one(rule, result_str)
         return result_str
     if isinstance(value, dict):
-        return {k: redact_structured(v, rules=rules) for k, v in value.items()}
+        redacted: dict[object, object] = {}
+        for item_key, item_value in value.items():
+            redacted_key = redact_structured(item_key, rules=rules) if isinstance(item_key, str) else item_key
+            redacted[_unique_mapping_key(redacted_key, redacted)] = redact_structured(item_value, rules=rules)
+        return redacted
     if isinstance(value, list):
         return [redact_structured(item, rules=rules) for item in value]
     if isinstance(value, tuple):
