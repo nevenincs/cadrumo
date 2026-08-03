@@ -141,17 +141,6 @@ PENDING_ENROLLMENT: Final[tuple[PendingSite, ...]] = (
             "database file beneath the bucket db directory is a declared member."
         ),
     ),
-    PendingSite(
-        module="core/tests/test_config_state_root.py",
-        function="test_explicit_substrate_override_still_wins",
-        site_count=2,
-        reason=(
-            "Pins that an explicit per-field substrate override beats root derivation, and "
-            "spells the expected paths by joining the root. Re-expression must keep it defending "
-            "that property -- asserting against the taxonomy's resolved value, not against the "
-            "accessor equalling itself."
-        ),
-    ),
     *(
         PendingSite(
             module="adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py",
