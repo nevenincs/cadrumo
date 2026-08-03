@@ -24,7 +24,7 @@ from typing import Union, get_args, get_origin
 
 import pytest
 
-from ..core import AuthProviderKind
+from ..core import PRODUCT_IDENTITY, AuthProviderKind
 from ..core.config import (
     Settings,
     StorageRouteKind,
@@ -33,7 +33,7 @@ from ..core.config import (
 from ..core.external_constants import load_external_constants
 from . import REPO_ROOT
 from .env_scope import isolated_aeat_env as _isolated_aeat_env
-from .env_scope import settings_without_env_file
+from .env_scope import scoped_env_var, settings_without_env_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -181,10 +181,22 @@ class TestStatusDetailUrlTemplate:
         assert settings.cadrumo_auth_provider is AuthProviderKind.CERTIFICATE
 
     def test_relative_env_paths_resolve_from_project_root(self, tmp_path: Path) -> None:
-        """Relative env-backed paths must anchor to the repository root, not the process cwd."""
-        with _isolated_aeat_env(CADRUMO_WORKFLOW_RUNS_DIR="env/workflow/runs"):
-            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        assert settings.cadrumo_workflow_runs_dir == REPO_ROOT / "env" / "workflow" / "runs"
+        """Relative env-backed paths anchor to the platform user-data root, not the process cwd.
+
+        ``core.paths._relative_path_anchor`` has no source-checkout arm: a
+        relative override always resolves under the platform user-data root,
+        never a repo-root walk. LOCALAPPDATA is pinned to an isolated
+        tmp_path subtree so the test never touches the real machine's
+        application-data directory.
+        """
+        isolated_app_data = tmp_path / "app-data"
+        with scoped_env_var("LOCALAPPDATA", str(isolated_app_data)):
+            with _isolated_aeat_env(CADRUMO_WORKFLOW_RUNS_DIR="env/workflow/runs"):
+                settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+        assert (
+            settings.cadrumo_workflow_runs_dir
+            == isolated_app_data / PRODUCT_IDENTITY.python_package / "env" / "workflow" / "runs"
+        )
 
     def test_blank_optional_path_env_vars_are_treated_as_unset(self) -> None:
         """Blank optional path env vars must normalize to ``None``."""
@@ -269,16 +281,25 @@ class TestRepoRelativePathNormalisationCoverage:
 
     def test_relative_audit_flagged_paths_resolve_under_project_root(self, tmp_path: Path) -> None:
         """End-to-end: relative env values for the three audit-flagged paths anchor to
-        the repository root (not the process cwd)."""
-        with _isolated_aeat_env(
-            CADRUMO_INVOICES_DIR="var/financial/invoices",
-            CADRUMO_ATTACHMENTS_DIR="var/financial/attachments",
-            CADRUMO_RUNS_DIR="var/runs",
-        ):
-            settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
-        assert settings.cadrumo_invoices_dir == REPO_ROOT / "var" / "financial" / "invoices"
-        assert settings.cadrumo_attachments_dir == REPO_ROOT / "var" / "financial" / "attachments"
-        assert settings.cadrumo_runs_dir == REPO_ROOT / "var" / "runs"
+        the platform user-data root (not the process cwd).
+
+        LOCALAPPDATA is pinned to an isolated tmp_path subtree so the test
+        never touches the real machine's application-data directory, per
+        ``core.paths._relative_path_anchor`` — there is no source-checkout
+        arm.
+        """
+        isolated_app_data = tmp_path / "app-data"
+        with scoped_env_var("LOCALAPPDATA", str(isolated_app_data)):
+            with _isolated_aeat_env(
+                CADRUMO_INVOICES_DIR="var/financial/invoices",
+                CADRUMO_ATTACHMENTS_DIR="var/financial/attachments",
+                CADRUMO_RUNS_DIR="var/runs",
+            ):
+                settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
+        app_root = isolated_app_data / PRODUCT_IDENTITY.python_package
+        assert settings.cadrumo_invoices_dir == app_root / "var" / "financial" / "invoices"
+        assert settings.cadrumo_attachments_dir == app_root / "var" / "financial" / "attachments"
+        assert settings.cadrumo_runs_dir == app_root / "var" / "runs"
 
 
 def _parse_env_example_kv() -> dict[str, str]:

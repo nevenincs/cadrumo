@@ -1265,6 +1265,9 @@ class Settings(CadrumoMcpServingSettings):
         "cadrumo_justificantes_dir",
         "cadrumo_filing_history_dir",
         "cadrumo_wallet_diagnostic_dump_dir",
+        "cadrumo_filed_declarations_dir",
+        "cadrumo_iva_compensation_history_dir",
+        "cadrumo_iva_read_evidence_dir",
         mode="after",
     )
     @classmethod

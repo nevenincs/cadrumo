@@ -21,6 +21,7 @@ from sqlalchemy import text
 
 from ......core import PRODUCT_IDENTITY
 from ......core.config import Settings
+from ......tests.env_scope import scoped_env_var
 from ...errors import StorageError
 from .. import create_engine_from_settings, dispose_engine
 
@@ -206,7 +207,6 @@ def test_engine_refuses_creating_a_database_with_former_product_filename(tmp_pat
 
 def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Relative SQLite URLs resolve against the application-data anchor, not cwd.
 
@@ -219,7 +219,6 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     real machine's application-data directory.
     """
     isolated_app_data = tmp_path / "app-data"
-    monkeypatch.setenv("LOCALAPPDATA", str(isolated_app_data))
     relative_db = Path("var") / "pytest-relative-sqlite" / "engine.db"
     anchored_db = isolated_app_data / PRODUCT_IDENTITY.python_package / relative_db
     settings = _settings_for(f"sqlite:///{relative_db.as_posix()}")
@@ -229,7 +228,7 @@ def test_engine_anchors_relative_sqlite_urls_to_the_application_data_root(
     original_cwd = Path.cwd()
     os.chdir(cwd_marker)
     try:
-        with _engine_for(settings) as engine:
+        with scoped_env_var("LOCALAPPDATA", str(isolated_app_data)), _engine_for(settings) as engine:
             with engine.connect() as conn:
                 conn.execute(text("select 1"))
             assert Path(engine.url.database or "") == anchored_db
