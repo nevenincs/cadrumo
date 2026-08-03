@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:38a218d9bc7ca9cfb5c6e36f055b2a7fbecf1ecba15f04f3152b20b4ac6235ad'
+body_hash: 'sha256:17a19c28286db504ff79f03f709b0b816029b90bb2ef5130b8d4f51d03849b80'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -46,19 +46,19 @@ Replaces the derivation validator, the tree materialiser, and the override-setti
 - [x] `W01.P02.S09` - Add the bucket-scoped and keystore-scoped accessor variant taking the bucket identifier, gated by a test asserting a root-scoped member passed to it refuses rather than silently resolving; `src/cadrumo/core/_storage_taxonomy.py`.
 - [ ] `W01.P02.S10` - Add effective_storage_root to the paths module returning the caller override or the settings root, normalised, gated by a test asserting a relative override anchors to the platform user-data root one level above the storage root; `src/cadrumo/core/paths.py`.
 - [x] `W01.P02.S11` - Rewrite the derived-output validator to iterate the taxonomy instead of the dict while keeping the model-fields-set skip, gated by the existing explicit-override-wins test staying green; `src/cadrumo/core/config.py`.
-- [ ] `W01.P02.S12` - Rewrite ensure_storage_tree to materialise the taxonomy-derived member set and delete the path-suffix file inference, gated by the existing file-valued-setting test asserting the parent is created and the leaf is not; `src/cadrumo/core/config.py`.
-- [ ] `W01.P02.S13` - Preserve the occupied-by-a-file refusal message and its positive control through the materialiser rewrite, gated by the existing test asserting both the path substring and the occupied-by-a-file diagnosis appear; `src/cadrumo/core/config.py`.
-- [ ] `W01.P02.S14` - Rewrite the override-settings root-change pop-and-rebuild loop against the taxonomy key space, gated by a test asserting a root override re-derives every non-overridden category under the new root; `src/cadrumo/core/config.py`.
-- [ ] `W01.P02.S15` - Route the settings-cache pointer fingerprint's independent root read through the taxonomy resolver, keeping the deferred submodule-qualified pointer import, gated by a test asserting a profile switch invalidates the cached settings; `src/cadrumo/core/config.py`.
-- [ ] `W01.P02.S16` - Add the missing root permission-bits test asserting the mode after ensure_storage_tree, with a positive control proving the assertion fails when the hardening is removed; `src/cadrumo/core/tests/test_ensure_storage_tree.py`.
+- [x] `W01.P02.S12` - Rewrite ensure_storage_tree to materialise the taxonomy-derived member set and delete the path-suffix file inference, gated by the existing file-valued-setting test asserting the parent is created and the leaf is not; `src/cadrumo/core/config.py`.
+- [x] `W01.P02.S13` - Preserve the occupied-by-a-file refusal message and its positive control through the materialiser rewrite, gated by the existing test asserting both the path substring and the occupied-by-a-file diagnosis appear; `src/cadrumo/core/config.py`.
+- [x] `W01.P02.S14` - Rewrite the override-settings root-change pop-and-rebuild loop against the taxonomy key space, gated by a test asserting a root override re-derives every non-overridden category under the new root; `src/cadrumo/core/config.py`.
+- [x] `W01.P02.S15` - Route the settings-cache pointer fingerprint's independent root read through the taxonomy resolver, keeping the deferred submodule-qualified pointer import, gated by a test asserting a profile switch invalidates the cached settings; `src/cadrumo/core/config.py`.
+- [x] `W01.P02.S16` - Add the missing root permission-bits test asserting the mode after ensure_storage_tree, with a positive control proving the assertion fails when the hardening is removed; `src/cadrumo/core/tests/test_ensure_storage_tree.py`.
 - [ ] `W01.P02.S17` - Delete the untyped derived-dirs dict and the transitional parity test in one commit, gated by clean collection over the whole source tree immediately before the commit; `src/cadrumo/core/config.py`.
 
 ### Phase `W01.P03` - unify the bucket and keystore names in core and delete the duplicate literals
 
 Moves the bucket-layout and keystore names into the core taxonomy so the namespace registry becomes a consumer, then deletes each of the four unpinned re-typed copies of the same two names.
 
-- [ ] `W01.P03.S18` - Declare the bucket-layout and keystore members in the core taxonomy with fixed override policy and bucket-relative or keystore-relative scope, gated by a test asserting an operator override of a fixed member refuses; `src/cadrumo/core/_storage_taxonomy.py`.
-- [ ] `W01.P03.S19` - Rewrite the namespace registry's filesystem-name constants as consumers of the core taxonomy while leaving the secure-object namespace definitions untouched, gated by a test asserting each constant equals its taxonomy member value; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `W01.P03.S18` - Declare the bucket-layout and keystore members in the core taxonomy with fixed override policy and bucket-relative or keystore-relative scope, gated by a test asserting an operator override of a fixed member refuses; `src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W01.P03.S19` - Rewrite the namespace registry's filesystem-name constants as consumers of the core taxonomy while leaving the secure-object namespace definitions untouched, gated by a test asserting each constant equals its taxonomy member value; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
 - [ ] `W01.P03.S20` - Re-point bucket_paths onto the scoped accessor, gated by the existing bucket provisioning tests plus an assertion that no bare directory-name literal survives in the module; `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`.
 - [ ] `W01.P03.S21` - Re-point keystore_path onto the scoped accessor while preserving the keystore-separation validation, gated by the existing separation-refusal test; `src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py`.
 - [ ] `W01.P03.S22` - Delete the inline buckets and db literals in the bucket database path construction and read the taxonomy instead, gated by the route-classification suite; `src/cadrumo/core/config.py`.
