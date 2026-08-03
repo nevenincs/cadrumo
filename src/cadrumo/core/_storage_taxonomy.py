@@ -434,6 +434,21 @@ class StorageLocation(BaseModel):
     :attr:`consumer_module` is set.
     """
 
+    test_pinned_exception: str | None = None
+    """Why this member's resolution deliberately diverges from its declared subpath under pytest.
+
+    ``None`` for every member but one. The registry disk cache is the sole
+    case: under pytest its resolver selects the host-shared OS temp directory
+    instead of ``<root>/cache/registry``, so every xdist worker and every
+    subprocess-spawning test shares one compiled pickle for the immutable
+    bundled tree rather than each getting a private, per-worker cache. Without
+    this field that branch reads as an undeclared special case buried in one
+    consumer; stating the reason here turns it into a positive, member-level
+    declaration the taxonomy alone carries -- the same discipline
+    :data:`EXTERNAL_PATH_SETTINGS_FIELDS` applies to a whole field escaping the
+    taxonomy, narrowed to one member's one runtime branch.
+    """
+
     @model_validator(mode="after")
     def _require_exactly_one_liveness_claim(self) -> StorageLocation:
         """Refuse a member that claims both a consumer and dormancy, or neither."""
@@ -468,6 +483,7 @@ def _location(
     override_policy: StorageOverridePolicy = StorageOverridePolicy.OPERATOR_OVERRIDABLE,
     fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
     derives_settings_default: bool = True,
+    test_pinned_exception: str | None = None,
 ) -> StorageLocation:
     """Build one declaration, defaulting the axes most members share."""
     return StorageLocation(
@@ -483,6 +499,7 @@ def _location(
         dormant_reason=dormant_reason,
         settings_field=settings_field,
         derives_settings_default=derives_settings_default and settings_field is not None,
+        test_pinned_exception=test_pinned_exception,
     )
 
 

@@ -348,6 +348,14 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.CACHE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
         derives_settings_default=False,
+        test_pinned_exception=(
+            "Under pytest, with no explicit override, the resolver selects the "
+            "host-shared OS temp directory instead of this member's declared "
+            "subpath, so every xdist worker and subprocess-spawning test shares "
+            "one compiled pickle for the immutable bundled registry tree rather "
+            "than each deriving a private, per-worker cache from a per-pid "
+            "storage root. See _loader_cache.registry_disk_cache_dir."
+        ),
     ),
     # ── Durable generated outputs ───────────────────────────────────────────
     _location(

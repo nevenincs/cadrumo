@@ -30,12 +30,20 @@ import tempfile
 from functools import lru_cache
 from pathlib import Path
 
+from ....core import StorageCategory, storage_location
 from ....core.config import load_settings
 from ....core.resources import bundled_path
 from ._errors import RegistryLoadError
 
 REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
+
+# The production branch's relative path, read off the taxonomy rather than an
+# untethered ``"cache" / "registry"`` literal -- the member's name is governed
+# there (see its declaration in ``core._storage_taxonomy``), while the field
+# itself stays deliberately un-derived so the pytest branch below can keep
+# selecting on it being unset.
+_REGISTRY_DISK_CACHE_RELATIVE_PATH = storage_location(StorageCategory.REGISTRY_DISK_CACHE).relative_path()
 
 # The bundled tree gets a longer fingerprint TTL than a mutable authoring
 # tree, but NOT a process-lifetime one: under an editable install (the
@@ -210,7 +218,11 @@ def registry_disk_cache_dir() -> Path:
        get a per-pid ``cadrumo_local_storage_root``, so deriving from it would
        give every worker a private cache and defeat the single-compile sharing
        the disk pickle exists to deliver. The bundled tree is immutable during
-       a run, so one host-shared compiled pickle is safe to share.
+       a run, so one host-shared compiled pickle is safe to share. This
+       divergence from the member's declared subpath is a positive, test-pinned
+       exception rather than an undeclared special case -- see
+       :attr:`~core.StorageLocation.test_pinned_exception` on
+       ``StorageCategory.REGISTRY_DISK_CACHE``.
     """
     settings = load_settings()
     return _resolve_registry_disk_cache_dir(
@@ -231,7 +243,7 @@ def _resolve_registry_disk_cache_dir(*, override: Path | None, under_pytest: boo
         return override
     if under_pytest:
         return Path(tempfile.gettempdir())
-    return storage_root / "cache" / "registry"
+    return storage_root / _REGISTRY_DISK_CACHE_RELATIVE_PATH
 
 
 def registry_disk_cache_max_entries() -> int:
