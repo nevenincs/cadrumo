@@ -550,6 +550,71 @@ This is the third distinct way the secret store has surfaced in this review: no 
 members for `master.key` and its siblings, five ungoverned filename literals, and now its
 one declared grammar unpinnable.
 
+### manual-read-of-every-production-write-site | high | Four unpinned OS-temp destinations against six correctly pinned, and a class of site neither census can classify at all
+
+**Context:** with the corrected count at ~100, reading every production
+filesystem-mutating call site by hand became cheaper than bounding the residual
+statistically. This records what the read found. It is not yet complete — the unexercised
+remainder is prioritised against the containment log — but two results are already firm.
+
+**Result one: a third of the sites are not classifiable at their own location, and that is
+structural rather than a gap in the reading.** Roughly fifteen are *transport primitives*
+whose destination is always the caller's: the four `core/atomic_write.py` entry points and
+their tempfile siblings, `core/locks.py`, `observability/_sink.py`,
+`sql/engine.py::_ensure_sqlite_parent`, the master-key throttle and session writers, and
+the parity-tape writers. Each does `path.parent.mkdir(...)` on a path it was handed.
+
+Classifying these as unenrolled would be wrong; classifying them as enrolled would be
+equally wrong. **They are pass-through, and the enrollment question for them lives at
+their call sites, not at the write.** This matters for the method: for a generic primitive
+the *only* instrument that answers "where did this actually land" is the runtime log,
+because the static answer is "wherever the caller said". It is the sharpest case for why
+the union of the two methods is necessary rather than merely thorough.
+
+**Result two: four production sites write to the OS temp directory with no `dir=` pin,
+and the same codebase pins six others correctly.** That contrast is the finding — the
+compliant shape exists and is used, so these four are an inconsistency rather than a
+missing pattern.
+
+The pinned six — `atomic_write.py` (three), `bucket_maintenance/_service.py`,
+`modelo/_review_package.py`, `_modelo_review_package_cli.py` — all pass
+`dir=<destination>.parent`, which is exactly the shape R11 requires: staged under a
+taxonomy-governed location or the destination's own parent, never the OS temp directory.
+
+The unpinned four:
+
+- `blob_store/_materialisation.py:159` — `tempfile.mkstemp` with no `dir=`, the single
+  path behind both `materialise_secret` and `export_to_temp_path`. It writes **decrypted
+  secret payloads** to the OS temp directory for third-party consumers that demand a path
+  rather than bytes (OAuth service-account credentials, Playwright `storage_state`,
+  cert-based clients).
+- `registry/_workbook_parity.py:493` and `:644` — LibreOffice conversion scratch for
+  registry workbook fixtures.
+- `entrypoints/cli/__init__.py:1318` — metadata state isolation.
+
+**On the first of those, the careful reading matters and I want to state it precisely
+rather than dramatically.** The pattern — decrypted bytes to a mode-0600 temp file,
+promptly unlinked — is verbatim the "Bad" example in
+`sensitive-financial-data-secure-storage-only`. But that rule's subject is financial
+evidence: invoices, bank statements, supporting documents, and decrypted bytes derived
+from them. This helper handles credentials and session state, a different class, and the
+codebase already declares `cadrumo_certificate_path` an `OPERATOR_INPUT` escape. **So this
+is not a breach of that rule**, and reporting it as one would be wrong.
+
+What it *is*: an AD-HOC destination under the closure criterion — chosen by neither the
+operator nor the taxonomy — and inconsistent with R11's own reasoning, which refused the
+OS temp directory for staged artefacts on the grounds that it is a shared, unconfigured
+location. That reasoning does not obviously stop at filing artefacts. The remedy is the
+one the codebase already uses six times: pass `dir=`. Whether the anchor should be a
+taxonomy member or the consumer's own directory is a small decision someone should take
+rather than inherit.
+
+**Why neither census could have found these.** `tempfile.mkstemp(prefix=..., suffix=...)`
+contains no path expression at all, so the taint pass had nothing to seed on; and the
+runtime pass sees a resolved OS-temp path but cannot know it *should* have been pinned.
+Only reading the call and knowing R11 exists produces the finding. That is the argument
+for the manual read stated as evidence rather than as a preference.
+
 ### verified-sound | none | What the record claims and the code supports
 
 Stated because a clean result is a result, and because several of these were the
