@@ -248,6 +248,7 @@ jobs:
             --workflow ".github/workflows/packaging-smoke.yml" \
             --head-sha "${head_sha}" \
             --repository "${GITHUB_REPOSITORY}" \
+            --resolve-seconds 1800 \
             --output-name packaging_run_id
 
   acquire:
@@ -309,7 +310,7 @@ jobs:
             # nowhere to go was previously dropped at the job boundary, and the
             # publication would then run without its acquisition proof.
             echo "Dispatching acquisition lane ${lane} (-> ${output_name})"
-            uv run --frozen python -m dev.release.run_resolution               --workflow "${lane}"               --head-sha "${HEAD_SHA}"               --repository "${GITHUB_REPOSITORY}"               --input "source_run_id=${PACKAGING_RUN_ID}"               --input "source_commit=${HEAD_SHA}"               --output-name "${output_name}"
+            uv run --frozen python -m dev.release.run_resolution               --workflow "${lane}"               --head-sha "${HEAD_SHA}"               --repository "${GITHUB_REPOSITORY}"               --input "source_run_id=${PACKAGING_RUN_ID}"               --input "source_commit=${HEAD_SHA}"               --resolve-seconds 1800               --output-name "${output_name}"
           done <<< "${lanes}"
 
   seal:
