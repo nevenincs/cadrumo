@@ -19,9 +19,12 @@ stamping is local evidence enrollment against an existing current record.
 See Also:
     :func:`cadrumo.application.live._session.active_verified_session`
         Enforces the read-only live gate before the register walker is opened.
-    :func:`cadrumo.application.live._filed_observation_persistence.persist_latest_filed_calculation_observations`
+    :func:`cadrumo.application.live._filed_capture_finalizer.finalize_filed_capture`
         Persists the latest captured filed observations as calculation-history
-        evidence.
+        evidence, and is the function this module actually calls. Each
+        registry-enrollment refusal becomes a typed
+        :class:`~application.live.FiledDataCaptureFailureRow`, raised under
+        ``FAIL_FAST`` and reported under ``BEST_EFFORT``.
     :func:`cadrumo.application.live._filed_observation_persistence.enroll_filed_justificante_evidence`
         Persists matching justificante metadata and stamps current filing
         records when the receipt matches.

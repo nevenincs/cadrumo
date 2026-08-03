@@ -46,7 +46,6 @@ from .._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed
 from .._filed_observation_persistence import (
     latest_declarations_by_period,
     persist_iva_compensation_history_observations_strict,
-    persist_latest_filed_calculation_observations,
     select_latest_filed_observations_in_history_order,
 )
 from ._filed_capture_history_support import (
@@ -129,12 +128,13 @@ def test_latest_filed_observation_capture_threads_justificante_csv_metadata(tmp_
     with _secure_backend(tmp_path):
         observation = _prior_303_observation(pending_compensation=Decimal("1200.00"))
 
-        keys = persist_latest_filed_calculation_observations(
+        keys = finalize_filed_capture(
             (observation,),
             justificante_csvs_by_observation={
                 ("303", 2026, "1T", _SYNTHETIC_EXPEDIENTE_ID): ("CSV30320261T",),
             },
-        )
+            policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+        ).calculation_observation_keys
         loaded = CalculationObservationRepository().load_observation("303", Period.from_year_and_code(2026, "1T"))
 
     assert keys == ("303:2026:1T",)
@@ -185,14 +185,22 @@ def test_filed_capture_fail_fast_finalizer_raises_on_incomplete_observation(tmp_
     assert stored is None
 
 
-def test_all_capture_routes_share_one_selection_and_ordering_authority(tmp_path: Path) -> None:
-    """The finalizer and the calculation-history persistence produce identical ordered keys.
+def test_capture_finalizer_persists_in_the_shared_selection_and_ordering_authority(tmp_path: Path) -> None:
+    """The finalizer persists exactly what the shared selector chooses, in its order.
 
-    Both delegate to ``select_latest_filed_observations_in_history_order``, so a
-    duplicate-period batch (a later BAJA cannot supersede an earlier ALTA) and a
-    cross-year set persist the SAME keys in the SAME order via either route —
-    proving the capture finalizer and the history-persistence path cannot drift
-    apart, which the duplicated capture-side selector previously allowed.
+    This was a two-route parity case: it asserted the finalizer and a second
+    history-persistence route resolved identical ordered keys. That second
+    route has been deleted — it had no production caller and its own private
+    helper swallowed registry-enrollment refusals — so the parity half would
+    now compare the finalizer against nothing.
+
+    What survives is the property that was always load-bearing: the selector
+    (``select_latest_filed_observations_in_history_order``) decides which
+    observation wins a duplicate period (a later BAJA cannot supersede an
+    earlier ALTA) and in what order the batch lands, and the finalizer
+    persists that decision rather than re-deriving one. Asserting the
+    selector's output and the finalizer's keys separately, then that they
+    agree, keeps the finalizer from drifting into its own selection.
     """
     observations = (
         _prior_303_observation(
@@ -230,12 +238,14 @@ def test_all_capture_routes_share_one_selection_and_ordering_authority(tmp_path:
     # The finalizer persists those same keys in that same order via the shared authority.
     with _secure_backend(tmp_path / "finalizer"):
         finalization = finalize_filed_capture(observations, policy=FiledCaptureFailurePolicy.BEST_EFFORT)
-    # The calculation-history persistence route resolves identical keys/order.
-    with _secure_backend(tmp_path / "history"):
-        history_keys = persist_latest_filed_calculation_observations(observations)
 
     assert finalization.failures == ()
-    assert finalization.calculation_observation_keys == history_keys == ("303:2025:4T", "303:2026:1T")
+    assert finalization.calculation_observation_keys == ("303:2025:4T", "303:2026:1T")
+    # Pinned against the selector's own output, not just a literal, so the two
+    # cannot drift apart without this failing.
+    assert finalization.calculation_observation_keys == tuple(
+        f"{obs.modelo}:{obs.ejercicio}:{obs.period.registry_token}" for obs in selected
+    )
 
 
 def test_finalizer_does_not_disturb_the_separate_strict_iva_compensation_path(tmp_path: Path) -> None:
@@ -693,7 +703,7 @@ def test_filed_history_keeps_non_iva_numeric_period_order_alongside_iva_rows() -
 def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        keys = persist_latest_filed_calculation_observations(
+        keys = finalize_filed_capture(
             (
                 _prior_303_observation(
                     expediente_id="200030300000012Z",
@@ -707,7 +717,8 @@ def test_duplicate_period_capture_promotes_alta_over_later_non_alta_observation(
                     presented_at=datetime(2026, 4, 22, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
-        )
+            policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+        ).calculation_observation_keys
 
         stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
         history = IvaCompensationHistoryRepository().load_period(Period.from_year_and_code(2026, "1T"))
@@ -780,7 +791,7 @@ def test_iva_history_strict_persist_refuses_non_303_before_writing(tmp_path: Pat
 def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
-        persist_latest_filed_calculation_observations(
+        finalize_filed_capture(
             (
                 _prior_303_observation(
                     expediente_id="200030300000002Z",
@@ -793,6 +804,7 @@ def test_duplicate_period_capture_promotes_latest_filing_to_calculation_history(
                     presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
                 ),
             ),
+            policy=FiledCaptureFailurePolicy.BEST_EFFORT,
         )
 
         stored = repository.load_observation("303", Period.from_year_and_code(2026, "1T"))
