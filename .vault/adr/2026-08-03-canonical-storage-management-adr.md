@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c1a4243415e5df93e6e66811c10021bec184073dda589bebf69f49f1e407d5e4'
+body_hash: 'sha256:12a61c3743131904f1f658726f4b7407df48faf6e43f780b9ec01fb5e1940dc6'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -140,6 +140,17 @@ membership test, and its enforcing property are fixed.
   landed at HEAD — see R12, whose earlier ratification research F20 disproved by
   measurement; the review-package pair remains uncommitted peer WIP.
 - The two isolation tiers survive verbatim and migrate differently; see R15.
+- **No lane anywhere may add a `Path`-typed `Settings` field until the lifecycle
+  gate is rewritten.** The gate discovers by walking `Settings.model_fields`, so
+  any new path field is unclassified on arrival and reds it — and that file is
+  peer-owned and fenced, so the classifying edit cannot be made in the same
+  commit. This is a repository-wide sequencing constraint, not a
+  campaign-internal one: it blocks the corpus-search enrollment, it blocks
+  retiring the derivation dict (the fenced file imports it in five places), and
+  it silently blocks any unrelated feature that would introduce a path setting.
+  The gate rewrite is therefore on the critical path for more than this campaign,
+  and it should be sequenced first rather than treated as cleanup that follows
+  the taxonomy.
 - **Path fields stay flat-introspectable on `Settings`, and this is a design
   constraint with a stated reason, not an accident.** The lifecycle gate
   discovers its subject structurally, by introspecting `Settings.model_fields`.
@@ -536,6 +547,67 @@ rewrite begin. No lane may edit that file before the peer's commit lands, and no
 lane may "helpfully" add the three missing classifications itself — that is the
 peer's in-flight change and duplicating it produces a collision on the most
 load-bearing gate in this campaign.
+
+**R19 — The settings-cache root read is lifted into the pure resolver, not
+seamed and not left raw.** `_active_profile_pointer_fingerprint` computes the
+cache key for settings construction, so it must answer "which pointer would the
+next construction see" *before* any settings exist. It cannot read the root
+through `Settings` without circularity, and it currently reads
+`os.environ` directly, which no sanctioned technique can pin: the override-seam
+singularity gate forbids a second `override_*` seam and the monkeypatch ban
+forbids the other route.
+
+**Neither standing rule yields. Both are right, and no amendment is needed** —
+the seam gate's own prescription is the answer. It objects to a test double
+living in production (a swappable process-global a factory consults) and
+explicitly names the alternative: real DI threads the dependency through a
+parameter. `StateRootInputs` is already exactly that — a frozen, injectable
+record carrying `platform`, `home`, and **`environ`**.
+
+**The fix is to make the unpinnable path stop existing**, by lifting
+override-aware root resolution into a pure function over `StateRootInputs` that
+applies the precedence the fingerprint currently hand-rolls: the override value
+if the environment carries one, otherwise the resolved platform default. The
+fingerprint calls it with the live inputs. The raw `os.environ` read disappears,
+the path becomes testable by passing synthetic inputs with no seam and no
+monkeypatch, and the duplicated environment-variable-name literal that research
+F17 flagged as a second independent root-resolution path collapses onto one
+owner.
+
+**One correction the implementer must not miss.** Routing the fingerprint
+through the *existing* `resolve_state_root` would be a correctness regression,
+not a cleanup. Verified: that function resolves only the platform default and
+does **not** read the override variable — the override is applied by
+pydantic-settings at the `Settings` layer, as its own docstring says. Calling it
+from the fingerprint would silently drop the override from the cache key, so a
+process with a redirected root would fingerprint the wrong pointer file and
+could serve stale settings across a profile switch. That is research F17's
+invariant-10 hazard, made worse. The new function must apply the override
+precedence itself; it is not a rename of the existing resolver.
+
+The test that becomes possible is the one that matters: construct inputs with
+the override set and assert the fingerprint resolves the pointer under the
+overridden root, then construct inputs without it and assert the platform
+default. Today neither branch is pinned.
+
+**R20 — The retired derivation dict survives as a declared pinning oracle with
+a death date.** Production no longer reads `_STATE_ROOT_DERIVED_DIRS`; it is
+retained solely so the on-disk-name pinning test keeps an oracle independent of
+the taxonomy it checks. Deriving it from the taxonomy would make that test
+assert the taxonomy against itself — precisely R14's failed-migration shape,
+where a pinning test survives as a tautology.
+
+This is an intentional, temporary duplication and must be labelled as one in
+source, naming both its purpose and its retirement point, so a future reader
+neither deletes it as redundant nor "converges" it as duplication. It is
+explicitly **not** a counter-example to the campaign's own no-duplicate-authority
+ruling: an independent oracle for a gate is a different category from a second
+production authority, and the distinguishing test is whether production reads
+it. Production does not.
+
+Its retirement is blocked by the same coupling that blocks new path fields (see
+Constraints), and it dies when the lifecycle gate is rewritten — not before, and
+not by deriving it.
 
 ## Rationale
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:2169cba2675029e6e4378289653bfb0490f921fc6d7a05ebe34121ce2de509b9'
+body_hash: 'sha256:9b5e822876626b8bcfef077b70038d4846a5107504cbb1eb37a025716b9aa997'
 related: []
 ---
 
@@ -314,6 +314,59 @@ anchoring must update these tests deliberately. What is no longer true is the
 obligation — this campaign inherits no red test on this axis.
 
 ### What was not investigated
+
+### F22 — The taxonomy has 41 members, not 29
+
+The landed taxonomy carries **41 members**: 31 root-scoped (the 28 derived
+directories, plus the non-derived registry disk cache, plus two fixed fieldless
+members — the buckets container and the active-profile pointer), 7
+bucket-scoped, and 3 keystore-scoped. An earlier instruction quoting 29 was
+wrong and the measurement corrected it.
+
+The breakdown matters beyond arithmetic: it is the first count that reflects
+R13's scope axis, and it shows the scoped members (10 of 41) are a quarter of
+the set rather than a rounding error — which is why scope had to be a required
+field rather than a note.
+
+### F23 — The direct-environment-read gate scans only `AEAT_*`, so the renamed majority is unguarded
+
+`src/cadrumo/core/tests/test_settings_single_surface_invariant.py` enforces that
+AEAT-prefixed configuration is read through `Settings` rather than raw
+`os.environ`. Its matcher is `^AEAT_[A-Z0-9_]+$`, confirmed at five call sites in
+that module.
+
+The product rename moved 39 of 49 environment variables from `AEAT_*` to
+`CADRUMO_*` (prior-campaign ruling R6). **The gate's pattern was never widened,
+so it no longer covers the renamed majority.** Direct `CADRUMO_*` environment
+access is currently invisible to it, confirmed by three unflagged production
+sites: the settings-cache root read in `core/config.py:1367`, and two
+environment *writes* in `entrypoints/cli/__init__.py:1320-1321`.
+
+This is why the unpinnable root read in F17's invariant 10 was never caught by a
+gate — not because it was judged acceptable, but because the guard stopped
+seeing that variable's name. The finding is recorded here rather than actioned:
+widening the pattern is out of this campaign's scope and would likely surface
+further sites, but a campaign that renames a variable family should be expected
+to re-point the gates keyed on the old names, and this one was missed. The
+two CLI writes in particular deserve their own look, since a write has no
+`Settings` API at all and may be a legitimate irreducible exception — or may
+not.
+
+### What was not investigated
+
+The untriaged tail of test files in F16 was not individually confirmed; an
+estimate is not an acceptable closing state for the migration mandate and that
+triage is being run separately. `dev/docs/tests/test_env_reference.py` was not
+read, and it gates drift between the generated environment reference and the
+settings fields, so a field rename would trip it. Whether the `blobs` and
+`audit` name collision across depths has ever caused a real defect was not
+investigated; both work correctly today. Whether the registry-disk-cache
+fingerprint churn (F18) has produced observed spurious replay refusals in
+practice was not investigated — only that the digest demonstrably moves. Whether
+any other browser-mediated flow could trigger a download was not exhaustively
+swept; F20's context-level refusal makes that safe by default rather than by
+inventory. The full set of `CADRUMO_*` direct environment reads that F23's gate
+gap leaves unguarded was not enumerated beyond the three sites named.
 
 ### F20 — Cancelling a browser download does not prevent the bytes reaching disk
 
