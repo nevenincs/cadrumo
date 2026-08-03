@@ -33,9 +33,19 @@ because a raise legitimately comes from a callee, so the obvious
 implementation would fail on correct code.
 
 A hard cut with no stored baseline, which the tree affords: the whole
-production surface carried exactly two violations, both fixed in the
-commit that added this. A ratchet over an unknown backlog is how a gate
-gets disabled; a measured backlog of two is how one gets enforced.
+production surface carried three violations, all fixed alongside this. A
+ratchet over an unknown backlog is how a gate gets disabled; a backlog
+this size is how one gets enforced.
+
+The third was found late, and by accident. The parameter check shipped
+reading a block's indent as the MINIMUM over its section, so a docstring
+that resumed prose at the margin after ``Args:`` reported no documented
+parameters at all — a clean-looking nothing, over a real ghost entry.
+Nothing surfaced it; a leftover mention in an unrelated file did not add
+up, and chasing that turned it over. The lesson sits in this gate's own
+subject: a detector whose reach is narrower than its stated contract
+reads exactly like an invariant that holds, which is why both directions
+below are proved rather than assumed.
 """
 
 from __future__ import annotations
@@ -76,55 +86,80 @@ _ENTRY = re.compile(r"^(?P<indent>[ \t]+)(?P<name>\*{0,2}[A-Za-z_][A-Za-z0-9_]*)
 _ARG_SECTIONS = ("Args", "Arguments", "Parameters")
 
 
-def _section_headers(doc: str) -> list[tuple[int, str]]:
-    """Return ``(line index, canonical name)`` for each recognised section header."""
+def _indent_of(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
+def _section_headers(doc: str) -> list[tuple[int, int, str]]:
+    """Return ``(line index, indent, canonical name)`` for each recognised header."""
     headers = []
     for index, line in enumerate(doc.splitlines()):
         match = _HEADER.match(line)
         if match and match.group("name").strip().casefold() in SECTION_NAMES:
-            headers.append((index, match.group("name").strip()))
+            headers.append((index, _indent_of(line), match.group("name").strip()))
     return headers
 
 
 def _section_body(doc: str, wanted: str) -> list[str]:
-    """Return the lines between ``wanted``'s header and the next header."""
+    """Return the lines belonging to ``wanted``'s section.
+
+    A section ends at the next header OR at the first line that dedents
+    back to the header's own level, whichever comes first. The second
+    clause is what makes this correct rather than merely plausible: a
+    docstring may resume ordinary prose after its ``Args:`` block without
+    opening a new section, and treating that prose as part of the block
+    silently destroys the reading of everything above it.
+    """
     lines = doc.splitlines()
     headers = _section_headers(doc)
-    for position, (index, name) in enumerate(headers):
+    for position, (index, indent, name) in enumerate(headers):
         if name != wanted:
             continue
         end = headers[position + 1][0] if position + 1 < len(headers) else len(lines)
-        return lines[index + 1 : end]
+        body = []
+        for line in lines[index + 1 : end]:
+            if line.strip() and _indent_of(line) <= indent:
+                break
+            body.append(line)
+        return body
     return []
 
 
 def documented_parameters(doc: str) -> list[str]:
     """Names declared in a docstring's argument section.
 
-    An entry sits at the block's own indent and a wrapped continuation
-    line is indented deeper. That constraint is load-bearing rather than
-    tidiness: without it every prose line containing a colon ("... is
-    handed to: the write door") reads as an entry. Measured on this tree,
-    the unconstrained form reported fifteen missing parameters of which
-    fourteen were wrapped prose — a detector that would have spent its
-    credibility on noise before catching the one real defect.
+    An entry sits at the indent the block opens with, and a wrapped
+    continuation line is indented deeper. Both halves of that were learned
+    by being wrong on this tree:
+
+    Taking any indented ``name:`` line as an entry reported fifteen
+    missing parameters, fourteen of which were wrapped prose containing a
+    colon ("... is handed to: the write door") — a detector that spends
+    its credibility on noise before it finds anything.
+
+    Taking the block's indent as the MINIMUM over the section then hid a
+    real defect, which is the worse failure and the reason this reads from
+    the first entry instead. A docstring that resumes prose at the margin
+    after its ``Args:`` block dragged that minimum to zero, so every entry
+    sat above it and the function reported no documented parameters at
+    all — reporting nothing, while looking exactly like a clean result.
     """
     for header in _ARG_SECTIONS:
         body = [line for line in _section_body(doc, header) if line.strip()]
         if not body:
             continue
-        base = min(len(line) - len(line.lstrip()) for line in body)
+        base = _indent_of(body[0])
         return [
             match.group("name").lstrip("*")
             for line in body
-            if len(line) - len(line.lstrip()) == base and (match := _ENTRY.match(line))
+            if _indent_of(line) == base and (match := _ENTRY.match(line))
         ]
     return []
 
 
 def repeated_sections(doc: str) -> list[str]:
     """Return every section name appearing more than once in one docstring."""
-    counts = Counter(name for _, name in _section_headers(doc))
+    counts = Counter(name for _, _, name in _section_headers(doc))
     return sorted(name for name, total in counts.items() if total > 1)
 
 
@@ -230,6 +265,16 @@ _WRAPPED_PROSE = '''"""Do a thing.
             handed to: the write door, before this runs.
     """'''
 
+_PROSE_RESUMES_AFTER_ARGS = '''"""Do a thing.
+
+    Args:
+        value: The input.
+        extra_events: A parameter this function does not take.
+
+    This paragraph resumes at the margin without opening a section, which
+    is ordinary in this codebase and must not blind the reader above it.
+    """'''
+
 
 def _docstring_of(source: str) -> str:
     """Parse a constructed function and hand back its docstring."""
@@ -265,6 +310,27 @@ def test_the_parameter_check_reads_wrapped_prose_as_prose() -> None:
     cries wolf on correct code is one somebody switches off.
     """
     assert documented_parameters(_docstring_of(_WRAPPED_PROSE)) == ["value"]
+
+
+def test_prose_resuming_after_the_args_block_does_not_hide_its_entries() -> None:
+    """The recall case, and the one this gate shipped broken.
+
+    A docstring that returns to the margin after ``Args:`` was reading as
+    a block with no entries at all, because the block's indent was taken
+    as the minimum over everything up to the next header and the trailing
+    prose dragged it to zero. The gate then reported nothing for that
+    function — indistinguishable from a clean one, and it silently passed
+    over a real ghost parameter until a discrepancy in an unrelated check
+    exposed it.
+
+    The direction is what makes this worth a dedicated proof: a detector
+    that over-reports gets argued with, while one that under-reports is
+    simply believed.
+    """
+    documented = documented_parameters(_docstring_of(_PROSE_RESUMES_AFTER_ARGS))
+    assert documented == ["value", "extra_events"], (
+        f"entries must survive prose that dedents after the block, but read {documented}"
+    )
 
 
 def test_the_section_vocabulary_really_came_from_napoleon() -> None:
