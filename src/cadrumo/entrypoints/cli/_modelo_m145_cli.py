@@ -29,6 +29,7 @@ from typing import Annotated
 
 import typer
 
+from ...adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ...application.modelo import (
     M145CommunicationPeriod,
     create_m145_communication_record,
@@ -176,6 +177,7 @@ def register_m145_communication_commands(
         result = export_m145_communication_record(
             communication_record_id,
             bucket_id=_bucket_id(),
+            renderer=RegistryFixedWidthRecordRenderer(),
             actor=m145_actor_from_cli(actor, resolve_default_actor=resolve_default_actor),
         )
         emit_m145_export_result(ctx, result=result)

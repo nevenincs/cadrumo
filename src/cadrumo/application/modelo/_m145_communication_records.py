@@ -31,22 +31,12 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import InvalidOperation
 from enum import StrEnum
-from typing import Annotated, cast
+from typing import Annotated
 
 from pydantic import BaseModel, Field, TypeAdapter, field_validator, model_validator
 
-from ...adapters.outbound.aeat.export import (
-    AeatExportFormatError,
-    FicheroBoeEncoding,
-    FieldKind,
-    Justification,
-    RecordFieldSpec,
-    SignedMode,
-    record_field,
-    render_record_body,
-)
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import M145_COMMUNICATION_RECORD_NAMESPACE
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, ExportLayoutFormat, validated_casilla_id_map
@@ -66,20 +56,20 @@ from ...domain.buckets import (
 )
 from ...domain.calculations.registry import (
     CasillaDefinition,
-    CasillaFieldKind,
     ExportRecordDefinition,
     RegistrySnapshot,
     casillas_by_id,
     resolve_export_layout,
     undeclared_casilla_ids,
 )
-from ...domain.modelos import ModeloError
+from ...domain.modelos import ModeloError, ModeloExportError
 from ..live import SecureSnapshotRepository
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_SERVICE_OWNER,
     build_m145_communication_service_contract,
 )
+from ._ports import FicheroBoeRecordRenderer
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
 
@@ -713,129 +703,28 @@ def _validation_issue_summary(result: M145CommunicationValidationResult) -> str:
     return ", ".join(issue_kinds)
 
 
-def _m145_fichero_encoding(encoding: str) -> FicheroBoeEncoding:
-    """Map the registry's Latin-1 spelling to the shared encoder vocabulary."""
-    if encoding == "latin-1":
-        return "iso-8859-1"
-    # CAST-RATIONALE-M145-ENCODING: the registry declares `encoding` from the
-    # same closed FicheroBoeEncoding vocabulary; only the latin-1 spelling
-    # needs remapping, so every other value is already a valid member.
-    return cast(FicheroBoeEncoding, encoding)
-
-
-def _m145_export_inputs(
+def _render_m145_export_record(
     record_definition: ExportRecordDefinition,
     record: M145CommunicationRecord,
-) -> tuple[tuple[RecordFieldSpec, ...], dict[str, str], dict[CasillaId, Decimal], int]:
-    """Adapt one M145 registry record into canonical fixed-width encoder inputs."""
-    specs: list[RecordFieldSpec] = []
-    headers: dict[str, str] = {}
-    casilla_values: dict[CasillaId, Decimal] = {}
-    for field in sorted(
-        record_definition.fields,
-        key=lambda item: (-1 if item.offset is None else item.offset, item.id),
-    ):
-        if field.offset is None or field.length is None:
-            raise M145CommunicationRecordExportError(
-                f"Modelo 145 export field {field.id!r} lacks fixed-width coordinates",
-                context={"export_field_id": field.id, "reason": "missing_coordinates"},
-            )
-        justification = Justification.LEFT if field.justification == "left" else Justification.RIGHT
-        pad_char = "0" if field.padding == "left_zero" else " "
-        if field.kind is CasillaFieldKind.LITERAL:
-            specs.append(
-                record_field(
-                    offset=field.offset,
-                    length=field.length,
-                    field_id=field.id,
-                    kind=FieldKind.RESERVED,
-                    literal_value=field.literal or "",
-                ),
-            )
-            continue
-        if field.kind is CasillaFieldKind.FILLER:
-            headers[field.id] = ""
-            specs.append(
-                record_field(
-                    offset=field.offset,
-                    length=field.length,
-                    field_id=field.id,
-                    kind=FieldKind.ALPHANUMERIC,
-                    justification=justification,
-                    pad_char=pad_char,
-                ),
-            )
-            continue
-        if field.kind is not CasillaFieldKind.CASILLA or field.casilla_id is None:
-            raise M145CommunicationRecordExportError(
-                f"Modelo 145 export field {field.id!r} cannot be mapped to the canonical encoder",
-                context={"export_field_id": field.id, "reason": "field_kind"},
-            )
-        value = record.field_values.get(field.casilla_id, "")
-        if field.data_type == "money":
-            if value.strip():
-                try:
-                    casilla_values[field.casilla_id] = coerce_decimal_strict(value.strip())
-                except InvalidOperation as exc:
-                    raise M145CommunicationRecordExportError(
-                        f"Modelo 145 export field {field.id!r} has an invalid money value",
-                        context={"export_field_id": field.id, "reason": "money_value"},
-                    ) from exc
-            specs.append(
-                record_field(
-                    offset=field.offset,
-                    length=field.length,
-                    field_id=field.id,
-                    casilla_id=field.casilla_id,
-                    kind=FieldKind.CURRENCY,
-                    justification=justification,
-                    pad_char=pad_char,
-                    signed_mode=SignedMode.INLINE_SIGN if field.signed else SignedMode.UNSIGNED,
-                ),
-            )
-            continue
-        if field.data_type == "integer":
-            try:
-                headers[field.id] = str(int(value.strip())) if value.strip() else ""
-            except ValueError as exc:
-                raise M145CommunicationRecordExportError(
-                    f"Modelo 145 export field {field.id!r} has an invalid integer value",
-                    context={"export_field_id": field.id, "reason": "integer_value"},
-                ) from exc
-            kind = FieldKind.NUMERIC
-        elif field.data_type == "text":
-            headers[field.id] = value
-            kind = FieldKind.ALPHANUMERIC
-        else:
-            raise M145CommunicationRecordExportError(
-                f"Modelo 145 export field {field.id!r} uses unsupported data_type {field.data_type!r}",
-                context={"export_field_id": field.id, "data_type": field.data_type, "reason": "data_type"},
-            )
-        specs.append(
-            record_field(
-                offset=field.offset,
-                length=field.length,
-                field_id=field.id,
-                kind=kind,
-                justification=justification,
-                pad_char=pad_char,
-            ),
-        )
-    total_length = max(spec.offset + spec.length - 1 for spec in specs)
-    return tuple(specs), headers, casilla_values, total_length
+    *,
+    renderer: FicheroBoeRecordRenderer,
+) -> bytes:
+    """Render one registry-declared record through the injected renderer.
 
+    Which record to render, and which operator-entered values it carries, are
+    this layer's decisions. The fixed-width wire format is not: field
+    coordinates, justification, padding and the character set all belong to the
+    adapter that owns the AEAT format, and reach us only through
+    :class:`FicheroBoeRecordRenderer`.
 
-def _render_m145_export_record(record_definition: ExportRecordDefinition, record: M145CommunicationRecord) -> bytes:
-    specs, headers, casilla_values, total_length = _m145_export_inputs(record_definition, record)
+    The line terminator stays here deliberately. The renderer returns a bare
+    body because terminator ownership belongs to whoever knows whether it is
+    writing a lone record or one row of a larger file, and the registry
+    declares it separately on ``record.line_ending``.
+    """
     try:
-        body = render_record_body(
-            casilla_values=casilla_values,
-            headers=headers,
-            specs=specs,
-            encoding=_m145_fichero_encoding(record_definition.encoding),
-            total_length=total_length,
-        )
-    except AeatExportFormatError as exc:
+        body = renderer.render_record_body(record_definition, field_values=record.field_values)
+    except ModeloExportError as exc:
         raise M145CommunicationRecordExportError(
             f"Modelo 145 export record {record_definition.id!r} could not be rendered: {exc}",
             context={"export_record_id": record_definition.id, "reason": "canonical_fixed_width_encoder"},
@@ -847,10 +736,16 @@ def export_m145_communication_record(
     communication_record_id: str,
     *,
     bucket_id: BucketId,
+    renderer: FicheroBoeRecordRenderer,
     actor: str = _M145_COMMUNICATION_EVENT_ACTOR,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
 ) -> M145CommunicationExportResult:
-    """Render one Modelo 145 communication record through the registry export layout."""
+    """Render one Modelo 145 communication record through the registry export layout.
+
+    ``renderer`` is supplied by the composition root rather than resolved here:
+    the fixed-width AEAT wire format is an adapter concern, and importing it
+    from this layer is what the port exists to avoid.
+    """
     validation = validate_m145_communication_record(communication_record_id, bucket_id=bucket_id)
     if not validation.valid:
         _LOGGER.warning(
@@ -891,7 +786,9 @@ def export_m145_communication_record(
             f"Modelo 145 export layout {layout.id!r} declares mixed encodings: {sorted(encodings)!r}",
             context={"export_layout_id": layout.id, "encodings": tuple(sorted(encodings)), "reason": "encodings"},
         )
-    payload = b"".join(_render_m145_export_record(record_definition, record) for record_definition in records)
+    payload = b"".join(
+        _render_m145_export_record(record_definition, record, renderer=renderer) for record_definition in records
+    )
     result = M145CommunicationExportResult(
         communication_record_id=record.communication_record_id,
         bucket_id=record.bucket_id,

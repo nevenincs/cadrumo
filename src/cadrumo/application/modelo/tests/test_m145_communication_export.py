@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.outbound.aeat.export import render_record_body
+from ....adapters.outbound.aeat.export import RegistryFixedWidthRecordRenderer
 from ....core.resources import resources
 from ....domain.calculations.registry import ExportFieldDefinition, ResolvedExportLayout, resolve_export_layout
 from ....tests.secure_sql import isolated_runtime_profile
@@ -31,7 +31,6 @@ from .. import (
     create_m145_communication_record,
     export_m145_communication_record,
 )
-from .._m145_communication_records import _m145_export_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,7 +71,11 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(t
             M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
             bucket_id=runtime.bucket_id,
         )
-        result = export_m145_communication_record(record.communication_record_id[:12], bucket_id=runtime.bucket_id)
+        result = export_m145_communication_record(
+            record.communication_record_id[:12],
+            bucket_id=runtime.bucket_id,
+            renderer=RegistryFixedWidthRecordRenderer(),
+        )
 
     nif = resolved.fields_by_id["modelo-145-dr-03-perceptor-nif"]
     first_surname = resolved.fields_by_id["modelo-145-dr-04-perceptor-primer-apellido"]
@@ -111,7 +114,9 @@ def test_export_m145_communication_record_applies_registry_numeric_and_money_pad
             ),
             bucket_id=runtime.bucket_id,
         )
-        result = export_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+        result = export_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+        )
 
     assert _payload_slice(result.payload, descendant_year) == b"2010"
     assert _payload_slice(result.payload, compensation) == f"{123456:017d}".encode()
@@ -135,15 +140,29 @@ def test_export_m145_communication_record_matches_canonical_encoder_for_money_an
             ),
             bucket_id=runtime.bucket_id,
         )
-        result = export_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+        result = export_m145_communication_record(
+            record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+        )
 
-    specs, headers, casilla_values, total_length = _m145_export_inputs(record_definition, record)
-    canonical_body = render_record_body(
-        casilla_values=casilla_values,
-        headers=headers,
-        specs=specs,
-        encoding="iso-8859-1",
-        total_length=total_length,
+    # The adapter owns the body; this layer owns only the terminator the
+    # registry declares per record, so the body is compared against the
+    # renderer rather than re-derived here -- the wire format is covered by
+    # the renderer's own suite.
+    #
+    # PREMISE, stated because it bounds what this assertion can catch: this
+    # layout declares ``line_ending = "none"``, so the expected terminator is
+    # empty. Removing the terminator concatenation from the service is
+    # therefore an EQUIVALENT mutation against this data and this test will
+    # not flag it -- verified by applying exactly that mutation and watching
+    # all nine tests still pass. What it does catch is the mapping drifting,
+    # because the expected value below is written out independently of
+    # ``_LINE_ENDINGS``. The ``lf``/``crlf`` branches are unreachable from any
+    # shipped M145 layout and are left uncovered rather than exercised through
+    # a synthetic record that would assert our own constant back at us.
+    assert record_definition.line_ending == "none"
+    canonical_body = RegistryFixedWidthRecordRenderer().render_record_body(
+        record_definition,
+        field_values=record.field_values,
     )
     assert result.payload == canonical_body
 
@@ -158,7 +177,9 @@ def test_export_m145_communication_record_refuses_invalid_record(tmp_path: Path)
             bucket_id=runtime.bucket_id,
         )
         with pytest.raises(ValueError, match="validation passes"):
-            export_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+            export_m145_communication_record(
+                record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+            )
 
 
 def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path: Path) -> None:
@@ -174,7 +195,9 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path
             bucket_id=runtime.bucket_id,
         )
         with pytest.raises(ValueError, match="overflows length"):
-            export_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+            export_m145_communication_record(
+                record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+            )
 
 
 def _seeded_export(runtime) -> M145CommunicationExportResult:
@@ -183,7 +206,9 @@ def _seeded_export(runtime) -> M145CommunicationExportResult:
         M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values()),
         bucket_id=runtime.bucket_id,
     )
-    return export_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
+    return export_m145_communication_record(
+        record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
+    )
 
 
 def _tampered(result: M145CommunicationExportResult, **overrides: object):
