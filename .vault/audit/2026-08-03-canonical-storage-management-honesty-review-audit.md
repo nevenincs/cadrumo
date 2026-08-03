@@ -1202,6 +1202,66 @@ written by real CLI use. So "quiet" for census purposes means **no live `aeat` C
 invocations**, not merely no pytest. That is a different gate, and it means the census is
 currently blocked by other campaigns' legitimate activity rather than by any defect.
 
+### leaked-pytest-roots-are-hygiene-not-safety | none | 264 MB holds no taxpayer data, and the asserted two-mechanism distinction is not what the code says
+
+Two questions, one of them a check on an asserted mechanism. Read-only throughout; nothing
+deleted, and the standing prohibition binds hardest here because 1,354 obviously-disposable
+directories is the most tempting shape it will take.
+
+**Contents: hygiene, unambiguously. Nothing sensitive is present — not empty, absent.**
+Walking all 1,331 roots at measurement time (263,970,009 bytes), only **five** top-level
+names exist across the entire population:
+
+| top-level | roots | files | bytes |
+| --- | --- | --- | --- |
+| `logs` | 1,325 | 1,325 | 42,067,498 |
+| `cache` | 7 | 16 | 218,915,263 |
+| `cadrumo.db` + `-shm` + `-wal` | 16 | 46 | 2,987,248 |
+
+`secrets`, `keystore`, `buckets`, `financial`, `blobs`, `submissions`, `justificantes`
+**do not appear at all.** The bootstrap tree is not materialised in these roots; only what
+the tests actually touched exists.
+
+**83% of the volume is seven copies of one file.** `cache/corpus-text/cadrumo_corpus_text_cache.json`
+at ~31 MB each — a derivative of the bundled legal corpus, not taxpayer data. The
+remaining 16% is diagnostic logs.
+
+**The sixteen SQLite files are the ones that decide safety, and they are empty.** They are
+root-fallback databases, the cold-start route every profile-bound write refuses. Opened
+read-only, counting rows in every table of every one: **0 rows, total, across all sixteen**
+— including `secure_objects`, the table that would carry encrypted taxpayer records.
+Exhaustive rather than sampled, because a sampled zero is a claim about the sample.
+
+**Verdict: disk hygiene. There is no safety finding here.**
+
+**The asserted mechanism does not hold, and the code says so in its own words.** The claim
+under check was that a prior fix ended the lifetime of the roots `env_scope` mints, while
+this population is minted by conftest at import time *before any fixture exists to own its
+teardown* — a genuinely different mechanism.
+
+That is not the case. The root `conftest.py:93` and `src/cadrumo/conftest.py:65` **both call
+`register_collection_storage_root_cleanup`**, which registers an `atexit` removal plus a
+stale-sibling sweep. These roots have an owner. And `_collection_storage_root.py`'s module
+docstring states the relationship directly: *"Both families leak by the same mechanism — a
+process that is killed rather than torn down runs neither its `atexit` hooks nor pytest's
+teardown — and on a shared box under load that is routine rather than exceptional."*
+
+The real difference is narrower than asserted: the per-call roots carry **one additional**
+session-scoped finalizer covering the normal path. Both families are defeated identically
+by a kill, and the shared backstop is the sweep.
+
+**Nothing has regressed, and the count is explained.** `_STALE_AFTER_SECONDS` is 24 hours.
+Measured age distribution across 1,354 roots: **oldest 23.6 h, newest 0.01 h, and not one
+has crossed the threshold.** Both families are present — 1,354 pid-named roots and 133
+settings-prefixed ones — and both are retained *by design*, not by failure. The
+457 → 176 → 1,354 progression is a quiet period followed by a day of heavy killed-worker
+activity, which is precisely the condition the sweep was written for.
+
+**So the honest answer to "regressed, or a real distinction?" is neither.** The fix works,
+the population is one mechanism rather than two, and the accumulation is the designed
+retention window doing what it says. A cleanup would be tidiness; there is nothing to
+repair.
+
 ### verified-sound | none | What the record claims and the code supports
 
 Stated because a clean result is a result, and because several of these were the
