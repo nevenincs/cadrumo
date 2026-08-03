@@ -28,6 +28,20 @@ _MAX_BASELINE_TOML_LINE_CHARS = 520
 _MAX_LOCALE_TOML_LINES = 2_300
 _MAX_LOCALE_BASELINE_TOML_LINES = 2_300
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
+# What a green here does and does not mean. Measured over this file's whole
+# history: every recorded change to a baseline below has been UPWARD, and no
+# ceiling has ever been lowered --
+#
+#     _validate_evidence.py             362 -> 384 -> 391
+#     _validate.py                      251 -> 282
+#     _validate_dependency_sections.py  241 -> 248
+#     _validate_relation_sources.py     310 -> 311
+#
+# So this pass records that someone re-measured a number, not that a budget
+# held. The incentive runs that way by construction: raising a ceiling is a
+# one-line edit and shrinking a validator is real work, so the cheap move is
+# always the one that widens the gate. Read a green as "growth was noticed",
+# and treat a raise as the reviewed decision it is rather than bookkeeping.
 _VALIDATOR_MODULE_LINE_BASELINES = {
     # The verification-predicate DSL validator cluster (arity/shape
     # validators for equals, roll_forward_balances,
