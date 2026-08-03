@@ -44,6 +44,7 @@ from pydantic_settings import SettingsConfigDict
 
 from ..core import AuthProviderKind
 from ..core.config import Settings
+from ._collection_storage_root import SETTINGS_STEM
 
 _SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
 """Temporary storage roots minted for returned Settings instances, held open.
@@ -122,7 +123,7 @@ def settings_without_env_file(**overrides: Any) -> Settings:
         and "CADRUMO_LOCAL_STORAGE_ROOT" not in os.environ
         and "cadrumo_local_storage_root" not in os.environ
     ):
-        temporary_directory = TemporaryDirectory(prefix="cadrumo-settings-")
+        temporary_directory = TemporaryDirectory(prefix=SETTINGS_STEM)
         _SETTINGS_STORAGE_DIRECTORIES.append(temporary_directory)
         overrides = {**overrides, "cadrumo_local_storage_root": temporary_directory.name}
     return _EnvFileFreeSettings(**overrides)

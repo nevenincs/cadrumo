@@ -25,11 +25,69 @@ from pathlib import Path
 from tempfile import gettempdir
 
 _STEM = "cadrumo-pytest-"
+
+SETTINGS_STEM = "cadrumo-settings-"
+"""Prefix for the temporary storage roots ``env_scope`` mints per call.
+
+Declared here rather than at the mint site so the sweep below and the code
+that creates them cannot disagree about the name -- ``env_scope`` imports this
+constant instead of spelling it again. Importing this module is safe from
+anywhere: it is pure stdlib and resolves no Settings.
+"""
+
+_SWEPT_STEMS = (_STEM, SETTINGS_STEM)
+"""Every prefix the staleness sweep reclaims.
+
+Both families leak by the same mechanism -- a process that is killed rather
+than torn down runs neither its ``atexit`` hooks nor pytest's teardown -- and
+on a shared box under load that is routine rather than exceptional. The
+per-call roots additionally carry a session-scoped finalizer
+(``env_scope.release_settings_storage_directories``), which is what handles the
+normal path; this sweep is the complement that catches what a finalizer
+structurally cannot.
+"""
+
 _STALE_AFTER_SECONDS = 24 * 60 * 60
 """Generous staleness threshold for a sibling root: long enough to never
 race a slow CI run or a long-idle interactive session sharing the same
 temp directory, short enough that crashed/killed prior invocations do not
 accumulate indefinitely."""
+
+
+def sweep_stale_roots(parent: Path, *, now: float | None = None) -> int:
+    """Remove swept-prefix directories under ``parent`` older than the threshold.
+
+    Split out of the ``atexit`` hook so the staleness rule can be exercised
+    directly: a sweep reachable only through interpreter shutdown is a sweep
+    nothing can prove reclaims the right things, or spares the wrong ones.
+
+    Best-effort throughout -- a locked file or a permission error is swallowed.
+    This is tidiness, not correctness: a stale root is self-invalidating on
+    next use, because a fresh PID never reuses an old directory.
+
+    Args:
+        parent: Directory to sweep, normally the OS temp directory.
+        now: Reference time, defaulting to the wall clock. Injectable so a test
+            can age a directory without waiting a day for it.
+
+    Returns:
+        How many directories were removed.
+    """
+    reference = time.time() if now is None else now
+    removed = 0
+    for stem in _SWEPT_STEMS:
+        try:
+            siblings = list(parent.glob(f"{stem}*"))
+        except OSError:
+            continue
+        for sibling in siblings:
+            try:
+                if reference - sibling.stat().st_mtime > _STALE_AFTER_SECONDS:
+                    shutil.rmtree(sibling, ignore_errors=True)
+                    removed += 1
+            except OSError:
+                continue
+    return removed
 
 
 def collection_storage_root() -> Path:
@@ -45,31 +103,19 @@ def collection_storage_root() -> Path:
 def register_collection_storage_root_cleanup(root: Path) -> None:
     """Register best-effort cleanup for ``root`` and any stale sibling directories.
 
-    Removes ``root`` at process exit (``atexit``) and sweeps any
-    ``cadrumo-pytest-*`` sibling directory whose modification time is older
-    than :data:`_STALE_AFTER_SECONDS`, so per-invocation directories from past
-    runs (crashed sessions, killed workers) do not accumulate indefinitely in
-    the OS temp directory. Both the removal and the sweep are best-effort: a
-    locked file or a permission error is swallowed rather than raised, since
-    this is tidiness, not correctness — a stale root, like a stale registry
-    cache pickle, is self-invalidating on next use because a fresh PID never
-    reuses an old directory.
+    Removes ``root`` at process exit (``atexit``) and sweeps every stale
+    sibling carrying a swept prefix (see :data:`_SWEPT_STEMS`), so
+    per-invocation directories from past runs — crashed sessions, killed
+    workers — do not accumulate indefinitely in the OS temp directory. Both the
+    removal and the sweep are best-effort: a locked file or a permission error
+    is swallowed rather than raised, since this is tidiness, not correctness —
+    a stale root, like a stale registry cache pickle, is self-invalidating on
+    next use because a fresh PID never reuses an old directory.
     """
 
     def _cleanup() -> None:
         shutil.rmtree(root, ignore_errors=True)
-        parent = root.parent
-        now = time.time()
-        try:
-            siblings = list(parent.glob(f"{_STEM}*"))
-        except OSError:
-            return
-        for sibling in siblings:
-            try:
-                if now - sibling.stat().st_mtime > _STALE_AFTER_SECONDS:
-                    shutil.rmtree(sibling, ignore_errors=True)
-            except OSError:
-                continue
+        sweep_stale_roots(root.parent)
 
     atexit.register(_cleanup)
 
