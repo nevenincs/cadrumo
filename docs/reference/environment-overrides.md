@@ -78,6 +78,7 @@ value already present in your shell always wins.
 | `CADRUMO_FALLBACK_LANGUAGES` | str | `es,en` | Comma-separated fallback chain consulted when the target language is missing. |
 | `CADRUMO_FILE_LOCK_RETRY_BACKOFF_S` | float | `0.05` | Sleep interval (seconds) between non-blocking file-lock acquire attempts |
 | `CADRUMO_FILE_LOCK_TIMEOUT_S` | float | `30.0` | Default exclusive file-lock acquisition timeout (seconds) |
+| `CADRUMO_FILED_DECLARATIONS_DIR` | Path | (derived) | Directory for filed-declaration observations captured from AEAT. Derived under cadrumo_local_storage_root unless explicitly set. |
 | `CADRUMO_FILING_HISTORY_ARCHIVE_HTML` | bool | `false` | If true, archive fetched detail-page HTML under <cadrumo_filing_history_dir>/pages/ |
 | `CADRUMO_FILING_HISTORY_CACHE_TTL_S` | int | `900` | TTL in seconds for per-expediente filing-history cache entries (default 15 min) |
 | `CADRUMO_FILING_HISTORY_DIR` | Path | (derived) | Directory where the persisted ModeloHistory JSON file lives |
@@ -92,6 +93,8 @@ value already present in your shell always wins.
 | `CADRUMO_INBOX_PDF_DIR` | Path | (derived) | Directory where downloaded notification PDFs are stored |
 | `CADRUMO_INVOICES_DIR` | Path | (derived) | Directory where the invoice catalogue JSON file is stored |
 | `CADRUMO_IVA_CATALOGUE_ROOT` | Path | (derived) | Root directory for the hand-reviewed IVA taxonomy catalogue |
+| `CADRUMO_IVA_COMPENSATION_HISTORY_DIR` | Path | (derived) | Directory for Modelo 303 compensation-history capture reports. Derived under cadrumo_local_storage_root unless explicitly set. |
+| `CADRUMO_IVA_READ_EVIDENCE_DIR` | Path | (derived) | Directory for IVA remote-state read-evidence reports. Derived under cadrumo_local_storage_root unless explicitly set. |
 | `CADRUMO_JUSTIFICANTE_PARSER_BACKEND` | JustificanteParserBackendSetting | `pdfplumber` | Parser backend for `cadrumo.adapters.inbound.justificante` |
 | `CADRUMO_JUSTIFICANTES_DIR` | Path | (derived) | Directory where parsed justificante PDFs and metadata are stored |
 | `CADRUMO_KEYRING_PROBE_TIMEOUT_S` | float | `10.0` | Wall-clock budget (seconds) for the AUTO backend's OS-keychain read before it is treated as locked. macOS Keychain ACLs are per-binary, so a process distinct from the one that minted the item must answer an authorization dialog that a headless or background context can never show, and the read would otherwise block forever. Generous enough that a foreground operator can answer the prompt; short enough that a dialog-less context degrades promptly instead of hanging |
