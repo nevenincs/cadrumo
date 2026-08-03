@@ -35,11 +35,20 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
     """Build a clean subprocess env with no ambient ``CADRUMO_OUTPUT_LANGUAGE``.
 
-    Strips every ``AEAT_*`` variable so the only language signal reaching the
-    console is the ``--language`` flag under test (or, when ``language`` is set,
-    an explicit ambient override used to prove the flag wins over it).
+    Strips every ``CADRUMO_*`` and ``AEAT_*`` variable so the only language
+    signal reaching the console is the ``--language`` flag under test (or, when
+    ``language`` is set, an explicit ambient override used to prove the flag
+    wins over it).
+
+    Stripping the product prefix is what makes the flag cases mean anything.
+    The test process pins ``CADRUMO_OUTPUT_LANGUAGE=en`` for its own
+    readability, so an inherited environment would hand the child the very
+    answer a ``--language en`` case exists to prove the flag produces, and that
+    case would pass with the flag doing nothing. Mirrors the CLI-reference
+    generator's environment builder, which strips both prefixes for the same
+    reason.
     """
-    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
+    env = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
     env.update(
         {
             "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
@@ -180,10 +189,19 @@ def test_invalid_language_value_is_refused_with_accepted_set(tmp_path: Path) -> 
     The pre-parse forwards only supported values; the canonical Typer ``Choice``
     on the root callback remains the single refusal authority and must name the
     accepted set rather than silently ignoring the value.
+
+    The ambient language is pinned to English deliberately, and this is the one
+    case in the module that wants one. Click localises the ``Invalid value for``
+    prefix but not the accepted-set clause, so the English assertion below is
+    only honest if the run is English by declaration rather than by whatever the
+    machine resolves. It also keeps the last assertion from going vacuous: the
+    guard is that an invalid value must refuse rather than render help, and help
+    wrongly rendered under a Spanish default would not contain the English
+    string being looked for, so the check would pass while the defect shipped.
     """
     result = _run_console(
         ["--language", "xx", "config", "profile", "create", "--help"],
-        _console_env(tmp_path, language=None),
+        _console_env(tmp_path, language="en"),
     )
     combined = f"{result.stdout}\n{result.stderr}"
     assert "Invalid value" in combined, combined
