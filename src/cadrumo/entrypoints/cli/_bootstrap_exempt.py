@@ -84,6 +84,20 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # no session; the same plaintext-only grounds as ``profile archive
     # inspect`` above. Locked profiles still list — status is a manifest field.
     "config profile list",
+    # The storage tree is the container every profile sits inside, so the whole
+    # family answers questions that exist before any profile does: ``init``
+    # materialises the tree on a fresh root, and ``list``/``show``/``check``
+    # read the declared taxonomy plus filesystem metadata. None of them unlocks
+    # a bucket or decrypts a column -- ``list`` resolves per-bucket members
+    # against the active-profile POINTER, which is plaintext, the same grounds
+    # as ``config profile list`` above. Gating them behind a login would be the
+    # same deadlock: an operator whose profile will not open is exactly the one
+    # who needs to be told where their data is. ``reclaim`` is a mutation and
+    # is exempt on the same grounds -- the categories its lifecycle guard
+    # permits are root-level regenerable caches and logs shared across
+    # profiles, never a bucket's own encrypted state, which that guard refuses
+    # outright.
+    "config storage",
     # Tombstoning a profile opens its OWN session scoped to the target, the
     # same shape as ``config login`` and the custody verbs above:
     # ``delete_profile_with_lifecycle_span`` wraps the mutation in

@@ -35,7 +35,7 @@ from ...core import (
     storage_location,
     storage_path,
 )
-from ...core.config import ensure_storage_tree, load_settings
+from ...core.config import STORAGE_ROOT_MODE, ensure_storage_tree, load_settings
 from ...core.logging import get_logger
 from ._errors import StorageReclaimRefusedError, StorageReclaimUnconfirmedError
 from ._models import (
@@ -71,8 +71,13 @@ listing categories means a member reclassified in the taxonomy changes what
 reclaim will touch at the same moment, with no second list to forget.
 """
 
-_EXPECTED_ROOT_MODE: Final[int] = 0o700
-"""Mode ``ensure_storage_tree`` requests on the root, mirrored for the drift check."""
+_EXPECTED_ROOT_MODE: Final[int] = STORAGE_ROOT_MODE
+"""Mode ``ensure_storage_tree`` requests on the root, read from it for the drift check.
+
+Bound to the materialiser's own constant rather than restating the value: a
+check defined as matching what was requested must not be able to keep
+passing against a mode the materialiser no longer requests.
+"""
 
 
 def storage_lifecycle_permits_reclaim(lifecycle: StorageLifecycle) -> bool:

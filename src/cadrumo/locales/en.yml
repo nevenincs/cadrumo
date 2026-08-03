@@ -3763,11 +3763,35 @@ cli:
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
     storage:
+      check:
+        drifted: The storage tree does not match its declaration.
+        help: Verify the storage tree against its declaration without repairing it
+        mode_unenforced: This platform does not implement POSIX permission bits, so
+          root permissions were not checked.
       errors:
         reclaim_refused: 'refusing to reclaim %{category}: %{reason}. %{path} holds
           %{entries} entries and none were removed.'
         reclaim_unconfirmed: reclaiming %{category} deletes %{entries} entries under
           %{path} and needs explicit confirmation.
+      help: Inspect and maintain the local storage tree
+      init:
+        already_materialised: Every declared directory already existed; nothing was
+          created.
+        help: Create every declared directory, preserving everything already there
+      list:
+        help: Show every storage category, its path, and whether it holds anything
+        relocation_is_manual: To move the tree, stop Cadrumo, copy it yourself, then
+          point %{variable} at the new location. No command moves it, because a copy
+          that completes for the records but not for the key material leaves neither
+          usable.
+      reclaim:
+        category_help: Storage category to reclaim
+        help: Delete a storage category's regenerable contents
+        incomplete: Some entries could not be removed and are still on disk.
+        yes_help: Confirm the deletion; without it the command refuses
+      show:
+        category_help: Storage category to show
+        help: Show one storage category in full
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -4662,6 +4686,12 @@ cli:
         section_first_run: First run
         section_profile_inspection: Profile inspection
         section_profile_lifecycle: Profile lifecycle
+        section_storage: Storage
+        storage_check: Check the storage tree for missing or misplaced directories
+        storage_init: Create any storage directory that is missing
+        storage_list: See where every kind of local data is kept
+        storage_reclaim: Free space by deleting a category the app can rebuild
+        storage_show: Look at one storage category in detail
       root:
         diagnostics_live_filed: List captured filed-return observations.
         diagnostics_overview: Summarize active workspace readiness.

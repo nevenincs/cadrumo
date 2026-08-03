@@ -12,6 +12,7 @@ Registered entries:
   - ``aeat app ledger ratios``       (key-value-as-record exception)
   - ``aeat app ledger inventory``    (lifecycle operations)
   - ``aeat config auth apoderado``   (lifecycle operations)
+  - ``aeat config storage``          (lifecycle operations)
 
 Each entry documents the noun-group's intended verb set plus its
 declared exception class. The conformance harness in
@@ -88,6 +89,22 @@ APODERADO = MutatingNounGroupContract(
 )
 
 
+STORAGE = MutatingNounGroupContract(
+    noun="storage_category",
+    cli_path="aeat config storage",
+    # Lifecycle-only exception: the member set is fixed by the core storage
+    # taxonomy, so an operator can neither add a category nor remove one, and
+    # there is no per-field edit — a category's path, node kind, lifecycle, and
+    # override policy are declared facts, not operator-editable values.
+    # ``reclaim`` empties a category back to its declared-but-empty state, which
+    # is the reset transition; ``init`` materialises, and list / show / check
+    # read.
+    exception=NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY,
+    crud_verbs=frozenset(),
+    lifecycle_state_verbs=frozenset({LifecycleStateVerb.RESET}),
+)
+
+
 BUILTIN_CRUD_CATALOGUE: CrudContractCatalogue = CrudContractCatalogue(
     entries=(
         EVIDENCE,
@@ -95,6 +112,7 @@ BUILTIN_CRUD_CATALOGUE: CrudContractCatalogue = CrudContractCatalogue(
         USAGE_RATIOS,
         INVENTORY,
         APODERADO,
+        STORAGE,
     ),
 )
 
@@ -114,6 +132,7 @@ __all__ = [
     "EVIDENCE",
     "INVENTORY",
     "INVOICE",
+    "STORAGE",
     "USAGE_RATIOS",
     "get_builtin_catalogue",
 ]

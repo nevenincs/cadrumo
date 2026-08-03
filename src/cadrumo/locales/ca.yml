@@ -4033,11 +4033,35 @@ cli:
       help: Mostrar l'estat del perfil de configuració actiu
       next_step: 'Següent pas: `aeat app overview status`'
     storage:
+      check:
+        drifted: L'arbre d'emmagatzematge no coincideix amb la seva declaració.
+        help: Verifica l'arbre d'emmagatzematge amb la seva declaració sense reparar-lo
+        mode_unenforced: Aquesta plataforma no implementa els bits de permisos POSIX,
+          així que no s'han comprovat els permisos de l'arrel.
       errors:
         reclaim_refused: 'es rebutja alliberar %{category}: %{reason}. %{path} conté
           %{entries} entrades i no se n''ha eliminat cap.'
         reclaim_unconfirmed: alliberar %{category} elimina %{entries} entrades a %{path}
           i requereix confirmació explícita.
+      help: Inspecciona i manté l'arbre d'emmagatzematge local
+      init:
+        already_materialised: Tots els directoris declarats ja existien; no se n'ha
+          creat cap.
+        help: Crea tots els directoris declarats conservant el que ja hi hagi
+      list:
+        help: Mostra cada categoria d'emmagatzematge, la seva ruta i si conté res
+        relocation_is_manual: Per moure l'arbre, atura Cadrumo, copia'l tu mateix
+          i després apunta %{variable} a la nova ubicació. Cap ordre no el mou, perquè
+          una còpia que acaba per als registres però no per al material de claus deixa
+          tots dos inservibles.
+      reclaim:
+        category_help: Categoria d'emmagatzematge que es vol alliberar
+        help: Elimina el contingut regenerable d'una categoria d'emmagatzematge
+        incomplete: Algunes entrades no s'han pogut eliminar i encara són al disc.
+        yes_help: Confirma l'eliminació; sense aquesta opció l'ordre es rebutja
+      show:
+        category_help: Categoria d'emmagatzematge que es vol mostrar
+        help: Mostra una categoria d'emmagatzematge completa
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -4992,6 +5016,14 @@ cli:
         section_first_run: Primera execució
         section_profile_inspection: Inspecció del perfil
         section_profile_lifecycle: Cicle de vida del perfil
+        section_storage: Emmagatzematge
+        storage_check: Comprova si a l'arbre d'emmagatzematge li falten directoris
+          o estan mal ubicats
+        storage_init: Crea qualsevol directori d'emmagatzematge que falti
+        storage_list: Consulta on es desa cada tipus de dada local
+        storage_reclaim: Allibera espai eliminant una categoria que l'aplicació pot
+          reconstruir
+        storage_show: Consulta una categoria d'emmagatzematge en detall
       root:
         diagnostics_live_filed: Diagnosticar les declaracions presentades capturades
           en viu.

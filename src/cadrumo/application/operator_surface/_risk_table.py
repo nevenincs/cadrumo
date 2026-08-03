@@ -189,6 +189,18 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.reset.resume": CommandRiskDeclaration(destructive=True),
     "config.reset.start": CommandRiskDeclaration(destructive=True),
     "config.reset.status": CommandRiskDeclaration(),
+    # Storage lifecycle: ``list``/``show``/``check`` only read the tree, and
+    # ``init`` creates missing directories while preserving every existing one.
+    # ``reclaim`` irreversibly deletes a category's contents, which is the whole
+    # point of the verb and exactly why it is declared destructive: its own
+    # lifecycle guard already refuses the categories that must never be deleted,
+    # but the operator confirmation this flag drives is a separate protection
+    # covering the categories where deleting IS permitted.
+    "config.storage.check": CommandRiskDeclaration(),
+    "config.storage.init": CommandRiskDeclaration(),
+    "config.storage.list": CommandRiskDeclaration(),
+    "config.storage.reclaim": CommandRiskDeclaration(destructive=True),
+    "config.storage.show": CommandRiskDeclaration(),
     # Recovery lifecycle: ``status`` and ``verify`` read; ``create`` enrolls a
     # first envelope (nothing replaced); ``rotate`` invalidates the previous
     # recovery code, so it elicits human confirmation on the MCP surface.

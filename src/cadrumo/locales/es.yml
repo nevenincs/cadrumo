@@ -4065,11 +4065,35 @@ cli:
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
     storage:
+      check:
+        drifted: El árbol de almacenamiento no coincide con su declaración.
+        help: Verifica el árbol de almacenamiento frente a su declaración sin repararlo
+        mode_unenforced: Esta plataforma no implementa los bits de permisos POSIX,
+          así que no se han comprobado los permisos de la raíz.
       errors:
         reclaim_refused: 'se rechaza liberar %{category}: %{reason}. %{path} contiene
           %{entries} entradas y no se ha eliminado ninguna.'
         reclaim_unconfirmed: liberar %{category} elimina %{entries} entradas en %{path}
           y requiere confirmación explícita.
+      help: Inspecciona y mantiene el árbol de almacenamiento local
+      init:
+        already_materialised: Todos los directorios declarados ya existían; no se
+          ha creado ninguno.
+        help: Crea todos los directorios declarados conservando lo que ya exista
+      list:
+        help: Muestra cada categoría de almacenamiento, su ruta y si contiene algo
+        relocation_is_manual: Para mover el árbol, detén Cadrumo, cópialo tú mismo
+          y luego apunta %{variable} a la nueva ubicación. Ningún comando lo mueve,
+          porque una copia que termina para los registros pero no para el material
+          de claves deja ambos inservibles.
+      reclaim:
+        category_help: Categoría de almacenamiento que se va a liberar
+        help: Elimina el contenido regenerable de una categoría de almacenamiento
+        incomplete: Algunas entradas no se han podido eliminar y siguen en el disco.
+        yes_help: Confirma la eliminación; sin esta opción el comando se rechaza
+      show:
+        category_help: Categoría de almacenamiento que se va a mostrar
+        help: Muestra una categoría de almacenamiento al completo
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -5031,6 +5055,14 @@ cli:
         section_first_run: Primera ejecución
         section_profile_inspection: Inspección de perfil
         section_profile_lifecycle: Ciclo de vida del perfil
+        section_storage: Almacenamiento
+        storage_check: Comprueba si al árbol de almacenamiento le faltan directorios
+          o están mal ubicados
+        storage_init: Crea cualquier directorio de almacenamiento que falte
+        storage_list: Consulta dónde se guarda cada tipo de dato local
+        storage_reclaim: Libera espacio eliminando una categoría que la aplicación
+          puede reconstruir
+        storage_show: Consulta una categoría de almacenamiento en detalle
       root:
         diagnostics_live_filed: Diagnosticar las declaraciones presentadas capturadas
           en vivo.

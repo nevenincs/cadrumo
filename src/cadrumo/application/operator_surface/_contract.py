@@ -52,6 +52,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "auth",
             "repair",
             "check",
+            "storage",
             "google",
             "reset",
             "collab",
@@ -204,6 +205,15 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         service_owner="cadrumo.application.provisioning",
         commands=("check",),
         mutability=OperatorMutability.READ_ONLY,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.STORAGE,
+        root=RootSurfaceName.CONFIG,
+        child="storage",
+        operator_question="report where local data lives and reclaim what a category's lifecycle says is regenerable",
+        service_owner="cadrumo.application.storage_management",
+        commands=("list", "show", "check", "init", "reclaim"),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
         domain=MountedCommandDomain.GOOGLE,

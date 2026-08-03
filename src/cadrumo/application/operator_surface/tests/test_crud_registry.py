@@ -14,6 +14,7 @@ from .._crud_registry import (
     EVIDENCE,
     INVENTORY,
     INVOICE,
+    STORAGE,
     USAGE_RATIOS,
     get_builtin_catalogue,
 )
@@ -29,6 +30,7 @@ class TestCatalogueShape:
             USAGE_RATIOS,
             INVENTORY,
             APODERADO,
+            STORAGE,
         )
 
     def test_old_split_invoice_contracts_are_gone(self) -> None:
@@ -80,6 +82,13 @@ class TestLifecycleOnlyEntries:
         assert APODERADO.exception is NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY
         assert APODERADO.crud_verbs == frozenset()
 
+    def test_storage_declares_lifecycle_only(self) -> None:
+        # A storage category is declared by the core taxonomy, so it can be
+        # emptied but never added, removed, or edited field-by-field.
+        assert STORAGE.exception is NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY
+        assert STORAGE.crud_verbs == frozenset()
+        assert STORAGE.noun == "storage_category"
+
 
 class TestCatalogueUniquePaths:
     def test_every_cli_path_is_unique(self) -> None:
@@ -114,6 +123,9 @@ class TestRequiredAuditClosure:
 
     def test_inventory_noun_group_is_represented(self) -> None:
         assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger inventory") is not None
+
+    def test_storage_noun_group_is_represented(self) -> None:
+        assert BUILTIN_CRUD_CATALOGUE.find("aeat config storage") is not None
 
     def test_ratios_key_value_exception_is_represented(self) -> None:
         entry = BUILTIN_CRUD_CATALOGUE.find("aeat app ledger ratios")

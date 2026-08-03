@@ -447,6 +447,31 @@ def _config_help() -> HelpDocument:
                     ),
                 ),
             ),
+            HelpSection(
+                title=tr("cli.operator_surface.help.config.section_storage"),
+                entries=(
+                    HelpEntry(
+                        command="aeat config storage list",
+                        description=tr("cli.operator_surface.help.config.storage_list"),
+                    ),
+                    HelpEntry(
+                        command="aeat config storage show CATEGORY",
+                        description=tr("cli.operator_surface.help.config.storage_show"),
+                    ),
+                    HelpEntry(
+                        command="aeat config storage check",
+                        description=tr("cli.operator_surface.help.config.storage_check"),
+                    ),
+                    HelpEntry(
+                        command="aeat config storage init",
+                        description=tr("cli.operator_surface.help.config.storage_init"),
+                    ),
+                    HelpEntry(
+                        command="aeat config storage reclaim CATEGORY --yes",
+                        description=tr("cli.operator_surface.help.config.storage_reclaim"),
+                    ),
+                ),
+            ),
         ),
         footer=tr("cli.operator_surface.help.config.footer", default="Run aeat --help for the full overview."),
     )
