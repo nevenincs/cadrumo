@@ -265,6 +265,54 @@ def test_windows_worst_case_suffix_covers_the_real_bucket_layout_shape() -> None
     rules (HMAC prefix 8, label capped at 64 chars, ``.meta.json``
     sidecar extension) so a change to either shape is caught here instead
     of silently under-counting the margin.
+
+    A prior version of this guard omitted the ``<namespace>`` directory
+    ``LocalFileSystemProvider`` fans one out per (``_local.py:176``/``:292``,
+    ``self._root / namespace``) -- the same omission the constant it guards
+    carried, so it reproduced rather than caught the gap. The positive
+    control below proves this version would have caught it.
+    """
+    from ...adapters.outbound.storage._local import _SIDECAR_EXTENSION
+    from ...adapters.outbound.storage._object_name import _HMAC_PREFIX_LENGTH, sanitize_provider_object_label
+    from ...adapters.persistence.storage import (
+        BUCKET_BLOBS_DIRNAME,
+        BUCKETS_DIRNAME,
+    )
+    from ...domain.buckets import BucketEventObjectType
+    from ...domain.user_profile import new_profile_id
+
+    worst_label = sanitize_provider_object_label("x" * 200)  # clamps to 64 chars
+    # A real, representative outbound-attachment namespace value -- the same
+    # one the constant's own comment names. BucketEventObjectType carries no
+    # enforced length cap today (see the constant's comment); this recomputes
+    # the shape for the specific value the constant is pinned to, not a
+    # structurally-guaranteed ceiling over every possible namespace.
+    namespace = BucketEventObjectType.LEDGER_TRANSACTION.value
+    recomputed = (
+        "\\"
+        + BUCKETS_DIRNAME
+        + "\\"
+        + new_profile_id()  # canonical UUIDv4 string, always 36 chars
+        + "\\"
+        + BUCKET_BLOBS_DIRNAME
+        + "\\"
+        + namespace
+        + "\\"
+        + ("a" * _HMAC_PREFIX_LENGTH)
+        + "--"
+        + worst_label
+        + _SIDECAR_EXTENSION
+    )
+    assert len(recomputed) == WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH
+
+
+def test_windows_worst_case_suffix_guard_catches_a_dropped_namespace_segment() -> None:
+    """Positive control: reproduces the exact prior omission and proves the guard would catch it.
+
+    Recomputes the shape WITHOUT the ``<namespace>`` segment -- the shape the
+    constant carried before this fix -- and asserts it does NOT match the
+    corrected constant, so a future regression that drops the segment again
+    reds this guard instead of passing silently.
     """
     from ...adapters.outbound.storage._local import _SIDECAR_EXTENSION
     from ...adapters.outbound.storage._object_name import _HMAC_PREFIX_LENGTH, sanitize_provider_object_label
@@ -274,12 +322,12 @@ def test_windows_worst_case_suffix_covers_the_real_bucket_layout_shape() -> None
     )
     from ...domain.user_profile import new_profile_id
 
-    worst_label = sanitize_provider_object_label("x" * 200)  # clamps to 64 chars
-    recomputed = (
+    worst_label = sanitize_provider_object_label("x" * 200)
+    without_namespace = (
         "\\"
         + BUCKETS_DIRNAME
         + "\\"
-        + new_profile_id()  # canonical UUIDv4 string, always 36 chars
+        + new_profile_id()
         + "\\"
         + BUCKET_BLOBS_DIRNAME
         + "\\"
@@ -288,4 +336,7 @@ def test_windows_worst_case_suffix_covers_the_real_bucket_layout_shape() -> None
         + worst_label
         + _SIDECAR_EXTENSION
     )
-    assert len(recomputed) == WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH
+    assert len(without_namespace) != WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH, (
+        "the namespace-dropping shape must NOT match the corrected constant -- if it does, "
+        "the guard above cannot actually catch the omission it was fixed to catch"
+    )

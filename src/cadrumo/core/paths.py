@@ -101,18 +101,43 @@ _WIN_ERROR_FILENAME_EXCED_RANGE = 206
 _WINDOWS_LONG_PATH_WINERRORS = frozenset({_WIN_ERROR_PATH_NOT_FOUND, _WIN_ERROR_FILENAME_EXCED_RANGE})
 
 #: Worst-case path suffix (leading separator through file extension) that
-#: the bucket-directory layout can append below a configured storage root:
-#: ``\buckets\<uuid-36>\blobs\<hmac-8>--<label-64>.meta.json``. Mirrors
-#: :data:`cadrumo.adapters.persistence.storage._namespace_registry.BUCKETS_DIRNAME`
-#: / ``BUCKET_BLOBS_DIRNAME`` and the outbound
-#: ``LocalFileSystemProvider`` filename shape
-#: (``<hmac_prefix_8>--<label>.meta.json``, ``label`` capped at 64 chars).
+#: the bucket-directory layout can append below a configured storage root.
+#: Mirrors the ``local_provider_object_sidecar`` grammar declared in
+#: :data:`cadrumo.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
+#: (``<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.meta.json``),
+#: not the earlier, shorter mirror
+#: (``\buckets\<uuid-36>\blobs\<hmac-8>--<label-64>.meta.json``) that omitted
+#: the ``<namespace>`` segment ``LocalFileSystemProvider`` fans out one
+#: directory per outbound-attachment namespace into
+#: (``_local.py:176``/``:292``, ``self._root / namespace``) -- the omission
+#: understated the true worst case by 19 characters (136 measured versus the
+#: correct 155), which could let the preflight margin in
+#: :func:`windows_storage_root_long_path_margin` accept a storage root from
+#: which a real outbound write then exceeds ``MAX_PATH``.
+#:
+#: ``bucket_id`` is a 36-character UUID; ``hmac_prefix`` is 8 hex characters;
+#: ``label`` is capped at 64 characters
+#: (:func:`~adapters.outbound.storage.sanitize_provider_object_label`).
+#: ``namespace`` carries no enforced length cap today -- ``ledger_transaction``
+#: (:class:`~domain.buckets.BucketEventObjectType`, the object-type catalogue
+#: an outbound attachment namespaces by) is used here as a real, representative
+#: value, not a structurally-guaranteed ceiling; a longer namespace value
+#: would understate the margin again. Tracked as a separate finding, not
+#: fixed here.
 #: Kept as a literal here (not imported) because this module sits below the
 #: persistence and outbound-storage layers in the dependency graph; the
 #: two call sites that use this constant assert their real deepest-suffix
 #: shapes against it in tests.
 WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH: int = len(
-    "\\buckets\\" + ("0" * 36) + "\\blobs\\" + ("a" * 8) + "--" + ("b" * 64) + ".meta.json",
+    "\\buckets\\"
+    + ("0" * 36)
+    + "\\blobs\\"
+    + "ledger_transaction"
+    + "\\"
+    + ("a" * 8)
+    + "--"
+    + ("b" * 64)
+    + ".meta.json",
 )
 
 
