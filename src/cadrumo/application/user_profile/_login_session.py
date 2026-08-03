@@ -624,10 +624,10 @@ def _record_activation(*, profile_id: str) -> None:
     returns before this point, so a retry re-stamps no activation.
     """
     from ..workflow import workflow_state_repository
-    from ._orchestration import _append_profile_activated_event, select_profile
+    from ._orchestration import append_profile_activated_event, select_profile
 
     workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
-    _append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
+    append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
 
 
 def _mint_or_warn(

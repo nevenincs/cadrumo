@@ -13,6 +13,7 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
+from typing import cast
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -140,7 +141,7 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
     # CAST-RATIONALE-TOML-INVARIANT-DICT:
     data = _STRING_OBJECT_MAPPING.validate_python(raw_profile)
     category = SpendingCategory(str(data.get("category")))
-    raw_rule = data.get("proportionality")
+    raw_rule = cast("dict[str, object] | None", data.get("proportionality"))
     if not isinstance(raw_rule, dict):
         raise CategoryValidationError(f"profile {category.value!r} must declare [profiles.proportionality]")
     raw_iva_hint = data.get("iva_hint")
@@ -176,7 +177,9 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
             "statutory_cap_variants": tuple(
                 _parse_cap_variant(raw_variant) for raw_variant in _OBJECT_SEQUENCE.validate_python(raw_variants)
             ),
-            "citations": tuple(_parse_citation(raw_citation) for raw_citation in _OBJECT_SEQUENCE.validate_python(raw_citations)),
+            "citations": tuple(
+                _parse_citation(raw_citation) for raw_citation in _OBJECT_SEQUENCE.validate_python(raw_citations)
+            ),
             "notes": tr(str(data.get("notes"))),
         },
     )

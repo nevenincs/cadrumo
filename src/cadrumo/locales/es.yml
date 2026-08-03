@@ -3597,6 +3597,8 @@ cli:
         session_not_persisted: No hay un almacén de claves del sistema utilizable,
           así que la sesión no se puede guardar; este inicio de sesión solo vale para
           el comando actual.
+      refusal:
+        abandoned: Se ha cancelado el inicio de sesión; no se ha abierto ningún perfil.
     logout:
       help: Cierra la sesión del perfil y borra su puntero local
       notices:
@@ -4201,8 +4203,6 @@ cli:
         legible(s)'
       state_backend_readable: El almacén de estado del flujo de trabajo es accesible.
       state_backend_unreadable: El almacén de estado del flujo de trabajo no es accesible.
-      venv_in_sync: El entorno virtual está sincronizado.
-      venv_stale: El entorno virtual está desactualizado.
     telemetry:
       app_help: Inspecciona y controla el nivel de telemetría remota, desactivado
         por defecto y opcional.
@@ -6775,6 +6775,19 @@ flows:
       de flujo.
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
       el flujo desde un terminal real o guíalo con un archivo de respuestas.
+  login:
+    cancel_button: Cancelar
+    intro: Elige el perfil que quieres abrir y escribe la contraseña que lo protege.
+      No se desbloquea nada hasta que la contraseña se acepte.
+    password_hint: La contraseña que elegiste al crear este perfil. No se puede restablecer.
+    password_label: Contraseña
+    profile_label: Perfil
+    refusal:
+      password_required: Escribe la contraseña de este perfil.
+      unlock_failed: No se ha podido abrir el perfil.
+    section: Perfil y contraseña
+    title: Inicia sesión en tu perfil
+    unlock_button: Iniciar sesión
   manager:
     action:
       abandoned: Sin cambios.

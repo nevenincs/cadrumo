@@ -38,7 +38,7 @@ from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.user_profile import UserProfileFact
-from ._orchestration import _require_active, build_lifecycle_service, set_active_fields
+from ._orchestration import build_lifecycle_service, require_active, set_active_fields
 
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileRecord
@@ -203,7 +203,7 @@ def apply_cotejo(
     it through the workflow repository like every other fact mutation.
     """
     record = state.active_profile_record()
-    profile_id = _require_active(state)
+    profile_id = require_active(state)
     fresh = divergence_facts(divergences)
     fresh_paths = {fact.path for fact in fresh}
     clearing = tuple(

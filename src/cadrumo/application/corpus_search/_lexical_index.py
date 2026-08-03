@@ -31,7 +31,7 @@ import re
 import sqlite3
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Protocol
 
 from pydantic import TypeAdapter
 
@@ -186,14 +186,9 @@ class _SpanishStemmer(Protocol):
     def stemWords(self, words: list[str]) -> list[str]: ...  # noqa: N802 - matches the real C-extension method name
 
 
-@runtime_checkable
-class _SnowballStemmerModule(Protocol):
-    def stemmer(self, language: str) -> _SpanishStemmer: ...
-
-
 def _spanish_stemmer() -> _SpanishStemmer:
     module = importlib.import_module("snowballstemmer")
-    if not isinstance(module, _SnowballStemmerModule):
+    if not hasattr(module, "stemmer"):
         raise RuntimeError("snowballstemmer module does not expose the typed stemmer factory")
     return module.stemmer("spanish")
 

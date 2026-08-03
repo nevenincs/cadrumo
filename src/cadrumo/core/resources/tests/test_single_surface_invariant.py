@@ -124,14 +124,19 @@ _FILE_WALK_RE = re.compile(
     r"Path\(__file__\)\.resolve\(\)((?:\.parent)+)|Path\(__file__\)\.resolve\(\)\.parents\[(\d+)\]",
 )
 
-_SANCTIONED_CHECKOUT_ROOT_OWNERS = frozenset(
-    {
-        # The ONE module allowed to know a source checkout exists. It gates that
-        # knowledge behind ``RunMode.CHECKOUT`` and owns the installed-vs-checkout
-        # decision for the whole application.
-        "src/cadrumo/core/_config_state_root.py",
-    },
-)
+_SANCTIONED_CHECKOUT_ROOT_OWNERS: frozenset[str] = frozenset()
+"""Deliberately empty: NO production module may reconstruct a repository root.
+
+This once exempted ``core/_config_state_root.py``, which classified the run as
+a checkout or an installed distribution by probing for ``pyproject.toml`` and
+``.git`` and anchored the taxpayer's encrypted store accordingly. That is gone:
+the storage root is unconditionally the platform user-data directory, and a
+developer redirects it with ``CADRUMO_LOCAL_STORAGE_ROOT`` like any other
+operator override. A tax-filing product does not inspect the filesystem to work
+out how it was installed, so there is no module left with a reason to be here.
+Adding an entry back means a production module has started asking about
+repositories again — treat that as the finding, not as a configuration step.
+"""
 
 
 def test_no_production_module_walks_out_of_the_package() -> None:

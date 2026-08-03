@@ -952,6 +952,13 @@ def _require_active(state: WorkflowState) -> str:
     return bucket_id
 
 
+# Public application seam for sibling services that require the active bucket.
+# Keep the implementation name private so the orchestration internals can
+# evolve without widening the facade, while cross-module callers use the
+# typed alias below.
+require_active = _require_active
+
+
 def rename_profile(
     *,
     profile_id: str,
@@ -997,8 +1004,13 @@ def rename_profile(
     return aggregate.record
 
 
+# Public application seam for authentication's activation event composition.
+append_profile_activated_event = _append_profile_activated_event
+
+
 __all__ = [
     "ProfileLogoutOverrideError",
+    "append_profile_activated_event",
     "build_lifecycle_service",
     "complete_setup_with_lifecycle_span",
     "delete_profile_with_lifecycle_span",
@@ -1011,6 +1023,7 @@ __all__ = [
     "register_active_profile",
     "remove_active_profile",
     "rename_profile",
+    "require_active",
     "select_profile",
     "select_profile_with_lifecycle_span",
     "set_active_field",

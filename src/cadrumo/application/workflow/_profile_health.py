@@ -95,6 +95,11 @@ class ActiveProfileHealth(BaseModel):
         """
         return self._active_profile_label
 
+    def with_active_profile_label(self, label: str | None) -> ActiveProfileHealth:
+        """Attach the manifest label captured during this health assessment."""
+        self._active_profile_label = label
+        return self
+
 
 class ActiveProfileRepairResult(BaseModel):
     """Result of a safe active-profile pointer repair probe/action."""
@@ -125,8 +130,7 @@ def _with_active_profile_label(health: ActiveProfileHealth, label: str | None) -
     ``PrivateAttr`` preserves this transient witness through ``model_copy``
     while excluding it from ``model_dump`` and therefore from repair JSON.
     """
-    health._active_profile_label = label
-    return health
+    return health.with_active_profile_label(label)
 
 
 def _no_active_profile_next_action() -> str:

@@ -452,7 +452,7 @@ class ModeloRecordCatalogue(BaseModel):
         return self.records.values()
 
     @override
-    def __iter__(self) -> Iterator[ModeloRecord]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[ModeloRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields ModeloRecord records, not BaseModel field-value tuples
         """Iterate over :class:`ModeloRecord` values (not ``(key, value)`` pairs)."""
         return iter(self.records.values())
 

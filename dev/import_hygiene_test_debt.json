@@ -40,6 +40,15 @@
         "reason": "White-box test reach: the registration screen is constructed with the REAL register callback so the screen is exercised against actual application behaviour (including the refusal-to-text translation) rather than a double. `attempt_registration` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface for test consumers alone would put implementation detail on the public CLI API. A Ruling-4 documented bridge was considered and rejected for the same reason -- a bridge is a canonical PUBLIC source for real consumers, and this seam has none outside these tests, so a bridge would mint production API to serve tests and would legitimise the adapter-to-entrypoint inversion rather than record it."
       },
       {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_registration_language_switch.py",
+        "lineno": 28,
+        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
+        "imported_names": [
+          "attempt_registration"
+        ],
+        "reason": "White-box test reach: the registration screen is constructed with the REAL register callback so the screen is exercised against actual application behaviour (including the refusal-to-text translation) rather than a double. `attempt_registration` is the CLI's composition of application.user_profile onto the TUI screen -- entrypoint-owned by design, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted: cadrumo.entrypoints.cli exports eight names (app, main and a few payload helpers), and adding a presenter seam to that surface for test consumers alone would put implementation detail on the public CLI API. A Ruling-4 documented bridge was considered and rejected for the same reason -- a bridge is a canonical PUBLIC source for real consumers, and this seam has none outside these tests, so a bridge would mint production API to serve tests and would legitimise the adapter-to-entrypoint inversion rather than record it."
+      },
+      {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_theme.py",
         "lineno": 206,
         "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",

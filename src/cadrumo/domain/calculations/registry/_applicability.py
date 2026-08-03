@@ -459,6 +459,15 @@ _INCOMPLETE_UNDETERMINED_REASON = (
     "hecho se declara positivamente; en otro caso no se conjetura una "
     "obligación."
 )
+
+# Public read-only facades consumed by the focused applicability module. The
+# implementation names remain underscored to mark configuration ownership;
+# consumers import these aliases rather than reaching into private symbols.
+INCOMPLETE_LEGAL_REFS = _INCOMPLETE_LEGAL_REFS
+ATTRIBUTION_PASS_THROUGH_LEGAL_REFS = _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS
+INCOMPLETE_UNDECLARED_REASON = _INCOMPLETE_UNDECLARED_REASON
+INCOMPLETE_UNRULED_REASON = _INCOMPLETE_UNRULED_REASON
+INCOMPLETE_UNDETERMINED_REASON = _INCOMPLETE_UNDETERMINED_REASON
 _IMPATRIADO_M720_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-35-2006:art-93",  # LIRPF Art. 93 — régimen especial impatriados.
     "ley-7-2012:da-1",  # Ley 7/2012 DA 1ª — obligación Modelo 720.
@@ -1441,6 +1450,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
         ),
     ),
 }
+
+MODELO_APPLICABILITY_RULES = _MODELO_APPLICABILITY_RULES
 """Seed modelo-applicability rules — core persona coverage.
 
 A modelo absent from this table has no derived rule yet: its

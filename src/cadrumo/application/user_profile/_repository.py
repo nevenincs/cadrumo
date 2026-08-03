@@ -182,6 +182,9 @@ def _refresh_output_language_hint(*, bucket_id: str, record: UserProfileRecord) 
         )
 
 
+refresh_output_language_hint = _refresh_output_language_hint
+
+
 def user_profile_value_object_key(profile_id: str) -> str:
     """Return the secure-object key for a profile's live aggregate.
 
@@ -760,6 +763,7 @@ __all__ = [
     "USER_PROFILE_VALUE_NAMESPACE",
     "UserProfileLifecycleRepository",
     "UserProfileSnapshotRepository",
+    "refresh_output_language_hint",
     "secure_objects_for_bucket",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",

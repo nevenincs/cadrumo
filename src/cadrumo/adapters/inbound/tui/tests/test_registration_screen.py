@@ -70,6 +70,10 @@ async def test_typing_credentials_and_pressing_create_makes_a_live_profile(tmp_p
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await _fill(pilot, username="Screen Subject", password=_TYPED_PASSWORD, confirm=_TYPED_PASSWORD)
             await pilot.click("#btn-create")
+            # Registration runs on a worker thread, so a bare pause only
+            # yields the event loop and may return before the profile
+            # exists; joining the worker is what makes this deterministic.
+            await app.workers.wait_for_complete()
             await pilot.pause()
 
         assert app.outcome is not None

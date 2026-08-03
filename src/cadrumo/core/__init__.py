@@ -91,8 +91,6 @@ from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_m
 from ._concept_lifecycle import ConceptLifecycle
 from ._config_state_root import (
     FormerProductStateError,
-    RunMode,
-    detect_run_mode,
     live_state_root_inputs,
 )
 from ._credentials import (
@@ -325,7 +323,6 @@ __all__: list[str] = [
     "RescateType",
     "ResultDisposition",
     "RevisionReviewStatus",
-    "RunMode",
     "SectorDiferenciadoLetra",
     "SecureObjectWrite",
     "ServiceCapability",
@@ -342,7 +339,6 @@ __all__: list[str] = [
     "classify_post_filing_event_kind",
     "clear_pointer",
     "derive_result_disposition",
-    "detect_run_mode",
     "exclusive_file_lock",
     "expected_floor",
     "foreign_asset_obligation_group",

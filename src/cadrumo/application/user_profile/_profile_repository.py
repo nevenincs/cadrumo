@@ -87,7 +87,7 @@ from . import (
 from ._aggregate import ProfileAggregate
 from ._integrity import ProfileIntegrityError, verify_profile_integrity
 from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
-from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
+from ._repository import UserProfileLifecycleRepository, refresh_output_language_hint
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.bucket import BucketPaths
@@ -797,7 +797,7 @@ class ProfileRepository:
                     translated_message="application.user_profile.errors.profile_tombstoned_not_selectable",
                     context={"profile": profile_id},
                 )
-            _refresh_output_language_hint(bucket_id=profile_id, record=aggregate.record)
+            refresh_output_language_hint(bucket_id=profile_id, record=aggregate.record)
             pointer_transaction.write(BucketPointer(bucket_id=profile_id, schema_version=1))
             return aggregate
 

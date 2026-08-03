@@ -14,7 +14,7 @@ from ...tests.secure_sql import dev_test_database_password
 
 
 @pytest.fixture(autouse=True)
-def _file_backed_review_storage(tmp_path: Path) -> Iterator[None]:
+def file_backed_review_storage(tmp_path: Path) -> Iterator[None]:
     with override_settings(
         cadrumo_local_storage_root=tmp_path,
         cadrumo_active_profile=None,

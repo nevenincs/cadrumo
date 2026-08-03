@@ -253,7 +253,7 @@ class VerificationReportCatalogue(BaseModel):
         return self.reports.values()
 
     @override
-    def __iter__(self) -> Iterator[VerificationReport]:  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional pydantic catalogue iteration adapter — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[VerificationReport]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]  # reason: intentional Pydantic catalogue iteration adapter; the established public API yields VerificationReport records, not BaseModel field-value tuples
         """Iterate over :class:`VerificationReport` values (not ``(key, value)`` pairs)."""
         return iter(self.reports.values())
 

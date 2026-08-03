@@ -3571,6 +3571,8 @@ cli:
         session_not_persisted: No hi ha cap magatzem de claus del sistema utilitzable,
           així que la sessió no es pot desar; aquest inici de sessió només val per
           a l'ordre actual.
+      refusal:
+        abandoned: S'ha cancel·lat l'inici de sessió; no s'ha obert cap perfil.
     logout:
       help: Tanca la sessió del perfil i esborra el seu punter local
       notices:
@@ -4169,8 +4171,6 @@ cli:
       state_backend_readable: L'emmagatzematge d'estat del flux de treball és llegible.
       state_backend_unreadable: L'emmagatzematge d'estat del flux de treball no és
         llegible.
-      venv_in_sync: L'entorn virtual està sincronitzat.
-      venv_stale: L'entorn virtual està desactualitzat.
     telemetry:
       app_help: Inspecciona i controla el nivell de telemetria remota, desactivat
         per defecte i opcional.
@@ -6735,6 +6735,20 @@ flows:
       de flux.
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
       el flux des d'un terminal real o guia'l amb un fitxer de respostes.
+  login:
+    cancel_button: Cancel·la
+    intro: Tria el perfil que vols obrir i escriu la contrasenya que el protegeix.
+      No es desbloqueja res fins que la contrasenya s'accepti.
+    password_hint: La contrasenya que vas triar en crear aquest perfil. No es pot
+      restablir.
+    password_label: Contrasenya
+    profile_label: Perfil
+    refusal:
+      password_required: Escriu la contrasenya d'aquest perfil.
+      unlock_failed: No s'ha pogut obrir el perfil.
+    section: Perfil i contrasenya
+    title: Inicia la sessió al teu perfil
+    unlock_button: Inicia la sessió
   manager:
     action:
       abandoned: Sense canvis.

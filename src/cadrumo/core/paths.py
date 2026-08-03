@@ -1,8 +1,8 @@
 """Shared path normalization and containment helpers.
 
 Centralises the small set of :class:`~pathlib.Path` primitives that every other
-``aeat`` module needs: resolving repo-relative paths against a RunMode-aware
-anchor via :func:`resolve_project_path`, normalising user-provided settings
+Cadrumo module needs: resolving relative operator paths against the
+application-data anchor via :func:`resolve_project_path`, normalising settings
 with :func:`normalize_project_relative_path`, and safely resolving
 caller-provided sub-paths under a fixed root without allowing path-traversal
 escapes.
@@ -32,9 +32,7 @@ import sys
 from pathlib import Path, PurePosixPath
 
 from ._config_state_root import (
-    RunMode,
     StateRootInputs,
-    detect_run_mode,
     live_state_root_inputs,
     platform_user_data_root,
 )
@@ -42,33 +40,35 @@ from .errors import CoreValidationError
 
 
 def _relative_path_anchor(state_root_inputs: StateRootInputs | None = None) -> Path:
-    """Return the RunMode-aware base for resolving a relative operator path.
+    """Return the base a relative operator path resolves against.
 
-    Sourced entirely from the application-data-root authority in
-    :mod:`cadrumo.core._config_state_root` — never from the local
-    repo-root walk. A source checkout anchors at
-    ``inputs.project_root_candidate`` (the checkout-root candidate the
-    state-root authority already computes). An installed distribution
-    anchors under the platform user-data directory
-    (:func:`cadrumo.core._config_state_root.platform_user_data_root`)
-    instead, so a relative override of a ``var/``-style operator setting
-    (storage root, cache dir, log dir, financial catalogue dir, ...) can
-    never resolve inside a virtualenv or an ephemeral package cache — the
-    same hazard :func:`cadrumo.core._config_state_root.resolve_state_root`
-    already closes for the ``cadrumo_local_storage_root`` default.
+    Always the platform user-data directory
+    (:func:`cadrumo.core._config_state_root.platform_user_data_root`), the
+    same root :func:`~cadrumo.core._config_state_root.resolve_state_root`
+    hands the storage default. A relative override of a ``var/``-style
+    operator setting (storage root, cache dir, log dir, financial catalogue
+    dir, ...) therefore lands beside the state it belongs with, and can
+    never resolve inside a virtualenv or an ephemeral package cache.
+
+    There is no source-checkout arm. An earlier revision branched here on
+    whether the process was running from a repository, which made a
+    source-layout guess decide where operator data was written; a
+    tax-filing product does not classify its own installation. A developer
+    who wants a checkout-local location sets the corresponding setting
+    explicitly, and an explicit override wins over this anchor.
 
     Args:
-        state_root_inputs: Injectable :class:`~cadrumo.core._config_state_root.StateRootInputs`
-            seam. ``None`` (the live default) captures the running process's
-            inputs via :func:`~cadrumo.core._config_state_root.live_state_root_inputs`
-            — the same seam :func:`~cadrumo.core._config_state_root.default_storage_root`
+        state_root_inputs: Injectable
+            :class:`~cadrumo.core._config_state_root.StateRootInputs` seam.
+            ``None`` (the live default) captures the running process's
+            inputs via
+            :func:`~cadrumo.core._config_state_root.live_state_root_inputs`
+            — the same seam
+            :func:`~cadrumo.core._config_state_root.default_storage_root`
             reads, so a relative override and the unset default resolve
-            consistently. Tests inject a deterministic ``installed`` or
-            ``checkout`` context without mutating the ambient process.
+            consistently.
     """
     inputs = state_root_inputs if state_root_inputs is not None else live_state_root_inputs()
-    if detect_run_mode(inputs) is RunMode.CHECKOUT:
-        return inputs.project_root_candidate
     return platform_user_data_root(inputs)
 
 
@@ -194,7 +194,7 @@ def windows_storage_root_long_path_margin(root: Path) -> int:
 
 
 def resolve_project_path(value: str | Path, *, state_root_inputs: StateRootInputs | None = None) -> Path:
-    """Resolve a relative path against the RunMode-aware anchor.
+    """Resolve a relative path against the application-data anchor.
 
     Absolute paths are returned as absolute resolved paths. Relative paths
     are interpreted against :func:`_relative_path_anchor` — never the
@@ -211,7 +211,7 @@ def resolve_project_path(value: str | Path, *, state_root_inputs: StateRootInput
         state_root_inputs: Optional injectable
             :class:`~cadrumo.core._config_state_root.StateRootInputs` seam
             forwarded to :func:`_relative_path_anchor`. ``None`` (the
-            default) resolves the live process's RunMode.
+            default) captures the live process's inputs.
 
     Returns:
         The fully resolved absolute :class:`pathlib.Path`.
@@ -227,7 +227,7 @@ def normalize_project_relative_path(
     *,
     state_root_inputs: StateRootInputs | None = None,
 ) -> Path | None:
-    """Normalise an optional path setting to an absolute, RunMode-anchored path.
+    """Normalise an optional path setting to an absolute, data-root-anchored path.
 
     Used by settings validators for optional path fields. It preserves
     ``None`` and delegates path semantics to :func:`resolve_project_path`;
@@ -238,7 +238,7 @@ def normalize_project_relative_path(
         state_root_inputs: Optional injectable
             :class:`~cadrumo.core._config_state_root.StateRootInputs` seam
             forwarded to :func:`resolve_project_path`. ``None`` (the
-            default) resolves the live process's RunMode.
+            default) captures the live process's inputs.
 
     Returns:
         ``None`` when ``value`` is ``None``; otherwise the resolved

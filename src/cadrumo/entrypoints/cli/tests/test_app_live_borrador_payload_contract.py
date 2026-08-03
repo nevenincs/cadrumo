@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from ....tests.aeat_literal_fixtures import BORRADOR_PAYLOAD_WWW2_ORIGIN_FIXTURE
 from .._app_live_payloads import (
     Borrador100LatestResult,
     Borrador100ListResult,
@@ -24,7 +25,7 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
         "filing_year": 2024,
         "period": "2024 0A",
         "captured_at": "2025-03-15T10:00:00+00:00",
-        "source_url": "https://www2.agenciatributaria.gob.es/",
+        "source_url": BORRADOR_PAYLOAD_WWW2_ORIGIN_FIXTURE,
         "binding_count": 1,
         "state": "active",
     }

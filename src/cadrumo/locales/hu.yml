@@ -3519,6 +3519,8 @@ cli:
           a bejelentkezés előtt.
         session_not_persisted: Nincs használható rendszerkulcstár, ezért a munkamenet
           nem menthető; ez a bejelentkezés csak a jelenlegi parancsra érvényes.
+      refusal:
+        abandoned: A bejelentkezés megszakadt; egyetlen profil sem nyílt meg.
     logout:
       help: A profil munkamenetének lezárása és helyi mutatójának törlése
       notices:
@@ -4110,8 +4112,6 @@ cli:
         sor.'
       state_backend_readable: Az állapot-tár olvasható.
       state_backend_unreadable: Az állapot-tár nem olvasható.
-      venv_in_sync: A virtuális környezet szinkronban van.
-      venv_stale: A virtuális környezet elavult.
     telemetry:
       app_help: Az alapértelmezetten kikapcsolt, opcionális távoli telemetria szint
         ellenőrzése és vezérlése.
@@ -6617,6 +6617,20 @@ flows:
     unexpected_app_type: Az interaktív képernyő nem kapcsolódik folyamat-alkalmazáshoz.
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
       Indítsd a folyamatot valódi terminálból, vagy vezéreld szkriptelt válaszfájllal.
+  login:
+    cancel_button: Mégse
+    intro: Válaszd ki a megnyitni kívánt profilt, és írd be a hozzá tartozó jelszót.
+      Semmi sem nyílik meg, amíg a jelszót el nem fogadja a program.
+    password_hint: Az a jelszó, amelyet a profil létrehozásakor választottál. Nem
+      állítható vissza.
+    password_label: Jelszó
+    profile_label: Profil
+    refusal:
+      password_required: Írd be az ehhez a profilhoz tartozó jelszót.
+      unlock_failed: A profilt nem sikerült megnyitni.
+    section: Profil és jelszó
+    title: Jelentkezz be a profilodba
+    unlock_button: Bejelentkezés
   manager:
     action:
       abandoned: Nem történt változás.

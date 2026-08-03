@@ -1,6 +1,18 @@
 # ── Platform ─────────────────────────────────────────────────────────────────
 set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
 
+# ── Dev-loop storage root ────────────────────────────────────────────────────
+# Keep a developer's state inside the checkout instead of the platform
+# user-data directory. This is DEV CONFIGURATION, not product behaviour: the
+# application always defaults to the platform directory and never inspects the
+# filesystem for a `pyproject.toml` or `.git` marker to decide otherwise. A
+# tax-filing product does not classify its own installation, so the dev loop
+# opts in through the ordinary override channel like any operator would.
+export CADRUMO_LOCAL_STORAGE_ROOT := env_var_or_default(
+    "CADRUMO_LOCAL_STORAGE_ROOT",
+    justfile_directory() / "var" / "storage",
+)
+
 # List available recipes.
 default:
     @just --list

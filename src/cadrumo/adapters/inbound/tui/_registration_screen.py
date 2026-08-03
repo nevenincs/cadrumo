@@ -27,26 +27,32 @@ See Also:
         provisions the key material, and leaves the session unlocked.
     :func:`~cadrumo.application.user_profile.assess_passphrase`
         The advisory banding behind the live strength line.
+    :class:`~cadrumo.adapters.inbound.tui.LoginApp`
+        The other credential surface; the two share their attempt
+        lifecycle and panel layout through ``CredentialApp``.
 """
 
 from __future__ import annotations
 
 from contextlib import ExitStack
 from contextvars import copy_context
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar, Final, Protocol, override
+from typing import TYPE_CHECKING, Final, Protocol, override
 
-from textual.app import App, ComposeResult
-from textual.binding import Binding
+from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Button, Footer, Input, Label, LoadingIndicator, Select, Static
-from textual.worker import Worker, WorkerState
 
 from ....core import PassphraseStrength
 from ....core.config import override_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
-from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
+from ._credential_screen import (
+    CREDENTIAL_PANEL_CSS,
+    CredentialApp,
+    CredentialAttempt,
+    run_credential_app,
+)
+from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -79,18 +85,12 @@ class PassphraseVerdict(Protocol):
         ...  # pragma: no cover
 
 
-@dataclass(frozen=True, slots=True)
-class RegistrationAttempt:
+class RegistrationAttempt(CredentialAttempt["ProfileRegistrationOutcome"]):
     """The outcome of asking the application to create a profile.
 
-    A refusal arrives as text the screen displays, not as an exception it
-    has to recognise. That keeps refusal *classification* with the layer
-    that owns the rules, and leaves this screen doing what a screen does:
-    show the operator what happened.
+    Named rather than used as the bare generic so the seam that builds it
+    and the screen that reads it agree on more than a shape.
     """
-
-    outcome: ProfileRegistrationOutcome | None = None
-    refusal: str | None = None
 
 
 def strength_copy(strength: PassphraseStrength, *, minimum_length: int) -> str:
@@ -136,11 +136,12 @@ def _language_options() -> list[tuple[str, str]]:
     ]
 
 
-class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
+class RegistrationApp(CredentialApp["ProfileRegistrationOutcome"]):
     """Full-screen credential entry that creates and unlocks one profile."""
 
     CSS = (
         BASE_CSS
+        + CREDENTIAL_PANEL_CSS
         + """
     #registration-intro { margin: 0 0 1 0; }
     #registration-why {
@@ -149,24 +150,17 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         padding: 0 0 0 2;
         margin: 0 0 1 0;
     }
-    .field-label { text-style: bold; margin: 1 0 0 0; }
-    .field-hint { color: $text-muted; margin: 0 0 1 0; }
     #strength-line { margin: 0 0 1 0; }
     .strength-refused { color: $error; }
     .strength-weak { color: $warning; }
     .strength-fair { color: $accent; }
     .strength-strong { color: $success; }
-    #registration-refusal { color: $error; margin: 0 0 1 0; }
-    #registration-busy { display: none; height: 1; margin: 0 0 1 0; }
-    #registration-busy.busy { display: block; }
-    #registration-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
     """
     )
 
-    BINDINGS: ClassVar = [
-        Binding("f3", "toggle_appearance", "", show=False),
-        Binding("escape", "abandon", "", show=False),
-    ]
+    REFUSAL_ID = "#registration-refusal"
+    BUSY_ID = "#registration-busy"
+    ATTEMPT_NAME = "profile-registration"
 
     def __init__(
         self,
@@ -192,14 +186,6 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
 
         A prefill, never a commitment: this screen is where the decision is
         made, so the operator can still change it before creating."""
-        self.outcome: ProfileRegistrationOutcome | None = None
-        """The created profile, or ``None`` when the operator abandoned the
-        screen. The caller distinguishes the two by this, never by an
-        exception, because abandoning registration is an ordinary choice."""
-        self.error: BaseException | None = None
-        """Unexpected registration failure, re-raised by the synchronous runner."""
-        self._registration_worker: Worker[RegistrationAttempt] | None = None
-        """The one in-flight profile mutation; duplicate submissions are refused."""
         self._active_language = output_language()
         """The language the screen is currently written in.
 
@@ -254,9 +240,9 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
                 id="field-output-language",
             )
 
-            yield Static(id="registration-refusal")
-            yield LoadingIndicator(id="registration-busy")
-            with Vertical(id="registration-actions"):
+            yield Static(id="registration-refusal", classes="credential-refusal")
+            yield LoadingIndicator(id="registration-busy", classes="credential-busy")
+            with Vertical(id="registration-actions", classes="credential-actions"):
                 yield Button(tr("flows.registration.create_button"), id="btn-create", classes="-primary")
         yield Footer()
 
@@ -402,7 +388,7 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         re-derived, so the screen never becomes a second authority on what
         a valid registration is.
         """
-        if self._registration_worker is not None:
+        if self.attempt_in_flight:
             return
 
         username = self.query_one("#field-username", Input).value.strip()
@@ -410,21 +396,20 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         confirm = self.query_one("#field-confirm", Input).value
 
         if not username:
-            self._refuse(tr("flows.registration.refusal.username_required"))
+            self.refuse(tr("flows.registration.refusal.username_required"))
             self.query_one("#field-username", Input).focus()
             return
         assessment = self._assess_passphrase(password)
         if not assessment.acceptable:
-            self._refuse(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
+            self.refuse(strength_copy(assessment.strength, minimum_length=assessment.minimum_length))
             self.query_one("#field-password", Input).focus()
             return
         if password != confirm:
-            self._refuse(tr("flows.registration.refusal.confirmation_mismatch"))
+            self.refuse(tr("flows.registration.refusal.confirmation_mismatch"))
             self.query_one("#field-confirm", Input).focus()
             return
 
         selected_language = self.selected_output_language()
-        self._set_busy(True)
         registration_context = copy_context()
         password_buffer = bytearray(password, UTF_8_ENCODING)
 
@@ -439,38 +424,14 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
             finally:
                 password_buffer[:] = b"\x00" * len(password_buffer)
 
-        self._registration_worker = self.run_worker(
-            _register,
-            name="profile-registration",
-            group="profile-registration",
-            exit_on_error=False,
-            exclusive=True,
-            thread=True,
-        )
+        self.start_attempt(_register)
 
-    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
-        """Finish the one registration attempt back on Textual's UI task."""
-        worker = self._registration_worker
-        if worker is None or event.worker is not worker or event.state not in {WorkerState.SUCCESS, WorkerState.ERROR}:
-            return
-        self._registration_worker = None
-        if event.state is WorkerState.ERROR:
-            self.error = worker.error or RuntimeError("profile registration worker failed")
-            self._leave(None)
-            return
-        attempt = worker.result
-        if attempt is None:
-            self.error = RuntimeError("profile registration worker returned no result")
-            self._leave(None)
-            return
-        if attempt.outcome is None:
-            self._set_busy(False)
-            self._refuse(attempt.refusal or tr("flows.registration.refusal.username_required"))
-            return
-        self.outcome = attempt.outcome
-        self._leave(self.outcome)
+    @override
+    def default_refusal(self) -> str:
+        return tr("flows.registration.refusal.username_required")
 
-    def _leave(self, outcome: ProfileRegistrationOutcome | None) -> None:
+    @override
+    def leave(self, outcome: ProfileRegistrationOutcome | None) -> None:
         """Close the screen, releasing the language it was rendering under.
 
         Released here rather than at teardown because the override is
@@ -480,31 +441,16 @@ class RegistrationApp(App["ProfileRegistrationOutcome | None"]):
         survive the screen.
         """
         self._language_overrides.close()
-        self.exit(outcome)
+        super().leave(outcome)
 
-    def _set_busy(self, busy: bool) -> None:
+    @override
+    def set_busy(self, *, busy: bool) -> None:
         """Render registration progress and freeze inputs while storage mutates."""
-        self.query_one("#registration-refusal", Static).update("")
-        self.query_one("#registration-busy", LoadingIndicator).set_class(busy, "busy")
+        super().set_busy(busy=busy)
         for field_id in ("field-username", "field-password", "field-confirm"):
             self.query_one(f"#{field_id}", Input).disabled = busy
         self.query_one("#field-output-language", Select).disabled = busy
         self.query_one("#btn-create", Button).disabled = busy
-
-    def action_abandon(self) -> None:
-        """Leave without creating anything; the caller sees ``None``."""
-        if self._registration_worker is not None:
-            # A thread-backed mutation cannot be cancelled safely: cancellation
-            # would only detach its result while encrypted storage may still land.
-            return
-        self.outcome = None
-        self._leave(None)
-
-    def action_toggle_appearance(self) -> None:
-        toggle_appearance(self)
-
-    def _refuse(self, message: str) -> None:
-        self.query_one("#registration-refusal", Static).update(message)
 
 
 def run_registration_tui(
@@ -519,11 +465,9 @@ def run_registration_tui(
     not an error, so the caller decides what to do rather than catching an
     exception to find out.
     """
-    app = RegistrationApp(assess=assess, register=register, suggested_name=suggested_name)
-    app.run()
-    if app.error is not None:
-        raise app.error
-    return app.outcome
+    return run_credential_app(
+        RegistrationApp(assess=assess, register=register, suggested_name=suggested_name),
+    )
 
 
 __all__ = ["PassphraseVerdict", "RegistrationApp", "RegistrationAttempt", "run_registration_tui"]

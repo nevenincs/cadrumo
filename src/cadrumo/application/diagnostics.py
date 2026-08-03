@@ -52,13 +52,7 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import AnyHttpUrl, BaseModel, TypeAdapter, model_validator
 
 from .. import __version__
-from ..core import (
-    STRICT_FROZEN_CONFIG,
-    Modelo,
-    RunMode,
-    detect_run_mode,
-    live_state_root_inputs,
-)
+from ..core import STRICT_FROZEN_CONFIG, Modelo
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
 from ..core.errors import SiteHealthError
@@ -462,10 +456,6 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             provider_context.__exit__(None, None, None)  # type: ignore[attr-defined]
 
     checks.append(_registry_cross_domain_integrity_check(root))
-
-    stale_sync = _windows_stale_sync_check()
-    if stale_sync is not None:
-        checks.append(stale_sync)
 
     return ConfigRepairReport(
         overall=_overall_status(tuple(checks)),
@@ -1050,45 +1040,6 @@ def _compact_exception(exc: BaseException) -> str:
         exc = root
     message = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
     return f"{type(exc).__name__}: {message}"
-
-
-def _windows_stale_sync_check() -> DiagnosticCheck | None:
-    """Report when the Windows venv is older than ``pyproject.toml``.
-
-    Plain ``uv run aeat`` re-syncs the venv on each invocation, which
-    races the OS handle on ``Scripts/aeat.exe`` and intermittently raises
-    ``os error 32``. The canonical workaround is to invoke the CLI via
-    ``uv run --no-sync aeat`` (or the ``tools/aeat.cmd`` launcher).
-    That workaround skips sync, so a stale venv must be detected
-    explicitly. This row fires when the host is Windows and
-    ``pyproject.toml`` is newer than the venv marker.
-    """
-    if sys.platform != "win32":
-        return None
-    # Checkout-only by construction: a stale-venv warning is meaningless for an
-    # installed distribution, which has neither a `pyproject.toml` nor a
-    # `.venv`. Gating on RunMode makes that explicit instead of silently
-    # probing a repo-shaped path that never exists off a checkout.
-    inputs = live_state_root_inputs()
-    if detect_run_mode(inputs) is not RunMode.CHECKOUT:
-        return None
-    checkout_root = inputs.project_root_candidate
-    pyproject = checkout_root / "pyproject.toml"
-    venv_marker = checkout_root / ".venv" / "pyvenv.cfg"
-    if not pyproject.is_file() or not venv_marker.is_file():
-        return None
-    if pyproject.stat().st_mtime <= venv_marker.stat().st_mtime:
-        return DiagnosticCheck(
-            name="runtime.dependency_sync",
-            status="ok",
-            summary=tr("cli.diagnostics.summary.venv_in_sync"),
-        )
-    return DiagnosticCheck(
-        name="runtime.dependency_sync",
-        status="warn",
-        summary=tr("cli.diagnostics.summary.venv_stale"),
-        next_action="uv sync",
-    )
 
 
 def _overall_status(checks: tuple[DiagnosticCheck, ...]) -> DiagnosticStatus:

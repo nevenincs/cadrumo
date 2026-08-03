@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import os
 import threading
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -114,7 +114,7 @@ def _canonical_root(root: Path | None) -> Path:
 @contextmanager
 def active_profile_pointer_transaction(
     root: Path | None = None,
-) -> Iterator[ActiveProfilePointerTransaction]:
+) -> Generator[ActiveProfilePointerTransaction]:
     """Acquire or re-enter the active-profile pointer transaction.
 
     Re-entry is valid only for the same canonical root, process, and thread.

@@ -53,6 +53,26 @@ The footer names the key with the same words its row does, so this is the
 one key both surfaces resolve.
 """
 
+_FOOTER_DRAIN_LIMIT = 20
+"""How many barriers the footer gets to settle within before the test gives up.
+
+A cap, not a wait: exhausting it fails and names what the footer last
+showed, because a footer that cannot reach a settled state is a finding
+about the page rather than a slow machine.
+"""
+
+_MINIMUM_FOOTER_DRAINS = 2
+"""Barriers that must pass before an unchanged footer counts as settled.
+
+A barrier covers the widgets that exist when it is posted, so the first
+one can be queued ahead of a rebuild the render had only just scheduled,
+and the reads either side of it would agree while that rebuild was still
+pending. A second barrier is necessarily queued behind the rebuild, and a
+widget processes its messages in order, so it cannot overtake it. The
+bound comes from the queue's ordering, not from a frame count chosen by
+eye.
+"""
+
 _COLUMN_KEYS = (
     "flows.manager.column.state",
     "flows.manager.column.field",
@@ -80,17 +100,14 @@ def _manager() -> ProfileManagerApp:
     )
 
 
-def _footer_description(app: ProfileManagerApp, key: str) -> str | None:
-    """What the footer says one key does, or ``None`` when it names no such key.
+def _footer_entries(app: ProfileManagerApp) -> dict[str, str]:
+    """Every key the footer names, with the words it names it by.
 
     Read off the rendered footer rather than the binding table, because a
     binding can be declared shown and still be dropped from the footer —
     which is how the key came to be invisible in the first place.
     """
-    for entry in app.query(FooterKey):
-        if entry.key == key:
-            return entry.description
-    return None
+    return {entry.key: entry.description for entry in app.query(FooterKey)}
 
 
 def _column_headings(app: ProfileManagerApp) -> list[str]:
@@ -98,27 +115,38 @@ def _column_headings(app: ProfileManagerApp) -> list[str]:
     return [str(column.label) for table in app.query(DataTable) for column in table.columns.values()]
 
 
-async def _settled_footer_description(app: ProfileManagerApp, pilot, key: str, *, until: str) -> str | None:
-    """Wait for the footer to word one key as ``until``, then report what it says.
+async def _drained_footer(app: ProfileManagerApp, pilot) -> dict[str, str]:
+    """Drain the page's pending messages until the footer settles, then report it.
 
-    The footer does not compose with the page. It listens for the bindings
-    to change and schedules its own rebuild for after the next refresh, so
-    its entry appears a frame or more after the render that described it —
-    and how many frames is a scheduling detail no test should depend on.
-    Reading it after a fixed pause is a bet on that timing, and one that
-    has already been lost once here.
+    ``pilot.pause()`` is a barrier, not a sleep: it posts a callback to the
+    application and to every widget in the screen tree, and returns once all
+    of them have been processed. What it cannot cover is a widget that did
+    not exist when it was posted — and the footer answers a bindings change
+    by rebuilding its children, so the entries read here are mounted *by*
+    the work the barrier is waiting on.
 
-    Waiting for the expected wording rather than counting pauses removes
-    the bet without weakening the assertion, because what comes back is
-    whatever the footer actually says when the wait ends: a footer that
-    never names the key returns ``None``, and one that never re-words
-    returns the words it is stuck on. Both fail against the real content.
+    Hence a fixed point rather than a count of frames or a wait for an
+    expected wording. Draining until two consecutive reads agree waits on
+    the page reaching quiescence, which is a property of its message queue
+    rather than of the machine's speed, and it never waits for a particular
+    string — so the wait cannot decide the answer. Whatever the footer
+    settled on is what comes back, a footer that never named the key
+    included.
     """
-    for _ in range(40):
+    previous: dict[str, str] | None = None
+    for drained in range(1, _FOOTER_DRAIN_LIMIT + 1):
         await pilot.pause()
-        if _footer_description(app, key) == until:
-            break
-    return _footer_description(app, key)
+        current = _footer_entries(app)
+        # An empty footer has not composed at all, which is not a settled
+        # state for a page that mounts one.
+        if current and current == previous and drained >= _MINIMUM_FOOTER_DRAINS:
+            return current
+        previous = current
+    message = (
+        f"the footer never settled: still changing after {_FOOTER_DRAIN_LIMIT} "
+        f"drained message queues, last showing {previous}"
+    )
+    raise AssertionError(message)
 
 
 async def _settle(pilot, app: ProfileManagerApp) -> None:
@@ -151,10 +179,9 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
-            named = tr(_LANGUAGE_LABEL_KEY, locale=_STARTING_LANGUAGE)
-            offered = await _settled_footer_description(app, pilot, _LANGUAGE_KEY, until=named)
-            assert offered == named, (
-                f"the footer must name the language chooser in the page's own language, but said {offered!r}"
+            settled = await _drained_footer(app, pilot)
+            assert settled.get(_LANGUAGE_KEY) == tr(_LANGUAGE_LABEL_KEY, locale=_STARTING_LANGUAGE), (
+                f"the footer must name the language chooser in the page's own language, but showed {settled}"
             )
 
             await pilot.press(_LANGUAGE_KEY)
@@ -213,9 +240,10 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             assert set(headings) == set(expected), (
                 f"the column headings must be rewritten in {_TARGET_LANGUAGE}, but read {sorted(set(headings))}"
             )
-            renamed = tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE)
-            offered = await _settled_footer_description(app, pilot, _LANGUAGE_KEY, until=renamed)
-            assert offered == renamed, f"the footer must be rewritten too, but still said {offered!r}"
+            settled = await _drained_footer(app, pilot)
+            assert settled.get(_LANGUAGE_KEY) == tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE), (
+                f"the footer must be rewritten too, but showed {settled}"
+            )
             app.exit(None)
 
         record = ProfileRepository().load(require_active_bucket_id()).record

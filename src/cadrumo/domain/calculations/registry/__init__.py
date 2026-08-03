@@ -509,7 +509,6 @@ from ._schema_verification import (
 )
 from ._snapshot import build_snapshot
 from ._snapshot_coordinate import registry_snapshot_id, registry_snapshot_id_for
-from ._source_evidence_fingerprint import JustificanteCorpusUnavailableAdvisory
 from ._temporal import select_revision, select_revision_for_year
 from ._validate import RegistryValidator
 from ._validate_cross_revision import (
@@ -657,7 +656,6 @@ __all__ = [
     "InvoiceObservationRequirement",
     "IrnrIncomeObservationProtocol",
     "IvaLedgerObservation",
-    "JustificanteCorpusUnavailableAdvisory",
     "KeyedBracketEntry",
     "LegalParameter",
     "LegalRefId",

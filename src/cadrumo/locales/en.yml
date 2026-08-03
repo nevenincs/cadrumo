@@ -3323,6 +3323,8 @@ cli:
           this login.
         session_not_persisted: No usable OS keychain found, so the session cannot
           be saved; this login applies to the current command only.
+      refusal:
+        abandoned: Login was cancelled; no profile was opened.
     logout:
       help: Close the profile session and clear its local pointer
       notices:
@@ -3882,8 +3884,6 @@ cli:
         row(s)'
       state_backend_readable: Workflow state store is readable.
       state_backend_unreadable: Workflow state store is not readable.
-      venv_in_sync: Virtual environment is in sync.
-      venv_stale: Virtual environment is stale.
     telemetry:
       app_help: Inspect and control the default-off, opt-in remote telemetry tier.
       bad_tier: '--tier must be one of: %{accepted}; got %{value!r}.'
@@ -6295,6 +6295,20 @@ flows:
     unexpected_app_type: The interactive screen is not attached to a flow application.
     unsupported_console: This console cannot host interactive questions. Run the flow
       from a real terminal, or drive it with a scripted answer file.
+  login:
+    cancel_button: Cancel
+    intro: Choose the profile to open and type the password that protects it. Nothing
+      is unlocked until the password is accepted.
+    password_hint: The password you chose when this profile was created. It cannot
+      be reset.
+    password_label: Password
+    profile_label: Profile
+    refusal:
+      password_required: Type the password for this profile.
+      unlock_failed: The profile could not be opened.
+    section: Profile and password
+    title: Log in to your profile
+    unlock_button: Log in
   manager:
     action:
       abandoned: No changes made.
