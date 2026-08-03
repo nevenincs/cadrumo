@@ -35,7 +35,7 @@ if TYPE_CHECKING:
         StatusRecoveryView,
     )
     from ....application.workflow import WorkflowState
-    from ....domain.user_profile import UserProfileRecord
+    from ....domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
 
 
 def present_status_tui(ctx: typer.Context) -> bool:
@@ -192,7 +192,11 @@ def _build_recovery_view() -> StatusRecoveryView:
     )
 
 
-def _build_fact_rows(record: UserProfileRecord | None) -> tuple[StatusFactRow, ...]:
+def _build_fact_rows(
+    record: UserProfileRecord | None,
+    *,
+    schema: ProfileSchemaDefinition | None = None,
+) -> tuple[StatusFactRow, ...]:
     """Project the active profile record into masked/labelled fact rows.
 
     Labels resolve through the profile schema's per-field description; a
@@ -204,12 +208,41 @@ def _build_fact_rows(record: UserProfileRecord | None) -> tuple[StatusFactRow, .
     printed the Cl@ve credential inputs (``auth.dni_nie``,
     ``auth.numero_soporte``, ``auth.fecha_validez``) in clear while the
     overview masked them.
+
+    Sharing that authority is not enough on its own, because the two
+    surfaces have to reach it with the same answer to "which field is
+    this". This walk is fact-driven, so it sees the indexed paths a
+    repeated fact is stored under -- ``socios.0.nif``,
+    ``censo.divergencia.0.axis`` -- and an indexed path matches no schema
+    field, so an exact lookup raised and the row fell through to the
+    keyword net. That net is deliberately partial: it is a floor under
+    facts the schema does not know, and a declared field it does not
+    recognise by name would have been decided by its leaf's spelling
+    rather than by its declaration. Reducing the path to the field that
+    declares it closes that, and closes it in the direction the masking
+    authority already chose -- a declaration is never overridden by
+    wording, in either direction.
+
+    The LABEL keeps the raw indexed path rather than the field's
+    description, because the two questions are different: three socios
+    would otherwise render three identically-labelled rows on a surface
+    with no other column to tell them apart.
+
+    Args:
+        record: The active profile, or ``None`` for no rows at all.
+        schema: Optional schema override; the canonical schema when
+            omitted. Injected rather than patched so a caller can state
+            the declarations a confidentiality decision is read against —
+            the shipped schema classes nothing ``SECRET`` inside a
+            repeated fact today, so a guard written against it alone
+            would be vacuous.
     """
     from ....adapters.inbound.tui import StatusFactRow
     from ....application.user_profile import mask_profile_field, record_to_path_values
     from ....domain.user_profile import (
         UserProfileError,
         load_user_profile_schema,
+        section_field_key,
     )
 
     if record is None:
@@ -217,21 +250,22 @@ def _build_fact_rows(record: UserProfileRecord | None) -> tuple[StatusFactRow, .
     values = record_to_path_values(record)
     if not values:
         return ()
-    schema = load_user_profile_schema()
+    resolved_schema = schema if schema is not None else load_user_profile_schema()
 
     rows: list[StatusFactRow] = []
     for path in sorted(values):
         value = values[path]
+        declared_path = section_field_key(path)
         try:
-            field_def = schema.field(path)
+            field_def = resolved_schema.field(declared_path)
         except UserProfileError:
             label = path
             masked = mask_profile_field(path=path, label=path, sensitivity=None)
         else:
-            label = field_def.description or path
+            label = path if declared_path != path else (field_def.description or path)
             masked = mask_profile_field(
                 path=path,
-                label=label,
+                label=field_def.description or path,
                 sensitivity=field_def.sensitivity,
             )
         rows.append(StatusFactRow(label=label, value=value, masked=masked))
