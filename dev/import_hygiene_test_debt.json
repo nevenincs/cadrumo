@@ -440,6 +440,15 @@
       },
       {
         "importer_path": "src/cadrumo/core/tests/test_paths.py",
+        "occurrence": 2,
+        "target_mod": "cadrumo.adapters.outbound.storage._local",
+        "imported_names": [
+          "_SIDECAR_EXTENSION"
+        ],
+        "reason": "Second occurrence is the positive control for the guard recorded at occurrence 1: it recomputes the same suffix WITHOUT the <namespace> segment -- the shape the constant carried before the fix -- and asserts it does NOT match, proving the guard would have caught that omission. A positive control must reach the same private constants as the guard it controls, or it would prove something about a different shape."
+      },
+      {
+        "importer_path": "src/cadrumo/core/tests/test_paths.py",
         "occurrence": 1,
         "target_mod": "cadrumo.adapters.outbound.storage._object_name",
         "imported_names": [
@@ -447,6 +456,16 @@
           "sanitize_provider_object_label"
         ],
         "reason": "Anti-tautology test recomputes the Windows worst-case object-path suffix length from the real HMAC-prefix width and label-sanitizing rules shared by every storage provider, so a change to either shape is caught here rather than silently under-counting the margin."
+      },
+      {
+        "importer_path": "src/cadrumo/core/tests/test_paths.py",
+        "occurrence": 2,
+        "target_mod": "cadrumo.adapters.outbound.storage._object_name",
+        "imported_names": [
+          "_HMAC_PREFIX_LENGTH",
+          "sanitize_provider_object_label"
+        ],
+        "reason": "Second occurrence is the positive control paired with occurrence 1, recomputing the same worst-case shape from the same HMAC-prefix width and label-sanitizing rules while omitting the <namespace> segment, so the control and the guard it controls stay derived from one source of truth rather than diverging on a hardcoded width."
       },
       {
         "importer_path": "src/cadrumo/core/time/tests/test_clock.py",

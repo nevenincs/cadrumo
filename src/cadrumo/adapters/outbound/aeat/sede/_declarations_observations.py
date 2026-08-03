@@ -188,6 +188,32 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     )
 
 
+def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
+    """Return what the filed artefact said for ``casilla``, as a string.
+
+    An :class:`ObservedCasillaValue` is evidence of the ARTEFACT, so a boolean
+    field records the token AEAT actually wrote -- ``S`` / ``N`` for the XML
+    dictionary's ``LGC`` rows -- rather than ``str(True)``. ``"True"`` is a
+    Python repr that appears on no AEAT surface, and it was reaching the
+    evidence boundary for every ``LGC`` row.
+
+    Only the boolean case reads ``raw``, and that narrowness is load-bearing
+    rather than timidity. ``raw`` and ``str(value)`` agree for XML-dictionary
+    rows (measured: 75 of 77 on a real Modelo 100 artefact, the two exceptions
+    being exactly the ``LGC`` bools), but they disagree for EVERY fixed-width
+    casilla, because that format carries money zero-padded and scaled by 100:
+    Modelo 130 casilla ``01`` is ``raw='00000000000010000'`` against
+    ``str(value)='100'``. Since the registry-enrollment consumer reads these
+    back through ``Decimal(...)``, recording ``raw`` for a fixed-width money
+    field would enrol 10000 where the taxpayer filed 100. The typed value is
+    the faithful reading there, and the raw token is the faithful reading only
+    where the parser's own conversion discards the artefact's spelling.
+    """
+    if isinstance(casilla.value, bool):
+        return casilla.raw
+    return str(casilla.value)
+
+
 def _observed_casillas_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
@@ -228,7 +254,7 @@ def _observed_casillas_from_submitted_file(
         observations.append(
             ObservedCasillaValue(
                 casilla_id=casilla.casilla_id,
-                value=str(casilla.value),
+                value=_observed_value_token(casilla),
                 source_artefact_kind="submitted_file",
                 source_locator=casilla.source_locator,
                 confidence=1.0,

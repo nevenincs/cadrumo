@@ -56,17 +56,28 @@ See ``src/cadrumo/tests/README.md`` and charter ``#116`` for the full taxonomy.
 from __future__ import annotations
 
 import os
+import shutil
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
 # Pure stdlib, deliberately not `from cadrumo.tests import collection_storage_root`
 # -- see the docstring above. Mirrors `_collection_storage_root.collection_storage_root`'s
 # own derivation (`<gettempdir()>/cadrumo-pytest-<pid>`) exactly; the two module docstrings
 # cross-reference each other so a future edit to one is not made deaf to the other.
-os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"))
+_PURE_STDLIB_COLLECTION_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
+"""This conftest's own candidate root, computed before any Cadrumo import.
 
-from cadrumo.tests import collection_storage_root
-from cadrumo.tests._env_loader import bridge_env_file_into_environ
+Only ever materialises on disk (and only ever needs cleanup) when a test run
+never reaches ``src/cadrumo/conftest.py`` -- e.g. a ``dev/**``-only
+collection -- since that conftest unconditionally overwrites the same
+environment variable for every run that does reach it, and this value is
+never referenced again once overwritten.
+"""
+os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(_PURE_STDLIB_COLLECTION_ROOT))
+
+from cadrumo.tests import collection_storage_root  # noqa: E402
+from cadrumo.tests._env_loader import bridge_env_file_into_environ  # noqa: E402
 
 # Bridge the operator's development-only env/.env dotfile into os.environ
 # BEFORE any Cadrumo import resolves Settings (production Settings carries
@@ -110,3 +121,20 @@ def pytest_terminal_summary(
 ) -> None:
     """Delegate to the shared marker-deselection reporter."""
     _report_deselection(terminalreporter, exitstatus, config)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _release_pure_stdlib_collection_root() -> Iterator[None]:
+    """Remove this conftest's own candidate collection root, at session end.
+
+    Companion to ``src/cadrumo/conftest.py``'s
+    ``_release_collection_storage_root`` fixture, for the same measured
+    reason: ``register_collection_storage_root_cleanup``'s ``atexit`` hook
+    does not reliably fire for an xdist worker process (1,319 roots
+    accumulated across the fleet with zero evidence of it firing), so
+    removal is bound to pytest's own session-teardown machinery as well.
+    Best-effort and named-path-only -- see that fixture's docstring for the
+    full reasoning, which applies here unchanged.
+    """
+    yield
+    shutil.rmtree(_PURE_STDLIB_COLLECTION_ROOT, ignore_errors=True)

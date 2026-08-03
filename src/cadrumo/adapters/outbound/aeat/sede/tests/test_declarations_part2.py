@@ -456,7 +456,16 @@ class TestSubmittedFileObservation:
         assert observed_values[_M100_CASILLA_0180] == "26.26"
         assert observed_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == "37.37"
         assert observed_values[_M100_CASILLA_0695] == "87.87"
-        assert observed_values[_M100_CASILLA_0067] == "True"
+        # `0067` (CURBA, "Urbana") is an `LGC` row, so the parser hands back a
+        # bool -- and this assertion previously read "True", pinning a Python
+        # repr into filed-artefact evidence against a REAL AEAT artefact. The
+        # artefact says `<CURBA>S</CURBA>`; inverted rather than deleted, so it
+        # now holds the boundary to the token AEAT wrote.
+        assert observed_values[_M100_CASILLA_0067] == "S"
+        assert "True" not in observed_values.values(), (
+            "a Python bool repr reached filed-artefact evidence; observations record the "
+            "artefact's own token, so nothing here may spell a value the way Python does"
+        )
         assert 'nif="Y' not in body_text
         assert 'nif="00000000T"' in body_text
         assert "CL SANITIZADA 0000 LOCALIDAD" in body_text

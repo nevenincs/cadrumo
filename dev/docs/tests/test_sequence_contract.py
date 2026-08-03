@@ -6,18 +6,18 @@ json-path — not merely ``exit_code`` or the ``status`` spine field, so a seque
 verifies the MEANING of its final output rather than only that the process ran.
 
 The detection lives in the parser (``result_frame_asserts_result_payload``); this
-module enforces it as a ratcheting per-page gate — the same discipline as the
-mandatory-display fence gate — so the docs build, the check tier, and the engine's
-own synthetic unit tests stay green while the converters sweep. A page may never
-exceed its committed offender count; a page absent from the baseline may carry
-none; a page below its baseline passes. An empty baseline means every enrolled
-``@result`` frame asserts its payload.
+module enforces it as a ratcheting per-page gate. Each page's offender count must
+EQUAL its committed entry: a page may never exceed it, and clearing offenders reds
+the gate until the entry comes down in the same change. A page absent from the
+baseline may carry none. An empty baseline means every enrolled ``@result`` frame
+asserts its payload.
 """
 
 from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -28,6 +28,8 @@ from dev.docs.sequences import (
     read_golden,
     result_frame_asserts_result_payload,
 )
+
+from ._ratchet_support import ratchet_divergences
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -57,22 +59,10 @@ def _current_offender_counts() -> dict[str, int]:
     return counts
 
 
-def test_result_frames_assert_the_result_payload() -> None:
-    """No enrolled page carries more payload-less @result frames than its baseline.
-
-    A ``@result`` frame asserting only ``exit_code`` (and/or ``status``) proves the
-    command ran without proving it produced the right answer. This gate ratchets
-    DOWN from a committed per-page baseline: converters add a ``result.<path>``
-    assertion and tighten the entry, and an empty baseline means the contract is
-    fully applied. A page below its baseline passes, so the sweep never reds the
-    tree mid-flight.
-    """
-    baseline: dict[str, int] = json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
-    current = _current_offender_counts()
+def _render_result_ratchet_problems(current: Mapping[str, int], baseline: Mapping[str, int]) -> list[str]:
+    """Render one remediation line per page whose count disagrees with its entry."""
     problems: list[str] = []
-    for page in sorted(current):
-        count = current[page]
-        allowed = baseline.get(page, 0)
+    for page, count, allowed in ratchet_divergences(current, baseline):
         if count > allowed:
             problems.append(
                 f"{page}: {count} @result frame(s) assert no result payload, baseline allows {allowed}. "
@@ -81,6 +71,61 @@ def test_result_frames_assert_the_result_payload() -> None:
                 "'@expect result.work_unit_id != null'), not only 'exit_code'/'status'; "
                 f"then tighten the entry in {_BASELINE_PATH.name}"
             )
+        else:
+            problems.append(
+                f"{page}: {count} payload-less @result frame(s) remain but the baseline still "
+                f"allows {allowed}: the debt shrank, so lower the entry to {count} "
+                f"(or remove the key entirely when it reaches 0) in {_BASELINE_PATH.name} "
+                "in this same change, otherwise the unclaimed allowance silently "
+                "pre-authorises that many new offenders."
+            )
+    return problems
+
+
+def test_result_ratchet_bites_in_both_directions() -> None:
+    """The renderer flags a NEW offender and an UNCLAIMED allowance alike.
+
+    The second half is the property this gate did not have: before the flip, a
+    page below its entry passed silently and the unclaimed allowance
+    pre-authorised that many new offenders. Driving the real renderer proves
+    both directions bite, and that a page dropped from the baseline compares
+    equal to a page producing nothing.
+    """
+    baseline = {"how-to/a": 1}
+
+    regressed = _render_result_ratchet_problems({"how-to/a": 2}, baseline)
+    assert len(regressed) == 1, regressed
+    assert "baseline allows 1" in regressed[0]
+
+    cleared = _render_result_ratchet_problems({"how-to/a": 0}, baseline)
+    assert len(cleared) == 1, cleared
+    assert "lower the entry to 0" in cleared[0]
+
+    assert _render_result_ratchet_problems({"how-to/a": 1}, baseline) == []
+    assert _render_result_ratchet_problems({}, {}) == []
+    # A page absent from BOTH sides is not invented, and a page that regressed
+    # from an absent key is still caught.
+    assert _render_result_ratchet_problems({"how-to/b": 1}, {}) != []
+
+
+def test_result_frames_assert_the_result_payload() -> None:
+    """Every enrolled page's payload-less @result count EQUALS its baseline entry.
+
+    A ``@result`` frame asserting only ``exit_code`` (and/or ``status``) proves the
+    command ran without proving it produced the right answer. The remaining debt is
+    pinned per page and the equality is enforced in BOTH directions: a new offender
+    fails, and *clearing* one also fails until its entry comes down in the same
+    change. An absent key means zero, so a fully-converted page is dropped from the
+    baseline rather than recorded as ``0``. An empty baseline means the contract is
+    fully applied.
+
+    The both-directions form is deliberate. This gate previously allowed a page to
+    sit below its entry as "legitimate mid-sweep progress"; that licence outlived
+    its sweep and 73 of 81 allowances went unclaimed, so 73 new payload-less frames
+    could have landed silently. Shrink-only by structure, not by convention.
+    """
+    baseline: dict[str, int] = json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
+    problems = _render_result_ratchet_problems(_current_offender_counts(), baseline)
     assert not problems, (
         "cli-sequence @result frames must assert their result payload "
         "(ADR D4 result-assertion contract):\n  " + "\n  ".join(problems)
@@ -145,19 +190,21 @@ def test_development_metadata_pattern_discriminates() -> None:
 
 
 def test_result_assertion_baseline_is_well_formed() -> None:
-    """The ratchet baseline is a well-formed page -> non-negative-count map.
+    """The ratchet baseline is a well-formed page -> positive-count map.
 
-    The baseline is deliberately NOT asserted equal to the live counts: a page
-    below its baseline is legitimate mid-sweep progress. The one-directional
-    guarantee (no page exceeds its baseline) lives in
-    :func:`test_result_frames_assert_the_result_payload`.
+    Shape only; the value identity is asserted in BOTH directions by
+    :func:`test_result_frames_assert_the_result_payload`. A ``0`` entry is
+    rejected here rather than tolerated: a page carrying no payload-less frame
+    needs no allowance, and an absent key already means zero, so a recorded zero
+    is a stale entry wearing the shape of a live one.
     """
     baseline = json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
     assert isinstance(baseline, dict), "result_assertion_baseline.json must map page -> count"
     for page, allowed in baseline.items():
         assert isinstance(page, str) and page, "baseline keys must be non-empty docname-style page paths"
-        assert isinstance(allowed, int) and not isinstance(allowed, bool) and allowed >= 0, (
-            f"baseline entry {page!r} must be a non-negative integer count, got {allowed!r}"
+        assert isinstance(allowed, int) and not isinstance(allowed, bool) and allowed > 0, (
+            f"baseline entry {page!r} must be a positive integer count, got {allowed!r}; "
+            "drop the key entirely when a page reaches zero"
         )
 
 

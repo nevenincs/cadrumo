@@ -37,6 +37,7 @@ from .errors import NamespaceRegistryError
 # the declaration inward is what made those copies deletable rather than
 # merely pinnable, and it adds no upward dependency: an adapter depending on
 # core is the legal direction.
+ROOT_FALLBACK_DATABASE_FILENAME = storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
 BUCKETS_DIRNAME = storage_location(StorageCategory.BUCKETS).subpath
 BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
 #: Relative to the bucket root, not to ``db/`` -- this is the nested file, the
@@ -53,9 +54,10 @@ PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SES
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
 #: Directory holding the application-owned config-reset journal. The
 #: application module owns the durable journal itself; the name is declared
-#: here so the on-disk hierarchy has one inventory, and the enrollment gate
-#: pins the two declarations together.
-CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"
+#: once in the core taxonomy (:class:`~cadrumo.core.StorageCategory.CONFIG_RESET_JOURNAL`)
+#: and read here, so the on-disk hierarchy has one inventory rather than two
+#: agreeing constants.
+CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 SECRET_INDEX_FILENAME = "index.json"  # noqa: S105 - filename, not a credential
@@ -130,15 +132,15 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # classified REGENERABLE in PERSISTED_FORMATS accordingly.
         key="root_fallback_database",
         kind=StoragePathKind.FILE,
-        grammar="<root>/cadrumo.db",
+        grammar=f"<root>/{ROOT_FALLBACK_DATABASE_FILENAME}",
         owner="cadrumo.core.config",
         anchor=StoragePathAnchor.STORAGE_ROOT,
-        segment=storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath,
+        segment=ROOT_FALLBACK_DATABASE_FILENAME,
     ),
     StoragePathDefinition(
         key="bucket_root",
         kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/buckets/<bucket_id>/",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/",
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKETS_DIRNAME,
@@ -146,7 +148,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="bucket_db",
         kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/buckets/<bucket_id>/db/",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_DB_DIRNAME}/",
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_DB_DIRNAME,
@@ -166,7 +168,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="bucket_blobs",
         kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/buckets/<bucket_id>/blobs/",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_BLOBS_DIRNAME}/",
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_BLOBS_DIRNAME,
@@ -174,7 +176,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="bucket_audit",
         kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/buckets/<bucket_id>/audit/",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_AUDIT_DIRNAME}/",
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_AUDIT_DIRNAME,
@@ -182,7 +184,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="bucket_manifest",
         kind=StoragePathKind.FILE,
-        grammar="<root>/buckets/<bucket_id>/manifest.toml",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_MANIFEST_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_MANIFEST_FILENAME,
@@ -190,7 +192,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="bucket_lock",
         kind=StoragePathKind.FILE,
-        grammar="<root>/buckets/<bucket_id>/.lock",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_LOCK_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_LOCK_FILENAME,
@@ -198,7 +200,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="bucket_output_language_hint",
         kind=StoragePathKind.FILE,
-        grammar="<root>/buckets/<bucket_id>/output-language.hint",
+        grammar=f"<root>/{BUCKETS_DIRNAME}/<bucket_id>/{BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.bucket",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,
@@ -206,7 +208,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="keystore_bucket",
         kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/keystore/<bucket_id>/",
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/",
         owner="cadrumo.adapters.persistence.storage.master_key",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=KEYSTORE_DIRNAME,
@@ -214,7 +216,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="bucket_dek",
         kind=StoragePathKind.FILE,
-        grammar="<root>/keystore/<bucket_id>/bucket.dek.json",
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{BUCKET_DEK_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.master_key",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_DEK_FILENAME,
@@ -222,7 +224,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="profile_session",
         kind=StoragePathKind.FILE,
-        grammar="<root>/keystore/<bucket_id>/session.v1.json",
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{PROFILE_SESSION_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.master_key",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=PROFILE_SESSION_FILENAME,
@@ -230,7 +232,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="login_throttle",
         kind=StoragePathKind.FILE,
-        grammar="<root>/keystore/<bucket_id>/login-throttle.json",
+        grammar=f"<root>/{KEYSTORE_DIRNAME}/<bucket_id>/{LOGIN_THROTTLE_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.master_key",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=LOGIN_THROTTLE_FILENAME,
@@ -245,7 +247,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # with every other ``<root>``-anchored entry here.
         key="secret_index",
         kind=StoragePathKind.FILE,
-        grammar="<root>/secrets/index.json",
+        grammar=f"<root>/secrets/{SECRET_INDEX_FILENAME}",
         owner="cadrumo.adapters.persistence.storage.secret_store",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=SECRET_INDEX_FILENAME,
@@ -254,7 +256,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
         key="config_reset_journal",
         kind=StoragePathKind.FILE,
-        grammar="<root>/reset-operations/<operation_id>.json",
+        grammar=f"<root>/{CONFIG_RESET_JOURNAL_DIRNAME}/<operation_id>.json",
         owner="cadrumo.application.config_reset",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=CONFIG_RESET_JOURNAL_DIRNAME,

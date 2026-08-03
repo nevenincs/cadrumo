@@ -35,6 +35,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _NOW = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 _FINGERPRINT = "a" * 64
 _SNAPSHOT = "b" * 64
+_TRANSACTION_ID = "c" * 64
 _RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
     "resultado.contable",
     surface="_RESULTADO_CONTABLE_CASILLA",
@@ -57,7 +58,7 @@ def _ledger_evidence() -> LedgerFilingEvidence:
         snapshot_fingerprint=_SNAPSHOT,
         rows=(
             LedgerEvidenceRow(
-                transaction_id="tx-roundtrip-001",
+                transaction_id=_TRANSACTION_ID,
                 fingerprint=_FINGERPRINT,
                 booked_date="2026-03-31",
                 value_date="2026-04-01",
@@ -119,7 +120,7 @@ def test_offline_export_sidecar_reconstitutes_evidence_casilla_basis() -> None:
     evidence = sheet_evidence_from_ledger_filing(
         _ledger_evidence(),
         casilla_ids_by_contributor_id={
-            "tx-roundtrip-001": (_IVA_DEVENGADO_BASE_CASILLA, _IVA_DEVENGADO_CUOTA_CASILLA),
+            _TRANSACTION_ID: (_IVA_DEVENGADO_BASE_CASILLA, _IVA_DEVENGADO_CUOTA_CASILLA),
         },
     )
     export = serialize_offline_export(_plan(evidence))
@@ -142,7 +143,7 @@ def test_offline_export_sidecar_reconstitutes_evidence_casilla_basis() -> None:
         _IVA_DEVENGADO_CUOTA_CASILLA,
     )
     assert sidecar.evidence.manual_entries[0].casilla_id == _RESULTADO_CONTABLE_CASILLA
-    assert sidecar.evidence.contributor_rows[0].transaction_id == "tx-roundtrip-001"
+    assert sidecar.evidence.contributor_rows[0].transaction_id == _TRANSACTION_ID
     assert sidecar.evidence.contributor_rows[0].legal_refs == _LEGAL_REFS
     assert sidecar.evidence.manual_entries[0].source_refs == _SOURCE_REFS
 
@@ -157,6 +158,6 @@ def test_ledger_evidence_projection_refuses_noncanonical_casilla_attribution() -
         sheet_evidence_from_ledger_filing(
             _ledger_evidence(),
             casilla_ids_by_contributor_id={
-                "tx-roundtrip-001": (_NONCANONICAL_IVA_DEVENGADO_BASE_CASILLA_ID,),
+                _TRANSACTION_ID: (_NONCANONICAL_IVA_DEVENGADO_BASE_CASILLA_ID,),
             },
         )

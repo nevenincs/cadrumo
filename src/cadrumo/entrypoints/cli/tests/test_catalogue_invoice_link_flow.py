@@ -24,13 +24,14 @@ the real repositories. No mocks, stubs, or monkeypatch.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.storage import INVOICE_CATALOGUE_NAMESPACE, Envelope, SecureObjectRepository
 from ....application.invoices import build_catalogue_invoice
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
@@ -165,8 +166,17 @@ def test_link_refuses_cross_bucket_catalogue_invoice() -> None:
     The catalogue ``create`` verb stamps the active bucket, but the cross-bucket
     guard in ``link`` must still refuse an invoice whose ``bucket_id`` names a
     different profile. Here a rich invoice carrying a foreign bucket id is
-    persisted into the active catalogue directly, then ``link`` is attempted; the
-    guard must refuse it rather than persist a cross-bucket link.
+    planted directly, then ``link`` is attempted; the guard must refuse it rather
+    than persist a cross-bucket link.
+
+    The row is planted (and read back) through the secure-object substrate's
+    own writer, not through :class:`InvoiceCatalogueRepository`:
+    ``InvoiceCatalogueRepository`` binds to one bucket's store and refuses a
+    catalogue naming a foreign bucket on both save and load (see
+    ``test_invoices_bucket_binding.py``), so it cannot be used to construct
+    this scenario. The planted row is still genuinely valid at every layer
+    beneath that guard, which is what the ``link`` verb's own cross-bucket
+    guard -- a different, still-live check -- has to catch.
     """
     transaction_id = _add_outgoing_transaction()
 
@@ -182,17 +192,56 @@ def test_link_refuses_cross_bucket_catalogue_invoice() -> None:
         iva_rate=Decimal("21"),
         currency="EUR",
     )
-    repo = InvoiceCatalogueRepository()
-    repo.save(InvoiceCatalogue.from_invoices([foreign_invoice]))
+    _write_raw_catalogue(InvoiceCatalogue.from_invoices([foreign_invoice]))
 
     linked = invoke_cached_cli(
         ["app", "ledger", "link", transaction_id, "--invoice-id", foreign_invoice.invoice_id],
     )
     assert linked.exit_code != 0, linked.output
     # The guard refused before writing: the invoice must not cite the transaction.
-    reloaded = InvoiceCatalogueRepository().load().get(foreign_invoice.invoice_id)
+    reloaded = _load_raw_catalogue().get(foreign_invoice.invoice_id)
     assert reloaded is not None
     assert reloaded.linked_transaction_ids == (), reloaded.linked_transaction_ids
+
+
+def _write_raw_catalogue(catalogue: InvoiceCatalogue) -> None:
+    """Persist ``catalogue`` straight through the secure-object substrate.
+
+    Bypasses ``InvoiceCatalogueRepository``'s bucket-attribution guard so a
+    foreign-bucket row can be planted for a guard-refusal test.
+    """
+    envelope = Envelope[InvoiceCatalogue](
+        schema_version=INVOICE_CATALOGUE_NAMESPACE.schema_version,
+        written_at=datetime(2026, 3, 10, 12, 0, tzinfo=UTC),
+        classification=INVOICE_CATALOGUE_NAMESPACE.sensitivity,
+        payload=catalogue,
+    )
+    SecureObjectRepository().save(
+        namespace=INVOICE_CATALOGUE_NAMESPACE.namespace,
+        object_key=INVOICE_CATALOGUE_NAMESPACE.require_default_object_key(),
+        classification=INVOICE_CATALOGUE_NAMESPACE.sensitivity,
+        schema_version=INVOICE_CATALOGUE_NAMESPACE.schema_version,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode("utf-8"),
+    )
+
+
+def _load_raw_catalogue() -> InvoiceCatalogue:
+    """Load the persisted catalogue straight through the secure-object substrate.
+
+    Bypasses ``InvoiceCatalogueRepository``'s bucket-attribution guard so a
+    catalogue holding a foreign-bucket row can still be read back to confirm
+    it was left unmodified.
+    """
+    record = SecureObjectRepository().load(
+        INVOICE_CATALOGUE_NAMESPACE.namespace,
+        INVOICE_CATALOGUE_NAMESPACE.require_default_object_key(),
+        expected_class=INVOICE_CATALOGUE_NAMESPACE.sensitivity,
+        max_supported_version=INVOICE_CATALOGUE_NAMESPACE.schema_version,
+    )
+    assert record is not None, "expected the foreign catalogue row to be present"
+    envelope = Envelope[InvoiceCatalogue].model_validate_json(record.payload.decode("utf-8"))
+    return envelope.payload
 
 
 def test_catalogue_create_stamps_intra_community_category() -> None:

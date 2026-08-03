@@ -13,7 +13,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-from ..core import exclusive_file_lock
+from ..core import StorageCategory, exclusive_file_lock, storage_location
 from ..core.config import Settings
 from ..core.errors import CadrumoError
 from ..core.paths import effective_storage_root
@@ -25,7 +25,7 @@ from ._config_reset_models import (
 )
 from ._journal_repository import JournalRepositoryBase
 
-CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"
+CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
 
 
 class ConfigResetJournalError(CadrumoError):

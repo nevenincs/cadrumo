@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import ast
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from ......core import StorageCategory, storage_location
 from ......core.errors import ERROR_REGISTRY, build_error_envelope
 from .._errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
 from .._layout import (
@@ -16,6 +18,8 @@ from .._layout import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_LAYOUT_MODULE = Path(__file__).resolve().parent.parent / "_layout.py"
 
 
 def test_provision_creates_three_subdirectories(tmp_path: Path) -> None:
@@ -142,3 +146,45 @@ def test_provision_still_raises_already_present_for_a_real_file_collision(tmp_pa
     with pytest.raises(BucketAlreadyPresentError) as excinfo:
         provision_bucket_directory(tmp_path, "alpha")
     assert not isinstance(excinfo.value, BucketPathTooLongError)
+
+
+def _string_literals(module: Path) -> set[str]:
+    """Return every string constant in ``module`` that is not a docstring."""
+    tree = ast.parse(module.read_text(encoding="utf-8"))
+    docstrings = {
+        node.body[0].value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
+        and node.body
+        and isinstance(node.body[0], ast.Expr)
+        and isinstance(node.body[0].value, ast.Constant)
+        and isinstance(node.body[0].value.value, str)
+    }
+    return {
+        node.value
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node not in docstrings
+    }
+
+
+def test_no_bare_directory_name_literal_survives_in_the_layout_module() -> None:
+    """The bucket/db/blobs/audit directory names are read from the taxonomy, never re-typed.
+
+    An AST walk rather than a text scan, matching the shape of the core
+    name-unification gate (``test_storage_taxonomy_name_unification.py``): a
+    text scanner would have to special-case this test's own explanation of
+    the governed names, which an AST walk cannot produce the error from at
+    all.
+    """
+    literals = _string_literals(_LAYOUT_MODULE)
+    assert literals, "the module must contain some string constants, or this asserts nothing"
+    governed = (
+        storage_location(StorageCategory.BUCKETS).subpath,
+        storage_location(StorageCategory.BUCKET_DATABASE).subpath,
+        storage_location(StorageCategory.BUCKET_BLOBS).subpath,
+        storage_location(StorageCategory.BUCKET_AUDIT).subpath,
+    )
+    for name in governed:
+        assert name not in literals, (
+            f"_layout.py re-types the governed layout name {name!r}; read the taxonomy instead"
+        )

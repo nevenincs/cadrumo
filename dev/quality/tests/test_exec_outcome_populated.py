@@ -41,8 +41,14 @@ whole tree on day one is bad citizenship in a shared worktree and gets disabled.
 The current offender set is captured as a checked-in baseline that the gate
 treats as a ceiling: the offender set may only shrink, and any offender NOT named
 in the baseline fails. The baseline is grandfathered debt, not permission — its
-entries should be paid down by filling the named records' Outcomes, which shrinks
-the set; the gate never requires a baselined record to *stay* empty.
+entries are paid down by filling the named records' Outcomes.
+
+The correspondence is enforced in BOTH directions. A baselined record is never
+required to *stay* empty; it is required to leave the baseline in the same change
+that fills it. A standing entry whose record is now populated is not inert — it
+pre-authorises whatever later occupies that stem, so a record could be filled,
+re-emptied, and pass while named. 37 entries had gone stale exactly that way
+before the reciprocal assertion existed.
 
 Anti-vacuity. This gate exists because sibling gates in its campaign were
 false-green over unproven sets, so it carries its own floors and a hostile probe:
@@ -220,6 +226,27 @@ def test_baseline_file_is_well_formed_and_is_debt_not_permission() -> None:
 
     note = str(baseline.get("$schema_note", ""))
     assert "debt" in note.lower(), "the baseline note must state it is grandfathered debt, not permission"
+
+
+def test_every_baseline_entry_answers_a_live_offender() -> None:
+    """A baselined stem whose Outcome is now populated must leave the baseline.
+
+    The reciprocal of the ratchet, and the half it lacked. Filling a record's
+    Outcome removes it from the offender set but left its entry standing, and a
+    standing entry is not inert: it pre-authorises whatever later occupies that
+    stem, so a record could be filled, re-emptied, and sail through named. 37
+    entries had gone stale exactly this way before this assertion existed.
+
+    This does NOT require a baselined record to stay empty — the opposite. It
+    requires the entry to be dropped in the same change that fills the record,
+    which is what makes the set shrink by structure rather than by convention.
+    """
+    stale = sorted(_baseline_offender_stems() - _scan_offenders().offending_record_stems)
+    assert stale == [], (
+        "baseline entr(ies) naming a record whose Outcome is now populated. The debt was paid, so "
+        f"remove the entry from {_BASELINE_PATH.name} in the same change that filled the record — "
+        "a stale entry silently pre-authorises the next empty Outcome at that stem:\n  " + "\n  ".join(stale)
+    )
 
 
 def test_scan_meets_anti_vacuity_subject_floors() -> None:

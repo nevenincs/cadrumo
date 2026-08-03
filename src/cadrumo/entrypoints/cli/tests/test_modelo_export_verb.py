@@ -224,7 +224,6 @@ def _set_emilio_legal_entity_export_profile() -> None:
                 UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="500000"),
                 UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
                 UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value="100"),
-                UserProfileFact(path="irpf.estimation_regime", value=""),
             ),
         ),
     )

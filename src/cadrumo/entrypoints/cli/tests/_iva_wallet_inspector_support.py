@@ -16,7 +16,10 @@ _NIF = "12345678Z"
 #: ``profile_id`` (a bucket holds one live profile keyed by its own id).
 #: ``UserProfileRecord.profile_id`` requires a UUIDv4, so this is a UUID.
 _GUIDANCE_PROFILE = "33333333-3333-4333-8333-333333333333"
-_GUIDANCE_NIF = "87654321Y"
+_GUIDANCE_NIF = "87654321X"
+#: Check letter verified against the standard NIF algorithm
+#: (letters = "TRWAGMYFPDXBNJZSQVHLCKE"[87654321 % 23]); "Y" was a typo that
+#: only started failing once NIF checksum validation began enforcing it.
 #: Bucket id used by the seed/correct/override CLI tests. A bucket holds
 #: exactly one live profile keyed by its own id, so the stored profile's
 #: ``profile_id`` MUST equal the active bucket id for the verb's

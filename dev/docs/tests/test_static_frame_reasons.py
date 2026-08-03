@@ -20,13 +20,17 @@ cross-check the declaration against physical evidence):
   frame mislabelled as a TTY problem, or a purely local frame excused as
   "live AEAT", both fail here.
 - **Ratcheted.** ``unconverted`` asserts NO blocker — it is a visible debt, not
-  a justification — so its per-page count may never exceed the committed
-  baseline. Converting frames tightens the baseline toward zero.
+  a justification — so its per-page count must EQUAL the committed baseline:
+  never exceeding it, and never quietly sitting below it either. Converting a
+  frame reds the gate until its entry comes down in the same change, which is
+  what drives the baseline toward zero instead of leaving unclaimed allowances
+  behind.
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -38,6 +42,8 @@ from dev.docs.sequences import (
     discover_sequences,
     live_aeat_tokens,
 )
+
+from ._ratchet_support import ratchet_divergences
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -126,14 +132,59 @@ def test_live_token_frames_are_never_marked_unconverted() -> None:
     )
 
 
-def test_unconverted_static_frames_do_not_exceed_their_baseline() -> None:
-    """No page carries more ``unconverted`` static frames than its committed baseline.
+def _render_unconverted_ratchet_problems(current: Mapping[str, int], baseline: Mapping[str, int]) -> list[str]:
+    """Render one remediation line per page whose count disagrees with its entry."""
+    problems: list[str] = []
+    for page, count, allowed in ratchet_divergences(current, baseline):
+        if count > allowed:
+            problems.append(f"{page}: {count} unconverted @static frame(s), baseline allows {allowed}")
+        else:
+            problems.append(
+                f"{page}: {count} unconverted @static frame(s) remain but the baseline still allows "
+                f"{allowed}; lower the entry to {count} (or remove the key when it reaches 0) in this "
+                "same change, otherwise the unclaimed allowance pre-authorises that many new frames"
+            )
+    return problems
+
+
+def test_unconverted_ratchet_bites_in_both_directions() -> None:
+    """The renderer flags a NEW unconverted frame and an UNCLAIMED allowance alike.
+
+    The second half is the property this gate did not have: before the flip, a
+    page below its entry passed silently and the unclaimed allowance
+    pre-authorised that many new unconverted frames. Driving the real renderer
+    proves both directions bite.
+    """
+    baseline = {"how-to/a": 2}
+
+    regressed = _render_unconverted_ratchet_problems({"how-to/a": 3}, baseline)
+    assert len(regressed) == 1, regressed
+    assert "baseline allows 2" in regressed[0]
+
+    converted = _render_unconverted_ratchet_problems({"how-to/a": 1}, baseline)
+    assert len(converted) == 1, converted
+    assert "lower the entry to 1" in converted[0]
+
+    assert _render_unconverted_ratchet_problems({"how-to/a": 2}, baseline) == []
+    assert _render_unconverted_ratchet_problems({}, {}) == []
+    assert _render_unconverted_ratchet_problems({"how-to/b": 1}, {}) != []
+
+
+def test_unconverted_static_frames_equal_their_baseline() -> None:
+    """Every page's ``unconverted`` static-frame count EQUALS its baseline entry.
 
     ``unconverted`` is the honest marker for "nothing blocks this; it simply has
-    not been converted yet". It is debt, so it ratchets DOWN: a converter turns
-    frames into executed truth and tightens the entry. A page below its baseline
-    passes, so a partial sweep never reds the tree. An empty baseline means every
-    remaining static frame is blocked for a verified reason.
+    not been converted yet". It is debt, and the remaining debt is pinned per page
+    with the equality enforced in BOTH directions: a new unconverted frame fails,
+    and *converting* one also fails until its entry comes down in the same change.
+    An absent key means zero, so a fully-converted page is dropped from the
+    baseline rather than recorded as ``0``. An empty baseline means every remaining
+    static frame is blocked for a verified reason.
+
+    The both-directions form is deliberate. This gate previously let a page sit
+    below its entry as partial-sweep progress; that licence outlived its sweep and
+    27 of 60 allowances went unclaimed, so 27 new unconverted frames could have
+    landed silently. Shrink-only by structure, not by convention.
     """
     baseline: dict[str, int] = json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
     current: dict[str, int] = {}
@@ -141,30 +192,29 @@ def test_unconverted_static_frames_do_not_exceed_their_baseline() -> None:
         assert frame.blocked is not None
         if frame.blocked.code is StaticBlocker.UNCONVERTED:
             current[page] = current.get(page, 0) + 1
-    problems = [
-        f"{page}: {count} unconverted @static frame(s), baseline allows {baseline.get(page, 0)}"
-        for page, count in sorted(current.items())
-        if count > baseline.get(page, 0)
-    ]
+    problems = _render_unconverted_ratchet_problems(current, baseline)
     assert not problems, (
-        "unconverted @static frames must ratchet down, never up. Convert the frame to "
-        "executed truth (and regenerate its golden), or — if it is genuinely blocked — "
-        f"declare the real blocker instead of '{StaticBlocker.UNCONVERTED.value}'. "
+        "unconverted @static frames must ratchet down, never up, and the baseline must track them "
+        "exactly. Convert the frame to executed truth (and regenerate its golden), or — if it is "
+        f"genuinely blocked — declare the real blocker instead of '{StaticBlocker.UNCONVERTED.value}'. "
         f"Then tighten {_BASELINE_PATH.name}:\n  " + "\n  ".join(problems)
     )
 
 
 def test_unconverted_baseline_is_well_formed() -> None:
-    """The ratchet baseline is a well-formed page -> non-negative-count map.
+    """The ratchet baseline is a well-formed page -> positive-count map.
 
-    Deliberately NOT asserted equal to the live counts: a page below its
-    baseline is legitimate mid-sweep progress. The one-directional guarantee
-    lives in :func:`test_unconverted_static_frames_do_not_exceed_their_baseline`.
+    Shape only; the value identity is asserted in BOTH directions by
+    :func:`test_unconverted_static_frames_equal_their_baseline`. A ``0`` entry is
+    rejected here rather than tolerated: a fully-converted page needs no
+    allowance, and an absent key already means zero, so a recorded zero is a stale
+    entry wearing the shape of a live one.
     """
     baseline = json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
     assert isinstance(baseline, dict), "unconverted_static_baseline.json must map page -> count"
     for page, allowed in baseline.items():
         assert isinstance(page, str) and page, "baseline keys must be non-empty docname-style page paths"
-        assert isinstance(allowed, int) and not isinstance(allowed, bool) and allowed >= 0, (
-            f"baseline entry {page!r} must be a non-negative integer count, got {allowed!r}"
+        assert isinstance(allowed, int) and not isinstance(allowed, bool) and allowed > 0, (
+            f"baseline entry {page!r} must be a positive integer count, got {allowed!r}; "
+            "drop the key entirely when a page reaches zero"
         )

@@ -160,9 +160,34 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger invoice catalogue create",
     "app ledger invoice catalogue import",
     "app ledger invoice catalogue remove",
+    # Fetches a document and stores its bytes as encrypted evidence through
+    # ``add_attachment_bytes``; ``pull-folder`` is the same primitive applied
+    # once per Drive child. A link is never stored on its own, so both verbs
+    # always write bucket-scoped attachment bytes when they succeed.
+    "app ledger doclink",
+    "app ledger pull-folder",
+    # Composes the same ``create_catalogue_invoice`` primitive its guarded
+    # ``catalogue create`` sibling uses, so it was the one unguarded door into
+    # the invoice catalogue.
+    "app ledger invoice catalogue wizard",
+    # Operator-declared IVA registers, each an encrypted bucket-scoped
+    # document: the capital-goods register (``add``), and the prorrata
+    # register (``upsert_entry`` / ``upsert_sector_definition``).
+    "app ledger bienes-inversion declare",
+    "app ledger prorrata elect-general",
+    "app ledger prorrata elect-especial",
+    "app ledger prorrata declare-sector",
+    # Rewrites the whole derived participation index via ``replace_all``. The
+    # index is a rebuildable cache, but the rebuild itself is a bucket write.
+    "app ledger participation rebuild",
     "app live justificante pull",
     "app live iva-wallet pull",
     "app live iva-wallet pull-history",
+    # Prefix matching only continues past an entry on a SPACE, so the
+    # ``app live iva-wallet pull`` entry above never covered the hyphenated
+    # ``pull-evidence`` leaf. It persists an acquisition manifest into the
+    # encrypted live-IVA namespace and needs its own entry.
+    "app live iva-wallet pull-evidence",
     "app live filed pull",
     "app live filed pull-sources",
     "app live notifications pull",
@@ -177,11 +202,50 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app modelo work file",
     "app modelo work amend",
     "app modelo work resume",
+    # Guided walks over the SAME primitives their guarded siblings call --
+    # ``work calculate`` and ``work amend`` respectively -- so leaving them out
+    # left a prompted path to a write whose direct path was guarded.
+    "app modelo work wizard",
+    "app modelo work amend-wizard",
     "app modelo m145 create",
+    # Lifecycle transitions on a persisted M145 communication record; each
+    # saves the transitioned record together with its history event.
+    "app modelo m145 mark-delivered-to-payer",
+    "app modelo m145 mark-locally-completed",
+    # Records an M036 census declaration filed at sede into the encrypted
+    # declaration namespace, with the matching CENSO_DECLARATION_* audit event.
+    "app modelo m036 alta",
+    "app modelo m036 modificacion",
+    "app modelo m036 baja",
     "app modelo iva-wallet seed",
+    # The two write companions of ``seed``: ``correct`` overwrites the stored
+    # opening carry-forward balance, ``override`` persists a taxpayer_override
+    # decision. Both emit an audit event; the read-only ``balance`` sibling is
+    # deliberately absent.
+    "app modelo iva-wallet correct",
+    "app modelo iva-wallet override",
+    # Mints and persists this bucket's signing / encryption keypair on first
+    # use, so each is a bucket write even when its package output goes to a
+    # file; ``decrypt`` additionally records the consumed-nonce replay ledger.
+    # The ``build`` / ``encrypt-*`` siblings write only to --output and the
+    # ``verify*`` siblings stay bootstrap-exempt for profile-less reviewers.
+    "app modelo review-package sign",
+    "app modelo review-package counter-sign",
+    "app modelo review-package decrypt",
+    "app modelo review-package import-feedback",
     "app modelo filing-record import",
+    # Persists non-official local casilla observations for later prefill.
+    "app modelo filing-record observe-local",
+    # Reads as a query but is not one: the M190 / retenciones paths own a
+    # durable set-replace of percepción and retención observations before the
+    # aggregation runs, which is why the CLI entrypoint -- not the pure
+    # aggregator -- is the write site.
+    "app modelo aggregate",
     "app modelo reconcile",
     "app modelo export",
+    # Clears crash-interrupted bundle exports: removes staged cleartext, drops
+    # the journal entry, and emits the owed PROFILE_EXPORTED bucket event.
+    "app maintenance reconcile",
     "app quickfile",
     "config auth configure",
     "config auth login",

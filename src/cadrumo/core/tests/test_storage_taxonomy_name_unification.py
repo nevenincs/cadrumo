@@ -10,6 +10,14 @@ these modules read the declaration and the copies are gone.
 The state-root cases below cover the injection seam the resolver already
 provides: it takes its whole platform context as an argument, so a test hands
 over a synthetic one rather than mutating the ambient process around the call.
+
+The journal-repository case is a different flavor of the same duplication.
+``application/_journal_repository.py`` is not blocked by the hexagonal
+direction -- application may import core freely -- so its ``"buckets"``
+literal was plain drift rather than a layering symptom, found once the new
+directory-agreement gate made every hand-typed layout name suspect. Included
+here because the fix and the property this gate proves are identical, whether
+the literal's origin was a layering constraint or an oversight.
 """
 
 from __future__ import annotations
@@ -40,6 +48,7 @@ _SETTINGS_MODULE = Path(__file__).resolve().parent.parent / "config.py"
 _MASTER_KEY_MODULE = (
     Path(__file__).resolve().parents[2] / "adapters" / "persistence" / "storage" / "master_key" / "_master_key.py"
 )
+_JOURNAL_REPOSITORY_MODULE = Path(__file__).resolve().parents[2] / "application" / "_journal_repository.py"
 
 
 def test_the_core_constants_are_the_taxonomy_not_a_second_copy() -> None:
@@ -70,10 +79,10 @@ def _string_literals(module: Path) -> set[str]:
 
 @pytest.mark.parametrize(
     "module",
-    [_ROUTE_MODULE, _STATE_ROOT_MODULE, _SETTINGS_MODULE, _MASTER_KEY_MODULE],
-    ids=["storage_route", "state_root", "settings", "master_key"],
+    [_ROUTE_MODULE, _STATE_ROOT_MODULE, _SETTINGS_MODULE, _MASTER_KEY_MODULE, _JOURNAL_REPOSITORY_MODULE],
+    ids=["storage_route", "state_root", "settings", "master_key", "journal_repository"],
 )
-def test_no_core_module_re_types_a_governed_layout_name(module: Path) -> None:
+def test_no_production_module_re_types_a_governed_layout_name(module: Path) -> None:
     """The literals are deleted, not merely pinned.
 
     An AST walk rather than a text scan, because both names appear in prose here
