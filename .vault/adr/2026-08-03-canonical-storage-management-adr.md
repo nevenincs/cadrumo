@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:d899c0b2300fe677c109dff95794d17e9013729abc510bab753f14d26583a982'
+body_hash: 'sha256:cddbda15bf640a9900df75515dcba48f7c7fb287ca8a0cf71429c3612b049632'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -115,12 +115,12 @@ enforcing property are fixed.
   consumer update, and every gate update share one commit, with clean
   collection observed immediately before it, and a `relocation:` commit subject
   tag.
-- Two tests in core config tests are red at HEAD independently of this campaign
-  (research F10), asserting a repository-root anchor that the relative-path
-  anchor deliberately no longer implements. They sit on this axis and will be
-  attributed to it. They are in scope: this campaign either corrects them to the
-  implemented anchoring or records them as a named known-red with an owner. It
-  may not leave them ambiguous.
+- Relative-path overrides anchor to the platform user-data root, never to the
+  checkout. Research F10 recorded two tests asserting the retired
+  repository-root anchoring as red; a peer commit landing during this record's
+  authoring re-anchored both, and they were re-run green at HEAD. This campaign
+  therefore inherits no red test on this axis, but any change it makes to
+  anchoring must update those tests deliberately rather than by accident.
 - The registry disk cache resolves through a three-branch resolver whose pytest
   branch deliberately uses the host-shared OS temp directory for cross-worker
   sharing of an immutable bundled tree (research F5). Its production branch

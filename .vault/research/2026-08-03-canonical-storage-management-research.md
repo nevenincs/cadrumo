@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:dcad2a36928f1134de268356e134a4cbe3ae5f3e00451c4c06980f8ff12664a8'
+body_hash: 'sha256:b3530fb33097f1ea316162e7439407c69dba734d5da39ee1f869d13fbf3468e2'
 related: []
 ---
 
@@ -273,14 +273,26 @@ CLI.
 
 `test_relative_env_paths_resolve_from_project_root` and
 `test_relative_audit_flagged_paths_resolve_under_project_root` in
-`src/cadrumo/tests/test_config.py` assert that a relative environment override
-anchors under the repository root. `_relative_path_anchor`
+`src/cadrumo/tests/test_config.py` asserted that a relative environment
+override anchors under the repository root, while `_relative_path_anchor`
 (`src/cadrumo/core/paths.py:42`) deliberately carries no source-checkout arm and
-anchors to the platform user-data root instead; its docstring says so. The
-tests were not updated when that arm was removed. They are red at HEAD,
-independently of this campaign, and a change to relative-path anchoring will be
-blamed for them unless the campaign either fixes them or carries them forward
-as a named known-red.
+anchors to the platform user-data root instead. The tests were not updated when
+that arm was removed, and were red when this research was opened.
+
+**Resolved during authoring, by a peer, not by this campaign.** A commit
+landing while this document was being written re-anchored both tests via an
+isolated `LOCALAPPDATA`, matching the pattern already used in the SQL engine
+tests, and additionally documented and normalised three path settings
+(`CADRUMO_FILED_DECLARATIONS_DIR`, `CADRUMO_IVA_COMPENSATION_HISTORY_DIR`,
+`CADRUMO_IVA_READ_EVIDENCE_DIR`) that were absent from the environment
+reference and from the normalisation validator tuple. Both tests were
+re-run at HEAD after that commit and pass.
+
+The finding is retained rather than deleted because the underlying semantics
+remain load-bearing for this campaign: relative overrides anchor to the
+platform user-data root, never to the checkout, and any future change to
+anchoring must update these tests deliberately. What is no longer true is the
+obligation — this campaign inherits no red test on this axis.
 
 ### What was not investigated
 
