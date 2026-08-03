@@ -101,8 +101,7 @@ class _RotationPlanSettings(Protocol):
 class _BlobStoreSettings(Protocol):
     """Minimal settings surface required by :func:`default_blob_store_roots`."""
 
-    cadrumo_blob_store_dir: Path
-    cadrumo_attachments_dir: Path
+    cadrumo_local_storage_root: Path
 
 
 class RotationPlanEntry(BaseModel):
@@ -539,19 +538,36 @@ def rotate_blob_stores(
 def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
     """Return the canonical blob-store roots covered by master-key rotation.
 
-    The substrate persists wrapped DEKs in:
+    :class:`~cadrumo.adapters.persistence.storage.blob_store.EncryptedBlobStore`
+    documents ``root_dir`` as the directory *containing* the ``blobs/``
+    subtree -- the PARENT of ``blobs/``, not ``blobs/`` itself, because the
+    store appends its own ``blobs`` segment internally
+    (``EncryptedBlobStore._shard_dir_for``). This function returns that
+    parent, matching the contract every ``EncryptedBlobStore`` caller must
+    honour -- the same minimal fix
+    :func:`adapters.persistence.storage.blob_store.get_secret_store`'s
+    factory landed for the identical doubled-``blobs/blobs`` bug. Passing
+    ``cadrumo_blob_store_dir`` (already ``<storage_root>/blobs``, the CHILD)
+    here would make :func:`rotate_blob_stores` walk
+    ``<storage_root>/blobs/blobs/`` -- a directory that never exists -- and
+    report a clean rotation of nothing while every real blob's wrapped DEK
+    stays under the retiring master key.
 
-    - The secret-store's blob store (``cadrumo_blob_store_dir``), wired up
-      by :func:`adapters.persistence.storage.get_secret_store` for opaque-bearer credentials, OAuth
-      refresh tokens, and identity records.
-    - The financial-attachments store (``cadrumo_attachments_dir``), wired
-      up by :class:`adapters.persistence.storage.AttachmentStore` for
-      receipts, invoices, and bank statements.
-
-    Each root is a directory whose ``blobs/<hex[:2]>/<hex>.manifest.json``
-    files carry the per-blob ``wrapped_dek`` field. Operators with
-    custom blob stores extend this tuple before calling
-    :func:`rotate_blob_stores`.
+    The substrate has exactly one production ``EncryptedBlobStore`` consumer
+    today: the secret store's blob store (opaque-bearer credentials, OAuth
+    refresh tokens, identity records), wired up by
+    :func:`adapters.persistence.storage.get_secret_store` and rooted at
+    ``cadrumo_local_storage_root``. Financial attachment bytes and manifests
+    are deliberately NOT covered here:
+    :class:`~cadrumo.adapters.persistence.storage.AttachmentStore` was
+    migrated off filesystem blob storage onto the SQL ``secure_objects``
+    substrate, whose rows are encrypted under the per-bucket DEK rather than
+    the master key directly -- the same exclusion
+    :func:`default_rotation_plan` already documents for ``secure_objects``.
+    A master-key / passphrase custody change rewraps that DEK without
+    changing its value, so attachment ciphertext stays valid and never
+    requires re-encryption on master-key rotation. Operators with custom
+    blob stores extend this tuple before calling :func:`rotate_blob_stores`.
 
     Roots that resolve to the same absolute path (operator override /
     shared deployment) are deduplicated so the rotation does not
@@ -559,10 +575,7 @@ def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
     """
     seen: set[Path] = set()
     roots: list[Path] = []
-    for setting_path in (
-        Path(settings.cadrumo_blob_store_dir),
-        Path(settings.cadrumo_attachments_dir),
-    ):
+    for setting_path in (Path(settings.cadrumo_local_storage_root),):
         if not setting_path.exists():
             continue
         resolved = setting_path.resolve()
