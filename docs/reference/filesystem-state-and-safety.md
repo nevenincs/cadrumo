@@ -19,8 +19,8 @@ installed distribution. Running from a checkout does not move it: set
 `CADRUMO_LOCAL_STORAGE_ROOT` to put the tree inside the checkout.
 
 Cadrumo creates the root and the directories below it when a command that
-uses them runs. The state-free surfaces — `--help`, `--version`, and a bare
-invocation — do not create anything, so browsing the command tree leaves no
+uses them runs. The state-free surfaces (`--help`, `--version`, and a bare
+invocation) do not create anything, so browsing the command tree leaves no
 state behind.
 
 Profile state is bucket-scoped under
