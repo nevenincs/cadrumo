@@ -552,14 +552,20 @@ def test_abandoning_the_page_writes_nothing() -> None:
 
 
 @pytest.mark.usefixtures("active_profile")
-def test_a_value_the_record_rejects_leaves_the_earlier_facts_written() -> None:
-    """The plural door is a loop, so a late rejection half-writes.
+def test_a_value_the_record_rejects_leaves_no_partial_write() -> None:
+    """The plural door commits the whole batch as one aggregate write.
 
-    This is the behaviour the page's field validation exists to keep an
-    operator away from, and it is pinned here so the docstring's account
-    of the remaining failure window stays honest. If profile-fact writes
-    ever become transactional this case is what should fail, and the
-    docstring it defends is what should then change.
+    ``set_active_fields`` now routes through ``apply_active_profile_facts``
+    and the lifecycle's ``edit_fields``, which batches every field into one
+    decrypt/validate/re-encrypt round trip and judges the resulting fact set
+    as a whole (see ``ProfileLifecycleService.edit_fields``'s docstring: "the
+    batch is judged as a whole, so a patch is never left half-applied by a
+    later field's refusal"). A field the schema rejects therefore leaves
+    NONE of the batch's facts durably written, not just the rejected one.
+    Pinned here so a future re-introduction of a per-field write loop (the
+    historical shape this door used to have, when it looped the singular
+    ``set_active_field`` and persisted between iterations) is caught as a
+    behavioural regression.
     """
     with pytest.raises(ProfileSchemaValidationError):
         _commit_auth_choice(
@@ -573,10 +579,9 @@ def test_a_value_the_record_rejects_leaves_the_earlier_facts_written() -> None:
         )
 
     facts = _auth_facts()
-    assert facts.get(_AUTH_DNI_NIE_PATH) == "00000000T", "the earlier facts are already durable"
-    assert facts.get(_AUTH_FECHA_VALIDEZ_PATH) is None, "the rejected fact never landed"
+    assert facts == {}, "the whole batch is one write; a rejected field must not leave any fact durable"
     assert workflow_state_repository().load().auth.provider is None, (
-        "the provider was never activated, so the two stores now disagree"
+        "the provider was never activated, so the two stores stay in agreement"
     )
 
 

@@ -47,13 +47,28 @@ def test_invoke_cached_cli_accepts_env_mapping() -> None:
     assert result.exit_code == 0
 
 
-def test_semantic_output_preserves_option_tokens_under_github_actions() -> None:
-    """GitHub's forced ANSI styling cannot split semantic option names."""
+def test_semantic_output_stays_plain_text_under_github_actions() -> None:
+    """Rich rendering stays off for help text even under GitHub Actions.
+
+    Typer's ``rich_utils`` module forces Rich terminal styling when it
+    detects ``GITHUB_ACTIONS`` at import time (checked in a fresh
+    subprocess so that detection genuinely runs under the simulated
+    environment). But ``cadrumo.entrypoints.cli._stdio._disable_rich_cli_rendering``
+    sets ``typer.core.HAS_RICH = False`` for the whole command tree at
+    import time, precisely so option/argument tables wrap to the real
+    terminal width instead of Rich's box-drawing border — which garbles
+    under piped output, non-tty CI runners, and narrow terminals. That
+    guard reads ``typer.core.HAS_RICH`` live on every render call, so it
+    overrides Typer's own GitHub Actions detection rather than racing it.
+    This proves the guard holds: help output carries no ANSI escapes even
+    under a GitHub-Actions-shaped environment, and the semantic option
+    token is present either way.
+    """
     source = """
 from cadrumo.tests.cli_runner import invoke_cached_cli, semantic_cli_output
 result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
 assert result.exit_code == 0, result.output
-assert "\\x1b[" in result.output
+assert "\\x1b[" not in result.output
 assert "--output-language" in semantic_cli_output(result)
 """
     completed = subprocess.run(  # noqa: S603 - fixed interpreter and literal regression probe.
