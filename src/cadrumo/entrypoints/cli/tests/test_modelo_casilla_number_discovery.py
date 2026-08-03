@@ -46,11 +46,11 @@ def test_casillas_number_filter_finds_m100_employment_income_and_withholding() -
     )
 
     assert salary.exit_code == 0, salary.output
-    assert "0003\t0003\tmanual\tfalse\tRetribuciones dinerarias. Importe integro" in salary.output
+    assert "0003\t0003\tmanual\tfalse\tCash remuneration. Gross amount" in salary.output
     assert "0596" not in salary.output
 
     assert withholding.exit_code == 0, withholding.output
-    assert "0596\t0596\tbound\tfalse\tPor rendimientos del trabajo" in withholding.output
+    assert "0596\t0596\tbound\tfalse\tFor employment income" in withholding.output
     assert "0003" not in withholding.output
 
 
