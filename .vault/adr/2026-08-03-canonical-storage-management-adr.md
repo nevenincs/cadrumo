@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:6723859abaf55dc6489a28d4d3aca605f7822c84d1c8329cb1114939562d019f'
+body_hash: 'sha256:9cfe7b7c10467948ce9099ef734bcc1b808238a59b6066a660f84f0ddf7ad464'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -330,13 +330,33 @@ accepted ADR conflicts. The operator's standing goal anticipates superseding
 conflicting decisions; the finding is that there are none, recorded explicitly
 so a future reader does not hunt a phantom conflict.
 
-**R9 — The enforcing gate.** The property is provenance, not census: **the
-storage root has exactly one reader.** A structural AST test asserts the
-`cadrumo_local_storage_root` attribute is accessed only inside the taxonomy
-resolver. Every ad-hoc site research F1 found begins with exactly that access, so
-a gate on the root's readership reaches the join-built paths a literal-matching
-gate structurally cannot. It has no count, no vocabulary list, and no per-file
-allowlist to drift.
+**R9 — The enforcing gate.** The property is provenance, not census — but it
+shipped narrower than this ruling's first wording claimed, and the narrowing is
+correct rather than a shortfall. The originally-stated property, **the storage
+root has exactly one reader**, is a post-burndown property: it cannot hold
+until every ad-hoc site is enrolled, and a gate red at HEAD by dozens of
+legitimate reads gets allowlisted into meaninglessness or deleted. What shipped
+instead is **location production**: a structural AST test asserting that the
+storage root is *joined onto* — via `/`, `joinpath`, `glob`, `rglob`, `iterdir`,
+or a `Path(...)` wrapper, following the root through a function-local rebind —
+only inside a declared producer. Reading the root as the root (handing it to a
+disk-usage walker, reporting it, scanning beneath it) produces no location and
+is not a finding; at time of writing 68 such reads exist and every one is
+legitimate. Every ad-hoc site research F1 found begins with exactly the join
+access, so a gate on join-production reaches the paths a literal-matching gate
+structurally cannot, with no count, no vocabulary list, and no per-file
+allowlist to drift over the property it actually asserts. The narrower property
+is recorded in the gate's own module docstring, not only here, because a gate
+that quietly covers less than its ruling implies is how a campaign believes
+itself finished before it is.
+
+A second, different property is deliberately **not** covered by this gate at
+all: that a test must not hardcode a taxonomy-governed directory or file name.
+That is literal vocabulary, not join provenance, and it lives in the
+settings-lifecycle gate, which scans production modules only — extending it
+across the test corpus is its own burndown (see R14, R15). Neither gate
+subsumes the other: a literal scan cannot see a path built by joining, and the
+provenance gate cannot see a name spelled out in full.
 
 **The gate covers tests.** A test that hardcodes a taxonomy-governed directory or
 file name fails CI exactly as production code does;
@@ -347,12 +367,31 @@ precisely to say it is not used — a counting gate inherits that false-positive
 class.
 
 Three gates support it. A materialisation-parity gate asserts the tree
-materaliser's target set derives from the taxonomy rather than a parallel list.
+materialiser's target set derives from the taxonomy rather than a parallel list.
 A binding gate asserts every `Path`-typed settings field is bound to a member or
 declared an escape with a role — enumerating all 35 fields per R4. A liveness
 gate asserts every member has a production consumer or is explicitly declared
-dormant with a reason, turning research F7's two writer-less categories into a
-decision someone must take.
+dormant with a reason, turning research F7's two writer-less categories — which
+measurement later widened to four (audit found `status-cache`, `storage-backup`,
+`inbox`, and `inbox-pdf`) — into a decision someone must take.
+
+**The liveness gate's evidence shape was extended beyond this ruling's original
+spec, on measurement, and the extension is the most consequential
+implementation finding of this campaign.** A claim is satisfied by an
+`ast.Attribute` load of the bound settings field, an `ast.Attribute` load of
+the category member, **or the field name as a non-docstring string
+constant** — a third shape this ruling did not anticipate. Without it, two live
+categories holding regulated AEAT filing evidence (the IVA read-evidence roots)
+would have reported writer-less: both reach their settings through
+`_resolve_live_output_root(output_root, "cadrumo_iva_read_evidence_dir")`, the
+field named as a string and resolved dynamically, invisible to an
+attribute-only walk. Acting on that false report deletes a live category
+holding regulated filing evidence. Admitting the third shape must not re-admit
+the trap the docstring exclusion already closes: `core/auth_session_keys.py`
+names a settings field inside its own module docstring precisely to record
+independence from it, and a docstring is also an `ast.Constant` — the two are
+distinguished structurally, every docstring node collected and excluded by
+identity, not by an allowlist entry.
 
 **R10 — Unify the names in core; federate the policy on the member.** The
 bucket-layout and keystore names move into the core taxonomy, and
@@ -371,6 +410,22 @@ and readable; encoding it as module placement is why the layering wall produced
 the duplication in the first place. The SQL secure-object namespace definitions
 are a different concern — logical database keys, not filesystem paths — and stay
 where they are.
+
+**A gap in "enforceable" was found on review, and is not yet closed.** The gate
+proving this guarantee (`test_bucket_and_keystore_layout_is_fixed_not_operator_overridable`)
+asserts only that today's `FIXED` members happen to carry no `settings_field` —
+there is no `settings_field` on a fixed member, so nothing on
+`Settings`/`override_settings` can reach it, and the assertion is structurally
+true by that absence. It does not refuse the combination itself: the pydantic
+model permits a `FIXED` member with a `settings_field`, and if one is ever
+declared, the operator-override guarantee this ruling exists to state would
+quietly stop holding for the member it names while the existing gate kept
+passing — it would simply be asserting a fact about a different, still-field-less
+set of members. This is currently enforced by absence, not by a guard. A
+declaration-time validator refusing `override_policy=FIXED` paired with a
+non-null `settings_field`, with a positive control that an `OPERATOR_OVERRIDABLE`
+member carrying a field is not flagged, is tracked as a plan Step and not yet
+built.
 
 **R11 — Review-package staging must be `dir=`-pinned; the in-flight fix is
 ratified.** Plaintext filing artefacts staged before archiving must be staged
@@ -426,9 +481,22 @@ are easy to conflate precisely because the code stops mentioning the file.
 **R13 — Scope, not name, disambiguates the duplicated directory names.** `blobs`
 and `audit` each name both a top-level category and a per-bucket subdirectory at
 a different depth. Both are correct today. A flat name-keyed enum would conflate
-them, so `StorageScope` (`ROOT`, `BUCKET_RELATIVE`, `KEYSTORE_RELATIVE`) is a
-required field and members are identified by scope and name together. The
-collision is not ruled acceptable-and-ignored: it is ruled expressible.
+them, so `StorageScope` is a required field and members are identified by scope
+and name together. The collision is not ruled acceptable-and-ignored: it is
+ruled expressible.
+
+**The scope enum shipped with four members, not the three this ruling first
+declared, and the addition closed a real defect rather than a cosmetic one.**
+`StorageScope` is `ROOT`, `BUCKET_RELATIVE`, `KEYSTORE_RELATIVE`, and
+`KEYSTORE_ROOT`. The first cut declared only `KEYSTORE_RELATIVE` for every
+keystore-scoped member, including the keystore's own root directory, and the
+scoped accessor resolved it as nested beneath the owning bucket
+(`buckets/<bucket_id>/keystore/<subpath>`) — contradicting
+`validate_keystore_separation`'s own requirement, unchanged since before this
+campaign, that a bucket's keystore live at `keystore/<bucket_id>/` as a sibling
+of `buckets/`. `KEYSTORE_ROOT` names the keystore directory itself, anchored at
+the storage root; `KEYSTORE_RELATIVE` now names only what nests beneath that
+anchor. See R23 for the correction record.
 
 **R14 — Pinning tests migrate by re-expression, and a tautology is a failed
 migration.** Test literals divide into incidental (someone needed a directory)
@@ -517,6 +585,44 @@ omission is explained by the field's `None` default, which the exclusion
 function could not resolve. Declaring participation per member fixes it as a
 side effect. This is a deliberate correction, and an implementer must not
 "restore parity" with the old eight-field set on seeing the digest change.
+
+**Two different counts live under this ruling, and stating only one of them is
+what produced three amendments on the same number.** `FINGERPRINT_EXCLUDED_STORAGE_FIELDS`
+is keyed by **settings field**, not by taxonomy member — a file-kind leaf
+nested under an excluded directory category (a cache's compiled index, a
+cache's content file) can itself be a separate excluded *member* while
+carrying no `settings_field` of its own, since the field lives on the parent
+directory category. **Excluded members** and **excluded fields** are
+therefore not the same cardinality by construction, and a ruling that quotes
+one number as if it were the other will drift the moment either axis grows
+independently of the other.
+
+**Verified at committed HEAD `c16bb9a0ae`: nine excluded members, all nine
+carrying a `settings_field`, so both counts currently agree at 9** —
+`LLM_USAGE`, `LLM_RUN_TELEMETRY`, `MCP_TELEMETRY`, `RUNS`, `LLM_CACHE`,
+`CORPUS_TEXT_CACHE`, `CORPUS_SEARCH_CACHE`, `VALIDATION_VERDICT_CACHE`,
+`REGISTRY_DISK_CACHE`. The rise from the original eight to nine is not
+drift: two of the nine — `CORPUS_SEARCH_CACHE` and `VALIDATION_VERDICT_CACHE`
+— are categories this campaign itself enrolled (R6, R17) that had no
+corresponding settings field for the old eight-field tuple to have read in
+the first place.
+
+**This agreement is not guaranteed to survive the next declaration, and a
+future reader must recompute rather than trust either number here.**
+Family 1's file-leaf members (the compiled corpus-search index, the corpus-text
+cache file, and comparable file-kind children of an already-excluded
+directory category) widen the *member* count without adding a
+`settings_field`, so the two counts will diverge again as soon as those land
+— correctly, not as drift, for the same structural reason `CORPUS_SEARCH_CACHE`
+and `VALIDATION_VERDICT_CACHE` already diverged from the original eight.
+**Correction, found on two later honesty reviews**: an earlier version of
+this paragraph counted eleven and named `STATUS_CACHE` and `STORAGE_BACKUP`
+among them; both were declared dormant and then deleted outright, taxonomy
+member and all. A second review then found this ruling stating "nine
+members" against a live taxonomy that (in the working tree, mid-declaration)
+already carried eleven members against nine fields — the member-versus-field
+conflation this paragraph now states explicitly, so a fourth amendment on
+the same unstated distinction should not be needed.
 
 The gate for this axis asserts a property, with the positive control built in:
 for a category declared non-participating, writing beneath it must leave the
@@ -618,9 +724,26 @@ ruling: an independent oracle for a gate is a different category from a second
 production authority, and the distinguishing test is whether production reads
 it. Production does not.
 
-Its retirement is blocked by the same coupling that blocks new path fields (see
-Constraints), and it dies when the lifecycle gate is rewritten — not before, and
-not by deriving it.
+Its retirement was blocked by the same coupling that blocks new path fields (see
+Constraints), and was ruled to die when the lifecycle gate was rewritten — not
+before, and not by deriving it. **That gate has since been rewritten**: the
+hand-curated lifecycle frozensets were retired and classification now reads off
+the taxonomy, and the rewritten gate no longer imports
+`_STATE_ROOT_DERIVED_DIRS` — confirmed at HEAD, zero references to the name
+exist anywhere in `src/cadrumo` outside its own declaration. The blocking
+coupling is resolved.
+
+**The oracle role itself relocated ahead of the dict's physical deletion — and
+the deletion has since happened too.** `test_storage_taxonomy_parity.py`, the
+transitional parity test this dict originally backed, is deleted. Its pinning
+property relocated into an independently hand-maintained `DERIVED_OUTPUT_SUBPATHS`
+dict inside `test_output_dir_state_root.py` — a separate oracle, not
+`_STATE_ROOT_DERIVED_DIRS` renamed or re-exported. `_STATE_ROOT_DERIVED_DIRS`
+itself is now confirmed gone from `config.py` and from every other file in
+`src/cadrumo` — the dict's own death-date sentence is closed, not merely
+unblocked. Verified independently at committed HEAD, not taken from a report:
+`git show HEAD:src/cadrumo/core/config.py | grep _STATE_ROOT_DERIVED_DIRS`
+returns nothing.
 
 **R21 — `config storage` is bootstrap-exempt, so `reclaim` rests on one guard,
 and that guard carries a standing condition.** The family sits in the
@@ -663,6 +786,61 @@ answers a condition — a redistribution that would otherwise leave every existi
 test green while the operator-facing behaviour changed. This applies well beyond
 storage: any self-healing or refuse-early layer in front of a reporting layer
 has the same shape.
+
+**R23 — The keystore-scope defect, found on review, was real and is now
+closed.** This ruling was added to record a genuine implementation defect:
+`StorageScope` shipped with `KEYSTORE_RELATIVE` alone, and the scoped accessor
+resolved a bucket's keystore nested beneath it rather than sibling to
+`buckets/`, contradicting `validate_keystore_separation`. **The fix has since
+landed** — adding `KEYSTORE_ROOT` (R13, amended in the same pass as this
+ruling), with an anti-regression guard: the accessor test that once pinned the
+wrong nested shape as expected now asserts the sibling shape and carries a
+positive control that feeds the still-live separation validator a nested path
+to confirm it still refuses. This ruling is retained, superseded, rather than
+deleted, so the audit trail shows what R13 as originally written got wrong and
+how long it took to close — from this ADR first recording the defect to the fix
+landing was within the same execution day. Two plan Steps that depend on this
+fix — re-pointing `bucket_paths` and `keystore_path` onto the corrected scoped
+accessor — remain open.
+
+## Implementation Amendment Log
+
+This ADR was amended six times during execution before this audit pass, and
+twice more by it (once to record the keystore-scope defect as R23, once again
+within the hour to record its fix). Several rulings were **overridden by
+measurement during implementation, correctly** — the record is worth keeping
+because it is where this campaign's best findings live: R9's provenance gate
+shipped narrower than its first wording (location production, not universal
+readership, with the liveness gate's evidence shape independently extended on
+measurement to avoid deleting live regulated evidence); R12's
+cancel-then-refetch ratification was withdrawn on measurement that a
+`.crdownload` file existed on disk before `cancel()` could act; R13's scope
+axis shipped with four members instead of the ruling's original three, closing
+a real keystore-nesting defect rather than a cosmetic gap (R23 records the full
+arc, including that an earlier version of the accessor's own test had pinned
+the wrong nested shape as correct — the clearest evidence in this campaign that
+a green suite is not a claim about correctness); R16's fingerprint-participation
+axis went through three amendments on one number (eight, then eleven, then
+nine) before a second self-duplication review found the actual root cause —
+the ruling conflated excluded *members* with excluded *settings fields*,
+two different cardinalities by construction — and R16 now states both counts
+and why they can diverge again rather than a single number; R17 split two
+superficially-similar opt-in fields and added a fifth `ExternalPathRole`; R19
+resolved an apparent standing-rule conflict by lifting root resolution into a
+pure function rather than amending either rule; R20's retirement blocker
+resolved and its retired dict is now confirmed physically deleted, not merely
+unblocked; R10's `FIXED`-override guarantee was found, on review, to be
+enforced by absence rather than by a guard. Each is stated above at its own
+ruling, in place, rather than collected here — this log exists only to name
+that the correction discipline itself was followed repeatedly, not once.
+
+**Post-audit addendum**: a fresh-context honesty review found this ADR's own
+R16 correction had drifted again — stated as eleven at the point this log was
+written, nine after `S74`'s dormancy deletion removed two of the eleven named
+members — and that R13's scope-member count in this same log undercounted
+(three, not four). Both corrected in place above rather than only here,
+consistent with this log's own stated purpose: name that the correction
+discipline was followed, not just once.
 
 ## Rationale
 
