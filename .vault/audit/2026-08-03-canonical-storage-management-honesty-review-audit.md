@@ -68,6 +68,30 @@ the campaign's enforcement is red, and no closure record states that. This findi
 resolves itself the moment that lane commits, and should be re-measured then rather
 than treated as durable.
 
+**Re-measured at a later HEAD, and the situation moved backwards rather than forwards.**
+The first measurement was at HEAD `72b7b06ad3`. Re-run against a fresh archive of HEAD
+`1b4cecc31f`, fifteen commits later, serial and single-SHA: **2 failed, 13 passed**, the
+same two gates.
+
+- The settings-lifecycle gate is **still red**, on the identical five literals. The fix
+  remains uncommitted peer WIP: both modules are still `M` in the working tree with the
+  literals present at HEAD and absent only from the working copies. `git diff` over both
+  gate modules and `_storage_taxonomy.py` across those fifteen commits is empty, so the
+  gates themselves did not move — only the surrounding tree did. A campaign report that
+  this gate "has since gone green" is a working-tree reading, not a HEAD fact.
+- The liveness gate went from **3 unbacked consumer claims to 13**. The ten new ones are
+  every bucket- and keystore-scoped member — `bucket.db`, `bucket.blobs`, `bucket.audit`,
+  `bucket.manifest`, `bucket.lock`, `bucket.output-language-hint`, `bucket.keystore`,
+  `keystore.bucket-dek`, `keystore.profile-session`, `keystore.login-throttle` — all
+  still claiming `_namespace_registry.py` after the path-hierarchy extraction moved their
+  consumers into a sibling module. That is R10's entire core-ward migration reporting its
+  consumption unbacked.
+
+The diagnosis of the ten is understood and the remediation is described as routed. The
+distinction worth keeping is that routed describes intent and the gate describes state:
+at HEAD the campaign's own enforcement is failing on more claims than when this review
+opened, which is the opposite direction from the closure narrative.
+
 ### nested-ungoverned-set-materially-larger | critical | The confirmed NESTED-UNGOVERNED set is four compositions in two modules; measurement finds roughly fourteen destinations across eight
 
 **Claimed:** the closure reference records two confirmed NESTED-UNGOVERNED sites — the
