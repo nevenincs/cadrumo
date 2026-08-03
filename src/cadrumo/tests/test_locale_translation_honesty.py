@@ -11,15 +11,22 @@ placeholder, never a legitimate translation, so it has no per-key
 allowlist — only a shrink-only ``_key_echo_ceiling`` ratchet recorded in
 the same allowlist file.
 
-The current state ships ca and hu as wholesale-English placeholders.
-The allowlist's ``untranslated_pending`` bucket captures that state
-with a ``_untranslated_ceiling`` integer that records the maximum
-number of allowed identical-to-en keys.  Adding new untranslated
-strings causes the count to exceed the ceiling and the test fails —
-the ceiling is a ratchet, not a blanket bypass.
+The wholesale-placeholder era is over, and the prose used to outlive it.
+Measured across all 4404 keys: ``ca`` and ``hu`` each leave 30 values
+identical to English and ``es`` leaves 51, every one of them named and
+reasoned individually in the allowlist — so ca and hu are 4374/4404
+translated, not the "wholesale-English placeholders" this docstring
+once described. Both carry ``_untranslated_ceiling = 0``, meaning the
+``untranslated_pending`` bucket grants no bypass at all: a NEW
+untranslated string is refused immediately, with no headroom to absorb
+it. Read that before assuming a new key may ship echoing English.
 
-To lower the ratchet after translating a batch of keys: re-run the
-count and update ``_untranslated_ceiling`` in the allowlist file.
+The bucket and its ceiling are retained rather than removed because
+neither is hand-editable — ``_intentional_identical.json`` is
+CLI-managed (``aeat-locales-cli``), ``allow-identical`` only ADDS a
+per-key entry, and no verb removes one; ``cadrumo.locales._status``
+also binds the bucket key, so dropping it is a code change rather than
+a data edit.
 """
 
 from __future__ import annotations
