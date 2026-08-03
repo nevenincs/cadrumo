@@ -77,10 +77,23 @@ class StorageScope(StrEnum):
     top-level ``blobs`` and ``audit`` categories share their names with
     per-bucket subdirectories at a different depth, and both are correct.
     Keying on name alone would conflate them.
+
+    The keystore anchor is a second, independent bucket-id-parameterized root,
+    not a nested subdirectory of the bucket it unlocks. Production states this
+    as the load-bearing invariant it is
+    (:func:`~adapters.persistence.storage.bucket.validate_keystore_separation`):
+    the keystore lives at ``<root>/keystore/<bucket-id>/``, sibling to
+    ``buckets/``, and a configuration that resolves it under ``buckets/`` is
+    refused so a later unlock cannot silently violate the separation.
+    ``KEYSTORE_ROOT`` names that per-bucket keystore directory itself --
+    parameterized by a bucket id like ``BUCKET_RELATIVE``, but anchored at
+    ``<root>/keystore/`` rather than ``<root>/buckets/`` -- and
+    ``KEYSTORE_RELATIVE`` names what nests beneath it.
     """
 
     ROOT = "root"
     BUCKET_RELATIVE = "bucket_relative"
+    KEYSTORE_ROOT = "keystore_root"
     KEYSTORE_RELATIVE = "keystore_relative"
 
 
@@ -869,10 +882,15 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         override_policy=StorageOverridePolicy.FIXED,
     ),
     _location(
+        # Sibling to buckets/ under the storage root, never nested inside the
+        # bucket directory it unlocks -- production states and enforces this
+        # separation (adapters.persistence.storage.bucket._keystore_paths,
+        # validate_keystore_separation), so this member's scope is its own
+        # bucket-id-parameterized root, not BUCKET_RELATIVE.
         StorageCategory.BUCKET_KEYSTORE,
         "keystore",
         consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        scope=StorageScope.BUCKET_RELATIVE,
+        scope=StorageScope.KEYSTORE_ROOT,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -1033,11 +1051,18 @@ def bucket_scoped_storage_path(
     if not trimmed:
         raise CoreValidationError("bucket_id must not be blank")
     resolved = _effective_settings(settings)
-    bucket_root = (
-        Path(resolved.cadrumo_local_storage_root) / storage_location(StorageCategory.BUCKETS).relative_path() / trimmed
-    )
+    root = Path(resolved.cadrumo_local_storage_root)
+
+    if location.scope is StorageScope.KEYSTORE_ROOT:
+        # The bucket-id-parameterized keystore root itself: <root>/keystore/<id>.
+        return root / location.relative_path() / trimmed
     if location.scope is StorageScope.KEYSTORE_RELATIVE:
-        bucket_root = bucket_root / storage_location(StorageCategory.BUCKET_KEYSTORE).relative_path()
+        # Sibling to buckets/, never nested beneath it -- the same separation
+        # KEYSTORE_ROOT anchors, with this member's own subpath appended.
+        keystore_root = root / storage_location(StorageCategory.BUCKET_KEYSTORE).relative_path() / trimmed
+        return keystore_root / location.relative_path()
+
+    bucket_root = root / storage_location(StorageCategory.BUCKETS).relative_path() / trimmed
     return bucket_root / location.relative_path()
 
 

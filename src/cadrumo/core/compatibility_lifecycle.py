@@ -98,6 +98,11 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "archive": PersistedFormatClass.DURABLE,
     "bucket_dek": PersistedFormatClass.DURABLE,
     "bucket_manifest": PersistedFormatClass.DURABLE,
+    # The per-bucket SQLite file holding the encrypted secure_objects table --
+    # every filing, ledger entry, and evidence record a taxpayer has. The rows
+    # inside are already DURABLE under "secure_object"; the file that carries
+    # them is the same durability obligation at the container level.
+    "bucket_database_file": PersistedFormatClass.DURABLE,
     # The secret-store index maps HMAC lookup digests to blob references. It
     # is DURABLE rather than regenerable: the digest is an HMAC of the natural
     # key, and while each stored record still carries that key, no rebuild
@@ -110,6 +115,12 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "config_reset_journal": PersistedFormatClass.REGENERABLE,
     "bucket_lock": PersistedFormatClass.REGENERABLE,
     "bucket_output_language_hint": PersistedFormatClass.REGENERABLE,
+    # The cold-start database URL before any profile bucket exists. Every
+    # profile-bound write refuses this route
+    # (StorageRouteKind.ROOT_FALLBACK_DATABASE), so no taxpayer content ever
+    # lands here -- it is a placeholder nothing real writes through, and
+    # delete-and-refuse costs nothing.
+    "root_fallback_database": PersistedFormatClass.REGENERABLE,
 }
 
 

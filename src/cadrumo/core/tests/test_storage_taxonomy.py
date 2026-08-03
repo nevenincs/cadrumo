@@ -49,7 +49,7 @@ def _axis_members(axis: type[StrEnum]) -> set[str]:
 def test_each_axis_is_a_closed_set() -> None:
     """Every axis names exactly the values it declares, and nothing else."""
     assert _axis_members(StorageNodeKind) == {"directory", "file"}
-    assert _axis_members(StorageScope) == {"root", "bucket_relative", "keystore_relative"}
+    assert _axis_members(StorageScope) == {"root", "bucket_relative", "keystore_root", "keystore_relative"}
     assert _axis_members(StorageOverridePolicy) == {"operator_overridable", "fixed"}
     assert _axis_members(StorageLifecycle) == {"unbounded_by_design", "retention", "rotation", "ttl"}
     assert _axis_members(StorageGrouping) == {"state", "logs", "cache", "exports"}
@@ -220,16 +220,74 @@ def test_storage_path_refuses_a_scoped_member_rather_than_resolving_it(tmp_path:
 
 
 def test_the_scoped_accessor_resolves_bucket_and_keystore_members(tmp_path: Path) -> None:
-    """Keystore members nest under the bucket's keystore, not beside it."""
+    """The keystore is sibling to buckets/, never nested inside the bucket it unlocks.
+
+    Production states and enforces this separation
+    (:func:`~adapters.persistence.storage.bucket.validate_keystore_separation`);
+    an earlier version of this assertion pinned the keystore resolving under
+    ``buckets/primary/keystore/`` and was itself the bug, passing because
+    nothing checked the resolved path against the production invariant it
+    exists to satisfy. See
+    :func:`test_the_keystore_anchor_passes_the_production_separation_check`
+    for that check.
+    """
     root = tmp_path / "state"
     with override_settings(cadrumo_local_storage_root=root):
         bucket_tree = root / "buckets" / "primary"
         assert bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE, "primary") == bucket_tree / "db"
         assert bucket_scoped_storage_path(StorageCategory.BUCKET_MANIFEST, "primary") == bucket_tree / "manifest.toml"
+
+        keystore_tree = root / "keystore" / "primary"
+        assert bucket_scoped_storage_path(StorageCategory.BUCKET_KEYSTORE, "primary") == keystore_tree
         assert (
             bucket_scoped_storage_path(StorageCategory.KEYSTORE_PROFILE_SESSION, "primary")
-            == bucket_tree / "keystore" / "session.v1.json"
+            == keystore_tree / "session.v1.json"
         )
+        assert (
+            bucket_scoped_storage_path(StorageCategory.KEYSTORE_BUCKET_DEK, "primary")
+            == keystore_tree / "bucket.dek.json"
+        )
+        assert (
+            bucket_scoped_storage_path(StorageCategory.KEYSTORE_LOGIN_THROTTLE, "primary")
+            == keystore_tree / "login-throttle.json"
+        )
+
+
+def test_the_keystore_anchor_passes_the_production_separation_check(tmp_path: Path) -> None:
+    """Bind the taxonomy's keystore resolution to production's own security check.
+
+    A test asserting only a literal path would not have caught the original
+    defect either -- the literal it would have pinned was itself wrong. This
+    asserts the accessor's output against ``validate_keystore_separation``,
+    the real function that later refuses a session whose keystore resolves
+    under the bucket tree, so a regression that renests the keystore under
+    ``buckets/`` reds here structurally rather than by restating a coordinate.
+    """
+    from ...adapters.persistence.storage.bucket import validate_keystore_separation
+
+    root = tmp_path / "state"
+    with override_settings(cadrumo_local_storage_root=root):
+        resolved = bucket_scoped_storage_path(StorageCategory.BUCKET_KEYSTORE, "primary")
+
+    # Must not raise: a resolution nested under buckets/ or the per-bucket db
+    # dir is exactly what this refuses.
+    validate_keystore_separation(root, "primary", configured_keystore=resolved)
+
+
+def test_the_production_separation_check_still_refuses_a_nested_keystore(tmp_path: Path) -> None:
+    """Positive control: the check above must still be capable of firing.
+
+    Without this, the previous test would pass identically against a
+    validator that had degraded to a no-op, which is the exact failure mode a
+    security check silently disabled looks like.
+    """
+    from ...adapters.persistence.storage.bucket import BucketValidationError, validate_keystore_separation
+
+    root = tmp_path / "state"
+    nested = root / "buckets" / "primary" / "keystore"
+
+    with pytest.raises(BucketValidationError):
+        validate_keystore_separation(root, "primary", configured_keystore=nested)
 
 
 def test_the_scoped_accessor_refuses_a_root_member_and_a_blank_bucket(tmp_path: Path) -> None:

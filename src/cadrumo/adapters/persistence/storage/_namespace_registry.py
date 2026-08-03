@@ -1070,6 +1070,18 @@ DOMAIN_NAMESPACE_DEFINITIONS = (
 
 STORAGE_PATH_DEFINITIONS = (
     StoragePathDefinition(
+        # Root-scoped, not nested under buckets/ -- the cold-start database
+        # used only before any profile bucket exists. Every profile-bound
+        # write refuses this route (StorageRouteKind.ROOT_FALLBACK_DATABASE),
+        # so no real taxpayer content ever lands here; it is a placeholder URL,
+        # classified REGENERABLE in PERSISTED_FORMATS accordingly.
+        key="root_fallback_database",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/cadrumo.db",
+        owner="cadrumo.core.config",
+        segment=storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath,
+    ),
+    StoragePathDefinition(
         key="bucket_root",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/",
