@@ -42,28 +42,6 @@ from ..errors import CoreValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-# The exclusion oracle, re-derived independently from the drift-fingerprint
-# module's own eight attribute reads rather than from the taxonomy, so the
-# taxonomy cannot certify its own completeness. Field NAMES, never resolved
-# paths: two fields overridden onto one directory shrink a resolved-path set
-# while exactly the same fields are still consulted, so a cardinality
-# comparison is wrong in both directions at once.
-_FINGERPRINT_EXCLUDED_ORACLE = frozenset(
-    {
-        "cadrumo_corpus_search_cache_dir",
-        "cadrumo_corpus_text_cache_dir",
-        "cadrumo_llm_cache_dir",
-        "cadrumo_llm_run_telemetry_dir",
-        "cadrumo_llm_usage_dir",
-        "cadrumo_mcp_telemetry_dir",
-        "cadrumo_runs_dir",
-        "cadrumo_status_cache_dir",
-        "cadrumo_storage_backup_dir",
-        "cadrumo_validation_verdict_cache_dir",
-    },
-)
-
-
 def _axis_members(axis: type[StrEnum]) -> set[str]:
     return {member.value for member in axis}
 
@@ -172,17 +150,32 @@ def test_path_fields_stay_flat_attributes_on_settings(tmp_path: Path) -> None:
         )
 
 
-def test_fingerprint_participation_reproduces_the_independent_oracle() -> None:
-    """Set equality in both directions, by field name.
+def test_fingerprint_participation_is_a_declared_axis_on_every_member() -> None:
+    """Participation is declared per member, not inferred from another axis.
 
-    Excluding too much walks the digest toward the empty-tree constant that once
-    defeated drift detection outright; excluding too little churns it on every
-    cache write. Neither direction moves any other test, so both inclusions are
-    asserted here.
+    What the exclusion set must *contain* is asserted against a reasoned oracle
+    in :mod:`~core.tests.test_storage_fingerprint_participation_gate`, together
+    with the behavioural halves that catch a digest degraded to the empty-tree
+    constant. Two independent statements of one set is the duplicate authority
+    this taxonomy exists to remove, so this keeps only what belongs here: the
+    axis is total over the members, and the derived index agrees with the
+    declarations it is built from.
     """
-    assert FINGERPRINT_EXCLUDED_STORAGE_FIELDS == _FINGERPRINT_EXCLUDED_ORACLE, (
-        f"missing: {sorted(_FINGERPRINT_EXCLUDED_ORACLE - FINGERPRINT_EXCLUDED_STORAGE_FIELDS)}; "
-        f"extra: {sorted(FINGERPRINT_EXCLUDED_STORAGE_FIELDS - _FINGERPRINT_EXCLUDED_ORACLE)}"
+    for category, location in STORAGE_TAXONOMY.items():
+        assert isinstance(location.fingerprint_participation, FingerprintParticipation), category
+
+    from .._storage_taxonomy import StorageScope as _Scope
+
+    recomputed = {
+        location.settings_field
+        for location in STORAGE_TAXONOMY.values()
+        if location.settings_field is not None
+        and location.fingerprint_participation is FingerprintParticipation.EXCLUDED
+    }
+    assert recomputed == FINGERPRINT_EXCLUDED_STORAGE_FIELDS
+    assert recomputed, "the derived exclusion index is empty, so this asserts nothing"
+    assert all(STORAGE_TAXONOMY[STORAGE_FIELD_CATEGORIES[field]].scope is _Scope.ROOT for field in recomputed), (
+        "only a root-scoped member can be excluded from the data-root digest"
     )
 
 
