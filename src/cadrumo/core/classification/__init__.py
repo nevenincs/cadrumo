@@ -190,8 +190,17 @@ class RedactionRule(BaseModel):
             declaration; rules can be loaded from configuration without
             requiring a working regex compiler at import.
         strategy: How the matched value is rewritten.
-        applies_to: Sensitivity classes this rule applies to. Empty
-            tuple means the rule applies regardless of class.
+
+    Where a rule applies is NOT declared here. It is decided by the
+    policies that name the rule in their ``redaction_rules``, and
+    :func:`core.redaction.default_rules_for` reads nothing else. This
+    record once also carried an ``applies_to`` tuple of sensitivity
+    classes, which was a second declaration of that same fact: never
+    consulted, free to disagree with the policy table, and typed against
+    :class:`SensitivityClass` so it could not describe the OUTPUT policy
+    table at all -- the table that decides operator-facing redaction. A
+    duplicate the code ignores can only drift into a lie, so the fact is
+    declared once, where it is read.
     """
 
     model_config = _STRICT_FROZEN
@@ -199,7 +208,6 @@ class RedactionRule(BaseModel):
     name: str = Field(min_length=1)
     pattern: str = Field(min_length=1)
     strategy: RedactionStrategy
-    applies_to: tuple[SensitivityClass, ...] = Field(default=())
 
 
 class ClassificationPolicy(BaseModel):

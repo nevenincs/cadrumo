@@ -232,66 +232,31 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
             name="nif-hash",
             pattern=_NIF_PATTERN,
             strategy=_RedactionStrategy.SHA256_PREFIX,
-            applies_to=(
-                _SensitivityClass.IDENTITY,
-                _SensitivityClass.FINANCIAL,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
         "cif-hash": _RedactionRule(
             name="cif-hash",
             pattern=_CIF_PATTERN,
             strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
-            applies_to=(
-                _SensitivityClass.IDENTITY,
-                _SensitivityClass.FINANCIAL,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
         "iban-hash": _RedactionRule(
             name="iban-hash",
             pattern=_IBAN_PATTERN,
             strategy=_RedactionStrategy.SHA256_PREFIX_IF_IBAN,
-            applies_to=(
-                _SensitivityClass.IDENTITY,
-                _SensitivityClass.FINANCIAL,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
         "url-host-only": _RedactionRule(
             name="url-host-only",
             pattern=_URL_PATTERN,
             strategy=_RedactionStrategy.HOST_ONLY,
-            applies_to=(
-                _SensitivityClass.SESSION,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
         "token-fingerprint": _RedactionRule(
             name="token-fingerprint",
             pattern=_BEARER_PATTERN,
             strategy=_RedactionStrategy.FINGERPRINT,
-            applies_to=(
-                _SensitivityClass.SECRET,
-                _SensitivityClass.SESSION,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
         "bearer-token-fingerprint": _RedactionRule(
             name="bearer-token-fingerprint",
             pattern=_OPAQUE_BEARER_PATTERN,
             strategy=_RedactionStrategy.FINGERPRINT,
-            applies_to=(
-                _SensitivityClass.SECRET,
-                _SensitivityClass.SESSION,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
     },
 )

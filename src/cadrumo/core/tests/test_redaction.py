@@ -344,7 +344,7 @@ def test_redacting_an_already_redacted_line_changes_nothing() -> None:
 
 
 def test_cif_rule_is_enrolled_in_every_policy_that_carries_the_nif_rule() -> None:
-    """Enrolment is what makes the rule reachable, not its ``applies_to``.
+    """Enrolment is the only thing that makes a rule reachable.
 
     A rule resolves through the policy's ``redaction_rules`` name tuple, so
     a rule declared but never enrolled is inert everywhere — which is how a
