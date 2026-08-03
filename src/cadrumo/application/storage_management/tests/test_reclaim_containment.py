@@ -136,6 +136,34 @@ class TestReclaimCannotReachTaxpayerData:
                 continue
             assert STORAGE_TAXONOMY[category].grouping is not StorageGrouping.STATE
 
+    def test_the_accepted_set_is_confined_to_logs_and_caches(self, tmp_path) -> None:
+        """A denylist of one grouping leaves the filing evidence unguarded.
+
+        The assertion above refuses
+        :attr:`~cadrumo.core.StorageGrouping.STATE`, which is the encrypted
+        substrate and its key material. It says nothing about
+        :attr:`~cadrumo.core.StorageGrouping.EXPORTS` -- the drafts,
+        justificantes, filing history, filed declarations, invoices and
+        attachments a taxpayer defends a return with. Every one of those is
+        declared ``UNBOUNDED_BY_DESIGN`` today, so none is reclaimable; but that
+        is a property of the current declaration, and a single lifecycle edit
+        made in good faith ("filing history grows forever, prune it") would move
+        one into the accepted set with the ``STATE`` denylist still green.
+
+        Stated as an allowlist for that reason: reclaim may reach regenerable
+        logs and caches, and a member of any other family joining the accepted
+        set is a decision that must be taken deliberately rather than inherited
+        from a lifecycle change.
+        """
+        permitted = {StorageGrouping.LOGS, StorageGrouping.CACHE}
+        for category in _accepted_categories(tmp_path):
+            grouping = STORAGE_TAXONOMY[category].grouping
+            assert grouping in permitted, (
+                f"reclaim accepts {category.value}, grouped {grouping.value}, which is neither a log "
+                "nor a cache -- if this family is genuinely reclaimable, widen the allowlist here and "
+                "say why, because the deletion is of operator data rather than regenerable output"
+            )
+
     def test_every_accepted_member_declares_a_bounded_lifecycle(self, tmp_path) -> None:
         for category in _accepted_categories(tmp_path):
             assert STORAGE_TAXONOMY[category].lifecycle in RECLAIMABLE_LIFECYCLES
