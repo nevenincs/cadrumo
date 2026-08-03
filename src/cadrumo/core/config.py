@@ -95,9 +95,11 @@ LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_O
 
 _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     # Every output directory whose default is not an explicit operator override
-    # derives from ``cadrumo_local_storage_root`` under one category taxonomy, so
-    # a checkout keeps everything under the checkout's ``var/storage`` while an
-    # installed run keeps it under the platform user-data root. The value is the
+    # derives from ``cadrumo_local_storage_root`` under one category taxonomy.
+    # That root is the platform user-data location in every run mode: a source
+    # checkout no longer redirects it, and a developer who wants the store
+    # inside their checkout says so with ``CADRUMO_LOCAL_STORAGE_ROOT``. The
+    # value is the
     # POSIX-style relative subpath under the root; ``cache/`` is the sole on-disk
     # category prefix (the encrypted-state substrate, diagnostic logs, and
     # durable outputs keep bare, self-describing leaf names, matching the
@@ -130,6 +132,13 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_runs_dir": "runs",
     "cadrumo_justificantes_dir": "justificantes",
     "cadrumo_filing_history_dir": "filing-history",
+    # Live AEAT read-evidence roots. Previously hardcoded as CLI option defaults
+    # (``var/cadrumo/...``), which placed regulated filing evidence outside this
+    # taxonomy AND outside operator control: no override reached them because
+    # they were never settings at all.
+    "cadrumo_filed_declarations_dir": "filed-declarations",
+    "cadrumo_iva_compensation_history_dir": "live/iva-compensation-history",
+    "cadrumo_iva_read_evidence_dir": "live/iva-read-evidence",
     # Financial file-envelope catalogues and the registry parity-tape archive
     # (declared by the integration-fields mixin). The parity archive nests under
     # the derived audit directory, matching its historical layout.
@@ -238,7 +247,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Token Storage ───────────────────────────────────────────────────────
     cadrumo_token_dir: Path = Field(
-        default=Path("var"),
+        default=Path("tokens"),
         description=(
             "Directory for cached authentication token and lock files. The "
             "the relative default here is a placeholder: when the field "
@@ -307,7 +316,7 @@ class Settings(CadrumoMcpServingSettings):
         ),
     )
     cadrumo_storage_backup_dir: Path = Field(
-        default=Path("var") / "backups",
+        default=Path("backups"),
         description="Directory where the storage layer writes database backups",
     )
     cadrumo_secret_store_backend: SecretStoreBackend = Field(
@@ -340,7 +349,7 @@ class Settings(CadrumoMcpServingSettings):
         ),
     )
     cadrumo_secret_store_dir: Path = Field(
-        default=Path("var") / "secrets",
+        default=Path("secrets"),
         description="Directory for the encrypted secret-store master-key file and ciphertext records",
     )
     cadrumo_dev_test_database_password: SecretStr = Field(
@@ -348,11 +357,11 @@ class Settings(CadrumoMcpServingSettings):
         description="Development/test-only password used by secure-storage subprocess tests.",
     )
     cadrumo_blob_store_dir: Path = Field(
-        default=Path("var") / "blobs",
+        default=Path("blobs"),
         description="Directory containing the encrypted blob store (content-addressed, classification-aware)",
     )
     cadrumo_audit_dir: Path = Field(
-        default=Path("var") / "audit",
+        default=Path("audit"),
         description="Directory for the governed audit sink (redacted, classification-aware)",
     )
 
@@ -534,14 +543,14 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Registry corpus-text validation cache ───────────────────────────────
     cadrumo_corpus_text_cache_dir: Path = Field(
-        default=Path("var") / "cache" / "corpus-text",
+        default=Path("cache") / "corpus-text",
         description=(
             "Directory for the registry corpus source-text validation cache "
             "(normalised text keyed by content fingerprint)"
         ),
     )
     cadrumo_validation_verdict_cache_dir: Path = Field(
-        default=Path("var") / "cache" / "registry-verdict",
+        default=Path("cache") / "registry-verdict",
         description=(
             "Directory for the persistent registry-validation verdict cache "
             "(a fingerprint-keyed proof that validate_registry ran green, so a "
@@ -857,17 +866,17 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Submission engine ───────────────────────────────────────────────────
     cadrumo_submissions_dir: Path = Field(
-        default=Path("var") / "submissions",
+        default=Path("submissions"),
         description="Directory where ModeloPresentado JSON audit records are persisted",
     )
 
     # ── Notifications inbox ─────────────────────────────────────────────────
     cadrumo_inbox_dir: Path = Field(
-        default=Path("var") / "inbox",
+        default=Path("inbox"),
         description="Directory where the persisted Inbox JSON file lives",
     )
     cadrumo_inbox_pdf_dir: Path = Field(
-        default=Path("var") / "inbox" / "pdfs",
+        default=Path("inbox") / "pdfs",
         description="Directory where downloaded notification PDFs are stored",
     )
     cadrumo_inbox_alert_lead_days: int = Field(
@@ -880,12 +889,12 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Workflow engine ─────────────────────────────────────────────────────
     cadrumo_workflow_runs_dir: Path = Field(
-        default=Path("var") / "workflow-runs",
+        default=Path("workflow-runs"),
         description="Directory where WorkflowResult JSON audit records are persisted",
     )
     # ── Filing draft engine ─────────────────────────────────────────────────
     cadrumo_drafts_dir: Path = Field(
-        default=Path("var") / "drafts",
+        default=Path("drafts"),
         description="Directory where filing drafts are written as JSON files",
     )
     cadrumo_draft_fail_on_warning: bool = Field(
@@ -907,7 +916,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Status reader ───────────────────────────────────────────────────────
     cadrumo_status_cache_dir: Path = Field(
-        default=Path("var") / "status-cache",
+        default=Path("status-cache"),
         description="Directory for the short-lived AEAT status-page cache",
     )
     cadrumo_status_cache_ttl_s: int = Field(
@@ -933,7 +942,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Observability ──────────────────────────────────────────────────────
     cadrumo_runs_dir: Path = Field(
-        default=Path("var") / "runs",
+        default=Path("runs"),
         description=(
             "Directory where run traces and JSONL event logs are persisted "
             "(one subdirectory per run_id, containing trace.json + events.jsonl)"
@@ -951,8 +960,29 @@ class Settings(CadrumoMcpServingSettings):
     )
     # ── Justificante parser ─────────────────────────────────────────────────
     cadrumo_justificantes_dir: Path = Field(
-        default=Path("var") / "justificantes",
+        default=Path("justificantes"),
         description="Directory where parsed justificante PDFs and metadata are stored",
+    )
+    cadrumo_filed_declarations_dir: Path = Field(
+        default=Path("filed-declarations"),
+        description=(
+            "Directory for filed-declaration observations captured from AEAT. "
+            "Derived under cadrumo_local_storage_root unless explicitly set."
+        ),
+    )
+    cadrumo_iva_compensation_history_dir: Path = Field(
+        default=Path("live") / "iva-compensation-history",
+        description=(
+            "Directory for Modelo 303 compensation-history capture reports. "
+            "Derived under cadrumo_local_storage_root unless explicitly set."
+        ),
+    )
+    cadrumo_iva_read_evidence_dir: Path = Field(
+        default=Path("live") / "iva-read-evidence",
+        description=(
+            "Directory for IVA remote-state read-evidence reports. "
+            "Derived under cadrumo_local_storage_root unless explicitly set."
+        ),
     )
     cadrumo_justificante_parser_backend: JustificanteParserBackendSetting = Field(
         default=JustificanteParserBackendSetting.PDFPLUMBER,
@@ -961,7 +991,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Filing history ──────────────────────────────────────────────────────
     cadrumo_filing_history_dir: Path = Field(
-        default=Path("var") / "filing-history",
+        default=Path("filing-history"),
         description="Directory where the persisted ModeloHistory JSON file lives",
     )
     cadrumo_filing_history_cache_ttl_s: int = Field(
