@@ -133,7 +133,7 @@ def test_status_surface_holds_no_private_masking_policy() -> None:
 
 @pytest.mark.parametrize(
     "path",
-    ["auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"],
+    ["auth.numero_soporte", "auth.fecha_validez"],
 )
 def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> None:
     """The Cl@ve credential inputs mask under the schema really shipped.
@@ -147,6 +147,17 @@ def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> N
     of a secret from rendered output: a field simply missing from a
     fixture would satisfy an output-shaped assertion while remaining
     unmasked in production.
+
+    The two named here are the CONTRASTE -- what proves possession of the
+    physical document. ``auth.dni_nie`` was named alongside them and is
+    not one: it merely names the holder, carries the same identifier
+    ``identity.tax_id`` renders in the clear one section above, and
+    confers no capability without a contraste and a PIN this profile
+    never stores. It is deliberately excluded rather than accommodated by
+    a looser assertion: the list is an explicit statement of which fields
+    MUST mask, so dropping one has to be a visible decision. Deriving it
+    from the schema instead would make the gate read its expectation off
+    the thing it checks, and it could then never fail.
     """
     from .....application.user_profile import mask_profile_field
     from .....domain.user_profile import load_user_profile_schema
