@@ -215,6 +215,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RESUME: ${{ needs.preflight.outputs.resume }}
           BUMPED_COMMIT: ${{ needs.bump.outputs.commit }}
+          DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
         run: |
           # Resolution is by IDENTITY, never by recency. packaging-smoke queues
           # rather than cancels on a newer dispatch, so the newest run of that
@@ -244,8 +245,19 @@ jobs:
           fi
           head_sha="${BUMPED_COMMIT:-$(git rev-parse HEAD)}"
           echo "head_sha=${head_sha}" >> "$GITHUB_OUTPUT"
+          # A rehearsal proves this orchestrator's own wiring (bump, campaign,
+          # acquire, seal) - it does not need the full multi-OS packaging-smoke
+          # campaign (historically 1-6h) to do that, and the seal step below
+          # never dispatches publish-release.yml for a dry_run candidate anyway
+          # (Gate 2 requires a promotable packaging-smoke.yml source, which a
+          # quick run structurally is not). A real dispatch still runs the full
+          # campaign, because that is the source Gate 2 actually verifies.
+          campaign_workflow=".github/workflows/packaging-smoke.yml"
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            campaign_workflow=".github/workflows/packaging-quick.yml"
+          fi
           uv run --frozen python -m dev.release.run_resolution \
-            --workflow ".github/workflows/packaging-smoke.yml" \
+            --workflow "${campaign_workflow}" \
             --head-sha "${head_sha}" \
             --repository "${GITHUB_REPOSITORY}" \
             --resolve-seconds 1800 \
@@ -372,6 +384,21 @@ jobs:
           CLAUDE_EVIDENCE_RELEASE: ${{ needs.precondition.outputs.claude_evidence_release }}
           DRY_RUN: ${{ needs.preflight.outputs.dry_run }}
         run: |
+          # A rehearsal's packaging_run_id points at packaging-quick.yml (the
+          # campaign stage's own dry_run branch), which publish-release.yml's
+          # Gate 2 structurally cannot accept as a source (it pins the exact
+          # packaging-smoke.yml path, the only workflow that mints promotable
+          # evidence). Dispatching anyway would not silently pass -- Gate 2
+          # would refuse it, instructively -- but it would do so on every
+          # single rehearsal, a permanent, expected-looking "failure" with no
+          # diagnostic value. This orchestrator's own dry_run already proved
+          # bump, campaign, acquisition, and seal; re-proving publish-release's
+          # Gate 1/2 needs a REAL packaging-smoke source, which only a real
+          # dispatch produces.
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            echo "dry_run: not dispatching publish-release.yml (its Gate 2 needs a real packaging-smoke.yml source, which a rehearsal does not produce)"
+            exit 0
+          fi
           args=(--repo "${GITHUB_REPOSITORY}" -f "packaging_run_id=${PACKAGING_RUN_ID}" -f "dry_run=${DRY_RUN}")
           [ -n "${SCOOP_RUN_ID}" ] && args+=(-f "scoop_run_id=${SCOOP_RUN_ID}")
           [ -n "${HOMEBREW_RUN_ID}" ] && args+=(-f "homebrew_run_id=${HOMEBREW_RUN_ID}")
