@@ -124,6 +124,23 @@ _EXPECTED_OS_KEYCHAIN_TEST_IDS = frozenset(
         "::TestSilentResume::test_valid_session_resumes_with_no_authentication",
         "src/cadrumo/entrypoints/cli/tests/test_profile_session_root_resume.py"
         "::TestSilentResume::test_resume_advances_the_idle_deadline",
+        "src/cadrumo/tests/test_secure_sql.py"
+        "::TestHarnessReapsSessionKeys::test_login_inside_the_harness_leaves_no_keychain_entry",
+        # The destroy-path reaps. Each asserts on the KEYCHAIN half of the
+        # split-knowledge session specifically — that
+        # ``load_profile_session_key`` returns nothing once the profile is
+        # gone — so a host with no credential store cannot mint the key whose
+        # absence is the subject, and the case would pass vacuously. The
+        # on-disk half of the same contract is deliberately left in the
+        # default lane (``test_tombstone_removes_the_persisted_record``), so
+        # the reap stays covered everywhere; only the custody-bound halves
+        # carry the marker.
+        "src/cadrumo/application/user_profile/tests/test_destroy_reaps_session_artefacts.py"
+        "::TestTombstoneReapsTheSession::test_tombstone_removes_the_keychain_half",
+        "src/cadrumo/application/user_profile/tests/test_destroy_reaps_session_artefacts.py"
+        "::TestDirectoryRemovalReapsTheSession::test_removing_the_bucket_directory_removes_the_keychain_key",
+        "src/cadrumo/application/user_profile/tests/test_destroy_reaps_session_artefacts.py"
+        "::TestDirectoryRemovalReapsTheSession::test_the_key_is_reaped_even_when_the_directory_is_already_gone",
     },
 )
 _LEGACY_READ_MARKER = "live_" + "read"
