@@ -98,6 +98,25 @@ iva_wallet_app = typer.Typer(
 app.add_typer(iva_wallet_app, name="iva-wallet")
 
 
+def _resolve_live_output_root(value: Path | None, setting_name: str) -> Path:
+    """Resolve an ``--output-root`` to its enrolled data-root default.
+
+    An explicit operator value wins; otherwise the location comes from
+    :class:`~cadrumo.core.config.Settings`, so the evidence lands inside the
+    declared data-root taxonomy and moves with an operator's
+    ``CADRUMO_LOCAL_STORAGE_ROOT``. These roots were previously hardcoded
+    ``var/cadrumo/...`` literals on the option itself, which put regulated
+    filing evidence outside that taxonomy and beyond any override — the
+    default was not a setting at all, so nothing could redirect it.
+    """
+    if value is not None:
+        return value
+    from ...core.config import load_settings
+
+    resolved: Path = getattr(load_settings(), setting_name)
+    return resolved
+
+
 def _live_period_option(period: str | None, *, year: int) -> Period | None:
     if period is None:
         return None
@@ -449,7 +468,7 @@ def iva_wallet_pull_history_cmd(
         typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
     ],
     output_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output-root",
             file_okay=False,
@@ -457,7 +476,7 @@ def iva_wallet_pull_history_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/cadrumo/live/iva-compensation-history"),
+    ] = None,
 ) -> None:
     """Pull Modelo 303 filed history into an :class:`IvaCompensationHistoryCaptureReport`.
 
@@ -474,7 +493,7 @@ def iva_wallet_pull_history_cmd(
         capture_iva_compensation_history(
             year_from=year_from,
             year_to=year_to,
-            output_root=output_root,
+            output_root=_resolve_live_output_root(output_root, "cadrumo_iva_compensation_history_dir"),
         ),
     )
     lines = (
@@ -542,7 +561,7 @@ def iva_wallet_pull_evidence_cmd(
         ),
     ] = None,
     output_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output-root",
             file_okay=False,
@@ -550,7 +569,7 @@ def iva_wallet_pull_evidence_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/cadrumo/live/iva-read-evidence"),
+    ] = None,
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as an IVA remote-state report.
 
@@ -574,7 +593,7 @@ def iva_wallet_pull_evidence_cmd(
                 target_year=target_year,
                 target_period=resolved_target_period,
                 taxpayer_nif=taxpayer_nif,
-                output_root=output_root,
+                output_root=_resolve_live_output_root(output_root, "cadrumo_iva_read_evidence_dir"),
             ),
             timeout_ms=_live_iva_evidence_pull_command_timeout_ms(year_from=year_from, year_to=year_to),
         ),
@@ -1064,7 +1083,7 @@ def filed_pull_cmd(
         typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
     ] = None,
     output_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output-root",
             file_okay=False,
@@ -1072,7 +1091,7 @@ def filed_pull_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/cadrumo/filed-declarations"),
+    ] = None,
     period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.live.period_help"))] = None,
     expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
     limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
@@ -1097,7 +1116,7 @@ def filed_pull_cmd(
             capture_filed_data(
                 modelo=selected_modelos[0],
                 year=year,
-                output_root=output_root,
+                output_root=_resolve_live_output_root(output_root, "cadrumo_filed_declarations_dir"),
                 period=resolved_period,
                 expediente_id=expediente_id,
                 limit=limit,
@@ -1131,7 +1150,7 @@ def filed_pull_cmd(
         capture_filed_data_bulk(
             year_from=resolved_from,
             year_to=resolved_to,
-            output_root=output_root,
+            output_root=_resolve_live_output_root(output_root, "cadrumo_filed_declarations_dir"),
             modelos=selected_modelos or None,
             limit=limit,
         ),
@@ -1185,7 +1204,7 @@ def filed_pull_sources_cmd(
     year: Annotated[int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))],
     period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help"))],
     output_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output-root",
             file_okay=False,
@@ -1193,7 +1212,7 @@ def filed_pull_sources_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/cadrumo/filed-declarations"),
+    ] = None,
     registry_root: Annotated[
         Path | None,
         typer.Option(
@@ -1230,7 +1249,7 @@ def filed_pull_sources_cmd(
             modelo=modelo,
             year=year,
             period=_required_live_period_option(period, year=year),
-            output_root=output_root,
+            output_root=_resolve_live_output_root(output_root, "cadrumo_filed_declarations_dir"),
             registry_root=registry_root,
             source_root=source_root,
         ),

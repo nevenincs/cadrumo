@@ -12,8 +12,6 @@ multi-profile scan, and the ``backlog`` command's work-unit enrichment.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from ...application.overview import (
     OverviewCalendarEvent,
     OverviewCalendarFilingEvidence,
@@ -209,7 +207,14 @@ def _local_calendar_filing_evidence(
         filing_records = tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load().values())
         justificantes = tuple(JustificanteRepository().iter_justificantes())
         justificante_captures = JustificanteCaptureSnapshotService(bucket_id=bucket_id).list_snapshots()
-        filed_observation_store = FiledDeclaracionObservationStore(Path("var/cadrumo/filed-declarations"))
+        # Enrolled data-root location, not a hardcoded literal: this store holds
+        # filed-declaration evidence and must move with the operator's
+        # CADRUMO_LOCAL_STORAGE_ROOT like every other durable output.
+        from ...core.config import load_settings
+
+        filed_observation_store = FiledDeclaracionObservationStore(
+            load_settings().cadrumo_filed_declarations_dir,
+        )
         filed_declaration_observations, verified_filed_artefact_csvs = (
             _calendar_verified_filed_declaration_observations(
                 filed_observation_store,
