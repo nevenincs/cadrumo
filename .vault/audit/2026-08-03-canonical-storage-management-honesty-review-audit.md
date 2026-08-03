@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:f495e94ed3d3ab6b100be07a7073e581695a517bcca73f4cf5259a6155a724fc'
+body_hash: 'sha256:f18108b637f49eb6442aac9d39d9da62405fd5b57e6235759d9c25be07745eae'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-plan]]'
@@ -990,12 +990,16 @@ condition is the right place for it and a warning on every bootstrap would be no
 about something else, per the request — and recorded at its true severity rather than
 the one I first gave it.
 
-### rotation-guard-conflates-two-states | low | Two rotation-path existence guards cannot distinguish "never provisioned" from "vanished" — the second protection whose failure reads as success
+### rotation-guard-conflates-two-states | low | Two rotation-path existence guards cannot distinguish "never provisioned" from "vanished", and no downstream check recovers the distinction
 
-A second instance of the same shape the `chmod`-swallowed-failure finding above records:
-a protection whose failure is indistinguishable from its success, surfaced this time by
-the out-of-plan `default_blob_store_roots` doubled-path fix (commit `5fbd329fd0`) rather
-than by `S81`.
+Surfaced by the out-of-plan `default_blob_store_roots` doubled-path fix (commit
+`5fbd329fd0`), independent of `S81`. **Not paired with the `chmod` finding above** — that
+finding's initial framing was itself an overstatement the lead corrected after verifying
+`ROOT_PERMISSIONS_DRIFTED` at `application/storage_management/_service.py:196-205`
+detects the condition on demand; pairing this finding beside it on shape alone, before
+confirming a downstream detector is equally absent here, would be the same error repeated.
+It was not repeated: the absence claim below was checked by reading the consuming code,
+not inferred from the shape resembling the `chmod` case.
 
 **Where.** Two guard sites, identical shape, both in
 `adapters/persistence/storage/_rotation.py`:
@@ -1047,26 +1051,40 @@ docstring warns about for a missed blob: "the blob is unrecoverable" once the ol
 gone — and unlike the file-envelope path's later-run recovery, once the old key material
 itself is destroyed, a root that reappears afterward cannot be rotated at all.
 
+**What would detect this, named concretely, and confirmed absent by reading the code
+rather than by its absence from memory.** The `chmod` finding's mitigating half is a real
+downstream consumer: `ROOT_PERMISSIONS_DRIFTED`, a persisted-condition check independent
+of the moment the `chmod` failed, reachable through a shipped operator verb
+(`config storage check`). The equivalent shape here would be a consumer that reads a
+`RotationSummary` (or the root tuple `default_blob_store_roots` returned) and cross-checks
+it against an independent expectation — for instance, comparing the roots actually walked
+against the declared root-scoped `StorageCategory` members the taxonomy already enumerates,
+the way the campaign's materialisation-parity gate cross-checks the materialised tree
+against the declared member set. Grepped the whole tree for every symbol that shape would
+need to consume — `RotationSummary`, `rotate_blob_stores`, `rotate_master_key`,
+`default_blob_store_roots`, `default_rotation_plan` — and every hit outside
+`adapters/persistence/storage/_rotation.py` itself is either the package's own `__init__.py`
+re-export or a test file; none of `test_storage_liveness_gate.py`,
+`test_storage_binding_gate.py`, `test_storage_provenance_gate.py`, or
+`test_storage_materialisation_parity.py` mentions rotation at all. There is no operator
+verb, no application-layer consumer, and no campaign gate standing behind either rotation
+surface. The absence is not inferred from the shape of the finding; it is what the grep
+returned.
+
 **Severity, stated explicitly.** `low`, not `medium`, and the reason is reachability, not
 consequence: `rotate_blob_stores` / `default_blob_store_roots` have **zero production
-callers** — confirmed by grep across the whole tree outside `_rotation.py` and its tests —
-so no operator or automated job can trigger this today. The consequence *if* it fires is
-severe (an operator retiring an old master key on a false-clean summary), which is why it
-is recorded rather than dropped; the low label reflects that nothing reaches the code path
-yet, deliberately, unlike the `chmod` finding above where a partial detector already ships
-and the residual was narrowed by finding it. No such detector exists here to narrow
-against — the absence itself is the finding, not evidence the risk is smaller.
+callers**, so no operator or automated job can trigger this today. The consequence *if* it
+fires is severe (an operator retiring an old master key on a false-clean summary), which is
+why it is recorded rather than dropped; the low label reflects only that nothing reaches
+the code path yet.
 
 **Not campaign-caused, not fixed here, and correctly left alone.** The doubled-path fix
 corrected which root the guard is applied to; it did not (and should not have, unasked)
 change what the guard does with a `False`. The guard's current behaviour is a deliberate,
 consistently-applied, module-wide design choice with a stated rationale and passing test
-coverage — reversing it inside an unrelated bug fix would be scope creep, and the
-right owner is whoever designs the eventual operator-facing rotation verb (today there is
-none). Recorded here, alongside the `chmod` finding, so both members of this pattern — a
-protection whose failure is swallowed at debug-only logging, and a protection whose
-failure is indistinguishable from a benign true negative — survive outside the Step
-records that happened to surface them.
+coverage — reversing it inside an unrelated bug fix would be scope creep, and the right
+owner is whoever designs the eventual operator-facing rotation verb (today there is none).
+Recorded here so it survives outside the Step record that happened to surface it.
 
 ### s109-and-s111-independently-verified | none | Both hold; the S109 plan row suggested a tautology and the implementer correctly declined it
 
