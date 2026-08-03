@@ -35,10 +35,11 @@ file-producing call sites, one over path-composition expressions), targeted read
 in-process resolution of the taxonomy against the settings model, a serial run of the
 six storage gates, and a smoke of the delivered operator surface.
 
-**Verdict: the closure criterion is not met.** Four findings block; seven do not,
-of which one (the ungated locale value-constraint class) is high and should not wait. The
-verdict is not close — it is established three independent ways, and the campaign's own
-open Steps establish it before any independent measurement is considered.
+**Verdict when this review opened: the closure criterion was not met**, four findings
+blocking. **Verdict at close: still not met, but for a different reason, and one of the
+four is now closed by measurement.** The campaign's enforcement is green; its declared
+work is not finished and part of it is still untracked. The closing measurement and the
+revised standing of each blocker are in the final section.
 
 ## Findings
 
@@ -746,6 +747,80 @@ as described: the provenance gate's census does undercount by construction;
 re-scope excluding tests is correctly and consistently applied. I found no third
 unaccountable checkbox, though I cannot verify checkbox authorship — one shared git
 identity — so absence of evidence is the most I can offer there.
+
+### closing-measurement | none | Both gates green at a pinned object; two blockers remain and one is unchanged
+
+**Measured by me, pinned by construction** — SHA resolved into a variable first, that
+literal object archived, extracted, run serially with no marker filter:
+
+```
+pinned  471ad349d6e6b7ae48d2021dbf950543e56a9595
+result  164 passed, 0 failed
+gates   settings-lifecycle, liveness, provenance, binding,
+        materialisation-parity, taxonomy, storage-management service
+```
+
+This is an independent confirmation of the campaign's own report at `c16bb9a0ae`, taken
+at a different object by a different party. **The first blocker is closed.** The
+enrollment change landed, and with it both the five literals and the three unbacked
+consumer claims that shared its cause.
+
+**The other three, re-checked at the same pinned object rather than assumed:**
+
+- *Nested-ungoverned set larger than recorded* — **substantially reduced, not closed.**
+  The secret store's five file leaves are declared, its grammar re-anchored, the
+  active-profile pointer enrolled, and the dead tempfile bridge deleted rather than
+  pinned. The Families 1 and 2 remainder and all of Family 4 are still to land.
+- *Closure-blocking work has no plan row* — **unchanged.** `W02.P06`
+  ("nested subpath governance beneath enrolled categories") still carries **zero Steps**
+  at this object, as do `W02.P07`, `W02.P08` and `W03.P11`. The production write-call
+  census is a partial exception worth stating precisely: **the artefact now exists** — it
+  is in this document, static and runtime both — but the tracking row still does not, so
+  the evidence is no longer missing while the accountability still is.
+- *Criterion unmet by the plan's own open Steps* — **unchanged in kind, larger in count.**
+  28 open Steps against 25 when this review opened. That rise is healthy rather than
+  worrying: it is the enumeration and the gate work being written down.
+
+**So the reason closure is blocked has changed, and the change is worth naming.** It was
+"the campaign's own enforcement is red at HEAD" — an integrity problem. It is now "the
+declared work is not finished, and one phase of it is still untracked" — an ordinary
+completion problem. The first kind should stop a closure claim outright; the second is a
+burndown with a known end.
+
+### the-site-gate-b-found-that-i-missed | medium | My enumeration missed a tracked site, and the reason is procedural as well as technical
+
+**Reported to me:** a gate built on my enumeration surfaced
+`application/_config_reset_repository.py`'s `reset-operations` — a duplicate constant
+joined onto the raw storage root, bypassing `storage_path()` — which my census did not
+find.
+
+**Verified, and the diagnosis has three parts.**
+
+*Technically, it falls in two residual classes I had declared.* The join is not a single
+expression: `root = storage_root or resolved_settings.cadrumo_local_storage_root` and the
+dirname travels separately as a keyword argument into a constructor, where the composition
+happens. That is cross-boundary composition plus container-mediated flow — two of the four
+classes I named as unseeable. Finding an instance of a predicted class validates the bound
+rather than refuting it.
+
+*But there is a real seed-set gap that is mine.* My taint pass seeds on settings fields
+that are **taxonomy members**, and the storage root deliberately is not one — it is the
+container. I excluded it on the reasoning that the provenance gate already covers root
+joins. The two instruments therefore shared a blind spot neither owner would notice from
+their own side: the provenance gate sees a *direct* root join, my pass sees *member*
+joins, and a root passed as a parameter and joined behind a constructor is invisible to
+both. Seeding on the root as well would have cost nothing.
+
+*And the procedural gap matters more than either.* **This site is already tracked as plan
+Step `S25`**, open, naming the exact file and the exact defect — "collapse the twin
+reset-journal directory-name declaration onto the taxonomy member". I enumerated from the
+code and from the closure reference and never cross-referenced the plan's own open Steps,
+several of which name production enrollment sites directly. That is a cheap source I did
+not use, and it would have caught this one for free.
+
+So the honest accounting: it is a genuine miss in my enumeration; it is not a new unknown
+for the campaign, which has tracked it since the plan was authored; and the count does not
+grow by one, because `S25` was already inside the open-Step total I reported as blocking.
 
 ## Recommendations
 
