@@ -857,7 +857,10 @@ class ProfileManagerApp(App[None]):
 
         A refusal while the application is still up means something else
         entirely — that this was called on the UI task — and is raised, not
-        dressed up as an abandonment.
+        dressed up as an abandonment. Telling those two apart by liveness
+        is exact rather than approximate: the application stops running
+        before it lets go of its loop, so a refusal that coincides with a
+        stopped application can only be the one the missing loop caused.
         """
         collected: Mapping[str, str] | None = None
         answered = threading.Event()
