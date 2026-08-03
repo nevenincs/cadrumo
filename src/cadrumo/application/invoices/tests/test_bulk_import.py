@@ -184,6 +184,29 @@ def test_import_refuses_every_spanish_amount_grammar(taxable_base: str, tmp_path
         assert [failure.field for failure in result.refused] == ["taxable_base"]
 
 
+def test_the_amount_refusal_teaches_the_grammar_it_wants(tmp_path: Path) -> None:
+    """The refusal names the accepted form, not just that the value was rejected.
+
+    An operator who typed ``1.234`` meaning one thousand two hundred and
+    thirty-four euros has not made a typo — they wrote their own language
+    correctly into a field that wanted a different grammar. Telling them only
+    that the value is invalid leaves them to guess which of the two readings
+    the field disagreed with, and the likeliest guess is that the amount is
+    wrong rather than the notation.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        rows = _csv_rows(
+            "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
+            f"{_CIF},Papeleria Sol SL,BULK-ES-005,2026-05-01,1.234,21\n",
+        )
+        result = import_invoices_from_rows(rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED)
+
+        reason = result.refused[0].reason
+        assert "1234.56" in reason, "the refusal must show a correctly-written amount"
+        assert "decimal separator" in reason
+        assert "1.234" in reason, "the refusal must echo what the operator actually wrote"
+
+
 def test_import_still_accepts_the_canonical_euro_amount(tmp_path: Path) -> None:
     """The refusal above is specific: a canonical dot-decimal amount still imports.
 

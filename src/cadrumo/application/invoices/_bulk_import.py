@@ -199,7 +199,13 @@ def _parse_row_decimal(raw: object, *, row_number: int, field: str) -> Decimal:
         raise _RowParseError(
             row_number=row_number,
             field=field,
-            reason=f"invalid decimal amount: {_cell_text(raw)!r}",
+            reason=(
+                f"invalid decimal amount: {_cell_text(raw)!r} — write the amount with a dot as the "
+                "decimal separator, no thousands separator, and at most two decimals, so one "
+                "thousand two hundred and thirty-four euros fifty-six is '1234.56'. The Spanish "
+                "forms '1.234,56' and '1.234' are refused rather than guessed at, because '1.234' "
+                "is also a valid way to write one euro twenty-three."
+            ),
         )
     return numeric
 
