@@ -609,11 +609,50 @@ one the codebase already uses six times: pass `dir=`. Whether the anchor should 
 taxonomy member or the consumer's own directory is a small decision someone should take
 rather than inherit.
 
+**Reconciled against the earlier integrations finding, and the remedy changes: the
+secret-tempfile bridge is dead code, so it should be deleted rather than pinned.**
+Verified at HEAD — every reference to `materialise_secret` and `export_to_temp_path` is
+the module's own definition, an `__all__` entry, a facade re-export, a docstring mention,
+or its own test file. **Zero production callers**, and no dynamic reference either (no
+`getattr`, no `import_module`, no string-keyed dispatch). The docstring names Google
+service-account credentials, Playwright `storage_state` and cert-based clients as
+motivating cases, which describes what a library *can* demand rather than what this
+codebase routes through the helper.
+
+The distinction worth keeping precise: **the `SecretStore` itself is very much live** — the
+OAuth flow, the certificate backend, custody, login sessions and workflow persistence all
+use it. It is only the *path-shaped bridge on top of it* that nothing calls. A reader who
+checks "is the secret store used?" gets yes and stops; the question that matters is
+narrower.
+
+So this site should be **deleted, not pinned**, and deleting it removes one of the four
+unpinned OS-temp destinations outright. Two project rules point the same way:
+`aeat-source-hygiene` bars landing design-only shells, and `no-dormant-source-resolvers`
+codifies exactly this shape for resolvers — merged capability is enrolled or deleted.
+
+**Dead makes it worse in one specific respect, not better.** An unexercised helper that
+writes decrypted secrets to the OS temp directory sits in the public facade with an
+inviting docstring, so the next author who needs a path-shaped secret will reach for it
+and reasonably read its presence as sanction. That is the dormant-capability hazard rather
+than a live one, and deletion closes it in a way that pinning `dir=` would not — pinning
+would leave a sanctioned-looking route to a pattern nobody has needed.
+
+That leaves **three** sites to pin with the shape already used six times: the two
+`_workbook_parity.py` LibreOffice scratch directories and `cli/__init__.py:1318`.
+
 **Why neither census could have found these.** `tempfile.mkstemp(prefix=..., suffix=...)`
 contains no path expression at all, so the taint pass had nothing to seed on; and the
-runtime pass sees a resolved OS-temp path but cannot know it *should* have been pinned.
-Only reading the call and knowing R11 exists produces the finding. That is the argument
-for the manual read stated as evidence rather than as a preference.
+runtime pass sees a resolved OS-temp path but cannot know it *should* have been pinned —
+and for the dead bridge it would see nothing at all, because nothing calls it. Only
+reading the call, knowing R11 exists, and then checking the caller set produces the
+finding and its correct remedy. That is the argument for the manual read stated as
+evidence rather than as a preference.
+
+**A gate belongs alongside this**, because the contrast is drift rather than a design gap:
+six sites pin correctly and three will not until someone fixes them. An assertion that
+every production `tempfile` call choosing an application destination passes `dir=` would
+have caught all four. R11's existing review covered the *call* — stage briefly, then zip —
+and not the *destination*, which is how these survived a policy that already existed.
 
 ### verified-sound | none | What the record claims and the code supports
 
