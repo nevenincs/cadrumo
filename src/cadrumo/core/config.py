@@ -1407,6 +1407,16 @@ def reset_settings_cache() -> None:
     _constructed_settings.cache_clear()
 
 
+STORAGE_ROOT_MODE: Final[int] = 0o700
+"""Permission mode :func:`ensure_storage_tree` requests on the state root.
+
+Named because a second reader needs it: a drift check that verifies the root
+still carries what was asked for has to compare against the same value, and a
+literal repeated in both places lets the check keep passing against a mode the
+materialiser no longer requests.
+"""
+
+
 def ensure_storage_tree(settings: Settings | None = None) -> Path:
     """Materialise the state root and its declared directories, and return the root.
 
@@ -1472,7 +1482,7 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
             ) from exc
 
     try:
-        root.chmod(0o700)
+        root.chmod(STORAGE_ROOT_MODE)
     except (OSError, NotImplementedError):  # pragma: no cover - platform-dependent
         _LOGGER.debug("could not restrict permissions on %s; relying on filesystem ACLs", root)
 
