@@ -63,10 +63,10 @@ from ...adapters.persistence.storage.bucket import (
 from ...adapters.persistence.storage.master_key import KdfParams
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BucketPointer
-from ...core.config import load_settings
 from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
+from ...core.paths import effective_storage_root
 from ...core.redaction import redact_for_cli_output
 from ...core.time import now
 from ...domain.user_profile import (
@@ -177,7 +177,7 @@ class ProfileRepository:
                 lifecycle service. ``None`` resolves the canonical
                 process-shared schema.
         """
-        self._root = root if root is not None else load_settings().cadrumo_local_storage_root
+        self._root = effective_storage_root(root)
         self._secure_objects = secure_objects
         self._schema = schema
 
