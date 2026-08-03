@@ -12,6 +12,8 @@ view would fail.
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 from textual.widgets import DataTable, Input, Static
 
@@ -21,6 +23,7 @@ from .....application.user_profile import (
     register_profile_with_credentials,
 )
 from .....core import require_active_bucket_id
+from .....core.i18n import tr
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
@@ -371,6 +374,94 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
             assert app.is_running, "the screen must survive a refusing action"
             assert "NO-CERTIFICATE-REGISTERED" in reported
             app.exit(None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "raise_wordlessly",
+    [RuntimeError, asyncio.CancelledError],
+    ids=["a-door-that-raises-bare", "a-worker-that-was-cancelled"],
+)
+async def test_a_failure_carrying_no_text_is_named_rather_than_shown_blank(
+    tmp_path,
+    raise_wordlessly: type[BaseException],
+) -> None:
+    """A failure with nothing to say must not reach the operator as an empty line.
+
+    ``str(exc)`` is the empty string for any exception built without
+    arguments, and the settling handler used to render it as itself. That
+    put an error-styled line carrying no text in the one place the
+    operator looks for what went wrong — worse than silence, because it
+    says something happened and then refuses to say what.
+
+    Both shapes are driven because emptiness belongs to no single type.
+    ``asyncio.CancelledError`` is the one Textual produces on its own:
+    ``Worker._run`` stores the cancellation it caught, and its text is
+    empty. A door raising bare reaches the same blank through the
+    ordinary failure branch, which is why the fallback keys on the
+    rendered text rather than on the exception.
+
+    What is asserted is the rendered notice, not the handling: the whole
+    complaint is about what is on the operator's screen.
+    """
+    from .. import ManagerAction, ManagerActionOutcome
+
+    def _wordless() -> ManagerActionOutcome:
+        raise raise_wordlessly
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        app = ProfileManagerApp(
+            _live_overview(),
+            persist=_persist,
+            actions=[ManagerAction(key="silent", label="Silent", run=_wordless)],
+        )
+        # Resolved here rather than at import: the page words itself under
+        # the language this profile carries, so a value read outside this
+        # context would be compared against a sentence produced elsewhere.
+        expected = tr("flows.manager.action.failed")
+
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            await pilot.click("#action-silent")
+            reported = await _settled_notice(app, pilot, expected)
+            app.exit(None)
+
+        assert reported == expected, f"a failure with no text of its own showed {reported!r} rather than naming itself"
+
+
+@pytest.mark.asyncio
+async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_path) -> None:
+    """The write path settles the same way, and had the same blank.
+
+    ``_settle_write`` rendered ``str(worker.error)`` exactly as the action
+    path did, so a storage door raising bare emptied the notice line while
+    styling it as a refusal. Proved separately because it is a separate
+    handler with its own fallback wording, and fixing one of the two would
+    otherwise pass on the other's test.
+    """
+
+    def _persist_wordlessly(path: str, value: str):
+        raise RuntimeError
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        app = ProfileManagerApp(_live_overview(), persist=_persist_wordlessly)
+        expected = tr("flows.manager.edit.write_failed")
+
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            field = app._field_by_key[_EDITED_PATH]
+            app.push_screen(_edit_screen(field), app._apply_edit_for(field))
+            await pilot.pause()
+            app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
+            await pilot.click("#btn-edit-save")
+            reported = await _settled_notice(app, pilot, expected)
+            app.exit(None)
+
+        assert reported == expected, (
+            f"a write failing with no text of its own showed {reported!r} rather than naming itself"
+        )
 
 
 @pytest.mark.asyncio

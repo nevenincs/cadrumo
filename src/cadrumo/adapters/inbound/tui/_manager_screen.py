@@ -697,7 +697,7 @@ class ProfileManagerApp(App[None]):
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
-        self._refuse(str(worker.error) if worker.error is not None else tr("flows.manager.edit.write_failed"))
+        self._refuse_worker(worker.error, "flows.manager.edit.write_failed")
 
     def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
         """Report one finished action and adopt any profile it handed back.
@@ -711,9 +711,7 @@ class ProfileManagerApp(App[None]):
         self._pending_action = None
         self._set_busy(False)
         if worker.state is not WorkerState.SUCCESS or worker.result is None:
-            self._refuse(
-                str(worker.error) if worker.error is not None else tr("flows.manager.action.failed"),
-            )
+            self._refuse_worker(worker.error, "flows.manager.action.failed")
             return
         outcome = worker.result
         if outcome.overview is not None:
@@ -738,6 +736,23 @@ class ProfileManagerApp(App[None]):
     def _refuse(self, message: str) -> None:
         """Show something the page would not do, and why."""
         self._announce(message, _REFUSAL_TONE)
+
+    def _refuse_worker(self, error: BaseException | None, fallback_key: str) -> None:
+        """Show what a finished worker failed with, never as a blank line.
+
+        ``str(exc)`` is the empty string for any exception constructed
+        without arguments, and Textual hands the settling handlers exactly
+        that when a worker is cancelled: ``Worker._run`` stores the
+        ``asyncio.CancelledError`` it caught, whose text is empty. Rendered
+        as itself it reaches the operator as an error-styled line with
+        nothing written on it, which says less than saying nothing.
+
+        The fallback therefore turns on the rendered text being empty
+        rather than on the exception's type, because no type owns that
+        emptiness — a door that raises bare renders just as blank.
+        """
+        rendered = str(error) if error is not None else ""
+        self._refuse(rendered or tr(fallback_key))
 
     def _report(self, message: str) -> None:
         """Show what an action did."""
