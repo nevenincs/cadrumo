@@ -444,11 +444,27 @@ cross-module composition (a helper in module A returns a tainted directory and m
 appends to it); library-named files (a directory handed to a writer that picks the
 filename); container-mediated flow (a tainted path stored in a dict, dataclass or list
 and read back elsewhere); and fully dynamic roots. The first class is not hypothetical
-and its surface is measurable: of **267** production filesystem-mutating call sites,
-**260 receive their destination from a parameter, a call, or an attribute** rather than
-constructing it locally. Static analysis cannot close that without whole-program
-interprocedural dataflow, which would carry its own unsoundness in a codebase this
-dynamic.
+and its surface is measurable.
+
+**Correcting a number I previously reported as measured.** I first gave that surface as
+"260 of 267 production filesystem-mutating call sites". **That was inflated roughly
+2.6-fold by a defect in my own census**: it counted every `.replace(...)` attribute call
+as `Path.replace`, so every ordinary `str.replace(old, new)` in the tree was scored as a
+filesystem rename. The discriminator is arity — `Path.replace` takes one argument,
+`str.replace` takes two — and applying it removes **166 false positives**. The corrected
+figure is **101 production filesystem-mutating call sites in `src/cadrumo`, of which 96
+receive their destination from a parameter, a call, or an attribute**; spot-checking the
+survivors finds two more that are service-object `.rename()` methods rather than
+filesystem renames, so the true figure is about **99**.
+
+The ratio is essentially unchanged — 95% receive rather than construct, against the 97% I
+first reported — so the qualitative conclusion stands. **The absolute number changes what
+should be recommended, though, and in the useful direction.** At 267 sites, exhaustive
+manual review is not a serious proposal and the residual has to be bounded statistically.
+At about 100 it is an afternoon's work: a reviewer can read every production write site
+in the tree and classify its destination by hand, which closes the cross-module class
+completely rather than bounding it. Static analysis cannot close that class without
+whole-program interprocedural dataflow; a human reading a hundred sites can.
 
 **The tightest defensible bound, and the method that reaches it.** No single method
 suffices, and the two available ones have *complementary* blind spots rather than
@@ -458,7 +474,7 @@ destination string**, so it has no expression-shape blind spot at all. The union
 therefore the non-undercounting method, and its residual is not an unknown — it is
 exactly the set of production write sites that both receive their destination
 cross-module *and* are never exercised, which is finite and enumerable by intersecting
-the 267 static sites against the frames the instrumented run observes.
+the ~100 static sites against the frames the instrumented run observes.
 
 So the bound to declare against is: **at least 23 distinct application-chosen undeclared
 names, across 34 sites in 14 modules**, with the residual confined to a nameable list
@@ -588,7 +604,11 @@ Blocking, in the order that makes the next measurement cheapest:
 4. Close, or explicitly re-scope with a stated reason, the open production-enrollment
    Steps — `S51`, `S52`, `S53` at minimum, since their own text asserts the criterion is
    unmet for the sites they name.
-5. Declare Families 1 and 2 of the enumeration — 15 names, no model change needed — as
+5. Read all ~100 production filesystem-mutating call sites by hand and classify each
+   destination. This is now the cheapest way to close the enumeration completely rather
+   than bound it: the count is small enough for exhaustive review, which is the only
+   method that closes the cross-module composition class outright. Then declare
+   Families 1 and 2 of the enumeration — 15 names, no model change needed — as
    `StorageCategory` members. Declare Family 4 as `StoragePathDefinition` grammars plus
    the handful of vocabulary tokens they need; no model change and no ruling is required,
    the mechanism already exists. Family 3 needs nothing: it is already declared and
