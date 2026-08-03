@@ -202,12 +202,25 @@ class FieldEditScreen(ModalScreen[str | None]):
 
     @override
     def compose(self) -> ComposeResult:
+        """Lay out the dialog for one field.
+
+        A masked field's box starts EMPTY, and both halves of why are
+        worth stating because neither is visible from here. The overview
+        this dialog is handed never carries a masked value — the
+        projection substitutes the mask placeholder, deliberately, so
+        that a page held open on screen cannot leak a secret — which
+        means there is no real value available to pre-fill with. And the
+        placeholder itself must not be used in its place: it is an
+        ordinary string, so it would be submitted back as the literal new
+        value the moment the operator pressed save, overwriting the
+        secret with a row of dots.
+
+        The emptiness is therefore not the field's state, and the rest of
+        this screen exists to stop it being read as one.
+        """
         with Vertical(id="edit-dialog"):
             yield Label(self._prompt, id="edit-label")
             yield Static(tr("flows.manager.edit.path", path=self._field.path), id="edit-path")
-            # A masked field starts EMPTY rather than pre-filled with the
-            # placeholder: pre-filling would submit the dots back as the
-            # literal new value the moment the operator pressed enter.
             if self._field.enum_values:
                 yield OptionList(*[self._label_for(value) for value in self._field.enum_values], id="edit-options")
             else:

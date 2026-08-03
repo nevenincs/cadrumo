@@ -391,12 +391,26 @@ async def test_a_masked_enum_pre_selects_nothing_so_enter_cannot_overwrite_it(tm
                 "the dialog must stay open so the operator can choose, rather than closing on nothing"
             )
 
+            # The button reaches the same code by a different route, and
+            # the key path passing says nothing about it. With no
+            # highlight it dismisses None -- a no-change, never a blank --
+            # which is the measured answer to whether this half of the
+            # dialog can clear a value: it cannot. It only ever hands back
+            # None or one of its own declared tokens, and neither reaches
+            # the write door as a clear.
+            await pilot.click("#btn-edit-save")
+            await pilot.pause()
+            assert dismissed == [None], f"save with nothing chosen must be a no-change, but gave {dismissed!r}"
+
             # The operator is not stranded: one arrow key reaches the first
             # token, which is where focus alone used to leave them.
+            chosen: list[str | None] = []
+            app.push_screen(FieldEditScreen(masked_enum), chosen.append)
+            await pilot.pause()
             await pilot.press("down")
             await pilot.pause()
             assert app.screen.query_one("#edit-options", OptionList).highlighted == 0
             await pilot.press("enter")
             await pilot.pause()
-            assert dismissed == ["casilla"], f"a chosen token must still be written, but got {dismissed!r}"
+            assert chosen == ["casilla"], f"a chosen token must still be written, but got {chosen!r}"
             app.exit(None)
