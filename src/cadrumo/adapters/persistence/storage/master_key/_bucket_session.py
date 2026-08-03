@@ -49,6 +49,11 @@ if TYPE_CHECKING:
 _KEK_BYTES = 32
 _DEK_BYTES = 32
 DEFAULT_SESSION_ABSOLUTE_MINUTES = 240
+#: Entries kept by the per-session routed-settings memo. Measured need is two
+#: -- a profile write asks for the route once inside a settings override and
+#: once outside it, alternating -- so the bound is that pair with headroom,
+#: not a general-purpose cache size.
+_ROUTED_SETTINGS_MEMO_SIZE = 4
 _log = get_logger(__name__)
 
 
@@ -76,7 +81,6 @@ class BucketSession:
         "_kek_buffer",
         "_opened_at",
         "_routed_settings",
-        "_routed_settings_key",
         "_sealed",
         "_storage_root",
         "_unsecured_backend",
@@ -108,10 +112,10 @@ class BucketSession:
         self._unsecured_backend = unsecured_backend
         self._sealed = False
         self._engine: Engine | None = None
-        # One-entry memo behind :meth:`routed_settings`; see that method for
-        # why the scope is the session and not the process.
-        self._routed_settings_key: str | None = None
-        self._routed_settings: Settings | None = None
+        # Small bounded memo behind :meth:`routed_settings`; see that method
+        # for why the scope is the session and not the process, and why one
+        # entry was not enough.
+        self._routed_settings: dict[str, Settings] = {}
         # Registered at construction, not at binding: a session owns key buffers
         # from this point on, and the emergency-zeroisation path must cover it
         # whether or not it is ever bound to a context (and whichever thread
@@ -374,9 +378,17 @@ class BucketSession:
         returns a fresh instance whenever no override is in scope, so
         identity would miss every time. Serialising costs about a
         thousandth of the derivation it avoids, and equal settings
-        provably derive an equal route. One entry is kept, because the
-        access pattern is the same source asked repeatedly; a source that
-        differs simply replaces it.
+        provably derive an equal route.
+
+        A few entries are kept rather than one. The memo originally held a
+        single slot on the premise that the access pattern is the same
+        source asked repeatedly; measurement disproved it. A profile field
+        edit asks for this route twice, once under a settings override and
+        once outside it, and those two sources alternate strictly -- so a
+        one-slot memo had each arm evict the other and served zero hits
+        across an entire editing session, recomputing every derivation it
+        existed to avoid. The bound stays small because the working set is
+        that alternating pair, not an unbounded space of sources.
 
         Args:
             source: The live :class:`~core.config.Settings` whose non-route
@@ -393,11 +405,15 @@ class BucketSession:
         from .....core.config import settings_for_active_profile_bucket
 
         key = source.model_dump_json()
-        if self._routed_settings_key == key and self._routed_settings is not None:
-            return self._routed_settings
+        memoised = self._routed_settings.get(key)
+        if memoised is not None:
+            return memoised
         derived = settings_for_active_profile_bucket(self._bucket_id, source)
-        self._routed_settings_key = key
-        self._routed_settings = derived
+        if len(self._routed_settings) >= _ROUTED_SETTINGS_MEMO_SIZE:
+            # Bounded, and evicting the oldest keeps an alternating pair
+            # resident rather than letting one arm evict the other.
+            self._routed_settings.pop(next(iter(self._routed_settings)))
+        self._routed_settings[key] = derived
         return derived
 
     def acquire_engine(self, settings_factory: Callable[[], Settings]) -> Engine:
@@ -457,8 +473,7 @@ class BucketSession:
         # The memoised route resolves configured paths against the filesystem,
         # so a caller re-materialising this bucket's directory invalidates that
         # derivation for the same reason it invalidates the engine handle.
-        self._routed_settings_key = None
-        self._routed_settings = None
+        self._routed_settings.clear()
         if self._sealed or self._engine is None:
             return
         from ..sql.engine import dispose_engine_handle
@@ -491,8 +506,7 @@ class BucketSession:
         _zeroise(self._kek_buffer)
         _zeroise(self._dek_buffer)
         self._sealed = True
-        self._routed_settings_key = None
-        self._routed_settings = None
+        self._routed_settings.clear()
         self._dispose_engine()
 
     def _dispose_engine(self) -> None:
