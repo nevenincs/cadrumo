@@ -29,8 +29,8 @@ import pytest
 from pydantic import BaseModel
 
 from .....core import AuthProviderKind, Modelo
+from .....core.config import override_settings
 from .....core.resources import bundled_path
-from .....tests.env_scope import scoped_env_var
 from .._compiled_cache import (
     _CADRUMO_PACKAGE_DIR,
     _LOADER_CODE_FINGERPRINT,
@@ -48,7 +48,6 @@ from .._loader import (
     clear_fingerprint_cache,
     load_registry_tree,
 )
-from .._loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 from .._schema import ModeloDefinition, RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -307,7 +306,13 @@ def test_stale_loader_pickle_is_not_served_while_current_key_pickle_is(tmp_path:
     isolated_cache_dir = tmp_path / "registry-disk-cache"
     isolated_cache_dir.mkdir()
 
-    with scoped_env_var(REGISTRY_DISK_CACHE_DIR_ENV_VAR, str(isolated_cache_dir)):
+    # ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` backs the Settings field
+    # ``cadrumo_registry_disk_cache_dir``; ``load_settings()`` caches the
+    # constructed ``Settings`` per active-profile pointer, so a plain
+    # ``os.environ`` mutation is invisible to the in-process resolver once an
+    # earlier call already built and cached a ``Settings`` instance.
+    # ``override_settings`` is the mechanism that actually takes effect here.
+    with override_settings(cadrumo_registry_disk_cache_dir=isolated_cache_dir):
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
 
