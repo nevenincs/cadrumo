@@ -4032,6 +4032,12 @@ cli:
         per començar.
       help: Mostrar l'estat del perfil de configuració actiu
       next_step: 'Següent pas: `aeat app overview status`'
+    storage:
+      errors:
+        reclaim_refused: 'es rebutja alliberar %{category}: %{reason}. %{path} conté
+          %{entries} entrades i no se n''ha eliminat cap.'
+        reclaim_unconfirmed: alliberar %{category} elimina %{entries} entrades a %{path}
+          i requereix confirmació explícita.
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
@@ -5908,6 +5914,8 @@ errors:
     error_storage_bucket_path_too_long: El camí del directori del bucket supera el
       límit MAX_PATH de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més
       curt o activa LongPathsEnabled (vegeu `aeat config check`).
+    error_storage_management: No s'ha pogut llegir ni alliberar l'arbre d'emmagatzematge
+      local.
     error_submission_validation: Un model d'enviament no ha superat la validació.
     error_telemetry_schema: Una clau de mètrica de telemetria no està registrada a
       l'esquema tancat de mètriques de la seva ordre.
@@ -6600,6 +6608,10 @@ errors:
       activa. Executa `aeat config login NAME` i torna-ho a provar.
     refused_storage_passphrase_too_short: La frase de contrasenya és massa curta.
       Ha de tenir com a mínim 8 caràcters.
+    refused_storage_reclaim: 'Es rebutja alliberar aquesta categoria d''emmagatzematge:
+      el seu cicle de vida declarat conserva el seu contingut.'
+    refused_storage_reclaim_unconfirmed: Alliberar una categoria d'emmagatzematge
+      elimina dades i requereix confirmació explícita.
     refused_storage_secret_already_exists: Ja existeix un secret amb aquesta clau.
       Fes servir l'opció de sobreescriptura si el vols reemplaçar.
     refused_storage_session_expired: La sessió activa ha caducat per inactivitat.

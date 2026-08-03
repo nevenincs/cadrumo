@@ -3984,6 +3984,12 @@ cli:
         NÉV` a kezdéshez.'
       help: Az aktuális konfigurációs profil készenléti állapotának megjelenítése.
       next_step: 'Következő lépés: `aeat app overview status`'
+    storage:
+      errors:
+        reclaim_refused: '%{category} felszabadítása elutasítva: %{reason}. A(z) %{path}
+          %{entries} bejegyzést tartalmaz, és egyet sem távolítottunk el.'
+        reclaim_unconfirmed: '%{category} felszabadítása %{entries} bejegyzést töröl
+          a(z) %{path} alatt, és kifejezett megerősítést igényel.'
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -5833,6 +5839,7 @@ errors:
       a Windows MAX_PATH korlátját. Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást
       egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd
       `aeat config check`).
+    error_storage_management: A helyi tárolófát nem sikerült beolvasni vagy felszabadítani.
     error_submission_validation: Egy benyújtási modell nem ment át az érvényesítésen.
     error_telemetry_schema: Egy telemetriai metrikakulcs nincs regisztrálva a parancs
       zárt metrikasémájában.
@@ -6485,6 +6492,10 @@ errors:
       szükséges. Futtassa az `aeat config login NÉV` parancsot, majd próbálja újra.
     refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakterből
       kell állnia.
+    refused_storage_reclaim: 'A tárolókategória felszabadítása elutasítva: a deklarált
+      életciklusa megőrzi a tartalmát.'
+    refused_storage_reclaim_unconfirmed: Egy tárolókategória felszabadítása adatokat
+      töröl, és kifejezett megerősítést igényel.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
     refused_storage_session_expired: Az aktív munkamenet inaktivitás miatt lejárt.

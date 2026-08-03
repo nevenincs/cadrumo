@@ -3762,6 +3762,12 @@ cli:
         to get started.
       help: Show the readiness of the current configuration profile
       next_step: 'Next step: `aeat app overview status`'
+    storage:
+      errors:
+        reclaim_refused: 'refusing to reclaim %{category}: %{reason}. %{path} holds
+          %{entries} entries and none were removed.'
+        reclaim_unconfirmed: reclaiming %{category} deletes %{entries} entries under
+          %{path} and needs explicit confirmation.
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -5526,6 +5532,7 @@ errors:
     error_storage_bucket_path_too_long: The bucket directory path exceeds the Windows
       MAX_PATH limit. Move CADRUMO_LOCAL_STORAGE_ROOT to a shorter path or enable
       LongPathsEnabled (see `aeat config check`).
+    error_storage_management: The local storage tree could not be read or reclaimed.
     error_submission_validation: A submission model failed validation.
     error_telemetry_schema: A telemetry metric key was not registered in the closed
       metric schema for its command.
@@ -6165,6 +6172,10 @@ errors:
       Run `aeat config login NAME` and try again.
     refused_storage_passphrase_too_short: The passphrase is too short. It must be
       at least 8 characters long.
+    refused_storage_reclaim: 'Reclaiming this storage category is refused: its declared
+      lifecycle keeps its contents.'
+    refused_storage_reclaim_unconfirmed: Reclaiming a storage category deletes data
+      and needs explicit confirmation.
     refused_storage_secret_already_exists: A secret with that key already exists.
       Use the overwrite option to replace it.
     refused_storage_session_expired: The active session expired due to inactivity.

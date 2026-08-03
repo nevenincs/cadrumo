@@ -4064,6 +4064,12 @@ cli:
         para empezar.
       help: Mostrar el estado del perfil de configuración activo
       next_step: 'Próximo paso: `aeat app overview status`'
+    storage:
+      errors:
+        reclaim_refused: 'se rechaza liberar %{category}: %{reason}. %{path} contiene
+          %{entries} entradas y no se ha eliminado ninguna.'
+        reclaim_unconfirmed: liberar %{category} elimina %{entries} entradas en %{path}
+          y requiere confirmación explícita.
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -5950,6 +5956,8 @@ errors:
     error_storage_bucket_path_too_long: La ruta del directorio del bucket supera el
       límite MAX_PATH de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más
       corta o habilite LongPathsEnabled (véase `aeat config check`).
+    error_storage_management: No se ha podido leer ni liberar el árbol de almacenamiento
+      local.
     error_submission_validation: Un modelo de envío no superó la validación.
     error_telemetry_schema: Una clave de métrica de telemetría no está registrada
       en el esquema cerrado de métricas de su comando.
@@ -6640,6 +6648,10 @@ errors:
       Ejecuta `aeat config login NAME` y vuelve a intentarlo.
     refused_storage_passphrase_too_short: La frase de contraseña es demasiado corta.
       Debe tener al menos 8 caracteres.
+    refused_storage_reclaim: 'Se rechaza liberar esta categoría de almacenamiento:
+      su ciclo de vida declarado conserva su contenido.'
+    refused_storage_reclaim_unconfirmed: Liberar una categoría de almacenamiento elimina
+      datos y requiere confirmación explícita.
     refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
       la opción de sobrescritura si quieres reemplazarlo.
     refused_storage_session_expired: La sesión activa ha caducado por inactividad.
