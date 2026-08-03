@@ -129,6 +129,17 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "run_trace": PersistedFormatClass.REGENERABLE,
     "run_events": PersistedFormatClass.REGENERABLE,
     "run_envelope": PersistedFormatClass.REGENERABLE,
+    # Diagnostic accounting (LLM usage/telemetry) and evictable caches (the
+    # response cache, the registry-verdict skip-validation proof) -- none of
+    # them taxpayer filing evidence. The two logical/display-only entries
+    # (usage, run-telemetry) never materialise a file at all; the cache entry
+    # is likewise SQL-backed. The lock file and the verdict cache file ARE
+    # real writes, both freely deleted and regenerated.
+    "llm_usage_record": PersistedFormatClass.REGENERABLE,
+    "llm_run_telemetry_record": PersistedFormatClass.REGENERABLE,
+    "auth_acquisition_lock": PersistedFormatClass.REGENERABLE,
+    "validation_verdict_cache_entry": PersistedFormatClass.REGENERABLE,
+    "llm_cache_entry": PersistedFormatClass.REGENERABLE,
 }
 
 

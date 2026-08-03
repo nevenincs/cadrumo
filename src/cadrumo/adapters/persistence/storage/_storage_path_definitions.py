@@ -293,4 +293,54 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         grammar="<root>/runs/<run_id>/envelope.json",
         owner="cadrumo.core.observability",
     ),
+    # The five entries below declare filename TEMPLATES rather than a single
+    # fixed leaf -- a daily log filename, a bucket/provider-keyed lock name, a
+    # digest-suffixed cache filename, a provider/model-keyed cache path --
+    # each governed by the taxonomy's parent directory member (LLM_USAGE,
+    # LLM_RUN_TELEMETRY, TOKENS, VALIDATION_VERDICT_CACHE, LLM_CACHE) plus a
+    # grammar spelling the interpolated shape, exactly the mechanism the six
+    # entries above already use for the blob/run fan-outs.
+    #
+    # Three of the five (llm_usage_record, llm_run_telemetry_record,
+    # llm_cache_entry) are NOT materialised as files: their producers persist
+    # through ``secure_object_repository_for_active_bucket().save(...)``
+    # (encrypted SQL secure objects), and each producer's own docstring
+    # states its returned path is "logical ... for operator display only" /
+    # "The cache itself is persisted in encrypted SQL secure objects". The
+    # grammar still documents that real, produced STRING -- callers build and
+    # return it for display -- but no byte is ever written at it. Declared as
+    # ``kind=FILE`` anyway (matching the composition the honesty review's taint
+    # pass found, and giving the display-path contract a governed home) rather
+    # than invented as a new kind; the conformance tests for these three name
+    # this explicitly and assert the returned Path, never on-disk presence.
+    StoragePathDefinition(
+        key="llm_usage_record",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/llm-usage/usage-<timestamp>.jsonl",
+        owner="cadrumo.adapters.outbound.llm",
+    ),
+    StoragePathDefinition(
+        key="llm_run_telemetry_record",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/llm-run-telemetry/run-telemetry-<timestamp>.jsonl",
+        owner="cadrumo.adapters.outbound.llm",
+    ),
+    StoragePathDefinition(
+        key="auth_acquisition_lock",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/tokens/<bucket_id>-<auth_provider_kind>-auth.lock",
+        owner="cadrumo.application.auth",
+    ),
+    StoragePathDefinition(
+        key="validation_verdict_cache_entry",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/cache/registry-verdict/cadrumo_validation_verdict_<sha256[:16]>.json",
+        owner="cadrumo.domain.calculations.registry",
+    ),
+    StoragePathDefinition(
+        key="llm_cache_entry",
+        kind=StoragePathKind.FILE,
+        grammar="<root>/cache/llm-cache/<provider>/<model>/<sha256>-<sha256>.json",
+        owner="cadrumo.adapters.outbound.llm",
+    ),
 )

@@ -65,7 +65,11 @@ from ._size_budget import (
     scan_module_lines,
     write_size_budget_baseline,
 )
-from ._storage_path_grammar import assert_path_matches_grammar, literal_directory_runs
+from ._storage_path_grammar import (
+    assert_grammar_vocabulary_is_declared,
+    assert_path_matches_grammar,
+    literal_directory_runs,
+)
 from .mcp_session import connected_server_and_client_session
 
 if TYPE_CHECKING:
@@ -88,6 +92,7 @@ __all__ = [
     "SizeBudgetBaseline",
     "aeat_relative",
     "apply_collection_storage_root",
+    "assert_grammar_vocabulary_is_declared",
     "assert_path_matches_grammar",
     "assert_real_corpus",
     "ast_for_path",
