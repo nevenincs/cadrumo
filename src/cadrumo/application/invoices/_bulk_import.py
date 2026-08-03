@@ -38,13 +38,14 @@ import csv
 import io
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing import parse_iso8601_date
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceValidationError
@@ -156,14 +157,51 @@ def _parse_row_date(raw: str, *, row_number: int, field: str) -> date:
     return value
 
 
-def _parse_row_decimal(raw: str, *, row_number: int, field: str) -> Decimal:
-    try:
-        value = Decimal(raw)
-    except InvalidOperation as exc:
-        raise _RowParseError(row_number=row_number, field=field, reason=f"invalid decimal amount: {raw!r}") from exc
-    if not value.is_finite():
-        raise _RowParseError(row_number=row_number, field=field, reason=f"invalid decimal amount: {raw!r}")
-    return value
+def _parse_row_decimal(raw: object, *, row_number: int, field: str) -> Decimal:
+    """Parse one spreadsheet cell into a euro-grammar :class:`~decimal.Decimal`.
+
+    A cell that already arrives numeric — an XLSX float, int, or Decimal — is
+    coerced as-is, exactly as the bank-statement importer's
+    ``_already_numeric_amount`` does. The workbook, not the operator, chose
+    that representation, so its precision is not the operator's grammar to
+    judge; a float is routed through :func:`coerce_decimal` so the printed
+    precision survives instead of the binary expansion.
+
+    TEXT is the operator's own writing and is held to the canonical euro
+    grammar. That matters for one shape specifically. A gestor writing
+    Spanish types ``1.234`` for one thousand two hundred and thirty-four
+    euros, and a bare ``Decimal`` reads it as ``1.234`` — one euro
+    twenty-three, a thousandfold under-declaration of an invoice's taxable
+    base, reaching Modelo 303/390 as a wrong number rather than as any kind
+    of failure. The comma spellings (``1.234,56``, ``1234,56``) were always
+    refused loudly; this dot-grouped one was the only one that passed
+    silently, because it happens to be legal syntax for a different number.
+    The two-fractional-digit cap is what separates them: no euro amount
+    carries three decimals, so the shape that means "thousands" in Spanish
+    can be refused without guessing which grammar was intended.
+
+    Refusing rather than reinterpreting is the deliberate posture — the row
+    is reported with its number and field so the operator corrects the
+    source, and no amount is inferred on their behalf.
+    """
+    if isinstance(raw, Decimal):
+        numeric: Decimal | None = raw
+    elif isinstance(raw, bool):
+        # bool is an int subclass; a TRUE cell is not an amount.
+        numeric = None
+    elif isinstance(raw, int):
+        numeric = Decimal(raw)
+    elif isinstance(raw, float):
+        numeric = coerce_decimal(raw)
+    else:
+        numeric = try_parse_canonical_decimal(_cell_text(raw), max_fraction_digits=2)
+    if numeric is None or not numeric.is_finite():
+        raise _RowParseError(
+            row_number=row_number,
+            field=field,
+            reason=f"invalid decimal amount: {_cell_text(raw)!r}",
+        )
+    return numeric
 
 
 class _RowParseError(Exception):
@@ -190,11 +228,15 @@ def _parse_bulk_invoice_row(raw_row: Mapping[str, object], *, row_number: int) -
     invoice_date_raw = _cell_text(raw_row.get("invoice_date"))
     invoice_date = _parse_row_date(invoice_date_raw, row_number=row_number, field="invoice_date")
 
-    taxable_base_raw = _cell_text(raw_row.get("taxable_base"))
-    taxable_base = _parse_row_decimal(taxable_base_raw, row_number=row_number, field="taxable_base")
+    # The raw cell is handed over unstringified so an already-numeric workbook
+    # value keeps its own representation; only operator-written TEXT is held to
+    # the euro grammar.
+    taxable_base = _parse_row_decimal(raw_row.get("taxable_base"), row_number=row_number, field="taxable_base")
 
     iva_rate_raw = _cell_text(raw_row.get("iva_rate"))
-    iva_rate = _parse_row_decimal(iva_rate_raw, row_number=row_number, field="iva_rate") if iva_rate_raw else None
+    iva_rate = (
+        _parse_row_decimal(raw_row.get("iva_rate"), row_number=row_number, field="iva_rate") if iva_rate_raw else None
+    )
 
     currency_raw = _cell_text(raw_row.get("currency")) or DEFAULT_CURRENCY
     country_code_raw = _cell_text(raw_row.get("country_code")) or "ES"
