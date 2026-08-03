@@ -34,7 +34,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG
+from ....core import STRICT_FROZEN_CONFIG, StorageCategory, storage_location
 from ....core.atomic_write import atomic_write_text
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
@@ -58,6 +58,18 @@ from .master_key import MasterKeyProvider
 
 #: Label carried on every containment refusal raised for a plan target.
 _TARGET_FILENAME_CONTEXT = "rotation_target_filename"
+
+# Bare directory names, read off the taxonomy rather than untethered string
+# literals. Still joined onto ``cadrumo_attachments_dir`` /
+# ``cadrumo_submissions_dir`` exactly as before -- the members carry no
+# ``settings_field`` and are not safe to resolve directly, because their
+# parent categories are operator-overridable (see the members' declarations
+# in ``core._storage_taxonomy``).
+_ATTACHMENTS_MANIFESTS_DIRNAME = Path(storage_location(StorageCategory.ATTACHMENTS_MANIFESTS).subpath).name
+_SUBMISSIONS_AMENDMENT_RESULTS_DIRNAME = Path(
+    storage_location(StorageCategory.SUBMISSIONS_AMENDMENT_RESULTS).subpath,
+).name
+_SUBMISSIONS_AMENDMENTS_DIRNAME = Path(storage_location(StorageCategory.SUBMISSIONS_AMENDMENTS).subpath).name
 
 _log = get_logger(__name__)
 
@@ -428,7 +440,7 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
             hkdf_context=b"cadrumo.domain.invoices.catalogue.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.cadrumo_attachments_dir) / "manifests",
+            store_dir=Path(settings.cadrumo_attachments_dir) / _ATTACHMENTS_MANIFESTS_DIRNAME,
             hkdf_context=b"cadrumo.domain.attachments.manifest.v1",
         ),
         RotationPlanEntry(
@@ -457,11 +469,11 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
         # HKDF context — DO NOT deduplicate. Removing either entry breaks
         # rotation for the corresponding directory's envelopes.
         RotationPlanEntry(
-            store_dir=Path(settings.cadrumo_submissions_dir) / "amendment-results",
+            store_dir=Path(settings.cadrumo_submissions_dir) / _SUBMISSIONS_AMENDMENT_RESULTS_DIRNAME,
             hkdf_context=b"cadrumo.application.filing.amendment.v1",
         ),
         RotationPlanEntry(
-            store_dir=Path(settings.cadrumo_submissions_dir) / "amendments",
+            store_dir=Path(settings.cadrumo_submissions_dir) / _SUBMISSIONS_AMENDMENTS_DIRNAME,
             hkdf_context=b"cadrumo.application.filing.amendment.v1",
         ),
         RotationPlanEntry(

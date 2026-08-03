@@ -14,7 +14,9 @@ from ....core import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
+    StorageCategory,
     normalise_corpus_text,
+    storage_location,
 )
 from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.config import load_settings
@@ -26,7 +28,12 @@ _SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 _LOGGER = logging.getLogger(__name__)
 
-_CORPUS_TEXT_CACHE_FILENAME = "cadrumo_corpus_text_cache.json"
+# Bare filename, read off the taxonomy rather than an untethered string
+# literal. Still joined onto ``cadrumo_corpus_text_cache_dir`` exactly as
+# before -- the member carries no ``settings_field`` and is not safe to
+# resolve directly, because ``CORPUS_TEXT_CACHE`` is operator-overridable
+# (see the member's declaration in ``core._storage_taxonomy``).
+_CORPUS_TEXT_CACHE_FILENAME = Path(storage_location(StorageCategory.CORPUS_TEXT_CACHE_FILE).subpath).name
 
 # Shipped sidecar constants (see dev/corpus/extract_manual_corpus_text.py).
 # Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json

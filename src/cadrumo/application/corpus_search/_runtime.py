@@ -19,13 +19,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from ...core import StorageCategory, storage_location
 from ...core.config import Settings, load_settings
 from ._citation_lookup import bundled_citation_lookup
 from ._lexical_index import build_lexical_index, iter_corpus_chunks
 from ._models import RetrievalResponse
 from ._retrieval import run_retrieval
 
-_INDEX_FILENAME = "corpus.sqlite"
+# Bare filename, read off the taxonomy rather than an untethered string
+# literal. Still joined onto ``cadrumo_corpus_search_cache_dir`` exactly as
+# before -- the member carries no ``settings_field`` and is not safe to
+# resolve directly, because ``CORPUS_SEARCH_CACHE`` is operator-overridable
+# (see the member's declaration in ``core._storage_taxonomy``).
+_INDEX_FILENAME = Path(storage_location(StorageCategory.CORPUS_SEARCH_INDEX).subpath).name
 
 _DEFAULT_LIMIT = 8
 

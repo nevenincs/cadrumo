@@ -135,7 +135,6 @@ _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
 _PERCENT_PLACEHOLDER_RE = re.compile(r"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>%[-#+ 0-9.]*[a-zA-Z])")
-_DEFAULT_LOG_FILE_NAME = "cadrumo.log"
 
 
 def _normalise_log_key(key: str) -> str:
@@ -395,10 +394,14 @@ def default_log_file_path() -> Path:
     An explicit ``CADRUMO_LOG_DIR`` override still wins, and still keeps the
     log isolated per workspace rather than mixing every session's records into
     one system-wide file.
-    """
-    from ._storage_taxonomy import StorageCategory, storage_path
 
-    return storage_path(StorageCategory.LOGS).expanduser() / _DEFAULT_LOG_FILE_NAME
+    The filename itself is read off the taxonomy's ``LOG_FILE`` member rather
+    than declared as an untethered string literal here.
+    """
+    from ._storage_taxonomy import StorageCategory, storage_location, storage_path
+
+    filename = Path(storage_location(StorageCategory.LOG_FILE).subpath).name
+    return storage_path(StorageCategory.LOGS).expanduser() / filename
 
 
 def _prepare_log_directory(log_file: Path) -> str | None:
