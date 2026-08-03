@@ -46,11 +46,44 @@ from ..core import AuthProviderKind
 from ..core.config import Settings
 
 _SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
-"""Keep temporary Cadrumo local-storage roots alive for returned Settings instances."""
+"""Temporary storage roots minted for returned Settings instances, held open.
+
+The strong reference is deliberate: a returned :class:`Settings` names this
+directory, so it has to outlive the call that produced it. What it must NOT do
+is outlive the session, and for a long time it did -- nothing dropped these and
+no sweep covered the prefix, so a measured 457 of them had accumulated in the
+operator's temp directory, the oldest three weeks old. Each is empty; the cost
+is in directory entries rather than bytes, which is why byte-oriented
+measurement never noticed.
+
+:func:`release_settings_storage_directories` is what ends the lifetime, and
+``cadrumo/conftest.py`` calls it once per session.
+"""
+
+
+def release_settings_storage_directories() -> None:
+    """Remove every temporary storage root this module minted.
+
+    Called at session teardown. Safe to call more than once, and safe to call
+    when nothing was minted.
+
+    Best-effort per directory: teardown must not fail a passing session nor
+    mask a failing one, and a root a test deliberately made unreadable is a
+    legitimate reason for cleanup to fail. The reference is dropped either way,
+    so a directory that resists removal is not retried forever.
+    """
+    while _SETTINGS_STORAGE_DIRECTORIES:
+        directory = _SETTINGS_STORAGE_DIRECTORIES.pop()
+        try:
+            directory.cleanup()
+        except OSError:
+            continue
+
 
 __all__ = [
     "isolated_aeat_env",
     "ready_clave_settings",
+    "release_settings_storage_directories",
     "scoped_cwd",
     "scoped_env_var",
     "scoped_sys_argv",
