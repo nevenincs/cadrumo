@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from typing import cast
 
 import pytest
@@ -14,7 +15,9 @@ from ..redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_OBJECT_KEY_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
+    default_rules_for_class,
     redact_for_cli_output,
+    redact_structured,
     redact_structured_for_cli_output,
 )
 
@@ -25,6 +28,12 @@ _PROFILE_ID = "123e4567-e89b-12d3-a456-426614174000"
 # NIF pattern; the reveal opt-out must emit it verbatim, not NIF-hashed.
 _NIF_SHAPED_UUID = "1470176e-780c-46df-8b21-c6f540f142a0"
 _NIF = "12345678Z"
+# Entity tax identities carrying the check character AEAT's algorithm
+# computes, and a same-shaped reference that does not (an invoice number
+# ``F1234567B`` is exactly the CIF shape).
+_CIF = "B12345674"
+_CIF_OTHER = "A58818501"
+_CIF_LOOKALIKE = "F1234567B"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
 _OBJECT_KEY = "wallet:2026-secret"
@@ -222,3 +231,72 @@ def test_cli_output_reveal_identifiers_unredacts_only_profile_and_bucket() -> No
         reveal_identifiers=True,
     )
     assert structured == {"bucket_id": _NIF_SHAPED_UUID, "profile_id": _NIF_SHAPED_UUID}
+
+
+# ── entity tax identity (CIF) ───────────────────────────────────────────────
+
+
+def _expected_sha256_prefix(value: str) -> str:
+    """Derive the documented ``SHA256_PREFIX`` form independently of the rules.
+
+    Computed here from the strategy's stated contract — the first eight hex
+    characters of the value's SHA-256 digest — rather than copied from an
+    observed run, so a change to how the redactor derives the digest fails
+    this test instead of being ratified by it.
+    """
+    return f"sha256:{hashlib.sha256(value.encode('utf-8')).hexdigest()[:8]}"
+
+
+def test_cli_output_hashes_an_entity_tax_identity() -> None:
+    """A sociedad's CIF is hashed exactly as a natural person's NIF is.
+
+    The two arrive on the same field (``identity.tax_id``) and reach the
+    same export header, so protecting one and not the other would make the
+    operator's entity type decide their privacy.
+    """
+    for cif in (_CIF, _CIF.lower(), _CIF_OTHER):
+        redacted = redact_for_cli_output(f"tax_id={cif}")
+        assert cif not in redacted
+        assert redacted == f"tax_id={_expected_sha256_prefix(cif)}"
+
+
+def test_cli_output_leaves_a_cif_shaped_document_reference_verbatim() -> None:
+    """A lookalike that fails its check character is not an identity.
+
+    The CIF shape is letter-led over fifteen letters, which is also the
+    shape of an ordinary document reference. Hashing those would make a
+    ledger row unidentifiable to the operator to protect nothing, so the
+    check character is what admits a match.
+    """
+    for lookalike in (_CIF_LOOKALIKE, "B12345678", "A12345678"):
+        assert redact_for_cli_output(f"ref={lookalike}") == f"ref={lookalike}"
+
+
+def test_cif_rule_is_enrolled_in_every_policy_that_carries_the_nif_rule() -> None:
+    """Enrolment is what makes the rule reachable, not its ``applies_to``.
+
+    A rule resolves through the policy's ``redaction_rules`` name tuple, so
+    a rule declared but never enrolled is inert everywhere — which is how a
+    CIF reached the log, error, and LLM-cache paths in cleartext while the
+    rule catalogue claimed to cover it.
+    """
+    for sensitivity in SensitivityClass:
+        names = {rule.name for rule in default_rules_for_class(sensitivity)}
+        if "nif-hash" in names:
+            assert "cif-hash" in names, f"{sensitivity.name} hashes a NIF but not a CIF"
+
+
+def test_structured_redaction_hashes_a_cif_leaf() -> None:
+    """The structured path is the one that reaches persisted artefacts.
+
+    The LLM disk cache redacts through this path before materializing its
+    JSON file, so a leaf the rules miss is written to disk in cleartext.
+    """
+    redacted = redact_structured(
+        {"party_tax_id": _CIF, "note": f"invoice {_CIF_LOOKALIKE}"},
+        rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
+    )
+    assert redacted == {
+        "party_tax_id": _expected_sha256_prefix(_CIF),
+        "note": f"invoice {_CIF_LOOKALIKE}",
+    }

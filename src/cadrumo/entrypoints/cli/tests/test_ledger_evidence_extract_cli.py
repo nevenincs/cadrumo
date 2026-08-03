@@ -29,6 +29,7 @@ here is ever written outside the encrypted bucket substrate.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterator
 from io import BytesIO
@@ -41,6 +42,19 @@ from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _SUPPLIER_CIF = "B12345674"
+
+
+def _redacted(tax_id: str) -> str:
+    """Return the form an operator-facing envelope carries a tax identity in.
+
+    The extract payload leaves the process through the CLI redaction funnel,
+    which hashes a supplier's tax identity whether that supplier is a natural
+    person or a company. Asserting the digest rather than the raw value still
+    pins the extracted identity exactly -- the digest is derived from it -- so
+    these cases keep proving extraction recovered the right supplier.
+    """
+    return f"sha256:{hashlib.sha256(tax_id.encode('utf-8')).hexdigest()[:8]}"
+
 
 _FULL_INVOICE_LINES = (
     "Factura de Acme Suministros SL",
@@ -92,7 +106,7 @@ def test_extract_by_evidence_id_recovers_every_grounded_field(tmp_path: Path) ->
     result = json.loads(extracted.output)["result"]
 
     assert result["evidence_id"] == evidence_id
-    assert result["supplier_tax_id"] == _SUPPLIER_CIF
+    assert result["supplier_tax_id"] == _redacted(_SUPPLIER_CIF)
     assert result["invoice_number"] == "2026-0142"
     assert result["invoice_date"] == "2026-03-10"
     assert result["taxable_base"] == "100.00"
@@ -143,7 +157,7 @@ def test_extract_by_attachment_id_uses_the_evidence_records_in_store_bytes(tmp_p
     assert extracted.exit_code == 0, extracted.output
     result = json.loads(extracted.output)["result"]
     assert result["attachment_id"] == attachment_id
-    assert result["supplier_tax_id"] == _SUPPLIER_CIF
+    assert result["supplier_tax_id"] == _redacted(_SUPPLIER_CIF)
     assert result["grand_total"] == "121.00"
 
 

@@ -32,6 +32,7 @@ path: whichever is unavailable or insufficient, the operator-facing
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -46,6 +47,18 @@ from ....tests.user_profile import register_minimal_profile
 from .envelope_helpers import require_schema_envelope as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _redacted(tax_id: str) -> str:
+    """Return the form an operator-facing envelope carries a tax identity in.
+
+    The payload leaves the process through the CLI redaction funnel, which
+    hashes a counterparty's tax identity whether that counterparty is a
+    natural person or a company. Asserting the digest rather than the raw
+    value still pins the identity exactly -- the digest is derived from it.
+    """
+    return f"sha256:{hashlib.sha256(tax_id.encode('utf-8')).hexdigest()[:8]}"
+
 
 # A valid Spanish CIF (control digit verified) reused across the catalogue
 # invoice test surface.
@@ -89,7 +102,7 @@ def test_wizard_creates_invoice_from_provided_fields() -> None:
     assert result.exit_code == 0, result.output
     payload = _json_result(result.output)
     assert payload["already_existed"] is False
-    assert payload["counterparty_tax_id"] == _RECEIVED_COUNTERPARTY_CIF
+    assert payload["counterparty_tax_id"] == _redacted(_RECEIVED_COUNTERPARTY_CIF)
     assert payload["invoice_number"] == "2026-0900"
     assert payload["grand_total"] == "121.00"
 

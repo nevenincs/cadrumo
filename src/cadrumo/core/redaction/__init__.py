@@ -27,7 +27,14 @@ The redaction strategies, defined in
 
 ``SHA256_PREFIX``
     Replace the matched span with ``sha256:<first-8-hex>`` of its
-    SHA-256 digest. Used for stable identifiers (NIF / NIE / CIF).
+    SHA-256 digest. Used for the personal identity shapes (NIF / NIE),
+    which are matched on shape alone.
+
+``SHA256_PREFIX_IF_IDENTITY``
+    As ``SHA256_PREFIX``, but only when the matched span parses as a real
+    Spanish tax identity. Used for the CIF shape, whose letter-led form
+    collides with ordinary document references; the check character is
+    what tells the two apart.
 
 ``HOST_ONLY``
     For URL-shaped values, retain only ``<scheme>://<host>``;
@@ -65,9 +72,21 @@ from ..classification import (
 )
 from ..hashing import sha256_hex as _sha256_hex
 
-# NIF / NIE / CIF — Spanish identity numbers. Eight digits + check letter
-# with optional leading X / Y / Z for foreigners.
+# NIF / NIE — Spanish personal identity numbers. Eight digits + check letter
+# with optional leading X / Y / Z for foreigners. Matched on shape alone: a
+# digit-led run this long rarely collides with ordinary text, so the rule errs
+# wide and hashes a lookalike rather than risk missing a mistyped identity.
 _NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
+
+# CIF — the tax identity of a legal entity: a kind letter (A-H, J, N, P-S,
+# U, V, W), seven digits, and a check character that is a digit or a letter
+# A-J depending on the kind. Unlike the personal shapes above this one is
+# LETTER-led over a fifteen-letter class, which is the same shape as an
+# ordinary document reference (an invoice ``F1234567B``, a batch id), so it
+# is paired with ``SHA256_PREFIX_IF_IDENTITY``: the check character decides.
+# Widening the personal pattern's leading class instead would have admitted
+# every such reference.
+_CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
 
 # Bearer / OAuth tokens commonly start with ``ey`` (JWT).
 _BEARER_PATTERN = r"(?i)\b(?:bearer\s+)?(eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,})"
@@ -188,6 +207,17 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
                 _SensitivityClass.DIAGNOSTIC,
             ),
         ),
+        "cif-hash": _RedactionRule(
+            name="cif-hash",
+            pattern=_CIF_PATTERN,
+            strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
+            applies_to=(
+                _SensitivityClass.IDENTITY,
+                _SensitivityClass.FINANCIAL,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
+            ),
+        ),
         "url-host-only": _RedactionRule(
             name="url-host-only",
             pattern=_URL_PATTERN,
@@ -276,6 +306,21 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
         return pattern.sub("...", value)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
         return pattern.sub(lambda m: _sha256_prefix(m.group(0)), value)
+    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
+        # Imported here, not at module scope: ``core.identity`` reaches
+        # ``core.errors``, which reaches this module — the same cycle the
+        # lazy ``..errors`` imports below step around.
+        from ..identity import IdentityError, validate_identity
+
+        def _hash_if_identity(match: re.Match[str]) -> str:
+            span = match.group(0)
+            try:
+                validate_identity(span)
+            except IdentityError:
+                return span
+            return _sha256_prefix(span)
+
+        return pattern.sub(_hash_if_identity, value)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
         return pattern.sub(lambda m: _host_only(m.group(0)), value)
     if rule.strategy is _RedactionStrategy.FINGERPRINT:

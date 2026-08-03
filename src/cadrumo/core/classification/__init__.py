@@ -146,6 +146,12 @@ class RedactionStrategy(StrEnum):
     Attributes:
         SHA256_PREFIX: Replace the matched value with the first eight
             hex characters of its SHA-256 digest.
+        SHA256_PREFIX_IF_IDENTITY: As ``SHA256_PREFIX``, but only when the
+            matched span parses as a real Spanish tax identity document;
+            a match that fails its check character is left verbatim. For
+            a shape whose leading character class is wide enough to
+            collide with ordinary document references, the check
+            character is what separates an identity from a lookalike.
         HOST_ONLY: For URL-shaped values, retain only the host
             component; drop path, query, and fragment.
         FINGERPRINT: Replace bearer / OAuth token-shaped values with
@@ -156,6 +162,7 @@ class RedactionStrategy(StrEnum):
     """
 
     SHA256_PREFIX = "sha256_prefix"
+    SHA256_PREFIX_IF_IDENTITY = "sha256_prefix_if_identity"
     HOST_ONLY = "host_only"
     FINGERPRINT = "fingerprint"
     ELLIPSIS = "ellipsis"
@@ -252,6 +259,7 @@ _DIAGNOSTIC_RETENTION = timedelta(days=7)
 
 _AUDIT_REDACTION_RULES = (
     "nif-hash",
+    "cif-hash",
     "url-host-only",
     "token-fingerprint",
     "bearer-token-fingerprint",
@@ -279,13 +287,13 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.IDENTITY,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash",),
+            redaction_rules=("nif-hash", "cif-hash"),
         ),
         SensitivityClass.FINANCIAL: ClassificationPolicy(
             sensitivity=SensitivityClass.FINANCIAL,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash",),
+            redaction_rules=("nif-hash", "cif-hash"),
         ),
         SensitivityClass.AUDIT: ClassificationPolicy(
             sensitivity=SensitivityClass.AUDIT,

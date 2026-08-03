@@ -33,6 +33,7 @@ here is ever written outside the encrypted bucket substrate.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Iterator
 from io import BytesIO
@@ -43,6 +44,18 @@ import pytest
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _redacted(tax_id: str) -> str:
+    """Return the form an operator-facing envelope carries a tax identity in.
+
+    The payload leaves the process through the CLI redaction funnel, which
+    hashes a counterparty's tax identity whether that counterparty is a
+    natural person or a company. Asserting the digest rather than the raw
+    value still pins the identity exactly -- the digest is derived from it.
+    """
+    return f"sha256:{hashlib.sha256(tax_id.encode('utf-8')).hexdigest()[:8]}"
+
 
 _SUPPLIER_CIF = "B12345674"
 
@@ -108,7 +121,7 @@ def test_confirm_by_evidence_id_mints_a_real_catalogue_invoice(tmp_path: Path) -
 
     assert result["created"] is True
     assert result["kind"] == "received"
-    assert result["counterparty_tax_id"] == _SUPPLIER_CIF
+    assert result["counterparty_tax_id"] == _redacted(_SUPPLIER_CIF)
     assert result["counterparty_name"] == "Acme Suministros SL"
     assert result["invoice_number"] == "2026-0142"
     assert result["issued_at"] == "2026-03-10"
@@ -188,7 +201,7 @@ def test_confirm_honours_an_override_of_an_extracted_field(tmp_path: Path) -> No
     assert result["invoice_number"] == "OVERRIDE-9999"
     assert result["base_total"] == "500.00"
     # Fields not overridden still come from the extracted draft.
-    assert result["counterparty_tax_id"] == _SUPPLIER_CIF
+    assert result["counterparty_tax_id"] == _redacted(_SUPPLIER_CIF)
     assert result["issued_at"] == "2026-03-10"
 
 
