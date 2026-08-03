@@ -116,21 +116,40 @@ class AtRestTreatment(StrEnum):
 class RetentionPolicy(BaseModel):
     """Retention envelope for a :class:`SensitivityClass`.
 
-    A policy declares how long a record SHOULD live and when it SHOULD
-    be archived. Repositories enforce ``max_age`` at read time when the
-    record carries a ``written_at`` field; archival itself is implemented
-    by per-domain repositories.
+    Only ``require_explicit_expiry`` binds. It is read at the secret
+    store's write door, which refuses a record of a class demanding an
+    expiry that does not carry one. ``max_age`` and ``archive_after``
+    are declared here and on the shipped policy table and are read by
+    nothing -- not by a repository, not by a gate, not by a test. Treat
+    a value in either as a statement of intent, never as a guarantee
+    some caller already honours.
+
+    Wiring ``max_age`` up is not a matter of finding its missing reader.
+    It is declared at five fiscal years for IDENTITY, FINANCIAL and
+    AUDIT, and enforcing that as the read-time refusal this docstring
+    once claimed would make a taxpayer's own filed records unreadable
+    on their fifth birthday -- while ``domain.retention`` independently
+    BLOCKS erasing those same records for four years after filing,
+    because the law requires them kept. The two rules point opposite
+    ways, so an implementer has to reconcile them (against a decision
+    about what the app owes a taxpayer holding old records) rather than
+    simply connect this field to a caller.
+
+    The retention that does ship -- LLM usage and run telemetry pruning,
+    MCP session-file pruning -- runs on its own ``Settings`` bounds and
+    never consults this policy. Their working retention is not evidence
+    that these two fields do anything.
 
     Attributes:
-        max_age: Maximum live-record age. ``None`` means unbounded
-            (e.g. for CORPUS material whose lifetime is the project
-            lifetime).
-        archive_after: Age at which a record should be archived from
-            the live store. ``None`` means archival is not policy-
-            mandated.
+        max_age: Intended maximum live-record age. ``None`` means
+            unbounded (e.g. for CORPUS material whose lifetime is the
+            project lifetime). Unread; see above.
+        archive_after: Intended age at which a record should be archived
+            from the live store. ``None`` means archival is not policy-
+            mandated. Unread; no archival path consults it.
         require_explicit_expiry: When ``True``, a record of this class
             MUST carry an explicit ``expires_at`` field at write time.
-            Defaults to ``True`` for SECRET and SESSION.
+            Set for SECRET and SESSION, and enforced for them.
     """
 
     model_config = _STRICT_FROZEN
