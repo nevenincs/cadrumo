@@ -36,6 +36,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ...core import Period, read_toml
 from ...core.decimal import coerce_decimal
+from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
 from ._models import RecargoBand, Recovery
@@ -62,10 +63,10 @@ def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
     target = path if path is not None else _DEFAULT_BRACKET_PATH
     resolved = target.resolve()
     try:
-        stat = resolved.stat()
+        fingerprint = path_stat_fingerprint(resolved)
     except OSError as exc:
         raise DeadlineValidationError(f"{resolved}: cannot stat recargo bracket registry: {exc}") from exc
-    return _load_recargo_bands_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _load_recargo_bands_cached(*fingerprint)
 
 
 @lru_cache(maxsize=16)

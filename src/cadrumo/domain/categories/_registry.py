@@ -20,7 +20,7 @@ from pydantic import TypeAdapter, ValidationError
 from ...core import read_toml
 from ...core.decimal import coerce_decimal
 from ...core.i18n import Translatable as tr
-from ...core.paths import file_stat_fingerprint
+from ...core.paths import file_stat_fingerprint, path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import CategoryValidationError
 from ._profile import CategoryProfile, IvaDeductibilityHint
@@ -47,10 +47,10 @@ def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, Category
     """
     resolved = path.resolve()
     try:
-        stat = resolved.stat()
+        fingerprint = path_stat_fingerprint(resolved)
     except OSError as exc:
         raise CategoryValidationError(f"{resolved}: cannot stat category profile registry: {exc}") from exc
-    return _load_category_profile_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _load_category_profile_file_cached(*fingerprint)
 
 
 @lru_cache(maxsize=32)

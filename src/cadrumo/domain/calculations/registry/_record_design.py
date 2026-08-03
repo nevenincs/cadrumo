@@ -35,6 +35,7 @@ from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
 from ....core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
+from ....core.paths import path_stat_fingerprint
 from ._errors import RegistryValidationError
 from ._record_design_coverage import (
     DerivedDisenoCasilla,
@@ -79,8 +80,7 @@ def extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design source not found: {path}")
-    stat = resolved.stat()
-    return _extract_record_design_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _extract_record_design_cached(*path_stat_fingerprint(resolved))
 
 
 @lru_cache(maxsize=256)
@@ -106,8 +106,7 @@ def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design workbook not found: {path}")
-    stat = resolved.stat()
-    return _extract_record_design_workbook_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _extract_record_design_workbook_cached(*path_stat_fingerprint(resolved))
 
 
 def extract_record_design_xls_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
@@ -119,8 +118,7 @@ def extract_record_design_xls_workbook(path: Path) -> tuple[RecordDesignSheet, .
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design XLS workbook not found: {path}")
-    stat = resolved.stat()
-    return _extract_record_design_xls_workbook_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _extract_record_design_xls_workbook_cached(*path_stat_fingerprint(resolved))
 
 
 @lru_cache(maxsize=256)
@@ -210,8 +208,7 @@ def extract_record_design_pdf(path: Path) -> tuple[RecordDesignSheet, ...]:
     resolved = path.resolve()
     if not resolved.is_file():
         raise FileNotFoundError(f"record-design PDF not found: {path}")
-    stat = resolved.stat()
-    return _extract_record_design_pdf_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _extract_record_design_pdf_cached(*path_stat_fingerprint(resolved))
 
 
 @lru_cache(maxsize=256)

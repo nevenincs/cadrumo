@@ -13,6 +13,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core import freeze_toml, read_toml
+from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import UserProfileSchemaLoadError
 from ._schema import ProfileSchemaDefinition
@@ -34,10 +35,10 @@ def load_user_profile_schema(path: Path | None = None) -> ProfileSchemaDefinitio
     target = path if path is not None else bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
     resolved = target.resolve()
     try:
-        stat = resolved.stat()
+        fingerprint = path_stat_fingerprint(resolved)
     except OSError as exc:
         raise _schema_load_error(resolved, "cannot stat user-profile schema", operation="stat") from exc
-    return _load_user_profile_schema_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _load_user_profile_schema_cached(*fingerprint)
 
 
 @lru_cache(maxsize=16)

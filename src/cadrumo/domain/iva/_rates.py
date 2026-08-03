@@ -19,6 +19,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ...core import read_toml
 from ...core.decimal import coerce_decimal
+from ...core.paths import path_stat_fingerprint
 from ...core.resources import bundled_path
 from ._errors import IvaCatalogueError, IvaRateOverlapError, IvaValidationError
 from ._schema import EUMemberState, IvaRateKind, IvaRateRecord
@@ -54,10 +55,10 @@ def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tupl
     target = path if path is not None else bundled_path("registry", "aeat", "iva", "rates.toml")
     resolved = target.resolve()
     try:
-        stat = resolved.stat()
+        fingerprint = path_stat_fingerprint(resolved)
     except OSError as exc:
         raise IvaCatalogueError(f"{resolved}: cannot stat IVA rate registry: {exc}") from exc
-    return _load_iva_rate_table_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    return _load_iva_rate_table_cached(*fingerprint)
 
 
 @lru_cache(maxsize=16)

@@ -315,6 +315,32 @@ def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:
     return (path.name, stat.st_size, stat.st_mtime_ns)
 
 
+def path_stat_fingerprint(path: Path) -> tuple[str, int, int]:
+    """Return a cache-key fingerprint triple for a single file, keyed by its full path.
+
+    The path-keyed sibling of :func:`file_stat_fingerprint`. That function's
+    triple starts with the bare file *name*, which is correct only when every
+    candidate is known to come from the same directory (a tree-walk
+    fingerprint); reused as a global cache key spanning multiple directories,
+    a name-only first element collides across unrelated files that happen to
+    share a filename. This triple starts with ``str(path)`` instead, so it
+    stays unique across directories. Use :func:`file_stat_fingerprint` for a
+    same-directory tree fingerprint (its shorter name-only key is the
+    correct, and cheaper, choice there); use this one for a single-file
+    loader cache keyed on a resolved, possibly cross-directory path.
+
+    Args:
+        path: The file to fingerprint. Must be an existing, stat-able
+            path.
+
+    Returns:
+        ``(str(path), stat.st_size, stat.st_mtime_ns)``. ``path.stat()``
+        propagates ``OSError`` when the file is unreadable or disappears.
+    """
+    stat = path.stat()
+    return (str(path), stat.st_size, stat.st_mtime_ns)
+
+
 def directory_byte_total(
     directory: Path,
     *,
