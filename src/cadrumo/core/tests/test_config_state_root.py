@@ -32,28 +32,41 @@ def _state_root_inputs_under(base: Path, *, platform: str = "win32") -> StateRoo
 
 
 def test_storage_root_derives_every_substrate_dir(tmp_path: Path) -> None:
-    """The token, log, secret, blob and audit roots follow the platform root."""
+    """Every substrate directory follows the platform root and none escapes to the checkout.
+
+    Which subpath each one lands on is :mod:`test_output_dir_state_root`'s
+    oracle and is deliberately not restated here -- five name equalities in
+    this module were a strict duplicate of that table.
+
+    What is left is the property the oracle does not own: each substrate
+    category resolves *beneath* the resolved root, and beneath the checkout
+    never. That is not the accessor agreeing with itself. A derivation
+    validator that failed to fire leaves the field carrying its
+    ``REPO_ROOT/var`` placeholder, which fails both halves at once -- which is
+    the regression this test has always existed to catch.
+    """
     resolution = resolve_state_root(_state_root_inputs_under(tmp_path))
 
     with isolated_aeat_env():
         settings = settings_without_env_file(cadrumo_local_storage_root=resolution.storage_root)
 
     root = settings.cadrumo_local_storage_root
-    assert settings.cadrumo_token_dir == root / "tokens"
-    assert settings.cadrumo_log_dir == root / "logs"
-    assert settings.cadrumo_secret_store_dir == root / "secrets"
-    assert settings.cadrumo_blob_store_dir == root / "blobs"
-    assert settings.cadrumo_audit_dir == root / "audit"
-    for derived in (
-        settings.cadrumo_token_dir,
-        settings.cadrumo_log_dir,
-        settings.cadrumo_secret_store_dir,
-        settings.cadrumo_blob_store_dir,
-        settings.cadrumo_audit_dir,
-    ):
-        assert derived is not None
-        assert root in derived.parents
-        assert REPO_ROOT not in derived.parents
+    substrate = (
+        StorageCategory.TOKENS,
+        StorageCategory.LOGS,
+        StorageCategory.SECRETS,
+        StorageCategory.BLOBS,
+        StorageCategory.AUDIT,
+    )
+    resolved = {category: storage_path(category, settings=settings) for category in substrate}
+
+    # Five distinct locations, so the loop below cannot pass by comparing one
+    # value against itself five times.
+    assert len(set(resolved.values())) == len(substrate), resolved
+
+    for category, derived in resolved.items():
+        assert root in derived.parents, category
+        assert REPO_ROOT not in derived.parents, category
 
 
 def test_explicit_substrate_override_still_wins(tmp_path: Path) -> None:
