@@ -526,10 +526,9 @@ def delete_profile_session_key(*, bucket_id: str) -> None:
 
 def profile_session_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the ``session.v1.json`` path inside the bucket keystore directory."""
-    from ..bucket import keystore_path, validate_keystore_separation
+    from ..bucket import keystore_sidecar_path
 
-    validate_keystore_separation(storage_root, bucket_id)
-    return keystore_path(storage_root, bucket_id) / PROFILE_SESSION_FILENAME
+    return keystore_sidecar_path(storage_root=storage_root, bucket_id=bucket_id, filename=PROFILE_SESSION_FILENAME)
 
 
 def _document_from_record(record: PersistedProfileSession) -> _PersistedSessionDocument:
