@@ -27,6 +27,7 @@ from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import schema_valid_placeholder
 from ...workflow import WorkflowState
 from .. import (
     CENSAL_ADOPTABLE_PATHS,
@@ -105,28 +106,23 @@ def _read(
     )
 
 
-def _placeholder_for(field: object) -> str:
-    """Return a value the schema will accept for one required field.
-
-    Derived from the field's declared type rather than a fixed string. A
-    literal ``"placeholder"`` is only valid for free-text fields: the schema
-    binds enum fields to their declared value set, so a required enum filled
-    with arbitrary text is refused at registration — before any test's own
-    subject is reached, which makes the failure look like the code under test
-    rather than the fixture.
-    """
-    declared = tuple(getattr(field, "enum_values", None) or ())
-    if declared:
-        return str(declared[0])
-    return {
-        "boolean": "true",
-        "date": "2020-01-01",
-        "decimal": "0",
-        "integer": "0",
-    }.get(str(getattr(field, "type", "")), "placeholder")
-
-
 def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, ...]:
+    """Fill every schema-required field, overriding only the fiscal identity.
+
+    The filler is the shared ``schema_valid_placeholder`` rather than a local
+    one. A local copy stated the same intent and drifted from it: it keyed
+    admissible values off a small table of type names, which had no entry for
+    ``money`` and so returned the free-text sentinel for money fields — a
+    value the write door refuses. It also ignored the declared numeric bounds
+    the door now enforces. Sharing the filler means this fixture inherits the
+    guard that sweeps it against every field the schema declares, instead of
+    restating the rule and being wrong about it privately.
+
+    ``identity.tax_id`` is still overridden here, and deliberately: the
+    shared filler returns a checksum-valid NIF, but these tests need the ONE
+    identity the fixture reads carry, or the ownership guard refuses every
+    case and they pass for the wrong reason.
+    """
     facts: list[UserProfileFact] = []
     for section in schema.sections:
         if section.repeatable:
@@ -135,7 +131,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
             if not field.required:
                 continue
             path = f"{section.key}.{field.key}"
-            value = _PROFILE_NIF if path == "identity.tax_id" else _placeholder_for(field)
+            value = _PROFILE_NIF if path == "identity.tax_id" else schema_valid_placeholder(field)
             facts.append(UserProfileFact(path=path, value=value))
     return tuple(facts)
 

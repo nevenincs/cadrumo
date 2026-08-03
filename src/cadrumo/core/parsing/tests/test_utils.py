@@ -27,6 +27,16 @@ _RECOGNIZED_TOKENS: tuple[tuple[str, bool], ...] = (
     ("sí", True),
     ("SI", True),
     ("SÍ", True),
+    # The Spanish affirmative had been half-supported: "si"/"sí" were
+    # recognised while "s" -- the abbreviation the filing layer has always
+    # accepted -- and "verdadero", the ordinary word, were not. A vocabulary
+    # that takes one spelling of yes and not another is arbitrary from the
+    # operator's side, and the missing spellings are exactly what a reader
+    # then silently turned into "no".
+    ("s", True),
+    ("S", True),
+    ("verdadero", True),
+    ("VERDADERO", True),
     ("false", False),
     ("False", False),
     ("FALSE", False),
@@ -35,6 +45,8 @@ _RECOGNIZED_TOKENS: tuple[tuple[str, bool], ...] = (
     ("NO", False),
     ("n", False),
     ("N", False),
+    ("falso", False),
+    ("FALSO", False),
 )
 
 _UNKNOWN_TOKENS: tuple[str | None, ...] = (

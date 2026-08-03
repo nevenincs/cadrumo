@@ -74,10 +74,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "Deliberately tolerant OCR rate scrape; returns None on failure. Same "
         "machine-produced-text posture as _parse_labelled_amount above."
     ),
-    ("application/invoices/_bulk_import.py", "_parse_row_decimal"): (
-        "CSV bulk-import transport, not a hand-typed boundary: already carries an "
-        "is_finite() guard and a typed per-row refusal naming row and field."
-    ),
     ("application/aggregation/_atribucion_member.py", "_decimal"): (
         "Typed isinstance dispatch over an already-persisted profile fact; the "
         "profile-fact entry boundary owns the text grammar. Reported as a "

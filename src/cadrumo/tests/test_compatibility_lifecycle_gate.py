@@ -178,20 +178,20 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
     ("floors", "expected"),
     [
         # The exact shape the checkpoint would take today: the three canonical
-        # tiers frozen, the two durable formats with no floor machinery omitted.
+        # tiers frozen, the three durable formats with no floor machinery omitted.
         (
             {"secure_object": 1, "bundle": 3, "archive": 3},
-            ("bucket_dek", "bucket_manifest", "secret_index"),
+            ("bucket_database_file", "bucket_dek", "bucket_manifest", "secret_index"),
         ),
         # One omission is still an omission.
         (
             {"secure_object": 1, "bundle": 3, "archive": 3, "bucket_manifest": 2},
-            ("bucket_dek", "secret_index"),
+            ("bucket_database_file", "bucket_dek", "secret_index"),
         ),
         # Freezing only the substrate leaves every other durable format bare.
         (
             {"secure_object": 1},
-            ("archive", "bucket_dek", "bucket_manifest", "bundle", "secret_index"),
+            ("archive", "bucket_database_file", "bucket_dek", "bucket_manifest", "bundle", "secret_index"),
         ),
     ],
 )

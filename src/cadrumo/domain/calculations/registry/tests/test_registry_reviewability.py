@@ -39,8 +39,10 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     # _validate_evidence.py grew past the 300-line default with the
     # sidecar-reading helper (_read_manual_pdf_sidecar + constants) and the
     # validation-verdict-pin disk-cache write counter, then again with the
-    # shared manual-PDF-sidecar validation contract (commit 5f8cfc5145).
-    "_validate_evidence.py": 384,
+    # shared manual-PDF-sidecar validation contract (commit 5f8cfc5145), then
+    # again with the corpus-text cache filename cross-referenced off the
+    # storage taxonomy instead of an untethered literal; re-measured 2026-08-03.
+    "_validate_evidence.py": 391,
     "_validate_surfaces.py": 350,
     "_validate_verification_predicates.py": 431,
     "_validate_cross_revision.py": 424,

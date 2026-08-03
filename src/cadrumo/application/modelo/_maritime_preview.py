@@ -35,6 +35,7 @@ from typing import Literal
 from ...application.calculations import resolve_maritime_exemption
 from ...application.user_profile import fact_value
 from ...application.workflow import workflow_state_repository
+from ...core.parsing import parse_bool
 from ...domain.renta import MaritimeWorkerFacts, ProfileCompletenessError
 from ..calculations import MaritimeExemptionResult
 
@@ -116,10 +117,7 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
         return raw.strip() if raw else None
 
     def _bool(path: str) -> bool:
-        raw = fact_value(record, path)
-        if raw is None:
-            return False
-        return raw.strip().lower() in {"true", "1", "yes"}
+        return _bool_from_raw(fact_value(record, path))
 
     return MaritimeWorkerFacts(
         worker_class=_raw("maritime_worker.worker_class"),
@@ -130,6 +128,24 @@ def maritime_facts_from_active_profile() -> MaritimeWorkerFacts:
         pending_eu_clearance=_bool("maritime_worker.pending_eu_clearance"),
         retmar_registered=_bool("maritime_worker.retmar_registered"),
     )
+
+
+def _bool_from_raw(raw: str | None) -> bool:
+    """Read a stored boolean fact, defaulting an absent or unreadable one to ``False``.
+
+    Resolves through the one canonical vocabulary rather than a set spelled out
+    here. The set spelled out here accepted ``true``, ``1`` and ``yes`` and
+    nothing else, so a taxpayer answering ``si`` -- ordinary Spanish, and
+    already accepted by the filing layer -- was recorded as having said no on a
+    fact that gates an exemption pathway.
+
+    ``False`` remains the fallback for a word the vocabulary cannot read,
+    because these fields are optional and a partial profile must still resolve.
+    That fallback is safe only because the write door refuses an unreadable
+    value at entry, where the operator can still correct it; it is not a
+    licence to interpret garbage.
+    """
+    return parse_bool(raw) is True
 
 
 def preview_maritime_exemption_for_active_profile(

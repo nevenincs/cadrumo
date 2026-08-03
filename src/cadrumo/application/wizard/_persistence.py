@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from ...domain.user_profile import UserProfileRecord
 
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time import today_madrid
 from ..user_profile import (
@@ -251,6 +251,13 @@ def parse_canonical(question: WizardQuestion, raw: str) -> object:
     if answer_type is bool:
         if raw == "" and not (question.required and question.visible_when is None):
             return ""
+        # Deliberately NOT the canonical vocabulary. This reads a token the
+        # application itself wrote, and its strictness is a guard: accepting
+        # 'True' or 'TRUE' would silently admit an unlowercased str(bool)
+        # that leaked past _render_fact_value, corrupting the round-trip
+        # rather than failing it. Widening it here is what that guard exists
+        # to prevent -- the operator-facing vocabulary belongs at
+        # validate_confirm, which is where a person actually types.
         return raw == "true"
     if answer_type is int:
         return int(raw) if raw else 0
@@ -321,8 +328,25 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         birth_date=birth_date,
         adoption_date=adoption_date,
         discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
-        convive_con_contribuyente=row.get("convivencia", "") != "false",
-        custodia_compartida=row.get("custodia-compartida", "") == "true",
+        # Both read through the canonical vocabulary, and both resolve an
+        # unreadable or unanswered value to the NON-CLAIMING direction.
+        #
+        # convivencia gates the Art. 58.1 and 58.2 mínimo outright
+        # (DescendantInfo.is_eligible_ordinary refuses when it is false), so
+        # True is the claiming answer. The negative list this replaces --
+        # `!= "false"` -- resolved everything except one spelling to True,
+        # which made an unanswered question assert cohabitation and claim a
+        # mínimo the taxpayer never stated. Over-declaring is the worse
+        # direction: under-declaring short-changes them and is visible to
+        # them, while a false claim to AEAT is what gets them penalised.
+        #
+        # Do not flip either of these back for symmetry with the page
+        # defaults. The flow declares `default="true"` for convivencia, which
+        # is the value the widget PRE-FILLS for an operator who is present to
+        # accept or change it; it is not a licence to assert the same answer
+        # for one who never saw the question.
+        convive_con_contribuyente=parse_bool(row.get("convivencia", "")) is True,
+        custodia_compartida=parse_bool(row.get("custodia-compartida", "")) is True,
         meses_madre_trabajo_2024=int(meses) if meses else 0,
         gastos_guarderia_euros=int(gastos) if gastos else 0,
         nif=row.get("nif") or None,

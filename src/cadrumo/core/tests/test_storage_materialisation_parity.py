@@ -114,6 +114,32 @@ def materialised(tmp_path: Path) -> tuple[Path, Settings]:
     return root, settings
 
 
+def test_the_declared_and_observed_sets_are_both_non_degenerate(
+    materialised: tuple[Path, Settings],
+) -> None:
+    """Two empty sets agree, so both sides must be shown to be real.
+
+    Every comparison below is an equality between a declaration-derived
+    expectation and observed disk state. If the taxonomy collapsed, or the
+    materialiser stopped creating anything, the two would agree perfectly and
+    the parity assertions would certify a tree that does not exist. Bounds
+    rather than counts, so the floor does not rot on the next member.
+    """
+    root, settings = materialised
+    expected = expected_directories(settings)
+    observed = _observed_directories(root)
+
+    assert len(expected) >= 20, (
+        f"the declaration produced only {len(expected)} expected director(ies): {sorted(expected)}. "
+        "The taxonomy declares dozens of root-derived members, so this means discovery collapsed "
+        "and the parity comparisons below would hold vacuously"
+    )
+    assert len(observed) >= 20, (
+        f"the materialiser created only {len(observed)} director(y/ies) under {root}. Parity "
+        "against an empty tree is not parity"
+    )
+
+
 def test_every_declared_directory_exists_on_disk(materialised: tuple[Path, Settings]) -> None:
     """A member the materialiser skips fails here, named by its category."""
     root, settings = materialised

@@ -116,21 +116,40 @@ class AtRestTreatment(StrEnum):
 class RetentionPolicy(BaseModel):
     """Retention envelope for a :class:`SensitivityClass`.
 
-    A policy declares how long a record SHOULD live and when it SHOULD
-    be archived. Repositories enforce ``max_age`` at read time when the
-    record carries a ``written_at`` field; archival itself is implemented
-    by per-domain repositories.
+    Only ``require_explicit_expiry`` binds. It is read at the secret
+    store's write door, which refuses a record of a class demanding an
+    expiry that does not carry one. ``max_age`` and ``archive_after``
+    are declared here and on the shipped policy table and are read by
+    nothing -- not by a repository, not by a gate, not by a test. Treat
+    a value in either as a statement of intent, never as a guarantee
+    some caller already honours.
+
+    Wiring ``max_age`` up is not a matter of finding its missing reader.
+    It is declared at five fiscal years for IDENTITY, FINANCIAL and
+    AUDIT, and enforcing that as the read-time refusal this docstring
+    once claimed would make a taxpayer's own filed records unreadable
+    on their fifth birthday -- while ``domain.retention`` independently
+    BLOCKS erasing those same records for four years after filing,
+    because the law requires them kept. The two rules point opposite
+    ways, so an implementer has to reconcile them (against a decision
+    about what the app owes a taxpayer holding old records) rather than
+    simply connect this field to a caller.
+
+    The retention that does ship -- LLM usage and run telemetry pruning,
+    MCP session-file pruning -- runs on its own ``Settings`` bounds and
+    never consults this policy. Their working retention is not evidence
+    that these two fields do anything.
 
     Attributes:
-        max_age: Maximum live-record age. ``None`` means unbounded
-            (e.g. for CORPUS material whose lifetime is the project
-            lifetime).
-        archive_after: Age at which a record should be archived from
-            the live store. ``None`` means archival is not policy-
-            mandated.
+        max_age: Intended maximum live-record age. ``None`` means
+            unbounded (e.g. for CORPUS material whose lifetime is the
+            project lifetime). Unread; see above.
+        archive_after: Intended age at which a record should be archived
+            from the live store. ``None`` means archival is not policy-
+            mandated. Unread; no archival path consults it.
         require_explicit_expiry: When ``True``, a record of this class
             MUST carry an explicit ``expires_at`` field at write time.
-            Defaults to ``True`` for SECRET and SESSION.
+            Set for SECRET and SESSION, and enforced for them.
     """
 
     model_config = _STRICT_FROZEN
@@ -146,6 +165,17 @@ class RedactionStrategy(StrEnum):
     Attributes:
         SHA256_PREFIX: Replace the matched value with the first eight
             hex characters of its SHA-256 digest.
+        SHA256_PREFIX_IF_IDENTITY: As ``SHA256_PREFIX``, but only when the
+            matched span parses as a real Spanish tax identity document;
+            a match that fails its check character is left verbatim. For
+            a shape whose leading character class is wide enough to
+            collide with ordinary document references, the check
+            character is what separates an identity from a lookalike.
+        SHA256_PREFIX_IF_IBAN: As ``SHA256_PREFIX``, but only when the
+            matched span passes the ISO 13616 mod-97 check. An IBAN shape
+            is a long alphanumeric run that collides freely with hashes,
+            opaque ids, and tokens; the checksum is what makes matching
+            one safe.
         HOST_ONLY: For URL-shaped values, retain only the host
             component; drop path, query, and fragment.
         FINGERPRINT: Replace bearer / OAuth token-shaped values with
@@ -156,6 +186,8 @@ class RedactionStrategy(StrEnum):
     """
 
     SHA256_PREFIX = "sha256_prefix"
+    SHA256_PREFIX_IF_IDENTITY = "sha256_prefix_if_identity"
+    SHA256_PREFIX_IF_IBAN = "sha256_prefix_if_iban"
     HOST_ONLY = "host_only"
     FINGERPRINT = "fingerprint"
     ELLIPSIS = "ellipsis"
@@ -177,8 +209,17 @@ class RedactionRule(BaseModel):
             declaration; rules can be loaded from configuration without
             requiring a working regex compiler at import.
         strategy: How the matched value is rewritten.
-        applies_to: Sensitivity classes this rule applies to. Empty
-            tuple means the rule applies regardless of class.
+
+    Where a rule applies is NOT declared here. It is decided by the
+    policies that name the rule in their ``redaction_rules``, and
+    :func:`core.redaction.default_rules_for` reads nothing else. This
+    record once also carried an ``applies_to`` tuple of sensitivity
+    classes, which was a second declaration of that same fact: never
+    consulted, free to disagree with the policy table, and typed against
+    :class:`SensitivityClass` so it could not describe the OUTPUT policy
+    table at all -- the table that decides operator-facing redaction. A
+    duplicate the code ignores can only drift into a lie, so the fact is
+    declared once, where it is read.
     """
 
     model_config = _STRICT_FROZEN
@@ -186,7 +227,6 @@ class RedactionRule(BaseModel):
     name: str = Field(min_length=1)
     pattern: str = Field(min_length=1)
     strategy: RedactionStrategy
-    applies_to: tuple[SensitivityClass, ...] = Field(default=())
 
 
 class ClassificationPolicy(BaseModel):
@@ -252,6 +292,8 @@ _DIAGNOSTIC_RETENTION = timedelta(days=7)
 
 _AUDIT_REDACTION_RULES = (
     "nif-hash",
+    "cif-hash",
+    "iban-hash",
     "url-host-only",
     "token-fingerprint",
     "bearer-token-fingerprint",
@@ -279,13 +321,13 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.IDENTITY,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash",),
+            redaction_rules=("nif-hash", "cif-hash", "iban-hash"),
         ),
         SensitivityClass.FINANCIAL: ClassificationPolicy(
             sensitivity=SensitivityClass.FINANCIAL,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash",),
+            redaction_rules=("nif-hash", "cif-hash", "iban-hash"),
         ),
         SensitivityClass.AUDIT: ClassificationPolicy(
             sensitivity=SensitivityClass.AUDIT,

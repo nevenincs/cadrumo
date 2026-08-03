@@ -37,6 +37,22 @@ def test_absent_pointer_returns_none(tmp_path: Path) -> None:
     assert read_pointer(tmp_path) is None
 
 
+def test_pointer_path_resolves_to_the_literal_expected_shape(tmp_path: Path) -> None:
+    """``pointer_path`` must resolve to exactly ``root / "active-profile"``.
+
+    Asserted against the literal expected shape rather than the taxonomy
+    accessor re-applied (``storage_location(StorageCategory.ACTIVE_PROFILE_POINTER)``):
+    rebuilding the expected path from the same accessor under test would only
+    prove the accessor equals itself. This pins the on-disk pointer location
+    -- the on-disk authority profile selection depends on -- so a future
+    resolution change here is a loud failure here, not a silent relocation
+    every operator's active profile stops resolving from.
+    """
+    assert pointer_path(tmp_path) == tmp_path / "active-profile"
+    nested = tmp_path / "nested" / "root"
+    assert pointer_path(nested) == nested / "active-profile"
+
+
 def test_write_is_atomic_no_tmp_lingers(tmp_path: Path) -> None:
     pointer = _pointer("alpha")
 

@@ -98,6 +98,11 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "archive": PersistedFormatClass.DURABLE,
     "bucket_dek": PersistedFormatClass.DURABLE,
     "bucket_manifest": PersistedFormatClass.DURABLE,
+    # The per-bucket SQLite file holding the encrypted secure_objects table --
+    # every filing, ledger entry, and evidence record a taxpayer has. The rows
+    # inside are already DURABLE under "secure_object"; the file that carries
+    # them is the same durability obligation at the container level.
+    "bucket_database_file": PersistedFormatClass.DURABLE,
     # The secret-store index maps HMAC lookup digests to blob references. It
     # is DURABLE rather than regenerable: the digest is an HMAC of the natural
     # key, and while each stored record still carries that key, no rebuild
@@ -110,6 +115,31 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     "config_reset_journal": PersistedFormatClass.REGENERABLE,
     "bucket_lock": PersistedFormatClass.REGENERABLE,
     "bucket_output_language_hint": PersistedFormatClass.REGENERABLE,
+    # The cold-start database URL before any profile bucket exists. Every
+    # profile-bound write refuses this route
+    # (StorageRouteKind.ROOT_FALLBACK_DATABASE), so no taxpayer content ever
+    # lands here -- it is a placeholder nothing real writes through, and
+    # delete-and-refuse costs nothing.
+    "root_fallback_database": PersistedFormatClass.REGENERABLE,
+    # A run trace, its event log, and its captured envelope are diagnostic and
+    # replay tooling, not filing evidence: the RUNS category itself is
+    # RETENTION lifecycle and fingerprint-EXCLUDED because per-run churn is
+    # the point. Losing one means a stale run cannot be replayed for
+    # debugging; it never strands taxpayer data.
+    "run_trace": PersistedFormatClass.REGENERABLE,
+    "run_events": PersistedFormatClass.REGENERABLE,
+    "run_envelope": PersistedFormatClass.REGENERABLE,
+    # Diagnostic accounting (LLM usage/telemetry) and evictable caches (the
+    # response cache, the registry-verdict skip-validation proof) -- none of
+    # them taxpayer filing evidence. The two logical/display-only entries
+    # (usage, run-telemetry) never materialise a file at all; the cache entry
+    # is likewise SQL-backed. The lock file and the verdict cache file ARE
+    # real writes, both freely deleted and regenerated.
+    "llm_usage_record": PersistedFormatClass.REGENERABLE,
+    "llm_run_telemetry_record": PersistedFormatClass.REGENERABLE,
+    "auth_acquisition_lock": PersistedFormatClass.REGENERABLE,
+    "validation_verdict_cache_entry": PersistedFormatClass.REGENERABLE,
+    "llm_cache_entry": PersistedFormatClass.REGENERABLE,
 }
 
 

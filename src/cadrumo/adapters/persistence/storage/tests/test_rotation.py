@@ -25,8 +25,11 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core import StorageCategory, storage_path
+from .....core.config import override_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....tests.master_key import EphemeralMasterKeyProvider
+from .....tests.storage_scope import storage_overrides
 from .. import (
     CipherEnvelope,
     EncryptedBlobStore,
@@ -575,21 +578,25 @@ class TestDefaultBlobStoreRoots:
         # the secret store on old-key cutover.
         from .. import default_blob_store_roots
 
-        secret_store_dir = tmp_path / "secrets"
-        blob_store_dir = tmp_path / "blobs"
-        attachments_dir = tmp_path / "attachments"
-        secret_store_dir.mkdir()
-        blob_store_dir.mkdir()
-        attachments_dir.mkdir()
+        with override_settings(
+            **storage_overrides(
+                tmp_path,
+                StorageCategory.SECRETS,
+                StorageCategory.BLOBS,
+                StorageCategory.ATTACHMENTS,
+            ),
+        ) as settings:
+            secret_store_dir = storage_path(StorageCategory.SECRETS, settings=settings)
+            blob_store_dir = storage_path(StorageCategory.BLOBS, settings=settings)
+            for directory in (
+                secret_store_dir,
+                blob_store_dir,
+                storage_path(StorageCategory.ATTACHMENTS, settings=settings),
+            ):
+                directory.mkdir(parents=True)
 
-        from .....core.config import Settings
+            roots = default_blob_store_roots(settings)
 
-        settings = Settings(
-            cadrumo_secret_store_dir=secret_store_dir,
-            cadrumo_blob_store_dir=blob_store_dir,
-            cadrumo_attachments_dir=attachments_dir,
-        )
-        roots = default_blob_store_roots(settings)
         assert blob_store_dir in roots, f"blob_store_dir must be in roots; got {roots!r}"
         assert secret_store_dir not in roots, f"secret_store_dir is the wrong root for SecretStore blobs; got {roots!r}"
 
@@ -604,6 +611,11 @@ class TestDefaultBlobStoreRoots:
 
         from .....core.config import Settings
 
+        # Spelled out rather than resolved through the taxonomy on purpose: the
+        # subject here is an operator collapsing two members onto ONE directory,
+        # which is precisely the arrangement the declared subpaths cannot
+        # express. Routing this through the accessor would give two distinct
+        # roots and quietly stop exercising deduplication at all.
         settings = Settings(
             cadrumo_secret_store_dir=tmp_path / "secrets",
             cadrumo_blob_store_dir=shared,
@@ -616,15 +628,20 @@ class TestDefaultBlobStoreRoots:
         # Pre-provision installations have no blob store yet — the
         # helper must omit non-existent directories so the rotation
         # reports a clean (0, 0, 0) instead of an OS-level error.
-        from .....core.config import Settings
         from .. import default_blob_store_roots
 
-        settings = Settings(
-            cadrumo_secret_store_dir=tmp_path / "secrets",
-            cadrumo_blob_store_dir=tmp_path / "missing-blobs",
-            cadrumo_attachments_dir=tmp_path / "missing-attachments",
-        )
-        roots = default_blob_store_roots(settings)
+        # Anchored on a directory that is never created, so every declared
+        # member below it is absent — the pre-provision shape, without naming
+        # a single leaf.
+        with override_settings(
+            **storage_overrides(
+                tmp_path / "never-provisioned",
+                StorageCategory.SECRETS,
+                StorageCategory.BLOBS,
+                StorageCategory.ATTACHMENTS,
+            ),
+        ) as settings:
+            roots = default_blob_store_roots(settings)
         assert roots == ()
 
 

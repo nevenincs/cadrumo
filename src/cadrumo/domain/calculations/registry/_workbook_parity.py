@@ -490,6 +490,21 @@ def run_workbook_with_libreoffice(
     if resolved.suffix.lower() != _XLSX_EXTENSION:
         raise RegistryValidationError("LibreOffice runner currently accepts only XLSX workbooks")
 
+    # Declared exception to the "every tempfile call passes dir=" storage
+    # provenance discipline: this scratch area is never renamed into place --
+    # LibreOffice is shelled out to convert a copy, and the recalculated
+    # values are read back into memory and returned. The dir= pin exists to
+    # guarantee same-filesystem adjacency for an eventual os.rename; with no
+    # rename here, that requirement does not bind, and pinning buys nothing.
+    # It also measurably regresses: anchoring dir= on the workbook's own
+    # directory (deeper-nested under a real pytest tmp_path) pushed this
+    # exact call past a length where LibreOffice's own `-env:UserInstallation=`
+    # profile tree failed to materialise under pytest-xdist (passed at path
+    # length 137 under -n0, failed at 147 under a real xdist worker;
+    # plausibly Windows MAX_PATH once LibreOffice's internal profile
+    # directories are added on top) -- proven by reverting to HEAD and
+    # reproducing the failure, then restoring and reproducing it again.
+    # Leave this on the OS-default temp root.
     with TemporaryDirectory(prefix="cadrumo-workbook-") as tmp:
         tmp_path = Path(tmp)
         output_dir = tmp_path / "output"
@@ -641,6 +656,13 @@ def _converted_binary_xls_path(
     *,
     runner: Path,
 ) -> Generator[Path]:
+    # Declared exception -- same reasoning and same measured regression as
+    # run_workbook_with_libreoffice above: no rename happens here (the
+    # converted file is read back into memory, or yielded for the caller to
+    # read within the `with` block), so the dir= same-filesystem-adjacency
+    # requirement does not bind, and pinning it broke real LibreOffice
+    # headless conversion under pytest-xdist's deeper tmp_path nesting.
+    # Leave this on the OS-default temp root.
     with TemporaryDirectory(prefix="cadrumo-xls-conversion-") as tmp:
         tmp_path = Path(tmp)
         output_dir = tmp_path / "output"

@@ -23,9 +23,10 @@ as ``aeat --version``.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import date as _date
 from decimal import Decimal
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import typer
@@ -556,6 +557,18 @@ def optional_decimal_text(value: Decimal | None) -> str | None:
     if value is None:
         return None
     return format(value, "f")
+
+
+def resolve_optional_root(value: Path | None, default: Callable[[], Path]) -> Path:
+    """Resolve an optional ``--*-root`` Typer option to its declared default.
+
+    Shared by every optional-root option that falls back to a bundled data
+    path or a :class:`~cadrumo.core.config.Settings` field when the operator
+    supplies no override. ``default`` is invoked ONLY when ``value`` is
+    ``None``, so a settings-backed default never triggers a settings load on
+    the common override path.
+    """
+    return value if value is not None else default()
 
 
 def resolve_pull_year_range(

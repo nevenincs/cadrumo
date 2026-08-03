@@ -18,7 +18,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import date
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -201,7 +200,7 @@ def _partial_m100_profile() -> Iterator[None]:
                     UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
                     UserProfileFact(path="filing_export.declaration_type", value="1"),
                     UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                    UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+                    UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
                 ),
             ),
         )

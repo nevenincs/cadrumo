@@ -21,6 +21,8 @@ from typing import override
 
 import pytest
 
+from ....tests.storage_scope import storage_overrides
+from ... import StorageCategory
 from ...config import override_settings
 from ...logging import get_logger
 from .. import run_context
@@ -65,7 +67,7 @@ class TestRunContextLoggingFilter:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             logger = get_logger("cadrumo.core.observability.test_logging_filter")
             capture = _CaptureHandler()
             logging.getLogger().addHandler(capture)
@@ -118,7 +120,7 @@ class TestStderrRunEventFilter:
         """The filter must NOT accidentally drop events from the sink."""
         from .. import GenericPayload, RunEventKind, RunEventPayload, load_events, record_event
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with run_context(entrypoint="cadrumo test stderr-filter", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,

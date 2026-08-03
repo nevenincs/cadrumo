@@ -14,7 +14,7 @@ from decimal import Decimal, InvalidOperation
 
 import pytest
 
-from .. import try_parse_canonical_decimal
+from .. import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -113,3 +113,47 @@ def test_unsigned_variant_refuses_negative() -> None:
 
 def test_signed_variant_accepts_negative() -> None:
     assert try_parse_canonical_decimal("-1000", signed=True) == Decimal("-1000")
+
+
+@pytest.mark.parametrize(
+    "token",
+    (
+        pytest.param("1.234", id="one-thousand-two-hundred-and-thirty-four"),
+        pytest.param("10.500", id="ten-thousand-five-hundred"),
+        pytest.param("100.000", id="one-hundred-thousand"),
+        pytest.param("1.000", id="one-thousand"),
+        pytest.param("-1.234", id="signed"),
+        pytest.param("  1.234  ", id="surrounded-by-whitespace"),
+    ),
+)
+def test_a_lone_dot_before_three_digits_is_two_way_readable(token: str) -> None:
+    """Spanish thousands and an English decimal are written identically here.
+
+    Nothing in the token itself decides between them, so a parser that picks
+    one is guessing at a thousandfold error.
+    """
+    assert european_thousands_reading_is_ambiguous(token) is True
+
+
+@pytest.mark.parametrize(
+    ("token", "why"),
+    (
+        pytest.param("1.234,56", "a comma settles it: Spanish marks decimals with it", id="grouped-with-comma"),
+        pytest.param("1234,56", "same, without grouping", id="bare-comma"),
+        pytest.param("1234.56", "two trailing digits cannot be a thousands group", id="two-decimals"),
+        pytest.param("0.5", "one trailing digit cannot be either", id="one-decimal"),
+        pytest.param("1.2345", "four cannot be: a grouped number would read 12.345", id="four-decimals"),
+        pytest.param("0.333", "a thousands run never opens with a zero group", id="coefficient"),
+        pytest.param("1000.000", "a lead of four digits would itself have been grouped", id="long-lead"),
+        pytest.param("1.234.567", "two dots cannot be a decimal at all", id="fully-grouped"),
+        pytest.param("1234", "no separator, nothing to read two ways", id="plain-integer"),
+    ),
+)
+def test_a_token_carrying_its_own_evidence_is_not_ambiguous(token: str, why: str) -> None:
+    """Only the genuinely two-way tokens refuse; everything else keeps working.
+
+    The coefficient and long-lead cases are the ones that make this usable on
+    values whose kind is not yet known — refusing ``0.333`` to catch ``1.234``
+    would trade one wrong answer for another.
+    """
+    assert european_thousands_reading_is_ambiguous(token) is False, why

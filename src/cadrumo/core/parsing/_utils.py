@@ -11,11 +11,23 @@ from ..logging import get_logger
 _log = get_logger(__name__)
 
 # Tokens that unambiguously mean "true" in AEAT-facing string fields.
-# Includes Spanish affirmative forms ("sí"/"si") used in G313 exports.
-_TRUTHY: frozenset[str] = frozenset({"true", "1", "yes", "y", "si", "sí"})
+#
+# This is the ONE vocabulary. Every reader of an operator-written boolean
+# resolves through it rather than restating its own set, because a set restated
+# per reader diverges per reader: the maritime reader accepted no Spanish at
+# all while the filing layer accepted "si", so the same word meant yes in one
+# place and no in another with nothing raised in between.
+#
+# The Spanish half is deliberately complete rather than partial. "si"/"sí" were
+# recognised while "s" -- the abbreviation the filing layer has always taken --
+# and "verdadero", the ordinary word, were not; accepting one spelling of yes
+# and not another is arbitrary from the operator's side, and the spellings that
+# were missing are precisely the ones a reader then turned silently into "no".
+_TRUTHY: frozenset[str] = frozenset({"true", "1", "yes", "y", "si", "sí", "s", "verdadero"})
 
-# Tokens that unambiguously mean "false".
-_FALSY: frozenset[str] = frozenset({"false", "0", "no", "n"})
+# Tokens that unambiguously mean "false", paired spelling-for-spelling with the
+# affirmative set above so neither half is more Spanish than the other.
+_FALSY: frozenset[str] = frozenset({"false", "0", "no", "n", "falso"})
 
 
 def _parse_bool(raw: str | None) -> bool | None:

@@ -77,6 +77,31 @@ authority this table paraphrases, and it grows as command families are added.
   `aeat config profile show`.
 - "Configure AEAT read access" → `aeat config auth`.
 
+## Storage and disk-space questions
+
+- "Where is my data, and is anything empty that should not be?" → `aeat config
+  storage list` — every declared category, its resolved path, and whether it
+  holds anything.
+- "What does one category actually contain?" → `aeat config storage show
+  <category>`.
+- "Has the on-disk tree drifted from what it should be?" → `aeat config
+  storage check` — read-only; reports, never repairs. Two of its findings
+  (a missing directory, a path already occupied by the wrong kind of node)
+  never surface through the CLI, because bootstrap already creates a missing
+  directory and refuses an occupied one before any command body runs — do
+  not expect `check` to report those.
+- "Materialise the declared tree on a machine that has none" → `aeat config
+  storage init` — idempotent; creates what is missing, never removes or
+  recreates existing content.
+- "Free disk space" → `aeat config storage reclaim <category> --yes`.
+  **Destructive: deletes the category's contents.** It refuses rather than
+  deletes in two cases: every bucket- or keystore-scoped category (those
+  belong to a profile bucket's own lifecycle, reclaimed only by deleting the
+  bucket itself), and any root category whose declared lifecycle is not
+  retention/rotation/TTL — the encrypted substrate, key material, audit
+  trail, and durable filing outputs are never reclaimable. Inspect the
+  category with `show` first; `reclaim` is not a general "clean up" verb.
+
 ## Long-tail discovery — finding a verb this table does not name
 
 This table and the domain toolsets cover the common path. Reach every other verb

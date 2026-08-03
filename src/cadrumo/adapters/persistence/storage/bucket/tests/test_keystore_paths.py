@@ -11,6 +11,7 @@ from .._errors import BucketValidationError
 from .._keystore_paths import (
     keystore_path,
     keystore_root,
+    keystore_sidecar_path,
     validate_keystore_separation,
 )
 
@@ -76,6 +77,19 @@ def test_rejects_keystore_paths_nested_under_bucket_storage(tmp_path: Path) -> N
 def test_external_path_passes_validation(tmp_path: Path) -> None:
     external = tmp_path / "elsewhere" / "alpha"
     validate_keystore_separation(tmp_path, "alpha", configured_keystore=external)
+
+
+def test_sidecar_path_joins_filename_onto_keystore_directory(tmp_path: Path) -> None:
+    result = keystore_sidecar_path(storage_root=tmp_path, bucket_id="alpha", filename="sidecar.json")
+    assert result == tmp_path / "keystore" / "alpha" / "sidecar.json"
+
+
+def test_sidecar_path_refuses_before_returning_when_separation_invalid(tmp_path: Path) -> None:
+    # An empty bucket_id fails the separation check's own path derivation
+    # (via keystore_path) before any sidecar path can be joined and
+    # returned: the refusal happens inside validate-then-join, never after.
+    with pytest.raises(BucketValidationError, match="non-empty"):
+        keystore_sidecar_path(storage_root=tmp_path, bucket_id="", filename="sidecar.json")
 
 
 def test_keystore_validation_error_envelope_is_localized_and_redacted(tmp_path: Path) -> None:

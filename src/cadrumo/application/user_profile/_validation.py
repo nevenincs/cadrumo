@@ -15,12 +15,14 @@ from typing import Final
 from ...core.errors import BaseSeverity
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...domain.user_profile import (
+    NUMERIC_PROFILE_FIELD_TYPES,
     ProfileFieldDefinition,
     ProfileFieldType,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
     UserProfileFact,
     UserProfileRecord,
+    numeric_value_refusal,
     section_field_key,
 )
 from . import (
@@ -49,6 +51,17 @@ REQUIRED_FIELD_MISSING_CODE: Final[str] = "required_field_missing"
 
 CONDITIONAL_REQUIRED_FIELD_MISSING_CODE: Final[str] = "conditional_required_field_missing"
 """Issue code for a field required only under some other fact's value."""
+
+NUMERIC_VALUE_ISSUE_CODE: Final[str] = "numeric_field_invalid"
+"""Issue code for a numeric field carrying a non-number or an out-of-range value.
+
+Deliberately NOT a completeness code: a malformed or out-of-range value is a
+bad answer rather than a missing one, so it refuses even while a profile is
+still ``SETUP_INCOMPLETE``, exactly as a bad date or an unknown enum token
+already does. Deferring it would let a wrong number sit in a profile until
+the ACTIVE promotion and then refuse the promotion instead of the write that
+caused it.
+"""
 
 COMPLETENESS_ISSUE_CODES: Final[frozenset[str]] = frozenset(
     {REQUIRED_FIELD_MISSING_CODE, CONDITIONAL_REQUIRED_FIELD_MISSING_CODE},
@@ -166,6 +179,8 @@ class ProfileValidationService:
             return ()
         if field.type is ProfileFieldType.ENUM:
             return self._validate_enum_value(field, fact)
+        if field.type in NUMERIC_PROFILE_FIELD_TYPES:
+            return self._validate_numeric_value(field, fact)
         if field.type is not ProfileFieldType.DATE:
             return ()
         if isinstance(fact.value, date):
@@ -177,6 +192,38 @@ class ProfileValidationService:
                 return (self._invalid_date_issue(field, fact),)
             return ()
         return (self._invalid_date_issue(field, fact),)
+
+    @staticmethod
+    def _validate_numeric_value(
+        field: ProfileFieldDefinition,
+        fact: UserProfileFact,
+    ) -> tuple[ProfileValidationIssue, ...]:
+        """Reject a numeric-typed value that is not a number, or is out of range.
+
+        The declared bounds were inert before this: ``minimum`` and
+        ``maximum`` were checked for their own coherence at schema build and
+        then compared to nothing, so a participation percentage declared
+        ``0..100`` accepted ``999`` here and carried it into the M184
+        attribution calculation with nothing raised -- a wrong number in a
+        filing a human submits, rather than a failure anybody could see.
+
+        The verdict comes from
+        :func:`~cadrumo.domain.user_profile.numeric_value_refusal` rather
+        than being formed here, so the readers that consume these facts
+        judge a value by the same rule this door admits it under. A second
+        opinion living on the read side is exactly how the two drift.
+        """
+        refusal = numeric_value_refusal(field, fact.value)
+        if refusal is None:
+            return ()
+        return (
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=NUMERIC_VALUE_ISSUE_CODE,
+                path=fact.path,
+                message=refusal,
+            ),
+        )
 
     @staticmethod
     def _validate_enum_value(
@@ -341,6 +388,7 @@ class ProfileValidationService:
 __all__ = [
     "COMPLETENESS_ISSUE_CODES",
     "CONDITIONAL_REQUIRED_FIELD_MISSING_CODE",
+    "NUMERIC_VALUE_ISSUE_CODE",
     "REQUIRED_FIELD_MISSING_CODE",
     "ProfileValidationService",
 ]

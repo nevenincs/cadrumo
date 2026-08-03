@@ -62,8 +62,8 @@ def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
             UserProfileFact(path="filing_export.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=Decimal("0")),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )

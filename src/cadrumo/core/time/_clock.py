@@ -31,10 +31,7 @@ from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
 from ..errors import CoreValidationError
-from ..logging import get_logger
 from ._utc import validate_utc_aware
-
-_logger = get_logger(__name__)
 
 _FROZEN_INSTANT: ContextVar[datetime | None] = ContextVar(
     "_aeat_frozen_clock_instant",

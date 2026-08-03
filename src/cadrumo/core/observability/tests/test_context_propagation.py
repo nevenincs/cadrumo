@@ -16,6 +16,8 @@ from typing import Protocol
 
 import pytest
 
+from ....tests.storage_scope import storage_overrides
+from ... import StorageCategory, storage_path
 from ...config import override_settings
 from .. import (
     GenericPayload,
@@ -82,7 +84,7 @@ class TestRunContextOutcome:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with run_context(entrypoint="cadrumo test ok", arguments=()) as info:
                 run_id = info.run_id
             trace = load_trace(run_id)
@@ -94,7 +96,7 @@ class TestRunContextOutcome:
             (KeyboardInterrupt(), "cadrumo test int"),
         )
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             for exception, entrypoint in cases:
                 captured: dict[str, str] = {}
                 expected_error = (
@@ -119,14 +121,15 @@ class TestRunContextOutcome:
     ) -> None:
         run_id = "1111111111111111"
         with (
-            override_settings(cadrumo_runs_dir=tmp_path),
+            override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings,
             pytest.raises(RunTracePersistenceError) as excinfo,
             run_context(entrypoint="cadrumo test persist fail", arguments=(), run_id=run_id),
         ):
-            (tmp_path / run_id / "trace.json").mkdir()
+            trace_path = storage_path(StorageCategory.RUNS, settings=settings) / run_id / "trace.json"
+            trace_path.mkdir(parents=True)
 
         assert excinfo.value.operation == "save_trace"
-        assert excinfo.value.path == tmp_path / run_id / "trace.json"
+        assert excinfo.value.path == trace_path
         assert current_run_context() is None
 
     def test_trace_persistence_failure_does_not_mask_body_error(
@@ -135,11 +138,11 @@ class TestRunContextOutcome:
     ) -> None:
         run_id = "2222222222222222"
         with (
-            override_settings(cadrumo_runs_dir=tmp_path),
+            override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)),
             pytest.raises(RuntimeError, match="primary failure"),
             run_context(entrypoint="cadrumo test body fail", arguments=(), run_id=run_id),
         ):
-            (tmp_path / run_id / "trace.json").mkdir()
+            (storage_path(StorageCategory.RUNS) / run_id / "trace.json").mkdir(parents=True)
             raise RuntimeError("primary failure")
 
         assert current_run_context() is None
@@ -159,7 +162,7 @@ class TestRunContextRunIdValidation:
 
         bad_run_ids = ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789")
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             for bad_run_id in bad_run_ids:
                 before = set(tmp_path.iterdir())
                 with (
@@ -174,7 +177,7 @@ class TestRunContextRunIdValidation:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with run_context(
                 entrypoint="cadrumo test",
                 arguments=(),
@@ -190,7 +193,7 @@ class TestRunIdPropagation:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             chain: Callable[[str], None] = _SubmissionStep(_InboxStep(_StatusStep()))
             with run_context(entrypoint="cadrumo test chain", arguments=()) as info:
                 chain("alpha")
@@ -223,7 +226,7 @@ class TestRunSinkScrubbing:
         tmp_path: Path,
     ) -> None:
         """A NIF-shaped value in a GenericPayload field must not appear in plain text."""
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with run_context(entrypoint="cadrumo test scrub nif", arguments=()) as info:
                 record_event(
                     RunEventKind.ASSERTION,
@@ -231,7 +234,7 @@ class TestRunSinkScrubbing:
                 )
                 run_id = info.run_id
 
-            jsonl_path = tmp_path / run_id / "events.jsonl"
+            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / "events.jsonl"
             assert jsonl_path.exists(), f"JSONL sink file not found: {jsonl_path}"
 
             raw_text = jsonl_path.read_text(encoding="utf-8")
@@ -251,7 +254,7 @@ class TestRunSinkScrubbing:
         from ...logging import SecretScrubbingFilter, attach_run_sink
         from .._sink import JsonlRunSink
 
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)
             attach_run_sink(sink)
             try:
@@ -268,7 +271,7 @@ class TestRunSinkScrubbing:
         tmp_path: Path,
     ) -> None:
         """Every JSONL line must deserialise cleanly after scrubbing is applied."""
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             with run_context(entrypoint="cadrumo test scrub json", arguments=()) as info:
                 record_event(
                     RunEventKind.NAVIGATION,
@@ -276,7 +279,7 @@ class TestRunSinkScrubbing:
                 )
                 run_id = info.run_id
 
-            jsonl_path = tmp_path / run_id / "events.jsonl"
+            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / "events.jsonl"
             lines = [ln for ln in jsonl_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
             assert lines, "no JSONL lines written"
             for line in lines:

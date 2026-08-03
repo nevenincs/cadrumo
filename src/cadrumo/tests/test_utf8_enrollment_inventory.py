@@ -70,36 +70,29 @@ _SCAN_EXCLUDES: frozenset[str] = frozenset(
     },
 )
 
-# Known pre-existing violating files (ratchet history/ratchet history backlog, to be cleaned up
-# over time).  New files must NOT appear here — add a cleanup
-# commit instead.  Removing an entry locks that file at zero violations.
+# Known pre-existing violating files, to be cleaned up over time. New files must
+# NOT appear here — add a cleanup commit instead. Removing an entry locks that
+# file at zero violations.
+#
+# Every entry must still exempt a REAL violation, and
+# :func:`test_no_ratchet_entry_has_gone_inert` enforces that. A file that was
+# cleaned up, or deleted, but left listed here does not become a harmless
+# leftover: it becomes a standing pre-authorisation for that exact path to
+# reacquire bare UTF-8 literals with no review. This list was measured on
+# 2026-08-03 and 35 of its 78 entries had gone inert that way — 29 files since
+# cleaned, 6 no longer present — so 35 paths were silently exempt for nothing.
+# They are deleted here rather than left as backlog decoration.
 _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
     {
         "adapters/outbound/aeat/sede/_declarations_observations.py",
         "adapters/outbound/llm/_cache.py",
         "adapters/outbound/llm/_usage.py",
         "adapters/outbound/storage/_mirror_manifest.py",
-        "adapters/persistence/profile/assets.py",
         "adapters/persistence/profile/filing_amendments.py",
-        "adapters/persistence/profile/inventory.py",
-        "adapters/persistence/storage/attachment.py",
         "adapters/persistence/storage/crypto/_encrypted_columns.py",
-        "adapters/persistence/storage/envelope/_envelope.py",
-        "adapters/persistence/storage/envelope/tests/_repository_contract_support.py",
         "adapters/persistence/storage/envelope/_secure_repository.py",
-        "adapters/persistence/storage/master_key/test_no_classvar_state.py",
-        "adapters/persistence/storage/sql/secure_objects.py",
-        "application/auth/_diagnostics.py",
-        "application/calculations/_observations_repository.py",
-        "application/evidence/_models.py",
-        "application/evidence/_service.py",
-        "application/export/_tabular.py",
         "application/filing/_review.py",
-        "application/ledger/_actions_export.py",
         "application/ledger/_actions_import.py",
-        "application/ledger/_actions_manual.py",
-        "application/live/_borrador_100.py",
-        "application/live/_censo.py",
         "application/live/_snapshot_base.py",
         "application/live/_verify.py",
         "application/modelo/_revision_persistence.py",
@@ -109,7 +102,6 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "application/wizard/_translations.py",
         "application/workflow/_persistence.py",
         "core/_bucket_pointer_io.py",
-        "core/config.py",
         "core/corpus_manifest/__init__.py",
         "core/i18n/_render.py",
         "core/json_contract.py",
@@ -117,33 +109,17 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "core/observability/_sink.py",
         "core/observability/_store.py",
         "domain/auth/apoderamientos/_catalogue.py",
-        "domain/buckets/_event.py",
-        "domain/buckets/_event_repository.py",
         "domain/calculations/registry/_export_parse.py",
         "domain/calculations/registry/_legal.py",
         "domain/calculations/registry/_live_parity.py",
         "domain/calculations/registry/_parity_tapes.py",
         "domain/calculations/registry/_renta_web_open_oracle.py",
         "domain/calculations/registry/_validate_evidence.py",
-        "domain/deadlines/_recargo.py",
-        "domain/filing/_amendment.py",
-        "domain/filing/_schema.py",
-        "domain/invoices/_repository.py",
         "domain/manuals/_fetch.py",
         "domain/manuals/_loader.py",
-        "domain/modelos/_calculation_repository.py",
-        "domain/modelos/_calculation_revision.py",
-        "domain/modelos/_filing_record.py",
-        "domain/modelos/_filing_repository.py",
-        "domain/modelos/_repository.py",
-        "domain/modelos/_verification_report.py",
-        "domain/modelos/_verification_repository.py",
         "domain/modelos/_work_unit.py",
         "domain/transactions/_llm.py",
-        "domain/transactions/_repository.py",
-        "domain/usage_ratios/_service.py",
         "domain/user_profile/_values.py",
-        "entrypoints/cli/_config/__init__.py",
         "entrypoints/cli/_config/_google.py",
         "entrypoints/cli/_config/_google_sync_calc.py",
         "entrypoints/cli/_config/_profile_bundle.py",
@@ -151,8 +127,6 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "entrypoints/cli/_ledger_classify_cli.py",
         "entrypoints/cli/_stdio.py",
         "locales/_ast_scanner.py",
-        "tests/_env_loader.py",
-        "tests/fixtures/justificantes/_generate.py",
     },
 )
 
@@ -160,6 +134,37 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
 def _all_production_files() -> tuple[Path, ...]:
     """Return all non-test Python files under src/cadrumo/, excluding the constant module."""
     return non_test_package_python_files(include_data=True, scan_excludes=_SCAN_EXCLUDES)
+
+
+def test_no_ratchet_entry_has_gone_inert() -> None:
+    """Every ratchet entry must still exempt a file that really violates.
+
+    A ratchet only ratchets in one direction on its own: the check below refuses
+    a NEW violation, but nothing ever forced an entry out when its file was
+    cleaned or deleted. An entry left behind is not spent, it is loaded — the
+    listed path stays exempt, so that exact file may silently reacquire bare
+    UTF-8 literals without review, and a deleted path pre-exempts whatever is
+    created there later.
+
+    Measured on 2026-08-03, 35 of 78 entries had gone inert this way. This is the
+    check that keeps the backlog honest as it drains.
+    """
+    by_relative_path = {aeat_relative(path): path for path in _all_production_files()}
+    cleaned: list[str] = []
+    vanished: list[str] = []
+    for entry in sorted(_KNOWN_VIOLATING_FILES):
+        path = by_relative_path.get(entry)
+        if path is None:
+            vanished.append(entry)
+        elif not bare_utf8_literal_violations(path):
+            cleaned.append(entry)
+
+    assert not (cleaned or vanished), (
+        "ratchet entries that exempt nothing and now stand as silent pre-authorisations:\n"
+        + "".join(f"  cleaned, still listed: {entry}\n" for entry in cleaned)
+        + "".join(f"  no longer in the tree: {entry}\n" for entry in vanished)
+        + "\nDelete them from _KNOWN_VIOLATING_FILES in this commit."
+    )
 
 
 def test_no_bare_utf8_literals_in_production_files() -> None:

@@ -14,8 +14,9 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from ..core import exclusive_file_lock
-from ..core.config import Settings, load_settings
+from ..core.config import Settings
 from ..core.errors import CadrumoError
+from ..core.paths import effective_storage_root
 from ._config_reset_models import (
     ConfigResetOperation,
     ConfigResetOperationStatus,
@@ -131,8 +132,7 @@ class ConfigResetJournalRepository(JournalRepositoryBase[ConfigResetOperation]):
         settings: Settings | None = None,
         storage_root: Path | None = None,
     ) -> None:
-        resolved_settings = settings or load_settings()
-        root = storage_root or resolved_settings.cadrumo_local_storage_root
+        root = effective_storage_root(storage_root, settings=settings)
         super().__init__(
             journal_dirname=CONFIG_RESET_JOURNAL_DIRNAME,
             storage_root=root,

@@ -19,9 +19,10 @@ from pathlib import Path
 import pytest
 
 from ..core import STORAGE_TAXONOMY, StorageCategory, StorageOverridePolicy, StorageScope, storage_path
-from ..core.config import override_settings
+from ..core.config import Settings, override_settings
 from ..core.errors import CoreValidationError
-from .storage_scope import storage_overrides
+from .env_scope import isolated_aeat_env, settings_without_env_file
+from .storage_scope import relocated_storage_path, storage_env_overrides, storage_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -111,3 +112,54 @@ def test_the_refusal_probes_would_otherwise_succeed(tmp_path: Path) -> None:
     would satisfy all three and isolate nothing.
     """
     assert storage_overrides(tmp_path, StorageCategory.SECRETS) == {"cadrumo_secret_store_dir": tmp_path / "secrets"}
+
+
+def test_the_single_category_accessor_agrees_with_the_override_it_pairs_with(tmp_path: Path) -> None:
+    """The path a test seeds is the path the override sends production to.
+
+    These are used together — seed the directory, then enter the block — so a
+    disagreement between them would have a test writing files somewhere the
+    system under test never looks, and passing for the wrong reason. Checked
+    end to end through :func:`storage_path` under a live override rather than
+    against the mapping, which would only prove one function calls the other.
+    """
+    seeded = relocated_storage_path(tmp_path, StorageCategory.FINANCIAL_TRANSACTIONS)
+
+    with override_settings(**storage_overrides(tmp_path, StorageCategory.FINANCIAL_TRANSACTIONS)) as settings:
+        assert storage_path(StorageCategory.FINANCIAL_TRANSACTIONS, settings=settings) == seeded
+
+    assert seeded == tmp_path / "financial" / "transactions"
+
+
+def test_the_single_category_accessor_refuses_what_the_mapping_refuses(tmp_path: Path) -> None:
+    """It inherits the refusals rather than quietly widening them."""
+    with pytest.raises(CoreValidationError, match="fixed layout"):
+        relocated_storage_path(tmp_path, StorageCategory.BUCKETS)
+
+
+def test_the_environment_form_names_a_variable_the_settings_model_reads(tmp_path: Path) -> None:
+    """The env form emits a live variable name, not an uppercased guess.
+
+    Checked against the model's own environment inventory rather than against
+    ``field.upper()``, which is the derivation under test and would agree with
+    itself.
+    """
+    environment = storage_env_overrides(tmp_path, StorageCategory.SECRETS, StorageCategory.RUNS)
+
+    assert set(environment) <= Settings.env_var_names()
+    assert environment["CADRUMO_SECRET_STORE_DIR"] == str(tmp_path / "secrets")
+    assert environment["CADRUMO_RUNS_DIR"] == str(tmp_path / "runs")
+
+
+def test_the_environment_form_actually_reaches_the_settings_model(tmp_path: Path) -> None:
+    """A variable this emits relocates the category when the model reads it.
+
+    The point of the reachability check is that a name nothing reads would
+    leave a subprocess pointed at the operator's real location. Proving the
+    name resolves is what makes that check meaningful rather than decorative.
+    """
+    environment = storage_env_overrides(tmp_path, StorageCategory.SECRETS)
+
+    with isolated_aeat_env(**environment):
+        settings = settings_without_env_file()
+        assert storage_path(StorageCategory.SECRETS, settings=settings) == tmp_path / "secrets"

@@ -2,7 +2,7 @@
 
 A module whose filename begins with ``test_live_`` reads, at a glance, as a
 test of an AEAT live surface. This ratchet keeps that signal honest: every
-source-controlled ``test_live_*.py`` module MUST either carry the
+``test_live_*.py`` module present on disk MUST either carry the
 ``aeat_live`` execution marker (it genuinely contacts a live AEAT surface and
 is gated behind the opt-in) OR carry a banner comment of the form
 ``# INTENTIONAL: <scope> because <reason>`` declaring, in the author's words,
@@ -106,7 +106,17 @@ def _live_filename_violation(path: Path) -> str | None:
 
 
 def _live_prefixed_test_modules() -> list[Path]:
-    """Return every source-controlled ``test_live_*.py`` module under ``src/cadrumo``."""
+    """Return every ``test_live_*.py`` module present on disk under ``src/cadrumo``.
+
+    The scan is a filesystem glob and deliberately does not consult git, so an
+    untracked module is in scope — matching :func:`_discover_test_modules` in
+    the companion :mod:`test_marker_integrity`. In a worktree where several
+    agents hold uncommitted work at once, a mis-declared ``test_live_*`` module
+    is caught before it is committed rather than after. The cost is that a red
+    here may name a file absent at HEAD, so triage starts with
+    ``git status --short -- <file>``: an untracked path is a peer's work in
+    progress, not a regression.
+    """
     return sorted(path for path in SRC_CADRUMO.glob("**/test_live_*.py") if path.name != "__init__.py")
 
 

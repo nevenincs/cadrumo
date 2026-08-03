@@ -690,7 +690,14 @@ class TestConfirmInvoiceDraftFromEvidence:
         # which governs post-construction invariants such as duplicate
         # identity) -- either way, an invalid override refuses rather than
         # silently minting a malformed invoice.
-        with pytest.raises((InvoiceValidationError, ValidationError)):
+        # Since the confirm path began ASSERTING the supplied tax id against
+        # the extracted one, an override that disagrees is refused earlier and
+        # more specifically, as a ``PurchaseInvoiceEvidenceInputError`` naming
+        # the field. The property under test is unchanged -- an invalid
+        # override refuses rather than minting a malformed invoice -- and the
+        # checksum refusal below still governs the case where extraction found
+        # no tax id to compare against.
+        with pytest.raises((InvoiceValidationError, ValidationError, PurchaseInvoiceEvidenceInputError)):
             confirm_invoice_draft_from_evidence(
                 bucket_id=_BUCKET_ID,
                 kind=InvoiceKind.RECEIVED,

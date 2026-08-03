@@ -40,10 +40,7 @@ from ._config_integration_fields import (
 )
 from ._config_mcp_serving_fields import CadrumoMcpServingSettings
 from ._config_state_root import (
-    BUCKET_DB_DIRNAME,
-    BUCKETS_DIRNAME,
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
-    PRODUCT_DATABASE_FILENAME,
     default_storage_root,
     refuse_former_product_database,
 )
@@ -94,73 +91,6 @@ LIVE_READ_TEST_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_OPT_IN_ENV_VAR
 LIVE_READ_TEST_OPT_IN_VALUE = _live_test_config.LIVE_READ_TEST_OPT_IN_VALUE
 LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD
 LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
-
-_STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
-    # NOT the authority. ``core._storage_taxonomy`` declares every location,
-    # and settings derivation, tree materialisation, and the override rebuild
-    # all read it. This literal table survives only as the independent oracle
-    # the parity gate pins that declaration against, and as the surface the
-    # test modules that have not yet migrated still import. It is deleted with
-    # them; until then a subpath edited here without editing the taxonomy (or
-    # the reverse) reds the gate rather than silently moving operator data.
-    #
-    # Every output directory whose default is not an explicit operator override
-    # derives from ``cadrumo_local_storage_root`` under one category taxonomy.
-    # That root is the platform user-data location in every run mode: a source
-    # checkout no longer redirects it, and a developer who wants the store
-    # inside their checkout says so with ``CADRUMO_LOCAL_STORAGE_ROOT``. The
-    # value is the
-    # POSIX-style relative subpath under the root; ``cache/`` is the sole on-disk
-    # category prefix (the encrypted-state substrate, diagnostic logs, and
-    # durable outputs keep bare, self-describing leaf names, matching the
-    # existing tokens/secrets/blobs/audit/logs layout). The lifecycle grouping
-    # (state / cache / logs / exports) is a conceptual classification, not a
-    # rigid path prefix.
-    #
-    # State substrate and identity (encrypted store + auth tokens).
-    "cadrumo_token_dir": "tokens",
-    "cadrumo_secret_store_dir": "secrets",
-    "cadrumo_blob_store_dir": "blobs",
-    "cadrumo_audit_dir": "audit",
-    # Diagnostic and append-only telemetry logs.
-    "cadrumo_log_dir": "logs",
-    "cadrumo_llm_usage_dir": "llm-usage",
-    "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
-    "cadrumo_mcp_telemetry_dir": "telemetry",
-    # Regenerable, evictable caches (the cache/ namespace, which also holds the
-    # registry-pickle cache).
-    "cadrumo_llm_cache_dir": "cache/llm-cache",
-    "cadrumo_status_cache_dir": "cache/status-cache",
-    "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
-    "cadrumo_corpus_search_cache_dir": "cache/corpus-search",
-    "cadrumo_validation_verdict_cache_dir": "cache/registry-verdict",
-    # Durable generated outputs.
-    "cadrumo_storage_backup_dir": "backups",
-    "cadrumo_submissions_dir": "submissions",
-    "cadrumo_inbox_dir": "inbox",
-    "cadrumo_inbox_pdf_dir": "inbox/pdfs",
-    "cadrumo_workflow_runs_dir": "workflow-runs",
-    "cadrumo_drafts_dir": "drafts",
-    "cadrumo_runs_dir": "runs",
-    "cadrumo_justificantes_dir": "justificantes",
-    "cadrumo_filing_history_dir": "filing-history",
-    # Live AEAT read-evidence roots. Previously hardcoded as CLI option defaults
-    # (``var/cadrumo/...``), which placed regulated filing evidence outside this
-    # taxonomy AND outside operator control: no override reached them because
-    # they were never settings at all.
-    "cadrumo_filed_declarations_dir": "filed-declarations",
-    "cadrumo_iva_compensation_history_dir": "live/iva-compensation-history",
-    "cadrumo_iva_read_evidence_dir": "live/iva-read-evidence",
-    # Financial file-envelope catalogues and the registry parity-tape archive
-    # (declared by the integration-fields mixin). The parity archive nests under
-    # the derived audit directory, matching its historical layout.
-    "cadrumo_financial_txs_dir": "financial/transactions",
-    "cadrumo_invoices_dir": "financial/invoices",
-    "cadrumo_attachments_dir": "financial/attachments",
-    "cadrumo_usage_ratios_path": "financial/usage-ratios.json",
-    "cadrumo_registry_parity_store_dir": "audit/registry/parity",
-}
-
 
 _NON_ENVIRONMENT_SELECTION_NAMES: Final[frozenset[str]] = frozenset({"CADRUMO_ACTIVE_PROFILE"})
 """Settings names that no environment source may populate.
@@ -326,10 +256,6 @@ class Settings(CadrumoMcpServingSettings):
             "deterministic location supply this field explicitly; production "
             "reads the computed value."
         ),
-    )
-    cadrumo_storage_backup_dir: Path = Field(
-        default=Path("backups"),
-        description="Directory where the storage layer writes database backups",
     )
     cadrumo_secret_store_backend: SecretStoreBackend = Field(
         default=SecretStoreBackend.AUTO,
@@ -597,14 +523,16 @@ class Settings(CadrumoMcpServingSettings):
             "wallet (cartera) read. The ``None`` default disables capture and "
             "is the only production posture: with it unset the wallet read "
             "path is byte-for-byte unchanged. When set via "
-            "``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` the read dumps the full "
-            "captured page tree — main document, every popup page, every child "
-            "frame, and per-page screenshots — to this directory so AEAT DOM "
-            "drift on the cartera surface can be diagnosed offline "
-            "against real evidence. The capture may contain live taxpayer "
-            "amounts; it is written only to this operator-chosen directory and "
-            "must never be committed or reused as a fixture without "
-            "sanitisation."
+            "``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` the read writes one redacted "
+            "structural-shape summary per captured page and frame — URL "
+            "without query, heading/table/form/input counts, form action "
+            "paths, input identifiers, and a content hash — to this directory "
+            "so AEAT DOM drift on the cartera surface can be diagnosed "
+            "offline. It never writes raw HTML, frame HTML, screenshots, "
+            "input values, or wallet amounts, so the capture carries no live "
+            "taxpayer figures; it is written only to this operator-chosen "
+            "directory and must never be committed or reused as a fixture "
+            "without sanitisation."
         ),
     )
     cadrumo_wallet_diagnostic_retention_days: int = Field(
@@ -894,14 +822,6 @@ class Settings(CadrumoMcpServingSettings):
     )
 
     # ── Notifications inbox ─────────────────────────────────────────────────
-    cadrumo_inbox_dir: Path = Field(
-        default=Path("inbox"),
-        description="Directory where the persisted Inbox JSON file lives",
-    )
-    cadrumo_inbox_pdf_dir: Path = Field(
-        default=Path("inbox") / "pdfs",
-        description="Directory where downloaded notification PDFs are stored",
-    )
     cadrumo_inbox_alert_lead_days: int = Field(
         default=7,
         description=(
@@ -938,14 +858,6 @@ class Settings(CadrumoMcpServingSettings):
     )
 
     # ── Status reader ───────────────────────────────────────────────────────
-    cadrumo_status_cache_dir: Path = Field(
-        default=Path("cache") / "status-cache",
-        description="Directory for the short-lived AEAT status-page cache",
-    )
-    cadrumo_status_cache_ttl_s: int = Field(
-        default=900,
-        description="TTL in seconds for status cache entries (default 15 min)",
-    )
     aeat_status_detail_url_template: str = Field(
         default_factory=_default_status_detail_url_template,
         description=(
@@ -1098,9 +1010,11 @@ class Settings(CadrumoMcpServingSettings):
                 raise ActiveProfilePointerError(path=pointer_file) from exc
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()
+        from ._storage_taxonomy import StorageCategory, bucket_scoped_storage_path, storage_path
+
         if not bucket_id:
             refuse_former_product_database(self.cadrumo_local_storage_root)
-            fallback_db_path = self.cadrumo_local_storage_root / PRODUCT_DATABASE_FILENAME
+            fallback_db_path = storage_path(StorageCategory.ROOT_FALLBACK_DATABASE, settings=self)
             object.__setattr__(
                 self,
                 "cadrumo_database_url",
@@ -1108,17 +1022,11 @@ class Settings(CadrumoMcpServingSettings):
             )
             return self
         refuse_former_product_database(self.cadrumo_local_storage_root, bucket_id=bucket_id)
-        # The layout names come from the one core storage authority. This
-        # fallback used to re-type them, unpinned against the code that
-        # actually provisions a bucket, so a rename would have routed the
-        # cold-start database at a directory nothing else agreed on.
-        bucket_db_path = (
-            self.cadrumo_local_storage_root
-            / BUCKETS_DIRNAME
-            / bucket_id
-            / BUCKET_DB_DIRNAME
-            / PRODUCT_DATABASE_FILENAME
-        )
+        # The layout comes from the one core storage authority. This fallback
+        # used to re-type it, unpinned against the code that actually
+        # provisions a bucket, so a rename would have routed the cold-start
+        # database at a directory nothing else agreed on.
+        bucket_db_path = bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE_FILE, bucket_id, settings=self)
         object.__setattr__(
             self,
             "cadrumo_database_url",
@@ -1283,7 +1191,6 @@ class Settings(CadrumoMcpServingSettings):
         "cadrumo_attachments_dir",
         "cadrumo_local_storage_root",
         "cadrumo_log_dir",
-        "cadrumo_storage_backup_dir",
         "cadrumo_secret_store_dir",
         "cadrumo_blob_store_dir",
         "cadrumo_audit_dir",
@@ -1301,12 +1208,9 @@ class Settings(CadrumoMcpServingSettings):
         "cadrumo_llm_run_telemetry_dir",
         "cadrumo_mcp_telemetry_dir",
         "cadrumo_submissions_dir",
-        "cadrumo_inbox_dir",
-        "cadrumo_inbox_pdf_dir",
         "cadrumo_workflow_runs_dir",
         "cadrumo_drafts_dir",
         "cadrumo_runs_dir",
-        "cadrumo_status_cache_dir",
         "cadrumo_justificantes_dir",
         "cadrumo_filing_history_dir",
         "cadrumo_wallet_diagnostic_dump_dir",

@@ -66,8 +66,8 @@ _STORAGE_DIRNAME = "storage"
 BUCKETS_DIRNAME = storage_location(StorageCategory.BUCKETS).subpath
 #: Per-bucket database directory name, read from the one core storage authority.
 BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
-#: Canonical SQLite filename for Cadrumo-owned application state.
-PRODUCT_DATABASE_FILENAME = f"{PRODUCT_IDENTITY.python_package}.db"
+#: Canonical SQLite filename, read from the one core storage authority.
+PRODUCT_DATABASE_FILENAME = storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath
 #: Retired ``aeat`` database filename inspected only for refusal.
 FORMER_PRODUCT_DATABASE_FILENAME = "aeat.db"
 

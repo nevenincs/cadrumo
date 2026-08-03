@@ -56,7 +56,7 @@ from pydantic import BaseModel, Field
 from ...adapters.outbound.llm import LLMClient, LLMProvider, LLMRequest, MultimodalImageInput
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
-from ...core.decimal import coerce_finite_european_decimal
+from ...core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
 from ...core.hashing import sha256_hex
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_date
@@ -199,10 +199,30 @@ def _grounded_decimal(raw: str | None) -> Decimal | None:
     grand total by a hundred, and it admitted ``NaN`` and ``Infinity`` as
     amounts. The canonical helper reads a comma as the decimal separator (so
     ``"1.234,56"`` still parses as ``1234.56``) and refuses non-finite values.
+
+    An amount whose dot could equally be a thousands separator or a decimal
+    point is dropped rather than read one way. The model is instructed to
+    transcribe what is printed and the schema types every field as a string so
+    nothing is normalised on the way out, which is deliberate -- it means the
+    convention in the returned text is the SUPPLIER'S, and a supplier writing
+    Spanish prints one thousand two hundred and thirty-four euros as
+    ``1.234``. Read as a decimal that is ``1.23``, a thousandfold light on a
+    taxable base bound for Modelo 303/390.
+
+    Dropping to ``None`` is the same call :func:`_grounded_currency` makes on a
+    symbol it cannot resolve, for the same reason: the confirm path treats a
+    missing amount as a hard refusal naming the ``--taxable-base`` override, so
+    the operator is asked for the figure. A guessed one would instead be minted
+    silently, and the draft review is advisory rather than a gate -- ``confirm``
+    re-extracts and uses the extracted value for any field the operator did not
+    explicitly override.
     """
     if raw is None:
         return None
-    return coerce_finite_european_decimal(raw.strip())
+    text = raw.strip()
+    if european_thousands_reading_is_ambiguous(text):
+        return None
+    return coerce_finite_european_decimal(text)
 
 
 def _grounded_currency(raw: str | None) -> str | None:

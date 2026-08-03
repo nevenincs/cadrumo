@@ -343,3 +343,59 @@ class TestParseDescendienteFlag:
     def test_case_insensitive_keys(self) -> None:
         d = parse_descendiente_flag("nacimiento=2020-03-15")
         assert d.birth_date == date(2020, 3, 15)
+
+    @pytest.mark.parametrize(
+        ("spelling", "expected"),
+        (
+            pytest.param("sí", True, id="si-accented"),
+            pytest.param("si", True, id="si-bare"),
+            pytest.param("s", True, id="s-abbreviated"),
+            pytest.param("verdadero", True, id="verdadero"),
+            pytest.param("no", False, id="no"),
+            pytest.param("n", False, id="n-abbreviated"),
+            pytest.param("falso", False, id="falso"),
+        ),
+    )
+    def test_convivencia_reads_the_spanish_a_taxpayer_actually_writes(
+        self,
+        spelling: str,
+        expected: bool,
+    ) -> None:
+        """Every spelling the canonical vocabulary accepts reads the same way here."""
+        d = parse_descendiente_flag(f"NACIMIENTO=2020-03-15,CONVIVENCIA={spelling}")
+
+        assert d.convive_con_contribuyente is expected
+
+    @pytest.mark.parametrize("key", ("CONVIVENCIA", "CUSTODIA"))
+    def test_an_unreadable_yes_no_refuses_rather_than_claiming(self, key: str) -> None:
+        """A word the vocabulary cannot read must not resolve to a deduction.
+
+        Both fields used to answer silently, and both answered in the
+        direction that claims: ``CONVIVENCIA`` resolved an unreadable word to
+        ``True`` (Art. 58 cohabitation, which qualifies the descendant at
+        all), while ``CUSTODIA`` resolved it to ``False`` (the full mínimo
+        rather than the Art. 61 half). Opposite booleans, same direction.
+        """
+        with pytest.raises(ValueError, match=key):
+            parse_descendiente_flag(f"NACIMIENTO=2020-03-15,{key}=quizas")
+
+    def test_the_yes_no_refusal_lists_the_spellings_it_accepts(self) -> None:
+        """The refusal has to teach the vocabulary, not just reject the word."""
+        with pytest.raises(ValueError) as caught:
+            parse_descendiente_flag("NACIMIENTO=2020-03-15,CONVIVENCIA=quizas")
+
+        message = str(caught.value)
+        assert "sí" in message and "no" in message, "must name the Spanish spellings"
+        assert "quizas" in message, "must echo what the operator wrote"
+
+    def test_an_absent_yes_no_still_takes_its_documented_default(self) -> None:
+        """Refusing an unreadable VALUE must not start refusing an absent one.
+
+        The two defaults are the flag's published contract and point opposite
+        ways, so a guard that collapsed absence into the refusal would break
+        every short-form invocation.
+        """
+        d = parse_descendiente_flag("NACIMIENTO=2020-03-15")
+
+        assert d.convive_con_contribuyente is True
+        assert d.custodia_compartida is False

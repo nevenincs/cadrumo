@@ -14,9 +14,10 @@ UTC timestamps, public Argon2id KDF parameters and salt, recovery-enrollment
 state, idle-lock setting, key schedule, schema version, and lifecycle mirror.
 It must not contain passphrases, derived keys, wrapped DEKs, recovery secrets,
 taxpayer payloads, or secure-object ciphertext. Keystore helpers
-(:func:`keystore_root`, :func:`keystore_path`, and
-:func:`validate_keystore_separation`) enforce that custody material lives
-outside the ``buckets/`` tree and the per-bucket database directory.
+(:func:`keystore_root`, :func:`keystore_path`,
+:func:`validate_keystore_separation`, and :func:`keystore_sidecar_path`)
+enforce that custody material lives outside the ``buckets/`` tree and the
+per-bucket database directory.
 
 The sealed-archive surface re-exports :class:`ExportArchiveHeader`,
 :class:`SealedArchiveContents`, :func:`write_sealed_archive`, and
@@ -54,7 +55,7 @@ from ._errors import (
     RecoveryVerificationError,
 )
 from ._export_header import ExportArchiveHeader
-from ._keystore_paths import keystore_path, keystore_root, validate_keystore_separation
+from ._keystore_paths import keystore_path, keystore_root, keystore_sidecar_path, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory, trash_rename_and_remove
 from ._lockfile import acquire_lock, lock_path, release_lock
 from ._manifest import (
@@ -107,6 +108,7 @@ __all__ = [
     "ensure_manifest_schema_readable",
     "keystore_path",
     "keystore_root",
+    "keystore_sidecar_path",
     "lock_path",
     "manifest_path",
     "normalize_output_language_hint",

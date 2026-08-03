@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 from ._config_state_root import PRODUCT_DATABASE_FILENAME
-from ._storage_taxonomy import StorageCategory, storage_location
+from ._storage_taxonomy import StorageCategory, storage_location, storage_path
 from .errors import CoreValidationError
 
 if TYPE_CHECKING:
@@ -49,7 +49,7 @@ def classify_storage_route_for_settings(settings: Settings) -> StorageRouteClass
             database_url=database_url,
             database_path=database_path,
         )
-    root_fallback = _normalized_path(settings.cadrumo_local_storage_root / PRODUCT_DATABASE_FILENAME)
+    root_fallback = _normalized_path(storage_path(StorageCategory.ROOT_FALLBACK_DATABASE, settings=settings))
     if database_path is not None and _normalized_path(database_path) == root_fallback:
         return StorageRouteClassification(
             kind=StorageRouteKind.ROOT_FALLBACK_DATABASE,

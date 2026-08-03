@@ -139,7 +139,7 @@ def _full_m100_profile() -> UserProfileRecord:
             # 0023 renta-2025-profile-family-descendants-eu-eea-deduction
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
             # 0024 renta-2025-profile-family-minor-children-in-unit
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -261,7 +261,7 @@ def test_unmarried_profile_resolves_neutral_marriage_facts_without_marriage_date
             UserProfileFact(path="filing_export.declaration_type", value="1"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -303,7 +303,7 @@ def test_pareja_hecho_status_does_not_feed_official_ecivil_channels() -> None:
             UserProfileFact(path="filing_export.declaration_type", value="1"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="5"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -331,7 +331,7 @@ def test_married_profile_without_marriage_date_keeps_marriage_facts_unresolved()
             UserProfileFact(path="filing_export.declaration_type", value="1"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1985, 6, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=Decimal("0")),
+            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -364,6 +364,13 @@ def test_typed_values_match_expected_python_types() -> None:
         ("renta-2025-profile-spouse-non-resident-irpf", bool),
         ("renta-2025-profile-spouse-eu-eea-resident", bool),
         ("renta-2025-profile-family-descendants-eu-eea-deduction", bool),
+        # Declared boolean in the schema, and the fixture now says so too. It
+        # sat in the Decimal group below only because the fixture wrote
+        # Decimal("0") into a boolean-declared field. The art. 84 reducción
+        # formula still compares this binding against the literal "0" and is
+        # unaffected: _decimal_value converts a bool to Decimal("1")/("0")
+        # before the numeric channel sees it.
+        ("renta-2025-profile-family-minor-children-in-unit", bool),
     ]:
         binding = binding_map[binding_id]
         value = resolve_profile_binding_value(binding, fact_index)
@@ -401,7 +408,6 @@ def test_typed_values_match_expected_python_types() -> None:
         "renta-2025-profile-declaration-type",  # "1" → Decimal("1")
         "renta-2025-profile-taxpayer-disability-grade",  # "0" → Decimal("0")
         "renta-2025-profile-spouse-disability-grade",  # "0" → Decimal("0")
-        "renta-2025-profile-family-minor-children-in-unit",  # Decimal("0")
     ]:
         if binding_id not in binding_map:
             continue

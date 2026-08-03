@@ -30,6 +30,7 @@ import pytest
 # guard.
 from .core.external_constants import UTF_8_ENCODING
 from .tests import apply_collection_storage_root, package_python_files, prime_ast_cache
+from .tests.env_scope import release_settings_storage_directories
 
 # Child conftests import command-line interface (CLI) and internationalization
 # (`i18n`) modules while pytest is collecting tests. Those imports initialise
@@ -186,3 +187,29 @@ def _isolate_registry_caches() -> Iterator[None]:
     _reset()
     yield
     _reset()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _release_settings_storage_directories() -> Iterator[None]:
+    """Drop the temporary storage roots ``env_scope`` mints, at session end.
+
+    ``settings_without_env_file`` mints a temporary root whenever a caller
+    supplies none and the environment carries none -- which is every call made
+    inside ``isolated_aeat_env``, since that clears the storage-root variable.
+    It has to hold the directory open, because the ``Settings`` it returns
+    names that path.
+
+    Nothing used to drop them and no sweep covered the prefix, so they
+    accumulated: a runtime write census measured 457 in the operator's temp
+    directory, the oldest three weeks old, one per call across every session
+    ever run. Each is empty, so the cost is directory entries rather than
+    bytes, and a byte-oriented look never saw it.
+
+    Binding the lifetime here is what fixes it: the directories must outlive
+    the call, and now they do not outlive the session. A worker killed rather
+    than torn down still leaks, which no in-process finalizer can prevent --
+    that residual is the reason the collection-time root carries a staleness
+    sweep as well as an ``atexit`` hook.
+    """
+    yield
+    release_settings_storage_directories()

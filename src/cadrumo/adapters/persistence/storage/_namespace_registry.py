@@ -12,15 +12,34 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core import StorageCategory, storage_location
 from ....core.classification import SensitivityClass
 from ._namespace_taxonomy import (
     _CUSTODY_PROFILE_DISPOSITIONS,
     StorageCustodyDisposition,
     StorageCustodyProfile,
     StorageNamespaceScope,
+    StoragePathAnchor,
     StoragePathKind,
     StorageRemoteMirrorPolicy,
+)
+from ._storage_path_definitions import (
+    BLOB_MANIFEST_SCHEMA_VERSION,
+    BUCKET_AUDIT_DIRNAME,
+    BUCKET_BLOBS_DIRNAME,
+    BUCKET_DATABASE_FILENAME,
+    BUCKET_DB_DIRNAME,
+    BUCKET_DEK_FILENAME,
+    BUCKET_LOCK_FILENAME,
+    BUCKET_MANIFEST_FILENAME,
+    BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,  # noqa: F401 - public re-export for bucket/_output_language_hint.py
+    BUCKETS_DIRNAME,
+    CONFIG_RESET_JOURNAL_DIRNAME,
+    KEYSTORE_DIRNAME,
+    LOGIN_THROTTLE_FILENAME,
+    PROFILE_SESSION_FILENAME,
+    SECRET_RECORD_SCHEMA_VERSION,
+    STORAGE_PATH_DEFINITIONS,
+    StoragePathDefinition,
 )
 from .errors import NamespaceRegistryError
 
@@ -29,39 +48,12 @@ SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
 SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 
-# The bucket and keystore layout names are read from the core storage
-# taxonomy, which is their single declaration; this module is a consumer of
-# that authority, not a second one. They were declared here originally, and
-# core could not import them without inverting the hexagonal direction -- so
-# the core modules that needed the same two names re-typed them as inline
-# literals instead, unpinned against these. Moving the declaration inward is
-# what made those copies deletable rather than merely pinnable, and it adds no
-# upward dependency: an adapter depending on core is the legal direction.
-#
-# These names stay bound here because the surrounding hierarchy declarations
-# and every storage caller already reach them through this module. The SQL
-# secure-object namespace keys below are a different concern -- logical
-# database keys, not filesystem paths -- and keep their own declarations.
-BUCKETS_DIRNAME = storage_location(StorageCategory.BUCKETS).subpath
-BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
-BUCKET_BLOBS_DIRNAME = storage_location(StorageCategory.BUCKET_BLOBS).subpath
-BUCKET_AUDIT_DIRNAME = storage_location(StorageCategory.BUCKET_AUDIT).subpath
-BUCKET_MANIFEST_FILENAME = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
-BUCKET_LOCK_FILENAME = storage_location(StorageCategory.BUCKET_LOCK).subpath
-BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = storage_location(StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT).subpath
-KEYSTORE_DIRNAME = storage_location(StorageCategory.BUCKET_KEYSTORE).subpath
-BUCKET_DEK_FILENAME = storage_location(StorageCategory.KEYSTORE_BUCKET_DEK).subpath
-PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION).subpath
-LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
-#: Directory holding the application-owned config-reset journal. The
-#: application module owns the durable journal itself; the name is declared
-#: here so the on-disk hierarchy has one inventory, and the enrollment gate
-#: pins the two declarations together.
-CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"
-BLOB_MANIFEST_SCHEMA_VERSION = 1
-SECRET_RECORD_SCHEMA_VERSION = 1
-SECRET_INDEX_FILENAME = "index.json"  # noqa: S105 - filename, not a credential
-SECRET_INDEX_SCHEMA_VERSION = 1
+# The bucket/keystore layout names, the fan-out shape declarations, and
+# StoragePathDefinition itself live in _storage_path_definitions.py --
+# imported above, re-exported below -- so every existing caller of
+# `from .._namespace_registry import BUCKETS_DIRNAME` (etc.) keeps working
+# unchanged. The SQL secure-object namespace keys below are the concern that
+# stays: logical database keys, not filesystem paths.
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
 
@@ -209,39 +201,6 @@ class SecureObjectNamespaceDefinition(BaseModel):
         if self.default_object_key is None:
             raise NamespaceRegistryError(f"namespace {self.namespace!r} does not define a singleton object key")
         return self.default_object_key
-
-
-class StoragePathDefinition(BaseModel):
-    """Contract for one storage hierarchy path or logical marker."""
-
-    model_config = _STRICT_FROZEN
-
-    key: str = Field(min_length=1)
-    kind: StoragePathKind
-    grammar: str = Field(min_length=1)
-    owner: str = Field(min_length=1)
-    segment: str | None = Field(default=None, min_length=1)
-    schema_version: int | None = Field(default=None, ge=1)
-
-    @field_validator("key")
-    @classmethod
-    def _key_is_registry_safe(cls, value: str) -> str:
-        if value != value.strip():
-            raise NamespaceRegistryError("path key must not carry surrounding whitespace")
-        if any(separator in value for separator in ("/", "\\")):
-            raise NamespaceRegistryError("path key must not contain path separators")
-        return value
-
-    @field_validator("segment")
-    @classmethod
-    def _segment_is_single_path_component(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-        if value != value.strip():
-            raise NamespaceRegistryError("path segment must not carry surrounding whitespace")
-        if "/" in value or "\\" in value:
-            raise NamespaceRegistryError("path segment must be a single component")
-        return value
 
 
 class StorageHierarchyRegistry(BaseModel):
@@ -1065,114 +1024,6 @@ DOMAIN_NAMESPACE_DEFINITIONS = (
     TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
 )
 
-STORAGE_PATH_DEFINITIONS = (
-    StoragePathDefinition(
-        key="bucket_root",
-        kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/buckets/<bucket_id>/",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        segment=BUCKETS_DIRNAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_db",
-        kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/buckets/<bucket_id>/db/",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        segment=BUCKET_DB_DIRNAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_blobs",
-        kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/buckets/<bucket_id>/blobs/",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        segment=BUCKET_BLOBS_DIRNAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_audit",
-        kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/buckets/<bucket_id>/audit/",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        segment=BUCKET_AUDIT_DIRNAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_manifest",
-        kind=StoragePathKind.FILE,
-        grammar="<root>/buckets/<bucket_id>/manifest.toml",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        segment=BUCKET_MANIFEST_FILENAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_lock",
-        kind=StoragePathKind.FILE,
-        grammar="<root>/buckets/<bucket_id>/.lock",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        segment=BUCKET_LOCK_FILENAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_output_language_hint",
-        kind=StoragePathKind.FILE,
-        grammar="<root>/buckets/<bucket_id>/output-language.hint",
-        owner="cadrumo.adapters.persistence.storage.bucket",
-        segment=BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,
-    ),
-    StoragePathDefinition(
-        key="keystore_bucket",
-        kind=StoragePathKind.DIRECTORY,
-        grammar="<root>/keystore/<bucket_id>/",
-        owner="cadrumo.adapters.persistence.storage.master_key",
-        segment=KEYSTORE_DIRNAME,
-    ),
-    StoragePathDefinition(
-        key="bucket_dek",
-        kind=StoragePathKind.FILE,
-        grammar="<root>/keystore/<bucket_id>/bucket.dek.json",
-        owner="cadrumo.adapters.persistence.storage.master_key",
-        segment=BUCKET_DEK_FILENAME,
-    ),
-    StoragePathDefinition(
-        key="profile_session",
-        kind=StoragePathKind.FILE,
-        grammar="<root>/keystore/<bucket_id>/session.v1.json",
-        owner="cadrumo.adapters.persistence.storage.master_key",
-        segment=PROFILE_SESSION_FILENAME,
-    ),
-    StoragePathDefinition(
-        key="login_throttle",
-        kind=StoragePathKind.FILE,
-        grammar="<root>/keystore/<bucket_id>/login-throttle.json",
-        owner="cadrumo.adapters.persistence.storage.master_key",
-        segment=LOGIN_THROTTLE_FILENAME,
-    ),
-    StoragePathDefinition(
-        key="secret_index",
-        kind=StoragePathKind.FILE,
-        grammar="<cadrumo_secret_store_dir>/index.json",
-        owner="cadrumo.adapters.persistence.storage.secret_store",
-        segment=SECRET_INDEX_FILENAME,
-        schema_version=SECRET_INDEX_SCHEMA_VERSION,
-    ),
-    StoragePathDefinition(
-        key="config_reset_journal",
-        kind=StoragePathKind.FILE,
-        grammar="<root>/reset-operations/<operation_id>.json",
-        owner="cadrumo.application.config_reset",
-        segment=CONFIG_RESET_JOURNAL_DIRNAME,
-    ),
-    StoragePathDefinition(
-        key="secure_objects_table",
-        kind=StoragePathKind.LOGICAL_SQL,
-        grammar="db://secure_objects/<namespace>/<object_key>",
-        owner="cadrumo.adapters.persistence.storage.sql",
-    ),
-    StoragePathDefinition(
-        key="blob_manifest",
-        kind=StoragePathKind.BLOB_OBJECT,
-        grammar="<root>/blobs/<sha256[:2]>/<sha256>.manifest.json",
-        owner="cadrumo.adapters.persistence.storage.blob_store",
-        schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
-    ),
-)
-
 STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
     namespaces=(
         WORKFLOW_STATE_NAMESPACE,
@@ -1248,6 +1099,7 @@ __all__ = [
     "BUCKETS_DIRNAME",
     "BUCKET_AUDIT_DIRNAME",
     "BUCKET_BLOBS_DIRNAME",
+    "BUCKET_DATABASE_FILENAME",
     "BUCKET_DB_DIRNAME",
     "BUCKET_DEK_FILENAME",
     "BUCKET_LOCK_FILENAME",
@@ -1310,6 +1162,7 @@ __all__ = [
     "StorageCustodyProfile",
     "StorageHierarchyRegistry",
     "StorageNamespaceScope",
+    "StoragePathAnchor",
     "StoragePathDefinition",
     "StoragePathKind",
     "StorageRemoteMirrorPolicy",

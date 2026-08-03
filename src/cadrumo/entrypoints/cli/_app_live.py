@@ -51,7 +51,7 @@ from ._app_live_notifications_cli import notifications_app, register_notificatio
 from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._app_live_verify_cli import register_verify_commands, verify_app
-from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_pull_year_range
+from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_optional_root, resolve_pull_year_range
 
 if TYPE_CHECKING:
     from ...application.live import VerifyVerdict
@@ -449,7 +449,7 @@ def iva_wallet_pull_history_cmd(
         typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
     ],
     output_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output-root",
             file_okay=False,
@@ -457,7 +457,7 @@ def iva_wallet_pull_history_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/cadrumo/live/iva-compensation-history"),
+    ] = None,
 ) -> None:
     """Pull Modelo 303 filed history into an :class:`IvaCompensationHistoryCaptureReport`.
 
@@ -468,13 +468,17 @@ def iva_wallet_pull_history_cmd(
     submit AEAT form choices.
     """
     from ...application.live import capture_iva_compensation_history
+    from ...core.config import load_settings
 
     _emit_live_auth_preflight()
     report = asyncio.run(
         capture_iva_compensation_history(
             year_from=year_from,
             year_to=year_to,
-            output_root=output_root,
+            output_root=resolve_optional_root(
+                output_root,
+                lambda: load_settings().cadrumo_iva_compensation_history_dir,
+            ),
         ),
     )
     lines = (
@@ -542,7 +546,7 @@ def iva_wallet_pull_evidence_cmd(
         ),
     ] = None,
     output_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output-root",
             file_okay=False,
@@ -550,7 +554,7 @@ def iva_wallet_pull_evidence_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/cadrumo/live/iva-read-evidence"),
+    ] = None,
 ) -> None:
     """Capture filed-history and wallet/cartera evidence as an IVA remote-state report.
 
@@ -563,6 +567,7 @@ def iva_wallet_pull_evidence_cmd(
     never performs AEAT filing, payment, or representative submission actions.
     """
     from ...application.live import capture_iva_remote_state
+    from ...core.config import load_settings
 
     resolved_target_period = _required_live_period_option(target_period, year=target_year)
     _emit_live_auth_preflight()
@@ -574,7 +579,7 @@ def iva_wallet_pull_evidence_cmd(
                 target_year=target_year,
                 target_period=resolved_target_period,
                 taxpayer_nif=taxpayer_nif,
-                output_root=output_root,
+                output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_iva_read_evidence_dir),
             ),
             timeout_ms=_live_iva_evidence_pull_command_timeout_ms(year_from=year_from, year_to=year_to),
         ),
@@ -1064,7 +1069,7 @@ def filed_pull_cmd(
         typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
     ] = None,
     output_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output-root",
             file_okay=False,
@@ -1072,7 +1077,7 @@ def filed_pull_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/cadrumo/filed-declarations"),
+    ] = None,
     period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.live.period_help"))] = None,
     expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
     limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
@@ -1087,6 +1092,7 @@ def filed_pull_cmd(
     :class:`ModeloRecord` evidence when an existing current filing record
     matches.
     """
+    from ...core.config import load_settings
     from ._app_live_payloads import FiledCaptureFailurePayload, FiledCaptureResult
 
     _emit_live_auth_preflight()
@@ -1097,7 +1103,7 @@ def filed_pull_cmd(
             capture_filed_data(
                 modelo=selected_modelos[0],
                 year=year,
-                output_root=output_root,
+                output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
                 period=resolved_period,
                 expediente_id=expediente_id,
                 limit=limit,
@@ -1131,7 +1137,7 @@ def filed_pull_cmd(
         capture_filed_data_bulk(
             year_from=resolved_from,
             year_to=resolved_to,
-            output_root=output_root,
+            output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
             modelos=selected_modelos or None,
             limit=limit,
         ),
@@ -1185,7 +1191,7 @@ def filed_pull_sources_cmd(
     year: Annotated[int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))],
     period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help"))],
     output_root: Annotated[
-        Path,
+        Path | None,
         typer.Option(
             "--output-root",
             file_okay=False,
@@ -1193,7 +1199,7 @@ def filed_pull_sources_cmd(
             writable=True,
             help=tr("cli.app.live.output_root_help"),
         ),
-    ] = Path("var/cadrumo/filed-declarations"),
+    ] = None,
     registry_root: Annotated[
         Path | None,
         typer.Option(
@@ -1222,6 +1228,7 @@ def filed_pull_sources_cmd(
     The emitted :class:`FiledCaptureSourcesResult` is local evidence only; the
     command does not submit or mutate AEAT state.
     """
+    from ...core.config import load_settings
     from ._app_live_payloads import FiledCaptureSourcesResult
 
     _emit_live_auth_preflight()
@@ -1230,7 +1237,7 @@ def filed_pull_sources_cmd(
             modelo=modelo,
             year=year,
             period=_required_live_period_option(period, year=year),
-            output_root=output_root,
+            output_root=resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir),
             registry_root=registry_root,
             source_root=source_root,
         ),

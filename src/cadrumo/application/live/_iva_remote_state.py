@@ -66,8 +66,9 @@ from ...application.calculations import IvaCompensationHistoryRepository as _Iva
 from ...application.calculations import IvaWalletDecisionRepository as _IvaWalletDecisionRepository
 from ...application.calculations import iva_wallet_decision_key as _iva_wallet_decision_key
 from ...application.calculations import reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation
-from ...core import Modelo, Period
+from ...core import Modelo, Period, StorageCategory
 from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
+from ...core import storage_location as _storage_location
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
@@ -112,6 +113,22 @@ from ._session import active_verified_session as _active_verified_session
 # Deliberately not a ``sha256:`` value, so an absent filing subject stays
 # distinguishable from every real pseudonymised one.
 _ABSENT_TAXPAYER_REF = "absent"
+
+# Bare directory names, read off the taxonomy rather than untethered string
+# literals. Still joined onto ``cadrumo_audit_dir`` / an already-resolved
+# ``store_root`` exactly as before -- the members carry no ``settings_field``
+# and are not safe to resolve directly, because ``AUDIT`` is
+# operator-overridable (see the members' declarations in
+# ``core._storage_taxonomy``).
+_AUDIT_LIVE_DIRNAME = Path(_storage_location(StorageCategory.AUDIT_LIVE).subpath).name
+_AUDIT_LIVE_IVA_WALLET_DIRNAME = Path(_storage_location(StorageCategory.AUDIT_LIVE_IVA_WALLET).subpath).name
+_AUDIT_LIVE_IVA_REMOTE_STATE_DIRNAME = Path(_storage_location(StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE).subpath).name
+_IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME = Path(
+    _storage_location(StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE_FILED_HISTORY).subpath,
+).name
+_IVA_REMOTE_STATE_WALLET_DIRNAME = Path(
+    _storage_location(StorageCategory.AUDIT_LIVE_IVA_REMOTE_STATE_WALLET).subpath,
+).name
 
 
 class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemoteStateAcquisitionManifest]):
@@ -674,7 +691,11 @@ async def _capture_iva_compensation_wallet_with_session(
         taxpayer_nif=taxpayer_nif,
         settings=settings,
     )
-    store_root = output_root if output_root is not None else settings.cadrumo_audit_dir / "live" / "iva-wallet"
+    store_root = (
+        output_root
+        if output_root is not None
+        else settings.cadrumo_audit_dir / _AUDIT_LIVE_DIRNAME / _AUDIT_LIVE_IVA_WALLET_DIRNAME
+    )
     return persist_and_reconcile_iva_compensation_wallet(observation, output_root=store_root)
 
 
@@ -733,7 +754,9 @@ async def _capture_iva_remote_state_for_active_storage(
 
         _AeatAccessGate(settings).require_live_read()
         store_root = (
-            output_root if output_root is not None else settings.cadrumo_audit_dir / "live" / "iva-remote-state"
+            output_root
+            if output_root is not None
+            else settings.cadrumo_audit_dir / _AUDIT_LIVE_DIRNAME / _AUDIT_LIVE_IVA_REMOTE_STATE_DIRNAME
         )
         filed_history: IvaCompensationHistoryCaptureReport | None = None
         wallet: IvaWalletCaptureReport | None = None
@@ -778,7 +801,7 @@ async def _capture_iva_remote_state_for_active_storage(
                     settings=settings,
                     year_from=year_from,
                     year_to=year_to,
-                    output_root=store_root / "filed-history",
+                    output_root=store_root / _IVA_REMOTE_STATE_FILED_HISTORY_DIRNAME,
                     progress_context=filed_progress,
                 ),
                 surface=LiveIvaReadSurface.FILED_HISTORY,
@@ -805,7 +828,7 @@ async def _capture_iva_remote_state_for_active_storage(
                     target_year=target_year,
                     target_period=target_period,
                     taxpayer_nif=taxpayer_nif,
-                    output_root=store_root / "wallet",
+                    output_root=store_root / _IVA_REMOTE_STATE_WALLET_DIRNAME,
                     progress_context=wallet_progress,
                 ),
                 surface=LiveIvaReadSurface.WALLET_CARTERA,

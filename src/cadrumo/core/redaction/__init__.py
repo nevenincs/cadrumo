@@ -27,7 +27,22 @@ The redaction strategies, defined in
 
 ``SHA256_PREFIX``
     Replace the matched span with ``sha256:<first-8-hex>`` of its
-    SHA-256 digest. Used for stable identifiers (NIF / NIE / CIF).
+    SHA-256 digest. Used for the personal identity shapes (NIF / NIE),
+    which are matched on shape alone.
+
+``SHA256_PREFIX_IF_IDENTITY``
+    As ``SHA256_PREFIX``, but only when the matched span parses as a real
+    Spanish tax identity. Used for the CIF shape, whose letter-led form
+    collides with ordinary document references; the check character is
+    what tells the two apart.
+
+``SHA256_PREFIX_IF_IBAN``
+    As ``SHA256_PREFIX``, but only when the matched span passes the ISO
+    13616 mod-97 check. Used for bank accounts, by an operator decision
+    that deliberately reaches past the redaction ADR's tax-identity
+    must-handle list. A BOE citation is the standing negative control: it
+    must keep passing through untouched, and a pattern that starts eating
+    one is too wide.
 
 ``HOST_ONLY``
     For URL-shaped values, retain only ``<scheme>://<host>``;
@@ -48,6 +63,8 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from urllib.parse import urlparse
 
+from .._iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
+from .._iban import iban_mod_97 as _iban_mod_97
 from ..classification import (
     ClassificationPolicy as _ClassificationPolicy,
 )
@@ -65,9 +82,43 @@ from ..classification import (
 )
 from ..hashing import sha256_hex as _sha256_hex
 
-# NIF / NIE / CIF — Spanish identity numbers. Eight digits + check letter
-# with optional leading X / Y / Z for foreigners.
+# NIF / NIE — Spanish personal identity numbers. Eight digits + check letter
+# with optional leading X / Y / Z for foreigners. Matched on shape alone: a
+# digit-led run this long rarely collides with ordinary text, so the rule errs
+# wide and hashes a lookalike rather than risk missing a mistyped identity.
 _NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
+
+# CIF — the tax identity of a legal entity: a kind letter (A-H, J, N, P-S,
+# U, V, W), seven digits, and a check character that is a digit or a letter
+# A-J depending on the kind. Unlike the personal shapes above this one is
+# LETTER-led over a fifteen-letter class, which is the same shape as an
+# ordinary document reference (an invoice ``F1234567B``, a batch id), so it
+# is paired with ``SHA256_PREFIX_IF_IDENTITY``: the check character decides.
+# Widening the personal pattern's leading class instead would have admitted
+# every such reference.
+_CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
+
+# IBAN — a bank account number is sensitive financial data, so it is hashed
+# out of operator-facing output by operator decision. That decision is BROADER
+# than the redaction ADR's must-handle list, which names the tax-identity
+# shapes and does not mention bank accounts: this arm is a deliberate
+# extension, not an inference from that list. Do not narrow it back on the
+# grounds that the ADR omits it.
+#
+# Scanning form of the anchored :data:`IBAN_SHAPE_RE` in ``core._iban``, which
+# stays the authority on what an IBAN looks like. Two country letters, two
+# check digits, then an 11-30 character BBAN. Uppercase and separator-free is
+# the canonical form the app itself validates and stores; a grouped
+# ``ES79 2100 ...`` rendering is not matched, and no surface here emits one.
+#
+# Every country, not just ES: foreign accounts are declarable (Modelo 720
+# exists for assets held abroad) and refund accounts may be non-SEPA, so an
+# ES-only arm would protect the domestic case and leak the foreign one. The
+# breadth is safe because the mod-97 checksum, not the shape, admits the
+# match — a long alphanumeric run otherwise collides with hashes and opaque
+# ids, and a real 32-character hex digest in the bundled corpus is rejected
+# by the checksum exactly as intended.
+_IBAN_PATTERN = r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"
 
 # Bearer / OAuth tokens commonly start with ``ey`` (JWT).
 _BEARER_PATTERN = r"(?i)\b(?:bearer\s+)?(eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,})"
@@ -181,44 +232,31 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
             name="nif-hash",
             pattern=_NIF_PATTERN,
             strategy=_RedactionStrategy.SHA256_PREFIX,
-            applies_to=(
-                _SensitivityClass.IDENTITY,
-                _SensitivityClass.FINANCIAL,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
+        ),
+        "cif-hash": _RedactionRule(
+            name="cif-hash",
+            pattern=_CIF_PATTERN,
+            strategy=_RedactionStrategy.SHA256_PREFIX_IF_IDENTITY,
+        ),
+        "iban-hash": _RedactionRule(
+            name="iban-hash",
+            pattern=_IBAN_PATTERN,
+            strategy=_RedactionStrategy.SHA256_PREFIX_IF_IBAN,
         ),
         "url-host-only": _RedactionRule(
             name="url-host-only",
             pattern=_URL_PATTERN,
             strategy=_RedactionStrategy.HOST_ONLY,
-            applies_to=(
-                _SensitivityClass.SESSION,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
         "token-fingerprint": _RedactionRule(
             name="token-fingerprint",
             pattern=_BEARER_PATTERN,
             strategy=_RedactionStrategy.FINGERPRINT,
-            applies_to=(
-                _SensitivityClass.SECRET,
-                _SensitivityClass.SESSION,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
         "bearer-token-fingerprint": _RedactionRule(
             name="bearer-token-fingerprint",
             pattern=_OPAQUE_BEARER_PATTERN,
             strategy=_RedactionStrategy.FINGERPRINT,
-            applies_to=(
-                _SensitivityClass.SECRET,
-                _SensitivityClass.SESSION,
-                _SensitivityClass.AUDIT,
-                _SensitivityClass.DIAGNOSTIC,
-            ),
         ),
     },
 )
@@ -237,6 +275,25 @@ def default_rules() -> Mapping[str, _RedactionRule]:
 def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ...]:
     """Resolve the rule references on a policy to concrete rule instances.
 
+    A name the registry cannot resolve is REFUSED, not skipped. Skipping
+    was the previous behaviour and it made this fail open: a typo in a
+    policy's rule tuple dropped that arm of the policy, and the only
+    evidence was sensitive data arriving unredacted somewhere nobody was
+    looking. A confidentiality boundary has to fail the other way, so an
+    unresolvable name now stops the caller instead of quietly narrowing
+    what gets redacted.
+
+    The skip was documented as deliberate — room for per-domain policies
+    to name custom rules registered by other modules. That extension
+    point has no user and no mechanism: every policy is built in the
+    default table in :mod:`core.classification`, this function's only
+    caller is :func:`default_rules_for_class`, and the registry is a
+    frozen mapping with nothing to register through. It was therefore
+    paying a fail-open confidentiality risk for a flexibility nothing
+    used. Should per-domain rules ever be wanted, they need a real
+    registration path, and this refusal is what would make its absence
+    obvious rather than silent.
+
     Args:
         policy: A :class:`core.classification.ClassificationPolicy`
             whose ``redaction_rules`` field carries rule names.
@@ -244,11 +301,21 @@ def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ..
     Returns:
         A tuple of :class:`core.classification.RedactionRule`
         instances in the order they were declared on the policy.
-        Names that are not in the default registry are silently
-        skipped: this is deliberate so per-domain policies can
-        reference custom rules registered by other modules.
+
+    Raises:
+        RedactionError: If the policy names a rule the registry does not
+            declare.
     """
-    return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules if name in _DEFAULT_RULES)
+    from ..errors import RedactionError
+
+    unresolvable = [name for name in policy.redaction_rules if name not in _DEFAULT_RULES]
+    if unresolvable:
+        known = ", ".join(sorted(_DEFAULT_RULES))
+        raise RedactionError(
+            f"policy for {policy.sensitivity.value!r} names redaction rule(s) that do not exist: "
+            f"{', '.join(repr(name) for name in unresolvable)}; declared rules are: {known}"
+        )
+    return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules)
 
 
 def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionRule, ...]:
@@ -276,6 +343,30 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
         return pattern.sub("...", value)
     if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
         return pattern.sub(lambda m: _sha256_prefix(m.group(0)), value)
+    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IDENTITY:
+        # Imported here, not at module scope: ``core.identity`` reaches
+        # ``core.errors``, which reaches this module — the same cycle the
+        # lazy ``..errors`` imports below step around.
+        from ..identity import IdentityError, validate_identity
+
+        def _hash_if_identity(match: re.Match[str]) -> str:
+            span = match.group(0)
+            try:
+                validate_identity(span)
+            except IdentityError:
+                return span
+            return _sha256_prefix(span)
+
+        return pattern.sub(_hash_if_identity, value)
+    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
+
+        def _hash_if_iban(match: re.Match[str]) -> str:
+            span = match.group(0)
+            if _IBAN_SHAPE_RE.match(span) and _iban_mod_97(span) == 1:
+                return _sha256_prefix(span)
+            return span
+
+        return pattern.sub(_hash_if_iban, value)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
         return pattern.sub(lambda m: _host_only(m.group(0)), value)
     if rule.strategy is _RedactionStrategy.FINGERPRINT:
@@ -311,13 +402,34 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
 
 
 def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object:
-    """Recursively apply ``rules`` to every string leaf inside a structure.
+    """Recursively apply ``rules`` to every string **value** inside a structure.
 
-    Walks dicts, lists, and tuples; redacts every string at the
-    leaves. Non-string non-container values pass through unchanged.
-    The container shape is preserved (dict stays dict, list stays
-    list, tuple stays tuple). The resulting object is a fresh copy
-    at every container level — the input is never mutated.
+    Walks dicts, lists, and tuples; redacts every string reached as a
+    dict value or a list/tuple element. Non-string non-container values
+    pass through unchanged. The container shape is preserved (dict stays
+    dict, list stays list, tuple stays tuple). The resulting object is a
+    fresh copy at every container level — the input is never mutated.
+
+    Dict KEYS are redacted with the same rules as values. They were not,
+    until a measurement found a NIF or IBAN written as a key surviving
+    the observability sink in cleartext while the value beside it was
+    hashed. Nothing exercised that: no payload model on this path
+    declares a ``dict[str, ...]`` field today, so the gap was latent
+    rather than live, and one innocently-added field would have opened
+    it with nothing to catch the change.
+
+    Redacting keys is safe here because the diagnostic rules HASH rather
+    than substitute a fixed placeholder, so two distinct keys stay
+    distinct. Where a rule does collapse several inputs onto one
+    placeholder, :func:`_unique_mapping_key` suffixes the duplicate
+    instead of overwriting it — a redacted log may not silently lose an
+    entry to a key collision.
+
+    Sets are still not walked, and that one needs no guard: every
+    production caller passes ``model_dump(mode="json")``, which
+    serialises a set to a LIST before it ever arrives here, and lists are
+    walked. A set only reaches this function from a hand-built mapping,
+    which no caller constructs.
 
     This is the load-bearing primitive for nested audit payloads:
     submission audit events and run-trace records are nested dicts,
@@ -340,7 +452,11 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
             result_str = _apply_one(rule, result_str)
         return result_str
     if isinstance(value, dict):
-        return {k: redact_structured(v, rules=rules) for k, v in value.items()}
+        redacted: dict[object, object] = {}
+        for item_key, item_value in value.items():
+            redacted_key = redact_structured(item_key, rules=rules) if isinstance(item_key, str) else item_key
+            redacted[_unique_mapping_key(redacted_key, redacted)] = redact_structured(item_value, rules=rules)
+        return redacted
     if isinstance(value, list):
         return [redact_structured(item, rules=rules) for item in value]
     if isinstance(value, tuple):

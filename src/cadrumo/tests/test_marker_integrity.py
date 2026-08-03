@@ -1,6 +1,8 @@
 """AST-backed integrity audit for the hexagonal test-marker taxonomy.
 
-Walks every source-controlled test module under ``src/cadrumo/`` and ``docs/`` and asserts that each
+Walks every test module present on disk under ``src/cadrumo/`` and ``docs/``
+— the scan is a filesystem glob and does not consult git, so an untracked
+module is in scope (see :func:`_discover_test_modules`) — and asserts that each
 carries a single top-level ``pytestmark = [...]`` assignment containing
 exactly one execution-scope marker (``unit`` / ``integration`` /
 ``aeat_live``) and exactly one ``hex_*`` marker.
@@ -246,10 +248,18 @@ def _tree_for_path(path: Path) -> ast.Module:
 
 
 def _discover_test_modules() -> list[Path]:
-    """Return every source-controlled ``test_*.py`` module.
+    """Return every ``test_*.py`` module present on disk.
 
     Excludes ``__init__.py`` and helper modules that do not define test
     functions or test classes.
+
+    The scan is a filesystem glob and deliberately does not consult git, so
+    an untracked module is in scope. That is the useful behaviour in a
+    worktree where several agents hold uncommitted work at once: a
+    misplaced ``pytestmark`` is caught before it is committed rather than
+    after. The cost is that a red here may name a file that does not exist
+    at HEAD, so triage starts with ``git status --short -- <file>`` — an
+    untracked path is a peer's work in progress, not a regression.
     """
     collected: set[Path] = set()
     for root in _TEST_MODULE_ROOTS:

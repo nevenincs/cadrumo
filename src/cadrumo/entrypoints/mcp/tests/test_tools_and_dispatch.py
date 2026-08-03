@@ -231,7 +231,7 @@ def test_json_safe_default_renders_paths_tuples_and_falls_back_to_none() -> None
     assert _json_safe_default(7) == 7
     assert _json_safe_default("x") == "x"
     # A Path renders as its string form.
-    assert _json_safe_default(Path("secrets") / "cert.p12") == str(Path("secrets") / "cert.p12")
+    assert _json_safe_default(Path("probe-cert-store") / "cert.p12") == str(Path("probe-cert-store") / "cert.p12")
     # A tuple/list renders as a JSON array of recursively json-safe items.
     assert _json_safe_default(("a", 1)) == ["a", 1]
     assert _json_safe_default([Path("p"), ("nested",)]) == [str(Path("p")), ["nested"]]
@@ -240,12 +240,19 @@ def test_json_safe_default_renders_paths_tuples_and_falls_back_to_none() -> None
 
 
 def _probe_leaf_command() -> ClickCommand:
-    """A real Typer command carrying a Path default, a list default, and a flag pair."""
+    """A real Typer command carrying a Path default, a list default, and a flag pair.
+
+    ``probe-cert-store`` is a fictional parent segment, deliberately not a real
+    ``StorageCategory`` subpath: this default only exercises the click-to-schema
+    Path-rendering projection and never resolves against
+    ``cadrumo_local_storage_root``, so it must not spell a taxonomy-governed name
+    a reader could mistake for a real, application-chosen location.
+    """
     probe = typer.Typer()
 
     @probe.command()
     def run(
-        cert: Annotated[Path, typer.Option("--cert")] = Path("secrets/cert.p12"),
+        cert: Annotated[Path, typer.Option("--cert")] = Path("probe-cert-store/cert.p12"),
         tags: Annotated[list[str], typer.Option("--tag")] = ["a", "b"],  # noqa: B006
         colour: Annotated[bool, typer.Option("--colour/--no-colour")] = True,
     ) -> None: ...
@@ -262,8 +269,8 @@ def test_path_and_list_option_defaults_project_and_round_trip_into_the_schema() 
     }
     # A Path default renders as a string, both on the parameter and in its property.
     cert = by_name["cert"]
-    assert cert.default == str(Path("secrets/cert.p12"))
-    assert cert.property_schema()["default"] == str(Path("secrets/cert.p12"))
+    assert cert.default == str(Path("probe-cert-store/cert.p12"))
+    assert cert.property_schema()["default"] == str(Path("probe-cert-store/cert.p12"))
     # A list default renders as a JSON array on the array-typed property.
     tags = by_name["tags"]
     assert tags.multiple is True

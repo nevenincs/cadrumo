@@ -61,6 +61,7 @@ _EXPORT_PASSPHRASE = "manager-action-seam-bundle-secret"  # noqa: S105 - synthet
 _LABEL = "Action Seam Subject"
 
 _EXPECTED_KEY = {
+    "add-row": "flows.manager.action.abandoned",
     "censal-pull": "flows.manager.action.censal_pull_no_provider",
     "certificate": "flows.manager.action.abandoned",
     "export": "flows.manager.action.abandoned",

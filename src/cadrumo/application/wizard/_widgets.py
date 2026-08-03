@@ -23,12 +23,10 @@ from pathlib import Path
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ...core.identity import IdentityError, validate_identity
+from ...core.parsing import parse_bool
 from ...core.redaction import redact_validation_context as _redact_validation_context
 from ._errors import WizardValidationError
 from ._models import WizardQuestion, WizardWidget
-
-_TRUE_TOKENS = frozenset({"true", "yes", "1", "y"})
-_FALSE_TOKENS = frozenset({"false", "no", "0", "n"})
 
 _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 
@@ -126,16 +124,24 @@ def validate_confirm(raw: str, question: WizardQuestion) -> str:
     typed projection reloads as ``None`` rather than collapsing onto
     declared-``False``. A blank answer fails only for an
     unconditionally-required CONFIRM.
+
+    The accepted vocabulary is the canonical one rather than a set held
+    here. The two sets this replaces were a fourth hand-rolled boolean
+    dialect, and the only one an operator typed into directly -- every
+    other divergent coercion read a value some earlier layer had already
+    written. They carried no Spanish at all, so a taxpayer answering
+    ``sí`` to a confirm question in a Spanish tax application was refused
+    outright: not a wrong answer recorded silently, but a correct answer
+    the application would not take.
     """
     token = raw.strip().lower()
     if not token:
         if question.required and question.visible_when is None:
             raise _fail(question, "invalid_confirm", raw=raw)
         return ""
-    if token in _TRUE_TOKENS:
-        return "true"
-    if token in _FALSE_TOKENS:
-        return "false"
+    parsed = parse_bool(token)
+    if parsed is not None:
+        return "true" if parsed else "false"
     raise _fail(question, "invalid_confirm", raw=raw)
 
 

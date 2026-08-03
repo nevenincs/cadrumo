@@ -45,7 +45,7 @@ import time
 import typing
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Any, Final, NamedTuple, TypeGuard, cast
+from typing import Final, NamedTuple, TypeGuard
 
 from pydantic import BaseModel
 
@@ -213,7 +213,7 @@ def _derive_embedded_foreign_types(
             for candidate in _iter_annotation_types(field.annotation):
                 if issubclass(candidate, BaseModel):
                     pending.append(candidate)
-                foreign = _classify_foreign_type(cast(Any, candidate))
+                foreign = _classify_foreign_type(candidate)
                 if foreign is not None:
                     found[foreign.marker] = foreign
     return tuple(found[marker] for marker in sorted(found))
@@ -489,8 +489,7 @@ def _is_two_object_tuple(value: object) -> TypeGuard[tuple[object, object]]:
     """Narrow an untyped pickle tuple to the expected two-item envelope."""
     if not isinstance(value, tuple):
         return False
-    value_tuple = cast(tuple[Any, ...], value)
-    return len(value_tuple) == 2
+    return len(value) == 2
 
 
 def _read_cache_bytes(path: Path) -> bytes | None:

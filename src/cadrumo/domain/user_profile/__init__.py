@@ -83,12 +83,14 @@ from ._registry_contract import (
     validate_user_profile_registry_contract,
 )
 from ._schema import (
+    NUMERIC_PROFILE_FIELD_TYPES,
     ProfileFieldDefinition,
     ProfileFieldType,
     ProfileRemovePolicy,
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
     ProfileSnapshotPolicy,
+    numeric_value_refusal,
 )
 from ._values import (
     UserProfileFact,
@@ -132,6 +134,7 @@ def __getattr__(name: str):
 
 
 __all__ = [
+    "NUMERIC_PROFILE_FIELD_TYPES",
     "CarriedSecureObject",
     "CoverageManifest",
     "ProfileAlreadyExistsError",
@@ -166,6 +169,7 @@ __all__ = [
     "load_user_profile_schema",
     "new_profile_id",
     "new_profile_snapshot_id",
+    "numeric_value_refusal",
     "profile_binding_selectors",
     "profile_field_label",
     "profile_field_label_key",

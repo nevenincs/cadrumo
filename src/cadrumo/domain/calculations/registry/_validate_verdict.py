@@ -26,8 +26,8 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from .... import __version__
+from ....core import StorageCategory, storage_path
 from ....core.atomic_write import atomic_write_best_effort_text
-from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ._loader_cache import is_bundled_registry_root
 
@@ -157,17 +157,21 @@ def stamp_bundled_verdict(
 def verdict_cache_path(root: Path) -> Path:
     """Return the writable per-storage-root verdict file for ``root``.
 
-    Derived from :attr:`~core.config.Settings.cadrumo_validation_verdict_cache_dir`
-    (``<storage-root>/cache/registry-verdict``), never a shared OS temp dir. The
-    filename embeds a hash of the resolved root path so distinct registry roots
-    never share a file, while a fingerprint change on one root reuses the same
-    filename so the mismatch branch deletes and rewrites in place.
+    Resolved through :func:`~core.storage_path` for
+    ``StorageCategory.VALIDATION_VERDICT_CACHE``
+    (``<storage-root>/cache/registry-verdict``), never a shared OS temp dir and
+    never a direct read of ``cadrumo_validation_verdict_cache_dir`` here -- the
+    accessor is what stays correct if the member's resolution ever gains a
+    case. The filename embeds a hash of the resolved root path so distinct
+    registry roots never share a file, while a fingerprint change on one root
+    reuses the same filename so the mismatch branch deletes and rewrites in
+    place.
 
     Returns:
         The verdict file location for ``root`` under the settings cache dir.
     """
     digest = hashlib.sha256(str(root).encode("utf-8")).hexdigest()[:_ROOT_HASH_LEN]
-    return load_settings().cadrumo_validation_verdict_cache_dir / f"{_VERDICT_FILENAME_PREFIX}{digest}.json"
+    return storage_path(StorageCategory.VALIDATION_VERDICT_CACHE) / f"{_VERDICT_FILENAME_PREFIX}{digest}.json"
 
 
 def shipped_verdict_location(registry_root: Path) -> Path:

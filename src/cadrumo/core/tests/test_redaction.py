@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 from typing import cast
 
 import pytest
 
 from ..classification import (
     OutputSensitivityClass,
+    RedactionRule,
+    RedactionStrategy,
     SensitivityClass,
     default_output_policy_for,
     default_policy_for,
@@ -14,7 +17,9 @@ from ..redaction import (
     CLI_BUCKET_ID_PLACEHOLDER,
     CLI_OBJECT_KEY_PLACEHOLDER,
     CLI_PROFILE_ID_PLACEHOLDER,
+    default_rules_for_class,
     redact_for_cli_output,
+    redact_structured,
     redact_structured_for_cli_output,
 )
 
@@ -25,6 +30,26 @@ _PROFILE_ID = "123e4567-e89b-12d3-a456-426614174000"
 # NIF pattern; the reveal opt-out must emit it verbatim, not NIF-hashed.
 _NIF_SHAPED_UUID = "1470176e-780c-46df-8b21-c6f540f142a0"
 _NIF = "12345678Z"
+# Entity tax identities carrying the check character AEAT's algorithm
+# computes, and a same-shaped reference that does not (an invoice number
+# ``F1234567B`` is exactly the CIF shape).
+_CIF = "B12345674"
+_CIF_OTHER = "A58818501"
+_CIF_LOOKALIKE = "F1234567B"
+# Bank accounts across countries -- foreign accounts are declarable, so the
+# arm is not ES-only. ``_IBAN_BAD_CHECKSUM`` carries the IBAN shape with
+# check digits that fail mod-97, and ``_HEX_DIGEST`` is a real 32-character
+# digest lifted from the bundled corpus: both are the collision class a
+# shape-only bank-account pattern would swallow.
+_IBAN_ES = "ES7921000813610123456789"
+_IBAN_DE = "DE89370400440532013000"
+_IBAN_GB = "GB29NWBK60161331926819"
+_IBAN_BAD_CHECKSUM = "ES9921000418450200051332"
+_HEX_DIGEST = "EB58612F0394953A4B516B938AD3FEB1"
+# Operator ruling, recorded as a standing negative control: "ibans are
+# sensitive, boe citations are not". A legal citation must reach the operator
+# intact, so a pattern that starts hashing one is too wide by definition.
+_BOE_CITATION = "BOE-A-2024-26694"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
 _OBJECT_KEY = "wallet:2026-secret"
@@ -222,3 +247,183 @@ def test_cli_output_reveal_identifiers_unredacts_only_profile_and_bucket() -> No
         reveal_identifiers=True,
     )
     assert structured == {"bucket_id": _NIF_SHAPED_UUID, "profile_id": _NIF_SHAPED_UUID}
+
+
+# ── entity tax identity (CIF) ───────────────────────────────────────────────
+
+
+def _expected_sha256_prefix(value: str) -> str:
+    """Derive the documented ``SHA256_PREFIX`` form independently of the rules.
+
+    Computed here from the strategy's stated contract — the first eight hex
+    characters of the value's SHA-256 digest — rather than copied from an
+    observed run, so a change to how the redactor derives the digest fails
+    this test instead of being ratified by it.
+    """
+    return f"sha256:{hashlib.sha256(value.encode('utf-8')).hexdigest()[:8]}"
+
+
+def test_cli_output_hashes_an_entity_tax_identity() -> None:
+    """A sociedad's CIF is hashed exactly as a natural person's NIF is.
+
+    The two arrive on the same field (``identity.tax_id``) and reach the
+    same export header, so protecting one and not the other would make the
+    operator's entity type decide their privacy.
+    """
+    for cif in (_CIF, _CIF.lower(), _CIF_OTHER):
+        redacted = redact_for_cli_output(f"tax_id={cif}")
+        assert cif not in redacted
+        assert redacted == f"tax_id={_expected_sha256_prefix(cif)}"
+
+
+def test_cli_output_leaves_a_cif_shaped_document_reference_verbatim() -> None:
+    """A lookalike that fails its check character is not an identity.
+
+    The CIF shape is letter-led over fifteen letters, which is also the
+    shape of an ordinary document reference. Hashing those would make a
+    ledger row unidentifiable to the operator to protect nothing, so the
+    check character is what admits a match.
+    """
+    for lookalike in (_CIF_LOOKALIKE, "B12345678", "A12345678"):
+        assert redact_for_cli_output(f"ref={lookalike}") == f"ref={lookalike}"
+
+
+# ── bank accounts (operator ruling) ─────────────────────────────────────────
+
+
+def test_cli_output_hashes_a_bank_account_in_any_country() -> None:
+    """An IBAN is hashed whether the account is Spanish or foreign.
+
+    Foreign accounts are declarable in this domain, so an ES-only arm would
+    protect the domestic case and leak the one a taxpayer holds abroad.
+    """
+    for iban in (_IBAN_ES, _IBAN_DE, _IBAN_GB):
+        redacted = redact_for_cli_output(f"cuenta={iban}")
+        assert iban not in redacted
+        assert redacted == f"cuenta={_expected_sha256_prefix(iban)}"
+
+
+def test_a_boe_citation_survives_the_funnel_untouched() -> None:
+    """A legal citation must reach the operator intact.
+
+    The standing negative control for every identifier pattern here, not an
+    incidental case: a citation is how an operator checks the law behind a
+    number, and a pattern wide enough to hash one is too wide by definition.
+
+    A citation is held out by SHAPE rather than by any checksum -- it never
+    matches in the first place -- so this case guards against a future
+    widening of the pattern itself, which is a different failure from the
+    checksum gate the next test covers.
+    """
+    assert redact_for_cli_output(f"ref={_BOE_CITATION}") == f"ref={_BOE_CITATION}"
+    assert redact_for_cli_output(f"see {_BOE_CITATION} art. 29") == f"see {_BOE_CITATION} art. 29"
+
+
+def test_bank_account_lookalikes_that_fail_the_checksum_survive() -> None:
+    """The mod-97 gate, not the shape, is what admits a bank account.
+
+    Both survivors carry the IBAN shape exactly: one is a real 32-character
+    hex digest taken from the bundled corpus, the other has check digits that
+    fail mod-97. A shape-only pattern would hash each into unidentifiability,
+    which is the cost that made matching on the checksum worth it.
+    """
+    for survivor in (_IBAN_BAD_CHECKSUM, _HEX_DIGEST):
+        assert redact_for_cli_output(f"ref={survivor}") == f"ref={survivor}"
+
+
+def test_redacting_an_already_redacted_line_changes_nothing() -> None:
+    """Redaction is idempotent, which the LLM cache relies on when re-read.
+
+    A digest that a later rule matched again would corrupt a stored payload
+    on every subsequent read, so the property is asserted rather than assumed.
+    """
+    line = f"nif={_NIF} cif={_CIF} iban={_IBAN_ES} ref={_BOE_CITATION}"
+    once = redact_for_cli_output(line)
+    assert redact_for_cli_output(once) == once
+    for raw in (_NIF, _CIF, _IBAN_ES):
+        assert raw not in once
+    assert _BOE_CITATION in once
+
+
+def test_cif_rule_is_enrolled_in_every_policy_that_carries_the_nif_rule() -> None:
+    """Enrolment is the only thing that makes a rule reachable.
+
+    A rule resolves through the policy's ``redaction_rules`` name tuple, so
+    a rule declared but never enrolled is inert everywhere — which is how a
+    CIF reached the log, error, and LLM-cache paths in cleartext while the
+    rule catalogue claimed to cover it.
+    """
+    for sensitivity in SensitivityClass:
+        names = {rule.name for rule in default_rules_for_class(sensitivity)}
+        if "nif-hash" in names:
+            assert "cif-hash" in names, f"{sensitivity.name} hashes a NIF but not a CIF"
+            assert "iban-hash" in names, f"{sensitivity.name} hashes a NIF but not a bank account"
+
+
+def test_structured_redaction_hashes_a_cif_leaf() -> None:
+    """The structured path is the one that reaches persisted artefacts.
+
+    The LLM disk cache redacts through this path before materializing its
+    JSON file, so a leaf the rules miss is written to disk in cleartext.
+    """
+    redacted = redact_structured(
+        {
+            "party_tax_id": _CIF,
+            "refund_iban": _IBAN_ES,
+            "note": f"invoice {_CIF_LOOKALIKE} under {_BOE_CITATION}",
+        },
+        rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
+    )
+    assert redacted == {
+        "party_tax_id": _expected_sha256_prefix(_CIF),
+        "refund_iban": _expected_sha256_prefix(_IBAN_ES),
+        "note": f"invoice {_CIF_LOOKALIKE} under {_BOE_CITATION}",
+    }
+
+
+def test_structured_redaction_hashes_a_tax_id_written_as_a_mapping_key() -> None:
+    """A key is as readable as a value once the JSON is on disk.
+
+    The gap this pins was latent rather than live: the walker redacted
+    dict values and skipped dict keys, and no payload model on the
+    observability or LLM-cache path declares a ``dict[str, ...]`` field,
+    so nothing exercised it. A single added field keyed by anything
+    taxpayer-derived would have written cleartext into the persisted
+    artefact while the value beside it was hashed.
+    """
+    redacted = redact_structured(
+        {_NIF: "seen", _IBAN_ES: {"nested": _CIF}},
+        rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
+    )
+    assert redacted == {
+        _expected_sha256_prefix(_NIF): "seen",
+        _expected_sha256_prefix(_IBAN_ES): {"nested": _expected_sha256_prefix(_CIF)},
+    }
+    assert _NIF not in repr(redacted)
+    assert _IBAN_ES not in repr(redacted)
+
+
+def test_structured_redaction_keeps_two_colliding_keys_distinct() -> None:
+    """A redacted log must not lose an entry to a key collision.
+
+    Hashing rules keep distinct inputs distinct, but the collapsing
+    strategies do not: ``HOST_ONLY`` maps every URL sharing a host onto
+    that host, and ``ELLIPSIS`` maps every match onto one string. Letting
+    the second key overwrite the first would silently drop a record from
+    a diagnostic artefact, so the duplicate is suffixed instead.
+    """
+    host_only = RedactionRule(
+        name="host-only",
+        pattern=r"https?://\S+",
+        strategy=RedactionStrategy.HOST_ONLY,
+    )
+    redacted = redact_structured(
+        {"https://aeat.es/expediente/a": 1, "https://aeat.es/expediente/b": 2},
+        rules=(host_only,),
+    )
+    assert len(redacted) == 2, f"a colliding key overwrote another entry: {redacted}"
+    assert set(redacted.values()) == {1, 2}
+
+    ellipsis = RedactionRule(name="ellipsis", pattern=r"secret-\w+", strategy=RedactionStrategy.ELLIPSIS)
+    collapsed = redact_structured({"secret-alpha": 1, "secret-beta": 2}, rules=(ellipsis,))
+    assert len(collapsed) == 2, f"a colliding key overwrote another entry: {collapsed}"

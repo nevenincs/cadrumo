@@ -29,6 +29,7 @@ from openpyxl.worksheet.properties import PageSetupProperties
 from pydantic import BaseModel
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.decimal import format_decimal
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.identity import ContentDigest
@@ -452,7 +453,7 @@ def _contributor_values(row: SheetEvidenceContributorRow) -> tuple[str, ...]:
         "ledger",
         row.casilla_id,
         row.transaction_id,
-        _format_decimal(row.amount),
+        format_decimal(row.amount),
         row.currency,
         _format_optional_decimal(row.taxable_base),
         _format_optional_decimal(row.iva_rate),
@@ -493,18 +494,12 @@ def _coerce_cell_value(value: Decimal | str | bool | None) -> str | bool:
     if value is None:
         return ""
     if isinstance(value, Decimal):
-        return _format_decimal(value)
+        return format_decimal(value)
     return value
 
 
-def _format_decimal(value: Decimal) -> str:
-    return format(value, "f")
-
-
 def _format_optional_decimal(value: Decimal | None) -> str:
-    if value is None:
-        return ""
-    return _format_decimal(value)
+    return format_decimal(value, none_value="")
 
 
 def _join(values: tuple[str, ...]) -> str:

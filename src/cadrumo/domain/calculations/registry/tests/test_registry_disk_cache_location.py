@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from .....core import StorageCategory, storage_location
 from .._loader_cache import (
     _resolve_registry_disk_cache_dir,
     registry_disk_cache_dir,
@@ -29,6 +30,12 @@ def test_production_derives_cache_registry_under_storage_root(tmp_path: Path) ->
         under_pytest=False,
         storage_root=tmp_path / "state",
     )
+    # Pinned against the taxonomy's declared subpath rather than a restated
+    # literal, so a re-declaration of the member is the only way to move this
+    # assertion -- asserting the accessor equals itself would delete the
+    # test's reason for existing.
+    location = storage_location(StorageCategory.REGISTRY_DISK_CACHE)
+    assert resolved == tmp_path / "state" / location.relative_path()
     assert resolved == tmp_path / "state" / "cache" / "registry"
 
 
@@ -39,6 +46,22 @@ def test_pytest_without_override_uses_host_shared_temp(tmp_path: Path) -> None:
         storage_root=tmp_path / "state",
     )
     assert resolved == Path(tempfile.gettempdir())
+
+
+def test_pytest_branch_is_a_declared_test_pinned_exception() -> None:
+    """The pytest branch's divergence from the declared subpath is a positive
+    declaration on the member, not an undeclared special case -- and every
+    other member stays silent on the axis."""
+    location = storage_location(StorageCategory.REGISTRY_DISK_CACHE)
+    assert location.test_pinned_exception is not None
+    assert location.test_pinned_exception.strip()
+    other_members_with_exceptions = [
+        category.value
+        for category in StorageCategory
+        if category is not StorageCategory.REGISTRY_DISK_CACHE
+        and storage_location(category).test_pinned_exception is not None
+    ]
+    assert other_members_with_exceptions == []
 
 
 def test_explicit_override_wins_in_either_environment(tmp_path: Path) -> None:

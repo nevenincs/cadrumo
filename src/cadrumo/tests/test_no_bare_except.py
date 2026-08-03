@@ -11,9 +11,10 @@ parses the AST, and fails if it finds either shape.  Adding a bare
 ``except`` to a test file is blocked immediately by the CI gate;
 the fix is always to replace it with a specific exception assertion.
 
-The enumeration also covers
-:mod:`cadrumo.entrypoints.cli.test_stdio` to confirm no workaround
-for the behavior contract stream-reconfigure tests landed there.
+The sweep is whole-surface rather than a named list, so it also reaches
+:mod:`cadrumo.entrypoints.cli.tests.test_stdio` — confirming no workaround
+for the stream-reconfigure contract tests landed there — without that module
+being enumerated as a special case.
 """
 
 from __future__ import annotations

@@ -126,6 +126,58 @@ class TestGroundExtractedFields:
         draft = _ground_extracted_fields(fields, raw_text_length=10)
         assert draft.taxable_base is None
 
+    @pytest.mark.parametrize(
+        "printed",
+        (
+            pytest.param("1.234", id="one-thousand-two-hundred-and-thirty-four"),
+            pytest.param("12.500", id="twelve-thousand-five-hundred"),
+            pytest.param("1.000", id="one-thousand"),
+        ),
+    )
+    def test_a_two_way_readable_amount_is_dropped_not_read_as_cents(self, printed: str) -> None:
+        """A supplier's ``1.234`` is dropped rather than stored as one euro twenty-three.
+
+        The model transcribes what the invoice printed, so the convention in
+        the string is the SUPPLIER'S. A Spanish supplier writes one thousand
+        two hundred and thirty-four euros as ``1.234``; read as a decimal that
+        is a taxable base a thousandfold light, bound for Modelo 303/390.
+
+        Dropping is what makes it safe: the confirm path treats a missing
+        taxable base as a hard refusal naming ``--taxable-base``, so the
+        operator is asked. A guessed figure would be minted instead, because
+        confirm re-extracts and uses the extracted value for every field the
+        operator did not explicitly override.
+        """
+        fields = _VisionExtractedFields.model_validate_json(_extraction_json(taxable_base=printed))
+
+        draft = _ground_extracted_fields(fields, raw_text_length=10)
+
+        assert draft.taxable_base is None
+
+    @pytest.mark.parametrize(
+        ("printed", "expected"),
+        (
+            pytest.param("1.234,56", Decimal("1234.56"), id="spanish-grouped-with-comma"),
+            pytest.param("100,00", Decimal("100.00"), id="spanish-comma-decimal"),
+            pytest.param("1.234.567,89", Decimal("1234567.89"), id="spanish-fully-grouped"),
+            pytest.param("1234.56", Decimal("1234.56"), id="dot-decimal"),
+            pytest.param("850", Decimal("850"), id="whole-euros-no-separator"),
+        ),
+    )
+    def test_every_unambiguous_printed_amount_still_grounds(self, printed: str, expected: Decimal) -> None:
+        """The drop is narrow: every spelling carrying its own evidence still reads.
+
+        These are the forms a Spanish invoice actually prints, and all of them
+        already worked -- which is exactly why they prove nothing on their own
+        and are asserted alongside the dropped cases rather than instead of
+        them.
+        """
+        fields = _VisionExtractedFields.model_validate_json(_extraction_json(taxable_base=printed))
+
+        draft = _ground_extracted_fields(fields, raw_text_length=10)
+
+        assert draft.taxable_base == expected
+
     def test_all_null_fields_ground_to_an_empty_draft(self) -> None:
         fields = _VisionExtractedFields()
         draft = _ground_extracted_fields(fields, raw_text_length=0)

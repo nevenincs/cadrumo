@@ -45,15 +45,11 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
 from ._models import STRICT_FROZEN_CONFIG
-from .errors import CoreValidationError
-
-if TYPE_CHECKING:
-    from .config import Settings
 
 
 class StorageNodeKind(StrEnum):
@@ -76,10 +72,23 @@ class StorageScope(StrEnum):
     top-level ``blobs`` and ``audit`` categories share their names with
     per-bucket subdirectories at a different depth, and both are correct.
     Keying on name alone would conflate them.
+
+    The keystore anchor is a second, independent bucket-id-parameterized root,
+    not a nested subdirectory of the bucket it unlocks. Production states this
+    as the load-bearing invariant it is
+    (:func:`~adapters.persistence.storage.bucket.validate_keystore_separation`):
+    the keystore lives at ``<root>/keystore/<bucket-id>/``, sibling to
+    ``buckets/``, and a configuration that resolves it under ``buckets/`` is
+    refused so a later unlock cannot silently violate the separation.
+    ``KEYSTORE_ROOT`` names that per-bucket keystore directory itself --
+    parameterized by a bucket id like ``BUCKET_RELATIVE``, but anchored at
+    ``<root>/keystore/`` rather than ``<root>/buckets/`` -- and
+    ``KEYSTORE_RELATIVE`` names what nests beneath it.
     """
 
     ROOT = "root"
     BUCKET_RELATIVE = "bucket_relative"
+    KEYSTORE_ROOT = "keystore_root"
     KEYSTORE_RELATIVE = "keystore_relative"
 
 
@@ -155,6 +164,7 @@ class ExternalPathRole(StrEnum):
     THIRD_PARTY_CACHE = "third_party_cache"
     EXTERNAL_EXECUTABLE = "external_executable"
     OPERATOR_DIRECTED_OUTPUT = "operator_directed_output"
+    MAINTAINER_TOOLING_OUTPUT = "maintainer_tooling_output"
 
 
 class ExternalPathDeclaration(BaseModel):
@@ -197,10 +207,19 @@ EXTERNAL_PATH_SETTINGS_FIELDS: Final[dict[str, ExternalPathDeclaration]] = {
     for declaration in (
         ExternalPathDeclaration(
             settings_field="aeat_manuals_root",
-            role=ExternalPathRole.BUNDLED_RESOURCE,
+            role=ExternalPathRole.MAINTAINER_TOOLING_OUTPUT,
             reason=(
-                "The bundled AEAT Manual practico corpus ships inside the package and is read "
-                "only. The application never writes there, so it fails the write test."
+                "The bundled AEAT Manual practico corpus ships inside the package and the "
+                "*running application* never writes there -- it fails the write test from the "
+                "operator's chair. But domain.manuals._fetch demonstrably does write there: it "
+                "streams a manual part's PDF plus a manifest to disk under this root. That "
+                "module has no entrypoints/ surface (grep confirms only a test references it), "
+                "so it reads as maintainer tooling that refreshes the bundled corpus before a "
+                "release, the same shape as the locales CLI writing into the package's own "
+                "source tree -- but nothing enforces that boundary at the call graph, so the "
+                "prior BUNDLED_RESOURCE declaration's 'never writes there' was false the moment "
+                "this fetcher existed. This role says what is actually true: tooling-written, "
+                "not application-written."
             ),
         ),
         ExternalPathDeclaration(
@@ -277,8 +296,23 @@ class StorageCategory(StrEnum):
     AUDIT = "audit"
     REGISTRY_PARITY_STORE = "registry-parity-store"
 
+    # ── Fixed layout: within the secret store ────────────────────────────────
+    SECRETS_MASTER_KEY = "secrets.master-key"
+    SECRETS_MASTER_KDF = "secrets.master-kdf"
+    SECRETS_MASTER_LOCK = "secrets.master-lock"
+    SECRETS_KEYRING_LOCK = "secrets.keyring-lock"
+    SECRETS_MASTER_RECOVERY_KEY = "secrets.master-recovery-key"
+
+    # ── Fixed layout: live IVA remote-state capture, nested under audit ──────
+    AUDIT_LIVE = "audit.live"
+    AUDIT_LIVE_IVA_WALLET = "audit.live.iva-wallet"
+    AUDIT_LIVE_IVA_REMOTE_STATE = "audit.live.iva-remote-state"
+    AUDIT_LIVE_IVA_REMOTE_STATE_FILED_HISTORY = "audit.live.iva-remote-state.filed-history"
+    AUDIT_LIVE_IVA_REMOTE_STATE_WALLET = "audit.live.iva-remote-state.wallet"
+
     # ── Diagnostic and append-only telemetry logs ───────────────────────────
     LOGS = "logs"
+    LOG_FILE = "logs.file"
     LLM_USAGE = "llm-usage"
     LLM_RUN_TELEMETRY = "llm-run-telemetry"
     MCP_TELEMETRY = "mcp-telemetry"
@@ -286,17 +320,17 @@ class StorageCategory(StrEnum):
 
     # ── Regenerable, evictable caches ───────────────────────────────────────
     LLM_CACHE = "llm-cache"
-    STATUS_CACHE = "status-cache"
     CORPUS_TEXT_CACHE = "corpus-text-cache"
+    CORPUS_TEXT_CACHE_FILE = "corpus-text-cache.file"
     CORPUS_SEARCH_CACHE = "corpus-search-cache"
+    CORPUS_SEARCH_INDEX = "corpus-search-cache.index"
     VALIDATION_VERDICT_CACHE = "validation-verdict-cache"
     REGISTRY_DISK_CACHE = "registry-disk-cache"
 
     # ── Durable generated outputs ───────────────────────────────────────────
-    STORAGE_BACKUP = "storage-backup"
     SUBMISSIONS = "submissions"
-    INBOX = "inbox"
-    INBOX_PDF = "inbox-pdf"
+    SUBMISSIONS_AMENDMENT_RESULTS = "submissions.amendment-results"
+    SUBMISSIONS_AMENDMENTS = "submissions.amendments"
     WORKFLOW_RUNS = "workflow-runs"
     DRAFTS = "drafts"
     JUSTIFICANTES = "justificantes"
@@ -307,14 +341,17 @@ class StorageCategory(StrEnum):
     FINANCIAL_TRANSACTIONS = "financial-transactions"
     INVOICES = "invoices"
     ATTACHMENTS = "attachments"
+    ATTACHMENTS_MANIFESTS = "attachments.manifests"
     USAGE_RATIOS = "usage-ratios"
 
     # ── Fixed layout: the bucket container and the active-profile pointer ───
     BUCKETS = "buckets"
     ACTIVE_PROFILE_POINTER = "active-profile-pointer"
+    ROOT_FALLBACK_DATABASE = "root-fallback-database"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"
+    BUCKET_DATABASE_FILE = "bucket.db-file"
     BUCKET_BLOBS = "bucket.blobs"
     BUCKET_AUDIT = "bucket.audit"
     BUCKET_MANIFEST = "bucket.manifest"
@@ -397,6 +434,21 @@ class StorageLocation(BaseModel):
     :attr:`consumer_module` is set.
     """
 
+    test_pinned_exception: str | None = None
+    """Why this member's resolution deliberately diverges from its declared subpath under pytest.
+
+    ``None`` for every member but one. The registry disk cache is the sole
+    case: under pytest its resolver selects the host-shared OS temp directory
+    instead of ``<root>/cache/registry``, so every xdist worker and every
+    subprocess-spawning test shares one compiled pickle for the immutable
+    bundled tree rather than each getting a private, per-worker cache. Without
+    this field that branch reads as an undeclared special case buried in one
+    consumer; stating the reason here turns it into a positive, member-level
+    declaration the taxonomy alone carries -- the same discipline
+    :data:`EXTERNAL_PATH_SETTINGS_FIELDS` applies to a whole field escaping the
+    taxonomy, narrowed to one member's one runtime branch.
+    """
+
     @model_validator(mode="after")
     def _require_exactly_one_liveness_claim(self) -> StorageLocation:
         """Refuse a member that claims both a consumer and dormancy, or neither."""
@@ -431,6 +483,7 @@ def _location(
     override_policy: StorageOverridePolicy = StorageOverridePolicy.OPERATOR_OVERRIDABLE,
     fingerprint_participation: FingerprintParticipation = FingerprintParticipation.PARTICIPATING,
     derives_settings_default: bool = True,
+    test_pinned_exception: str | None = None,
 ) -> StorageLocation:
     """Build one declaration, defaulting the axes most members share."""
     return StorageLocation(
@@ -446,597 +499,26 @@ def _location(
         dormant_reason=dormant_reason,
         settings_field=settings_field,
         derives_settings_default=derives_settings_default and settings_field is not None,
+        test_pinned_exception=test_pinned_exception,
     )
 
 
-_ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
-    # ── State substrate and identity ────────────────────────────────────────
-    _location(
-        StorageCategory.TOKENS,
-        "tokens",
-        consumer_module="application/auth/_acquisition_lock.py",
-        settings_field="cadrumo_token_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-    ),
-    _location(
-        StorageCategory.SECRETS,
-        "secrets",
-        consumer_module="adapters/persistence/storage/master_key/_master_key.py",
-        settings_field="cadrumo_secret_store_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-    ),
-    _location(
-        StorageCategory.BLOBS,
-        "blobs",
-        consumer_module="adapters/persistence/storage/blob_store/_materialisation.py",
-        settings_field="cadrumo_blob_store_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-    ),
-    _location(
-        StorageCategory.AUDIT,
-        "audit",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        settings_field="cadrumo_audit_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-    ),
-    _location(
-        StorageCategory.REGISTRY_PARITY_STORE,
-        "audit/registry/parity",
-        consumer_module="entrypoints/cli/registry.py",
-        settings_field="cadrumo_registry_parity_store_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-    ),
-    # ── Diagnostic and append-only telemetry logs ───────────────────────────
-    _location(
-        StorageCategory.LOGS,
-        "logs",
-        consumer_module="core/logging.py",
-        settings_field="cadrumo_log_dir",
-        lifecycle=StorageLifecycle.ROTATION,
-        grouping=StorageGrouping.LOGS,
-    ),
-    _location(
-        StorageCategory.LLM_USAGE,
-        "llm-usage",
-        consumer_module="adapters/outbound/llm/_usage.py",
-        settings_field="cadrumo_llm_usage_dir",
-        lifecycle=StorageLifecycle.RETENTION,
-        grouping=StorageGrouping.LOGS,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.LLM_RUN_TELEMETRY,
-        "llm-run-telemetry",
-        consumer_module="adapters/outbound/llm/_run_telemetry.py",
-        settings_field="cadrumo_llm_run_telemetry_dir",
-        lifecycle=StorageLifecycle.RETENTION,
-        grouping=StorageGrouping.LOGS,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.MCP_TELEMETRY,
-        "telemetry",
-        consumer_module="entrypoints/mcp/_telemetry.py",
-        settings_field="cadrumo_mcp_telemetry_dir",
-        lifecycle=StorageLifecycle.RETENTION,
-        grouping=StorageGrouping.LOGS,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        # Observability's own output. Fingerprinting it would make every run's
-        # digest depend on the traces the immediately preceding run left, so a
-        # hermetic replay would refuse on essentially every attempt.
-        StorageCategory.RUNS,
-        "runs",
-        consumer_module="core/observability/_store.py",
-        settings_field="cadrumo_runs_dir",
-        lifecycle=StorageLifecycle.RETENTION,
-        grouping=StorageGrouping.LOGS,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    # ── Regenerable, evictable caches ───────────────────────────────────────
-    _location(
-        StorageCategory.LLM_CACHE,
-        "cache/llm-cache",
-        consumer_module="adapters/outbound/llm/_cache.py",
-        settings_field="cadrumo_llm_cache_dir",
-        lifecycle=StorageLifecycle.RETENTION,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.STATUS_CACHE,
-        "cache/status-cache",
-        dormant_reason=(
-            "No production module reads or writes it. The AEAT status-reader cache it is named for "
-            "was never wired: its companion time-to-live setting has no consumer either, so the "
-            "whole feature is declaration only. Wire the status reader or delete both the member "
-            "and its settings."
-        ),
-        settings_field="cadrumo_status_cache_dir",
-        lifecycle=StorageLifecycle.TTL,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.CORPUS_TEXT_CACHE,
-        "cache/corpus-text",
-        consumer_module="domain/calculations/registry/_validate_evidence.py",
-        settings_field="cadrumo_corpus_text_cache_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.CORPUS_SEARCH_CACHE,
-        "cache/corpus-search",
-        consumer_module="application/corpus_search/_runtime.py",
-        settings_field="cadrumo_corpus_search_cache_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.VALIDATION_VERDICT_CACHE,
-        "cache/registry-verdict",
-        consumer_module="domain/calculations/registry/_validate_verdict.py",
-        settings_field="cadrumo_validation_verdict_cache_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        # The name is governed here; the field is deliberately NOT derived, so
-        # the resolver's pytest branch can keep selecting on its absence.
-        #
-        # Excluded from the digest, and this is a correction rather than a
-        # restatement. The compiled registry pickle lands here and is rewritten
-        # on every recompile, so it churned the digest and produced spurious
-        # replay refusals -- measured, with a positive control: a write into an
-        # excluded directory left the digest unchanged while a write here moved
-        # it. It was fingerprinted only because the old hardcoded exclusion list
-        # could not resolve a field defaulting to None. Digests will differ from
-        # their pre-correction value on any machine holding a compiled cache;
-        # that is the correction landing, and it must not be "fixed" by
-        # restoring parity with the old set.
-        StorageCategory.REGISTRY_DISK_CACHE,
-        "cache/registry",
-        consumer_module="domain/calculations/registry/_loader_cache.py",
-        settings_field="cadrumo_registry_disk_cache_dir",
-        lifecycle=StorageLifecycle.RETENTION,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-        derives_settings_default=False,
-    ),
-    # ── Durable generated outputs ───────────────────────────────────────────
-    _location(
-        StorageCategory.STORAGE_BACKUP,
-        "backups",
-        dormant_reason=(
-            "No production module reads or writes it. Bucket archive and profile-bundle export both "
-            "write to a destination the operator names, not to this directory, so nothing ever "
-            "lands here. Point an export at it or delete the member."
-        ),
-        settings_field="cadrumo_storage_backup_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.SUBMISSIONS,
-        "submissions",
-        consumer_module="adapters/persistence/storage/_rotation.py",
-        settings_field="cadrumo_submissions_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.INBOX,
-        "inbox",
-        dormant_reason=(
-            "No production module reads or writes it. Only test fixtures set the field, and no "
-            "consumer reads it back, so the location exists on disk and stays empty. Wire the "
-            "document intake that would fill it or delete the member."
-        ),
-        settings_field="cadrumo_inbox_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.INBOX_PDF,
-        "inbox/pdfs",
-        dormant_reason=(
-            "No production module reads or writes it. It shares the intake's fate: declared, "
-            "materialised, and never written. Wire the PDF intake or delete the member."
-        ),
-        settings_field="cadrumo_inbox_pdf_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.WORKFLOW_RUNS,
-        "workflow-runs",
-        consumer_module="application/workflow/_persistence.py",
-        settings_field="cadrumo_workflow_runs_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.DRAFTS,
-        "drafts",
-        consumer_module="adapters/persistence/storage/_rotation.py",
-        settings_field="cadrumo_drafts_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.JUSTIFICANTES,
-        "justificantes",
-        consumer_module="adapters/persistence/storage/_rotation.py",
-        settings_field="cadrumo_justificantes_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.FILING_HISTORY,
-        "filing-history",
-        consumer_module="adapters/persistence/storage/_rotation.py",
-        settings_field="cadrumo_filing_history_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.FILED_DECLARATIONS,
-        "filed-declarations",
-        consumer_module="entrypoints/cli/_overview_evidence.py",
-        settings_field="cadrumo_filed_declarations_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.IVA_COMPENSATION_HISTORY,
-        "live/iva-compensation-history",
-        consumer_module="entrypoints/cli/_app_live.py",
-        settings_field="cadrumo_iva_compensation_history_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.IVA_READ_EVIDENCE,
-        "live/iva-read-evidence",
-        consumer_module="entrypoints/cli/_app_live.py",
-        settings_field="cadrumo_iva_read_evidence_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.FINANCIAL_TRANSACTIONS,
-        "financial/transactions",
-        consumer_module="adapters/persistence/storage/_rotation.py",
-        settings_field="cadrumo_financial_txs_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.INVOICES,
-        "financial/invoices",
-        consumer_module="adapters/persistence/storage/_rotation.py",
-        settings_field="cadrumo_invoices_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.ATTACHMENTS,
-        "financial/attachments",
-        consumer_module="adapters/persistence/storage/_rotation.py",
-        settings_field="cadrumo_attachments_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.USAGE_RATIOS,
-        "financial/usage-ratios.json",
-        consumer_module="adapters/persistence/storage/_rotation.py",
-        settings_field="cadrumo_usage_ratios_path",
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    # ── Fixed layout: the bucket container and the active-profile pointer ───
-    _location(
-        StorageCategory.BUCKETS,
-        "buckets",
-        consumer_module="core/_config_state_root.py",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.ACTIVE_PROFILE_POINTER,
-        "active-profile",
-        consumer_module="core/config.py",
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
+# Deliberately not at module top: this closes a circular import.
+# ``_storage_taxonomy_locations`` imports the axis enums, ``StorageLocation``
+# and ``_location`` from THIS module, so it can only be imported back here
+# once those names are already bound -- i.e. after the class/function
+# definitions above, not before them.
+from ._storage_taxonomy_locations import (  # noqa: E402 - see comment above
+    FINGERPRINT_EXCLUDED_STORAGE_FIELDS,
+    ROOT_DERIVED_STORAGE_FIELDS,
+    ROOT_DERIVED_STORAGE_LOCATIONS,
+    STORAGE_FIELD_CATEGORIES,
+    STORAGE_TAXONOMY,
+    bucket_scoped_storage_path,
+    storage_location,
+    storage_path,
+    storage_tree_targets,
 )
-
-
-_BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
-    _location(
-        StorageCategory.BUCKET_DATABASE,
-        "db",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        scope=StorageScope.BUCKET_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.BUCKET_BLOBS,
-        "blobs",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        scope=StorageScope.BUCKET_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.BUCKET_AUDIT,
-        "audit",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        scope=StorageScope.BUCKET_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.BUCKET_MANIFEST,
-        "manifest.toml",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        node_kind=StorageNodeKind.FILE,
-        scope=StorageScope.BUCKET_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.BUCKET_LOCK,
-        ".lock",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        node_kind=StorageNodeKind.FILE,
-        scope=StorageScope.BUCKET_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT,
-        "output-language.hint",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        node_kind=StorageNodeKind.FILE,
-        scope=StorageScope.BUCKET_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.BUCKET_KEYSTORE,
-        "keystore",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        scope=StorageScope.BUCKET_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.KEYSTORE_BUCKET_DEK,
-        "bucket.dek.json",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        node_kind=StorageNodeKind.FILE,
-        scope=StorageScope.KEYSTORE_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.KEYSTORE_PROFILE_SESSION,
-        "session.v1.json",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        node_kind=StorageNodeKind.FILE,
-        scope=StorageScope.KEYSTORE_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-    _location(
-        StorageCategory.KEYSTORE_LOGIN_THROTTLE,
-        "login-throttle.json",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
-        node_kind=StorageNodeKind.FILE,
-        scope=StorageScope.KEYSTORE_RELATIVE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-    ),
-)
-
-
-STORAGE_TAXONOMY: Final[dict[StorageCategory, StorageLocation]] = {
-    location.category: location for location in (*_ROOT_LOCATIONS, *_BUCKET_LOCATIONS)
-}
-"""The single declaration of every application-chosen on-disk location.
-
-Total over :class:`StorageCategory`: a member without a declaration would be a
-name the application can pass around but never resolve.
-"""
-
-
-STORAGE_FIELD_CATEGORIES: Final[dict[str, StorageCategory]] = {
-    location.settings_field: location.category
-    for location in STORAGE_TAXONOMY.values()
-    if location.settings_field is not None
-}
-"""Reverse index from a flat settings field name to the member that governs it."""
-
-
-ROOT_DERIVED_STORAGE_LOCATIONS: Final[tuple[StorageLocation, ...]] = tuple(
-    location for location in _ROOT_LOCATIONS if location.derives_settings_default
-)
-"""Members whose settings default is computed from the storage root, in declaration order.
-
-Settings validation and the override-rebuild loop iterate this rather than a
-parallel table, so a member cannot be declared here and silently left underived.
-"""
-
-
-ROOT_DERIVED_STORAGE_FIELDS: Final[tuple[str, ...]] = tuple(
-    location.settings_field for location in ROOT_DERIVED_STORAGE_LOCATIONS if location.settings_field is not None
-)
-"""Settings fields whose default is computed from the storage root, in declaration order."""
-
-
-FINGERPRINT_EXCLUDED_STORAGE_FIELDS: Final[frozenset[str]] = frozenset(
-    location.settings_field
-    for location in STORAGE_TAXONOMY.values()
-    if location.settings_field is not None and location.fingerprint_participation is FingerprintParticipation.EXCLUDED
-)
-"""Settings fields whose contents are kept out of the data-root drift digest.
-
-Compared by field NAME wherever it is checked, never by resolved-path
-cardinality: two fields may legitimately be overridden onto one directory,
-which shrinks a resolved-path set while exactly the same fields are consulted.
-"""
-
-
-def storage_location(category: StorageCategory) -> StorageLocation:
-    """Return the declaration for ``category``."""
-    return STORAGE_TAXONOMY[category]
-
-
-def storage_path(category: StorageCategory, *, settings: Settings | None = None) -> Path:
-    """Return the resolved absolute path of a root-scoped member.
-
-    The member's settings field is the authority when it declares one and holds
-    a value, so an explicit per-field operator override wins here exactly as it
-    does everywhere else, and the isolation fixtures that place a category
-    outside the root keep resolving to where they put it. A member with no field
-    -- the fixed bucket container, the active-profile pointer -- resolves as the
-    root joined with its declared subpath.
-
-    Args:
-        category: The member to resolve. Must be root-scoped.
-        settings: Settings to resolve against. Defaults to the effective
-            settings for the calling context.
-
-    Returns:
-        The absolute path this member occupies.
-
-    Raises:
-        CoreValidationError: When ``category`` is bucket- or keystore-scoped and
-            therefore needs a bucket identifier to resolve.
-    """
-    location = storage_location(category)
-    if location.scope is not StorageScope.ROOT:
-        raise CoreValidationError(
-            f"storage category {category.value!r} is {location.scope.value} and needs a bucket "
-            "identifier; resolve it with bucket_scoped_storage_path instead.",
-        )
-    resolved = _effective_settings(settings)
-    if location.settings_field is not None:
-        value = getattr(resolved, location.settings_field, None)
-        if value is not None:
-            return Path(value)
-    return Path(resolved.cadrumo_local_storage_root) / location.relative_path()
-
-
-def bucket_scoped_storage_path(
-    category: StorageCategory,
-    bucket_id: str,
-    *,
-    settings: Settings | None = None,
-) -> Path:
-    """Return the resolved absolute path of a bucket- or keystore-scoped member.
-
-    Bucket layout is fixed by policy, so this resolves through the declared
-    subpaths rather than through any operator-facing setting: a keystore cannot
-    be relocated out from under the bucket it unlocks.
-
-    Args:
-        category: The member to resolve. Must not be root-scoped.
-        bucket_id: The bucket whose tree the member sits in.
-        settings: Settings to resolve the bucket container against. Defaults to
-            the effective settings for the calling context.
-
-    Returns:
-        The absolute path this member occupies within ``bucket_id``'s tree.
-
-    Raises:
-        CoreValidationError: When ``category`` is root-scoped, or ``bucket_id``
-            is blank.
-    """
-    location = storage_location(category)
-    if location.scope is StorageScope.ROOT:
-        raise CoreValidationError(
-            f"storage category {category.value!r} is root-scoped and takes no bucket "
-            "identifier; resolve it with storage_path instead.",
-        )
-    trimmed = bucket_id.strip()
-    if not trimmed:
-        raise CoreValidationError("bucket_id must not be blank")
-    resolved = _effective_settings(settings)
-    bucket_root = (
-        Path(resolved.cadrumo_local_storage_root) / storage_location(StorageCategory.BUCKETS).relative_path() / trimmed
-    )
-    if location.scope is StorageScope.KEYSTORE_RELATIVE:
-        bucket_root = bucket_root / storage_location(StorageCategory.BUCKET_KEYSTORE).relative_path()
-    return bucket_root / location.relative_path()
-
-
-def storage_tree_targets(settings: Settings) -> tuple[Path, ...]:
-    """Return every directory :func:`~core.config.ensure_storage_tree` creates.
-
-    Derived from the declaration and from nothing else, so the materialiser
-    cannot drift from the taxonomy by carrying a second list. A file-valued
-    member contributes its parent and explicitly not its leaf -- creating the
-    leaf would put a directory exactly where a document must be written, and the
-    failure would surface much later, at the write.
-
-    Members with no settings field are fixed layout the bucket lifecycle
-    provisions per bucket, and members whose field is absent are opt-in
-    locations the operator has not asked for; neither is materialised here.
-    """
-    targets: list[Path] = []
-    for location in _ROOT_LOCATIONS:
-        if location.settings_field is None:
-            continue
-        value = getattr(settings, location.settings_field, None)
-        if value is None:
-            continue
-        candidate = Path(value)
-        targets.append(candidate.parent if location.node_kind is StorageNodeKind.FILE else candidate)
-    return tuple(targets)
-
-
-def _effective_settings(settings: Settings | None) -> Settings:
-    """Return ``settings`` or the effective settings for the calling context.
-
-    Imported through the owning submodule inside the call, never at module
-    scope: the settings module reaches this one during its own construction, so
-    a module-scope import in this direction closes an import cycle.
-    """
-    if settings is not None:
-        return settings
-    from .config import load_settings
-
-    return load_settings()
-
 
 __all__ = [
     "EXTERNAL_PATH_SETTINGS_FIELDS",

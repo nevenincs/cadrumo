@@ -575,8 +575,8 @@ def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
     run end to end, which is what most CLI-driven scenarios need.
 
     Every generated-output directory settings field derives its default from
-    ``cadrumo_local_storage_root`` (the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy
-    in :mod:`core.config`), so isolating the root through
+    ``cadrumo_local_storage_root`` (every root-derived member of
+    :data:`~core.STORAGE_TAXONOMY`), so isolating the root through
     :func:`isolated_profile_storage_root` alone relocates the whole family —
     tokens, drafts, runs, financial catalogues, and every sibling directory —
     without a per-field override block. ``cadrumo_output_language`` is pinned

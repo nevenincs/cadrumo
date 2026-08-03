@@ -63,7 +63,7 @@ from ...adapters.persistence.storage.master_key import (
     reset_login_throttle,
     zeroise,
 )
-from ...core import STRICT_FROZEN_CONFIG, resolve_active_bucket_id
+from ...core import STRICT_FROZEN_CONFIG, StorageCategory, resolve_active_bucket_id, storage_location
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
 from ...core.time import now as utc_now
@@ -73,7 +73,12 @@ from ...domain.buckets import (
     emit_bucket_event,
 )
 
-_RECOVERY_WRAP_FILENAME = "master.recovery.key"
+# Bare filename, read off the taxonomy rather than an untethered string
+# literal. Still joined onto ``cadrumo_secret_store_dir`` exactly as before --
+# the member carries no ``settings_field`` and is not safe to resolve
+# directly, because ``SECRETS`` is operator-overridable (see the member's
+# declaration in ``core._storage_taxonomy``).
+_RECOVERY_WRAP_FILENAME = Path(storage_location(StorageCategory.SECRETS_MASTER_RECOVERY_KEY).subpath).name
 _CUSTODY_ACTOR = "operator"
 _log = get_logger(__name__)
 

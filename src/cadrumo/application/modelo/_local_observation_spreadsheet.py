@@ -36,7 +36,7 @@ from typing import Final
 
 from openpyxl import load_workbook
 
-from ...core.decimal import normalize_decimal_separators
+from ...core.decimal import european_thousands_reading_is_ambiguous, normalize_decimal_separators
 from ...core.external_constants import CSV_ENCODING_FALLBACK_CHAIN, XLSX_EXTENSION
 from ._action_errors import ModeloLocalObservationError
 
@@ -111,6 +111,26 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
             )
             continue
         first_row_by_code[code] = row_number
+        # Thousands are stripped only when a comma is present, which reads every
+        # unambiguous Spanish spelling correctly and leaves exactly one that it
+        # cannot: a lone dot before three digits. ``1.234`` is one thousand two
+        # hundred and thirty-four to the operator who typed it and one point two
+        # three four to this parser, and nothing in the token decides between
+        # them. These are casilla values -- the figures that go on the return --
+        # so the row is refused and named rather than read a thousandfold light.
+        if european_thousands_reading_is_ambiguous(raw_value):
+            # Name both numbers rather than the abstract ambiguity: the operator
+            # knows which one they meant, and seeing them side by side is what
+            # lets them pick the spelling that says so.
+            written = raw_value.strip()
+            malformed.append(
+                f"row {row_number}: value {raw_value!r} for casilla {code!r} could mean "
+                f"{written.replace('.', '')} (a Spanish thousands separator) or "
+                f"{written.replace('.', ',')} (a decimal fraction), and nothing in the value "
+                f"decides which; write {written.replace('.', '')} if you meant the first, "
+                f"or {written.replace('.', ',')} if you meant the second",
+            )
+            continue
         try:
             normalized = normalize_decimal_separators(raw_value, strip_thousands="," in raw_value)
             value = Decimal(normalized)

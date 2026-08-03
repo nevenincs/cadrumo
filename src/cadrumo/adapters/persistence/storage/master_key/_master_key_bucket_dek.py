@@ -27,10 +27,9 @@ def master_key_unavailable_error(message: str) -> MasterKeyUnavailableError:
 def bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the separated keystore path for one bucket's wrapped DEK."""
     from .._namespace_registry import BUCKET_DEK_FILENAME
-    from ..bucket import keystore_path, validate_keystore_separation
+    from ..bucket import keystore_sidecar_path
 
-    validate_keystore_separation(storage_root, bucket_id)
-    return keystore_path(storage_root, bucket_id) / BUCKET_DEK_FILENAME
+    return keystore_sidecar_path(storage_root=storage_root, bucket_id=bucket_id, filename=BUCKET_DEK_FILENAME)
 
 
 def bucket_key_schedule(*, storage_root: Path, bucket_id: str):

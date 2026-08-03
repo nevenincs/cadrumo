@@ -32,7 +32,7 @@ import sys
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path, PurePosixPath
 from stat import S_ISREG
-from typing import Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 from ._config_state_root import (
     StateRootInputs,
@@ -40,6 +40,9 @@ from ._config_state_root import (
     platform_user_data_root,
 )
 from .errors import CoreValidationError
+
+if TYPE_CHECKING:
+    from .config import Settings
 
 
 def _relative_path_anchor(state_root_inputs: StateRootInputs | None = None) -> Path:
@@ -250,6 +253,66 @@ def normalize_project_relative_path(
     if value is None:
         return None
     return resolve_project_path(value, state_root_inputs=state_root_inputs)
+
+
+def effective_storage_root(
+    root: Path | None = None,
+    *,
+    settings: Settings | None = None,
+    state_root_inputs: StateRootInputs | None = None,
+) -> Path:
+    """Return the effective Cadrumo storage root: a caller override, or the settings default.
+
+    The single accessor for the "an explicit root override wins, otherwise
+    fall back to ``Settings.cadrumo_local_storage_root``" fallback that six
+    call sites across ``application/user_profile`` and
+    ``application/_config_reset_repository.py`` each re-implemented inline.
+    Comparing the six copies surfaced real drift, not just duplication: one
+    normalised an override by calling bare :meth:`~pathlib.Path.resolve`,
+    which for a *relative* override resolves against the process's current
+    working directory rather than anchoring it the way every other relative
+    operator path in this codebase does; the other four returned an explicit
+    override completely unnormalised — a relative override, or one carrying
+    ``~``, passed straight through un-expanded and un-resolved. Both are
+    defects: a login or profile-repository root must compare identically
+    regardless of the directory the process happened to start from, and an
+    unnormalised override risks a cross-platform identity mismatch (a
+    differently-cased or non-canonical path failing to compare equal to
+    itself resolved a second time elsewhere).
+
+    An explicit ``root`` is therefore always normalised through
+    :func:`resolve_project_path`: an absolute override resolves as-is
+    (including Windows on-disk casing); a *relative* override anchors under
+    the platform user-data root — one level above the settings default's own
+    ``storage/`` — never under the current working directory and never
+    nested under an already-derived storage root. ``root is None`` falls
+    back to ``Settings.cadrumo_local_storage_root``, which the settings
+    field validator already normalises identically on load, so no second
+    resolve is spent on the common (no-override) path.
+
+    Args:
+        root: Optional caller-supplied storage-root override. ``None``
+            (the default) resolves ``Settings.cadrumo_local_storage_root``.
+        settings: Optional already-resolved
+            :class:`~cadrumo.core.config.Settings`, read only when ``root``
+            is ``None``, so a caller that already holds a ``Settings``
+            instance need not trigger a second :func:`~cadrumo.core.config.load_settings`.
+            ``None`` (the default) loads the live settings.
+        state_root_inputs: Optional injectable
+            :class:`~cadrumo.core._config_state_root.StateRootInputs` seam
+            forwarded to :func:`resolve_project_path` when ``root`` is
+            supplied. ``None`` (the default) captures the live process's
+            inputs.
+
+    Returns:
+        The resolved absolute storage root.
+    """
+    if root is not None:
+        return resolve_project_path(root, state_root_inputs=state_root_inputs)
+    from .config import load_settings
+
+    resolved_settings = settings if settings is not None else load_settings()
+    return resolved_settings.cadrumo_local_storage_root
 
 
 def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) -> Path:

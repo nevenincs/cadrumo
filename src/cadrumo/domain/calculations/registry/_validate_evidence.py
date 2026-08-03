@@ -14,10 +14,12 @@ from ....core import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
+    StorageCategory,
     normalise_corpus_text,
+    storage_location,
+    storage_path,
 )
 from ....core.atomic_write import atomic_write_best_effort_text
-from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.resources import packaged_data, resolve_companion_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
@@ -26,7 +28,12 @@ _SourceTextCacheKey = tuple[str, str, int, int]
 _NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, str] = {}
 _LOGGER = logging.getLogger(__name__)
 
-_CORPUS_TEXT_CACHE_FILENAME = "cadrumo_corpus_text_cache.json"
+# Bare filename, read off the taxonomy rather than an untethered string
+# literal. Still joined onto ``cadrumo_corpus_text_cache_dir`` exactly as
+# before -- the member carries no ``settings_field`` and is not safe to
+# resolve directly, because ``CORPUS_TEXT_CACHE`` is operator-overridable
+# (see the member's declaration in ``core._storage_taxonomy``).
+_CORPUS_TEXT_CACHE_FILENAME = Path(storage_location(StorageCategory.CORPUS_TEXT_CACHE_FILE).subpath).name
 
 # Shipped sidecar constants (see dev/corpus/extract_manual_corpus_text.py).
 # Sidecars live at _data/manual_corpus_text/<path-relative-to-corpus>.corpus_text.json
@@ -129,11 +136,15 @@ _DISK_CACHE_ADAPTER: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], c
 def _corpus_text_cache_path() -> Path:
     """Return the settings-derived corpus-text cache file location.
 
-    Defaults under ``<cadrumo_local_storage_root>/cache/corpus-text`` (scoped
-    per user by the storage root), replacing the former shared OS-temp-dir
-    location that any two users or CI containers on one host could clobber.
+    Resolved through the taxonomy accessor rather than by reading
+    ``cadrumo_corpus_text_cache_dir`` here. Both answer the same today, because
+    the settings field is what the accessor consults first -- but only one of
+    them stays correct if the member's resolution ever gains a case. Defaults
+    under ``<cadrumo_local_storage_root>/cache/corpus-text`` (scoped per user by
+    the storage root), replacing the former shared OS-temp-dir location that
+    any two users or CI containers on one host could clobber.
     """
-    return load_settings().cadrumo_corpus_text_cache_dir / _CORPUS_TEXT_CACHE_FILENAME
+    return storage_path(StorageCategory.CORPUS_TEXT_CACHE) / _CORPUS_TEXT_CACHE_FILENAME
 
 
 def reset_corpus_text_cache() -> None:

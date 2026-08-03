@@ -11,7 +11,12 @@ from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANC
 from ..core.hashing import sha256_hex
 from ..core.identity import nif_check_letter
 from ..domain.deadlines import IVARegime
-from ..domain.user_profile import ProfileAlreadyExistsError, UserProfileFact
+from ..domain.user_profile import (
+    NUMERIC_PROFILE_FIELD_TYPES,
+    ProfileAlreadyExistsError,
+    ProfileFieldType,
+    UserProfileFact,
+)
 
 if TYPE_CHECKING:
     from ..adapters.persistence.storage import SecureObjectRepository
@@ -21,6 +26,23 @@ if TYPE_CHECKING:
 #: Checksum-valid NIF filler, derived through the canonical check-letter table
 #: rather than written out, so it cannot drift from the algorithm that admits it.
 _PLACEHOLDER_TAX_ID = f"12345678{nif_check_letter(12345678)}"
+
+#: Calendar-day filler for date fields, in the zero-padded layout the write door
+#: requires. Fixed rather than derived from the clock: a filler that moves with
+#: today's date makes every test using it non-reproducible, and a suite that
+#: passes in one week and fails the next reports the calendar, not the code.
+#: The particular day is arbitrary but not careless -- the date fields are mostly
+#: birth, marriage, and activity-start dates, so a plausible adult birth year
+#: avoids handing anything that later reads an age a taxpayer born last year.
+_PLACEHOLDER_DATE = "1990-01-01"
+
+#: Boolean filler. ``false`` rather than ``true`` for two reasons that agree.
+#: It is the non-triggering answer -- these flags gate obligations and exemption
+#: pathways, so a filler that says yes asserts an obligation the test never meant
+#: to claim. And it preserves what the sentinel already meant: every reader of a
+#: boolean fact treats an unrecognised token as false, so filling with ``false``
+#: changes no consumer's answer while making the stored value honestly a boolean.
+_PLACEHOLDER_BOOLEAN = "false"
 
 
 def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
@@ -52,6 +74,23 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
     rather than added to a table of paths: one field whose downstream contract
     is stricter than its declared type, named where that is true.
 
+    A date field takes a fixed calendar day. The write door enforces
+    ``ProfileFieldType.DATE`` as narrowly as it enforces an enum's declared
+    set -- a date-typed fact must carry a real ISO-8601 day in the
+    zero-padded ``YYYY-MM-DD`` layout -- so the sentinel is refused there
+    exactly as it is in an enum field. Unlike the numeric branch there is
+    nothing to derive: the schema permits bounds only on numeric fields, so a
+    date field declares no range to honour and a constant is the whole answer.
+
+    A boolean field takes a boolean token, and this is the branch the door
+    does NOT force. Nothing refuses the sentinel on a boolean fact, so the
+    cost of omitting this branch is not a visible refusal but a quiet wrong
+    answer: the fact carrier leaves an unrecognised token a ``str`` instead
+    of promoting it to a ``bool``, and every consumer asking whether the flag
+    is set reads it as false. The branch exists because "the declaration
+    admits it" is a claim about the declaration, not about which mistakes
+    happen to be caught.
+
     Args:
         field: The schema definition of the field being filled.
 
@@ -62,7 +101,34 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
         return field.enum_values[0]
     if field.key == "tax_id":
         return _PLACEHOLDER_TAX_ID
+    if field.type in NUMERIC_PROFILE_FIELD_TYPES:
+        return _numeric_placeholder(field)
+    if field.type is ProfileFieldType.DATE:
+        return _PLACEHOLDER_DATE
+    if field.type is ProfileFieldType.BOOLEAN:
+        return _PLACEHOLDER_BOOLEAN
     return "placeholder"
+
+
+def _numeric_placeholder(field: ProfileFieldDefinition) -> str:
+    """Return a number this numeric field's declaration admits.
+
+    The sentinel is not one: a numeric field now refuses the word
+    ``placeholder`` the same way an enum field refuses it, so the branch
+    that made enums legal has to exist for numbers too.
+
+    The declared bounds are honoured rather than sidestepped, because the
+    value has to satisfy the very check this exists to keep tests clear of.
+    The minimum is preferred when one is declared -- it is admissible by
+    definition and needs no arithmetic -- and the fallbacks stay inside a
+    declared ceiling. As with the enum branch, the value means nothing
+    beyond being legal; a test needing a PARTICULAR number should say so.
+    """
+    if field.minimum is not None:
+        return str(field.minimum)
+    if field.maximum is not None and field.maximum < 1:
+        return str(field.maximum)
+    return "1"
 
 
 def _distinct_valid_nif(profile_id: str) -> str:

@@ -78,6 +78,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BucketPointer, ProfileSessionRefusalReason, resolve_active_bucket_id
 from ...core.config import SecretStoreBackend, load_settings
 from ...core.logging import get_logger
+from ...core.paths import effective_storage_root
 from ...core.time import now as _now
 from ...domain.user_profile import ProfileNotFoundError, UserProfileError
 from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
@@ -143,10 +144,6 @@ class ProfileLoginOutcome(BaseModel):
     session_persisted: bool
     already_authenticated: bool
     closed_previous_bucket_id: str | None = None
-
-
-def _storage_root() -> Path:
-    return load_settings().cadrumo_local_storage_root
 
 
 def _backend_kind(provider: MasterKeyProvider) -> SecretStoreBackend:
@@ -225,7 +222,7 @@ def resume_active_profile_session(
         :class:`~cadrumo.core.ProfileSessionRefusalReason` naming why not.
     """
     instant = _now() if now is None else now
-    storage_root = _storage_root()
+    storage_root = effective_storage_root()
     outcome, dek = resume_profile_session(storage_root=storage_root, bucket_id=bucket_id, now=instant)
     if not outcome.resumed or outcome.record is None or dek is None:
         return outcome.refusal if outcome.refusal is not None else ProfileSessionRefusalReason.ABSENT
@@ -398,7 +395,7 @@ def login_profile(
     from ...adapters.persistence.storage.master_key import get_master_key_provider
 
     instant = _now() if now is None else now
-    storage_root = _storage_root()
+    storage_root = effective_storage_root()
 
     with active_profile_pointer_transaction() as pointer_transaction:
         selected = pointer_transaction.read()
@@ -494,11 +491,11 @@ def _resume_for_idempotent_login(*, bucket_id: str, now: datetime):
 
     live = current_active_bucket_session()
     if live is not None and live.bucket_id == bucket_id and not live.is_expired(now):
-        peeked, _ = _peek(storage_root=_storage_root(), bucket_id=bucket_id, now=now)
+        peeked, _ = _peek(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
         return peeked.record if peeked.resumed else None
     if resume_active_profile_session(bucket_id=bucket_id, now=now) is not None:
         return None
-    peeked, _ = _peek(storage_root=_storage_root(), bucket_id=bucket_id, now=now)
+    peeked, _ = _peek(storage_root=effective_storage_root(), bucket_id=bucket_id, now=now)
     return peeked.record if peeked.resumed else None
 
 

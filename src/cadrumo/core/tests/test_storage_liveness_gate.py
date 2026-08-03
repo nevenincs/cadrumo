@@ -25,12 +25,17 @@ an ``ast.Attribute`` load of the category member, **or** the field name as a
 non-docstring string constant.
 
 The third shape was added on measurement, not on principle, and omitting it
-would have been a serious error. The two live-evidence roots reach their
-settings through ``_resolve_live_output_root(output_root,
+would have been a serious error. The two live-evidence roots used to reach
+their settings through ``_resolve_live_output_root(output_root,
 "cadrumo_iva_read_evidence_dir")`` -- the field named as a string and resolved
-dynamically. An attribute walk cannot see that, so an attribute-only gate
-reports both as writer-less, and someone acting on the report deletes a live
-category holding regulated filing evidence.
+dynamically. An attribute walk alone cannot see that, so an attribute-only
+gate would have reported both as writer-less, and someone acting on the
+report would have deleted a live category holding regulated filing evidence.
+That call site has since collapsed onto a shared resolver that takes the
+default as a callable rather than a field-name string, so today's claims are
+all backed by attribute-load evidence -- but the third shape stays, proven by
+the discrimination test below, because a future dynamic-name lookup is
+exactly the pattern that motivated it in the first place.
 
 That shape is the mirror image of the trap this gate is most careful about, so
 admitting it must not admit the trap: ``core/auth_session_keys.py`` names a
@@ -70,9 +75,13 @@ def docstring_nodes(tree: ast.AST) -> set[int]:
         if not isinstance(node, ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
             continue
         body = node.body
-        if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant):
-            if isinstance(body[0].value.value, str):
-                found.add(id(body[0].value))
+        if (
+            body
+            and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)
+        ):
+            found.add(id(body[0].value))
     return found
 
 
@@ -153,7 +162,22 @@ def test_the_taxonomy_declares_a_liveness_claim_for_every_member() -> None:
         "nothing does -- a member that answers neither is a location the application creates and "
         "may never use"
     )
-    assert _members_claiming_a_consumer(), "no member claims a consumer; discovery, not the tree, is broken"
+
+    # Totality over an empty taxonomy is vacuous, and a collapsed member set
+    # would also make every consumer claim below trivially satisfied -- the
+    # gate would report a fully live tree while inspecting nothing. Bounds,
+    # not counts, so the floor survives an ordinary new member.
+    assert len(STORAGE_TAXONOMY) >= 30, (
+        f"the taxonomy declares only {len(STORAGE_TAXONOMY)} member(s); it governs dozens of "
+        "locations, so this means the declaration collapsed and every assertion here holds "
+        "vacuously"
+    )
+    claiming = _members_claiming_a_consumer()
+    assert len(claiming) >= 20, (
+        f"only {len(claiming)} member(s) claim a consumer. Most declared locations are live, so a "
+        "number this low means either the claims were stripped or nearly everything was marked "
+        "dormant -- and 'everything is dormant' passes this gate while meaning nothing"
+    )
 
 
 def test_every_named_consumer_module_exists() -> None:
