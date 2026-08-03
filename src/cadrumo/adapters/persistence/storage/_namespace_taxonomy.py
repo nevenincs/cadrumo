@@ -78,8 +78,8 @@ class StoragePathKind(StrEnum):
 class StoragePathAnchor(StrEnum):
     """Which directory a :class:`StoragePathDefinition` grammar's ``<root>`` token means.
 
-    Declared because it is not one thing. Sixteen of the nineteen
-    ``<root>``-anchored filesystem entries mean the top-level storage root
+    Declared because it is not one thing. Nearly every
+    ``<root>``-anchored filesystem entry means the top-level storage root
     (``cadrumo_local_storage_root``); the three blob-content entries
     (``blob_manifest``, ``blob_content_plaintext``, ``blob_content_ciphertext``)
     instead anchor ``<root>`` at
