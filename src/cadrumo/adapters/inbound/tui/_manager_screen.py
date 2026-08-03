@@ -7,8 +7,10 @@ glyph each — a progress meter for a process, telling the operator where
 they were in a walk but never what their profile actually held.
 
 The page here is the profile itself: every schema section, every declared
-field, and the value on record for it. A field the operator has not
-filled in is a visible empty row, because "what is still blank" is the
+field, and the value on record for it — including one row per instance of
+a fact the taxpayer holds several of, so three socios read as three rows
+rather than one. A field the operator has not filled in is a visible empty
+row, because "what is still blank" is the
 question this page exists to answer. Selecting any row edits it in place
 and writes immediately; there is no submit step, no final commit, and no
 ordering. Completeness is shown as a count and a list of what filing will
@@ -94,6 +96,16 @@ _ABSENT_GLYPH = "○"
 
 _REQUIRED_MARK = "*"
 """Marks a field filing will eventually require."""
+
+_ROW_INDEX_SEPARATOR = " · "
+"""Sits between a repeated row's instance number and its field label.
+
+Punctuation rather than copy, which is why it is written here and not in
+the locale catalogues: the label beside it is already translated, and the
+number is a stored identity. A taxpayer with three socios would otherwise
+read three identical ``NIF`` rows, since the path telling them apart is
+shown only once the row is opened.
+"""
 
 _REFUSAL_TONE = "-refusal"
 """Something the page would not do. The operator's next task."""
@@ -400,20 +412,23 @@ class ProfileManagerApp(App[None]):
     def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
 
-        The row SET cannot change under an edit: the overview is projected
-        by walking the profile SCHEMA, not the record's facts, so every
-        declared field yields a row whether or not it holds a value. What an
-        edit CAN change is a row's rendered content — and not only the edited
-        row's, since the write door normalises values and re-derives presence
-        and completeness. So rather than assume the edited path is the only
-        thing that moved, this diffs the old page against the new one and
-        writes exactly the cells that differ: usually one row, occasionally a
-        few, never all of them.
+        Most edits leave the row SET alone: the overview is projected by
+        walking the profile SCHEMA, so every declared field yields a row
+        whether or not it holds a value. What such an edit CAN change is a
+        row's rendered content — and not only the edited row's, since the
+        write door normalises values and re-derives presence and
+        completeness. So rather than assume the edited path is the only thing
+        that moved, this diffs the old page against the new one and writes
+        exactly the cells that differ: usually one row, occasionally a few,
+        never all of them.
 
-        The structural comparison is the safety valve. Should the projection
-        ever become record-dependent — a conditional section, a repeatable
-        row set — the shapes stop matching and this falls back to the full
-        rebuild rather than writing into stale coordinates.
+        Some edits DO move the row set, because how many rows a repeated
+        fact stands for is the record's to say, not the schema's: clearing
+        the last leaf of a censal divergence retires its rows, and filling a
+        row of a repeatable section can add a group. The structural
+        comparison is what makes that safe — the shapes stop matching and
+        this falls back to the full rebuild rather than writing into
+        coordinates the new page no longer has.
         """
         previous = self.overview
         self.overview = updated
@@ -477,10 +492,18 @@ class ProfileManagerApp(App[None]):
         looks like, or an edited row would drift from its unedited siblings.
         Deriving both from here is what makes the diff comparison meaningful:
         it compares exactly the strings that get written.
+
+        A row belonging to one instance of a repeated fact is named by that
+        instance. The projection states which instance as data and leaves
+        the presentation here, so the schema's translated label is never
+        edited to carry it.
         """
+        label = f"{field.label}{_REQUIRED_MARK}" if field.required else field.label
+        if field.row_index is not None:
+            label = f"{field.row_index}{_ROW_INDEX_SEPARATOR}{label}"
         return (
             _PRESENT_GLYPH if field.present else _ABSENT_GLYPH,
-            f"{field.label}{_REQUIRED_MARK}" if field.required else field.label,
+            label,
             field.value or "",
         )
 

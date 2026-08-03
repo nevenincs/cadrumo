@@ -24,6 +24,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....domain.user_profile import (
+    ProfileFieldType,
     UserProfileFact,
     UserProfileRecord,
     UserProfileStatus,
@@ -197,8 +198,31 @@ def test_schema_field_coverage_is_complete_in_the_projection() -> None:
     Anti-vacuity for the localization gates: they compare dictionaries, so
     a projection that dropped fields would shrink both sides and still
     agree.
-    """
-    declared = set(load_user_profile_schema().field_paths)
-    projected = {field.path for section in _overview_in("en").sections for field in section.fields}
 
-    assert declared == projected
+    A namespace field — an ``object`` or ``array``, whose instances live at
+    ``field.INDEX.leaf`` — reaches the view as those instances rather than
+    as itself, because nothing writes its bare path and a row offered there
+    could only ever be blank. So the record carries one instance and both
+    halves are asserted exactly: the ordinary fields as declared, plus the
+    row that instance produced. Stated as one equality rather than as a
+    subtraction, so the carve-out cannot quietly widen to cover a field
+    that simply went missing.
+    """
+    schema = load_user_profile_schema()
+    namespaces = {
+        f"{section.key}.{field.key}"
+        for section in schema.sections
+        for field in section.fields
+        if field.type in {ProfileFieldType.OBJECT, ProfileFieldType.ARRAY}
+    }
+    assert namespaces, "no namespace field is declared, which would make the carve-out below vacuous"
+
+    instance_path = "censo.divergencia.0.axis"
+    record = _record().model_copy(
+        update={"facts": (*_record().facts, UserProfileFact(path=instance_path, value="censo.iae_epigrafe"))},
+    )
+    with override_settings(cadrumo_output_language="en"):
+        overview = build_profile_overview(record)
+    projected = {field.path for section in overview.sections for field in section.fields}
+
+    assert projected == (set(schema.field_paths) - namespaces) | {instance_path}
