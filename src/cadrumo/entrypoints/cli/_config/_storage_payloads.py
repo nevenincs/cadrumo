@@ -1,9 +1,10 @@
 """Typed ``--json`` payload schemas for ``aeat config storage``.
 
-Each schema is the inner ``result`` of the shared envelope spine and nothing
-more: the outer ``schema_version`` / ``command`` / ``status`` / ``notices``
-fields belong to :class:`SchemaEnvelope`, and every non-blocking diagnostic this
-surface produces rides the typed notice channel rather than a field of its own.
+Each schema is a strict :class:`OutputSchema` describing the inner ``result``
+of the shared envelope spine and nothing more: the outer ``schema_version`` /
+``command`` / ``status`` / ``notices`` fields belong to
+:class:`SchemaEnvelope`, and every non-blocking diagnostic this surface
+produces rides the typed notice channel rather than a field of its own.
 
 Paths are rendered as strings because the envelope is a wire contract; the
 service returns real :class:`~pathlib.Path` values and the command projects

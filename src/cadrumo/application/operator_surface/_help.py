@@ -244,6 +244,43 @@ def _root_help() -> HelpDocument:
     )
 
 
+def _config_storage_section() -> HelpSection:
+    """Return the rows that answer where local data lives and what may be freed.
+
+    Extracted from :func:`_config_help` for the same reason
+    :func:`_config_custody_section` was: adding this family pushed the document
+    builder through its per-callable size band, and the band is a ceiling to
+    respect rather than a baseline to rewrite. The storage verbs are a cohesive
+    concern -- every one addresses the on-disk tree itself rather than anything
+    stored inside it.
+    """
+    return HelpSection(
+        title=tr("cli.operator_surface.help.config.section_storage"),
+        entries=(
+            HelpEntry(
+                command="aeat config storage list",
+                description=tr("cli.operator_surface.help.config.storage_list"),
+            ),
+            HelpEntry(
+                command="aeat config storage show CATEGORY",
+                description=tr("cli.operator_surface.help.config.storage_show"),
+            ),
+            HelpEntry(
+                command="aeat config storage check",
+                description=tr("cli.operator_surface.help.config.storage_check"),
+            ),
+            HelpEntry(
+                command="aeat config storage init",
+                description=tr("cli.operator_surface.help.config.storage_init"),
+            ),
+            HelpEntry(
+                command="aeat config storage reclaim CATEGORY --yes",
+                description=tr("cli.operator_surface.help.config.storage_reclaim"),
+            ),
+        ),
+    )
+
+
 def _config_custody_section() -> HelpSection:
     """Return the passphrase and recovery-code custody rows.
 
@@ -447,31 +484,7 @@ def _config_help() -> HelpDocument:
                     ),
                 ),
             ),
-            HelpSection(
-                title=tr("cli.operator_surface.help.config.section_storage"),
-                entries=(
-                    HelpEntry(
-                        command="aeat config storage list",
-                        description=tr("cli.operator_surface.help.config.storage_list"),
-                    ),
-                    HelpEntry(
-                        command="aeat config storage show CATEGORY",
-                        description=tr("cli.operator_surface.help.config.storage_show"),
-                    ),
-                    HelpEntry(
-                        command="aeat config storage check",
-                        description=tr("cli.operator_surface.help.config.storage_check"),
-                    ),
-                    HelpEntry(
-                        command="aeat config storage init",
-                        description=tr("cli.operator_surface.help.config.storage_init"),
-                    ),
-                    HelpEntry(
-                        command="aeat config storage reclaim CATEGORY --yes",
-                        description=tr("cli.operator_surface.help.config.storage_reclaim"),
-                    ),
-                ),
-            ),
+            _config_storage_section(),
         ),
         footer=tr("cli.operator_surface.help.config.footer", default="Run aeat --help for the full overview."),
     )
