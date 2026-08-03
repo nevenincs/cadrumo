@@ -740,17 +740,27 @@ finding was the right call, and the question was worth asking.
 `get_logger` calls in a package documented as import-light, retired; `core/logging.py` is
 clean in the working tree. A 640-test slice measured a **0-byte** log delta.
 
-**Two residues, both measured here rather than inherited.** First, the log is **still being
-appended to after the fix landed**: 4,911,619 bytes at 19:30 against 4,911,417 reported
-earlier, with the fix committed at 19:22. That is ~200 bytes, not the earlier ~4.4 MB
-runaway, so the fix plainly worked on the path it targeted — but "closed" is a stronger
-word than a single-slice measurement supports, and either another path still logs or a
-process predating the fix is still running. Second, ~82 MB of derived cache sits under the
-real root (two registry pickles at 22.9 MB each, a 31.3 MB corpus-text cache, a 126-byte
-verdict file), stamped during today's fleet activity. Those are regenerable caches and
-`cache/` under the storage root is a *correct* location for genuine operator use; the open
-question is only whether test runs land there, which `S45`, `S51` and `S52` cover
-precisely. A full-suite measurement after those land settles it either way.
+**Two residues, both measured here rather than inherited, and the first is an active rate
+rather than a stale delta.** Successive readings of the log: **4,911,417 bytes** as first
+reported, **4,911,619 at 19:30**, **4,912,669 at 19:33** — roughly **350 bytes a minute,
+still climbing**, with the fix committed at 19:22. That is not a pre-fix process draining;
+it is ongoing writing. Against the earlier ~4.4 MB runaway it is a reduction of orders of
+magnitude and the fix plainly worked on the path it targeted — but the leak is **reduced,
+not closed**, and a single 640-test slice reading zero is consistent with that rather than
+evidence against it. The remaining writer is unidentified.
+
+Second, the derived caches under the real root are being written **now**, not historically:
+at a baseline pinned to `6ce5a3d4dc` the corpus-text cache is stamped 19:26, a registry
+pickle 19:28, the verdict file 19:26 — all within ten minutes of the reading. Five files,
+**82,150,682 bytes** total. These are regenerable caches, and `cache/` under the storage
+root is a correct location for genuine operator use, so this is not a data-safety finding;
+it is evidence that test or fleet activity currently lands there, which is exactly what
+`S45`, `S51` and `S52` address. A full-suite measurement at a named object after those land
+settles both residues in one run.
+
+**A baseline is recorded above precisely so that measurement is a comparison rather than a
+recollection.** Object `6ce5a3d4dc`, wall clock 19:34, five files, 82,150,682 bytes, log at
+4,912,669.
 
 ### the-site-gate-b-found-that-i-missed | medium | My enumeration missed a tracked site, and the reason is procedural as well as technical
 
