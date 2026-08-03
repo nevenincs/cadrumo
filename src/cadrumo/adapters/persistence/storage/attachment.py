@@ -143,6 +143,10 @@ def _decode_manifest_envelope(payload: bytes, *, attachment_id: str | None = Non
             raise _attachment_validation_error("invalid attachment manifest", violation="manifest_payload")
         attachment_id = _require_digest(manifest_sha256, field_name="sha256")
     manifest_payload["attachment_id"] = attachment_id
+    # ``_JSON_OBJECT.validate_python`` returns a fresh dict, so the injected
+    # attachment_id above lands on a copy — write it back into the envelope
+    # dict actually serialized below.
+    typed_payload_dict["payload"] = manifest_payload
     try:
         envelope_json = json.dumps(typed_payload_dict)
         envelope = Envelope[Attachment].model_validate_json(envelope_json)

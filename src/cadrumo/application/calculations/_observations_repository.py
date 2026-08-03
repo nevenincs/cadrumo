@@ -179,6 +179,8 @@ def _decision_payload_digest(decision: IvaCompensationReconciliationDecision) ->
 
 
 def _require_observation_period(period: Period) -> Period:
+    if not isinstance(period, Period):
+        raise ObservationKeyError(f"period must be a cadrumo.core.Period instance, got {type(period).__name__}")
     return period
 
 
