@@ -177,6 +177,29 @@ class FieldEditScreen(ModalScreen[str | None]):
         """Show one enum token the way the operator should read it."""
         return self._choice_labels.get(value, value)
 
+    @property
+    def _box_hides_a_value(self) -> bool:
+        """Whether an empty box here is hiding a value rather than describing one."""
+        return self._field.masked and self._field.present and not self._field.enum_values
+
+    @property
+    def _offers_clear(self) -> bool:
+        """Whether this dialog must carry its own way to delete the value.
+
+        Only a masked field needs one. Its box opens empty because the
+        value is withheld, so emptying the box cannot mean "delete this" —
+        the box was already empty, and the operator never saw what they
+        would be deleting. Every other field says it by being emptied,
+        which is a gesture they took deliberately against a value they
+        could read.
+
+        Offered only where the deletion would actually happen: a field
+        holding nothing has none to remove, and a required field's
+        deletion is refused downstream, so a button for either would
+        promise an outcome the dialog then has to take back.
+        """
+        return self._field.masked and self._field.present and not self._field.required
+
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
@@ -189,8 +212,15 @@ class FieldEditScreen(ModalScreen[str | None]):
                 yield OptionList(*[self._label_for(value) for value in self._field.enum_values], id="edit-options")
             else:
                 yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
+            # An empty box that means "unset" needs no explaining. One that
+            # means "withheld" does, or the operator reads the emptiness as
+            # the field's state and saves it back.
+            if self._box_hides_a_value:
+                yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
+                if self._offers_clear:
+                    yield Button(tr("flows.manager.edit.clear"), id="btn-edit-clear")
                 yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
 
     def on_mount(self) -> None:
@@ -202,21 +232,57 @@ class FieldEditScreen(ModalScreen[str | None]):
             (index for index, value in enumerate(self._field.enum_values) if value == self._field.value),
             None,
         )
-        if current is not None:
-            options.highlighted = current
         options.focus()
+        # Taking focus highlights the first row on its own, and enter on an
+        # untouched list would then write whatever happens to be first — a
+        # choice the operator never made. So the highlight is assigned after
+        # focus and only where it is TRUE, which clears it when the field
+        # holds no token of this list. Masking is what makes that
+        # destructive rather than merely wrong: the lookup above compares
+        # against the mask placeholder, so it can never match, and the write
+        # would replace a value the dialog was not allowed to show. Nothing
+        # is lost in reach — the first arrow key highlights the first row,
+        # exactly where focus used to leave it.
+        options.highlighted = current
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-edit-save":
             if self._field.enum_values:
                 self._dismiss_highlighted_option()
             else:
-                self.dismiss(self.query_one("#edit-input", Input).value)
+                self._submit_typed(self.query_one("#edit-input", Input).value)
+        elif event.button.id == "btn-edit-clear":
+            # The one gesture that means "delete this". It dismisses the
+            # empty string rather than a marker of its own so the write
+            # door keeps a single reading of blank: blank is already a
+            # clear everywhere else, and this is how a field whose box
+            # cannot be emptied meaningfully still reaches it.
+            self.dismiss("")
         else:
             self.dismiss(None)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        self.dismiss(event.value)
+        self._submit_typed(event.value)
+
+    def _submit_typed(self, value: str) -> None:
+        """Dismiss with what the operator typed, or with nothing to do.
+
+        An empty box on a masked field is not a clear. The operator was
+        shown a mask instead of the value, so an empty box is what "I
+        typed nothing" looks like and saving on it reads as leaving the
+        field alone — they were never offered the chance to delete
+        something they could see. Writing the blank through would destroy
+        a value they cannot even watch go, so it dismisses as a
+        no-change, exactly as cancelling does, and deletion is left to
+        the button that says so.
+
+        Every other field keeps the old reading, because there an empty
+        box is one the operator emptied.
+        """
+        if self._field.masked and not value.strip():
+            self.dismiss(None)
+            return
+        self.dismiss(value)
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         self._dismiss_highlighted_option()
@@ -270,6 +336,7 @@ class ProfileManagerApp(App[None]):
     }
     #edit-label { text-style: bold; }
     #edit-path { color: $text-muted; margin: 0 0 1 0; }
+    #edit-masked-note { color: $text-muted; }
     #edit-dialog Input { margin: 0 0 1 0; }
     #edit-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
     #edit-actions Button { margin: 0 0 0 2; }
