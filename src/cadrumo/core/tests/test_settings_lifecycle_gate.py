@@ -1,179 +1,112 @@
-"""Structural lifecycle gate for every generated-output settings directory.
+"""Growth lifecycle and location provenance for every path-valued setting.
 
-Every ``_dir`` / ``_path`` / ``_root`` Path-typed :class:`~core.config.Settings`
-field must map to exactly one declared growth-lifecycle class:
+This gate used to carry the classification itself: five hand-maintained
+frozensets naming which settings directory rotated, expired, was pruned, grew
+by design, or was not an application output at all. A curated list inside a
+test module is a poor home for a domain fact -- it drifts from the code it
+describes, and it was invisible to anything but this file.
 
-- ``ROTATION`` - a size-capped rotating handler bounds the file(s).
-- ``TTL`` - entries expire after a time-to-live window.
-- ``RETENTION`` - a prune/eviction removes entries past an age or count bound.
-- ``UNBOUNDED_BY_DESIGN`` - durable state / evidence / filing artefacts (and
-  bounded single-file caches) deliberately retained, with a stated reason.
-- ``EXEMPT_INPUT`` - not an app-generated output: read-only bundled inputs,
-  an operator-supplied credential path, or the storage-root container itself.
+The classification now lives on the taxonomy, where each member declares its
+own :class:`~core._storage_taxonomy.StorageLifecycle`, and each path setting
+outside the taxonomy declares an
+:class:`~core._storage_taxonomy.ExternalPathRole` saying why. Two of the old
+assertions therefore hold **by construction** rather than by checking: a path
+field cannot be unclassified when classification is a required field on its
+declaration, and it cannot be double-classified when it has exactly one
+declaration. Re-asserting either here would be asserting that the taxonomy
+equals itself. Totality over the settings model -- that every path field *has*
+a declaration to read -- is a real property and is owned by
+:mod:`~core.tests.test_storage_binding_gate`.
 
-The gate fails when a field is unclassified, double-classified, or - for a
-non-exempt output directory - defaults outside the state-root derivation
-without being an opt-in (``None``-default) override, so a new dir field with a
-``PROJECT_ROOT``-anchored default or no declared lifecycle can no longer land
-silently.
+What is left is what the taxonomy cannot tell you, and both remain:
+
+- **Derivation.** A non-exempt output directory must derive its default from
+  the storage root, or be an opt-in override with no default at all. The
+  eliminated defect is a concrete ``PROJECT_ROOT``-anchored default, which
+  resolves inside site-packages on an installed run and puts operator data
+  somewhere no override can reach.
+- **Provenance by literal.** A shipped module must not build a path out of the
+  taxonomy's own vocabulary. Five CLI options once defaulted to
+  ``Path("var/cadrumo/filed-declarations")`` and similar; because those
+  defaults were not settings, no storage-root override could reach them, and
+  regulated filing evidence landed outside the taxonomy *and* outside operator
+  control. Its sibling in :mod:`~tests.test_storage_provenance_gate` catches
+  the paths built by joining onto the root, which no literal scan can see.
+
+Discovery still enumerates ``Path``-typed **settings fields**, which is the
+strictly larger set -- there are more path settings than taxonomy members,
+because escapes are settings too. Folding discovery onto taxonomy members
+would leave every escape uncovered while the suite stayed green.
 """
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
-from types import UnionType
-from typing import Union, get_args, get_origin
 
 import pytest
 
-from ..config import _STATE_ROOT_DERIVED_DIRS, Settings
+from .._storage_taxonomy import (
+    EXTERNAL_PATH_SETTINGS_FIELDS,
+    ROOT_DERIVED_STORAGE_FIELDS,
+    STORAGE_ROOT_SETTINGS_FIELD,
+    STORAGE_TAXONOMY,
+)
+from ..config import Settings
+from ._settings_path_fields import path_typed_settings_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_PATH_FIELD_SUFFIXES = ("_dir", "_path", "_root")
 
-# Logs rotate via a size-capped RotatingFileHandler.
-_ROTATION = frozenset({"cadrumo_log_dir"})
+def _exempt_fields() -> frozenset[str]:
+    """Path settings that are not application-chosen generated output.
 
-# Time-to-live expiry of cached entries.
-_TTL = frozenset({"cadrumo_status_cache_dir"})
-
-# An age/count prune or eviction bounds the store.
-_RETENTION = frozenset(
-    {
-        "cadrumo_llm_cache_dir",
-        "cadrumo_llm_usage_dir",
-        "cadrumo_llm_run_telemetry_dir",
-        "cadrumo_mcp_telemetry_dir",  # prune_telemetry drops files past an age or count bound
-        "cadrumo_runs_dir",
-        "cadrumo_registry_disk_cache_dir",  # fingerprint-count eviction
-        "cadrumo_wallet_diagnostic_dump_dir",
-    }
-)
-
-# Durable state / evidence / filing artefacts retained by design, plus bounded
-# single-file caches. Each is deliberately not pruned:
-#   - token/secret/blob/audit: the encrypted-store substrate; audit and
-#     evidence must not be silently pruned (secure-storage governs them).
-#   - submissions/drafts/justificantes/filing-history/workflow-runs/inbox(+pdf):
-#     filing-grade artefacts retained for audit and re-derivation.
-#   - financial txs/invoices/attachments: durable financial catalogues.
-#   - storage backups: operator-managed DB backups.
-#   - registry parity store: registry parity-tape audit artefacts.
-#   - usage-ratios.json: a single operator-config FILE (one entry per category).
-#   - corpus-text cache: a single content-fingerprinted cache FILE, bounded by
-#     the finite bundled-corpus source set; stale keys are inert (they embed
-#     source size+mtime).
-#   - validation-verdict cache: one tiny fingerprint-keyed verdict FILE per
-#     registry root; a fingerprint change reuses the same filename (deleted and
-#     rewritten on mismatch), so the store never grows with tree edits.
-_UNBOUNDED_BY_DESIGN = frozenset(
-    {
-        "cadrumo_token_dir",
-        "cadrumo_secret_store_dir",
-        "cadrumo_blob_store_dir",
-        "cadrumo_audit_dir",
-        "cadrumo_storage_backup_dir",
-        "cadrumo_submissions_dir",
-        "cadrumo_drafts_dir",
-        "cadrumo_justificantes_dir",
-        "cadrumo_filing_history_dir",
-        "cadrumo_workflow_runs_dir",
-        "cadrumo_inbox_dir",
-        "cadrumo_inbox_pdf_dir",
-        "cadrumo_financial_txs_dir",
-        "cadrumo_invoices_dir",
-        "cadrumo_attachments_dir",
-        "cadrumo_usage_ratios_path",
-        "cadrumo_registry_parity_store_dir",
-        "cadrumo_corpus_search_cache_dir",  # one index rebuilt from a static bundled corpus
-        "cadrumo_corpus_text_cache_dir",
-        "cadrumo_validation_verdict_cache_dir",
-        # Live AEAT read-evidence. Unbounded by design for the same reason as
-        # the filing artefacts above: this is evidence of what the authority
-        # showed at a point in time, and a human files outside the application
-        # on the strength of it. Evicting it on a timer would silently destroy
-        # the record a later filing is defended with.
-        "cadrumo_filed_declarations_dir",
-        "cadrumo_iva_compensation_history_dir",
-        "cadrumo_iva_read_evidence_dir",
-    }
-)
-
-# Not app-generated output: bundled read-only inputs, an operator credential
-# path, and the storage-root container itself (its categorised children carry
-# the lifecycles above).
-_EXEMPT_INPUT = frozenset(
-    {
-        "aeat_manuals_root",
-        "aeat_normatives_root",
-        "cadrumo_iva_catalogue_root",
-        "cadrumo_certificate_path",
-        "cadrumo_local_storage_root",
-    }
-)
-
-_ALL_CLASSES = (_ROTATION, _TTL, _RETENTION, _UNBOUNDED_BY_DESIGN, _EXEMPT_INPUT)
+    The declared escapes -- bundled read-only corpora, an operator-supplied
+    credential, an external executable, an operator-directed dump -- plus the
+    storage root itself, whose categorised children carry the lifecycles.
+    """
+    return frozenset(EXTERNAL_PATH_SETTINGS_FIELDS) | {STORAGE_ROOT_SETTINGS_FIELD}
 
 
-def _path_typed_fields() -> set[str]:
-    """Enumerate every ``_dir``/``_path``/``_root`` Path-typed Settings field."""
-    fields: set[str] = set()
-    for name, field_info in Settings.model_fields.items():
-        if not name.endswith(_PATH_FIELD_SUFFIXES):
-            continue
-        annotation = field_info.annotation
-        origin = get_origin(annotation)
-        members: tuple[object, ...] = get_args(annotation) if origin in (Union, UnionType) else (annotation,)
-        if any(member is Path for member in members):
-            fields.add(name)
-    return fields
+def test_every_non_exempt_output_dir_derives_from_the_state_root() -> None:
+    """Derived from the root, or an opt-in override -- never a concrete default.
 
+    A concrete ``PROJECT_ROOT``-anchored default resolves inside site-packages
+    on an installed run, so durable state lands where no operator override can
+    reach it and no uninstall will find it.
+    """
+    discovered = path_typed_settings_fields(Settings)
+    assert discovered, "path-field discovery found nothing, so this asserts nothing"
 
-def test_every_path_field_maps_to_exactly_one_lifecycle_class() -> None:
-    path_fields = _path_typed_fields()
-    classified = set().union(*_ALL_CLASSES)
-
-    unclassified = sorted(path_fields - classified)
-    assert not unclassified, (
-        "Path-typed Settings fields with no declared lifecycle class: "
-        f"{unclassified}. Add each to exactly one class in "
-        "test_settings_lifecycle_gate.py (rotation / TTL / retention / "
-        "unbounded-by-design with a stated reason) or EXEMPT_INPUT."
-    )
-    stale = sorted(classified - path_fields)
-    assert not stale, f"Lifecycle classes name fields that no longer exist: {stale}"
-
-
-def test_lifecycle_classes_are_pairwise_disjoint() -> None:
-    for i, left in enumerate(_ALL_CLASSES):
-        for right in _ALL_CLASSES[i + 1 :]:
-            overlap = sorted(left & right)
-            assert not overlap, f"fields classified in two lifecycle classes at once: {overlap}"
-
-
-def test_non_exempt_output_dirs_derive_from_the_state_root() -> None:
-    """A non-exempt output directory must derive from ``cadrumo_local_storage_root``
-    or be an opt-in (``None``-default) override -- never a ``PROJECT_ROOT``-anchored
-    effective default that resolves inside site-packages on an installed run."""
-    for name in sorted(_path_typed_fields() - _EXEMPT_INPUT):
+    offenders: list[str] = []
+    for name in sorted(discovered - _exempt_fields()):
         field_info = Settings.model_fields[name]
-        derived = name in _STATE_ROOT_DERIVED_DIRS
-        opt_in_override = field_info.default is None
-        assert derived or opt_in_override, (
-            f"{name}: a non-exempt output directory must either derive from the "
-            "state root (be listed in _STATE_ROOT_DERIVED_DIRS) or be an opt-in "
-            "override with a None default; a concrete PROJECT_ROOT-anchored "
-            "default is the eliminated defect."
-        )
+        if name in ROOT_DERIVED_STORAGE_FIELDS or field_info.default is None:
+            continue
+        offenders.append(f"{name} (default {field_info.default!r})")
+    assert not offenders, (
+        f"non-exempt output setting(s) with a concrete default that does not derive from the "
+        f"storage root: {offenders}. Declare the field's taxonomy member so settings validation "
+        "computes its default from the root, or give it a None default and make it an opt-in "
+        "override -- a concrete anchored default is the eliminated defect"
+    )
 
 
-def test_usage_ratios_path_is_classified_as_a_file_output() -> None:
-    """``cadrumo_usage_ratios_path`` is a single JSON FILE (not a directory); it is
-    classified unbounded-by-design and still derives its location from the root."""
-    assert "cadrumo_usage_ratios_path" in _UNBOUNDED_BY_DESIGN
-    assert "cadrumo_usage_ratios_path" in _STATE_ROOT_DERIVED_DIRS
+def test_the_exempt_set_is_exactly_the_declared_escapes_and_the_root() -> None:
+    """Exemption is a declaration, never a frozenset a test module curates.
+
+    The five hand-maintained classes this gate used to carry are gone. The
+    assertion that replaced them is that exemption has one source: a field is
+    exempt because it declared an ``ExternalPathRole`` with a reason, or
+    because it is the anchor. A field cannot become exempt by being added to a
+    list here.
+    """
+    exempt = _exempt_fields()
+    assert STORAGE_ROOT_SETTINGS_FIELD in exempt
+    assert exempt - {STORAGE_ROOT_SETTINGS_FIELD} == frozenset(EXTERNAL_PATH_SETTINGS_FIELDS)
+    assert not exempt & set(field for field in ROOT_DERIVED_STORAGE_FIELDS), (
+        "a field cannot be both exempt from generated-output lifecycle and derived as one"
+    )
 
 
 # --------------------------------------------------------------------- #
@@ -181,19 +114,22 @@ def test_usage_ratios_path_is_classified_as_a_file_output() -> None:
 # --------------------------------------------------------------------- #
 
 _TAXONOMY_VOCABULARY = frozenset(
-    # Every leaf the declared taxonomy owns, plus the retired `var` prefix and
-    # the product's own directory name. A path literal built from this
-    # vocabulary is naming an operator-data location, which only Settings may do.
-    {segment for subpath in _STATE_ROOT_DERIVED_DIRS.values() for segment in subpath.split("/")}
-    | {"var", "cadrumo"},
+    # Every segment the declared taxonomy owns, plus the retired `var` prefix
+    # and the product's own directory name. A path literal built from this
+    # vocabulary is naming an operator-data location, which only the taxonomy
+    # may do. Read from the declaration rather than a parallel table, so a new
+    # member's leaf name is protected the moment it is declared.
+    {segment for location in STORAGE_TAXONOMY.values() for segment in location.subpath.split("/")} | {"var", "cadrumo"},
 )
 
 _PRODUCTION_ROOT = Path(__file__).resolve().parents[2]
 
 _LITERAL_OWNERS = frozenset(
     {
-        # The taxonomy itself and the fields that declare it: these MUST carry
-        # the literals, because they are what every other module resolves through.
+        # The taxonomy itself and the settings modules that declare its fields:
+        # these MUST carry the literals, because they are what every other
+        # module resolves through.
+        "core/_storage_taxonomy.py",
         "core/config.py",
         "core/_config_llm_fields.py",
         "core/_config_integration_fields.py",
@@ -213,21 +149,23 @@ def _production_modules() -> list[Path]:
     return modules
 
 
+def test_the_vocabulary_covers_the_declared_leaf_names() -> None:
+    """The vocabulary is derived, so it must actually contain what it protects.
+
+    Without this the scan below could silently degrade to an empty vocabulary
+    and pass on every module while protecting nothing.
+    """
+    assert {"filed-declarations", "justificantes", "keystore", "buckets"} <= _TAXONOMY_VOCABULARY
+
+
 def test_no_production_module_names_an_operator_data_location_by_literal() -> None:
-    """Operator-data paths resolve through Settings, never a hardcoded literal.
+    """Operator-data paths resolve through the taxonomy, never a hardcoded literal.
 
-    The sibling gate above only sees fields that ARE settings, so it is blind
-    to the failure this one exists for: a path that was never enrolled at all.
-    Five CLI options once defaulted to ``Path("var/cadrumo/filed-declarations")``
-    and similar. Because those defaults were not settings, no
-    ``CADRUMO_LOCAL_STORAGE_ROOT`` override could reach them — regulated filing
-    evidence landed outside the declared taxonomy AND outside operator control,
-    and the existing gate could not have noticed.
-
-    The rule: a multi-segment path literal in shipped code must not be built
-    from the taxonomy's own vocabulary. Naming ``filed-declarations`` or ``var``
-    in a literal means a module is deciding where operator data lives, which is
-    the taxonomy's job.
+    The sibling assertions above only see fields that ARE settings, so they are
+    blind to the failure this one exists for: a path that was never enrolled at
+    all. Naming ``filed-declarations`` or ``var`` in a multi-segment literal
+    means a module is deciding where operator data lives, which is the
+    taxonomy's job.
     """
     offenders: list[str] = []
     pattern = re.compile(r'Path\(\s*"([^"]*/[^"]*)"')
@@ -238,7 +176,7 @@ def test_no_production_module_names_an_operator_data_location_by_literal() -> No
             if segments & _TAXONOMY_VOCABULARY:
                 offenders.append(f"{rel}: Path({literal!r})")
     assert not offenders, (
-        "shipped modules naming an operator-data location by literal instead of "
-        "resolving it from Settings (enrol the path in _STATE_ROOT_DERIVED_DIRS "
-        f"and read it from Settings): {offenders}"
+        "shipped modules naming an operator-data location by literal instead of resolving it "
+        "through the storage taxonomy (declare a StorageCategory and resolve it with "
+        f"storage_path): {offenders}"
     )
