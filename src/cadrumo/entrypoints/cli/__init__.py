@@ -1315,6 +1315,16 @@ def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
 
     keys = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_DATABASE_URL")
     saved = {key: os.environ.get(key) for key in keys}
+    # Declared exception to the "every tempfile call passes dir=" storage
+    # provenance discipline: there is no "destination" to anchor on here.
+    # This scope exists so a --help/--version invocation runs against a
+    # throwaway root instead of the operator's real one, which may be
+    # retired or broken -- isolation FROM a root, not production NEAR one.
+    # Anchoring dir= on anything derived from the real root (even a pure,
+    # no-I/O computation like the platform user-data directory) reintroduces
+    # the dependency this scope exists to sever, and could break --help on
+    # exactly the broken-root case it is meant to survive. The OS-default
+    # temp root is the correct home, not a gap.
     with TemporaryDirectory(prefix="cadrumo-cli-metadata-") as temporary_root:
         root = Path(temporary_root)
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
