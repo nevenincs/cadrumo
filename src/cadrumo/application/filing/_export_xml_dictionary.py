@@ -23,9 +23,10 @@ See Also:
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from xml.etree import ElementTree
 
@@ -34,7 +35,6 @@ from defusedxml import ElementTree as DefusedElementTree
 from ...core import Modelo
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
-from ...core.money import round_to_cents
 from ...domain.calculations.registry import (
     CasillaId,
     ExportLayoutDefinition,
@@ -48,6 +48,21 @@ from .runtime import RegistrySchemaAccessor
 
 _XML_SCHEMA_INSTANCE_NS = "http://www.w3.org/2001/XMLSchema-instance"
 ElementTree.register_namespace("xsi", _XML_SCHEMA_INSTANCE_NS)
+
+# The one dictionary type whose boolean states are spelled out. Every other
+# boolean-bearing row is ``tipo_logico``, whose pattern is ``([0-1]){1}``.
+_SINO_DICTIONARY_TYPE = "S_N"
+
+# The dictionary's numeric type codes are self-describing: ``P<width><scale>``
+# and ``N<width><scale>`` name the field's integer width and its fractional-digit
+# count, so the trailing digit is the scale to render at. Confirmed against every
+# code the Modelo 100 dictionary uses across all six revisions by reading the
+# ``fractionDigits`` facet of the XSD type each code lands on: ``P010``/``P020``/
+# ``P030``/``P040`` resolve to ``xs:integer`` types carrying no fractional digits,
+# while ``P012``/``P032``/``P072``/``P102``/``N102`` resolve to ``xs:decimal``
+# types declaring ``fractionDigits="2"``. Reading the scale off the code keeps a
+# future code correct without this module being edited.
+_NUMERIC_DICTIONARY_TYPE = re.compile(r"^[NP]\d{2}(?P<scale>\d)$")
 
 
 def render_xml_dictionary_layout(
@@ -232,14 +247,35 @@ def _xml_dictionary_header_value(
 
 
 def _format_xml_dictionary_value(data_type: str, value: object) -> str:
+    """Render one value in the form the dictionary row's declared type accepts.
+
+    The row's ``data_type`` decides the rendering, not the Python type of the
+    value. Deciding from the value alone cannot distinguish rows that happen to
+    carry the same Python type but are declared differently by AEAT: every
+    boolean rendered as ``"S"``/``"N"`` regardless of whether the row was
+    ``tipo_logico`` (which accepts only ``0``/``1``) or ``tipo_SINO_Exclusivo``
+    (only ``SI``/``NO``), and every numeric row was rendered with two decimals
+    even where the row is an ``xs:integer``.
+
+    Args:
+        data_type: The dictionary row's declared type code.
+        value: The scalar to render.
+
+    Returns:
+        The rendered text for the XML element or attribute.
+    """
+    normalized_type = data_type.upper()
     if isinstance(value, bool):
-        return "S" if value else "N"
+        if normalized_type == _SINO_DICTIONARY_TYPE:
+            return "SI" if value else "NO"
+        return "1" if value else "0"
     if isinstance(value, date):
         return f"{value.day}/{value.month}/{value.year}"
-    normalized_type = data_type.upper()
-    if normalized_type.startswith(("N", "P")):
+    numeric = _NUMERIC_DICTIONARY_TYPE.match(normalized_type)
+    if numeric is not None:
         amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
-        return f"{round_to_cents(amount):.2f}"
+        scale = int(numeric["scale"])
+        return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
     return str(value).strip()
 
 

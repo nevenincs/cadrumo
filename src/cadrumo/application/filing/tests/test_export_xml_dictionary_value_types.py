@@ -1,0 +1,162 @@
+"""Rendered XML-dictionary values satisfy the type AEAT's XSD declares for them.
+
+The dictionary row's declared type, not the Python type of the value, decides how
+a value is rendered. Deciding from the value alone cannot tell two rows apart that
+carry the same Python type but are declared differently: a boolean row is
+``tipo_logico`` (``([0-1]){1}``) in most of the tree but ``tipo_SINO_Exclusivo``
+(``SI``/``NO``) in a handful of places, and a numeric row is an ``xs:integer`` for
+some type codes and an ``xs:decimal`` carrying ``fractionDigits="2"`` for others.
+
+Expected tokens are never written by hand here. Each assertion reads the facets the
+bundled official AEAT XSD declares for that element or attribute and checks the
+rendered value against them, so the oracle is AEAT's schema rather than a
+restatement of the code under test.
+"""
+
+from __future__ import annotations
+
+import re
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+from defusedxml import ElementTree as DefusedElementTree
+
+from ....core.resources import bundled_path
+from .._export_xml_dictionary import _format_xml_dictionary_value
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
+_MODELO_100_2024_XSD = "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd"
+
+
+def _xsd_root() -> object:
+    xsd = bundled_path(
+        "corpus",
+        "aeat_official",
+        "disenos_registro",
+        "modelo_100",
+        "files",
+        _MODELO_100_2024_XSD,
+    )
+    root = DefusedElementTree.parse(Path(xsd)).getroot()
+    assert root is not None
+    return root
+
+
+def _simple_type(type_name: str) -> object:
+    for simple_type in _xsd_root().iter(f"{_XSD_NS}simpleType"):
+        if simple_type.attrib.get("name") == type_name:
+            return simple_type
+    pytest.fail(f"bundled Modelo 100 XSD declares no simpleType named {type_name!r}")
+
+
+def _accepts(type_name: str, value: str) -> bool:
+    """Whether AEAT's XSD type ``type_name`` accepts the rendered ``value``.
+
+    Reads the enumeration, pattern, and base facets the schema declares. The
+    numeric bases are checked for representability rather than range, which is
+    what the rendering decision turns on.
+    """
+    simple_type = _simple_type(type_name)
+    enumerations = {
+        node.attrib["value"] for node in simple_type.iter(f"{_XSD_NS}enumeration") if "value" in node.attrib
+    }
+    if enumerations:
+        return value in enumerations
+    patterns = [node.attrib["value"] for node in simple_type.iter(f"{_XSD_NS}pattern") if "value" in node.attrib]
+    if patterns:
+        return any(re.fullmatch(pattern, value) is not None for pattern in patterns)
+    bases = {node.attrib.get("base") for node in simple_type.iter(f"{_XSD_NS}restriction")}
+    if "xs:integer" in bases:
+        return re.fullmatch(r"-?\d+", value) is not None
+    if "xs:decimal" in bases:
+        return re.fullmatch(r"-?\d+(\.\d+)?", value) is not None
+    pytest.fail(f"bundled XSD type {type_name!r} declares no facet this oracle understands")
+    return False
+
+
+def test_the_xsd_oracle_rejects_what_it_should_accept_nothing_of() -> None:
+    """The oracle discriminates, so a passing assertion below means something.
+
+    Without this, an oracle that accepted everything would make every other test
+    in this module vacuous.
+    """
+    assert _accepts("tipo_logico", "1")
+    assert not _accepts("tipo_logico", "S")
+    assert _accepts("tipo_SINO_Exclusivo", "SI")
+    assert not _accepts("tipo_SINO_Exclusivo", "S")
+    assert _accepts("tipo_Integer1a366", "365")
+    assert not _accepts("tipo_Integer1a366", "365.00")
+    assert _accepts("tipo_ImpPositivo", "12000.25")
+
+
+@pytest.mark.parametrize(
+    ("dictionary_type", "xsd_type"),
+    [
+        ("LGC", "tipo_logico"),
+        ("S_N", "tipo_SINO_Exclusivo"),
+    ],
+)
+def test_boolean_rows_render_the_token_their_declared_type_accepts(
+    dictionary_type: str,
+    xsd_type: str,
+) -> None:
+    for value in (True, False):
+        rendered = _format_xml_dictionary_value(dictionary_type, value)
+        assert _accepts(xsd_type, rendered), (
+            f"{dictionary_type} row rendered {rendered!r} for {value!r}, which {xsd_type} rejects"
+        )
+    assert _format_xml_dictionary_value("LGC", True) != _format_xml_dictionary_value("LGC", False)
+    assert _format_xml_dictionary_value("S_N", True) != _format_xml_dictionary_value("S_N", False)
+
+
+@pytest.mark.parametrize(
+    ("dictionary_type", "xsd_type"),
+    [
+        ("P010", "tipo_Integer1a9"),
+        ("P020", "tipo_Integer020"),
+        ("P030", "tipo_Integer1a366"),
+        ("P040", "tipo_Integer1a9999"),
+    ],
+)
+def test_integer_rows_render_without_fractional_digits(dictionary_type: str, xsd_type: str) -> None:
+    rendered = _format_xml_dictionary_value(dictionary_type, Decimal("3"))
+
+    assert _accepts(xsd_type, rendered), f"{dictionary_type} rendered {rendered!r}, which {xsd_type} rejects"
+    assert "." not in rendered
+
+
+@pytest.mark.parametrize(
+    ("dictionary_type", "xsd_type"),
+    [
+        ("P012", "tipo_Decimal012"),
+        ("P032", "tipo_Porcentaje"),
+        ("P072", "tipo_Decimal072"),
+        ("P102", "tipo_ImpPositivo"),
+        ("N102", "tipo_ImpNegativo"),
+    ],
+)
+def test_two_decimal_rows_keep_their_two_decimals(dictionary_type: str, xsd_type: str) -> None:
+    rendered = _format_xml_dictionary_value(dictionary_type, Decimal("1.5"))
+
+    assert rendered == "1.50"
+    assert _accepts(xsd_type, rendered)
+
+
+def test_the_scale_is_read_off_the_type_code_rather_than_enumerated() -> None:
+    """A type code this module never names still renders at its declared scale.
+
+    The dictionary's numeric codes carry their own fractional-digit count in the
+    trailing digit, so a code AEAT adds later is rendered correctly without the
+    renderer being edited. Asserting that here keeps the property from being
+    quietly replaced by a lookup table over today's codes.
+    """
+    assert _format_xml_dictionary_value("P083", Decimal("1.2394")) == "1.239"
+    assert _format_xml_dictionary_value("P060", Decimal("1.6")) == "2"
+
+
+def test_a_non_numeric_row_is_left_alone() -> None:
+    assert _format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
+    assert _format_xml_dictionary_value("TIT", Decimal("2")) == "2"
