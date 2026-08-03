@@ -78,7 +78,7 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
         description="Subprocess timeout (seconds) for the LibreOffice binary XLS conversion fall-back",
     )
     cadrumo_registry_parity_store_dir: Path = Field(
-        default=Path("var") / "audit" / "registry" / "parity",
+        default=Path("audit") / "registry" / "parity",
         description="Directory where registry parity tape artifacts are archived by default",
     )
     cadrumo_registry_disk_cache_dir: Path | None = Field(
@@ -117,19 +117,19 @@ class CadrumoIntegrationSettings(CadrumoRuntimeSettings):
         description="Preferred encoding attempted first when decoding financial CSV sources",
     )
     cadrumo_financial_txs_dir: Path = Field(
-        default=Path("var") / "financial" / "transactions",
+        default=Path("financial") / "transactions",
         description="Directory where the transaction catalogue JSON file is stored",
     )
     cadrumo_invoices_dir: Path = Field(
-        default=Path("var") / "financial" / "invoices",
+        default=Path("financial") / "invoices",
         description="Directory where the invoice catalogue JSON file is stored",
     )
     cadrumo_attachments_dir: Path = Field(
-        default=Path("var") / "financial" / "attachments",
+        default=Path("financial") / "attachments",
         description="Root directory for the attachment byte and manifest store",
     )
     cadrumo_usage_ratios_path: Path = Field(
-        default=Path("var") / "financial" / "usage-ratios.json",
+        default=Path("financial") / "usage-ratios.json",
         description="User-configured per-category usage ratio overrides",
     )
 

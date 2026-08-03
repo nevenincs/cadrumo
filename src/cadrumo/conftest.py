@@ -15,32 +15,54 @@ across all child conftests by pytest).
 from __future__ import annotations
 
 import ast
+import os
 import sys
+import tempfile
 from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
 
-# Force wizard-catalogue registration at conftest import time so every
-# pytest worker process has SETUP_FLOW / WIZARD_FLOWS registered before
-# any test runs. Otherwise a cli_runner.invoke path that opens a profile
-# session (short-circuiting the CLI bootstrap's catalogue registration at
-# entrypoints/cli/__init__.py:281) and doesn't transitively import the
-# wizard package hits the "Wizard catalogue has not been registered"
-# guard.
-from .core.external_constants import UTF_8_ENCODING
-from .tests import apply_collection_storage_root, package_python_files, prime_ast_cache
-from .tests.env_scope import release_settings_storage_directories
-
 # Child conftests import command-line interface (CLI) and internationalization
 # (`i18n`) modules while pytest is collecting tests. Those imports initialise
 # logging, which resolves Settings before function-scoped fixtures can establish
 # their own temporary storage roots. Set this Cadrumo root first so tests do not
-# read a user's legacy product-state directory during collection. `overwrite=True`
-# because this conftest is the authoritative source for its own process's root,
-# regardless of what the repo-root conftest's permissive `setdefault` already set.
-_COLLECTION_STORAGE_ROOT = apply_collection_storage_root(overwrite=True)
+# read a user's legacy product-state directory during collection. Overwritten
+# (not `setdefault`) because this conftest is the authoritative source for its
+# own process's root, regardless of what the repo-root conftest's permissive
+# `setdefault` already set.
+#
+# Pure stdlib, deliberately NOT `apply_collection_storage_root(overwrite=True)`
+# from `.tests`: importing ANY name from `cadrumo.tests` -- or from `.core`,
+# as this module's own imports below now do only AFTER this line -- executes
+# that package's `__init__.py` body first (Python always initialises a parent
+# package before a submodule access completes), and both packages' import
+# surfaces have, in practice, drifted to reach production modules carrying a
+# module-level `get_logger(__name__)` call. Any such call fires
+# `configure_logging()`, which binds its `RotatingFileHandler` exactly once
+# per process -- if that binding happens before this line runs, it binds to
+# the operator's real log rather than this process's isolated root, and
+# nothing later in the process can re-bind it. Spelling the derivation out
+# here (mirroring `_collection_storage_root.collection_storage_root`'s own
+# `<gettempdir()>/cadrumo-pytest-<pid>`) removes the dependency on either
+# package staying import-light for this one safety-critical line.
+_COLLECTION_STORAGE_ROOT = Path(tempfile.gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
+os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
 """Process-private local-storage root set before child conftests import Cadrumo."""
+
+# Safe to import cadrumo.* below this point: the storage-root env var any of
+# these modules' own import surfaces might trigger a premature
+# configure_logging() against is already set by the pure-stdlib lines above.
+from .core.external_constants import UTF_8_ENCODING  # noqa: E402
+from .tests import package_python_files, prime_ast_cache, register_collection_storage_root_cleanup  # noqa: E402
+from .tests.env_scope import release_settings_storage_directories  # noqa: E402
+
+# The other half of what apply_collection_storage_root(overwrite=True) used
+# to do in one call: register the atexit cleanup and stale-sibling sweep for
+# the root set above. Splitting the env-var write from this registration is
+# exactly the point -- the write must happen before any cadrumo import, the
+# registration is only safe (and only needed) after.
+register_collection_storage_root_cleanup(_COLLECTION_STORAGE_ROOT)
 
 _SRC_CADRUMO_ROOT: Path = Path(__file__).resolve().parent
 """Root of the ``src/cadrumo/`` source tree (the directory hosting this conftest)."""

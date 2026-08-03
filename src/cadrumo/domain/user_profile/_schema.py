@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field, StringConstraints, field_validator, model
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.classification import SensitivityClass
 from ...core.decimal import coerce_decimal_strict
+from ...core.parsing import parse_bool
 from ._errors import UserProfileNotFoundError, UserProfileValidationError
 
 _SchemaId = Annotated[
@@ -292,6 +293,51 @@ def numeric_value_refusal(field: ProfileFieldDefinition, value: object) -> str |
     if field.maximum is not None and value > field.maximum:
         return f"{field.key} must be a number{accepted}; got {value}"
     return None
+
+
+def boolean_value_refusal(field: ProfileFieldDefinition, value: object) -> str | None:
+    """Return why ``value`` fails ``field``'s boolean declaration, or ``None``.
+
+    The single authority for "is this a legal value for this boolean field",
+    the counterpart to :func:`numeric_value_refusal`. It exists because the
+    declaration was inert: a field declared ``boolean`` accepted ``banana``,
+    ``placeholder`` and ``''`` on write and stored them unchallenged, while
+    every reader then had to decide for itself what an unreadable value
+    meant. Readers that resolve a stored boolean default an unreadable one
+    to ``False`` -- safe only if a value this door admitted can always be
+    read, which is what this function makes true.
+
+    Readability, not spelling, is the test. A taxpayer answering ``sí`` is
+    saying yes, and refusing that while accepting ``true`` would be a
+    vocabulary rule dressed up as a type rule. The judgement therefore comes
+    from :func:`~cadrumo.core.parsing.parse_bool`, the one boolean vocabulary
+    the rest of the codebase already reads answers with, rather than a set
+    spelled out here that could drift from it.
+
+    A real :class:`bool` is admissible by construction: it needs no parsing
+    and carries no ambiguity.
+
+    Absence is not this rule's business. A ``None`` value is a cleared or
+    unanswered field, which the required-field check judges. An empty string
+    is NOT absence -- it is an answer that says nothing -- and is refused, as
+    the enum and date declarations already refuse it.
+
+    Args:
+        field: The declaration the value must satisfy.
+        value: The value carried by the fact, after the fact carrier has
+            restored its type.
+
+    Returns:
+        An instructive message naming the field and what it accepts, or
+        ``None`` when the value is admissible or the field is not boolean.
+    """
+    if field.type is not ProfileFieldType.BOOLEAN or value is None:
+        return None
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, str) and parse_bool(value) is not None:
+        return None
+    return f"{field.key} must be a yes/no answer (true/false, sí/no, 1/0); got {value!r}"
 
 
 def _accepted_range_clause(field: ProfileFieldDefinition) -> str:

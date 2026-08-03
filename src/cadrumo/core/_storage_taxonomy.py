@@ -450,6 +450,29 @@ class StorageLocation(BaseModel):
     """
 
     @model_validator(mode="after")
+    def _fixed_override_policy_forbids_a_settings_field(self) -> StorageLocation:
+        """Refuse a FIXED member that also exposes an operator-facing settings field.
+
+        The two claims contradict each other. ``FIXED`` asserts an operator
+        cannot relocate this member -- the guarantee that a keystore cannot be
+        moved out from under the bucket it unlocks. A ``settings_field`` is
+        precisely the field an operator overrides a location through. Today's
+        declarations happen to keep every ``FIXED`` member's field ``None``,
+        but "happens to" is not a guard: nothing before this validator stopped
+        a future ``FIXED`` member from also naming a ``settings_field``, which
+        would let a settings override silently defeat the immovability
+        ``FIXED`` exists to promise. Refusing the combination at declaration
+        time makes it unconstructable instead of merely absent so far.
+        """
+        if self.override_policy is StorageOverridePolicy.FIXED and self.settings_field is not None:
+            raise ValueError(
+                f"storage category {self.category.value!r} declares override_policy=FIXED and "
+                f"settings_field={self.settings_field!r}; a FIXED member must not expose an "
+                "operator-overridable settings field, or its immovability guarantee is not real",
+            )
+        return self
+
+    @model_validator(mode="after")
     def _require_exactly_one_liveness_claim(self) -> StorageLocation:
         """Refuse a member that claims both a consumer and dormancy, or neither."""
         claims = (self.consumer_module, self.dormant_reason)

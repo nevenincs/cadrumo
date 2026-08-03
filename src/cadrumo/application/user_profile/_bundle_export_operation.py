@@ -34,9 +34,10 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import exclusive_file_lock
-from ...core.config import Settings, load_settings
+from ...core.config import Settings
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
 from .._journal_repository import JournalRepositoryBase
 from ._bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
@@ -222,8 +223,7 @@ class ProfileBundleExportJournalRepository(JournalRepositoryBase[ProfileBundleEx
         settings: Settings | None = None,
         storage_root: Path | None = None,
     ) -> None:
-        resolved_settings = settings or load_settings()
-        root = storage_root or resolved_settings.cadrumo_local_storage_root
+        root = effective_storage_root(storage_root, settings=settings)
         super().__init__(
             journal_dirname=PROFILE_EXPORT_JOURNAL_DIRNAME,
             storage_root=root,

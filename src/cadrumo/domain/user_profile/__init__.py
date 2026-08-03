@@ -90,6 +90,7 @@ from ._schema import (
     ProfileSchemaDefinition,
     ProfileSectionDefinition,
     ProfileSnapshotPolicy,
+    boolean_value_refusal,
     numeric_value_refusal,
 )
 from ._values import (
@@ -164,6 +165,7 @@ __all__ = [
     "UserProfileSnapshot",
     "UserProfileStatus",
     "UserProfileValidationError",
+    "boolean_value_refusal",
     "build_user_profile_selector_index",
     "declared_provenance_sources",
     "load_user_profile_schema",

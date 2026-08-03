@@ -25,11 +25,9 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....core import StorageCategory, storage_path
 from .....core.config import override_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....tests.master_key import EphemeralMasterKeyProvider
-from .....tests.storage_scope import storage_overrides
 from .. import (
     CipherEnvelope,
     EncryptedBlobStore,
@@ -565,84 +563,87 @@ class TestSingleFileRotationEntry:
 
 
 class TestDefaultBlobStoreRoots:
-    """`default_blob_store_roots` must walk where the SecretStore writes blobs."""
+    """`default_blob_store_roots` must return ``EncryptedBlobStore.root_dir``'s own contract.
 
-    def test_uses_blob_store_dir_not_secret_store_dir(
+    ``root_dir`` is documented as the directory *containing* the ``blobs/``
+    subtree -- the PARENT of ``blobs/``, not ``blobs/`` itself, because the
+    store appends its own ``blobs`` segment internally. Every test in this
+    class drives that real contract rather than asserting a settings field
+    equals itself: a prior version of this class asserted
+    ``cadrumo_blob_store_dir in roots`` (``cadrumo_blob_store_dir`` is
+    already ``<root>/blobs``, the CHILD), which enshrined the doubled-path
+    bug the fix below closes rather than catching it.
+    """
+
+    def test_returns_the_storage_root_and_a_real_blob_round_trips_through_it(self, tmp_path: Path) -> None:
+        """A blob written at the declared grammar path is found by walking the returned root."""
+        from .. import default_blob_store_roots
+
+        storage_root = tmp_path / "storage"
+        provider = EphemeralMasterKeyProvider()
+        writer = EncryptedBlobStore(root_dir=storage_root, master_key_provider=provider)
+        reference = writer.put(b"real-blob-payload", classification=SensitivityClass.SECRET)
+
+        with override_settings(cadrumo_local_storage_root=storage_root) as settings:
+            roots = default_blob_store_roots(settings)
+
+        assert roots == (storage_root,), f"expected exactly the storage root; got {roots!r}"
+        reader = EncryptedBlobStore(root_dir=roots[0], master_key_provider=provider)
+        assert reader.get(reference) == b"real-blob-payload"
+
+    def test_skips_missing_directories(self, tmp_path: Path) -> None:
+        # Pre-provision installations have no storage root yet — the
+        # helper must omit a non-existent root so the rotation reports a
+        # clean (0, 0, 0) instead of an OS-level error.
+        from .. import default_blob_store_roots
+
+        with override_settings(cadrumo_local_storage_root=tmp_path / "never-provisioned") as settings:
+            roots = default_blob_store_roots(settings)
+        assert roots == ()
+
+    def test_the_child_blobs_directory_would_have_silently_no_opped_rotation_positive_control(
         self,
         tmp_path: Path,
     ) -> None:
-        # The substrate's SecretStore is wired at
-        # ``cadrumo_blob_store_dir`` (see ``get_secret_store``) — NOT at
-        # ``cadrumo_secret_store_dir``. A rotation that walks the wrong
-        # directory silently skips every secret-store DEK and bricks
-        # the secret store on old-key cutover.
+        """Positive control: the pre-fix root makes rotation report a clean no-op on a real, un-rotated blob.
+
+        Master-key rotation exists to re-wrap every blob's DEK before the
+        old key is retired; a blob whose DEK is not re-wrapped becomes
+        unrecoverable the moment the old key is gone. Walking the wrong
+        (child) root finds zero manifests and reports success -- worse than
+        an error, because nothing signals that the real blob was skipped.
+        """
         from .. import default_blob_store_roots
 
-        with override_settings(
-            **storage_overrides(
-                tmp_path,
-                StorageCategory.SECRETS,
-                StorageCategory.BLOBS,
-                StorageCategory.ATTACHMENTS,
-            ),
-        ) as settings:
-            secret_store_dir = storage_path(StorageCategory.SECRETS, settings=settings)
-            blob_store_dir = storage_path(StorageCategory.BLOBS, settings=settings)
-            for directory in (
-                secret_store_dir,
-                blob_store_dir,
-                storage_path(StorageCategory.ATTACHMENTS, settings=settings),
-            ):
-                directory.mkdir(parents=True)
+        storage_root = tmp_path / "storage"
+        old_key = EphemeralMasterKeyProvider()
+        new_key = EphemeralMasterKeyProvider()
+        writer = EncryptedBlobStore(root_dir=storage_root, master_key_provider=old_key)
+        writer.put(b"needs-rotation", classification=SensitivityClass.SECRET)
 
-            roots = default_blob_store_roots(settings)
+        with override_settings(cadrumo_local_storage_root=storage_root) as settings:
+            # The pre-fix contract: what ``cadrumo_blob_store_dir`` resolves
+            # to, already ``<storage_root>/blobs`` -- the CHILD
+            # ``EncryptedBlobStore`` appends its own ``blobs`` segment onto.
+            buggy_roots = (storage_root / "blobs",)
+            buggy_summary = rotate_blob_stores(
+                buggy_roots,
+                old_master_key_provider=old_key,
+                new_master_key_provider=new_key,
+            )
+            assert buggy_summary == RotationSummary(rotated=0, skipped=0, errors=0), (
+                "fixture assumption: the buggy child root must silently find nothing to rotate"
+            )
 
-        assert blob_store_dir in roots, f"blob_store_dir must be in roots; got {roots!r}"
-        assert secret_store_dir not in roots, f"secret_store_dir is the wrong root for SecretStore blobs; got {roots!r}"
-
-    def test_dedupes_overlapping_roots(self, tmp_path: Path) -> None:
-        # Operator override may point both settings at the same dir;
-        # the helper must deduplicate so rotation does not visit the
-        # same blob twice.
-        from .. import default_blob_store_roots
-
-        shared = tmp_path / "shared-blobs"
-        shared.mkdir()
-
-        from .....core.config import Settings
-
-        # Spelled out rather than resolved through the taxonomy on purpose: the
-        # subject here is an operator collapsing two members onto ONE directory,
-        # which is precisely the arrangement the declared subpaths cannot
-        # express. Routing this through the accessor would give two distinct
-        # roots and quietly stop exercising deduplication at all.
-        settings = Settings(
-            cadrumo_secret_store_dir=tmp_path / "secrets",
-            cadrumo_blob_store_dir=shared,
-            cadrumo_attachments_dir=shared,
+            fixed_roots = default_blob_store_roots(settings)
+            fixed_summary = rotate_blob_stores(
+                fixed_roots,
+                old_master_key_provider=old_key,
+                new_master_key_provider=new_key,
+            )
+        assert fixed_summary == RotationSummary(rotated=1, skipped=0, errors=0), (
+            "the corrected root must actually rotate the real blob the buggy root silently missed"
         )
-        roots = default_blob_store_roots(settings)
-        assert len(roots) == 1, f"expected one deduped root; got {roots!r}"
-
-    def test_skips_missing_directories(self, tmp_path: Path) -> None:
-        # Pre-provision installations have no blob store yet — the
-        # helper must omit non-existent directories so the rotation
-        # reports a clean (0, 0, 0) instead of an OS-level error.
-        from .. import default_blob_store_roots
-
-        # Anchored on a directory that is never created, so every declared
-        # member below it is absent — the pre-provision shape, without naming
-        # a single leaf.
-        with override_settings(
-            **storage_overrides(
-                tmp_path / "never-provisioned",
-                StorageCategory.SECRETS,
-                StorageCategory.BLOBS,
-                StorageCategory.ATTACHMENTS,
-            ),
-        ) as settings:
-            roots = default_blob_store_roots(settings)
-        assert roots == ()
 
 
 class TestRotationLockTargetAlignment:

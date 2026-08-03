@@ -13,7 +13,8 @@ from textwrap import dedent
 import pytest
 from sqlalchemy import text
 
-from ......core.config import SecretStoreBackend, override_settings
+from ......core import StorageCategory, bucket_scoped_storage_path
+from ......core.config import SecretStoreBackend, Settings, override_settings
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
 from ...bucket import BucketKeySchedule
@@ -37,9 +38,47 @@ from .._active_session import (
     has_active_bucket_session,
 )
 from .._master_key import _b64decode, _KdfParameters
+from .._master_key_bucket_dek import bucket_dek_path as production_bucket_dek_path
 from ._master_key_support import _settings_with_store, _write_registered_bucket
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def _bucket_dek_path(settings: Settings, bucket_id: str) -> Path:
+    """Resolve the bucket DEK through the declared member, anchored to production.
+
+    The tests below used to spell this coordinate out. A literal is a poor
+    guard here and the history proves it: the keystore member was declared at
+    the wrong scope for months, and the test that should have caught it had
+    pinned the wrong location as correct. A literal only defends the answer
+    whoever typed it believed.
+
+    Re-pointing at the accessor alone would be no better, and for the
+    ``not exists()`` assertions it would be worse -- an accessor aimed
+    anywhere production never writes satisfies them trivially, which is an
+    assertion placed where its own failure cannot occur.
+
+    So the declared resolution is checked against ``bucket_dek_path``, the
+    function the write path itself calls (imported here under an explicit
+    ``production_`` alias, because the tests bind a local of the same name), before being handed back. Two
+    independent routes to one location: a drift in either is a mismatch here,
+    and the ``is_file()`` assertions downstream then confirm the bytes really
+    land there. ``bucket_dek_path`` reaches the location through
+    ``keystore_sidecar_path``, which runs the separation invariant on the way,
+    so a renested keystore is refused rather than compared.
+
+    What this does NOT independently confirm is the leaf name:
+    ``BUCKET_DEK_FILENAME`` is read from the same declared member the accessor
+    uses, so both sides agree on it by construction. The directory is the part
+    under independent guard.
+    """
+    resolved = bucket_scoped_storage_path(StorageCategory.KEYSTORE_BUCKET_DEK, bucket_id, settings=settings)
+    expected = production_bucket_dek_path(storage_root=settings.cadrumo_local_storage_root, bucket_id=bucket_id)
+    assert resolved == expected, (
+        f"the declared keystore member resolves to {resolved}, but the write path uses {expected}"
+    )
+    return resolved
+
 
 _PROVIDER_SESSION_HARNESS = dedent(
     """
@@ -136,7 +175,7 @@ class TestFileFallbackProvider:
             passphrase_callback=lambda: "correct horse battery staple",
         )
         master_key = provider.provision_master_key()
-        bucket_dek_path = settings.cadrumo_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
+        bucket_dek_path = _bucket_dek_path(settings, "alpha")
 
         with (
             override_settings(
@@ -306,7 +345,7 @@ class TestFileFallbackProvider:
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
-        bucket_dek_path = settings.cadrumo_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
+        bucket_dek_path = _bucket_dek_path(settings, "alpha")
 
         with (
             override_settings(
@@ -365,7 +404,7 @@ class TestFileFallbackProvider:
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
-        bucket_dek_path = settings.cadrumo_local_storage_root / "keystore" / "current" / "bucket.dek.json"
+        bucket_dek_path = _bucket_dek_path(settings, "current")
 
         with (
             override_settings(
@@ -387,7 +426,7 @@ class TestFileFallbackProvider:
             passphrase_callback=lambda: "correct horse battery staple",
         )
         provider.provision_master_key()
-        bucket_dek_path = settings.cadrumo_local_storage_root / "keystore" / "missing" / "bucket.dek.json"
+        bucket_dek_path = _bucket_dek_path(settings, "missing")
 
         with (
             override_settings(
@@ -422,7 +461,7 @@ class TestFileFallbackProvider:
             ),
         ):
             assert len(get_active_master_key()) == KEY_SIZE
-        assert (settings.cadrumo_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
+        assert _bucket_dek_path(settings, "orphaned").is_file()
 
         second = FileFallbackMasterKeyProvider(
             store_dir=settings.cadrumo_secret_store_dir,
@@ -438,7 +477,7 @@ class TestFileFallbackProvider:
             activate_master_key_provider(second, fallback_bucket_id="orphaned"),
         ):
             pass
-        assert (settings.cadrumo_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
+        assert _bucket_dek_path(settings, "orphaned").is_file()
 
     def test_bucket_manifest_idle_lock_overrides_settings_default(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
