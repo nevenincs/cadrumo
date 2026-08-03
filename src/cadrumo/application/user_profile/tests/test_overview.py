@@ -227,31 +227,39 @@ def test_a_shipped_field_masks_exactly_when_the_schema_says_secret() -> None:
     assert not divergent, f"masking disagrees with the declaration for: {divergent}"
 
 
-@pytest.mark.parametrize("path", ["auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"])
-def test_a_credential_description_cannot_mask_a_field_declared_non_secret(path: str) -> None:
+def _mask_keywords() -> frozenset[str]:
+    from .._overview import _MASK_KEYWORDS
+
+    return _MASK_KEYWORDS
+
+
+@pytest.mark.parametrize("keyword", sorted(_mask_keywords()))
+def test_no_wording_can_mask_a_field_the_schema_declares_non_secret(keyword: str) -> None:
     """A field's wording carries no authority over its classification.
 
     DISCRIMINATING, and the sharpest form of the guarantee: it re-asks
-    the decision for the REAL shipped description under a classification
-    that is not ``secret``, and requires the answer to be no. Each of
-    these descriptions contains the word "credential", which is exactly
-    what used to mask them -- so if prose still had any power, this would
-    mask and fail.
+    the decision under a label built to contain each masking keyword in
+    turn, and requires a field declared non-``secret`` to stay clear.
+    Every one of these labels masked before the fix.
+
+    It is written against a constructed label rather than the shipped
+    descriptions on purpose. Reading the real prose would re-couple this
+    proof to wording that is now inert -- the test would then break on an
+    editorial change, which is the very dependency the fix removed. The
+    shipped side is covered by the whole-schema gate above.
 
     The ``secret`` half is the positive control. Without it a
-    mask_profile_field that simply never masked would satisfy the first
-    assertion while protecting nothing.
+    ``mask_profile_field`` that simply never masked would satisfy the
+    first assertion while protecting nothing.
     """
-    from ....domain.user_profile import load_user_profile_schema
     from .. import mask_profile_field
 
-    description = load_user_profile_schema().field(path).description
-    assert "credential" in description.casefold(), "this proof needs a description the keyword arm would have matched"
+    label = f"mentions a {keyword} only to say that none is stored here"
 
-    assert not mask_profile_field(path=path, label=description, sensitivity=SensitivityClass.IDENTITY), (
-        f"{path!r} masks on its wording, not on its declaration"
+    assert not mask_profile_field(path="auth.provider", label=label, sensitivity=SensitivityClass.IDENTITY), (
+        f"a label mentioning {keyword!r} masks a field the schema declares non-secret"
     )
-    assert mask_profile_field(path=path, label=description, sensitivity=SensitivityClass.SECRET)
+    assert mask_profile_field(path="auth.provider", label=label, sensitivity=SensitivityClass.SECRET)
 
 
 def test_no_shipped_field_depends_on_the_keyword_arm(monkeypatch: pytest.MonkeyPatch) -> None:
