@@ -24,6 +24,7 @@ from .....application.user_profile import (
 )
 from .....core import require_active_bucket_id
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+from .....tests.manager_pilot import wait_until_settled
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
 
@@ -148,7 +149,11 @@ async def test_a_write_door_refusal_is_reported_rather_than_taking_the_screen_do
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             app._persist(_MALFORMED_PATH, "not-a-date")
-            await pilot.pause()
+            # The write runs on a worker thread and the refusal reaches the
+            # notice line only when its completion is delivered back, so a
+            # bare `pause` reads the page a beat early and finds it empty --
+            # intermittently, and more often the busier the machine.
+            await wait_until_settled(app, pilot)
             assert app.is_running, "the refusal must not have taken the screen down"
             assert _notice(app), "the refusal must be shown to the operator"
             app.exit(None)
