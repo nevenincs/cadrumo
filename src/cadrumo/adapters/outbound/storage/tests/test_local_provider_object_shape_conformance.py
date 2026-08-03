@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from .....tests._storage_path_grammar import assert_path_matches_grammar
+from .....tests import assert_path_matches_grammar
 from ....persistence.storage.bucket import bucket_paths
 from .._local import LocalFileSystemProvider
 

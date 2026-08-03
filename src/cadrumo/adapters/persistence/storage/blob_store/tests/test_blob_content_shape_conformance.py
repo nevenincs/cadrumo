@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from ......core.classification import SensitivityClass
-from ......tests._storage_path_grammar import assert_path_matches_grammar
+from ......tests import assert_path_matches_grammar
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...crypto import KEY_SIZE
 from .._blob_store import EncryptedBlobStore
