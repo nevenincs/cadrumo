@@ -101,6 +101,13 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
 
     Asserted against a fresh read of the profile rather than the screen's
     own state, so an implementation that only repainted would fail here.
+
+    The wait after the save is the load-bearing part. Saving only *starts*
+    the write -- it runs on a worker thread -- so reading storage after a
+    bare pause races it, and the race is decided by how busy the machine
+    is. This case read one beat early and was the last in the file still
+    doing so; under load it reported a persisted value of ``None`` and read
+    as a write-through defect rather than as an under-waited test.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
@@ -113,7 +120,7 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
             await pilot.pause()
             app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
-            await pilot.pause()
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         reloaded = ProfileRepository().load(require_active_bucket_id()).record
