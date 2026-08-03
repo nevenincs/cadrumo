@@ -46,6 +46,26 @@ def _persist(path: str, value: str):
     return persist_active_profile_field(path, value, label="Manager Subject")
 
 
+async def _settled_notice(app: ProfileManagerApp, pilot, expected: str) -> str:
+    """Wait for an action's outcome to reach the page, then return it.
+
+    Actions run on a worker thread, so pressing the button starts the work
+    rather than finishing it: the outcome lands a repaint or two later.
+    Waiting for the expected text rather than a fixed number of pauses
+    keeps the test from passing on a page that simply has not caught up.
+
+    Returns whatever the channel holds when the wait ends, so a test that
+    never sees its text still asserts against the real content and reports
+    what was actually shown.
+    """
+    for _ in range(80):
+        await pilot.pause()
+        content = str(app.query_one("#manager-notice", Static).content)
+        if expected in content:
+            return content
+    return str(app.query_one("#manager-notice", Static).content)
+
+
 def _rows(app: ProfileManagerApp) -> dict[str, list[str]]:
     """Every rendered row across every section table, keyed by field path."""
     collected: dict[str, list[str]] = {}
@@ -106,6 +126,122 @@ async def test_editing_a_row_writes_through_to_the_encrypted_record(tmp_path) ->
         assert stored.get(_EDITED_PATH) == "Ada Lovelace"
 
 
+@pytest.mark.asyncio
+async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables(tmp_path) -> None:
+    """One edit repaints one row, and leaves the rest of the page standing.
+
+    The page carries a table per schema section and a row per declared
+    field, so redrawing all of them to change a single value made a
+    one-field edit cost the whole screen — the operator felt it as a
+    freeze. The edit now writes just the cells whose content moved.
+
+    Widget identity is what pins that. A wholesale redraw unmounts every
+    table and mounts new ones, so asserting the very same ``DataTable``
+    objects are still on screen afterwards fails the moment the
+    incremental path is swapped back for a full rebuild — which a check
+    on the rendered values alone would not catch, since both paths
+    ultimately show the right number.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+
+        app = ProfileManagerApp(_live_overview(), persist=_persist)
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            before = _rows(app)
+            assert before[_EDITED_PATH][2] == "", "the fixture must start blank, or the glyph cannot flip"
+            tables = list(app.query(DataTable))
+            progress = str(app.query_one("#manager-progress", Static).content)
+            untouched = {path: cells for path, cells in before.items() if path != _EDITED_PATH}
+
+            field = app._field_by_key[_EDITED_PATH]
+            app.push_screen(_edit_screen(field), app._apply_edit_for(field))
+            await pilot.pause()
+            app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
+            await pilot.click("#btn-edit-save")
+            # The write runs on a worker thread now, so the assertions wait
+            # for storage to answer rather than for a repaint that has not
+            # been asked for yet.
+            await app.workers.wait_for_complete()
+            await pilot.pause()
+
+            after = _rows(app)
+            assert after[_EDITED_PATH][2] == "Ada Lovelace", "the edited row must show the stored value"
+            assert after[_EDITED_PATH][0] == "●", "the edited row must now read as filled in"
+            assert {path: cells for path, cells in after.items() if path != _EDITED_PATH} == untouched, (
+                "an incremental repaint must leave every other row exactly as it was"
+            )
+            assert [id(table) for table in app.query(DataTable)] == [id(table) for table in tables], (
+                "the tables must survive the edit; remounting them is the full rebuild this replaced"
+            )
+            assert str(app.query_one("#manager-progress", Static).content) != progress, (
+                "the filled-in count must follow the edit"
+            )
+            app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> None:
+    """Serialising writes costs the operator no typed input.
+
+    Two writes in flight together would each merge into the same pre-edit
+    record, so the second save would drop the first field — they have to be
+    serialised. What matters is WHERE the refusal lands. Refusing after the
+    box closed would throw away what the operator had already typed, which
+    is a worse failure than the freeze this work removed: a freeze is
+    irritating, losing input is destructive.
+
+    The guard therefore sits at row selection, upstream of the box. A
+    write can only start from a dialog dismissal, and no dialog can open
+    while one is in flight, so the operator is stopped before they type
+    rather than after — there is never anything to lose.
+    """
+    import threading
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_profile_with_credentials(label="Manager Subject", passphrase=_PASSWORD)
+        release = threading.Event()
+
+        def _gated(path: str, value: str):
+            """The real write door, held open while the second edit is tried."""
+            release.wait(timeout=30)
+            return _persist(path, value)
+
+        app = ProfileManagerApp(_live_overview(), persist=_gated)
+        async with app.run_test(size=_TERMINAL_SIZE) as pilot:
+            await pilot.pause()
+            field = app._field_by_key[_EDITED_PATH]
+            app.push_screen(_edit_screen(field), app._apply_edit_for(field))
+            await pilot.pause()
+            app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
+            await pilot.click("#btn-edit-save")
+            await pilot.pause()
+            assert app._pending_write is not None, "the first write must still be in flight to prove anything"
+
+            settled = len(app.screen_stack)
+            table = next(candidate for candidate in app.query(DataTable) if candidate.row_count)
+            row_key = next(iter(table.rows))
+            app.on_data_table_row_selected(DataTable.RowSelected(table, 0, row_key))
+            await pilot.pause()
+
+            assert len(app.screen_stack) == settled, (
+                "no edit box may open while a write is in flight; opening one is how typed input gets discarded"
+            )
+            assert str(app.query_one("#manager-notice", Static).content), (
+                "the operator must be told why the row did not open"
+            )
+
+            release.set()
+            await app.workers.wait_for_complete()
+            await pilot.pause()
+            app.exit(None)
+
+        reloaded = ProfileRepository().load(require_active_bucket_id()).record
+        assert {fact.path: fact.value for fact in reloaded.facts}.get(_EDITED_PATH) == "Ada Lovelace", (
+            "the gated door must be the real one, or this test proves nothing about production"
+        )
+
+
 def _edit_screen(field):
     from .._manager_screen import FieldEditScreen
 
@@ -161,9 +297,9 @@ async def test_an_action_runs_and_reports_what_it_did(tmp_path) -> None:
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await pilot.click("#action-probe")
-            await pilot.pause()
+            reported = await _settled_notice(app, pilot, "DID-THE-THING")
             assert ran == ["yes"]
-            assert "DID-THE-THING" in str(app.query_one("#manager-action-result", Static).content)
+            assert "DID-THE-THING" in reported
             app.exit(None)
 
 
@@ -226,9 +362,9 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await pilot.click("#action-boom")
-            await pilot.pause()
+            reported = await _settled_notice(app, pilot, "NO-CERTIFICATE-REGISTERED")
             assert app.is_running, "the screen must survive a refusing action"
-            assert "NO-CERTIFICATE-REGISTERED" in str(app.query_one("#manager-action-result", Static).content)
+            assert "NO-CERTIFICATE-REGISTERED" in reported
             app.exit(None)
 
 

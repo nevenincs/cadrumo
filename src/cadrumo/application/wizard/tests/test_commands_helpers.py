@@ -29,7 +29,6 @@ from .._commands import (
     _format_missing_flags,
     _help_key,
     _missing_required_flags,
-    _no_flag_name,
     _required_flag_questions,
 )
 from .._models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
@@ -76,7 +75,7 @@ def _flow(*questions: WizardQuestion) -> WizardFlow:
 
 
 # ---------------------------------------------------------------------------
-# _flag_name / _no_flag_name
+# _flag_name
 # ---------------------------------------------------------------------------
 
 
@@ -115,11 +114,6 @@ def test_tax_residence_ccaa_choices_match_the_ccaa_enum() -> None:
 
     expected = [member.value for member in CCAA] + ["pais_vasco", "navarra"]
     assert expected == _CCAA_CHOICE_VALUES
-
-
-def test_no_flag_name_inserts_no_prefix_for_confirm_questions() -> None:
-    question = _question(qid="pays_iva", widget=WizardWidget.CONFIRM, answer_type=bool)
-    assert _no_flag_name(question) == "--no-pays_iva"
 
 
 # ---------------------------------------------------------------------------

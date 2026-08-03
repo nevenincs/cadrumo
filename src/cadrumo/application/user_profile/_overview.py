@@ -42,7 +42,12 @@ from ...core.classification import SensitivityClass
 # ``UserProfileStatus`` is a pydantic FIELD type below, so it must resolve at
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
-from ...domain.user_profile import UserProfileStatus, load_user_profile_schema
+from ...domain.user_profile import (
+    UserProfileStatus,
+    load_user_profile_schema,
+    profile_field_label,
+    profile_section_title,
+)
 from ._completeness import missing_required_field_paths, profile_value_is_present
 from ._projections import record_to_path_values
 
@@ -209,6 +214,13 @@ def build_profile_overview(
 
     Returns:
         A :class:`ProfileOverview` covering every declared section and field.
+
+    Note:
+        Section titles and field labels are resolved into the output
+        language at build time, so the returned view is bound to the
+        language that was active when it was built. A surface that lets the
+        operator change language must rebuild the overview rather than
+        re-render the existing one, or the table keeps the old language.
     """
     resolved_schema = schema if schema is not None else load_user_profile_schema()
     values = record_to_path_values(record)
@@ -227,6 +239,11 @@ def build_profile_overview(
         for field in section.fields:
             path = f"{section.key}.{field.key}"
             raw = values.get(path)
+            # Masking reads the schema's own description, never the
+            # localized label. Whether a value is a secret is a property of
+            # the field, not of the language it is being read in: scanning
+            # translated copy would let a field whose Spanish label omits
+            # "password" render in the clear while its English row masked.
             masked = mask_profile_field(
                 path=path,
                 label=field.description,
@@ -236,7 +253,7 @@ def build_profile_overview(
             field_views.append(
                 ProfileFieldView(
                     path=path,
-                    label=field.description or path,
+                    label=profile_field_label(section.key, field) or path,
                     # Mask only a value that exists; masking a blank would
                     # render dots for a field the operator has not filled in
                     # and read as "something is set here".
@@ -246,7 +263,11 @@ def build_profile_overview(
                 ),
             )
         sections.append(
-            ProfileSectionView(key=section.key, title=section.title, fields=tuple(field_views)),
+            ProfileSectionView(
+                key=section.key,
+                title=profile_section_title(section),
+                fields=tuple(field_views),
+            ),
         )
 
     return ProfileOverview(

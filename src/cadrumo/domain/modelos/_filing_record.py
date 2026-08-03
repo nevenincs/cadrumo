@@ -105,6 +105,7 @@ def is_justificante_backed_external_evidence(kind: ExternalEvidenceKind) -> bool
         },
     )
 
+
 _EvidenceReference = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -362,8 +363,7 @@ class ModeloRecordCatalogue(BaseModel):
             target = self.records.get(target_id)
             if target is None:
                 raise ModeloValidationError(
-                    f"filing record {record.filing_record_id!r} amends {target_id!r}, "
-                    "which is not in this catalogue",
+                    f"filing record {record.filing_record_id!r} amends {target_id!r}, which is not in this catalogue",
                 )
             coordinates = (record.bucket_id, record.modelo, record.filing_year, record.period, record.member_nif)
             target_coordinates = (

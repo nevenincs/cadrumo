@@ -41,7 +41,7 @@ from pathlib import Path
 import pytest
 from textual.widgets import DataTable
 
-from .....adapters.inbound.tui import FormApp, FormPage
+from .....adapters.inbound.tui import FormApp, FormPage, FormScreen, presenting_forms_through
 from .....application.user_profile import ProfileRepository, profile_create_storage_span
 from .....application.workflow import workflow_state_repository
 from .....core import AuthProviderKind, require_active_bucket_id
@@ -88,10 +88,32 @@ def _page(
     )
 
 
+def _certificate_answering(present):
+    """Run the certificate action with ``present`` answering its page.
+
+    Binds the one presenter authority for the call rather than handing the
+    action its own injection parameter. The action had both, which made
+    two ways to decide how a form is shown; this is the one the running
+    manager uses, so these cases exercise the shipped path.
+    """
+    with presenting_forms_through(present):
+        return _run_certificate()
+
+
 def _rows(app: FormApp) -> dict[str, str]:
-    """Read the page as the operator sees it: row key to displayed value."""
-    table: DataTable[str] = app.query_one("#form-table", DataTable)
+    """Read the page as the operator sees it: row key to displayed value.
+
+    The page is addressed through the screen stack because it is a screen
+    its host pushes, and ``App.query_one`` resolves against the default
+    screen instead of the pushed one.
+    """
+    table: DataTable[str] = _form_screen(app).query_one("#form-table", DataTable)
     return {str(row_key.value): str(table.get_row(row_key)[1]) for row_key in table.rows}
+
+
+def _form_screen(app: FormApp) -> FormScreen:
+    """The form page itself, wherever it sits in the host's screen stack."""
+    return next(screen for screen in reversed(app.screen_stack) if isinstance(screen, FormScreen))
 
 
 def _label_of(page: FormPage, key: str) -> str:
@@ -494,8 +516,8 @@ def test_a_refused_clave_answer_writes_nothing_at_all() -> None:
     statement order alone is not evidence of that.
     """
     with override_settings(cadrumo_clave_prefer_non_qr=True, **_NO_CLAVE_SETTINGS):
-        outcome = _run_certificate(
-            lambda _page: _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value}),
+        outcome = _certificate_answering(
+            lambda _page, _rebuild=None: _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value}),
         )
 
     assert outcome.overview is None, "a refusal must not redraw the page as though something changed"
@@ -507,8 +529,8 @@ def test_a_refused_clave_answer_writes_nothing_at_all() -> None:
 def test_an_accepted_answer_reaches_the_record_through_the_whole_action() -> None:
     """The other half of the same door: an acceptable answer does land."""
     with override_settings(cadrumo_clave_prefer_non_qr=False, **_NO_CLAVE_SETTINGS):
-        outcome = _run_certificate(
-            lambda _page: _answer(
+        outcome = _certificate_answering(
+            lambda _page, _rebuild=None: _answer(
                 **{
                     _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
                     _AUTH_DNI_NIE_PATH: "00000000T",
@@ -523,7 +545,7 @@ def test_an_accepted_answer_reaches_the_record_through_the_whole_action() -> Non
 @pytest.mark.usefixtures("active_profile")
 def test_abandoning_the_page_writes_nothing() -> None:
     """Leaving without committing is "make no change", not an error."""
-    outcome = _run_certificate(lambda _page: None)
+    outcome = _certificate_answering(lambda _page, _rebuild=None: None)
 
     assert outcome.overview is None
     assert _auth_facts() == {}
@@ -637,8 +659,8 @@ def test_run_certificate_surfaces_the_repair_command_when_no_file_is_configured(
     "active certificate: -" message the direct CLI uses only for the
     operationally-complete case.
     """
-    outcome = _run_certificate(
-        lambda _page: _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CERTIFICATE.value}),
+    outcome = _certificate_answering(
+        lambda _page, _rebuild=None: _answer(**{_AUTH_PROVIDER_PATH: AuthProviderKind.CERTIFICATE.value}),
     )
 
     assert tr("application.auth.operator.errors.certificate_file_required") in outcome.message
@@ -661,8 +683,8 @@ def test_run_certificate_reports_the_provider_as_done_when_operationally_complet
     Móvil provider, which ``configure_operator_auth`` reports complete
     unconditionally.
     """
-    outcome = _run_certificate(
-        lambda _page: _answer(
+    outcome = _certificate_answering(
+        lambda _page, _rebuild=None: _answer(
             **{
                 _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
                 _AUTH_DNI_NIE_PATH: "00000000T",

@@ -181,11 +181,7 @@ def require_bundled_oracle_evidence_locator(
             f"{surface_label} payload must declare raw_evidence_locator",
         )
     locator_length = len(raw_evidence_locator)
-    if not (
-        BUNDLED_ORACLE_EVIDENCE_LOCATOR_MIN_LENGTH
-        <= locator_length
-        <= BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH
-    ):
+    if not (BUNDLED_ORACLE_EVIDENCE_LOCATOR_MIN_LENGTH <= locator_length <= BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH):
         raise RegistryValidationError(
             f"{surface_label} raw_evidence_locator must be between "
             f"{BUNDLED_ORACLE_EVIDENCE_LOCATOR_MIN_LENGTH} and "

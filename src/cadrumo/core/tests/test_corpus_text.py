@@ -150,7 +150,9 @@ def test_descriptive_article_anchor_does_not_collapse_to_its_base_article() -> N
         include_title=True,
     )
 
-    assert normalise_corpus_text("Artículo 9 bis. Acuerdo de ventas de bienes en consigna") in normalise_corpus_text(text)
+    assert normalise_corpus_text("Artículo 9 bis. Acuerdo de ventas de bienes en consigna") in normalise_corpus_text(
+        text
+    )
 
 
 def test_multi_unit_sidecar_keeps_articulo_unico_distinct_from_articulo_1() -> None:

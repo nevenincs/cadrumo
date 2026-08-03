@@ -112,12 +112,12 @@ class RevisionCapabilityProbe(BaseModel):
 def revision_capability_probe(revision: ModeloRevision, *, modelo_id: str) -> RevisionCapabilityProbe:
     """Fold the capability predicates ``revision`` declares.
 
-    ``modelo_id`` scopes the calculation-closure traversal; it is the owning
-    modelo's identifier, not a revision id.
-
     Args:
         revision: The :class:`ModeloRevision` whose export layouts,
             completeness manifest, and extraction profiles are probed.
+        modelo_id: Scopes the calculation-closure traversal that decides
+            ``calc_grade``. This is the owning modelo's identifier, not a
+            revision id.
     """
     export_formats = {layout.format for layout in revision.export_layouts}
     return RevisionCapabilityProbe(

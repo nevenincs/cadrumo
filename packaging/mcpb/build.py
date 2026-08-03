@@ -498,17 +498,20 @@ def _stage_bundle(stage: Path, cohort: PythonCohort) -> None:
     (stage / "manifest.json").write_text(
         json.dumps(stamped_manifest(cohort), indent=2, ensure_ascii=False) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     (stage / "constraints.txt").write_text(
         render_constraints_file(constraint_lines, min_uv_version=_MIN_UV_VERSION),
         encoding=_UTF_8,
+        newline="\n",
     )
     (stage / "pyproject.toml").write_text(
         runtime_pyproject(cohort, constraint_lines=constraint_lines),
         encoding=_UTF_8,
+        newline="\n",
     )
-    (server / "server.py").write_text(_BOOTSTRAP_SOURCE, encoding=_UTF_8)
-    (server / "_serve.py").write_text(_SERVE_SOURCE, encoding=_UTF_8)
+    (server / "server.py").write_text(_BOOTSTRAP_SOURCE, encoding=_UTF_8, newline="\n")
+    (server / "_serve.py").write_text(_SERVE_SOURCE, encoding=_UTF_8, newline="\n")
 
 
 def _write_archive_member(

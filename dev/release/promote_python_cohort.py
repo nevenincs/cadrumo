@@ -106,7 +106,7 @@ def _write_outputs(path: Path, cohort: PythonCohort) -> None:
         "source_commit": cohort.source_commit,
         "version": cohort.version,
     }
-    with path.open("a", encoding=_UTF_8) as handle:
+    with path.open("a", encoding=_UTF_8, newline="\n") as handle:
         for name, value in rows.items():
             handle.write(f"{name}={value}\n")
 

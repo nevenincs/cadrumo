@@ -217,6 +217,7 @@ def write_provenance_sidecar(pdf_path: Path) -> Path:
         )
         + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     return sidecar
 

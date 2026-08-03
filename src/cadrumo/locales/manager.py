@@ -21,7 +21,7 @@ from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.i18n import extract_placeholders
 from ..core.logging import get_logger
-from ._registry_scanner import scan_registry_keys
+from ._registry_scanner import scan_profile_schema_keys, scan_registry_keys
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
 type LocaleNode = str | dict[str, "LocaleNode"]
@@ -159,10 +159,12 @@ class LocaleManager:
         3. F-string registry — bounded f-string patterns whose value sets
            are fully known at import time (e.g. wizard choice labels
            keyed by enum values). See :mod:`locales._fstring_registry`.
-        4. Registry scanner — keys declared as data by the category profile
-           registry rather than by a Python call site. The first three paths
-           read Python source only, so these were invisible to every parity
-           check and sat unresolved in all four catalogues. See
+        4. Registry scanner — keys declared as data by a committed registry
+           rather than by a Python call site: named literally by the category
+           profile registry, and derived from declared structure by the
+           user-profile schema. The first three paths read Python source
+           only, so these were invisible to every parity check and sat
+           unresolved in all four catalogues. See
            :mod:`locales._registry_scanner`.
 
         Dynamic namespaces (open-ended f-string and concatenation forms)
@@ -189,6 +191,7 @@ class LocaleManager:
         keys.update(scan_source_tree(self.src_dir))
         keys.update(get_registered_keys())
         keys.update(scan_registry_keys())
+        keys.update(scan_profile_schema_keys())
         return keys
 
     def get_codebase_namespaces(self) -> set[str]:
@@ -313,7 +316,7 @@ class LocaleManager:
 
             new_data = self._build_nested_dict(codebase_keys, data, namespace_prefixes)
 
-            with open(f, "w", encoding=UTF_8_ENCODING) as f_obj:
+            with open(f, "w", encoding=UTF_8_ENCODING, newline="\n") as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
 
     def canonicalize_product_identity_references(
@@ -644,7 +647,7 @@ def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> Non
             newline = "\r\n" if line.endswith("\r\n") else "\n"
             replacement = match.group("indent") + key + ": " + _yaml_quoted_scalar(value) + newline
             lines[index : _yaml_leaf_end(lines, index, indent)] = [replacement]
-            path.write_text("".join(lines), encoding=UTF_8_ENCODING)
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
             return
 
     raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
@@ -669,7 +672,7 @@ def _append_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
                 insertion_index,
                 " " * (indent + 2) + leaf + ": " + _yaml_quoted_scalar(value) + newline,
             )
-            path.write_text("".join(lines), encoding=UTF_8_ENCODING)
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
             return
 
     raise LocaleError(f"Locale parent key not found in YAML text: {'.'.join(parent_parts)!r}")
@@ -699,7 +702,7 @@ def _remove_existing_yaml_leaf(path: Path, parts: list[str], *, allow_empty_leaf
                 raise LocaleError(f"Cannot remove {'.'.join(parts)!r}: it resolves to a namespace")
             del lines[index : _yaml_leaf_end(lines, index, indent)]
             _prune_empty_yaml_namespaces(lines, parts[:-1])
-            path.write_text("".join(lines), encoding=UTF_8_ENCODING)
+            path.write_text("".join(lines), encoding=UTF_8_ENCODING, newline="\n")
             return
 
     raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")

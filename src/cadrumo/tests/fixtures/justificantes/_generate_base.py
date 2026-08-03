@@ -229,5 +229,5 @@ def _write_sidecar(
         "warnings": [],
     }
     sidecar_path = pdf_path.with_suffix(".json")
-    sidecar_path.write_text(json.dumps(sidecar_data, indent=2), encoding=UTF_8_ENCODING)
+    sidecar_path.write_text(json.dumps(sidecar_data, indent=2), encoding=UTF_8_ENCODING, newline="\n")
     print(f"wrote sidecar {sidecar_path}")

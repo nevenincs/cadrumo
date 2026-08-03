@@ -38,6 +38,7 @@ def _run(argv: list[str], *, cwd: Path, env: dict[str, str], log: Path, timeout:
         f"stdout:\n{completed.stdout}\n"
         f"stderr:\n{completed.stderr}\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     if completed.returncode != 0:
         raise SystemExit(f"command failed ({completed.returncode}): {argv!r}; retained log: {log}")
@@ -90,6 +91,7 @@ def _run_concurrent_launches(
             f"stdout:\n{stdout}\n"
             f"stderr:\n{stderr}\n",
             encoding=_UTF_8,
+            newline="\n",
         )
         if process.returncode != 0:
             failures.append(f"{label} launch {index} exited {process.returncode}; retained log: {log}")
@@ -414,6 +416,7 @@ def run_mcpb_smoke(
         )
         + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return evidence_path
 

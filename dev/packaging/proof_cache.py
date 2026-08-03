@@ -177,7 +177,7 @@ def record(
     )
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = _record_path(cache_dir, proof_kind, source_fp, env_fp)
-    path.write_text(proof.model_dump_json(indent=2), encoding=_UTF_8)
+    path.write_text(proof.model_dump_json(indent=2), encoding=_UTF_8, newline="\n")
     _evict_beyond_cap(cache_dir, keep=path, cap=max_records if max_records is not None else _max_records())
     return path
 

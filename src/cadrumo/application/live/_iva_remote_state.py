@@ -109,6 +109,10 @@ from ._remote_state_outcomes import auth_outcome as _auth_outcome
 from ._remote_state_outcomes import surface_outcome as _surface_outcome
 from ._session import active_verified_session as _active_verified_session
 
+# Deliberately not a ``sha256:`` value, so an absent filing subject stays
+# distinguishable from every real pseudonymised one.
+_ABSENT_TAXPAYER_REF = "absent"
+
 
 class IvaRemoteStateAcquisitionManifestRepository(_SecureBoundRepository[IvaRemoteStateAcquisitionManifest]):
     """Repository for encrypted live IVA acquisition manifests.
@@ -488,7 +492,18 @@ def _decimal_text(value: Decimal | None) -> str | None:
     return str(value) if value is not None else None
 
 
-def _taxpayer_ref(taxpayer_nif: str) -> str:
+def _taxpayer_ref(taxpayer_nif: str | None) -> str:
+    """Pseudonymise a filing subject's NIF into a CLI-safe reference.
+
+    ``None`` is a legitimate domain value: a carry-forward lot inherits its
+    subject from the source period state, which may itself declare none. The
+    absent case returns an explicit marker rather than a digest, so it can
+    never be read as a real subject nor collide with one -- hashing a
+    stand-in would mint one stable ref that every subjectless row shared,
+    making them look like the same taxpayer.
+    """
+    if taxpayer_nif is None:
+        return _ABSENT_TAXPAYER_REF
     digest = _sha256_hex(taxpayer_nif.strip().upper().encode("utf-8"))
     return f"sha256:{digest[:12]}"
 

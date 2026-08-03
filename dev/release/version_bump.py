@@ -59,6 +59,9 @@ _UTF_8: Final[str] = "utf-8"
 #: touching it here would make the bump fail its own post-bump readiness
 #: re-check.
 MANIFEST_RELATIVE: Final[Path] = Path(".release-please-manifest.json")
+#: release-please's own config file, relative to the repository root -- see
+#: `run_release_please_dry_run`'s docstring for why this MUST stay relative.
+RELEASE_PLEASE_CONFIG_RELATIVE: Final[Path] = Path("release-please-config.json")
 ROOT_PYPROJECT_RELATIVE: Final[Path] = Path("pyproject.toml")
 DATA_MANUALS_PYPROJECT_RELATIVE: Final[Path] = Path("packaging/cadrumo_data_manuals/pyproject.toml")
 DATA_OFFICIAL_PYPROJECT_RELATIVE: Final[Path] = Path("packaging/cadrumo_data_official/pyproject.toml")
@@ -110,7 +113,7 @@ def _bump_manifest(repo_root: Path, version: str) -> SurfaceUpdate:
         raise VersionBumpError(f"{MANIFEST_RELATIVE} does not carry a root '.' entry")
     payload["."] = version
     after = json.dumps(payload, indent=2) + "\n"
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(MANIFEST_RELATIVE, before, after)
 
 
@@ -118,7 +121,7 @@ def _bump_pyproject_version(repo_root: Path, relative: Path, version: str) -> Su
     path = repo_root / relative
     before = path.read_text(encoding=_UTF_8)
     after = _substitute_single(before, _PYPROJECT_VERSION_RE, version, surface=str(relative))
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(relative, before, after)
 
 
@@ -126,7 +129,7 @@ def _bump_init(repo_root: Path, version: str) -> SurfaceUpdate:
     path = repo_root / INIT_RELATIVE
     before = path.read_text(encoding=_UTF_8)
     after = _substitute_single(before, _INIT_VERSION_RE, version, surface=str(INIT_RELATIVE))
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(INIT_RELATIVE, before, after)
 
 
@@ -148,7 +151,7 @@ def _bump_dependency_pins(repo_root: Path, version: str) -> SurfaceUpdate:
                 f"{ROOT_PYPROJECT_RELATIVE} must pin {distribution} exactly once, found {len(matches)}",
             )
         after = pattern.sub(f'"{distribution}=={version}"', after, count=1)
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(ROOT_PYPROJECT_RELATIVE, before, after)
 
 
@@ -164,7 +167,7 @@ def _bump_changelog(repo_root: Path, version: str, block: str, *, release_date: 
     normalized_block = block if block.endswith("\n") else f"{block}\n"
     insertion = f"\n{heading}\n{normalized_block}"
     after = before.replace(_UNRELEASED_HEADING, _UNRELEASED_HEADING + insertion, 1)
-    path.write_text(after, encoding=_UTF_8)
+    path.write_text(after, encoding=_UTF_8, newline="\n")
     return SurfaceUpdate(CHANGELOG_RELATIVE, before, after)
 
 
@@ -340,6 +343,15 @@ def run_release_please_dry_run(
     `npx`, and whether the self-hosted fleet carries a Node.js toolchain is
     unverified (`2026-08-02-release-pipeline-full-automation-adr`).
 
+    `config_file` / `manifest_file`, when supplied, MUST be paths relative to
+    the repository root, never absolute local filesystem paths: `--repo-url`
+    puts release-please into its GitHub-API remote-fetch mode, where these
+    flags are repo-relative strings used to fetch the named files from
+    `target_branch`, not local paths on this machine. Confirmed live: an
+    absolute path here makes release-please refuse with "Missing required
+    manifest config: <path>" because that string never matches anything in
+    the fetched tree.
+
     Grounding note, VERIFIED LIVE (2026-08-02, `nevenincs/cadrumo` @
     `ac6305809d`): this repository has no prior release-please-generated
     release (this is its first automated bump), so release-please finds no
@@ -371,8 +383,15 @@ def run_release_please_dry_run(
     npx = npx_executable or shutil.which("npx")
     if npx is None:
         raise VersionBumpError("npx is not on PATH; cannot invoke release-please")
-    config = config_file or (repo_root / "release-please-config.json")
-    manifest = manifest_file or (repo_root / MANIFEST_RELATIVE)
+    # RELATIVE, never joined onto repo_root: `--repo-url` puts release-please
+    # into its GitHub-API remote-fetch manifest mode, where `--config-file` /
+    # `--manifest-file` are repo-relative path STRINGS used to fetch the
+    # files from `target_branch` via the API, not local filesystem paths (see
+    # the grounding note above). An absolute local path never matches
+    # anything in the fetched tree and release-please refuses with
+    # "Missing required manifest config: <path>" -- confirmed live.
+    config = config_file if config_file is not None else RELEASE_PLEASE_CONFIG_RELATIVE
+    manifest = manifest_file if manifest_file is not None else MANIFEST_RELATIVE
     completed = _run(
         [
             npx,
@@ -515,8 +534,15 @@ def commit_tag_and_push(
         raise version_identity.VersionIdentityError(f"version {version} is not available to publish:\n  - {joined}")
 
     tag_name = f"v{version}"
+    # `-c` rather than a persisted `git config` call: this repo is the real
+    # checkout (or, under a rehearsal, the disposable copy that already seeded
+    # its own persisted identity), and a runner image carries no default git
+    # identity, so a bare `git commit` fails "Author identity unknown" the
+    # first time this stage actually runs. The same bot identity the account's
+    # other automated commits (the Scoop/Homebrew tap pushes) already use.
+    identity = ["-c", "user.name=cadrumo-release", "-c", "user.email=release@cadrumo.invalid"]
     _run([git, "add", "--", *(str(relative) for relative in _STAGED_RELATIVE_PATHS)], cwd=repo_root)
-    _run([git, "commit", "-m", f"chore(release): v{version}"], cwd=repo_root)
+    _run([git, *identity, "commit", "-m", f"chore(release): v{version}"], cwd=repo_root)
     commit_sha = _run([git, "rev-parse", "HEAD"], cwd=repo_root).stdout.strip()
     _run([git, "tag", "-a", tag_name, "-m", f"Cadrumo {tag_name}"], cwd=repo_root)
     if push:
@@ -598,24 +624,17 @@ def rehearse_bump(
         if git is None:
             raise VersionBumpError("git is not on PATH; cannot rehearse the bump")
         _run([git, "init", "-q", "-b", "main"], cwd=rehearsal_root)
-        _run(
-            [git, "-c", "user.email=rehearsal@cadrumo.invalid", "-c", "user.name=rehearsal", "add", "-A"],
-            cwd=rehearsal_root,
-        )
-        _run(
-            [
-                git,
-                "-c",
-                "user.email=rehearsal@cadrumo.invalid",
-                "-c",
-                "user.name=rehearsal",
-                "commit",
-                "-q",
-                "-m",
-                "rehearsal seed",
-            ],
-            cwd=rehearsal_root,
-        )
+        # Persisted into the rehearsal repo's OWN local config (not `-c`, which
+        # only scopes one invocation) so every later commit in this disposable
+        # tree -- including the one `commit_tag_and_push` makes below, which
+        # runs no differently here than it would against the real repo -- has
+        # a valid identity. Runner images ship no default git identity, so a
+        # bare `git commit` with no persisted config fails "Author identity
+        # unknown" the first time a rehearsal reaches its own bump commit.
+        _run([git, "config", "user.email", "rehearsal@cadrumo.invalid"], cwd=rehearsal_root)
+        _run([git, "config", "user.name", "rehearsal"], cwd=rehearsal_root)
+        _run([git, "add", "-A"], cwd=rehearsal_root)
+        _run([git, "commit", "-q", "-m", "rehearsal seed"], cwd=rehearsal_root)
 
         stage_bump(
             rehearsal_root,
@@ -721,7 +740,7 @@ def _emit_bump_outputs(github_output: str, *, version: str, commit: str) -> None
     """
     if not github_output:
         return
-    with Path(github_output).open("a", encoding=_UTF_8) as handle:
+    with Path(github_output).open("a", encoding=_UTF_8, newline="\n") as handle:
         handle.write(f"version={version}\n")
         handle.write(f"commit={commit}\n")
 

@@ -48,7 +48,9 @@ modelo-preparation workflow's expected trajectory.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
+from itertools import pairwise
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -63,6 +65,19 @@ LIFECYCLE_STAGE_ORDER: tuple[str, ...] = (
     "modelo.export",
 )
 """Canonical command-stage order shared by declared and observed eval trajectories."""
+
+
+def lifecycle_stages_in_canonical_order(positions: Mapping[str, int]) -> bool:
+    """True when the lifecycle stages present in ``positions`` hold the canonical order.
+
+    The one ordering predicate both trajectory dimensions share: the declared
+    runner asserts it over a scenario's ``expected_trajectory``, the live scorer
+    over the keys a persona actually issued. Stages ABSENT from ``positions``
+    are unconstrained - a trajectory that legitimately stops at ``verify`` is
+    ordered - so this asks only that the stages which do appear appear in order.
+    """
+    present = [stage for stage in LIFECYCLE_STAGE_ORDER if stage in positions]
+    return all(positions[earlier] < positions[later] for earlier, later in pairwise(present))
 
 
 class GoldenScenario(BaseModel):

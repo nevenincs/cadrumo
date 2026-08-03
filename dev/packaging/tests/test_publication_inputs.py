@@ -160,6 +160,11 @@ def test_claiming_scoop_or_homebrew_arms_its_acquisition_lane(channel_id: str) -
 
 
 def test_claiming_scoop_and_homebrew_together_arms_both_lanes() -> None:
+    """Two independent claims arm two lanes: the derivation unions them rather than picking one.
+
+    The returned tuple is also asserted in sorted order, so the lane set is a
+    deterministic value a workflow matrix can consume directly.
+    """
     descriptor = load_descriptor()
     both = _with_availability(
         _with_availability(descriptor, _SCOOP, Availability.AVAILABLE),
@@ -218,12 +223,23 @@ def test_unclaimed_host_extension_precondition_passes_regardless_of_evidence_rel
 
 
 def test_claimed_and_supplied_host_extension_precondition_passes() -> None:
+    """The positive control: a claimed host channel with a real evidence release raises no refusal.
+
+    Without this the refusal tests could pass against a precondition that
+    refuses unconditionally.
+    """
     descriptor = load_descriptor()
     claimed = _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE)
     assert host_extension_precondition_refusal(claimed, claude_evidence_release="evidence-claude-123") is None
 
 
 def test_claimed_and_absent_host_extension_precondition_refuses_naming_the_capture_command() -> None:
+    """A claimed host channel with no evidence release refuses, and the refusal is actionable.
+
+    The refusal must carry the ``REFUSED:`` prefix, name the offending channel,
+    and name the capture command the operator runs -- and must describe that
+    capture as a local human step, never as something this module performs.
+    """
     descriptor = load_descriptor()
     claimed = _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE)
 
@@ -247,6 +263,7 @@ def test_host_extension_precondition_treats_whitespace_only_evidence_release_as_
 
 
 def test_host_extension_precondition_names_every_claimed_host_channel() -> None:
+    """With both host channels claimed the single refusal names both, not just the first found."""
     descriptor = load_descriptor()
     both = _with_availability(
         _with_availability(descriptor, "claude-plugin", Availability.AVAILABLE),
@@ -267,6 +284,12 @@ def test_host_extension_precondition_never_fires_for_a_non_host_extension_claim(
 
 
 def test_every_mapped_lane_channel_resolves_to_an_existing_workflow_path_on_disk() -> None:
+    """Every channel-to-workflow mapping points at a workflow file that really exists.
+
+    The mapping is a hand-maintained table of repository-relative paths, so a
+    renamed or deleted workflow would otherwise leave a claimed channel
+    dispatching a lane that no longer exists.
+    """
     for channel_id, workflow_path in LANE_WORKFLOW_BY_CHANNEL.items():
         resolved = _REPO_ROOT / workflow_path
         assert resolved.is_file(), f"{channel_id!r} maps to {workflow_path!r}, which does not exist on disk"
@@ -281,12 +304,23 @@ def test_the_claude_channels_carry_both_a_dispatchable_lane_and_a_human_evidence
 
 
 def test_todays_descriptor_needs_no_acquisition_lane_workflow() -> None:
+    """The committed descriptor claims only python, so it resolves to no workflows and no unmapped lanes.
+
+    An empty ``unmapped_acquisition_lanes`` is the load-bearing half: it proves
+    the empty workflow tuple comes from having no lanes, not from a lane that
+    silently failed to resolve.
+    """
     descriptor = load_descriptor()
     assert acquisition_lane_workflows(descriptor) == ()
     assert unmapped_acquisition_lanes(descriptor) == ()
 
 
 def test_claiming_scoop_and_homebrew_resolves_to_their_distinct_workflows() -> None:
+    """Two claims on separately-owned lanes resolve to two distinct workflow paths, sorted.
+
+    The counterpart to the claude dedupe case below: distinct owners must not
+    collapse the way two channels sharing one workflow do.
+    """
     descriptor = load_descriptor()
     both = _with_availability(
         _with_availability(descriptor, _SCOOP, Availability.AVAILABLE),

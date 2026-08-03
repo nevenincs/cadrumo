@@ -279,17 +279,23 @@ def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_p
     assert (late_report.revision, late_report.period) == ("2025-late", "2T")
     assert _annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=early_as_of) == early_report.period
     assert _annual_period_for_year(authority, modelo="999", filing_year=2025, as_of=late_as_of) == late_report.period
-    assert authority.snapshot(
-        "999",
-        filing_year=2025,
-        period=early_report.period or "",
-        on=early_as_of,
-        revision_id=early_report.revision,
-    ).revision.id == early_report.revision
-    assert authority.snapshot(
-        "999",
-        filing_year=2025,
-        period=late_report.period or "",
-        on=late_as_of,
-        revision_id=late_report.revision,
-    ).revision.id == late_report.revision
+    assert (
+        authority.snapshot(
+            "999",
+            filing_year=2025,
+            period=early_report.period or "",
+            on=early_as_of,
+            revision_id=early_report.revision,
+        ).revision.id
+        == early_report.revision
+    )
+    assert (
+        authority.snapshot(
+            "999",
+            filing_year=2025,
+            period=late_report.period or "",
+            on=late_as_of,
+            revision_id=late_report.revision,
+        ).revision.id
+        == late_report.revision
+    )

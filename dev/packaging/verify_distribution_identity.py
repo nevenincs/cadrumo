@@ -1590,7 +1590,7 @@ def main(argv: list[str] | None = None) -> int:
     print(payload, end="")
     if args.output is not None:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(payload, encoding=_UTF_8)
+        args.output.write_text(payload, encoding=_UTF_8, newline="\n")
     if report.ok:
         return 0
     # stdout stays the machine document; the human account goes to stderr so a

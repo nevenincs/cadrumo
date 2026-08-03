@@ -793,7 +793,7 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
             except (PlaywrightError, OSError) as exc:
                 log.debug("wallet diagnostic: frame dump failed: %s", exc, exc_info=True)
     try:
-        (dump_dir / f"{label}-summary.txt").write_text("\n".join(summary) + "\n", encoding=UTF_8_ENCODING)
+        (dump_dir / f"{label}-summary.txt").write_text("\n".join(summary) + "\n", encoding=UTF_8_ENCODING, newline="\n")
     except OSError as exc:
         log.debug("wallet diagnostic: summary write failed: %s", exc, exc_info=True)
     log.info("wallet diagnostic captured label=%s pages=%s dir=%s", label, len(pages), dump_dir)

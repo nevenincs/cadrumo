@@ -364,4 +364,8 @@ def write_size_budget_baseline(
         "modules": dict(sorted(baseline.modules.items())),
         "callables": dict(sorted(baseline.callables.items())),
     }
-    path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + "\n", encoding=_UTF_8)
+    path.write_text(
+        json.dumps(document, indent=2, ensure_ascii=False) + "\n",
+        encoding=_UTF_8,
+        newline="\n",
+    )

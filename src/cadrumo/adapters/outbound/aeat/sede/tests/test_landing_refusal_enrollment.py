@@ -114,9 +114,7 @@ def _parse(path: Path) -> ast.Module:
 def _drives_a_form_control(tree: ast.Module) -> bool:
     """Return whether the module calls a Playwright control-driving method."""
     return any(
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr in _FORM_DRIVING_METHODS
+        isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in _FORM_DRIVING_METHODS
         for node in ast.walk(tree)
     )
 

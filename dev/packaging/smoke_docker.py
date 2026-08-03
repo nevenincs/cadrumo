@@ -51,7 +51,7 @@ def _work_dir(repo_root: Path, requested: str | None, mode: str) -> Path:
 def _write_probe(work_dir: Path, filename: str, source: str) -> Path:
     """Write a container probe script into the mounted work directory."""
     path = work_dir / filename
-    path.write_text(textwrap.dedent(source).lstrip(), encoding=_UTF_8)
+    path.write_text(textwrap.dedent(source).lstrip(), encoding=_UTF_8, newline="\n")
     return path
 
 

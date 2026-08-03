@@ -59,7 +59,6 @@ class ConfigCollabRecipientAddResult(RecipientFingerprintRowPayload):
     """JSON envelope for ``aeat config collab recipient add``."""
 
 
-
 @register_schema("config.collab.recipient.list")
 class ConfigCollabRecipientListResult(OutputSchema):
     """JSON envelope for ``aeat config collab recipient list``."""

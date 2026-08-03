@@ -108,9 +108,9 @@ _GROUNDED_OUTPUTS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...]
     ("0519", "5550.00", ("ley-35-2006:art-56",), _SOURCE_REFS_CUOTA),
     ("0520", "5550.00", ("ley-35-2006:art-56", "ley-35-2006:art-73"), _SOURCE_REFS_CUOTA),
     ("0528", "2667.75", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64"), _SOURCE_REFS_CUOTA),
-    ("0529", "2621.89", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75"), _SOURCE_REFS_0529),
+    ("0529", "2621.89", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75-2015"), _SOURCE_REFS_0529),
     ("0532", "2140.50", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-64"), _SOURCE_REFS_CUOTA),
-    ("0533", "2094.64", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75"), _SOURCE_REFS_CUOTA),
+    ("0533", "2094.64", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-75-2015"), _SOURCE_REFS_CUOTA),
     ("0545", "2406.50", ("ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-66"), _SOURCE_REFS_CUOTA),
     ("0546", "2360.64", ("ley-35-2006:art-73", "ley-35-2006:art-74", "ley-35-2006:art-76"), _SOURCE_REFS_CUOTA),
 )

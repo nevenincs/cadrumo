@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-76-2015.html",
+  "source_sha256": "72a85ecf67bfcc650072a61dbc02202b6ea0f91a3ffc6f140099bd568e6b8818",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "La parte de base liquidable del ahorro que exceda, en su caso, del importe del mínimo personal y familiar que resulte de los incrementos o disminuciones a que se refiere el artículo 56.3 de esta Ley, será gravada de la siguiente forma:\n1.º A la base liquidable del ahorro se le aplicarán los tipos que se indican en la siguiente escala:\nBase liquidable del ahorro\n–\nHasta euros\nCuota íntegra\n–\nEuros\nResto base liquidable del ahorro\n–\nHasta euros\nTipo aplicable\n–\nPorcentaje\n0\n0\n6.000\n9,5\n6.000,00\n570\n44.000\n10,5\n50.000,00\n5.190\nEn adelante\n11,5\n2.º La cuantía resultante se minorará en el importe derivado de aplicar a la parte de la base liquidable del ahorro correspondiente al mínimo personal y familiar que resulte de los incrementos o disminuciones a que se refiere el artículo 56.3 de esta Ley, la escala prevista en el número 1.º anterior.\nSe modifica por el art. 1.51 de la Ley 26/2014, de 27 de noviembre. Ref. BOE-A-2014-12327.\nSe modifica, con efectos desde 1 de enero de 2010, por el art. 63.2 de la Ley 39/2010, de 22 de diciembre. Ref. BOE-A-2010-19703.\nSe modifica, con efectos desde el 1 de enero de 2010 por el art. 69.2 de la Ley 26/2009, de 23 de diciembre. Ref. BOE-A-2009-20765\nRedactado conforme a la corrección de errores pubicada en BOE núm. 96, de 21 de abril de 2010. Ref. BOE-A-2010-6285\nSe modifica por la disposición final 2.11 de la Ley 22/2009, de 18 de diciembre. Ref. BOE-A-2009-20375\nEsta modificación entra en vigor y surte efectos desde el 1 de enero de 2010, según establece la disposición final 5.",
+      "title": "Artículo 76. Tipo de gravamen del ahorro.",
+      "section": "Artículo 76. Tipo de gravamen del ahorro.",
+      "anchor": "#a76"
+    }
+  ]
+}

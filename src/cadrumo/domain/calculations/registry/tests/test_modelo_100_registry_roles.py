@@ -166,12 +166,18 @@ def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:
         assert annual_order_ref in revision.legal_refs, filing_year
         assert revision.orden_aplicabilidad == (annual_order_ref,), filing_year
 
+        # The 2020 revision's applicability window (closes_on 2021-06-30) predates
+        # art. 91's current redaction (effective_from 2021-07-11, Ley 11/2021 art.
+        # 3.4); it cites the version-scoped 2015-2021-07-10 redaction instead. Every
+        # later revision cites the current bare id.
+        art_91_ref = "ley-35-2006:art-91-2015" if filing_year == 2020 else "ley-35-2006:art-91"
+
         casillas_by_role = {
             casilla.semantic_role: casilla for casilla in revision.casillas if casilla.semantic_role in detail_roles
         }
         assert set(casillas_by_role) == detail_roles, filing_year
         for casilla in casillas_by_role.values():
-            assert "ley-35-2006:art-91" in casilla.legal_refs, (filing_year, casilla.id)
+            assert art_91_ref in casilla.legal_refs, (filing_year, casilla.id)
             assert tfi_order_ref in casilla.legal_refs, (filing_year, casilla.id)
 
 

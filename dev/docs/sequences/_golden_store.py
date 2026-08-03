@@ -430,6 +430,7 @@ def write_golden(
     target.write_text(
         json.dumps(document, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return target
 

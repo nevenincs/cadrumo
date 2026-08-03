@@ -29,6 +29,29 @@ if TYPE_CHECKING:
     from ....application.user_profile import ProfileOverview, ProfileRegistrationOutcome
 
 
+_ROUTING_META_KEYS = frozenset({"ctx", "profile_name", "quiet", "accept_defaults"})
+
+
+def _field_value_was_supplied(value: object) -> bool:
+    """Return whether a parsed wizard value represents an explicit flag.
+
+    Typer materialises repeated options with an empty list when the operator
+    did not pass them. An empty collection is therefore a parser default, not
+    an explicit field value; non-empty collections and every scalar value
+    (including ``False`` and ``0``) are explicit.
+    """
+    if value is None:
+        return False
+    if isinstance(value, list | tuple):
+        return any(str(item) for item in value)
+    return True
+
+
+def has_explicit_profile_fields(kwargs: Mapping[str, object]) -> bool:
+    """Whether parsed wizard kwargs contain a field the caller supplied."""
+    return any(_field_value_was_supplied(value) for key, value in kwargs.items() if key not in _ROUTING_META_KEYS)
+
+
 def manager_is_the_right_frontend(
     *,
     mode: str,
@@ -112,6 +135,59 @@ def persist_active_profile_field(path: str, value: str, *, label: str | None = N
     return build_active_profile_overview(label=label)
 
 
+def _active_profile_manager_storage(
+    *,
+    label: str | None = None,
+) -> tuple[ProfileOverview, Callable[[str, str], ProfileOverview]]:
+    """Bind one manager session to one resolved encrypted-store handle.
+
+    A manager edits many fields while the same active-profile storage session is
+    open.  Resolving the storage route afresh for the workflow write, profile
+    write, and post-write read on every edit repeatedly rebuilds ``Settings``
+    and normalises every configured path.  Keep one secure repository and the
+    canonical schema for the lifetime of this screen; the repository still
+    performs the same encrypted SQL writes, validation, revision checks, and
+    audit-event commit for every edit.
+
+    The returned overview is still rebuilt from a post-commit database read.
+    That preserves the manager's no-optimistic-render contract while avoiding
+    only repeated route discovery, not persistence or integrity verification.
+    """
+    from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
+    from ....application.user_profile import ProfileRepository, build_profile_overview, set_active_field
+    from ....application.workflow import WorkflowStateRepository
+    from ....core import require_active_bucket_id
+    from ....domain.user_profile import UserProfileFact, load_user_profile_schema
+
+    profile_id = require_active_bucket_id()
+    secure_objects = secure_object_repository_for_active_bucket()
+    schema = load_user_profile_schema()
+    profiles = ProfileRepository(secure_objects=secure_objects, schema=schema)
+    workflow = WorkflowStateRepository(objects=secure_objects)
+
+    def _overview() -> ProfileOverview:
+        aggregate = profiles.load(profile_id)
+        return build_profile_overview(
+            aggregate.record,
+            label=label if label is not None else aggregate.label,
+            schema=schema,
+        )
+
+    def _persist(path: str, value: str) -> ProfileOverview:
+        fact = UserProfileFact(path=path, value=value.strip() or None)
+        workflow.update(
+            lambda state: set_active_field(
+                state,
+                fact,
+                secure_objects=secure_objects,
+                schema=schema,
+            ),
+        )
+        return _overview()
+
+    return _overview(), _persist
+
+
 def present_profile_manager(*, label: str | None = None) -> None:
     """Open the manager on the active profile and run it to completion.
 
@@ -122,9 +198,10 @@ def present_profile_manager(*, label: str | None = None) -> None:
     from ....adapters.inbound.tui import run_profile_manager_tui
     from ._manager_actions import manager_actions
 
+    overview, persist = _active_profile_manager_storage(label=label)
     run_profile_manager_tui(
-        build_active_profile_overview(label=label),
-        persist=lambda path, value: persist_active_profile_field(path, value, label=label),
+        overview,
+        persist=persist,
         actions=manager_actions(),
     )
 
@@ -138,13 +215,23 @@ def present_form(
 
     ``None`` means they left without committing, which every caller treats
     as "make no change" rather than as an error.
-    """
-    from ....adapters.inbound.tui import run_form_tui
 
+    How the page is shown depends on who is asking. Reached from the
+    command line there is no application yet, so one is started for it.
+    Reached from inside the profile manager there already is one, and a
+    second cannot be started from a running event loop — so the manager
+    binds a presenter that opens the page on itself, and this call finds
+    it. Callers say what they want shown and stay out of that decision.
+    """
+    from ....adapters.inbound.tui import active_form_presenter, run_form_tui
+
+    presenter = active_form_presenter()
+    if presenter is not None:
+        return presenter(page, rebuild)
     return run_form_tui(page, rebuild=rebuild)
 
 
-def attempt_registration(label: str, passphrase: str) -> RegistrationAttempt:
+def attempt_registration(label: str, passphrase: str, output_language: str) -> RegistrationAttempt:
     """Create one profile, reporting a refusal as text rather than raising.
 
     Classifying a refusal is the application layer's job and displaying it
@@ -158,9 +245,14 @@ def attempt_registration(label: str, passphrase: str) -> RegistrationAttempt:
         ProfileRegistrationError,
         register_profile_with_credentials,
     )
+    from ....domain.user_profile import UserProfileFact
 
     try:
-        outcome = register_profile_with_credentials(label=label, passphrase=passphrase)
+        outcome = register_profile_with_credentials(
+            label=label,
+            passphrase=passphrase,
+            facts=(UserProfileFact(path="preferences.output_language", value=output_language),),
+        )
     except (ProfileRegistrationError, ProfileAlreadyRegisteredError) as refusal:
         return _Attempt(refusal=str(refusal))
     return _Attempt(outcome=outcome)
@@ -190,6 +282,7 @@ def present_registration(*, suggested_name: str | None = None) -> ProfileRegistr
 __all__ = [
     "attempt_registration",
     "build_active_profile_overview",
+    "has_explicit_profile_fields",
     "host_can_run_full_screen",
     "manager_is_the_right_frontend",
     "persist_active_profile_field",

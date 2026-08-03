@@ -106,15 +106,22 @@ def test_core_survives_settings_construction_during_its_own_init() -> None:
         def find_spec(self, fullname: str, path: object = None, target: object = None) -> None:
             if fullname == "cadrumo.core.secure_object_write" and not _MidInitSettingsTrigger.fired:
                 _MidInitSettingsTrigger.fired = True
-                from cadrumo.core.config import load_settings
-
-                load_settings()
+                # Absolute, string-form import by necessity: this hook fires
+                # DURING `cadrumo.core`'s own init with every `cadrumo.*` entry
+                # cleared from `sys.modules`. A relative import would resolve
+                # through this test module's own package and re-enter the very
+                # init under measurement, so `import_module` is what preserves
+                # the absolute semantics the assertion depends on.
+                importlib.import_module("cadrumo.core.config").load_settings()
             return None
 
     trigger = _MidInitSettingsTrigger()
     sys.meta_path.insert(0, trigger)
     try:
-        import cadrumo.core  # noqa: F401  -- importing IS the assertion
+        # Absolute, string-form import by necessity: the assertion IS a fresh
+        # absolute import of `cadrumo.core` from a wiped `sys.modules`, which a
+        # relative form cannot reproduce.
+        importlib.import_module("cadrumo.core")  # importing IS the assertion
     finally:
         sys.meta_path.remove(trigger)
 

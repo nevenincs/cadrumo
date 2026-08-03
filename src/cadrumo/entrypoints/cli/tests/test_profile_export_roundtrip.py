@@ -746,7 +746,7 @@ def test_export_json_envelope_carries_purpose_transport_and_data_categories(tmp_
     assert encrypted_payload["purpose"] == "portable_transfer"
 
 
-def test_config_profile_export_result_refuses_malformed_transport_and_reconcile_row() -> None:
+def test_config_profile_export_result_refuses_malformed_transport_and_reconcile_row(tmp_path: Path) -> None:
     """The canonical result type -- not a permissive shell -- refuses malformed custody rows.
 
     ``purpose``/``transport`` are typed as the real
@@ -764,7 +764,7 @@ def test_config_profile_export_result_refuses_malformed_transport_and_reconcile_
     base_kwargs = {
         "profile_id": "profile-1",
         "display_name": "Example",
-        "out": "/tmp/bundle.json",
+        "out": str(tmp_path / "bundle.json"),
         "schema_version": 3,
         "purpose": ProfileBundleExportPurpose.PORTABLE_TRANSFER,
         "transport": ProfileBundleExportTransport.CLEARTEXT_LOCAL,

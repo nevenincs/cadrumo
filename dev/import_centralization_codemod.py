@@ -239,7 +239,7 @@ def apply_plans_to_file(path: Path, plans: list[RewritePlan]) -> bool:
         changed = True
 
     if changed:
-        path.write_text("".join(lines), encoding=_UTF_8)
+        path.write_text("".join(lines), encoding=_UTF_8, newline="\n")
     return changed
 
 

@@ -124,7 +124,8 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
-                SecureObjectRow.object_key == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
+                SecureObjectRow.object_key
+                == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
@@ -170,7 +171,8 @@ def test_register_missing_cuota_surfaces_at_load(tmp_path: Path) -> None:
         with session_scope(engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
-                SecureObjectRow.object_key == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
+                SecureObjectRow.object_key
+                == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
             )
             row = session.execute(stmt).scalar_one()
             aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)

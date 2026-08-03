@@ -537,7 +537,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(f"run {run.run_id} concluded {outcome.conclusion}")
 
     if args.github_output:
-        with Path(args.github_output).open("a", encoding=_UTF_8) as handle:
+        with Path(args.github_output).open("a", encoding=_UTF_8, newline="\n") as handle:
             handle.write(f"{args.output_name}={run.run_id}\n")
 
     if outcome.conclusion != "success":

@@ -1081,7 +1081,7 @@ def _write_smoke_manifest(
         details=details or None,
     )
     path = work_dir / "packaging-smoke-manifest.json"
-    path.write_text(manifest.model_dump_json(indent=2) + "\n", encoding=_UTF_8)
+    path.write_text(manifest.model_dump_json(indent=2) + "\n", encoding=_UTF_8, newline="\n")
     return path
 
 
@@ -1158,6 +1158,7 @@ def main(argv: list[str] | None = None) -> int:
     tax_evidence_path.write_text(
         json.dumps(tax_evidence.to_jsonable(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
 
     checks = [

@@ -168,7 +168,7 @@ def obstructed_path(path: Path) -> Iterator[Path]:
     if previous_bytes is not None:
         path.unlink()
     path.mkdir(parents=True)
-    (path / _BLOCKER_NAME).write_text(_BLOCKER_CONTENTS, encoding=UTF_8_ENCODING)
+    (path / _BLOCKER_NAME).write_text(_BLOCKER_CONTENTS, encoding=UTF_8_ENCODING, newline="\n")
     try:
         _assert_writes_refused(path)
         yield path

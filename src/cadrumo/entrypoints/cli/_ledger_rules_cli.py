@@ -349,11 +349,11 @@ def rule_list(ctx: typer.Context) -> None:
             {
                 "rule_id": r.rule_id,
                 "description_pattern": r.description_pattern,
-                    "classification": r.classification,
+                "classification": r.classification,
                 "category_id": r.category_id,
                 "priority": r.priority,
                 "actor": r.actor,
-                    "created_at": r.created_at,
+                "created_at": r.created_at,
             }
             for r in rules
         ],

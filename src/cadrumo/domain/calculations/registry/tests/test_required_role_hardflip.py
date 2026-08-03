@@ -1,6 +1,6 @@
 """Tests for semantic-role validator hard-flip and semantic cross-reference accessor.
 
-`_validate_required_role_declarations` enforces that casillas
+`required_role_declaration_failures` enforces that casillas
 matching any registered label pattern declare the canonical role.
 The pattern set covers only corpus-complete label families.
 
@@ -17,9 +17,9 @@ import pytest
 
 from .._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from .._validate_semantic_roles import (
-    _REQUIRED_ROLE_LABEL_PATTERNS,
-    _validate_required_role_declarations,
+    REQUIRED_ROLE_LABEL_PATTERNS,
     collect_casillas_by_semantic_role,
+    required_role_declaration_failures,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -74,7 +74,7 @@ def _registry_modelo(modelo_id: str, revision_id: str, casillas: list[CasillaDef
 
 class TestRequiredRoleLabelPatterns:
     def test_pattern_set_is_non_empty(self) -> None:
-        assert len(_REQUIRED_ROLE_LABEL_PATTERNS) >= 1
+        assert len(REQUIRED_ROLE_LABEL_PATTERNS) >= 1
 
 
 class TestRequiredRoleHardflip:
@@ -85,7 +85,7 @@ class TestRequiredRoleHardflip:
             semantic_role="filing_year",
         )
         m = _registry_modelo("180", "2023", [c])
-        assert _validate_required_role_declarations([m]) == ()
+        assert required_role_declaration_failures([m]) == ()
 
     @pytest.mark.parametrize(
         ("label", "semantic_role"),
@@ -100,7 +100,7 @@ class TestRequiredRoleHardflip:
     def test_base_imponible_labels_require_split_roles(self, label: str, semantic_role: str) -> None:
         c = _casilla(label=label, data_type="decimal", semantic_role=semantic_role)
         m = _registry_modelo("100", "2025", [c])
-        assert _validate_required_role_declarations([m]) == ()
+        assert required_role_declaration_failures([m]) == ()
 
     def test_label_match_without_role_fails(self) -> None:
         c = _casilla(
@@ -109,7 +109,7 @@ class TestRequiredRoleHardflip:
             semantic_role=None,
         )
         m = _registry_modelo("180", "2023", [c])
-        failures = _validate_required_role_declarations([m])
+        failures = required_role_declaration_failures([m])
         assert len(failures) == 1
         assert "filing_year" in failures[0]
         assert "no semantic_role" in failures[0]
@@ -121,7 +121,7 @@ class TestRequiredRoleHardflip:
             semantic_role="devengo_year",  # close-but-wrong
         )
         m = _registry_modelo("180", "2023", [c])
-        failures = _validate_required_role_declarations([m])
+        failures = required_role_declaration_failures([m])
         assert len(failures) == 1
         assert "devengo_year" in failures[0]
         assert "filing_year" in failures[0]
@@ -129,7 +129,7 @@ class TestRequiredRoleHardflip:
     def test_unmatched_label_ignored(self) -> None:
         c = _casilla(label="Some other label")
         m = _registry_modelo("180", "2023", [c])
-        assert _validate_required_role_declarations([m]) == ()
+        assert required_role_declaration_failures([m]) == ()
 
 
 class TestCrossReferenceAccessor:

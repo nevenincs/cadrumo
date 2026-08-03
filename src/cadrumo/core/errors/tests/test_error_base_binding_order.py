@@ -61,13 +61,9 @@ def test_the_base_class_is_defined_before_not_found_is_imported() -> None:
     """
     tree = _module_tree("__init__.py")
 
-    definitions = {
-        node.name: node.lineno for node in tree.body if isinstance(node, ast.ClassDef)
-    }
+    definitions = {node.name: node.lineno for node in tree.body if isinstance(node, ast.ClassDef)}
     not_found_import = next(
-        node.lineno
-        for node in tree.body
-        if isinstance(node, ast.ImportFrom) and node.module == "_not_found"
+        node.lineno for node in tree.body if isinstance(node, ast.ImportFrom) and node.module == "_not_found"
     )
 
     for name in _FACADE_NAMES_NEEDED_BY_NOT_FOUND:
@@ -81,7 +77,7 @@ def test_the_base_class_is_defined_before_not_found_is_imported() -> None:
 
 def test_the_package_actually_imports() -> None:
     """The behaviour the ordering exists to protect, not just its shape."""
-    import cadrumo.core.errors as errors_package
+    from ... import errors as errors_package
 
     assert issubclass(errors_package.CoreNotFoundError, errors_package.CoreError)
     assert issubclass(errors_package.CoreNotFoundError, KeyError)

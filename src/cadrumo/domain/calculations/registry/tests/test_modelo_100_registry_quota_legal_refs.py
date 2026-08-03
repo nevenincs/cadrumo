@@ -8,10 +8,8 @@ import pytest
 
 from ._modelo_100_legal_refs_support import (
     _ANUALIDADES_ALIMENTOS_TOTAL_CASILLA,
-    _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF,
     _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
     _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
-    _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
     _BASE_LIQUIDABLE_ART_50_REF,
     _BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA,
     _BROAD_DEDUCTION_ART_68_REF,
@@ -36,6 +34,40 @@ _ANUALIDADES_FORMULA_YEARS = tuple(range(2022, 2026))
 _ANUALIDADES_MANUAL_INPUT_YEARS = (2020, 2021)
 _EXTRACTION_PROFILE_YEARS = tuple(range(2021, 2024))
 
+#: Each pre-2025 filing year's applicability window predates art. 75's current
+#: catalogue redaction (effective_from 2025-04-03, Ley 1/2025), so it cites the
+#: version-scoped redaction actually in force for that filing year instead of
+#: the bare current id. art-75-2015 covers 2015-01-01 to 2025-04-02 (unchanged
+#: text through 2020-2023 and still unchanged for the 2024 devengo, which closes
+#: 2024-12-31 -- entirely inside that window).
+_AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR = {
+    2020: "ley-35-2006:art-75-2015",
+    2021: "ley-35-2006:art-75-2015",
+    2022: "ley-35-2006:art-75-2015",
+    2023: "ley-35-2006:art-75-2015",
+    2024: "ley-35-2006:art-75-2015",
+    2025: "ley-35-2006:art-75",
+}
+#: art-63's current redaction takes effect 2021-01-01 (Ley 11/2020's sixth
+#: bracket); 2020's devengo (closes 2020-12-31) falls entirely inside the
+#: pre-amendment art-63-2015 window (2015-01-01 to 2020-12-31).
+_GENERAL_SCALE_ART_63_REF_BY_YEAR = {
+    2020: "ley-35-2006:art-63-2015",
+    2021: _GENERAL_SCALE_ART_63_REF,
+    2022: _GENERAL_SCALE_ART_63_REF,
+    2023: _GENERAL_SCALE_ART_63_REF,
+    2024: _GENERAL_SCALE_ART_63_REF,
+    2025: _GENERAL_SCALE_ART_63_REF,
+}
+_AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR = {
+    2020: "ley-35-2006:art-76-2015",
+    2021: "ley-35-2006:art-76-2021",
+    2022: "ley-35-2006:art-76-2021",
+    2023: "ley-35-2006:art-76-2023",
+    2024: "ley-35-2006:art-76",
+    2025: "ley-35-2006:art-76",
+}
+
 
 @lru_cache
 def _revision_for(filing_year: int):
@@ -45,6 +77,7 @@ def _revision_for(filing_year: int):
 def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_articles() -> None:
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
+        general_scale_art_63_ref = _GENERAL_SCALE_ART_63_REF_BY_YEAR[filing_year]
         checked_casilla_ids = {_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA, *_GENERAL_BASE_CUOTA_CASILLAS}
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in checked_casilla_ids}
 
@@ -63,7 +96,7 @@ def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_article
         base_formula = formula_by_target.get(_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA)
         if base_formula is not None:
             assert _BASE_LIQUIDABLE_ART_50_REF in base_formula.legal_refs
-            assert _GENERAL_SCALE_ART_63_REF in base_formula.legal_refs
+            assert general_scale_art_63_ref in base_formula.legal_refs
             assert _PERSONAL_FAMILY_MINIMUM_ART_56_REF not in base_formula.legal_refs
             assert _SAVINGS_BASE_ART_49_REF not in base_formula.legal_refs
             assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in base_formula.legal_refs
@@ -71,7 +104,7 @@ def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_article
         for casilla_id in _GENERAL_BASE_CUOTA_CASILLAS:
             casilla = casillas_by_id[casilla_id]
             formula = formula_by_target[casilla_id]
-            assert _GENERAL_SCALE_ART_63_REF in casilla.legal_refs, (filing_year, casilla.id)
+            assert general_scale_art_63_ref in casilla.legal_refs, (filing_year, casilla.id)
             assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, (filing_year, casilla.id)
             assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
             assert _SAVINGS_BASE_ART_49_REF not in formula.legal_refs, (filing_year, formula.id)
@@ -111,12 +144,11 @@ def test_modelo_100_2025_scale_result_casillas_use_scale_articles_not_fractional
 
 
 def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
-    expected_refs = {
-        _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
-        _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF,
-    }
-
     for filing_year in _ANUALIDADES_FORMULA_YEARS:
+        expected_refs = {
+            _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
+            _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
+        }
         revision = _revision_for(filing_year)
         formula_id = f"renta-{filing_year}-anualidades-alimentos-hijos-suma"
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
@@ -135,12 +167,11 @@ def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
 
 def test_modelo_100_anualidades_casilla_is_manual_input_pre_2022() -> None:
     """2020/2021 carry 0527 as a manual scalar input with no sum formula."""
-    expected_refs = {
-        _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
-        _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF,
-    }
-
     for filing_year in _ANUALIDADES_MANUAL_INPUT_YEARS:
+        expected_refs = {
+            _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
+            _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year],
+        }
         revision = _revision_for(filing_year)
         formula_id = f"renta-{filing_year}-anualidades-alimentos-hijos-suma"
         formulas_by_id = {formula.id: formula for formula in revision.formulas}
@@ -192,17 +223,19 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
         form_order_refs = {_MODELO_100_2025_FORM_ORDER_REF} if filing_year == 2025 else set()
         separate_escala_ids = _autonomic_separate_escala_formula_ids(filing_year)
         regime_modelled = filing_year in _SEPARATE_ESCALA_MODELLED_YEARS
-        regime_refs = {_AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF} if regime_modelled else set()
+        art_75_ref = _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR[filing_year]
+        art_76_ref = _AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR[filing_year]
+        regime_refs = {art_75_ref} if regime_modelled else set()
         expected_refs_by_formula = {
             f"renta-{filing_year}-tipo-medio-gravamen-autonomico-base-liquidable-general": {
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
             },
             f"renta-{filing_year}-tipo-medio-gravamen-autonomico-base-liquidable-ahorro": {
-                _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+                art_76_ref,
             },
             f"renta-{filing_year}-minimo-personal-base-liquidable-ahorro-autonomica": {
                 _PERSONAL_FAMILY_MINIMUM_ART_56_REF,
-                _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+                art_76_ref,
                 *form_order_refs,
             },
             f"renta-{filing_year}-cuota-escala-autonomica-sobre-base-liquidable-general": {
@@ -226,7 +259,7 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
             f"renta-{filing_year}-cuota-integra-autonomica": {
                 _AUTONOMIC_INTEGRAL_QUOTA_ART_73_REF,
                 _AUTONOMIC_GENERAL_SCALE_ART_74_REF,
-                _AUTONOMIC_SAVINGS_SCALE_ART_76_REF,
+                art_76_ref,
                 *form_order_refs,
             },
         }
@@ -241,7 +274,7 @@ def test_modelo_100_autonomic_quota_formula_refs_match_lirpf_articles() -> None:
             assert _STATE_DEDUCTION_ART_67_REF not in legal_refs, formula_id
             # art-75 is permitted only on the separate-escala formulas in modelled years.
             if not (regime_modelled and formula_id in separate_escala_ids):
-                assert _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF not in legal_refs, formula_id
+                assert art_75_ref not in legal_refs, formula_id
 
         assert not offenders, filing_year
 

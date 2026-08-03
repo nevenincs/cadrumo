@@ -63,6 +63,7 @@ Submodules
    cadrumo.application.modelo._objective_estimation_advisory
    cadrumo.application.modelo._official_box_advisory
    cadrumo.application.modelo._participation_index_rebuild
+   cadrumo.application.modelo._ports
    cadrumo.application.modelo._prior_payment_advisory
    cadrumo.application.modelo._profile_binding
    cadrumo.application.modelo._profile_readiness_gate

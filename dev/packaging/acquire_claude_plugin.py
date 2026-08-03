@@ -84,6 +84,7 @@ def _run(argv: list[str], *, cwd: Path, environment: dict[str, str], log: Path, 
         f"argv={json.dumps(argv)}\nexit_code={completed.returncode}\n"
         f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return completed
 
@@ -253,6 +254,7 @@ def run_claude_plugin_acquisition(
     evidence_path.write_text(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return evidence_path
 

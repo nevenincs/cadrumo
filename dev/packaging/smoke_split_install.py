@@ -217,6 +217,7 @@ def main(argv: list[str] | None = None) -> int:
     tax_evidence_path.write_text(
         json.dumps(tax_evidence.to_jsonable(), indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
 
     manifest = _write_smoke_manifest(

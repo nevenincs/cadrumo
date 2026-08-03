@@ -316,7 +316,7 @@ class NewModeloScaffoldManager:
                 already_present.append(entry.relative_path)
                 continue
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(entry.content, encoding=_UTF_8)
+            target.write_text(entry.content, encoding=_UTF_8, newline="\n")
             written.append(entry.relative_path)
 
         return ScaffoldResult(

@@ -23,3 +23,4 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.outbound.aeat.export._errors
+   cadrumo.adapters.outbound.aeat.export._registry_record_renderer

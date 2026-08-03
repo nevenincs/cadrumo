@@ -132,11 +132,11 @@ source_refs = ["aeat-manual"]
 
 
 def _write_standard_manifest(target_dir: Path, title: str) -> None:
-    (target_dir / "manifest.toml").write_text(_standard_manifest_text(title), encoding="utf-8")
+    (target_dir / "manifest.toml").write_text(_standard_manifest_text(title), encoding="utf-8", newline="\n")
 
 
 def _write_standard_revision_preamble(path: Path) -> None:
-    path.write_text(_standard_revision_preamble_text(), encoding="utf-8")
+    path.write_text(_standard_revision_preamble_text(), encoding="utf-8", newline="\n")
 
 
 def _build_directory_layout(
@@ -148,11 +148,11 @@ def _build_directory_layout(
     """Materialise a directory-mode modelo at ``target_dir``."""
 
     target_dir.mkdir(parents=True, exist_ok=True)
-    (target_dir / "manifest.toml").write_text(manifest_text, encoding="utf-8")
+    (target_dir / "manifest.toml").write_text(manifest_text, encoding="utf-8", newline="\n")
     revisions_dir = target_dir / "revisions"
     revisions_dir.mkdir(exist_ok=True)
     for filename, content in revision_files.items():
-        (revisions_dir / filename).write_text(content, encoding="utf-8")
+        (revisions_dir / filename).write_text(content, encoding="utf-8", newline="\n")
 
 
 def write_extracted_corpus_sidecar(corpus_path: Path, *, anchor: str, text: str) -> None:
@@ -175,6 +175,7 @@ def write_extracted_corpus_sidecar(corpus_path: Path, *, anchor: str, text: str)
     corpus_path.with_name(corpus_path.name + ".extracted.json").write_text(
         json.dumps({"units": [{"anchor": anchor, "text": text}]}),
         encoding="utf-8",
+        newline="\n",
     )
 
 
@@ -209,11 +210,15 @@ def write_fragmented_revision(revision_dir: Path, revision_text: str) -> None:
         else:
             scalar_blocks.append(block)
     revision_dir.mkdir(parents=True, exist_ok=True)
-    (revision_dir / "revision.toml").write_text("".join(scalar_blocks).rstrip("\n") + "\n", encoding="utf-8")
+    (revision_dir / "revision.toml").write_text(
+        "".join(scalar_blocks).rstrip("\n") + "\n", encoding="utf-8", newline="\n"
+    )
     for field, blocks in section_blocks.items():
         section_dir = revision_dir / field
         section_dir.mkdir(parents=True, exist_ok=True)
-        (section_dir / f"0001-{field}.toml").write_text("".join(blocks).strip("\n") + "\n", encoding="utf-8")
+        (section_dir / f"0001-{field}.toml").write_text(
+            "".join(blocks).strip("\n") + "\n", encoding="utf-8", newline="\n"
+        )
 
 
 def _minimal_fragment_revision_layout(
@@ -226,8 +231,8 @@ def _minimal_fragment_revision_layout(
 
     revision_dir = target_dir / "revisions" / "2025"
     revision_dir.mkdir(parents=True)
-    (target_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TEXT, encoding="utf-8")
-    (revision_dir / "revision.toml").write_text(revision_text, encoding="utf-8")
+    (target_dir / "manifest.toml").write_text(_MINIMAL_MANIFEST_TEXT, encoding="utf-8", newline="\n")
+    (revision_dir / "revision.toml").write_text(revision_text, encoding="utf-8", newline="\n")
     for relative_dir in fragment_dirs:
         (revision_dir / relative_dir).mkdir(parents=True)
     return revision_dir
@@ -236,7 +241,7 @@ def _minimal_fragment_revision_layout(
 def _write_locale_fragment(locales_dir: Path, language: str, filename: str, text: str) -> None:
     language_dir = locales_dir / language
     language_dir.mkdir(parents=True, exist_ok=True)
-    (language_dir / filename).write_text(text, encoding="utf-8")
+    (language_dir / filename).write_text(text, encoding="utf-8", newline="\n")
 
 
 def _write_minimal_localized_modelo(target_dir: Path, casilla_ids: tuple[str, ...]) -> Path:
@@ -255,6 +260,7 @@ legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 """.lstrip(),
         encoding="utf-8",
+        newline="\n",
     )
     casilla_tables = "\n".join(
         f"""

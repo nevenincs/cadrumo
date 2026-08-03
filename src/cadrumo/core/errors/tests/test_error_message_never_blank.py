@@ -23,18 +23,25 @@ from __future__ import annotations
 import pytest
 
 from ...i18n import tr
+from ...identity import IdentityError
 from .. import CadrumoError, CoreValidationError, resolve_error_message
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_TRANSLATION_KEY = "errors.integrity.integrity_storage_secure_object_unreadable"
+_TRANSLATION_KEY = "errors.identity.document_empty"
 
 
 def _translated_only_error() -> CadrumoError:
-    """Return a real registered error built the way 556 raise sites build one."""
-    from ....adapters.persistence.storage.errors import SecureObjectUnreadableError
+    """Return a real registered error built the way 556 raise sites build one.
 
-    return SecureObjectUnreadableError("cadrumo.test.namespace", 7)
+    :class:`IdentityError` is registered under ``INTEGRITY_IDENTITY_DOCUMENT``
+    and is raised translated-message-only in production (the empty-document
+    guard in :mod:`core.identity`), so it reproduces the exact construction
+    shape under test. It is core-owned deliberately: the contract being
+    measured belongs to :class:`CadrumoError`, so the test needs no error type
+    from an outer layer to exercise it.
+    """
+    return IdentityError(translated_message=_TRANSLATION_KEY)
 
 
 def test_translated_message_only_error_has_non_empty_text() -> None:

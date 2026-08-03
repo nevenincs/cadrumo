@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.domain.user_profile._errors
+   cadrumo.domain.user_profile._labels
    cadrumo.domain.user_profile._loader
    cadrumo.domain.user_profile._portable_export
    cadrumo.domain.user_profile._registry_contract

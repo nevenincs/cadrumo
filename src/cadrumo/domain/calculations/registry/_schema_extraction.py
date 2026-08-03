@@ -57,11 +57,7 @@ class BboxAnchorSpec(RegistryModel):
 
     @model_validator(mode="after")
     def _anchor_x_range_is_not_inverted(self) -> BboxAnchorSpec:
-        if (
-            self.anchor_x_min is not None
-            and self.anchor_x_max is not None
-            and self.anchor_x_min > self.anchor_x_max
-        ):
+        if self.anchor_x_min is not None and self.anchor_x_max is not None and self.anchor_x_min > self.anchor_x_max:
             raise RegistryValidationError("bbox anchor_x_min must not exceed anchor_x_max")
         return self
 

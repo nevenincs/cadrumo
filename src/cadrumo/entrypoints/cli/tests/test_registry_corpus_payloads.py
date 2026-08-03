@@ -58,7 +58,9 @@ def test_citation_payloads_preserve_typed_application_projections() -> None:
 
     listed = CitationListResult(reference_count=1, topic_count=1, topics=[topic], references=[reference])
     shown = CitationShowResult(reference=reference, articulo=article, related_topics=[topic])
-    verified = CitationVerifyResult(reference_count=1, issue_count=1, passed=False, topic_count=1, topics=[topic], issues=[issue])
+    verified = CitationVerifyResult(
+        reference_count=1, issue_count=1, passed=False, topic_count=1, topics=[topic], issues=[issue]
+    )
 
     assert listed.references == [reference]
     assert shown.articulo == article

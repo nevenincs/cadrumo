@@ -5,7 +5,7 @@ over stdio, then scores trajectories with the REAL faithfulness check injected
 from ``entrypoints.mcp`` and the live-write / handoff leaf sets injected from
 their single ``_hitl`` declarations - the hexagonal injection pattern the scorer
 mandates (this package never imports ``entrypoints.mcp``; the test, which may,
-supplies the callable and the data). The five semantics are exercised over
+supplies the callable and the data). The scorer's semantics are exercised over
 constructed trajectories fed to the real scorer - real judging logic, test-data
 inputs, no mocks.
 """
@@ -234,3 +234,102 @@ def test_reentered_lifecycle_stage_fails_the_score() -> None:
     assert score.lifecycle_ordered is False
     assert score.passed is False
     assert any("re-enters lifecycle stage(s): modelo.work.calculate" in failure for failure in score.failures)
+
+
+def test_out_of_order_lifecycle_is_not_reported_as_a_re_entry() -> None:
+    # The scorer promises the two ordering breakages are reported DISTINCTLY,
+    # because they are different operator errors with different remediations.
+    # Running the stages out of sequence must produce the ordering message and
+    # must not accuse the trajectory of re-entering a stage it visited once.
+    calls = [
+        _call("modelo.describe"),
+        _call("modelo.casillas"),
+        _call("modelo.work.create"),
+        _call("modelo.work.calculate"),
+        _call("modelo.export"),
+        _call("modelo.work.verify"),
+        _call("modelo.work.revision"),
+        _call("modelo.reconcile.pull"),
+    ]
+
+    score = _score(_trajectory(calls, []), load_scenario(_SCENARIO_PATH))
+
+    assert score.lifecycle_ordered is False
+    assert any("violates the create -> calculate -> verify -> export" in failure for failure in score.failures)
+    assert not any("re-enters lifecycle stage" in failure for failure in score.failures)
+
+
+def test_expected_coverage_requires_order_not_merely_presence() -> None:
+    # ``expected_covered`` is an ORDER-PRESERVING subsequence, not a set test.
+    # Swapping two adjacent NON-lifecycle keys keeps every expected key present
+    # and leaves the lifecycle dimension clean, so the asserted lifecycle pass
+    # is what attributes the failure to coverage rather than to ordering.
+    calls = _complete_calls()
+    calls[0], calls[1] = calls[1], calls[0]
+
+    score = _score(_trajectory(calls, []), load_scenario(_SCENARIO_PATH))
+
+    assert sorted(call.command_key for call in calls) == sorted(load_scenario(_SCENARIO_PATH).expected_trajectory)
+    assert score.lifecycle_ordered is True
+    assert score.expected_covered is False
+    assert score.passed is False
+
+
+def test_expected_coverage_tolerates_interleaved_extra_calls() -> None:
+    # The positive control for the ordering test above: coverage is a
+    # subsequence, so a trajectory that issues additional calls between the
+    # expected ones still covers the scenario. Without this, the ordering test
+    # would also pass against a scorer that demanded exact equality.
+    calls = _complete_calls()
+    calls.insert(3, _call("modelo.describe"))
+
+    score = _score(_trajectory(calls, []), load_scenario(_SCENARIO_PATH))
+
+    assert score.expected_covered is True
+    assert score.keys_resolve is True
+    assert score.passed is True
+
+
+def test_a_later_narration_may_cite_a_figure_from_an_earlier_tool_result() -> None:
+    # Faithfulness runs against the CUMULATIVE corpus of every tool result the
+    # session had already seen, not just the calls one narration consumed. Here
+    # the figure is returned by ``calculate`` and consumed by the FIRST
+    # narration; the export narration that later cites it must still be
+    # faithful. A per-narration corpus reset would make this legitimate
+    # narration unfaithful at the irreversible handoff boundary and fail a
+    # correct agent.
+    trajectory = _trajectory(
+        _complete_calls(),
+        [
+            LiveNarrationRecord(step="modelo.work.calculate", text="the calculation is complete"),
+            LiveNarrationRecord(step="modelo.export", text=f"the quarter result casilla 07 is {_GROUNDED_FIGURE}"),
+        ],
+    )
+
+    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+
+    export_checks = [check for check in score.narration_checks if check.step == "modelo.export"]
+    assert export_checks
+    assert all(check.faithful for check in export_checks)
+    assert not score.invariants.handoff_faithfulness_blocks
+    assert score.passed is True
+
+
+def test_free_narration_inherits_its_anchoring_call_and_blocks_at_the_handoff() -> None:
+    # A narration that declares no step is anchored to the single call it
+    # consumes. Here the preceding narration consumes through ``verify``, so the
+    # free narration anchors to ``modelo.export`` -- an irreversible handoff
+    # leaf -- and an ungrounded figure in it must BLOCK. An agent cannot escape
+    # the handoff faithfulness gate by omitting the step label.
+    trajectory = _trajectory(
+        _complete_calls(),
+        [
+            LiveNarrationRecord(step="modelo.work.verify", text="verification is clean"),
+            LiveNarrationRecord(text=f"the filing total is {_UNGROUNDED_FIGURE}"),
+        ],
+    )
+
+    score = _score(trajectory, load_scenario(_SCENARIO_PATH))
+
+    assert score.invariants.handoff_faithfulness_blocks == ("modelo.export",)
+    assert score.passed is False

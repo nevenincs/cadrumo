@@ -253,6 +253,7 @@ def write_manifest(root: Path, manifest: CohortManifest) -> Path:
     destination.write_text(
         manifest.model_dump_json(indent=2) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return destination
 

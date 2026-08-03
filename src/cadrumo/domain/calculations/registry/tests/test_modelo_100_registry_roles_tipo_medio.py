@@ -36,6 +36,18 @@ _AVERAGE_RATE_ROWS = {
     ),
 }
 
+#: art-63's current redaction takes effect 2021-01-01 (Ley 11/2020's sixth
+#: bracket); 2020's devengo (closes 2020-12-31) falls entirely inside the
+#: pre-amendment art-63-2015 window (2015-01-01 to 2020-12-31).
+_GENERAL_SCALE_ART_63_REF_BY_YEAR = {
+    2020: "ley-35-2006:art-63-2015",
+    2021: "ley-35-2006:art-63",
+    2022: "ley-35-2006:art-63",
+    2023: "ley-35-2006:art-63",
+    2024: "ley-35-2006:art-63",
+    2025: "ley-35-2006:art-63",
+}
+
 
 @pytest.mark.parametrize("filing_year", [2020, 2021, 2022, 2023, 2024, 2025])
 def test_modelo_100_average_rate_casillas_are_ratio_typed(filing_year: int) -> None:
@@ -57,7 +69,7 @@ def test_modelo_100_average_rate_casillas_are_ratio_typed(filing_year: int) -> N
         assert label_formula in casilla.label
         assert label_part in casilla.label
         assert "Tipos medios de gravamen" in casilla.label
-        assert "ley-35-2006:art-63" in casilla.legal_refs
+        assert _GENERAL_SCALE_ART_63_REF_BY_YEAR[filing_year] in casilla.legal_refs
 
         formula = formulas_by_id[expected_formula]
         assert formula.target_casilla_id == casilla_id

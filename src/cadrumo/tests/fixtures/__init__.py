@@ -98,6 +98,7 @@ def provenance_mismatches(pdf_path: Path) -> list[str]:
         ]
     return []
 
+
 __all__ = [
     "FIXTURE_PROVENANCE_REAL",
     "FIXTURE_PROVENANCE_SYNTHETIC",

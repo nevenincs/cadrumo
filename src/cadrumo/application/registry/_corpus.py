@@ -30,10 +30,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from cadrumo.core.config import coerce_output_language_setting
-
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.config import Settings, load_settings
+from ...core.config import Settings, coerce_output_language_setting, load_settings
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
 from ...core.topics import Topic, TopicCatalogue, load_topic_catalogue

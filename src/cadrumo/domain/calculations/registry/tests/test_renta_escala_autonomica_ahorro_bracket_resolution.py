@@ -68,11 +68,25 @@ def _revision(year: int):
     return modelo.revisions[str(year)]
 
 
+#: Each pre-2024 filing year's applicability window predates art.76's current
+#: catalogue redaction (effective_from 2024-12-22, Ley 7/2024), so it cites the
+#: version-scoped redaction actually in force for that filing year instead of
+#: the bare current id.
+_ART_76_REF_BY_YEAR = {
+    2020: "ley-35-2006:art-76-2015",
+    2021: "ley-35-2006:art-76-2021",
+    2022: "ley-35-2006:art-76-2021",
+    2023: "ley-35-2006:art-76-2023",
+    2024: "ley-35-2006:art-76",
+    2025: "ley-35-2006:art-76",
+}
+
+
 def test_ahorro_escala_declares_art_76_legal_ref() -> None:
     """The autonomica ahorro escala must carry the art.76 legal grounding."""
     for year in _ALL_YEARS:
         table = _ahorro_table(year)
-        assert "ley-35-2006:art-76" in table.legal_refs
+        assert _ART_76_REF_BY_YEAR[year] in table.legal_refs
         assert table.data_type == "bracket_table"
 
 

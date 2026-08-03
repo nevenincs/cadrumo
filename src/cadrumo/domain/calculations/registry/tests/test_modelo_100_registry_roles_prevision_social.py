@@ -11,7 +11,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PREVISION_SOCIAL_SECTION = ("toma_datos_ampliada", "red_base_imponible", "red_prevision_social")
 _ART_51_REF = "ley-35-2006:art-51"
-_ART_52_REF = "ley-35-2006:art-52"
+# The 2021 revision's applicability window predates art. 52's current
+# catalogue redaction (effective_from 2023-01-01, Ley 31/2022 art. 62.1); it
+# cites the version-scoped 2021-only redaction (Ley 11/2020 art. 62.2) instead.
+_ART_52_REF = "ley-35-2006:art-52-2021"
 _AEAT_2021_DICTIONARY_REF = "aeat-dr-100-2021-dictionary"
 _AEAT_2021_INPUT_DICTIONARY_REF = "aeat-dr-100-2021-input-dictionary"
 _AEAT_2021_XSD_REF = "aeat-dr-100-2021-xsd"

@@ -95,7 +95,7 @@ def app_maintenance_reconcile(
             ReconciledProfileExportPayload(
                 operation_id=operation.operation_id,
                 destination=operation.destination,
-                   purpose=operation.purpose,
+                purpose=operation.purpose,
             )
             for operation in outcome.reconciled
         ],

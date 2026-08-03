@@ -358,6 +358,6 @@ class TestSecretStoreNaturalKey:
         ) != _backend_module._secret_store_key(bucket_id="bucket", name="apoderado")
 
     def test_bucket_scoping_survives(self) -> None:
-        assert _backend_module._secret_store_key(
-            bucket_id="a", name="personal"
-        ) != _backend_module._secret_store_key(bucket_id="b", name="personal")
+        assert _backend_module._secret_store_key(bucket_id="a", name="personal") != _backend_module._secret_store_key(
+            bucket_id="b", name="personal"
+        )

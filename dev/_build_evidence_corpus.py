@@ -94,6 +94,7 @@ def _save(name: str, data: bytes, *, source_url: str, licence: str, title: str, 
         )
         + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     print(f"saved {name} ({len(data)} bytes, {licence}) <- {title}")
 

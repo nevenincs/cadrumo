@@ -236,9 +236,7 @@ def test_guard_refuses_a_hostile_authority_on_the_authority_ground(url: str) -> 
     result = _evaluate(url)
 
     assert result.decision == "blocked"
-    assert _AUTHORITY_REFUSAL_GROUND in result.reason, (
-        f"expected an authority refusal, got: {result.reason}"
-    )
+    assert _AUTHORITY_REFUSAL_GROUND in result.reason, f"expected an authority refusal, got: {result.reason}"
     assert _ALLOW_LIST_REFUSAL_GROUND not in result.reason
 
 

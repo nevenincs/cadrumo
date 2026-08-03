@@ -53,6 +53,7 @@ def _run(argv: list[str], *, cwd: Path, log: Path) -> CommandResult:
         f"argv={json.dumps(argv)}\ncwd={cwd}\nexit_code={completed.returncode}\n"
         f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     return completed
 
@@ -224,6 +225,7 @@ def run_pypi_acquisition(
     evidence_path.write_text(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
 
     if release_cohort_dir is not None and row_id is not None:

@@ -489,7 +489,7 @@ def main() -> int:
     )
     output = args.output_dir.resolve() / "Formula" / "cadrumo.rb"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(formula, encoding="utf-8")
+    output.write_text(formula, encoding="utf-8", newline="\n")
     sys.stdout.write(f"{output}\n")
     return 0
 

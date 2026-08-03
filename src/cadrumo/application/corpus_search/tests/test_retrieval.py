@@ -35,7 +35,10 @@ def test_ranked_lexical_hits_for_a_prose_query(tmp_path: Path) -> None:
     response = run_retrieval("recargo declaración extemporánea", database_path=database_path, limit=5)
     assert response.mode is RetrievalMode.LEXICAL_ONLY
     assert response.hits
-    assert response.hits[0].corpus_ref.endswith("ley-58-2003-art-27.html")
+    # The ref is ``path#anchor``: the citation resolver splits the fragment off
+    # before opening the file, so both halves are asserted here -- a dropped or
+    # altered anchor would still resolve to a file but to the wrong unit.
+    assert response.hits[0].corpus_ref == "corpus/normatives/html/ley-58-2003-art-27.html#a27"
     assert response.hits[0].lexical_rank == 0
     # Rank mirrors the lexical order and the score is a positive, strictly
     # decreasing BM25 relevance, so the page is ordered best-first.

@@ -352,7 +352,7 @@ def _commit_concept(handbook: TerminologyHandbook, new_concept: ConceptRecord, c
     candidate_handbook = TerminologyHandbook(concepts=tuple(by_id.values()))
     _validate_or_refuse(candidate_handbook)
     path = concepts_dir / f"{revalidated.concept_id}.toml"
-    path.write_text(serialise_concept(revalidated), encoding=UTF_8_ENCODING)
+    path.write_text(serialise_concept(revalidated), encoding=UTF_8_ENCODING, newline="\n")
     return path
 
 

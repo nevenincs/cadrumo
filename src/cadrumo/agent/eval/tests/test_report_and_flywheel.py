@@ -28,7 +28,6 @@ from .._report import (
 )
 from .._runner import load_scenario
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
@@ -394,6 +393,7 @@ def test_promoted_scenario_refuses_a_nonidentical_same_signature_replacement(tmp
         )
 
     assert path.read_text(encoding="utf-8") == original
+
 
 class _ScenarioOutcomeRowFields(TypedDict):
     scenario: str

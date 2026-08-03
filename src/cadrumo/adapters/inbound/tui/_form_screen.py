@@ -22,6 +22,8 @@ point composes.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, ClassVar, override
@@ -29,14 +31,24 @@ from typing import TYPE_CHECKING, ClassVar, override
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import ModalScreen
+from textual.screen import ModalScreen, Screen
 from textual.widgets import Button, DataTable, Footer, Input, Label, OptionList, SelectionList, Static
 
 from ....core.i18n import tr
 from ._theme import BASE_CSS, ContentScroll, install_cadrumo_themes, toggle_appearance
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Iterator, Mapping, Sequence
+
+type FormRebuild = Callable[[Mapping[str, str]], FormPage]
+"""Recomputes a page from the answers given to it so far."""
+
+type FormPresenter = Callable[[FormPage, FormRebuild | None], Mapping[str, str] | None]
+"""Shows one page and returns what the operator committed, or ``None``.
+
+Takes the rebuild callable positionally so a host can supply the same
+shape whether or not the page regenerates itself.
+"""
 
 
 class FormFieldKind(StrEnum):
@@ -100,9 +112,36 @@ _MULTI_CHOICE_SEPARATOR = ","
 convention the profile facts already store."""
 
 
+_EDIT_DIALOG_CSS = """
+#edit-dialog {
+    border: thick $accent;
+    background: $surface;
+    padding: 1 3;
+    width: 60%;
+    height: auto;
+}
+#edit-label { text-style: bold; }
+#edit-path { color: $text-muted; margin: 0 0 1 0; }
+#edit-refusal { color: $error; }
+#edit-dialog Input { margin: 0 0 1 0; }
+#edit-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
+#edit-actions Button { margin: 0 0 0 2; }
+"""
+"""Dialog styling carried by the edit screens themselves.
+
+These rules used to live on the host application's ``CSS``, which was
+enough while the only host was :class:`FormApp`. The page is now also
+pushed into the profile manager, and a dialog that took its appearance
+from whichever application happened to be hosting it would render
+unstyled in the second one. Carrying the rules on the screens makes them
+self-sufficient in any host.
+"""
+
+
 class TextEditScreen(ModalScreen[str | None]):
     """Type one text value. Dismisses with the new value, or ``None``."""
 
+    DEFAULT_CSS = _EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
     def __init__(self, field: FormField) -> None:
@@ -149,6 +188,7 @@ class TextEditScreen(ModalScreen[str | None]):
 class ChoiceEditScreen(ModalScreen[str | None]):
     """Pick any number of options. Dismisses with a comma-joined token list."""
 
+    DEFAULT_CSS = _EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
     def __init__(self, field: FormField) -> None:
@@ -184,6 +224,7 @@ class ChoiceEditScreen(ModalScreen[str | None]):
 class OneChoiceEditScreen(ModalScreen[str | None]):
     """Pick exactly one option. Dismisses with its token."""
 
+    DEFAULT_CSS = _EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
     def __init__(self, field: FormField) -> None:
@@ -242,36 +283,37 @@ def _edit_screen_for(field: FormField) -> ModalScreen[str | None]:
             return TextEditScreen(field)
 
 
-class FormApp(App["Mapping[str, str] | None"]):
-    """Full-screen editable field page with an explicit commit."""
+class FormScreen(Screen["Mapping[str, str] | None"]):
+    """The editable field page itself, as a screen any host can push.
 
-    CSS = (
-        BASE_CSS
-        + """
+    A plain screen rather than a modal one: the modal styling centres its
+    content and tints whatever lies beneath, which suits the small
+    single-value dialogs above but not this. The page is a whole surface
+    in its own right, so it covers its host completely and keeps the
+    full-width layout it had when it was an application.
+
+    The page began life fused to :class:`FormApp`, which was sufficient
+    while the only way to reach it was to start an application for it. The
+    profile manager now offers the same doors from inside an application
+    that is already running, where starting a second one is impossible:
+    an application owns an event loop, and starting one from a thread that
+    already has a running loop raises rather than nesting.
+
+    Separating the page from its host is what lets both reach it. The
+    standalone entry point keeps its own application; the manager pushes
+    this screen onto the one it is already running. That leaves one page
+    implementation and two hosts, rather than a copy per host which would
+    drift apart the first time either one changed.
+    """
+
+    DEFAULT_CSS = """
     #form-table { height: auto; width: 100%; background: $surface; }
     #form-refusal { color: $error; margin: 1 0 0 0; }
     #form-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
     #form-actions Button { margin: 0 0 0 2; }
-    #edit-dialog {
-        border: thick $accent;
-        background: $surface;
-        padding: 1 3;
-        width: 60%;
-        height: auto;
-    }
-    #edit-label { text-style: bold; }
-    #edit-path { color: $text-muted; margin: 0 0 1 0; }
-    #edit-refusal { color: $error; }
-    #edit-dialog Input { margin: 0 0 1 0; }
-    #edit-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
-    #edit-actions Button { margin: 0 0 0 2; }
     """
-    )
 
-    BINDINGS: ClassVar = [
-        Binding("f3", "toggle_appearance", "", show=False),
-        Binding("escape", "abandon", "", show=False),
-    ]
+    BINDINGS: ClassVar = [Binding("escape", "abandon", "", show=False)]
 
     def __init__(
         self,
@@ -307,15 +349,22 @@ class FormApp(App["Mapping[str, str] | None"]):
         yield Footer()
 
     def on_mount(self) -> None:
-        install_cadrumo_themes(self)
         self.query_one("#form-banner", Static).update(self._page.title)
         self.query_one("#form-body", Vertical).border_title = self._page.section
         table: DataTable[str] = self.query_one("#form-table", DataTable)
         table.add_columns(tr("flows.manager.column.field"), tr("flows.manager.column.value"))
-        self._render()
+        self._render_rows()
 
-    def _render(self) -> None:
-        """Rebuild the row set from the current field list and values."""
+    def _render_rows(self) -> None:
+        """Rebuild the row set from the current field list and values.
+
+        Named for the rows rather than for rendering because ``_render``
+        belongs to Textual: a widget's is what produces its visual, and a
+        screen that shadowed it with a table rebuild returning ``None``
+        would fail to draw at all. Harmless while this page was an
+        application, which has no such method — and precisely the kind of
+        collision that only appears once the page becomes a screen.
+        """
         table: DataTable[str] = self.query_one("#form-table", DataTable)
         table.clear()
         for form_field in self._page.fields:
@@ -341,7 +390,9 @@ class FormApp(App["Mapping[str, str] | None"]):
             validate=form_field.validate,
         )
         screen = _edit_screen_for(current)
-        self.push_screen(screen, self._accept_for(current.key))
+        # The stack belongs to the application, not to a screen on it, so
+        # the dialog is pushed through the host rather than by this page.
+        self.app.push_screen(screen, self._accept_for(current.key))
 
     def _accept_for(self, key: str) -> Callable[[str | None], None]:
         def _accept(value: str | None) -> None:
@@ -357,7 +408,7 @@ class FormApp(App["Mapping[str, str] | None"]):
                     form_field.key: self._values.get(form_field.key, form_field.value)
                     for form_field in self._page.fields
                 }
-            self._render()
+            self._render_rows()
 
         return _accept
 
@@ -382,11 +433,53 @@ class FormApp(App["Mapping[str, str] | None"]):
                 self.query_one("#form-refusal", Static).update(f"{form_field.label}: {refusal}")
                 return
         self.collected = dict(self._values)
-        self.exit(self.collected)
+        self.dismiss(self.collected)
 
     def action_abandon(self) -> None:
         self.collected = None
-        self.exit(None)
+        self.dismiss(None)
+
+
+class FormApp(App["Mapping[str, str] | None"]):
+    """Standalone host for :class:`FormScreen`.
+
+    Everything that makes the page a page lives on the screen; this exists
+    only to give it an application to run in when there is not already
+    one, which is the case for every caller that reaches a form straight
+    from the command line.
+    """
+
+    CSS = BASE_CSS
+
+    BINDINGS: ClassVar = [Binding("f3", "toggle_appearance", "", show=False)]
+
+    def __init__(
+        self,
+        page: FormPage,
+        *,
+        rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
+    ) -> None:
+        super().__init__()
+        self._page = page
+        self._rebuild = rebuild
+        self.collected: Mapping[str, str] | None = None
+        """The committed values, or ``None`` when the operator left without
+        committing. Callers read this rather than catching an exception,
+        because abandoning is an ordinary choice."""
+
+    def on_mount(self) -> None:
+        install_cadrumo_themes(self)
+        self.push_screen(FormScreen(self._page, rebuild=self._rebuild), self._finish)
+
+    def _finish(self, collected: Mapping[str, str] | None) -> None:
+        """Carry the screen's answer out to the caller and close.
+
+        The application exists only for the one screen, so its dismissal
+        is the application's result: there is nothing left to show once
+        the page is done with.
+        """
+        self.collected = collected
+        self.exit(collected)
 
     def action_toggle_appearance(self) -> None:
         toggle_appearance(self)
@@ -397,10 +490,55 @@ def run_form_tui(
     *,
     rebuild: Callable[[Mapping[str, str]], FormPage] | None = None,
 ) -> Mapping[str, str] | None:
-    """Run one form page and return the committed values, or ``None``."""
+    """Run one form page and return the committed values, or ``None``.
+
+    For a caller that has no application of its own. A caller already
+    running one pushes :class:`FormScreen` instead — starting a second
+    application from inside a running event loop is what this function
+    cannot do.
+    """
     app = FormApp(page, rebuild=rebuild)
     app.run()
     return app.collected
+
+
+_ACTIVE_FORM_PRESENTER: ContextVar[FormPresenter | None] = ContextVar(
+    "cadrumo_active_form_presenter",
+    default=None,
+)
+"""How a form should be shown, when something has already decided.
+
+Empty in the ordinary case, where a caller reaching a form is free to
+start an application for it. A host that is already running one binds
+this so the same call opens a page on the host instead.
+"""
+
+
+@contextmanager
+def presenting_forms_through(presenter: FormPresenter) -> Iterator[None]:
+    """Route form presentation through ``presenter`` for this context.
+
+    A context variable rather than an argument because the callers that
+    present a form do not take one: an action is a plain zero-argument
+    callable, and several of them are deliberately kept that way — the
+    censal action's parameterless signature is a pinned safety property,
+    since a parameter there would be somewhere to aim the read at another
+    taxpayer. The host therefore states how forms are shown for the
+    duration of the call rather than threading it through every action.
+
+    Restores the previous value on the way out, so nesting is safe and an
+    action that raises cannot leave a stale presenter bound.
+    """
+    token = _ACTIVE_FORM_PRESENTER.set(presenter)
+    try:
+        yield
+    finally:
+        _ACTIVE_FORM_PRESENTER.reset(token)
+
+
+def active_form_presenter() -> FormPresenter | None:
+    """The presenter bound for this context, or ``None`` to start an application."""
+    return _ACTIVE_FORM_PRESENTER.get()
 
 
 def multi_choice_tokens(value: str) -> tuple[str, ...]:
@@ -420,9 +558,13 @@ __all__ = [
     "FormField",
     "FormFieldKind",
     "FormPage",
+    "FormPresenter",
+    "FormScreen",
     "OneChoiceEditScreen",
     "TextEditScreen",
+    "active_form_presenter",
     "form_choices",
     "multi_choice_tokens",
+    "presenting_forms_through",
     "run_form_tui",
 ]

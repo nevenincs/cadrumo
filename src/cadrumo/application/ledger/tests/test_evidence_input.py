@@ -145,7 +145,9 @@ def test_attachment_evidence_normalizes_media_type_for_classification_but_preser
         bucket_id=_BUCKET_ID,
     )
 
-    resolved = resolve_attachment_evidence_input(attachment.attachment_id, store=AttachmentStore(objects=secure_objects))
+    resolved = resolve_attachment_evidence_input(
+        attachment.attachment_id, store=AttachmentStore(objects=secure_objects)
+    )
 
     assert resolved.media_kind is expected_kind
     assert resolved.mime_type == mime_type

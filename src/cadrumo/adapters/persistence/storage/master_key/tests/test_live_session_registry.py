@@ -18,16 +18,16 @@ import threading
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.master_key._active_session import (
+from ......core.time import now
+from .._active_session import (
     activate_session,
     close_active_bucket_session,
 )
-from cadrumo.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from cadrumo.adapters.persistence.storage.master_key._live_sessions import (
+from .._bucket_session import BucketSession
+from .._live_sessions import (
     close_all_live_bucket_sessions,
     live_bucket_session_count,
 )
-from cadrumo.core.time import now
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

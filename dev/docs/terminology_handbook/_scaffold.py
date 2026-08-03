@@ -254,7 +254,7 @@ def apply_scaffold_plan(plan: ScaffoldPlan, concepts_dir: Path) -> tuple[Path, .
         if entry.action is ScaffoldAction.UNCHANGED:
             continue
         path = concepts_dir / f"{entry.concept_id}.toml"
-        path.write_text(serialise_concept(entry.record), encoding=UTF_8_ENCODING)
+        path.write_text(serialise_concept(entry.record), encoding=UTF_8_ENCODING, newline="\n")
         written.append(path)
     return tuple(sorted(written))
 

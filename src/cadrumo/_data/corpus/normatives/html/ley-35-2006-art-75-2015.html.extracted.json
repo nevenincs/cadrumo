@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-75-2015.html",
+  "source_sha256": "a7c65b8a8815cbfb2d511b791af46e96fd3bc7762d8c9788023068c984c5ab24",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.1",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "Los contribuyentes que satisfagan anualidades por alimentos a sus hijos por decisión judicial sin derecho a la aplicación por estos últimos del mínimo por descendientes previsto en el artículo 58 de esta Ley, cuando el importe de aquéllas sea inferior a la base liquidable general, aplicarán la escala prevista en el número 1.º del apartado 1 del artículo anterior separadamente al importe de las anualidades por alimentos y al resto de la base liquidable general. La cuantía total resultante se minorará en el importe derivado de aplicar la escala prevista en el número 1.º del apartado 1 del artículo 74 de esta Ley a la parte de la base liquidable general correspondiente al mínimo personal y familiar que resulte de los incrementos o disminuciones a que se refiere el artículo 56.3 de esta Ley, incrementado en 1.980 euros anuales, sin que pueda resultar negativa como consecuencia de tal minoración.\nSe modifica por el art. 1.50 de la Ley 26/2014, de 27 de noviembre. Ref. BOE-A-2014-12327.\nSe modifica por la disposición final 2.10 de la Ley 22/2009, de 18 de diciembre. Ref. BOE-A-2009-20375\nEsta modificación entra en vigor y surte efectos desde el 1 de enero de 2010, según establece la disposición final 5.",
+      "title": "Artículo 75. Especialidades aplicables en los supuestos de anualidades por alimentos a favor de los hijos.",
+      "section": "Artículo 75. Especialidades aplicables en los supuestos de anualidades por alimentos a favor de los hijos.",
+      "anchor": "#a75"
+    }
+  ]
+}

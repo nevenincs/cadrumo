@@ -106,6 +106,7 @@ def _run(
         f"argv={json.dumps(argv)}\nreturncode={completed.returncode}\n"
         f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}",
         encoding=_UTF_8,
+        newline="\n",
     )
     if completed.returncode != 0:
         raise SystemExit(f"command failed with exit {completed.returncode}: {argv!r}; see {log_path}")
@@ -481,6 +482,7 @@ def _prove_installed_plugin(
     evidence_path.write_text(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
+        newline="\n",
     )
     print(evidence_path)
     return 0

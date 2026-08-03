@@ -13,9 +13,10 @@ rendered prose, which is locale data and would make them tautological.
 from __future__ import annotations
 
 import pytest
+from textual.app import App
 from textual.widgets import DataTable, Input, SelectionList, Static
 
-from .. import FormApp, FormField, FormFieldKind, FormPage, form_choices, multi_choice_tokens
+from .. import FormApp, FormField, FormFieldKind, FormPage, FormScreen, form_choices, multi_choice_tokens
 
 pytestmark = [
     pytest.mark.unit,
@@ -29,8 +30,19 @@ def _page(*fields: FormField) -> FormPage:
     return FormPage(title="TITLE", section="SECTION", fields=fields)
 
 
-def _rows(app: FormApp) -> dict[str, str]:
-    table: DataTable[str] = app.query_one("#form-table", DataTable)
+def _form(app: App[object]) -> FormScreen:
+    """The form page, wherever it currently sits in the screen stack.
+
+    The page is a screen the host pushes rather than the host's own body,
+    so it is addressed directly here for two reasons: an open edit dialog
+    sits above it, which rules out ``app.screen``, and ``App.query_one``
+    resolves against the default screen, which the page is not.
+    """
+    return next(screen for screen in reversed(app.screen_stack) if isinstance(screen, FormScreen))
+
+
+def _rows(app: App[object]) -> dict[str, str]:
+    table: DataTable[str] = _form(app).query_one("#form-table", DataTable)
     return {str(row_key.value): str(table.get_row(row_key)[1]) for row_key in table.rows}
 
 
@@ -50,7 +62,7 @@ async def test_editing_a_row_writes_the_typed_value_back_to_the_page() -> None:
     app = FormApp(_page(FormField(key="a", label="A")))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        app.query_one("#form-table", DataTable).action_select_cursor()
+        _form(app).query_one("#form-table", DataTable).action_select_cursor()
         await pilot.pause()
         app.screen.query_one("#edit-input", Input).value = "typed"
         await pilot.click("#btn-edit-save")
@@ -69,7 +81,7 @@ async def test_a_refused_value_holds_the_dialog_open_and_never_reaches_the_page(
     app = FormApp(_page(FormField(key="a", label="A", validate=lambda value: "NO" if value == "bad" else None)))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        app.query_one("#form-table", DataTable).action_select_cursor()
+        _form(app).query_one("#form-table", DataTable).action_select_cursor()
         await pilot.pause()
         app.screen.query_one("#edit-input", Input).value = "bad"
         await pilot.click("#btn-edit-save")
@@ -88,7 +100,7 @@ async def test_commit_rechecks_a_field_the_operator_never_opened() -> None:
         await pilot.click("#btn-form-save")
         await pilot.pause()
         assert app.collected is None, "commit must refuse while a field is invalid"
-        assert str(app.query_one("#form-refusal", Static).content)
+        assert str(_form(app).query_one("#form-refusal", Static).content)
         app.exit(None)
 
 
@@ -120,13 +132,50 @@ async def test_a_multi_choice_field_stores_the_tokens_it_was_given() -> None:
     app = FormApp(_page(field))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        app.query_one("#form-table", DataTable).action_select_cursor()
+        _form(app).query_one("#form-table", DataTable).action_select_cursor()
         await pilot.pause()
         app.screen.query_one("#edit-choices", SelectionList).select_all()
         await pilot.click("#btn-edit-save")
         await pilot.pause()
         assert set(multi_choice_tokens(_rows(app)["scopes"])) == {"READ", "WRITE"}
         app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_the_page_works_in_a_host_that_is_not_its_own_application() -> None:
+    """The page is reachable from an application that is already running.
+
+    This is the property the page was separated from its application to
+    obtain, and it cannot be observed through :class:`FormApp`, which
+    always starts a fresh application. A host that is already running one
+    cannot start a second — so if the page only worked as an application,
+    every door reached from inside a running screen would be shut.
+
+    The host here is a plain application standing in for any such caller,
+    deliberately not the profile manager: what is being pinned is that the
+    page needs nothing from a particular host, only somewhere to be
+    pushed.
+    """
+
+    class _Host(App[None]):
+        pass
+
+    host = _Host()
+    async with host.run_test(size=_TERMINAL_SIZE) as pilot:
+        await pilot.pause()
+        collected: list[object] = []
+        host.push_screen(
+            FormScreen(_page(FormField(key="a", label="A", value="carried"))),
+            collected.append,
+        )
+        await pilot.pause()
+
+        assert _rows(host)["a"] == "carried", "the page must render inside the borrowed host"
+
+        await pilot.click("#btn-form-save")
+        await pilot.pause()
+        assert collected == [{"a": "carried"}], "committing must hand the values back to the host"
+        host.exit(None)
 
 
 @pytest.mark.asyncio
@@ -148,7 +197,7 @@ async def test_a_shrinking_page_drops_the_values_it_no_longer_asks_for() -> None
     app = FormApp(_page(FormField(key="count", label="Count", value="2")), rebuild=rebuild)
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        table: DataTable[str] = app.query_one("#form-table", DataTable)
+        table: DataTable[str] = _form(app).query_one("#form-table", DataTable)
         table.action_select_cursor()
         await pilot.pause()
         app.screen.query_one("#edit-input", Input).value = "2"

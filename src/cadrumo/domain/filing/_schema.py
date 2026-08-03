@@ -225,8 +225,7 @@ class ModeloApprovalBasis(BaseModel):
         """
         if value != APPROVAL_BASIS_VERSION:
             raise FilingValidationError(
-                f"approval basis version {value!r} is not the current basis layout "
-                f"{APPROVAL_BASIS_VERSION!r}",
+                f"approval basis version {value!r} is not the current basis layout {APPROVAL_BASIS_VERSION!r}",
             )
         return value
 
@@ -315,8 +314,7 @@ class ModeloDraft(BaseModel):
             )
         if self.modelo != self.snapshot_ref.modelo:
             raise FilingValidationError(
-                f"draft modelo {self.modelo!r} does not match its snapshot_ref modelo "
-                f"{self.snapshot_ref.modelo!r}",
+                f"draft modelo {self.modelo!r} does not match its snapshot_ref modelo {self.snapshot_ref.modelo!r}",
             )
         expected_schema_version = registry_schema_version(
             modelo=self.snapshot_ref.modelo,

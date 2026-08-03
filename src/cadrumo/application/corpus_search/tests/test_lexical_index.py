@@ -67,7 +67,12 @@ def test_search_stemmed_column_recovers_inflection(tmp_path: Path) -> None:
     # snowball-stemmed column recovers it against "extemporánea".
     hits = search_lexical(database_path, "recargos extemporáneas", limit=5)
     assert hits, "stemmed recall should recover the inflected query"
-    assert any(hit.corpus_ref.endswith("ley-58-2003-art-27.html") for hit in hits)
+    art27 = [hit for hit in hits if hit.corpus_ref.partition("#")[0].endswith("ley-58-2003-art-27.html")]
+    assert art27, "stemmed recall should reach the LGT art. 27 document"
+    # Pin the whole ``path#anchor`` ref, not just the path: the citation
+    # resolver splits the fragment off before opening the file, so a dropped
+    # anchor still names a readable file but the wrong extracted unit.
+    assert {hit.corpus_ref for hit in art27} == {"corpus/normatives/html/ley-58-2003-art-27.html#a27"}
 
 
 def test_empty_query_is_refused(tmp_path: Path) -> None:

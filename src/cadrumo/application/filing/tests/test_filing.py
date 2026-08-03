@@ -257,8 +257,7 @@ def test_build_draft_blocks_negative_modelo_130_retenciones() -> None:
 
     assert draft.status is ModeloDraftStatus.BORRADOR
     assert any(
-        finding.code == "casilla-out-of-range" and finding.casilla_id == _M130_CASILLA_06
-        for finding in draft.findings
+        finding.code == "casilla-out-of-range" and finding.casilla_id == _M130_CASILLA_06 for finding in draft.findings
     )
 
 
@@ -332,8 +331,7 @@ def test_build_draft_blocks_negative_modelo_111_retenciones() -> None:
 
     assert draft.status is ModeloDraftStatus.BORRADOR
     assert any(
-        finding.code == "casilla-out-of-range" and finding.casilla_id == _M111_CASILLA_06
-        for finding in draft.findings
+        finding.code == "casilla-out-of-range" and finding.casilla_id == _M111_CASILLA_06 for finding in draft.findings
     )
 
 
