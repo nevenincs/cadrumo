@@ -98,16 +98,26 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # The rest of the target-scoped profile verbs, on the same grounds as
     # ``delete`` above: each names the profile it operates on and opens that
     # bucket's own session, so blocking on the ACTIVE bucket's session was a
-    # precondition mismatch rather than a security boundary. ``rename`` and
-    # ``archive export`` go through BucketMaintenanceService, which wraps both
-    # in ``profile_storage_session``; ``duplicate`` reads its source through
-    # the same self-scoped span; ``validate NAME`` is the read-only twin of
+    # precondition mismatch rather than a security boundary. ``rename`` goes
+    # through BucketMaintenanceService, which wraps it in
+    # ``profile_storage_session``; ``duplicate`` reads its source through the
+    # same self-scoped span; ``validate NAME`` is the read-only twin of
     # ``show NAME``, which the root callback already carves out by hand.
     # Credentials are still required — they are just supplied to the target
     # rather than demanded as a prior login into an unrelated profile.
+    #
+    # ``config profile archive export`` is DELIBERATELY ABSENT and must stay
+    # that way. It is target-scoped like its siblings, so it would qualify on
+    # the mechanical reading — but it is the one verb here that emits a
+    # PORTABLE COPY of the profile's financial records, and the login gate is
+    # the control the operator wants on that. Recency is the point: the gate
+    # demands a currently-valid session (one whose idle and absolute deadlines
+    # have not elapsed), which a target-scoped unlock does not establish.
+    # Mechanical qualification is not sufficient for a verb whose output
+    # leaves the encrypted store; see
+    # ``test_archive_export_must_stay_login_gated``.
     "config profile duplicate",
     "config profile rename",
-    "config profile archive export",
     "config profile validate",
     # Bundled-registry discovery: lists public modelo metadata and must stay
     # reachable before a profile has been unlocked.

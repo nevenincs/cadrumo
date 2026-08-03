@@ -286,6 +286,44 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
             assert error["suggestion"] != "aeat config login", document
             assert "aeat config login" not in semantic_cli_output(result)
 
+    def test_archive_export_must_stay_login_gated(self) -> None:
+        """``profile archive export`` must NOT be exempted from the login gate.
+
+        This is a deliberate exception to the reasoning that freed its
+        siblings, and it is pinned here because that reasoning would otherwise
+        readmit it: ``archive export`` IS target-scoped, so on the mechanical
+        test — "does the verb open its own session for the profile it names?" —
+        it qualifies exactly as ``rename`` and ``duplicate`` do. It was in fact
+        exempted on that basis and then withdrawn.
+
+        What makes it different is its OUTPUT, not its plumbing: it emits a
+        portable copy of the profile's financial records, and the operator's
+        directive (2026-08-03) is that producing one requires a currently-valid
+        login. Recency is the substance of that requirement — the gate demands
+        a session whose idle and absolute deadlines have not elapsed, which a
+        target-scoped unlock performed by the verb itself never establishes.
+
+        Asserted against the registry rather than the live CLI so the guard
+        holds even when the surrounding environment cannot run a command, and
+        so it names the precise thing a future sweep would change.
+        """
+        from .._bootstrap_exempt import is_bootstrap_exempt
+
+        assert not is_bootstrap_exempt("config profile archive export"), (
+            "`config profile archive export` emits a portable copy of the profile's "
+            "financial records and must stay behind the login gate. Being "
+            "target-scoped is not sufficient grounds to exempt it -- that is the "
+            "reasoning that already readmitted it once."
+        )
+        # The sibling exemptions this rule is carved out of must still hold,
+        # so a future change cannot satisfy this guard by re-gating everything.
+        for still_exempt in (
+            "config profile rename",
+            "config profile duplicate",
+            "config profile validate",
+        ):
+            assert is_bootstrap_exempt(still_exempt), still_exempt
+
     def test_the_login_gate_still_refuses_a_decrypting_verb(self) -> None:
         """The exemption opened one door, not the gate.
 
