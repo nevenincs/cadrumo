@@ -50,10 +50,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # comparison is wrong in both directions at once.
 _FINGERPRINT_EXCLUDED_ORACLE = frozenset(
     {
+        "cadrumo_corpus_search_cache_dir",
         "cadrumo_corpus_text_cache_dir",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_run_telemetry_dir",
         "cadrumo_llm_usage_dir",
+        "cadrumo_mcp_telemetry_dir",
         "cadrumo_runs_dir",
         "cadrumo_status_cache_dir",
         "cadrumo_storage_backup_dir",

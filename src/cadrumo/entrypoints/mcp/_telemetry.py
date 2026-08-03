@@ -38,10 +38,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.config import load_settings
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.hashing import sha256_hex
+from ...core.paths import select_filesystem_retention_survivors
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
-_TELEMETRY_DIRNAME = "telemetry"
 _SECONDS_PER_DAY = 86_400
 _SESSION_ID_PATTERN = re.compile(r"[A-Za-z0-9_-][A-Za-z0-9._-]*")
 
@@ -94,8 +94,14 @@ def content_sha256(text: str) -> str:
 
 
 def telemetry_dir() -> Path:
-    """The workspace-scoped telemetry directory under the local storage root."""
-    return load_settings().cadrumo_local_storage_root / _TELEMETRY_DIRNAME
+    """The workspace-scoped telemetry directory under the local storage root.
+
+    Read from the settings field rather than joined here: a module-local
+    subdirectory literal is invisible to the storage taxonomy, so no
+    environment override could reach it and the tree materialiser could not
+    pre-create it.
+    """
+    return load_settings().cadrumo_mcp_telemetry_dir
 
 
 def _session_telemetry_path(directory: Path, *, session_id: str) -> Path:
@@ -142,7 +148,13 @@ def prune_telemetry(
     Session files are ranked newest-first by modification time (ties broken by
     filename for determinism). The newest ``keep_newest`` are retained
     unconditionally. Of the remainder, a file is removed when it falls beyond
-    the ``max_sessions`` count bound OR is older than ``max_age_days``.
+    the ``max_sessions`` count bound OR is older than ``max_age_days`` — the
+    survivor decision delegates to the shared
+    :func:`~cadrumo.core.paths.select_filesystem_retention_survivors`
+    selector in its ``combine="union"`` mode (age and count evaluated
+    independently, not staged, since a rank-3 session within the age window
+    must still be prunable for being beyond the count bound), with
+    ``protect_newest=keep_newest``.
 
     Args:
         directory: The telemetry directory to sweep. A missing directory is a
@@ -162,16 +174,23 @@ def prune_telemetry(
     reference = time.time() if now is None else now
     cutoff = reference - max_age_days * _SECONDS_PER_DAY
     entries = [(path, path.stat().st_mtime) for path in directory.glob("*.jsonl")]
-    # Newest first; the filename tie-break keeps the ranking deterministic when
-    # two sessions share an mtime (common in a fast test that writes in a burst).
-    entries.sort(key=lambda item: (item[1], item[0].name), reverse=True)
+    # Pre-sort by filename descending: the shared selector's stable,
+    # timestamp-only sort then preserves this order for any mtime tie,
+    # reproducing the newest-first-by-(mtime, name) tie-break deterministically
+    # (common in a fast test that writes a burst of sessions).
+    entries.sort(key=lambda item: item[0].name, reverse=True)
+    _keep, stale = select_filesystem_retention_survivors(
+        entries,
+        timestamp=lambda item: item[1],
+        cutoff=cutoff,
+        max_count=max_sessions,
+        combine="union",
+        protect_newest=keep_newest,
+    )
     removed: list[Path] = []
-    for position, (path, mtime) in enumerate(entries):
-        if position < keep_newest:
-            continue
-        if position >= max_sessions or mtime < cutoff:
-            path.unlink()
-            removed.append(path)
+    for path, _mtime in stale:
+        path.unlink()
+        removed.append(path)
     return tuple(removed)
 
 

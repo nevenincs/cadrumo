@@ -394,10 +394,10 @@ def default_log_file_path() -> Path:
     """
     from .config import load_settings
 
-    log_dir = load_settings().cadrumo_log_dir
-    if log_dir is None:  # pragma: no cover - validator always populates the field
-        log_dir = load_settings().cadrumo_local_storage_root / "logs"
-    return log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
+    # No fallback join: the field is non-optional and the validator always
+    # populates it, so a literal "logs" here would be an unreachable second
+    # declaration of a subpath the taxonomy already owns.
+    return load_settings().cadrumo_log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
 
 
 def _prepare_log_directory(log_file: Path) -> str | None:

@@ -126,11 +126,13 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_log_dir": "logs",
     "cadrumo_llm_usage_dir": "llm-usage",
     "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
+    "cadrumo_mcp_telemetry_dir": "telemetry",
     # Regenerable, evictable caches (the cache/ namespace, which also holds the
     # registry-pickle cache).
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_status_cache_dir": "cache/status-cache",
     "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
+    "cadrumo_corpus_search_cache_dir": "cache/corpus-search",
     "cadrumo_validation_verdict_cache_dir": "cache/registry-verdict",
     # Durable generated outputs.
     "cadrumo_storage_backup_dir": "backups",
@@ -556,6 +558,18 @@ class Settings(CadrumoMcpServingSettings):
         description=(
             "Directory for the registry corpus source-text validation cache "
             "(normalised text keyed by content fingerprint)"
+        ),
+    )
+    cadrumo_mcp_telemetry_dir: Path = Field(
+        default=Path("telemetry"),
+        description=("Directory for MCP session trajectory telemetry (one file per session, pruned by age and count)"),
+    )
+    cadrumo_corpus_search_cache_dir: Path = Field(
+        default=Path("cache") / "corpus-search",
+        description=(
+            "Directory for the corpus-search lexical index (a SQLite database "
+            "stemmed from the bundled corpus on first search, and current "
+            "thereafter because that corpus is static)"
         ),
     )
     cadrumo_validation_verdict_cache_dir: Path = Field(
@@ -1279,11 +1293,13 @@ class Settings(CadrumoMcpServingSettings):
         "aeat_normatives_root",
         "cadrumo_iva_catalogue_root",
         "cadrumo_corpus_text_cache_dir",
+        "cadrumo_corpus_search_cache_dir",
         "cadrumo_validation_verdict_cache_dir",
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
         "cadrumo_llm_run_telemetry_dir",
+        "cadrumo_mcp_telemetry_dir",
         "cadrumo_submissions_dir",
         "cadrumo_inbox_dir",
         "cadrumo_inbox_pdf_dir",

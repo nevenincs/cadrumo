@@ -177,12 +177,14 @@ class StorageCategory(StrEnum):
     LOGS = "logs"
     LLM_USAGE = "llm-usage"
     LLM_RUN_TELEMETRY = "llm-run-telemetry"
+    MCP_TELEMETRY = "mcp-telemetry"
     RUNS = "runs"
 
     # ── Regenerable, evictable caches ───────────────────────────────────────
     LLM_CACHE = "llm-cache"
     STATUS_CACHE = "status-cache"
     CORPUS_TEXT_CACHE = "corpus-text-cache"
+    CORPUS_SEARCH_CACHE = "corpus-search-cache"
     VALIDATION_VERDICT_CACHE = "validation-verdict-cache"
     REGISTRY_DISK_CACHE = "registry-disk-cache"
 
@@ -357,6 +359,14 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
+        StorageCategory.MCP_TELEMETRY,
+        "telemetry",
+        settings_field="cadrumo_mcp_telemetry_dir",
+        lifecycle=StorageLifecycle.RETENTION,
+        grouping=StorageGrouping.LOGS,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
         # Observability's own output. Fingerprinting it would make every run's
         # digest depend on the traces the immediately preceding run left, so a
         # hermetic replay would refuse on essentially every attempt.
@@ -388,6 +398,14 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         StorageCategory.CORPUS_TEXT_CACHE,
         "cache/corpus-text",
         settings_field="cadrumo_corpus_text_cache_dir",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.CACHE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
+    ),
+    _location(
+        StorageCategory.CORPUS_SEARCH_CACHE,
+        "cache/corpus-search",
+        settings_field="cadrumo_corpus_search_cache_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,

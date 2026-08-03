@@ -20,6 +20,7 @@ silently.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from types import UnionType
 from typing import Union, get_args, get_origin
@@ -44,6 +45,7 @@ _RETENTION = frozenset(
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
         "cadrumo_llm_run_telemetry_dir",
+        "cadrumo_mcp_telemetry_dir",  # prune_telemetry drops files past an age or count bound
         "cadrumo_runs_dir",
         "cadrumo_registry_disk_cache_dir",  # fingerprint-count eviction
         "cadrumo_wallet_diagnostic_dump_dir",
@@ -85,8 +87,17 @@ _UNBOUNDED_BY_DESIGN = frozenset(
         "cadrumo_attachments_dir",
         "cadrumo_usage_ratios_path",
         "cadrumo_registry_parity_store_dir",
+        "cadrumo_corpus_search_cache_dir",  # one index rebuilt from a static bundled corpus
         "cadrumo_corpus_text_cache_dir",
         "cadrumo_validation_verdict_cache_dir",
+        # Live AEAT read-evidence. Unbounded by design for the same reason as
+        # the filing artefacts above: this is evidence of what the authority
+        # showed at a point in time, and a human files outside the application
+        # on the strength of it. Evicting it on a timer would silently destroy
+        # the record a later filing is defended with.
+        "cadrumo_filed_declarations_dir",
+        "cadrumo_iva_compensation_history_dir",
+        "cadrumo_iva_read_evidence_dir",
     }
 )
 
@@ -163,3 +174,71 @@ def test_usage_ratios_path_is_classified_as_a_file_output() -> None:
     classified unbounded-by-design and still derives its location from the root."""
     assert "cadrumo_usage_ratios_path" in _UNBOUNDED_BY_DESIGN
     assert "cadrumo_usage_ratios_path" in _STATE_ROOT_DERIVED_DIRS
+
+
+# --------------------------------------------------------------------- #
+# Operator-data locations come from the taxonomy, never from a literal   #
+# --------------------------------------------------------------------- #
+
+_TAXONOMY_VOCABULARY = frozenset(
+    # Every leaf the declared taxonomy owns, plus the retired `var` prefix and
+    # the product's own directory name. A path literal built from this
+    # vocabulary is naming an operator-data location, which only Settings may do.
+    {segment for subpath in _STATE_ROOT_DERIVED_DIRS.values() for segment in subpath.split("/")}
+    | {"var", "cadrumo"},
+)
+
+_PRODUCTION_ROOT = Path(__file__).resolve().parents[2]
+
+_LITERAL_OWNERS = frozenset(
+    {
+        # The taxonomy itself and the fields that declare it: these MUST carry
+        # the literals, because they are what every other module resolves through.
+        "core/config.py",
+        "core/_config_llm_fields.py",
+        "core/_config_integration_fields.py",
+        "core/_config_state_root.py",
+    },
+)
+
+
+def _production_modules() -> list[Path]:
+    """Every shipped module, excluding test trees and the taxonomy owners."""
+    modules = []
+    for path in _PRODUCTION_ROOT.rglob("*.py"):
+        rel = path.relative_to(_PRODUCTION_ROOT).as_posix()
+        if "/tests/" in f"/{rel}" or rel.startswith("tests/") or rel in _LITERAL_OWNERS:
+            continue
+        modules.append(path)
+    return modules
+
+
+def test_no_production_module_names_an_operator_data_location_by_literal() -> None:
+    """Operator-data paths resolve through Settings, never a hardcoded literal.
+
+    The sibling gate above only sees fields that ARE settings, so it is blind
+    to the failure this one exists for: a path that was never enrolled at all.
+    Five CLI options once defaulted to ``Path("var/cadrumo/filed-declarations")``
+    and similar. Because those defaults were not settings, no
+    ``CADRUMO_LOCAL_STORAGE_ROOT`` override could reach them — regulated filing
+    evidence landed outside the declared taxonomy AND outside operator control,
+    and the existing gate could not have noticed.
+
+    The rule: a multi-segment path literal in shipped code must not be built
+    from the taxonomy's own vocabulary. Naming ``filed-declarations`` or ``var``
+    in a literal means a module is deciding where operator data lives, which is
+    the taxonomy's job.
+    """
+    offenders: list[str] = []
+    pattern = re.compile(r'Path\(\s*"([^"]*/[^"]*)"')
+    for module in _production_modules():
+        rel = module.relative_to(_PRODUCTION_ROOT).as_posix()
+        for literal in pattern.findall(module.read_text(encoding="utf-8")):
+            segments = {segment for segment in literal.split("/") if segment}
+            if segments & _TAXONOMY_VOCABULARY:
+                offenders.append(f"{rel}: Path({literal!r})")
+    assert not offenders, (
+        "shipped modules naming an operator-data location by literal instead of "
+        "resolving it from Settings (enrol the path in _STATE_ROOT_DERIVED_DIRS "
+        f"and read it from Settings): {offenders}"
+    )

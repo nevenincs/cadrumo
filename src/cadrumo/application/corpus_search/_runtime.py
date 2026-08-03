@@ -25,16 +25,23 @@ from ._lexical_index import build_lexical_index, iter_corpus_chunks
 from ._models import RetrievalResponse
 from ._retrieval import run_retrieval
 
-_INDEX_SUBDIR = "corpus-search"
 _INDEX_FILENAME = "corpus.sqlite"
 
 _DEFAULT_LIMIT = 8
 
 
 def corpus_search_dir(settings: Settings | None = None) -> Path:
-    """Return the app-controlled corpus-search cache directory."""
+    """Return the app-controlled corpus-search cache directory.
+
+    Read from the settings field rather than joined onto the storage root
+    here. A module-local subdirectory literal is invisible to the taxonomy:
+    no environment override could reach it, the tree materialiser could not
+    pre-create it, and a root override in a test would not redirect it -- so
+    this module carried its own ``mkdir`` to compensate for a directory
+    nothing else knew about.
+    """
     resolved = settings or load_settings()
-    return resolved.cadrumo_local_storage_root / _INDEX_SUBDIR
+    return resolved.cadrumo_corpus_search_cache_dir
 
 
 def corpus_index_path(settings: Settings | None = None) -> Path:
@@ -52,7 +59,6 @@ def ensure_corpus_index(settings: Settings | None = None) -> Path:
     """
     database_path = corpus_index_path(settings)
     if not database_path.exists():
-        database_path.parent.mkdir(parents=True, exist_ok=True)
         build_lexical_index(database_path, iter_corpus_chunks())
     return database_path
 
