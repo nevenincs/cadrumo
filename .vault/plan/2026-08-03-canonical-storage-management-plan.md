@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:ebd8b5d82c473358f64155421c6a14e7914f0a0f968f62519eb37323ffa7640e'
+body_hash: 'sha256:5aa1cd8d6a6980ccb2923925f755d55888bcf24fd37a6965d419b9c1404f510a'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -96,7 +96,7 @@ Enrolls every remaining production location under the taxonomy: the cache and di
 
 Enrolls or explicitly escapes every remaining root-anchored cache, telemetry, and diagnostic location, and widens the field selector so no path-valued setting can hide behind an inconvenient name.
 
-- [ ] `W02.P05.S42` - Add a corpus-search category member and its settings field, delete the module-local index subdirectory constant and the local parent-mkdir workaround, gated by a test asserting the per-field environment override now resolves and the tree materialiser pre-creates it; `src/cadrumo/application/corpus_search/_runtime.py`.
+- [x] `W02.P05.S42` - Add a corpus-search category member and its settings field, delete the module-local index subdirectory constant and the local parent-mkdir workaround, gated by a test asserting the per-field environment override now resolves and the tree materialiser pre-creates it; `src/cadrumo/application/corpus_search/_runtime.py`.
 - [x] `W02.P05.S43` - Add an MCP session-telemetry category member and delete the module-local telemetry directory constant, gated by a test asserting the telemetry directory resolves through the accessor under an overridden root; `src/cadrumo/entrypoints/mcp/_telemetry.py`.
 - [ ] `W02.P05.S44` - Govern the registry disk-cache name through a taxonomy member while leaving the field itself un-derived by the settings validator, gated by a test asserting the production branch resolves to the taxonomy subpath and the field default stays absent; `src/cadrumo/domain/calculations/registry/_loader_cache.py`.
 - [ ] `W02.P05.S45` - Declare the registry disk-cache resolver's pytest-shared temporary branch as an explicit test-pinned exception on the member rather than an undeclared special case, gated by a test asserting the declaration exists and the branch still selects under pytest; `src/cadrumo/domain/calculations/registry/_loader_cache.py`.

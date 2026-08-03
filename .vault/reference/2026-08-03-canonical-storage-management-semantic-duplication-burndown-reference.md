@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:8a422362aead1fe4c99d3f3a0cb8d9d56d4679a1fd211c87d3f43b53f919f82d'
+body_hash: 'sha256:c128025fa758a0c2123909fdb03c12b307756c116c52542a19db08926b4c50e6'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
@@ -356,6 +356,35 @@ not represented here. It is expected to cover test-fixture and conftest
 duplication, which the migration mandate binds identically to production. This
 document must be extended when it lands — its absence is a known gap in the
 burndown target, not a statement that the axis is clean.
+
+#### P6 — Settings placeholder defaults restating the declared subpath (found 2026-08-03, closed)
+
+*Concept:* every root-derived settings field carries a relative default that the
+derivation validator replaces with an absolute path under the storage root. The
+placeholder is therefore a second statement of a subpath the taxonomy declares.
+
+**Two had already drifted, and nothing noticed.** `cadrumo_llm_cache_dir`
+declared `llm-cache` against the taxonomy's `cache/llm-cache`, and
+`cadrumo_status_cache_dir` declared `status-cache` against `cache/status-cache`.
+Both were harmless in effect — the validator overrides the placeholder before
+anything reads it — which is precisely why the drift survived: the value that
+rotted is the one nothing consults. A duplicate nobody reads is a duplicate
+nobody maintains.
+
+*Canonical:* the taxonomy member's `subpath`.
+
+*Disposal:* pinned rather than eliminated. The duplicate has to exist —
+pydantic requires a default, and deriving it from the taxonomy would close an
+import cycle, since `_storage_taxonomy` is typed against `Settings`.
+`core/tests/test_storage_default_parity.py` now compares every root-derived
+default against its declared subpath, with a positive control so a change
+making the defaults non-path cannot empty the comparison and leave it green.
+Mutation-proved by re-drifting one default and confirming the gate reds.
+
+*Note for the P3 cluster:* the MCP session-telemetry echo was carried by plan
+step `W02.P05.S43` rather than by this document's cluster list, and the
+diagnostic-log join by `W02.P05.S54`. A reader treating the cluster list as the
+complete duplication inventory would miss both; the plan is the wider record.
 
 ### Cross-cutting lesson: removing dependence is not preventing the artefact
 
