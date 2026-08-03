@@ -31,6 +31,7 @@ from pydantic import ValidationError
 from ..atomic_write import atomic_write_text
 from ..config import Settings, load_settings
 from ..logging import get_logger
+from ..paths import directory_byte_total, select_filesystem_retention_survivors
 from ..time import now
 from ._errors import RunTracePersistenceError, RunTraceValidationError
 from ._models import RUN_ID_PATTERN, RunEvent, RunTrace
@@ -482,20 +483,12 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
 def _run_dir_total_bytes(entry: Path) -> int:
     """Return the total file size (bytes) under one run directory.
 
-    Best-effort: a file that cannot be stat'd counts as zero so the size
-    pass never crashes the prune it feeds.
+    Delegates to the shared :func:`~cadrumo.core.paths.directory_byte_total`
+    walker in tolerant mode: a file that cannot be stat'd counts as zero so
+    the size pass never crashes the prune it feeds.
     """
-    total = 0
-    try:
-        for candidate in entry.rglob("*"):
-            try:
-                if candidate.is_file():
-                    total += candidate.stat().st_size
-            except OSError:
-                _logger.debug("prune_run_traces: could not stat %s", candidate, exc_info=True)
-    except OSError:
-        _logger.debug("prune_run_traces: could not walk run directory %s", entry, exc_info=True)
-    return total
+    total_bytes, _file_count = directory_byte_total(entry, tolerate_errors=True)
+    return total_bytes
 
 
 def prune_run_traces(
@@ -508,7 +501,10 @@ def prune_run_traces(
 
     Gives the run-trace store a declared retention lifecycle instead of one
     subdirectory accumulating per run forever. Two independent bounds apply
-    in order:
+    in order, each delegating its survivor decision to the shared
+    :func:`~cadrumo.core.paths.select_filesystem_retention_survivors`
+    selector while this function keeps its own ``rmtree`` side effect and
+    its own newest-directory-never-size-pruned rule:
 
     1. **Age** — run directories whose modification time (last write) is older
        than ``retention_days`` are removed, so crashed runs that never produced
@@ -517,8 +513,8 @@ def prune_run_traces(
     2. **Total size** — if the surviving run directories still exceed
        ``max_total_bytes`` on disk, the oldest directories are removed until
        the store fits under the ceiling. The newest run directory is always
-       kept, so the trace whose save triggered the prune survives even when it
-       alone exceeds the ceiling.
+       kept (``protect_newest=1``), so the trace whose save triggered the
+       prune survives even when it alone exceeds the ceiling.
 
     ``retention_days`` defaults to the centralized
     :attr:`~core.config.Settings.cadrumo_runs_retention_days` and
@@ -547,63 +543,49 @@ def prune_run_traces(
     except OSError:
         _logger.debug("prune_run_traces: runs directory not enumerable at %s", base, exc_info=True)
         return 0
-    removed_by_age, survivors = _prune_run_dirs_by_age(entries, cutoff=cutoff)
-    removed_by_size = _prune_run_dirs_by_size(survivors, max_total_bytes=effective_max_total_bytes)
-    return removed_by_age + removed_by_size
 
-
-def _prune_run_dirs_by_age(
-    entries: tuple[Path, ...],
-    *,
-    cutoff: datetime,
-) -> tuple[int, list[tuple[float, Path]]]:
-    """Remove run directories older than ``cutoff``; return (removed, survivors).
-
-    Survivors carry their mtime for the subsequent size-bound pass. Best-effort:
-    a directory that cannot be stat'd or removed is logged and skipped.
-    """
-    removed = 0
-    survivors: list[tuple[float, Path]] = []
+    candidates: list[tuple[Path, float]] = []
     for entry in entries:
         try:
             if not entry.is_dir() or re.fullmatch(RUN_ID_PATTERN, entry.name) is None:
                 continue
-            mtime = entry.stat().st_mtime
-            modified = datetime.fromtimestamp(mtime, tz=UTC)
-            if modified >= cutoff:
-                survivors.append((mtime, entry))
-                continue
+            candidates.append((entry, entry.stat().st_mtime))
+        except OSError:
+            _logger.debug("prune_run_traces: could not stat run directory %s", entry, exc_info=True)
+    # Pre-sort by path, descending: the selector's stable, timestamp-only sort
+    # then preserves this order for any mtime tie (two run directories saved
+    # within the same filesystem timestamp tick), reproducing the prior
+    # ``(mtime, Path)`` tuple sort's implicit path tie-break for "which
+    # directory counts as newest".
+    candidates.sort(key=lambda pair: pair[0], reverse=True)
+
+    age_survivors, age_removed = select_filesystem_retention_survivors(
+        candidates,
+        timestamp=lambda pair: datetime.fromtimestamp(pair[1], tz=UTC),
+        cutoff=cutoff,
+    )
+    removed_by_age = _rmtree_pairs(age_removed)
+
+    _size_survivors, size_removed = select_filesystem_retention_survivors(
+        age_survivors,
+        timestamp=lambda pair: pair[1],
+        max_total_bytes=effective_max_total_bytes,
+        size_fn=lambda pair: _run_dir_total_bytes(pair[0]),
+        protect_newest=1,
+    )
+    removed_by_size = _rmtree_pairs(size_removed)
+    return removed_by_age + removed_by_size
+
+
+def _rmtree_pairs(pairs: list[tuple[Path, float]]) -> int:
+    """Best-effort ``rmtree`` over ``(directory, mtime)`` pairs; return the removed count."""
+    removed = 0
+    for entry, _mtime in pairs:
+        try:
             shutil.rmtree(entry)
             removed += 1
         except OSError:
             _logger.debug("prune_run_traces: could not prune run directory %s", entry, exc_info=True)
-    return removed, survivors
-
-
-def _prune_run_dirs_by_size(
-    survivors: list[tuple[float, Path]],
-    *,
-    max_total_bytes: int,
-) -> int:
-    """Remove oldest survivors until the store fits under ``max_total_bytes``.
-
-    The newest run directory is never size-pruned, so the trace whose save
-    triggered the prune survives even when it alone exceeds the ceiling.
-    """
-    survivors.sort()  # oldest mtime first
-    sized = [(entry, _run_dir_total_bytes(entry)) for _, entry in survivors]
-    total_bytes = sum(size for _, size in sized)
-    removed = 0
-    for entry, size in sized[:-1]:  # the newest directory is never size-pruned
-        if total_bytes <= max_total_bytes:
-            break
-        try:
-            shutil.rmtree(entry)
-        except OSError:
-            _logger.debug("prune_run_traces: could not prune run directory %s", entry, exc_info=True)
-            continue
-        removed += 1
-        total_bytes -= size
     return removed
 
 

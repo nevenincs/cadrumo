@@ -29,7 +29,10 @@ storage layout can produce.
 from __future__ import annotations
 
 import sys
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path, PurePosixPath
+from stat import S_ISREG
+from typing import Any, Literal, Protocol
 
 from ._config_state_root import (
     StateRootInputs,
@@ -310,3 +313,212 @@ def file_stat_fingerprint(path: Path) -> tuple[str, int, int]:
     """
     stat = path.stat()
     return (path.name, stat.st_size, stat.st_mtime_ns)
+
+
+def directory_byte_total(
+    directory: Path,
+    *,
+    tolerate_errors: bool = False,
+    entries: Iterable[Path] | None = None,
+) -> tuple[int, int]:
+    """Return ``(total_bytes, file_count)`` for every regular file under ``directory``.
+
+    A missing (or not-a-directory) ``directory`` reports ``(0, 0)`` rather
+    than raising, mirroring the shape every prior hand-rolled walker used.
+
+    Args:
+        directory: The directory to sum. Only used to short-circuit on
+            absence when ``entries`` is not supplied; the actual walk reads
+            ``entries`` (or a fresh recursive glob of ``directory``).
+        tolerate_errors: When ``False`` (the default), an ``OSError`` raised
+            while statting a candidate (or while advancing the recursive
+            walk itself, e.g. a permission error on a subdirectory)
+            propagates. When ``True``, the failing candidate — or the rest
+            of an interrupted walk — is skipped and the total reflects only
+            what was successfully stat'd, so a blob write racing this read
+            never crashes the caller.
+        entries: Pre-enumerated candidates to sum instead of a fresh
+            ``directory.rglob("*")``. Injectable so a caller that already
+            holds an enumeration can reuse it, and so a test can reproduce a
+            file vanishing mid-walk deterministically (list the candidate,
+            delete it on disk, then call this function with that stale
+            reference).
+
+    Returns:
+        ``(total_bytes, file_count)`` summed over every regular file
+        encountered. Directories and other non-regular entries among the
+        candidates are silently skipped (not an error).
+    """
+    if entries is None and not directory.is_dir():
+        return 0, 0
+    candidates = iter(entries) if entries is not None else directory.rglob("*")
+    total_bytes = 0
+    file_count = 0
+    while True:
+        try:
+            candidate = next(candidates)
+        except StopIteration:
+            break
+        except OSError:
+            if not tolerate_errors:
+                raise
+            break
+        try:
+            candidate_stat = candidate.stat()
+        except OSError:
+            if not tolerate_errors:
+                raise
+            continue
+        if S_ISREG(candidate_stat.st_mode):
+            total_bytes += candidate_stat.st_size
+            file_count += 1
+    return total_bytes, file_count
+
+
+class _RetentionTimestamp(Protocol):
+    """Any orderable retention timestamp: a ``datetime``, epoch ``float``, or ``int`` mtime_ns.
+
+    The selector never compares timestamps produced by two different
+    callers in the same call, so a consistent orderable representation per
+    caller (rather than a single fixed type) is all this needs.
+    """
+
+    def __lt__(self, other: Any, /) -> bool: ...
+
+
+def select_filesystem_retention_survivors[EntryT, TimestampT: _RetentionTimestamp](
+    entries: Sequence[EntryT],
+    *,
+    timestamp: Callable[[EntryT], TimestampT],
+    cutoff: TimestampT | None = None,
+    max_count: int | None = None,
+    max_total_bytes: int | None = None,
+    size_fn: Callable[[EntryT], int] | None = None,
+    combine: Literal["sequential", "union"] = "sequential",
+    protect_newest: int = 0,
+) -> tuple[list[EntryT], list[EntryT]]:
+    """Select survivors/removals under composable age, count, and byte bounds.
+
+    Mirrors :func:`~cadrumo.adapters.outbound.llm.select_retention_removal_keys`'s
+    pure rank-and-bound shape, generalized to a filesystem entry (a run
+    directory, a dump file, a telemetry file, a compiled-cache pickle)
+    instead of a secure-object key, and widened from that primitive's fixed
+    cutoff-then-count pipeline to composable, independently-optional bounds.
+    Deletion stays with the caller: this function only decides who survives.
+
+    Entries are ranked newest-first by ``timestamp`` (a stable sort, so
+    entries sharing a timestamp keep their relative input order — pass
+    entries pre-sorted by a secondary key when that tie-break matters, e.g.
+    filename). ``protect_newest`` exempts the top-ranked N entries from
+    removal under every bound, while still counting them toward the
+    ``max_total_bytes`` running total and toward rank positions in
+    ``combine="union"`` mode.
+
+    Args:
+        entries: Candidates to rank and select over. Order does not matter;
+            the function re-ranks internally.
+        timestamp: Projection returning each entry's retention timestamp.
+        cutoff: Age boundary. An entry strictly older than ``cutoff`` is a
+            removal candidate; an entry exactly at ``cutoff`` survives.
+        max_count: Maximum surviving entries under the rank/count bound.
+        max_total_bytes: Total-size ceiling; requires ``size_fn``. Oldest
+            surviving entries are dropped until the running total fits.
+        size_fn: Per-entry byte size, required when ``max_total_bytes`` is
+            set.
+        combine: ``"sequential"`` (default) applies ``cutoff``, then
+            ``max_count``, then ``max_total_bytes`` as successive stages,
+            each narrowing the previous stage's survivors — mirrors
+            :func:`~cadrumo.adapters.outbound.llm.select_retention_removal_keys`'s
+            cutoff-then-count shape, extended with a byte-total stage.
+            ``"union"`` evaluates ``cutoff`` and ``max_count`` independently
+            against the full (unstaged) ranking and removes an entry
+            matching either — the shape a "keep the newest N sessions,
+            otherwise prune by age or rank" policy needs, where a rank-3
+            entry within the age window still gets removed for being beyond
+            the count bound. ``"union"`` does not support
+            ``max_total_bytes`` (a byte ceiling has no rank-independent
+            per-entry membership test).
+        protect_newest: The top-ranked N entries survive unconditionally
+            (still counted toward ``max_total_bytes`` and toward rank
+            positions in ``"union"`` mode).
+
+    Returns:
+        ``(keep, remove)``, both drawn from ``entries`` with no entry in
+        both.
+
+    Raises:
+        ValueError: When no bound is supplied, when ``max_total_bytes`` is
+            supplied without ``size_fn``, or when ``combine="union"`` is
+            paired with ``max_total_bytes``.
+    """
+    if cutoff is None and max_count is None and max_total_bytes is None:
+        raise ValueError(
+            "select_filesystem_retention_survivors requires at least one of cutoff, max_count, max_total_bytes",
+        )
+    if max_total_bytes is not None and size_fn is None:
+        raise ValueError("max_total_bytes requires size_fn")
+    if combine == "union" and max_total_bytes is not None:
+        raise ValueError("combine='union' does not support max_total_bytes")
+
+    ranked: list[tuple[int, EntryT]] = sorted(
+        enumerate(entries),
+        key=lambda pair: timestamp(pair[1]),
+        reverse=True,
+    )
+    protected_indices = {index for index, _entry in ranked[: max(protect_newest, 0)]}
+
+    if combine == "union":
+        keep_pairs: list[tuple[int, EntryT]] = []
+        remove_pairs: list[tuple[int, EntryT]] = []
+        for rank, (index, entry) in enumerate(ranked):
+            if index in protected_indices:
+                keep_pairs.append((index, entry))
+                continue
+            expired = cutoff is not None and timestamp(entry) < cutoff
+            beyond_rank = max_count is not None and rank >= max_count
+            (remove_pairs if (expired or beyond_rank) else keep_pairs).append((index, entry))
+        return [entry for _, entry in keep_pairs], [entry for _, entry in remove_pairs]
+
+    survivors = ranked
+    removed: list[tuple[int, EntryT]] = []
+
+    if cutoff is not None:
+        kept, expired_pairs = [], []
+        for index, entry in survivors:
+            if index not in protected_indices and timestamp(entry) < cutoff:
+                expired_pairs.append((index, entry))
+            else:
+                kept.append((index, entry))
+        survivors, removed = kept, removed + expired_pairs
+
+    if max_count is not None:
+        kept, excess_pairs = [], []
+        retained = 0
+        for index, entry in survivors:
+            if index in protected_indices:
+                kept.append((index, entry))
+                continue
+            if retained < max_count:
+                kept.append((index, entry))
+                retained += 1
+            else:
+                excess_pairs.append((index, entry))
+        survivors, removed = kept, removed + excess_pairs
+
+    if max_total_bytes is not None:
+        assert size_fn is not None  # enforced above
+        total = sum(size_fn(entry) for _index, entry in survivors)
+        over_ceiling: list[tuple[int, EntryT]] = []
+        over_indices: set[int] = set()
+        for index, entry in reversed(survivors):  # oldest surviving entry first
+            if total <= max_total_bytes:
+                break
+            if index in protected_indices:
+                continue
+            over_ceiling.append((index, entry))
+            over_indices.add(index)
+            total -= size_fn(entry)
+        survivors = [pair for pair in survivors if pair[0] not in over_indices]
+        removed = removed + over_ceiling
+
+    return [entry for _index, entry in survivors], [entry for _index, entry in removed]
