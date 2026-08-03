@@ -762,6 +762,41 @@ settles both residues in one run.
 recollection.** Object `6ce5a3d4dc`, wall clock 19:34, five files, 82,150,682 bytes, log at
 4,912,669.
 
+**Reproduced on demand, which settles it.** Rather than infer the writer from timestamps,
+I drove it: baseline the real log, run one test file, measure again.
+
+```
+pytest src/cadrumo/core/tests/test_storage_taxonomy.py        delta      0 bytes
+pytest src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py   delta    258 bytes
+```
+
+The second run appended two records to the **operator's real diagnostic log** at 19:39,
+naming their own emitters — `cadrumo.core.wizard_catalogue` and
+`cadrumo.core.setup_answers`, both module-level `get_logger` holders firing on
+registration side effects. **The leak is live at HEAD and reproducible on demand.** Not a
+residue, not a pre-fix process draining.
+
+**The first run is the more instructive of the two, because I nearly reported it.** A
+delta of zero on a narrow storage test is a claim about the *selection*, not about the
+world: that file never imports the wizard catalogue, so it cannot leak. Had I stopped
+there I would have reported "closed" on the strength of a selection that structurally
+could not have shown otherwise — the same shape as the false zero on the user home, one
+layer along. **It also supplies a simpler explanation for the flat before/after results
+reported elsewhere than any argument about measurement windows: a slice that does not
+reach the emitters does not leak, whatever the window.** That is testable by re-running
+those slices against a selection that does reach them.
+
+**And the sharper question the reproduction raises.** A separate probe — set
+`CADRUMO_LOCAL_STORAGE_ROOT` to a scratch directory, then import the package tree —
+wrote **0 bytes** to the real root and created the log under the redirected root instead.
+So redirection *works* when the variable is set before import. Under pytest it is supposed
+to be: tier-one collection bootstrapping (R15) exists precisely to point the root at a
+process-private temporary directory before any import resolves settings. It is not
+holding for the logging path. **The defect is therefore better described as "the
+collection-time isolation does not cover the logging path" than as "three more modules
+call `get_logger` too"** — which is an argument for the structural fix over
+caller-by-caller retirement, and it now rests on a measurement rather than a preference.
+
 ### the-site-gate-b-found-that-i-missed | medium | My enumeration missed a tracked site, and the reason is procedural as well as technical
 
 **Reported to me:** a gate built on my enumeration surfaced
