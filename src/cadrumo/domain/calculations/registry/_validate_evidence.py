@@ -17,9 +17,9 @@ from ....core import (
     StorageCategory,
     normalise_corpus_text,
     storage_location,
+    storage_path,
 )
 from ....core.atomic_write import atomic_write_best_effort_text
-from ....core.config import load_settings
 from ....core.hashing import sha256_hex
 from ....core.resources import packaged_data, resolve_companion_binary
 from ._schema import LegalReference, SourceCitation, SourceReference
@@ -136,11 +136,15 @@ _DISK_CACHE_ADAPTER: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], c
 def _corpus_text_cache_path() -> Path:
     """Return the settings-derived corpus-text cache file location.
 
-    Defaults under ``<cadrumo_local_storage_root>/cache/corpus-text`` (scoped
-    per user by the storage root), replacing the former shared OS-temp-dir
-    location that any two users or CI containers on one host could clobber.
+    Resolved through the taxonomy accessor rather than by reading
+    ``cadrumo_corpus_text_cache_dir`` here. Both answer the same today, because
+    the settings field is what the accessor consults first -- but only one of
+    them stays correct if the member's resolution ever gains a case. Defaults
+    under ``<cadrumo_local_storage_root>/cache/corpus-text`` (scoped per user by
+    the storage root), replacing the former shared OS-temp-dir location that
+    any two users or CI containers on one host could clobber.
     """
-    return load_settings().cadrumo_corpus_text_cache_dir / _CORPUS_TEXT_CACHE_FILENAME
+    return storage_path(StorageCategory.CORPUS_TEXT_CACHE) / _CORPUS_TEXT_CACHE_FILENAME
 
 
 def reset_corpus_text_cache() -> None:

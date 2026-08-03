@@ -28,6 +28,7 @@ from typing import Never
 
 from pydantic import ValidationError
 
+from .. import StorageCategory, storage_path
 from ..atomic_write import atomic_write_text
 from ..config import Settings, load_settings
 from ..logging import get_logger
@@ -98,6 +99,12 @@ def _require_trace_identity(trace: RunTrace, *, expected_run_id: str) -> RunTrac
 def runs_dir(settings: Settings | None = None) -> Path:
     """Return the configured runs directory. Resolution only; never creates it.
 
+    Resolved through :func:`~core.storage_path` for
+    ``StorageCategory.RUNS`` rather than by reading ``cadrumo_runs_dir``
+    directly here. Both answer the same today, because the settings field is
+    what the accessor consults first -- but only one of them stays correct if
+    the member's resolution ever gains a case.
+
     A pure path resolver. Materialisation is a write-side concern: the one
     production writer (:func:`_run_dir`) creates the full ``<runs_dir>/<run_id>``
     chain itself via ``mkdir(parents=True)`` when it stages a run for writing,
@@ -117,8 +124,7 @@ def runs_dir(settings: Settings | None = None) -> Path:
     Returns:
         Absolute path to the per-process runs root. Not guaranteed to exist.
     """
-    cfg = settings or load_settings()
-    return cfg.cadrumo_runs_dir
+    return storage_path(StorageCategory.RUNS, settings=settings)
 
 
 def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
