@@ -346,6 +346,113 @@ never exceeds its current pin before the next regeneration. Nothing counts regen
 Low severity and not this campaign's defect — recorded so the next reader asking "why did
 our file's pin rise?" finds the mechanism rather than re-deriving it.
 
+### nested-ungoverned-enumeration | critical | 23 undeclared application-chosen names across 34 sites in 14 modules, and why a complete static enumeration is not achievable
+
+**Claimed / asked:** the earlier figure of roughly fourteen destinations across eight
+modules was given as a floor, and a floor cannot be closed against. Required: a method
+that does not undercount by construction, with its blind spots named; the findings
+grouped by declarable shape; and reclaim-reachability flagged.
+
+**Why the first two passes undercounted, precisely.** Both matched an *expression shape*
+— `base / "literal"`. A base held on an instance attribute, a segment that is an
+f-string, a constant declared far from its use, and a composition assembled across a
+function boundary all produce the same defect wearing a different shape.
+
+**Pass three inverts the question and propagates taint instead of matching shape.** It
+seeds on every expression that *is* a taxonomy root — a settings field bound to a member,
+or an accessor call — then propagates through local assignments, `self` attributes, and
+function returns to a fixed point within the module, and records every path composition
+over a tainted base *regardless of what the appended segment looks like*, classifying the
+segment rather than requiring it to be a literal. That the earlier passes were
+shape-limited is now measured rather than asserted: of the appended segments found, only
+19 are plain literals against 10 module constants, 5 f-strings and 7 dynamic expressions.
+
+**Result: 34 undeclared compositions across 14 modules**, reducing to **23 distinct
+application-chosen names** once repeated sites are collapsed. Four verified individually
+against HEAD before reporting; one of those four (`workflow/_persistence.py:441`, a
+`run_id` appended to the workflow-runs root) proved to be a **data-derived** segment and
+is excluded — which is the distinction that matters for declaration and is applied
+throughout below. R5 governs every *application-chosen* segment; a run id, a bucket id or
+a content digest is data, and declaring it as a member would be a category error.
+
+**Grouped by declarable shape, because the grouping is the design work:**
+
+*Family 1 — fixed file leaves directly under a declared category (8 names, 14 sites).*
+The secret store is five of them: `master.key`, `master.kdf`, `master.lock`,
+`keyring.lock` (`master_key/_master_key.py`) and `master.recovery.key`
+(`user_profile/_custody.py`). Then `cache/corpus-search/corpus.sqlite`,
+`cache/corpus-text/cadrumo_corpus_text_cache.json`, and `logs/cadrumo.log`. **One grammar,
+not eight members' worth of argument**: this is exactly the shape the bucket layout
+already declares as `BUCKET_MANIFEST` / `BUCKET_LOCK` file-kind members. The secret store
+is the conspicuous omission — the taxonomy declares file leaves for the bucket layout and
+none for the directory holding the master key.
+
+*Family 2 — fixed subdirectories under a declared category (7 names, 7 sites).*
+`financial/attachments/manifests`; `submissions/amendment-results` and
+`submissions/amendments`; and under `audit`, the intermediate `live` plus
+`live/iva-wallet`, `live/iva-remote-state`, and the caller-rooted `filed-history` and
+`wallet`. Ordinary missing directory members, declarable today with no model change.
+Note the intermediate `audit/live` is itself undeclared, so declaring only the leaves
+would leave a governed leaf under an ungoverned parent.
+
+*Family 3 — instance-scoped file leaves that need a new scope axis (3 names).*
+`runs/<run_id>/trace.json`, `envelope.json`, `events.jsonl`. The `<run_id>` is data; the
+three filenames are application-chosen. Declaring these needs a `RUN_RELATIVE` scope
+anchored on the runs root, structurally identical to the `KEYSTORE_RELATIVE` /
+`KEYSTORE_ROOT` pair R13 added — which is precedent, not new design.
+
+*Family 4 — filename templates the model cannot currently express (5 patterns).*
+`llm-usage/usage-{}.jsonl`, `llm-run-telemetry/run-telemetry-{}.jsonl`,
+`tokens/{}-{}-auth.lock`, `cache/registry-verdict/{prefix}{digest}.json`, and
+`llm-cache/<provider>/<model>/{}-{}.json`. **This family is the one that blocks a
+declaration campaign rather than merely feeding it.** `StorageLocation.subpath` is a
+single string plus a `node_kind`; it has no way to express *a family of files matching a
+pattern* inside a declared directory. Whoever declares these needs a ruling first: either
+the model gains a filename-pattern field, or the ADR states explicitly that
+instance-keyed files inside a declared directory are governed by the directory alone.
+The second is probably right and is cheap — but it must be *stated*, because today the
+silence is indistinguishable from an oversight.
+
+**Reclaim-reachability — and this corrects my own earlier finding.** I previously reported
+that none of the nested-ungoverned set was reachable by `reclaim`, on the eight
+settings-field-rooted sites then known. On the fuller set that is **wrong**: **11 of the
+34 sites sit under a reclaimable parent** — `runs` (7 sites), `llm-cache`,
+`llm-usage`, `llm-run-telemetry` (retention) and `logs` (rotation). In every one of the
+eleven, deletion is the *intended* behaviour: they are regenerable traces, caches and
+telemetry whose whole purpose is to be pruned, and `reclaim logs` was observed retaining
+an entry rather than clearing the tree. So the conclusion — no undeclared nested location
+currently sits under a reclaimable parent where deletion would be wrong — survives, but it
+survives on the merits of what happens to be declared today, it is asserted by nothing,
+and my earlier blanket statement was too strong.
+
+**Why a complete static enumeration is not achievable, stated rather than assumed away.**
+Pass three is complete for compositions *within* a module. It cannot see four classes:
+cross-module composition (a helper in module A returns a tainted directory and module B
+appends to it); library-named files (a directory handed to a writer that picks the
+filename); container-mediated flow (a tainted path stored in a dict, dataclass or list
+and read back elsewhere); and fully dynamic roots. The first class is not hypothetical
+and its surface is measurable: of **267** production filesystem-mutating call sites,
+**260 receive their destination from a parameter, a call, or an attribute** rather than
+constructing it locally. Static analysis cannot close that without whole-program
+interprocedural dataflow, which would carry its own unsoundness in a codebase this
+dynamic.
+
+**The tightest defensible bound, and the method that reaches it.** No single method
+suffices, and the two available ones have *complementary* blind spots rather than
+overlapping ones: static taint misses runtime values but sees every site whether or not
+a test reaches it; runtime observation misses unexercised code but sees the **resolved
+destination string**, so it has no expression-shape blind spot at all. The union is
+therefore the non-undercounting method, and its residual is not an unknown — it is
+exactly the set of production write sites that both receive their destination
+cross-module *and* are never exercised, which is finite and enumerable by intersecting
+the 267 static sites against the frames the instrumented run observes.
+
+So the bound to declare against is: **at least 23 distinct application-chosen undeclared
+names, across 34 sites in 14 modules**, with the residual confined to a nameable list
+rather than an open question. Declaration work can begin on Families 1 and 2 immediately
+— 15 of the 23 names, no model change required — while Family 4 waits on the ruling it
+needs and Family 3 waits on the scope axis.
+
 ### verified-sound | none | What the record claims and the code supports
 
 Stated because a clean result is a result, and because several of these were the
@@ -396,31 +503,40 @@ Blocking, in the order that makes the next measurement cheapest:
 4. Close, or explicitly re-scope with a stated reason, the open production-enrollment
    Steps — `S51`, `S52`, `S53` at minimum, since their own text asserts the criterion is
    unmet for the sites they name.
+5. Declare Families 1 and 2 of the enumeration — 15 names, no model change needed — and
+   open the ruling Family 4 requires *before* anyone attempts to declare a filename
+   template, because `StorageLocation` cannot express one and a declarer who discovers
+   that mid-sweep will either invent a field or quietly skip the family. Family 3 needs
+   the run-relative scope axis first, on the `KEYSTORE_ROOT` precedent.
 
 Non-blocking:
 
-5. Parametrise the two help-surface contract tests over all four locales, or add one
+6. Parametrise the two help-surface contract tests over all four locales, or add one
    test that builds every `HelpSurface` in every locale. It is the cheapest possible
    gate for the class, and without it the corrected strings sit one edit from
    re-shipping. Separately, give the ten near-cap strings real headroom rather than
    leaving the tightest at zero.
-6. Add a gate asserting every bound settings field's default equals its member's
+7. Add a gate asserting every bound settings field's default equals its member's
    `relative_path()`, and correct the five `var/`-prefixed defaults. A dead literal that
    already disagrees with the authority is the campaign's own subject matter.
-7. Re-stamp `R16` with the current count of nine and remove the two deleted members from
+8. Re-stamp `R16` with the current count of nine and remove the two deleted members from
    its enumeration.
-8. Backfill the five empty exec records, and prefer a content check over a filename
+9. Backfill the five empty exec records, and prefer a content check over a filename
    check when asserting `plan-closure-requires-exec-records` in future.
-9. Extend the containment proof with an assertion over the *resolved subtree* rather
-   than the declared set — or, more cheaply, assert that no reclaimable category has any
-   undeclared child, which finding two shows is currently true and is worth locking.
-10. Correct `S69`'s cited path.
+10. Extend the containment proof with an assertion over the *resolved subtree* rather
+   than the declared set. The cheaper form is stronger than it looks: assert that no
+   reclaimable category has any undeclared child. That is true today and is precisely
+   the property the enumeration shows is currently unasserted.
+11. Correct `S69`'s cited path.
 
 One methodological note for whoever runs the next pass. Every finding above that matters
 came from executing something — a serial gate run, an in-process comparison of the
 taxonomy against the settings model, an AST pass, a CLI smoke — and the two findings I
 would have got wrong by reading alone were the settings-default drift (invisible in
-source, because the validator overwrites it) and the reclaim safety of the
-nested-ungoverned set (which reads alarming and measures benign). The closure reference
+source, because the validator overwrites it) and the reclaim reachability of the
+nested-ungoverned set — where reading alone gave me a blanket "none is reachable" that
+the fuller enumeration then contradicted, eleven of thirty-four sites sitting under a
+reclaimable parent. That correction is the clearest argument in this document for
+measuring twice: the first answer was mine, confident, and wrong in the safe direction. The closure reference
 is right that a runtime containment check is the stronger method, and it remains the
 single highest-value unrun measurement in this campaign.
