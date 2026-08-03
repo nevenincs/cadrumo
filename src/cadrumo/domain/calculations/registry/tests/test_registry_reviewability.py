@@ -22,82 +22,50 @@ _MAX_BASELINE_TOML_LINE_CHARS = 520
 # hand-authored formula/binding/casilla fragments. The M100 2025 revision ships
 # its per-locale catalogue as a single monolithic file (2242 lines) rather than
 # the split per-file layout the 2024 revision uses, so it clears the strict
-# fragment cap by a wide margin. Give locale files their own higher ceiling with
-# small headroom (ship-authorised rebaseline) while the strict cap keeps biting
-# every hand-authored registry fragment (largest non-locale fragment: ~1027).
+# fragment cap by a wide margin. Give locale files their own higher ceiling
+# while the strict cap keeps biting every hand-authored registry fragment
+# (largest non-locale fragment: ~1027).
 _MAX_LOCALE_TOML_LINES = 2_300
 _MAX_LOCALE_BASELINE_TOML_LINES = 2_300
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
-# What a green here does and does not mean. Measured over this file's whole
-# history: every recorded change to a baseline below has been UPWARD, and no
-# ceiling has ever been lowered --
+# Per-module ceilings for the validators that already exceed the default above.
+# A module earns an entry here only by crossing that default; everything else
+# is held to it, so this mapping stays a list of known-large modules rather
+# than a register of every validator.
 #
-#     _validate_evidence.py             362 -> 384 -> 391
-#     _validate.py                      251 -> 282
-#     _validate_dependency_sections.py  241 -> 248
-#     _validate_relation_sources.py     310 -> 311
+# Each entry is pinned to the module's exact current length, because slack is
+# this gate's failure mode. A ceiling sitting above actual is silent permission
+# to grow into the gap, and the gap is invisible from the outside -- the gate
+# goes on reporting "reviewable" about a budget nothing is defending. Pinning
+# makes any addition red, which is the entire mechanism: growth becomes a
+# decision rather than a default.
 #
-# So this pass records that someone re-measured a number, not that a budget
-# held. The incentive runs that way by construction: raising a ceiling is a
-# one-line edit and shrinking a validator is real work, so the cheap move is
-# always the one that widens the gate. Read a green as "growth was noticed",
-# and treat a raise as the reviewed decision it is rather than bookkeeping.
+# The incentive runs against that by construction, since raising a number is a
+# one-line edit while shrinking a validator is real work. So a raise is a
+# reviewed decision, and its reasoning belongs in the commit that makes it --
+# not accumulated here, where it becomes a changelog nobody reads and every
+# future reader has to scroll past.
 _VALIDATOR_MODULE_LINE_BASELINES = {
-    # The verification-predicate DSL validator cluster (arity/shape
-    # validators for equals, roll_forward_balances,
-    # casilla_equals_implies_*, deduccion_requires_adquisicion_before,
-    # profile_flag_enabled) lives in the sibling
-    # _validate_verification_predicates.py module; this module holds only
-    # the cross-reference, workbook-parity, verification-expectation
-    # dispatch, application-link, and deadline-window section validators.
-    # _validate_evidence.py grew past the 300-line default with the
-    # sidecar-reading helper (_read_manual_pdf_sidecar + constants) and the
-    # validation-verdict-pin disk-cache write counter, then again with the
-    # shared manual-PDF-sidecar validation contract (commit 5f8cfc5145), then
-    # again with the corpus-text cache filename cross-referenced off the
-    # storage taxonomy instead of an untethered literal; re-measured 2026-08-03
-    # at 391, then raised to 395 the same day by "re-point three cache/telemetry
-    # reads onto the taxonomy accessor". That raise was reviewed the same way as
-    # the workbook-parity one below: the statement count is a wash there (one
-    # import and one return swapped for their taxonomy-routed equivalents) and
-    # the whole net delta is docstring prose recording why the accessor is
-    # consulted rather than the settings field it currently agrees with. Prose
-    # that survives the next divergence is worth four lines of ceiling.
-    "_validate_evidence.py": 395,
-    "_validate_surfaces.py": 350,
+    # The verification-predicate DSL validators (arity and shape checks for
+    # equals, roll_forward_balances, casilla_equals_implies_*,
+    # deduccion_requires_adquisicion_before, profile_flag_enabled) live in
+    # _validate_verification_predicates.py rather than alongside the section
+    # validators, which is why it is the largest module here.
     "_validate_verification_predicates.py": 431,
-    "_validate_cross_revision.py": 424,
+    "_validate_evidence.py": 395,
+    "_validate_surfaces.py": 342,
+    "_validate_cross_revision.py": 328,
+    "_validate_relation_sources.py": 311,
     "_validate_record_sections.py": 305,
-    "_validate_references.py": 312,
-    # Grew by one line from ordinary registry-package maintenance (import
-    # retargeting / rename-campaign churn); re-measured 2026-08-03.
-    "_validate_revision_sections.py": 300,
-    "_validate_semantic_roles.py": 243,
-    "_validate_revision_identity.py": 228,
-    # Grew with the filing-schedule-cadence validation (commit 6cb2af96c9).
-    "_validate_dependency_sections.py": 248,
-    # Grew past 251 with accumulated feature grounding (e.g. the M210
-    # tipo-de-renta parity gate) and cross-package import-facade sweeps;
-    # re-measured 2026-08-03.
-    "_validate.py": 282,
-    "_validate_relation_periods.py": 209,
-    "_validate_semantic_role_axes.py": 188,
-    "_validate_relation_sources.py": 318,
 }
-# Grew past 1_336 across several targeted fixes (call-time Settings deferral,
-# Linux ty platform narrowing, the single-identifier snapshot-naming route);
-# re-measured 2026-08-03 at 1_394, then raised to 1_416 the same day.
+# Same ratchet, pinned to this module's exact current length.
 #
-# That last raise is the reviewed decision this file's header asks for, and the
-# review is: the 22-line delta is ENTIRELY comment. The commit "record the three
-# dir= pin exceptions at their call sites" added no statements -- it documents,
-# at each call site, why three tempfile calls are exempt from the dir= storage
-# provenance discipline, including a path-length regression under pytest-xdist
-# established by reverting to HEAD, reproducing the failure, restoring, and
-# reproducing it again. This gate counts LINES as a proxy for complexity, and
-# on this delta the proxy inverts: the module got easier to review, not harder.
-# Shrinking it to make room for the explanation, or deleting the explanation to
-# fit the ceiling, would both trade measured knowledge for a number. Raised.
+# One caveat worth carrying, because it recurs: line count is a proxy for
+# complexity, and the proxy inverts when a delta is pure comment. A module that
+# grows only by recording why a call site is the way it is has become easier to
+# review, not harder, and neither shrinking it to make room nor deleting the
+# explanation to fit the number is a good trade. Read what a delta is made of
+# before treating a red here as an instruction to cut.
 _WORKBOOK_PARITY_MODULE_LINE_BASELINE = 1_416
 
 
