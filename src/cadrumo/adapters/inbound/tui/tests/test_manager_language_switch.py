@@ -98,6 +98,29 @@ def _column_headings(app: ProfileManagerApp) -> list[str]:
     return [str(column.label) for table in app.query(DataTable) for column in table.columns.values()]
 
 
+async def _settled_footer_description(app: ProfileManagerApp, pilot, key: str, *, until: str) -> str | None:
+    """Wait for the footer to word one key as ``until``, then report what it says.
+
+    The footer does not compose with the page. It listens for the bindings
+    to change and schedules its own rebuild for after the next refresh, so
+    its entry appears a frame or more after the render that described it —
+    and how many frames is a scheduling detail no test should depend on.
+    Reading it after a fixed pause is a bet on that timing, and one that
+    has already been lost once here.
+
+    Waiting for the expected wording rather than counting pauses removes
+    the bet without weakening the assertion, because what comes back is
+    whatever the footer actually says when the wait ends: a footer that
+    never names the key returns ``None``, and one that never re-words
+    returns the words it is stuck on. Both fail against the real content.
+    """
+    for _ in range(40):
+        await pilot.pause()
+        if _footer_description(app, key) == until:
+            break
+    return _footer_description(app, key)
+
+
 async def _settle(pilot, app: ProfileManagerApp) -> None:
     """Wait for the page to finish reacting to a write.
 
@@ -128,8 +151,9 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
 
-            offered = _footer_description(app, _LANGUAGE_KEY)
-            assert offered == tr(_LANGUAGE_LABEL_KEY, locale=_STARTING_LANGUAGE), (
+            named = tr(_LANGUAGE_LABEL_KEY, locale=_STARTING_LANGUAGE)
+            offered = await _settled_footer_description(app, pilot, _LANGUAGE_KEY, until=named)
+            assert offered == named, (
                 f"the footer must name the language chooser in the page's own language, but said {offered!r}"
             )
 
@@ -189,10 +213,9 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             assert set(headings) == set(expected), (
                 f"the column headings must be rewritten in {_TARGET_LANGUAGE}, but read {sorted(set(headings))}"
             )
-            offered = _footer_description(app, _LANGUAGE_KEY)
-            assert offered == tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE), (
-                f"the footer must be rewritten too, but still said {offered!r}"
-            )
+            renamed = tr(_LANGUAGE_LABEL_KEY, locale=_TARGET_LANGUAGE)
+            offered = await _settled_footer_description(app, pilot, _LANGUAGE_KEY, until=renamed)
+            assert offered == renamed, f"the footer must be rewritten too, but still said {offered!r}"
             app.exit(None)
 
         record = ProfileRepository().load(require_active_bucket_id()).record
