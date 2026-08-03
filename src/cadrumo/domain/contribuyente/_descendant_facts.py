@@ -155,6 +155,41 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
     return tuple(result)
 
 
+def _flag_bool(raw: str, *, key: str) -> bool:
+    """Read one yes/no flag value, refusing a word the vocabulary cannot read.
+
+    Both fields this serves gate the mínimo por descendientes, and both used
+    to resolve an unreadable word to a bool silently — in the direction that
+    CLAIMS. ``CONVIVENCIA`` took ``is not False``, so a typo became ``True``,
+    and Art. 58 cohabitation is what qualifies the descendant at all.
+    ``CUSTODIA`` took ``is True``, so a typo became ``False``, and
+    :meth:`~domain.contribuyente.RentaFamilyProfile.custodia_compartida_prorrata_factor`
+    returns the full ``1`` for ``False`` against ``0.5`` for shared custody
+    (Art. 61 LIRPF). Opposite booleans, one direction: more deduction than the
+    operator asked for.
+
+    That is why this refuses rather than picking a safer default. The safe
+    default points opposite ways on the two fields, so any single default is
+    wrong on one of them, and both silent readings are wrong anyway — one
+    over-claims, the other quietly under-claims. An unreadable answer is not
+    an answer, and the operator is at a command line where they can correct
+    it, which is the same call
+    :func:`~cadrumo.core.parsing.parse_bool` is asked to make everywhere else.
+
+    Absence still means the documented default (``CONVIVENCIA`` true,
+    ``CUSTODIA`` false); this governs only a value the operator did supply.
+    """
+    parsed = parse_bool(raw)
+    if parsed is None:
+        raise ProfileAnswerTypeError(
+            f"{key} must say yes or no; got {raw!r}. Write yes as si, sí, s, true, verdadero, y or 1, "
+            "and no as no, n, false, falso or 0. It is refused rather than assumed because both "
+            "fields decide part of the mínimo por descendientes, and guessing would claim a "
+            "deduction nobody asked for.",
+        )
+    return parsed
+
+
 def parse_descendiente_flag(raw: str) -> DescendantInfo:
     """Parse a ``--descendiente NACIMIENTO=YYYY-MM-DD,...`` flag value.
 
@@ -197,12 +232,12 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     convive = True
     conv_raw = parts.get("CONVIVENCIA")
     if conv_raw is not None:
-        convive = parse_bool(conv_raw) is not False
+        convive = _flag_bool(conv_raw, key="CONVIVENCIA")
 
     custodia = False
     custodia_raw = parts.get("CUSTODIA")
     if custodia_raw is not None:
-        custodia = parse_bool(custodia_raw) is True
+        custodia = _flag_bool(custodia_raw, key="CUSTODIA")
 
     meses_madre_trabajo_2024 = 0
     meses_raw = parts.get("MESES_TRABAJO")
