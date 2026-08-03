@@ -239,9 +239,11 @@ def test_parse_refuses_the_two_way_readable_thousands_amount(tmp_path: Path) -> 
         parse_casilla_value_spreadsheet(path)
 
     message = str(caught.value)
-    assert "1.234" in message, "the refusal must echo the offending value"
-    assert "thousands" in message, "and say what the ambiguity is"
-    assert "01" in message, "and name the casilla"
+    assert "1.234" in message, "the refusal must echo what the operator wrote"
+    assert "01" in message, "and name the casilla, so the row is findable"
+    assert "1234" in message, "and show the thousands reading as a number"
+    assert "1,234" in message, "and the fractional one, so the operator picks between them"
+    assert "thousands" in message, "and say plainly what the ambiguity is"
 
 
 @pytest.mark.parametrize(

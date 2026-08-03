@@ -119,10 +119,16 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
         # them. These are casilla values -- the figures that go on the return --
         # so the row is refused and named rather than read a thousandfold light.
         if european_thousands_reading_is_ambiguous(raw_value):
+            # Name both numbers rather than the abstract ambiguity: the operator
+            # knows which one they meant, and seeing them side by side is what
+            # lets them pick the spelling that says so.
+            written = raw_value.strip()
             malformed.append(
-                f"row {row_number}: value {raw_value!r} for casilla {code!r} could mean either "
-                f"thousands or decimals; write it as a plain number without a thousands separator, "
-                f"or add the decimal comma, so that thousands is unambiguous",
+                f"row {row_number}: value {raw_value!r} for casilla {code!r} could mean "
+                f"{written.replace('.', '')} (a Spanish thousands separator) or "
+                f"{written.replace('.', ',')} (a decimal fraction), and nothing in the value "
+                f"decides which; write {written.replace('.', '')} if you meant the first, "
+                f"or {written.replace('.', ',')} if you meant the second",
             )
             continue
         try:
