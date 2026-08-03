@@ -199,8 +199,18 @@ def _build_fact_rows(
 ) -> tuple[StatusFactRow, ...]:
     """Project the active profile record into masked/labelled fact rows.
 
-    Labels resolve through the profile schema's per-field description; a
-    path with no schema field falls back to the raw dotted path.
+    Labels resolve through ``profile_field_label``, the same catalogue the
+    profile manager reads, so one field cannot be named two different
+    things on two surfaces. The schema's ``description`` is not a label:
+    it is long-form authority prose -- ``auth.provider`` runs to four
+    sentences -- and mixed-language by design, so rendering it here gave
+    the operator a paragraph in a column, in whichever language its author
+    happened to write. It also made the two strings one string: improving
+    the documentation silently rewrote the screen, and two commits have
+    already oscillated that prose between the two jobs. The catalogue
+    falls back to ``description`` for a key it does not carry, so an
+    untranslated field renders exactly what it renders today; a path with
+    no schema field at all falls back to the raw dotted path.
 
     The masking decision is delegated to ``mask_profile_field``, the one
     authority the profile overview also uses. This surface previously
@@ -223,10 +233,17 @@ def _build_fact_rows(
     authority already chose -- a declaration is never overridden by
     wording, in either direction.
 
-    The LABEL keeps the raw indexed path rather than the field's
-    description, because the two questions are different: three socios
-    would otherwise render three identically-labelled rows on a surface
-    with no other column to tell them apart.
+    The LABEL keeps the raw indexed path rather than the field's name,
+    because the two questions are different: three socios would otherwise
+    render three identically-labelled rows on a surface with no other
+    column to tell them apart.
+
+    Masking reads the schema's ``description``, never the localized
+    label, for the reason the overview gives: whether a value is a secret
+    is a property of the field, not of the language it is being read in,
+    and scanning translated copy would let a field whose label in one
+    language omits ``password`` render in the clear while its row in
+    another masked.
 
     Args:
         record: The active profile, or ``None`` for no rows at all.
@@ -242,6 +259,7 @@ def _build_fact_rows(
     from ....domain.user_profile import (
         UserProfileError,
         load_user_profile_schema,
+        profile_field_label,
         section_field_key,
     )
 
@@ -262,7 +280,8 @@ def _build_fact_rows(
             label = path
             masked = mask_profile_field(path=path, label=path, sensitivity=None)
         else:
-            label = path if declared_path != path else (field_def.description or path)
+            section_key = declared_path.split(".", 1)[0]
+            label = path if declared_path != path else (profile_field_label(section_key, field_def) or path)
             masked = mask_profile_field(
                 path=path,
                 label=field_def.description or path,

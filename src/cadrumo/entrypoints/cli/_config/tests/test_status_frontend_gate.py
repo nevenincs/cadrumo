@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from .....adapters.inbound.tui import StatusFactRow
+    from .....domain.user_profile import UserProfileRecord
 
 
 def _ctx_with_format(format_name: str) -> typer.Context:
@@ -250,6 +251,8 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
+_AUTH_PROVIDER_PATH = "auth.provider"
+_AUTH_SOPORTE_PATH = "auth.numero_soporte"
 _AUTH_PROVIDER_VALUE = "clave_movil"
 _AUTH_SOPORTE_VALUE = "ABC123456"
 
@@ -282,14 +285,18 @@ def _seed_auth_facts() -> None:
     set_active_fields(
         workflow_state_repository().load(),
         (
-            UserProfileFact(path="auth.provider", value=_AUTH_PROVIDER_VALUE),
-            UserProfileFact(path="auth.numero_soporte", value=_AUTH_SOPORTE_VALUE),
+            UserProfileFact(path=_AUTH_PROVIDER_PATH, value=_AUTH_PROVIDER_VALUE),
+            UserProfileFact(path=_AUTH_SOPORTE_PATH, value=_AUTH_SOPORTE_VALUE),
         ),
     )
 
 
-def _fact_rows_over_a_real_profile() -> tuple[StatusFactRow, ...]:
-    """Build the status fact rows for a really created, auth-bearing profile."""
+def _fact_rows_over_a_real_profile() -> tuple[tuple[StatusFactRow, ...], UserProfileRecord]:
+    """Build the status fact rows for a really created, auth-bearing profile.
+
+    The record is returned alongside its rows so a caller can project the
+    SAME record through another surface and compare the two readings.
+    """
     from .....application.user_profile import profile_storage_session
     from .....application.workflow import read_profile_bucket, workflow_state_repository
 
@@ -299,7 +306,8 @@ def _fact_rows_over_a_real_profile() -> tuple[StatusFactRow, ...]:
     with profile_storage_session(pointer.bucket_id):
         _seed_auth_facts()
         record = workflow_state_repository().load().active_profile_record()
-        return _status_frontend._build_fact_rows(record=record)
+        assert record is not None
+        return _status_frontend._build_fact_rows(record=record), record
 
 
 @pytest.mark.usefixtures("_isolated_cli_backend")
@@ -315,7 +323,7 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
     """
     from .....application.user_profile import mask_profile_field
 
-    rows = _fact_rows_over_a_real_profile()
+    rows, _record = _fact_rows_over_a_real_profile()
 
     assert rows, "a created profile must project at least one fact row"
     nif_row = next((row for row in rows if row.value == "12345678Z"), None)
@@ -349,6 +357,88 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
         assert not mask_profile_field(path=row.label, label=row.label, sensitivity=None), (
             f"credential-shaped row {row.label!r} rendered unmasked"
         )
+
+
+# ── row labels: one name per field, except where an index must show ─────────
+
+
+@pytest.mark.usefixtures("_isolated_cli_backend")
+def test_an_unindexed_row_carries_the_label_the_manager_carries() -> None:
+    """One field must not be named two different things on two surfaces.
+
+    DISCRIMINATING, and deliberately measured against the OTHER surface
+    rather than against the label function this one now calls: asserting
+    that ``_build_fact_rows`` returns what ``profile_field_label`` returns
+    would restate the implementation. The manager builds its own rows
+    through ``build_profile_overview``, so agreement between the two is an
+    independent reading of the property that matters.
+
+    The second assertion is what makes this fail on the old code rather
+    than merely on a renamed key: the status page used to render the
+    schema's ``description`` verbatim, which for ``auth.provider`` is four
+    sentences of authority prose. A row that still equals the description
+    is a row that never reached the catalogue.
+    """
+    from .....application.user_profile import build_profile_overview
+    from .....domain.user_profile import load_user_profile_schema
+
+    rows, record = _fact_rows_over_a_real_profile()
+
+    status_label = next(row.label for row in rows if row.value == _AUTH_PROVIDER_VALUE)
+    overview = build_profile_overview(record)
+    manager_label = next(
+        field.label for section in overview.sections for field in section.fields if field.path == _AUTH_PROVIDER_PATH
+    )
+    assert status_label == manager_label, (
+        f"status names auth.provider {status_label!r} while the manager names it {manager_label!r}"
+    )
+    assert status_label != load_user_profile_schema().field(_AUTH_PROVIDER_PATH).description, (
+        "the status row still renders the schema description as its label"
+    )
+
+
+def test_an_indexed_row_keeps_its_raw_path_as_the_label() -> None:
+    """Two socios must stay distinguishable, so an indexed row keeps its path.
+
+    DISCRIMINATING as an inequality: the schema declares
+    ``attribution_entity_socios.nif`` once, so naming an indexed row after
+    its declaration -- by label or by description, it makes no difference
+    -- collapses every socio to the same row name on a surface with no
+    other column to tell them apart. The label is therefore the raw path
+    and the equality assertion below pins which path.
+
+    The record is built directly rather than through the CLI walk because
+    ``config profile create`` collects no socio: the shape under test is
+    an indexed fact, and this is a real ``UserProfileRecord`` read by the
+    production builder against the real shipped schema.
+    """
+    from .....domain.user_profile import (
+        UserProfileFact,
+        load_user_profile_schema,
+        profile_field_label,
+    )
+    from .....domain.user_profile import UserProfileRecord as _Record
+
+    first_path = "attribution_entity_socios.0.nif"
+    second_path = "attribution_entity_socios.1.nif"
+    record = _Record(
+        profile_id="00000000-0000-4000-8000-0000000000a1",
+        display_name="Socios status row",
+        facts=(
+            UserProfileFact(path=first_path, value="B12345678"),
+            UserProfileFact(path=second_path, value="B87654321"),
+        ),
+    )
+
+    rows = _status_frontend._build_fact_rows(record=record)
+    labels = {row.value: row.label for row in rows}
+    assert labels.keys() >= {"B12345678", "B87654321"}, f"both socios must project a row; got {labels}"
+    assert labels["B12345678"] != labels["B87654321"], "two socios rendered under one indistinguishable row name"
+    assert labels["B12345678"] == first_path
+    assert labels["B87654321"] == second_path
+
+    declared = load_user_profile_schema().field("attribution_entity_socios.nif")
+    assert labels["B12345678"] != profile_field_label("attribution_entity_socios", declared)
 
 
 # ── independent zone degradation (a damaged read never tracebacks) ──────────

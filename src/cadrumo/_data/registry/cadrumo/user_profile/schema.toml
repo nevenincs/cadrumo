@@ -135,8 +135,11 @@ enum_values = ["certificate", "clave_movil", "clave_permanente"]
 # simply cannot authenticate. Anything upstream of a session reads whichever
 # field it names and will not notice the disagreement.
 #
-# Descriptions here stay short on purpose: the status page renders them
-# verbatim as row labels, so rationale belongs in comments like this one.
+# Rationale belongs in comments like this one rather than in a description.
+# No surface renders a description as a row label any more -- the status page
+# and the manager both read the locale catalogue -- but a description is still
+# the string the masking heuristic scans for an unclassified field, and it is
+# what a field renders when no catalogue carries its label yet.
 [[sections.fields]]
 key = "dni_nie"
 type = "string"
