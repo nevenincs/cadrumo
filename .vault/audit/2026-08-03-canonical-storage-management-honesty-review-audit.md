@@ -815,12 +815,41 @@ consumer claims that shared its cause.
   The secret store's five file leaves are declared, its grammar re-anchored, the
   active-profile pointer enrolled, and the dead tempfile bridge deleted rather than
   pinned. The Families 1 and 2 remainder and all of Family 4 are still to land.
-- *Closure-blocking work has no plan row* — **unchanged.** `W02.P06`
-  ("nested subpath governance beneath enrolled categories") still carries **zero Steps**
-  at this object, as do `W02.P07`, `W02.P08` and `W03.P11`. The production write-call
-  census is a partial exception worth stating precisely: **the artefact now exists** — it
-  is in this document, static and runtime both — but the tracking row still does not, so
-  the evidence is no longer missing while the accountability still is.
+- *Closure-blocking work has no plan row* — **unchanged at every committed object, and
+  resolved in an uncommitted working-tree edit.** Measured with a parse that touches no
+  shell, at three objects — `72b7b06ad3`, the pinned `471ad349d6`, and a later HEAD
+  `9f6969150e` — the plan reads identically: 22 phases, 82 Steps, 54 checked, 28 open,
+  and `W02.P06`, `W02.P07`, `W02.P08` and `W03.P11` each carry **zero Steps**. The same
+  parse against the **working tree**, where the plan file is `M`, reads 23 phases, 114
+  Steps, 69 checked, 45 open, with `W02.P06` carrying 11 Steps of which 5 are checked.
+  **The rows have been written; they are not committed.** The finding holds against every
+  object a reader can fetch, and the remedy is already drafted — a better position than
+  either "untracked" or "tracked" describes alone.
+
+  The production write-call census is a partial exception worth stating precisely: **the
+  artefact now exists** — it is in this document, static and runtime both — but its
+  tracking row exists at no committed object, so the evidence is no longer missing while
+  the accountability still is.
+
+  **A note on how this was nearly amended away.** It was reported to me as an artefact of
+  my own tooling: plan identifiers are written in backticks, and a pattern built inside a
+  double-quoted shell string has its backticks eaten as command substitution, so every
+  phase would report zero. **The mechanism is real. It is not what happened here.** Two
+  checks refute it — a parse run from a script file with no shell anywhere in the path
+  reproduces the four empty phases exactly at three separate committed objects; and the
+  original shell-embedded parse had returned 22 phases with correct titles and correct
+  non-zero Step counts for eighteen of them, which eaten backticks could not produce,
+  since the pattern would then have matched nothing at all rather than selectively. The
+  114/69/45 figures are the working tree's, and they match no committed object.
+
+  This is the same root failure as the other four recorded here, in its fourth mechanism,
+  **and it is the most instructive because it arrived with a compelling technical
+  explanation attached.** A bare wrong number invites checking; a wrong number carrying a
+  credible mechanism supplies the verification a reader would otherwise go looking for,
+  and is therefore harder to catch than a bare one. The guard that worked was the cheap
+  one — take a load-bearing number a second time by a different mechanism, and, the part
+  that mattered here, **take it at a named object rather than at whatever the filesystem
+  happens to hold.**
 - *Criterion unmet by the plan's own open Steps* — **unchanged in kind, larger in count.**
   28 open Steps against 25 when this review opened. That rise is healthy rather than
   worrying: it is the enumeration and the gate work being written down.
