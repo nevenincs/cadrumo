@@ -119,21 +119,21 @@ enum_values = ["certificate", "clave_movil", "clave_permanente"]
 key = "dni_nie"
 type = "string"
 required = false
-sensitivity = "identity"
+sensitivity = "secret"
 description = "DNI or NIE presented to Cl@ve. It is recorded separately from identity.tax_id because a credential input and a taxpayer identifier are different things that happen to carry equal values today; merging them would hide the day they diverge. It is not a route to acting for someone else: live authentication refuses outright when this value and identity.tax_id disagree."
 
 [[sections.fields]]
 key = "numero_soporte"
 type = "string"
 required = false
-sensitivity = "identity"
+sensitivity = "secret"
 description = "Numero de soporte printed on a NIE document. It is the contraste Cl@ve asks a NIE holder for, the counterpart of fecha_validez for a DNI holder; Cl@ve reads exactly one of the two, chosen by which document the DNI/NIE is, and only on the non-QR route. It is a credential input: it persists only in the encrypted profile store, never in a dotenv file or a log."
 
 [[sections.fields]]
 key = "fecha_validez"
 type = "date"
 required = false
-sensitivity = "identity"
+sensitivity = "secret"
 description = "Validity date printed on a DNI document. It is the contraste Cl@ve asks a DNI holder for, the counterpart of numero_soporte for a NIE holder; Cl@ve reads exactly one of the two, chosen by which document the DNI/NIE is, and only on the non-QR route. It is a credential input: it persists only in the encrypted profile store, never in a dotenv file or a log."
 
 [[sections]]

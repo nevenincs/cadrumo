@@ -176,3 +176,54 @@ def test_sections_keep_their_schema_declaration_order() -> None:
     """Order is the schema's, so the page reads the way the schema declares."""
     overview = build_profile_overview(_record(), schema=_schema())
     assert [section.key for section in overview.sections] == ["identity", "access"]
+
+
+def test_the_clave_credential_inputs_mask_without_the_keyword_arm(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The shipped Cl@ve inputs mask by DECLARATION, not by their wording.
+
+    DISCRIMINATING, and against the schema really shipped rather than the
+    stand-in above. The sibling gates show these three fields mask; none
+    of them can show WHY, and for a long time the why was an accident.
+    Not one profile schema field declared ``secret``, so every masked
+    field reached the mask through the keyword arm — "credential" happens
+    to sit in each description. The confidentiality of a Cl@ve credential
+    was therefore a property of prose nobody was required to keep, and
+    rewording a description would have unmasked it silently.
+
+    The measurement empties the keyword set at runtime and re-asks. That
+    mutates the policy DATA, not the decision under test: with no
+    keywords left, ``mask_profile_field`` has only the declaration to go
+    on, so a field that still masks masks because the schema says so.
+
+    ``censo.divergencia`` is the positive control. It masks today only on
+    the word "token" in "provenance token", so it MUST stop masking under
+    the mutation. If both halves still masked, the mutation never took
+    and the first half would prove nothing.
+    """
+    from ....domain.user_profile import load_user_profile_schema
+    from .. import mask_profile_field
+    from .._overview import _MASK_KEYWORDS
+
+    schema = load_user_profile_schema()
+
+    def decision(path: str) -> bool:
+        field_def = schema.field(path)
+        return mask_profile_field(
+            path=path,
+            label=field_def.description or path,
+            sensitivity=field_def.sensitivity,
+        )
+
+    keyword_reliant = "censo.divergencia"
+    assert _MASK_KEYWORDS, "the keyword arm must be non-empty before the mutation"
+    assert decision(keyword_reliant), "the control field must mask before the mutation"
+
+    monkeypatch.setattr("cadrumo.application.user_profile._overview._MASK_KEYWORDS", frozenset())
+
+    for path in ("auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"):
+        assert decision(path), f"credential input {path!r} masks on its wording, not on its declaration"
+    assert not decision(keyword_reliant), (
+        "the keyword arm was not actually removed, so the declared fields above prove nothing"
+    )

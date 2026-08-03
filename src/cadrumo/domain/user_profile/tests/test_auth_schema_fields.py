@@ -4,11 +4,16 @@ The section exists so an authentication mode's credential inputs live on
 the encrypted profile rather than in a dotenv file: a second profile on
 the same machine carries its own credentials, and an operator setting up
 through the TUI can supply them at all. Two properties therefore have to
-hold and are pinned here. Every field sits at ``identity`` sensitivity,
-which is what routes it into ciphertext at rest. And no field is
-``required``, because the requirement is conditional on the chosen
-provider - a certificate needs neither Cl@ve field - so a hard schema
-requirement would refuse every certificate profile.
+hold and are pinned here. No field sits in a class the policy table
+treats as plaintext at rest. And no field is ``required``, because the
+requirement is conditional on the chosen provider - a certificate needs
+neither Cl@ve field - so a hard schema requirement would refuse every
+certificate profile.
+
+The three Cl@ve credential inputs declare ``secret``, which is what
+makes the manager and status surfaces mask them. Before that they sat at
+``identity`` and masked only because their descriptions contain the word
+"credential" - a property of the prose, not of the schema.
 """
 
 from __future__ import annotations
@@ -16,7 +21,7 @@ from __future__ import annotations
 import pytest
 
 from ....core import AuthProviderKind
-from ....core.classification import SensitivityClass
+from ....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .. import ProfileSchemaDefinition, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -24,6 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 AUTH_FIELD_KEYS: frozenset[str] = frozenset({"provider", "dni_nie", "numero_soporte", "fecha_validez"})
 CONTRASTE_FIELD_KEYS: frozenset[str] = frozenset({"numero_soporte", "fecha_validez"})
+CREDENTIAL_FIELD_KEYS: frozenset[str] = frozenset({"dni_nie", "numero_soporte", "fecha_validez"})
 
 
 @pytest.fixture
@@ -31,17 +37,57 @@ def schema() -> ProfileSchemaDefinition:
     return load_user_profile_schema()
 
 
-def test_auth_section_persists_at_identity_sensitivity(
+def test_no_auth_field_declares_a_plaintext_at_rest_class(
     schema: ProfileSchemaDefinition,
 ) -> None:
-    """A numero de soporte is a credential input, so the whole section
-    is classified ``identity`` and reaches the encrypted store. A drift
-    to ``operational`` would put a credential in a queryable plaintext
-    class."""
+    """No auth field may declare a class the policy table calls plaintext.
+
+    This pinned ``identity`` on every field until the Cl@ve credential
+    inputs were raised to ``secret``, and justified it as "what routes it
+    into ciphertext at rest". That justification was wrong, so it is not
+    restated here: a profile value's at-rest class comes from the
+    ``cadrumo.application.user_profile.value`` secure-object namespace,
+    which is ``identity`` whatever the field declares. The field's own
+    class is read by the masking authority and by nothing else.
+
+    What the declaration must still not do is describe credential-bearing
+    material as plaintext-safe, so the assertion reads the real policy
+    table rather than naming one permitted member - which is what let the
+    ``secret`` raise look like a violation of a rule it does not break.
+    """
 
     section = schema.section("auth")
-    assert section.sensitivity is SensitivityClass.IDENTITY
-    assert all(field.sensitivity is SensitivityClass.IDENTITY for field in section.fields)
+    plaintext = sorted(
+        field.key
+        for field in section.fields
+        if default_policy_for(field.sensitivity).at_rest is not AtRestTreatment.CIPHERTEXT_REQUIRED
+    )
+    assert not plaintext, f"auth fields declare a plaintext-at-rest class: {plaintext}"
+    assert default_policy_for(section.sensitivity).at_rest is AtRestTreatment.CIPHERTEXT_REQUIRED
+
+
+def test_the_clave_credential_inputs_declare_secret(
+    schema: ProfileSchemaDefinition,
+) -> None:
+    """The three Cl@ve credential inputs are ``secret`` by declaration.
+
+    DISCRIMINATING, and the schema half of the masking guarantee: the
+    masking authority masks a field the schema classes ``secret``, so
+    this declaration is what keeps the DNI/NIE and both contraste forms
+    off the manager and status surfaces. They previously masked only
+    because their descriptions contain "credential", which made the
+    confidentiality of a credential a property of its prose - reword the
+    description and the value renders in the clear.
+
+    ``provider`` is deliberately excluded. It holds which authentication
+    mode the taxpayer uses, a closed enum whose values the schema
+    publishes anyway; knowing it confers no authentication capability, so
+    it is not ``secret`` material.
+    """
+
+    section = schema.section("auth")
+    declared = {field.key for field in section.fields if field.sensitivity is SensitivityClass.SECRET}
+    assert declared == CREDENTIAL_FIELD_KEYS
 
 
 def test_auth_section_carries_the_provider_and_every_clave_credential(
