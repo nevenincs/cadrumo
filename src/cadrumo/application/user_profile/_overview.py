@@ -162,9 +162,12 @@ class ProfileFieldView(BaseModel):
     copy.
 
     The value is the stored index verbatim, not a display ordinal, because
-    it is the same identity the CLI row verbs address. ``None`` marks a row
+    it is the identity the fact path itself carries -- what a write to
+    ``<section>.<index>.<field>`` addresses, and what row assembly and
+    index allocation agree on. Renumbering it for display would leave the
+    surface naming a row the store does not have. ``None`` marks a row
     that belongs to no instance -- every ordinary field, and the unindexed
-    implicit row.
+    implicit row the setup wizard writes.
     """
 
     @property
