@@ -96,7 +96,18 @@ def _require_trace_identity(trace: RunTrace, *, expected_run_id: str) -> RunTrac
 
 
 def runs_dir(settings: Settings | None = None) -> Path:
-    """Return the configured runs directory, creating it when absent.
+    """Return the configured runs directory. Resolution only; never creates it.
+
+    A pure path resolver. Materialisation is a write-side concern: the one
+    production writer (:func:`_run_dir`) creates the full ``<runs_dir>/<run_id>``
+    chain itself via ``mkdir(parents=True)`` when it stages a run for writing,
+    which brings this root into existence as a side effect of that single
+    ``mkdir`` call -- it does not depend on this function creating anything.
+    A read must never materialise a directory for what it failed to find, so
+    every read-only caller (:func:`load_trace`, :func:`load_envelope_document`,
+    :func:`iter_events`, :func:`iter_runs`, :func:`prune_run_traces`) treats an
+    absent root exactly like an empty one rather than relying on this resolver
+    to conjure it first.
 
     Args:
         settings: Optional :class:`core.config.Settings` override
@@ -104,22 +115,20 @@ def runs_dir(settings: Settings | None = None) -> Path:
             loaded via :func:`core.config.load_settings`.
 
     Returns:
-        Absolute path to the per-process runs root.
+        Absolute path to the per-process runs root. Not guaranteed to exist.
     """
     cfg = settings or load_settings()
-    target = cfg.cadrumo_runs_dir
-    try:
-        target.mkdir(parents=True, exist_ok=True)
-    except OSError as exc:
-        _raise_persistence_error("runs_dir", target, exc)
-    return target
+    return cfg.cadrumo_runs_dir
 
 
 def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
-    """Return the per-run directory, creating it when absent.
+    """Return the per-run directory, creating it (and the runs root) when absent.
 
-    Rejects ``run_id`` values that do not match the canonical minted
-    shape so ``runs_dir / run_id`` cannot traverse out of the
+    The one production write path that materialises anything under the runs
+    root: ``mkdir(parents=True)`` creates the per-run subdirectory and, as
+    part of the same call, any missing ancestor -- including the runs root
+    itself -- in one step. Rejects ``run_id`` values that do not match the
+    canonical minted shape so ``runs_dir / run_id`` cannot traverse out of the
     configured runs directory.
 
     Args:
@@ -182,9 +191,9 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
 def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
     """Load and strictly validate a persisted :class:`RunTrace`.
 
-    Read-only lookups do not create the per-run directory — a missing
-    ``trace.json`` raises :exc:`RunTraceValidationError` without
-    polluting the runs directory with an empty entry.
+    Read-only: does not create the per-run directory, nor the runs root
+    itself. A missing ``trace.json`` raises :exc:`RunTraceValidationError`
+    without polluting the runs directory with an empty entry.
 
     Args:
         run_id: 16-char lowercase hex run identifier.
@@ -263,8 +272,8 @@ def load_envelope_document(
 ) -> dict[str, object]:
     """Load the persisted emitted-envelope document for a run.
 
-    Read-only: does not create the per-run directory. Returns the raw
-    mapping; type it with
+    Read-only: does not create the per-run directory, nor the runs root
+    itself. Returns the raw mapping; type it with
     :func:`core.observability.validate_captured_envelope`.
 
     Args:
@@ -355,8 +364,8 @@ def iter_events(
     validated *eagerly* — before the iterator starts — so a bad id
     surfaces at the call site instead of on first iteration.
 
-    Read-only: does not create a run directory when absent. A missing
-    file yields no records.
+    Read-only: does not create a run directory when absent, nor the runs
+    root itself. A missing file yields no records.
 
     Args:
         run_id: 16-char lowercase hex run identifier.
@@ -426,6 +435,11 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
     listing, and blocks any non-run artefacts that may have been dropped into
     the runs directory by hand.
 
+    Read-only: does not create the runs directory. No run has ever been saved
+    on a fresh install or an isolated test root, so an absent runs directory
+    is treated exactly like an empty one -- yielding nothing -- rather than
+    raising.
+
     Args:
         settings: Optional :class:`core.config.Settings` override.
 
@@ -435,6 +449,8 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
     """
     base = runs_dir(settings)
     pairs: list[tuple[str, RunTrace]] = []
+    if not base.is_dir():
+        return
     try:
         entries = tuple(base.iterdir())
     except OSError as exc:

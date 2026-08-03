@@ -244,11 +244,13 @@ class TestStoreRunIdValidation:
             # directory. While the two were the same path this could not
             # observe the resolver materialising the root, because the
             # fixture had already created it -- relocating the category is
-            # what made that visible. The property being defended is
-            # unchanged: a lookup that finds nothing must not leave a
-            # directory for the run it looked for.
-            assert runs_root.exists(), "the resolver materialises the runs root on read"
-            assert list(runs_root.iterdir()) == [], "missing trace lookup must not create a run dir"
+            # what made that visible: with the fixture no longer pre-creating
+            # runs_root, a resolver that eagerly mkdir'd it would show up
+            # here as `runs_root.exists()` turning True. The property being
+            # defended is unchanged: a lookup that finds nothing must not
+            # leave a directory behind, for the run it looked for or for the
+            # runs root itself.
+            assert not runs_root.exists(), "a failed lookup must not materialise the runs root"
 
 
 class TestStorePersistenceErrors:
@@ -266,17 +268,21 @@ class TestStorePersistenceErrors:
         )
 
     def test_save_trace_wraps_unusable_runs_root(self, tmp_path: Path) -> None:
+        """The write path is the sole materialiser: its mkdir(parents=True) covers the
+        runs root too, so an unusable root now surfaces from `_run_dir`, not `runs_dir` —
+        `runs_dir` is a pure resolver post-fix and never attempts a mkdir of its own."""
+        trace = self._trace()
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
             runs_root = storage_path(StorageCategory.RUNS, settings=settings)
             runs_root.parent.mkdir(parents=True, exist_ok=True)
             runs_root.write_text("not a directory", encoding="utf-8")
 
             with pytest.raises(RunTracePersistenceError) as excinfo:
-                save_trace(self._trace(), settings=settings)
+                save_trace(trace, settings=settings)
 
         error = excinfo.value
-        assert error.operation == "runs_dir"
-        assert error.path == runs_root
+        assert error.operation == "_run_dir"
+        assert error.path == runs_root / trace.run_id
         assert isinstance(error.__cause__, OSError)
 
     def test_load_trace_wraps_unreadable_trace_file(self, tmp_path: Path) -> None:
@@ -347,6 +353,16 @@ class TestStorePersistenceErrors:
         assert any("skipping non-directory entry" in message and "plain.txt" in message for message in messages)
         assert any("skipping non-run directory not-a-run" in message for message in messages)
         assert any("skipping run directory 0123456789abcdef without trace.json" in message for message in messages)
+
+    def test_iter_runs_on_a_missing_runs_directory_yields_nothing(self, tmp_path: Path) -> None:
+        """No run has ever been saved: the resolver must not create anything to answer this."""
+        with override_settings(**storage_overrides(tmp_path / "does-not-exist", StorageCategory.RUNS)) as settings:
+            runs_root = storage_path(StorageCategory.RUNS, settings=settings)
+            assert not runs_root.exists()
+
+            assert list(iter_runs(settings=settings)) == []
+
+            assert not runs_root.exists(), "enumerating an absent runs directory must not materialise it"
 
 
 class TestIterEvents:
