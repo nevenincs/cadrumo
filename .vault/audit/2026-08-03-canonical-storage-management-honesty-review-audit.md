@@ -410,23 +410,21 @@ none for the directory holding the master key.
 Note the intermediate `audit/live` is itself undeclared, so declaring only the leaves
 would leave a governed leaf under an ungoverned parent.
 
-*Family 3 — instance-scoped file leaves that need a new scope axis (3 names).*
+*Family 3 — instance-scoped file leaves (3 names). **Superseded: already declared.***
 `runs/<run_id>/trace.json`, `envelope.json`, `events.jsonl`. The `<run_id>` is data; the
-three filenames are application-chosen. Declaring these needs a `RUN_RELATIVE` scope
-anchored on the runs root, structurally identical to the `KEYSTORE_RELATIVE` /
-`KEYSTORE_ROOT` pair R13 added — which is precedent, not new design.
+three filenames are application-chosen. I first recommended a `RUN_RELATIVE` scope axis
+for these. **That was wrong** — all three are already declared as `StoragePathDefinition`
+grammars and behaviourally pinned. See the grammar-mechanism finding below; this family
+needs nothing.
 
 *Family 4 — filename templates the model cannot currently express (5 patterns).*
 `llm-usage/usage-{}.jsonl`, `llm-run-telemetry/run-telemetry-{}.jsonl`,
 `tokens/{}-{}-auth.lock`, `cache/registry-verdict/{prefix}{digest}.json`, and
-`llm-cache/<provider>/<model>/{}-{}.json`. **This family is the one that blocks a
-declaration campaign rather than merely feeding it.** `StorageLocation.subpath` is a
-single string plus a `node_kind`; it has no way to express *a family of files matching a
-pattern* inside a declared directory. Whoever declares these needs a ruling first: either
-the model gains a filename-pattern field, or the ADR states explicitly that
-instance-keyed files inside a declared directory are governed by the directory alone.
-The second is probably right and is cheap — but it must be *stated*, because today the
-silence is indistinguishable from an oversight.
+`llm-cache/<provider>/<model>/{}-{}.json`. `StorageLocation.subpath` cannot express a family of
+files matching a pattern, so I first read this family as blocking on a model change or an
+ADR ruling. **Both are unnecessary**: the `StoragePathDefinition.grammar` mechanism
+already expresses parameterised shapes and pins them against real writes. Family 4 needs
+grammar entries and a few vocabulary tokens. See the grammar-mechanism finding below.
 
 **Reclaim-reachability — and this corrects my own earlier finding.** I previously reported
 that none of the nested-ungoverned set was reachable by `reclaim`, on the eight
@@ -467,6 +465,74 @@ names, across 34 sites in 14 modules**, with the residual confined to a nameable
 rather than an open question. Declaration work can begin on Families 1 and 2 immediately
 — 15 of the 23 names, no model change required — while Family 4 waits on the ruling it
 needs and Family 3 waits on the scope axis.
+
+### grammar-mechanism-already-covers-families-3-and-4 | high | Family 3 needs no scope axis and Family 4 needs no ruling; the fan-out grammar already expresses both, and one declared grammar is unpinnable
+
+**Claimed / asked:** before adding a `filename_pattern` field to `StorageLocation` or a
+`RUN_RELATIVE` scope axis, check whether `StoragePathDefinition.grammar` already covers
+these shapes — and answer whether `grammar` (namespace registry) and `subpath`
+(taxonomy) are reachable from one another, or whether using the grammar would mean
+declaring a path definition for something that exists only as a taxonomy member.
+
+**Verified: the mechanism exists, does exactly this, and the instinct to check first was
+right on both families. I retract my Family 3 recommendation outright.**
+
+`_storage_path_definitions.py` states the division of labour in its own docstring: it
+carries "the parameterised fan-out SHAPES (a content-hash prefix, an outbound namespace,
+a per-run id) that cannot be enumerable `StorageCategory` members." That is Families 3
+and 4 described in advance.
+
+*Family 3 is already done, and a scope axis would have been a second way to say one
+thing.* `run_trace`, `run_events` and `run_envelope` are declared with grammars
+`<root>/runs/<run_id>/trace.json`, `.../events.jsonl`, `.../envelope.json`; `<run_id>`
+already has a regex fragment (16 lowercase hex, the shape the run-id minter produces);
+and `test_run_trace_shape_conformance.py` drives the three **real** writers and matches
+the **real** resulting paths against the declared grammar. Its docstring even names the
+gap it closed: "the `<run_id>` fan-out beneath it was never promoted to a declared
+shape." Proposing `RUN_RELATIVE` would have introduced the precise defect this campaign
+exists to remove. My earlier recommendation was wrong.
+
+*Family 4 fits, so it needs neither a model change nor a ruling.* The compiler
+(`_storage_path_grammar.py`) substitutes `<token>` placeholders from a declared
+vocabulary and — exactly as hoped — raises `AssertionError` naming an unrecognised token
+rather than matching it silently. Family 4 needs grammar entries plus roughly four new
+vocabulary tokens for the interpolated parts (a timestamp, a provider, a model, a verdict
+prefix; the verdict digest may already be covered by the existing `sha256` fragment).
+The second option — an ADR sentence that instance-keyed files are governed by their
+directory — is not needed, because the mechanism can govern them directly and more
+strongly, by pinning a real write against a declared shape.
+
+**The coupling question, answered.** They are independent but composable, and nothing
+forces the link. `StoragePathDefinition.segment` is optional and, where used, is
+populated *from* the taxonomy (`segment=storage_location(...).subpath`) — so a path
+definition can reference a member without requiring one. The grammar itself is a
+hand-authored string that spells the whole path. Family 4's parent directories are
+already taxonomy members, so adding grammars introduces no second authority over the
+category.
+
+**But the directory portion of every grammar is a hand-written literal that no gate binds
+to the member it duplicates.** `<root>/runs/<run_id>/trace.json` spells `runs` as text
+while `StorageCategory.RUNS` independently declares `runs` as its subpath, and no test
+compares them. Renaming the member's subpath would leave every grammar silently
+disagreeing. That is modest today and multiplies with each grammar a declaration campaign
+adds, so it is worth a gate before the campaign rather than after.
+
+**A latent gap found while checking the vocabulary, and it is the secret store again.**
+Cross-checking every token used in a declared grammar against the declared fragments:
+`secret_index` — `kind=FILE`, a real filesystem path — declares
+`<cadrumo_secret_store_dir>/index.json`, and `cadrumo_secret_store_dir` **has no regex
+fragment**. Any test pinning that key fails with the compiler's tooling error rather than
+a conformance result, so the grammar is declared but unverifiable. (The other undeclared
+token, `<object_key>`, belongs to `secure_objects_table`, whose kind is `LOGICAL_SQL` and
+whose `db://` path is correctly outside this compiler's scope — not a defect.) The
+loud-raise design is right; what is missing is a gate asserting that **every
+filesystem-kind grammar compiles against the declared vocabulary**. That gate would have
+caught this one, and it should land with the Family 4 entries rather than after them,
+since each new grammar is another chance to declare a token nobody defined.
+
+This is the third distinct way the secret store has surfaced in this review: no file-leaf
+members for `master.key` and its siblings, five ungoverned filename literals, and now its
+one declared grammar unpinnable.
 
 ### verified-sound | none | What the record claims and the code supports
 
@@ -522,11 +588,13 @@ Blocking, in the order that makes the next measurement cheapest:
 4. Close, or explicitly re-scope with a stated reason, the open production-enrollment
    Steps — `S51`, `S52`, `S53` at minimum, since their own text asserts the criterion is
    unmet for the sites they name.
-5. Declare Families 1 and 2 of the enumeration — 15 names, no model change needed — and
-   open the ruling Family 4 requires *before* anyone attempts to declare a filename
-   template, because `StorageLocation` cannot express one and a declarer who discovers
-   that mid-sweep will either invent a field or quietly skip the family. Family 3 needs
-   the run-relative scope axis first, on the `KEYSTORE_ROOT` precedent.
+5. Declare Families 1 and 2 of the enumeration — 15 names, no model change needed — as
+   `StorageCategory` members. Declare Family 4 as `StoragePathDefinition` grammars plus
+   the handful of vocabulary tokens they need; no model change and no ruling is required,
+   the mechanism already exists. Family 3 needs nothing: it is already declared and
+   pinned. Land two gates alongside: every filesystem-kind grammar must compile against
+   the declared token vocabulary (which would have caught `secret_index`), and every
+   grammar's directory portion must agree with the taxonomy subpath it spells out.
 
 Non-blocking:
 
