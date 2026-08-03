@@ -28,7 +28,7 @@ from datetime import date
 from typing import Literal
 
 from ...core.errors import ProfileAnswerTypeError
-from ...core.parsing import parse_iso8601_date
+from ...core.parsing import parse_bool, parse_iso8601_date
 from .family import DescendantInfo
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
@@ -197,12 +197,12 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     convive = True
     conv_raw = parts.get("CONVIVENCIA")
     if conv_raw is not None:
-        convive = conv_raw.lower() not in ("false", "0", "no")
+        convive = parse_bool(conv_raw) is not False
 
     custodia = False
     custodia_raw = parts.get("CUSTODIA")
     if custodia_raw is not None:
-        custodia = custodia_raw.lower() in ("true", "1", "si", "sí", "yes")
+        custodia = parse_bool(custodia_raw) is True
 
     meses_madre_trabajo_2024 = 0
     meses_raw = parts.get("MESES_TRABAJO")

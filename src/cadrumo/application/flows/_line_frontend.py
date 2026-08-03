@@ -32,6 +32,7 @@ from pydantic import TypeAdapter
 
 from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
 from ...core.i18n import tr
+from ...core.parsing import parse_bool
 from ._capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
 from ._checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
 from ._copy import (
@@ -265,7 +266,7 @@ class LineFlowFrontend:
         result = self._ask(
             questionary.confirm(
                 prompt,
-                default=default.strip().lower() in {"true", "yes", "1", "y"},
+                default=parse_bool(default) is True,
                 input=self._input,
                 output=self._output,
             ),

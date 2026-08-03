@@ -284,15 +284,12 @@ def _parse_optional_bool(raw: str | None) -> bool | None:
     that has not declared the fact must remain outside the LIS Art. 29
     15 percent override, which requires telling ``None`` apart from
     ``False`` at the typed boundary.
+
+    The three-state shape is exactly what the canonical parser already
+    returns, so this delegates rather than restating the token sets --
+    which is what it used to do, while importing that same parser.
     """
-    if raw is None or raw == "":
-        return None
-    token = raw.strip().lower()
-    if token in {"true", "1", "yes", "y", "si", "sí"}:
-        return True
-    if token in {"false", "0", "no", "n"}:
-        return False
-    return None
+    return _parse_bool(raw)
 
 
 def _parse_date(raw: str | None) -> date | None:

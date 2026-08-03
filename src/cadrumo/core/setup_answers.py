@@ -40,6 +40,7 @@ from ..core import STRICT_FROZEN_CONFIG
 from .errors import CoreError, ProfileAnswerTypeError
 from .external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from .logging import get_logger
+from .parsing import parse_bool
 
 _log = get_logger(__name__)
 
@@ -58,13 +59,11 @@ def _parse_optional_bool_token(value: object, *, field_name: str) -> object:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        token = value.strip().lower()
-        if token == "":
+        if value.strip() == "":
             return ""
-        if token in {"true", "1", "yes", "y", "si", "sí"}:
-            return True
-        if token in {"false", "0", "no", "n"}:
-            return False
+        parsed = parse_bool(value)
+        if parsed is not None:
+            return parsed
     raise ValueError(f"{field_name} must be a boolean, blank, or a recognised canonical token")
 
 
