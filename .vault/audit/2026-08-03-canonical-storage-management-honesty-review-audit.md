@@ -53,7 +53,7 @@ gives **157 passed, 2 failed**. `test_storage_liveness_gate.py::test_every_consu
 and `test_settings_lifecycle_gate.py::test_no_production_module_names_an_operator_data_location_by_literal`
 both fail. Neither caveat applies: no parallelism, no moving tree.
 
-Both fail for the same cause — five production literals naming taxonomy-governed
+Both fail for the same cause — one unlanded enrollment change; five production literals naming taxonomy-governed
 locations: `entrypoints/cli/_app_live.py` carries `Path('var/cadrumo/live/iva-compensation-history')`,
 `Path('var/cadrumo/live/iva-read-evidence')` and `Path('var/cadrumo/filed-declarations')`
 twice; `entrypoints/cli/_overview_evidence.py` carries the last of these once. Those
@@ -68,29 +68,44 @@ the campaign's enforcement is red, and no closure record states that. This findi
 resolves itself the moment that lane commits, and should be re-measured then rather
 than treated as durable.
 
-**Re-measured at a later HEAD, and the situation moved backwards rather than forwards.**
-The first measurement was at HEAD `72b7b06ad3`. Re-run against a fresh archive of HEAD
-`1b4cecc31f`, fifteen commits later, serial and single-SHA: **2 failed, 13 passed**, the
-same two gates.
+**Re-measured twice more, and the second re-measurement corrects the first — including
+an error of my own in exactly the class this review exists to catch.**
 
-- The settings-lifecycle gate is **still red**, on the identical five literals. The fix
-  remains uncommitted peer WIP: both modules are still `M` in the working tree with the
-  literals present at HEAD and absent only from the working copies. `git diff` over both
-  gate modules and `_storage_taxonomy.py` across those fifteen commits is empty, so the
-  gates themselves did not move — only the surrounding tree did. A campaign report that
-  this gate "has since gone green" is a working-tree reading, not a HEAD fact.
-- The liveness gate went from **3 unbacked consumer claims to 13**. The ten new ones are
-  every bucket- and keystore-scoped member — `bucket.db`, `bucket.blobs`, `bucket.audit`,
-  `bucket.manifest`, `bucket.lock`, `bucket.output-language-hint`, `bucket.keystore`,
-  `keystore.bucket-dek`, `keystore.profile-session`, `keystore.login-throttle` — all
-  still claiming `_namespace_registry.py` after the path-hierarchy extraction moved their
-  consumers into a sibling module. That is R10's entire core-ward migration reporting its
-  consumption unbacked.
+The middle measurement in this section previously read "3 unbacked consumer claims became
+13" and framed the campaign's enforcement as moving backwards. **That framing was wrong,
+and the SHA it was attributed to was wrong.** The 13 was a real observation, but it was
+not taken at the commit I labelled it with: the archive command ran `git archive HEAD`
+and then printed `git log -1` *afterwards*, and in a worktree taking commits every few
+minutes a commit landed in between. The measurement was of the parent commit; the label
+came from the child. Confirmed after the fact by content rather than by timestamp: the
+commit I named carries ten references to the extracted sibling module and the one before
+it carries zero, so a 13-unbacked reading was only possible at the earlier one.
 
-The diagnosis of the ten is understood and the remediation is described as routed. The
-distinction worth keeping is that routed describes intent and the gate describes state:
-at HEAD the campaign's own enforcement is failing on more claims than when this review
-opened, which is the opposite direction from the closure narrative.
+The lesson is worth more than the correction. `git archive HEAD` followed by a separate
+`git rev-parse` is a race, and it produces the same defect as reading a dirty working
+tree — a real number attached to a state it did not come from. The fix is to resolve the
+SHA into a variable *first* and archive that literal object. Every measurement in this
+section after this point does so.
+
+**Measured at explicitly pinned `9fdca8d083`, serial, single SHA: 2 failed, 13 passed.**
+
+- Liveness gate: **3** unbacked claims — `filed-declarations` claiming
+  `entrypoints/cli/_overview_evidence.py`, and `iva-compensation-history` and
+  `iva-read-evidence` both claiming `entrypoints/cli/_app_live.py`.
+- Settings-lifecycle gate: the same **5** literals in those same two modules.
+
+**The two gates have one shared cause, which is the finding that matters.** Both modules
+still name `var/cadrumo/live/iva-*` and `var/cadrumo/filed-declarations` as literals at
+HEAD. The lifecycle gate catches the literals directly; the liveness gate catches the
+three members whose declared consumer does not reference their category or settings field
+— because that consumer reaches the location by literal instead. One enrollment change
+closes both.
+
+So the honest arc of the liveness gate is 3 → 13 → 3: the path-hierarchy extraction
+briefly orphaned ten bucket- and keystore-scoped claims, and the very next commit
+re-pointed them. My snapshot landed inside that window. The campaign's enforcement did
+not move backwards; a four-commit window did, and it has closed. What remains is the
+enrollment three, unchanged since this review opened.
 
 ### nested-ungoverned-set-materially-larger | critical | The confirmed NESTED-UNGOVERNED set is four compositions in two modules; measurement finds roughly fourteen destinations across eight
 
@@ -488,9 +503,13 @@ identity — so absence of evidence is the most I can offer there.
 
 Blocking, in the order that makes the next measurement cheapest:
 
-1. Re-run the six storage gates serially against committed HEAD once the peer lane
-   holding the `_app_live.py` / `_overview_evidence.py` fix commits, and record the
-   result. Do not declare closure while a campaign-owned gate is red at HEAD.
+1. Land the enrollment change in `_app_live.py` and `_overview_evidence.py`. **Both
+   blocking gates trace to that single unlanded diff** — the lifecycle gate on its five
+   literals, the liveness gate on the three members whose declared consumer reaches the
+   location by literal instead of by member. It is the campaign's last actionable
+   blocker and it is sitting unowned in the working tree. Re-measure serially against an
+   explicitly pinned SHA afterwards; do not declare closure while a campaign-owned gate
+   is red at HEAD.
 2. Author Steps into `W02.P06` for every nested-ungoverned destination, using the list
    in finding two as a starting inventory rather than a complete one. The secret-store
    file leaves (`master.key`, `master.kdf`, `master.lock`, `keyring.lock`,
