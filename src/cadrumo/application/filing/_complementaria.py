@@ -63,7 +63,7 @@ class _SubmittedOriginal(Protocol):
     modelo: str
     period: Period
     profile_tax_id: str
-    justificante_csv: str
+    justificante_csv: str | None
 
 
 def build_complementaria(
@@ -132,7 +132,7 @@ def _submitted_original(original: object) -> _SubmittedOriginal:
         raise ModeloBuilderError("original submission does not conform to the expected protocol shape")
     submitted: _SubmittedOriginal = original
     csv = submitted.justificante_csv
-    if not csv.strip():
+    if csv is None or not csv.strip():
         raise ModeloBuilderError("original submission must include an official justificante CSV")
     return submitted
 
