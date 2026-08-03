@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:f0c058bc368b4c78a1876d1a37fb7183e1e9b6c8214fe11bad4bbbae4353ae7c'
+body_hash: 'sha256:7e86932617a94826c421b03630dda57472c777c978432642b0ac129121708d5b'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -263,7 +263,7 @@ Proves each new gate can actually fail by the smallest edit that should break it
 
 Resolves the one measurement this campaign ratified without proving: whether browser-mediated download bytes reach a filesystem path before cancellation fires.
 
-- [ ] `W05.P21.S81` - Execute the root-permission-drift finding and the mode-bit assertion on a real POSIX host, neither of which has run there yet despite the guarded-inline conversion that lets them execute on every platform; `src/cadrumo/core/tests/test_ensure_storage_tree.py`.
+- [x] `W05.P21.S81` - Execute the root-permission-drift finding and the mode-bit assertion on a real POSIX host, neither of which has run there yet despite the guarded-inline conversion that lets them execute on every platform; `src/cadrumo/core/tests/test_ensure_storage_tree.py`.
 
 ### Phase `W05.P22` - honesty review and closure
 
