@@ -206,7 +206,13 @@ class CorpusManifestDiff(BaseModel):
 
     @property
     def is_clean(self) -> bool:
-        """Return ``True`` iff every tracked file's hash matches the manifest."""
+        """Return ``True`` iff the corpus on disk matches the manifest exactly.
+
+        Not merely a hash check over the tracked files: an untracked file
+        appearing (``added``) and a tracked file vanishing (``removed``)
+        each make the corpus dirty on their own, with every remaining
+        hash still matching.
+        """
         return not (self.added or self.removed or self.changed)
 
 

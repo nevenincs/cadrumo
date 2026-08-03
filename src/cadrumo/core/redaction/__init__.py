@@ -402,13 +402,29 @@ def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
 
 
 def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object:
-    """Recursively apply ``rules`` to every string leaf inside a structure.
+    """Recursively apply ``rules`` to every string **value** inside a structure.
 
-    Walks dicts, lists, and tuples; redacts every string at the
-    leaves. Non-string non-container values pass through unchanged.
-    The container shape is preserved (dict stays dict, list stays
-    list, tuple stays tuple). The resulting object is a fresh copy
-    at every container level — the input is never mutated.
+    Walks dicts, lists, and tuples; redacts every string reached as a
+    dict value or a list/tuple element. Non-string non-container values
+    pass through unchanged. The container shape is preserved (dict stays
+    dict, list stays list, tuple stays tuple). The resulting object is a
+    fresh copy at every container level — the input is never mutated.
+
+    Dict KEYS are deliberately not redacted, and sets are not walked at
+    all. That is safe only because of what the callers pass: every
+    production call site hands in ``model_dump(mode="json")`` of a strict
+    frozen model, so the keys are pydantic field names and the values are
+    the taxpayer-derived data. No model on this path carries a free-form
+    ``dict[str, ...]`` field — the one extension point,
+    :class:`~cadrumo.core.observability.GenericPayload`, stores its
+    ad-hoc entries as a ``tuple[tuple[str, str], ...]`` rather than a
+    mapping, which keeps both halves inside the walk.
+
+    So a future payload field typed ``dict[str, X]`` and keyed by
+    anything taxpayer-derived would pass its keys through this function
+    in cleartext, with no gate to catch it. Add such a field only with a
+    key-aware redactor — :func:`redact_structured_for_cli_output` is the
+    key-aware sibling and the model to follow.
 
     This is the load-bearing primitive for nested audit payloads:
     submission audit events and run-trace records are nested dicts,
