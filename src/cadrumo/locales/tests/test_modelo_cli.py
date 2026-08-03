@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from ...core.config import override_settings
+from ...core.external_constants import OutputLanguage
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import load_modelo_directory
 from ...tests.cli_runner import invoke_typer_app
@@ -204,11 +206,24 @@ def test_set_command_does_not_mutate_official_spanish_schema_label(registry_root
 
 
 def _invoke_modelo(registry_root: Path, *args: str):
-    return invoke_typer_app(
-        app,
-        ["modelo", *args, "--registry-root", str(registry_root)],
-        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
-    )
+    """Invoke the modelo locale CLI with the rendered language pinned to English.
+
+    The assertions read the command's own report prose, so the render language
+    has to be a property of the test rather than of whoever runs it. Handing
+    ``CADRUMO_OUTPUT_LANGUAGE`` to the Click runner's ``env`` does not supply
+    that: :class:`~cadrumo.core.config.Settings` is built once per
+    active-profile pointer and held, so a runner that sets the variable after
+    that construction never reaches the resolver at all, and the active
+    profile's own language decides the output. Whether the variable is observed
+    therefore depends on what else in the process loaded settings first, which
+    is why the same assertion passed or failed by machine and by test order.
+
+    :func:`~cadrumo.core.config.override_settings` is the in-process door the
+    resolver consults ahead of that cache, and it drops the language cache at
+    both of its own boundaries, so no pin leaks into a neighbouring test.
+    """
+    with override_settings(cadrumo_output_language=OutputLanguage.EN):
+        return invoke_typer_app(app, ["modelo", *args, "--registry-root", str(registry_root)])
 
 
 def _remove_revision_label(registry_root: Path, key: str) -> None:
