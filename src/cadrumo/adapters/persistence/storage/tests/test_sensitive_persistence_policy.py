@@ -101,16 +101,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "path.write_text",
     ): "agent-harness eval flywheel; writes promoted eval scenario definitions, no sensitive/user data",
     (
-        "src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py",
-        "_write_bytes_secure_fd",
-        "os.write",
-    ): "secure temp materialisation writes through a pre-created private fd",
-    (
-        "src/cadrumo/adapters/persistence/storage/blob_store/_materialisation.py",
-        "_create_materialised_temp_path",
-        "tempfile.mkstemp",
-    ): "explicit secret/export materialisation uses private temp files",
-    (
         "src/cadrumo/adapters/persistence/storage/bucket/_sealed_archive_writer.py",
         "write_sealed_archive",
         "tarfile.open",

@@ -26,12 +26,10 @@ The public surface is grouped by contract:
   from this facade: it is a ceiling, and advertising it here would offer
   layer-two callers the wrong contract.
 - Encryption substrate — :class:`Envelope`, :class:`CipherEnvelope`,
-  :class:`EncryptedBlobStore`, :class:`SecretStore`, :class:`MasterKeyProvider`,
-  and the column-level helpers :class:`EncryptedString`,
-  :class:`EncryptedBytes`, :class:`EncryptedJSON`, and :class:`HashedLookup`.
-- Path-shaped SDK bridges — :func:`materialise_secret`,
-  :func:`export_to_temp_path`, and :func:`get_secret_store` for callers that
-  cannot consume in-memory secret bytes.
+  :class:`EncryptedBlobStore`, :class:`SecretStore`, :func:`get_secret_store`
+  (the route-canonical store factory), :class:`MasterKeyProvider`, and the
+  column-level helpers :class:`EncryptedString`, :class:`EncryptedBytes`,
+  :class:`EncryptedJSON`, and :class:`HashedLookup`.
 - Runtime and custody boundary — :class:`StorageRuntime`,
   :class:`StorageRuntimeReadiness`, runtime repository factories,
   :func:`activate_session`, :func:`get_active_master_key`,
@@ -196,9 +194,7 @@ from .blob_store import (
     BlobManifest,
     BlobReference,
     EncryptedBlobStore,
-    export_to_temp_path,
     get_secret_store,
-    materialise_secret,
 )
 from .bucket import RecoveryVerificationError
 from .crypto import (
@@ -534,7 +530,6 @@ __all__ = [
     "dispose_engines_for_bucket",
     "encode_mnemonic",
     "encrypt_record",
-    "export_to_temp_path",
     "generate_recovery_key",
     "get_active_master_key",
     "get_engine",
@@ -552,7 +547,6 @@ __all__ = [
     "load_wrapped_master_key",
     "looks_like_real_tax_id",
     "manifest_path_for",
-    "materialise_secret",
     "mint_recovery_envelope",
     "open_session_from_recovery",
     "redact",

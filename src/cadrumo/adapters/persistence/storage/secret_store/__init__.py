@@ -11,11 +11,9 @@ and indexes natural keys by HMAC-SHA256 lookup digest.
 The index is deliberately not a plaintext inventory: secret keys,
 payload bytes, and blob digests are kept out of user-facing miss,
 collision, corruption, and cleanup messages. SECRET and SESSION
-records must also carry explicit expiry before write. Consumers that
-need a filesystem path for an SDK should use
-:func:`adapters.persistence.storage.blob_store.materialise_secret`
-or :func:`adapters.persistence.storage.blob_store.export_to_temp_path`;
-this package owns opaque secret persistence, not tempfile lifecycle.
+records must also carry explicit expiry before write. This package
+owns opaque secret persistence, not tempfile lifecycle; every current
+consumer reads bytes directly rather than through a filesystem path.
 """
 
 from __future__ import annotations
