@@ -22,8 +22,11 @@ import pytest
 import typer
 from typer.core import TyperCommand
 
+from .....core.config import override_settings
 from .....tests.secure_sql import isolated_profile_storage_root
-from .._login_frontend import login_screen_is_available, login_tui_is_the_right_frontend
+from ... import _headless_secret_channel_active
+from .._login_frontend import _login_choices, login_screen_is_available, login_tui_is_the_right_frontend
+from .._manager_frontend import host_can_run_full_screen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -104,6 +107,25 @@ def _context(*, output_format: str) -> typer.Context:
     return typer.Context(TyperCommand("login"), obj={"format": output_format})
 
 
+def _a_profile_exists() -> None:
+    """Put one real profile in the isolated root, so the count is not the reason.
+
+    Without this, every resolved case below would answer ``False`` because
+    there is nothing to log in to — and would keep answering ``False`` with
+    the condition under test deleted. That is a clean negative proving
+    nothing. A real profile removes the alternative explanation and leaves
+    the condition each case names as the only thing the answer turns on.
+    """
+    from .....application.user_profile import logout_active_profile
+    from .._manager_frontend import attempt_registration
+
+    attempt = attempt_registration("Routing Subject", "routing-frontend-operator-secret", "en")
+    assert attempt.outcome is not None, f"the fixture profile must exist, but: {attempt.refusal}"
+    # Registration leaves the profile unlocked, and the session is
+    # process-global; close it so it cannot outlive this test's root.
+    logout_active_profile()
+
+
 def test_this_non_interactive_host_never_reaches_the_screen(tmp_path) -> None:
     """The resolved rule fails closed on the host a CI job actually has.
 
@@ -111,20 +133,40 @@ def test_this_non_interactive_host_never_reaches_the_screen(tmp_path) -> None:
     classifies the host as non-interactive — the same classification a
     piped shell, a dumb terminal, and a CI runner get. Resolving the rule
     here is therefore the real scripted case, not a described one.
+
+    Every OTHER input is first cleared and then *asserted* clear, which is
+    what gives the final assertion its meaning. Without that, the answer
+    would be ``False`` for whichever reason happened to hold — an empty
+    storage root, or the passphrase the isolation fixture configures — and
+    would stay ``False`` with the host check deleted, proving nothing about
+    the host at all.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
-        assert login_screen_is_available(_context(output_format="text"), name=None, secrets_stdin=False) is False
+        _a_profile_exists()
+        # The isolation fixture configures the headless secret channel, and
+        # that alone would decide the answer; withdraw it so it cannot.
+        with override_settings(cadrumo_secret_passphrase=None):
+            assert _headless_secret_channel_active() is False, "the headless channel must not be the reason"
+            assert len(_login_choices()) == 1, "an empty storage root must not be the reason"
+            assert host_can_run_full_screen() is False, "this host must genuinely be the non-interactive case"
+
+            ctx = _context(output_format="text")
+            assert login_screen_is_available(ctx, name=None, secrets_stdin=False) is False
 
 
-def test_a_json_caller_never_reaches_the_screen(tmp_path) -> None:
-    """A machine reading the envelope must not have a screen written over it."""
+def test_the_resolved_rule_reads_the_format_and_the_arguments(tmp_path) -> None:
+    """The gathered inputs are the ones the operator actually supplied.
+
+    The host this suite runs on cannot be made full-screen, so the answer
+    below cannot turn on the format or the arguments and asserting it
+    would prove nothing — those conditions are proved against the pure
+    rule. What IS proved here is the threading: each argument reaches the
+    predicate as itself, and neither a named profile nor a piped secret
+    makes the resolved call raise on the way.
+    """
     with isolated_profile_storage_root(tmp_path=tmp_path):
+        _a_profile_exists()
         assert login_screen_is_available(_context(output_format="json"), name=None, secrets_stdin=False) is False
-
-
-def test_a_named_profile_and_a_piped_secret_both_stay_on_the_prompt(tmp_path) -> None:
-    """The two argument-shaped opt-outs resolve the same way as the pure rule."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
         ctx = _context(output_format="text")
-        assert login_screen_is_available(ctx, name="some-profile", secrets_stdin=False) is False
+        assert login_screen_is_available(ctx, name="Routing Subject", secrets_stdin=False) is False
         assert login_screen_is_available(ctx, name=None, secrets_stdin=True) is False

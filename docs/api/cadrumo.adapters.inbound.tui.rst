@@ -14,7 +14,9 @@ Submodules
    :maxdepth: 4
 
    cadrumo.adapters.inbound.tui._app
+   cadrumo.adapters.inbound.tui._credential_screen
    cadrumo.adapters.inbound.tui._form_screen
+   cadrumo.adapters.inbound.tui._login_screen
    cadrumo.adapters.inbound.tui._manager_screen
    cadrumo.adapters.inbound.tui._question_screen
    cadrumo.adapters.inbound.tui._registration_screen

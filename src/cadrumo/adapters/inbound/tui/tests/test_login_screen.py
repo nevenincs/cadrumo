@@ -177,7 +177,10 @@ async def test_the_chosen_profile_is_the_one_that_opens(tmp_path) -> None:
         second = _register("Beta Subject")
 
         app = _screen(
-            [LoginChoice(profile_id=first, label="Alpha Subject"), LoginChoice(profile_id=second, label="Beta Subject")],
+            [
+                LoginChoice(profile_id=first, label="Alpha Subject"),
+                LoginChoice(profile_id=second, label="Beta Subject"),
+            ],
             preselected=first,
         )
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
