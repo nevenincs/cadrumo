@@ -34,6 +34,20 @@ _NIF = "12345678Z"
 _CIF = "B12345674"
 _CIF_OTHER = "A58818501"
 _CIF_LOOKALIKE = "F1234567B"
+# Bank accounts across countries -- foreign accounts are declarable, so the
+# arm is not ES-only. ``_IBAN_BAD_CHECKSUM`` carries the IBAN shape with
+# check digits that fail mod-97, and ``_HEX_DIGEST`` is a real 32-character
+# digest lifted from the bundled corpus: both are the collision class a
+# shape-only bank-account pattern would swallow.
+_IBAN_ES = "ES7921000813610123456789"
+_IBAN_DE = "DE89370400440532013000"
+_IBAN_GB = "GB29NWBK60161331926819"
+_IBAN_BAD_CHECKSUM = "ES9921000418450200051332"
+_HEX_DIGEST = "EB58612F0394953A4B516B938AD3FEB1"
+# Operator ruling, recorded as a standing negative control: "ibans are
+# sensitive, boe citations are not". A legal citation must reach the operator
+# intact, so a pattern that starts hashing one is too wide by definition.
+_BOE_CITATION = "BOE-A-2024-26694"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
 _OBJECT_KEY = "wallet:2026-secret"
@@ -272,6 +286,63 @@ def test_cli_output_leaves_a_cif_shaped_document_reference_verbatim() -> None:
         assert redact_for_cli_output(f"ref={lookalike}") == f"ref={lookalike}"
 
 
+# ── bank accounts (operator ruling) ─────────────────────────────────────────
+
+
+def test_cli_output_hashes_a_bank_account_in_any_country() -> None:
+    """An IBAN is hashed whether the account is Spanish or foreign.
+
+    Foreign accounts are declarable in this domain, so an ES-only arm would
+    protect the domestic case and leak the one a taxpayer holds abroad.
+    """
+    for iban in (_IBAN_ES, _IBAN_DE, _IBAN_GB):
+        redacted = redact_for_cli_output(f"cuenta={iban}")
+        assert iban not in redacted
+        assert redacted == f"cuenta={_expected_sha256_prefix(iban)}"
+
+
+def test_a_boe_citation_survives_the_funnel_untouched() -> None:
+    """A legal citation must reach the operator intact.
+
+    The standing negative control for every identifier pattern here, not an
+    incidental case: a citation is how an operator checks the law behind a
+    number, and a pattern wide enough to hash one is too wide by definition.
+
+    A citation is held out by SHAPE rather than by any checksum -- it never
+    matches in the first place -- so this case guards against a future
+    widening of the pattern itself, which is a different failure from the
+    checksum gate the next test covers.
+    """
+    assert redact_for_cli_output(f"ref={_BOE_CITATION}") == f"ref={_BOE_CITATION}"
+    assert redact_for_cli_output(f"see {_BOE_CITATION} art. 29") == f"see {_BOE_CITATION} art. 29"
+
+
+def test_bank_account_lookalikes_that_fail_the_checksum_survive() -> None:
+    """The mod-97 gate, not the shape, is what admits a bank account.
+
+    Both survivors carry the IBAN shape exactly: one is a real 32-character
+    hex digest taken from the bundled corpus, the other has check digits that
+    fail mod-97. A shape-only pattern would hash each into unidentifiability,
+    which is the cost that made matching on the checksum worth it.
+    """
+    for survivor in (_IBAN_BAD_CHECKSUM, _HEX_DIGEST):
+        assert redact_for_cli_output(f"ref={survivor}") == f"ref={survivor}"
+
+
+def test_redacting_an_already_redacted_line_changes_nothing() -> None:
+    """Redaction is idempotent, which the LLM cache relies on when re-read.
+
+    A digest that a later rule matched again would corrupt a stored payload
+    on every subsequent read, so the property is asserted rather than assumed.
+    """
+    line = f"nif={_NIF} cif={_CIF} iban={_IBAN_ES} ref={_BOE_CITATION}"
+    once = redact_for_cli_output(line)
+    assert redact_for_cli_output(once) == once
+    for raw in (_NIF, _CIF, _IBAN_ES):
+        assert raw not in once
+    assert _BOE_CITATION in once
+
+
 def test_cif_rule_is_enrolled_in_every_policy_that_carries_the_nif_rule() -> None:
     """Enrolment is what makes the rule reachable, not its ``applies_to``.
 
@@ -284,6 +355,7 @@ def test_cif_rule_is_enrolled_in_every_policy_that_carries_the_nif_rule() -> Non
         names = {rule.name for rule in default_rules_for_class(sensitivity)}
         if "nif-hash" in names:
             assert "cif-hash" in names, f"{sensitivity.name} hashes a NIF but not a CIF"
+            assert "iban-hash" in names, f"{sensitivity.name} hashes a NIF but not a bank account"
 
 
 def test_structured_redaction_hashes_a_cif_leaf() -> None:
@@ -293,10 +365,15 @@ def test_structured_redaction_hashes_a_cif_leaf() -> None:
     JSON file, so a leaf the rules miss is written to disk in cleartext.
     """
     redacted = redact_structured(
-        {"party_tax_id": _CIF, "note": f"invoice {_CIF_LOOKALIKE}"},
+        {
+            "party_tax_id": _CIF,
+            "refund_iban": _IBAN_ES,
+            "note": f"invoice {_CIF_LOOKALIKE} under {_BOE_CITATION}",
+        },
         rules=default_rules_for_class(SensitivityClass.DIAGNOSTIC),
     )
     assert redacted == {
         "party_tax_id": _expected_sha256_prefix(_CIF),
-        "note": f"invoice {_CIF_LOOKALIKE}",
+        "refund_iban": _expected_sha256_prefix(_IBAN_ES),
+        "note": f"invoice {_CIF_LOOKALIKE} under {_BOE_CITATION}",
     }

@@ -36,6 +36,14 @@ The redaction strategies, defined in
     collides with ordinary document references; the check character is
     what tells the two apart.
 
+``SHA256_PREFIX_IF_IBAN``
+    As ``SHA256_PREFIX``, but only when the matched span passes the ISO
+    13616 mod-97 check. Used for bank accounts, by an operator decision
+    that deliberately reaches past the redaction ADR's tax-identity
+    must-handle list. A BOE citation is the standing negative control: it
+    must keep passing through untouched, and a pattern that starts eating
+    one is too wide.
+
 ``HOST_ONLY``
     For URL-shaped values, retain only ``<scheme>://<host>``;
     everything else (path, query, fragment) is dropped.
@@ -55,6 +63,8 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from urllib.parse import urlparse
 
+from .._iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
+from .._iban import iban_mod_97 as _iban_mod_97
 from ..classification import (
     ClassificationPolicy as _ClassificationPolicy,
 )
@@ -87,6 +97,28 @@ _NIF_PATTERN = r"\b[XYZxyz]?\d{7,8}[A-Za-z]\b"
 # Widening the personal pattern's leading class instead would have admitted
 # every such reference.
 _CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
+
+# IBAN — a bank account number is sensitive financial data, so it is hashed
+# out of operator-facing output by operator decision. That decision is BROADER
+# than the redaction ADR's must-handle list, which names the tax-identity
+# shapes and does not mention bank accounts: this arm is a deliberate
+# extension, not an inference from that list. Do not narrow it back on the
+# grounds that the ADR omits it.
+#
+# Scanning form of the anchored :data:`IBAN_SHAPE_RE` in ``core._iban``, which
+# stays the authority on what an IBAN looks like. Two country letters, two
+# check digits, then an 11-30 character BBAN. Uppercase and separator-free is
+# the canonical form the app itself validates and stores; a grouped
+# ``ES79 2100 ...`` rendering is not matched, and no surface here emits one.
+#
+# Every country, not just ES: foreign accounts are declarable (Modelo 720
+# exists for assets held abroad) and refund accounts may be non-SEPA, so an
+# ES-only arm would protect the domestic case and leak the foreign one. The
+# breadth is safe because the mod-97 checksum, not the shape, admits the
+# match — a long alphanumeric run otherwise collides with hashes and opaque
+# ids, and a real 32-character hex digest in the bundled corpus is rejected
+# by the checksum exactly as intended.
+_IBAN_PATTERN = r"\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b"
 
 # Bearer / OAuth tokens commonly start with ``ey`` (JWT).
 _BEARER_PATTERN = r"(?i)\b(?:bearer\s+)?(eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,})"
@@ -218,6 +250,17 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
                 _SensitivityClass.DIAGNOSTIC,
             ),
         ),
+        "iban-hash": _RedactionRule(
+            name="iban-hash",
+            pattern=_IBAN_PATTERN,
+            strategy=_RedactionStrategy.SHA256_PREFIX_IF_IBAN,
+            applies_to=(
+                _SensitivityClass.IDENTITY,
+                _SensitivityClass.FINANCIAL,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
+            ),
+        ),
         "url-host-only": _RedactionRule(
             name="url-host-only",
             pattern=_URL_PATTERN,
@@ -321,6 +364,15 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
             return _sha256_prefix(span)
 
         return pattern.sub(_hash_if_identity, value)
+    if rule.strategy is _RedactionStrategy.SHA256_PREFIX_IF_IBAN:
+
+        def _hash_if_iban(match: re.Match[str]) -> str:
+            span = match.group(0)
+            if _IBAN_SHAPE_RE.match(span) and _iban_mod_97(span) == 1:
+                return _sha256_prefix(span)
+            return span
+
+        return pattern.sub(_hash_if_iban, value)
     if rule.strategy is _RedactionStrategy.HOST_ONLY:
         return pattern.sub(lambda m: _host_only(m.group(0)), value)
     if rule.strategy is _RedactionStrategy.FINGERPRINT:

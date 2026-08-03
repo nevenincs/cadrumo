@@ -152,6 +152,11 @@ class RedactionStrategy(StrEnum):
             a shape whose leading character class is wide enough to
             collide with ordinary document references, the check
             character is what separates an identity from a lookalike.
+        SHA256_PREFIX_IF_IBAN: As ``SHA256_PREFIX``, but only when the
+            matched span passes the ISO 13616 mod-97 check. An IBAN shape
+            is a long alphanumeric run that collides freely with hashes,
+            opaque ids, and tokens; the checksum is what makes matching
+            one safe.
         HOST_ONLY: For URL-shaped values, retain only the host
             component; drop path, query, and fragment.
         FINGERPRINT: Replace bearer / OAuth token-shaped values with
@@ -163,6 +168,7 @@ class RedactionStrategy(StrEnum):
 
     SHA256_PREFIX = "sha256_prefix"
     SHA256_PREFIX_IF_IDENTITY = "sha256_prefix_if_identity"
+    SHA256_PREFIX_IF_IBAN = "sha256_prefix_if_iban"
     HOST_ONLY = "host_only"
     FINGERPRINT = "fingerprint"
     ELLIPSIS = "ellipsis"
@@ -260,6 +266,7 @@ _DIAGNOSTIC_RETENTION = timedelta(days=7)
 _AUDIT_REDACTION_RULES = (
     "nif-hash",
     "cif-hash",
+    "iban-hash",
     "url-host-only",
     "token-fingerprint",
     "bearer-token-fingerprint",
@@ -287,13 +294,13 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.IDENTITY,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash", "cif-hash"),
+            redaction_rules=("nif-hash", "cif-hash", "iban-hash"),
         ),
         SensitivityClass.FINANCIAL: ClassificationPolicy(
             sensitivity=SensitivityClass.FINANCIAL,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=("nif-hash", "cif-hash"),
+            redaction_rules=("nif-hash", "cif-hash", "iban-hash"),
         ),
         SensitivityClass.AUDIT: ClassificationPolicy(
             sensitivity=SensitivityClass.AUDIT,
