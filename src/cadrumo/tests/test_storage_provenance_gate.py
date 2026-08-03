@@ -56,10 +56,10 @@ import pytest
 from ..core import STORAGE_ROOT_SETTINGS_FIELD
 from ._inventory import aeat_relative, ast_for_path, package_python_files
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 if TYPE_CHECKING:
     from pathlib import Path
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 JOIN_METHODS: Final[frozenset[str]] = frozenset({"joinpath", "glob", "rglob", "iterdir"})
@@ -109,38 +109,6 @@ PERMITTED_PRODUCERS: Final[frozenset[tuple[str, str]]] = frozenset(
 
 
 PENDING_ENROLLMENT: Final[tuple[PendingSite, ...]] = (
-    PendingSite(
-        module="core/config.py",
-        function="Settings._resolve_database_url_for_active_profile",
-        site_count=2,
-        reason=(
-            "Builds the cold-start root-fallback database path and the per-bucket database path "
-            "by joining module-local name constants onto the root. Both need declared members "
-            "before they can resolve through the accessor -- the root-fallback database file, "
-            "and the database file beneath the per-bucket db directory, which is a member while "
-            "the file inside it is not."
-        ),
-    ),
-    PendingSite(
-        module="core/_config_storage_route.py",
-        function="classify_storage_route_for_settings",
-        site_count=1,
-        reason=(
-            "Re-derives the same root-fallback database path to classify the storage route. This "
-            "is one of the duplicate copies the name unification exists to delete, and it goes "
-            "when the root-fallback database becomes a declared member."
-        ),
-    ),
-    PendingSite(
-        module="adapters/persistence/storage/master_key/_master_key.py",
-        function="refuse_unsecured_bucket_with_real_profile",
-        site_count=1,
-        reason=(
-            "A third inline copy of the per-bucket database path, assembled from the adapter's "
-            "own layout constants. It resolves through the bucket-scoped accessor once the "
-            "database file beneath the bucket db directory is a declared member."
-        ),
-    ),
     *(
         PendingSite(
             module="adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py",
