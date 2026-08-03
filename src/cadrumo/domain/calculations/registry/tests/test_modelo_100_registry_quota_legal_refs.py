@@ -34,17 +34,30 @@ _ANUALIDADES_FORMULA_YEARS = tuple(range(2022, 2026))
 _ANUALIDADES_MANUAL_INPUT_YEARS = (2020, 2021)
 _EXTRACTION_PROFILE_YEARS = tuple(range(2021, 2024))
 
-#: Each pre-2024/2025 filing year's applicability window predates arts. 75/76's
-#: current catalogue redactions (effective_from 2025-04-03 / 2024-12-22), so it
-#: cites the version-scoped redaction actually in force for that filing year
-#: instead of the bare current id.
+#: Each pre-2025 filing year's applicability window predates art. 75's current
+#: catalogue redaction (effective_from 2025-04-03, Ley 1/2025), so it cites the
+#: version-scoped redaction actually in force for that filing year instead of
+#: the bare current id. art-75-2015 covers 2015-01-01 to 2025-04-02 (unchanged
+#: text through 2020-2023 and still unchanged for the 2024 devengo, which closes
+#: 2024-12-31 -- entirely inside that window).
 _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF_BY_YEAR = {
     2020: "ley-35-2006:art-75-2015",
     2021: "ley-35-2006:art-75-2015",
     2022: "ley-35-2006:art-75-2015",
     2023: "ley-35-2006:art-75-2015",
-    2024: "ley-35-2006:art-75",
+    2024: "ley-35-2006:art-75-2015",
     2025: "ley-35-2006:art-75",
+}
+#: art-63's current redaction takes effect 2021-01-01 (Ley 11/2020's sixth
+#: bracket); 2020's devengo (closes 2020-12-31) falls entirely inside the
+#: pre-amendment art-63-2015 window (2015-01-01 to 2020-12-31).
+_GENERAL_SCALE_ART_63_REF_BY_YEAR = {
+    2020: "ley-35-2006:art-63-2015",
+    2021: _GENERAL_SCALE_ART_63_REF,
+    2022: _GENERAL_SCALE_ART_63_REF,
+    2023: _GENERAL_SCALE_ART_63_REF,
+    2024: _GENERAL_SCALE_ART_63_REF,
+    2025: _GENERAL_SCALE_ART_63_REF,
 }
 _AUTONOMIC_SAVINGS_SCALE_ART_76_REF_BY_YEAR = {
     2020: "ley-35-2006:art-76-2015",
@@ -64,6 +77,7 @@ def _revision_for(filing_year: int):
 def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_articles() -> None:
     for filing_year in _LIVE_M100_YEARS:
         revision = _revision_for(filing_year)
+        general_scale_art_63_ref = _GENERAL_SCALE_ART_63_REF_BY_YEAR[filing_year]
         checked_casilla_ids = {_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA, *_GENERAL_BASE_CUOTA_CASILLAS}
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas if casilla.id in checked_casilla_ids}
 
@@ -82,7 +96,7 @@ def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_article
         base_formula = formula_by_target.get(_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA)
         if base_formula is not None:
             assert _BASE_LIQUIDABLE_ART_50_REF in base_formula.legal_refs
-            assert _GENERAL_SCALE_ART_63_REF in base_formula.legal_refs
+            assert general_scale_art_63_ref in base_formula.legal_refs
             assert _PERSONAL_FAMILY_MINIMUM_ART_56_REF not in base_formula.legal_refs
             assert _SAVINGS_BASE_ART_49_REF not in base_formula.legal_refs
             assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in base_formula.legal_refs
@@ -90,7 +104,7 @@ def test_modelo_100_general_liquidable_and_cuota_chain_exclude_unrelated_article
         for casilla_id in _GENERAL_BASE_CUOTA_CASILLAS:
             casilla = casillas_by_id[casilla_id]
             formula = formula_by_target[casilla_id]
-            assert _GENERAL_SCALE_ART_63_REF in casilla.legal_refs, (filing_year, casilla.id)
+            assert general_scale_art_63_ref in casilla.legal_refs, (filing_year, casilla.id)
             assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, (filing_year, casilla.id)
             assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
             assert _SAVINGS_BASE_ART_49_REF not in formula.legal_refs, (filing_year, formula.id)
