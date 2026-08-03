@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .._namespace_registry import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
+from .....core import StorageCategory, storage_location
 from ._errors import BucketValidationError
 from ._layout import BucketPaths, bucket_paths
 
@@ -28,7 +28,7 @@ _KEYSTORE_VALIDATION_SURFACE = "bucket_keystore"
 
 def keystore_root(root: Path) -> Path:
     """Return the keystore parent ``<root>/keystore/`` (no IO)."""
-    return root / KEYSTORE_DIRNAME
+    return root / storage_location(StorageCategory.BUCKET_KEYSTORE).relative_path()
 
 
 def keystore_path(root: Path, bucket_id: str) -> Path:
@@ -94,7 +94,9 @@ def validate_keystore_separation(
     paths: BucketPaths = bucket_paths(root, bucket_id)
     target = configured_keystore if configured_keystore is not None else keystore_path(root, bucket_id)
 
-    buckets_parent = root / BUCKETS_DIRNAME
+    # The already-resolved bucket dir's parent IS the buckets container -- no
+    # second read of the governed name is needed.
+    buckets_parent = paths.bucket_dir.parent
     if _is_under(target, paths.db_dir):
         raise BucketValidationError(
             "keystore path resolves under bucket db dir",

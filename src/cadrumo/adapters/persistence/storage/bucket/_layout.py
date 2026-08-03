@@ -24,15 +24,10 @@ from typing import Literal
 from pydantic import BaseModel
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import StorageCategory, storage_location
 from .....core.identity import BucketId
 from .....core.logging import get_logger
 from .....core.paths import is_windows_long_path_error
-from .._namespace_registry import (
-    BUCKET_AUDIT_DIRNAME,
-    BUCKET_BLOBS_DIRNAME,
-    BUCKET_DB_DIRNAME,
-    BUCKETS_DIRNAME,
-)
 from ._errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketValidationError
 
 _log = get_logger(__name__)
@@ -69,14 +64,14 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     if "/" in bucket_id or "\\" in bucket_id:
         raise BucketValidationError("bucket_id must not contain a path separator")
 
-    bucket_dir = root / BUCKETS_DIRNAME / bucket_id
+    bucket_dir = root / storage_location(StorageCategory.BUCKETS).relative_path() / bucket_id
     return BucketPaths(
         bucket_id=bucket_id,
         root=root,
         bucket_dir=bucket_dir,
-        db_dir=bucket_dir / BUCKET_DB_DIRNAME,
-        blobs_dir=bucket_dir / BUCKET_BLOBS_DIRNAME,
-        audit_dir=bucket_dir / BUCKET_AUDIT_DIRNAME,
+        db_dir=bucket_dir / storage_location(StorageCategory.BUCKET_DATABASE).relative_path(),
+        blobs_dir=bucket_dir / storage_location(StorageCategory.BUCKET_BLOBS).relative_path(),
+        audit_dir=bucket_dir / storage_location(StorageCategory.BUCKET_AUDIT).relative_path(),
     )
 
 
