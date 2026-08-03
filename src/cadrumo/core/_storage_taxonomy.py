@@ -59,6 +59,19 @@ class StorageNodeKind(StrEnum):
     per-bucket file names -- ``manifest.toml``, ``.lock``, the keystore
     sidecars -- that follow no suffix convention, and inferring wrongly creates
     a directory where a document belongs, which fails much later at the write.
+
+    A second enum names the same axis one layer out: the storage adapter's
+    ``StoragePathKind`` answers a wider question, adding a member for a row
+    living in the encrypted database rather than on disk and one for
+    content-addressed blob content. The two are deliberately **not** merged --
+    ``core`` must not import an adapter type, and a ``StrEnum`` carrying
+    members cannot later be extended to subclass another -- so the
+    relationship is a declared parity rather than a shared definition:
+    ``DIRECTORY`` and ``FILE`` must spell their values identically on both
+    sides. Both are ``StrEnum``, so code compares them by value across the
+    boundary and a divergent spelling would return ``False`` rather than
+    raising. A gate pins that overlap, and pins only the overlap, so the
+    adapter stays free to grow members ``core`` has no use for.
     """
 
     DIRECTORY = "directory"

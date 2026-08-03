@@ -67,7 +67,24 @@ class StorageRemoteMirrorPolicy(StrEnum):
 
 
 class StoragePathKind(StrEnum):
-    """Persistent storage hierarchy node kind."""
+    """Persistent storage hierarchy node kind.
+
+    A strict superset of the core taxonomy's :class:`StorageNodeKind`, which
+    answers only "directory or file" because that is all the taxonomy needs to
+    decide. This one additionally names ``LOGICAL_SQL``, for a record living in
+    the encrypted database rather than on disk, and ``BLOB_OBJECT`` for
+    content-addressed blob content -- concepts that belong to the adapter and
+    would be noise in ``core``.
+
+    Deliberately not merged with it: ``core`` must not import an adapter type,
+    and a ``StrEnum`` carrying members cannot later be extended to subclass
+    another. So the two agree by declared parity instead -- ``DIRECTORY`` and
+    ``FILE`` carry identical values on both sides, pinned by a gate that
+    covers the overlap alone. Adding a member here is expected and does not
+    disturb that gate; **changing the spelling of a shared one does**, silently,
+    because both enums are ``StrEnum`` and cross-boundary code compares them by
+    value.
+    """
 
     DIRECTORY = "directory"
     FILE = "file"
