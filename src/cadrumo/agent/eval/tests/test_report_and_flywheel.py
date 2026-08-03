@@ -28,7 +28,6 @@ from .._report import (
 )
 from .._runner import load_scenario
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
