@@ -11,14 +11,12 @@ Manifests are plaintext JSON on disk (corpus material is plaintext;
 the manifest is the integrity gate, not the secrecy gate). Per-record
 fields are validated against path-traversal at construction.
 
-Operator workflow (via the ``aeat security verify-corpus`` CLI):
-
-- ``aeat security verify-corpus --corpus manuals`` — re-walk the
-- ``aeat security verify-corpus --corpus manuals --regenerate``
-  manual-verification scope before running it.
-
-The API in this module owns manifest regeneration after an intentional corpus
-update; it is not exposed as a separate human CLI command.
+There is no human CLI for corpus verification. This module's API is the
+whole surface: :func:`build_corpus_manifest`, :func:`verify_corpus_manifest`,
+and :func:`save_corpus_manifest`, re-exported through
+``cadrumo.adapters.persistence.storage`` and driven programmatically by its
+consumers. The same API owns manifest regeneration after an intentional
+corpus update.
 
 This module also builds and verifies distributable corpus *bundles*: a
 single ``.zip`` archive carrying every corpus file plus an embedded

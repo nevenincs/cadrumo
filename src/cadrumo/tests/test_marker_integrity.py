@@ -1,6 +1,8 @@
 """AST-backed integrity audit for the hexagonal test-marker taxonomy.
 
-Walks every source-controlled test module under ``src/cadrumo/`` and ``docs/`` and asserts that each
+Walks every test module present on disk under ``src/cadrumo/`` and ``docs/``
+— the scan is a filesystem glob and does not consult git, so an untracked
+module is in scope (see :func:`_discover_test_modules`) — and asserts that each
 carries a single top-level ``pytestmark = [...]`` assignment containing
 exactly one execution-scope marker (``unit`` / ``integration`` /
 ``aeat_live``) and exactly one ``hex_*`` marker.
