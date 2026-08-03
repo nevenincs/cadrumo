@@ -119,11 +119,13 @@ async def _drained_footer(app: ProfileManagerApp, pilot) -> dict[str, str]:
     """Drain the page's pending messages until the footer settles, then report it.
 
     ``pilot.pause()`` is a barrier, not a sleep: it posts a callback to the
-    application and to every widget in the screen tree, and returns once all
-    of them have been processed. What it cannot cover is a widget that did
-    not exist when it was posted — and the footer answers a bindings change
-    by rebuilding its children, so the entries read here are mounted *by*
-    the work the barrier is waiting on.
+    application and to every widget in the screen tree *as that tree stands
+    when it runs*, and returns once all of them have answered. That walk is
+    what bounds it — a widget mounted after the callbacks went out is not
+    among them, so nothing waits for it — and the footer answers a bindings
+    change by rebuilding its children. The entries read here are therefore
+    mounted *by* the work the barrier is waiting on, which is why passing
+    one barrier is no evidence that they exist yet.
 
     Hence a fixed point rather than a count of frames or a wait for an
     expected wording. Draining until two consecutive reads agree waits on
