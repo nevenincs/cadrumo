@@ -78,7 +78,12 @@ from ....adapters.outbound.storage import (
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
-from ....adapters.persistence.storage import secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage import (
+    STORAGE_NAMESPACE_REGISTRY,
+    SecureObjectNamespaceDefinition,
+    StorageRemoteMirrorPolicy,
+    secure_object_repository_for_active_bucket,
+)
 from ....adapters.persistence.storage.sql import verify_revision_self_consistency
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....core.config import load_settings
@@ -633,6 +638,63 @@ def _first_lineage_inconsistent_row(rows: list[SecureObjectRawRow]) -> str | Non
     return None
 
 
+#: Named once so the refusal text and the reason cannot drift apart: WHY an
+#: unmirrorable namespace is blocked here rather than skipped quietly. A skip
+#: lands in ``skipped_by_namespace``, which the operator reads as "nothing to
+#: do" — the same channel a dry run and an empty namespace use. A namespace
+#: that declares it must not leave the machine is not nothing-to-do; it is a
+#: declaration the sync is being asked to violate, and the operator has to be
+#: able to tell those apart. Blocking also matches what the decrypting read
+#: path already does with an unregistered namespace, which refuses rather than
+#: returning empty.
+_UNMIRRORABLE_NAMESPACE_BLOCKS_NOT_SKIPS = (
+    "namespace blocked rather than skipped: its registry definition withholds "
+    "remote mirroring, so pushing it would contradict the declaration, and a "
+    "silent skip would be indistinguishable from having nothing to push"
+)
+
+
+def _unmirrorable_namespace_reason(namespace: str) -> str | None:
+    """Return why ``namespace`` must not be mirrored, or ``None`` when it may be.
+
+    :meth:`SecureObjectRepository.iter_all_records_raw` deliberately bypasses
+    the decrypting read path, and with it
+    ``SecureObjectRepository._enforce_registered_read_policy`` — the funnel
+    that otherwise resolves a row's namespace definition and refuses an
+    unregistered one. The mirror therefore has to re-assert the registry
+    contract at its own boundary, exactly as
+    :func:`_first_lineage_inconsistent_row` re-asserts the pre-decrypt lineage
+    gate for the same reason.
+
+    An unregistered namespace is refused rather than waved through. The rows
+    most likely to be unregistered are the newest, and mirroring a row whose
+    disposition nothing has declared is precisely what
+    :data:`StorageRemoteMirrorPolicy` exists to prevent; refusing names it in
+    the operator-facing failure list rather than dropping it silently.
+    """
+    try:
+        definition = STORAGE_NAMESPACE_REGISTRY.namespace_by_value(namespace)
+    except KeyError:
+        return f"namespace_unregistered:mirror_preflight:{_UNMIRRORABLE_NAMESPACE_BLOCKS_NOT_SKIPS}"
+    return _mirror_refusal_for_definition(definition)
+
+
+def _mirror_refusal_for_definition(definition: SecureObjectNamespaceDefinition) -> str | None:
+    """Return why ``definition``'s namespace must not be mirrored, or ``None``.
+
+    Split from the registry lookup so the decision can be exercised against a
+    policy the shipped registry does not currently carry. No namespace ships
+    as ``LOCAL_ONLY`` today, so a test that re-labelled a shipped one to reach
+    that branch would be asserting against a production declaration somebody
+    may legitimately change; taking a definition directly lets the test build
+    the case it means to test.
+    """
+    policy = definition.remote_mirror_policy
+    if policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:
+        return None
+    return f"remote_mirror_withheld:{policy.value}:{_UNMIRRORABLE_NAMESPACE_BLOCKS_NOT_SKIPS}"
+
+
 def _preflight_mirror_namespaces(
     *,
     provider: StorageProvider,
@@ -669,6 +731,11 @@ def _preflight_mirror_namespaces(
     failed: list[tuple[str, str]] = []
     degraded: list[tuple[str, str]] = []
     for namespace, rows in planned_rows_by_namespace.items():
+        unmirrorable = _unmirrorable_namespace_reason(namespace)
+        if unmirrorable is not None:
+            failed.append((namespace, unmirrorable))
+            blocked.add(namespace)
+            continue
         lineage_failure = _first_lineage_inconsistent_row(rows)
         if lineage_failure is not None:
             failed.append((namespace, lineage_failure))
