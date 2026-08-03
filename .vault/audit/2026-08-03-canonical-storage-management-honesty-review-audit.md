@@ -894,6 +894,65 @@ So the honest accounting: it is a genuine miss in my enumeration; it is not a ne
 for the campaign, which has tracked it since the plan was authored; and the count does not
 grow by one, because `S25` was already inside the open-Step total I reported as blocking.
 
+### s81-mode-bits-evaluated-on-posix | none | The root-permission assertion holds on a real POSIX host, umask-independently, with its control firing
+
+**The Step:** `W05.P21.S81` — execute the root-permission-drift finding and the mode-bit
+assertion on a real POSIX host. Open because Windows has no meaningful mode bits, so the
+assertion sits behind `if os.name != "nt"` and is unevaluable on the machine this campaign
+normally measures from. The instrument, in that case, is the platform itself.
+
+**Host.** `gergelys-macbook-neo` was offered and is reachable over Tailscale
+(`100.111.203.66`, active, direct), but **SSH refused both available keys**
+(`publickey,password,keyboard-interactive`) and Tailscale SSH is not serving there. I did
+not attempt passwords and did not touch that machine's authentication — the standing
+instruction is to report blocked rather than route around an auth boundary. Measured
+instead on the WSL2 Ubuntu guest of this workstation: **Linux 5.15.167.4, python 3.14.4,
+`os.name == 'posix'`, euid 1001** — a genuine POSIX host with a native ext4 root, and no
+root privilege required.
+
+**Object measured.** `63a969556a`. Two facts compose the assertion, and each is established
+on the platform that can see it:
+
+*The hardening call is unconditional* — verified statically at that object.
+`ensure_storage_tree` materialises the tree, then executes `root.chmod(STORAGE_ROOT_MODE)`
+with `STORAGE_ROOT_MODE = 0o700`, outside any platform branch and after the mkdir loop, so
+it is last-writer.
+
+*That call's effect on POSIX* — measured, replicating the exact sequence with stdlib only:
+
+```
+                created   assertion_holds   after chmod 0o755   control_fires
+umask 0o000      0o700         True               0o755             True
+umask 0o022      0o700         True               0o755             True
+umask 0o077      0o700         True               0o755             True
+```
+
+**The assertion holds, and its positive control fires.** The umask sweep is the part worth
+keeping: `chmod` is not umask-masked while `mkdir(mode=...)` is, so a hardening that lands
+exactly `0o700` under a hostile `0o077` and a permissive `0o000` alike is demonstrably the
+former. A DrvFs (`/mnt/c`) run behaved identically, which is a mild surprise worth
+recording rather than a finding.
+
+**What was NOT evaluated, precisely.** The literal pytest function was not executed on
+POSIX. Doing so needs the project's dependency set installed into the operator's WSL, and
+installing into their machine is not something to do unasked. What is therefore unproven
+is only the *composition through pytest's fixtures* — the two facts above cover the
+mechanism the Step exists to check, but a reader wanting the test itself green on POSIX
+should know it has not been run, and that closing the Step on this evidence is a judgement
+rather than an execution.
+
+**One observation the measurement surfaced.** The hardening is **best-effort**: the
+`chmod` is wrapped in `except (OSError, NotImplementedError)` and its failure is recorded
+at **debug** level only. On POSIX the test would catch a failure, because it asserts the
+resulting mode — but in production a filesystem that refused the `chmod` would leave the
+root holding encrypted records, key material and the audit trail at whatever mode it
+inherited, announced only in a debug log nobody reads. Not a defect this campaign
+introduced, and not one the Step asks about; recorded because the measurement put it in
+front of me.
+
+**Artefacts left in place** under `/tmp` and `/mnt/c/.../Temp` on the WSL guest, per the
+standing no-delete rule. Nothing installed, nothing configured, nothing removed.
+
 ### verified-sound | none | What the record claims and the code supports
 
 Stated because a clean result is a result, and because several of these were the
