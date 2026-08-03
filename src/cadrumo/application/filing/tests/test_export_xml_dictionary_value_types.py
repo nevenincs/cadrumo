@@ -11,6 +11,13 @@ Expected tokens are never written by hand here. Each assertion reads the facets 
 bundled official AEAT XSD declares for that element or attribute and checks the
 rendered value against them, so the oracle is AEAT's schema rather than a
 restatement of the code under test.
+
+Checking one field at a time is the stronger instrument here, not a weaker stand-in
+for validating a whole exported document. A schema validator stops a sequence at its
+first error, and an exported declaration currently fails on a mandatory element the
+dictionary cannot supply, so validating the document as a whole never reaches a
+single rendered value. Per-field checking is also independent of how much of a draft
+happens to be populated, which document validation is not.
 """
 
 from __future__ import annotations
