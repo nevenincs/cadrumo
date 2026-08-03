@@ -54,9 +54,10 @@ PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SES
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
 #: Directory holding the application-owned config-reset journal. The
 #: application module owns the durable journal itself; the name is declared
-#: here so the on-disk hierarchy has one inventory, and the enrollment gate
-#: pins the two declarations together.
-CONFIG_RESET_JOURNAL_DIRNAME = "reset-operations"
+#: once in the core taxonomy (:class:`~cadrumo.core.StorageCategory.CONFIG_RESET_JOURNAL`)
+#: and read here, so the on-disk hierarchy has one inventory rather than two
+#: agreeing constants.
+CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
 BLOB_MANIFEST_SCHEMA_VERSION = 1
 SECRET_RECORD_SCHEMA_VERSION = 1
 SECRET_INDEX_FILENAME = "index.json"  # noqa: S105 - filename, not a credential

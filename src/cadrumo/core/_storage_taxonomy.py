@@ -361,6 +361,7 @@ class StorageCategory(StrEnum):
     BUCKETS = "buckets"
     ACTIVE_PROFILE_POINTER = "active-profile-pointer"
     ROOT_FALLBACK_DATABASE = "root-fallback-database"
+    CONFIG_RESET_JOURNAL = "config-reset-journal"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"

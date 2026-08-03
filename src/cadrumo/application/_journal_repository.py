@@ -27,7 +27,7 @@ from typing import Protocol
 
 from pydantic import ValidationError
 
-from ..core import exclusive_file_lock
+from ..core import StorageCategory, exclusive_file_lock, storage_location
 from ..core.atomic_write import atomic_write_hardened_text
 from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING
@@ -193,7 +193,9 @@ class JournalRepositoryBase[T: JournalOperation]:
         resolved_root = self._root.resolve(strict=True)
         if resolved_root.parent != self._storage_root:
             raise self._error_type(f"{self._subject} repository escaped the storage root")
-        buckets_root = (self._storage_root / "buckets").resolve(strict=False)
+        buckets_root = (self._storage_root / storage_location(StorageCategory.BUCKETS).relative_path()).resolve(
+            strict=False,
+        )
         if resolved_root == buckets_root or buckets_root in resolved_root.parents:
             raise self._error_type(f"{self._subject} repository must remain outside bucket directories")
         return True

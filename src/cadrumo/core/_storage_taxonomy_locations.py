@@ -519,6 +519,21 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
+    _location(
+        # Application-owned journal directory for in-flight and completed
+        # config-reset operations, sibling to buckets/ under the storage root.
+        # No dedicated settings field exists to relocate it independently of
+        # the storage root -- the same shape as BUCKETS and
+        # ACTIVE_PROFILE_POINTER above, so it is FIXED for the same reason:
+        # nothing here permits an operator-facing override to point it
+        # anywhere else.
+        StorageCategory.CONFIG_RESET_JOURNAL,
+        "reset-operations",
+        consumer_module="application/_config_reset_repository.py",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
 )
 
 

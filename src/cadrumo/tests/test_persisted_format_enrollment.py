@@ -31,7 +31,6 @@ from typing import Final
 import pytest
 
 from ..adapters.persistence.storage import (
-    CONFIG_RESET_JOURNAL_DIRNAME,
     LOGIN_THROTTLE_FILENAME,
     STORAGE_NAMESPACE_REGISTRY,
     SecureObjectNamespaceDefinition,
@@ -41,8 +40,10 @@ from ..core import (
     PERSISTED_FORMATS,
     RELEASED_FORMAT_FLOORS,
     PersistedFormatClass,
+    StorageCategory,
     misclassified_floor_keys,
     stale_persisted_format_declarations,
+    storage_location,
     undeclared_persisted_formats,
 )
 
@@ -133,14 +134,20 @@ def test_application_owned_journal_name_agrees_with_the_registry() -> None:
     """The config-reset journal has one name, declared once.
 
     The journal is application-owned but its directory is part of the on-disk
-    hierarchy, so the name is declared in the storage registry and the gate
-    pins the application's own constant against it — a rename that updates one
-    and not the other fails here rather than orphaning a taxpayer's
-    interrupted reset.
+    hierarchy, so the name is declared exactly once in the core taxonomy
+    (:class:`~cadrumo.core.StorageCategory.CONFIG_RESET_JOURNAL`) and the gate
+    pins the application's own constant against THAT declaration — not
+    against a second agreeing constant elsewhere, which a rename could update
+    while leaving the other stale. A rename that updates the taxonomy and not
+    the application's read of it fails here rather than orphaning a
+    taxpayer's interrupted reset.
     """
     from ..application import _config_reset_repository
 
-    assert _config_reset_repository.CONFIG_RESET_JOURNAL_DIRNAME == CONFIG_RESET_JOURNAL_DIRNAME
+    assert (
+        storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
+        == _config_reset_repository.CONFIG_RESET_JOURNAL_DIRNAME
+    )
 
 
 def test_login_throttle_sidecar_name_is_declared_once() -> None:

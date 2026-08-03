@@ -24,13 +24,14 @@ comparing two different anchors, not verifying one. See
 ``StoragePathAnchor``'s own docstring for why the anchors differ (a real,
 separately-tracked production discrepancy, not merely a labelling gap).
 
-The one pre-existing exception -- ``config_reset_journal``'s ``reset-operations``
-directory, joined onto the raw storage root in
+``config_reset_journal``'s ``reset-operations`` directory was the one
+pre-existing exception -- joined onto the raw storage root in
 ``application/_config_reset_repository.py`` rather than resolved through a
-declared category -- is named explicitly rather than silently exempted; it is a
-real, already-recorded gap
-(``2026-08-03-canonical-storage-management-honesty-review-audit``), not a defect
-this gate invents or launders.
+declared category. That gap is closed: ``reset-operations`` is now
+``StorageCategory.CONFIG_RESET_JOURNAL``'s declared subpath, so the exemption
+list below is empty. Kept as a live dict rather than deleted outright, so a
+future genuinely-unmatched key has a declared home to name itself in rather
+than reopening this docstring.
 """
 
 from __future__ import annotations
@@ -49,13 +50,14 @@ _KNOWN_DIRECTORY_SUBPATHS: Final[frozenset[str]] = frozenset(
     storage_location(category).subpath for category in StorageCategory
 )
 
-_UNDECLARED_DIRECTORY_EXEMPTIONS: Final[dict[str, str]] = {
-    "config_reset_journal": (
-        "'reset-operations' is joined onto the raw storage root in "
-        "application/_config_reset_repository.py, not resolved through a declared "
-        "StorageCategory member -- a pre-existing gap, not one this gate invents"
-    ),
-}
+_UNDECLARED_DIRECTORY_EXEMPTIONS: Final[dict[str, str]] = {}
+"""Genuinely-unmatched keys, named explicitly rather than silently skipped.
+
+Empty today: ``config_reset_journal`` was the sole prior entry, retired once
+``reset-operations`` became ``StorageCategory.CONFIG_RESET_JOURNAL``'s declared
+subpath. The anti-rot test below still runs over whatever this holds, so a
+future entry is proven genuine rather than trusted on the comment beside it.
+"""
 
 
 def _storage_root_anchored_definitions() -> list[object]:
