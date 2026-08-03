@@ -4977,12 +4977,10 @@ cli:
         section_profile_inspection: Profiladatok vizsgálata
         section_profile_lifecycle: Profil életciklusa
         section_storage: Tárolás
-        storage_check: Ellenőrzi, hogy a tárolófából hiányoznak-e könyvtárak, vagy
-          rossz helyen vannak-e
+        storage_check: 'Ellenőrzi a tárolófát: hiányzó vagy rossz helyen lévő könyvtárak'
         storage_init: Létrehozza a hiányzó tárolókönyvtárakat
         storage_list: Megnézheted, hol tárolódik minden helyi adattípus
-        storage_reclaim: Helyet szabadít fel egy olyan kategória törlésével, amelyet
-          az alkalmazás újraépít
+        storage_reclaim: Helyet szabadít fel egy újraépíthető kategória törlésével
         storage_show: Egy tárolókategória részletes megtekintése
       root:
         diagnostics_live_filed: Rögzített benyújtott bevallás-megfigyelések listázása.
@@ -6679,6 +6677,14 @@ flows:
   manager:
     action:
       abandoned: Nem történt változás.
+      add_row: Sor hozzáadása
+      add_row_done: A(z) %{section} %{index}. sora hozzáadva.
+      add_row_empty: Semmi sem lett kitöltve, ezért nem jött létre új sor.
+      add_row_incomplete: A sorból kötelező adatok hiányoznak, ezért semmi sem lett
+        mentve.
+      add_row_none: Ez a profilséma nem tartalmaz sorokat kezelő szakaszt.
+      add_row_required: Kötelező; enélkül a sor nem adható hozzá.
+      add_row_section: Melyik szakaszhoz
       auth_clave_incomplete: 'A Cl@ve még ezt igényli: %{missing}. Semmi sem lett
         elmentve.'
       auth_contraste_missing: 'A QR nélküli Cl@ve Móvil útvonalhoz a dokumentum ellenőrző
@@ -6716,13 +6722,6 @@ flows:
         clave_movil: Cl@ve Móvil
         clave_permanente: Cl@ve Permanente
       working: '{action} folyamatban...'
-      add_row: 'Sor hozzáadása'
-      add_row_section: 'Melyik szakaszhoz'
-      add_row_required: 'Kötelező; enélkül a sor nem adható hozzá.'
-      add_row_done: 'A(z) %{section} %{index}. sora hozzáadva.'
-      add_row_empty: 'Semmi sem lett kitöltve, ezért nem jött létre új sor.'
-      add_row_incomplete: 'A sorból kötelező adatok hiányoznak, ezért semmi sem lett mentve.'
-      add_row_none: 'Ez a profilséma nem tartalmaz sorokat kezelő szakaszt.'
     actions:
       section: Műveletek
     column:
