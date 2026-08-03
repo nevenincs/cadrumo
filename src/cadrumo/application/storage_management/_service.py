@@ -120,6 +120,16 @@ def inspect_storage_tree(*, settings: Settings | None = None) -> StorageTreeChec
     Only members the settings actually resolve are checked. A member whose
     opt-in field is unset names a location the operator has not asked for, and
     reporting it missing would turn every unused affordance into a finding.
+
+    Two of these findings are unreachable from the CLI, and the reason is worth
+    stating rather than leaving to be rediscovered. The command line materialises
+    the declared tree during bootstrap, so by the time a command body runs a
+    missing directory has been created and a directory occupied by a file has
+    already been refused there, naming the same path this would have named. Both
+    findings remain reachable in-process, and the ones the CLI genuinely leaves
+    to this function are a directory sitting where a file-valued member's leaf
+    belongs -- the materialiser creates that member's parent and deliberately
+    not its leaf -- and root permission drift.
     """
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)
