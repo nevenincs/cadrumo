@@ -28,7 +28,7 @@ from typing import cast
 import httpx
 from pydantic import BaseModel, Field
 
-from ..core import OPTIONAL_EXTRAS, STRICT_FROZEN_CONFIG, OptionalExtra, optional_extra_available
+from ..core import OPTIONAL_EXTRAS, STRICT_FROZEN_CONFIG, ExternalPathRole, OptionalExtra, optional_extra_available
 from ..core.config import Settings, load_settings
 
 __all__ = [
@@ -165,6 +165,23 @@ def probe_subprocess_providers() -> tuple[DependencyStatus, ...]:
     return tuple(statuses)
 
 
+PLAYWRIGHT_BROWSERS_ROOT_ROLE = ExternalPathRole.THIRD_PARTY_CACHE
+"""Why the Playwright browser cache sits outside the storage taxonomy.
+
+Declared as a positive statement rather than left as the root's plain absence
+from :data:`~core.STORAGE_TAXONOMY` or :data:`~core.EXTERNAL_PATH_SETTINGS_FIELDS`:
+Playwright installs its own Chromium build under a vendor-owned layout
+convention (``PLAYWRIGHT_BROWSERS_PATH`` or a per-OS default cache directory),
+so the application neither chooses this location nor writes the binaries there
+-- it fails the choose test :class:`~core.ExternalPathRole` exists to name.
+There is no :class:`~core.config.Settings` field to carry the declaration on
+(the root is resolved from a vendor environment variable and a platform
+default, never a Cadrumo setting), so it lives beside the resolver it
+describes rather than in :data:`~core.EXTERNAL_PATH_SETTINGS_FIELDS`, which is
+keyed by settings field name.
+"""
+
+
 def _playwright_browsers_root(cache_root: Path | None = None) -> Path:
     """Return the directory Playwright installs browser binaries into.
 
@@ -172,6 +189,10 @@ def _playwright_browsers_root(cache_root: Path | None = None) -> Path:
     ``PLAYWRIGHT_BROWSERS_PATH`` then falls back to the per-OS default cache. A
     filesystem read only — it never launches the Playwright driver (which can
     hang inside the CLI process), so the probe stays fast and non-blocking.
+
+    A third-party-owned cache (see :data:`PLAYWRIGHT_BROWSERS_ROOT_ROLE`): the
+    application reads this location to probe for an installed build and never
+    chooses or writes to it.
     """
     if cache_root is not None:
         return cache_root

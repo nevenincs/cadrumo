@@ -19,12 +19,14 @@ from typing import ClassVar, override
 
 import pytest
 
-from ...core import MissingOptionalExtraError, OptionalExtra, require_optional_extra
+from ...core import ExternalPathRole, MissingOptionalExtraError, OptionalExtra, require_optional_extra
 from ...core.config import override_settings
 from ...core.errors import CadrumoError, CoreError
 from ..provisioning import (
     OPTIONAL_EXTRAS,
+    PLAYWRIGHT_BROWSERS_ROOT_ROLE,
     DependencyStatus,
+    _playwright_browsers_root,
     probe_ollama_vision,
     probe_optional_extra,
     probe_optional_extras,
@@ -121,6 +123,23 @@ def test_probe_playwright_browser_missing_root_is_unavailable_not_an_error(
     """A nonexistent cache root reports unavailable rather than raising OSError."""
     status = probe_playwright_browser(cache_root=tmp_path / "does-not-exist")
     assert status.available is False
+
+
+def test_playwright_browsers_root_escape_is_declared() -> None:
+    """The Playwright browser cache carries a positive third-party-cache
+    declaration rather than sitting silently outside the storage taxonomy."""
+    assert PLAYWRIGHT_BROWSERS_ROOT_ROLE is ExternalPathRole.THIRD_PARTY_CACHE
+
+
+def test_playwright_browsers_root_still_honours_vendor_env_var(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The declared escape does not change resolution: an explicit
+    ``PLAYWRIGHT_BROWSERS_PATH`` still wins over the per-OS default."""
+    vendor_root = tmp_path / "vendor-playwright-cache"
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(vendor_root))
+    assert _playwright_browsers_root() == vendor_root
 
 
 def test_probe_subprocess_providers_returns_typed_statuses_and_never_raises() -> None:
