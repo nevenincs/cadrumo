@@ -1,4 +1,4 @@
-"""The bucket layout has one name, and the platform context has one seam.
+"""The bucket layout has exactly one name per directory.
 
 Two names -- the bucket container and the per-bucket database directory -- were
 re-typed as inline literals in core modules because the constants declaring them
@@ -7,9 +7,9 @@ hexagonal direction. The duplication was a symptom of the names sitting in the
 wrong layer, so no tidying could remove it. Now that the names live in core,
 these modules read the declaration and the copies are gone.
 
-The state-root seam is the companion fix: resolution was already a pure function
-of its inputs, but nothing above it could supply them, so a test could pin a
-synthetic platform only by mutating the ambient process.
+The state-root cases below cover the injection seam the resolver already
+provides: it takes its whole platform context as an argument, so a test hands
+over a synthetic one rather than mutating the ambient process around the call.
 """
 
 from __future__ import annotations
@@ -25,10 +25,8 @@ from .._config_state_root import (
     PRODUCT_DATABASE_FILENAME,
     FormerProductStateError,
     StateRootInputs,
-    current_state_root_inputs,
-    default_storage_root,
-    override_state_root_inputs,
     refuse_former_product_database,
+    resolve_state_root,
 )
 from .._config_storage_route import classify_storage_route_for_settings
 from .._storage_taxonomy import StorageCategory, storage_location
@@ -115,26 +113,28 @@ def _synthetic_inputs(home: Path) -> StateRootInputs:
     return StateRootInputs(platform="linux", environ={"XDG_DATA_HOME": str(home / "share")}, home=home)
 
 
-def test_the_seam_pins_the_platform_context_without_touching_the_process(tmp_path: Path) -> None:
-    """A synthetic platform is supplied, not simulated by mutating the process."""
-    inputs = _synthetic_inputs(tmp_path)
+def test_root_resolution_is_a_pure_function_of_its_supplied_inputs(tmp_path: Path) -> None:
+    """The platform context is passed in, not read from the ambient process.
 
-    with override_state_root_inputs(inputs) as pinned:
-        assert pinned is inputs
-        assert current_state_root_inputs() is inputs
-        assert default_storage_root() == tmp_path / "share" / "cadrumo" / "storage"
-
-
-def test_omitting_the_seam_changes_nothing(tmp_path: Path) -> None:
-    """The seam defaults to live capture, so production behaviour is untouched.
-
-    Asserted by exiting the block: the pinned context must not survive it, or
-    every later resolution in the process would silently read a test's platform.
+    This is the dependency-injection seam the resolver already has, and it is
+    the one a test should reach for: a synthetic platform is constructed and
+    handed over, rather than simulated by mutating ``os.environ`` and
+    ``sys.platform`` around the call.
     """
-    live_before = default_storage_root()
+    resolution = resolve_state_root(_synthetic_inputs(tmp_path))
 
-    with override_state_root_inputs(_synthetic_inputs(tmp_path)):
-        assert default_storage_root() != live_before
+    assert resolution.storage_root == tmp_path / "share" / "cadrumo" / "storage"
+    assert resolution.platform_user_data_root == tmp_path / "share" / "cadrumo"
 
-    assert default_storage_root() == live_before
-    assert current_state_root_inputs().platform, "live capture must resume outside the block"
+
+def test_the_resolver_reads_nothing_beyond_what_it_was_given(tmp_path: Path) -> None:
+    """Positive control: two different contexts must produce two different roots.
+
+    Without this, a resolver that ignored its argument and read the ambient
+    process would satisfy the assertion above on any machine whose real
+    platform happened to match.
+    """
+    first = resolve_state_root(_synthetic_inputs(tmp_path / "first"))
+    second = resolve_state_root(_synthetic_inputs(tmp_path / "second"))
+
+    assert first.storage_root != second.storage_root

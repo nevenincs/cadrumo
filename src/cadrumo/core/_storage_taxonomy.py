@@ -645,10 +645,18 @@ STORAGE_FIELD_CATEGORIES: Final[dict[str, StorageCategory]] = {
 """Reverse index from a flat settings field name to the member that governs it."""
 
 
+ROOT_DERIVED_STORAGE_LOCATIONS: Final[tuple[StorageLocation, ...]] = tuple(
+    location for location in _ROOT_LOCATIONS if location.derives_settings_default
+)
+"""Members whose settings default is computed from the storage root, in declaration order.
+
+Settings validation and the override-rebuild loop iterate this rather than a
+parallel table, so a member cannot be declared here and silently left underived.
+"""
+
+
 ROOT_DERIVED_STORAGE_FIELDS: Final[tuple[str, ...]] = tuple(
-    location.settings_field
-    for location in _ROOT_LOCATIONS
-    if location.derives_settings_default and location.settings_field is not None
+    location.settings_field for location in ROOT_DERIVED_STORAGE_LOCATIONS if location.settings_field is not None
 )
 """Settings fields whose default is computed from the storage root, in declaration order."""
 
@@ -792,6 +800,7 @@ def _effective_settings(settings: Settings | None) -> Settings:
 __all__ = [
     "FINGERPRINT_EXCLUDED_STORAGE_FIELDS",
     "ROOT_DERIVED_STORAGE_FIELDS",
+    "ROOT_DERIVED_STORAGE_LOCATIONS",
     "STORAGE_FIELD_CATEGORIES",
     "STORAGE_TAXONOMY",
     "ExternalPathRole",

@@ -40,6 +40,8 @@ from ._config_integration_fields import (
 )
 from ._config_mcp_serving_fields import CadrumoMcpServingSettings
 from ._config_state_root import (
+    BUCKET_DB_DIRNAME,
+    BUCKETS_DIRNAME,
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
     PRODUCT_DATABASE_FILENAME,
     default_storage_root,
@@ -1092,7 +1094,17 @@ class Settings(CadrumoMcpServingSettings):
             )
             return self
         refuse_former_product_database(self.cadrumo_local_storage_root, bucket_id=bucket_id)
-        bucket_db_path = self.cadrumo_local_storage_root / "buckets" / bucket_id / "db" / PRODUCT_DATABASE_FILENAME
+        # The layout names come from the one core storage authority. This
+        # fallback used to re-type them, unpinned against the code that
+        # actually provisions a bucket, so a rename would have routed the
+        # cold-start database at a directory nothing else agreed on.
+        bucket_db_path = (
+            self.cadrumo_local_storage_root
+            / BUCKETS_DIRNAME
+            / bucket_id
+            / BUCKET_DB_DIRNAME
+            / PRODUCT_DATABASE_FILENAME
+        )
         object.__setattr__(
             self,
             "cadrumo_database_url",
@@ -1108,7 +1120,7 @@ class Settings(CadrumoMcpServingSettings):
         blob, audit), the append-only telemetry logs, the regenerable caches,
         and the durable generated-output directories all default to a subpath
         under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, per
-        the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy. That root is the platform
+        the core storage taxonomy. That root is the platform
         user-data location in every run mode, never inside a virtualenv or uv
         cache — the hazard a checkout-relative ``var/...`` default carries on
         an installed distribution. A developer who wants the tree inside their
@@ -1121,13 +1133,23 @@ class Settings(CadrumoMcpServingSettings):
         placeholder default. The validator only computes paths; provider
         factories and custody loaders decide how those directories are opened.
 
+        Which fields those are, and what subpath each takes, is not decided
+        here: the typed declaration is iterated directly so this validator
+        cannot drift from it by carrying a table of its own. Members whose
+        field is a deliberate opt-in override are excluded by the declaration
+        rather than by a special case here -- deriving a default into one would
+        silently retire the branch that selects on the field being unset.
+
         ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is already
         populated when this runs.
         """
-        for field_name, subpath in _STATE_ROOT_DERIVED_DIRS.items():
-            if field_name in self.model_fields_set:
+        from ._storage_taxonomy import ROOT_DERIVED_STORAGE_LOCATIONS
+
+        for location in ROOT_DERIVED_STORAGE_LOCATIONS:
+            field_name = location.settings_field
+            if field_name is None or field_name in self.model_fields_set:
                 continue
-            object.__setattr__(self, field_name, self.cadrumo_local_storage_root / subpath)
+            object.__setattr__(self, field_name, self.cadrumo_local_storage_root / location.relative_path())
         return self
 
     @field_validator(
@@ -1331,11 +1353,19 @@ def _active_profile_pointer_fingerprint() -> tuple[object, ...]:
     than the construction it guards, so correctness here costs nothing worth
     measuring. A missing pointer is a distinct, legitimate state (logged out)
     and gets its own key.
+
+    The pointer filename comes from the same taxonomy member the pointer
+    reader itself resolves, rather than being re-typed here. The root is still
+    read straight from the environment: that read is deliberately independent
+    of the settings model it guards, because it has to answer "which pointer
+    would the next construction see" BEFORE any settings exist to ask.
     """
     import os
 
+    from ._storage_taxonomy import StorageCategory, storage_location
+
     root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT") or str(default_storage_root())
-    pointer = Path(root) / "active-profile"
+    pointer = Path(root) / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
     try:
         stat = pointer.stat()
     except OSError:
@@ -1470,7 +1500,18 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     token, log, and storage-substrate paths stay coherent. The helper preserves
     ``model_fields_set`` to keep the distinction between explicit operator
     settings and computed defaults visible to route classification.
+
+    When the root itself is overridden, every derived field that the caller did
+    not set and the source had not set explicitly is dropped from the merged
+    dict so it re-derives under the NEW root. Without that, flattening through
+    ``model_dump`` turns each previously-derived absolute path into an explicit
+    value and the whole tree stays pinned to the old root -- a leak that does
+    not fail any single test, because each one still reads a path that exists.
+    The field set is taken from the taxonomy, so a member added there is
+    covered here the moment it lands.
     """
+    from ._storage_taxonomy import ROOT_DERIVED_STORAGE_FIELDS
+
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the
     # merged dict through ``model_validate`` so a malformed override
@@ -1484,7 +1525,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     ):
         merged.pop("cadrumo_database_url", None)
     if "cadrumo_local_storage_root" in overrides:
-        for derived_field in _STATE_ROOT_DERIVED_DIRS:
+        for derived_field in ROOT_DERIVED_STORAGE_FIELDS:
             if derived_field not in overrides and derived_field not in current.model_fields_set:
                 merged.pop(derived_field, None)
     merged.update(overrides)

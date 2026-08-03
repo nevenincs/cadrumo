@@ -43,11 +43,8 @@ See Also:
 
 from __future__ import annotations
 
-import contextvars
 import os
 import sys
-from collections.abc import Iterator
-from contextlib import contextmanager
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -147,51 +144,6 @@ def live_state_root_inputs() -> StateRootInputs:
     )
 
 
-_state_root_inputs_override: contextvars.ContextVar[StateRootInputs | None] = contextvars.ContextVar(
-    "_state_root_inputs_override",
-    default=None,
-)
-
-
-@contextmanager
-def override_state_root_inputs(inputs: StateRootInputs) -> Iterator[StateRootInputs]:
-    """Pin the platform context every root resolution reads, for the with-block.
-
-    Resolution was already a pure function of :class:`StateRootInputs`, but
-    nothing above it could supply one: :class:`~core.config.Settings` captured
-    the live process on every construction, so a test could pin a synthetic
-    platform only by mutating ``os.environ`` and ``sys.platform`` around the
-    whole model. This is the seam that was missing, and it changes nothing when
-    unused -- every caller still falls through to live capture.
-
-    Args:
-        inputs: The platform context to serve inside the block.
-
-    Yields:
-        The pinned ``inputs``.
-    """
-    token = _state_root_inputs_override.set(inputs)
-    try:
-        yield inputs
-    finally:
-        _state_root_inputs_override.reset(token)
-
-
-def current_state_root_inputs() -> StateRootInputs:
-    """Return the pinned platform context, or capture the live process.
-
-    Every root resolution reads this rather than the ambient process directly,
-    so a pinned context reaches all of them together. A context pinned for the
-    settings root but not for the settings cache key would be worse than no
-    seam at all: the two would disagree about which root they were describing,
-    and the cache would key on a pointer file the settings never used.
-    """
-    override = _state_root_inputs_override.get()
-    if override is not None:
-        return override
-    return live_state_root_inputs()
-
-
 def _env_absolute_path(environ: dict[str, str], name: str) -> Path | None:
     """Return an absolute :class:`~pathlib.Path` from ``environ[name]``, or ``None``.
 
@@ -269,4 +221,4 @@ def default_storage_root() -> Path:
     product does not classify its installation. A developer overrides it with
     ``CADRUMO_LOCAL_STORAGE_ROOT``.
     """
-    return resolve_state_root(current_state_root_inputs()).storage_root
+    return resolve_state_root(live_state_root_inputs()).storage_root

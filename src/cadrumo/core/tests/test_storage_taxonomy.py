@@ -35,7 +35,7 @@ from .._storage_taxonomy import (
     storage_path,
     storage_tree_targets,
 )
-from ..config import Settings, override_settings
+from ..config import Settings, _active_profile_pointer_fingerprint, override_settings
 from ..errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -267,3 +267,68 @@ def test_tree_targets_skip_fixed_layout_and_absent_opt_in_members(tmp_path: Path
     assert root / "buckets" not in targets, "the bucket container is provisioned by the bucket lifecycle"
     assert root / "cache" / "registry" not in targets, "an unset opt-in override must not be materialised"
     assert root / "tokens" in targets, "a positive control: ordinary members ARE materialised"
+
+
+def test_a_root_override_re_derives_every_non_overridden_category(tmp_path: Path) -> None:
+    """The rebuild loop must cover the whole declared field set, not a stale copy.
+
+    Flattening settings through ``model_dump`` turns every previously-derived
+    absolute path into an explicit value, so without the pop the entire tree
+    stays pinned to the previous root. That leak fails no individual test --
+    each one still reads a path that exists -- which is why it is asserted
+    directly, over every derived member rather than a sampled few.
+    """
+    first = tmp_path / "first-root"
+    second = tmp_path / "second-root"
+
+    with (
+        override_settings(cadrumo_local_storage_root=first),
+        override_settings(cadrumo_local_storage_root=second) as rebuilt,
+    ):
+        stale = {
+            field_name: getattr(rebuilt, field_name)
+            for field_name in ROOT_DERIVED_STORAGE_FIELDS
+            if not str(getattr(rebuilt, field_name)).startswith(str(second))
+        }
+
+    assert ROOT_DERIVED_STORAGE_FIELDS, "the derived field set must be non-empty, or this asserts nothing"
+    assert not stale, f"these stayed pinned to the previous root: {stale}"
+
+
+def test_an_explicitly_overridden_category_is_not_re_derived(tmp_path: Path) -> None:
+    """Positive control for the test above: the rebuild must not clobber an override.
+
+    A loop that re-derived unconditionally would pass the assertion above while
+    silently discarding exactly the operator intent the override expresses.
+    """
+    elsewhere = tmp_path / "operator-chosen-runs"
+
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path / "first", cadrumo_runs_dir=elsewhere),
+        override_settings(cadrumo_local_storage_root=tmp_path / "second") as rebuilt,
+    ):
+        assert rebuilt.cadrumo_runs_dir == elsewhere
+
+
+def test_the_settings_cache_key_resolves_its_pointer_through_the_taxonomy(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The cache key must name the pointer file the pointer reader actually uses.
+
+    The filename used to be re-typed here, unpinned against the reader, so a
+    rename would have left the key watching a file nothing writes -- and a
+    profile switch would then serve a stale settings instance for the life of
+    the process, with no error anywhere.
+    """
+    root = tmp_path / "keyed-root"
+    root.mkdir()
+    pointer = root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
+    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(root))
+
+    absent = _active_profile_pointer_fingerprint()
+    pointer.write_text('bucket_id = "primary"\n', encoding="utf-8")
+    present = _active_profile_pointer_fingerprint()
+
+    assert absent[0] == str(root), "the key must name the configured root"
+    assert absent != present, "writing the pointer must move the key, or a profile switch serves stale settings"
