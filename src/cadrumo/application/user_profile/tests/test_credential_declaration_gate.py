@@ -62,10 +62,10 @@ from ....domain.user_profile import (
 )
 from .._overview import _MASK_KEYWORDS
 
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 _CREDENTIAL_SECTIONS: Final[frozenset[str]] = frozenset({"auth"})

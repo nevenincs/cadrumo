@@ -697,7 +697,7 @@ class ProfileManagerApp(App[None]):
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
-        self._refuse_worker(worker.error, "flows.manager.edit.write_failed")
+        self._refuse_worker(worker.error, message_key="flows.manager.edit.write_failed")
 
     def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
         """Report one finished action and adopt any profile it handed back.
@@ -711,7 +711,7 @@ class ProfileManagerApp(App[None]):
         self._pending_action = None
         self._set_busy(False)
         if worker.state is not WorkerState.SUCCESS or worker.result is None:
-            self._refuse_worker(worker.error, "flows.manager.action.failed")
+            self._refuse_worker(worker.error, message_key="flows.manager.action.failed")
             return
         outcome = worker.result
         if outcome.overview is not None:
@@ -737,7 +737,7 @@ class ProfileManagerApp(App[None]):
         """Show something the page would not do, and why."""
         self._announce(message, _REFUSAL_TONE)
 
-    def _refuse_worker(self, error: BaseException | None, fallback_key: str) -> None:
+    def _refuse_worker(self, error: BaseException | None, *, message_key: str) -> None:
         """Show what a finished worker failed with, never as a blank line.
 
         ``str(exc)`` is the empty string for any exception constructed
@@ -752,7 +752,7 @@ class ProfileManagerApp(App[None]):
         emptiness — a door that raises bare renders just as blank.
         """
         rendered = str(error) if error is not None else ""
-        self._refuse(rendered or tr(fallback_key))
+        self._refuse(rendered or tr(message_key))
 
     def _report(self, message: str) -> None:
         """Show what an action did."""
