@@ -42,6 +42,7 @@ from .....application.user_profile import (
 )
 from .....core import require_active_bucket_id
 from .....core.i18n import tr
+from .....tests.manager_pilot import wait_until_settled
 from .....tests.secure_sql import isolated_profile_storage_root
 from .._manager_actions import manager_actions
 from .._manager_frontend import persist_active_profile_field, present_form
@@ -94,14 +95,6 @@ _A_PAGE = FormPage(
 Its content is irrelevant to the tests that use it: what they watch is
 whether asking for a page at all can leave the asking thread stuck."""
 
-_LOOP_CRASH = "asyncio.run() cannot be called from a running event loop"
-"""The exact text the broken seam reported to the operator.
-
-Asserted verbatim rather than by exception type because the screen caught
-the failure and rendered it, so this string is what the defect actually
-looked like from the outside.
-"""
-
 
 def _manager() -> ProfileManagerApp:
     """The manager as production builds it, on a freshly registered profile."""
@@ -132,7 +125,17 @@ def _open_form(app: ProfileManagerApp) -> FormScreen | None:
 
 
 async def _wait_for_form(pilot, app: ProfileManagerApp) -> FormScreen | None:
-    """Wait for an action to put a page on screen, if it is going to."""
+    """Wait for an action to put a page on screen, if it is going to.
+
+    A race between two outcomes rather than a wait for the page to
+    settle, which is why it is not
+    :func:`~cadrumo.tests.manager_pilot.wait_until_settled`: an action that shows a
+    page has *not* settled and must not, because it is blocked on its
+    thread waiting for the answer this test has yet to give. Waiting for
+    quiescence here would hold the pilot against the dismissal only the
+    pilot can deliver. So both endings are watched — the page appearing,
+    and the action concluding without one — and neither is assumed.
+    """
     for _ in range(80):
         await pilot.pause()
         form = _open_form(app)
@@ -141,18 +144,6 @@ async def _wait_for_form(pilot, app: ProfileManagerApp) -> FormScreen | None:
         if app._pending_action is None:
             return None
     return _open_form(app)
-
-
-async def _wait_for_action(pilot, app: ProfileManagerApp) -> None:
-    """Wait until the action has settled, so the line read is its own.
-
-    Reading before this returns the progress line the press wrote
-    synchronously, which is how a dead action passed for a working one.
-    """
-    for _ in range(120):
-        await pilot.pause()
-        if app._pending_action is None:
-            return
 
 
 @pytest.mark.asyncio
@@ -191,10 +182,7 @@ async def test_an_action_that_starts_its_own_loop_is_carried_by_the_seam(tmp_pat
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await pilot.click("#action-loop-owner")
-            for _ in range(80):
-                await pilot.pause()
-                if _notice(app) and _LOOP_CRASH not in _notice(app):
-                    break
+            await wait_until_settled(app, pilot)
             reported = _notice(app)
             app.exit(None)
 
@@ -234,7 +222,7 @@ async def test_pressing_a_real_action_reports_the_outcome_it_actually_reached(tm
             form = await _wait_for_form(pilot, app)
             if form is not None:
                 await pilot.click("#btn-form-cancel")
-            await _wait_for_action(pilot, app)
+            await wait_until_settled(app, pilot)
 
             reported = _notice(app)
             app.exit(None)
@@ -277,7 +265,7 @@ async def test_a_form_the_operator_commits_reaches_the_action(tmp_path) -> None:
             await _type_into(pilot, app, "destination", str(destination))
             await _type_into(pilot, app, "passphrase", _EXPORT_PASSPHRASE)
             await pilot.click("#btn-form-save")
-            await _wait_for_action(pilot, app)
+            await wait_until_settled(app, pilot)
 
             reported = _notice(app)
             app.exit(None)

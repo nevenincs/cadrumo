@@ -25,6 +25,7 @@ from .....application.user_profile import (
 from .....core import require_active_bucket_id
 from .....core.i18n import tr
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+from .....tests.manager_pilot import wait_until_settled
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
 
@@ -49,23 +50,14 @@ def _persist(path: str, value: str):
     return persist_active_profile_field(path, value, label="Manager Subject")
 
 
-async def _settled_notice(app: ProfileManagerApp, pilot, expected: str) -> str:
-    """Wait for an action's outcome to reach the page, then return it.
+def _notice(app: ProfileManagerApp) -> str:
+    """Whatever the page's one diagnostic channel currently holds.
 
-    Actions run on a worker thread, so pressing the button starts the work
-    rather than finishing it: the outcome lands a repaint or two later.
-    Waiting for the expected text rather than a fixed number of pauses
-    keeps the test from passing on a page that simply has not caught up.
-
-    Returns whatever the channel holds when the wait ends, so a test that
-    never sees its text still asserts against the real content and reports
-    what was actually shown.
+    Read only after :func:`wait_until_settled`, never polled for an expected wording.
+    A poll for the text it hopes to see cannot fail on the text that is
+    really there, and the press writes a progress line synchronously — so
+    such a poll is satisfied before the work it is waiting on has run.
     """
-    for _ in range(80):
-        await pilot.pause()
-        content = str(app.query_one("#manager-notice", Static).content)
-        if expected in content:
-            return content
     return str(app.query_one("#manager-notice", Static).content)
 
 
@@ -165,8 +157,7 @@ async def test_editing_one_field_repaints_that_row_without_rebuilding_the_tables
             # The write runs on a worker thread now, so the assertions wait
             # for storage to answer rather than for a repaint that has not
             # been asked for yet.
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await wait_until_settled(app, pilot)
 
             after = _rows(app)
             assert after[_EDITED_PATH][2] == "Ada Lovelace", "the edited row must show the stored value"
@@ -235,8 +226,7 @@ async def test_a_second_edit_is_refused_before_its_dialog_opens(tmp_path) -> Non
             )
 
             release.set()
-            await app.workers.wait_for_complete()
-            await pilot.pause()
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         reloaded = ProfileRepository().load(require_active_bucket_id()).record
@@ -300,7 +290,8 @@ async def test_an_action_runs_and_reports_what_it_did(tmp_path) -> None:
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await pilot.click("#action-probe")
-            reported = await _settled_notice(app, pilot, "DID-THE-THING")
+            await wait_until_settled(app, pilot)
+            reported = _notice(app)
             assert ran == ["yes"]
             assert "DID-THE-THING" in reported
             app.exit(None)
@@ -341,8 +332,7 @@ async def test_an_action_that_changed_the_record_redraws_the_page(tmp_path) -> N
             # ``on_worker_state_changed`` rather than inline with the click.
             # ``pause`` only drains the event loop and would let this assert
             # race the write, reading the pre-action value.
-            await refreshing.workers.wait_for_complete()
-            await pilot.pause()
+            await wait_until_settled(refreshing, pilot)
             assert _rows(refreshing)[_EDITED_PATH][2] == "After"
             refreshing.exit(None)
 
@@ -370,7 +360,8 @@ async def test_a_refusing_action_reports_it_instead_of_taking_the_screen_down(tm
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await pilot.click("#action-boom")
-            reported = await _settled_notice(app, pilot, "NO-CERTIFICATE-REGISTERED")
+            await wait_until_settled(app, pilot)
+            reported = _notice(app)
             assert app.is_running, "the screen must survive a refusing action"
             assert "NO-CERTIFICATE-REGISTERED" in reported
             app.exit(None)
@@ -424,7 +415,8 @@ async def test_a_failure_carrying_no_text_is_named_rather_than_shown_blank(
         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
             await pilot.pause()
             await pilot.click("#action-silent")
-            reported = await _settled_notice(app, pilot, expected)
+            await wait_until_settled(app, pilot)
+            reported = _notice(app)
             app.exit(None)
 
         assert reported == expected, f"a failure with no text of its own showed {reported!r} rather than naming itself"
@@ -456,7 +448,8 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
             await pilot.pause()
             app.screen.query_one("#edit-input", Input).value = "Ada Lovelace"
             await pilot.click("#btn-edit-save")
-            reported = await _settled_notice(app, pilot, expected)
+            await wait_until_settled(app, pilot)
+            reported = _notice(app)
             app.exit(None)
 
         assert reported == expected, (

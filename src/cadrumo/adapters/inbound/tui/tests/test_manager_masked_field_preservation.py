@@ -36,6 +36,7 @@ from .....application.user_profile import (
 )
 from .....core import require_active_bucket_id
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+from .....tests.manager_pilot import wait_until_settled
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
 
@@ -79,11 +80,6 @@ def _open(app, field):
     from .._manager_screen import FieldEditScreen
 
     app.push_screen(FieldEditScreen(field), app._apply_edit_for(field))
-
-
-async def _settle(app, pilot) -> None:
-    await app.workers.wait_for_complete()
-    await pilot.pause()
 
 
 @pytest.mark.asyncio
@@ -130,7 +126,7 @@ async def test_saving_a_masked_field_without_typing_does_not_clear_it(tmp_path) 
                 "the dialog must still open empty, or this is not the gesture under test"
             )
             await pilot.click("#btn-edit-save")
-            await _settle(app, pilot)
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE
@@ -154,7 +150,7 @@ async def test_pressing_enter_in_an_untouched_masked_box_does_not_clear_it(tmp_p
             _open(app, app._field_by_key[_MASKED_PATH])
             await pilot.pause()
             await pilot.press("enter")
-            await _settle(app, pilot)
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE
@@ -174,7 +170,7 @@ async def test_whitespace_typed_into_a_masked_box_does_not_clear_it(tmp_path) ->
             await pilot.pause()
             app.screen.query_one("#edit-input", Input).value = "   "
             await pilot.click("#btn-edit-save")
-            await _settle(app, pilot)
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         assert _stored().get(_MASKED_PATH) == _MASKED_VALUE
@@ -199,7 +195,7 @@ async def test_a_masked_field_can_still_be_deliberately_cleared(tmp_path) -> Non
             _open(app, app._field_by_key[_MASKED_PATH])
             await pilot.pause()
             await pilot.click("#btn-edit-clear")
-            await _settle(app, pilot)
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         assert _stored().get(_MASKED_PATH) is None
@@ -259,7 +255,7 @@ async def test_an_unmasked_field_is_still_cleared_by_emptying_its_box(tmp_path) 
             await pilot.pause()
             app.screen.query_one("#edit-input", Input).value = ""
             await pilot.click("#btn-edit-save")
-            await _settle(app, pilot)
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         assert _stored().get(_PLAIN_PATH) is None
@@ -319,7 +315,7 @@ async def test_an_enum_dialog_pre_selects_nothing_it_cannot_confirm_is_current(t
                 "no token may be pre-selected when none of them is what the field holds"
             )
             await pilot.press("enter")
-            await _settle(app, pilot)
+            await wait_until_settled(app, pilot)
             app.exit(None)
 
         assert _ENUM_PATH not in _stored(), "an unchosen token must not have been written"
