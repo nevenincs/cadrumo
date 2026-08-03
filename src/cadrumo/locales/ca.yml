@@ -5006,8 +5006,7 @@ cli:
         recovery_status: Mostra l'estat de registre de la frase de recuperació.
         recovery_verify: Verifica una frase de recuperació sense utilitzar-la.
         reset_resume: Reprèn una operació de reinici incompleta.
-        reset_start: Inicia un reinici irreversible nou de tots els perfils emmagatzemats
-          localment.
+        reset_start: Inicia un reinici irreversible de tots els perfils desats localment.
         reset_status: Mostra l'estat d'una operació de reinici sense modificar dades
           locals.
         section_authentication: Autenticació AEAT
@@ -5017,8 +5016,7 @@ cli:
         section_profile_inspection: Inspecció del perfil
         section_profile_lifecycle: Cicle de vida del perfil
         section_storage: Emmagatzematge
-        storage_check: Comprova si a l'arbre d'emmagatzematge li falten directoris
-          o estan mal ubicats
+        storage_check: Comprova directoris absents o mal ubicats a l'arbre d'emmagatzematge.
         storage_init: Crea qualsevol directori d'emmagatzematge que falti
         storage_list: Consulta on es desa cada tipus de dada local
         storage_reclaim: Allibera espai eliminant una categoria que l'aplicació pot

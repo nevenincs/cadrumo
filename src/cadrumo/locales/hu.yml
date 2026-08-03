@@ -4968,8 +4968,8 @@ cli:
         reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
         reset_start: Visszafordíthatatlan visszaállítást indít minden helyben tárolt
           profilra.
-        reset_status: A helyi adatok módosítása nélkül megjeleníti a visszaállítási
-          művelet állapotát.
+        reset_status: Megjeleníti a visszaállítás állapotát a helyi adatok módosítása
+          nélkül.
         section_authentication: Hitelesítés
         section_custody: Jelszó és helyreállítás őrzése
         section_diagnostics: Diagnosztika
