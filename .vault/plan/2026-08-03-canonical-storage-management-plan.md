@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:933533aaf49af16d10d7d59dc1c431c9e175976448f9afa9c42f8def7472931a'
+body_hash: 'sha256:de3d04f62784dd4a484082b0a6e52696988a45fbf451b6046111c113d0671d11'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -239,7 +239,7 @@ Wires locale keys through the locales CLI in all four catalogues, regenerates th
 
 - [x] `W04.P18.S60` - Declare the typed result payloads for the five verbs on the envelope spine with no bespoke advisory or next or suggestion field, gated by the registered-schema and no-bespoke-notice-field conformance tests; `src/cadrumo/entrypoints/cli/_config/_storage_payloads.py`.
 - [x] `W04.P18.S61` - Pin the config storage surface through the real command tree rather than by calling handlers directly, gated by the documented-command conformance suite resolving every cited verb against the live CLI; `src/cadrumo/entrypoints/cli/_config/tests/`.
-- [ ] `W04.P18.S62` - Pin the bootstrap pre-emption itself so relocating tree materialisation out of bootstrap reds loudly rather than silently redistributing which surface answers a missing or occupied path, gated by a test naming the pre-emption as its subject; `src/cadrumo/entrypoints/cli/_config/tests/`.
+- [x] `W04.P18.S62` - Pin the bootstrap pre-emption itself so relocating tree materialisation out of bootstrap reds loudly rather than silently redistributing which surface answers a missing or occupied path, gated by a test naming the pre-emption as its subject; `src/cadrumo/entrypoints/cli/_config/tests/`.
 
 ### Phase `W04.P19` - dev tooling, packaging, and documentation sweep
 
