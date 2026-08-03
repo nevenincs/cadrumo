@@ -169,7 +169,22 @@ class CredentialApp[OutcomeT](App[OutcomeT | None]):
         self.query_one(self.BUSY_ID, LoadingIndicator).set_class(busy, "busy")
 
     def leave(self, outcome: OutcomeT | None) -> None:
-        """Close the screen, handing ``outcome`` back to the runner."""
+        """Close the screen, handing ``outcome`` back to the runner.
+
+        This is the only place the screens themselves close, but it is NOT
+        a teardown hook and nothing may be made to depend on it running.
+        ``App.exit`` is public, so a caller holding the app can close it
+        without coming through here — the tests that drive these screens
+        do exactly that. A subclass may override this to release something
+        it holds, and registration does, but only where the release is
+        hygiene: anything whose CORRECTNESS needs it would be silently
+        wrong on the bypass, and no test would show it.
+
+        Where a real guarantee is needed, bind it to something that cannot
+        be stepped over. The typed secret is the worked example — it is
+        overwritten in the worker callable's own ``finally``, so it is
+        bounded by the attempt rather than by how the screen was closed.
+        """
         self.exit(outcome)
 
     def action_abandon(self) -> None:
