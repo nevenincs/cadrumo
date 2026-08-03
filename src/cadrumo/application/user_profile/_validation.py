@@ -21,6 +21,7 @@ from ...domain.user_profile import (
     ProfileSectionDefinition,
     UserProfileFact,
     UserProfileRecord,
+    section_field_key,
 )
 from . import (
     ProfileValidationIssue,
@@ -115,7 +116,7 @@ class ProfileValidationService:
         )
 
     def _validate_one_fact(self, fact: UserProfileFact) -> tuple[ProfileValidationIssue, ...]:
-        binding = self._field_index.get(self._section_field_key(fact.path))
+        binding = self._field_index.get(section_field_key(fact.path))
         if binding is None:
             return (
                 ProfileValidationIssue(
@@ -329,15 +330,6 @@ class ProfileValidationService:
             )
             for path in conditional_profile_missing_required(values)
         )
-
-    @staticmethod
-    def _section_field_key(path: str) -> str:
-        head, _, tail = path.partition(".")
-        if not tail:
-            return path
-        if tail and "." in tail and tail.split(".", 1)[0].isdigit():
-            tail = tail.split(".", 1)[1]
-        return f"{head}.{tail.split('.', 1)[0]}"
 
     @staticmethod
     def _render_fact_value(value: object) -> str:

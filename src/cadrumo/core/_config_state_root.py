@@ -50,6 +50,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from ._models import STRICT_FROZEN_CONFIG
+from ._storage_taxonomy import StorageCategory, storage_location
 from .product_identity import PRODUCT_IDENTITY
 
 _WINDOWS_PLATFORM = "win32"
@@ -61,6 +62,10 @@ _APP_DIRNAME = PRODUCT_IDENTITY.python_package
 _FORMER_PRODUCT_APP_DIRNAME = "aeat"
 #: Storage substrate subdirectory under the resolved installed state root.
 _STORAGE_DIRNAME = "storage"
+#: Bucket container directory name, read from the one core storage authority.
+BUCKETS_DIRNAME = storage_location(StorageCategory.BUCKETS).subpath
+#: Per-bucket database directory name, read from the one core storage authority.
+BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
 #: Canonical SQLite filename for Cadrumo-owned application state.
 PRODUCT_DATABASE_FILENAME = f"{PRODUCT_IDENTITY.python_package}.db"
 #: Retired ``aeat`` database filename inspected only for refusal.
@@ -83,7 +88,7 @@ def refuse_former_product_database(storage_root: Path, *, bucket_id: str | None 
     """
     parent = storage_root
     if bucket_id:
-        parent = parent / "buckets" / bucket_id / "db"
+        parent = parent / BUCKETS_DIRNAME / bucket_id / BUCKET_DB_DIRNAME
     former_database = parent / FORMER_PRODUCT_DATABASE_FILENAME
     if not former_database.exists():
         return

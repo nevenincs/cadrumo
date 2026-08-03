@@ -47,7 +47,7 @@ Three ratcheting/pinned checks, backed by the checked-in
   scope for this pin; they are not asserted here because they shrink as that
   sweep lands, not as a Family-3 fix.
 
-A fourth, TEST-ONLY pair of checks backed by the checked-in
+A fourth, TEST-ONLY trio of checks backed by the checked-in
 ``dev/import_hygiene_test_debt.json`` governs the remainder that
 survives after every mechanically-facadable test-only site has been rewritten
 onto its owning package's public export: a private evaluator, repository
@@ -57,10 +57,14 @@ declined for promotion because doing so would contradict a
 package's documented architecture (e.g. ``LocalFileSystemProvider``, whose
 owning package docstring states its concrete backend modules are
 intentionally private behind a ``StorageProvider`` Protocol boundary). These
-two checks mirror the production Family-1 shape (count ratchet plus named-set
-equality) but are governed entirely SEPARATELY from the production baseline:
-a production (non-test) violation is NEVER tolerated by the test-debt file,
-and the production assertions above are unaffected by its contents.
+first two mirror the production Family-1 shape (count ratchet plus named-set
+equality); the third compares PER-TRIPLE occurrence counts, closing the blind
+spot the other two share -- both collapse or total away repeated occurrences of
+one reach, so a dead entry becomes a spare slot that hides an unnamed
+occurrence of an already-named triple. All three are governed entirely
+SEPARATELY from the production baseline: a production (non-test) violation is
+NEVER tolerated by the test-debt file, and the production assertions above are
+unaffected by its contents.
 
 A fifth, hard-zero check (**Family 4: underscore-named entries in
 ``__all__``**) asserts the live ``src/cadrumo`` tree carries no facade export
@@ -77,6 +81,7 @@ straight failure with no allowlist escape hatch.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, TypedDict
@@ -109,20 +114,36 @@ class _BaselineSite:
     """One named, documented production Family-1 exception."""
 
     importer_path: str
-    # Excluded from equality/hash: the line number is volatile (any peer edit that
-    # shifts a documented import's line would otherwise break the gate). A site's
-    # identity is (importer_path, target_mod, imported_names); lineno is kept only
-    # for human-readable diagnostics.
-    lineno: int = field(compare=False)
     target_mod: str
     imported_names: tuple[str, ...]
+    # Excluded from equality/hash: the line is volatile, and any peer edit that
+    # shifted a documented import would otherwise break the gate. Identity is
+    # (importer_path, target_mod, imported_names).
+    #
+    # Only ever populated on scanner-built sites, where it is read from the live
+    # AST and is what every diagnostic below prints. Sites loaded from the
+    # checked-in files leave it None: those files record an occurrence ordinal
+    # instead, because a persisted line number is a cache of a scan with nothing
+    # to invalidate it, and it had drifted on roughly half the entries -- by up
+    # to 245 lines -- while reading as documentation.
+    lineno: int | None = field(compare=False, default=None)
 
 
 class _BaselineSiteEntry(TypedDict):
-    """One JSON ``sites`` entry as checked into the baseline / test-debt files."""
+    """One JSON ``sites`` entry as checked into the baseline / test-debt files.
+
+    ``occurrence`` is a 1-based ordinal among the entries sharing this entry's
+    identity triple, in the order the reaches appear in the importing file. It
+    exists because one reach can occur several times in a file -- typically the
+    same function-local import in several tests -- each occurrence reasoned
+    separately, so something has to say which ``reason`` belongs to which site.
+    A line number used to do that job and rotted; an ordinal cannot, because the
+    only thing that changes it is a change in how many times the reach occurs,
+    which the occurrence gate already refuses to let pass unnoticed.
+    """
 
     importer_path: str
-    lineno: int
+    occurrence: int
     target_mod: str
     imported_names: list[str]
 
@@ -169,7 +190,6 @@ def _baseline_sites(baseline: _BaselineDocument) -> tuple[_BaselineSite, ...]:
     return tuple(
         _BaselineSite(
             importer_path=entry["importer_path"],
-            lineno=entry["lineno"],
             target_mod=entry["target_mod"],
             imported_names=tuple(entry["imported_names"]),
         )
@@ -278,7 +298,6 @@ def _test_debt_sites(test_debt: _TestDebtDocument) -> tuple[_BaselineSite, ...]:
     return tuple(
         _BaselineSite(
             importer_path=entry["importer_path"],
-            lineno=entry["lineno"],
             target_mod=entry["target_mod"],
             imported_names=tuple(entry["imported_names"]),
         )
@@ -360,6 +379,82 @@ def test_test_only_underscore_reaches_are_exactly_the_named_test_debt_set() -> N
     assert unnamed == [], (
         "new, undocumented test-only underscore-named cross-package private import(s) found "
         f"(not present in {repo_relative(_TEST_DEBT_PATH)}):\n  " + "\n  ".join(unnamed)
+    )
+
+
+def _site_triples(sites: tuple[_BaselineSite, ...]) -> Counter[tuple[str, str, tuple[str, ...]]]:
+    """How many times each identity triple occurs in a site collection."""
+    return Counter((s.importer_path, s.target_mod, s.imported_names) for s in sites)
+
+
+def test_every_test_debt_entry_answers_a_live_occurrence() -> None:
+    """The debt file must record each reach exactly as many times as it occurs.
+
+    The two checks above are both blind in the same direction. Set equality
+    collapses repeated occurrences of one triple, and the count ratchet
+    compares totals, so an entry whose reach no longer exists is not merely
+    stale -- it is a spare slot that lets an undocumented occurrence of an
+    already-named triple pass both. That is not hypothetical: five entries
+    had gone dead (the symbol promoted to a facade, the module renamed,
+    the reach rewritten onto a public name), and the padding they left
+    concealed a second undocumented reach in test_google_payloads.py.
+
+    Comparing per-triple counts closes it from both sides at once, and does
+    so without the fragility that keeps ``lineno`` out of site identity: a
+    triple survives any edit that merely moves the import down the file.
+    """
+    debt = _site_triples(_test_debt_sites(_load_test_debt()))
+    current = _site_triples(_current_test_only_underscore_sites())
+
+    dead = sorted(
+        f"{k[0]} <- {k[1]} {list(k[2])} (recorded {debt[k]}x, occurs {current[k]}x)"
+        for k in debt
+        if debt[k] > current[k]
+    )
+    undocumented = sorted(
+        f"{k[0]} <- {k[1]} {list(k[2])} (occurs {current[k]}x, recorded {debt[k]}x)"
+        for k in current
+        if current[k] > debt[k]
+    )
+
+    assert dead == [], (
+        f"test-debt entr(ies) in {repo_relative(_TEST_DEBT_PATH)} no longer answer a live reach. "
+        "If the reach was promoted onto a facade or rewritten, delete the entry in the same "
+        "commit; a spare slot silently widens the ratchet:\n  " + "\n  ".join(dead)
+    )
+    assert undocumented == [], (
+        f"test-only private reach(es) occur more often than {repo_relative(_TEST_DEBT_PATH)} records, "
+        "so an occurrence is unnamed. Add one reasoned entry per occurrence, or rewrite the extra "
+        "reach onto the owning package's facade:\n  " + "\n  ".join(undocumented)
+    )
+
+
+def test_test_debt_occurrence_ordinals_are_dense_and_start_at_one() -> None:
+    """Each triple's entries must be numbered 1..N with no gap or repeat.
+
+    The ordinal is what says which ``reason`` belongs to which of several
+    identical reaches in one file, so a duplicate or a hole makes two entries
+    indistinguishable again -- the failure the line number used to cause by
+    going stale, arriving instead by miscounting.
+
+    Nothing here reads a file, which is the point: the check cannot be broken
+    by an edit that merely moves an import. Only a change in how many times a
+    reach occurs can disturb it, and that is exactly what the occurrence gate
+    above already refuses to let pass unnoticed.
+    """
+    grouped: dict[tuple[str, str, tuple[str, ...]], list[int]] = {}
+    for entry in _load_test_debt()["test_only_family1_underscore_reaches"]["sites"]:
+        key = (entry["importer_path"], entry["target_mod"], tuple(entry["imported_names"]))
+        grouped.setdefault(key, []).append(entry["occurrence"])
+
+    malformed = sorted(
+        f"{k[0]} <- {k[1]} {list(k[2])} numbered {sorted(v)}, expected {list(range(1, len(v) + 1))}"
+        for k, v in grouped.items()
+        if sorted(v) != list(range(1, len(v) + 1))
+    )
+    assert malformed == [], (
+        f"occurrence ordinals in {repo_relative(_TEST_DEBT_PATH)} must run 1..N per reach, "
+        "so every entry names a distinct occurrence:\n  " + "\n  ".join(malformed)
     )
 
 

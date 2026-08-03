@@ -9,6 +9,8 @@ whichever subset had been reached.
 
 from __future__ import annotations
 
+import os
+import stat
 from pathlib import Path
 
 import pytest
@@ -101,3 +103,31 @@ def test_the_refusal_probe_would_otherwise_succeed(tmp_path: Path) -> None:
 
     with override_settings(cadrumo_local_storage_root=root):
         assert ensure_storage_tree() == root
+
+
+def test_the_root_is_restricted_to_its_owner(tmp_path: Path) -> None:
+    """The tree holds encrypted records, the keys that open them, and the audit over both.
+
+    Nothing asserted these bits before, so a refactor restructuring the
+    materialiser could have dropped the hardening in silence -- every other
+    test would keep passing, because a world-readable directory works exactly
+    as well as a private one until someone reads it.
+
+    The mode assertion is guarded rather than skipped: hosts without POSIX
+    modes still exercise everything above it, and the guard carries its own
+    positive control so the assertion cannot pass vacuously where it does run.
+    Loosening the bits afterwards must break the same comparison -- otherwise a
+    platform that accepted ``chmod`` and ignored it would read as hardened.
+    """
+    root = tmp_path / "state"
+
+    with override_settings(cadrumo_local_storage_root=root):
+        ensure_storage_tree()
+
+    assert root.is_dir()
+    if os.name != "nt":
+        assert stat.S_IMODE(root.stat().st_mode) == 0o700
+        root.chmod(0o755)
+        assert stat.S_IMODE(root.stat().st_mode) != 0o700, (
+            "the platform accepted a mode change without applying it, so the assertion above proves nothing"
+        )

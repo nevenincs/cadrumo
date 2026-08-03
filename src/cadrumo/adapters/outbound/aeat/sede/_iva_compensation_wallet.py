@@ -27,6 +27,7 @@ from .....core.config import Settings, load_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
+from .....core.paths import select_filesystem_retention_survivors
 from .....core.time import now
 from .....domain.calculations.registry import (
     RemoteOperation,
@@ -814,7 +815,10 @@ def prune_wallet_diagnostic_dumps(
     Invoked automatically after each dump so the opt-in directory carries a
     declared retention lifecycle instead of accumulating stale summaries once
     captures stop. Entirely best-effort: an unenumerable directory or an
-    unremovable file is logged and skipped, never raised.
+    unremovable file is logged and skipped, never raised. The survivor
+    decision (age cutoff alone) delegates to the shared
+    :func:`~cadrumo.core.paths.select_filesystem_retention_survivors`
+    selector; the enumeration and the removal side effect stay here.
 
     Returns:
         Number of dump files removed.
@@ -824,18 +828,26 @@ def prune_wallet_diagnostic_dumps(
         retention_days if retention_days is not None else cfg.cadrumo_wallet_diagnostic_retention_days
     )
     cutoff = now() - timedelta(days=effective_retention_days)
-    removed = 0
     try:
         entries = tuple(dump_dir.iterdir())
     except OSError:
         log.debug("wallet diagnostic: dump dir not enumerable at %s", dump_dir, exc_info=True)
         return 0
+    candidates: list[tuple[Path, datetime]] = []
     for entry in entries:
         try:
-            if not entry.is_file():
-                continue
-            if datetime.fromtimestamp(entry.stat().st_mtime, tz=UTC) >= cutoff:
-                continue
+            if entry.is_file():
+                candidates.append((entry, datetime.fromtimestamp(entry.stat().st_mtime, tz=UTC)))
+        except OSError:
+            log.debug("wallet diagnostic: could not stat dump entry %s", entry, exc_info=True)
+    _keep, stale = select_filesystem_retention_survivors(
+        candidates,
+        timestamp=lambda pair: pair[1],
+        cutoff=cutoff,
+    )
+    removed = 0
+    for entry, _mtime in stale:
+        try:
             entry.unlink()
             removed += 1
         except OSError:

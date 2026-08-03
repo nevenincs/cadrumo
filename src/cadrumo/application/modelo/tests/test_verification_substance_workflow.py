@@ -157,7 +157,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     Drift between the two sets is a silent-pass hazard.
 
     Structural gate: each known operator MUST have a matching
-    regex registered in _verification_actions._PREDICATE_<NAME_UPPER>. The probe
+    regex registered in _verification_predicates._PREDICATE_<NAME_UPPER>. The probe
     map below names the expected module-level regex variable per
     operator; the test asserts (a) the regex exists, (b) it matches
     the canonical probe expression for the operator. If a future change
@@ -165,7 +165,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     removes that regex without updating the canonical set, this
     test fires.
     """
-    from .. import _verification_actions as _verification_actions
+    from .. import _verification_predicates
 
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
@@ -225,7 +225,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
 
     for operator_name in KNOWN_VERIFICATION_PREDICATE_OPERATORS:
         regex_attr = regex_attr_names[operator_name]
-        regex = getattr(_verification_actions, regex_attr, None)
+        regex = getattr(_verification_predicates, regex_attr, None)
         assert regex is not None, (
             f"Runtime evaluator missing regex {regex_attr!r} for known operator "
             f"{operator_name!r}; the canonical set "

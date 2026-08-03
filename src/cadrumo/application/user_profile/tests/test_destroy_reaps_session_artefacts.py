@@ -34,7 +34,7 @@ from ....adapters.persistence.storage.master_key import (
     profile_session_path,
 )
 from ....core.resources import resources
-from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
+from ....domain.user_profile import ProfileSchemaDefinition, UserProfileError, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import schema_valid_placeholder
 from ...workflow import WorkflowState
@@ -192,3 +192,37 @@ class TestDirectoryRemovalReapsTheSession:
         remove_profile_bucket_directory(_PROFILE_ID)
 
         assert load_profile_session_key(bucket_id=_PROFILE_ID) is None
+
+
+class TestDirectoryRemovalToleratesAGenuineCleanupFailure:
+    """The ``"ignore"`` error posture: a stubborn directory never crashes the caller with a raw ``OSError``."""
+
+    def test_a_held_open_handle_surfaces_as_user_profile_error_not_a_raw_oserror(
+        self,
+        schema: ProfileSchemaDefinition,
+        _storage_root: Path,
+    ) -> None:
+        """``remove_profile_bucket_directory`` passes ``on_trash_cleanup_error="ignore"``.
+
+        Leftover trash litter from a failed cleanup is tolerable for this
+        caller, so a genuine removal failure must never leak the shared
+        primitive's ``OSError`` — it must surface only as the domain-typed
+        ``UserProfileError`` the post-removal ``target.exists()`` check
+        raises. Reproduced with a real held-open file handle inside the
+        bucket directory, blocking both the rename and the in-place
+        ``rmtree`` fallback — not a mock.
+        """
+        _create_and_login(schema)
+        close_active_bucket_session()
+        bucket_dir = bucket_paths(_storage_root, _PROFILE_ID).bucket_dir
+        held = (bucket_dir / "held.bin").open("wb")
+        try:
+            with pytest.raises(UserProfileError) as excinfo:
+                remove_profile_bucket_directory(_PROFILE_ID)
+            assert not isinstance(excinfo.value, OSError)
+        finally:
+            held.close()
+
+        # The directory genuinely survives -- "ignore" tolerates leftover
+        # litter, it does not pretend the removal happened.
+        assert bucket_dir.exists()

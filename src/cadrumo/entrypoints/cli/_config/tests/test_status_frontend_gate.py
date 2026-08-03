@@ -33,6 +33,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
+    from .....adapters.inbound.tui import StatusFactRow
+    from .....domain.user_profile import UserProfileRecord
+
 
 def _ctx_with_format(format_name: str) -> typer.Context:
     ctx = typer.Context(typer.core.TyperCommand("status"))
@@ -130,7 +133,7 @@ def test_status_surface_holds_no_private_masking_policy() -> None:
 
 @pytest.mark.parametrize(
     "path",
-    ["auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"],
+    ["auth.numero_soporte", "auth.fecha_validez"],
 )
 def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> None:
     """The Cl@ve credential inputs mask under the schema really shipped.
@@ -144,6 +147,17 @@ def test_clave_credential_inputs_mask_on_the_real_shipped_schema(path: str) -> N
     of a secret from rendered output: a field simply missing from a
     fixture would satisfy an output-shaped assertion while remaining
     unmasked in production.
+
+    The two named here are the CONTRASTE -- what proves possession of the
+    physical document. ``auth.dni_nie`` was named alongside them and is
+    not one: it merely names the holder, carries the same identifier
+    ``identity.tax_id`` renders in the clear one section above, and
+    confers no capability without a contraste and a PIN this profile
+    never stores. It is deliberately excluded rather than accommodated by
+    a looser assertion: the list is an explicit statement of which fields
+    MUST mask, so dropping one has to be a visible decision. Deriving it
+    from the schema instead would make the gate read its expectation off
+    the thing it checks, and it could then never fail.
     """
     from .....application.user_profile import mask_profile_field
     from .....domain.user_profile import load_user_profile_schema
@@ -248,30 +262,98 @@ def _create_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-@pytest.mark.usefixtures("_isolated_cli_backend")
-def test_build_fact_rows_masks_by_the_real_schema() -> None:
-    """Every fact row over a really created profile obeys the real schema's masking.
+_AUTH_PROVIDER_PATH = "auth.provider"
+_AUTH_SOPORTE_PATH = "auth.numero_soporte"
+_AUTH_PROVIDER_VALUE = "clave_movil"
+_AUTH_SOPORTE_VALUE = "ABC123456"
 
-    The profile is created through the real non-interactive CLI walk, the
-    record loaded through the real workflow repository, and the rows built
-    by the production builder against the shipped schema — so the masking
-    decision tested here is byte-for-byte the one the operator's screen
-    gets.
+
+def _seed_auth_facts() -> None:
+    """Give the credential-label net an ``auth.*`` subject to read.
+
+    ``config profile create`` collects no ``auth.*`` answer, so a fixture
+    built from that walk alone projects identity, contact, and activity
+    rows and NOT ONE row from the section whose labels name credentials.
+    The credential-shaped-label assertion below then ran over a row set
+    that could not contain the thing it looks for -- it passed for want
+    of a subject, which is indistinguishable from passing because the
+    labels are clean.
+
+    The two facts are chosen as a pair to cover both arms of that
+    assertion: ``auth.provider`` is declared ``identity``, so its row
+    renders UNMASKED and is read by the net, while ``auth.numero_soporte``
+    is declared ``secret``, so its row is masked and deliberately skipped.
+
+    They are written through ``set_active_fields`` -- the same plural door
+    the manager's authentication action commits through -- against the
+    real encrypted record, so the rows projected from them are the rows
+    an operator's screen is built from.
     """
-    from .....application.user_profile import mask_profile_field, profile_storage_session
+    from .....application.user_profile import set_active_fields
+    from .....application.workflow import workflow_state_repository
+    from .....domain.user_profile import UserProfileFact
+
+    set_active_fields(
+        workflow_state_repository().load(),
+        (
+            UserProfileFact(path=_AUTH_PROVIDER_PATH, value=_AUTH_PROVIDER_VALUE),
+            UserProfileFact(path=_AUTH_SOPORTE_PATH, value=_AUTH_SOPORTE_VALUE),
+        ),
+    )
+
+
+def _fact_rows_over_a_real_profile() -> tuple[tuple[StatusFactRow, ...], UserProfileRecord]:
+    """Build the status fact rows for a really created, auth-bearing profile.
+
+    The record is returned alongside its rows so a caller can project the
+    SAME record through another surface and compare the two readings.
+    """
+    from .....application.user_profile import profile_storage_session
     from .....application.workflow import read_profile_bucket, workflow_state_repository
 
     _create_profile()
     pointer = read_profile_bucket("operator")
     assert pointer is not None
     with profile_storage_session(pointer.bucket_id):
+        _seed_auth_facts()
         record = workflow_state_repository().load().active_profile_record()
-        rows = _status_frontend._build_fact_rows(record=record)
+        assert record is not None
+        return _status_frontend._build_fact_rows(record=record), record
+
+
+@pytest.mark.usefixtures("_isolated_cli_backend")
+def test_build_fact_rows_masks_by_the_real_schema() -> None:
+    """Every fact row over a really created profile obeys the real schema's masking.
+
+    The profile is created through the real non-interactive CLI walk, the
+    auth section written through the real plural fact door, the record
+    loaded through the real workflow repository, and the rows built by the
+    production builder against the shipped schema — so the masking
+    decision tested here is byte-for-byte the one the operator's screen
+    gets.
+    """
+    from .....application.user_profile import mask_profile_field
+
+    rows, _record = _fact_rows_over_a_real_profile()
 
     assert rows, "a created profile must project at least one fact row"
     nif_row = next((row for row in rows if row.value == "12345678Z"), None)
     assert nif_row is not None, f"the NIF fact must surface; labels: {sorted(row.label for row in rows)}"
     assert nif_row.masked is False
+
+    # ANTI-VACUITY, and the reason the fixture writes the auth section at
+    # all: the loop below is a net over UNMASKED rows, so it measures
+    # nothing unless an unmasked auth row is really in the set. Both arms
+    # are named, so a fixture that silently stops projecting either one
+    # fails here rather than quietly emptying the net.
+    provider_row = next((row for row in rows if row.value == _AUTH_PROVIDER_VALUE), None)
+    assert provider_row is not None, (
+        f"auth.provider must project an unmasked row; labels: {sorted(row.label for row in rows)}"
+    )
+    assert provider_row.masked is False, "auth.provider is declared identity and must render in the clear"
+    soporte_row = next((row for row in rows if row.value == _AUTH_SOPORTE_VALUE), None)
+    assert soporte_row is not None, "auth.numero_soporte must project a row"
+    assert soporte_row.masked is True, "auth.numero_soporte is declared secret and must render masked"
 
     # No unmasked row may carry a credential-shaped label. The question is
     # put to the canonical policy rather than restated here: this carried a
@@ -286,6 +368,88 @@ def test_build_fact_rows_masks_by_the_real_schema() -> None:
         assert not mask_profile_field(path=row.label, label=row.label, sensitivity=None), (
             f"credential-shaped row {row.label!r} rendered unmasked"
         )
+
+
+# ── row labels: one name per field, except where an index must show ─────────
+
+
+@pytest.mark.usefixtures("_isolated_cli_backend")
+def test_an_unindexed_row_carries_the_label_the_manager_carries() -> None:
+    """One field must not be named two different things on two surfaces.
+
+    DISCRIMINATING, and deliberately measured against the OTHER surface
+    rather than against the label function this one now calls: asserting
+    that ``_build_fact_rows`` returns what ``profile_field_label`` returns
+    would restate the implementation. The manager builds its own rows
+    through ``build_profile_overview``, so agreement between the two is an
+    independent reading of the property that matters.
+
+    The second assertion is what makes this fail on the old code rather
+    than merely on a renamed key: the status page used to render the
+    schema's ``description`` verbatim, which for ``auth.provider`` is four
+    sentences of authority prose. A row that still equals the description
+    is a row that never reached the catalogue.
+    """
+    from .....application.user_profile import build_profile_overview
+    from .....domain.user_profile import load_user_profile_schema
+
+    rows, record = _fact_rows_over_a_real_profile()
+
+    status_label = next(row.label for row in rows if row.value == _AUTH_PROVIDER_VALUE)
+    overview = build_profile_overview(record)
+    manager_label = next(
+        field.label for section in overview.sections for field in section.fields if field.path == _AUTH_PROVIDER_PATH
+    )
+    assert status_label == manager_label, (
+        f"status names auth.provider {status_label!r} while the manager names it {manager_label!r}"
+    )
+    assert status_label != load_user_profile_schema().field(_AUTH_PROVIDER_PATH).description, (
+        "the status row still renders the schema description as its label"
+    )
+
+
+def test_an_indexed_row_keeps_its_raw_path_as_the_label() -> None:
+    """Two socios must stay distinguishable, so an indexed row keeps its path.
+
+    DISCRIMINATING as an inequality: the schema declares
+    ``attribution_entity_socios.nif`` once, so naming an indexed row after
+    its declaration -- by label or by description, it makes no difference
+    -- collapses every socio to the same row name on a surface with no
+    other column to tell them apart. The label is therefore the raw path
+    and the equality assertion below pins which path.
+
+    The record is built directly rather than through the CLI walk because
+    ``config profile create`` collects no socio: the shape under test is
+    an indexed fact, and this is a real ``UserProfileRecord`` read by the
+    production builder against the real shipped schema.
+    """
+    from .....domain.user_profile import (
+        UserProfileFact,
+        load_user_profile_schema,
+        profile_field_label,
+    )
+    from .....domain.user_profile import UserProfileRecord as _Record
+
+    first_path = "attribution_entity_socios.0.nif"
+    second_path = "attribution_entity_socios.1.nif"
+    record = _Record(
+        profile_id="00000000-0000-4000-8000-0000000000a1",
+        display_name="Socios status row",
+        facts=(
+            UserProfileFact(path=first_path, value="B12345678"),
+            UserProfileFact(path=second_path, value="B87654321"),
+        ),
+    )
+
+    rows = _status_frontend._build_fact_rows(record=record)
+    labels = {row.value: row.label for row in rows}
+    assert labels.keys() >= {"B12345678", "B87654321"}, f"both socios must project a row; got {labels}"
+    assert labels["B12345678"] != labels["B87654321"], "two socios rendered under one indistinguishable row name"
+    assert labels["B12345678"] == first_path
+    assert labels["B87654321"] == second_path
+
+    declared = load_user_profile_schema().field("attribution_entity_socios.nif")
+    assert labels["B12345678"] != profile_field_label("attribution_entity_socios", declared)
 
 
 # ── independent zone degradation (a damaged read never tracebacks) ──────────

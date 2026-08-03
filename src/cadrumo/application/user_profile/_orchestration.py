@@ -28,7 +28,6 @@ See Also:
 
 from __future__ import annotations
 
-import secrets
 from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, NamedTuple
@@ -673,23 +672,23 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     """Trash-rename and remove a profile's on-disk bucket directory.
 
     Used both by atomic-create rollback and by
-    :func:`~cadrumo.application.config_reset.start_config_reset`. The
-    directory is first renamed to a trash-prefix sibling so a crashed
-    removal leaves a recoverable on-disk trace, then recursively
-    deleted. When the rename is refused - Windows denies renaming a
-    directory whose SQLite file was only just closed - the directory is
-    removed in place so the bucket does not survive the reset.
+    :func:`~cadrumo.application.config_reset.start_config_reset`. Delegates
+    the trash-rename-then-remove mechanics to the shared
+    :func:`~cadrumo.adapters.persistence.storage.bucket.trash_rename_and_remove`
+    primitive with ``on_trash_cleanup_error="ignore"`` — leftover trash
+    litter from a failed cleanup is tolerable here — then verifies the
+    directory is actually gone, since ``"ignore"`` never raises on its own.
 
-    Raises :class:`OSError` if the in-place removal also fails and the
-    bucket directory genuinely survives on disk, so a caller (config
+    Raises :class:`UserProfileError` if the bucket directory genuinely
+    survives on disk after the best-effort removal, so a caller (config
     reset in particular) never reports a removed profile while the
     bucket is still present. The atomic-create rollback caller wraps
     this call best-effort, since a residual directory there must not
     mask the original registration failure.
     """
     import gc
-    import shutil
 
+    from ...adapters.persistence.storage.bucket import trash_rename_and_remove
     from ...adapters.persistence.storage.master_key import current_active_bucket_session
     from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
 
@@ -723,22 +722,17 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     active_session = current_active_bucket_session()
     if active_session is not None and active_session.bucket_id == profile_id:
         active_session.invalidate_engine()
+    # Proactively release lingering handles before the rename attempt (the
+    # shared primitive also runs its own gc.collect() if the rename fails,
+    # but doing it here first makes the fast, no-fallback-needed rename path
+    # win more often right after the dispose/invalidate calls above).
     gc.collect()
-    trash = target.with_name(f".trash-{profile_id}-{secrets.token_hex(4)}")
-    try:
-        target.rename(trash)
-    except OSError:
-        # The crash-safe rename was refused (file handle still held);
-        # release lingering handles and remove the directory in place.
-        gc.collect()
-        shutil.rmtree(target, ignore_errors=True)
-        if target.exists():
-            raise UserProfileError(
-                translated_message="application.user_profile.errors.profile_bucket_directory_removal_failed",
-                context={"profile_id": profile_id, "operation": "remove_profile_bucket_directory"},
-            ) from None
-        return
-    shutil.rmtree(trash, ignore_errors=True)
+    trash_rename_and_remove(target, on_trash_cleanup_error="ignore")
+    if target.exists():
+        raise UserProfileError(
+            translated_message="application.user_profile.errors.profile_bucket_directory_removal_failed",
+            context={"profile_id": profile_id, "operation": "remove_profile_bucket_directory"},
+        ) from None
 
 
 def select_profile(

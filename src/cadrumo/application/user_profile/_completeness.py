@@ -118,23 +118,50 @@ def _missing_in_section(
     at least one row of every repeatable section, which would make an
     ordinary profile permanently invalid.
 
-    Row identity is the index segment (``socios.0.nif``). A repeatable fact
-    written WITHOUT an index is treated as a single implicit row rather than
-    ignored, because a producer currently writes one that way; that
-    divergence is tracked on its own and this deliberately does not prejudge
-    it, it only avoids dropping the field from validation.
+    Row identity is :func:`profile_section_rows`, shared with the surface
+    that renders those rows so the two cannot disagree about how many there
+    are. The unindexed implicit row it keeps is a producer's current
+    spelling; that divergence is tracked on its own and this deliberately
+    does not prejudge it, it only avoids dropping the field from validation.
     """
     if not section.repeatable:
         return [f"{section.key}.{key}" for key in required if f"{section.key}.{key}" not in present]
     missing: list[str] = []
-    for row, populated in _rows_of(section.key, present).items():
+    for row, populated in profile_section_rows(section.key, present).items():
         prefix = f"{section.key}.{row}." if row else f"{section.key}."
         missing.extend(f"{prefix}{key}" for key in required if key not in populated)
     return missing
 
 
-def _rows_of(section_key: str, present: Iterable[str]) -> dict[str, set[str]]:
-    """Group a section's populated paths by row, keying an unindexed path as one implicit row."""
+def profile_section_rows(section_key: str, present: Iterable[str]) -> dict[str, frozenset[str]]:
+    """Group a section's populated paths by row, in the order a surface should show them.
+
+    Row identity is the index segment (``socios.0.nif``). A repeatable fact
+    written WITHOUT an index is treated as a single implicit row keyed ``""``
+    rather than ignored, because a producer currently writes one that way.
+
+    Shared rather than restated, because the surface that RENDERS a
+    repeatable section and the check that decides which of its fields are
+    missing must agree about how many rows there are and which one each fact
+    belongs to. They did not: the display walked the unindexed path while
+    rows live at ``section.INDEX.field``, so a taxpayer's socios, activities,
+    properties and usage ratios were each shown as one permanently blank row
+    however many the profile held.
+
+    Ordering is the implicit row first, then indices in numeric order, so a
+    row's position on screen follows its identity rather than the order facts
+    happened to be written. Numeric rather than lexicographic, or row 10
+    would sort between rows 1 and 2.
+
+    Args:
+        section_key: The section whose rows are wanted.
+        present: Paths carrying a value, by the shared presence rule. A row
+            whose every fact is blank is therefore not a row here — which is
+            what keeps this reading identical for both callers.
+
+    Returns:
+        Each row's identity mapped to the field keys it populates.
+    """
     rows: dict[str, set[str]] = {}
     for path in present:
         head, _, tail = path.partition(".")
@@ -145,7 +172,8 @@ def _rows_of(section_key: str, present: Iterable[str]) -> dict[str, set[str]]:
             rows.setdefault(index, set()).add(field)
         elif not field:
             rows.setdefault("", set()).add(index)
-    return rows
+    ordered = sorted(rows, key=lambda row: (row != "", int(row) if row else 0))
+    return {row: frozenset(rows[row]) for row in ordered}
 
 
 def _has_value(values: Mapping[str, object], path: str) -> bool:
@@ -170,5 +198,6 @@ __all__ = [
     "conditional_profile_required_paths",
     "iva_regime_required",
     "missing_required_field_paths",
+    "profile_section_rows",
     "profile_value_is_present",
 ]

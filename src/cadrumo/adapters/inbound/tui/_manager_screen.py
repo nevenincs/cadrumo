@@ -7,8 +7,10 @@ glyph each — a progress meter for a process, telling the operator where
 they were in a walk but never what their profile actually held.
 
 The page here is the profile itself: every schema section, every declared
-field, and the value on record for it. A field the operator has not
-filled in is a visible empty row, because "what is still blank" is the
+field, and the value on record for it — including one row per instance of
+a fact the taxpayer holds several of, so three socios read as three rows
+rather than one. A field the operator has not filled in is a visible empty
+row, because "what is still blank" is the
 question this page exists to answer. Selecting any row edits it in place
 and writes immediately; there is no submit step, no final commit, and no
 ordering. Completeness is shown as a count and a list of what filing will
@@ -95,6 +97,16 @@ _ABSENT_GLYPH = "○"
 _REQUIRED_MARK = "*"
 """Marks a field filing will eventually require."""
 
+_ROW_INDEX_SEPARATOR = " · "
+"""Sits between a repeated row's instance number and its field label.
+
+Punctuation rather than copy, which is why it is written here and not in
+the locale catalogues: the label beside it is already translated, and the
+number is a stored identity. A taxpayer with three socios would otherwise
+read three identical ``NIF`` rows, since the path telling them apart is
+shown only once the row is opened.
+"""
+
 _REFUSAL_TONE = "-refusal"
 """Something the page would not do. The operator's next task."""
 
@@ -165,20 +177,63 @@ class FieldEditScreen(ModalScreen[str | None]):
         """Show one enum token the way the operator should read it."""
         return self._choice_labels.get(value, value)
 
+    @property
+    def _box_hides_a_value(self) -> bool:
+        """Whether an empty box here is hiding a value rather than describing one."""
+        return self._field.masked and self._field.present and not self._field.enum_values
+
+    @property
+    def _offers_clear(self) -> bool:
+        """Whether this dialog must carry its own way to delete the value.
+
+        Only a masked field needs one. Its box opens empty because the
+        value is withheld, so emptying the box cannot mean "delete this" —
+        the box was already empty, and the operator never saw what they
+        would be deleting. Every other field says it by being emptied,
+        which is a gesture they took deliberately against a value they
+        could read.
+
+        Offered only where the deletion would actually happen: a field
+        holding nothing has none to remove, and a required field's
+        deletion is refused downstream, so a button for either would
+        promise an outcome the dialog then has to take back.
+        """
+        return self._field.masked and self._field.present and not self._field.required
+
     @override
     def compose(self) -> ComposeResult:
+        """Lay out the dialog for one field.
+
+        A masked field's box starts EMPTY, and both halves of why are
+        worth stating because neither is visible from here. The overview
+        this dialog is handed never carries a masked value — the
+        projection substitutes the mask placeholder, deliberately, so
+        that a page held open on screen cannot leak a secret — which
+        means there is no real value available to pre-fill with. And the
+        placeholder itself must not be used in its place: it is an
+        ordinary string, so it would be submitted back as the literal new
+        value the moment the operator pressed save, overwriting the
+        secret with a row of dots.
+
+        The emptiness is therefore not the field's state, and the rest of
+        this screen exists to stop it being read as one.
+        """
         with Vertical(id="edit-dialog"):
             yield Label(self._prompt, id="edit-label")
             yield Static(tr("flows.manager.edit.path", path=self._field.path), id="edit-path")
-            # A masked field starts EMPTY rather than pre-filled with the
-            # placeholder: pre-filling would submit the dots back as the
-            # literal new value the moment the operator pressed enter.
             if self._field.enum_values:
                 yield OptionList(*[self._label_for(value) for value in self._field.enum_values], id="edit-options")
             else:
                 yield Input(value="" if self._field.masked else (self._field.value or ""), id="edit-input")
+            # An empty box that means "unset" needs no explaining. One that
+            # means "withheld" does, or the operator reads the emptiness as
+            # the field's state and saves it back.
+            if self._box_hides_a_value:
+                yield Static(tr("flows.manager.edit.masked_kept"), id="edit-masked-note")
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-edit-cancel")
+                if self._offers_clear:
+                    yield Button(tr("flows.manager.edit.clear"), id="btn-edit-clear")
                 yield Button(tr("flows.manager.edit.save"), id="btn-edit-save", classes="-primary")
 
     def on_mount(self) -> None:
@@ -190,21 +245,57 @@ class FieldEditScreen(ModalScreen[str | None]):
             (index for index, value in enumerate(self._field.enum_values) if value == self._field.value),
             None,
         )
-        if current is not None:
-            options.highlighted = current
         options.focus()
+        # Taking focus highlights the first row on its own, and enter on an
+        # untouched list would then write whatever happens to be first — a
+        # choice the operator never made. So the highlight is assigned after
+        # focus and only where it is TRUE, which clears it when the field
+        # holds no token of this list. Masking is what makes that
+        # destructive rather than merely wrong: the lookup above compares
+        # against the mask placeholder, so it can never match, and the write
+        # would replace a value the dialog was not allowed to show. Nothing
+        # is lost in reach — the first arrow key highlights the first row,
+        # exactly where focus used to leave it.
+        options.highlighted = current
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-edit-save":
             if self._field.enum_values:
                 self._dismiss_highlighted_option()
             else:
-                self.dismiss(self.query_one("#edit-input", Input).value)
+                self._submit_typed(self.query_one("#edit-input", Input).value)
+        elif event.button.id == "btn-edit-clear":
+            # The one gesture that means "delete this". It dismisses the
+            # empty string rather than a marker of its own so the write
+            # door keeps a single reading of blank: blank is already a
+            # clear everywhere else, and this is how a field whose box
+            # cannot be emptied meaningfully still reaches it.
+            self.dismiss("")
         else:
             self.dismiss(None)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
-        self.dismiss(event.value)
+        self._submit_typed(event.value)
+
+    def _submit_typed(self, value: str) -> None:
+        """Dismiss with what the operator typed, or with nothing to do.
+
+        An empty box on a masked field is not a clear. The operator was
+        shown a mask instead of the value, so an empty box is what "I
+        typed nothing" looks like and saving on it reads as leaving the
+        field alone — they were never offered the chance to delete
+        something they could see. Writing the blank through would destroy
+        a value they cannot even watch go, so it dismisses as a
+        no-change, exactly as cancelling does, and deletion is left to
+        the button that says so.
+
+        Every other field keeps the old reading, because there an empty
+        box is one the operator emptied.
+        """
+        if self._field.masked and not value.strip():
+            self.dismiss(None)
+            return
+        self.dismiss(value)
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         self._dismiss_highlighted_option()
@@ -258,6 +349,7 @@ class ProfileManagerApp(App[None]):
     }
     #edit-label { text-style: bold; }
     #edit-path { color: $text-muted; margin: 0 0 1 0; }
+    #edit-masked-note { color: $text-muted; }
     #edit-dialog Input { margin: 0 0 1 0; }
     #edit-actions { height: auto; align-horizontal: right; margin: 1 0 0 0; }
     #edit-actions Button { margin: 0 0 0 2; }
@@ -400,20 +492,23 @@ class ProfileManagerApp(App[None]):
     def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
 
-        The row SET cannot change under an edit: the overview is projected
-        by walking the profile SCHEMA, not the record's facts, so every
-        declared field yields a row whether or not it holds a value. What an
-        edit CAN change is a row's rendered content — and not only the edited
-        row's, since the write door normalises values and re-derives presence
-        and completeness. So rather than assume the edited path is the only
-        thing that moved, this diffs the old page against the new one and
-        writes exactly the cells that differ: usually one row, occasionally a
-        few, never all of them.
+        Most edits leave the row SET alone: the overview is projected by
+        walking the profile SCHEMA, so every declared field yields a row
+        whether or not it holds a value. What such an edit CAN change is a
+        row's rendered content — and not only the edited row's, since the
+        write door normalises values and re-derives presence and
+        completeness. So rather than assume the edited path is the only thing
+        that moved, this diffs the old page against the new one and writes
+        exactly the cells that differ: usually one row, occasionally a few,
+        never all of them.
 
-        The structural comparison is the safety valve. Should the projection
-        ever become record-dependent — a conditional section, a repeatable
-        row set — the shapes stop matching and this falls back to the full
-        rebuild rather than writing into stale coordinates.
+        Some edits DO move the row set, because how many rows a repeated
+        fact stands for is the record's to say, not the schema's: clearing
+        the last leaf of a censal divergence retires its rows, and filling a
+        row of a repeatable section can add a group. The structural
+        comparison is what makes that safe — the shapes stop matching and
+        this falls back to the full rebuild rather than writing into
+        coordinates the new page no longer has.
         """
         previous = self.overview
         self.overview = updated
@@ -477,10 +572,18 @@ class ProfileManagerApp(App[None]):
         looks like, or an edited row would drift from its unedited siblings.
         Deriving both from here is what makes the diff comparison meaningful:
         it compares exactly the strings that get written.
+
+        A row belonging to one instance of a repeated fact is named by that
+        instance. The projection states which instance as data and leaves
+        the presentation here, so the schema's translated label is never
+        edited to carry it.
         """
+        label = f"{field.label}{_REQUIRED_MARK}" if field.required else field.label
+        if field.row_index is not None:
+            label = f"{field.row_index}{_ROW_INDEX_SEPARATOR}{label}"
         return (
             _PRESENT_GLYPH if field.present else _ABSENT_GLYPH,
-            f"{field.label}{_REQUIRED_MARK}" if field.required else field.label,
+            label,
             field.value or "",
         )
 
@@ -697,7 +800,7 @@ class ProfileManagerApp(App[None]):
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as
         # though nothing had been asked of it.
-        self._refuse_worker(worker.error, "flows.manager.edit.write_failed")
+        self._refuse_worker(worker.error, message_key="flows.manager.edit.write_failed")
 
     def _settle_action(self, worker: Worker[ManagerActionOutcome]) -> None:
         """Report one finished action and adopt any profile it handed back.
@@ -711,7 +814,7 @@ class ProfileManagerApp(App[None]):
         self._pending_action = None
         self._set_busy(False)
         if worker.state is not WorkerState.SUCCESS or worker.result is None:
-            self._refuse_worker(worker.error, "flows.manager.action.failed")
+            self._refuse_worker(worker.error, message_key="flows.manager.action.failed")
             return
         outcome = worker.result
         if outcome.overview is not None:
@@ -737,7 +840,7 @@ class ProfileManagerApp(App[None]):
         """Show something the page would not do, and why."""
         self._announce(message, _REFUSAL_TONE)
 
-    def _refuse_worker(self, error: BaseException | None, fallback_key: str) -> None:
+    def _refuse_worker(self, error: BaseException | None, *, message_key: str) -> None:
         """Show what a finished worker failed with, never as a blank line.
 
         ``str(exc)`` is the empty string for any exception constructed
@@ -752,7 +855,7 @@ class ProfileManagerApp(App[None]):
         emptiness — a door that raises bare renders just as blank.
         """
         rendered = str(error) if error is not None else ""
-        self._refuse(rendered or tr(fallback_key))
+        self._refuse(rendered or tr(message_key))
 
     def _report(self, message: str) -> None:
         """Show what an action did."""

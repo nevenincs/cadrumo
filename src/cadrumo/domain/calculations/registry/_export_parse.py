@@ -16,6 +16,7 @@ from ....core import ExportLayoutFormat
 from ....core.decimal import normalize_decimal_separators
 from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.parsing import parse_bool as _core_parse_bool
+from ....core.paths import path_stat_fingerprint
 from ._errors import RegistryValidationError
 from ._ids import BindingId, CasillaId, ExportFieldId, ExportLayoutId, RecordId, validated_casilla_id
 from ._schema import (
@@ -201,8 +202,8 @@ def xml_dictionary_entries(
 
 
 def _read_dictionary_text(path: Path) -> str:
-    stat = path.stat()
-    return _read_dictionary_text_cached(str(path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
+    resolved = path.expanduser().resolve()
+    return _read_dictionary_text_cached(*path_stat_fingerprint(resolved))
 
 
 @lru_cache(maxsize=256)

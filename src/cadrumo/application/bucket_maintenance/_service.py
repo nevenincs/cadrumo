@@ -35,6 +35,7 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.bucket import ManifestKdfParams, acquire_lock, release_lock
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.paths import directory_byte_total
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time import now
 from ...domain.buckets import (
@@ -196,17 +197,13 @@ def _directory_byte_total(directory: Path) -> tuple[int, int]:
     never populated still exists per :func:`provision_bucket_directory`, but
     the helper tolerates absence defensively) report ``(0, 0)`` rather than
     raising. Only regular-file sizes are summed via ``os.stat``; no file is
-    opened or decrypted.
+    opened or decrypted. Delegates to the shared
+    :func:`~cadrumo.core.paths.directory_byte_total` walker in tolerant
+    mode: a blob write racing this read no longer crashes the disk-usage
+    report (previously unhandled — a small latent correctness gap this
+    convergence closes).
     """
-    if not directory.is_dir():
-        return 0, 0
-    total_bytes = 0
-    file_count = 0
-    for entry in directory.rglob("*"):
-        if entry.is_file():
-            total_bytes += entry.stat().st_size
-            file_count += 1
-    return total_bytes, file_count
+    return directory_byte_total(directory, tolerate_errors=True)
 
 
 class BucketMaintenanceService:

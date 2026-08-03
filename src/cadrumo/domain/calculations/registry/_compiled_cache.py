@@ -52,6 +52,7 @@ from pydantic import BaseModel
 from ....core.aggregation import BindingSourceKind
 from ....core.atomic_write import atomic_write_best_effort_bytes
 from ....core.hashing import sha256_hex
+from ....core.paths import select_filesystem_retention_survivors
 from ._bindings import selector_model_for_source
 from ._loader_cache import registry_disk_cache_dir, registry_disk_cache_max_entries
 from ._schema import ModeloDefinition, RegistryCatalogues
@@ -324,25 +325,36 @@ def _evict_stale_registry_pickles(cache_dir: Path, *, logger: logging.Logger) ->
     would otherwise grow without bound. Called after a successful write; entirely
     best-effort -- a prune failure (a permission error, a concurrent writer's
     unlink, a file that vanished mid-scan) is logged and swallowed. Eviction must
-    never crash a registry load; the worst case is a few extra stale files.
+    never crash a registry load; the worst case is a few extra stale files. The
+    survivor decision (a count bound alone) delegates to the shared
+    :func:`~cadrumo.core.paths.select_filesystem_retention_survivors` selector.
     """
     keep = registry_disk_cache_max_entries()
+    entries: list[tuple[Path, int]] = []
     try:
-        entries: list[tuple[int, Path]] = []
         for cache_path in cache_dir.glob(f"{_CACHE_FILENAME_PREFIX}*{_CACHE_FILENAME_SUFFIX}"):
             try:
-                entries.append((cache_path.stat().st_mtime_ns, cache_path))
+                entries.append((cache_path, cache_path.stat().st_mtime_ns))
             except OSError:
                 continue
     except OSError:
         logger.debug("Could not enumerate compiled registry caches in %s", cache_dir, exc_info=True)
         return
-    entries.sort(reverse=True)
-    for _mtime_ns, stale in entries[keep:]:
+    # Pre-sort by path, descending: the selector's stable, timestamp-only sort
+    # then preserves this order for any mtime_ns tie (real on some filesystems
+    # whose mtime resolution is coarser than a nanosecond), reproducing the
+    # prior ``(mtime_ns, Path)`` tuple sort's implicit path tie-break.
+    entries.sort(key=lambda pair: pair[0], reverse=True)
+    _keep, stale = select_filesystem_retention_survivors(
+        entries,
+        timestamp=lambda pair: pair[1],
+        max_count=keep,
+    )
+    for cache_path, _mtime_ns in stale:
         try:
-            stale.unlink()
+            cache_path.unlink()
         except OSError:
-            logger.debug("Could not evict stale compiled registry cache %s", stale, exc_info=True)
+            logger.debug("Could not evict stale compiled registry cache %s", cache_path, exc_info=True)
 
 
 def compiled_cache_path(root: Path, fingerprints: FingerprintTuples) -> Path:
@@ -463,9 +475,8 @@ def _is_compiled_registry_payload(payload: object) -> bool:
     modelos_raw, catalogues_raw = payload
     if not _is_object_tuple(modelos_raw):
         return False
-    return (
-        all(isinstance(modelo, ModeloDefinition) for modelo in modelos_raw)
-        and isinstance(catalogues_raw, RegistryCatalogues)
+    return all(isinstance(modelo, ModeloDefinition) for modelo in modelos_raw) and isinstance(
+        catalogues_raw, RegistryCatalogues
     )
 
 

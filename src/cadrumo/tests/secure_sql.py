@@ -40,9 +40,11 @@ from ..adapters.persistence.storage.master_key import (
     get_master_key_provider,
     load_or_mint_bucket_dek,
 )
+from ..core import StorageCategory
 from ..core.config import Settings, load_settings, override_settings
 from ..domain.user_profile import UserProfileStatus
 from .master_key import EphemeralMasterKeyProvider
+from .storage_scope import storage_overrides
 
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
@@ -309,14 +311,16 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     """
 
     storage_root = tmp_path / "cadrumo-storage"
-    secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=None,
         cadrumo_secret_store_backend="file",
-        cadrumo_secret_store_dir=secret_store_dir,
         cadrumo_secret_passphrase=passphrase,
+        # Anchored on ``tmp_path``, not on the storage root, so the secret
+        # substrate stays a sibling of the bucket tree rather than nesting
+        # inside it -- the production custody split.
+        **storage_overrides(tmp_path, StorageCategory.SECRETS),
     ) as settings:
         dispose_engine(settings)
         try:
@@ -347,7 +351,6 @@ def isolated_runtime_profile(
     """
 
     storage_root = tmp_path / "cadrumo-storage"
-    secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
 
@@ -355,8 +358,8 @@ def isolated_runtime_profile(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=bucket_id,
         cadrumo_secret_store_backend="file",
-        cadrumo_secret_store_dir=secret_store_dir,
         cadrumo_secret_passphrase=passphrase,
+        **storage_overrides(tmp_path, StorageCategory.SECRETS),
     ) as settings:
         dispose_engine(settings)
         session, paths = _provision_bucket_dek_v1_session(
@@ -449,7 +452,6 @@ def isolated_two_bucket_runtime(
     failure.
     """
     storage_root = tmp_path / "cadrumo-storage"
-    secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
 
@@ -457,8 +459,11 @@ def isolated_two_bucket_runtime(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=primary_bucket_id,
         cadrumo_secret_store_backend="file",
-        cadrumo_secret_store_dir=secret_store_dir,
         cadrumo_secret_passphrase=passphrase,
+        # One secret substrate for both buckets: the production shape is many
+        # buckets under one root sharing one master key, each with its own
+        # wrapped DEK.
+        **storage_overrides(tmp_path, StorageCategory.SECRETS),
     ) as settings:
         dispose_engine(settings)
         primary_session, primary_paths = _provision_bucket_dek_v1_session(
@@ -526,15 +531,25 @@ def isolated_cli_runtime_profile(
     filesystem directories read from settings for runs, drafts, tokens,
     financial transactions, and invoices. Keep that setup on the central
     settings surface instead of per-test environment mutation.
+
+    The five are named by category, so the settings field and the leaf
+    directory both come from the taxonomy. Spelled by hand, they had already
+    drifted: this block pinned ``cadrumo_financial_txs_dir`` to ``txs`` while
+    the declared subpath is ``financial/transactions``, and nothing caught it,
+    because a fixture that only round-trips its own override agrees with any
+    name it is given.
     """
 
     with (
         override_settings(
-            cadrumo_runs_dir=tmp_path / "runs",
-            cadrumo_drafts_dir=tmp_path / "drafts",
-            cadrumo_token_dir=tmp_path / "tokens",
-            cadrumo_financial_txs_dir=tmp_path / "txs",
-            cadrumo_invoices_dir=tmp_path / "invoices",
+            **storage_overrides(
+                tmp_path,
+                StorageCategory.RUNS,
+                StorageCategory.DRAFTS,
+                StorageCategory.TOKENS,
+                StorageCategory.FINANCIAL_TRANSACTIONS,
+                StorageCategory.INVOICES,
+            ),
         ),
         isolated_runtime_profile(
             tmp_path=tmp_path,

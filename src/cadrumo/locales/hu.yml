@@ -3984,6 +3984,38 @@ cli:
         NÉV` a kezdéshez.'
       help: Az aktuális konfigurációs profil készenléti állapotának megjelenítése.
       next_step: 'Következő lépés: `aeat app overview status`'
+    storage:
+      check:
+        drifted: A tárolófa nem egyezik a deklarációjával.
+        help: Ellenőrzi a tárolófát a deklarációjához képest, javítás nélkül
+        mode_unenforced: Ez a platform nem valósítja meg a POSIX jogosultsági biteket,
+          ezért a gyökér jogosultságait nem ellenőriztük.
+      errors:
+        reclaim_refused: '%{category} felszabadítása elutasítva: %{reason}. A(z) %{path}
+          %{entries} bejegyzést tartalmaz, és egyet sem távolítottunk el.'
+        reclaim_unconfirmed: '%{category} felszabadítása %{entries} bejegyzést töröl
+          a(z) %{path} alatt, és kifejezett megerősítést igényel.'
+      help: A helyi tárolófa vizsgálata és karbantartása
+      init:
+        already_materialised: Minden deklarált könyvtár már létezett; egyet sem hoztunk
+          létre.
+        help: Létrehozza az összes deklarált könyvtárat, megőrizve a meglévő tartalmat
+      list:
+        help: Megjeleníti minden tárolókategória útvonalát és azt, hogy tartalmaz-e
+          valamit
+        relocation_is_manual: A fa áthelyezéséhez állítsd le az alkalmazást, másold
+          át magad, majd irányítsd a(z) %{variable} változót az új helyre. Egyetlen
+          parancs sem helyezi át, mert az a másolat, amely a rekordokra befejeződik,
+          a kulcsanyagra viszont nem, mindkettőt használhatatlanná teszi.
+      reclaim:
+        category_help: A felszabadítandó tárolókategória
+        help: Törli egy tárolókategória újratermelhető tartalmát
+        incomplete: Néhány bejegyzést nem sikerült eltávolítani, és még mindig a lemezen
+          vannak.
+        yes_help: Megerősíti a törlést; enélkül a parancs elutasít
+      show:
+        category_help: A megjelenítendő tárolókategória
+        help: Egy tárolókategória teljes megjelenítése
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -4944,6 +4976,14 @@ cli:
         section_first_run: Első futtatás
         section_profile_inspection: Profiladatok vizsgálata
         section_profile_lifecycle: Profil életciklusa
+        section_storage: Tárolás
+        storage_check: Ellenőrzi, hogy a tárolófából hiányoznak-e könyvtárak, vagy
+          rossz helyen vannak-e
+        storage_init: Létrehozza a hiányzó tárolókönyvtárakat
+        storage_list: Megnézheted, hol tárolódik minden helyi adattípus
+        storage_reclaim: Helyet szabadít fel egy olyan kategória törlésével, amelyet
+          az alkalmazás újraépít
+        storage_show: Egy tárolókategória részletes megtekintése
       root:
         diagnostics_live_filed: Rögzített benyújtott bevallás-megfigyelések listázása.
         diagnostics_overview: Az aktív munkaterület készültségének összefoglalása.
@@ -5833,6 +5873,7 @@ errors:
       a Windows MAX_PATH korlátját. Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást
       egy rövidebb útvonalra, vagy engedélyezze a LongPathsEnabled beállítást (lásd
       `aeat config check`).
+    error_storage_management: A helyi tárolófát nem sikerült beolvasni vagy felszabadítani.
     error_submission_validation: Egy benyújtási modell nem ment át az érvényesítésen.
     error_telemetry_schema: Egy telemetriai metrikakulcs nincs regisztrálva a parancs
       zárt metrikasémájában.
@@ -6485,6 +6526,10 @@ errors:
       szükséges. Futtassa az `aeat config login NÉV` parancsot, majd próbálja újra.
     refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakterből
       kell állnia.
+    refused_storage_reclaim: 'A tárolókategória felszabadítása elutasítva: a deklarált
+      életciklusa megőrzi a tartalmát.'
+    refused_storage_reclaim_unconfirmed: Egy tárolókategória felszabadítása adatokat
+      töröl, és kifejezett megerősítést igényel.
     refused_storage_secret_already_exists: Ilyen kulcsú titkos adat már létezik. Használja
       a felülírás lehetőséget a csere érdekében.
     refused_storage_session_expired: Az aktív munkamenet inaktivitás miatt lejárt.
@@ -6679,6 +6724,9 @@ flows:
       value: Érték
     edit:
       cancel: Mégse
+      clear: Törlés
+      masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
+        megőrzéshez, vagy írj be egy újat a cseréhez.
       path: 'Belső azonosító: %{path}'
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.

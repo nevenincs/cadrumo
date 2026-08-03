@@ -33,7 +33,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from ...core.config import Settings, load_settings
 from ...core.logging import get_logger
-from ...core.paths import resolve_relative_subpath
+from ...core.paths import path_stat_fingerprint, resolve_relative_subpath
 from ._errors import ManualNotFoundError, ManualParseError
 from ._schema import (
     Chapter,
@@ -88,13 +88,13 @@ def _read_text(path: Path) -> str:
     """Read a UTF-8 text file, raising :exc:`ManualNotFoundError` on miss."""
     try:
         resolved = path.resolve()
-        stat = resolved.stat()
+        fingerprint = path_stat_fingerprint(resolved)
     except FileNotFoundError as exc:
         raise ManualNotFoundError(f"missing required file: {path}") from exc
     except OSError as exc:
         raise ManualParseError(f"{path}: cannot stat required file ({exc})") from exc
     try:
-        return _read_text_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+        return _read_text_cached(*fingerprint)
     except OSError as exc:
         raise ManualParseError(f"{path}: cannot read required file ({exc})") from exc
 

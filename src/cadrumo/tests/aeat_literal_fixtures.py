@@ -119,6 +119,10 @@ REDACTION_INTERNAL_PATH_CANARY = "/internal/path?token=12345"
 REDACTION_SECRET_WLPL_PATH_CANARY = "/wlpl/SECRET-PATH/Submit?session=ABCDEFGHIJ"  # noqa: S105 - path canary
 UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY = "/wlpl/OTHER/MutatingPath"
 UNCLASSIFIED_WWW2_READ_PATH_CANARY = "/wlpl/some/path"
+LANDED_ORIGIN_CARTERA_CUOTAS_PATH_FIXTURE = "/wlpl/DAI3-RUTI/CarteraCuotas"
+RENTA_REGIMEN_CITATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/regimen"
+RENTA_DEDUCIBILIDAD_CITATION_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/renta"
+AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE = "sede.agenciatributaria.gob.es/auth"
 AEAT_LITERAL_SCAN_TOKENS = (
     _AEAT.domains.host_suffix,
     "/wlpl/",

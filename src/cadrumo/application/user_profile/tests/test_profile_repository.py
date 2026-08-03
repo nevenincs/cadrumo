@@ -412,6 +412,44 @@ def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
     assert reloaded.label == "Survivor"
 
 
+def test_failed_create_propagates_a_genuine_rollback_cleanup_failure(_backend: Path) -> None:
+    """A held-open handle blocking the bucket-directory removal surfaces, never swallowed.
+
+    ``ProfileRepository._remove_bucket_directory`` calls the shared
+    ``trash_rename_and_remove`` primitive with its default
+    ``on_trash_cleanup_error="raise"`` — load-bearing so a genuine
+    rollback-cleanup failure reaches the operator aggregated alongside the
+    original create failure (a :class:`BaseExceptionGroup`), rather than
+    being swallowed while a residual directory lingers on disk undetected.
+    Reproduced with a real held-open file handle inside the bucket
+    directory, blocking both the rename and the in-place ``rmtree``
+    fallback — not a mock.
+    """
+    repository = ProfileRepository()
+    profile_id = new_profile_id()
+    paths = bucket_paths(_backend, profile_id)
+    paths.bucket_dir.mkdir(parents=True)
+    held = (paths.bucket_dir / "held.bin").open("wb")
+    try:
+        with pytest.raises(BaseExceptionGroup) as excinfo, profile_create_storage_span(profile_id):
+            repository.create(
+                label="Victim",
+                facts=_INCOMPLETE_FACTS,
+                profile_id=profile_id,
+                routing_profile_id=profile_id,
+            )
+    finally:
+        held.close()
+
+    # The cleanup failure is aggregated alongside the original create
+    # failure, never swallowed by the rollback.
+    assert any(isinstance(exc, OSError) for exc in excinfo.value.exceptions)
+    # The directory genuinely survives -- "raise" means an in-place
+    # removal that also fails leaves it in place rather than pretending
+    # cleanup happened.
+    assert paths.bucket_dir.exists()
+
+
 def test_delete_tombstones_and_clears_the_pointer(_backend: Path) -> None:
     """``delete`` tombstones the record and clears the active pointer."""
 

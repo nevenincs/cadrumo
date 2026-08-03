@@ -1054,4 +1054,37 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.storage_management._errors.StorageManagementError",
+        ErrorCode(
+            code="ERROR_STORAGE_MANAGEMENT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_storage_management",
+            default_suggestion="aeat config storage check",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.storage_management._errors.StorageReclaimRefusedError",
+        ErrorCode(
+            code="REFUSED_STORAGE_RECLAIM",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_reclaim",
+            default_suggestion="aeat config storage list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.storage_management._errors.StorageReclaimUnconfirmedError",
+        ErrorCode(
+            code="REFUSED_STORAGE_RECLAIM_UNCONFIRMED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_reclaim_unconfirmed",
+            default_suggestion="aeat config storage reclaim CATEGORY --yes",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

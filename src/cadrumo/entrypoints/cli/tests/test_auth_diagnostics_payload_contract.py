@@ -17,6 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....application.auth import AuthDiagnosticDetail, AuthDiagnosticPhoneState, AuthDiagnosticSummary
+from ....tests.aeat_literal_fixtures import AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE
 from .._config_payloads import AuthDiagnosticsListResult, AuthDiagnosticsReportResult, AuthDiagnosticsShowResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -28,7 +29,7 @@ def _summary(**overrides: object) -> AuthDiagnosticSummary:
     base: dict[str, object] = {
         "diagnostic_id": "diag-1",
         "reason": "auth_completion_timeout",
-        "url": "sede.agenciatributaria.gob.es/auth",
+        "url": AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE,
         "captured_at": _CAPTURED_AT,
         "html_captured": False,
         "screenshot_captured": False,
@@ -41,7 +42,7 @@ def _detail(**overrides: object) -> AuthDiagnosticDetail:
     base: dict[str, object] = {
         "diagnostic_id": "diag-1",
         "reason": "auth_completion_timeout",
-        "url": "sede.agenciatributaria.gob.es/auth",
+        "url": AUTH_DIAGNOSTIC_SEDE_URL_FIXTURE,
         "captured_at": _CAPTURED_AT,
         "html_captured": False,
         "screenshot_captured": False,

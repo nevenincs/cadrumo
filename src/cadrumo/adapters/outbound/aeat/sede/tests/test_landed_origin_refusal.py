@@ -32,6 +32,7 @@ from types import ModuleType
 import pytest
 
 from ......core.config import Settings
+from ......tests.aeat_literal_fixtures import LANDED_ORIGIN_CARTERA_CUOTAS_PATH_FIXTURE
 from .. import _adapter_utils, _declarations_fetch, _iva_compensation_wallet
 from .._adapter_utils import landed_origin
 from .._errors import SedeNavigationError
@@ -54,7 +55,7 @@ _UNUSABLE_LANDINGS: tuple[str | None, ...] = (
 
 _USABLE_LANDINGS: tuple[str, ...] = (
     f"{_DOMAINS.www1}/x",
-    f"{_DOMAINS.www12}/wlpl/DAI3-RUTI/CarteraCuotas",
+    f"{_DOMAINS.www12}{LANDED_ORIGIN_CARTERA_CUOTAS_PATH_FIXTURE}",
 )
 
 
@@ -156,8 +157,6 @@ class TestTheExtractionIsOneSharedPredicate:
         offenders = [
             ast.unparse(node)
             for node in ast.walk(tree)
-            if isinstance(node, ast.JoinedStr)
-            and "scheme" in ast.unparse(node)
-            and "netloc" in ast.unparse(node)
+            if isinstance(node, ast.JoinedStr) and "scheme" in ast.unparse(node) and "netloc" in ast.unparse(node)
         ]
         assert not offenders, f"retired inline origin extraction still present: {offenders}"

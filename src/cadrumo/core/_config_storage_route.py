@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import unquote
 
 from ._config_state_root import PRODUCT_DATABASE_FILENAME
+from ._storage_taxonomy import StorageCategory, storage_location
 from .errors import CoreValidationError
 
 if TYPE_CHECKING:
@@ -123,8 +124,16 @@ def _bucket_id_for_route(*, database_path: Path | None, storage_root: Path) -> s
         relative = _normalized_path(database_path).relative_to(_normalized_path(storage_root))
     except ValueError:
         return ""
+    # Read from the one core storage authority rather than re-typing the two
+    # names here. This classifier used to carry its own copy of ``buckets`` and
+    # ``db``, unpinned against the layout that actually provisions them, so a
+    # rename would leave it silently classifying every bucket database as an
+    # explicit URL -- the branch below returns "" and the caller reads that as
+    # "not a bucket route" rather than as a failure to recognise one.
+    buckets_dirname = storage_location(StorageCategory.BUCKETS).subpath
+    bucket_db_dirname = storage_location(StorageCategory.BUCKET_DATABASE).subpath
     parts = relative.parts
-    if len(parts) == 4 and parts[0] == "buckets" and parts[2:] == ("db", PRODUCT_DATABASE_FILENAME):
+    if len(parts) == 4 and parts[0] == buckets_dirname and parts[2:] == (bucket_db_dirname, PRODUCT_DATABASE_FILENAME):
         return parts[1]
     return ""
 

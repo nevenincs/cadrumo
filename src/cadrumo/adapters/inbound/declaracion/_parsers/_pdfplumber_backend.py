@@ -24,6 +24,7 @@ from pathlib import Path
 
 from .....core.hashing import sha256_hex
 from .....core.logging import get_logger
+from .....core.paths import path_stat_fingerprint
 from ...pdf import (
     extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl,
 )
@@ -112,14 +113,9 @@ def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
 def _extract_pages_text_with_pdfium(pdf_path: Path) -> tuple[str, ...] | None:
     """Run the cached pypdfium2 path extraction for one filesystem PDF."""
     resolved = pdf_path.resolve()
-    stat = resolved.stat()
+    fingerprint = path_stat_fingerprint(resolved)
     content_digest = sha256_file(resolved)
-    return _extract_pages_text_with_pdfium_cached(
-        str(resolved),
-        stat.st_size,
-        stat.st_mtime_ns,
-        content_digest,
-    )
+    return _extract_pages_text_with_pdfium_cached(*fingerprint, content_digest)
 
 
 @lru_cache(maxsize=256)

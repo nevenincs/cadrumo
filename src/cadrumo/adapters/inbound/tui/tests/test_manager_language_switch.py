@@ -31,6 +31,7 @@ from .....application.user_profile import (
 from .....core import require_active_bucket_id
 from .....core.i18n import tr
 from .....entrypoints.cli._config._manager_frontend import persist_active_profile_field
+from .....tests.manager_pilot import wait_until_settled
 from .....tests.secure_sql import isolated_profile_storage_root
 from .. import ProfileManagerApp
 from .._manager_screen import _LANGUAGE_KEY, _OUTPUT_LANGUAGE_PATH
@@ -134,6 +135,14 @@ async def _drained_footer(app: ProfileManagerApp, pilot) -> dict[str, str]:
     string — so the wait cannot decide the answer. Whatever the footer
     settled on is what comes back, a footer that never named the key
     included.
+
+    Kept here rather than folded into the shared
+    :func:`~cadrumo.tests.manager_pilot.wait_until_settled`, which waits on the page
+    holding no unfinished background work. That is a different question
+    with a different answer: the footer carries no such flag, and a
+    recompose is not work anything is waiting on, so there is nothing to
+    watch but the reading itself. A wait for quiescence of a *value* and a
+    wait for a *state* only look alike from far enough away.
     """
     previous: dict[str, str] | None = None
     for drained in range(1, _FOOTER_DRAIN_LIMIT + 1):
@@ -149,21 +158,6 @@ async def _drained_footer(app: ProfileManagerApp, pilot) -> dict[str, str]:
         f"drained message queues, last showing {previous}"
     )
     raise AssertionError(message)
-
-
-async def _settle(pilot, app: ProfileManagerApp) -> None:
-    """Wait for the page to finish reacting to a write.
-
-    Two waits, because a write lands in two steps. The worker finishing is
-    the first: it reaches storage on a thread, so the press only starts it.
-    But the redraw does not happen there — the worker's completion is
-    delivered as a message and the page repaints while handling it, so a
-    test that stopped at "no worker is running" would read the page one
-    beat before it caught up, and see the language it had just changed.
-    """
-    await app.workers.wait_for_complete()
-    await pilot.pause()
-    await pilot.pause()
 
 
 @pytest.mark.asyncio
@@ -235,7 +229,7 @@ async def test_choosing_a_language_rewords_the_page_through_the_ordinary_door(tm
             options = app.screen.query_one("#edit-options", OptionList)
             options.highlighted = _language_tokens(app).index(_TARGET_LANGUAGE)
             await pilot.click("#btn-edit-save")
-            await _settle(pilot, app)
+            await wait_until_settled(app, pilot)
 
             headings = _column_headings(app)
             expected = [tr(key, locale=_TARGET_LANGUAGE) for key in _COLUMN_KEYS]

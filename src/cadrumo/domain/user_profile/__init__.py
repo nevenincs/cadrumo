@@ -99,6 +99,7 @@ from ._values import (
     declared_provenance_sources,
     new_profile_id,
     new_profile_snapshot_id,
+    section_field_key,
     utc_now,
 )
 
@@ -171,6 +172,7 @@ __all__ = [
     "profile_schema_locale_keys",
     "profile_section_title",
     "profile_section_title_key",
+    "section_field_key",
     "utc_now",
     "validate_user_profile_registry_contract",
 ]

@@ -54,6 +54,8 @@ from ._reset_cli import register_reset_commands
 from ._sandbox import register_sandbox_commands
 from ._status_rendering import blocked_readiness_status as _blocked_readiness_status
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
+from ._storage_cli import register_storage_commands as _register_storage_commands
+from ._storage_cli import storage_app as storage_app
 
 if TYPE_CHECKING:
     from ....application.workflow import ProfileBucketPointer as _ProfileBucketPointer
@@ -762,6 +764,7 @@ register_sandbox_commands(profile_app)
 register_reset_commands(app)
 app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
+_register_storage_commands(app)
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
 _register_censo_commands(profile_app)
 auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
@@ -792,5 +795,6 @@ __all__ = [
     "register_reset_commands",
     "register_sandbox_commands",
     "repair_app",
+    "storage_app",
     "tr",
 ]

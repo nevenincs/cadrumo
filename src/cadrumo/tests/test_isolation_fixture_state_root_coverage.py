@@ -4,7 +4,7 @@ state-root-derived output directory.
 ``isolated_cli_backend`` (``tests.secure_sql``) exists so ~22 test modules
 stop hand-declaring a private copy of the same storage-root override block.
 The promotion is only sound if the fixture actually relocates every
-generated-output directory the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy
+generated-output directory the storage taxonomy's root-derived member set
 declares — otherwise a test suite that relies on the fixture could still
 write through to a shared, non-isolated default. This test enumerates the
 taxonomy DYNAMICALLY (never a hardcoded field list) so a future dir field
@@ -20,7 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from ..core.config import _STATE_ROOT_DERIVED_DIRS, load_settings
+from ..core import ROOT_DERIVED_STORAGE_FIELDS
+from ..core.config import load_settings
 from .secure_sql import isolated_cli_backend as isolated_cli_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -30,7 +31,7 @@ def test_isolated_cli_backend_covers_every_state_root_derived_dir(
     isolated_cli_backend: Path,
     tmp_path: Path,
 ) -> None:
-    """Every entry in ``_STATE_ROOT_DERIVED_DIRS`` resolves under the test's
+    """Every root-derived storage member resolves under the test's
     own ``tmp_path`` once the fixture is active — proving the fixture
     isolates the whole family from any shared or ambient location, re-derived
     dynamically from the live taxonomy rather than a field list pinned at
@@ -51,8 +52,8 @@ def test_isolated_cli_backend_covers_every_state_root_derived_dir(
 
     assert settings.cadrumo_local_storage_root == storage_root
 
-    assert _STATE_ROOT_DERIVED_DIRS, "the state-root derivation taxonomy must not be empty"
-    for field_name in _STATE_ROOT_DERIVED_DIRS:
+    assert ROOT_DERIVED_STORAGE_FIELDS, "the root-derived member set must not be empty"
+    for field_name in ROOT_DERIVED_STORAGE_FIELDS:
         value = getattr(settings, field_name)
         assert value is not None, field_name
         assert value == tmp_path or tmp_path in value.parents, (

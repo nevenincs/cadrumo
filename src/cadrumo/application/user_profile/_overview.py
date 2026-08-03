@@ -6,6 +6,11 @@ walking the schema and pairing every declared field with its recorded
 value — so a field the operator has not filled in is a visible empty row
 rather than an absence they have to infer.
 
+A declaration does not always stand for one row. A repeatable section's
+rows and an object field's instances live under an index the schema never
+mentions, so the record decides how many there are while the schema
+decides what each holds; both are expanded here.
+
 That inversion is the point. The surface this replaces enumerated the
 *steps of a setup wizard*: a list of questions with a status glyph, which
 told the operator where they were in a process but never what their
@@ -43,17 +48,22 @@ from ...core.classification import SensitivityClass
 # runtime; deferring it to TYPE_CHECKING leaves the model undefined and every
 # construction raises. The rest of the domain surface is annotation-only.
 from ...domain.user_profile import (
+    ProfileFieldType,
     UserProfileStatus,
     load_user_profile_schema,
     profile_field_label,
     profile_section_title,
 )
-from ._completeness import missing_required_field_paths, profile_value_is_present
+from ._completeness import missing_required_field_paths, profile_section_rows, profile_value_is_present
 from ._projections import record_to_path_values
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from ...domain.user_profile import (
+        ProfileFieldDefinition,
         ProfileSchemaDefinition,
+        ProfileSectionDefinition,
         UserProfileRecord,
     )
 
@@ -103,6 +113,27 @@ incidental, and is pinned by a test: trimming ``key`` from this set
 would silently unmask every compound key field.
 """
 
+_NAMESPACE_FIELD_TYPES: Final[frozenset[ProfileFieldType]] = frozenset(
+    {ProfileFieldType.OBJECT, ProfileFieldType.ARRAY},
+)
+"""Field types whose declared path names a namespace rather than a value.
+
+An ``object`` or ``array`` field is written as indexed instances under its
+path -- ``censo.divergencia.{n}.{axis,artefact_value,source}``,
+``renta_family.descendiente.{n}.*`` -- and never at the bare path itself.
+So the bare path is not a blank waiting to be filled in; it is not a slot
+at all, and a row offered for it can only ever be empty. The manager
+offered exactly that: one permanently blank ``censo.divergencia`` row,
+which counted against the profile's own progress line and accepted a typed
+value that no reader in the system ever looks at.
+
+Their instances are therefore discovered from the record. The leaf names
+are not declared anywhere -- the writing family chooses them -- which is
+what separates these from a repeatable SECTION, whose row fields the
+schema does declare and which is why an empty repeatable section can still
+show what a row would hold while an empty namespace shows nothing.
+"""
+
 
 class ProfileFieldView(BaseModel):
     """One schema field paired with whatever the profile records for it."""
@@ -119,6 +150,21 @@ class ProfileFieldView(BaseModel):
 
     The manager receives the declaration rather than guessing from the
     current value, so an unanswered enum is still presented as a choice.
+    """
+    row_index: str | None = Field(default=None)
+    """Which instance of a repeated fact this row belongs to, if any.
+
+    A taxpayer with three socios gets three rows labelled ``NIF``, and
+    nothing in the label tells them apart -- the path that does is not a
+    column. So the instance is stated here as data and left to the surface
+    to present, rather than folded into the label: the label is the
+    schema's, translated, and a projection that edited it would be writing
+    copy.
+
+    The value is the stored index verbatim, not a display ordinal, because
+    it is the same identity the CLI row verbs address. ``None`` marks a row
+    that belongs to no instance -- every ordinary field, and the unindexed
+    implicit row.
     """
 
     @property
@@ -225,6 +271,153 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     return any(keyword in haystack for keyword in _MASK_KEYWORDS)
 
 
+def _field_view(
+    *,
+    path: str,
+    section_key: str,
+    field: ProfileFieldDefinition,
+    values: Mapping[str, str],
+    label_suffix: str = "",
+    row_index: str | None = None,
+) -> ProfileFieldView:
+    """Pair one path with the field declaring it and whatever the record holds there.
+
+    The declaring field is passed in rather than looked up from the path,
+    which is what keeps an indexed row as safe as an unindexed one. A path
+    carrying an index matches no schema field, so a lookup would hand the
+    masking authority ``sensitivity=None`` and drop the row to the keyword
+    net -- and a ``SECRET`` field's rows would then render in the clear
+    unless their leaf happened to be named like a credential. Here the
+    declaration travels with the row, so an instance of a secret field is
+    masked for the same reason the field is.
+
+    Masking reads the schema's own description, never the localized label.
+    Whether a value is a secret is a property of the field, not of the
+    language it is being read in: scanning translated copy would let a field
+    whose Spanish label omits "password" render in the clear while its
+    English row masked.
+    """
+    raw = values.get(path)
+    masked = mask_profile_field(path=path, label=field.description, sensitivity=field.sensitivity)
+    present = profile_value_is_present(raw)
+    return ProfileFieldView(
+        path=path,
+        label=f"{profile_field_label(section_key, field) or path}{label_suffix}",
+        # Mask only a value that exists; masking a blank would render dots
+        # for a field the operator has not filled in and read as "something
+        # is set here".
+        value=MASKED_PLACEHOLDER if (masked and present) else raw,
+        masked=masked,
+        required=field.required,
+        enum_values=field.enum_values,
+        row_index=row_index,
+    )
+
+
+def _repeatable_section_views(
+    section: ProfileSectionDefinition,
+    values: Mapping[str, str],
+    present: frozenset[str],
+) -> list[ProfileFieldView]:
+    """Expand one repeatable section into a row group per instance it holds.
+
+    A section with three socios yields three groups of the same declared
+    fields, addressed at ``section.INDEX.field`` — which is both where the
+    values live and where the completeness check already names its missing
+    entries, so the two now speak about the same rows.
+
+    A section holding NO rows keeps the single unindexed group, which is
+    what the page has always shown. That is the honest answer to "you have
+    no socios": the fields a socio would carry, blank. Rendering nothing
+    would say the section does not exist, and rendering one blank group
+    beside three filled ones — the defect this replaces — says the taxpayer
+    has none while they have three.
+    """
+    rows = tuple(profile_section_rows(section.key, present)) or ("",)
+    return [
+        _field_view(
+            path=f"{section.key}.{row}.{field.key}" if row else f"{section.key}.{field.key}",
+            section_key=section.key,
+            field=field,
+            values=values,
+            row_index=row or None,
+        )
+        for row in rows
+        for field in section.fields
+    ]
+
+
+def _namespace_field_views(
+    section_key: str,
+    field: ProfileFieldDefinition,
+    values: Mapping[str, str],
+) -> list[ProfileFieldView]:
+    """Expand one object/array field into a row per indexed leaf it holds.
+
+    Both halves of the address are discovered, because neither is declared:
+    the writing family chooses the instance count and the leaf names alike,
+    so the schema can say only that the path is a namespace. An empty
+    namespace yields no rows at all — see :data:`_NAMESPACE_FIELD_TYPES`.
+
+    Instances are ordered numerically; leaves keep the order the record
+    presents them, which is the order the writing family recorded them in
+    (``axis`` before ``artefact_value`` before ``source``) rather than an
+    alphabetisation that would scramble a row into ``artefact_value``,
+    ``axis``, ``source``.
+
+    The leaf is named in the label because it is the only thing telling two
+    rows of one instance apart, and it is a stored key rather than prose, so
+    it is shown as itself rather than translated.
+    """
+    prefix = f"{section_key}.{field.key}."
+    instances: dict[str, list[str]] = {}
+    for path in values:
+        if not path.startswith(prefix):
+            continue
+        index, _, leaf = path[len(prefix) :].partition(".")
+        if not leaf or not index.isdigit():
+            continue
+        leaves = instances.setdefault(index, [])
+        if leaf not in leaves:
+            leaves.append(leaf)
+    return [
+        _field_view(
+            path=f"{prefix}{index}.{leaf}",
+            section_key=section_key,
+            field=field,
+            values=values,
+            label_suffix=f" ({leaf})",
+            row_index=index,
+        )
+        for index in sorted(instances, key=int)
+        for leaf in instances[index]
+    ]
+
+
+def _section_field_views(
+    section: ProfileSectionDefinition,
+    values: Mapping[str, str],
+    present: frozenset[str],
+) -> list[ProfileFieldView]:
+    """Every row one section contributes, expanding whatever repeats."""
+    if section.repeatable:
+        return _repeatable_section_views(section, values, present)
+    views: list[ProfileFieldView] = []
+    for field in section.fields:
+        if field.type in _NAMESPACE_FIELD_TYPES:
+            views.extend(_namespace_field_views(section.key, field, values))
+            continue
+        views.append(
+            _field_view(
+                path=f"{section.key}.{field.key}",
+                section_key=section.key,
+                field=field,
+                values=values,
+            ),
+        )
+    return views
+
+
 def build_profile_overview(
     record: UserProfileRecord,
     *,
@@ -238,6 +431,15 @@ def build_profile_overview(
     it. A fact-driven walk would render only what is already filled in,
     which is precisely the information the operator does not need — they
     need to see the blanks.
+
+    What the schema cannot say alone is how MANY rows a declaration stands
+    for. A repeatable section's rows and an object field's instances both
+    live under an index the schema never mentions, so the record decides
+    their count and the schema decides their content. Reading only the
+    schema meant every such fact was invisible: a taxpayer's socios,
+    activities, properties, usage ratios and censal divergences were each
+    represented by one blank row whatever they held, on the page whose
+    whole purpose is saying what the profile holds.
 
     Args:
         record: The :class:`UserProfileRecord` whose values populate the view.
@@ -266,40 +468,15 @@ def build_profile_overview(
     # rows has no facts to strip; the rule that was missing is that an
     # absent row demands nothing.
     missing_required: list[str] = list(missing_required_field_paths(resolved_schema, values))
+    # The same presence rule the completeness check reads, so the rows this
+    # renders and the rows it reports missing fields for are one set.
+    present = frozenset(path for path, value in values.items() if profile_value_is_present(value))
     for section in resolved_schema.sections:
-        field_views: list[ProfileFieldView] = []
-        for field in section.fields:
-            path = f"{section.key}.{field.key}"
-            raw = values.get(path)
-            # Masking reads the schema's own description, never the
-            # localized label. Whether a value is a secret is a property of
-            # the field, not of the language it is being read in: scanning
-            # translated copy would let a field whose Spanish label omits
-            # "password" render in the clear while its English row masked.
-            masked = mask_profile_field(
-                path=path,
-                label=field.description,
-                sensitivity=field.sensitivity,
-            )
-            present = profile_value_is_present(raw)
-            field_views.append(
-                ProfileFieldView(
-                    path=path,
-                    label=profile_field_label(section.key, field) or path,
-                    # Mask only a value that exists; masking a blank would
-                    # render dots for a field the operator has not filled in
-                    # and read as "something is set here".
-                    value=MASKED_PLACEHOLDER if (masked and present) else raw,
-                    masked=masked,
-                    required=field.required,
-                    enum_values=field.enum_values,
-                ),
-            )
         sections.append(
             ProfileSectionView(
                 key=section.key,
                 title=profile_section_title(section),
-                fields=tuple(field_views),
+                fields=tuple(_section_field_views(section, values, present)),
             ),
         )
 

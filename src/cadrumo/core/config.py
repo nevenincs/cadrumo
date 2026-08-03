@@ -40,6 +40,8 @@ from ._config_integration_fields import (
 )
 from ._config_mcp_serving_fields import CadrumoMcpServingSettings
 from ._config_state_root import (
+    BUCKET_DB_DIRNAME,
+    BUCKETS_DIRNAME,
     FORMER_PRODUCT_DATABASE_FILENAME,  # noqa: F401 - public re-export for storage adapters
     PRODUCT_DATABASE_FILENAME,
     default_storage_root,
@@ -94,6 +96,14 @@ LIVE_READ_TEST_GOOGLE_OPT_IN_SETTINGS_FIELD = _live_test_config.LIVE_READ_TEST_G
 LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR = _live_test_config.LIVE_READ_TEST_GOOGLE_OPT_IN_ENV_VAR
 
 _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
+    # NOT the authority. ``core._storage_taxonomy`` declares every location,
+    # and settings derivation, tree materialisation, and the override rebuild
+    # all read it. This literal table survives only as the independent oracle
+    # the parity gate pins that declaration against, and as the surface the
+    # test modules that have not yet migrated still import. It is deleted with
+    # them; until then a subpath edited here without editing the taxonomy (or
+    # the reverse) reds the gate rather than silently moving operator data.
+    #
     # Every output directory whose default is not an explicit operator override
     # derives from ``cadrumo_local_storage_root`` under one category taxonomy.
     # That root is the platform user-data location in every run mode: a source
@@ -116,11 +126,13 @@ _STATE_ROOT_DERIVED_DIRS: dict[str, str] = {
     "cadrumo_log_dir": "logs",
     "cadrumo_llm_usage_dir": "llm-usage",
     "cadrumo_llm_run_telemetry_dir": "llm-run-telemetry",
+    "cadrumo_mcp_telemetry_dir": "telemetry",
     # Regenerable, evictable caches (the cache/ namespace, which also holds the
     # registry-pickle cache).
     "cadrumo_llm_cache_dir": "cache/llm-cache",
     "cadrumo_status_cache_dir": "cache/status-cache",
     "cadrumo_corpus_text_cache_dir": "cache/corpus-text",
+    "cadrumo_corpus_search_cache_dir": "cache/corpus-search",
     "cadrumo_validation_verdict_cache_dir": "cache/registry-verdict",
     # Durable generated outputs.
     "cadrumo_storage_backup_dir": "backups",
@@ -380,13 +392,12 @@ class Settings(CadrumoMcpServingSettings):
         description=(
             "Root directory for the LocalFileSystemProvider backend. Each namespace "
             "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
-            "paired with a `.meta.json` sidecar. The default is installed-run aware: a "
-            "source checkout resolves to the checkout's `var/storage`, while an installed "
-            "distribution roots at the platform user-data directory "
-            "(`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` or "
-            "`~/Library/Application Support/cadrumo/storage`) so the encrypted store never "
-            "lands inside a virtualenv or uv cache. An explicit `CADRUMO_LOCAL_STORAGE_ROOT` "
-            "override wins over the derived default."
+            "paired with a `.meta.json` sidecar. The default is the platform user-data "
+            "directory (`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` "
+            "or `~/Library/Application Support/cadrumo/storage`) in every run mode, so the "
+            "encrypted store never lands inside a virtualenv or uv cache. A source checkout "
+            "does not redirect it: a developer who wants the tree inside their checkout "
+            "sets this variable, and that explicit override wins over the derived default."
         ),
     )
     cadrumo_google_drive_root_folder_id: str | None = Field(
@@ -547,6 +558,18 @@ class Settings(CadrumoMcpServingSettings):
         description=(
             "Directory for the registry corpus source-text validation cache "
             "(normalised text keyed by content fingerprint)"
+        ),
+    )
+    cadrumo_mcp_telemetry_dir: Path = Field(
+        default=Path("telemetry"),
+        description=("Directory for MCP session trajectory telemetry (one file per session, pruned by age and count)"),
+    )
+    cadrumo_corpus_search_cache_dir: Path = Field(
+        default=Path("cache") / "corpus-search",
+        description=(
+            "Directory for the corpus-search lexical index (a SQLite database "
+            "stemmed from the bundled corpus on first search, and current "
+            "thereafter because that corpus is static)"
         ),
     )
     cadrumo_validation_verdict_cache_dir: Path = Field(
@@ -916,7 +939,7 @@ class Settings(CadrumoMcpServingSettings):
 
     # ── Status reader ───────────────────────────────────────────────────────
     cadrumo_status_cache_dir: Path = Field(
-        default=Path("status-cache"),
+        default=Path("cache") / "status-cache",
         description="Directory for the short-lived AEAT status-page cache",
     )
     cadrumo_status_cache_ttl_s: int = Field(
@@ -1085,7 +1108,17 @@ class Settings(CadrumoMcpServingSettings):
             )
             return self
         refuse_former_product_database(self.cadrumo_local_storage_root, bucket_id=bucket_id)
-        bucket_db_path = self.cadrumo_local_storage_root / "buckets" / bucket_id / "db" / PRODUCT_DATABASE_FILENAME
+        # The layout names come from the one core storage authority. This
+        # fallback used to re-type them, unpinned against the code that
+        # actually provisions a bucket, so a rename would have routed the
+        # cold-start database at a directory nothing else agreed on.
+        bucket_db_path = (
+            self.cadrumo_local_storage_root
+            / BUCKETS_DIRNAME
+            / bucket_id
+            / BUCKET_DB_DIRNAME
+            / PRODUCT_DATABASE_FILENAME
+        )
         object.__setattr__(
             self,
             "cadrumo_database_url",
@@ -1101,7 +1134,7 @@ class Settings(CadrumoMcpServingSettings):
         blob, audit), the append-only telemetry logs, the regenerable caches,
         and the durable generated-output directories all default to a subpath
         under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, per
-        the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy. That root is the platform
+        the core storage taxonomy. That root is the platform
         user-data location in every run mode, never inside a virtualenv or uv
         cache — the hazard a checkout-relative ``var/...`` default carries on
         an installed distribution. A developer who wants the tree inside their
@@ -1114,13 +1147,23 @@ class Settings(CadrumoMcpServingSettings):
         placeholder default. The validator only computes paths; provider
         factories and custody loaders decide how those directories are opened.
 
+        Which fields those are, and what subpath each takes, is not decided
+        here: the typed declaration is iterated directly so this validator
+        cannot drift from it by carrying a table of its own. Members whose
+        field is a deliberate opt-in override are excluded by the declaration
+        rather than by a special case here -- deriving a default into one would
+        silently retire the branch that selects on the field being unset.
+
         ``mode="after"`` guarantees ``cadrumo_local_storage_root`` is already
         populated when this runs.
         """
-        for field_name, subpath in _STATE_ROOT_DERIVED_DIRS.items():
-            if field_name in self.model_fields_set:
+        from ._storage_taxonomy import ROOT_DERIVED_STORAGE_LOCATIONS
+
+        for location in ROOT_DERIVED_STORAGE_LOCATIONS:
+            field_name = location.settings_field
+            if field_name is None or field_name in self.model_fields_set:
                 continue
-            object.__setattr__(self, field_name, self.cadrumo_local_storage_root / subpath)
+            object.__setattr__(self, field_name, self.cadrumo_local_storage_root / location.relative_path())
         return self
 
     @field_validator(
@@ -1250,11 +1293,13 @@ class Settings(CadrumoMcpServingSettings):
         "aeat_normatives_root",
         "cadrumo_iva_catalogue_root",
         "cadrumo_corpus_text_cache_dir",
+        "cadrumo_corpus_search_cache_dir",
         "cadrumo_validation_verdict_cache_dir",
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
         "cadrumo_llm_run_telemetry_dir",
+        "cadrumo_mcp_telemetry_dir",
         "cadrumo_submissions_dir",
         "cadrumo_inbox_dir",
         "cadrumo_inbox_pdf_dir",
@@ -1324,11 +1369,19 @@ def _active_profile_pointer_fingerprint() -> tuple[object, ...]:
     than the construction it guards, so correctness here costs nothing worth
     measuring. A missing pointer is a distinct, legitimate state (logged out)
     and gets its own key.
+
+    The pointer filename comes from the same taxonomy member the pointer
+    reader itself resolves, rather than being re-typed here. The root is still
+    read straight from the environment: that read is deliberately independent
+    of the settings model it guards, because it has to answer "which pointer
+    would the next construction see" BEFORE any settings exist to ask.
     """
     import os
 
+    from ._storage_taxonomy import StorageCategory, storage_location
+
     root = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT") or str(default_storage_root())
-    pointer = Path(root) / "active-profile"
+    pointer = Path(root) / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
     try:
         stat = pointer.stat()
     except OSError:
@@ -1370,22 +1423,42 @@ def reset_settings_cache() -> None:
     _constructed_settings.cache_clear()
 
 
+STORAGE_ROOT_MODE: Final[int] = 0o700
+"""Permission mode :func:`ensure_storage_tree` requests on the state root.
+
+Named because a second reader needs it: a drift check that verifies the root
+still carries what was asked for has to compare against the same value, and a
+literal repeated in both places lets the check keep passing against a mode the
+materialiser no longer requests.
+"""
+
+
 def ensure_storage_tree(settings: Settings | None = None) -> Path:
     """Materialise the state root and its declared directories, and return the root.
 
-    :data:`_STATE_ROOT_DERIVED_DIRS` declares where every derived output
-    lands, and the validator above turns those declarations into absolute
-    paths -- but nothing built them. Directories appeared only when some
-    consumer happened to write: the local provider made its root on first
-    write, the journal repository made its own, bucket provisioning made a
-    bucket's tree. A fresh machine therefore held whichever subset of the
-    taxonomy had been reached, and "where does my data live" had no answer
-    that could be given before the fact.
+    The taxonomy declares where every derived output lands and the validator
+    above turns those declarations into absolute paths -- but nothing built
+    them. Directories appeared only when some consumer happened to write: the
+    local provider made its root on first write, the journal repository made
+    its own, bucket provisioning made a bucket's tree. A fresh machine
+    therefore held whichever subset of the taxonomy had been reached, and
+    "where does my data live" had no answer that could be given before the
+    fact.
 
-    This is that answer. It creates the root and every declared directory,
-    returns the root, and is safe to call repeatedly -- so a caller that
-    needs the tree can say so, instead of relying on having written
-    something first.
+    This is that answer: it creates the root and every declared directory,
+    returns the root, and is safe to call repeatedly -- so a caller that needs
+    the tree can say so, instead of relying on having written something first.
+
+    Which directories those are is not decided here.
+    :func:`~core._storage_taxonomy.storage_tree_targets` derives them from the
+    typed declaration, so this materialiser cannot drift from the taxonomy by
+    carrying a second list of its own. That matters most for the distinction a
+    second list gets wrong: file-valued members contribute their parent and
+    explicitly not their leaf, and which members those are is a typed fact on
+    the declaration rather than a guess from a field-name suffix -- a suffix
+    guess cannot reach the per-bucket file names no naming convention governs,
+    and putting a directory where a document must be written fails much later,
+    at the write.
 
     Restrictive permissions are requested on the root because the tree holds
     encrypted taxpayer records, their key material, and the audit trail over
@@ -1406,22 +1479,12 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
             refusal names the offending path: a half-built tree is worse than
             an absent one, because the gap only surfaces later, at a write.
     """
+    from ._storage_taxonomy import storage_tree_targets
+
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)
 
-    targets = [root]
-    for field_name, _subpath in _STATE_ROOT_DERIVED_DIRS.items():
-        value = getattr(resolved, field_name, None)
-        if value is None:
-            continue
-        candidate = Path(value)
-        # The taxonomy names one file among the directories
-        # (``cadrumo_usage_ratios_path``). Its field name says so, and the
-        # directory that has to exist is its parent -- creating the leaf
-        # itself would put a directory where a JSON document belongs.
-        targets.append(candidate.parent if field_name.endswith("_path") else candidate)
-
-    for target in targets:
+    for target in (root, *storage_tree_targets(resolved)):
         if target.exists() and not target.is_dir():
             raise CoreValidationError(
                 f"Cadrumo state directory {target} is occupied by a file; "
@@ -1435,7 +1498,7 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
             ) from exc
 
     try:
-        root.chmod(0o700)
+        root.chmod(STORAGE_ROOT_MODE)
     except (OSError, NotImplementedError):  # pragma: no cover - platform-dependent
         _LOGGER.debug("could not restrict permissions on %s; relying on filesystem ACLs", root)
 
@@ -1463,7 +1526,18 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     token, log, and storage-substrate paths stay coherent. The helper preserves
     ``model_fields_set`` to keep the distinction between explicit operator
     settings and computed defaults visible to route classification.
+
+    When the root itself is overridden, every derived field that the caller did
+    not set and the source had not set explicitly is dropped from the merged
+    dict so it re-derives under the NEW root. Without that, flattening through
+    ``model_dump`` turns each previously-derived absolute path into an explicit
+    value and the whole tree stays pinned to the old root -- a leak that does
+    not fail any single test, because each one still reads a path that exists.
+    The field set is taken from the taxonomy, so a member added there is
+    covered here the moment it lands.
     """
+    from ._storage_taxonomy import ROOT_DERIVED_STORAGE_FIELDS
+
     current = load_settings()
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the
     # merged dict through ``model_validate`` so a malformed override
@@ -1477,7 +1551,7 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     ):
         merged.pop("cadrumo_database_url", None)
     if "cadrumo_local_storage_root" in overrides:
-        for derived_field in _STATE_ROOT_DERIVED_DIRS:
+        for derived_field in ROOT_DERIVED_STORAGE_FIELDS:
             if derived_field not in overrides and derived_field not in current.model_fields_set:
                 merged.pop(derived_field, None)
     merged.update(overrides)
