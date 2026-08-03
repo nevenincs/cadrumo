@@ -79,6 +79,7 @@ from pydantic import TypeAdapter
 from ...core import BindingSourceKind as _BindingSourceKind
 from ...core import Period as _Period
 from ...core.errors import BaseSeverity as _BaseSeverity
+from ...core.parsing import parse_bool
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from ...core.resources import resources as _resources
 from ...core.time import now as _utc_now
@@ -820,14 +821,21 @@ def _decimal_input(input_id: str, value: object) -> Decimal:
 
 
 def _boolean_input(input_id: str, value: object) -> bool:
+    """Coerce a binding input to a boolean, refusing a word nothing can read.
+
+    Resolves through the one canonical vocabulary rather than the two sets
+    that used to be spelled out here. Those sets were not a superset of the
+    canonical one and not a subset either: they took ``s`` which the canonical
+    vocabulary lacked, and missed ``sí`` which it had. Two overlapping
+    dialects of the same idea is how ``si`` came to mean yes at this boundary
+    and no at the maritime reader.
+    """
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        normalized = value.strip().lower()
-        if normalized in {"1", "true", "s", "si", "yes"}:
-            return True
-        if normalized in {"0", "false", "n", "no"}:
-            return False
+        parsed = parse_bool(value)
+        if parsed is not None:
+            return parsed
     raise ModeloBuilderError(f"binding input {input_id!r} must be a boolean value")
 
 
