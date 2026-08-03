@@ -675,12 +675,56 @@ production-framed across **36 distinct production modules**.
 | --- | --- |
 | under a declared taxonomy subpath | 212,659 |
 | pytest tmp, no declared segment | 33,989 |
-| inside the checkout | **0** |
-| under the real user home | **0** |
-| anywhere else | **0** |
+| inside the checkout | 0 |
+| under the real user home | **not measurable by this instrument -- see below** |
+| anywhere else | 0 |
 
-For the paths the suite exercises, every production write landed under a taxonomy-declared
-root or in test scaffolding. That is the containment property, and it holds.
+For the paths the suite exercises *and the writes this instrument can observe*, every
+production write landed under a taxonomy-declared root or in test scaffolding.
+
+**The user-home row originally read `0`, and that was wrong. It is corrected here rather
+than quietly, because it was the strongest-looking line in the whole review and it was an
+artefact of the instrument rather than a finding about the tree.**
+
+There is a live leak the instrument could not see. The operator's real diagnostic log at
+`<user-data>/cadrumo/storage/logs/cadrumo.log` measured **4,909,370 bytes**, up from
+492,406 earlier the same day and last modified *after* the instrumented run had finished.
+Every pytest invocation in this shared worktree appends to it, and under fleet load it
+grew roughly ten-fold in hours. Verified independently: **zero records across all five
+worker logs mention that path**, while the file grew by about 4.4 MB.
+
+**Two compounding reasons, and the second is the more general one.**
+
+*Ordering.* Logging binds its handler when the logging module is configured, ahead of the
+pytest plugin's `pytest_configure` where the wrappers install. A handler already bound
+writes through a descriptor the wrapper never wrapped.
+
+*Granularity, which ordering does not explain and which perfect ordering would not fix.*
+The handler is a `RotatingFileHandler`: it opens the file **once**, and every subsequent
+record goes through the retained stream's `write`, never through `open()` or
+`Path.write_text` again. Even if the wrapper had installed first it would have observed
+exactly **one** event -- the handler's initial open -- and none of the millions of bytes
+that followed. **Call-site wrapping cannot see append-through-a-retained-handle at all**,
+and that generalises past logging to any long-lived writer: an open database connection,
+a streaming export, a held file object.
+
+**So "every primitive wrapped" does not imply "every write observed", and I stated the
+first as though it entailed the second.** This is the fifth mechanism recorded earlier in
+this document recurring in a third form -- the instrument was not broader than its name
+this time but *narrower in time and in granularity*, and a real measurement again got the
+wrong name attached to it. The guard is the same one: establish what the instrument can
+structurally see before quoting what it did not find. **A zero is a claim about the
+instrument until it is shown to be a claim about the world.**
+
+The remedy is in flight: `core/logging.py` is modified in the working tree and uncommitted.
+
+**One observation I can report but not attribute.** The operator's real storage root
+carries a fully materialised taxonomy tree -- `audit`, `blobs`, `cache`, `secrets`,
+`submissions` and the rest -- every directory stamped 12:53, before the instrumented run
+began. Whether a test run created it or ordinary operator use did is **not established**,
+and I record it as an open question rather than a finding. It is the obvious next thing to
+measure once the logging fix lands, because the same instrument blindness applies to
+whatever created it.
 
 **What this run is not.** It reported 118 failed / 22,229 passed. **Those failures are
 instrumentation artefacts and this run is not a gate measurement** — wrapping
