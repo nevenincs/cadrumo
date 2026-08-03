@@ -220,7 +220,13 @@ def build_review_package(
     Members are written to a temporary staging directory then packed with
     :func:`~core.corpus_manifest.build_corpus_bundle`, which itself
     writes atomically (temp-file-then-rename) so a build failure never
-    leaves a partial package at ``output_path``.
+    leaves a partial package at ``output_path``. The staging directory is a
+    sibling of ``output_path`` (``dir=output_path.parent``), never the
+    OS-shared temp directory: it holds the rendered fichero-BOE draft plus
+    the revision's typed observations and bundled ledger evidence in
+    plaintext for the few milliseconds the archive build takes, and a
+    world-shared temp location is not an acceptable home for that
+    (``sensitive-financial-data-secure-storage-only``).
 
     Raises:
         ReviewPackageRevisionStateError: If ``revision.state`` is not in
@@ -267,7 +273,17 @@ def build_review_package(
         else '{"present": false}'
     )
 
-    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-") as staging_name:
+    # Pin staging beside the operator-chosen destination rather than the
+    # OS-shared temp directory: the members below are plaintext filing
+    # evidence, and the default ``tempfile`` location is not a sanctioned
+    # home for that (``sensitive-financial-data-secure-storage-only``).
+    # ``mkdir`` runs before the ``TemporaryDirectory`` call because the
+    # latter requires ``dir`` to already exist; a destination whose parent
+    # cannot be created (permission denied, a path component is a file, disk
+    # full) refuses loudly here rather than silently falling back to
+    # ``tempfile.gettempdir()``.
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-", dir=output_path.parent) as staging_name:
         staging_root = Path(staging_name)
         (staging_root / _DRAFT_MEMBER).write_bytes(draft_bytes)
         (staging_root / _REVISION_MEMBER).write_text(
