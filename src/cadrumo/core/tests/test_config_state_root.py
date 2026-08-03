@@ -15,6 +15,7 @@ from .._config_state_root import (
     platform_user_data_root,
     resolve_state_root,
 )
+from .._storage_taxonomy import StorageCategory, storage_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -56,19 +57,39 @@ def test_storage_root_derives_every_substrate_dir(tmp_path: Path) -> None:
 
 
 def test_explicit_substrate_override_still_wins(tmp_path: Path) -> None:
-    """An explicit substrate directory kwarg overrides the derived path."""
+    """An explicit substrate directory kwarg overrides the derived path.
+
+    Measured against a control built from the same root *without* the
+    override, so "the override won" is a comparison between two resolutions
+    rather than the accessor agreeing with itself. The control is what keeps
+    the first assertion from going vacuous: it proves the chosen override
+    target is not simply where derivation would have put the directory anyway.
+
+    Where the derived location lands is deliberately not restated here. That
+    is :mod:`test_output_dir_state_root`'s subject, checked against the
+    retained derivation table -- an oracle independent of the taxonomy, so the
+    on-disk name is pinned somewhere that cannot pass by comparing the
+    declaration with itself.
+    """
     resolution = resolve_state_root(_state_root_inputs_under(tmp_path))
     explicit_secret_dir = tmp_path / "operator-secrets"
 
     with isolated_aeat_env():
-        settings = settings_without_env_file(
+        derived = settings_without_env_file(cadrumo_local_storage_root=resolution.storage_root)
+        overridden = settings_without_env_file(
             cadrumo_local_storage_root=resolution.storage_root,
             cadrumo_secret_store_dir=explicit_secret_dir,
         )
 
-    assert settings.cadrumo_secret_store_dir == explicit_secret_dir
-    assert settings.cadrumo_secret_store_dir != settings.cadrumo_local_storage_root / "secrets"
-    assert settings.cadrumo_blob_store_dir == settings.cadrumo_local_storage_root / "blobs"
+    assert storage_path(StorageCategory.SECRETS, settings=overridden) == explicit_secret_dir
+    assert storage_path(StorageCategory.SECRETS, settings=derived) != explicit_secret_dir
+    # Overriding one substrate directory must not disturb a sibling that is
+    # still deriving. Two independently built Settings, so this compares a
+    # resolution against a resolution rather than a value against itself.
+    assert storage_path(StorageCategory.BLOBS, settings=overridden) == storage_path(
+        StorageCategory.BLOBS,
+        settings=derived,
+    )
 
 
 def test_the_live_default_follows_the_captured_platform_inputs(tmp_path: Path) -> None:
