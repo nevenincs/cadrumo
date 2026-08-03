@@ -103,10 +103,9 @@ def _required_wait_seconds(consecutive_failures: int) -> int:
 
 def login_throttle_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the throttle sidecar path inside the bucket keystore directory."""
-    from ..bucket import keystore_path, validate_keystore_separation
+    from ..bucket import keystore_sidecar_path
 
-    validate_keystore_separation(storage_root, bucket_id)
-    return keystore_path(storage_root, bucket_id) / LOGIN_THROTTLE_FILENAME
+    return keystore_sidecar_path(storage_root=storage_root, bucket_id=bucket_id, filename=LOGIN_THROTTLE_FILENAME)
 
 
 def _read_state(path: Path) -> LoginThrottleState:
