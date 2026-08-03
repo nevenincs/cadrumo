@@ -39,8 +39,6 @@ from ._fsync import fsync_parent_dir
 if TYPE_CHECKING:  # pragma: no cover — annotation-only import
     from .errors import CadrumoError
 
-_POINTER_FILENAME = "active-profile"
-
 
 def pointer_path(root: Path) -> Path:
     """Return the canonical ``active-profile`` pointer path under the Cadrumo root.
@@ -51,7 +49,16 @@ def pointer_path(root: Path) -> Path:
     Returns:
         ``root / "active-profile"`` without touching the filesystem.
     """
-    return root / _POINTER_FILENAME
+    # Deferred for the same reason ``restore_pointer`` defers ``atomic_write``
+    # below: this module is read during Settings() bootstrap
+    # (core.config._resolve_database_url_for_active_profile imports
+    # pointer_path/read_pointer from here before Settings exists). A
+    # module-level import here would run at that same early point; deferring
+    # to call time keeps the taxonomy import off the bootstrap path even
+    # though ``_storage_taxonomy`` itself does not import ``.config``.
+    from ._storage_taxonomy import StorageCategory, storage_location
+
+    return root / storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).relative_path()
 
 
 def read_pointer(root: Path) -> BucketPointer | None:
