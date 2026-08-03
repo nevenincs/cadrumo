@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Callable, Iterable, Sequence
+from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from stat import S_ISREG
 from typing import TYPE_CHECKING, Any, Literal, Protocol
@@ -248,9 +249,56 @@ def resolve_project_path(value: str | Path, *, state_root_inputs: StateRootInput
         The fully resolved absolute :class:`pathlib.Path`.
     """
     candidate = Path(value).expanduser()
-    if candidate.is_absolute():
-        return candidate.resolve()
-    return (_relative_path_anchor(state_root_inputs) / candidate).resolve()
+    if not candidate.is_absolute():
+        candidate = _relative_path_anchor(state_root_inputs) / candidate
+    return _resolved_path(str(candidate))
+
+
+@lru_cache(maxsize=4096)
+def _resolved_path(path_text: str) -> Path:
+    """Resolve one fully-composed path, memoised for the process.
+
+    ``Path.resolve`` is a syscall, not a string operation: on Windows it
+    walks every component through ``nt._getfinalpathname``, so resolving a
+    28-field settings tree costs a few hundred kernel round trips. Nothing
+    about that work varies with the caller -- the same composed path text
+    resolves to the same location -- yet ``Settings`` re-derives every
+    configured path on every construction, and a construction happens
+    several times per operator action. One profile field edit measured 424
+    ``_getfinalpathname`` calls, none of which could return a different
+    answer than the call before it.
+
+    The key is the composed path TEXT rather than the caller's argument, so
+    the relative and absolute arms share one cache and a relative override
+    cannot collide with a differently-anchored path of the same name.
+
+    Memoising is safe against the case that actually occurs -- a configured
+    directory resolved before it exists and created afterwards -- because a
+    path's resolution does not change when it is created: measured on this
+    platform across deep nesting, mixed case, and files. What DOES change a
+    resolution is replacing a real directory with a symlink or junction
+    pointing elsewhere, which is why :func:`clear_resolved_path_cache`
+    exists and why any caller re-materialising a storage tree under a live
+    process must call it.
+    """
+    return Path(path_text).resolve()
+
+
+def clear_resolved_path_cache() -> None:
+    """Drop memoised path resolutions after the filesystem moves underneath.
+
+    Required only when a path already resolved during this process is made
+    to resolve somewhere ELSE -- replacing a directory with a symlink or
+    junction to a different target. Creating, deleting, or re-creating a
+    directory at the same location does not change its resolution and needs
+    no invalidation.
+
+    This is the path-resolution counterpart of the engine and routed-settings
+    invalidations a bucket re-materialisation already performs; a caller that
+    swaps a storage root's identity beneath a running process calls all of
+    them.
+    """
+    _resolved_path.cache_clear()
 
 
 def normalize_project_relative_path(
