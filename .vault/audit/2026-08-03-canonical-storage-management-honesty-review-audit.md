@@ -718,147 +718,39 @@ instrument until it is shown to be a claim about the world.**
 
 The remedy is in flight: `core/logging.py` is modified in the working tree and uncommitted.
 
-**One observation I can report but not attribute.** The operator's real storage root
-carries a fully materialised taxonomy tree -- `audit`, `blobs`, `cache`, `secrets`,
-`submissions` and the rest -- every directory stamped 12:53, before the instrumented run
-began. Whether a test run created it or ordinary operator use did is **not established**,
-and I record it as an open question rather than a finding. It is the obvious next thing to
-measure once the logging fix lands, because the same instrument blindness applies to
-whatever created it.
+**A limitation of the method, not a footnote on one row.** The blind spot above is a
+property of containment-by-primitive-wrapping and should be read as bounding every such
+census, including this one: **a long-lived writer that holds its handle is invisible after
+its first open.** A log handler, an open database connection, a streaming export, any
+retained file object — the wrapper sees the `open()` and then nothing, however many bytes
+follow. Any future containment run must either instrument at the descriptor level or
+enumerate the retained-handle writers separately and measure them by file size. The
+general form: **a zero is a claim about the instrument until it is shown to be a claim
+about the world.**
 
-**What this run is not.** It reported 118 failed / 22,229 passed. **Those failures are
-instrumentation artefacts and this run is not a gate measurement** — wrapping
-`builtins.open` and `Path.mkdir` perturbs tests that assert on or patch them, and the run
-carries both caveats the closure reference records anyway (parallel, and 40 minutes
-against a moving tree). It was run to capture destinations, and only the destination log
-should be read from it.
+**The open question is answered, and the answer is the reassuring one.** The materialised
+tree under the operator's real root is empty shells. Verified directly: **`secrets/`
+contains nothing** — no credentials, no key material, no taxpayer data — and the whole
+21-directory tree holds five files, all of them derived caches plus the log. The uniform
+12:53 stamp is bootstrap creating every declared directory whether or not anything writes
+to it, which is why they share one timestamp. Recording it as a question rather than a
+finding was the right call, and the question was worth asking.
 
-**The residual, which was the point.** Intersecting the static site list against the
-observed frames: **78 of 97 static sites executed**; 19 did not; 13 sit in modules that
-never wrote at all. Filtering those to sites whose destination also arrives from
-elsewhere gives **12 raw residual sites across 6 modules** — and reading all twelve
-reduces it further, because four are false positives my census still over-matches:
-`repository.rename(...)`, `BucketMaintenanceService().rename(...)`,
-`session.touch(now)` and `session.touch(instant)` are object methods, not filesystem
-calls. The arity filter caught two-argument `str.replace`; it does not catch a
-single-argument `.rename` or `.touch` on a non-`Path`. **The static count of 97 therefore
-still carries a handful of non-filesystem calls, and the honest figure is a little lower
-again.**
+**The logging leak is fixed at the root and the fix is committed** — two premature
+`get_logger` calls in a package documented as import-light, retired; `core/logging.py` is
+clean in the working tree. A 640-test slice measured a **0-byte** log delta.
 
-**The genuine residual is eight sites in two modules**, both registry parity and
-verification tooling, neither handling taxpayer data:
-
-- `domain/calculations/registry/_parity_tapes.py` — four sites in `save_parity_scenario`
-  and `save_parity_tape`, both pure transport primitives taking `path` as a parameter, so
-  their enrollment question relocates to callers that the suite also did not exercise.
-- `domain/calculations/registry/_workbook_parity.py` — four sites inside the two
-  unpinned `TemporaryDirectory` scratch areas already recorded above and queued for a
-  `dir=` anchor.
-
-**So the last unknown is closed as a list rather than as an estimate.** The class "neither
-static nor runtime can speak for" is eight sites in two dev-facing modules — small enough
-to read in a sitting, and read. Of the fourteen modules carrying static nested-ungoverned
-compositions, five were observed writing at runtime, so the static findings are not
-theoretical either.
-
-### verified-sound | none | What the record claims and the code supports
-
-Stated because a clean result is a result, and because several of these were the
-likeliest places to find a problem.
-
-`R20` holds exactly as written: `_STATE_ROOT_DERIVED_DIRS` is absent from every file at
-HEAD, not merely unblocked. `S73`/`S74` genuinely landed — all four dormant categories
-and the companion TTL field are deleted, and no member declares a `dormant_reason`
-today. `R7`'s operator surface is real and works: `config storage list` enumerates 26
-resolvable locations of 41 declared members, `check` reports healthy on a fresh tree,
-`reclaim logs` succeeds and `reclaim secrets` refuses with a localised message naming the
-lifecycle class, the entry count and the path.
-
-Gate construction quality is high and above what this codebase's rules require. The
-binding gate carries a non-empty-discovery floor and detector-fires controls in both
-directions; the materialisation-parity gate asserts both sets non-degenerate before
-comparing them, and proves its unexplained-directory detector can fire; the containment
-proof derives from the real verb rather than a copied predicate. I looked specifically
-for a gate whose subject is empty or whose positive control is missing and did not find
-one beyond the two already confessed (`S18`'s fixed-not-overridable assertion, true by
-absence, and the provenance gate's narrowed scope, which its own module docstring
-states accurately).
-
-The self-reported weaknesses I was asked to verify rather than rediscover all check out
-as described: the provenance gate's census does undercount by construction;
-`cadrumo_database_url` is a `str` and invisible to the `Path`-typed binding machinery;
-`S83`, `S10` and `S81` are genuinely open and honestly recorded as such; the criterion
-re-scope excluding tests is correctly and consistently applied. I found no third
-unaccountable checkbox, though I cannot verify checkbox authorship — one shared git
-identity — so absence of evidence is the most I can offer there.
-
-### closing-measurement | none | Both gates green at a pinned object; two blockers remain and one is unchanged
-
-**Measured by me, pinned by construction** — SHA resolved into a variable first, that
-literal object archived, extracted, run serially with no marker filter:
-
-```
-pinned  471ad349d6e6b7ae48d2021dbf950543e56a9595
-result  164 passed, 0 failed
-gates   settings-lifecycle, liveness, provenance, binding,
-        materialisation-parity, taxonomy, storage-management service
-```
-
-This is an independent confirmation of the campaign's own report at `c16bb9a0ae`, taken
-at a different object by a different party. **The first blocker is closed.** The
-enrollment change landed, and with it both the five literals and the three unbacked
-consumer claims that shared its cause.
-
-**The other three, re-checked at the same pinned object rather than assumed:**
-
-- *Nested-ungoverned set larger than recorded* — **substantially reduced, not closed.**
-  The secret store's five file leaves are declared, its grammar re-anchored, the
-  active-profile pointer enrolled, and the dead tempfile bridge deleted rather than
-  pinned. The Families 1 and 2 remainder and all of Family 4 are still to land.
-- *Closure-blocking work has no plan row* — **unchanged at every committed object, and
-  resolved in an uncommitted working-tree edit.** Measured with a parse that touches no
-  shell, at three objects — `72b7b06ad3`, the pinned `471ad349d6`, and a later HEAD
-  `9f6969150e` — the plan reads identically: 22 phases, 82 Steps, 54 checked, 28 open,
-  and `W02.P06`, `W02.P07`, `W02.P08` and `W03.P11` each carry **zero Steps**. The same
-  parse against the **working tree**, where the plan file is `M`, reads 23 phases, 114
-  Steps, 69 checked, 45 open, with `W02.P06` carrying 11 Steps of which 5 are checked.
-  **The rows have been written; they are not committed.** The finding holds against every
-  object a reader can fetch, and the remedy is already drafted — a better position than
-  either "untracked" or "tracked" describes alone.
-
-  The production write-call census is a partial exception worth stating precisely: **the
-  artefact now exists** — it is in this document, static and runtime both — but its
-  tracking row exists at no committed object, so the evidence is no longer missing while
-  the accountability still is.
-
-  **A note on how this was nearly amended away.** It was reported to me as an artefact of
-  my own tooling: plan identifiers are written in backticks, and a pattern built inside a
-  double-quoted shell string has its backticks eaten as command substitution, so every
-  phase would report zero. **The mechanism is real. It is not what happened here.** Two
-  checks refute it — a parse run from a script file with no shell anywhere in the path
-  reproduces the four empty phases exactly at three separate committed objects; and the
-  original shell-embedded parse had returned 22 phases with correct titles and correct
-  non-zero Step counts for eighteen of them, which eaten backticks could not produce,
-  since the pattern would then have matched nothing at all rather than selectively. The
-  114/69/45 figures are the working tree's, and they match no committed object.
-
-  This is the same root failure as the other four recorded here, in its fourth mechanism,
-  **and it is the most instructive because it arrived with a compelling technical
-  explanation attached.** A bare wrong number invites checking; a wrong number carrying a
-  credible mechanism supplies the verification a reader would otherwise go looking for,
-  and is therefore harder to catch than a bare one. The guard that worked was the cheap
-  one — take a load-bearing number a second time by a different mechanism, and, the part
-  that mattered here, **take it at a named object rather than at whatever the filesystem
-  happens to hold.**
-- *Criterion unmet by the plan's own open Steps* — **unchanged in kind, larger in count.**
-  28 open Steps against 25 when this review opened. That rise is healthy rather than
-  worrying: it is the enumeration and the gate work being written down.
-
-**So the reason closure is blocked has changed, and the change is worth naming.** It was
-"the campaign's own enforcement is red at HEAD" — an integrity problem. It is now "the
-declared work is not finished, and one phase of it is still untracked" — an ordinary
-completion problem. The first kind should stop a closure claim outright; the second is a
-burndown with a known end.
+**Two residues, both measured here rather than inherited.** First, the log is **still being
+appended to after the fix landed**: 4,911,619 bytes at 19:30 against 4,911,417 reported
+earlier, with the fix committed at 19:22. That is ~200 bytes, not the earlier ~4.4 MB
+runaway, so the fix plainly worked on the path it targeted — but "closed" is a stronger
+word than a single-slice measurement supports, and either another path still logs or a
+process predating the fix is still running. Second, ~82 MB of derived cache sits under the
+real root (two registry pickles at 22.9 MB each, a 31.3 MB corpus-text cache, a 126-byte
+verdict file), stamped during today's fleet activity. Those are regenerable caches and
+`cache/` under the storage root is a *correct* location for genuine operator use; the open
+question is only whether test runs land there, which `S45`, `S51` and `S52` cover
+precisely. A full-suite measurement after those land settles it either way.
 
 ### the-site-gate-b-found-that-i-missed | medium | My enumeration missed a tracked site, and the reason is procedural as well as technical
 
