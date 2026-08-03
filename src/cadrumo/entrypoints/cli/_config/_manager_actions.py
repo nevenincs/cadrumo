@@ -395,12 +395,11 @@ def _run_certificate() -> ManagerActionOutcome:
     Everything collected lands in the encrypted profile store under the
     ``auth`` section, never a plain file.
 
-    Args:
-        present: The door that shows the page and returns what the
-            operator committed, or ``None`` for the real screen. Injected
-            so the refusal and commit branches can be driven without a
-            terminal, which is the only way to prove that a refused
-            answer writes nothing.
+    Takes no parameters, deliberately. How the page is shown is bound by
+    the caller through ``presenting_forms_through``, which is what lets
+    the refusal and commit branches be driven without a terminal — and it
+    does so without this action carrying a door of its own for someone to
+    aim elsewhere.
     """
     from ....adapters.inbound.tui import ManagerActionOutcome
     from ....application.auth import list_operator_certificate_sources
