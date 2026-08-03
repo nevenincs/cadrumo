@@ -22,7 +22,7 @@ from datetime import date
 import pytest
 
 from ....tests.user_profile import schema_valid_placeholder
-from .. import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType, load_user_profile_schema
+from .. import NUMERIC_PROFILE_FIELD_TYPES, ProfileFieldType, UserProfileFact, load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -94,6 +94,44 @@ def test_a_date_field_gets_a_real_calendar_date_rather_than_the_sentinel() -> No
     assert refused == [], "the shared filler emitted a value the date write-door refuses:\n" + "\n".join(refused)
 
 
+def test_a_boolean_field_gets_a_value_that_survives_as_a_boolean() -> None:
+    """The write door admits the sentinel here, which is exactly the risk.
+
+    BOOLEAN is the one declared type the door does not check, so a sentinel
+    in a boolean field is accepted and then read as ``False`` by every
+    consumer that asks whether the flag is set. Nothing refuses it and
+    nothing reports it -- the wrong answer simply arrives quietly, which is
+    worse than the loud refusal a date field would have produced.
+
+    Asserted through the fact carrier rather than by matching a token,
+    because the property that matters is that the value survives as a
+    ``bool``. The carrier promotes ``"true"`` / ``"false"`` back to a real
+    boolean on re-parse and leaves anything else a ``str``, so this is the
+    check the sentinel actually fails.
+    """
+    schema = load_user_profile_schema()
+    boolean_fields = [
+        (section, field)
+        for section in schema.sections
+        for field in section.fields
+        if field.type is ProfileFieldType.BOOLEAN
+    ]
+
+    assert boolean_fields, "the schema declares no boolean field; this test would prove nothing"
+
+    not_boolean = []
+    for section, field in boolean_fields:
+        fact = UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field))
+        restored = UserProfileFact.model_validate_json(fact.model_dump_json())
+        if not isinstance(restored.value, bool):
+            not_boolean.append(f"{section.key}.{field.key} -> {restored.value!r} ({type(restored.value).__name__})")
+
+    assert not_boolean == [], (
+        "the shared filler emitted a value that does not survive as a boolean, so a consumer "
+        "asking whether the flag is set reads it as False with nothing raised:\n" + "\n".join(not_boolean)
+    )
+
+
 def test_a_field_with_no_declared_set_gets_the_sentinel() -> None:
     """The other half: a genuinely unconstrained field needs no special value.
 
@@ -104,9 +142,10 @@ def test_a_field_with_no_declared_set_gets_the_sentinel() -> None:
     The exclusions below are the field classes whose declarations DO
     constrain, each of which the filler answers with a real value: enum
     fields (their declared set), numeric fields (their declared bounds),
-    date fields (a calendar day), and ``tax_id`` -- whose schema type is a
-    plain string, but whose downstream ``SubjectTaxId`` projection enforces
-    the AEAT checksum the schema does not express.
+    date fields (a calendar day), boolean fields (a boolean token), and
+    ``tax_id`` -- whose schema type is a plain string, but whose downstream
+    ``SubjectTaxId`` projection enforces the AEAT checksum the schema does
+    not express.
 
     Adding a branch to the filler means adding its class here. That is
     deliberate rather than a maintenance wart: a new branch is a change to
@@ -124,6 +163,7 @@ def test_a_field_with_no_declared_set_gets_the_sentinel() -> None:
         and field.key != "tax_id"
         and field.type not in NUMERIC_PROFILE_FIELD_TYPES
         and field.type is not ProfileFieldType.DATE
+        and field.type is not ProfileFieldType.BOOLEAN
     ]
 
     assert plain, "no unconstrained field remains; the sentinel reaches nothing and this proves nothing"

@@ -36,6 +36,14 @@ _PLACEHOLDER_TAX_ID = f"12345678{nif_check_letter(12345678)}"
 #: avoids handing anything that later reads an age a taxpayer born last year.
 _PLACEHOLDER_DATE = "1990-01-01"
 
+#: Boolean filler. ``false`` rather than ``true`` for two reasons that agree.
+#: It is the non-triggering answer -- these flags gate obligations and exemption
+#: pathways, so a filler that says yes asserts an obligation the test never meant
+#: to claim. And it preserves what the sentinel already meant: every reader of a
+#: boolean fact treats an unrecognised token as false, so filling with ``false``
+#: changes no consumer's answer while making the stored value honestly a boolean.
+_PLACEHOLDER_BOOLEAN = "false"
+
 
 def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
     """Return filler for one field that the field's own schema admits.
@@ -74,6 +82,15 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
     nothing to derive: the schema permits bounds only on numeric fields, so a
     date field declares no range to honour and a constant is the whole answer.
 
+    A boolean field takes a boolean token, and this is the branch the door
+    does NOT force. Nothing refuses the sentinel on a boolean fact, so the
+    cost of omitting this branch is not a visible refusal but a quiet wrong
+    answer: the fact carrier leaves an unrecognised token a ``str`` instead
+    of promoting it to a ``bool``, and every consumer asking whether the flag
+    is set reads it as false. The branch exists because "the declaration
+    admits it" is a claim about the declaration, not about which mistakes
+    happen to be caught.
+
     Args:
         field: The schema definition of the field being filled.
 
@@ -88,6 +105,8 @@ def schema_valid_placeholder(field: ProfileFieldDefinition) -> str:
         return _numeric_placeholder(field)
     if field.type is ProfileFieldType.DATE:
         return _PLACEHOLDER_DATE
+    if field.type is ProfileFieldType.BOOLEAN:
+        return _PLACEHOLDER_BOOLEAN
     return "placeholder"
 
 
