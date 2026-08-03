@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:41dd6c1a799df5a219c904f34afc1ed2f9a874d006a139f9bab3cf33f0fb95cb'
+body_hash: 'sha256:2169cba2675029e6e4378289653bfb0490f921fc6d7a05ebe34121ce2de509b9'
 related: []
 ---
 
@@ -566,31 +566,76 @@ so no lane edits the owning files.
 
 ### F16 — The test surface is the larger half of the migration
 
-201 test files call `override_settings(`; 24 project conftests participate; 28
-`dev/` files reference the storage root; the confirmed literal table is 10 rows
-across 8 files with an untriaged tail of roughly 77 to 121 further files.
+201 test files call `override_settings(`, of which **108 pass a genuinely
+path-valued argument** across **263 kwarg occurrences**; the other 93 are
+non-path only and are untouched by this campaign. 24 project conftests
+participate and 28 `dev/` files reference the storage root.
 
-The canonical isolation mechanism is a two-tier root-redirection chain: a
-pure-stdlib module (`src/cadrumo/tests/_collection_storage_root.py:35`) derives
-a per-pid root under the OS temp directory, the repo-root conftest applies it
-with `overwrite=False` before anything can resolve settings, and
-`src/cadrumo/conftest.py:41` re-applies it with `overwrite=True`. It exists so
-collection-time imports never resolve the real platform root and trip the
-retired-product cold-start guard. It is the mechanism tests should be migrating
-*to*, not an ad-hoc declaration to migrate away from.
+**Two isolation tiers, with different dispositions.** They are easy to conflate
+and the conflation misdirects the migration:
 
-Against that, the fixtures themselves already carry drift:
-`isolated_cli_runtime_profile` in `src/cadrumo/tests/secure_sql.py` pins
-`cadrumo_financial_txs_dir` to `tmp_path / "txs"`, which does not match the
-taxonomy's own `financial/transactions`. This is a per-field override
-duplicating the taxonomy at a call site rather than deriving from it — the
-exact shape the migration must retire.
+*Tier one — collection-time bootstrapping, exempt.*
+`src/cadrumo/tests/_collection_storage_root.py` derives a per-process root under
+the OS temp directory; the repo-root conftest applies it with `overwrite=False`
+before anything can resolve settings, and `src/cadrumo/conftest.py:41` re-applies
+it with `overwrite=True`. Verified directly: the module imports **only stdlib**
+(`atexit`, `os`, `shutil`, `time`, `pathlib`, `tempfile`), sets **only**
+`CADRUMO_LOCAL_STORAGE_ROOT`, and names **no taxonomy leaf** — a grep for leaf
+names returns one hit which is the ordinary English word "runs" in prose, a
+substring false positive. The one field it touches,
+`cadrumo_local_storage_root`, is classified exempt input by the lifecycle gate
+precisely because it is the container rather than a categorised child.
 
-A further documented divergence: `cadrumo_secret_store_dir` is a **sibling** of
-the storage root in the three most-used isolation fixtures, though production
-nests it. The coverage gate had to widen its own assertion boundary to
-accommodate this. Any relocate or inspect operation that assumes every
-category is literally `<root>/<subpath>` is wrong under those fixtures.
+Its concern — do not resolve settings during collection on a machine that may
+carry retired-product state — is genuinely orthogonal to what lives under the
+root. It is not a refactor target and it is not a migration destination:
+**nothing migrates onto it**, because it has no application imports by design.
+
+*Tier two — the shared isolation fixtures, the actual target.*
+`secure_sql.py`'s `isolated_cli_backend`, `isolated_profile_storage_root`,
+`isolated_runtime_profile`, `isolated_cli_runtime_profile`, and `env_scope.py`'s
+`isolated_aeat_env` and `settings_without_env_file` isolate the whole root once
+per test rather than a field at a time. They are the right consolidation target
+— **and they hand-roll per-field literals themselves**. Verified:
+`isolated_cli_runtime_profile` overrides five fields with bare literals
+(`runs`, `drafts`, `tokens`, `txs`, `invoices`), and `txs` does not match the
+taxonomy's `financial/transactions` for that category. Roughly 10 such
+fixture-internal sites; migrating them first is what makes the larger sweep
+coherent rather than a sweep onto a drifting target.
+
+*The larger opportunity, named and not taken.* Beyond those fixtures, roughly
+350+ call sites hand-roll per-field override blocks duplicating what the
+fixtures already provide. Re-pointing each to the accessor satisfies the
+mandate; converting them to **use the shared fixtures instead** would be better
+engineering and is a separate design conversation about fixture ergonomics.
+Recorded so neither the expansion nor the omission happens silently.
+
+### F21 — The lifecycle gate can be made to pass on nothing, but only after this campaign's own rewrite
+
+The gate discovers its subject structurally: `_path_typed_fields()` introspects
+`Settings.model_fields`, and the literal-vocabulary support derives from
+`_STATE_ROOT_DERIVED_DIRS.values()`. A structural discovery that finds nothing
+yields assertions over empty sets.
+
+The hazard is **conditional**, and the condition matters because it inverts the
+obvious reading. At HEAD the gate is safe: if path fields moved off flat
+`Settings` attributes, `_path_typed_fields()` would shrink while the
+hand-maintained frozensets stayed populated, so the stale-entry assertion
+(`classified - path_fields`, `test_settings_lifecycle_gate.py:143`) would fire
+and the gate would red.
+
+R4 deletes those frozensets and derives classification from the taxonomy. **At
+that point both sides of the comparison move together**: a discovery finding
+nothing compares an empty subject against an empty classification and passes.
+The independent oracle disappears at precisely the moment the gate stops
+hand-maintaining its own list — which is the moment nobody is watching for it.
+
+Two consequences, both recorded as requirements rather than warnings: path
+fields stay flat-introspectable on `Settings` as a stated design constraint, and
+the binding gate carries a non-empty-discovery assertion so the vacuous pass is
+impossible regardless of how the taxonomy is shaped. The general form is worth
+stating: **a structural gate that discovers its own subject must assert that it
+discovered something.**
 
 ### F17 — Twelve migration invariants a naive refactor would silently break
 

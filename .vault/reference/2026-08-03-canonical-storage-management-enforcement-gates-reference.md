@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:585d46b3d3523c148fb9ca0702ea69b75ad7ca0be65a6f107dca3df7eaefbc39'
+body_hash: 'sha256:d413e9ff433c51df4e6fc011386cccbf8664e7db050abbf9e90112c2a4e4a913'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
@@ -118,6 +118,17 @@ it. The failure must name that field.
 **Non-tautological because** the field set is enumerated from
 `Settings.model_fields` — a source independent of the taxonomy. Deriving it from
 the taxonomy would let the taxonomy define its own completeness.
+
+**Required control against a vacuous pass.** The gate must assert its discovered
+field set is **non-empty**, and that discovery is anchored to
+`Settings.model_fields` rather than to the taxonomy. The hazard is specific and
+appears only after this campaign's own rewrite: today, a shrinking field set
+makes the existing stale-entry assertion fire, so a gate that finds nothing
+reds. Once classification derives from the taxonomy, both sides of that
+comparison move together — empty compared against empty passes. The independent
+oracle disappears at exactly the moment the gate stops hand-maintaining its own
+list, which is the moment nobody is looking for it. A structural gate that
+discovers its own subject must always assert it discovered something.
 
 ### Gate 3 — Materialisation parity
 

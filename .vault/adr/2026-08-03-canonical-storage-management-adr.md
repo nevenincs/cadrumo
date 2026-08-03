@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:363cb0df726bbd3aa0e84704f094e2e9c360074d376439c4bf39d97b7e83392d'
+body_hash: 'sha256:c1a4243415e5df93e6e66811c10021bec184073dda589bebf69f49f1e407d5e4'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -139,8 +139,21 @@ membership test, and its enforcing property are fixed.
   lane may edit over them. The download correction has since been superseded and
   landed at HEAD — see R12, whose earlier ratification research F20 disproved by
   measurement; the review-package pair remains uncommitted peer WIP.
-- The two-tier root-redirection chain is the canonical isolation mechanism and
-  survives verbatim; see R15.
+- The two isolation tiers survive verbatim and migrate differently; see R15.
+- **Path fields stay flat-introspectable on `Settings`, and this is a design
+  constraint with a stated reason, not an accident.** The lifecycle gate
+  discovers its subject structurally, by introspecting `Settings.model_fields`.
+  If the typed taxonomy moves path fields off flat attributes, that discovery
+  finds fewer fields — or none. The precise hazard is conditional and worth
+  stating exactly, because at HEAD it does not exist: today a shrinking field set
+  makes the gate's stale-entry assertion (classified names that no longer exist)
+  fire, so the gate reds. **After R4 rewrites classification to derive from the
+  taxonomy, both sides of that comparison move together**, and a discovery that
+  finds nothing compares empty against empty and passes vacuously. The
+  independent oracle disappears at exactly the moment the gate stops
+  hand-maintaining its own list. Lane A therefore keeps path fields flat and
+  introspectable, and Gate 2 carries a non-empty-discovery assertion as its
+  positive control so the vacuous pass is impossible regardless.
 - Settings construction is cached because path resolution is expensive on
   Windows. No filesystem probe may enter settings construction or validation.
 - Relative-path overrides anchor to the platform user-data root, never the
@@ -407,15 +420,48 @@ itself has deleted the test's reason for existing while leaving it green. That
 is a failed migration and must be treated as such in review. This is the single
 most likely way the mandate is satisfied on paper and gutted in substance.
 
-**R15 — The two-tier root-redirection chain is the canonical target, not a
-refactor target.** It survives verbatim. It exists so collection-time imports
-never resolve the real platform root and trip the retired-product cold-start
-guard, and it must run before anything can resolve settings — which is why its
-first tier is deliberately pure-stdlib with no application imports. Tests
-migrate *to* it and to the shared isolation fixtures built on it. What does
-migrate is fixture-level drift on top of the chain: per-field overrides that
-duplicate the taxonomy at a call site, including the fixture research F16 found
-pinning a category to a path disagreeing with the taxonomy's own subpath.
+**R15 — The two isolation tiers have different dispositions, and conflating them
+misdirects the migration.** An earlier wording called the whole chain "the
+canonical target". Measurement showed tier one is not a target at all — nothing
+migrates to it — and an implementer reading otherwise would try to route call
+sites at a layer that has no application imports by design and cannot accept
+them.
+
+*Tier one — collection-time bootstrapping. Exempt, untouched, not a target.*
+`src/cadrumo/tests/_collection_storage_root.py` and its two conftest callers
+point the root environment variable at a process-private temporary directory
+**before any import can resolve settings**, so collection never resolves against
+a real platform root on a machine still carrying retired-product state. Verified:
+the module imports only stdlib (`atexit`, `os`, `shutil`, `time`, `pathlib`,
+`tempfile`), sets only the root variable, and names **no taxonomy leaf** — its
+single apparent leaf match is the ordinary English word "runs" in prose. It
+touches only `cadrumo_local_storage_root`, which the lifecycle gate classifies
+as exempt input precisely because it is the container rather than a categorised
+child. Its concern — do not resolve settings during collection — is orthogonal
+to what lives under the root. It survives verbatim, and nothing migrates onto it.
+
+*Tier two — the shared isolation fixtures. The real migration target, and it
+migrates first.* `secure_sql.py`'s `isolated_cli_backend`,
+`isolated_profile_storage_root`, `isolated_runtime_profile`, and
+`isolated_cli_runtime_profile`, plus `env_scope.py`'s `isolated_aeat_env` and
+`settings_without_env_file`, isolate the whole root once per test rather than a
+field at a time. That is the right abstraction for call sites to consolidate
+onto — **but they currently hand-roll the per-field literals themselves**.
+Verified: `isolated_cli_runtime_profile` overrides five fields with bare
+literals, one of which (`txs`) disagrees with the taxonomy's own subpath for
+that category. So tier two is both the destination and itself a migration
+subject, and it goes first: roughly 10 fixture-internal sites, small and
+high-leverage, because migrating them is what makes the large sweep coherent
+rather than a sweep onto a drifting target.
+
+*Named, and explicitly out of scope.* Beyond those fixtures, roughly 350+ call
+sites hand-roll per-field override blocks duplicating what the fixtures already
+provide. Mechanically re-pointing each to the accessor satisfies the mandate and
+is in scope. Getting them to **use the shared fixtures instead** is better
+engineering and is **not** in scope for this campaign — it is a larger design
+conversation about fixture ergonomics. The distinction is recorded so the
+campaign neither silently expands into that work nor silently pretends the
+opportunity does not exist.
 
 **R16 — Fingerprint participation is a third independent typed field, never
 derived.** `StorageLocation` carries `fingerprint_participation` as its own
