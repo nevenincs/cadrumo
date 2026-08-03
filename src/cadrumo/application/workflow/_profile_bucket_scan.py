@@ -53,6 +53,7 @@ from ...adapters.persistence.storage.bucket import (
     read_manifest,
 )
 from ...core.logging import get_logger
+from ...core.paths import effective_storage_root
 from ...core.redaction import redact_for_cli_output
 from ...domain.user_profile import UserProfileStatus
 from ._errors import ProfileLabelAmbiguousError
@@ -363,11 +364,7 @@ def _compact_manifest_error(exc: BaseException) -> str:
 
 
 def _resolve_root(root: Path | None) -> Path:
-    if root is not None:
-        return root
-    from ...core.config import load_settings
-
-    return load_settings().cadrumo_local_storage_root
+    return effective_storage_root(root)
 
 
 __all__ = [
