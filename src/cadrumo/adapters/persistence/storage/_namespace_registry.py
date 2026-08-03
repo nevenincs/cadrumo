@@ -12,6 +12,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core import StorageCategory, storage_location
 from ....core.classification import SensitivityClass
 from ._namespace_taxonomy import (
     _CUSTODY_PROFILE_DISPOSITIONS,
@@ -28,17 +29,30 @@ SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
 SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 
-BUCKETS_DIRNAME = "buckets"
-BUCKET_DB_DIRNAME = "db"
-BUCKET_BLOBS_DIRNAME = "blobs"
-BUCKET_AUDIT_DIRNAME = "audit"
-BUCKET_MANIFEST_FILENAME = "manifest.toml"
-BUCKET_LOCK_FILENAME = ".lock"
-BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = "output-language.hint"
-KEYSTORE_DIRNAME = "keystore"
-BUCKET_DEK_FILENAME = "bucket.dek.json"
-PROFILE_SESSION_FILENAME = "session.v1.json"
-LOGIN_THROTTLE_FILENAME = "login-throttle.json"
+# The bucket and keystore layout names are read from the core storage
+# taxonomy, which is their single declaration; this module is a consumer of
+# that authority, not a second one. They were declared here originally, and
+# core could not import them without inverting the hexagonal direction -- so
+# the core modules that needed the same two names re-typed them as inline
+# literals instead, unpinned against these. Moving the declaration inward is
+# what made those copies deletable rather than merely pinnable, and it adds no
+# upward dependency: an adapter depending on core is the legal direction.
+#
+# These names stay bound here because the surrounding hierarchy declarations
+# and every storage caller already reach them through this module. The SQL
+# secure-object namespace keys below are a different concern -- logical
+# database keys, not filesystem paths -- and keep their own declarations.
+BUCKETS_DIRNAME = storage_location(StorageCategory.BUCKETS).subpath
+BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
+BUCKET_BLOBS_DIRNAME = storage_location(StorageCategory.BUCKET_BLOBS).subpath
+BUCKET_AUDIT_DIRNAME = storage_location(StorageCategory.BUCKET_AUDIT).subpath
+BUCKET_MANIFEST_FILENAME = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
+BUCKET_LOCK_FILENAME = storage_location(StorageCategory.BUCKET_LOCK).subpath
+BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = storage_location(StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT).subpath
+KEYSTORE_DIRNAME = storage_location(StorageCategory.BUCKET_KEYSTORE).subpath
+BUCKET_DEK_FILENAME = storage_location(StorageCategory.KEYSTORE_BUCKET_DEK).subpath
+PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION).subpath
+LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
 #: Directory holding the application-owned config-reset journal. The
 #: application module owns the durable journal itself; the name is declared
 #: here so the on-disk hierarchy has one inventory, and the enrollment gate
