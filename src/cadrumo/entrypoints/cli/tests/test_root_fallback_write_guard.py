@@ -451,7 +451,7 @@ def _app_leaves() -> tuple[str, ...]:
 
 
 def test_every_unambiguously_mutating_app_leaf_is_guarded_or_bootstrap_exempt() -> None:
-    """A mutating ``app`` leaf must be guarded OR exempt, and never neither.
+    """A TOKEN-MATCHED mutating ``app`` leaf must be guarded OR exempt, never neither.
 
     ``aeat app`` commands operate on the active profile bucket by definition,
     so a leaf that mutates one while sitting outside BOTH the profile-bound
@@ -466,6 +466,21 @@ def test_every_unambiguously_mutating_app_leaf_is_guarded_or_bootstrap_exempt() 
     confirm, ledger restore, three invoice-catalogue verbs, justificante pull,
     iva-wallet seed, m145 create and work resume. This gate is what stops the
     tenth.
+
+    SCOPE, STATED HONESTLY: the guarantee is total over the leaves
+    :data:`_APP_MUTATION_TOKENS` SELECTS, and silent everywhere else. It reads
+    the last word of each leaf, so it examines a minority of the tree and never
+    looks at the rest -- 38 of 200 live ``app`` leaves when this note was
+    written, measured rather than estimated, and left undated-in-code on
+    purpose so no assertion depends on a count that drifts with the tree. A
+    mutating verb whose final token is absent from the set is invisible here no
+    matter how plainly it writes: ``app modelo aggregate`` owns a durable
+    observation write and ``app live iva-wallet pull-evidence`` persists an
+    acquisition manifest, and neither is token-matched. Lengthening the token
+    list does not fix that -- it re-arms the same failure one verb later, which
+    is why the whole-tree census below exists as a second, name-independent
+    mechanism. Do not read a green result here as "every mutating leaf is
+    covered"; read it as "every leaf this set names is covered".
     """
 
     leaves = _app_leaves()
@@ -505,4 +520,276 @@ def test_mutation_token_set_still_matches_live_verbs() -> None:
     assert dead == [], (
         f"mutation token(s) naming no live app verb: {dead}. Each silently narrows the "
         "criterion gate's coverage; remove it or restore the verb it was written for."
+    )
+
+
+# ---------------------------------------------------------------------------
+# The whole-tree census: classification is mandatory, and names carry no weight
+# ---------------------------------------------------------------------------
+
+#: Every ``app`` leaf reviewed and determined NOT to mutate the active profile
+#: bucket. Membership is a reviewer's assertion about what the handler WRITES,
+#: reached by tracing it to its persistence call -- never an inference from the
+#: verb's name.
+#:
+#: This roster exists so that "outside both safety mechanisms" stops being the
+#: silent default. The token gate above answers a question only about the
+#: leaves it selects; this set plus the two production catalogues must together
+#: account for EVERY live ``app`` leaf, so a newly-added verb is unclassified
+#: until somebody reads it. That is the whole point: the previous criterion
+#: went blind whenever a mutating verb was named something its token list did
+#: not anticipate, and a longer token list would only move the blind spot.
+#:
+#: The determinations behind the entries, grouped by why they do not write:
+#:
+#: - Pure reads and projections -- every ``list`` / ``view`` / ``show`` /
+#:   ``status`` / ``history`` / ``latest`` leaf, plus ``ledger check``,
+#:   ``ledger preflight``, ``ledger review``, ``modelo project``,
+#:   ``modelo readiness``, ``modelo requires``, ``modelo compare``,
+#:   ``modelo audit *``, ``m145 export`` / ``validate``, and the
+#:   ``overview`` family. ``overview prepare`` is here despite its imperative
+#:   name: it composes reads into a walkthrough and emits, writing nothing.
+#: - Writes that land OUTSIDE the bucket -- ``modelo review-package build``,
+#:   ``encrypt-for-recipient`` and ``encrypt-feedback`` write only to their
+#:   ``--output`` path, and ``app agent`` materialises shipped harness data
+#:   into an operator directory (its handler documents that it never enters
+#:   the bucket session). Their signing / decrypting siblings are NOT here --
+#:   those mint and persist a keypair into the bucket on first use.
+#: - Reads that decrypt but never write -- ``diagnostics telemetry flush``
+#:   builds a payload and hands it to the telemetry sink, and
+#:   ``ledger evidence extract`` runs the extractor over stored bytes and
+#:   returns a draft ("never mints or persists", per its own handler).
+#:
+#: Adding a leaf here is a claim that its write path was traced and found
+#: absent. Do not add one to silence the census.
+_REVIEWED_NON_MUTATING_APP_LEAVES: frozenset[str] = frozenset(
+    {
+        "app agent",
+        "app contract",
+        "app diagnostics errors",
+        "app diagnostics latency",
+        "app diagnostics llm-usage",
+        "app diagnostics run-health",
+        "app diagnostics runs",
+        "app diagnostics telemetry flush",
+        "app ledger bienes-inversion list",
+        "app ledger check",
+        "app ledger evidence extract",
+        "app ledger evidence list",
+        "app ledger evidence view",
+        "app ledger history",
+        "app ledger inventory list",
+        "app ledger invoice catalogue list",
+        "app ledger invoice catalogue view",
+        "app ledger invoice list",
+        "app ledger invoice view",
+        "app ledger list",
+        "app ledger llm-diagnostics",
+        "app ledger preflight",
+        "app ledger prorrata list",
+        "app ledger ratios eligible",
+        "app ledger ratios list",
+        "app ledger ratios validate",
+        "app ledger review",
+        "app ledger rule list",
+        "app ledger status",
+        "app ledger view",
+        "app live borrador 100 latest",
+        "app live borrador 100 list",
+        "app live borrador 100 view",
+        "app live expedientes latest",
+        "app live expedientes list",
+        "app live expedientes view",
+        "app live filed list",
+        "app live iva-wallet history",
+        "app live justificante list",
+        "app live justificante view",
+        "app live notifications latest",
+        "app live notifications list",
+        "app live notifications view",
+        "app live verify latest",
+        "app live verify list",
+        "app live verify view",
+        "app modelo audit check",
+        "app modelo audit export",
+        "app modelo audit show",
+        "app modelo bindings list",
+        "app modelo bindings resolve",
+        "app modelo compare",
+        "app modelo filing-record list",
+        "app modelo filing-record view",
+        "app modelo history",
+        "app modelo iva-wallet balance",
+        "app modelo m036 list",
+        "app modelo m036 view",
+        "app modelo m145 export",
+        "app modelo m145 validate",
+        "app modelo project",
+        "app modelo readiness",
+        "app modelo requires",
+        "app modelo review-package build",
+        "app modelo review-package encrypt-feedback",
+        "app modelo review-package encrypt-for-recipient",
+        "app modelo verification-report list",
+        "app modelo verification-report view",
+        "app modelo work compare-taxation",
+        "app modelo work dependencies",
+        "app modelo work history",
+        "app modelo work list",
+        "app modelo work observations",
+        "app modelo work preview-maritime-exemption",
+        "app modelo work revision",
+        "app modelo work revisions",
+        "app modelo work runs",
+        "app modelo work status",
+        "app overview agenda",
+        "app overview backlog",
+        "app overview calendar",
+        "app overview explain",
+        "app overview pipeline",
+        "app overview prepare",
+        "app overview status",
+        "app review queue",
+        "app review view",
+    }
+)
+
+
+def _classify_app_leaf(leaf: str) -> str:
+    """Return which mechanism accounts for ``leaf``, or ``"unclassified"``.
+
+    The three accounting mechanisms are mutually exclusive by intent, and
+    :func:`test_app_leaf_classification_is_unambiguous` proves no leaf claims
+    two of them.
+    """
+
+    if is_profile_bound_write_verb_path(leaf):
+        return "guarded"
+    if is_bootstrap_exempt(leaf):
+        return "bootstrap_exempt"
+    if leaf in _REVIEWED_NON_MUTATING_APP_LEAVES:
+        return "reviewed_non_mutating"
+    return "unclassified"
+
+
+def test_every_app_leaf_is_accounted_for_by_name_independent_census() -> None:
+    """Every live ``app`` leaf must be guarded, exempt, or reviewed non-mutating.
+
+    The name-independent companion to the token gate above, and the mechanism
+    that answers its blind spot. Where that gate asks "of the leaves whose last
+    word I recognise, are they all covered?", this one walks the whole live
+    tree and asks "is this leaf accounted for AT ALL?" -- so it cannot be
+    defeated by a verb named something the token list never anticipated, which
+    is exactly how the previous criterion went blind over 162 of 200 leaves.
+
+    A leaf reaches ``unclassified`` only by being newly added, or by a rename
+    that moved it out of a catalogue prefix. Either way the correct response is
+    to READ the handler and trace what it writes, then record the answer in the
+    matching mechanism. There is deliberately no fourth outcome and no
+    allowlist: an unread verb is the failure this gate exists to surface.
+
+    Twenty-five mutating leaves were unclassified when this census was
+    written -- among them the three ``m036`` census declarations, both ``iva-wallet``
+    correction verbs, the ledger and amend wizards, four ``review-package``
+    verbs that mint a signing keypair into the bucket, and
+    ``app modelo aggregate``, whose handler owns a durable observation write
+    while carrying a name no mutation-token list would ever have selected.
+    """
+
+    leaves = _app_leaves()
+    assert len(leaves) > 100, f"materialisation failed; only {len(leaves)} app leaves walked"
+
+    unclassified = sorted(leaf for leaf in leaves if _classify_app_leaf(leaf) == "unclassified")
+
+    assert unclassified == [], (
+        f"`app` leaf/leaves accounted for by NO mechanism: {unclassified}. Read each handler and "
+        "trace what it writes. If it mutates the active profile bucket, add it to "
+        "`PROFILE_BOUND_WRITE_VERB_PATHS` (or to `BOOTSTRAP_EXEMPT_VERB_PATHS` when it must "
+        "legitimately run before a profile is unlocked). If it does not, add it to "
+        "`_REVIEWED_NON_MUTATING_APP_LEAVES` -- which asserts you traced its write path and found "
+        "none, not that its name reads like a query."
+    )
+
+
+def test_app_leaf_classification_is_unambiguous() -> None:
+    """No leaf may be claimed by two accounting mechanisms at once.
+
+    The anti-vacuity floor for the census: it classifies by first match, so a
+    roster entry that is ALSO guarded or exempt would be silently shadowed and
+    the roster could accumulate contradictory claims without ever failing. A
+    leaf declared non-mutating while sitting in the write catalogue is a
+    genuine disagreement about what the verb does, and must be resolved rather
+    than ranked.
+    """
+
+    contradictory = sorted(
+        leaf
+        for leaf in _REVIEWED_NON_MUTATING_APP_LEAVES
+        if is_profile_bound_write_verb_path(leaf) or is_bootstrap_exempt(leaf)
+    )
+
+    assert contradictory == [], (
+        f"leaf/leaves declared non-mutating while ALSO guarded or bootstrap-exempt: {contradictory}. "
+        "One of the two declarations is wrong; read the handler and remove the other."
+    )
+
+
+def test_reviewed_non_mutating_roster_names_only_live_commands() -> None:
+    """Every roster entry must name a live leaf, and the roster must be populated.
+
+    The second anti-vacuity floor, and the same failure mode
+    :func:`test_every_guarded_write_path_names_a_live_command` guards on the
+    production catalogue. A roster entry left behind by a rename is a
+    determination about a verb that no longer exists, and it makes the census
+    look better-reviewed than it is. Emptiness is checked too: an empty roster
+    would make the census above pass only because everything else is guarded,
+    which is a different property than the one claimed.
+    """
+
+    leaves = set(_app_leaves())
+    assert len(_REVIEWED_NON_MUTATING_APP_LEAVES) > 50, (
+        f"only {len(_REVIEWED_NON_MUTATING_APP_LEAVES)} reviewed non-mutating leaves declared; the "
+        "roster has collapsed against the live tree and the census would be asserting far less "
+        "than it appears to"
+    )
+
+    stale = sorted(entry for entry in _REVIEWED_NON_MUTATING_APP_LEAVES if entry not in leaves)
+
+    assert stale == [], (
+        f"reviewed-non-mutating entries naming no live leaf: {stale}. Each is a determination about "
+        "a command that no longer exists; drop it, or restore the entry to the name the verb now has."
+    )
+
+
+def test_census_covers_leaves_the_mutation_token_heuristic_cannot_see() -> None:
+    """Anti-tautology proof that the census is a genuinely wider mechanism.
+
+    A second gate that merely re-derived the first one's selection would add
+    confidence without adding coverage. This pins the difference concretely.
+
+    ``app modelo aggregate`` and ``app live iva-wallet pull-evidence`` both
+    mutate the active bucket -- the first owns a durable observation write, the
+    second persists an acquisition manifest -- and NEITHER is selected by
+    :data:`_APP_MUTATION_TOKENS`, so the token gate is green over both no
+    matter how they are classified. The census reaches them because it walks
+    every leaf.
+
+    The second half proves the property is about names carrying no weight, not
+    about these two verbs: a leaf whose final token is entirely unknown to the
+    heuristic is invisible to it and unclassified to the census.
+    """
+
+    token_blind = ("app modelo aggregate", "app live iva-wallet pull-evidence")
+    for leaf in token_blind:
+        assert leaf.split()[-1] not in _APP_MUTATION_TOKENS, (
+            f"{leaf!r} is now token-matched, so it no longer demonstrates the gap this proof pins; "
+            "pick another leaf the heuristic cannot see"
+        )
+        assert _classify_app_leaf(leaf) != "unclassified", f"{leaf!r} must be accounted for by the census"
+
+    unregistered = "app ledger a-verb-that-was-just-invented"
+    assert unregistered.split()[-1] not in _APP_MUTATION_TOKENS
+    assert _classify_app_leaf(unregistered) == "unclassified", (
+        "a leaf in no catalogue and no roster must be reported unclassified; if this passes "
+        "trivially the census has stopped distinguishing reviewed leaves from unread ones"
     )
