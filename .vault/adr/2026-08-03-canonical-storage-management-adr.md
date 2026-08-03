@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:978bf8e52af71e107c97662d3b1558744c4a52db4f06ebeb70300bc845977a01'
+body_hash: 'sha256:84b997e6a3a89506e50f4d46cfba2965da1503dabd95a78034546ae7a0fd5701'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"
@@ -384,6 +384,80 @@ migrate is fixture-level drift on top of the chain: per-field overrides that
 duplicate the taxonomy at a call site, including the fixture research F16 found
 pinning a category to a path disagreeing with the taxonomy's own subpath.
 
+**R16 — Fingerprint participation is a third independent typed field, never
+derived.** `StorageLocation` carries `fingerprint_participation` as its own
+declared axis, orthogonal to `StorageLifecycle` and to the grouping.
+`data_root_cache_exclusions` is rewritten to derive its set from that field
+rather than from a hardcoded tuple of eight settings reads.
+
+The derivation option is refuted by enumeration, not by preference. Research
+F18 records all four candidates measured against the shipped set: retention
+united with TTL (7 members), the `cache/` grouping (4), their union (9), and
+retention alone (6). Every one differs from the shipped 8, and three differ in
+**both** directions — missing members that are excluded while adding members
+that are not. No lifecycle-or-grouping expression reproduces it, so any
+implementer reaching for "exclude everything TTL" or "exclude everything under
+`cache/`" would silently change what the replay-refusal mechanism treats as real
+state drift. The failure is invisible: excluding too much walks the digest
+toward the empty-tree constant, which is the exact historical defect the
+fingerprint module's own docstring records as having defeated drift detection
+for every installed operator; excluding too little turns the digest into noise
+that churns on every cache write. Neither moves a test.
+
+**The declared set deliberately differs from today's shipped set.** Research
+F18 proves by measurement, with a positive control, that `cache/registry` — the
+production location of the compiled registry pickle — is fingerprinted today: a
+write into an excluded directory left the digest unchanged while a write into
+`cache/registry` moved it. That is a regenerable cache rewritten on every
+recompile, so it churns the digest and produces spurious replay refusals. The
+omission is explained by the field's `None` default, which the exclusion
+function could not resolve. Declaring participation per member fixes it as a
+side effect. This is a deliberate correction, and an implementer must not
+"restore parity" with the old eight-field set on seeing the digest change.
+
+The gate for this axis asserts a property, with the positive control built in:
+for a category declared non-participating, writing beneath it must leave the
+digest unchanged; for a declared participating category, writing beneath it must
+change it. A gate asserting only the first half would pass against a fingerprint
+function that had degraded to the empty-tree constant — which is precisely the
+historical defect. Both halves are required.
+
+**R17 — The two opt-in retention fields are not alike, and R6's role set gains a
+fifth member.** Re-checking them against R6's own two questions, as the escape
+test demands, splits them (research F19):
+
+- `cadrumo_registry_disk_cache_dir` **enrolls**. When unset the application
+  itself picks `<root>/cache/registry` and writes the compiled pickle there, so
+  it chooses and writes and passes both questions. Its `None` default is an
+  override affordance, not the absence of an application-chosen location. It
+  enrolls under R4's opt-in-override discriminator: the **name** is
+  taxonomy-governed, which deletes the hand-written literal in the loader cache,
+  while the **field** is deliberately not auto-derived by the settings
+  validator, because the three-branch resolver depends on the field being `None`
+  to select its pytest branch. Governing the name and auto-deriving the field are
+  separate decisions and this member takes only the first.
+- `cadrumo_wallet_diagnostic_dump_dir` **escapes**, but none of R6's four roles
+  fits: unset, the feature is off and there is no application-chosen location;
+  set, the operator names the destination. `ExternalPathRole` therefore gains
+  `OPERATOR_DIRECTED_OUTPUT` — a destination the operator names for output the
+  application writes on request. R6's original four-role list was incomplete,
+  and this is the correction that re-checking surfaced.
+
+This supersedes the sentence in R6 that grouped both fields as opt-in overrides
+reading as oversights. The general lesson holds and is the reason the escape
+test is written as a test rather than a list: applying it to a real field
+changed the answer.
+
+**R18 — Sequencing around the peer-held lifecycle fix.** R4 deletes the five
+frozensets in `src/cadrumo/core/tests/test_settings_lifecycle_gate.py`, but that
+file is red at committed HEAD and a peer holds the active uncommitted fix
+(research F13). The order is fixed and not negotiable by an implementer: the
+peer's fix lands first, the gate goes green at HEAD, and only then does the gate
+rewrite begin. No lane may edit that file before the peer's commit lands, and no
+lane may "helpfully" add the three missing classifications itself — that is the
+peer's in-flight change and duplicating it produces a collision on the most
+load-bearing gate in this campaign.
+
 ## Rationale
 
 The knockout criterion for the representation is research F11. Every option that
@@ -459,3 +533,14 @@ with a declared override policy, per-category overrides for members that lack
 one, and a genuinely safe relocation built on the substrate's own atomic
 primitives, both become tractable. Both are later decisions with their own
 accounting.
+
+One visible behaviour change ships with R16: `db_sha256` will differ from its
+pre-campaign value on any machine holding a compiled registry cache, because
+that cache stops participating in the digest. Recorded run traces stamped before
+the change will therefore refuse replay once, which is the drift-refusal
+mechanism working as designed rather than a regression. The alternative —
+leaving a regenerable cache in the digest — is a permanent low-grade churn that
+makes every replay refusal untrustworthy. This is called out because the
+symptom (digests moved) looks exactly like the failure the same mechanism exists
+to catch, and an implementer seeing it must not reach for parity with the old
+eight-field set.

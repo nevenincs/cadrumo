@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:453d5d2b7548064ec067e7d77beac50022310317676e5497de590f97626dc23f'
+body_hash: 'sha256:e646b01bd8abbc2ecc16f7ca6dae6c3a9338ef92634a49926b63c01d89cd493b'
 related: []
 ---
 
@@ -314,6 +314,88 @@ anchoring must update these tests deliberately. What is no longer true is the
 obligation — this campaign inherits no red test on this axis.
 
 ### What was not investigated
+
+### F18 — No derivation reproduces the fingerprint-exclusion set, and the shipped set has a proven gap
+
+`data_root_cache_exclusions` (`src/cadrumo/core/observability/_fingerprint.py:163`)
+returns 8 resolved directories that `_hash_tree` prunes during the walk. Its
+docstring states the semantic axis: the excluded locations are regenerable,
+self-referential, or non-canonical duplicates, and carry no taxpayer state a
+replay must detect drift in. Three distinct reasons are given — self-reference
+(the observability run directory would make each digest depend on the previous
+run), regenerable-with-no-taxpayer-state (the LLM and status and corpus and
+verdict caches), and non-canonical duplicate (backups of state already
+fingerprinted at its primary location).
+
+**Every candidate derivation was enumerated against the shipped set and all
+fail, in both directions:**
+
+| candidate | size | delta versus shipped set |
+|---|---|---|
+| retention ∪ TTL | 7 | misses corpus-text, validation-verdict, backups; wrongly adds registry-disk-cache, wallet-diagnostic |
+| `cache/` grouping | 4 | misses llm-usage, llm-run-telemetry, runs, backups |
+| `cache/` ∪ retention ∪ TTL | 9 | misses backups; wrongly adds registry-disk-cache, wallet-diagnostic |
+| retention alone | 6 | misses status-cache, corpus-text, validation-verdict, backups; wrongly adds two |
+
+So participation is a genuinely independent axis. Deriving it from lifecycle or
+grouping would silently change what the replay-refusal mechanism treats as real
+state drift — and the mechanism's own docstring records the historical defect
+where `db_sha256` degraded to the empty-tree constant for every installed
+operator, permanently defeating drift detection.
+
+**A latent gap in the shipped set, proven by measurement with a positive
+control.** Using a real temporary storage root and the production functions:
+
+- writing a file into an excluded directory (the LLM cache) left the digest
+  unchanged — the positive control, proving the exclusion mechanism works and
+  the probe can detect a no-op;
+- writing a file into `cache/registry`, the production location of the compiled
+  registry pickle, **changed the digest**.
+
+The registry disk cache is therefore fingerprinted today. It is a regenerable
+cache rewritten on every registry recompile, so it churns `db_sha256` and
+produces spurious replay refusals — the exclude-too-little failure mode. The
+omission is explainable: `cadrumo_registry_disk_cache_dir` defaults to `None`,
+and the exclusion function resolves each entry unconditionally, so the field
+could not be added to the tuple without handling `None`.
+
+The consequence for the campaign is that the shipped 8-field set is not the
+*correct* set, only the *current* one. Declaring participation per member
+surfaces the gap; the declared set should differ from today's by adding the
+registry disk cache. That is a deliberate correction, not a regression to be
+"restored to parity".
+
+### F19 — The two opt-in retention fields are not alike under the escape test
+
+The two lifecycle-classified fields outside the taxonomy behave differently
+against the choose-and-write questions:
+
+- `cadrumo_registry_disk_cache_dir` — when unset, the application itself picks
+  `<root>/cache/registry` (`src/cadrumo/domain/calculations/registry/_loader_cache.py:230`)
+  and writes the compiled pickle there. It chooses **and** writes, so it is not
+  an escape. Its `None` default is an override affordance, not an absence of an
+  application-chosen location. Note the constraint: the three-branch resolver
+  depends on the field being `None` to select its pytest branch, so the *name*
+  can be taxonomy-governed while the *field* must not be auto-derived by the
+  settings validator.
+- `cadrumo_wallet_diagnostic_dump_dir` — when unset, the feature is off and
+  there is no application-chosen location at all; when set, the operator names
+  the destination. It fails the choose test and is a genuine escape, but of a
+  role none of the four declared roles covers: it is an operator-directed
+  *output* destination, not a bundled resource, operator input, third-party
+  cache, or external executable.
+
+### What was not investigated
+
+The untriaged tail of test files in F16 was not individually confirmed; an
+estimate is not an acceptable closing state for the migration mandate and that
+triage is being run separately. `dev/docs/tests/test_env_reference.py` was not
+read, and it gates drift between the generated environment reference and the
+settings fields, so a field rename would trip it. Whether the `blobs` and
+`audit` name collision across depths has ever caused a real defect was not
+investigated; both work correctly today. Whether the registry-disk-cache
+fingerprint churn (F18) has produced observed spurious replay refusals in
+practice was not investigated — only that the digest demonstrably moves.
 
 ### F11 — The duplicate literals are a layering symptom, and they foreclose the obvious fix
 
