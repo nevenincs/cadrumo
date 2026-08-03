@@ -22,6 +22,7 @@ from ...domain.user_profile import (
     ProfileSectionDefinition,
     UserProfileFact,
     UserProfileRecord,
+    boolean_value_refusal,
     numeric_value_refusal,
     section_field_key,
 )
@@ -61,6 +62,16 @@ still ``SETUP_INCOMPLETE``, exactly as a bad date or an unknown enum token
 already does. Deferring it would let a wrong number sit in a profile until
 the ACTIVE promotion and then refuse the promotion instead of the write that
 caused it.
+"""
+
+BOOLEAN_VALUE_ISSUE_CODE: Final[str] = "boolean_field_invalid"
+"""Issue code for a boolean field carrying something that is not a yes/no answer.
+
+Not a completeness code, for the same reason as its numeric sibling: an
+unreadable answer is a bad one rather than a missing one. A blank is refused
+here rather than deferred, because a boolean field's readers resolve an
+unreadable value to ``False`` -- so a value admitted unread does not stay
+undecided, it silently becomes "no".
 """
 
 COMPLETENESS_ISSUE_CODES: Final[frozenset[str]] = frozenset(
@@ -181,6 +192,8 @@ class ProfileValidationService:
             return self._validate_enum_value(field, fact)
         if field.type in NUMERIC_PROFILE_FIELD_TYPES:
             return self._validate_numeric_value(field, fact)
+        if field.type is ProfileFieldType.BOOLEAN:
+            return self._validate_boolean_value(field, fact)
         if field.type is not ProfileFieldType.DATE:
             return ()
         if isinstance(fact.value, date):
@@ -220,6 +233,38 @@ class ProfileValidationService:
             ProfileValidationIssue(
                 severity=BaseSeverity.ERROR,
                 code=NUMERIC_VALUE_ISSUE_CODE,
+                path=fact.path,
+                message=refusal,
+            ),
+        )
+
+    @staticmethod
+    def _validate_boolean_value(
+        field: ProfileFieldDefinition,
+        fact: UserProfileFact,
+    ) -> tuple[ProfileValidationIssue, ...]:
+        """Reject a boolean-typed value that is not a readable yes/no answer.
+
+        The declaration was inert before this: a field declared ``boolean``
+        accepted ``banana``, ``placeholder`` and ``''`` and stored them, so
+        every reader had to decide alone what an unreadable value meant.
+        Readers resolve one to ``False``, which is safe only when the door
+        guarantees a stored value can be read -- a guarantee the maritime
+        reader's fallback already documented as its justification before
+        anything provided it.
+
+        The verdict comes from
+        :func:`~cadrumo.domain.user_profile.boolean_value_refusal` rather
+        than being formed here, so the readers that consume these facts
+        judge a value by the same rule this door admits it under.
+        """
+        refusal = boolean_value_refusal(field, fact.value)
+        if refusal is None:
+            return ()
+        return (
+            ProfileValidationIssue(
+                severity=BaseSeverity.ERROR,
+                code=BOOLEAN_VALUE_ISSUE_CODE,
                 path=fact.path,
                 message=refusal,
             ),
