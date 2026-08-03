@@ -499,6 +499,7 @@ class ProfileManagerApp(App[None]):
         self.title = title
         self.sub_title = ""
         self.query_one("#manager-banner", Static).update(title)
+        self._offer_language_in_footer()
         if not self._actions:
             return
         self.query_one("#manager-actions-panel", Vertical).border_title = tr("flows.manager.actions.section")
