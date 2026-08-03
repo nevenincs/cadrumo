@@ -47,7 +47,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ._models import STRICT_FROZEN_CONFIG
 from .errors import CoreValidationError
@@ -368,6 +368,50 @@ class StorageLocation(BaseModel):
     Governing the name and deriving the field are separate decisions.
     """
 
+    consumer_module: str | None = None
+    """Production module that consumes this location, relative to ``src/cadrumo``.
+
+    Names the module, and a structural gate verifies the claim: that module must
+    contain a real reference to this member -- an attribute load of the bound
+    settings field, an attribute load of the category member, or the field name
+    as a non-docstring string constant, which is how the live-evidence roots are
+    reached. A name appearing in prose satisfies nothing.
+
+    The claim is deliberately consumption rather than write-reachability.
+    Tracing statically from an attribute to a filesystem write produces a false
+    negative on every indirection, and a gate that blocks legitimate changes is
+    a gate somebody switches off. Consumption is weaker in theory and far
+    stronger in practice, because a location no module touches cannot be written
+    to -- which is the condition worth catching.
+
+    Exactly one of this and :attr:`dormant_reason` is set.
+    """
+
+    dormant_reason: str | None = None
+    """Why this member has no consuming module, when it has none.
+
+    A declared location nothing reads or writes is a decision waiting to be
+    taken -- wire it or delete it -- and the point of requiring the reason is
+    that the decision becomes visible in the declaration instead of waiting to
+    be rediscovered by an audit. Exactly one of this and
+    :attr:`consumer_module` is set.
+    """
+
+    @model_validator(mode="after")
+    def _require_exactly_one_liveness_claim(self) -> StorageLocation:
+        """Refuse a member that claims both a consumer and dormancy, or neither."""
+        claims = (self.consumer_module, self.dormant_reason)
+        if sum(claim is not None for claim in claims) != 1:
+            raise ValueError(
+                f"storage category {self.category.value!r} must declare exactly one of "
+                "consumer_module (the production module that consumes this location) or "
+                "dormant_reason (why nothing does)",
+            )
+        for label, value in (("consumer_module", self.consumer_module), ("dormant_reason", self.dormant_reason)):
+            if value is not None and not value.strip():
+                raise ValueError(f"storage category {self.category.value!r} declares an empty {label}")
+        return self
+
     def relative_path(self) -> Path:
         """Return :attr:`subpath` as a path relative to this member's anchor."""
         return Path(*self.subpath.split("/"))
@@ -379,6 +423,8 @@ def _location(
     *,
     lifecycle: StorageLifecycle,
     grouping: StorageGrouping,
+    consumer_module: str | None = None,
+    dormant_reason: str | None = None,
     settings_field: str | None = None,
     node_kind: StorageNodeKind = StorageNodeKind.DIRECTORY,
     scope: StorageScope = StorageScope.ROOT,
@@ -396,6 +442,8 @@ def _location(
         lifecycle=lifecycle,
         grouping=grouping,
         fingerprint_participation=fingerprint_participation,
+        consumer_module=consumer_module,
+        dormant_reason=dormant_reason,
         settings_field=settings_field,
         derives_settings_default=derives_settings_default and settings_field is not None,
     )
@@ -406,6 +454,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.TOKENS,
         "tokens",
+        consumer_module="application/auth/_acquisition_lock.py",
         settings_field="cadrumo_token_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -413,6 +462,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.SECRETS,
         "secrets",
+        consumer_module="adapters/persistence/storage/master_key/_master_key.py",
         settings_field="cadrumo_secret_store_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -420,6 +470,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BLOBS,
         "blobs",
+        consumer_module="adapters/persistence/storage/blob_store/_materialisation.py",
         settings_field="cadrumo_blob_store_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -427,6 +478,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.AUDIT,
         "audit",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         settings_field="cadrumo_audit_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -434,6 +486,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.REGISTRY_PARITY_STORE,
         "audit/registry/parity",
+        consumer_module="entrypoints/cli/registry.py",
         settings_field="cadrumo_registry_parity_store_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -442,6 +495,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LOGS,
         "logs",
+        consumer_module="core/logging.py",
         settings_field="cadrumo_log_dir",
         lifecycle=StorageLifecycle.ROTATION,
         grouping=StorageGrouping.LOGS,
@@ -449,6 +503,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_USAGE,
         "llm-usage",
+        consumer_module="adapters/outbound/llm/_usage.py",
         settings_field="cadrumo_llm_usage_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -457,6 +512,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_RUN_TELEMETRY,
         "llm-run-telemetry",
+        consumer_module="adapters/outbound/llm/_run_telemetry.py",
         settings_field="cadrumo_llm_run_telemetry_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -465,6 +521,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.MCP_TELEMETRY,
         "telemetry",
+        consumer_module="entrypoints/mcp/_telemetry.py",
         settings_field="cadrumo_mcp_telemetry_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -476,6 +533,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # hermetic replay would refuse on essentially every attempt.
         StorageCategory.RUNS,
         "runs",
+        consumer_module="core/observability/_store.py",
         settings_field="cadrumo_runs_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.LOGS,
@@ -485,6 +543,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.LLM_CACHE,
         "cache/llm-cache",
+        consumer_module="adapters/outbound/llm/_cache.py",
         settings_field="cadrumo_llm_cache_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.CACHE,
@@ -493,6 +552,12 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.STATUS_CACHE,
         "cache/status-cache",
+        dormant_reason=(
+            "No production module reads or writes it. The AEAT status-reader cache it is named for "
+            "was never wired: its companion time-to-live setting has no consumer either, so the "
+            "whole feature is declaration only. Wire the status reader or delete both the member "
+            "and its settings."
+        ),
         settings_field="cadrumo_status_cache_dir",
         lifecycle=StorageLifecycle.TTL,
         grouping=StorageGrouping.CACHE,
@@ -501,6 +566,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.CORPUS_TEXT_CACHE,
         "cache/corpus-text",
+        consumer_module="domain/calculations/registry/_validate_evidence.py",
         settings_field="cadrumo_corpus_text_cache_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
@@ -509,6 +575,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.CORPUS_SEARCH_CACHE,
         "cache/corpus-search",
+        consumer_module="application/corpus_search/_runtime.py",
         settings_field="cadrumo_corpus_search_cache_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
@@ -517,6 +584,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.VALIDATION_VERDICT_CACHE,
         "cache/registry-verdict",
+        consumer_module="domain/calculations/registry/_validate_verdict.py",
         settings_field="cadrumo_validation_verdict_cache_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.CACHE,
@@ -525,17 +593,35 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         # The name is governed here; the field is deliberately NOT derived, so
         # the resolver's pytest branch can keep selecting on its absence.
+        #
+        # Excluded from the digest, and this is a correction rather than a
+        # restatement. The compiled registry pickle lands here and is rewritten
+        # on every recompile, so it churned the digest and produced spurious
+        # replay refusals -- measured, with a positive control: a write into an
+        # excluded directory left the digest unchanged while a write here moved
+        # it. It was fingerprinted only because the old hardcoded exclusion list
+        # could not resolve a field defaulting to None. Digests will differ from
+        # their pre-correction value on any machine holding a compiled cache;
+        # that is the correction landing, and it must not be "fixed" by
+        # restoring parity with the old set.
         StorageCategory.REGISTRY_DISK_CACHE,
         "cache/registry",
+        consumer_module="domain/calculations/registry/_loader_cache.py",
         settings_field="cadrumo_registry_disk_cache_dir",
         lifecycle=StorageLifecycle.RETENTION,
         grouping=StorageGrouping.CACHE,
+        fingerprint_participation=FingerprintParticipation.EXCLUDED,
         derives_settings_default=False,
     ),
     # ── Durable generated outputs ───────────────────────────────────────────
     _location(
         StorageCategory.STORAGE_BACKUP,
         "backups",
+        dormant_reason=(
+            "No production module reads or writes it. Bucket archive and profile-bundle export both "
+            "write to a destination the operator names, not to this directory, so nothing ever "
+            "lands here. Point an export at it or delete the member."
+        ),
         settings_field="cadrumo_storage_backup_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -544,6 +630,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.SUBMISSIONS,
         "submissions",
+        consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_submissions_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -551,6 +638,11 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.INBOX,
         "inbox",
+        dormant_reason=(
+            "No production module reads or writes it. Only test fixtures set the field, and no "
+            "consumer reads it back, so the location exists on disk and stays empty. Wire the "
+            "document intake that would fill it or delete the member."
+        ),
         settings_field="cadrumo_inbox_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -558,6 +650,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.INBOX_PDF,
         "inbox/pdfs",
+        dormant_reason=(
+            "No production module reads or writes it. It shares the intake's fate: declared, "
+            "materialised, and never written. Wire the PDF intake or delete the member."
+        ),
         settings_field="cadrumo_inbox_pdf_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -565,6 +661,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.WORKFLOW_RUNS,
         "workflow-runs",
+        consumer_module="application/workflow/_persistence.py",
         settings_field="cadrumo_workflow_runs_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -572,6 +669,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.DRAFTS,
         "drafts",
+        consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_drafts_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -579,6 +677,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.JUSTIFICANTES,
         "justificantes",
+        consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_justificantes_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -586,6 +685,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.FILING_HISTORY,
         "filing-history",
+        consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_filing_history_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -593,6 +693,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.FILED_DECLARATIONS,
         "filed-declarations",
+        consumer_module="entrypoints/cli/_overview_evidence.py",
         settings_field="cadrumo_filed_declarations_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -600,6 +701,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.IVA_COMPENSATION_HISTORY,
         "live/iva-compensation-history",
+        consumer_module="entrypoints/cli/_app_live.py",
         settings_field="cadrumo_iva_compensation_history_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -607,6 +709,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.IVA_READ_EVIDENCE,
         "live/iva-read-evidence",
+        consumer_module="entrypoints/cli/_app_live.py",
         settings_field="cadrumo_iva_read_evidence_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -614,6 +717,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.FINANCIAL_TRANSACTIONS,
         "financial/transactions",
+        consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_financial_txs_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -621,6 +725,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.INVOICES,
         "financial/invoices",
+        consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_invoices_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -628,6 +733,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.ATTACHMENTS,
         "financial/attachments",
+        consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_attachments_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -635,6 +741,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.USAGE_RATIOS,
         "financial/usage-ratios.json",
+        consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_usage_ratios_path",
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -644,6 +751,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKETS,
         "buckets",
+        consumer_module="core/_config_state_root.py",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
@@ -651,6 +759,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.ACTIVE_PROFILE_POINTER,
         "active-profile",
+        consumer_module="core/config.py",
         node_kind=StorageNodeKind.FILE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -663,6 +772,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_DATABASE,
         "db",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -671,6 +781,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_BLOBS,
         "blobs",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -679,6 +790,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_AUDIT,
         "audit",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -687,6 +799,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_MANIFEST,
         "manifest.toml",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -696,6 +809,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_LOCK,
         ".lock",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -705,6 +819,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT,
         "output-language.hint",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -714,6 +829,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_KEYSTORE,
         "keystore",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -722,6 +838,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.KEYSTORE_BUCKET_DEK,
         "bucket.dek.json",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.KEYSTORE_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -731,6 +848,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.KEYSTORE_PROFILE_SESSION,
         "session.v1.json",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.KEYSTORE_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -740,6 +858,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.KEYSTORE_LOGIN_THROTTLE,
         "login-throttle.json",
+        consumer_module="adapters/persistence/storage/_namespace_registry.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.KEYSTORE_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,

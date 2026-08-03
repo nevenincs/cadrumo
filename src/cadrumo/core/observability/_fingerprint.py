@@ -163,44 +163,35 @@ def compute_db_sha256(root: Path, *, excluded_dirs: frozenset[Path] = frozenset(
 def data_root_cache_exclusions(settings: Settings) -> frozenset[Path]:
     """Return the regenerable/self-referential directories under the data root.
 
-    Every entry here is read from ``settings`` itself — the same instance
-    whose :attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root`
-    :func:`compute_data_root_sha256` hashes — rather than a hardcoded
-    subpath string, so an operator override of any one of these
-    directories (e.g. a redirected LLM cache) is still excluded correctly
-    regardless of where it actually resolves:
+    Which directories those are is declared, not decided here. Each member of
+    the storage taxonomy carries a ``fingerprint_participation`` axis, and this
+    reads the excluded set from it. That axis is independent and never derived:
+    measured against every candidate, no expression over lifecycle or grouping
+    reproduces the intended set, and three candidates differ in *both*
+    directions at once — omitting members that are excluded while adding
+    members that are not. So "exclude everything under ``cache/``" or "exclude
+    everything with a time-to-live" are both wrong, and wrong invisibly.
 
-    - ``cadrumo_runs_dir`` — observability's own output (self-reference);
-      hashing it would make every run's ``db_sha256`` depend on the
-      immediately preceding run's trace files.
-    - ``cadrumo_llm_cache_dir``, ``cadrumo_llm_usage_dir``,
-      ``cadrumo_llm_run_telemetry_dir`` — LLM prompt cache, usage meters,
-      and run-timing telemetry; these drift on every model call and carry
-      no taxpayer state.
-    - ``cadrumo_status_cache_dir`` — AEAT status-reader cache.
-    - ``cadrumo_corpus_text_cache_dir``, ``cadrumo_validation_verdict_cache_dir``
-      — regenerable, evictable caches unrelated to real taxpayer state.
-    - ``cadrumo_storage_backup_dir`` — storage-layer backups (non-canonical
-      copies of state already fingerprinted at its primary location).
+    The value is still read from ``settings`` itself — the same instance whose
+    :attr:`~cadrumo.core.config.Settings.cadrumo_local_storage_root`
+    :func:`compute_data_root_sha256` hashes — so an operator override of any
+    one of these directories (a redirected LLM cache, say) is still excluded
+    correctly regardless of where it actually resolves. A field that resolves
+    to ``None`` is an opt-in location the operator never asked for; there is no
+    directory to exclude.
 
-    Core state (the encrypted profile/bucket database, ``workflow-runs``,
-    ``inbox``, ``drafts``, ``filing-history``, ``justificantes``,
-    ``financial/*``) is deliberately absent from this set: changes there
-    are real state drift that a replay must detect.
+    What stays *in* matters as much as what comes out. Core state — the
+    encrypted profile and bucket database, the filing artefacts, the financial
+    catalogues — is deliberately fingerprinted, because a change there is real
+    state drift a replay must refuse on. Excluding too much walks the digest
+    toward the empty-tree constant that once defeated drift detection for every
+    installed operator; excluding too little churns it on each cache write
+    until the refusal stops being believed.
     """
-    return frozenset(
-        path.resolve()
-        for path in (
-            settings.cadrumo_runs_dir,
-            settings.cadrumo_llm_cache_dir,
-            settings.cadrumo_llm_usage_dir,
-            settings.cadrumo_llm_run_telemetry_dir,
-            settings.cadrumo_status_cache_dir,
-            settings.cadrumo_corpus_text_cache_dir,
-            settings.cadrumo_validation_verdict_cache_dir,
-            settings.cadrumo_storage_backup_dir,
-        )
-    )
+    from .._storage_taxonomy import FINGERPRINT_EXCLUDED_STORAGE_FIELDS
+
+    resolved = (getattr(settings, field, None) for field in sorted(FINGERPRINT_EXCLUDED_STORAGE_FIELDS))
+    return frozenset(Path(path).resolve() for path in resolved if path is not None)
 
 
 def compute_data_root_sha256(settings: Settings) -> str:
