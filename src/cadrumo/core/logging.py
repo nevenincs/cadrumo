@@ -385,19 +385,20 @@ class _DropOperatorDocumentEchoFilter(logging.Filter):
 def default_log_file_path() -> Path:
     """Return the file path for non-interactive project logs.
 
-    The diagnostic log is rooted under ``cadrumo_log_dir``, which the
-    :class:`~cadrumo.core.config.Settings` validator derives from
-    ``<cadrumo_local_storage_root>/logs`` when no explicit ``CADRUMO_LOG_DIR``
-    override is supplied — so the log stays isolated per workspace
-    rather than mixing every session's records into a single
-    system-wide file.
-    """
-    from .config import load_settings
+    Resolved through the taxonomy accessor rather than by reading
+    ``cadrumo_log_dir`` here. Both answer the same today, because the settings
+    field is what the accessor consults first -- but only one of them stays
+    correct if the member's resolution ever gains a case. A call site that
+    reads the field directly has quietly opted out of whatever the accessor
+    decides, and it does so invisibly, by continuing to work.
 
-    # No fallback join: the field is non-optional and the validator always
-    # populates it, so a literal "logs" here would be an unreachable second
-    # declaration of a subpath the taxonomy already owns.
-    return load_settings().cadrumo_log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
+    An explicit ``CADRUMO_LOG_DIR`` override still wins, and still keeps the
+    log isolated per workspace rather than mixing every session's records into
+    one system-wide file.
+    """
+    from ._storage_taxonomy import StorageCategory, storage_path
+
+    return storage_path(StorageCategory.LOGS).expanduser() / _DEFAULT_LOG_FILE_NAME
 
 
 def _prepare_log_directory(log_file: Path) -> str | None:

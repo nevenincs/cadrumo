@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:5aa1cd8d6a6980ccb2923925f755d55888bcf24fd37a6965d419b9c1404f510a'
+body_hash: 'sha256:e202fd05fed94ed94eecc4fcf40d68b81cd35c9c501826a55a793e2d6a8a6d8d'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -67,6 +67,7 @@ Moves the bucket-layout and keystore names into the core taxonomy so the namespa
 - [ ] `W01.P03.S25` - Collapse the twin reset-journal directory-name declaration onto the taxonomy member, gated by the existing parity pin rewritten to compare the application constant against the taxonomy rather than against a second constant; `src/cadrumo/application/_config_reset_repository.py`.
 - [ ] `W01.P03.S26` - Re-point the Windows worst-case object-path suffix constant onto the now-core bucket-layout members, retiring the documented layering-wall literal, gated by the existing suffix-shape assertions in the layout and local-provider tests; `src/cadrumo/core/paths.py`.
 - [ ] `W01.P03.S64` - Delete the fifth unpinned buckets literal in the journal repository's containment check and read the taxonomy member instead, a copy found after the plan was authored and covered by no existing row, gated by the journal repository suite plus the name-unification gate seeing the module; `src/cadrumo/application/_journal_repository.py`.
+- [ ] `W01.P03.S79` - Fix bucket_scoped_storage_path's resolution of KEYSTORE_RELATIVE members, which places them nested under buckets/<bucket_id>/keystore/ and contradicts validate_keystore_separation's requirement that a bucket's keystore live at keystore/<bucket_id>/ as a sibling of buckets/, a live defect blocking S20 and S21; `src/cadrumo/core/_storage_taxonomy.py, src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py`.
 
 ### Phase `W01.P04` - semantic convergences independent of the taxonomy
 
@@ -98,17 +99,17 @@ Enrolls or explicitly escapes every remaining root-anchored cache, telemetry, an
 
 - [x] `W02.P05.S42` - Add a corpus-search category member and its settings field, delete the module-local index subdirectory constant and the local parent-mkdir workaround, gated by a test asserting the per-field environment override now resolves and the tree materialiser pre-creates it; `src/cadrumo/application/corpus_search/_runtime.py`.
 - [x] `W02.P05.S43` - Add an MCP session-telemetry category member and delete the module-local telemetry directory constant, gated by a test asserting the telemetry directory resolves through the accessor under an overridden root; `src/cadrumo/entrypoints/mcp/_telemetry.py`.
-- [ ] `W02.P05.S44` - Govern the registry disk-cache name through a taxonomy member while leaving the field itself un-derived by the settings validator, gated by a test asserting the production branch resolves to the taxonomy subpath and the field default stays absent; `src/cadrumo/domain/calculations/registry/_loader_cache.py`.
+- [x] `W02.P05.S44` - Govern the registry disk-cache name through a taxonomy member while leaving the field itself un-derived by the settings validator, gated by a test asserting the production branch resolves to the taxonomy subpath and the field default stays absent; `src/cadrumo/domain/calculations/registry/_loader_cache.py`.
 - [ ] `W02.P05.S45` - Declare the registry disk-cache resolver's pytest-shared temporary branch as an explicit test-pinned exception on the member rather than an undeclared special case, gated by a test asserting the declaration exists and the branch still selects under pytest; `src/cadrumo/domain/calculations/registry/_loader_cache.py`.
 - [ ] `W02.P05.S46` - Declare the Playwright browser root as a third-party-owned-cache escape carrying its role, gated by a test asserting the escape is declared and that the resolver still honours the vendor environment variable; `src/cadrumo/application/provisioning.py`.
-- [ ] `W02.P05.S47` - Declare the LibreOffice executable field as an external-executable escape carrying its role, gated by the binding gate seeing it once the selector widens; `src/cadrumo/core/config.py`.
+- [x] `W02.P05.S47` - Declare the LibreOffice executable field as an external-executable escape carrying its role, gated by the binding gate seeing it once the selector widens; `src/cadrumo/core/config.py`.
 - [x] `W02.P05.S48` - Widen the path-typed field selector from name suffix to annotation so no path-valued setting can hide behind an inconvenient name, gated by a test asserting the selector now returns the LibreOffice field; `src/cadrumo/core/config.py`.
-- [ ] `W02.P05.S49` - Declare the wallet diagnostic dump directory as an operator-directed-output escape, gated by a test asserting the role and that the feature stays off when the field is unset; `src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
+- [x] `W02.P05.S49` - Declare the wallet diagnostic dump directory as an operator-directed-output escape, gated by a test asserting the role and that the feature stays off when the field is unset; `src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
 - [ ] `W02.P05.S50` - Correct the wallet diagnostic field docstring so it stops overstating the capture scope relative to the implementation, gated by the generated environment reference regenerating without drift; `src/cadrumo/core/_config_integration_fields.py`.
 - [ ] `W02.P05.S51` - Re-point the corpus-text cache read onto the accessor, gated by the existing corpus-text cache location test re-expressed against the taxonomy; `src/cadrumo/domain/calculations/registry/_validate_evidence.py`.
 - [ ] `W02.P05.S52` - Re-point the validation-verdict cache read onto the accessor, gated by the existing verdict location test re-expressed against the taxonomy; `src/cadrumo/domain/calculations/registry/_validate_verdict.py`.
 - [ ] `W02.P05.S53` - Re-point the observability run-trace directory read onto the accessor, gated by the existing run-store suite; `src/cadrumo/core/observability/_store.py`.
-- [ ] `W02.P05.S54` - Re-point the default log file path onto the accessor, gated by the existing logging tests plus the rendered-help assertion naming the resolved log directory; `src/cadrumo/core/logging.py`.
+- [x] `W02.P05.S54` - Re-point the default log file path onto the accessor, gated by the existing logging tests plus the rendered-help assertion naming the resolved log directory; `src/cadrumo/core/logging.py`.
 - [ ] `W02.P05.S55` - Declare or escape the MCP certificate option's relative default so it stops naming a taxonomy-governed segment by literal, gated by the tools-and-dispatch tests re-expressed against whichever ruling applies; `src/cadrumo/entrypoints/mcp/_tools.py`.
 
 ### Phase `W02.P06` - nested subpath governance beneath enrolled categories
@@ -130,11 +131,14 @@ Collapses the copy-pasted optional-root Typer resolvers onto one parameterised h
 
 Rewrites the drift-fingerprint exclusion set to derive from the declared participation field, lands the deliberate registry-cache correction, and gates the axis with both halves of the property.
 
+- [x] `W02.P09.S65` - Declare fingerprint_participation as its own StorageLocation field, orthogonal to lifecycle and grouping, and derive the drift-fingerprint exclusion set from it instead of eight hardcoded settings reads, deliberately including the compiled registry pickle so a recompile no longer churns the digest, gated by both behavioural halves: a write beneath an excluded category leaves the digest unchanged and a write beneath a participating one moves it; `src/cadrumo/core/_storage_taxonomy.py, src/cadrumo/core/observability/_fingerprint.py`.
+- [x] `W02.P09.S66` - Delete the duplicate bare exclusion frozenset the taxonomy test had re-derived from the fingerprint module's old attribute reads, keeping the reasoned per-entry oracle as the sole statement of the excluded set, and replace the override-precedence test's self-referential comparison with a control Settings built without the override so the assertion proves displacement rather than a value equalling itself; `src/cadrumo/core/tests/test_storage_taxonomy.py, src/cadrumo/core/tests/test_config_state_root.py`.
 
 ### Phase `W02.P10` - single-file stat cache-key convergence
 
 Adds the path-keyed sibling of the existing filename-keyed stat fingerprint and converges the loader modules that each re-derived the identical stat-and-cache-key boilerplate.
 
+- [x] `W02.P10.S67` - Add path_stat_fingerprint as the path-keyed sibling of file_stat_fingerprint and converge the ten single-file loader call sites across eight modules onto it, excluding the justificante parser cache whose key is primarily a content digest rather than a path identity; `src/cadrumo/core/paths.py`.
 
 ## Wave `W03` - enforcement gates and the whole test-surface migration
 
@@ -149,26 +153,37 @@ Confirms the peer's fix has landed and the gate is green at committed HEAD befor
 
 Lands the structural gate whose property is that the storage root has exactly one reader, plus the materialisation-parity, binding, and liveness gates that keep the taxonomy honest, each proven by a mutation that reds it.
 
+- [x] `W03.P12.S68` - Add the AST-structural provenance gate asserting the storage root is joined onto only inside declared producers, matching Path binops, joinpath, glob, rglob, and iterdir through any wrapping, and excluding docstring mentions and field-declaration sites from the walk, leaving a named pending-debt table for sites not yet taxonomy-governed; `src/cadrumo/tests/test_storage_provenance_gate.py`.
+- [x] `W03.P12.S69` - Add the materialisation-parity gate asserting the tree ensure_storage_tree builds on disk is exactly the declared taxonomy member set in both directions, with the file-versus-directory leaf case asserted separately and idempotency proven by a second call that must preserve content; `src/cadrumo/tests/test_storage_materialisation_parity.py`.
+- [x] `W03.P12.S70` - Add the binding gate asserting every Path-typed Settings field is either bound to a taxonomy member or declared an ExternalPathRole escape with a reason, discovered by annotation rather than name suffix so no field can hide, with a non-empty-discovery assertion so the totality check cannot pass vacuously; `src/cadrumo/core/tests/test_storage_binding_gate.py, src/cadrumo/core/_storage_taxonomy.py`.
+- [x] `W03.P12.S71` - Add the liveness gate asserting every taxonomy member declares a consumer_module confirmed present in that module's AST or an explicit dormant_reason, discounting docstring mentions and the settings model's own field declarations so neither satisfies the claim by naming a field without using it; `src/cadrumo/core/tests/test_storage_liveness_gate.py`.
+- [ ] `W03.P12.S72` - Close the provenance gate's database-path pending-debt entries by declaring taxonomy members for the root-fallback database file and the database file beneath the per-bucket db directory, so the database-URL resolver and the storage-route classifier read declared members instead of joining the root ad hoc; `src/cadrumo/core/_storage_taxonomy.py, src/cadrumo/core/config.py, src/cadrumo/core/_config_storage_route.py`.
 
 ### Phase `W03.P13` - dormancy decisions the liveness gate forces
 
 Turns the three declared-but-unwritten categories into an explicit wire-or-delete decision rather than an audit-discoverable condition.
 
+- [x] `W03.P13.S73` - Declare the four writer-less categories the liveness gate found dormant with a stated reason each, status-cache for the never-wired AEAT status reader, storage-backup for archive and bundle export writing only where the operator directs, and inbox and inbox-pdf set only by fixtures; `src/cadrumo/core/_storage_taxonomy.py`.
+- [ ] `W03.P13.S74` - Decide wire-or-delete for each of the four dormant categories rather than leaving the declared reason as a permanent state, recording the decision and its rationale for status-cache, storage-backup, inbox, and inbox-pdf, plus the fifth item status-cache's unreferenced companion field cadrumo_status_cache_ttl_s, which a peer lane has re-verified dead by the string-constant method alongside all four categories and recommends deleting together with status-cache; `src/cadrumo/core/_storage_taxonomy.py`.
 
 ### Phase `W03.P14` - isolation fixture drift retirement
 
 Retires per-field overrides that duplicate the taxonomy at a call site, including the fixture pinning a category to a path that disagrees with the taxonomy, while leaving the two-tier root-redirection chain verbatim.
 
+- [x] `W03.P14.S75` - Add storage_overrides reading the field and subpath from STORAGE_TAXONOMY so a fixture can no longer disagree with the declaration, and converge the four tier-two isolation fixtures onto it, correcting isolated_cli_runtime_profile's drifted pin of the transactions category to a literal txs directory; `src/cadrumo/tests/secure_sql.py`.
+- [ ] `W03.P14.S76` - Converge the remaining tier-two isolation fixture-internal sites onto storage_overrides beyond the four already migrated; `src/cadrumo/tests/secure_sql.py, src/cadrumo/tests/env_scope.py`.
 
 ### Phase `W03.P15` - pins-by-design test re-expression
 
 Re-expresses each test whose reason for existing is the on-disk name it asserts, so it still defends that property against the taxonomy rather than degenerating into an accessor-equals-itself tautology.
 
+- [ ] `W03.P15.S77` - Re-express each pins-by-design test so it still defends its original on-disk-name property against the taxonomy's resolved value rather than degenerating into an accessor-equals-itself tautology, starting with the five master-key and keystore entries the provenance gate still carries as pending debt; `src/cadrumo/adapters/persistence/storage/master_key/tests/, src/cadrumo/adapters/persistence/storage/bucket/tests/`.
 
 ### Phase `W03.P16` - incidental test literal burndown by package
 
 Burns down the mechanically re-pointable literal corpus one test package at a time, each Step gated by the provenance gate scoped to that package plus that package's own suite.
 
+- [ ] `W03.P16.S78` - Burn down the incidental literal corpus one test package at a time across the roughly 108 files carrying path-valued overrides and the roughly 350 hand-rolled override sites, each package gated by the provenance gate scoped to it plus its own suite; `src/cadrumo/tests/`.
 
 ## Wave `W04` - the config storage operator surface, dev tooling, and documentation
 
@@ -178,24 +193,24 @@ Registers the config storage noun-group, authors its five verbs plus the refuse-
 
 Registers the lifecycle-operations-only noun-group and authors its five read and materialise verbs plus the refuse-and-instruct relocation response, each on the envelope spine with a registered strict schema.
 
-- [ ] `W04.P17.S56` - Add the storage-management application service exposing read over the declared tree plus a lifecycle-guarded reclaim that refuses on any category whose declared lifecycle forbids deletion, gated by a mutation proof that the refusal fires and a positive control that a prunable category is accepted; `src/cadrumo/application/storage_management/`.
-- [ ] `W04.P17.S57` - Register the config storage noun-group and its five verbs as a lifecycle-operations-only entry in the CRUD catalogue, gated by the catalogue conformance suite resolving the new path; `src/cadrumo/entrypoints/cli/_config/_storage_cli.py`.
-- [ ] `W04.P17.S58` - Declare the config storage family bootstrap-exempt rather than profile-bound, because the guard returns its exemption before consulting the guarded catalogue and a guarded entry would both be unreachable and make init refuse on a fresh machine, gated by a test asserting the exemption and one asserting init succeeds with no active profile; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
-- [ ] `W04.P17.S59` - Add the containment proof that with no active profile no category reclaim accepts resolves inside a bucket, keystore, or financial-sensitivity location, derived from the declared axes rather than listing today's members so a future prunable bucket-scoped member cannot silently join the accepted set; `src/cadrumo/application/storage_management/tests/`.
+- [x] `W04.P17.S56` - Add the storage-management application service exposing read over the declared tree plus a lifecycle-guarded reclaim that refuses on any category whose declared lifecycle forbids deletion, gated by a mutation proof that the refusal fires and a positive control that a prunable category is accepted; `src/cadrumo/application/storage_management/`.
+- [x] `W04.P17.S57` - Register the config storage noun-group and its five verbs as a lifecycle-operations-only entry in the CRUD catalogue, gated by the catalogue conformance suite resolving the new path; `src/cadrumo/entrypoints/cli/_config/_storage_cli.py`.
+- [x] `W04.P17.S58` - Declare the config storage family bootstrap-exempt rather than profile-bound, because the guard returns its exemption before consulting the guarded catalogue and a guarded entry would both be unreachable and make init refuse on a fresh machine, gated by a test asserting the exemption and one asserting init succeeds with no active profile; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
+- [x] `W04.P17.S59` - Add the containment proof that with no active profile no category reclaim accepts resolves inside a bucket, keystore, or financial-sensitivity location, derived from the declared axes rather than listing today's members so a future prunable bucket-scoped member cannot silently join the accepted set; `src/cadrumo/application/storage_management/tests/`.
 
 ### Phase `W04.P18` - operator-facing strings, reference, and conformance
 
 Wires locale keys through the locales CLI in all four catalogues, regenerates the CLI reference, and clears the schema, documented-command, and reviewed-write gates the new leaf must pass.
 
-- [ ] `W04.P18.S60` - Declare the typed result payloads for the five verbs on the envelope spine with no bespoke advisory or next or suggestion field, gated by the registered-schema and no-bespoke-notice-field conformance tests; `src/cadrumo/entrypoints/cli/_config/_storage_payloads.py`.
-- [ ] `W04.P18.S61` - Pin the config storage surface through the real command tree rather than by calling handlers directly, gated by the documented-command conformance suite resolving every cited verb against the live CLI; `src/cadrumo/entrypoints/cli/_config/tests/`.
+- [x] `W04.P18.S60` - Declare the typed result payloads for the five verbs on the envelope spine with no bespoke advisory or next or suggestion field, gated by the registered-schema and no-bespoke-notice-field conformance tests; `src/cadrumo/entrypoints/cli/_config/_storage_payloads.py`.
+- [x] `W04.P18.S61` - Pin the config storage surface through the real command tree rather than by calling handlers directly, gated by the documented-command conformance suite resolving every cited verb against the live CLI; `src/cadrumo/entrypoints/cli/_config/tests/`.
 - [ ] `W04.P18.S62` - Pin the bootstrap pre-emption itself so relocating tree materialisation out of bootstrap reds loudly rather than silently redistributing which surface answers a missing or occupied path, gated by a test naming the pre-emption as its subject; `src/cadrumo/entrypoints/cli/_config/tests/`.
 
 ### Phase `W04.P19` - dev tooling, packaging, and documentation sweep
 
 Retires the storage names restated in dev scripts, the justfile, and the packaging manifest, adds the drift gate the manifest lacks, and rewrites the operator documentation the CRUD surface makes stale.
 
-- [ ] `W04.P19.S63` - Scaffold the storage-management API reference stubs through the docs CLI rather than by hand, staging only the stubs naming the new modules, gated by the scaffold drift check exiting clean; `docs/api/`.
+- [x] `W04.P19.S63` - Scaffold the storage-management API reference stubs through the docs CLI rather than by hand, staging only the stubs naming the new modules, gated by the scaffold drift check exiting clean; `docs/api/`.
 
 ## Wave `W05` - completeness proof, honesty review, and closure
 
@@ -205,16 +220,19 @@ Proves the mandate rather than asserting it: mutation-proves each new gate, swee
 
 Proves each new gate can actually fail by the smallest edit that should break its specific property, then sweeps the whole tree for surviving unenrolled readers and records the result as the mandate's completeness evidence.
 
+- [ ] `W05.P20.S80` - Extend or document the provenance gate's join-detector blind spot, under which a local rebind such as assigning the root to a variable before joining evades the direct-attribute match and is not flagged, before the pending-enrollment table is treated as a complete inventory; `src/cadrumo/tests/test_storage_provenance_gate.py`.
 
 ### Phase `W05.P21` - open verifications inherited rather than authored
 
 Resolves the one measurement this campaign ratified without proving: whether browser-mediated download bytes reach a filesystem path before cancellation fires.
 
+- [ ] `W05.P21.S81` - Execute the root-permission-drift finding and the mode-bit assertion on a real POSIX host, neither of which has run there yet despite the guarded-inline conversion that lets them execute on every platform; `src/cadrumo/core/tests/test_ensure_storage_tree.py`.
 
 ### Phase `W05.P22` - honesty review and closure
 
 Runs the mandatory fresh-context honesty review before any completion claim, tracks every item it surfaces, reconciles the out-of-scope register, and confirms one execution record per closed Step.
 
+- [ ] `W05.P22.S82` - Backfill real Description and Outcome content into the seventeen W01.P01-P03 exec records that were checked complete but left as empty scaffolds since the campaign's earliest reconciliation pass, predating even the 33-of-64 mark, so plan-closure-requires-exec-records holds for the whole plan and not only the steps reconciled in this pass; `.vault/exec/2026-08-03-canonical-storage-management/`.
 
 ## Parallelization
 
