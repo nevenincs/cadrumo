@@ -197,7 +197,35 @@ comparison, and would remove the rename hazard that finding one turns into a
 mistrap. Verdict `CONVERGE`, lower priority than the two shape findings because
 the gate does hold today for the sixteen storage-root-anchored entries.
 
-### adr-r16-excluded-count-is-wrong-again-at-head | medium | The fingerprint-exclusion count has been amended three times and disagrees with the code again, because members and settings fields are counted as one thing
+### adr-r16-excluded-count-is-wrong-again-at-head | RETRACTED | Withdrawn on measurement: R16 was correct at HEAD; this finding measured the working tree and said HEAD
+
+**Retraction, recorded in place rather than by deletion, because the finding was
+acted on before it was checked.** The claim below is false as written. At HEAD
+`c16bb9a0ae` the taxonomy declares exactly nine fingerprint-excluded members, and
+they are exactly the nine `R16` enumerates, in the same order — nine members,
+nine fields, ADR says nine. No drift existed.
+
+The error was method, not arithmetic: the count came from `uv run python`, which
+imports the working tree. The two extra members it saw,
+`CORPUS_TEXT_CACHE_FILE` and `CORPUS_SEARCH_INDEX`, were uncommitted at the time
+and are the file leaves a peer was landing during this review. This audit's Scope
+states its measurements are anchored at HEAD; for this finding alone that was not
+true, and the campaign's own standing discipline on re-reading HEAD before
+reporting is what should have caught it.
+
+What survives is a prediction, not a defect. Those two members are excluded
+*members* carrying no *settings field*, so once they land the member count
+becomes eleven while `FINGERPRINT_EXCLUDED_STORAGE_FIELDS` stays at nine. `R16`
+quoted members; the mechanism it governs is keyed by field. The framing fix was
+therefore worth making, and was made: within an hour of this retraction `R16` was
+amended to state both counts, to verify them at a named commit, and to warn that
+their present agreement is not guaranteed to survive the next declaration. That
+amendment is correct and is the closing state of this item.
+
+The original finding text follows, unedited, so the record shows what was claimed
+and how it failed.
+
+
 
 Ruling `R16` in the ADR states the excluded set "settled at nine excluded
 members, not eight and not merely the old eight plus `cache/registry`", verified
@@ -313,8 +341,10 @@ modules at `_storage_path_definitions`, and re-point the ten taxonomy
 gate verifies what its docstring says it verifies. Add a parity gate over the two
 shared `StorageNodeKind` and `StoragePathKind` values and cross-reference the two
 docstrings; do not attempt a merge, which the layer direction and `StrEnum`
-extension both block. Correct `R16` to state the field count and to say why the
-member count differs, so the fourth amendment is the last one.
+extension both block. The `R16` recommendation that stood here is **withdrawn and
+already satisfied** — see the retraction above: the ruling was correct at HEAD,
+and it has since been amended to state both counts and why they can diverge,
+which is the durable form of the fix the retracted finding was reaching for.
 
 Interpolating the grammars' literal directory runs off `storage_location(...)`,
 as `segment=` already does, is the one recommendation that is optional. It would
