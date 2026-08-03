@@ -941,17 +941,54 @@ mechanism the Step exists to check, but a reader wanting the test itself green o
 should know it has not been run, and that closing the Step on this evidence is a judgement
 rather than an execution.
 
-**One observation the measurement surfaced.** The hardening is **best-effort**: the
-`chmod` is wrapped in `except (OSError, NotImplementedError)` and its failure is recorded
-at **debug** level only. On POSIX the test would catch a failure, because it asserts the
-resulting mode — but in production a filesystem that refused the `chmod` would leave the
-root holding encrypted records, key material and the audit trail at whatever mode it
-inherited, announced only in a debug log nobody reads. Not a defect this campaign
-introduced, and not one the Step asks about; recorded because the measurement put it in
-front of me.
+**One observation the measurement surfaced**, promoted to its own finding below {D} and
+corrected there, because my first statement of it overstated the exposure.
 
 **Artefacts left in place** under `/tmp` and `/mnt/c/.../Temp` on the WSL guest, per the
 standing no-delete rule. Nothing installed, nothing configured, nothing removed.
+
+### root-mode-hardening-is-best-effort | low | The chmod failure is swallowed at debug level, but the resulting condition is detectable by an operator verb
+
+**Reported first, and overstated.** I told the lead this failure was "announced only in a
+debug log nobody reads". **That is wrong, and writing the finding up carefully is what
+showed it.** The corrected version is narrower and worth less alarm.
+
+**What is true.** `core/config.py:1405-1407`, at object `e65c592b07`:
+
+```python
+try:
+    root.chmod(STORAGE_ROOT_MODE)                      # 0o700, config.py:1330
+except (OSError, NotImplementedError):                 # pragma: no cover
+    _LOGGER.debug("could not restrict permissions on %s; relying on filesystem ACLs", root)
+```
+
+The hardening is best-effort and its failure is recorded at **debug** level at the point of
+failure. The storage root holds encrypted records, the key material that opens them, and
+the audit trail over both, so a refused `chmod` leaves that tree at whatever mode it
+inherited.
+
+**What I missed, and it is the mitigating half.** The resulting *condition* is not
+undetected. `application/storage_management/_service.py:196-205` compares
+`root.stat().st_mode & 0o777` against `_EXPECTED_ROOT_MODE` and raises a
+`ROOT_PERMISSIONS_DRIFTED` issue with the observed and expected modes, surfaced through
+the shipped `config storage check` verb. Two details make it better than a spot check:
+`_EXPECTED_ROOT_MODE` is **bound to the materialiser's own constant** rather than
+restating `0o700`, so the check cannot keep passing against a mode the materialiser no
+longer requests; and `_root_mode_is_enforceable()` declares the check **unenforced** on
+Windows and reports `root_mode_enforced` in the payload, rather than passing vacuously
+where mode bits mean nothing. That is the same non-vacuity discipline this campaign's
+better gates show elsewhere.
+
+**So the accurate residual is narrow: the failure is detectable on demand, not
+self-announcing.** Nothing above debug fires when the `chmod` is refused, and nothing
+re-checks at write time — so an operator learns only if they run `config storage check`.
+Whether that is worth changing is a judgement for whoever owns the surface: an argument
+for raising the log level, and an argument that a verb built precisely to report this
+condition is the right place for it and a warning on every bootstrap would be noise.
+
+**Not campaign-caused and not in scope.** Recorded so it survives outside an S81 record
+about something else, per the request — and recorded at its true severity rather than
+the one I first gave it.
 
 ### verified-sound | none | What the record claims and the code supports
 
