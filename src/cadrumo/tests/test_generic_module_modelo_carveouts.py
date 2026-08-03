@@ -200,6 +200,93 @@ def test_no_baseline_entry_has_gone_stale(source_tree_ast: Mapping[Path, ast.AST
     )
 
 
+def _unmatchable_modelo_references(tree: ast.AST) -> list[str]:
+    """Return references to a ``Modelo`` member that :func:`_per_modelo_tokens` cannot see.
+
+    The matcher recognises exactly one route to a member: an ``M###`` attribute
+    whose receiver is a bare name bound to the enum by an ``ImportFrom``. Python
+    offers several other routes to the same member, and each is invisible to it:
+
+    * ``_M = Modelo`` then ``_M.M303`` — rebinding by ASSIGNMENT rather than by
+      import alias, which :func:`_modelo_binding_names` does not track.
+    * ``core.Modelo.M303`` — a dotted receiver, so ``node.value`` is an
+      ``ast.Attribute`` where the matcher requires an ``ast.Name``.
+    * ``Modelo["M303"]`` and ``getattr(Modelo, "M303")`` — lookups by member
+      name, which produce no ``M###`` attribute node at all.
+
+    None of these appear anywhere in the production tree today, which is exactly
+    why this is a precondition guard rather than a test pinning the blindness.
+    Pinning it would fail the day someone repaired the matcher, which is
+    backwards; this fires the day the gap first costs something — the day one of
+    these spellings enters a module under ratchet, where it would otherwise
+    inventory as zero tokens and pass while holding a real carve-out.
+    """
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Name) and node.value.id == "Modelo":
+            targets = ", ".join(t.id for t in node.targets if isinstance(t, ast.Name))
+            if targets:
+                offenders.append(f"line {node.lineno}: `{targets} = Modelo` rebinds the enum by assignment")
+        elif isinstance(node, ast.Attribute) and _MODELO_ATTR_RE.match(node.attr):
+            if isinstance(node.value, ast.Attribute) and node.value.attr == "Modelo":
+                offenders.append(
+                    f"line {node.lineno}: `{ast.unparse(node)}` reaches the enum through a dotted receiver"
+                )
+        elif _is_modelo_lookup_by_member_name(node):
+            offenders.append(f"line {node.lineno}: `{ast.unparse(node)}` looks the member up by name")
+    return offenders
+
+
+def _is_modelo_lookup_by_member_name(node: ast.AST) -> bool:
+    """Return whether *node* reaches a ``Modelo`` member by its NAME rather than as an attribute.
+
+    ``Modelo["M303"]`` and ``getattr(Modelo, "M303")`` are the same move spelled
+    two ways, and neither produces an ``M###`` attribute node for the matcher to
+    find. ``Modelo("303")`` is deliberately excluded: hydrating a member from its
+    stored registry VALUE is the loader boundary's canonical call and must stay
+    free.
+    """
+    if isinstance(node, ast.Subscript):
+        return isinstance(node.value, ast.Name) and node.value.id == "Modelo"
+    if isinstance(node, ast.Call):
+        return (
+            isinstance(node.func, ast.Name)
+            and node.func.id == "getattr"
+            and bool(node.args)
+            and isinstance(node.args[0], ast.Name)
+            and node.args[0].id == "Modelo"
+        )
+    return False
+
+
+def test_ratcheted_modules_spell_modelo_the_one_way_the_matcher_sees(
+    source_tree_ast: Mapping[Path, ast.AST],
+) -> None:
+    """No module under ratchet may reach a ``Modelo`` member by an unmatchable route.
+
+    The ratchet's guarantee is only as wide as its matcher. A carve-out spelled
+    any of the ways :func:`_unmatchable_modelo_references` describes would leave
+    the module inventorying as carrying zero per-modelo tokens, so the baseline
+    comparison would pass no matter how many carve-outs it held — the same
+    failure the aliased-import case caused before it was fixed, reached through a
+    different door.
+    """
+    inventory = {aeat_relative(path): tree for path, tree in production_ast_items(source_tree_ast)}
+    violations: list[str] = []
+    for relative_path in sorted(_RATCHET_BASELINE):
+        tree = inventory.get(relative_path)
+        if tree is None:
+            continue
+        violations.extend(f"{relative_path} {offence}" for offence in _unmatchable_modelo_references(tree))
+
+    assert not violations, (
+        "module(s) under ratchet reach the Modelo enum by a route the ratchet's matcher cannot see:\n  "
+        + "\n  ".join(violations)
+        + "\n\nSpell it `from ...core import Modelo` (optionally aliased) and use a bare "
+        "`Modelo.M###` attribute, or teach _per_modelo_tokens the new route in this commit."
+    )
+
+
 def _tokens_of(source: str) -> set[str]:
     """Return the per-modelo tokens the live matcher finds in *source*."""
     return _per_modelo_tokens(ast.parse(source))
@@ -258,3 +345,45 @@ def test_matcher_stays_silent_on_lookalikes(source: str) -> None:
     prose discussing a carve-out is not a carve-out.
     """
     assert _tokens_of(source) == set()
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        pytest.param("from x import Modelo\n_M = Modelo\ny = _M.M303\n", id="assignment-rebind"),
+        pytest.param("from x import core\ny = core.Modelo.M303\n", id="dotted-receiver"),
+        pytest.param('from x import Modelo\ny = Modelo["M303"]\n', id="subscript-by-member-name"),
+        pytest.param('from x import Modelo\ny = getattr(Modelo, "M303")\n', id="getattr-by-member-name"),
+    ),
+)
+def test_precondition_guard_fires_on_every_unmatchable_route(source: str) -> None:
+    """Anti-tautology proof: each evading route is planted and must be refused.
+
+    Every one of these is invisible to :func:`_per_modelo_tokens` — planting
+    them there returns an empty set, which is indistinguishable from a module
+    holding no carve-outs at all. The routes were enumerated from the ways
+    Python can reach an enum member, not read off the matcher, so the proof does
+    not inherit the blind spot it exists to cover.
+    """
+    assert _unmatchable_modelo_references(ast.parse(source)), f"guard missed an unmatchable route in:\n{source}"
+
+
+@pytest.mark.parametrize(
+    "source",
+    (
+        pytest.param("from x import Modelo\ny = Modelo.M303\n", id="the-matchable-direct-spelling"),
+        pytest.param("from x import Modelo as _M\ny = _M.M303\n", id="the-matchable-aliased-spelling"),
+        pytest.param('from x import Modelo\ny = Modelo("303")\n', id="hydrating-a-member-from-its-value"),
+        pytest.param("from x import OtherEnum\n_O = OtherEnum\ny = _O.M303\n", id="rebinding-an-unrelated-enum"),
+        pytest.param('y = config["Modelo"]\n', id="subscripting-something-merely-named-modelo"),
+    ),
+)
+def test_precondition_guard_stays_silent_on_legitimate_spellings(source: str) -> None:
+    """The other direction: the guard must not tax the spellings the matcher handles.
+
+    ``Modelo("303")`` is the canonical way to hydrate a member from its stored
+    registry token and must stay free — it is a call, not a by-name lookup, and
+    the loader boundary depends on it. A guard that refused it would push authors
+    toward the very routes this one exists to keep out.
+    """
+    assert _unmatchable_modelo_references(ast.parse(source)) == []
