@@ -309,6 +309,10 @@ class RentaFamilyProfile(BaseModel):
     @classmethod
     def _tuple_from_list(cls, value: object) -> object:
         if isinstance(value, list):
+            # CAST-RATIONALE-DESCENDANTS-ASCENDANTS-COERCION: isinstance narrows
+            # to list but not its element type; pydantic re-validates each
+            # element against the field's declared item type after this
+            # coercion.
             return tuple(cast("list[object]", value))
         return value
 
@@ -316,6 +320,9 @@ class RentaFamilyProfile(BaseModel):
     @classmethod
     def _descendientes_from_list(cls, value: object) -> object:
         if isinstance(value, list):
+            # CAST-RATIONALE-DESCENDIENTES-COERCION: isinstance narrows to list
+            # but not its element type; pydantic re-validates each element
+            # against the field's declared item type after this coercion.
             return tuple(cast("list[object]", value))
         return value
 

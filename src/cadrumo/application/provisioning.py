@@ -93,15 +93,21 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
             payload = response.json()
             if not isinstance(payload, dict):
                 raise ValueError("Ollama tags response must be a JSON object")
+            # CAST-RATIONALE-OLLAMA-TAGS-PAYLOAD: httpx.Response.json() returns
+            # Any; isinstance narrows to dict but not its type parameters.
             payload_object = cast(dict[str, object], payload)
             models = payload_object.get("models")
             if not isinstance(models, list):
                 raise ValueError("Ollama tags response must contain model objects with string names")
+            # CAST-RATIONALE-OLLAMA-TAGS-MODELS: isinstance narrows to list but
+            # not its element type; entries are validated individually below.
             models = cast(list[object], models)
             names: set[str] = set()
             for entry in models:
                 if not isinstance(entry, dict):
                     raise ValueError("Ollama tags response must contain model objects with string names")
+                # CAST-RATIONALE-OLLAMA-TAGS-MODEL-ENTRY: isinstance narrows to
+                # dict but not its type parameters.
                 name = cast(dict[str, object], entry).get("name")
                 if not isinstance(name, str):
                     raise ValueError("Ollama tags response must contain model objects with string names")

@@ -129,6 +129,8 @@ class CoverageManifest(BaseModel):
             raise ValueError("namespaces must be iterable")
         normalized: list[str] = []
         seen: set[str] = set()
+        # CAST-RATIONALE-NAMESPACES-ITERABLE: isinstance narrows to Iterable but
+        # not its element type; each item is validated as str in the loop.
         for item in cast(Iterable[object], value):
             if not isinstance(item, str):
                 raise ValueError("namespaces must contain strings only")
@@ -146,6 +148,9 @@ class CoverageManifest(BaseModel):
         if not isinstance(value, Mapping):
             raise ValueError("row_counts_by_namespace must be a mapping")
         row_counts: dict[str, int] = {}
+        # CAST-RATIONALE-ROW-COUNTS-MAPPING: isinstance narrows to Mapping but
+        # not its type parameters; each key/value pair is validated in the
+        # loop below.
         for raw_namespace, raw_count in cast(Mapping[object, object], value).items():
             if not isinstance(raw_namespace, str):
                 raise ValueError("row count namespaces must be strings")

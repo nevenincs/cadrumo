@@ -452,6 +452,8 @@ def _filing_evidence_from_calculation_observation(
     source_metadata_raw = getattr(payload, "source_metadata", None)
     source_metadata: Mapping[str, object]
     if isinstance(source_metadata_raw, Mapping):
+        # CAST-RATIONALE-CALENDAR-EVIDENCE-SOURCE-METADATA: isinstance narrows to
+        # Mapping but cannot check its type parameters.
         source_metadata = cast(Mapping[str, object], source_metadata_raw)
     else:
         source_metadata = {}

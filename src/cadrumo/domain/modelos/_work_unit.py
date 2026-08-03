@@ -320,7 +320,11 @@ class WorkUnitCatalogue(BaseModel):
         """Build a :class:`WorkUnitCatalogue` from an iterable / mapping of work units."""
         if isinstance(units, tuple):
             mapping: dict[str, WorkUnit] = {}
-            units_tuple = cast(tuple[WorkUnit, ...], units)  # pyright: ignore[reportUnnecessaryCast]  # ty narrows the tuple union conservatively
+            # CAST-RATIONALE-WORK-UNIT-CATALOGUE-TUPLE-NARROW: the isinstance
+            # check above already narrows the union to tuple[WorkUnit, ...];
+            # ty narrows the tuple union conservatively, so the cast restates
+            # what pyright itself already knows.
+            units_tuple = cast(tuple[WorkUnit, ...], units)  # pyright: ignore[reportUnnecessaryCast]
             for unit in units_tuple:
                 if unit.work_unit_id in mapping:
                     raise ModeloValidationError(f"duplicate work_unit_id {unit.work_unit_id!r}")

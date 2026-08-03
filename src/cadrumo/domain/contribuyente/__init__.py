@@ -143,6 +143,9 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
     @classmethod
     def _parse_change_history(cls, value: object) -> object:
         if isinstance(value, list):
+            # CAST-RATIONALE-TAX-RESIDENCE-CHANGE-HISTORY: isinstance narrows to
+            # list but not its element type; pydantic re-validates each element
+            # against the field's declared item type after this coercion.
             return tuple(cast(list[object], value))
         return value
 

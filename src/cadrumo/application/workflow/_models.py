@@ -456,6 +456,9 @@ def _coerce_workflow_step_details(value: object) -> object:
     if value is None or isinstance(value, WorkflowStepDetails):
         return value
     if isinstance(value, Mapping):
+        # CAST-RATIONALE-WORKFLOW-STEP-DETAILS-RAW-MAPPING: isinstance narrows
+        # to Mapping but not its type parameters; model_validate below
+        # re-validates the actual field shapes.
         return WorkflowStepDetails.model_validate(dict(cast(Mapping[str, object], value)))
     return value
 

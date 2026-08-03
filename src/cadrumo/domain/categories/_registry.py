@@ -141,6 +141,9 @@ def _parse_profile(raw_profile: object) -> CategoryProfile:
     # CAST-RATIONALE-TOML-INVARIANT-DICT:
     data = _STRING_OBJECT_MAPPING.validate_python(raw_profile)
     category = SpendingCategory(str(data.get("category")))
+    # CAST-RATIONALE-CATEGORY-PROPORTIONALITY-RAW: data.get() is loosely typed
+    # by the mapping adapter; the isinstance check immediately below is the
+    # real runtime validation of this value's shape.
     raw_rule = cast("dict[str, object] | None", data.get("proportionality"))
     if not isinstance(raw_rule, dict):
         raise CategoryValidationError(f"profile {category.value!r} must declare [profiles.proportionality]")

@@ -94,6 +94,9 @@ def _selector_profile_keys(binding: DataBindingDefinition) -> tuple[str, ...]:
     if isinstance(scalar_raw, str) and scalar_raw:
         keys.append(scalar_raw)
     if isinstance(composite_raw, (list, tuple)):
+        # CAST-RATIONALE-PROFILE-GROUNDING-COMPOSITE-KEYS: isinstance narrows to
+        # list/tuple but not the element type; each item is coerced via str()
+        # below regardless of its actual type.
         keys.extend(str(item) for item in cast(list[object] | tuple[object, ...], composite_raw) if item)
     return tuple(keys)
 
