@@ -1101,11 +1101,11 @@ class Settings(CadrumoMcpServingSettings):
         blob, audit), the append-only telemetry logs, the regenerable caches,
         and the durable generated-output directories all default to a subpath
         under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` scopes, per
-        the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy. A checkout keeps them under
-        the checkout's ``var/storage``; an installed run keeps them under the
-        platform user-data root — never inside a virtualenv or uv cache, which
-        is the hazard a a checkout-relative ``var/...`` default carries on an installed
-        distribution.
+        the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy. That root is the platform
+        user-data location in every run mode, never inside a virtualenv or uv
+        cache — the hazard a checkout-relative ``var/...`` default carries on
+        an installed distribution. A developer who wants the tree inside their
+        checkout sets ``CADRUMO_LOCAL_STORAGE_ROOT``.
 
         An explicit per-field env override (``CADRUMO_TOKEN_DIR``,
         ``CADRUMO_RUNS_DIR``, …) or a value supplied via an ``override_settings``
@@ -1365,6 +1365,78 @@ def reset_settings_cache() -> None:
     does not disturb the cache at all.
     """
     _constructed_settings.cache_clear()
+
+
+def ensure_storage_tree(settings: Settings | None = None) -> Path:
+    """Materialise the state root and its declared directories, and return the root.
+
+    :data:`_STATE_ROOT_DERIVED_DIRS` declares where every derived output
+    lands, and the validator above turns those declarations into absolute
+    paths -- but nothing built them. Directories appeared only when some
+    consumer happened to write: the local provider made its root on first
+    write, the journal repository made its own, bucket provisioning made a
+    bucket's tree. A fresh machine therefore held whichever subset of the
+    taxonomy had been reached, and "where does my data live" had no answer
+    that could be given before the fact.
+
+    This is that answer. It creates the root and every declared directory,
+    returns the root, and is safe to call repeatedly -- so a caller that
+    needs the tree can say so, instead of relying on having written
+    something first.
+
+    Restrictive permissions are requested on the root because the tree holds
+    encrypted taxpayer records, their key material, and the audit trail over
+    both. Platforms that do not implement POSIX modes ignore it, which is why
+    this asks rather than verifies; on such a host the filesystem's own
+    access control is the boundary.
+
+    Args:
+        settings: Settings to read the taxonomy from. Defaults to
+            :func:`load_settings`.
+
+    Returns:
+        The state root, guaranteed to exist when this returns.
+
+    Raises:
+        CoreValidationError: When the root or one of its directories cannot
+            be created, or a path in the taxonomy is occupied by a file. The
+            refusal names the offending path: a half-built tree is worse than
+            an absent one, because the gap only surfaces later, at a write.
+    """
+    resolved = settings if settings is not None else load_settings()
+    root = Path(resolved.cadrumo_local_storage_root)
+
+    targets = [root]
+    for field_name, _subpath in _STATE_ROOT_DERIVED_DIRS.items():
+        value = getattr(resolved, field_name, None)
+        if value is None:
+            continue
+        candidate = Path(value)
+        # The taxonomy names one file among the directories
+        # (``cadrumo_usage_ratios_path``). Its field name says so, and the
+        # directory that has to exist is its parent -- creating the leaf
+        # itself would put a directory where a JSON document belongs.
+        targets.append(candidate.parent if field_name.endswith("_path") else candidate)
+
+    for target in targets:
+        if target.exists() and not target.is_dir():
+            raise CoreValidationError(
+                f"Cadrumo state directory {target} is occupied by a file; "
+                "the storage tree cannot be materialised over it.",
+            )
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            raise CoreValidationError(
+                f"Cadrumo could not create the state directory {target}: {exc}",
+            ) from exc
+
+    try:
+        root.chmod(0o700)
+    except (OSError, NotImplementedError):  # pragma: no cover - platform-dependent
+        _LOGGER.debug("could not restrict permissions on %s; relying on filesystem ACLs", root)
+
+    return root
 
 
 def load_settings() -> Settings:
