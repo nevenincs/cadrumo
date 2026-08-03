@@ -84,6 +84,17 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # no session; the same plaintext-only grounds as ``profile archive
     # inspect`` above. Locked profiles still list — status is a manifest field.
     "config profile list",
+    # Tombstoning a profile opens its OWN session scoped to the target, the
+    # same shape as ``config login`` and the custody verbs above:
+    # ``delete_profile_with_lifecycle_span`` wraps the mutation in
+    # ``profile_storage_session(profile_id)``. The root callback's session is
+    # therefore redundant, and gating on it refused the verb before the body
+    # that already knew how to open the right one could run — so an operator
+    # could not retire a profile without first logging into it. The label is
+    # resolved by a plaintext manifest scan, so an unknown name still refuses
+    # as "unknown profile" rather than as a session diagnostic, and ``--yes``
+    # remains mandatory.
+    "config profile delete",
     # Bundled-registry discovery: lists public modelo metadata and must stay
     # reachable before a profile has been unlocked.
     "app modelo list",

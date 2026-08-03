@@ -247,6 +247,45 @@ class TestProfileDiscoveryStaysReachableWhileLoggedOut:
         # the label the operator came for.
         assert [row for row in document["result"]["profiles"] if row["name"] == _LABEL], document
 
+    def test_profile_delete_is_not_refused_by_the_login_gate(self) -> None:
+        """Retiring a profile must not require authenticating into it first.
+
+        ``delete_profile_with_lifecycle_span`` wraps the mutation in its own
+        ``profile_storage_session(profile_id)``, so the root callback's session
+        was redundant — and gating on it meant an operator could not retire a
+        profile without first logging into the very profile being removed.
+
+        What is asserted is that the verb REACHES ITS OWN BODY while logged
+        out, not that it completes: supplying credentials is still the target
+        session's business, and on a passphrase-backed host with no TTY it will
+        legitimately stop there. The envelope's ``command`` is the discriminator
+        — the root callback refuses before a command is bound, so a refusal
+        carries ``command: null``, while anything reaching the verb carries
+        ``config.profile.delete``.
+
+        The passphrase is cleared deliberately. A configured
+        ``CADRUMO_SECRET_PASSPHRASE`` satisfies the root gate by itself
+        (``_headless_secret_channel_active``), so with it set this assertion
+        would hold even with the exemption removed — the test would prove
+        nothing.
+        """
+        _create_profile()
+        # Never logged in: no persisted session exists at all.
+        close_active_bucket_session()
+
+        with override_settings(cadrumo_secret_passphrase=None):
+            result = invoke_cached_cli(
+                ["--format", "json", "config", "profile", "delete", _LABEL, "--yes"],
+            )
+
+        document = json.loads(semantic_cli_output(result))
+        assert document["command"] == "config.profile.delete", document
+        error = document.get("error")
+        if error is not None:
+            # Whatever else may stop it, it must not be the login gate.
+            assert error["suggestion"] != "aeat config login", document
+            assert "aeat config login" not in semantic_cli_output(result)
+
     def test_the_login_gate_still_refuses_a_decrypting_verb(self) -> None:
         """The exemption opened one door, not the gate.
 
