@@ -90,8 +90,6 @@ value already present in your shell always wins.
 | `CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME` | str | `cadrumo-vault` | Folder name created under the Google Drive root for the Cadrumo vault |
 | `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` | int | `300` | Clock-skew buffer (seconds) before nominal expiry when refreshing Google access tokens |
 | `CADRUMO_INBOX_ALERT_LEAD_DAYS` | int | `7` | Lead window (days) for notification deadline reporting: surface CRITICAL/HIGH notifications whose appeal_deadline falls within the next N days |
-| `CADRUMO_INBOX_DIR` | Path | (derived) | Directory where the persisted Inbox JSON file lives |
-| `CADRUMO_INBOX_PDF_DIR` | Path | (derived) | Directory where downloaded notification PDFs are stored |
 | `CADRUMO_INVOICES_DIR` | Path | (derived) | Directory where the invoice catalogue JSON file is stored |
 | `CADRUMO_IVA_CATALOGUE_ROOT` | Path | (derived) | Root directory for the hand-reviewed IVA taxonomy catalogue |
 | `CADRUMO_IVA_COMPENSATION_HISTORY_DIR` | Path | (derived) | Directory for Modelo 303 compensation-history capture reports. Derived under cadrumo_local_storage_root unless explicitly set. |
@@ -163,9 +161,6 @@ value already present in your shell always wins.
 | `CADRUMO_SECRET_PASSPHRASE` | SecretStr | (secret) | Passphrase that derives the encrypted-secret-store master key. Default None — the master-key loader refuses operation on None or empty value to preserve fail-closed behaviour. Operator-facing env var is CADRUMO_SECRET_PASSPHRASE. |
 | `CADRUMO_SECRET_STORE_BACKEND` | SecretStoreBackend | `auto` | Master-key backend for the secret store. auto = OS keychain when available, encrypted file fallback otherwise. keyring = OS keychain only (refuses to fall back). file = encrypted file only (required for CI / headless). unsecured = testing-only mode with a published deterministic key; requires cadrumo_allow_unencrypted=true and refuses real NIFs. |
 | `CADRUMO_SECRET_STORE_DIR` | Path | (derived) | Directory for the encrypted secret-store master-key file and ciphertext records |
-| `CADRUMO_STATUS_CACHE_DIR` | Path | (derived) | Directory for the short-lived AEAT status-page cache |
-| `CADRUMO_STATUS_CACHE_TTL_S` | int | `900` | TTL in seconds for status cache entries (default 15 min) |
-| `CADRUMO_STORAGE_BACKUP_DIR` | Path | (derived) | Directory where the storage layer writes database backups |
 | `CADRUMO_STORAGE_PROVIDER_KIND` | str | `local_filesystem` | Backend for `cadrumo.adapters.outbound.storage`. Accepted values: local_filesystem (default), google_drive, in_memory. google_drive additionally requires cadrumo_google_drive_root_folder_id and a per-profile registered OAuth client + token via `aeat config google`. |
 | `CADRUMO_STRICT_SECURITY` | bool | `false` | Raise instead of warn when AEAT credential artifact permission hardening fails |
 | `CADRUMO_SUBMISSIONS_DIR` | Path | (derived) | Directory where ModeloPresentado JSON audit records are persisted |

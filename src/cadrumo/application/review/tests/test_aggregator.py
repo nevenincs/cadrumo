@@ -66,8 +66,6 @@ def _build_settings(tmp_path: Path) -> Settings:
         cadrumo_financial_txs_dir=tmp_path / "transactions",
         cadrumo_invoices_dir=tmp_path / "invoices",
         cadrumo_attachments_dir=tmp_path / "attachments",
-        cadrumo_inbox_dir=tmp_path / "inbox",
-        cadrumo_inbox_pdf_dir=tmp_path / "inbox-pdfs",
         cadrumo_drafts_dir=tmp_path / "drafts",
     )
 

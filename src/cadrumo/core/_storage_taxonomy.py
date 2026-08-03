@@ -300,17 +300,13 @@ class StorageCategory(StrEnum):
 
     # ── Regenerable, evictable caches ───────────────────────────────────────
     LLM_CACHE = "llm-cache"
-    STATUS_CACHE = "status-cache"
     CORPUS_TEXT_CACHE = "corpus-text-cache"
     CORPUS_SEARCH_CACHE = "corpus-search-cache"
     VALIDATION_VERDICT_CACHE = "validation-verdict-cache"
     REGISTRY_DISK_CACHE = "registry-disk-cache"
 
     # ── Durable generated outputs ───────────────────────────────────────────
-    STORAGE_BACKUP = "storage-backup"
     SUBMISSIONS = "submissions"
-    INBOX = "inbox"
-    INBOX_PDF = "inbox-pdf"
     WORKFLOW_RUNS = "workflow-runs"
     DRAFTS = "drafts"
     JUSTIFICANTES = "justificantes"
@@ -576,20 +572,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
-        StorageCategory.STATUS_CACHE,
-        "cache/status-cache",
-        dormant_reason=(
-            "No production module reads or writes it. The AEAT status-reader cache it is named for "
-            "was never wired: its companion time-to-live setting has no consumer either, so the "
-            "whole feature is declaration only. Wire the status reader or delete both the member "
-            "and its settings."
-        ),
-        settings_field="cadrumo_status_cache_dir",
-        lifecycle=StorageLifecycle.TTL,
-        grouping=StorageGrouping.CACHE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
         StorageCategory.CORPUS_TEXT_CACHE,
         "cache/corpus-text",
         consumer_module="domain/calculations/registry/_validate_evidence.py",
@@ -641,46 +623,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     ),
     # ── Durable generated outputs ───────────────────────────────────────────
     _location(
-        StorageCategory.STORAGE_BACKUP,
-        "backups",
-        dormant_reason=(
-            "No production module reads or writes it. Bucket archive and profile-bundle export both "
-            "write to a destination the operator names, not to this directory, so nothing ever "
-            "lands here. Point an export at it or delete the member."
-        ),
-        settings_field="cadrumo_storage_backup_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
         StorageCategory.SUBMISSIONS,
         "submissions",
         consumer_module="adapters/persistence/storage/_rotation.py",
         settings_field="cadrumo_submissions_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.INBOX,
-        "inbox",
-        dormant_reason=(
-            "No production module reads or writes it. Only test fixtures set the field, and no "
-            "consumer reads it back, so the location exists on disk and stays empty. Wire the "
-            "document intake that would fill it or delete the member."
-        ),
-        settings_field="cadrumo_inbox_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.EXPORTS,
-    ),
-    _location(
-        StorageCategory.INBOX_PDF,
-        "inbox/pdfs",
-        dormant_reason=(
-            "No production module reads or writes it. It shares the intake's fate: declared, "
-            "materialised, and never written. Wire the PDF intake or delete the member."
-        ),
-        settings_field="cadrumo_inbox_pdf_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
     ),

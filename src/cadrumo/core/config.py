@@ -257,10 +257,6 @@ class Settings(CadrumoMcpServingSettings):
             "reads the computed value."
         ),
     )
-    cadrumo_storage_backup_dir: Path = Field(
-        default=Path("backups"),
-        description="Directory where the storage layer writes database backups",
-    )
     cadrumo_secret_store_backend: SecretStoreBackend = Field(
         default=SecretStoreBackend.AUTO,
         description=(
@@ -824,14 +820,6 @@ class Settings(CadrumoMcpServingSettings):
     )
 
     # ── Notifications inbox ─────────────────────────────────────────────────
-    cadrumo_inbox_dir: Path = Field(
-        default=Path("inbox"),
-        description="Directory where the persisted Inbox JSON file lives",
-    )
-    cadrumo_inbox_pdf_dir: Path = Field(
-        default=Path("inbox") / "pdfs",
-        description="Directory where downloaded notification PDFs are stored",
-    )
     cadrumo_inbox_alert_lead_days: int = Field(
         default=7,
         description=(
@@ -868,14 +856,6 @@ class Settings(CadrumoMcpServingSettings):
     )
 
     # ── Status reader ───────────────────────────────────────────────────────
-    cadrumo_status_cache_dir: Path = Field(
-        default=Path("cache") / "status-cache",
-        description="Directory for the short-lived AEAT status-page cache",
-    )
-    cadrumo_status_cache_ttl_s: int = Field(
-        default=900,
-        description="TTL in seconds for status cache entries (default 15 min)",
-    )
     aeat_status_detail_url_template: str = Field(
         default_factory=_default_status_detail_url_template,
         description=(
@@ -1209,7 +1189,6 @@ class Settings(CadrumoMcpServingSettings):
         "cadrumo_attachments_dir",
         "cadrumo_local_storage_root",
         "cadrumo_log_dir",
-        "cadrumo_storage_backup_dir",
         "cadrumo_secret_store_dir",
         "cadrumo_blob_store_dir",
         "cadrumo_audit_dir",
@@ -1227,12 +1206,9 @@ class Settings(CadrumoMcpServingSettings):
         "cadrumo_llm_run_telemetry_dir",
         "cadrumo_mcp_telemetry_dir",
         "cadrumo_submissions_dir",
-        "cadrumo_inbox_dir",
-        "cadrumo_inbox_pdf_dir",
         "cadrumo_workflow_runs_dir",
         "cadrumo_drafts_dir",
         "cadrumo_runs_dir",
-        "cadrumo_status_cache_dir",
         "cadrumo_justificantes_dir",
         "cadrumo_filing_history_dir",
         "cadrumo_wallet_diagnostic_dump_dir",

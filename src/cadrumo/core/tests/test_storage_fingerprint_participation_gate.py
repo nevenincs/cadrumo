@@ -83,10 +83,6 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "Session telemetry, pruned on retention. It churns per session and holds no taxpayer state.",
     ),
     ExclusionExpectation(
-        "cadrumo_status_cache_dir",
-        "Regenerable cache of an AEAT status page, expiring on a time-to-live.",
-    ),
-    ExclusionExpectation(
         "cadrumo_corpus_text_cache_dir",
         "Regenerable cache keyed by content fingerprint over the finite bundled corpus.",
     ),
@@ -105,11 +101,6 @@ EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
         "The compiled registry pickle, rewritten on every recompile. Fingerprinting it churned "
         "the digest and produced spurious replay refusals; it was included only because the old "
         "hardcoded list could not resolve a field defaulting to None.",
-    ),
-    ExclusionExpectation(
-        "cadrumo_storage_backup_dir",
-        "Non-canonical copies of state already fingerprinted at its primary location, so hashing "
-        "it counts the same drift twice.",
     ),
 )
 """The exclusion set, stated independently of the taxonomy, with a reason each.
@@ -173,7 +164,7 @@ def test_participation_is_compared_by_name_not_by_resolved_path_count() -> None:
     shared = Path.cwd() / "shared-cache-target"
     with override_settings(
         cadrumo_llm_cache_dir=shared,
-        cadrumo_status_cache_dir=shared,
+        cadrumo_llm_usage_dir=shared,
     ):
         from ..config import load_settings
 
