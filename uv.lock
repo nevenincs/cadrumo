@@ -157,7 +157,7 @@ wheels = [
 
 [[package]]
 name = "cadrumo"
-version = "0.2.1"
+version = "0.2.2"
 source = { editable = "." }
 dependencies = [
     { name = "argon2-cffi" },
@@ -393,12 +393,12 @@ dev = [
 
 [[package]]
 name = "cadrumo-data-manuals"
-version = "0.2.1"
+version = "0.2.2"
 source = { directory = "packaging/cadrumo_data_manuals" }
 
 [[package]]
 name = "cadrumo-data-official"
-version = "0.2.1"
+version = "0.2.2"
 source = { directory = "packaging/cadrumo_data_official" }
 
 [[package]]
