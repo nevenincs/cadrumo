@@ -179,7 +179,16 @@ class FieldEditScreen(ModalScreen[str | None]):
 
     @property
     def _box_hides_a_value(self) -> bool:
-        """Whether an empty box here is hiding a value rather than describing one."""
+        """Whether an empty box here is hiding a value rather than describing one.
+
+        The single authority for both halves of the withheld-value
+        reading: whether the dialog explains that an empty box keeps the
+        value, and whether saving on one actually keeps it. Those were
+        once decided separately, and the operator met the behaviour
+        without the explanation on a masked field holding nothing — where
+        the behaviour was also wrong. One predicate keeps a promise the
+        dialog makes and the rule it acts on from parting again.
+        """
         return self._field.masked and self._field.present and not self._field.enum_values
 
     @property
@@ -280,8 +289,8 @@ class FieldEditScreen(ModalScreen[str | None]):
     def _submit_typed(self, value: str) -> None:
         """Dismiss with what the operator typed, or with nothing to do.
 
-        An empty box on a masked field is not a clear. The operator was
-        shown a mask instead of the value, so an empty box is what "I
+        An empty box that is HIDING a value is not a clear. The operator
+        was shown a mask instead of the value, so an empty box is what "I
         typed nothing" looks like and saving on it reads as leaving the
         field alone — they were never offered the chance to delete
         something they could see. Writing the blank through would destroy
@@ -289,10 +298,28 @@ class FieldEditScreen(ModalScreen[str | None]):
         no-change, exactly as cancelling does, and deletion is left to
         the button that says so.
 
+        The condition is that the box conceals something, not merely that
+        the field is masked, and the two part on a masked field holding
+        NOTHING. There the emptiness is the field's own state rather than
+        a withholding, the operator is looking at the truth, and the
+        reasoning above has nothing to bite on — so a blank means what it
+        means everywhere else. That matters on a required field: reading
+        it as a no-change answered an operator who opened an empty
+        required field to fill it in with silence, leaving them a field
+        still counted as missing and no account of why saving changed
+        nothing. Handing the blank on lets the write door refuse it and
+        say so.
+
+        This is deliberately the same predicate that decides whether the
+        dialog EXPLAINS the no-change reading. Behaviour the operator is
+        not told about is the failure being closed here, so the note and
+        the rule it describes are read from one place and cannot drift
+        apart again.
+
         Every other field keeps the old reading, because there an empty
         box is one the operator emptied.
         """
-        if self._field.masked and not value.strip():
+        if self._box_hides_a_value and not value.strip():
             self.dismiss(None)
             return
         self.dismiss(value)

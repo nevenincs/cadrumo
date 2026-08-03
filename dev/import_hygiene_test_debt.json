@@ -40,6 +40,15 @@
         "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries above."
       },
       {
+        "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_manager_masked_required_field.py",
+        "occurrence": 1,
+        "target_mod": "cadrumo.entrypoints.cli._config._manager_frontend",
+        "imported_names": [
+          "persist_active_profile_field"
+        ],
+        "reason": "White-box test reach: the manager screen is driven with the REAL persist callback so an edit goes through the actual write path (blank-clears-the-fact, re-read rather than patch) instead of a double. Load-bearing here in particular -- these tests measure what a blank submission does to the RECORD for a field that is masked and required, so a double standing in for the write door would decide the very outcome under test. `persist_active_profile_field` is the CLI's composition of the profile write door onto the TUI screen -- entrypoint-owned, and consumed in production only inside entrypoints.cli._config._manager_frontend itself. Deliberately NOT promoted, and no Ruling-4 bridge minted, for the reason recorded on the `attempt_registration` entries below."
+      },
+      {
         "importer_path": "src/cadrumo/adapters/inbound/tui/tests/test_login_screen.py",
         "occurrence": 1,
         "target_mod": "cadrumo.entrypoints.cli._config._login_frontend",
