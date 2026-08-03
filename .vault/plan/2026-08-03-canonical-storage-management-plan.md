@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-03'
-body_hash: 'sha256:17a19c28286db504ff79f03f709b0b816029b90bb2ef5130b8d4f51d03849b80'
+body_hash: 'sha256:4a3e990749eb21684ba627b5f4422bca18007bcdf6ca361cdf931e37e80545bf'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -61,8 +61,8 @@ Moves the bucket-layout and keystore names into the core taxonomy so the namespa
 - [x] `W01.P03.S19` - Rewrite the namespace registry's filesystem-name constants as consumers of the core taxonomy while leaving the secure-object namespace definitions untouched, gated by a test asserting each constant equals its taxonomy member value; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
 - [ ] `W01.P03.S20` - Re-point bucket_paths onto the scoped accessor, gated by the existing bucket provisioning tests plus an assertion that no bare directory-name literal survives in the module; `src/cadrumo/adapters/persistence/storage/bucket/_layout.py`.
 - [ ] `W01.P03.S21` - Re-point keystore_path onto the scoped accessor while preserving the keystore-separation validation, gated by the existing separation-refusal test; `src/cadrumo/adapters/persistence/storage/bucket/_keystore_paths.py`.
-- [ ] `W01.P03.S22` - Delete the inline buckets and db literals in the bucket database path construction and read the taxonomy instead, gated by the route-classification suite; `src/cadrumo/core/config.py`.
-- [ ] `W01.P03.S23` - Delete the inline buckets and db literals in the storage-route classifier's parts matching and read the taxonomy instead, gated by the route-classification suite; `src/cadrumo/core/_config_storage_route.py`.
+- [x] `W01.P03.S22` - Delete the inline buckets and db literals in the bucket database path construction and read the taxonomy instead, gated by the route-classification suite; `src/cadrumo/core/config.py`.
+- [x] `W01.P03.S23` - Delete the inline buckets and db literals in the storage-route classifier's parts matching and read the taxonomy instead, gated by the route-classification suite; `src/cadrumo/core/_config_storage_route.py`.
 - [ ] `W01.P03.S24` - Re-point the active-profile pointer filename onto its taxonomy member, gated by a test asserting the pointer round-trips through the taxonomy-resolved path; `src/cadrumo/core/_bucket_pointer_io.py`.
 - [ ] `W01.P03.S25` - Collapse the twin reset-journal directory-name declaration onto the taxonomy member, gated by the existing parity pin rewritten to compare the application constant against the taxonomy rather than against a second constant; `src/cadrumo/application/_config_reset_repository.py`.
 - [ ] `W01.P03.S26` - Re-point the Windows worst-case object-path suffix constant onto the now-core bucket-layout members, retiring the documented layering-wall literal, gated by the existing suffix-shape assertions in the layout and local-provider tests; `src/cadrumo/core/paths.py`.
