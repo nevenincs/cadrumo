@@ -10,6 +10,20 @@ disagreeing with the taxonomy. This gate makes that comparison live, re-derived
 from :func:`~cadrumo.core.storage_location` on every run rather than a copied
 constant, so a rename is caught the moment it lands.
 
+Scoped to :attr:`~adapters.persistence.storage.StoragePathAnchor.STORAGE_ROOT`
+entries only. The three blob-content grammars
+(``blob_manifest``, ``blob_content_plaintext``, ``blob_content_ciphertext``) anchor
+their ``<root>`` token at
+:class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`'s own
+``root_dir`` instead -- a genuinely different coordinate system, with no
+``StorageCategory`` subpath declared relative to IT for this gate to compare
+against. An earlier version of this gate matched their literal ``blobs`` run
+against ``StorageCategory.BLOBS.subpath`` (also ``"blobs"``) and reported
+agreement -- but the two spellings only coincided by sharing a name; the gate was
+comparing two different anchors, not verifying one. See
+``StoragePathAnchor``'s own docstring for why the anchors differ (a real,
+separately-tracked production discrepancy, not merely a labelling gap).
+
 The one pre-existing exception -- ``config_reset_journal``'s ``reset-operations``
 directory, joined onto the raw storage root in
 ``application/_config_reset_repository.py`` rather than resolved through a
@@ -27,7 +41,7 @@ import pytest
 
 from .....core import StorageCategory, storage_location
 from .....tests import literal_directory_runs
-from .. import STORAGE_NAMESPACE_REGISTRY, StoragePathKind
+from .. import STORAGE_NAMESPACE_REGISTRY, StoragePathAnchor, StoragePathKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -44,10 +58,16 @@ _UNDECLARED_DIRECTORY_EXEMPTIONS: Final[dict[str, str]] = {
 }
 
 
-def _filesystem_kind_definitions() -> list[object]:
+def _storage_root_anchored_definitions() -> list[object]:
     return [
-        definition for definition in STORAGE_NAMESPACE_REGISTRY.paths if definition.kind != StoragePathKind.LOGICAL_SQL
+        definition
+        for definition in STORAGE_NAMESPACE_REGISTRY.paths
+        if definition.anchor is StoragePathAnchor.STORAGE_ROOT
     ]
+
+
+def _filesystem_kind_definitions() -> list[object]:
+    return _storage_root_anchored_definitions()
 
 
 def test_the_taxonomy_declares_more_than_a_handful_of_directory_subpaths() -> None:
@@ -120,3 +140,46 @@ def test_an_undeclared_directory_literal_is_caught_by_construction() -> None:
     assert bogus_run not in _KNOWN_DIRECTORY_SUBPATHS
     runs = literal_directory_runs(grammar=f"<root>/{bogus_run}/<bucket_id>/file.json", kind=StoragePathKind.FILE)
     assert runs == (bogus_run,)
+
+
+def test_the_blob_store_root_anchor_excludes_three_real_entries_not_an_empty_set() -> None:
+    """Confirms the STORAGE_ROOT scoping above genuinely excludes real entries.
+
+    Without this, an accidental filter bug (e.g. a typo'd anchor comparison
+    that matches nothing, or everything) would silently pass the main gate by
+    leaving it with zero or the full set to check -- this proves the excluded
+    group is exactly the three blob-content entries the module docstring
+    names, no more and no fewer.
+    """
+    blob_store_root_definitions = [
+        definition
+        for definition in STORAGE_NAMESPACE_REGISTRY.paths
+        if definition.anchor is StoragePathAnchor.BLOB_STORE_ROOT
+    ]
+    assert {definition.key for definition in blob_store_root_definitions} == {
+        "blob_manifest",
+        "blob_content_plaintext",
+        "blob_content_ciphertext",
+    }
+
+
+def test_a_blob_store_root_entrys_blobs_literal_would_falsely_agree_by_name_collision() -> None:
+    """Reproduces the exact false-positive the earlier gate shape produced.
+
+    ``blob_content_plaintext``'s literal run ('blobs') coincidentally equals
+    ``StorageCategory.BLOBS.subpath`` -- proving that checking it against the
+    known-subpath set, as the main gate does for STORAGE_ROOT entries, would
+    have reported "agreement" here too. The two anchors are not the same
+    directory in production (see the module docstring and StoragePathAnchor),
+    so that agreement would have been coincidental, not verified -- which is
+    exactly why this key is excluded from the main gate rather than included
+    and passing.
+    """
+    definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("blob_content_plaintext")
+    assert definition.anchor is StoragePathAnchor.BLOB_STORE_ROOT
+    runs = literal_directory_runs(grammar=definition.grammar, kind=definition.kind)
+    assert runs == ("blobs",)
+    assert runs[0] in _KNOWN_DIRECTORY_SUBPATHS, (
+        "fixture assumption: 'blobs' must still coincidentally match BLOBS.subpath for this "
+        "test to demonstrate the false-positive risk the anchor exclusion avoids"
+    )

@@ -69,6 +69,7 @@ from .. import (
     StorageRemoteMirrorPolicy,
 )
 from .._namespace_registry import (
+    StoragePathAnchor,
     StoragePathDefinition,
     StoragePathKind,
     secure_object_logical_path,
@@ -609,6 +610,7 @@ def _make_path_definition(**overrides: object) -> StoragePathDefinition:
         "kind": StoragePathKind.DIRECTORY,
         "grammar": "<root>/test/",
         "owner": "aeat-test",
+        "anchor": StoragePathAnchor.STORAGE_ROOT,
     }
     defaults.update(overrides)
     return StoragePathDefinition.model_validate(defaults)

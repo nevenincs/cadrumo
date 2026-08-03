@@ -18,6 +18,7 @@ from ._namespace_taxonomy import (
     StorageCustodyDisposition,
     StorageCustodyProfile,
     StorageNamespaceScope,
+    StoragePathAnchor,
     StoragePathKind,
     StorageRemoteMirrorPolicy,
 )
@@ -1161,6 +1162,7 @@ __all__ = [
     "StorageCustodyProfile",
     "StorageHierarchyRegistry",
     "StorageNamespaceScope",
+    "StoragePathAnchor",
     "StoragePathDefinition",
     "StoragePathKind",
     "StorageRemoteMirrorPolicy",

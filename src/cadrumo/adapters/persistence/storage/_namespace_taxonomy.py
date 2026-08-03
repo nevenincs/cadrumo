@@ -73,3 +73,25 @@ class StoragePathKind(StrEnum):
     FILE = "file"
     LOGICAL_SQL = "logical_sql"
     BLOB_OBJECT = "blob_object"
+
+
+class StoragePathAnchor(StrEnum):
+    """Which directory a :class:`StoragePathDefinition` grammar's ``<root>`` token means.
+
+    Declared because it is not one thing. Sixteen of the nineteen
+    ``<root>``-anchored filesystem entries mean the top-level storage root
+    (``cadrumo_local_storage_root``); the three blob-content entries
+    (``blob_manifest``, ``blob_content_plaintext``, ``blob_content_ciphertext``)
+    instead anchor ``<root>`` at
+    :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`'s
+    own ``root_dir`` constructor parameter -- a genuinely distinct value from
+    the storage root in how production wires it today
+    (``cadrumo_blob_store_dir``, which is itself already the storage root's
+    ``blobs`` subdirectory). Conflating the two let a directory-agreement
+    gate certify a match between two different anchors that happened to
+    share a literal subdirectory name (``blobs``), rather than verifying
+    anything real.
+    """
+
+    STORAGE_ROOT = "storage_root"
+    BLOB_STORE_ROOT = "blob_store_root"

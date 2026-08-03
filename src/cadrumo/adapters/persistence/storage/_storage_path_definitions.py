@@ -21,11 +21,11 @@ from __future__ import annotations
 
 from typing import Final
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import StorageCategory, storage_location
-from ._namespace_taxonomy import StoragePathKind
+from ._namespace_taxonomy import StoragePathAnchor, StoragePathKind
 from .errors import NamespaceRegistryError
 
 # The bucket and keystore layout names are read from the core storage
@@ -73,6 +73,17 @@ class StoragePathDefinition(BaseModel):
     owner: str = Field(min_length=1)
     segment: str | None = Field(default=None, min_length=1)
     schema_version: int | None = Field(default=None, ge=1)
+    anchor: StoragePathAnchor | None = Field(default=None)
+    """Which directory ``grammar``'s ``<root>`` token means.
+
+    Required for every ``<root>``-anchored kind (``FILE``, ``DIRECTORY``,
+    ``BLOB_OBJECT``) and forbidden for ``LOGICAL_SQL`` (a ``db://`` logical
+    path has no ``<root>`` token to anchor). Declared rather than assumed
+    uniform: the three blob-content entries anchor at
+    :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`'s
+    own ``root_dir``, a genuinely distinct value from the storage root every
+    other entry means -- see :class:`StoragePathAnchor`.
+    """
 
     @field_validator("key")
     @classmethod
@@ -94,6 +105,21 @@ class StoragePathDefinition(BaseModel):
             raise NamespaceRegistryError("path segment must be a single component")
         return value
 
+    @model_validator(mode="after")
+    def _anchor_matches_kind(self) -> StoragePathDefinition:
+        if self.kind is StoragePathKind.LOGICAL_SQL:
+            if self.anchor is not None:
+                raise NamespaceRegistryError(
+                    f"path {self.key!r} is LOGICAL_SQL (a db:// logical path) and must not declare "
+                    "an anchor -- there is no <root> token to anchor",
+                )
+        elif self.anchor is None:
+            raise NamespaceRegistryError(
+                f"path {self.key!r} is {self.kind.value} and must declare an anchor -- "
+                "which directory its <root> token means is not inferrable",
+            )
+        return self
+
 
 STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
     StoragePathDefinition(
@@ -106,6 +132,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/cadrumo.db",
         owner="cadrumo.core.config",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath,
     ),
     StoragePathDefinition(
@@ -113,6 +140,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/",
         owner="cadrumo.adapters.persistence.storage.bucket",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKETS_DIRNAME,
     ),
     StoragePathDefinition(
@@ -120,6 +148,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/db/",
         owner="cadrumo.adapters.persistence.storage.bucket",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_DB_DIRNAME,
     ),
     StoragePathDefinition(
@@ -132,12 +161,14 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/buckets/<bucket_id>/db/cadrumo.db",
         owner="cadrumo.core.config",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="bucket_blobs",
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/blobs/",
         owner="cadrumo.adapters.persistence.storage.bucket",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_BLOBS_DIRNAME,
     ),
     StoragePathDefinition(
@@ -145,6 +176,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/buckets/<bucket_id>/audit/",
         owner="cadrumo.adapters.persistence.storage.bucket",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_AUDIT_DIRNAME,
     ),
     StoragePathDefinition(
@@ -152,6 +184,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/buckets/<bucket_id>/manifest.toml",
         owner="cadrumo.adapters.persistence.storage.bucket",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_MANIFEST_FILENAME,
     ),
     StoragePathDefinition(
@@ -159,6 +192,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/buckets/<bucket_id>/.lock",
         owner="cadrumo.adapters.persistence.storage.bucket",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_LOCK_FILENAME,
     ),
     StoragePathDefinition(
@@ -166,6 +200,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/buckets/<bucket_id>/output-language.hint",
         owner="cadrumo.adapters.persistence.storage.bucket",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,
     ),
     StoragePathDefinition(
@@ -173,6 +208,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.DIRECTORY,
         grammar="<root>/keystore/<bucket_id>/",
         owner="cadrumo.adapters.persistence.storage.master_key",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=KEYSTORE_DIRNAME,
     ),
     StoragePathDefinition(
@@ -180,6 +216,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/keystore/<bucket_id>/bucket.dek.json",
         owner="cadrumo.adapters.persistence.storage.master_key",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=BUCKET_DEK_FILENAME,
     ),
     StoragePathDefinition(
@@ -187,6 +224,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/keystore/<bucket_id>/session.v1.json",
         owner="cadrumo.adapters.persistence.storage.master_key",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=PROFILE_SESSION_FILENAME,
     ),
     StoragePathDefinition(
@@ -194,6 +232,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/keystore/<bucket_id>/login-throttle.json",
         owner="cadrumo.adapters.persistence.storage.master_key",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=LOGIN_THROTTLE_FILENAME,
     ),
     StoragePathDefinition(
@@ -208,6 +247,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/secrets/index.json",
         owner="cadrumo.adapters.persistence.storage.secret_store",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=SECRET_INDEX_FILENAME,
         schema_version=SECRET_INDEX_SCHEMA_VERSION,
     ),
@@ -216,6 +256,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/reset-operations/<operation_id>.json",
         owner="cadrumo.application.config_reset",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=CONFIG_RESET_JOURNAL_DIRNAME,
     ),
     StoragePathDefinition(
@@ -229,6 +270,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.BLOB_OBJECT,
         grammar="<root>/blobs/<sha256[:2]>/<sha256>.manifest.json",
         owner="cadrumo.adapters.persistence.storage.blob_store",
+        anchor=StoragePathAnchor.BLOB_STORE_ROOT,
         schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
     ),
     # The six entries below declare parameterised fan-out SHAPES, not
@@ -246,12 +288,14 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.BLOB_OBJECT,
         grammar="<root>/blobs/<sha256[:2]>/<sha256>",
         owner="cadrumo.adapters.persistence.storage.blob_store",
+        anchor=StoragePathAnchor.BLOB_STORE_ROOT,
     ),
     StoragePathDefinition(
         key="blob_content_ciphertext",
         kind=StoragePathKind.BLOB_OBJECT,
         grammar="<root>/blobs/<sha256[:2]>/<sha256>.enc",
         owner="cadrumo.adapters.persistence.storage.blob_store",
+        anchor=StoragePathAnchor.BLOB_STORE_ROOT,
     ),
     StoragePathDefinition(
         # The Google-Drive-alternative local filesystem provider fans out one
@@ -263,12 +307,14 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.BLOB_OBJECT,
         grammar="<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.bin",
         owner="cadrumo.adapters.outbound.storage",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="local_provider_object_sidecar",
         kind=StoragePathKind.BLOB_OBJECT,
         grammar="<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.meta.json",
         owner="cadrumo.adapters.outbound.storage",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         # The observability run-trace directory fans out one subdirectory per
@@ -280,18 +326,21 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/runs/<run_id>/trace.json",
         owner="cadrumo.core.observability",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="run_events",
         kind=StoragePathKind.FILE,
         grammar="<root>/runs/<run_id>/events.jsonl",
         owner="cadrumo.core.observability",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="run_envelope",
         kind=StoragePathKind.FILE,
         grammar="<root>/runs/<run_id>/envelope.json",
         owner="cadrumo.core.observability",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     # The five entries below declare filename TEMPLATES rather than a single
     # fixed leaf -- a daily log filename, a bucket/provider-keyed lock name, a
@@ -318,29 +367,34 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         kind=StoragePathKind.FILE,
         grammar="<root>/llm-usage/usage-<timestamp>.jsonl",
         owner="cadrumo.adapters.outbound.llm",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="llm_run_telemetry_record",
         kind=StoragePathKind.FILE,
         grammar="<root>/llm-run-telemetry/run-telemetry-<timestamp>.jsonl",
         owner="cadrumo.adapters.outbound.llm",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="auth_acquisition_lock",
         kind=StoragePathKind.FILE,
         grammar="<root>/tokens/<bucket_id>-<auth_provider_kind>-auth.lock",
         owner="cadrumo.application.auth",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="validation_verdict_cache_entry",
         kind=StoragePathKind.FILE,
         grammar="<root>/cache/registry-verdict/cadrumo_validation_verdict_<sha256[:16]>.json",
         owner="cadrumo.domain.calculations.registry",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="llm_cache_entry",
         kind=StoragePathKind.FILE,
         grammar="<root>/cache/llm-cache/<provider>/<model>/<sha256>-<sha256>.json",
         owner="cadrumo.adapters.outbound.llm",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
 )
