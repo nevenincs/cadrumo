@@ -29,26 +29,41 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from ..adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StoragePathKind
+if TYPE_CHECKING:
+    from ..adapters.persistence.storage import StoragePathKind
 
 _PLACEHOLDER_PATTERNS: Final[dict[str, str]] = {
     # Content-hash fan-out (blob store, both root- and bucket-scoped).
     "sha256[:2]": r"[0-9a-f]{2}",
     "sha256": r"[0-9a-f]{64}",
+    # Registry-verdict cache filename: a 16-lowercase-hex truncation of a
+    # sha256 digest over the resolved registry root
+    # (domain/calculations/registry/_validate_verdict.py:_ROOT_HASH_LEN).
+    "sha256[:16]": r"[0-9a-f]{16}",
     # Observability per-run trace directory: 16 lowercase hex characters,
     # the shape core.observability._context._mint_run_id mints.
     "run_id": r"[0-9a-f]{16}",
+    # ISO calendar date (llm-usage / llm-run-telemetry daily filenames).
+    "timestamp": r"\d{4}-\d{2}-\d{2}",
+    # Closed set: core.AuthProviderKind's members, spelled precisely rather
+    # than bounded only by "not a path separator" like the free-form tokens
+    # below. Non-capturing group is load-bearing: "|" has the lowest regex
+    # precedence, so an ungrouped alternation would leak across the
+    # surrounding literal segments the compiler splices this fragment into.
+    "auth_provider_kind": r"(?:certificate|clave_movil|clave_permanente)",
     # Free-form application-chosen identifiers: a bucket id, an outbound
     # namespace, an HMAC-prefix segment, an operator-mutable label, a
-    # config-reset operation id. None of these are hash-shaped, so they are
-    # bounded only by "not a path separator".
+    # config-reset operation id, an LLM provider/model. None of these are
+    # hash-shaped, so they are bounded only by "not a path separator".
     "bucket_id": r"[^/]+",
     "namespace": r"[^/]+",
     "hmac_prefix": r"[^/]+",
     "label": r"[^/]+",
     "operation_id": r"[^/]+",
+    "provider": r"[^/]+",
+    "model": r"[^/]+",
 }
 
 _PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(r"<([^<>]+)>")
@@ -99,6 +114,18 @@ def assert_path_matches_grammar(*, key: str, root: Path, produced: Path) -> None
             pattern, or when the grammar names a placeholder this module has
             no regex fragment for.
     """
+    # Deferred: ``cadrumo.tests`` is imported at the earliest point in pytest
+    # collection, before test-harness storage-root isolation is applied
+    # (see the repo-root and src/cadrumo conftests). A module-level import
+    # here would pull in ``adapters.persistence.storage`` -> the full
+    # ``cadrumo.core`` facade -> a real module-level ``get_logger()`` call
+    # reachable through it, binding the diagnostic-log FileHandler to
+    # whatever storage root is active at THAT premature moment -- the
+    # operator's real one, since isolation has not landed yet. This helper is
+    # only ever called from inside a test body, well after isolation is in
+    # place, so the import costs nothing to defer here.
+    from ..adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
+
     definition = STORAGE_NAMESPACE_REGISTRY.path_by_key(key)
     pattern = _grammar_to_pattern(definition.grammar, root)
     produced_posix = produced.as_posix()
@@ -150,6 +177,9 @@ def literal_directory_runs(*, grammar: str, kind: StoragePathKind) -> tuple[str,
         return ()
     components = remainder.split("/")
     is_literal = ["<" not in component for component in components]
+    # Deferred for the same early-collection reason as assert_path_matches_grammar above.
+    from ..adapters.persistence.storage import StoragePathKind
+
     if kind in (StoragePathKind.FILE, StoragePathKind.BLOB_OBJECT):
         is_literal[-1] = False
     runs: list[str] = []
@@ -163,3 +193,21 @@ def literal_directory_runs(*, grammar: str, kind: StoragePathKind) -> tuple[str,
     if current:
         runs.append("/".join(current))
     return tuple(runs)
+
+
+def assert_grammar_vocabulary_is_declared(grammar: str) -> None:
+    """Assert every ``<placeholder>`` token in ``grammar`` has a declared regex fragment.
+
+    Thin wrapper over :func:`_grammar_to_pattern`'s own vocabulary check,
+    exposed publicly so a gate can assert compilability without also needing
+    a real ``<root>`` to substitute. Never call this for a
+    :attr:`~adapters.persistence.storage.StoragePathKind.LOGICAL_SQL`
+    grammar (a ``db://`` logical path uses its own tokens, e.g.
+    ``<object_key>``, deliberately outside this filesystem-grammar
+    compiler) -- callers must filter that kind out themselves.
+
+    Raises:
+        AssertionError: When ``grammar`` names a placeholder this module has
+            no regex fragment for. The message names the offending token.
+    """
+    _grammar_to_pattern(grammar, Path("/grammar-vocabulary-probe-root"))
