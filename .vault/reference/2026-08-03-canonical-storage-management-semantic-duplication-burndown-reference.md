@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c128025fa758a0c2123909fdb03c12b307756c116c52542a19db08926b4c50e6'
+body_hash: 'sha256:58f8629de0cca38c8f243bbe34a4d669e1f05253446cd3702cbf43d22a166b60'
 related:
   - "[[2026-08-03-canonical-storage-management-adr]]"
 ---
@@ -340,14 +340,22 @@ Recorded so a future pass does not re-litigate them:
 
 ### Corrections found while verifying this inventory
 
-- **The taxonomy has 28 entries, settling a dispute the ledgers left open.**
-  Measured directly against the live mapping: 28 entries, of which exactly 1 is a
-  file. Any 27 figure is wrong.
 - **There is a fifth unpinned `"buckets"` literal**, beyond the four previously
   reported: `application/_journal_repository.py:196` builds
   `(self._storage_root / "buckets").resolve(strict=False)`. It is not pinned to
   the namespace-registry constant and no test would catch it drifting. Add it to
   the set the ADR's unification ruling deletes.
+- **The taxonomy's entry and file count is not restated here.** An earlier
+  version of this section stated "28 entries, of which exactly 1 is a file" with
+  no date and no commit, under maximum emphasis ("any 27 figure is wrong") that
+  instructed a future reader to reject a correctly-measured count rather than
+  recompute. The taxonomy has grown continuously through this campaign — a
+  vault-corpus review measured 46 entries and 15 files at the SHA it checked,
+  and a later burndown wave has since added more. Any number written here would
+  be stale before this document's next read. The authority is `len(STORAGE_TAXONOMY)`
+  in `src/cadrumo/core/_storage_taxonomy.py`, plus the file-kind count from
+  iterating each member's `node_kind`; recompute against a pinned HEAD rather
+  than trusting a number in this or any other prose document.
 
 ### Not yet covered
 
