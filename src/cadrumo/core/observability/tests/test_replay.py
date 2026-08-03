@@ -24,6 +24,8 @@ from pathlib import Path
 
 import pytest
 
+from ....tests.storage_scope import storage_overrides
+from ... import StorageCategory
 from ...config import Settings, override_settings
 from .. import (
     AeatCorpusDriftError,
@@ -60,7 +62,7 @@ class TestReplayRun:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             current_corpus = compute_corpus_sha256(Settings())
             trace = _build_trace("0123456789abcdef", corpus_sha256=current_corpus)
             save_trace(trace)
@@ -72,7 +74,7 @@ class TestReplayRun:
         self,
         tmp_path: Path,
     ) -> None:
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             trace = _build_trace("fedcba9876543210", corpus_sha256="0" * 64)
             save_trace(trace)
             with pytest.raises(AeatCorpusDriftError, match=r"aeat|corpus|drift") as excinfo:
@@ -91,7 +93,7 @@ class TestReplayRun:
         tmp_path: Path,
     ) -> None:
         """Replay must refuse traces captured with the removed write flag."""
-        with override_settings(cadrumo_runs_dir=str(tmp_path)):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             current_corpus = compute_corpus_sha256(Settings())
             legacy_trace = RunTrace(
                 run_id="aaaabbbbccccdddd",
@@ -122,7 +124,7 @@ class TestReplayRun:
         )
         from .._store import load_trace
 
-        with override_settings(cadrumo_runs_dir=tmp_path):
+        with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             current_corpus = _compute_corpus_sha256(_Settings())
             original = RunTrace(
                 run_id="1111222233334444",
@@ -141,7 +143,10 @@ class TestReplayRun:
             # Settings field is consulted by ``run_context`` via
             # ``load_settings()`` at re-entry.
             with (
-                override_settings(cadrumo_runs_dir=tmp_path, cadrumo_replay_active=original.run_id),
+                override_settings(
+                    cadrumo_replay_active=original.run_id,
+                    **storage_overrides(tmp_path, StorageCategory.RUNS),
+                ),
                 run_context(entrypoint="cadrumo test replay-child", arguments=()) as info,
             ):
                 child_run_id = info.run_id
@@ -154,7 +159,10 @@ class TestReplayRun:
         from .. import run_context
         from .._store import load_trace
 
-        with override_settings(cadrumo_runs_dir=tmp_path, cadrumo_replay_active="1"):
+        with override_settings(
+            cadrumo_replay_active="1",
+            **storage_overrides(tmp_path, StorageCategory.RUNS),
+        ):
             with run_context(entrypoint="cadrumo test", arguments=()) as info:
                 rid = info.run_id
 
@@ -191,9 +199,8 @@ class TestReplayEndToEndBooleanFlag:
 
     def test_replay_of_workflow_list_json(self, tmp_path: Path) -> None:
         with override_settings(
-            cadrumo_runs_dir=tmp_path,
             # A fresh workflow-runs dir so list has nothing to render.
-            cadrumo_workflow_runs_dir=tmp_path / "workflow-runs",
+            **storage_overrides(tmp_path, StorageCategory.RUNS, StorageCategory.WORKFLOW_RUNS),
         ):
             current_corpus = compute_corpus_sha256(Settings())
             recorded = RunTrace(

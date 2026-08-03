@@ -11,6 +11,8 @@ from textwrap import dedent
 
 import pytest
 
+from ...core import StorageCategory
+from ...tests.storage_scope import storage_env_overrides
 from .test_config_reset import (
     _OVERRIDE_REASON,
     _PROFILE_A_ID,
@@ -148,7 +150,9 @@ def _child_env(root: Path) -> dict[str, str]:
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
             "CADRUMO_SECRET_STORE_BACKEND": "file",
-            "CADRUMO_SECRET_STORE_DIR": str(root.parent / "secrets"),
+            # Anchored on the root's parent, so the secret substrate stays a
+            # sibling of the bucket tree rather than nesting inside it.
+            **storage_env_overrides(root.parent, StorageCategory.SECRETS),
             "CADRUMO_SECRET_PASSPHRASE": DEV_TEST_DATABASE_PASSWORD,
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",

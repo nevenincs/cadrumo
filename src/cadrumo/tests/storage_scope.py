@@ -41,7 +41,7 @@ from ..core.errors import CoreValidationError
 if TYPE_CHECKING:
     from pathlib import Path
 
-__all__ = ["storage_overrides"]
+__all__ = ["storage_env_overrides", "storage_overrides"]
 
 
 def storage_overrides(anchor: Path, *categories: StorageCategory) -> dict[str, Path]:
@@ -91,3 +91,43 @@ def storage_overrides(anchor: Path, *categories: StorageCategory) -> dict[str, P
             )
         overrides[location.settings_field] = anchor / location.relative_path()
     return overrides
+
+
+def storage_env_overrides(anchor: Path, *categories: StorageCategory) -> dict[str, str]:
+    """Return the environment-variable form of :func:`storage_overrides`.
+
+    For a test that hands an environment to a subprocess rather than entering
+    an :func:`~core.config.override_settings` block. Same guarantee: neither
+    the variable name nor the leaf directory is written at the call site.
+
+    The name comes from :meth:`~core.config.Settings.env_var_names`, not from
+    uppercasing the field and hoping. A field whose environment source has
+    been severed is still a field, so uppercasing it yields a plausible
+    variable that reaches nothing -- the subprocess would silently run against
+    the real location. That case is refused here instead.
+
+    Args:
+        anchor: Directory to relocate beneath, ordinarily a test's ``tmp_path``.
+        categories: Root-scoped, operator-overridable members to relocate.
+
+    Returns:
+        Environment variable names mapped to stringified paths, ready to merge
+        into a subprocess environment.
+
+    Raises:
+        CoreValidationError: For anything :func:`storage_overrides` refuses, or
+            when a member's field is not reachable from the environment.
+    """
+    from ..core.config import Settings
+
+    reachable = Settings.env_var_names()
+    environment: dict[str, str] = {}
+    for field, path in storage_overrides(anchor, *categories).items():
+        name = field.upper()
+        if name not in reachable:
+            raise CoreValidationError(
+                f"settings field {field!r} is not reachable from the environment, so setting "
+                f"{name!r} would relocate nothing; override it through Settings instead.",
+            )
+        environment[name] = str(path)
+    return environment
