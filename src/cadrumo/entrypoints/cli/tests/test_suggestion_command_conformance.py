@@ -606,3 +606,196 @@ def test_scanner_flags_a_dead_option_citation() -> None:
     # Option validity is OFF for reference prose (no strict flag), so an abstract
     # mention of an option does not false-positive.
     assert not _dead_citations_in("The aeat app ledger split verb has no --dry-run preview.", origin="synthetic")
+
+
+# ── suggestions must survive the redaction funnel ──────────────────
+#
+# The citation checks above prove a suggested command EXISTS. They cannot
+# prove it is USABLE, and those are different failures: a suggestion rides
+# the notices channel, so it is redacted with the rest of the envelope
+# before the operator ever sees it. A verb that resolves is worthless if its
+# arguments arrive hashed.
+#
+# The evidence-extract hint embedded the extracted supplier NIF and reached
+# the operator as ``--counterparty-nif sha256:1c9f9632``. It broke for
+# natural-person suppliers -- most freelance invoices -- and kept working for
+# companies, so the common path was broken and the uncommon one hid it.
+#
+# The literal scanner above could never have caught it. The extracted
+# ``ast.Constant`` was ``"...catalogue create --kind received "``; the NIF
+# arrived in a separate ``FormattedValue`` of the same f-string, invisible to
+# a check that only reads constants. That is why this scans INTERPOLATIONS.
+
+#: Rule name -> the identifier-name tokens that carry a value that rule redacts.
+#:
+#: This is the one hand-written half, and it is hand-written because the two
+#: vocabularies genuinely differ: the funnel matches VALUE SHAPES, while this
+#: gate can only see the NAME of an interpolated expression. The defect that
+#: prompted the gate is the proof -- its identifier was ``supplier_tax_id``,
+#: which contains no rule name, so deriving tokens from ``default_rules()``
+#: alone would have missed the very case this exists to prevent.
+#:
+#: The coupling is therefore made LOUD rather than left implicit:
+#: :func:`test_every_redaction_rule_declares_its_identifier_vocabulary` fails
+#: when a rule ships without an entry here, naming it. The funnel gained three
+#: arms in one day (NIF/NIE, CIF, then IBAN); a quietly hand-maintained set
+#: would have rotted on the first of them.
+_REDACTABLE_IDENTIFIER_TOKENS: dict[str, frozenset[str]] = {
+    "nif-hash": frozenset({"nif", "nie", "tax_id", "taxid", "dni"}),
+    "cif-hash": frozenset({"cif"}),
+    "iban-hash": frozenset({"iban"}),
+    "url-host-only": frozenset({"url", "endpoint", "href"}),
+    # Bare ``token`` is deliberately absent. It is ordinary computing
+    # vocabulary here -- a period token (``1T``), a registry token, a parse
+    # token -- and including it flagged ``registry_token`` on the
+    # calculation-preparation hint, which carries a filing period and nothing
+    # redactable. The names that actually carry a credential are qualified, so
+    # the vocabulary is qualified too. The stated cost: a variable named
+    # exactly ``token`` carrying a real bearer value would not be seen. That
+    # is a narrower hole than a gate whose false positives get it disabled.
+    "token-fingerprint": frozenset({"secret", "credential", "api_key"}),
+    "bearer-token-fingerprint": frozenset({"bearer", "access_token", "refresh_token"}),
+}
+
+
+def _redactable_identifier_tokens() -> frozenset[str]:
+    """Return every identifier token that marks an interpolation as redactable."""
+    return frozenset().union(*_REDACTABLE_IDENTIFIER_TOKENS.values())
+
+
+def _interpolated_names(node: ast.AST) -> Iterator[str]:
+    """Yield the identifier name behind each value interpolated into ``node``.
+
+    Recurses through the expression forms a suggestion actually uses. The
+    ``or`` fallback shape is not hypothetical -- the original defect was
+    ``{draft.supplier_tax_id or '<nif>'}``, an :class:`ast.BoolOp` whose
+    redactable operand sits one level down, so a check reading only the
+    outermost expression would have passed it.
+    """
+    for child in ast.walk(node):
+        if isinstance(child, ast.FormattedValue):
+            for expression in ast.walk(child.value):
+                name = (
+                    expression.attr
+                    if isinstance(expression, ast.Attribute)
+                    else expression.id
+                    if isinstance(expression, ast.Name)
+                    else None
+                )
+                # A SCREAMING_CASE name is a declared module constant, never a
+                # taxpayer's value: the redactable shapes all arrive at runtime.
+                # Skipping them is a rule about what a constant IS rather than an
+                # exemption for a site, which matters because the alternative was
+                # allowlisting ``_NIF_IVA_AUTH_LOCKED_DESCRIPTOR`` -- a label
+                # naming AEAT's NIF-IVA service, carrying no identity at all.
+                if name is None or name.isupper():
+                    continue
+                yield name
+
+
+def _redactable_interpolations_in(tree: ast.AST, *, origin: str) -> list[str]:
+    """Report every suggestion in ``tree`` that interpolates a redactable name."""
+    tokens = _redactable_identifier_tokens()
+    failures: list[str] = []
+    for node in ast.walk(tree):
+        if not (isinstance(node, ast.keyword) and node.arg in _RUNNABLE_SUGGESTION_KEYS):
+            continue
+        for name in _interpolated_names(node.value):
+            lowered = name.lower()
+            matched = sorted(token for token in tokens if token in lowered)
+            if matched:
+                failures.append(f"{origin}:{node.value.lineno} interpolates {name!r} (matches {', '.join(matched)})")
+    return failures
+
+
+def test_every_redaction_rule_declares_its_identifier_vocabulary() -> None:
+    """A new redaction arm must state which identifier names carry its values.
+
+    This is the loud half of the coupling. The gate below can only match
+    NAMES, while the funnel matches VALUE SHAPES, so the bridge between them
+    cannot be derived -- but it can be forced to stay complete. A fourth arm
+    landing without an entry fails HERE, naming the rule, instead of silently
+    narrowing what the gate can see.
+    """
+    from ....core.redaction import default_rules
+
+    declared = frozenset(_REDACTABLE_IDENTIFIER_TOKENS)
+    shipped = frozenset(default_rules())
+
+    assert shipped - declared == frozenset(), (
+        f"redaction rules ship without an identifier vocabulary: {sorted(shipped - declared)}. "
+        "Add the identifier-name tokens that carry a value this rule redacts, so the "
+        "suggestion gate can see them."
+    )
+    assert declared - shipped == frozenset(), (
+        f"identifier vocabulary names rules that no longer ship: {sorted(declared - shipped)}. "
+        "Remove the stale entry rather than leaving the gate matching a retired arm."
+    )
+
+
+def test_no_suggestion_interpolates_a_redactable_identifier() -> None:
+    """No runnable suggestion may embed a value the funnel would hash.
+
+    This is REGRESSION PREVENTION, not defect discovery: the tree was swept
+    when this landed and the evidence hint was the only instance, so a green
+    run here is the expected result rather than evidence the scan works.
+    :func:`test_the_gate_flags_a_reconstructed_evidence_defect` is what proves
+    it can fail.
+    """
+    scanned = 0
+    failures: list[str] = []
+    for module_path in _iter_production_modules():
+        tree = ast.parse(module_path.read_text(encoding="utf-8"))
+        scanned += 1
+        failures.extend(_redactable_interpolations_in(tree, origin=str(module_path)))
+
+    assert scanned > 0, "the module scan matched nothing, so a green result here would be vacuous"
+    assert not failures, (
+        "a runnable suggestion embeds a value the redaction funnel hashes, so the operator "
+        "cannot run it as printed:\n" + "\n".join(failures)
+    )
+
+
+def test_the_gate_flags_a_reconstructed_evidence_defect() -> None:
+    """The scanner must fail on the shape that prompted it.
+
+    Reconstructs the retired evidence hint verbatim, including the ``or``
+    fallback that puts the redactable operand one level below the
+    interpolation. Without this the gate above passes for any tree with no
+    suggestions at all, and would keep passing if the extractor broke.
+    """
+    source = "\n".join(
+        (
+            "Notice(",
+            "    suggestion=(",
+            '        "aeat app ledger invoice catalogue create --kind received "',
+            "        f\"--counterparty-nif {draft.supplier_tax_id or '<nif>'} \"",
+            '        f"--invoice-number {draft.invoice_number}"',
+            "    ),",
+            ")",
+        ),
+    )
+
+    failures = _redactable_interpolations_in(ast.parse(source), origin="synthetic")
+
+    assert len(failures) == 1, failures
+    assert "supplier_tax_id" in failures[0]
+    assert "tax_id" in failures[0]
+
+
+def test_the_gate_does_not_flag_an_ordinary_interpolated_id() -> None:
+    """The control: a reference that survives the funnel must pass.
+
+    Work-unit, transaction and invoice ids are content-addressed digests the
+    funnel leaves alone by design, and every shipped suggestion embeds one of
+    those. A gate that flagged them would be refused on its first run and
+    rewritten into an allowlist, which is how this class of check dies.
+    """
+    source = "\n".join(
+        (
+            'Notice(suggestion=f"aeat app modelo work calculate {unit.work_unit_id}")',
+            'Notice(suggestion=f"aeat app ledger link <tx> --invoice-id {invoice.invoice_id}")',
+        ),
+    )
+
+    assert _redactable_interpolations_in(ast.parse(source), origin="synthetic") == []
