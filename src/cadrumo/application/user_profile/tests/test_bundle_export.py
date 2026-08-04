@@ -18,6 +18,7 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from ....adapters.persistence.storage.bucket import bucket_paths
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.user_profile import (
     CoverageManifest,
@@ -302,7 +303,7 @@ def test_event_failure_keeps_target_published_and_reconcile_emits_pending_event(
             _request(seed_path, purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER),
         )
         event_count_before = len(_export_events(bucket_id))
-        database_path = storage_root / "buckets" / bucket_id / "db" / "cadrumo.db"
+        database_path = bucket_paths(storage_root, bucket_id).database_file
 
         existing_target = tmp_path / "existing-target.json"
         previous_bytes = b"operator-owned previous export bytes\n"

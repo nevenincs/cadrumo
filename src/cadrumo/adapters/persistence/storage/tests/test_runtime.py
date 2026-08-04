@@ -32,6 +32,7 @@ from ..runtime_repository import (
 )
 from ..sql import SecureObjectRepository
 from ..sql.secure_objects import SecureObjectWrite
+from ..bucket import bucket_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -296,7 +297,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
 
     assert loaded is not None
     assert loaded.payload == b"runtime-payload"
-    assert (tmp_path / "buckets" / _BUCKET_A_ID / "db" / "cadrumo.db").exists()
+    assert (bucket_paths(tmp_path, _BUCKET_A_ID).database_file).exists()
 
 
 def test_runtime_repository_rejects_unregistered_namespace_writes(tmp_path: Path) -> None:

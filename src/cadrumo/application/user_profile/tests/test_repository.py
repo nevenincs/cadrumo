@@ -19,7 +19,7 @@ from ....adapters.persistence.storage import (
     SensitivityClass,
     StorageValidationError,
 )
-from ....adapters.persistence.storage.bucket import BucketValidationError
+from ....adapters.persistence.storage.bucket import BucketValidationError, bucket_paths
 from ....adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import override_settings
@@ -165,8 +165,8 @@ def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path
             assert bucket_b.load(profile_b).display_name == "Operator B"
             assert [row.profile_id for row in bucket_b.iter_records()] == [profile_b]
 
-        assert (storage_root / "buckets" / profile_a / "db" / "cadrumo.db").is_file()
-        assert (storage_root / "buckets" / profile_b / "db" / "cadrumo.db").is_file()
+        assert (bucket_paths(storage_root, profile_a).database_file).is_file()
+        assert (bucket_paths(storage_root, profile_b).database_file).is_file()
 
 
 def test_lifecycle_repository_refuses_a_foreign_profile_on_every_surface(tmp_path: Path) -> None:
@@ -222,7 +222,7 @@ def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Pa
         UserProfileLifecycleRepository(bucket_id=profile_id)
 
     assert not (tmp_path / "explicit.db").exists()
-    assert not (storage_root / "buckets" / profile_id / "db" / "cadrumo.db").exists()
+    assert not (bucket_paths(storage_root, profile_id).database_file).exists()
 
 
 def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> None:

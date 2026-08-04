@@ -14,6 +14,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.storage.bucket import bucket_paths
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     WorkflowResult,
@@ -39,7 +40,7 @@ def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
 def _database_bytes(tmp_path: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(tmp_path / "cadrumo-storage" / "buckets" / _BUCKET_ID / "db" / "cadrumo.db")
+    return read_db_at_rest_bytes(bucket_paths(tmp_path / "cadrumo-storage", _BUCKET_ID).database_file)
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:
