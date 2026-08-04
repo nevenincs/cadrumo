@@ -11,7 +11,7 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......core import Period
+from ......core import CasillaValueKind, Period
 from ......core.config import Settings
 from ......domain.calculations.registry import CasillaId, validated_casilla_id
 from ......tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -61,6 +61,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
             ObservedCasillaValue(
                 casilla_id=_M130_RESULTADO_CASILLA,
                 value="12.34",
+                value_kind=CasillaValueKind.NUMERIC,
                 source_artefact_kind="submitted_file",
                 source_locator="layout:field:19",
                 confidence=1.0,
@@ -129,6 +130,7 @@ def test_store_rejects_observation_with_printed_number_casilla_reference(
             ObservedCasillaValue(
                 casilla_id=_M303_PRINTED_COMPENSATION_REFERENCE_CASILLA,
                 value="0.00",
+                value_kind=CasillaValueKind.NUMERIC,
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:casilla:110",
                 confidence=1.0,

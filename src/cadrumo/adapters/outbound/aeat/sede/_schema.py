@@ -73,7 +73,8 @@ from typing import Final, Literal
 from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .....core import Modelo, Period
+from .....core import CasillaValueKind, Modelo, Period
+from .....core.decimal import coerce_decimal_strict
 from .....core.identity import ContentDigest
 from .....domain.calculations.registry import CasillaId
 from ._adapter_utils import is_aeat_csv
@@ -232,12 +233,19 @@ class FiledDeclaracionArtefact(BaseModel):
 
 
 class ObservedCasillaValue(BaseModel):
-    """One casilla value observed from an AEAT filed-data artefact."""
+    """One casilla value observed from an AEAT filed-data artefact.
+
+    ``value`` keeps the artefact's own token as text; ``value_kind`` carries the
+    parser's decision about how that text is meant to be read. Read a number
+    through :meth:`decimal_value` rather than converting ``value`` directly --
+    the conversion succeeds on text that merely looks numeric.
+    """
 
     model_config = _STRICT_FROZEN
 
     casilla_id: CasillaId
     value: str = Field(min_length=1, max_length=4096)
+    value_kind: CasillaValueKind
     source_artefact_kind: Literal[
         "submitted_file",
         "declaration_pdf",
@@ -248,6 +256,38 @@ class ObservedCasillaValue(BaseModel):
     source_locator: str = Field(min_length=1, max_length=512)
     confidence: float = Field(ge=0, le=1)
     mode: Literal["read"] = "read"
+
+    def decimal_value(self) -> Decimal:
+        """Return the observed amount, refusing any casilla that is not numeric.
+
+        The kind check comes BEFORE the conversion, and that order is the whole
+        point. :func:`~core.decimal.coerce_decimal_strict` is the canonical strict
+        coercion and this method delegates to it rather than adding a third
+        implementation, but it is strict about parse FAILURE and knows nothing
+        about the declaration -- ``coerce_decimal_strict("15")`` returns
+        ``Decimal("15")`` and is right to, because nothing in that token says it
+        is an epígrafe IAE. Only the kind can say so. Converting first and asking
+        questions afterwards is how a free-text Modelo 100 casilla enrols as an
+        amount.
+
+        No gate is watching this call site. The string-to-Decimal enrollment gate
+        governs ``entrypoints/`` and ``application/`` only, so this adapter is
+        outside its scope; and its matcher resolves no attribute types, so it
+        would not see an attribute read even in scope. The accessor test is the
+        enforcement -- keep it.
+
+        Raises:
+            SedeValidationError: When the casilla is not
+                :attr:`~core.CasillaValueKind.NUMERIC`.
+            decimal.InvalidOperation: When a numeric casilla carries an
+                unparseable token.
+        """
+        if self.value_kind is not CasillaValueKind.NUMERIC:
+            raise SedeValidationError(
+                f"casilla {self.casilla_id!r} is {self.value_kind.value}, not numeric; "
+                "its value is not an amount and must not be read as one",
+            )
+        return coerce_decimal_strict(self.value)
 
 
 class IvaCompensationWalletRow(BaseModel):

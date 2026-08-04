@@ -42,6 +42,7 @@ Submodules
    cadrumo.core._bucket_pointer_io
    cadrumo.core._capabilities
    cadrumo.core._casilla_id
+   cadrumo.core._casilla_value_kind
    cadrumo.core._concept_lifecycle
    cadrumo.core._config_integration_fields
    cadrumo.core._config_live_tests

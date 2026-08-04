@@ -43,7 +43,7 @@ from ...adapters.persistence.storage import (
     SensitivityClass,
     safe_repository_id,
 )
-from ...core import Modelo, Period
+from ...core import CasillaValueKind, Modelo, Period
 from ...core.identity import ContentDigest, SubjectTaxId
 from ...core.resources import resources
 from ...core.time import now
@@ -568,23 +568,43 @@ def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) ->
     for casilla in observation.casillas:
         if casilla.source_artefact_kind == "justificante_pdf":
             continue
+        # Modelo 303 and Modelo 390 declare only money casillas today, so this
+        # refusal is unreachable on current registry data. It is not decoration:
+        # these values feed cross-period IVA carry-forward balances, so the day a
+        # revision adds a text casilla the refusal must already be here rather
+        # than a wrong balance carried silently between filings.
+        #
+        # The kind is read through the port instead of catching what the accessor
+        # raises, because that refusal is the adapter's exception type and this
+        # layer does not import it.
+        if casilla.value_kind is not CasillaValueKind.NUMERIC:
+            raise _iva_compensation_decimal_refusal(observation, casilla.casilla_id)
         try:
-            values[casilla.casilla_id] = Decimal(casilla.value)
+            values[casilla.casilla_id] = casilla.decimal_value()
         except InvalidOperation as exc:
-            # Both Modelo 303 and Modelo 390 reach here, so the casilla id alone does
-            # not say which filing refused. Never add the observed VALUE to this
-            # context: the carrier holds the artefact's own token, and this context is
-            # rendered to the operator.
-            raise IvaCompensationDecimalParseError(
-                translated_message="errors.refused.refused_iva_compensation_decimal_parse",
-                context={
-                    "casilla_id": casilla.casilla_id,
-                    "modelo": observation.modelo,
-                    "filing_year": str(observation.ejercicio),
-                    "period": observation.period.registry_token,
-                },
-            ) from exc
+            raise _iva_compensation_decimal_refusal(observation, casilla.casilla_id) from exc
     return values
+
+
+def _iva_compensation_decimal_refusal(
+    observation: FiledDeclaracionObservationProtocol,
+    casilla_id: CasillaId,
+) -> IvaCompensationDecimalParseError:
+    """Build the refusal for a casilla the carry-forward reader cannot read as an amount.
+
+    Both Modelo 303 and Modelo 390 reach here, so the casilla id alone does not say
+    which filing refused. Never add the observed VALUE to this context: the carrier
+    holds the artefact's own token, and this context is rendered to the operator.
+    """
+    return IvaCompensationDecimalParseError(
+        translated_message="errors.refused.refused_iva_compensation_decimal_parse",
+        context={
+            "casilla_id": casilla_id,
+            "modelo": observation.modelo,
+            "filing_year": str(observation.ejercicio),
+            "period": observation.period.registry_token,
+        },
+    )
 
 
 def _validate_observed_casilla_ids(observation: FiledDeclaracionObservationProtocol) -> None:

@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from ......core import CasillaValueKind
 from ......domain.calculations.registry import (
     previous_filing_source_reference,
     validated_casilla_id,
@@ -838,6 +839,7 @@ class TestFiledObservationBindings:
                     ObservedCasillaValue(
                         casilla_id=_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA,
                         value="1",
+                        value_kind=CasillaValueKind.NUMERIC,
                         source_artefact_kind="submitted_file",
                         source_locator="field:0224",
                         confidence=1.0,
@@ -845,6 +847,7 @@ class TestFiledObservationBindings:
                     ObservedCasillaValue(
                         casilla_id=_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA,
                         value="2",
+                        value_kind=CasillaValueKind.NUMERIC,
                         source_artefact_kind="submitted_file",
                         source_locator="field:0224",
                         confidence=1.0,

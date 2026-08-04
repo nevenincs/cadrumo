@@ -26,7 +26,7 @@ from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
 
-from .....core import ExportLayoutFormat, Modelo, Period
+from .....core import CasillaValueKind, ExportLayoutFormat, Modelo, Period
 from .....core.config import Settings
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -64,7 +64,7 @@ from .....domain.iva_compensation import (
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from ._browser_constants import SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING
 from ._declarations_schema import Declaracion
-from ._errors import SedeParseError
+from ._errors import SedeParseError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 if TYPE_CHECKING:
@@ -188,6 +188,31 @@ def _read_guard_policy_from_snapshot(snapshot: RegistrySnapshot) -> RemoteStateG
     )
 
 
+def _observed_value_kind(value: object) -> CasillaValueKind:
+    """Classify an already-parsed casilla value by how a reader should treat it.
+
+    This is the same dispatch :func:`_observed_value_token` makes when it decides
+    whether to keep the artefact's spelling, and the two MUST agree: the token
+    rule and the kind are two answers to one question the parser already settled.
+    Splitting them would let a value be spelled as a boolean while being labelled
+    numeric, which is precisely the disagreement the kind exists to prevent.
+
+    The ``bool`` test comes first and must stay first, because ``bool`` is a
+    subclass of ``int``: testing for a number first would classify every yes/no
+    marker as an amount, which is the defect in its purest form.
+
+    Accepts ``object`` because it serves both artefact readers, whose parsed
+    types differ -- the export parser yields ``Decimal | str | bool``, while the
+    declaration-PDF extractor can also yield ``int`` and ``date``. A ``date`` is
+    text: it is a token that identifies a day, never a quantity.
+    """
+    if isinstance(value, bool):
+        return CasillaValueKind.BOOLEAN
+    if isinstance(value, Decimal | int):
+        return CasillaValueKind.NUMERIC
+    return CasillaValueKind.TEXT
+
+
 def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     """Return what the filed artefact said for ``casilla``, as a string.
 
@@ -209,7 +234,7 @@ def _observed_value_token(casilla: ParsedExportFieldValue) -> str:
     the faithful reading there, and the raw token is the faithful reading only
     where the parser's own conversion discards the artefact's spelling.
     """
-    if isinstance(casilla.value, bool):
+    if _observed_value_kind(casilla.value) is CasillaValueKind.BOOLEAN:
         return casilla.raw
     return str(casilla.value)
 
@@ -255,6 +280,7 @@ def _observed_casillas_from_submitted_file(
             ObservedCasillaValue(
                 casilla_id=casilla.casilla_id,
                 value=_observed_value_token(casilla),
+                value_kind=_observed_value_kind(casilla.value),
                 source_artefact_kind="submitted_file",
                 source_locator=casilla.source_locator,
                 confidence=1.0,
@@ -383,6 +409,7 @@ def _observed_modelo_303_casillas_from_submitted_file(
             ObservedCasillaValue(
                 casilla_id=canonical_ids_by_export_ref[export_ref],
                 value=str(value),
+                value_kind=_observed_value_kind(value),
                 source_artefact_kind="submitted_file",
                 source_locator=f"record:T30303:pos:{position}:width:{width}",
                 confidence=1.0,
@@ -484,6 +511,7 @@ def _observed_casillas_from_declaration_pdf(
             ObservedCasillaValue(
                 casilla_id=casilla.casilla_id,
                 value=str(casilla.printed_value),
+                value_kind=_observed_value_kind(casilla.printed_value),
                 source_artefact_kind="declaration_pdf",
                 source_locator=f"page:{casilla.source_page}:casilla:{casilla.casilla_id}",
                 confidence=casilla.extraction_confidence,
@@ -623,13 +651,21 @@ def registry_observation_from_filed_declaration(
                 f"observed casilla {casilla.casilla_id!r} in modelo {observation.modelo} "
                 f"revision {snapshot.revision.id} has incomplete registry legal_refs/source_refs",
             )
+        # Ask what the casilla IS, never what its token parses as. A free-text
+        # Modelo 100 casilla can hold a token that converts cleanly to a plausible
+        # wrong number -- `0065` (clave) reads as 15, `0167` (epígrafe IAE) as 22 --
+        # so a conversion attempt admits exactly the values it needed to reject.
+        #
+        # Collect rather than raise on the first one: a modelo whose schema declares
+        # free-text or boolean casillas fails on EVERY filing, so the operator needs
+        # the whole affected set to see it is a modelo-wide gap, not a bad figure in
+        # this return.
+        if casilla.value_kind is not CasillaValueKind.NUMERIC:
+            non_decimal.append((casilla.casilla_id, registry_casilla.label))
+            continue
         try:
-            value = Decimal(casilla.value)
+            value = casilla.decimal_value()
         except InvalidOperation:
-            # Collect rather than raise on the first one: a modelo whose schema declares
-            # free-text or boolean casillas fails on EVERY filing, so the operator needs
-            # the whole affected set to see it is a modelo-wide gap, not a bad figure in
-            # this return.
             non_decimal.append((casilla.casilla_id, registry_casilla.label))
             continue
         previous = casilla_values.get(casilla.casilla_id)
@@ -685,8 +721,8 @@ def _with_derived_303_compensation_available_observation(
         ):
             continue
         try:
-            values[casilla.casilla_id] = Decimal(casilla.value)
-        except InvalidOperation as exc:
+            values[casilla.casilla_id] = casilla.decimal_value()
+        except (InvalidOperation, SedeValidationError) as exc:
             raise SedeParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
     derivation = derive_m303_compensation_available_from_casillas(values)
     if derivation is None:
@@ -714,6 +750,7 @@ def _with_derived_303_compensation_available_observation(
     derived = ObservedCasillaValue(
         casilla_id=target_id,
         value=str(derivation.available),
+        value_kind=_observed_value_kind(derivation.available),
         source_artefact_kind=source_artefact_kind,
         source_locator=source_locator,
         confidence=1.0,
