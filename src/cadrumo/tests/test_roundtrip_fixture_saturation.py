@@ -19,8 +19,14 @@ c. The function body contains at least 4 keyword-argument assignments in its
 
 A function failing all three markers is reported as an unsaturated candidate.
 
-Waivers are declared inline below in ``_WAIVERS`` and must justify why the
-saturation rule does not apply (e.g. the model has no optional fields).
+There is no waiver list. The one that existed was keyed by
+``path:lineno:function_name``, and a key that bakes in a line number cannot be
+made durable -- it rots on the next edit to the file above it, and it rotted:
+its path also predated the move of tests into ``tests/`` packages, so it had
+matched nothing for a long time while still reading as live coverage. A builder
+that genuinely cannot saturate should say so in its own docstring, which
+satisfies marker (b) at the site and cannot drift away from the function it
+describes.
 """
 
 from __future__ import annotations
@@ -34,17 +40,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _TESTS_DIR = Path(__file__).parent
 _AEAT_ROOT = _TESTS_DIR.parent
-
-# Waivers: builder functions exempt from the saturation marker check.
-# Format: "path:lineno:function_name" -> "rationale"
-# Paths are relative to the repository src/cadrumo root (POSIX separators).
-_WAIVERS: dict[str, str] = {
-    # _populated_snapshot in test_borrador_100_roundtrip.py is waived
-    # pending verification of snapshot-model optional-field coverage.
-    "application/live/test_borrador_100_roundtrip.py:36:_populated_snapshot": (
-        "snapshot model optional-field coverage unconfirmed"
-    ),
-}
 
 # Saturation keywords searched in docstrings and file module docstrings.
 _SATURATION_KEYWORDS = frozenset({"populate", "non-default", "optional", "saturation", "defaultable"})
@@ -116,7 +111,8 @@ def test_populated_builders_carry_saturation_markers() -> None:
     b. Function docstring contains a saturation keyword.
     c. At least 4 keyword arguments appear in a return-call expression.
 
-    Builders in ``_WAIVERS`` are exempt with a documented rationale.
+    There is no waiver channel: a builder that cannot saturate documents that
+    in its own docstring, which is marker (b).
     """
     builders = _collect_populated_builders(_AEAT_ROOT)
 
@@ -127,10 +123,6 @@ def test_populated_builders_carry_saturation_markers() -> None:
 
     failures: list[str] = []
     for rel, lineno, name, func_node, module_tree in builders:
-        waiver_key = f"{rel}:{lineno}:{name}"
-        if waiver_key in _WAIVERS:
-            continue
-
         module_doc = _file_module_docstring(module_tree)
         func_doc = _function_docstring(func_node)
         max_kwargs = _max_kwargs_in_return_calls(func_node)
@@ -152,6 +144,5 @@ def test_populated_builders_carry_saturation_markers() -> None:
             f"Found {len(failures)} _populated_* builder(s) lacking saturation evidence:\n{joined}\n\n"
             "Fix by:\n"
             "  1. Adding a docstring/comment explaining that all optional fields are set, OR\n"
-            "  2. Populating more fields (>=4 keyword args in return call), OR\n"
-            "  3. Adding a waiver entry in test_roundtrip_fixture_saturation._WAIVERS with rationale.",
+            "  2. Populating more fields (>=4 keyword args in return call).",
         )
