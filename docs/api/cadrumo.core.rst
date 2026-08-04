@@ -54,6 +54,7 @@ Submodules
    cadrumo.core._config_support
    cadrumo.core._config_timeouts
    cadrumo.core._credentials
+   cadrumo.core._declaracion_idioma
    cadrumo.core._export_layout_format
    cadrumo.core._external_oracle_corpus
    cadrumo.core._foreign_asset_obligation
@@ -79,6 +80,7 @@ Submodules
    cadrumo.core._result_disposition
    cadrumo.core._revision_review
    cadrumo.core._storage_taxonomy
+   cadrumo.core._storage_taxonomy_locations
    cadrumo.core._tax_domain
    cadrumo.core._toml
    cadrumo.core.aggregation
