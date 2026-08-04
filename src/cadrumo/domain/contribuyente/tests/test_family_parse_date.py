@@ -44,7 +44,7 @@ def test_coerce_iso_date_field_raises_on_bad_format() -> None:
         _coerce_iso_date_field("15/03/2024")
 
 
-# ── DescendantInfo: birth_date and adoption_date fields ───────────────────────
+# ── DescendantInfo: birth_date and entry-event date fields ────────────────────
 
 
 def test_descendant_info_birth_date_from_iso_string() -> None:
