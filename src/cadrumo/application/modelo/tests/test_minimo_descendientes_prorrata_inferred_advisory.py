@@ -1,19 +1,19 @@
-"""The Art. 61 norma 1ª prorrata advisory, which the ADR's chosen default rests on.
+"""The Art. 61 norma 1ª prorrata advisory, which the chosen default direction depends on.
 
-This advisory is not a nice-to-have diagnostic. The ADR chose to APPLY the
+This advisory is not a nice-to-have diagnostic. The engine applies the
 prorrata where profile signals indicate a second entitled filer, rather than
-claim the full amount, and justified that choice on this advisory existing:
+claim the full amount, on the strength of this advisory existing:
 erring toward under-claiming is acceptable *because the operator is told and can
 correct it*. An advisory that never fires does not merely lose a message — it
 converts a deliberate, disclosed under-claim into a silent one and removes the
-ADR's stated reason for picking that direction over the alternative.
+stated reason for picking that direction over the alternative.
 
 It had no test of any kind: not the collector, not the wiring, not the source
 kind. Nothing anywhere drove it.
 
 Both directions are covered, and the silent half matters as much as the firing
 half for the same reason it did on the rentas advisory: an advisory that also
-fires when the operator DID answer is a blanket advisory, and the ADR's default
+fires when the operator DID answer is a blanket advisory, and the chosen default
 is only defensible if the message means something when it appears.
 """
 
@@ -113,7 +113,7 @@ def test_fires_when_the_prorrata_was_inferred_rather_than_answered() -> None:
 
 
 def test_the_message_names_the_descendant_and_both_corrections() -> None:
-    """The ADR's default is only defensible if the operator can act on the message.
+    """The chosen default is only defensible if the operator can act on the message.
 
     Under-claiming is disclosed rather than silent ONLY if the advisory says
     which descendant was inferred and how to state the answer in either
@@ -196,6 +196,69 @@ def test_names_only_the_descendants_whose_factor_was_inferred() -> None:
     assert "renta_family.descendiente.1" in message
     assert "renta_family.descendiente.0" not in message
     assert "renta_family.descendiente.2" not in message
+
+
+def test_the_conjunta_branch_is_pinned_on_the_codes_the_schema_can_store() -> None:
+    """Art. 82.1's two modalities, on the ONLY values this field can hold.
+
+    ``renta_taxpayer.marital_status`` is constrained to the ECIVIL enum, so a
+    code is what a real profile carries. Every earlier test of this branch
+    passed a ``SituacionFamiliar`` WORD form straight to the injector, which the
+    write door refuses — so the branch was exercised only on a value production
+    can never produce, and dropping the pareja-de-hecho CODE from the partnered
+    set regressed every real filer while failing nothing.
+
+    These facts go through the real write path, so a value the schema would
+    reject cannot reach the assertion.
+    """
+    from .._profile_binding import second_entitled_filer_indicated
+
+    unmarried = {
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
+        "filing_export.declaration_type": "2",
+    }
+    married = {
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
+        "filing_export.declaration_type": "2",
+    }
+    # Art. 82.1.2a: no marriage bond, so the unit is one progenitor plus the
+    # minor children and the other progenitor stays separately entitled.
+    assert second_entitled_filer_indicated(unmarried) is True
+    # Art. 82.1.1a: both progenitores inside the one unit, nothing to share.
+    assert second_entitled_filer_indicated(married) is False
+
+    # And the same codes survive the write door, which is what makes them the
+    # values production actually sees.
+    _write_household(_child(), signals=unmarried)
+    assert len(_collect()) == 1
+    _write_household(_child(), signals=married)
+    assert _collect() == ()
+
+
+def test_the_partnered_tokens_carry_no_foreign_vocabulary() -> None:
+    """The token sets must hold only values this field can store.
+
+    A word form here is not merely dead: it gives a test a way to match on a
+    branch no real filer takes, which is exactly how a dropped code went
+    unnoticed. Deriving the sets from the enum makes that unrepresentable, and
+    this asserts the derivation rather than the current contents.
+    """
+    from .._profile_binding import (
+        _MARRIED_STATUS_TOKENS,
+        _PARTNERED_STATUS_TOKENS,
+        _UNMARRIED_STATUS_TOKENS,
+    )
+
+    storable = {member.value for member in RentaMaritalStatus}
+    for name, tokens in (
+        ("married", _MARRIED_STATUS_TOKENS),
+        ("partnered", _PARTNERED_STATUS_TOKENS),
+        ("unmarried", _UNMARRIED_STATUS_TOKENS),
+    ):
+        assert tokens <= storable, f"{name} set carries tokens the schema cannot store: {sorted(tokens - storable)}"
+    # Married and unmarried partition the enum: no code is both, none is neither.
+    assert storable == _MARRIED_STATUS_TOKENS | _UNMARRIED_STATUS_TOKENS
+    assert not _MARRIED_STATUS_TOKENS & _UNMARRIED_STATUS_TOKENS
 
 
 def test_the_message_stays_inside_its_length_bound_for_a_large_household() -> None:

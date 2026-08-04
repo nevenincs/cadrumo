@@ -38,6 +38,7 @@ import pytest
 
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import ManualWorkedExamplePayload, RegistrySnapshot
+from ....domain.contribuyente import RentaMaritalStatus
 from .._profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
@@ -141,7 +142,7 @@ def _asturias_children() -> dict[str, object]:
         "renta_family.descendiente.0.discapacidad": "33",
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 22}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 19}-01-01",
-        "renta_taxpayer.marital_status": "casado",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
     }
 
 
@@ -195,7 +196,7 @@ def _valenciana_children(*, youngest_files_own_return: bool) -> dict[str, object
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 12}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
         "renta_family.descendiente.2.rentas_anuales": "4050",
-        "renta_taxpayer.marital_status": "pareja_hecho_registrada",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
         "filing_export.declaration_type": "1",
     }
     if youngest_files_own_return:
@@ -242,7 +243,7 @@ def _valenciana_conjunta() -> dict[str, object]:
         "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 12}-01-01",
         "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
         "renta_family.descendiente.2.rentas_anuales": "4050",
-        "renta_taxpayer.marital_status": "pareja_hecho_registrada",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
         "filing_export.declaration_type": "2",
     }
 
@@ -303,7 +304,9 @@ def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not() -> 
     whole = _PRINTED_THREE_CHILD_WHOLE_TRANCHES
 
     unmarried, _ = _aggregates(_valenciana_conjunta())
-    married, _ = _aggregates({**_valenciana_conjunta(), "renta_taxpayer.marital_status": "casado"})
+    married, _ = _aggregates(
+        {**_valenciana_conjunta(), "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value}
+    )
 
     # Married: both progenitores inside the one unit, nobody to share with.
     assert married == whole
@@ -321,7 +324,10 @@ def test_the_unmarried_conjunta_branch_is_the_thing_being_exercised() -> None:
     """
     conjunta = _valenciana_conjunta()
     assert second_entitled_filer_indicated(conjunta) is True
-    assert second_entitled_filer_indicated({**conjunta, "renta_taxpayer.marital_status": "casado"}) is False
+    assert (
+        second_entitled_filer_indicated({**conjunta, "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value})
+        is False
+    )
 
 
 def test_the_printed_conjunta_total_is_a_recorded_gap_not_an_expectation() -> None:

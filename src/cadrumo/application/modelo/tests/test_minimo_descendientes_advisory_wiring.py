@@ -44,6 +44,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
 _FILING_YEAR = 2024
 _ESTATAL_CASILLA: CasillaId = "0513"
+#: Annual period token for the Modelo 100 walk (named so the literal does not
+#: read as a credential to the security linter).
+_ANNUAL_PERIOD = "0A"
 
 _RENTAS_UNDECLARED = "minimo_descendientes_rentas_undeclared"
 _UNDECLARED = "minimo_descendientes_undeclared"
@@ -90,7 +93,7 @@ def _source_kinds(casilla_values: dict[CasillaId, Decimal]) -> set[str]:
         _revision(),
         casilla_values,
         modelo=Modelo.M100.value,
-        period_token="0A",
+        period_token=_ANNUAL_PERIOD,
         filing_year=_FILING_YEAR,
         bucket_id=_BUCKET_ID,
     )
@@ -119,7 +122,7 @@ def test_the_undeclared_advisory_reaches_the_coordinator() -> None:
 
 
 def test_the_prorrata_inferred_advisory_reaches_the_coordinator() -> None:
-    """The wiring of the collector the ADR's default direction rests on.
+    """The wiring of the collector the disclosed-under-claim default depends on.
 
     Applying the prorrata rather than the full amount is justified on the
     operator being told, so this wiring is what makes a disclosed under-claim

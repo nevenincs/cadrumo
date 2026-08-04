@@ -25,7 +25,12 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
-from ....domain.contribuyente import DescendantInfo, MinimoDescendientesThresholds, RentaFamilyProfile
+from ....domain.contribuyente import (
+    DescendantInfo,
+    MinimoDescendientesThresholds,
+    RentaFamilyProfile,
+    RentaMaritalStatus,
+)
 from .._profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
@@ -238,7 +243,7 @@ def test_two_entitled_filers_declaring_individually_each_take_half() -> None:
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": "casado",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
         "filing_export.declaration_type": "1",
     }
     _inject(facts, snapshot)
@@ -256,7 +261,7 @@ def test_conjunta_return_is_not_prorated() -> None:
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": "casado",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
         "filing_export.declaration_type": "2",
     }
     _inject(facts, snapshot)
@@ -269,7 +274,7 @@ def test_unpartnered_individual_filer_takes_the_full_minimo() -> None:
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": "soltero",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
         "filing_export.declaration_type": "1",
     }
     _inject(facts, snapshot)
@@ -287,7 +292,7 @@ def test_explicit_override_beats_the_derivation_in_both_directions() -> None:
     full = _parameter(snapshot, "primer-hijo")
     base: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": "casado",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
         "filing_export.declaration_type": "1",
     }
 
@@ -307,7 +312,7 @@ def test_shared_custody_still_prorates_without_any_partner_signal() -> None:
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_family.descendiente.0.custodia_compartida": "true",
-        "renta_taxpayer.marital_status": "soltero",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
         "filing_export.declaration_type": "1",
     }
     _inject(facts, snapshot)
