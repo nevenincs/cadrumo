@@ -37,8 +37,14 @@ dependencies = [
   # password-hashing primitive; ships pre-built wheels for
   # Linux/macOS/Windows.
   "argon2-cffi>=23.1.0,<26",
-  # HTML parsing for status readers.
-  "beautifulsoup4>=4.12,<5",
+  # HTML parsing for status readers. The `lxml` extra is load-bearing, not a
+  # preference: three sede readers pass "lxml" as the parser backend, and
+  # BeautifulSoup raises FeatureNotFound rather than falling back when the
+  # named backend is absent. lxml does reach a default install today, but only
+  # as a transitive of pikepdf -- incidental supply for a direct reliance, so a
+  # pikepdf change would surface as a runtime failure on the first AEAT page
+  # parsed. Declaring it turns that into a resolution failure instead.
+  "beautifulsoup4[lxml]>=4.12,<5",
   # Direct first-party imports (CadrumoTyperGroup command suggestions,
   # wizard prompt types, click context helpers). typer>=0.26 no longer
   # declares click, so the dependency must be explicit here.
@@ -335,13 +341,21 @@ dev = [
   "pillow==12.3.0",
   # Used only to generate synthetic fixture PDFs in tests.
   "reportlab>=4.4.10",
-  # libxml2 binding, used only by test support to compile the bundled AEAT
-  # record-design XSDs as validation oracles. It is already installed as a
-  # transitive of pikepdf; declaring it makes that reliance explicit, so a
-  # future pikepdf change surfaces as a resolution failure rather than an
-  # ImportError inside one test module. Nothing in src/cadrumo/ compiles a
-  # schema, so this stays out of the runtime dependencies.
+  # libxml2 binding. Test support imports `lxml.etree` directly to compile the
+  # bundled AEAT record-design XSDs as validation oracles; declaring it makes
+  # that reliance explicit rather than leaning on the transitive supply.
+  #
+  # This entry covers the XSD-compilation use ONLY. Nothing in src/cadrumo/
+  # compiles a schema -- but that does not put lxml outside the runtime set,
+  # which an earlier version of this comment concluded: production needs lxml
+  # as BeautifulSoup's parser BACKEND, declared as the `beautifulsoup4[lxml]`
+  # extra above. Two independent reliances, two declarations.
   "lxml>=6.0",
+  # Stubs for the above. `lxml.etree` is a C extension shipping no inline
+  # types, so it is the tree's only unresolved-import under `ty`; the stubs
+  # are dev-only because production never imports lxml, it names the backend
+  # as a string.
+  "types-lxml>=2025.3.30",
   "ruff>=0.15.12",
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/cadrumo/. vaultspec-rag
