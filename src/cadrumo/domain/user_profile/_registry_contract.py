@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Literal, cast
 
 from pydantic import BaseModel, Field
 
-from ._schema import ProfileSchemaDefinition
+from ._schema import ProfileDerivedSelectorDefinition, ProfileSchemaDefinition
 
 if TYPE_CHECKING:
     from ..calculations.registry import ModeloDefinition, ModeloRevision
@@ -52,6 +52,25 @@ class UserProfileSelectorIndex(BaseModel):
     schedule_predicates: frozenset[str]
     export_headers: frozenset[str]
     field_paths: frozenset[str]
+    #: Namespaces the engine owns and computes. Kept as typed models rather
+    #: than folded into ``profile_selectors`` because a pattern carrying a
+    #: placeholder is not a literal set member -- set membership could never
+    #: see it -- and because a caller resolving a selector this way needs to
+    #: know WHICH pattern matched, not merely that one did.
+    derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...] = ()
+
+    def derived_selector_for(self, selector: str) -> ProfileDerivedSelectorDefinition | None:
+        """Return the declared derived namespace owning *selector*, if any.
+
+        Scoped to binding-selector resolution. The schedule-predicate,
+        deadline, cross-reference and export-header surfaces read disjoint
+        namespaces that no derived path declares, so routing them through
+        here would silently retire real coverage warnings.
+        """
+        for definition in self.derived_selectors:
+            if definition.matches(selector):
+                return definition
+        return None
 
 
 class UserProfileRegistryContractReport(BaseModel):
@@ -99,6 +118,7 @@ def build_user_profile_selector_index(schema: ProfileSchemaDefinition) -> UserPr
         schedule_predicates=frozenset(schedule_predicates),
         export_headers=frozenset(export_headers),
         field_paths=frozenset(schema.field_paths),
+        derived_selectors=schema.derived_selectors,
     )
 
 
@@ -164,7 +184,12 @@ def _binding_issues(
             )
             continue
         for selector in selectors:
-            if selector not in index.profile_selectors:
+            # A selector resolves either as a literal schema-declared path /
+            # model alias, or as a member of a namespace the engine owns and
+            # computes. The derived hop sits here, BELOW the empty-selector
+            # arm above: that arm answers a malformed selector yielding no
+            # path at all, which no pattern should ever excuse.
+            if selector not in index.profile_selectors and index.derived_selector_for(selector) is None:
                 issues.append(
                     _issue(
                         severity=BaseSeverity.ERROR,

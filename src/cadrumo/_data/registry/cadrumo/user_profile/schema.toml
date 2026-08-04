@@ -5,6 +5,55 @@ title = "Cadrumo user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
 
+# Namespaces of profile paths the calculation engine OWNS and computes.
+#
+# These are not taxpayer data. Each value is derived at calculate time from the
+# source facts named in `derived_from`, so the namespace is declared once as a
+# year-parameterised pattern instead of one field per filing year. Registry
+# binding selectors targeting these paths resolve against these patterns.
+#
+# `{filing_year}` compiles to exactly four digits with a terminal anchor, so
+# `descendientes_minimos_aggregate_{filing_year}` cannot swallow the longer
+# `descendientes_minimos_aggregate_autonomico_{filing_year}` paths.
+#
+# `cotizaciones_ss_madre_2024` and `filing_export.rental_reduccion_art_23_2_tier_2024`
+# are deliberately absent: they are genuine operator input, not derived.
+
+[[derived_selectors]]
+pattern = "renta_family.descendientes_minimos_aggregate_{filing_year}"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Parte estatal del minimo por descendientes, calculada de los descendientes declarados."
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
+pattern = "renta_family.descendientes_minimos_aggregate_autonomico_{filing_year}"
+derived_from = ["renta_family.descendiente", "tax_residence.ccaa"]
+entry_surface = "aeat config profile descendiente"
+description = "Parte autonomica del minimo por descendientes, resuelta contra la CCAA de residencia."
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-61"]
+
+[[derived_selectors]]
+pattern = "renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Elegibilidad de la escala separada por anualidades por alimentos a favor de los hijos."
+legal_refs = ["ley-35-2006:art-64", "ley-35-2006:art-75"]
+
+[[derived_selectors]]
+pattern = "renta_family.descendientes_menores_3_{filing_year}"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Numero de descendientes menores de tres anos, contado de los descendientes declarados."
+legal_refs = ["ley-35-2006:art-58"]
+
+[[derived_selectors]]
+pattern = "renta_family.gastos_guarderia_reales_{filing_year}"
+derived_from = ["renta_family.descendiente"]
+entry_surface = "aeat config profile descendiente"
+description = "Gastos de custodia en guarderia agregados de los descendientes declarados."
+legal_refs = ["ley-35-2006:art-81"]
+
 [[sections]]
 key = "identity"
 title = "Identity"

@@ -57,8 +57,25 @@ def _load_user_profile_schema_cached(path: str, byte_count: int, modified_ns: in
     raw_sections = data.get("sections")
     if not isinstance(raw_sections, tuple) or not raw_sections:
         raise _schema_load_error(source_path, "missing [[sections]] tables", operation="validate")
+    # ``freeze_toml`` turns TOML arrays into tuples, so the guard mirrors the
+    # sections guard above. The key is passed through explicitly because
+    # ``model_validate`` receives only the keys named here -- an array left out
+    # of this call is parsed and then silently dropped.
+    raw_derived_selectors = data.get("derived_selectors", ())
+    if not isinstance(raw_derived_selectors, tuple):
+        raise _schema_load_error(
+            source_path,
+            "[[derived_selectors]] must be an array of tables",
+            operation="validate",
+        )
     try:
-        return ProfileSchemaDefinition.model_validate({**raw_schema, "sections": raw_sections})
+        return ProfileSchemaDefinition.model_validate(
+            {
+                **raw_schema,
+                "sections": raw_sections,
+                "derived_selectors": raw_derived_selectors,
+            },
+        )
     except ValidationError as exc:
         raise _schema_load_error(source_path, f"invalid user-profile schema: {exc}", operation="validate") from exc
 

@@ -12,6 +12,7 @@ from pathlib import Path
 import typer
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...application.ledger import bulk_classify_from_csv as _bulk_classify
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -29,11 +30,6 @@ def ledger_classify_bulk_csv(
     file: str,
     actor: str | None,
 ) -> None:
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import _bulk_classify
-
     if transaction_id is not None or classification is not None:
         raise _bad(
             tr(

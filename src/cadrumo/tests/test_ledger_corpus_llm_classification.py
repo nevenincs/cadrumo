@@ -10,10 +10,23 @@ When live classification IS available the harness:
 - behavior contract: scores per-classification accuracy against the oracle;
 - behavior contract: records ``classified_by="llm:<name>"`` + confidence and flags
   low-confidence predictions for manual review;
-- behavior contract: includes the edge cases (recargo anomaly, internal transfer, foreign
-  reverse-charge, régimen simplificado) in the sample;
+- behavior contract: samples the internal-transfer and foreign-reverse-charge edge
+  cases alongside business income/expense, personal, trabajo income, business
+  premises, and hospitality;
 - behavior contract: gates overall accuracy against a lenient floor and reports the
   per-classification miss rate.
+
+Sampled coverage, stated accurately: the needle list above is what the sample
+contains. It does NOT reach the recargo-anomaly or régimen-simplificado rows —
+both exist in the corpus and in the oracle, but no needle selects them, so an
+earlier claim that they were sampled overstated the harness. Adding them is a
+coverage decision for whoever owns the accuracy floor, not a docstring edit.
+
+Because this module is ``aeat_live``, none of the above runs without live opt-in.
+The two ``unit``-marked guards at the end therefore hold its preconditions — that
+every needle still resolves, and that every oracle classification has an
+agreement rule — in ordinary CI, where a corpus edit would otherwise erode the
+live run's coverage unobserved.
 """
 
 from __future__ import annotations
@@ -38,17 +51,29 @@ from .live_gate import requires_live_enabled
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "fixtures" / "financial" / "ledger-corpus"
-_ACCOUNTS = ("bbva-business-eur.csv", "caixabank-personal.csv", "revolut-multi.csv")
+# Every account a needle draws from must be listed here, or the needle silently
+# contributes nothing: the business-premises needle previously named a row in
+# ``n26-savings.csv`` while that file was not scanned.
+_ACCOUNTS = (
+    "bbva-business-eur.csv",
+    "caixabank-personal.csv",
+    "revolut-multi.csv",
+    "n26-savings.csv",
+)
 # Representative descriptions spanning the gamut + the edge cases (behavior contract).
+# Each needle MUST be a substring of a real corpus description that the oracle also
+# has a rule for; :func:`test_every_declared_needle_resolves_to_a_scored_sample`
+# enforces that, because an unmatched needle is skipped in silence and shrinks the
+# scored sample without changing any assertion.
 _SAMPLE_NEEDLES = (
     "Cobro factura F-2025-001 ACME",  # business income
     "Cuota autonomos RETA",  # business expense
     "Compra supermercado",  # personal
-    "Transferencia a cuenta personal",  # internal transfer
+    "Transferencia a cuenta personal",  # internal transfer (oracle: PERSONAL)
     "Nomina",  # trabajo income
     "cliente DE GmbH intracom",  # foreign reverse-charge
-    "Alquiler local",  # business premises
-    "Restaurante",  # mixed / hospitality
+    "Alquiler oficina coworking",  # business premises
+    "Restaurante",  # hospitality
 )
 # Lenient accuracy floor: a live LLM is not deterministic and the sample is
 # small; the gate guards against gross regression, not perfect agreement.
@@ -142,14 +167,28 @@ def test_llm_classification_scores_against_oracle_and_gates_accuracy() -> None:
 
 
 def _agrees(expected: str, predicted: BusinessClassification) -> bool:
-    """Coarse agreement between the oracle classification and the LLM axis."""
+    """Coarse agreement between the oracle classification and the LLM axis.
+
+    Raises on an oracle value this mapping does not know. The previous fallback
+    returned ``True``, which scored every unrecognised expectation as a HIT and
+    so inflated the accuracy the floor is measured against — a new oracle
+    classification would have raised the reported score while testing nothing.
+    Only ``BUSINESS``/``PERSONAL``/``MIXED`` occur today; a fourth value must
+    arrive with a deliberate agreement rule rather than a free pass.
+    """
     if expected == "BUSINESS":
         return predicted is BusinessClassification.BUSINESS
-    if expected in {"PERSONAL", "INTERNAL_TRANSFER"}:
+    if expected == "PERSONAL":
+        # Transfers are PERSONAL on the oracle's gated axis (INTERNAL_TRANSFER is
+        # a *direction* there, never a classification), and the LLM may answer
+        # PERSONAL or PROCESSED_UNCLASSIFIED — both are acceptable non-business.
         return predicted in {
             BusinessClassification.PERSONAL,
             BusinessClassification.PROCESSED_UNCLASSIFIED,
         }
     if expected == "MIXED":
         return predicted in {BusinessClassification.MIXED, BusinessClassification.BUSINESS}
-    return True
+    raise AssertionError(
+        f"oracle classification {expected!r} has no agreement rule; add one rather than "
+        "letting it score as correct by default",
+    )

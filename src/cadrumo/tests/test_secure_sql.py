@@ -15,12 +15,20 @@ from ..adapters.persistence.storage import (
     has_active_bucket_session,
 )
 from ..adapters.persistence.storage.bucket import read_manifest
-from ..adapters.persistence.storage.master_key import BucketSession, activate_session
+from ..adapters.persistence.storage.master_key import (
+    BucketSession,
+    activate_session,
+    close_active_bucket_session,
+    load_profile_session_key,
+)
 from ..adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
 from ..adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ..application.user_profile import login_profile
+from ..application.workflow import read_profile_bucket
 from ..core.classification import SensitivityClass
 from ..core.config import StorageRouteKind, load_settings, override_settings
+from .cli_runner import invoke_cached_cli
 from .secure_sql import (
     dev_test_database_password,
     isolated_cli_runtime_profile,
@@ -28,9 +36,12 @@ from .secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
     read_db_at_rest_bytes,
+    reap_profile_session_keys,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_REAP_LABEL = "harness-reap-operator"
 
 
 def test_read_db_at_rest_bytes_includes_the_wal_sidecar(tmp_path: Path) -> None:
@@ -189,6 +200,97 @@ def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to
         ),
     )
     assert not has_active_bucket_session()
+
+
+class TestHarnessReapsSessionKeys:
+    """The shared harness must not leak OS-keychain entries per test run.
+
+    A login mints a ``cadrumo:profile-session`` keychain entry keyed by
+    bucket uuid, and a test's storage root is a temporary directory that
+    production never reaps. Because every run mints a FRESH uuid, a
+    harness without this teardown deposits one permanent orphan per
+    leaking test per run — measured at 58 orphans from a single 54-test
+    pass, and 552 accumulated on one workstation before the credential
+    store saturated and ``CredWrite`` began failing host-wide.
+
+    The two halves are split so the reap-a-known-id contract stays
+    verifiable on a host whose credential store is unreachable, and only
+    the half that genuinely needs custody carries ``os_keychain``.
+    """
+
+    def test_reap_is_a_no_op_for_an_unpopulated_root(self, tmp_path: Path) -> None:
+        """An empty root enumerates to nothing and must not raise.
+
+        Teardown runs after every test using the harness, including tests
+        that never provisioned a bucket, so a reap that raised on an
+        absent ``buckets/`` directory would convert an unrelated passing
+        test into an error.
+        """
+        reap_profile_session_keys(tmp_path / "never-created")
+
+    def test_reap_skips_a_directory_that_is_not_a_bucket_identity(self, tmp_path: Path) -> None:
+        """A non-identity directory name can address no entry, so it is skipped.
+
+        The reap recovers identities from directory names; a stray
+        directory under ``buckets/`` must be ignored rather than raise the
+        canonical-identity refusal out of a teardown.
+        """
+        (tmp_path / "buckets" / "not-a-uuid").mkdir(parents=True)
+        reap_profile_session_keys(tmp_path)
+
+    @pytest.mark.os_keychain
+    def test_login_inside_the_harness_leaves_no_keychain_entry(self, tmp_path: Path) -> None:
+        """A real login's session key is gone once the harness context exits.
+
+        Keyed on the bucket uuid this test created rather than on a global
+        credential count, so a peer process minting concurrently on the
+        same workstation cannot make the assertion pass or fail
+        spuriously. The custody precondition is asserted FIRST: without it
+        a host that minted nothing would report a clean reap, which is
+        exactly the false-clean a saturated credential store produces.
+        """
+        with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+            created = invoke_cached_cli(
+                [
+                    "config",
+                    "profile",
+                    "create",
+                    _REAP_LABEL,
+                    "--quiet",
+                    "--accept-defaults",
+                    "--tax-id",
+                    "12345678Z",
+                    "--entity-type",
+                    "natural_person",
+                    "--name",
+                    "Harness",
+                    "--surnames",
+                    "Reap",
+                    "--activity",
+                    "design",
+                ],
+            )
+            assert created.exit_code == 0, created.output
+            close_active_bucket_session()
+            pointer = read_profile_bucket(_REAP_LABEL)
+            assert pointer is not None
+            bucket_id = pointer.bucket_id
+
+            login_profile()
+            if load_profile_session_key(bucket_id=bucket_id) is None:
+                pytest.fail(
+                    "login custodied no keychain session key, so a reap cannot be "
+                    "observed: this host has no usable OS credential store. The "
+                    "login itself succeeded and correctly degraded to a "
+                    "process-scoped session; only the custody half is unavailable.",
+                )
+            assert storage_root.is_dir()
+
+        assert load_profile_session_key(bucket_id=bucket_id) is None, (
+            "the harness teardown left a cadrumo:profile-session keychain entry "
+            f"behind for bucket {bucket_id}; every run of every login test would "
+            "deposit one more permanent orphan in the developer's credential store"
+        )
 
 
 def _control_session() -> BucketSession:

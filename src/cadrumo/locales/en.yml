@@ -6374,6 +6374,9 @@ flows:
         1990-01-31.
       auth_numero_soporte: Support number printed on the document
       auth_provider: How you identify to AEAT
+      auth_tax_id: Your tax identity (NIF or NIE)
+      auth_tax_id_invalid: That is not a valid NIF or NIE. Check the letter at the
+        end and enter it as it appears on your document, for example 12345678Z.
       busy: Another operation is still running. Wait for it to finish.
       censal_pull: Fill in from AEAT censal data
       censal_pull_auth_incomplete: Your identification is incomplete, so AEAT cannot

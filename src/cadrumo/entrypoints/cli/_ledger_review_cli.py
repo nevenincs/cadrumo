@@ -15,6 +15,8 @@ from ...application.ledger import (
     LedgerReviewQuery,
     LedgerReviewQueryResult,
     LedgerReviewRow,
+    compute_display_id_width,
+    query_ledger_review_rows,
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
@@ -25,11 +27,6 @@ ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
 
 def register_ledger_review_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import query_ledger_review_rows
-
     @app.command("review", help=tr("cli.ledger.review.help"))
     def ledger_review(
         ctx: typer.Context,
@@ -107,11 +104,6 @@ def _ledger_review_list_payload(result: LedgerReviewQueryResult) -> dict[str, ob
 
 
 def _ledger_review_list_lines(result: LedgerReviewQueryResult) -> list[str]:
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import compute_display_id_width
-
     lines: list[str] = [tr("cli.ledger.review.header")]
     review_ids = tuple(row.id for row in result.rows)
     review_width = compute_display_id_width(review_ids)

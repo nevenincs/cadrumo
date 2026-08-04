@@ -15,6 +15,7 @@ here compare the declaration against itself and pass for any subpath at all.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -25,6 +26,9 @@ from .env_scope import isolated_aeat_env, settings_without_env_file
 from .storage_scope import relocated_storage_path, storage_env_overrides, storage_overrides
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def test_the_overrides_relocate_each_category_to_its_declared_subpath(tmp_path: Path) -> None:

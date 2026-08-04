@@ -6,7 +6,12 @@ import typer
 
 from ...application.ledger import (
     PurchaseInvoiceEvidence,
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceNotFoundError,
+    PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
+    confirm_invoice_draft_from_evidence,
+    extract_invoice_draft_from_evidence,
 )
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -187,11 +192,6 @@ def _register_evidence_list_command() -> None:
 
 
 def _register_evidence_update_command() -> None:
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import PurchaseInvoiceEvidencePatch
-
     @evidence_app.command(
         "update",
         help=tr(
@@ -323,15 +323,6 @@ def extract_review_suggestion(*, evidence_id: str | None, reference: str) -> str
 
 
 def _register_evidence_extract_command() -> None:
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        PurchaseInvoiceEvidenceInputError,
-        PurchaseInvoiceEvidenceNotFoundError,
-        extract_invoice_draft_from_evidence,
-    )
-
     @evidence_app.command(
         "extract",
         help=tr(
@@ -582,15 +573,6 @@ def _run_evidence_confirm(
     currency: str | None,
     notes: str,
 ) -> None:
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        PurchaseInvoiceEvidenceInputError,
-        PurchaseInvoiceEvidenceNotFoundError,
-        confirm_invoice_draft_from_evidence,
-    )
-
     if (evidence_id is None) == (attachment_id is None):
         raise _bad(
             tr(

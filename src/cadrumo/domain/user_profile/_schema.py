@@ -8,10 +8,12 @@ secure DB backend.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
-from typing import Annotated, Self
+from functools import lru_cache
+from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
@@ -45,6 +47,19 @@ _FieldPath = Annotated[
 _Selector = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=256),
+]
+#: A canonical dotted path carrying at least one ``{placeholder}`` segment.
+#: Shaped like ``_FieldPath`` plus braces, so a pattern that accidentally
+#: carries no placeholder -- or stray uppercase / whitespace -- is refused at
+#: schema load rather than silently declaring a single literal path.
+_DerivedSelectorPattern = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=3,
+        max_length=160,
+        pattern=r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_{}]+)+$",
+    ),
 ]
 _Description = Annotated[
     str,
@@ -179,6 +194,88 @@ class ProfileSectionDefinition(BaseModel):
         return self
 
 
+#: Regex fragment each declared derived-selector placeholder expands to.
+#:
+#: ``filing_year`` is deliberately ``\d{4}`` rather than a wildcard. Two of the
+#: declared patterns are prefixes of one another
+#: (``descendientes_minimos_aggregate_{filing_year}`` and the ``_autonomico_``
+#: variant), so under a looser fragment the shorter pattern would swallow the
+#: longer one's paths -- every gate would stay green while the longer pattern's
+#: coverage silently vanished.
+_DERIVED_SELECTOR_PLACEHOLDERS: Final[Mapping[str, str]] = {"filing_year": r"\d{4}"}
+
+_DERIVED_SELECTOR_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(r"\{([^{}]+)\}")
+
+
+@lru_cache(maxsize=64)
+def _compiled_derived_selector_pattern(pattern: str) -> re.Pattern[str]:
+    """Compile a declared derived-selector pattern into an anchored regex.
+
+    Literal segments between placeholders are individually :func:`re.escape`-d
+    and the placeholder fragments spliced in raw. That ordering matters:
+    escaping the whole template first would mangle the fragments' own regex
+    metacharacters. The result carries a terminal ``\\Z`` anchor so a pattern
+    can never match a longer sibling path.
+
+    An unrecognised placeholder raises rather than matching anything, so a
+    typo in the schema TOML fails the load instead of quietly widening or
+    narrowing the namespace.
+
+    Raises:
+        :class:`UserProfileValidationError`: If *pattern* names a placeholder
+            with no declared regex fragment.
+    """
+    parts: list[str] = []
+    position = 0
+    for match in _DERIVED_SELECTOR_PLACEHOLDER_RE.finditer(pattern):
+        parts.append(re.escape(pattern[position : match.start()]))
+        token = match.group(1)
+        fragment = _DERIVED_SELECTOR_PLACEHOLDERS.get(token)
+        if fragment is None:
+            raise UserProfileValidationError(
+                f"derived selector pattern {pattern!r} names placeholder {{{token}}}, "
+                f"which has no declared regex fragment; declared placeholders are "
+                f"{sorted(_DERIVED_SELECTOR_PLACEHOLDERS)}",
+            )
+        parts.append(fragment)
+        position = match.end()
+    parts.append(re.escape(pattern[position:]))
+    return re.compile("".join(parts) + r"\Z")
+
+
+class ProfileDerivedSelectorDefinition(BaseModel):
+    """A namespace of profile paths the calculation engine owns and computes.
+
+    A derived path is NOT taxpayer data. Its value is computed at calculate
+    time from the source facts named in :attr:`derived_from`, so the schema
+    declares the namespace as a pattern rather than one field per filing year.
+    The pattern exists so registry binding selectors targeting these paths
+    still resolve once the per-year field declarations are gone.
+
+    This is a DECLARATION of engine ownership, never a resolution route for
+    values: nothing here supplies a value to the binding resolver.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    pattern: _DerivedSelectorPattern
+    derived_from: tuple[_FieldPath, ...] = Field(min_length=1)
+    entry_surface: _Description
+    description: _Description
+    legal_refs: tuple[_Description, ...] = ()
+
+    @model_validator(mode="after")
+    def _validate_pattern_compiles(self) -> Self:
+        # Compile eagerly so an unknown placeholder is a schema-load failure
+        # rather than a silent non-match discovered at validation time.
+        _compiled_derived_selector_pattern(self.pattern)
+        return self
+
+    def matches(self, selector: str) -> bool:
+        """Return whether *selector* falls inside this derived namespace."""
+        return _compiled_derived_selector_pattern(self.pattern).match(selector) is not None
+
+
 class ProfileSchemaDefinition(BaseModel):
     """The committed centralized user-profile schema."""
 
@@ -190,6 +287,7 @@ class ProfileSchemaDefinition(BaseModel):
     snapshot_policy: ProfileSnapshotPolicy
     remove_policy: ProfileRemovePolicy
     sections: tuple[ProfileSectionDefinition, ...] = Field(min_length=1)
+    derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...] = ()
 
     @field_validator("snapshot_policy", mode="before")
     @classmethod

@@ -26,8 +26,12 @@ from ...application.invoices import (
     resolve_catalogue_invoice_from_repository,
 )
 from ...application.ledger import (
+    BusinessOperationInvoiceDirection,
+    BusinessOperationInvoiceInputError,
+    BusinessOperationInvoicePatch,
     CollectibleInvoiceService,
     PayableInvoiceService,
+    validate_eu_iva_id,
 )
 from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -87,11 +91,6 @@ def _service_for_kind(
     kind: InvoiceKindOption,
 ) -> PayableInvoiceService | CollectibleInvoiceService:
     """Select the slim CRUD service for ``kind`` via the contractual mapping."""
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import BusinessOperationInvoiceDirection
-
     source_kind = invoice_direction_to_source_kind(InvoiceKind(kind.value))
     if source_kind is BusinessOperationInvoiceDirection.COLLECTIBLE_INVOICE:
         return CollectibleInvoiceService()
@@ -99,14 +98,6 @@ def _service_for_kind(
 
 
 def _validated_eu_iva_id(raw: str | None) -> str | None:
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        BusinessOperationInvoiceInputError,
-        validate_eu_iva_id,
-    )
-
     if raw is None:
         return None
     try:
@@ -381,11 +372,6 @@ def invoice_update(
     notes: str | None = typer.Option(None, "--notes"),
 ) -> None:
     """Update mutable fields on one business invoice record."""
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import BusinessOperationInvoicePatch
-
     bucket_id = _business_invoice_bucket_id()
     patch = BusinessOperationInvoicePatch(
         counterparty_nif=counterparty_nif,

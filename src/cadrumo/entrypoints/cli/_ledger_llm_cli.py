@@ -24,10 +24,22 @@ from pydantic import BaseModel, ValidationError
 from ...application.ledger import (
     LLMClassificationSuggestion,
     LLMProvider,
+    LlmReviewDecision,
     LlmReviewInvocationOrigin,
     LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
     LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
     ManualLedgerTransactionResult,
+    apply_evidence_classification,
+    derive_operator_iva_substrate,
+    execute_reviewed_decision,
+    is_llm_provider_available,
+    ledger_transaction_payload,
+    ledger_transaction_review_status,
+    saturate_llm_classification,
+    suggest_evidence_split,
+    suggest_llm_classification,
 )
 from ...core import resolve_active_bucket_id
 from ...core.i18n import tr
@@ -76,14 +88,6 @@ def emit_llm_rejection(
     the manual-override next step
     (``cli-notices-are-the-only-diagnostic-channel``).
     """
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        LlmReviewDecision,
-        LLMSuggestionRejectionResult,
-        execute_reviewed_decision,
-    )
     from ._ledger_llm_payloads import LedgerClassifyLlmRejectResult
 
     result = execute_reviewed_decision(
@@ -203,13 +207,6 @@ def dispatch_autosplit(
     the in-place write). The model emits no euro amount or regulated number; the
     registry derives every child's base and IVA.
     """
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        is_llm_provider_available,
-        suggest_evidence_split,
-    )
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
     from ._ledger_payloads import LedgerClassifySingleResult
 
@@ -308,14 +305,6 @@ def _emit_split(
     actor: str | None,
 ) -> None:
     """Preview or apply the multi-child evidence-driven split for the auto-split route."""
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        LlmReviewDecision,
-        LLMSplitApplyResult,
-        execute_reviewed_decision,
-    )
     from ._ledger_payloads import LedgerSplitResult
 
     proposed_children = _autosplit_child_payloads(suggestion)
@@ -382,15 +371,6 @@ def _emit_single(
     result_models: tuple[type[BaseModel], type[BaseModel]],
 ) -> None:
     """Preview or apply the in-place single-line classification (no-split verdict)."""
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        apply_evidence_classification,
-        ledger_transaction_payload,
-        ledger_transaction_review_status,
-    )
-
     suggest_model, single_model = result_models
     child = suggestion.children[0]
     if not apply:
@@ -461,13 +441,6 @@ def _emit_llm_single_classify(
     (e.g. the saturated IVA category) surfaced between the provenance and the
     review status.
     """
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        ledger_transaction_payload,
-        ledger_transaction_review_status,
-    )
     from ._ledger_payloads import LedgerClassifySingleResult
 
     review_status = ledger_transaction_review_status(result.transaction)
@@ -508,11 +481,6 @@ def _validate_classify_llm_options(
     by the local vision model, which needs no subprocess provider; a text-layer
     read with no provider is refused instructively downstream by the application.
     """
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import is_llm_provider_available
-
     if classification is not None or file is not None:
         raise _bad(
             tr(
@@ -750,15 +718,6 @@ def ledger_classify_llm(
     unchanged. ``--llm`` is mutually exclusive with the manual
     ``--classification`` / ``--file`` override.
     """
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        LlmReviewDecision,
-        execute_reviewed_decision,
-        suggest_llm_classification,
-    )
-
     prologue = _llm_classify_prologue(
         ctx,
         suggest_fn=suggest_llm_classification,
@@ -829,15 +788,6 @@ def ledger_saturate_llm(
     recorded as a declined audit event and the row is left unchanged. Manual
     ``classify`` flags remain the explicit per-field override.
     """
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        LlmReviewDecision,
-        execute_reviewed_decision,
-        saturate_llm_classification,
-    )
-
     prologue = _llm_classify_prologue(
         ctx,
         suggest_fn=saturate_llm_classification,
@@ -907,14 +857,6 @@ def ledger_operator_iva_derive(
     provenance. Only the IVA substrate is touched; the business classification
     and its provenance are left intact.
     """
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        derive_operator_iva_substrate,
-        ledger_transaction_payload,
-        ledger_transaction_review_status,
-    )
     from ._ledger_payloads import LedgerClassifySingleResult
 
     if file is not None or classification is not None:

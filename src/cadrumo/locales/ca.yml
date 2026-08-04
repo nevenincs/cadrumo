@@ -6817,6 +6817,9 @@ flows:
         per exemple 1990-01-31.
       auth_numero_soporte: Número de suport del document
       auth_provider: Forma d'identificació davant l'AEAT
+      auth_tax_id: La vostra identitat fiscal (NIF o NIE)
+      auth_tax_id_invalid: Aquest NIF o NIE no és vàlid. Comproveu la lletra final
+        i introduïu-lo tal com figura al vostre document, per exemple 12345678Z.
       busy: Encara hi ha una altra operació en curs. Espera que acabi.
       censal_pull: Emplenar amb les dades censals de l'AEAT
       censal_pull_auth_incomplete: La vostra identificació és incompleta, així que

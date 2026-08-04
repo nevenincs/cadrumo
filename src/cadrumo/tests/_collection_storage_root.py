@@ -18,6 +18,7 @@ safe to import from either conftest at the earliest point in collection.
 from __future__ import annotations
 
 import atexit
+import logging
 import os
 import shutil
 import time
@@ -100,6 +101,46 @@ def collection_storage_root() -> Path:
     return Path(gettempdir()) / f"{_STEM}{os.getpid()}"
 
 
+def _release_log_handlers_under(root: Path) -> None:
+    """Close and detach any root-logger file handler writing under ``root``.
+
+    ``configure_logging`` (``cadrumo.core.logging``) attaches a
+    ``RotatingFileHandler`` under this process's own storage root, and the
+    stdlib ``logging`` module registers its own ``atexit.register(logging.shutdown)``
+    at import time -- long before this module's cleanup is registered during
+    conftest collection. ``atexit`` runs callbacks in reverse registration
+    order, so this cleanup fires BEFORE ``logging.shutdown()`` closes that
+    handler: the log file is still open when ``shutil.rmtree`` below runs.
+    Windows refuses to delete an open file, and ``ignore_errors=True``
+    swallows that failure silently, so the root's cleanup was never actually
+    succeeding at process exit -- confirmed by measurement, reproducible on
+    every run. It only ever cleared later, once a *different* process's stale
+    sweep found the same root after the lock had already been released.
+
+    Closing the handler here (rather than calling the blanket
+    ``logging.shutdown()``) is deliberately narrow: it releases only the file
+    this cleanup is about to delete, leaving any other handler (stderr,
+    a per-run JSONL sink pointed elsewhere) untouched for whatever other
+    ``atexit`` callback still expects to use it.
+    """
+    root_logger = logging.getLogger()
+    for handler in list(root_logger.handlers):
+        base_filename = getattr(handler, "baseFilename", None)
+        if base_filename is None:
+            continue
+        try:
+            under_root = Path(base_filename).resolve().is_relative_to(root.resolve())
+        except OSError:
+            continue
+        if not under_root:
+            continue
+        root_logger.removeHandler(handler)
+        try:
+            handler.close()
+        except OSError:
+            continue
+
+
 def register_collection_storage_root_cleanup(root: Path) -> None:
     """Register best-effort cleanup for ``root`` and any stale sibling directories.
 
@@ -114,6 +155,7 @@ def register_collection_storage_root_cleanup(root: Path) -> None:
     """
 
     def _cleanup() -> None:
+        _release_log_handlers_under(root)
         shutil.rmtree(root, ignore_errors=True)
         sweep_stale_roots(root.parent)
 

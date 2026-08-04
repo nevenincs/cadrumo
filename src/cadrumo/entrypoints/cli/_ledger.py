@@ -24,7 +24,13 @@ from pydantic import ValidationError
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import (
     LLMProvider,
+    ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
+    create_manual_transaction,
+    ledger_transaction_payload,
+    ledger_transaction_review_status,
+    resolve_lineage_transaction_id,
+    update_manual_transaction_fields,
 )
 from ...core import Art104TresExclusion, ProrrataRegisterRegime, resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -147,11 +153,6 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
     content-addressed id stays authoritative; this is a read-side lookup
     convenience, never a change to how ids are minted.
     """
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import resolve_lineage_transaction_id
-
     if not isinstance(transaction_repository, TransactionCatalogueRepository):
         # Read verbs always receive a real catalogue repository through
         # _tx_repo; the structural Protocol is only used by mutation
@@ -346,16 +347,6 @@ def ledger_add(
     ),
 ) -> None:
     """Create one manual ledger transaction through the bucket-scoped backend."""
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        ManualLedgerTransactionCommand,
-        create_manual_transaction,
-        ledger_transaction_payload,
-        ledger_transaction_review_status,
-    )
-
     operator_assignable_on_add = (
         is_classified(business_classification) or business_classification is BusinessClassification.NOT_YET_PROCESSED
     )
@@ -545,11 +536,6 @@ def ledger_update(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.update.actor_help")),
 ) -> None:
     """Correct editable transaction facts through the bucket-scoped backend."""
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import update_manual_transaction_fields
-
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
@@ -675,15 +661,6 @@ def ledger_classify(
     reason: str | None = typer.Option(None, "--reason", help=tr("cli.ledger.classify.reason_help")),
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--file)."""
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import (
-        ledger_transaction_payload,
-        ledger_transaction_review_status,
-        update_manual_transaction_fields,
-    )
-
     m210_options = M210LedgerClassifyOptions(
         tipo_renta_code=m210_tipo_renta_code,
         gross_income_amount=m210_gross_income_amount,
@@ -863,11 +840,6 @@ def ledger_allocate(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.allocate.actor_help")),
 ) -> None:
     """Record business/private proportionality through the ledger backend."""
-    # Imported here rather than at module scope: the CLI module is
-    # loaded to register commands, and pulling the owning submodule
-    # then costs every invocation for work only this verb does.
-    from ...application.ledger import update_manual_transaction_fields
-
     state = _state()
     transaction_repository = _tx_repo(state)
     validated_category_id = _validate_category_id(category_id)

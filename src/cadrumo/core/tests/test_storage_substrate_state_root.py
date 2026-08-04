@@ -1,8 +1,15 @@
-"""State-root derivation for secure storage substrate settings."""
+"""State-root derivation for secure storage substrate settings.
+
+The ``"secrets"`` literal at the default-derivation assertion is deliberate:
+it is the independent oracle for what ``cadrumo_secret_store_dir`` defaults to
+when unoverridden, not scaffolding. Re-deriving it from the taxonomy would
+make the assertion compare the settings derivation against itself.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -11,6 +18,9 @@ from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def _settings_from_env(**env: str) -> Settings:

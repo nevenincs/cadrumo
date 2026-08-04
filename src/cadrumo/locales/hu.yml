@@ -6701,6 +6701,9 @@ flows:
         meg, például 1990-01-31.
       auth_numero_soporte: A dokumentumon szereplő támogatási szám
       auth_provider: Azonosítás módja az AEAT felé
+      auth_tax_id: Az Ön adóazonosítója (NIF vagy NIE)
+      auth_tax_id_invalid: Ez a NIF vagy NIE nem érvényes. Ellenőrizze a záró betűt,
+        és úgy adja meg, ahogy az okmányán szerepel, például 12345678Z.
       busy: Egy másik művelet még mindig fut. Várja meg, amíg befejeződik.
       censal_pull: Kitöltés az AEAT censusadataiból
       censal_pull_auth_incomplete: Az azonosítása hiányos, ezért az AEAT még nem olvasható.
