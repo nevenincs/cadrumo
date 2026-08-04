@@ -2099,6 +2099,7 @@ cli:
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
         pull_sources_help: Letölti egy cél-nyilatkozat függőségeihez szükséges benyújtott
           megfigyeléseket.
+        casillas_not_enrolled: 'A rögzített bevallásokban {count} rovat értéke nem összeg, ezért nem került be számítási bizonyítékként: {affected}. Az érintett bevallások minden számszerű adata a szokásos módon bekerült.'
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:

@@ -2161,6 +2161,7 @@ cli:
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
         pull_sources_help: Descàrrega les observacions presentades que requereixen
           les dependències d'una declaració objectiu.
+        casillas_not_enrolled: '{count} casella/es de les declaracions capturades contenen valors que no són imports, per la qual cosa no es van incorporar com a evidència de càlcul: {affected}. Tot el numèric d''aquestes declaracions es va incorporar amb normalitat.'
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:

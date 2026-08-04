@@ -2008,6 +2008,7 @@ cli:
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's
           dependencies.
+        casillas_not_enrolled: '{count} casilla(s) in the captured filings hold values that are not amounts, so they were not enrolled as calculation evidence: {affected}. Everything numeric in those filings was enrolled normally.'
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
