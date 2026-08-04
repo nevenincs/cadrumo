@@ -77,7 +77,7 @@ class TestCacheRedaction:
         cache.write(request, response)
 
         assert not (tmp_path / "cache").exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        db_path = secure_object_test_profile.paths.database_file
         assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_bearer_token_redacted_in_cache(
@@ -91,7 +91,7 @@ class TestCacheRedaction:
         cache.write(request, response)
 
         assert not (tmp_path / "cache").exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        db_path = secure_object_test_profile.paths.database_file
         assert _BEARER_TAIL.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_cache_entry_remains_parseable(self, tmp_path: Path) -> None:
@@ -124,7 +124,7 @@ class TestCacheRedaction:
         # plaintext NIF in the encrypted database bytes.
         cache.write(request, first.model_copy(update={"cache_hit": False}))
         assert not (tmp_path / "cache").exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        db_path = secure_object_test_profile.paths.database_file
         assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
 
@@ -155,7 +155,7 @@ class TestUsageRedaction:
         record = self._make_record(text=f"customer NIF: {_NIF_CANARY}")
         path = recorder.record(record)
         assert not path.exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        db_path = secure_object_test_profile.paths.database_file
         assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_bearer_token_redacted_in_usage(
@@ -167,7 +167,7 @@ class TestUsageRedaction:
         record = self._make_record(text=f"saw header {_BEARER_CANARY}")
         path = recorder.record(record)
         assert not path.exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        db_path = secure_object_test_profile.paths.database_file
         assert _BEARER_TAIL.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_each_record_is_one_jsonl_line(self, tmp_path: Path) -> None:
