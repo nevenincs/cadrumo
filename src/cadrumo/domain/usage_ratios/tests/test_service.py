@@ -18,6 +18,7 @@ from pydantic import TypeAdapter, ValidationError
 from ....adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
 from ....adapters.persistence.storage import Envelope, SensitivityClass
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....core import StorageCategory, storage_path
 from ....core.identity import BucketId
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...categories import SpendingCategory
@@ -64,6 +65,33 @@ def test_save_does_not_create_requested_plaintext_file(
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
     assert not target.exists()
     assert _runtime_profile.paths.database_file.exists()
+
+
+def test_save_persists_only_to_the_secure_database_object(
+    _runtime_profile: TestRuntimeProfile,
+) -> None:
+    """A saved profile never reaches the plaintext ``financial/usage-ratios.json`` leaf.
+
+    Sibling to ``test_save_does_not_create_requested_plaintext_file`` above,
+    but that test checks an arbitrary caller-chosen path
+    (``tmp_path / "a" / "b" / "ratios.json"``) rather than the real
+    taxonomy-declared location -- it would still pass even if
+    ``save_usage_ratios`` wrote to :data:`StorageCategory.USAGE_RATIOS`'s
+    real subpath, since that path is never checked. This test closes that
+    gap: :data:`StorageCategory.USAGE_RATIOS` declares
+    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
+    that module only walks the location to re-encrypt an ``.envelope.json``
+    file found there on master-key rotation -- it is a sweep, not a writer.
+    The module docstring states "no plaintext profile JSON or envelope file
+    lands on disk"; this proves it against the accessor-resolved path
+    itself, so a future taxonomy subpath move is tracked automatically
+    instead of silently passing vacuously against a stale path.
+    """
+    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.30")})
+    save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
+
+    assert load_usage_ratios(bucket_id=_BUCKET_A_ID) == profile
+    assert not storage_path(StorageCategory.USAGE_RATIOS).exists()
 
 
 def test_save_round_trips(tmp_path: Path) -> None:

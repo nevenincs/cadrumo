@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import StorageCategory, storage_path
 from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from .....domain.iva import InvoiceKind
 from .....tests.secure_sql import isolated_runtime_profile
@@ -91,6 +92,35 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
         assert loaded_line.quantity == Decimal("10")
         assert loaded_line.iva_amount == Decimal("210.00")
         assert loaded_line.category_id == "consultoria"
+
+
+def test_invoice_catalogue_persists_only_to_the_secure_database_object(
+    tmp_path: Path,
+) -> None:
+    """A saved catalogue never reaches the plaintext ``financial/invoices`` directory.
+
+    :data:`StorageCategory.INVOICES` declares
+    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
+    that module only walks the directory to re-encrypt any
+    ``.envelope.json`` files found there on master-key rotation -- it is a
+    sweep, not a writer. :class:`InvoiceCatalogueRepository`'s own module
+    docstring states "no plaintext invoice row, JSON catalogue, or
+    envelope file lands on disk"; this proves it, mirroring
+    ``test_put_file_reads_source_but_persists_only_secure_database_object``
+    for the attachments store. The assertion routes through
+    :func:`storage_path` rather than a literal so a future taxonomy subpath
+    move is tracked automatically instead of silently passing vacuously
+    against a stale path.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        invoice = _populated_invoice(invoice_number="F-2025-DORMANCY")
+        original = InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
+        repo = InvoiceCatalogueRepository()
+        repo.save(original)
+
+        assert repo.load() == original
+        assert not storage_path(StorageCategory.INVOICES).exists()
 
 
 def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Path) -> None:

@@ -21,7 +21,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
-from ....core import Period
+from ....core import Period, StorageCategory, storage_path
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.registry import CasillaId, RegistrySnapshotRef, validated_casilla_id
 from .._amendment import (
@@ -192,6 +192,43 @@ def test_filing_amendment_survives_encrypted_storage_roundtrip(
     assert loaded.created_at == _AMENDMENT_CREATED_AT
     assert loaded.created_at.utcoffset() == timedelta()
     assert loaded.model_dump(mode="json")["created_at"] == "2026-05-25T15:00:00Z"
+
+
+def test_filing_amendment_persists_only_to_the_secure_database_object(
+    tmp_path: Path,
+) -> None:
+    """A saved amendment never reaches either plaintext ``submissions/amendments*`` directory.
+
+    :data:`StorageCategory.SUBMISSIONS_AMENDMENTS` declares
+    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
+    that module only walks the directory to re-encrypt any
+    ``.envelope.json`` files found there on master-key rotation -- it is a
+    sweep, not a writer. :class:`ModeloAmendmentRepository`'s own module
+    docstring states "no plaintext amendment JSON or envelope file lands on
+    disk"; this proves it for ``submissions/amendments``, mirroring
+    ``test_put_file_reads_source_but_persists_only_secure_database_object``
+    for the attachments store.
+
+    :data:`StorageCategory.SUBMISSIONS_AMENDMENT_RESULTS` is checked here
+    too rather than in its own test: ``_rotation.py`` documents
+    ``ModeloAmendmentRepository`` as "one consumer identity" bound to BOTH
+    sibling directories under one shared HKDF context, but the repository
+    never references an "amendment result" concept anywhere in its source
+    -- the rotation-plan entry is a re-encryption-sweep target the
+    directory could hold, not evidence of a real writer for it. Asserting
+    both absences in the one place that persists an amendment keeps that
+    shared-consumer relationship visible instead of splitting it across two
+    tests that could drift independently.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        original = _populated_amendment()
+        repo = ModeloAmendmentRepository(bucket_id=_BUCKET_ID)
+        repo.save(original)
+
+        assert repo.load(original.amendment_id) == original
+        assert not storage_path(StorageCategory.SUBMISSIONS_AMENDMENTS).exists()
+        assert not storage_path(StorageCategory.SUBMISSIONS_AMENDMENT_RESULTS).exists()
 
 
 def test_filing_amendment_emptied_delta_surfaces_at_load(

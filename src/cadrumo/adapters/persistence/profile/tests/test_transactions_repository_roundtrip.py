@@ -33,6 +33,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from .....core import StorageCategory, storage_path
 from .....domain.iva import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
 from .....domain.transactions import (
     BusinessClassification,
@@ -168,6 +169,40 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
     assert loaded_mixed.raw.provenance.source_row_index == 7
     assert (bucket_paths(tmp_path / "cadrumo-storage", _BUCKET_ID).database_file).is_file()
+
+
+def test_transaction_catalogue_persists_only_to_the_secure_database_object(
+    tmp_path: Path,
+) -> None:
+    """A saved catalogue never reaches the plaintext ``financial/transactions`` directory.
+
+    :data:`StorageCategory.FINANCIAL_TRANSACTIONS` declares
+    ``adapters/persistence/storage/_rotation.py`` as its sole consumer, and
+    that module only walks the directory to re-encrypt any
+    ``.envelope.json`` files found there on master-key rotation -- it is a
+    sweep, not a writer. :class:`TransactionCatalogueRepository`'s own
+    module docstring states "no plaintext transaction row, JSON catalogue,
+    or envelope file lands on disk"; this proves it, mirroring
+    ``test_put_file_reads_source_but_persists_only_secure_database_object``
+    for the attachments store. The assertion routes through
+    :func:`storage_path` rather than a literal so a future taxonomy subpath
+    move is tracked automatically instead of silently passing vacuously
+    against a stale path.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        txn = _transaction(
+            provider_id="provider-dormancy-check",
+            amount=Decimal("42.00"),
+            description="Dormancy-check transaction",
+            classification=BusinessClassification.BUSINESS,
+        )
+        original = TransactionCatalogue.from_transactions([txn])
+        repo.save(original)
+
+        assert TransactionCatalogueRepository(bucket_id=profile.bucket_id).load() == original
+        assert not storage_path(StorageCategory.FINANCIAL_TRANSACTIONS).exists()
 
 
 def test_transaction_catalogue_refuses_foreign_payload_rekeyed_under_an_indexed_row(

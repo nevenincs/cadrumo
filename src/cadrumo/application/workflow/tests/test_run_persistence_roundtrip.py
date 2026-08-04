@@ -20,6 +20,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import Envelope
+from ....core import StorageCategory, storage_path
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import WorkflowError
 from .._models import (
@@ -109,6 +110,39 @@ def test_workflow_run_survives_encrypted_storage_roundtrip(
         assert details.get("modelo") == "303"
         assert details.get("period") == "2025 1T"
         assert details.get("closes_on") == "2025-04-20"
+
+
+def test_workflow_run_persists_only_to_the_secure_database_object(
+    tmp_path: Path,
+) -> None:
+    """A saved run never reaches the plaintext ``workflow-runs`` directory.
+
+    :data:`StorageCategory.WORKFLOW_RUNS` names
+    ``application/workflow/_persistence.py`` as its consumer, not
+    ``_rotation.py`` -- but that module's own ``save_run`` docstring states
+    why: "``runs_dir`` remains part of the API as a logical marker path for
+    callers and tests, but no plaintext run file is written there." The
+    Path ``WorkflowRunRepository.save`` returns is a caller-facing marker
+    built from that settings field, never something the method itself
+    writes to; the only real write goes to the encrypted secure-object
+    backend. ``_rotation.py`` still lists ``cadrumo_workflow_runs_dir`` as
+    a rotation-plan entry (a re-encryption sweep target the directory
+    could hold), which is why the category also shares the same
+    architecture as the ``_rotation.py``-only categories despite the
+    different declared consumer. This proves the claim directly, mirroring
+    ``test_put_file_reads_source_but_persists_only_secure_database_object``
+    for the attachments store. The assertion routes through
+    :func:`storage_path` rather than a literal so a future taxonomy
+    subpath move is tracked automatically instead of silently passing
+    vacuously against a stale path.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _populated_run()
+        save_run(original)
+
+        assert load_run(original.run_id) == original
+        assert not storage_path(StorageCategory.WORKFLOW_RUNS).exists()
 
 
 def test_workflow_run_aborted_reason_drift_surfaces_at_load(

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from .....core import Period
+from .....core import Period, StorageCategory, storage_path
 from .....domain.submission import (
     ModeloPresentado,
     SubmissionAttempt,
@@ -106,6 +106,28 @@ class TestSaveLoad:
         repo_b = SubmissionRepository()
         loaded = repo_b.load(filing.submission_id)
         assert loaded == filing
+
+    def test_save_persists_only_to_the_secure_database_object(self, repo: SubmissionRepository) -> None:
+        """A saved filing never reaches the plaintext ``submissions`` directory.
+
+        :data:`StorageCategory.SUBMISSIONS` declares
+        ``adapters/persistence/storage/_rotation.py`` as its sole consumer,
+        and that module only walks the directory to re-encrypt any
+        ``.envelope.json`` files found there on master-key rotation -- it is
+        a sweep, not a writer. :class:`SubmissionRepository`'s own module
+        docstring states "plaintext submission JSON or envelope file lands
+        on disk" is what it avoids; this proves it, mirroring
+        ``test_put_file_reads_source_but_persists_only_secure_database_object``
+        for the attachments store. The assertion routes through
+        :func:`storage_path` rather than a literal so a future taxonomy
+        subpath move is tracked automatically instead of silently passing
+        vacuously against a stale path.
+        """
+        filing = _make_filing()
+        repo.save(filing)
+
+        assert repo.load(filing.submission_id) == filing
+        assert not storage_path(StorageCategory.SUBMISSIONS).exists()
 
     def test_save_is_idempotent(self, repo: SubmissionRepository) -> None:
         filing = _make_filing()
