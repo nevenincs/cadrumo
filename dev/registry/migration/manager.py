@@ -17,14 +17,17 @@ from the compiler's supported revision set.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Final, Literal
+from unicodedata import normalize
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from cadrumo.core import read_toml
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.hashing import hash_file, sha256_hex
+from cadrumo.core.hashing import canonical_json_bytes, hash_file, sha256_hex
 from cadrumo.domain.calculations.registry import (
     CasillaDefinition,
     ModeloDefinition,
@@ -32,6 +35,11 @@ from cadrumo.domain.calculations.registry import (
     ModeloSource,
     discover_modelo_sources,
     load_registry_tree,
+)
+from cadrumo.locales._modelo_manager import (
+    ModeloLocaleFieldKind,
+    ModeloLocaleLeafState,
+    classify_modelo_locale_leaf,
 )
 
 _CORPUS_FINGERPRINT_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.corpus-fingerprint.v1"
@@ -41,6 +49,9 @@ _CANONICAL_CANDIDATE_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.c
 _CANONICAL_CANDIDATES_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.canonical-candidates.v1"
 _CLASSIFIED_CANDIDATE_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.classified-candidate.v1"
 _CLASSIFIED_CANDIDATES_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.classified-candidates.v1"
+_SOURCE_MANIFEST_ENTRY_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.source-manifest-entry.v1"
+_SOURCE_MANIFEST_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.source-manifest.v1"
+_UNRESOLVED_REVIEW_REGISTER_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.unresolved-review-register.v1"
 _CORPUS_SCOPE: Final[str] = "registry/aeat/**/*.toml"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 
@@ -50,9 +61,36 @@ LocalizationField = Literal["label", "help"]
 LocalizationResolution = Literal["localized", "official_spanish", "absent"]
 CanonicalOccurrenceScope = Literal["continuity", "revision_occurrence"]
 CandidateClassification = Literal["grounded", "revision_exact", "continuity_candidate"]
+SourceScope = Literal["schema", "modelo_locale", "revision_locale", "none"]
+ReviewStatus = Literal["not_required", "unresolved"]
+DriftField = Literal[
+    "number",
+    "segmento",
+    "data_type",
+    "semantic_role",
+    "input_kind",
+    "formula",
+    "binding",
+    "form_number",
+    "label",
+    "help",
+]
 
 _SUPPORTED_LOCALES: Final[tuple[str, ...]] = tuple(language.value for language in OutputLanguage)
 _LOCALIZATION_FIELDS: Final[tuple[LocalizationField, ...]] = ("label", "help")
+_DRIFT_FIELDS: Final[tuple[DriftField, ...]] = (
+    "number",
+    "segmento",
+    "data_type",
+    "semantic_role",
+    "input_kind",
+    "formula",
+    "binding",
+    "form_number",
+    "label",
+    "help",
+)
+_STRUCTURAL_DRIFT_FIELDS: Final[tuple[DriftField, ...]] = _DRIFT_FIELDS[:8]
 
 
 class MigrationInventoryError(ValueError):
@@ -480,6 +518,190 @@ class ClassifiedOccurrenceCandidates(_StrictRecord):
         return self
 
 
+class SourceManifestEntry(_StrictRecord):
+    """One sealed source observation carried into later migration stages."""
+
+    schema_id: str = _SOURCE_MANIFEST_ENTRY_SCHEMA
+    candidate: ClassifiedOccurrenceCandidate
+    candidate_chain_id: str | None = None
+    source_path: str | None = None
+    source_scope: SourceScope
+    raw_value: str | None
+    old_resolved_value: str | None
+    official_fallback: bool
+    leaf_state: Literal["authored", "key_echo", "blank", "mirrored", "absent"]
+    normalized_value_hash: str | None = Field(default=None, pattern=_SHA256_PATTERN)
+    drift_fields: tuple[DriftField, ...] = ()
+    review_status: ReviewStatus
+    emitted_target: str | None = None
+    source_hash: str | None = Field(default=None, pattern=_SHA256_PATTERN)
+
+    @field_validator("candidate_chain_id", "emitted_target", mode="after")
+    @classmethod
+    def _validate_optional_nonblank(cls, value: str | None) -> str | None:
+        """Reject blank migration tokens while allowing an absent target."""
+        if value is not None and not value.strip():
+            raise ValueError("optional migration identifiers must not be blank")
+        return value
+
+    @field_validator("source_path", mode="after")
+    @classmethod
+    def _validate_source_path(cls, value: str | None) -> str | None:
+        """Require source paths to use the corpus-relative canonical form."""
+        return None if value is None else _validate_relative_path(value)
+
+    @field_validator("drift_fields", mode="after")
+    @classmethod
+    def _validate_drift_fields(cls, value: tuple[DriftField, ...]) -> tuple[DriftField, ...]:
+        """Keep drift dimensions unique and in their documented order."""
+        if value != tuple(field for field in _DRIFT_FIELDS if field in value):
+            raise ValueError("drift_fields must be unique and in canonical order")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_source_observation(self) -> SourceManifestEntry:
+        """Ensure the row preserves the classified candidate and old oracle."""
+        if self.schema_id != _SOURCE_MANIFEST_ENTRY_SCHEMA:
+            raise ValueError(f"unsupported source manifest entry schema {self.schema_id!r}")
+
+        candidate = self.candidate.candidate
+        classification = self.candidate.classification
+        expected_chain_id = (
+            candidate.continuidad_id
+            if classification == "grounded"
+            else self.candidate.provisional_candidate_id
+            if classification == "continuity_candidate"
+            else None
+        )
+        if self.candidate_chain_id != expected_chain_id:
+            raise ValueError("candidate_chain_id does not match the classified candidate")
+        if self.old_resolved_value != candidate.value:
+            raise ValueError("old_resolved_value must preserve the resolved candidate value")
+        expected_fallback = candidate.resolution == "official_spanish"
+        if self.official_fallback != expected_fallback:
+            raise ValueError("official_fallback does not match the candidate resolution")
+        expected_review: ReviewStatus = "unresolved" if classification == "continuity_candidate" else "not_required"
+        if self.review_status != expected_review:
+            raise ValueError("review_status does not match the candidate classification")
+        if self.emitted_target is not None:
+            raise ValueError("S05 source observations must not claim an emitted target")
+
+        if candidate.resolution == "absent":
+            if any(
+                value is not None
+                for value in (self.raw_value, self.normalized_value_hash, self.source_path, self.source_hash)
+            ):
+                raise ValueError("absent observations must not carry source leaf values or hashes")
+            if self.source_scope != "none" or self.leaf_state != "absent":
+                raise ValueError("absent observations must use the none/absent source state")
+        elif self.official_fallback:
+            if self.source_scope != "schema":
+                raise ValueError("official Spanish fallback must point at a schema source")
+            if self.raw_value is None or self.raw_value != self.old_resolved_value:
+                raise ValueError("schema fallback must preserve the official resolved value")
+            if self.source_path is None or self.source_hash is None or self.leaf_state != "absent":
+                raise ValueError("schema fallback must retain its source hash and absent locale leaf state")
+        else:
+            if self.source_scope not in {"modelo_locale", "revision_locale"}:
+                raise ValueError("localized observations must point at a locale source")
+            if self.raw_value is None or self.source_path is None or self.source_hash is None:
+                raise ValueError("localized observations must carry source values and hashes")
+            if self.raw_value != self.old_resolved_value:
+                raise ValueError("localized source value must equal the old resolved value")
+            if self.leaf_state == "absent":
+                raise ValueError("localized observations must not have an absent leaf state")
+
+        expected_hash = (
+            None
+            if self.raw_value is None
+            else sha256_hex(_normalize_localization_value(self.raw_value).encode("utf-8"))
+        )
+        if self.normalized_value_hash != expected_hash:
+            raise ValueError("normalized_value_hash does not match the raw source value")
+        return self
+
+
+class SourceManifest(_StrictRecord):
+    """Sealed, deterministic manifest of every extracted source observation."""
+
+    schema_id: str = _SOURCE_MANIFEST_SCHEMA
+    corpus_fingerprint: CorpusFingerprint
+    entry_count: int = Field(ge=0)
+    grounded_count: int = Field(ge=0)
+    revision_exact_count: int = Field(ge=0)
+    continuity_candidate_count: int = Field(ge=0)
+    unresolved_entry_count: int = Field(ge=0)
+    source_file_count: int = Field(ge=0)
+    manifest_sha256: str = Field(pattern=_SHA256_PATTERN)
+    entries: tuple[SourceManifestEntry, ...]
+
+    @model_validator(mode="after")
+    def _validate_manifest(self) -> SourceManifest:
+        """Reject reordered observations, counter drift, and unbound hashes."""
+        if self.schema_id != _SOURCE_MANIFEST_SCHEMA:
+            raise ValueError(f"unsupported source manifest schema {self.schema_id!r}")
+        coordinates = tuple(_manifest_entry_sort_key(entry) for entry in self.entries)
+        if coordinates != tuple(sorted(coordinates)) or len(coordinates) != len(set(coordinates)):
+            raise ValueError("source manifest entries must be unique and sorted by candidate coordinate")
+        if self.entry_count != len(self.entries):
+            raise ValueError("entry_count does not match source manifest entries")
+        counts = {
+            classification: sum(entry.candidate.classification == classification for entry in self.entries)
+            for classification in ("grounded", "revision_exact", "continuity_candidate")
+        }
+        if self.grounded_count != counts["grounded"]:
+            raise ValueError("grounded_count does not match source manifest entries")
+        if self.revision_exact_count != counts["revision_exact"]:
+            raise ValueError("revision_exact_count does not match source manifest entries")
+        if self.continuity_candidate_count != counts["continuity_candidate"]:
+            raise ValueError("continuity_candidate_count does not match source manifest entries")
+        if self.unresolved_entry_count != sum(entry.review_status == "unresolved" for entry in self.entries):
+            raise ValueError("unresolved_entry_count does not match source manifest entries")
+        if self.source_file_count != len(
+            {entry.source_path for entry in self.entries if entry.source_path is not None}
+        ):
+            raise ValueError("source_file_count does not match source paths")
+        file_hashes = {file.relative_path: file.sha256 for file in self.corpus_fingerprint.files}
+        for entry in self.entries:
+            if entry.source_path is not None and file_hashes.get(entry.source_path) != entry.source_hash:
+                raise ValueError("source observation hash is not bound to the corpus fingerprint")
+        if self.manifest_sha256 != _digest_manifest_entries(_SOURCE_MANIFEST_SCHEMA, self.entries):
+            raise ValueError("manifest_sha256 does not match the canonical source observations")
+        return self
+
+
+class UnresolvedReviewRegister(_StrictRecord):
+    """The source-manifest subset that still requires continuity review."""
+
+    schema_id: str = _UNRESOLVED_REVIEW_REGISTER_SCHEMA
+    source_manifest_sha256: str = Field(pattern=_SHA256_PATTERN)
+    entry_count: int = Field(ge=0)
+    group_count: int = Field(ge=0)
+    register_sha256: str = Field(pattern=_SHA256_PATTERN)
+    entries: tuple[SourceManifestEntry, ...]
+
+    @model_validator(mode="after")
+    def _validate_review_register(self) -> UnresolvedReviewRegister:
+        """Require the register to remain a strict subset of unresolved candidates."""
+        if self.schema_id != _UNRESOLVED_REVIEW_REGISTER_SCHEMA:
+            raise ValueError(f"unsupported unresolved review register schema {self.schema_id!r}")
+        coordinates = tuple(_manifest_entry_sort_key(entry) for entry in self.entries)
+        if coordinates != tuple(sorted(coordinates)) or len(coordinates) != len(set(coordinates)):
+            raise ValueError("unresolved review entries must be unique and sorted")
+        if self.entry_count != len(self.entries):
+            raise ValueError("entry_count does not match unresolved review entries")
+        if any(
+            entry.review_status != "unresolved" or entry.candidate.classification != "continuity_candidate"
+            for entry in self.entries
+        ):
+            raise ValueError("unresolved review register may contain only continuity candidates")
+        if self.group_count != len({entry.candidate_chain_id for entry in self.entries}):
+            raise ValueError("group_count does not match unresolved candidate chains")
+        if self.register_sha256 != _digest_manifest_entries(_UNRESOLVED_REVIEW_REGISTER_SCHEMA, self.entries):
+            raise ValueError("register_sha256 does not match the canonical unresolved observations")
+        return self
+
+
 def _validate_relative_path(value: str) -> str:
     """Return ``value`` when it is a canonical POSIX relative path."""
     parsed = PurePosixPath(value)
@@ -523,6 +745,35 @@ def _digest_file_records(records: Iterable[CorpusFileFingerprint]) -> str:
         framed.extend(_digest_frame(str(record.byte_count)))
         framed.extend(_digest_frame(record.sha256))
     return sha256_hex(bytes(framed))
+
+
+def _normalize_localization_value(value: str) -> str:
+    """Apply the conservative comparison normalisation used for review hashes."""
+    return normalize("NFKC", " ".join(value.split())).casefold().rstrip(".:").rstrip()
+
+
+def _manifest_entry_sort_key(entry: SourceManifestEntry) -> tuple[str, str, str, str, str]:
+    """Return the source-coordinate order for one manifest row."""
+    candidate = entry.candidate.candidate
+    return _canonical_candidate_sort_key(candidate)
+
+
+def _digest_manifest_entries(schema_id: str, entries: Iterable[SourceManifestEntry]) -> str:
+    """Hash one ordered entry stream with the manifest schema in its domain."""
+    framed = bytearray(_digest_frame(schema_id))
+    for entry in entries:
+        payload = canonical_json_bytes(entry.model_dump(mode="json")).decode("utf-8")
+        framed.extend(_digest_frame(payload))
+    return sha256_hex(bytes(framed))
+
+
+@dataclass(frozen=True)
+class _SourceLeaf:
+    """One raw locale leaf and the file that owns it."""
+
+    relative_path: str
+    scope: SourceScope
+    value: str
 
 
 def _resolved_directory(root: Path) -> Path:
@@ -979,6 +1230,544 @@ def classify_canonical_occurrence_candidates(
             {item.provisional_candidate_id for item in frozen if item.classification == "continuity_candidate"},
         ),
         candidates=frozen,
+    )
+
+
+def _relative_path_path(root: Path, relative_path: str) -> Path:
+    """Resolve one validated corpus-relative path below ``root``."""
+    return root.joinpath(*PurePosixPath(relative_path).parts)
+
+
+def _read_source_toml(
+    root: Path,
+    relative_path: str,
+    cache: dict[str, dict[str, object]],
+) -> dict[str, object]:
+    """Read one already-fingerprinted TOML source into a small parse cache."""
+    parsed = cache.get(relative_path)
+    if parsed is not None:
+        return parsed
+    try:
+        parsed = read_toml(
+            _relative_path_path(root, relative_path),
+            error_factory=MigrationInventoryError,
+        )
+    except Exception as exc:
+        if isinstance(exc, MigrationInventoryError):
+            raise
+        raise MigrationInventoryError(f"could not read source {relative_path!r}: {exc}") from exc
+    cache[relative_path] = parsed
+    return parsed
+
+
+def _schema_casilla_ids(
+    value: object,
+    *,
+    revision_id: str,
+    casilla_id: str,
+    current_revision: str | None = None,
+) -> tuple[bool, ...]:
+    """Return matches for one casilla while carrying TOML revision context."""
+    matches: list[bool] = []
+    if isinstance(value, Mapping):
+        revisions = value.get("revisions")
+        if isinstance(revisions, Mapping):
+            for nested_revision_id, nested_value in revisions.items():
+                if isinstance(nested_revision_id, str):
+                    matches.extend(
+                        _schema_casilla_ids(
+                            nested_value,
+                            revision_id=revision_id,
+                            casilla_id=casilla_id,
+                            current_revision=nested_revision_id,
+                        ),
+                    )
+        if (
+            current_revision == revision_id
+            and value.get("id") == casilla_id
+            and isinstance(value.get("label"), str)
+            and isinstance(value.get("number"), str)
+        ):
+            matches.append(True)
+        for key, nested_value in value.items():
+            if key != "revisions":
+                matches.extend(
+                    _schema_casilla_ids(
+                        nested_value,
+                        revision_id=revision_id,
+                        casilla_id=casilla_id,
+                        current_revision=current_revision,
+                    ),
+                )
+    elif isinstance(value, (list, tuple)):
+        for nested_value in value:
+            matches.extend(
+                _schema_casilla_ids(
+                    nested_value,
+                    revision_id=revision_id,
+                    casilla_id=casilla_id,
+                    current_revision=current_revision,
+                ),
+            )
+    return tuple(matches)
+
+
+def _schema_casilla_coordinates(
+    value: object,
+    *,
+    current_revision: str | None = None,
+) -> tuple[tuple[str, str], ...]:
+    """Index all schema casilla identities carried by one parsed TOML value."""
+    coordinates: list[tuple[str, str]] = []
+    if isinstance(value, Mapping):
+        revisions = value.get("revisions")
+        if isinstance(revisions, Mapping):
+            for nested_revision_id, nested_value in revisions.items():
+                if isinstance(nested_revision_id, str):
+                    coordinates.extend(
+                        _schema_casilla_coordinates(
+                            nested_value,
+                            current_revision=nested_revision_id,
+                        ),
+                    )
+        casilla_id = value.get("id")
+        if (
+            current_revision is not None
+            and isinstance(casilla_id, str)
+            and isinstance(value.get("label"), str)
+            and isinstance(value.get("number"), str)
+        ):
+            coordinates.append((current_revision, casilla_id))
+        for key, nested_value in value.items():
+            if key != "revisions":
+                coordinates.extend(
+                    _schema_casilla_coordinates(
+                        nested_value,
+                        current_revision=current_revision,
+                    ),
+                )
+    elif isinstance(value, (list, tuple)):
+        for nested_value in value:
+            coordinates.extend(
+                _schema_casilla_coordinates(
+                    nested_value,
+                    current_revision=current_revision,
+                ),
+            )
+    return tuple(coordinates)
+
+
+def _schema_source_path(
+    *,
+    revision_entry: RevisionInventoryEntry,
+    revision_id: str,
+    casilla_id: str,
+    root: Path,
+    source_cache: dict[str, dict[str, object]],
+) -> str:
+    """Locate the single schema fragment that declares one casilla."""
+    matches: list[str] = []
+    for relative_path in revision_entry.revision_source_paths:
+        raw = _read_source_toml(root, relative_path, source_cache)
+        if _schema_casilla_ids(raw, revision_id=revision_id, casilla_id=casilla_id):
+            matches.append(relative_path)
+    if len(matches) != 1:
+        raise MigrationInventoryError(
+            f"expected one schema source for {revision_entry.modelo_id!r}/{revision_id!r}/{casilla_id!r}, "
+            f"found {matches!r}",
+        )
+    return matches[0]
+
+
+def _locale_target_paths(
+    root: Path,
+    base_relative: PurePosixPath | None,
+    locale: str,
+) -> tuple[str, ...]:
+    """Return one flat locale file or its sorted fragment files."""
+    if base_relative is None:
+        return ()
+    flat_relative = base_relative / "locales" / f"{locale}.toml"
+    flat_path = _relative_path_path(root, flat_relative.as_posix())
+    fragment_relative = flat_relative.with_suffix("")
+    fragment_path = _relative_path_path(root, fragment_relative.as_posix())
+    if flat_path.exists() and fragment_path.is_dir():
+        raise MigrationInventoryError(
+            f"locale {locale!r} is both a file and fragment directory at {flat_relative.parent.as_posix()!r}",
+        )
+    if flat_path.exists():
+        if not flat_path.is_file():
+            raise MigrationInventoryError(f"locale target is not a file: {flat_relative.as_posix()}")
+        return (flat_relative.as_posix(),)
+    if not fragment_path.is_dir():
+        return ()
+    paths = tuple(
+        sorted(_relative_source_path(root, path) for path in fragment_path.glob("*.toml") if path.is_file()),
+    )
+    return paths
+
+
+def _locale_table_values(
+    raw: Mapping[str, object],
+    *,
+    relative_path: str,
+) -> dict[tuple[LocalizationField, str], str]:
+    """Narrow one locale TOML mapping to validated label/help leaves."""
+    values: dict[tuple[LocalizationField, str], str] = {}
+    for field in _LOCALIZATION_FIELDS:
+        table = raw.get("labels" if field == "label" else "help", {})
+        if not isinstance(table, Mapping):
+            raise MigrationInventoryError(
+                f"locale source {relative_path!r} has a non-table {field!r} localization section",
+            )
+        for key, value in table.items():
+            if not isinstance(key, str) or not isinstance(value, str):
+                raise MigrationInventoryError(
+                    f"locale source {relative_path!r} has a non-string {field!r} leaf",
+                )
+            coordinate = (field, key)
+            if coordinate in values:
+                raise MigrationInventoryError(
+                    f"locale source {relative_path!r} repeats {field!r}/{key!r}",
+                )
+            values[coordinate] = value
+    return values
+
+
+def _modelo_relative_directory(entry: RevisionInventoryEntry) -> PurePosixPath | None:
+    """Return a directory-mode modelo directory from its manifest path."""
+    if entry.modelo_source_layout != "directory":
+        return None
+    return PurePosixPath(entry.modelo_source_path).parent
+
+
+def _revision_relative_directory(entry: RevisionInventoryEntry) -> PurePosixPath | None:
+    """Return a fragment-directory revision path, if the loader has one."""
+    if entry.revision_source_layout != "fragment_directory":
+        return None
+    for relative_path in entry.revision_source_paths:
+        parts = PurePosixPath(relative_path).parts
+        try:
+            revisions_index = parts.index("revisions")
+        except ValueError:
+            continue
+        if revisions_index + 1 < len(parts) and parts[revisions_index + 1] == entry.revision_id:
+            return PurePosixPath(*parts[: revisions_index + 2])
+    raise MigrationInventoryError(
+        f"revision source paths do not identify a directory for {entry.modelo_id!r}/{entry.revision_id!r}",
+    )
+
+
+def _locale_leaf_source(
+    *,
+    root: Path,
+    revision_entry: RevisionInventoryEntry,
+    locale: str,
+    field: LocalizationField,
+    casilla_id: str,
+    continuidad_id: str | None,
+    source_cache: dict[str, dict[str, object]],
+    locale_path_cache: dict[tuple[str, str, str, str], tuple[str, ...]],
+    locale_value_cache: dict[str, dict[tuple[LocalizationField, str], str]],
+) -> _SourceLeaf | None:
+    """Find the real loader-winning locale source for one occurrence leaf."""
+    target_key = casilla_id
+    targets: list[tuple[SourceScope, PurePosixPath | None]] = [
+        ("revision_locale", _revision_relative_directory(revision_entry)),
+    ]
+    if continuidad_id is not None:
+        targets.append(("modelo_locale", _modelo_relative_directory(revision_entry)))
+
+    for scope, base_relative in targets:
+        cache_key = (revision_entry.modelo_id, revision_entry.revision_id, locale, scope)
+        paths = locale_path_cache.get(cache_key)
+        if paths is None:
+            paths = _locale_target_paths(root, base_relative, locale)
+            locale_path_cache[cache_key] = paths
+        if scope == "modelo_locale":
+            if continuidad_id is None:
+                continue
+            target_key = continuidad_id
+        else:
+            target_key = casilla_id
+        matches: list[_SourceLeaf] = []
+        for relative_path in paths:
+            values = locale_value_cache.get(relative_path)
+            if values is None:
+                values = _locale_table_values(
+                    _read_source_toml(root, relative_path, source_cache),
+                    relative_path=relative_path,
+                )
+                locale_value_cache[relative_path] = values
+            value = values.get((field, target_key))
+            if value is not None:
+                matches.append(_SourceLeaf(relative_path=relative_path, scope=scope, value=value))
+        if len(matches) > 1:
+            raise MigrationInventoryError(
+                f"locale source has duplicate {scope}/{locale}/{field}/{target_key} leaves: "
+                f"{[match.relative_path for match in matches]!r}",
+            )
+        if matches:
+            return matches[0]
+    return None
+
+
+def _stable_casilla_value(casilla: CasillaDefinition, field: str) -> str | None:
+    """Project one structural casilla field into a deterministic scalar."""
+    value = getattr(casilla, field)
+    if value is None:
+        return None
+    enum_value = getattr(value, "value", None)
+    return str(enum_value if enum_value is not None else value)
+
+
+def _manifest_drift_fields(
+    classified: ClassifiedOccurrenceCandidates,
+    casillas: Mapping[tuple[str, str, str], CasillaDefinition],
+) -> dict[tuple[str, str, str, str, str], tuple[DriftField, ...]]:
+    """Measure structural and resolved-value drift without inferring identity."""
+    grouped: dict[tuple[str, str, str], list[ClassifiedOccurrenceCandidate]] = {}
+    for item in classified.candidates:
+        candidate = item.candidate
+        if item.classification == "revision_exact":
+            continue
+        if item.classification == "grounded":
+            if candidate.continuidad_id is None:
+                raise MigrationInventoryError("grounded candidate lost continuidad_id")
+            group_key = (candidate.modelo_id, "grounded", candidate.continuidad_id)
+        else:
+            if item.provisional_candidate_id is None:
+                raise MigrationInventoryError("continuity candidate lost provisional group id")
+            group_key = (candidate.modelo_id, "candidate", item.provisional_candidate_id)
+        grouped.setdefault(group_key, []).append(item)
+
+    drift_by_coordinate: dict[tuple[str, str, str, str, str], tuple[DriftField, ...]] = {}
+    for members in grouped.values():
+        occurrence_keys = {
+            (item.candidate.modelo_id, item.candidate.revision_id, item.candidate.casilla_id) for item in members
+        }
+        if len(occurrence_keys) < 2:
+            continue
+        drift: list[DriftField] = []
+        for field in _STRUCTURAL_DRIFT_FIELDS:
+            values = {_stable_casilla_value(casillas[key], field) for key in occurrence_keys}
+            if len(values) > 1:
+                drift.append(field)
+        for field in _LOCALIZATION_FIELDS:
+            values = {item.candidate.value for item in members if item.candidate.field == field}
+            if len(values) > 1:
+                drift.append("label" if field == "label" else "help")
+        ordered_drift: tuple[DriftField, ...] = tuple(field for field in _DRIFT_FIELDS if field in drift)
+        for item in members:
+            candidate = item.candidate
+            drift_by_coordinate[
+                (
+                    candidate.modelo_id,
+                    candidate.revision_id,
+                    candidate.casilla_id,
+                    candidate.locale,
+                    candidate.field,
+                )
+            ] = ordered_drift
+    return drift_by_coordinate
+
+
+def build_source_manifest(
+    root: Path,
+    classified: ClassifiedOccurrenceCandidates,
+    inventory: MigrationSourceInventory | None = None,
+) -> SourceManifest:
+    """Build the sealed source manifest without writing registry or output data.
+
+    The supplied S04 classification is bound to one S01 fingerprint. The
+    current loader supplies structural casilla objects, while raw TOML reads
+    identify the exact schema or locale file owning each observation. No
+    provisional candidate is copied into a production continuity field.
+    """
+    resolved = _resolved_directory(root)
+    pinned = inventory if inventory is not None else build_source_inventory(resolved)
+    if classified.corpus_fingerprint != pinned.corpus_fingerprint:
+        raise MigrationInventoryError("classified candidates do not match the pinned source inventory")
+    before = fingerprint_registry_corpus(resolved)
+    if before != pinned.corpus_fingerprint:
+        raise MigrationInventoryError("registry source no longer matches the pinned source inventory")
+
+    try:
+        modelos, _catalogues = load_registry_tree(resolved)
+    except Exception as exc:
+        raise MigrationInventoryError(f"could not load the pinned registry for source manifest: {exc}") from exc
+    after_load = fingerprint_registry_corpus(resolved)
+    if after_load != before:
+        raise MigrationInventoryError("registry source changed while source manifest loader ran")
+    modelos_by_id = _validate_loaded_registry_against_inventory(modelos, pinned)
+
+    casillas: dict[tuple[str, str, str], CasillaDefinition] = {}
+    for modelo_id, modelo in modelos_by_id.items():
+        for revision_id, revision in modelo.revisions.items():
+            for casilla in revision.casillas:
+                key = (modelo_id, str(revision_id), casilla.id)
+                if key in casillas:
+                    raise MigrationInventoryError(f"duplicate loaded casilla occurrence {key!r}")
+                casillas[key] = casilla
+
+    inventory_by_revision = {(entry.modelo_id, entry.revision_id): entry for entry in pinned.supported_revisions}
+    file_hashes = {file.relative_path: file.sha256 for file in pinned.corpus_fingerprint.files}
+    source_cache: dict[str, dict[str, object]] = {}
+    locale_value_cache: dict[str, dict[tuple[LocalizationField, str], str]] = {}
+    locale_path_cache: dict[tuple[str, str, str, str], tuple[str, ...]] = {}
+    schema_path_index: dict[tuple[str, str, str], str] = {}
+    for revision_entry in pinned.supported_revisions:
+        for relative_path in revision_entry.revision_source_paths:
+            raw = _read_source_toml(resolved, relative_path, source_cache)
+            for revision_id, casilla_id in _schema_casilla_coordinates(raw):
+                coordinate = (revision_entry.modelo_id, revision_id, casilla_id)
+                previous = schema_path_index.get(coordinate)
+                if previous is not None and previous != relative_path:
+                    raise MigrationInventoryError(
+                        f"duplicate schema sources for {coordinate!r}: {previous!r}, {relative_path!r}",
+                    )
+                schema_path_index[coordinate] = relative_path
+    drift_fields = _manifest_drift_fields(classified, casillas)
+    entries: list[SourceManifestEntry] = []
+
+    for classified_candidate in classified.candidates:
+        candidate = classified_candidate.candidate
+        occurrence_key = (candidate.modelo_id, candidate.revision_id, candidate.casilla_id)
+        casilla = casillas.get(occurrence_key)
+        if casilla is None:
+            raise MigrationInventoryError(
+                f"classified candidate is not a loaded casilla occurrence: {occurrence_key!r}"
+            )
+        revision_entry = inventory_by_revision.get((candidate.modelo_id, candidate.revision_id))
+        if revision_entry is None:
+            raise MigrationInventoryError(f"classified candidate is not in the pinned inventory: {occurrence_key!r}")
+
+        schema_path = schema_path_index.get(occurrence_key)
+        if schema_path is None:
+            raise MigrationInventoryError(f"classified candidate has no schema source: {occurrence_key!r}")
+        local_source = _locale_leaf_source(
+            root=resolved,
+            revision_entry=revision_entry,
+            locale=candidate.locale,
+            field=candidate.field,
+            casilla_id=candidate.casilla_id,
+            continuidad_id=candidate.continuidad_id,
+            source_cache=source_cache,
+            locale_path_cache=locale_path_cache,
+            locale_value_cache=locale_value_cache,
+        )
+        localized_label = _locale_leaf_source(
+            root=resolved,
+            revision_entry=revision_entry,
+            locale=candidate.locale,
+            field="label",
+            casilla_id=candidate.casilla_id,
+            continuidad_id=candidate.continuidad_id,
+            source_cache=source_cache,
+            locale_path_cache=locale_path_cache,
+            locale_value_cache=locale_value_cache,
+        )
+
+        if candidate.resolution == "localized":
+            if local_source is None:
+                raise MigrationInventoryError(
+                    "localized candidate has no raw locale source: "
+                    f"{occurrence_key!r}/{candidate.locale}/{candidate.field}",
+                )
+            raw_value = local_source.value
+            source_path = local_source.relative_path
+            source_scope: SourceScope = local_source.scope
+            source_key = candidate.continuidad_id if local_source.scope == "modelo_locale" else candidate.casilla_id
+            if source_key is None:
+                raise MigrationInventoryError("modelo locale source lost its continuity key")
+            leaf_value = classify_modelo_locale_leaf(
+                ModeloLocaleFieldKind.LABELS if candidate.field == "label" else ModeloLocaleFieldKind.HELP,
+                source_key,
+                raw_value,
+                label_value=localized_label.value if localized_label is not None else None,
+                official_label=casilla.label,
+            ).value
+            official_fallback = False
+        elif candidate.resolution == "official_spanish":
+            raw_value = casilla.label
+            source_path = schema_path
+            source_scope = "schema"
+            leaf_value = ModeloLocaleLeafState.ABSENT.value
+            official_fallback = True
+        else:
+            raw_value = None
+            source_path = None
+            source_scope = "none"
+            leaf_value = ModeloLocaleLeafState.ABSENT.value
+            official_fallback = False
+
+        source_hash = None if source_path is None else file_hashes.get(source_path)
+        if source_path is not None and source_hash is None:
+            raise MigrationInventoryError(f"source path is absent from the pinned fingerprint: {source_path!r}")
+        entries.append(
+            SourceManifestEntry(
+                candidate=classified_candidate,
+                candidate_chain_id=(
+                    casilla.continuidad_id
+                    if classified_candidate.classification == "grounded"
+                    else classified_candidate.provisional_candidate_id
+                    if classified_candidate.classification == "continuity_candidate"
+                    else None
+                ),
+                source_path=source_path,
+                source_scope=source_scope,
+                raw_value=raw_value,
+                old_resolved_value=candidate.value,
+                official_fallback=official_fallback,
+                leaf_state=leaf_value,
+                normalized_value_hash=(
+                    None if raw_value is None else sha256_hex(_normalize_localization_value(raw_value).encode("utf-8"))
+                ),
+                drift_fields=drift_fields.get(
+                    (
+                        candidate.modelo_id,
+                        candidate.revision_id,
+                        candidate.casilla_id,
+                        candidate.locale,
+                        candidate.field,
+                    ),
+                    (),
+                ),
+                review_status=(
+                    "unresolved" if classified_candidate.classification == "continuity_candidate" else "not_required"
+                ),
+                source_hash=source_hash,
+            ),
+        )
+
+    frozen_entries = tuple(sorted(entries, key=_manifest_entry_sort_key))
+    finished = fingerprint_registry_corpus(resolved)
+    if finished != after_load:
+        raise MigrationInventoryError("registry source changed while source manifest rows were built")
+    return SourceManifest(
+        corpus_fingerprint=pinned.corpus_fingerprint,
+        entry_count=len(frozen_entries),
+        grounded_count=sum(entry.candidate.classification == "grounded" for entry in frozen_entries),
+        revision_exact_count=sum(entry.candidate.classification == "revision_exact" for entry in frozen_entries),
+        continuity_candidate_count=sum(
+            entry.candidate.classification == "continuity_candidate" for entry in frozen_entries
+        ),
+        unresolved_entry_count=sum(entry.review_status == "unresolved" for entry in frozen_entries),
+        source_file_count=len({entry.source_path for entry in frozen_entries if entry.source_path is not None}),
+        manifest_sha256=_digest_manifest_entries(_SOURCE_MANIFEST_SCHEMA, frozen_entries),
+        entries=frozen_entries,
+    )
+
+
+def build_unresolved_review_register(manifest: SourceManifest) -> UnresolvedReviewRegister:
+    """Extract the unresolved continuity-candidate observations for review."""
+    entries = tuple(entry for entry in manifest.entries if entry.review_status == "unresolved")
+    return UnresolvedReviewRegister(
+        source_manifest_sha256=manifest.manifest_sha256,
+        entry_count=len(entries),
+        group_count=len({entry.candidate_chain_id for entry in entries}),
+        register_sha256=_digest_manifest_entries(_UNRESOLVED_REVIEW_REGISTER_SCHEMA, entries),
+        entries=entries,
     )
 
 

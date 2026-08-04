@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:52c644f66fe49776c22667f30f6cc393f28aae45870f5483823fad95edc305c9'
+body_hash: 'sha256:7ed64ca7d5c0e657b39684fb15c2b35dd027c7c92e2bf8ac97e5c29b71040df4'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
 ---
@@ -92,9 +92,26 @@ text heuristic can promote identity. The measured classification partition and
 incomplete-provisional-state refusal are covered by real bundled-corpus tests.
 No critical, high, or medium findings were identified.
 
+### source-manifest | low | No actionable safety or intent findings
+
+S05 binds every manifest observation to the pinned corpus fingerprint and the
+real schema or loader-winning locale source. It preserves raw and old resolved
+values, fallback and leaf state, normalized and source hashes, measured drift,
+review status, and an empty emitted target. The unresolved register is derived
+only from continuity candidates and does not promote provisional ids. The
+bundled-corpus tests prove the measured 126,192-row seal, 2,354 unresolved
+groups, placeholder-state counts, source ownership, tamper refusal, and
+read-only behavior. No critical, high, or medium findings were identified.
+
+The open pre-emission review gate is intentional: mirrored-help and key-echo
+leaves need explicit delete-versus-migrate adjudication, and year-embedded
+label families need an explicit parameterized-label decision before emission.
+
 ## Recommendations
 
 Keep the S01 fingerprint, S02 matrix, S03 candidate addresses, and S04
-classification immutable inputs to manifest generation. Do not promote
-provisional groups, emit catalogues, compare parity, or mutate production in
-this step.
+classification immutable inputs to manifest generation. Keep the S05 source
+manifest and unresolved register sealed evidence. Do not promote provisional
+groups, emit catalogues, compare parity, or mutate production in this step.
+Complete the pre-emission placeholder and year-parameterization review gate
+before any staging emitter hardens a representation.

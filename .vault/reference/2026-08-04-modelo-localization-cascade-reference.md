@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:7c427695c38b21ed42be175deae8581d78e05b81dc51094e737e42feb22aab36'
+body_hash: 'sha256:5757cb2318d6d16d7f268d18406c308c38ec4a87cb93392120a3701e8faad45d'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
 ---
@@ -71,6 +71,23 @@ is `continuity_candidate` with a migration-only provisional group token. The
 candidate's S03 exact address remains unchanged in the last case. Values,
 labels, printed numbers, and normalized text cannot upgrade a candidate into a
 production continuity identity.
+
+S05 binds the classified candidates back to the same corpus fingerprint and uses the
+real schema and locale source ownership to seal every observation. A manifest row carries
+the raw source value, old resolved value, official-Spanish fallback flag, source scope and
+path, source hash, normalized value hash, the existing locale leaf state, measured drift
+fields, review status, and an intentionally empty emitted target. Schema fallbacks retain
+their exact schema source; absent help has no fabricated source or value. The unresolved
+register is a strict subset of continuity candidates and retains only migration-only
+provisional group ids.
+
+The current bundled evidence is 126,192 observations: 144 grounded, 32,008
+revision-exact, and 94,040 continuity candidates across 2,354 groups. The manifest binds
+12,944 distinct source files. Existing leaf classification remains visible: 9,453
+mirrored-help values and 48 key echoes are not silently treated as authored translations.
+The pre-emission review gate must adjudicate those placeholder classes as delete-versus-
+migrate and decide whether year-embedded label families need an explicit parameterized-
+label ADR amendment before any emitter hardens their representation.
 
 The governing ADR requires Spanish to remain source-authoritative, forbids
 non-Spanish locale fallthrough, and keeps migration-only extraction on the old

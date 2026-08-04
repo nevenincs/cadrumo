@@ -4,7 +4,7 @@ tags:
   - '#modelo-localization-cascade'
 date: '2026-08-04'
 modified: '2026-08-04'
-body_hash: 'sha256:8355286f9ff59d223dc262c46b043104e4a7267ebe6e31dd7d14d43eca6a2f0a'
+body_hash: 'sha256:1d924bfc3c19c8fc59e1a7d5e90750709cabdfdd85c039eee26f0cd3b69e60e1'
 tier: L3
 related:
   - '[[2026-08-04-modelo-localization-cascade-adr]]'
@@ -28,17 +28,17 @@ related:
 
 This plan constructs and certifies a disposable migration application for the accepted root-only localization design. It deliberately stops short of production cutover. The application must extract the existing revision-local corpus, propose the root catalogue and revision-schema outcome, preserve unresolved semantic decisions for manual review, and prove old-versus-new resolution parity before any future cutover plan is considered.
 
-The normal operating mode is a dry run. Every dry run writes a deterministic, self-contained proposal to a temporary output directory containing the staged tree, source fingerprint, sealed manifest, conflicts, unresolved review register, parity report, and summary. The application must refuse a live registry destination and must not expose a production mutation path before explicit certification evidence exists.
+The normal operating mode is a dry run. Every dry run writes a deterministic, self-contained proposal to a temporary output directory containing the staged tree, source fingerprint, sealed manifest, conflicts, unresolved review register, parity report, and summary. The campaign is measured by verbatim Spanish extraction, a language-neutral schema, and stopping revision N+1 from re-declaring unchanged leaves; byte compression is not its success criterion. The application must refuse a live registry destination and must not expose a production mutation path before explicit certification evidence exists.
 
 ## Steps
 
 ## Parallelization
 
-Waves are sequential: source extraction and classification precede staging; staging precedes parity; parity and review precede the disposable handoff. Within a phase, steps are sequential unless the executing agent proves that their inputs and outputs are disjoint. No step may modify live revision schemas or locale data. The eventual production cutover is outside this plan and requires a separate certified plan.
+Waves are sequential: source extraction and classification precede the pre-emission review gate; the gate precedes staging; staging precedes parity; parity and review precede the disposable handoff. Within a phase, steps are sequential unless the executing agent proves that their inputs and outputs are disjoint. No step may modify live revision schemas or locale data. The eventual production cutover is outside this plan and requires a separate certified plan.
 
 ## Verification
 
-The migration application is verified with real corpus data and real filesystem behavior. A dry run must be repeatable, must produce a manually reviewable temporary artifact, and must leave the live registry unchanged. The parity harness must cover every supported model, revision, casilla, localizable field, and supported locale; mismatches, unresolved candidates, source drift, and incomplete review must fail certification. The final gate also proves that live-registry destinations and non-certified production-write modes are rejected, and that retained evidence is sufficient to reproduce or audit the proposal after the disposable application is removed.
+The migration application is verified with real corpus data and real filesystem behavior. A dry run must be repeatable, must produce a manually reviewable temporary artifact, and must leave the live registry unchanged. The pre-emission review gate must surface mirrored-help and key-echo leaves for delete-versus-migrate adjudication and surface year-embedded label families for an explicit parameterization decision. The parity harness must cover every supported model, revision, casilla, localizable field, and supported locale; mismatches, unresolved candidates, source drift, and incomplete review must fail certification. The final gate also proves that live-registry destinations and non-certified production-write modes are rejected, and that retained evidence is sufficient to reproduce or audit the proposal after the disposable application is removed.
 
 ## Wave `W01` - Migration source contract
 
@@ -53,11 +53,12 @@ Capture the complete existing localization corpus through the current loader wit
 
 ### Phase `W01.P02` - Identity and classification manifest
 
-Produce deterministic canonical candidates, exact occurrence records, unresolved review entries, and source hashes.
+Produce deterministic canonical candidates, exact occurrence records, unresolved review entries, and source hashes. Before emission, review must explicitly adjudicate placeholder debt as delete-versus-migrate and decide whether year-embedded label families need a parameterized-label ADR amendment; no emitter may silently harden either choice.
 
 - [x] `W01.P02.S03` - Generate canonical occurrence candidates from model, revision, casilla, and field identity; `dev/registry/migration`.
 - [x] `W01.P02.S04` - Classify candidates as grounded, revision-exact, or continuity-candidate without promoting provisional identity; `dev/registry/migration`.
-- [ ] `W01.P02.S05` - Emit a sealed source manifest and unresolved review register with hashes, drift fields, and leaf state; `dev/registry/migration`.
+- [x] `W01.P02.S05` - Emit a sealed source manifest and unresolved review register with hashes, drift fields, and leaf state; `dev/registry/migration`.
+- [ ] `W01.P02.S18` - Resolve placeholder debt and year-parameterized label decisions before emission; `dev/registry/migration and the authorizing ADR/research records`.
 
 ## Wave `W02` - Staged migration emitter
 
