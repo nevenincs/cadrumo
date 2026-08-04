@@ -16,9 +16,10 @@ change): ``secret_store/_secret_store.py`` independently hand-typed
 ``SECRET_INDEX_FILENAME = "index.json"``, and
 ``core/observability/_context.py`` independently re-declared
 ``_EVENTS_FILENAME = "events.jsonl"`` instead of importing the declaration
-already living in ``core/observability/_store.py``. Both are gone -- scanning
-the current tree confirms the fix rather than assuming it (see the
-precision section below).
+already living in ``core/observability/_store.py`` (now the public
+``EVENTS_FILENAME``, promoted by a later, related fix -- see the scope
+section below). Both are gone -- scanning the current tree confirms the fix
+rather than assuming it (see the precision section below).
 
 Why "a segment bound to a constant" needed a scanner distinct from every
 join-position instrument in this tree (the test-side gate above, the storage
@@ -33,20 +34,25 @@ shape is therefore deliberately different from all of them: it matches the
 Why pairwise, not vocabulary-membership alone
 -----------------------------------------------
 A first design flagged any non-authority production constant whose value
-matched the taxonomy vocabulary, at all. Running it against the real tree
-found ``SECRET_INDEX_FILENAME = "index.json"`` in
-``_storage_path_definitions.py`` and ``_TRACE_FILENAME`` /
+matched the taxonomy vocabulary, at all. Running it against the tree as it
+stood when this gate was written found ``SECRET_INDEX_FILENAME = "index.json"``
+in ``_storage_path_definitions.py`` and ``_TRACE_FILENAME`` /
 ``_EVENTS_FILENAME`` / ``_ENVELOPE_FILENAME`` in ``core/observability/_store.py``
 -- all four **sole, legitimate, already-canonical declaring sites** for a
 finer-grained (filename-level, not directory-level) piece of vocabulary the
 core taxonomy does not itself model, wrongly flagged as if they duplicated
-something. A constant is only evidence of duplication when a SECOND
-independent site declares the identical value; a single declaration, however
-it got there, is simply where a name currently lives. So the gate requires
-**two or more** non-authority production sites sharing one value before it
-calls it a duplicate -- vocabulary membership is used only as a relevance
-filter (confirms the shared value is a real on-disk segment, not an
-unrelated coincidence), never as the sole trigger.
+something. (The three ``_store.py`` names have since been promoted to public
+-- ``TRACE_FILENAME`` / ``EVENTS_FILENAME`` / ``ENVELOPE_FILENAME`` -- and read
+by ``_storage_path_definitions.py``'s own grammar, a related but separate fix;
+see the scope section below. Kept here as the worked example that falsified
+the membership-only design, not as a claim about the tree today.) A constant
+is only evidence of duplication when a SECOND independent site declares the
+identical value; a single declaration, however it got there, is simply where a
+name currently lives. So the gate requires **two or more** non-authority
+production sites sharing one value before it calls it a duplicate --
+vocabulary membership is used only as a relevance filter (confirms the shared
+value is a real on-disk segment, not an unrelated coincidence), never as the
+sole trigger.
 
 This also matches how the two real bugs actually looked before their fix:
 each was *exactly* two independent sites agreeing on one string. The pairwise
@@ -62,12 +68,18 @@ is), whose target is a single name and whose value is a string constant.
 Function-local constants are NOT scanned -- the class this gate targets is a
 NAMED constant meant to be imported, and by convention in this codebase that
 lives at module or class level, not inside a function body. NOT reachable at
-all: a literal embedded inside an f-string template (several
+all, as a matter of the AST shape rather than the current tree's content: a
+literal embedded inside an f-string template. Several
 ``StoragePathDefinition.grammar`` entries in ``_storage_path_definitions.py``
-hardcode a leaf filename this way rather than interpolating a named constant
--- a real, separate piece of debt this gate cannot see because the literal
-never appears as a bare ``ast.Constant``, only as one segment of an
-``ast.JoinedStr``). Vocabulary is the union of every
+used to hardcode a leaf filename this way instead of interpolating a named
+constant the way ``{RUNS_DIRNAME}`` already was -- ``run_trace`` / ``run_events``
+/ ``run_envelope`` were the found instance, fixed
+(``relocation:core.observability.TRACE_FILENAME,EVENTS_FILENAME,ENVELOPE_FILENAME``)
+once this gate's own docstring surfaced it as found-not-fixed. The blind spot
+itself is not: the literal never appears as a bare ``ast.Constant``, only as
+one segment of an ``ast.JoinedStr``, so a future f-string-embedded duplicate
+of this same shape would again be invisible here. Vocabulary is the union of
+every
 :data:`~cadrumo.core.STORAGE_TAXONOMY` subpath segment (the core, directory-
 level authority) and every non-templated ``/``-segment of every
 :data:`~cadrumo.adapters.persistence.storage.STORAGE_PATH_DEFINITIONS`
