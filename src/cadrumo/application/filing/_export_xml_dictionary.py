@@ -117,8 +117,10 @@ def render_xml_dictionary_layout(
     _append_declaration_aux(root, layout)
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
-    unfiled_paths = (
-        _modelo_100_unfiled_comunidad_paths(entries, casilla_values) if draft.modelo == Modelo.M100 else frozenset()
+    unfiled_paths: frozenset[str] = (
+        _modelo_100_unfiled_comunidad_paths(entries, casilla_values)
+        if draft.modelo == Modelo.M100
+        else frozenset[str]()
     )
     for entry in entries:
         if entry.path in unfiled_paths:
@@ -485,11 +487,19 @@ def _modelo_100_sign_branch_value(entry: XmlDictionaryEntry, raw: object) -> obj
     Returns:
         ``raw`` when the row's branch matches its sign, ``Decimal("0")`` when the
         row is the opposite branch, and ``raw`` unchanged for every other row.
+
+        A value that will not coerce carries no sign to route on, so it is read
+        as zero for the purpose of choosing a branch. This selects a branch
+        rather than validating a value: deciding what an uncoercible amount
+        means is :func:`_format_xml_dictionary_value`'s job, and it is the job
+        it does for every other casilla. Without the default, ``coerce_decimal``
+        answers ``None`` and the comparison below raises ``TypeError`` on the
+        export path.
     """
     negative_branch = entry.field_id in _MODELO_100_NEGATIVE_SIGN_BRANCH_FIELDS
     if not negative_branch and entry.field_id not in _MODELO_100_NON_NEGATIVE_SIGN_BRANCH_FIELDS:
         return raw
-    amount = coerce_decimal(raw)
+    amount = coerce_decimal(raw, default=Decimal("0"))
     return raw if (amount < 0) is negative_branch else Decimal("0")
 
 

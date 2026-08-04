@@ -81,11 +81,11 @@ def test_only_the_filed_comunidad_survives() -> None:
 
     unfiled = _modelo_100_unfiled_comunidad_paths(entries, {madrid_casilla: Decimal("250.00")})
 
-    written = {
-        _modelo_100_comunidad_block(entry.path)
-        for entry in entries
-        if _modelo_100_comunidad_block(entry.path) is not None and entry.path not in unfiled
-    }
+    written: set[str] = set()
+    for entry in entries:
+        block = _modelo_100_comunidad_block(entry.path)
+        if block is not None and entry.path not in unfiled:
+            written.add(block)
     assert written == {"MadridRes"}, f"expected only MadridRes to survive, got {sorted(written)}"
 
 
@@ -155,10 +155,10 @@ def test_restoring_all_write_fails_the_single_block_assertion() -> None:
         return frozenset()
 
     unfiled = all_write(entries, {})
-    written = {
-        _modelo_100_comunidad_block(entry.path)
-        for entry in entries
-        if _modelo_100_comunidad_block(entry.path) is not None and entry.path not in unfiled
-    }
+    written: set[str] = set()
+    for entry in entries:
+        block = _modelo_100_comunidad_block(entry.path)
+        if block is not None and entry.path not in unfiled:
+            written.add(block)
     assert len(written) == 15, "all-write no longer writes every comunidad block; the control is stale"
     assert written != {"MadridRes"}, "all-write satisfied the single-block assertion, so it proves nothing"
