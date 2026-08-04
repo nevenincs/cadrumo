@@ -1577,6 +1577,7 @@ model_selectors = [
   "DescendantInfo.acogimiento_resolucion_date",
   "DescendantInfo.discapacidad_grado",
   "DescendantInfo.convive_con_contribuyente",
+  "DescendantInfo.dependencia_economica",
   "DescendantInfo.custodia_compartida",
   "DescendantInfo.rentas_anuales_euros",
   "DescendantInfo.presenta_declaracion_propia",
@@ -1632,6 +1633,17 @@ effective_dated = false
 description = "Base imponible de los demás miembros de la unidad familiar para el límite de renta de la deducción de la Comunidad de Madrid (DL 1/2010 art. 18.1). En una unidad individual o monoparental equivale a cero; en una unidad conyugal solo se aplica cuando constan las bases necesarias."
 model_selectors = ["renta_family.unidad_familiar_otros_miembros_base"]
 legal_refs = ["ley-35-2006:art-77", "madrid-dl-1-2010:art-18"]
+
+[[sections.fields]]
+key = "anualidades_alimentos_euros"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+nullable = true
+description = "Anualidades por alimentos a favor de los hijos satisfechas por decisión judicial. Un importe positivo suspende la asimilación por dependencia económica del artículo 58 para todos los descendientes mientras no pueda repartirse por hijo."
+model_selectors = ["RentaFamilyProfile.anualidades_alimentos_euros"]
+legal_refs = ["ley-35-2006:art-58"]
 
 [[sections.fields]]
 key = "cotizaciones_ss_madre_2024"

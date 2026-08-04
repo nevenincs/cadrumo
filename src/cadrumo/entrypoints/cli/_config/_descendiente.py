@@ -144,6 +144,11 @@ def _write_descendientes(bucket_id: str, descendientes: tuple[DescendantInfo, ..
     workflow_state_repository().update(lambda current: set_active_fields(current, (*clears, *upserts)))
 
 
+def _tri(value: bool | None) -> str:
+    """Render a tri-state answer, keeping UNSET distinct from an explicit no."""
+    return "-" if value is None else str(value).lower()
+
+
 def _iso_or_dash(value: date | None) -> str:
     """Render an optional entry-event date for the text row, or a dash when absent."""
     return value.isoformat() if value is not None else "-"
@@ -162,6 +167,7 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"acogimiento={_iso_or_dash(descendant.acogimiento_resolucion_date)}",
                     f"discapacidad={descendant.discapacidad_grado if descendant.discapacidad_grado is not None else 0}",
                     f"convivencia={str(descendant.convive_con_contribuyente).lower()}",
+                    f"dependencia={_tri(descendant.dependencia_economica)}",
                     f"custodia={str(descendant.custodia_compartida).lower()}",
                     f"meses_madre_trabajo_2024={descendant.meses_madre_trabajo_2024}",
                     f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
@@ -192,6 +198,7 @@ def _emit_descendiente_list(
                 acogimiento_resolucion_date=descendant.acogimiento_resolucion_date,
                 discapacidad_grado=descendant.discapacidad_grado,
                 convive_con_contribuyente=descendant.convive_con_contribuyente,
+                dependencia_economica=descendant.dependencia_economica,
                 custodia_compartida=descendant.custodia_compartida,
                 rentas_anuales_euros=descendant.rentas_anuales_euros,
                 presenta_declaracion_propia=descendant.presenta_declaracion_propia,
@@ -347,6 +354,8 @@ def _descendant_prompt(page_id: str) -> str:
             return _tr("wizard.setup.descendientes.discapacidad.prompt")
         case "convivencia":
             return _tr("wizard.setup.descendientes.convivencia.prompt")
+        case "dependencia-economica":
+            return _tr("wizard.setup.descendientes.dependencia-economica.prompt")
         case "custodia-compartida":
             return _tr("wizard.setup.descendientes.custodia-compartida.prompt")
         case "meses-madre-trabajo":
@@ -406,7 +415,7 @@ def descendiente_add(
                 "NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|"
                 "acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela]"
                 "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65]"
-                "[,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
+                "[,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
                 "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
                 "[,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. "
                 "Repeatable. Run `aeat config profile descendiente` with no "

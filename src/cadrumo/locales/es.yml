@@ -3727,7 +3727,7 @@ cli:
         config profile delete %{name} --yes' para confirmar.
       delete_yes_help: Confirma explícitamente la eliminación
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
           Repetible. Ejecute `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
@@ -7839,6 +7839,19 @@ wizard:
       declaracion-propia:
         help: Solo impide el mínimo si además sus rentas superan el límite legal.
         prompt: ¿Presenta el descendiente su propia declaración de la renta?
+      dependencia-economica:
+        choices:
+          'false':
+            label: No contribuyo a su mantenimiento
+          'true':
+            label: Sí, contribuyo a su mantenimiento
+        help: Responda solo si el descendiente no convive con usted. Un progenitor
+          sin guarda y custodia, ni siquiera compartida, que no paga anualidades por
+          alimentos por decisión judicial pero contribuye al mantenimiento del hijo,
+          tiene derecho al mínimo por descendientes. Si usted declara anualidades
+          por alimentos, esta asimilación no se aplica a ningún descendiente mientras
+          la aplicación no pueda repartirlas por hijo.
+        prompt: ¿Contribuye usted al mantenimiento económico de este descendiente?
       discapacidad:
         choices:
           '0':
@@ -7945,7 +7958,7 @@ wizard:
         help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
           FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
       descendiente:
-        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: 'Formato: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:

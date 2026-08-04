@@ -14,6 +14,7 @@ Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.acogimiento_resolucion  ISO-8601 date string or absent
   renta_family.descendiente.{n}.discapacidad            "0" / "33" / "65" or absent
   renta_family.descendiente.{n}.convivencia             "true" / "false"
+  renta_family.descendiente.{n}.dependencia_economica   "true" / "false" or absent (absent means unset)
   renta_family.descendiente.{n}.custodia_compartida     "true" / "false" (absent means False)
   renta_family.descendiente.{n}.rentas_anuales          decimal euros or absent (absent means undeclared)
   renta_family.descendiente.{n}.declaracion_propia      "true" / "false" (absent means False)
@@ -68,6 +69,7 @@ _DESCENDIENTE_FLAG_KEYS = frozenset(
         "ACOGIMIENTO",
         "DISCAPACIDAD",
         "CONVIVENCIA",
+        "DEPENDENCIA",
         "CUSTODIA",
         "RENTAS",
         "DECLARACION_PROPIA",
@@ -131,6 +133,12 @@ def descendant_facts_from_list(
         if d.discapacidad_grado is not None:
             facts.append((f"{prefix}.discapacidad", str(d.discapacidad_grado)))
         facts.append((f"{prefix}.convivencia", "true" if d.convive_con_contribuyente else "false"))
+        # Tri-state: an UNSET dependency emits no fact, because unset and an
+        # explicit "no" are different answers and only unset may later be
+        # answered. Collapsing them would lose the distinction the
+        # assimilation turns on.
+        if d.dependencia_economica is not None:
+            facts.append((f"{prefix}.dependencia_economica", "true" if d.dependencia_economica else "false"))
         if d.custodia_compartida:
             facts.append((f"{prefix}.custodia_compartida", "true"))
         if d.rentas_anuales_euros is not None:
@@ -152,7 +160,7 @@ def descendant_facts_from_list(
 _N_RE = re.compile(
     r"^renta_family\.descendiente\.(\d+)\."
     r"(birth_date|relacion|inscripcion_registro_civil|acogimiento_resolucion|"
-    r"discapacidad|convivencia|custodia_compartida|"
+    r"discapacidad|convivencia|dependencia_economica|custodia_compartida|"
     r"rentas_anuales|declaracion_propia|prorrata_minimo|"
     r"meses_madre_trabajo|gastos_guarderia|nif)$",
 )
@@ -247,6 +255,12 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
             disc_val = None
         convivencia_raw = row.get("convivencia", "true")
         convive = convivencia_raw.lower() not in ("false", "0")
+        dependencia_raw = row.get("dependencia_economica")
+        dependencia = (
+            _flag_bool(dependencia_raw, key=f"renta_family.descendiente.{idx}.dependencia_economica")
+            if dependencia_raw is not None
+            else None
+        )
         custodia_raw = row.get("custodia_compartida", "false")
         custodia = custodia_raw.lower() not in ("false", "0")
         rentas_anuales = _stored_rentas_anuales(row.get("rentas_anuales"), index=idx)
@@ -279,6 +293,7 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
                 acogimiento_resolucion_date=acogimiento_date,
                 discapacidad_grado=_discapacidad_grade(disc_val),
                 convive_con_contribuyente=convive,
+                dependencia_economica=dependencia,
                 custodia_compartida=custodia,
                 rentas_anuales_euros=rentas_anuales,
                 presenta_declaracion_propia=declaracion_propia,
@@ -398,6 +413,11 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
                              is capped at three periods rather than restarted.
       DISCAPACIDAD=0|33|65   (optional) discapacidad grade
       CONVIVENCIA=true|false (optional, default true) cohabitation flag
+      DEPENDENCIA=true|false (optional) the taxpayer contributes to this
+                             descendant's upkeep without cohabiting. Omit to
+                             leave UNSET, which never assimilates; only an
+                             explicit true does, and only when no anualidades
+                             are declared.
       CUSTODIA=true|false    (optional, default false) custodia compartida (Art. 61 LIRPF)
       RENTAS=N               (optional) annual rentas excluding exempt income — Art. 58.1 ceiling
       DECLARACION_PROPIA=true|false
@@ -459,6 +479,11 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     if conv_raw is not None:
         convive = _flag_bool(conv_raw, key="CONVIVENCIA")
 
+    dependencia: bool | None = None
+    dependencia_raw = parts.get("DEPENDENCIA")
+    if dependencia_raw is not None:
+        dependencia = _flag_bool(dependencia_raw, key="DEPENDENCIA")
+
     custodia = False
     custodia_raw = parts.get("CUSTODIA")
     if custodia_raw is not None:
@@ -504,6 +529,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
         acogimiento_resolucion_date=acogimiento_date,
         discapacidad_grado=_discapacidad_grade(discapacidad_grado),
         convive_con_contribuyente=convive,
+        dependencia_economica=dependencia,
         custodia_compartida=custodia,
         rentas_anuales_euros=rentas_anuales_euros,
         presenta_declaracion_propia=presenta_declaracion_propia,

@@ -59,6 +59,7 @@ class ProfileDescendientePayload(OutputSchema):
     acogimiento_resolucion_date: date | None = None
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool
+    dependencia_economica: bool | None = None
     custodia_compartida: bool
     rentas_anuales_euros: Decimal | None = Field(default=None, ge=0)
     presenta_declaracion_propia: bool = False

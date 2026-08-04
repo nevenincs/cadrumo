@@ -155,6 +155,19 @@ class DescendantInfo(BaseModel):
         A disabled descendant remains mínimo-eligible regardless of age.
     convive_con_contribuyente
         Whether the descendant cohabits with the taxpayer (Art. 58.1 condition).
+        Stays a FACT about the household and is never overloaded to carry the
+        dependency case; the two are separate fields precisely so a filer who
+        does not cohabit is not forced to misstate cohabitation to reach the
+        allowance they are entitled to.
+    dependencia_economica
+        Whether the taxpayer contributes to this descendant's economic upkeep
+        without cohabiting. ``None`` (the default) means UNSET, which never
+        assimilates; only an explicit ``True`` does, and only when the filer
+        declares no judicial anualidades. The authority states the entitled
+        case in terms — a progenitor with no custody, not even shared, paying
+        no anualidades, who nonetheless contributes economically. ``False`` is
+        a real answer distinct from unset: it records that the question was put
+        and declined.
     custodia_compartida
         Art. 61 LIRPF: when ``True``, both progenitors share custody under a
         judicial or administrative arrangement. The mínimo-por-descendientes
@@ -204,6 +217,7 @@ class DescendantInfo(BaseModel):
     acogimiento_resolucion_date: date | None = None
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool = True
+    dependencia_economica: bool | None = None
     custodia_compartida: bool = False
     rentas_anuales_euros: Decimal | None = Field(default=None, ge=0)
     presenta_declaracion_propia: bool = False
@@ -439,14 +453,15 @@ class DescendantInfo(BaseModel):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        dependencia_assimilation_available: bool = False,
     ) -> bool:
         """True when the descendant qualifies for the Art. 58.1 ordinary mínimo.
 
         Eligibility requires ALL of:
 
         * cohabiting with the taxpayer (Art. 58.1 "siempre que conviva con el
-          contribuyente"), for which economic dependency is NOT yet modelled as
-          an equivalent;
+          contribuyente"), OR assimilated economic dependency — see
+          :meth:`meets_non_income_conditions`;
         * age < 25 at year-end OR any degree of discapacidad;
         * annual rentas excluding exempt income at or below the Art. 58.1
           ceiling (:meth:`exceeds_rentas_cap`);
@@ -461,10 +476,18 @@ class DescendantInfo(BaseModel):
             return False
         if self.excluded_by_declaracion_propia(thresholds):
             return False
-        return self.meets_non_income_conditions(filing_year)
+        return self.meets_non_income_conditions(
+            filing_year,
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        )
 
-    def meets_non_income_conditions(self, filing_year: int) -> bool:
-        """The half of Art. 58.1 that needs no ceiling: cohabitation and age/discapacidad.
+    def meets_non_income_conditions(
+        self,
+        filing_year: int,
+        *,
+        dependencia_assimilation_available: bool = False,
+    ) -> bool:
+        """The half of Art. 58.1 that needs no ceiling: the household limb and age/discapacidad.
 
         Split out rather than inlined because one caller genuinely cannot supply
         the ceilings and does not need them. A descendant with NO declared rentas
@@ -475,15 +498,58 @@ class DescendantInfo(BaseModel):
         re-deriving it beside :meth:`is_eligible_ordinary`, which is how the two
         would drift.
 
+        The household limb is cohabitation OR assimilated economic dependency.
+        The authority states the dependency case in terms: a progenitor without
+        custody, not even shared, and paying no judicial anualidades, who
+        nonetheless contributes to the descendant's economic upkeep "tendrá
+        derecho a la aplicación del mínimo por descendientes". Cohabitation is
+        therefore sufficient but not necessary, which is what an earlier reading
+        of this predicate got wrong.
+
+        Assimilation requires BOTH halves and neither is a default. The
+        descendant must carry an explicit ``dependencia_economica = True`` — an
+        unset field never assimilates, because the reachable-through-the-only-
+        available-field shape is how an excluded case gets granted. And the
+        caller must pass *dependencia_assimilation_available*, which the profile
+        computes from the filer-level anualidades declaration.
+
+        That flag defaults to ``False``, so a caller that forgets it gets the
+        UNDER-granting answer rather than the claiming one. The default is the
+        safe direction by construction rather than by convention.
+
         Not a public substitute for :meth:`is_eligible_ordinary`. Answering
         ``True`` here says only that the non-income conditions hold; a caller
         that HAS a rentas figure must still apply the ceilings.
         """
-        if not self.convive_con_contribuyente:
+        if not self.qualifies_on_household_limb(
+            dependencia_assimilation_available=dependencia_assimilation_available,
+        ):
             return False
         if self.discapacidad_grado and self.discapacidad_grado > 0:
             return True
         return self.age_at_year_end(filing_year) < _MAX_AGE_ORDINARY
+
+    def qualifies_on_household_limb(self, *, dependencia_assimilation_available: bool = False) -> bool:
+        """True when cohabitation holds, or economic dependency is assimilated in its place.
+
+        Named and public because three surfaces ask this question and one of
+        them — the advisory that discloses the assimilation to the operator —
+        needs it apart from the age limb.
+        """
+        if self.convive_con_contribuyente:
+            return True
+        return self.dependencia_economica is True and dependencia_assimilation_available
+
+    def assimilated_by_dependencia(self, *, dependencia_assimilation_available: bool = False) -> bool:
+        """True when this descendant reaches the mínimo ONLY through the dependency limb.
+
+        The disclosure predicate: a descendant who cohabits is not assimilated
+        even when the dependency fact is also set, so the advisory reports only
+        the households where the assimilation is actually load-bearing.
+        """
+        if self.convive_con_contribuyente:
+            return False
+        return self.dependencia_economica is True and dependencia_assimilation_available
 
     def is_eligible_menor_tres(self, filing_year: int) -> bool:
         """True when the descendant is under three at the devengo date and cohabits.
@@ -689,6 +755,25 @@ class RentaFamilyProfile(BaseModel):
     descendants: tuple[RentaDescendantProfile, ...] = ()
     ascendants: tuple[RentaAscendantProfile, ...] = ()
     descendientes: tuple[DescendantInfo, ...] = ()
+    anualidades_alimentos_euros: Decimal | None = Field(default=None, ge=0)
+    """Judicial anualidades por alimentos the filer PAYS, or ``None`` if undeclared.
+
+    Filer-level rather than per-descendant, and that is the staged boundary
+    rather than the intended end state. Art. 58 carves the dependency
+    assimilation out where anualidades are satisfied, and the carve-out is
+    per-child in the law; this profile cannot attribute a payment to one
+    descendant, so a declared amount suppresses the assimilation for EVERY
+    descendant until that attribution lands.
+
+    Suppressing them all is the under-granting direction, which is the safe one
+    and the direction this campaign's defaults rest on, but it is a real
+    narrowing: a filer paying anualidades for one child and supporting another
+    outside any court order loses the second child's assimilation too. The
+    calculate path discloses that rather than leaving it silent.
+
+    A declared ``0`` is an answer meaning none are paid and does NOT suppress;
+    only a positive amount does. ``None`` means the question was never put.
+    """
     cotizaciones_ss_madre_2024: int = Field(default=0, ge=0)
     """SS cotizaciones paid by the mother during 2024 (mirrors casilla 0013).
 
@@ -740,6 +825,64 @@ class RentaFamilyProfile(BaseModel):
         """Total number of DescendantInfo entries."""
         return len(self.descendientes)
 
+    @property
+    def dependencia_assimilation_available(self) -> bool:
+        """Whether the dependency assimilation may apply to ANY descendant this year.
+
+        False as soon as the filer declares a positive anualidades figure. Art.
+        58 carves the assimilation out where anualidades are satisfied, and
+        because this profile cannot yet attribute a payment to a particular
+        descendant the carve-out is applied to all of them.
+
+        The narrowing is deliberate and one-directional: it withholds an
+        allowance some filers are owed rather than granting one they are not.
+        Reversing it needs per-child attribution, not a looser reading here.
+        """
+        return not (self.anualidades_alimentos_euros is not None and self.anualidades_alimentos_euros > 0)
+
+    def dependencia_assimilated_indices(self, filing_year: int) -> tuple[int, ...]:
+        """Indices of descendants reaching the mínimo ONLY through the dependency limb.
+
+        The disclosure surface for a judgement the operator most needs to see:
+        the allowance is being granted to a non-cohabiting filer on a declared
+        economic-dependency fact, which is an assertion rather than an
+        observation. Empty when the assimilation is unavailable or nothing
+        relies on it.
+
+        Applies the NON-INCOME conditions only, for the same reason
+        :meth:`DescendantInfo.meets_non_income_conditions` exists: the caller is
+        a calculate-path advisory that cannot resolve the registry ceilings.
+        The narrowing is safe in this direction - a descendant excluded by a
+        ceiling contributes nothing either way, so the worst case is one extra
+        disclosure rather than a missing one.
+        """
+        available = self.dependencia_assimilation_available
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if descendant.assimilated_by_dependencia(dependencia_assimilation_available=available)
+            and descendant.meets_non_income_conditions(
+                filing_year,
+                dependencia_assimilation_available=available,
+            )
+        )
+
+    def dependencia_suppressed_indices(self) -> tuple[int, ...]:
+        """Indices whose declared dependency is suppressed by the anualidades carve-out.
+
+        These descendants would be assimilated but for the filer's declared
+        anualidades, which this model cannot yet attribute per child. Reported
+        so the narrowing is visible to the filer it costs rather than silently
+        withheld.
+        """
+        if self.dependencia_assimilation_available:
+            return ()
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if descendant.dependencia_economica is True and not descendant.convive_con_contribuyente
+        )
+
     def descendientes_menores_3_year_end(self, filing_year: int) -> int:
         """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
         return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year))
@@ -778,7 +921,16 @@ class RentaFamilyProfile(BaseModel):
         excluded by Art. 61 norma 2ª — see
         :meth:`DescendantInfo.is_eligible_ordinary`.
         """
-        return sum(1 for d in self.descendientes if d.is_eligible_ordinary(filing_year, thresholds=thresholds))
+        available = self.dependencia_assimilation_available
+        return sum(
+            1
+            for d in self.descendientes
+            if d.is_eligible_ordinary(
+                filing_year,
+                thresholds=thresholds,
+                dependencia_assimilation_available=available,
+            )
+        )
 
     def custodia_compartida_count(
         self,
@@ -798,7 +950,12 @@ class RentaFamilyProfile(BaseModel):
         return sum(
             1
             for d in self.descendientes
-            if d.custodia_compartida and d.is_eligible_ordinary(filing_year, thresholds=thresholds)
+            if d.custodia_compartida
+            and d.is_eligible_ordinary(
+                filing_year,
+                thresholds=thresholds,
+                dependencia_assimilation_available=self.dependencia_assimilation_available,
+            )
         )
 
     def minimo_prorrata_factor(
@@ -833,7 +990,11 @@ class RentaFamilyProfile(BaseModel):
         descendant always returns ``Decimal("1")`` because there is no mínimo
         to prorate.
         """
-        if not descendant.is_eligible_ordinary(filing_year, thresholds=thresholds):
+        if not descendant.is_eligible_ordinary(
+            filing_year,
+            thresholds=thresholds,
+            dependencia_assimilation_available=self.dependencia_assimilation_available,
+        ):
             return Decimal("1")
         if descendant.prorrata_minimo is not None:
             return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR if descendant.prorrata_minimo else Decimal("1")
@@ -890,7 +1051,15 @@ class RentaFamilyProfile(BaseModel):
         never enters the birth-order ranking at all.
         """
         eligible = sorted(
-            (d for d in self.descendientes if d.is_eligible_ordinary(filing_year, thresholds=thresholds)),
+            (
+                d
+                for d in self.descendientes
+                if d.is_eligible_ordinary(
+                    filing_year,
+                    thresholds=thresholds,
+                    dependencia_assimilation_available=self.dependencia_assimilation_available,
+                )
+            ),
             key=lambda d: d.birth_date,
         )
         if not eligible:

@@ -570,7 +570,10 @@ def _inject_derived_minimo_descendientes_facts(
         for fact_key, value in fact_index.items()
         if fact_key.startswith("renta_family.descendiente.")
     }
-    profile = RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
+    profile = RentaFamilyProfile(
+        descendientes=descendant_list_from_facts(descendant_facts),
+        anualidades_alimentos_euros=_declared_anualidades_alimentos(fact_index),
+    )
     second_filer_indicated = _second_entitled_filer_indicated(fact_index)
 
     birth_order_amounts, menor_tres_supplement = estatal_tranches
@@ -603,6 +606,34 @@ def _inject_derived_minimo_descendientes_facts(
         thresholds=thresholds,
         second_filer_indicated=second_filer_indicated,
     )
+
+
+_ANUALIDADES_ALIMENTOS_KEY = "renta_family.anualidades_alimentos_euros"
+
+
+def _declared_anualidades_alimentos(
+    fact_index: Mapping[str, UserProfileFactValue],
+) -> Decimal | None:
+    """Read the filer's declared judicial anualidades, or ``None`` when undeclared.
+
+    Gates the Art. 58 dependency assimilation: a positive figure suppresses it
+    for every descendant, because the statutory carve-out is per-child and this
+    profile cannot yet attribute a payment to one. An unreadable value is
+    treated as undeclared rather than as zero, which leaves the assimilation
+    AVAILABLE - so the fail-open direction is deliberate here and is the
+    opposite of this module's usual default.
+
+    The reason it is deliberate: the alternative reads a corrupt value as "a
+    large payment" and silently withdraws an allowance the authority states the
+    filer is entitled to, with nothing said. Leaving it available means the
+    assimilation applies only where the operator ALSO explicitly declared
+    dependency per descendant, which is a second affirmative act, and the
+    calculate path discloses every assimilation it grants.
+    """
+    raw = fact_index.get(_ANUALIDADES_ALIMENTOS_KEY)
+    if raw is None:
+        return None
+    return coerce_decimal(raw)
 
 
 def _inject_derived_anualidades_eligibility_facts(
@@ -638,6 +669,28 @@ def _inject_derived_anualidades_eligibility_facts(
     régimen question the law owns. Only the revisions carrying the
     separate-escala régimen are handled, identified by a declared consuming
     binding rather than by a hardcoded filing-year set.
+
+    THE OTHER HALF OF THE ART. 58 DEPENDENCY INCOMPATIBILITY, stated here
+    because the two rules are one pair and landing one half of a pair is this
+    campaign's most repeated defect. This flag says "the payer has no right to
+    the mínimo, so the separate escala applies"; the dependency assimilation
+    says "a non-cohabiting supporter DOES hold the mínimo". Both cannot be true
+    of the same descendant.
+
+    They cannot collide today, and by construction rather than by luck. The
+    assimilation requires the filer to declare NO positive anualidades, while
+    this régimen exists only for a filer who pays them. So wherever this flag
+    can be 1, the assimilation is already suppressed for every descendant, and
+    the eligibility evaluated below therefore passes
+    ``dependencia_assimilation_available=False`` explicitly rather than relying
+    on the parameter's default - an explicit False documents the reasoning at
+    the call site, where the next reader of this function will be.
+
+    When per-child attribution of anualidades lands, that reasoning expires:
+    a filer could then pay anualidades for one child and assimilate another,
+    and this flag would have to be evaluated per descendant rather than once.
+    Whoever lands that attribution must revisit this function in the same
+    change.
     """
     filing_year = snapshot.filing_year
     key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
@@ -655,7 +708,17 @@ def _inject_derived_anualidades_eligibility_facts(
         if fact_key.startswith("renta_family.descendiente.")
     }
     shared_custody = any(
-        descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year, thresholds=thresholds)
+        descendant.custodia_compartida
+        and descendant.is_eligible_ordinary(
+            filing_year,
+            thresholds=thresholds,
+            # Explicitly False: this régimen only exists for a filer who PAYS
+            # anualidades, and a paying filer already has the dependency
+            # assimilation suppressed for every descendant. See this function's
+            # docstring for why the two halves cannot collide, and for what
+            # expires when per-child attribution lands.
+            dependencia_assimilation_available=False,
+        )
         for descendant in descendant_list_from_facts(descendant_facts)
     )
     fact_index[key] = Decimal("0") if shared_custody else Decimal("1")

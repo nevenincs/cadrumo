@@ -368,6 +368,11 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     assert birth_date is not None
     rentas = row.get("rentas-anuales", "").strip()
     prorrata = row.get("prorrata-minimo", "").strip()
+    dependencia_raw = row.get("dependencia-economica", "").strip()
+    # Tri-state: a blank answer stays UNSET rather than collapsing to a no,
+    # because only an explicit yes assimilates and only an unset value may
+    # later be answered.
+    dependencia = parse_bool(dependencia_raw) if dependencia_raw else None
     relacion, inscripcion_date, acogimiento_date = _safe_relacion_and_entry_dates(row)
     # Operator-typed euros, so the strict grammar with the money cap: a bare
     # Decimal() admitted '1e3', '+100', 'NaN' and 'Infinity', and read the
@@ -392,6 +397,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     return DescendantInfo(
         birth_date=birth_date,
         **relacion_kwarg(relacion),
+        dependencia_economica=dependencia,
         inscripcion_registro_civil_date=inscripcion_date,
         acogimiento_resolucion_date=acogimiento_date,
         discapacidad_grado=_discapacidad_grade(row.get("discapacidad", "")),
@@ -548,6 +554,10 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
         # asked, so a zero emits its answer rather than being dropped.
         ("rentas-anuales", descendant.rentas_anuales_euros),
         ("prorrata-minimo", None if descendant.prorrata_minimo is None else str(descendant.prorrata_minimo).lower()),
+        (
+            "dependencia-economica",
+            None if descendant.dependencia_economica is None else str(descendant.dependencia_economica).lower(),
+        ),
         ("nif", descendant.nif),
     )
     answers.update({f"{prefix}.{page_id}": str(value) for page_id, value in optional if value is not None})

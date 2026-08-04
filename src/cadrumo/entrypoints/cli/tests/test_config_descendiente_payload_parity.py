@@ -35,6 +35,7 @@ def _payload_from(canonical: DescendantInfo, *, index: int = 0) -> ProfileDescen
         acogimiento_resolucion_date=canonical.acogimiento_resolucion_date,
         discapacidad_grado=canonical.discapacidad_grado,
         convive_con_contribuyente=canonical.convive_con_contribuyente,
+        dependencia_economica=canonical.dependencia_economica,
         custodia_compartida=canonical.custodia_compartida,
         meses_madre_trabajo_2024=canonical.meses_madre_trabajo_2024,
         gastos_guarderia_euros=canonical.gastos_guarderia_euros,

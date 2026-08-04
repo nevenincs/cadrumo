@@ -48,7 +48,13 @@ _DESCENDANTS_CANONICAL: dict[str, str] = {
     # carer to pick an entitling one, so a walk that never records it leaves
     # the over-grant this axis exists to prevent unexercised end to end.
     "descendientes#0.relacion": "acogimiento_temporal",
-    "descendientes#0.convivencia": "true",
+    # NON-cohabiting, which is what makes the dependency page reachable at all:
+    # it is gated on this answer, so a cohabiting canonical set would traverse
+    # past it and leave the assimilation unexercised end to end -- the exact
+    # zero-answered-coverage shape this campaign's audit found for three
+    # earlier pages.
+    "descendientes#0.convivencia": "false",
+    "descendientes#0.dependencia-economica": "true",
     # A two-decimal figure: the page declares FlowWidgetKind.DECIMAL, matching
     # the genuinely-Decimal domain field and the precision the CLI
     # `--descendiente RENTAS=` flag and the persistence layer already carry
@@ -113,6 +119,10 @@ def test_scripted_walk_over_the_live_definition_collects_descendants_and_submits
     # only truthful shape available to them and the one that withholds the
     # Art. 58.2 increase.
     assert facts["renta_family.descendiente.0.relacion"] == "acogimiento_temporal"
+    # The Art. 58 dependency answer is ANSWERED and lands as its own fact,
+    # distinct from cohabitation, which stays factually false.
+    assert facts["renta_family.descendiente.0.convivencia"] == "false"
+    assert facts["renta_family.descendiente.0.dependencia_economica"] == "true"
     assert "renta_family.descendiente.0.inscripcion_registro_civil" not in facts
     assert "renta_family.descendiente.0.acogimiento_resolucion" not in facts
     assert facts["renta_family.descendientes_count"] == "2"

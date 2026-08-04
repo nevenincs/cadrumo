@@ -3445,7 +3445,7 @@ cli:
         %{name} --yes' to confirm.
       delete_yes_help: Explicitly confirm the delete operation
       descendiente:
-        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
           Repeatable. Run `aeat config profile descendiente` with no subcommand to
           enter these guided.
         add_help: Add one or more descendants to the active profile.
@@ -7340,6 +7340,18 @@ wizard:
         help: This only removes the allowance if their income also exceeds the legal
           limit.
         prompt: Does the descendant file their own income tax return?
+      dependencia-economica:
+        choices:
+          'false':
+            label: No, I do not contribute to their upkeep
+          'true':
+            label: Yes, I contribute to their upkeep
+        help: Answer only if the descendant does not live with you. A parent without
+          custody, not even shared, who pays no court-ordered anualidades por alimentos
+          but contributes to the child's upkeep, is entitled to the mínimo por descendientes.
+          If you declare anualidades por alimentos, this assimilation does not apply
+          to any descendant while the application cannot attribute them per child.
+        prompt: Do you contribute to this descendant's economic upkeep?
       discapacidad:
         choices:
           '0':
@@ -7443,7 +7455,7 @@ wizard:
         help: ISO 3166-1 alpha-2 code of the country of fiscal residence (e.g. GB,
           DE, FR). Required when fiscal-residency is non_resident_irnr.
       descendiente:
-        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]
+        help: NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:

@@ -73,6 +73,10 @@ _PROBES: dict[str, tuple[str, str]] = {
     ),
     "DISCAPACIDAD": ("DISCAPACIDAD=33", "discapacidad_grado"),
     "CONVIVENCIA": ("CONVIVENCIA=false", "convive_con_contribuyente"),
+    # Probes the TRI-STATE: the baseline leaves it unset (None), so an
+    # explicit false is a real change. A parser that collapsed unset onto
+    # false would make this probe indistinguishable from a dropped token.
+    "DEPENDENCIA": ("DEPENDENCIA=false", "dependencia_economica"),
     "CUSTODIA": ("CUSTODIA=true", "custodia_compartida"),
     "RENTAS": ("RENTAS=9500", "rentas_anuales_euros"),
     "DECLARACION_PROPIA": ("DECLARACION_PROPIA=true", "presenta_declaracion_propia"),

@@ -45,6 +45,7 @@ from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casill
 
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
+    "collect_minimo_descendientes_dependencia_diagnostics",
     "collect_minimo_descendientes_entry_date_missing_diagnostics",
     "collect_minimo_descendientes_prorrata_inferred_diagnostics",
     "collect_minimo_descendientes_rentas_undeclared_diagnostics",
@@ -60,6 +61,8 @@ _COUNT_DESYNC_SOURCE_KIND = "descendientes_count_desync"
 _PRORRATA_INFERRED_SOURCE_KIND = "minimo_descendientes_prorrata_inferred"
 _RENTAS_UNDECLARED_SOURCE_KIND = "minimo_descendientes_rentas_undeclared"
 _ENTRY_DATE_MISSING_SOURCE_KIND = "minimo_descendientes_entry_date_missing"
+_DEPENDENCIA_ASSIMILATED_SOURCE_KIND = "minimo_descendientes_dependencia_assimilated"
+_DEPENDENCIA_SUPPRESSED_SOURCE_KIND = "minimo_descendientes_dependencia_suppressed"
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -430,6 +433,96 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
             casilla_id=estatal_id,
         ),
     )
+
+
+def collect_minimo_descendientes_dependencia_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Disclose the Art. 58 dependency assimilation, in both directions.
+
+    Two advisories from one collector because they are the two sides of one
+    staged rule and an operator needs to see whichever applies.
+
+    GRANTED: a non-cohabiting filer is taking the mínimo on a declared
+    economic-dependency fact. The authority states that entitlement in terms,
+    so this is correct rather than doubtful - but it rests on a judgement the
+    operator made, not on an observation, and it is the judgement AEAT would
+    ask about. Surfacing it is what keeps a declared fact from behaving like a
+    silent one.
+
+    SUPPRESSED: the filer declared judicial anualidades, so every declared
+    dependency is withheld. That is this model's staged narrowing rather than
+    the law: the statutory carve-out is per-child, and until per-child
+    attribution exists a filer paying for one child loses the assimilation for
+    another they support outside any court order. It under-grants, which is the
+    safe direction, and this is what stops it being a silent one.
+
+    Args:
+        revision: The :class:`ModeloRevision` being calculated; its ``valid_to``
+            supplies the devengo year.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        Up to two diagnostics, or an empty tuple when neither state applies.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    if estatal_id is None or revision.valid_to is None:
+        return ()
+    facts = _profile_fact_strings(bucket_id)
+    if facts is None:
+        return ()
+
+    from ...domain.contribuyente import RentaFamilyProfile
+
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    raw_anualidades = facts.get("renta_family.anualidades_alimentos_euros")
+    profile = RentaFamilyProfile(
+        descendientes=descendant_list_from_facts(descendant_facts),
+        anualidades_alimentos_euros=coerce_decimal(raw_anualidades) if raw_anualidades is not None else None,
+    )
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    granted = profile.dependencia_assimilated_indices(revision.valid_to.year)
+    if granted:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=_DEPENDENCIA_ASSIMILATED_SOURCE_KIND,
+                message=(
+                    f"casilla {estatal_id!r} (mínimo por descendientes) grants the Art. 58 allowance for "
+                    f"{_name_indices(list(granted))} on DECLARED economic dependency rather than "
+                    "cohabitation. The authority allows this for a progenitor without custody who pays no "
+                    "judicial anualidades and still contributes to the descendant's upkeep. Confirm the "
+                    "declaration holds for the filing year before filing"
+                ),
+                casilla_id=estatal_id,
+            ),
+        )
+    suppressed = profile.dependencia_suppressed_indices()
+    if suppressed:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind=_DEPENDENCIA_SUPPRESSED_SOURCE_KIND,
+                message=(
+                    f"casilla {estatal_id!r} (mínimo por descendientes) WITHHOLDS the Art. 58 dependency "
+                    f"assimilation for {_name_indices(list(suppressed))} because the profile declares "
+                    "judicial anualidades por alimentos. The statutory carve-out is per-child, but this "
+                    "model cannot yet attribute a payment to one descendant, so a declared amount "
+                    "suppresses the assimilation for all of them. This under-grants where the anualidades "
+                    "are paid for a different descendant"
+                ),
+                casilla_id=estatal_id,
+            ),
+        )
+    return tuple(diagnostics)
 
 
 def _declared_descendant_row_count(bucket_id: str) -> int | None:

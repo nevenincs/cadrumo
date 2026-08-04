@@ -72,6 +72,7 @@ _INSCRIPCION_PAGE_ID = "inscripcion-registro-civil"
 _ACOGIMIENTO_PAGE_ID = "acogimiento-resolucion"
 _DISCAPACIDAD_PAGE_ID = "discapacidad"
 _CONVIVENCIA_PAGE_ID = "convivencia"
+_DEPENDENCIA_PAGE_ID = "dependencia-economica"
 _CUSTODIA_COMPARTIDA_PAGE_ID = "custodia-compartida"
 _RENTAS_ANUALES_PAGE_ID = "rentas-anuales"
 _DECLARACION_PROPIA_PAGE_ID = "declaracion-propia"
@@ -88,6 +89,7 @@ DESCENDANT_PAGE_IDS: tuple[str, ...] = (
     _ACOGIMIENTO_PAGE_ID,
     _DISCAPACIDAD_PAGE_ID,
     _CONVIVENCIA_PAGE_ID,
+    _DEPENDENCIA_PAGE_ID,
     _CUSTODIA_COMPARTIDA_PAGE_ID,
     _RENTAS_ANUALES_PAGE_ID,
     _DECLARACION_PROPIA_PAGE_ID,
@@ -161,6 +163,10 @@ _DISCAPACIDAD_CHOICE_0_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.cho
 _DISCAPACIDAD_CHOICE_33_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.33.label"
 _DISCAPACIDAD_CHOICE_65_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.65.label"
 _CONVIVENCIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.convivencia.prompt"
+_DEPENDENCIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.dependencia-economica.prompt"
+_DEPENDENCIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.dependencia-economica.help"
+_DEPENDENCIA_CHOICE_TRUE_LOCALE_KEY = "wizard.setup.descendientes.dependencia-economica.choices.true.label"
+_DEPENDENCIA_CHOICE_FALSE_LOCALE_KEY = "wizard.setup.descendientes.dependencia-economica.choices.false.label"
 _CUSTODIA_COMPARTIDA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.custodia-compartida.prompt"
 _RENTAS_ANUALES_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.prompt"
 _RENTAS_ANUALES_HELP_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.help"
@@ -227,6 +233,10 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _DISCAPACIDAD_CHOICE_33_LOCALE_KEY,
     _DISCAPACIDAD_CHOICE_65_LOCALE_KEY,
     _CONVIVENCIA_PROMPT_LOCALE_KEY,
+    _DEPENDENCIA_PROMPT_LOCALE_KEY,
+    _DEPENDENCIA_HELP_LOCALE_KEY,
+    _DEPENDENCIA_CHOICE_TRUE_LOCALE_KEY,
+    _DEPENDENCIA_CHOICE_FALSE_LOCALE_KEY,
     _CUSTODIA_COMPARTIDA_PROMPT_LOCALE_KEY,
     _RENTAS_ANUALES_PROMPT_LOCALE_KEY,
     _RENTAS_ANUALES_HELP_LOCALE_KEY,
@@ -500,6 +510,16 @@ _ACOGIMIENTO_VISIBILITY: FlowVisibility = FlowVisibility(
 )
 
 
+#: Art. 58 dependency answers. Tri-state by construction: leaving the page
+#: unanswered is NOT a "no", it is an unanswered question, and only an explicit
+#: yes can assimilate. An explicit no is offered so the operator can record that
+#: the question was put and declined.
+_DEPENDENCIA_CHOICES: tuple[FlowChoice, ...] = (
+    FlowChoice(value="true", label=_locale_ref(_DEPENDENCIA_CHOICE_TRUE_LOCALE_KEY)),
+    FlowChoice(value="false", label=_locale_ref(_DEPENDENCIA_CHOICE_FALSE_LOCALE_KEY)),
+)
+
+
 _DISCAPACIDAD_CHOICES: tuple[FlowChoice, ...] = (
     FlowChoice(value="0", label=_locale_ref(_DISCAPACIDAD_CHOICE_0_LOCALE_KEY)),
     FlowChoice(value="33", label=_locale_ref(_DISCAPACIDAD_CHOICE_33_LOCALE_KEY)),
@@ -588,6 +608,22 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         default="true",
         required=False,
         answer_type=bool,
+    ),
+    FlowPage(
+        # SELECT with an explicit no rather than CONFIRM, because this axis is
+        # genuinely tri-state and a CONFIRM cannot express "unanswered". Unset
+        # never assimilates; only an explicit yes does. Gated on a NON-cohabiting
+        # answer, since the question only arises when cohabitation fails - a
+        # cohabiting descendant already qualifies and asking would invite an
+        # answer that changes nothing.
+        id=_DEPENDENCIA_PAGE_ID,
+        widget=FlowWidgetKind.SELECT,
+        prompt=_locale_ref(_DEPENDENCIA_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_DEPENDENCIA_HELP_LOCALE_KEY),
+        choices=_DEPENDENCIA_CHOICES,
+        required=False,
+        answer_type=str,
+        visible_when=FlowCondition(page_id=_CONVIVENCIA_PAGE_ID, equals="false"),
     ),
     FlowPage(
         id=_CUSTODIA_COMPARTIDA_PAGE_ID,

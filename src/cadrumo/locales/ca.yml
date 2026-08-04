@@ -3700,7 +3700,7 @@ cli:
         profile delete %{name} --yes' per confirmar.
       delete_yes_help: Confirma explícitament l'eliminació
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
           Repetible. Executeu `aeat config profile descendiente` sense subcomandament
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
@@ -7796,6 +7796,19 @@ wizard:
       declaracion-propia:
         help: Només impedeix el mínim si a més les seves rendes superen el límit legal.
         prompt: El descendent presenta la seva pròpia declaració de la renda?
+      dependencia-economica:
+        choices:
+          'false':
+            label: No, no hi contribueixo
+          'true':
+            label: Sí, hi contribueixo
+        help: Responeu només si el descendent no conviu amb vós. Un progenitor sense
+          guarda i custòdia, ni tan sols compartida, que no paga anualitats per aliments
+          per decisió judicial però contribueix al manteniment del fill, té dret al
+          mínim per descendents. Si declareu anualitats per aliments, aquesta assimilació
+          no s'aplica a cap descendent mentre l'aplicació no les pugui repartir per
+          fill.
+        prompt: Contribuïu al manteniment econòmic d'aquest descendent?
       discapacidad:
         choices:
           '0':
@@ -7901,7 +7914,7 @@ wizard:
         help: Codi ISO 3166-1 alfa-2 del país de residència fiscal (p.ex. GB, DE,
           FR). Obligatori quan fiscal-residency és non_resident_irnr.
       descendiente:
-        help: 'Format: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: 'Format: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realitza operacions intracomunitàries
       enrollment-large-company:

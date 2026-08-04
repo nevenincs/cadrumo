@@ -3648,7 +3648,7 @@ cli:
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
           Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
@@ -7696,6 +7696,19 @@ wizard:
         help: Ez csak akkor szünteti meg a kedvezményt, ha a jövedelme is meghaladja
           a törvényi határt.
         prompt: Benyújtja a leszármazott a saját jövedelemadó-bevallását?
+      dependencia-economica:
+        choices:
+          'false':
+            label: Nem járulok hozzá az eltartásához
+          'true':
+            label: Igen, hozzájárulok az eltartásához
+        help: Csak akkor válaszoljon, ha a leszármazott nem él Önnel. Az a szülő,
+          akinek nincs felügyeleti joga, még közös sem, és nem fizet bírósági határozaton
+          alapuló tartásdíjat, de hozzájárul a gyermek eltartásához, jogosult a leszármazottak
+          utáni adóalap-kedvezményre. Ha tartásdíjat vall be, ez a beszámítás egyetlen
+          leszármazottra sem alkalmazható, amíg az alkalmazás nem tudja azt gyermekenként
+          megosztani.
+        prompt: Hozzájárul Ön ennek a leszármazottnak a gazdasági eltartásához?
       discapacidad:
         choices:
           '0':
@@ -7805,7 +7818,7 @@ wizard:
         help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
           DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       descendiente:
-        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
+        help: 'Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Végez intraközösségi ügyleteket
       enrollment-large-company:
