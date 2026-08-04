@@ -289,11 +289,29 @@ class DescendantInfo(BaseModel):
         one so no caller can silently evaluate the age/cohabitation half of the
         law while skipping the two income conditions.
         """
-        if not self.convive_con_contribuyente:
-            return False
         if self.exceeds_rentas_cap(thresholds):
             return False
         if self.excluded_by_declaracion_propia(thresholds):
+            return False
+        return self.meets_non_income_conditions(filing_year)
+
+    def meets_non_income_conditions(self, filing_year: int) -> bool:
+        """The half of Art. 58.1 that needs no ceiling: cohabitation and age/discapacidad.
+
+        Split out rather than inlined because one caller genuinely cannot supply
+        the ceilings and does not need them. A descendant with NO declared rentas
+        figure can never be excluded by either income condition — both read an
+        absent figure as non-excluding — so for that descendant eligibility
+        reduces exactly to this predicate. The calculate-path advisory that flags
+        those descendants therefore asks this question directly instead of
+        re-deriving it beside :meth:`is_eligible_ordinary`, which is how the two
+        would drift.
+
+        Not a public substitute for :meth:`is_eligible_ordinary`. Answering
+        ``True`` here says only that the non-income conditions hold; a caller
+        that HAS a rentas figure must still apply the ceilings.
+        """
+        if not self.convive_con_contribuyente:
             return False
         if self.discapacidad_grado and self.discapacidad_grado > 0:
             return True
