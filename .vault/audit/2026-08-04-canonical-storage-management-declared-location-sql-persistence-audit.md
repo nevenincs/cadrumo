@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1e02eb288d401f270db2e9c90a75c9eedeb0926408d4c6b8646c40344a8d42c'
+body_hash: 'sha256:4f97cc109ffea044e3d7bc0b081bb31c91f2e4aeb6e06e5af96e15bc158cc643'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-closure-statement-reference]]'
@@ -38,6 +38,48 @@ looking, and they surfaced anyway.
 
 **The population is unknown, and I could not bound it.** That is the substantive
 result of this audit and it is a negative one.
+
+### a-fourth-candidate-and-the-cluster-it-reveals | high | Two of four are entries in the same function, which is a mechanism rather than a coincidence
+
+**`DRAFTS` is the fourth, verified independently at `bfe2da17f6`** rather than
+taken on report. Its complete production reference set:
+
+```
+_storage_taxonomy_locations.py:416   the declaration
+config.py:840                        the field (and :1213, the validator list)
+_rotation.py:94                      a dataclass field
+_rotation.py:456                     store_dir=Path(settings.cadrumo_drafts_dir)
+```
+
+**No writer.** The real persistence is `secure_objects` under the SQL namespace
+`cadrumo.domain.filing.drafts`, declared at `_namespace_registry.py:888` —
+byte-for-byte the shape recorded above for `cadrumo_justificantes_dir`.
+
+**The four are not scattered. Two of them are twenty-three lines apart.**
+`_rotation.py:456` is `drafts`; `_rotation.py:479` is `justificantes`. Both are
+entries in the same `default_rotation_plan` function, reached the same way, both
+describing a file shape nothing writes.
+
+That distinction carries the finding. **"Four instances" invites a search for a
+fifth; "four instances, two in one function" names a plausible common origin** —
+a rotation plan enumerating locations from the taxonomy at a time when those
+locations were filesystem-backed, and surviving the migration of their contents
+into SQL because nothing forces a plan entry to prove its target still receives
+bytes.
+
+**It also bounds a question that the population question is not.** The
+population — how many declared members are dormant — is not statically
+measurable, per the two instrument failures below. But `default_rotation_plan`'s
+entry list is **finite and enumerable**, so *"how many rotation entries name a
+location nothing writes to"* is answerable, and it is where half the known
+instances live. That is a strictly smaller question and **must not be reported as
+a proxy for the population**: a rotation entry is one way a dead declaration
+becomes reachable, not the only way.
+
+Severity unchanged and unchanged for a reason: **dead weight, not a defect.** The
+rotation entry walks a directory that materialises empty and finds nothing.
+`default_rotation_plan` stays unreopened — reading its entry list is not
+reopening it.
 
 ### the-instrument-fails-its-own-positive-control | high | A probe over all 58 members misses the confirmed instance, so its silence about the other 57 means nothing
 
