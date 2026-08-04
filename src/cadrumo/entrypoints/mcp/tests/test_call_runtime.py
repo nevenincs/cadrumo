@@ -175,3 +175,95 @@ def test_serving_limiter_caps_concurrent_off_loop_dispatch() -> None:
     # The cap binds: never more than ``cap`` ran at once, and with three times the
     # cap queued the limit was actually reached (not merely never exceeded).
     assert observed_peak == cap
+
+
+_TRANSPORT_ERROR_CONTEXT_CONTRACT: dict[str, frozenset[str]] = {
+    "mcp.transport.timeout": frozenset({"tier", "timeout_seconds", "timed_out"}),
+    "mcp.transport.installation_incomplete": frozenset({"installation_incomplete"}),
+}
+"""Every context key each transport refusal may carry, keyed by error code.
+
+The MCP transport has no writer-level redaction the way the CLI does, so this
+document leaves the process exactly as built. That is affordable only while its
+context is transport-level -- how the call was dispatched, never what it was
+about -- and nothing but this gate keeps it that way.
+"""
+
+
+def _transport_error_context_keys() -> dict[str, frozenset[str]]:
+    """Return each ``_transport_error_envelope`` call's code and context keys.
+
+    Read from the source rather than by calling the builders, so a THIRD caller
+    added later is seen too -- exercising the two known ones would keep passing
+    while a new refusal quietly widened the surface.
+    """
+    import ast
+    from pathlib import Path
+
+    source = Path(__file__).resolve().parent.parent / "_transport.py"
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+    found: dict[str, frozenset[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if getattr(node.func, "id", "") != "_transport_error_envelope":
+            continue
+        keywords = {kw.arg: kw.value for kw in node.keywords}
+        code_node, context_node = keywords.get("code"), keywords.get("context")
+        assert isinstance(code_node, ast.Constant), f"code must be a literal, got {ast.dump(code_node or ast.Pass())}"
+        assert isinstance(context_node, ast.Dict), "context must be a dict literal so its keys are auditable here"
+        keys: set[str] = set()
+        for key in context_node.keys:
+            assert isinstance(key, ast.Constant) and isinstance(key.value, str), "context keys must be string literals"
+            keys.add(key.value)
+        found[str(code_node.value)] = frozenset(keys)
+    return found
+
+
+def test_transport_error_context_keys_stay_transport_level() -> None:
+    """Widening the un-redacted MCP error surface must red rather than pass.
+
+    This document is emitted without redaction, and it is safe because its
+    context carries a tier name, an integer and two flags -- nothing operator- or
+    taxpayer-derived. That is a property of today's content, not a constraint, so
+    this gate makes it one: adding a key fails here, and the author meets the
+    contract at the moment they would otherwise silently widen the surface.
+    """
+    found = _transport_error_context_keys()
+
+    # Anti-vacuity floor: a rename or refactor that empties the scan would make
+    # every assertion below trivially true, which is the failure mode a gate of
+    # this shape dies of.
+    assert len(found) == len(_TRANSPORT_ERROR_CONTEXT_CONTRACT), (
+        f"expected {len(_TRANSPORT_ERROR_CONTEXT_CONTRACT)} _transport_error_envelope call sites, found "
+        f"{len(found)}: {sorted(found)}. A new refusal must declare its context keys in the contract above."
+    )
+    assert found == _TRANSPORT_ERROR_CONTEXT_CONTRACT, (
+        "MCP transport refusal context keys drifted from the declared contract. This surface is emitted "
+        "WITHOUT redaction, so a new key carrying operator- or taxpayer-derived data is a disclosure, not a "
+        f"documentation lapse. Found {found}, declared {_TRANSPORT_ERROR_CONTEXT_CONTRACT}."
+    )
+
+
+def test_cli_resolution_refusal_does_not_leak_the_installation_path() -> None:
+    """The refusal reports the exception class and errno, never the failing path.
+
+    An ``OSError`` renders the path it failed on, and an installation path
+    carries the account name of whoever installed it -- the only content on this
+    surface that varies with the machine. The operator reads this through an
+    agent and cannot act on the path anyway.
+    """
+    from .._transport import _cli_resolution_refusal_envelope
+
+    error = OSError(2, "No such file or directory", r"C:\Users\a-real-person\AppData\cadrumo\aeat.exe")
+    document = _cli_resolution_refusal_envelope(command_key="app.modelo.calculate", error=error)
+
+    message = str(document["error"]["message"])  # type: ignore[index]
+    assert "a-real-person" not in message, "the refusal must not echo the installation path"
+    assert "AppData" not in message, "nor any component of it"
+    # Python resolves OSError(2, ...) to FileNotFoundError, so the reported class
+    # is the specific subclass rather than the base -- which is the more useful
+    # half of the diagnostic, and the reason this asserts the actual class rather
+    # than a name assumed from the constructor.
+    assert type(error).__name__ in message, "but it must still say which failure class it was"
+    assert "errno 2" in message, "and give the errno a reader can act on"

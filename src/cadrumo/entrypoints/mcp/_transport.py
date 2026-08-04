@@ -76,7 +76,32 @@ def _transport_error_envelope(
     retryable: bool,
     context: dict[str, str],
 ) -> dict[str, object]:
-    """Build one strict canonical error document for an MCP transport failure."""
+    """Build one strict canonical error document for an MCP transport failure.
+
+    **This document is not redacted, and must never need to be.** Its ``message``
+    and ``context`` are transport-level by contract: they describe how the call
+    was dispatched, never what it was about. No operator-typed input, no taxpayer
+    identifier, and no value read from a profile or a filed artefact may reach
+    either field.
+
+    That is a constraint rather than an observation, because the surface is
+    otherwise safe only by accident of its current content. The MCP transport has
+    no writer-level redaction the way the CLI does — the CLI funnels inside
+    :func:`~entrypoints.cli._errors.write_stderr`, so everything it emits is
+    filtered on the way out, and this builder has no equivalent chokepoint.
+
+    APPLICATION errors never arrive here. Both MCP transports capture the CLI's
+    own stdout/stderr documents, which the CLI has already redacted before the
+    bytes reach the stream, so a captured error inherits that filtering. Only
+    failures of the dispatch itself — a timeout, an unusable installation — are
+    built here, which is why the contract above is affordable.
+
+    :func:`~entrypoints.mcp.tests.test_call_runtime` pins the ``context`` key set
+    of every caller, so widening this surface reds a gate rather than passing
+    silently. Adding a key that carries operator- or taxpayer-derived data means
+    this docstring is no longer true, and the fix then is redaction, not a wider
+    allowlist.
+    """
     document = {
         "schema_version": ENVELOPE_SCHEMA_VERSION,
         "command": command_key,
@@ -155,11 +180,21 @@ def _attested_cli_executable() -> str:
 
 
 def _cli_resolution_refusal_envelope(*, command_key: str, error: OSError) -> dict[str, object]:
-    """Build a structured refusal for an incomplete MCP installation."""
+    """Build a structured refusal for an incomplete MCP installation.
+
+    Reports the exception class and errno rather than ``str(error)``. An
+    ``OSError`` renders the path it failed on, and the path to a user's
+    installation carries their account name — the only content on this surface
+    that varies with the machine rather than being a fixed token. The class and
+    errno keep what a reader acts on (not-found versus permission-denied) while
+    the path, which the operator cannot use anyway because they are reading this
+    through an agent, does not travel.
+    """
+    detail = f"{type(error).__name__}" + (f" (errno {error.errno})" if error.errno is not None else "")
     return _transport_error_envelope(
         command_key=command_key,
         code="mcp.transport.installation_incomplete",
-        message=str(error),
+        message=f"The Cadrumo CLI could not be resolved: {detail}. Reinstall the package, then retry.",
         retryable=False,
         context={"installation_incomplete": "true"},
     )
