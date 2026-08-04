@@ -4,7 +4,7 @@ tags:
   - '#ledger-input-localization'
 date: '2026-06-10'
 modified: '2026-08-04'
-body_hash: 'sha256:7943192ac7711538085dfa08192dc805898f1e4e8a99d89858a1b9fc3528aa4f'
+body_hash: 'sha256:12e2454eb269e9fde3d101b1131e5617f743d505682e0716373aca474807c839'
 related:
   - "[[2026-06-10-ledger-input-localization-research]]"
   - '[[2026-08-04-decimal-notation-under-declaration-research]]'
@@ -197,33 +197,64 @@ the detector and never was. It refuses `0.335`, which is not ambiguous because a
 leading zero cannot be a thousands group, and it catches the Spanish shape only
 because a grouping happens to be three digits. Protection by side effect.
 
-### The two contracts
+### Three contracts
 
-**Strict operator input.** Ambiguity is REFUSED with a localised actionable message
-naming the accepted form. The operator is present and can retype. This is the original
+**1. Strict operator input.** Ambiguity is REFUSED with a localised actionable
+message naming the accepted form. The operator is present and can retype, and we
+must never bank a guess on a figure headed for a filing. This is the original
 ruling, now enforced by construction: the strict parsers consult the detector, and
 `max_fraction_digits` reverts to meaning precision.
 
-**Extraction.** Ambiguity resolves to NO VALUE, not to a guess. The downstream confirm
-path treats a missing amount as a hard refusal naming the override flag, so the
-operator supplies the figure.
+**2. Extraction.** Ambiguity resolves to NO VALUE, not to a guess. The downstream
+confirm path treats a missing amount as a hard refusal naming the override flag, so
+the operator supplies the figure.
 
-This second contract is adopted from the shipped implementation rather than designed:
-`_evidence_draft_vision._grounded_decimal` already composes the detector exactly this
-way, and its reasoning is the record's. The convention in an extracted string is the
-SUPPLIER'S, not one the reader can infer; a Spanish supplier prints one thousand two
-hundred and thirty-four as `1.234`, and reading that as a decimal is a thousandfold
-light on a taxable base bound for Modelo 303/390.
+An earlier framing of this amendment had extraction resolve ambiguity by Spanish
+convention, on the grounds that guessing is the job when reading a printed page.
+That framing is recorded and REVERSED, because it smuggles in a premise nobody
+checked: that the document follows Spanish convention. It does not necessarily —
+the convention is the SUPPLIER'S. A dot-decimal supplier's `8.000` is eight, and
+resolving it as eight thousand is wrong by a thousandfold in the OVER-declaring
+direction, the mirror of the defect that opened this amendment.
 
-An earlier framing of this amendment had extraction resolve the ambiguity by Spanish
-convention on the grounds that guessing is the job when reading a printed page. That
-framing is recorded and NOT adopted, because it is wrong in the over-declaring
-direction for a dot-decimal supplier and because the shipped path already argued the
-point: a guessed figure is minted silently, a dropped one is asked for. Both contracts
-therefore refuse to guess; they differ only in whether the refusal is loud at the
-boundary or deferred to the confirm prompt.
+The asymmetry settles it. Dropping costs an extraction and hands the question to
+the operator, who has the document in front of them and can read a convention no
+parser can infer. Guessing mints a figure silently. This ruling already held that a
+parser guessing which convention applies IS the silent-corruption surface; the
+reversal is simply carrying that across from operator input to extraction, where it
+was not applied the first time.
 
-### Deliberately outside both contracts
+**3. Bounded-range extraction.** Ambiguity is RESOLVED where the value's declared
+range makes the alternative reading impossible. A rate of 21000% is not a rate, so
+`21.000` in a rate position has only one reading left and dropping it would
+over-refuse a value that was never ambiguous in context.
+
+The discriminator is IMPOSSIBLE, not unlikely. A bound that merely makes the other
+reading improbable is a guess wearing a bound, and this contract does not cover it.
+An amount field whose values are "usually under a thousand" does not qualify; a
+percentage field where the alternative would be a 21000% tax rate does.
+
+This contract currently has NO consumer, which is recorded rather than hidden. It
+was named for `_find_iva_rate`, and measurement showed the ambiguous shape cannot
+reach that parse at all: its capture pattern admits at most two fraction digits,
+while the ambiguous shape needs exactly three. The bound is already enforced by the
+pattern rather than by a resolve step. The contract is named anyway because the
+reasoning is sound and the next bounded field should not have to rediscover it.
+
+### The fix was promotion, not invention
+
+The most useful thing in this amendment is what was NOT missing. The correct
+composition already existed, hand-written inside a single caller
+(`_evidence_draft_vision._grounded_decimal`), consulting the detector before the
+coercer and dropping on ambiguity, with the supplier-convention argument spelled out
+in its own docstring. It worked. It had worked all along.
+
+Nothing lifted it into the canonical home, so every other caller was free to be
+individually right or individually wrong, and two were wrong. That is fragmentation
+in its purest form: not an absent solution, but a solved problem that stayed local.
+The fix here is promotion of that implementation, not the design of a new one.
+
+### Deliberately outside all three contracts
 
 Rate extraction. An IVA rate of `21.000` is ambiguous by shape, but its thousands
 reading is impossible — there is no 21000% rate — so dropping it would refuse a value

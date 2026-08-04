@@ -18,9 +18,9 @@ is best-effort; a miss simply yields no advisory.
 from __future__ import annotations
 
 import re
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
-from ...core.decimal import normalize_decimal_separators
+from ...core.decimal import coerce_finite_european_decimal
 
 __all__ = ["printed_iva_advisory"]
 
@@ -32,13 +32,18 @@ _IVA_AMOUNT = re.compile(
 
 
 def _parse_amount(raw: str) -> Decimal | None:
-    """Parse a Spanish- or plain-formatted :class:`~decimal.Decimal` string, best-effort."""
-    text = raw.strip()
-    text = normalize_decimal_separators(text, strip_thousands="," in text)
-    try:
-        return Decimal(text)
-    except InvalidOperation:
-        return None
+    """Parse a Spanish- or plain-formatted :class:`~decimal.Decimal` string, best-effort.
+
+    The EXTRACTION contract, read from the canonical home rather than
+    re-implemented here. This function previously spelled out the same
+    normalise-then-construct sequence inline, which is how it came to disagree
+    with the rest of the codebase: a printed ``8.000`` was read as eight euros,
+    because the thousands strip only fires when a comma is present to settle
+    the convention. The canonical helper drops a token whose reading cannot be
+    settled, so the advisory reports nothing rather than a figure a thousandfold
+    out, and the operator is asked instead.
+    """
+    return coerce_finite_european_decimal(raw)
 
 
 def printed_iva_advisory(
