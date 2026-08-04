@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:2a65b738c2bdf76eb7d255fe6c0055d7161848634d59a574b95da9b9fb239d20'
+body_hash: 'sha256:f7fe46994a5b0ce81d109ab7994f61f286282fe2158df14714885ed456050b0d'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -132,6 +132,53 @@ discriminate its own guard — which is why an unexercised surface here is not t
 merely a coverage number.
 
 
+### 6. MEDIUM — the flag-help gate guards one of two strings describing the same surface
+
+Two strings describe the `--descendiente` flag format. The campaign corrected one and left
+its sibling stale in all four catalogues; the parity gate guards the same one it corrected.
+Reproduced independently, key for key: the wizard flag help is missing five accepted keys in
+Spanish, six in English and Hungarian, and seven in Catalan.
+
+This is the harm the entry-surface Step's own text describes and claims to close — that an
+operator refused at the write door cannot discover from help how to express the rentas
+figure. An operator reading the wizard help still cannot discover it, and that figure is what
+the campaign turns on. The key is a registered flag-help family, so it renders as CLI help
+rather than being dead copy.
+
+The sharp part is that the gate is *good*. It is bidirectional — every advertised key honoured
+by the parser, every parser key advertised — locale-parameterised across all four catalogues,
+and it already guards against naming a euro figure. It needs no new logic. Its key constant is
+a single string where it should be a tuple. Nobody finds that by reading the gate; it requires
+noticing there are two strings.
+
+This is the third instance in these two campaigns of one half of a mechanism being built or
+fixed while its sibling half is left — the same shape as the wizard clearing set and the
+emitter repair. It is now the first pattern to look for.
+
+Part of the drift predates the campaign: four keys were already missing before the three new
+ones existed, which is why Catalan is worst — it has been accumulating. Extending the gate
+retires that for free, and the fix is required to leave the suite RED before the catalogues
+are corrected, since a gate that is green over known-stale copy is worse than the gap.
+
+### 7. LOW — the prorrata factor is a hard half where the statute says equal shares among N
+
+The prorrata factor returns a fixed one-half whenever a second entitled contribuyente is
+indicated. Norma 1ª says the mínimo is prorated among two **or more** entitled contribuyentes
+in equal parts — 1/N, not 1/2. The operator-facing copy matches the implementation exactly in
+all four catalogues, so copy and predicate agree and both are narrower than the statute.
+
+The direction is over-grant, which under-declares, and that is the class this campaign exists
+to close. It is rated LOW on arity rather than on direction: three same-degree entitled
+contribuyentes for a *descendant* is near-impossible, since a child has two parents and norma
+1ª's own degree rule collapses mixed-degree cases to the closest relative. The axis where 1/N
+is ordinary — several siblings supporting one parent — is ascendientes, which has no formula
+and no binding, so no engine predicate applies the factor at all. The copy is also honest
+about the assumption rather than hiding it, advertising a split between both.
+
+Carried to the follow-up as a note rather than implemented, on the same principle as the other
+residuals: a statute-widening change does not belong inside a closing campaign.
+
+
 ## Verified clean
 
 The three claims flagged as most at risk before the review all hold.
@@ -174,6 +221,31 @@ commit twelve minutes earlier, which is the load-bearing half of the claim and j
 decision to decline the repair. Agent-level attribution within that is not recoverable — one
 shared git identity means author metadata distinguishes nothing — and is immaterial to the
 judgement, which rested on cross-campaign ownership.
+
+
+**The operator-facing copy for the three new facts was audited against the predicate in all
+four catalogues, and the hypothesis that prompted the audit was wrong in the useful
+direction.** The worry was that the own-declaration page might ask the bare behavioural
+question — does this descendant file a return — which an honest operator would answer yes to
+for a small-return filer, silently losing the mínimo while the code stayed correct.
+
+It does not. Every catalogue states the two-part rule explicitly: filing only removes the
+allowance if the descendant's rentas *also* exceed the legal limit. And the implementation
+makes the bare answer harmless rather than merely documented — exclusion requires the filing
+flag AND a present rentas figure AND that figure above the norma 2ª limit, with the docstring
+quoting the manual verbatim. The operator described does not lose the mínimo.
+
+The rentas prompt carries the exempt-income qualifier in all four catalogues, so none asks for
+a bare annual income figure that would wrongly breach the ceiling. The prorrata prompt asks
+whether another taxpayer is *entitled* to the allowance rather than whether they claim it —
+matching the statute's own wording, and the distinction between a correct answer and an
+over-claim. Choice-to-value mapping was verified against the factor's explicit-answer branch
+in both directions.
+
+One limit stated rather than glossed: this verified the semantic content of the Catalan and
+Hungarian strings — the legal qualifiers, the two-part rule, the entitlement framing, the
+choice mapping — not whether the phrasing reads naturally to a native speaker. That needs a
+speaker, not a probe, and is not claimed.
 
 
 ## The live legal cross-check
