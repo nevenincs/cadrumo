@@ -17,7 +17,7 @@ from ......core.errors import build_error_envelope, resolve_error_message
 from ......core.external_constants import UTF_8_ENCODING
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ......tests.path_obstruction import obstructed_path
-from ..._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION
+from ..._storage_path_definitions import BLOB_MANIFEST_SCHEMA_VERSION
 from ...crypto import KEY_SIZE
 from ...envelope import Envelope
 from ...errors import (

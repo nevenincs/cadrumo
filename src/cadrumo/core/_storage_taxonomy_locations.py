@@ -137,7 +137,13 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.AUDIT,
         "audit",
-        consumer_module="adapters/persistence/storage/_namespace_registry.py",
+        # The named module must be one that reaches this location, not merely one
+        # containing the token. `_namespace_registry.py` was claimed here and
+        # satisfied the liveness gate on 14 references to `SensitivityClass.AUDIT`
+        # -- an unrelated encryption-sensitivity member that happens to share the
+        # name -- while referencing `StorageCategory.AUDIT` zero times. The real
+        # consumer joins `cadrumo_audit_dir` to reach the live IVA remote state.
+        consumer_module="application/live/_iva_remote_state.py",
         settings_field="cadrumo_audit_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,

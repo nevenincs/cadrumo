@@ -43,7 +43,7 @@ from .....core.identity import ContentDigest
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from .....core.time import now, validate_utc_aware
-from .._namespace_registry import SECRET_RECORD_SCHEMA_VERSION
+from .._storage_path_definitions import SECRET_RECORD_SCHEMA_VERSION
 from ..blob_store import (
     BlobReference,
     EncryptedBlobStore,

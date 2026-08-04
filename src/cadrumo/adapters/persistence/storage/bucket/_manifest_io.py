@@ -18,7 +18,7 @@ from pydantic import ValidationError
 from .....core import parse_toml_text
 from .....core.atomic_write import atomic_write_text
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .._namespace_registry import BUCKET_MANIFEST_FILENAME
+from .._storage_path_definitions import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
 from ._errors import BucketValidationError
 from ._layout import BucketPaths
