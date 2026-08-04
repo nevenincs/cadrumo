@@ -40,7 +40,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.resources import bundled_path
@@ -161,6 +161,20 @@ class CasillaSurfaceCoverage(BaseModel):
     covered: int = Field(ge=0)
     uncovered_ids: tuple[str, ...] = ()
 
+    @model_validator(mode="after")
+    def _coverage_partition_is_valid(self) -> CasillaSurfaceCoverage:
+        if self.covered > self.total:
+            raise ValueError(f"casilla {self.surface.value} coverage cannot exceed total")
+        if self.covered + len(self.uncovered_ids) != self.total:
+            raise ValueError(
+                f"casilla {self.surface.value} coverage must partition total into covered and uncovered_ids",
+            )
+        if len(self.uncovered_ids) != len(set(self.uncovered_ids)):
+            raise ValueError(f"casilla {self.surface.value} uncovered_ids must be unique")
+        if self.uncovered_ids != tuple(sorted(self.uncovered_ids)):
+            raise ValueError(f"casilla {self.surface.value} uncovered_ids must be sorted")
+        return self
+
     @property
     def coverage_fraction(self) -> float:
         """Fraction of projected records satisfying this surface contract."""
@@ -181,6 +195,21 @@ class CasillaCoverageCensus(BaseModel):
     model_config = _STRICT_FROZEN
 
     surfaces: tuple[CasillaSurfaceCoverage, ...] = Field(min_length=5, max_length=5)
+
+    @model_validator(mode="after")
+    def _surfaces_are_canonical(self) -> CasillaCoverageCensus:
+        expected = tuple(CasillaCoverageKind)
+        actual = tuple(entry.surface for entry in self.surfaces)
+        if actual != expected:
+            raise ValueError(
+                "casilla coverage census surfaces must contain exactly the five "
+                "CasillaCoverageKind entries in canonical order",
+            )
+
+        projected_total = self.surfaces[0].total
+        if any(entry.total != projected_total for entry in self.surfaces[1:]):
+            raise ValueError("casilla coverage census surfaces must share the projected denominator")
+        return self
 
     def surface(self, surface: CasillaCoverageKind) -> CasillaSurfaceCoverage:
         """Return the coverage entry for one casilla surface."""
