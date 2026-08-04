@@ -31,7 +31,7 @@ import json
 from pathlib import Path
 
 _HERE = Path(__file__).parent
-_SUBMITTED = _HERE / "submitted-files"
+_SUBMITTED = _HERE / "aeat-sede" / "submitted-files"
 
 # Casilla 0435 (base imponible general) and 0460 (base imponible del ahorro)
 # each address two rows: one in BaseImponibleRes, one carried into
@@ -80,6 +80,11 @@ def write_carry_agreement_fixture() -> Path:
         )
         + "\n",
         encoding="utf-8",
+        # Pin the terminator rather than inheriting the platform's. This sidecar
+        # records a digest of the fixture beside it, and a committed fixture that
+        # differs byte-for-byte depending on which OS regenerated it makes every
+        # digest comparison downstream ambiguous.
+        newline="\n",
     )
     return target
 
