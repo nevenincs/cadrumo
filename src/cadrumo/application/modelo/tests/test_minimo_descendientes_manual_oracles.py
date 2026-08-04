@@ -72,12 +72,26 @@ def _snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=_ORACLE_YEAR, period="0A")
 
 
+def _injected_decimal(facts: dict[str, object], key: str) -> Decimal:
+    """Return the injected fact at ``key``, proving it is the Decimal it claims to be.
+
+    The fact mapping is ``object``-valued, so the aggregate the injector writes
+    has to be narrowed before it can be compared against an AEAT figure. Doing it
+    by assertion rather than by suppression means the narrowing is checked: if the
+    injector ever writes a string or a float here, this fails with the offending
+    type instead of the comparison silently succeeding on a coerced value.
+    """
+    value = facts[key]
+    assert isinstance(value, Decimal), f"{key} should be injected as a Decimal, got {type(value).__name__}"
+    return value
+
+
 def _aggregates(facts: dict[str, object]) -> tuple[Decimal, Decimal]:
     narrowed: Any = facts
     inject_derived_minimo_descendientes_facts(narrowed, _snapshot())
     return (
-        facts[f"renta_family.descendientes_minimos_aggregate_{_ORACLE_YEAR}"],  # type: ignore[return-value]
-        facts[f"renta_family.descendientes_minimos_aggregate_autonomico_{_ORACLE_YEAR}"],  # type: ignore[return-value]
+        _injected_decimal(facts, f"renta_family.descendientes_minimos_aggregate_{_ORACLE_YEAR}"),
+        _injected_decimal(facts, f"renta_family.descendientes_minimos_aggregate_autonomico_{_ORACLE_YEAR}"),
     )
 
 
