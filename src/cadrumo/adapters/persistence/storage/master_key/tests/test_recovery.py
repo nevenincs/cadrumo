@@ -1,10 +1,19 @@
-"""Tests for the recovery-key + BIP-39 mnemonic encoding."""
+"""Tests for the recovery-key + BIP-39 mnemonic encoding.
+
+The ``"master.recovery.key"`` literal throughout is deliberate: it is the
+provider's own filename choice (matches ``_RECOVERY_WRAP_FILENAME`` in
+``application/user_profile/_custody.py``, derived from
+``StorageCategory.SECRETS_MASTER_RECOVERY_KEY``'s declared subpath), not a
+caller-supplied value -- the same ``master.key``/``master.kdf`` boundary:
+the provider chooses the filename, the caller supplies the directory.
+"""
 
 from __future__ import annotations
 
 import secrets
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -33,6 +42,9 @@ from .._recovery_facade import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.recovery.key"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _NOW = datetime(2026, 5, 14, 12, 0, 0, tzinfo=UTC)
 _PASSPHRASE = "correct horse battery staple"  # noqa: S105 - synthetic test fixture

@@ -9,6 +9,12 @@ DEK and that the payload survives the boundary.
 
 One archive cycle covers every store so the expensive Argon2id recovery wrap runs
 once; each store asserts independently with a descriptive message.
+
+The ``"master.recovery.key"`` literal is deliberate: it is the provider's own
+filename choice (matches ``_RECOVERY_WRAP_FILENAME`` in
+``application/user_profile/_custody.py``, derived from
+``StorageCategory.SECRETS_MASTER_RECOVERY_KEY``'s declared subpath), not a
+caller-supplied value.
 """
 
 from __future__ import annotations
@@ -19,6 +25,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -62,6 +69,9 @@ from ...user_profile._commands import RegisterProfileCommand
 from ...user_profile._orchestration import profile_storage_session
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.recovery.key"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _BUCKET_ID = "7c7c7c7c-7c7c-47c7-87c7-7c7c7c7c7c7c"
 _LABEL = "Matrix source"

@@ -18,11 +18,17 @@ production contract's caller-supplied callbacks, not doubles.
 Each test runs inside a sessionless storage root so the custody audit event
 degrades to its documented no-op instead of reaching for whichever profile the
 developer's own pointer file happens to name.
+
+The ``"master.recovery.key"`` literal is deliberate: it is the provider's own
+filename choice (matches ``_RECOVERY_WRAP_FILENAME`` in ``.._custody``,
+derived from ``StorageCategory.SECRETS_MASTER_RECOVERY_KEY``'s declared
+subpath), not a caller-supplied value.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 from pydantic import SecretStr
@@ -38,6 +44,9 @@ from ....tests.secure_sql import isolated_sessionless_storage_root
 from .._custody import create_recovery_code
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.recovery.key"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _CALLBACK_PASSPHRASE = "enrollment-callback-store-passphrase-51ce"  # noqa: S105 - test fixture input
 _CONFIGURED_PASSPHRASE = "enrollment-configured-passphrase-a7d0"  # noqa: S105 - test fixture input
