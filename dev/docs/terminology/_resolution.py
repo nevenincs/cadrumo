@@ -10,13 +10,15 @@ REPORTED (a typed dropped-hit report), never shipped half-mapped.
 
 The five resolution rules (by source path):
 
-* ``src/cadrumo/_data/registry/.../casillas/*.toml`` -> the modelo's
-  :class:`~dev.docs.terminology._search_record.CasillaSearchRecord` set (the
-  CASILLA grounding surface).
+* ``src/cadrumo/_data/registry/.../casillas/*.toml`` -> the individual
+  :class:`~dev.docs.terminology._search_record.CasillaSearchRecord` named by
+  the hit's source section (the CASILLA grounding surface). A line range that
+  is ambiguous or cannot be read is dropped rather than mapped to a namespace
+  representative.
 * a Disenos de Registro source workbook or PDF
   (``.../disenos_registro/.../*.{xlsx,xls,pdf}``, indexed through the
-  preprocess-hook rules) -> the modelo's casilla target (the Diseno is the
-  casilla-to-field authority).
+  preprocess-hook rules) -> an individual casilla only when the hit carries
+  such a locator; a modelo-only source path is not enough to fabricate one.
 * a normatives source page (``.../normatives/.../*.html``, hook-indexed) or a
   legal catalogue TOML (``.../registry/aeat/legal/*.toml``) -> the
   legal-grounding target (the BOE permalink + ``#aN`` article anchor, resolved through the
@@ -161,6 +163,16 @@ class ResolutionResult:
 # Path rules
 # ---------------------------------------------------------------------------
 
+
+@dataclass(frozen=True, slots=True)
+class _CasillaSourceSection:
+    """One casilla declaration and its inclusive source line span."""
+
+    casilla_id: str
+    start_line: int
+    end_line: int
+
+
 _CONCEPT_TOML_RE = re.compile(
     r"^src/cadrumo/_data/terminology/concepts/(?P<concept_id>[^/]+)\.toml$",
 )
@@ -188,6 +200,10 @@ _CODE_MODULE_RE = re.compile(
 _DOCS_PAGE_RE = re.compile(
     r"^docs/(?P<rel>.+)\.(?:md|rst)$",
 )
+_CASILLA_TABLE_RE = re.compile(
+    r'^\[\[revisions\."[^"]+"\.casillas\]\]\s*$',
+)
+_CASILLA_ID_RE = re.compile(r'^\s*id\s*=\s*"(?P<id>[^"]+)"\s*$')
 
 #: Surfaces that are never indexed (tests, fixtures, scratch). A hit on one is
 #: dropped as EXCLUDED, distinct from an UNKNOWN_PATH so the report is precise.
@@ -310,10 +326,68 @@ class TargetResolver:
                 reason=DropReason.NO_TARGET_ENTITY,
                 detail=f"no projected casilla records for modelo {modelo!r}",
             )
-        # The fragment groups many casillas; the modelo's record set is the
-        # casilla-namespace target. Use the first record's namespace target,
-        # re-weighted by the hit score so a stronger hit ranks higher.
-        base = records[0]
+
+        path = hit.posix_path.as_posix()
+        if not path.endswith(".toml"):
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=(
+                    f"casilla source {path!r} identifies modelo {modelo!r} only; "
+                    "no individual casilla locator is available"
+                ),
+            )
+        if hit.line_start < 1 or hit.line_end < hit.line_start:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"invalid casilla source line range {hit.line_start}-{hit.line_end} for {path!r}",
+            )
+
+        sections = _read_casilla_source_sections(path)
+        if sections is None:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"cannot read casilla source {path!r} to identify an individual record",
+            )
+        matching = tuple(
+            section
+            for section in sections
+            if section.start_line <= hit.line_end and hit.line_start <= section.end_line
+        )
+        if not matching:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=f"source lines {hit.line_start}-{hit.line_end} identify no casilla in {path!r}",
+            )
+        if len(matching) != 1:
+            ids = ", ".join(repr(section.casilla_id) for section in matching)
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=(
+                    f"source lines {hit.line_start}-{hit.line_end} overlap multiple casillas "
+                    f"({ids}) in {path!r}"
+                ),
+            )
+
+        casilla_id = matching[0].casilla_id
+        matching_records = tuple(
+            record for record in records if str(record.metadata.casilla_id) == casilla_id
+        )
+        if len(matching_records) != 1:
+            return DroppedHit(
+                hit=hit,
+                reason=DropReason.NO_TARGET_ENTITY,
+                detail=(
+                    f"source casilla {casilla_id!r} for modelo {modelo!r} has no unique "
+                    "projected search record"
+                ),
+            )
+
+        (base,) = matching_records
         record = base.model_copy(
             update={"ranking_weight": _reweight(SearchRecordKind.CASILLA, hit.score)},
         )
@@ -505,6 +579,47 @@ def _to_corpus_relative(origin_path: str) -> str | None:
     if not origin_path.startswith(prefix):
         return None
     return origin_path[len(prefix) :]
+
+
+def _read_casilla_source_sections(project_relpath: str) -> tuple[_CasillaSourceSection, ...] | None:
+    """Read casilla source section spans without becoming a registry authority.
+
+    The validated registry remains the value and projection authority. This
+    helper only reads the source text to learn which individual declaration a
+    RAG line range overlaps, preserving the source-hit evidence boundary.
+    """
+    absolute = _REPO_ROOT / PurePosixPath(project_relpath.replace("\\", "/"))
+    try:
+        lines = absolute.read_text(encoding=_UTF_8).splitlines()
+    except OSError:
+        return None
+
+    headers = [
+        index
+        for index, line in enumerate(lines)
+        if _CASILLA_TABLE_RE.fullmatch(line)
+    ]
+    sections: list[_CasillaSourceSection] = []
+    for position, header_index in enumerate(headers):
+        next_header = headers[position + 1] if position + 1 < len(headers) else len(lines)
+        casilla_id = next(
+            (
+                match.group("id")
+                for line in lines[header_index + 1 : next_header]
+                if (match := _CASILLA_ID_RE.fullmatch(line)) is not None
+            ),
+            None,
+        )
+        if casilla_id is None:
+            continue
+        sections.append(
+            _CasillaSourceSection(
+                casilla_id=casilla_id,
+                start_line=header_index + 1,
+                end_line=next_header,
+            ),
+        )
+    return tuple(sections)
 
 
 _LEGAL_HEADER_RE = re.compile(r'^\[legal\."(?P<id>[^"]+)"\]', re.MULTILINE)
