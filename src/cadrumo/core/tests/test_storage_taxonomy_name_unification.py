@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -41,6 +42,16 @@ from .._storage_taxonomy import StorageCategory, storage_location
 from ..config import Settings, StorageRouteKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cadrumo.db", "buckets"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``root / "cadrumo.db"`` and ``root / "buckets" / "primary" / "db" / "cadrumo.db"``
+in ``test_the_database_url_resolves_to_its_pre_migration_shape`` are the
+independent on-disk-shape oracle for the pre-migration URL join; see that
+test's own docstring for why re-deriving them from the accessor would let the
+accessor and the validator drift together undetected.
+"""
 
 _ROUTE_MODULE = Path(__file__).resolve().parent.parent / "_config_storage_route.py"
 _STATE_ROOT_MODULE = Path(__file__).resolve().parent.parent / "_config_state_root.py"
