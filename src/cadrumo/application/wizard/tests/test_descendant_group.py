@@ -146,8 +146,10 @@ def test_count_two_projects_the_exact_documented_fact_shape() -> None:
         "renta_family.descendiente.1.custodia_compartida": "true",
         "renta_family.descendiente.1.nif": _VALID_NIF,
         "renta_family.descendientes_count": "2",
-        "renta_family.gastos_guarderia_reales_2024": "900",
     }
+    # The Art. 81 bis sum is deliberately absent. It is derived at calculate
+    # time from the per-child figure above, and the write door refuses it, so
+    # projecting it here would refuse this whole batch.
     assert projected == expected
 
 
