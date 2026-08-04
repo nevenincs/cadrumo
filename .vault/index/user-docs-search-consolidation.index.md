@@ -6,7 +6,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:1ec633c875931922f66253fe722aa8cbd84e784423fb9897ad3bff5111f4c251'
+body_hash: 'sha256:ed4fb63d4136645c105528ccceb8e1b13686c5f84a253456539ac8ec54b0ba5c'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -16,6 +16,8 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P04-S19]]'
   - '[[2026-08-01-user-docs-search-consolidation-P05-S14]]'
   - '[[2026-08-01-user-docs-search-consolidation-P05-S15]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P05-S16]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P05-S17]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S20]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S21]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S22]]'
@@ -27,6 +29,8 @@ related:
   - '[[2026-08-04-user-docs-search-consolidation-deterministic-casilla-enrollment-research]]'
   - '[[2026-08-04-user-docs-search-consolidation-p05-s14-review-audit]]'
   - '[[2026-08-04-user-docs-search-consolidation-p05-s15-review-audit]]'
+  - '[[2026-08-04-user-docs-search-consolidation-p05-s16-review-audit]]'
+  - '[[2026-08-04-user-docs-search-consolidation-p05-s17-review-audit]]'
   - '[[2026-08-04-user-docs-search-consolidation-p06-s23-review-audit]]'
   - '[[2026-08-04-user-docs-search-consolidation-p06-s24-review-audit]]'
 ---
@@ -46,6 +50,8 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-04-user-docs-search-consolidation-audit` - `user-docs-search-consolidation` audit: `P01.S01 shipped search licence rule amendment`
 - `2026-08-04-user-docs-search-consolidation-p05-s14-review-audit` - `user-docs-search-consolidation` audit: `P05.S14 legal reference surface review`
 - `2026-08-04-user-docs-search-consolidation-p05-s15-review-audit` - `user-docs-search-consolidation` audit: `P05.S15 legal search record injection review`
+- `2026-08-04-user-docs-search-consolidation-p05-s16-review-audit` - `user-docs-search-consolidation` audit: `P05.S16 legal relevance reconciliation review`
+- `2026-08-04-user-docs-search-consolidation-p05-s17-review-audit` - `user-docs-search-consolidation` audit: `P05.S17 legal anchor parity review`
 - `2026-08-04-user-docs-search-consolidation-p06-s23-review-audit` - `user-docs-search-consolidation` audit: `P06 deterministic enrollment follow-up`
 - `2026-08-04-user-docs-search-consolidation-p06-s24-review-audit` - `user-docs-search-consolidation` audit: `P06.S24 casilla enrollment gate review`
 
@@ -59,6 +65,8 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P04-S12` - Close the gap that leaves the built language roots unreachable on the live site and prove es, ca, and hu roots respond after deploy
 - `2026-08-01-user-docs-search-consolidation-P05-S14` - Build the generated legal reference surface rendering per-law pages with per-provision anchors from one shared slug authority, each entry carrying its BOE permalink and catalogue metadata
 - `2026-08-01-user-docs-search-consolidation-P05-S15` - Project the legal catalogue into the fifth search record kind with D1-conformant targets on the new surface and inject it beside the existing kinds with declared weights
+- `2026-08-01-user-docs-search-consolidation-P05-S16` - Reconcile the committed legal relevance targets to the new record ids and extend the target-resolution gate to refuse any target id no injector emits
+- `2026-08-01-user-docs-search-consolidation-P05-S17` - Add the legal per-kind parity gate proving anchor existence and destination-grounding coverage for every projected provision record
 - `2026-08-01-user-docs-search-consolidation-P06-S20` - Separate deterministic casilla enrollment from sparse semantic coverage by adding a coverage census for projected, exact-target, definition, locale, and relevance surfaces
 - `2026-08-01-user-docs-search-consolidation-P06-S21` - Carry registry help, input-kind, data-type, formula, and locale metadata through the casilla search projection and unified record without changing the opaque identity
 - `2026-08-01-user-docs-search-consolidation-P06-S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback
