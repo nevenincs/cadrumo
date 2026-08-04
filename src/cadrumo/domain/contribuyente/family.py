@@ -575,16 +575,26 @@ class DescendantInfo(BaseModel):
 
         Reports only the state that changes an outcome, so the advisory it feeds
         stays worth reading. A relación the statute excludes from the limb has
-        no anchor to be missing. A non-cohabiting descendant takes no mínimo at
-        all. And a descendant already under three takes the increase through the
-        ordinary limb regardless, so a missing anchor costs them nothing this
-        year — the flag is for the older adopted or fostered child, who is
+        no anchor to be missing. A descendant who fails the Art. 58.1 non-income
+        conditions — not cohabiting, or over 25 with no discapacidad — carries no
+        mínimo for the increase to attach to, so a missing date costs them
+        nothing; a 30-year-old adopted descendant is the false positive this limb
+        exists to suppress. And a descendant already under three takes the
+        increase through the ordinary limb regardless.
+
+        What remains is the older cohabiting adopted or fostered child, who is
         exactly the household the age-independent sentence was written for and
         the one currently granted nothing.
+
+        The income ceilings are deliberately NOT applied. They need registry
+        figures this layer does not resolve, and an absent rentas figure is
+        non-excluding anyway, so the residual over-report is a descendant whose
+        declared rentas breach the ceiling — a narrow case that already carries
+        its own advisory.
         """
         if self.relacion not in ART_58_2_ENTITLING_RELACIONES:
             return False
-        if not self.convive_con_contribuyente:
+        if not self.meets_non_income_conditions(filing_year):
             return False
         if self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES:
             return False

@@ -251,6 +251,10 @@ def test_an_entitling_relacion_without_its_date_is_valid_and_withholds(
             ),
             "not cohabiting, so no mínimo applies at all",
         ),
+        (
+            DescendantInfo(birth_date=date(1990, 1, 1), relacion=DescendantRelacion.ADOPTADO),
+            "over 25 with no discapacidad, so no tranche for the increase to attach to",
+        ),
     ],
 )
 def test_the_missing_anchor_report_stays_silent_where_nothing_is_lost(
