@@ -93,12 +93,19 @@ def test_the_repair_is_load_bearing_for_exactly_the_schemas_that_need_it() -> No
 
 
 def test_every_bundled_schema_compiles_after_repair() -> None:
-    """The escape is the only libxml2 incompatibility in the bundled corpus."""
+    """The escape is the only libxml2 incompatibility in the bundled corpus.
+
+    Asserts which schemas compiled, not merely how many: a count alone cannot
+    tell six of six from six attempts with four silently skipped.
+    """
     xsds = bundled_modelo_100_xsds()
 
     compiled = compile_record_design_schemas(xsds)
 
-    assert len(compiled) == len(xsds)
+    assert set(compiled) == set(xsds), (
+        f"compiled a different set than requested; missing {sorted(p.name for p in set(xsds) - set(compiled))}"
+    )
+    assert all(schema is not None for schema in compiled.values()), "a requested schema mapped to no compiled schema"
 
 
 def test_the_repair_is_a_byte_level_no_op_on_a_schema_that_already_compiles() -> None:
