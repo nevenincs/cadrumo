@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:38decf1c39a13263671e6d8f1deb6abd03c8de6ee29f080404427a45f216c364'
+body_hash: 'sha256:9eba1d805535cc0bbcf1f9e342fc32a4b5750f3cab9150271358202445feb29e'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-research]]"
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"
@@ -132,7 +132,7 @@ files their own return — and the anualidades régimen stops being denied to fi
 to it. Calculation output changes for affected profiles, which is the intended correction
 and not a regression.
 
-Operators gain two new descendiente questions and may meet a new advisory. That is a real
+Operators gain three new descendiente questions and may meet a new advisory. That is a real
 cost in setup friction, accepted because the alternative is a silently wrong figure on a
 filed return.
 

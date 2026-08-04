@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:81cd200c34a6f0651862bfd9a0072f590dbfd82efbf2c2a803d683e1b094a63f'
+body_hash: 'sha256:d79db0892568fc96f71aa0d983616136bd4fd3c5f1760f6d7fd86079bc080fd4'
 step_id: 'S11'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -85,5 +85,19 @@ signals, so it exercised the unpartnered branch by omission while reading as an 
 family. It now names the household it models. That is the semantic drift a grounding pass
 warned about -- figures unchanged and nothing red, but a test proving something other than
 what its name implies.
+
+CORRECTION, appended rather than applied over the text above. The Outcome opens by saying
+the Step is partially landed, stays open until the remainder commits, and that half the work
+sits uncommitted in the working tree. That was true when written and is now false: the
+remainder committed. Verified independently rather than taken from the plan's checkbox --
+neither production module retains a hardcoded `Decimal("8000")` or `Decimal("1800")`
+literal, and `_registry_thresholds` is consumed by both `test_custodia_compartida.py` and
+`test_descendant_info.py`. The work is complete and the plan's `[x]` was right.
+
+The original sentences are left standing deliberately. An execution record is evidence of
+what was known at the time, so tidying the false statement away would hide that the record
+went stale between writing and closure -- and a reader who cannot see that will trust the
+next stale record too. The same treatment the sibling derived-selectors audit gave its own
+Finding A.
 
 ## Notes
