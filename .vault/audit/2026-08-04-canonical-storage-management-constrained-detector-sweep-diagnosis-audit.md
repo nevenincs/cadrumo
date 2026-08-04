@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:419ea372b86664eec9559d9c877452602ea9ebd312715bafd0fd3a79e6c50605'
+body_hash: 'sha256:58aa5f9fe8f86af932efbc432d29428438e97ee328663de7cfa4be168bf9e812'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -24,6 +24,25 @@ positives MUST fire; the 54 hand-classified `registry` sites and the ~34 `llm-*`
 10 `manifest.toml` hand-classified sites were expected to fire zero. This document
 diagnoses why the sweep missed two of three positives and over-fired roughly
 thirty-fold, rather than tuning the detector to the oracles after the fact.
+
+**Decision history, recorded in full rather than as a final outcome** (a written
+decision reversed only in chat leaves the record saying one thing while the code
+says another):
+
+1. First pass (below): **not funded** — the general fix (call-context
+   discrimination plus cross-module reach) is a substantial build, and the work
+   it would automate is already done by hand.
+2. Reversed to **fund two specific, cheaply-measured changes** (a `CADRUMO_*`
+   env-var-key signal; excluding four `TAXONOMY_MARKERS` members that are
+   injection-parameter names) and retarget the tool to diff-scoped review,
+   after a teammate (`honesty`) measured both changes recovering the two known
+   misses at low added noise.
+3. **Reversed back to not funded**, on a further measurement (below): a random
+   sample of the sites the detector silently discards found the dominant real
+   miss is not a vocabulary gap at all, so no signal-set tuning — including the
+   two changes just funded — closes it. The code for step 2 was implemented,
+   then reverted in the same session once step 3 landed; see the commit history
+   on `dev/write_site_census.py` for both.
 
 ## Findings
 
@@ -101,48 +120,146 @@ invocation wrapper name to the signal set), but fixing it does not touch the
 over-firing findings above, which are the dominant failure mode by a wide
 margin.
 
+**Correction on second reading:** an earlier round attributed both misses to
+the same cross-module cause. `test_m145_communication_cli.py` is same-module —
+a missing signal name, not the documented limitation — so "0 for one sub-shape,
+1 for the other" rests on a single case, not two. Recorded because the earlier,
+narrower reading was relayed onward before this correction landed.
+
+### honesty-measured-the-real-denominator-702-coinciding-519-never-printed | high | Three known positives cannot validate recall; the population that matters is ten times larger
+
+A teammate (`honesty`) walked the archived test tree with this module's own
+`_literal_tail`/`_taxonomy_subpath_tokens`/`_module_signals_constraint_risk`
+and measured every `temporary`/`pass_through` site whose literal tail coincides
+with a declared taxonomy token, independent of whether the risk signal fires:
+
+```
+702  coinciding tails, across 187 files
+183  module signals risk  (45 files)   -- candidates for a print
+519  no signal at all      (142 files) -- silently discarded, never printed
+110  flagged constrained  = 16% of the coinciding-tail corpus
+```
+
+Two of the three known oracle positives live inside the 519. This retires an
+earlier, unmeasured objection to funding any fix ("110 hits is more reading
+than the hand-classification cost") — the detector is a roughly 6.4x reduction
+of the coinciding-tail population, not an increase in reading, so that
+objection would have condemned the tool even at perfect recall. The real
+question was never precision; it is whether the 519-site discard pile is safe
+to never read.
+
+Independently reproduced with a separate implementation of the same walk,
+pinned later at `dcfb8209e4` (`53f80f0830` is its ancestor): the flagged set
+matched exactly (110), and the coinciding-tail population had shrunk to
+307/197, with 26 fewer files carrying a coinciding tail at all. The shrink is
+explained, not a discrepancy — the intervening commits are this campaign's own
+`S78` hand-classification landings (migrations, pins, and renames across
+`master.recovery.key`, `cache`, `logs`, the small-band tail, and others),
+retiring real sites out of the coinciding-tail population between the two
+pins. Confirms the instrument is stable across two independent
+implementations and that the hand-classification lanes are shrinking the true
+risk surface even while the automated detector stays retired.
+
+### sampled-recall-of-the-discard-pile-finds-23-percent-rename-sensitive | critical | The class is not reachable by module-local co-occurrence, and no signal-set tuning fixes that
+
+Per the pre-stated design (a random, not a chosen, sample settles this or it
+proves nothing — a hand-picked sample reproduces the three-oracle problem at
+scale): `honesty` drew `random.Random(20260804)`, n=30, from the 519-site
+discard pile and classified each against the real production code, not the
+test snippet alone.
+
+```
+genuinely constrained -- a rename BREAKS the test          5
+rename does not break it, but silently VOIDS the assertion  2
+not constrained                                            23
+```
+
+**7 of 30 = 23%** rename-sensitive. Point estimate ~121 of 519; Wilson 95% CI
+≈ 12%–41%, i.e. an estimated 61–212 rename-sensitive sites in the pile this
+check currently never surfaces.
+
+Read against the real callees, the five that break outright share one
+structural property none of this detector's vocabulary reaches: the segment
+is independently derived **inside the production function under test**
+(`_profile_bucket_scan`'s own docstring: "Scans every `<root>/buckets/*/manifest.toml`");
+the caller's text names no accessor, no subprocess, no marker of any kind —
+there is nothing in the calling module to join on. This is a materially
+different, and materially larger, failure mode than the vocabulary gap
+`invoke_cached_cli` exposed above: **no extension of `CONSTRAINT_RISK_SIGNALS`
+can reach a constraint that lives entirely in a callee the detector never
+reads.** A proposed fix (adding a `CADRUMO_*` env-var-key string-constant
+check, tested against both known misses) was measured to catch 3 of 3 oracles,
+but on this sample addresses only the minority mechanism — one of the two
+misses caught genuinely, the other incidentally, per a second reading — and
+was retracted rather than shipped; see the decision history above and the
+revert commit on `dev/write_site_census.py`.
+
+Two of the seven surface a distinct, more dangerous failure mode: a rename
+does not break the test, it silently **voids** it — an absence assertion
+(`assert not (root / "buckets").exists()`) keeps passing once the thing it
+should have caught moved. "A broken test screams; a voided one does not," and
+neither is visible to any detector, including this one, framed around "a
+rename would break it." Tracked separately as its own severity category and
+owned elsewhere in this campaign rather than duplicated here.
+
 ## Recommendations
 
-**Do not ship or trust `WriteSite.constrained` as an automated finding
-generator.** Precision on this run is roughly 1 in 40 (3 real true positives
-among 114 flags at best; the third, `test_bundle_export_recovery.py`, is the only
-unambiguous hit), and the detector fails its own pre-stated oracle on the recall
-side too, missing 2 of 3 known positives for two unrelated reasons. Per the
-standard applied before this sweep ran — missing any known positive is
-disqualifying, not a tuning note — the instrument does not clear that bar, and
-patching it to the three known cases now would make it a lookup table rather than
-a working detector, which is the exact failure mode this diagnosis pass exists to
-avoid.
+**Final: `WriteSite.constrained` stays retired, at every scope, not funded.**
+The recall measurement is the disqualifier the precision estimate never could
+be: a random sample of the sites this check silently discards found 23%
+rename-sensitive, dominated by a mechanism (production-side derivation) no
+co-occurrence signal — current or extended — can reach. A clean tree-wide or
+diff-scoped run proves nothing about the population it never printed, so
+neither scope is safe to trust as a completeness signal. This supersedes the
+mid-session reversal to fund two specific fixes and retarget to diff-scoped
+review: that reversal was made on a figure (`CADRUMO_*` catching "3 of 3
+oracles") since qualified — one of the three was caught incidentally, per a
+second reading — and, more decisively, on a denominator (3 known positives)
+too small to validate recall at all. The two fixes were implemented and then
+reverted in the same session rather than left half-landed; see the decision
+history above.
+
+**The precision figure earlier in this document is an estimate, not a
+classification** — "3 real true positives among 114 flags at best" comes from
+reading a sample of the flagged output, not from exhaustively classifying it.
+Stated here explicitly so a later reader does not cite it as a measured count
+the way the recall figure now is.
 
 **Keep the code, the tests, and the honest self-reported unresolved rate.** The
 `--scope tests` widening, the `fixture` bucket, import-alias following in
-`_bindings()`, and the documented, disclosed limitation are durable and correct
-improvements independent of whether `constrained` ships as a trusted signal. The
-36 unit tests for the new primitives (`_literal_tail`,
+`_bindings()`, and the corrected section header and docstring (naming the
+production-side-derivation and vacuous-pass failure modes explicitly, not only
+the cross-module limitation) are durable and correct improvements independent
+of the funding question. The unit tests for the new primitives (`_literal_tail`,
 `_taxonomy_subpath_tokens`, `_module_signals_constraint_risk`, `_is_constrained`,
 `_top_level_div_chains`) remain valid pins on those primitives' individual
 behaviour; they were never claims about the composed detector's real-world
-precision, and this finding does not invalidate them.
+precision or recall, and this finding does not invalidate them.
 
-**If the category is worth pursuing further, it needs a sharper co-occurrence
-join, not a bigger vocabulary.** A workable version would need to distinguish an
-accessor *call* from a coincidental local-variable or field-name match (require
-`ast.Call` context, not bare `ast.Name`/`ast.Attribute` presence), and would need
-to see across the fixture-to-consumer boundary the cross-module miss exposed —
-neither is a small change.
+**A sharper co-occurrence join would not be enough either.** The earlier
+recommendation here said a workable version needs call-context discrimination
+plus cross-module reach. The sampled-recall finding sharpens that: the
+dominant real mechanism is not a co-occurrence at all — the constraint lives
+in the callee's implementation, invisible to any check that reads only the
+caller's module. Reaching it would need interprocedural analysis (following
+the call into the production function actually deriving the segment), a
+materially larger build than either of the two changes attempted here. Not
+recommended as a next step; six literal bands are already closed by hand at
+zero tooling cost, and the 519-site discard pile's real risk is better
+addressed by the direct follow-ups below than by a smarter static scanner.
 
-**Decided: not funded.** Call-context discrimination plus cross-module reach are
-both substantial builds, and the thing they would automate is already done — six
-literal bands closed by hand at zero tooling cost, with a handful of unrecorded
-segments left on the `S78` surface. The instrument would arrive after the work it
-was meant to accelerate. `WriteSite.constrained` is retired as a finding
-generator; the code, tests, and unresolved-rate self-report stand as noted above.
+**Follow-ups, tracked separately rather than duplicated in this document:** a
+full sweep for the vacuous-pass pattern (an absence/emptiness assertion that
+would keep passing after a taxonomy rename) across the discard pile, and a
+mutation-tested (not merely read) confirmation of the five genuinely
+rename-sensitive sites this sample found. Both are owned elsewhere in this
+campaign.
 
-**The pre-stated oracle is what made this result usable rather than a
-negotiation.** "Missing any known positive is disqualifying" was fixed before the
-sweep ran, so 114-flags-for-3-true-positives settled the question on contact
-instead of opening an argument about whether that ratio was tolerable. Read
-post-hoc, the same number is arguable in either direction — a defender could call
-it "close enough with tuning" and a critic could call it "obviously broken,"
-and neither could out-argue the other from the number alone. Fixing the bar in
-advance is what turned a measurement into a verdict.
+**The pre-stated oracle discipline is what made every step of this usable
+rather than a negotiation, twice over.** "Missing any known positive is
+disqualifying" turned 114-flags-for-3-true-positives into a settled question on
+contact rather than an argument about tolerable ratios. The same discipline —
+"random, not chosen" — is what makes the 23% recall figure load-bearing: a
+hand-picked sample would have reproduced the original three-oracle problem at
+a different scale, and neither a defender nor a critic could have out-argued
+the other from a cherry-picked number.
