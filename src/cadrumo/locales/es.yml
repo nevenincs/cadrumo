@@ -349,6 +349,7 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
+      casillas_not_decimal_valued: 'Este modelo declara casillas cuyo valor no es decimal, por lo que esta declaración no puede incorporarse como evidencia de cálculo fundamentada en el registro. La limitación afecta a todas las declaraciones de este modelo, no solo a esta.'
 aggregation:
   grouping:
     errors:

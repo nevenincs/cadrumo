@@ -309,6 +309,7 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
+      casillas_not_decimal_valued: 'This modelo declares casillas that are not decimal-valued, so this filing cannot be enrolled as registry-grounded calculation evidence. The limitation affects every filing of this modelo, not this return.'
 aggregation:
   grouping:
     errors:

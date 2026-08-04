@@ -775,6 +775,57 @@ class TestFiledObservationBindings:
         with pytest.raises(SedeParseError, match="not decimal-valued"):
             registry_observation_from_filed_declaration(observation)
 
+    def test_non_decimal_refusal_never_echoes_the_observed_value(self) -> None:
+        """The refusal names the casilla, never what the taxpayer filed into it.
+
+        Modelo 100 carries a referencia catastral and a street address as casilla
+        values, so a refusal that interpolated the value would push personal data
+        onto the capture-failure surface the operator reads.
+        """
+        filed_address = "CL SANITIZADA 0000 LOCALIDAD"
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: filed_address},
+        )
+
+        with pytest.raises(SedeParseError) as exc_info:
+            registry_observation_from_filed_declaration(observation)
+
+        context = exc_info.value.context or {}
+        rendered = " ".join([str(exc_info.value), *(str(value) for value in context.values())])
+        assert filed_address not in rendered
+        assert "SANITIZADA" not in rendered
+        assert _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA in rendered
+
+    def test_non_decimal_refusal_enumerates_every_affected_casilla(self) -> None:
+        """Refusal reports the whole affected set, not just the first casilla hit.
+
+        A modelo whose schema declares non-numeric casillas fails on every filing,
+        so the operator needs the size of the gap to read it as a modelo-level
+        limitation rather than a bad figure in this return.
+        """
+        observation = _filed_observation(
+            modelo="100",
+            ejercicio=2025,
+            period="0A",
+            casilla_values={
+                _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: "no-decimal",
+                _M100_CASILLA_0180: "also-not-decimal",
+            },
+        )
+
+        with pytest.raises(SedeParseError) as exc_info:
+            registry_observation_from_filed_declaration(observation)
+
+        message = str(exc_info.value)
+        context = exc_info.value.context or {}
+        assert _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA in message
+        assert _M100_CASILLA_0180 in message
+        assert context["non_decimal_casilla_count"] == "2"
+        assert context["modelo"] == "100"
+
     def test_contradictory_observed_values_rejected(self) -> None:
         observation = _filed_observation(
             modelo="100",

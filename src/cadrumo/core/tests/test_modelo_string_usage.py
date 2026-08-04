@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import aeat_relative, production_ast_items
+from ...tests import SRC_CADRUMO, aeat_relative, production_ast_items
 from .. import Modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -137,6 +137,16 @@ def bare_modelo_code_offenders(relative: str, tree: ast.Module) -> list[str]:
     """
     if relative in _SKIP_FILES:
         return []
+    return _offenders_ignoring_skip(relative, tree)
+
+
+def _offenders_ignoring_skip(relative: str, tree: ast.Module) -> list[str]:
+    """Detection body with ``_SKIP_FILES`` deliberately not consulted.
+
+    Split out so the skip-liveness test can ask the real detector what a
+    skipped module *would* report, which is the only way to tell a skip that is
+    still needed from one that has become dead weight.
+    """
     excluded = _docstring_const_ids(tree) | _decimal_arg_ids(tree) | _literal_ids(tree)
     offenders: list[str] = []
     for node in ast.walk(tree):
@@ -243,6 +253,30 @@ def test_detector_ignores_the_structurally_excluded_shapes(source: str) -> None:
     positives and pressure real entries into ``_ALLOWLIST``.
     """
     assert bare_modelo_code_offenders("application/synthetic/_clean.py", ast.parse(source)) == []
+
+
+def test_every_skip_file_still_needs_its_skip() -> None:
+    """A skipped module must still exist and still carry a bare modelo code.
+
+    ``_ALLOWLIST`` is reconciled by the main scan above, but ``_SKIP_FILES``
+    short-circuits :func:`bare_modelo_code_offenders` before any detection runs,
+    so nothing else observes it. Presence is not liveness: a skip whose module
+    was deleted, renamed, or since converted to the enum keeps exempting the
+    path and silently pre-authorises whatever later takes it.
+
+    The check is redundancy, not existence -- drop the skip, re-run the real
+    detector over the module, and require it to still fire.
+    """
+    stale: list[str] = []
+    for rel in sorted(_SKIP_FILES):
+        path = SRC_CADRUMO / rel
+        if not path.is_file():
+            stale.append(f"{rel} (file absent)")
+            continue
+        tree = ast.parse(path.read_bytes().decode("utf-8"))
+        if not _offenders_ignoring_skip(rel, tree):
+            stale.append(f"{rel} (no bare modelo code remains; drop the skip)")
+    assert not stale, "Stale _SKIP_FILES entries; remove them:\n" + "\n".join(f"  {entry}" for entry in stale)
 
 
 def test_detector_honours_the_allowlist_only_for_its_own_module() -> None:

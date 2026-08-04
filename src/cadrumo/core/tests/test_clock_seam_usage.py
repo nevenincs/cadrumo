@@ -50,7 +50,7 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import aeat_relative, production_ast_items
+from ...tests import SRC_CADRUMO, aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -190,3 +190,34 @@ def test_no_bare_wall_clock_reads_in_production(source_tree_ast: Mapping[Path, a
     assert not stale, "Stale _ALLOWLIST entries no longer read a bare clock; remove them:\n" + "\n".join(
         f"  {rel}" for rel in sorted(stale)
     )
+
+
+def test_every_skip_file_still_needs_its_skip() -> None:
+    """A skipped module must still exist and still read a bare clock.
+
+    ``_ALLOWLIST`` is reconciled above by the scan itself, but ``_SKIP_FILES``
+    short-circuits before any detection runs, so nothing else observes it. That
+    asymmetry is the hazard: presence is not liveness. A skip whose module was
+    deleted, renamed, or since routed through the seam keeps exempting the path,
+    silently pre-authorising whatever later takes it.
+
+    This is the redundancy check rather than an existence check -- drop the
+    skip, re-run the real detector over the module, and require it to still
+    fire. An entry that would pass without its skip is dead weight.
+    """
+    stale: list[str] = []
+    for rel in sorted(_SKIP_FILES):
+        path = SRC_CADRUMO / rel
+        if not path.is_file():
+            stale.append(f"{rel} (file absent)")
+            continue
+        tree = ast.parse(path.read_bytes().decode("utf-8"))
+        datetime_classes, date_classes, module_names = _clock_bindings(tree)
+        still_offends = any(
+            _is_bare_clock_read(node, datetime_classes, date_classes, module_names)
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+        )
+        if not still_offends:
+            stale.append(f"{rel} (no bare clock read remains; drop the skip)")
+    assert not stale, "Stale _SKIP_FILES entries; remove them:\n" + "\n".join(f"  {entry}" for entry in stale)

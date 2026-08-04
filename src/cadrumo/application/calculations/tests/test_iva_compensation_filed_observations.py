@@ -178,7 +178,16 @@ def test_iva_compensation_state_from_filed_observation_raises_localized_decimal_
         iva_compensation_state_from_filed_observation(observation)
 
     assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_decimal_parse"
-    assert excinfo.value.context == {"casilla_id": _M303_RESULTADO_CASILLA}
+    # Modelo 390 reaches this refusal too, so the context names which filing refused
+    # and not only the casilla. It must never carry the observed VALUE: the carrier
+    # holds the artefact's own token and this context is rendered to the operator.
+    assert excinfo.value.context == {
+        "casilla_id": _M303_RESULTADO_CASILLA,
+        "modelo": "303",
+        "filing_year": "2024",
+        "period": "4T",
+    }
+    assert "not-decimal" not in str(excinfo.value.context)
 
 
 def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: Path) -> None:

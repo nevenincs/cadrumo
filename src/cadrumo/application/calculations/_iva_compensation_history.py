@@ -571,9 +571,18 @@ def _decimal_casilla_values(observation: FiledDeclaracionObservationProtocol) ->
         try:
             values[casilla.casilla_id] = Decimal(casilla.value)
         except InvalidOperation as exc:
+            # Both Modelo 303 and Modelo 390 reach here, so the casilla id alone does
+            # not say which filing refused. Never add the observed VALUE to this
+            # context: the carrier holds the artefact's own token, and this context is
+            # rendered to the operator.
             raise IvaCompensationDecimalParseError(
                 translated_message="errors.refused.refused_iva_compensation_decimal_parse",
-                context={"casilla_id": casilla.casilla_id},
+                context={
+                    "casilla_id": casilla.casilla_id,
+                    "modelo": observation.modelo,
+                    "filing_year": str(observation.ejercicio),
+                    "period": observation.period.registry_token,
+                },
             ) from exc
     return values
 

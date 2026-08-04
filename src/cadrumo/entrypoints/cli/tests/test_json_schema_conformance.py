@@ -546,6 +546,42 @@ def test_no_bare_emit_json_success_call() -> None:
     )
 
 
+def test_every_emit_json_success_exemption_is_still_live() -> None:
+    """Each allowed module must exist and still reach ``emit_json_success``.
+
+    The scan above skips these paths before parsing them, so nothing else ever
+    observes the entries. Presence is not liveness: an entry whose module was
+    deleted or renamed, or which stopped touching ``emit_json_success``, leaves
+    a path permanently exempt from the funnel guard, and whatever later occupies
+    that path inherits an exemption nobody granted it.
+
+    The check is redundancy rather than existence -- run the same detection the
+    gate would have run had the path not been skipped, and require it to still
+    find the import or call the entry exists to permit.
+    """
+    stale: list[str] = []
+    for relative in sorted(_EMIT_JSON_SUCCESS_ALLOWED_MODULES):
+        path = Path(relative)
+        if not path.is_file():
+            stale.append(f"{relative} (file absent)")
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=relative)
+        reaches = any(
+            (isinstance(node, ast.ImportFrom) and any(alias.name == "emit_json_success" for alias in node.names))
+            or (
+                isinstance(node, ast.Call)
+                and (
+                    (isinstance(node.func, ast.Name) and node.func.id == "emit_json_success")
+                    or (isinstance(node.func, ast.Attribute) and node.func.attr == "emit_json_success")
+                )
+            )
+            for node in ast.walk(tree)
+        )
+        if not reaches:
+            stale.append(f"{relative} (no longer imports or calls emit_json_success; drop the entry)")
+    assert not stale, "Stale _EMIT_JSON_SUCCESS_ALLOWED_MODULES entries:\n" + "\n".join(f"  {entry}" for entry in stale)
+
+
 # ---------------------------------------------------------------------
 # Domain-report ↔ CLI payload mirror parity
 # ---------------------------------------------------------------------

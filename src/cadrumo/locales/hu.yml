@@ -328,6 +328,7 @@ adapters:
       session_expired_nav_failed: Az AEAT nyilatkozatnyilvántartó nem töltött be;
         a munkamenet valószínűleg lejárt. Futtassa a 'aeat config auth test' parancsot
         és próbálja újra.
+      casillas_not_decimal_valued: 'Ez a modelo olyan rovatokat tartalmaz, amelyek értéke nem decimális, ezért ez a bevallás nem rögzíthető nyilvántartásra alapozott számítási bizonyítékként. A korlátozás a modelo minden bevallását érinti, nem csak ezt.'
 aggregation:
   grouping:
     errors:

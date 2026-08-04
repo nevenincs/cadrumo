@@ -157,6 +157,41 @@ def test_explicit_database_route_test_setup_stays_approved(hardening_inventory: 
     assert hardening_inventory.explicit_route_setup_offences == []
 
 
+def test_every_allowed_repository_constructor_still_needs_its_entry() -> None:
+    """Each allowed constructor path must exist and still construct the repository.
+
+    Presence is not liveness. An entry whose module was deleted or renamed, or
+    which stopped constructing a :class:`SecureObjectRepository`, keeps a path
+    pre-authorised for direct construction -- so whatever later occupies that
+    path inherits an exemption nobody granted it.
+
+    The check is redundancy rather than existence: drop the entry, re-run the
+    real detector over the module, and require it to report the direct
+    construction it was exempting.
+    """
+    stale: list[str] = []
+    original = set(_ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS)
+    for relative in sorted(original):
+        path = repo_path(relative)
+        if not path.is_file():
+            stale.append(f"{relative} (file absent)")
+            continue
+        tree = ast_for_path(path)
+        assert tree is not None, f"{relative}: source must be parseable"
+        _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS.clear()
+        _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS.update(original - {relative})
+        try:
+            offences = _repository_construction_offences(relative, tree)
+        finally:
+            _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS.clear()
+            _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS.update(original)
+        if not any("direct SecureObjectRepository construction" in offence for offence in offences):
+            stale.append(f"{relative} (no longer constructs a SecureObjectRepository; drop the entry)")
+    assert not stale, "Stale _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS entries:\n" + "\n".join(
+        f"  {entry}" for entry in stale
+    )
+
+
 def _repository_construction_offences(relative: str, tree: ast.AST) -> list[str]:
     offences: list[str] = []
     constructors = _secure_object_repository_constructor_names(tree)
