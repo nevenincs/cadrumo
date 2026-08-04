@@ -567,6 +567,26 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
     """
     normalized_type = data_type.upper()
     if isinstance(value, bool):
+        # A boolean on a numeric row is an upstream type error, and rendering it
+        # would launder that error into a plausible amount: ``True`` on a euro-cent
+        # row reads as one euro, which the XSD accepts and no downstream check can
+        # question. Refusing here is the same decision the unreadable-amount branch
+        # below makes, for the same reason -- a wrong number that satisfies the
+        # schema is worse than no file at all.
+        #
+        # Only the two types AEAT declares boolean render a boolean. Every route
+        # into this function is expected to observe that already: the casilla input
+        # door refuses a boolean outright, and no Modelo 100 revision declares a
+        # boolean casilla on a numeric row. So this is a guard against a future
+        # route, not a live defect, and it must stay cheap and total rather than
+        # trying to guess what the value meant.
+        if _NUMERIC_DICTIONARY_TYPE.match(normalized_type) is not None:
+            raise FilingExportValidationError(
+                f"a {data_type} row is a numeric amount and cannot carry the boolean {value!r}. "
+                "The value reaching this row has the wrong type; correct it at the source "
+                "rather than rendering it, because a boolean written here would be filed as "
+                "the amount 1 or 0.",
+            )
         if normalized_type == _SINO_DICTIONARY_TYPE:
             return "SI" if value else "NO"
         return "1" if value else "0"

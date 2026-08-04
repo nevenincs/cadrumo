@@ -238,3 +238,42 @@ def test_an_already_typed_amount_skips_the_text_grammar() -> None:
     """
     assert _format_xml_dictionary_value("P102", Decimal("1.000")) == "1.00"
     assert _format_xml_dictionary_value("P102", 0) == "0.00"
+
+
+def test_a_numeric_row_refuses_a_boolean() -> None:
+    """A boolean on an amount row refuses rather than rendering as 1 or 0.
+
+    The boolean branch is evaluated before the numeric one, so ``True`` on a
+    ``P102`` euro-cent row used to render ``1`` -- a plausible one-euro amount that
+    the XSD accepts, exactly the shape of the unreadable-amount defect above. Both
+    launder an upstream error into a number a taxpayer never stated, and neither is
+    visible afterwards: nothing on the export path validates against the schema,
+    and ``1`` would satisfy it anyway.
+
+    This is a guard rather than a live fix. No route measured today delivers a
+    boolean here: the casilla input door refuses one for every declared family, and
+    no Modelo 100 revision declares a boolean casilla on a numeric row. The guard
+    exists so that a route added later fails loudly instead of filing a number.
+    """
+    for dictionary_type in ("P102", "N102", "P010", "P012"):
+        for value in (True, False):
+            with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
+                _format_xml_dictionary_value(dictionary_type, value)
+
+
+def test_the_boolean_refusal_spares_the_rows_declared_boolean() -> None:
+    """Positive control: only numeric rows refuse a boolean.
+
+    The boolean branch is correct for the two types AEAT declares boolean, and a
+    guard that refused every boolean would satisfy the refusal test above while
+    emptying the identity block of every declaration. The rendered tokens are
+    checked against the XSD facets rather than restated, so this stays an oracle
+    test rather than a copy of the code.
+    """
+    for dictionary_type, xsd_type in (("LGC", "tipo_logico"), ("S_N", "tipo_SINO_Exclusivo")):
+        for value in (True, False):
+            rendered = _format_xml_dictionary_value(dictionary_type, value)
+            assert _accepts(xsd_type, rendered), (
+                f"{dictionary_type} row rendered {rendered!r} for {value!r}, which {xsd_type} rejects"
+            )
+    assert _format_xml_dictionary_value("P102", Decimal("1")) == "1.00"
