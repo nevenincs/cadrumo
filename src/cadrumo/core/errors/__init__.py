@@ -107,19 +107,27 @@ class CadrumoError(Exception):
         """Construct a domain error with optional structured metadata.
 
         A ``translated_message``-only construction still carries readable text:
-        without the fallback below ``super().__init__()`` is called with zero
-        args, so ``str(exc)`` is the empty string — not untranslated, empty.
-        Most operator-facing surfaces route through
-        :func:`resolve_error_message`, which resolves the translation key and is
-        unaffected either way, but a bare ``str(exc)`` reaches operators at
-        several CLI boundaries and reaches everyone in tracebacks and logs, and
-        an error with no readable text gives whoever meets it nothing to act on.
+        ``super().__init__()`` receives ``translated_message`` so ``str(exc)``
+        renders it rather than the empty string. Most operator-facing surfaces
+        route through :func:`resolve_error_message`, which resolves the
+        translation key and is unaffected either way, but a bare ``str(exc)``
+        reaches operators at several CLI boundaries and reaches everyone in
+        tracebacks and logs, and an error with no readable text gives whoever
+        meets it nothing to act on.
 
-        The fallback stores the translation KEY rather than its translation on
-        purpose. Calling ``tr`` here would bind the text to the locale in force
-        at RAISE time, while :func:`resolve_error_message` deliberately
-        translates at RENDER time; the key is also a stable, greppable
-        identifier in a log where prose would vary by locale.
+        When NEITHER ``message`` nor ``translated_message`` is given,
+        ``super().__init__()`` is called with no positional argument at all,
+        so ``exc.args == ()`` — never a synthetic ``("",)``. ``str(exc)`` is
+        the empty string either way (Python's default ``Exception.__str__``
+        renders a zero-length ``args`` and a one-element ``args`` of ``""``
+        identically), so this changes only the shape of ``.args``, not any
+        rendered text. That shape matters to a subclass such as
+        :class:`~entrypoints.cli._tty.NonTtyRefusedError`, which constructs
+        with neither argument specifically so ``args`` stays empty and the CLI
+        renderer's ``error.args and error.args[0]`` check
+        (:mod:`core.errors._registry`) falls through to the registry
+        ``message_key`` for locale resolution rather than short-circuiting on
+        a truthy-but-blank ``args[0]``.
 
         Args:
             message: Optional human-readable message override.
@@ -128,7 +136,11 @@ class CadrumoError(Exception):
             suggestion: Optional copy-paste recovery command override.
             translated_message: Optional multilingual message override.
         """
-        super().__init__(message or translated_message or "")
+        text = message or translated_message
+        if text:
+            super().__init__(text)
+        else:
+            super().__init__()
         self.context: dict[str, object] | None = dict(context) if context is not None else None
         self.suggestion: str | None = suggestion
         self.translated_message: str | None = translated_message
