@@ -13,6 +13,14 @@ See Also:
         Backend read path used to verify real command effects.
     :mod:`~entrypoints.cli.tests.envelope_helpers`
         Schema-envelope helper used to inspect CLI JSON output.
+
+The ``"secrets"`` literal in ``isolated_m145_cli_backend`` below is not an
+arbitrary injected value: it must agree with what
+:func:`~tests.secure_sql.isolated_runtime_profile` already minted the master
+key under, since that fixture derives ``cadrumo_secret_store_dir`` from the
+real taxonomy accessor. The CLI subprocesses this env drives must
+independently compute the same location to unlock the profile the fixture
+already created; renaming it to a fictional segment breaks that handoff.
 """
 
 from __future__ import annotations
@@ -22,6 +30,7 @@ import os
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -31,6 +40,9 @@ from ....tests.secure_sql import dev_test_database_password, isolated_runtime_pr
 from .envelope_helpers import unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _CREATE_ARGS = [
@@ -126,7 +138,7 @@ def isolated_m145_cli_backend(tmp_path: Path) -> Iterator[str]:
             "CADRUMO_LOCAL_STORAGE_ROOT": str(runtime.storage_root),
             "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
             "CADRUMO_SECRET_STORE_BACKEND": "file",
-            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "fallback-store"),
+            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
             "CADRUMO_OUTPUT_LANGUAGE": "en",
         }

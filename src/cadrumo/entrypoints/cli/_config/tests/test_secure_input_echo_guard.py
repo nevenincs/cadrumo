@@ -23,7 +23,6 @@ import json
 import pathlib
 import subprocess
 import sys
-import tempfile
 import textwrap
 
 import pytest
@@ -170,7 +169,7 @@ def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
     assert _PLANTED_SECRET not in completed.stderr, "the planted secret must never be echoed to stderr"
 
 
-def test_console_less_host_refuses_instead_of_blocking_forever() -> None:
+def test_console_less_host_refuses_instead_of_blocking_forever(tmp_path: pathlib.Path) -> None:
     """A console-less host refuses promptly rather than hanging on the prompt.
 
     This is the regression for the hang, and it is why the guard checks for a
@@ -186,7 +185,7 @@ def test_console_less_host_refuses_instead_of_blocking_forever() -> None:
     yields a non-tty ``/dev/null`` stdin, which refuses on the same key, so the
     assertions hold everywhere without a skip.
     """
-    verdict_path = pathlib.Path(tempfile.mkdtemp()) / "verdict.json"
+    verdict_path = tmp_path / "verdict.json"
     probe = textwrap.dedent(
         f"""
         import json, sys
@@ -233,7 +232,7 @@ def test_console_less_host_refuses_instead_of_blocking_forever() -> None:
     )
 
 
-def test_real_console_with_rebound_stdin_refuses_the_echo_fallback() -> None:
+def test_real_console_with_rebound_stdin_refuses_the_echo_fallback(tmp_path: pathlib.Path) -> None:
     """On a GENUINE console, a rebound stdin still refuses rather than echoing.
 
     The real-console precondition now fires first, so a fake-console stdin can
@@ -257,7 +256,7 @@ def test_real_console_with_rebound_stdin_refuses_the_echo_fallback() -> None:
         )
         return
 
-    verdict_path = pathlib.Path(tempfile.mkdtemp()) / "verdict.json"
+    verdict_path = tmp_path / "verdict.json"
     probe = textwrap.dedent(
         f"""
         import json, sys

@@ -31,6 +31,7 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources import bundled_path
+from ....domain.filing import FilingExportValidationError
 from .._export_xml_dictionary import _format_xml_dictionary_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -168,3 +169,111 @@ def test_the_scale_is_read_off_the_type_code_rather_than_enumerated() -> None:
 def test_a_non_numeric_row_is_left_alone() -> None:
     assert _format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
     assert _format_xml_dictionary_value("TIT", Decimal("2")) == "2"
+
+
+def test_a_numeric_row_refuses_an_amount_it_cannot_read() -> None:
+    """An unreadable amount refuses rather than rendering as zero.
+
+    The renderer previously coerced with ``default=Decimal("0")``, so a value it
+    could not read became ``0.00`` on the filed artefact. ``0.00`` satisfies the
+    XSD for a ``P102`` row, so neither the schema nor any downstream check could
+    have caught it: a taxpayer's figure would have been declared to AEAT as
+    nothing, silently.
+
+    The Spanish shape is the case that matters. ``1.234,56`` cannot be told from a
+    three-decimal figure by any parser, which is why the operator-facing amount
+    grammar already refuses it rather than guessing -- this aligns the write side
+    with the decision the read side and the CLI option grammar both enforce.
+    """
+    for unreadable in ("1.234,56", "-1.234,56", "abc", ""):
+        with pytest.raises(FilingExportValidationError, match="could not be read"):
+            _format_xml_dictionary_value("P102", unreadable)
+
+
+def test_the_refusal_does_not_reach_a_value_the_row_can_read() -> None:
+    """Positive control: the refusal is not simply rejecting everything.
+
+    Without this, a renderer that raised on every numeric row would satisfy the
+    refusal test above while breaking every export.
+    """
+    assert _format_xml_dictionary_value("P102", Decimal("1234.56")) == "1234.56"
+    assert _format_xml_dictionary_value("P102", "1234.56") == "1234.56"
+    assert _format_xml_dictionary_value("P102", 0) == "0.00"
+    assert _format_xml_dictionary_value("X", "1.234,56") == "1.234,56"
+
+
+def test_a_text_amount_that_could_be_a_thousands_group_is_refused() -> None:
+    """``1.000`` on a euro-cent row is ambiguous, so it refuses.
+
+    That text is either one euro or one thousand, and no parser in the tree can
+    tell -- ``coerce_decimal`` and ``parse_spanish_decimal`` both read it as one
+    euro. Silently resolving it either way under-declares by a factor of 1000 or
+    over-declares by the same, on a filed artefact. The canonical grammar's
+    fractional-digit cap is a decision about an undecidable input, and this is
+    the renderer applying it.
+    """
+    with pytest.raises(FilingExportValidationError, match="could not be read"):
+        _format_xml_dictionary_value("P102", "1.000")
+
+
+def test_the_cap_is_an_ambiguity_rule_and_not_a_precision_rule() -> None:
+    """A row AEAT declares with three decimals reads ``1.000`` unambiguously.
+
+    The cap tracks what could be mistaken for a thousands group, not the row's
+    own scale. Capping an integer row at its declared scale of zero would refuse
+    ``1.6`` -- unambiguous input this renderer has always rounded -- so the cap
+    never falls below two while still refusing the three-digit fraction.
+    """
+    assert _format_xml_dictionary_value("P083", "1.000") == "1.000"
+    assert _format_xml_dictionary_value("P060", "1.6") == "2"
+    with pytest.raises(FilingExportValidationError):
+        _format_xml_dictionary_value("P060", "1.000")
+
+
+def test_an_already_typed_amount_skips_the_text_grammar() -> None:
+    """A value that arrives typed carries no ambiguity to resolve.
+
+    The grammar exists to read *text*. A ``Decimal`` or ``int`` already says
+    what it is, so routing it through a text parser could only lose information.
+    """
+    assert _format_xml_dictionary_value("P102", Decimal("1.000")) == "1.00"
+    assert _format_xml_dictionary_value("P102", 0) == "0.00"
+
+
+def test_a_numeric_row_refuses_a_boolean() -> None:
+    """A boolean on an amount row refuses rather than rendering as 1 or 0.
+
+    The boolean branch is evaluated before the numeric one, so ``True`` on a
+    ``P102`` euro-cent row used to render ``1`` -- a plausible one-euro amount that
+    the XSD accepts, exactly the shape of the unreadable-amount defect above. Both
+    launder an upstream error into a number a taxpayer never stated, and neither is
+    visible afterwards: nothing on the export path validates against the schema,
+    and ``1`` would satisfy it anyway.
+
+    This is a guard rather than a live fix. No route measured today delivers a
+    boolean here: the casilla input door refuses one for every declared family, and
+    no Modelo 100 revision declares a boolean casilla on a numeric row. The guard
+    exists so that a route added later fails loudly instead of filing a number.
+    """
+    for dictionary_type in ("P102", "N102", "P010", "P012"):
+        for value in (True, False):
+            with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
+                _format_xml_dictionary_value(dictionary_type, value)
+
+
+def test_the_boolean_refusal_spares_the_rows_declared_boolean() -> None:
+    """Positive control: only numeric rows refuse a boolean.
+
+    The boolean branch is correct for the two types AEAT declares boolean, and a
+    guard that refused every boolean would satisfy the refusal test above while
+    emptying the identity block of every declaration. The rendered tokens are
+    checked against the XSD facets rather than restated, so this stays an oracle
+    test rather than a copy of the code.
+    """
+    for dictionary_type, xsd_type in (("LGC", "tipo_logico"), ("S_N", "tipo_SINO_Exclusivo")):
+        for value in (True, False):
+            rendered = _format_xml_dictionary_value(dictionary_type, value)
+            assert _accepts(xsd_type, rendered), (
+                f"{dictionary_type} row rendered {rendered!r} for {value!r}, which {xsd_type} rejects"
+            )
+    assert _format_xml_dictionary_value("P102", Decimal("1")) == "1.00"

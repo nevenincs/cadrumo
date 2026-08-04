@@ -11,6 +11,7 @@ from pathlib import Path
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....application.user_profile import (
     CENSO_SOURCE_TAG,
     UserProfileLifecycleRepository,
@@ -136,6 +137,7 @@ def _modelo_record_with_external_justificante(
 
 def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justificante:
     body = f"{csv}-pdf".encode()
+    source_pdf_sha256 = hashlib.sha256(body).hexdigest()
     return Justificante(
         csv=csv,
         modelo="303",
@@ -147,8 +149,8 @@ def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justifican
         total_a_ingresar=None,
         total_a_devolver=None,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-        source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
-        source_pdf_sha256=hashlib.sha256(body).hexdigest(),
+        source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+        source_pdf_sha256=source_pdf_sha256,
         parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
     )
 

@@ -26,6 +26,12 @@ The report carries per-kind totals, per-kind covered counts, and the ordered
 list of uncovered ids per kind. It carries NO timestamp and NO machine path, so
 two runs on two machines produce byte-identical JSON -- the determinism the
 committed-artifact discipline requires.
+
+The separate casilla census below measures deterministic projection contracts
+that the relevance widening report cannot represent: exact target derivation,
+the currently carried invariant definition, localized descriptions, and
+sparse inbound relevance. It does not claim Pagefind or generated-site
+runtime parity.
 """
 
 from __future__ import annotations
@@ -36,6 +42,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
 
@@ -45,12 +52,16 @@ from ._concept_cards import ConceptCardRecord, project_concept_cards
 from ._miss_rate import load_committed_relevance
 from ._search_record import CasillaSearchRecord
 from ._sweep import SweepResult
-from ._unified_record import to_search_record
+from ._unified_record import SearchRecord, to_search_record
 
 __all__ = [
+    "CasillaCoverageKind",
+    "CasillaCoverageCensus",
+    "CasillaSurfaceCoverage",
     "CoverageKind",
     "CoverageReport",
     "KindCoverage",
+    "compute_casilla_coverage_census",
     "compute_coverage_report",
     "coverage_report_path",
     "legal_provision_ids",
@@ -82,6 +93,29 @@ class CoverageKind(StrEnum):
     LEGAL = "legal"
 
 
+class CasillaCoverageKind(StrEnum):
+    """The deterministic casilla surfaces measured by the coverage census.
+
+    ``projected`` is the deduplicated casilla surface produced by the registry
+    projection. The other surfaces are subsets of that same record identity:
+    ``exact-target`` observes the canonical unified-record destination,
+    ``definition`` observes the Spanish invariant description currently carried
+    by the projection, ``locale`` observes at least one non-Spanish localized
+    description, and ``relevance`` observes an inbound reference in the
+    committed sparse mapping.
+
+    None of these values observes Pagefind or a generated HTML artefact. They
+    are build-time data contracts only; runtime/index parity belongs to a later
+    gate with an artefact it can actually inspect.
+    """
+
+    PROJECTED = "projected"
+    EXACT_TARGET = "exact-target"
+    DEFINITION = "definition"
+    LOCALE = "locale"
+    RELEVANCE = "relevance"
+
+
 class KindCoverage(BaseModel):
     """Coverage of one target surface by the committed relevance mapping.
 
@@ -108,6 +142,52 @@ class KindCoverage(BaseModel):
         if self.total == 0:
             return 1.0
         return self.covered / self.total
+
+
+class CasillaSurfaceCoverage(BaseModel):
+    """Coverage of one casilla contract surface over projected record ids.
+
+    ``total`` is always the projected casilla denominator. ``covered`` is the
+    number of projected ids satisfying ``surface`` and ``uncovered_ids`` is the
+    sorted deterministic remainder. The ``projected`` surface is represented
+    as fully covered by definition, making the relationship between the
+    projection denominator and every later contract explicit.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    surface: CasillaCoverageKind
+    total: int = Field(ge=0)
+    covered: int = Field(ge=0)
+    uncovered_ids: tuple[str, ...] = ()
+
+    @property
+    def coverage_fraction(self) -> float:
+        """Fraction of projected records satisfying this surface contract."""
+        if self.total == 0:
+            return 1.0
+        return self.covered / self.total
+
+
+class CasillaCoverageCensus(BaseModel):
+    """Deterministic coverage census for the projected casilla surface.
+
+    This is deliberately separate from :class:`CoverageReport`: the latter's
+    relevance fields remain the widening report over all four enumerable
+    target surfaces. This census adds the casilla-only contract axes needed by
+    later parity work without changing that report's meaning.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    surfaces: tuple[CasillaSurfaceCoverage, ...] = Field(min_length=5, max_length=5)
+
+    def surface(self, surface: CasillaCoverageKind) -> CasillaSurfaceCoverage:
+        """Return the coverage entry for one casilla surface."""
+        for entry in self.surfaces:
+            if entry.surface is surface:
+                return entry
+        raise KeyError(surface)
 
 
 class CoverageReport(BaseModel):
@@ -166,6 +246,82 @@ def legal_provision_ids(authority: ValidatedRegistryAuthority) -> tuple[str, ...
     return tuple(
         sorted(legal_id for legal_id, entry in catalogue.items() if _has_permalink(entry)),
     )
+
+
+def compute_casilla_coverage_census(
+    *,
+    relevance: SweepResult | None = None,
+    casilla_records: tuple[CasillaSearchRecord, ...] | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> CasillaCoverageCensus:
+    """Compute deterministic coverage for the projected casilla contracts.
+
+    The census uses only the real projection and the committed relevance
+    mapping. A projected record is exact-target covered when the shared
+    :func:`to_search_record` funnel supplies its canonical non-empty target;
+    this records deterministic enrollment, not Pagefind index membership or
+    generated-page/anchor existence. Definition coverage is limited to the
+    Spanish invariant description currently present on the projection, and
+    locale coverage means at least one non-Spanish localized description.
+
+    Relevance coverage is the same inbound-record-id join used by
+    :func:`compute_coverage_report`, restricted to projected casilla ids. It is
+    intentionally not used as a prerequisite for exact-target enrollment.
+
+    Args:
+        relevance: The committed sweep mapping; defaults to the bundled load.
+        casilla_records: Projected casilla records; defaults to the bundled
+            validated-authority projection.
+        authority: The validated registry authority used when projecting the
+            default casilla records.
+
+    Returns:
+        A strict, frozen, deterministic census in
+        :class:`CasillaCoverageKind` order.
+    """
+    resolved_relevance = relevance if relevance is not None else load_committed_relevance()
+    if casilla_records is None:
+        resolved_authority = authority if authority is not None else bundled_authority()
+        resolved_casillas = project_casilla_search_records(resolved_authority)[0]
+    else:
+        resolved_casillas = casilla_records
+
+    by_id: dict[str, list[SearchRecord]] = {}
+    for record in resolved_casillas:
+        search_record = to_search_record(record)
+        by_id.setdefault(search_record.id, []).append(search_record)
+
+    projected = set(by_id)
+    exact_target = {
+        record_id
+        for record_id, records in by_id.items()
+        if any(_has_exact_target(record) for record in records)
+    }
+    definition = {
+        record_id
+        for record_id, records in by_id.items()
+        if any(_has_definition(record) for record in records)
+    }
+    locale = {
+        record_id
+        for record_id, records in by_id.items()
+        if any(_has_locale(record) for record in records)
+    }
+    referenced = _referenced_record_ids(resolved_relevance)
+    relevance_ids = projected & referenced
+
+    coverage_by_surface = {
+        CasillaCoverageKind.PROJECTED: projected,
+        CasillaCoverageKind.EXACT_TARGET: exact_target,
+        CasillaCoverageKind.DEFINITION: definition,
+        CasillaCoverageKind.LOCALE: locale,
+        CasillaCoverageKind.RELEVANCE: relevance_ids,
+    }
+    surfaces = tuple(
+        _casilla_surface_coverage(surface, projected, coverage_by_surface[surface])
+        for surface in CasillaCoverageKind
+    )
+    return CasillaCoverageCensus(surfaces=surfaces)
 
 
 def compute_coverage_report(
@@ -229,7 +385,7 @@ def compute_coverage_report(
         resolved_commands = cli_command_records
         resolved_options = cli_option_records
 
-    referenced = {target.record_id for mapping in resolved_relevance.mappings for target in mapping.targets}
+    referenced = _referenced_record_ids(resolved_relevance)
 
     surfaces: dict[CoverageKind, set[str]] = {
         CoverageKind.CONCEPT: {to_search_record(card).id for card in resolved_cards if card.is_approved},
@@ -262,6 +418,39 @@ def _kind_coverage(kind: CoverageKind, derivable: set[str], referenced: set[str]
         total=len(derivable),
         covered=len(covered),
         uncovered_ids=uncovered,
+    )
+
+
+def _casilla_surface_coverage(
+    surface: CasillaCoverageKind,
+    projected: set[str],
+    covered: set[str],
+) -> CasillaSurfaceCoverage:
+    return CasillaSurfaceCoverage(
+        surface=surface,
+        total=len(projected),
+        covered=len(covered),
+        uncovered_ids=tuple(sorted(projected - covered)),
+    )
+
+
+def _referenced_record_ids(relevance: SweepResult) -> set[str]:
+    return {target.record_id for mapping in relevance.mappings for target in mapping.targets}
+
+
+def _has_exact_target(record: SearchRecord) -> bool:
+    return bool(record.target.strip())
+
+
+def _has_definition(record: SearchRecord) -> bool:
+    description = record.descriptions.get(OutputLanguage.ES)
+    return bool(description and description.strip())
+
+
+def _has_locale(record: SearchRecord) -> bool:
+    return any(
+        language is not OutputLanguage.ES and bool(text and str(text).strip())
+        for language, text in record.descriptions.items()
     )
 
 

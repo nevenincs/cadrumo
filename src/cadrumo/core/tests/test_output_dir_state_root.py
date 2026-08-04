@@ -40,6 +40,49 @@ from ..config import Settings
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
+    {
+        "attachments",
+        "audit",
+        "blobs",
+        "cache",
+        "corpus-search",
+        "corpus-text",
+        "drafts",
+        "filed-declarations",
+        "filing-history",
+        "financial",
+        "invoices",
+        "iva-compensation-history",
+        "iva-read-evidence",
+        "justificantes",
+        "live",
+        "llm-cache",
+        "llm-run-telemetry",
+        "llm-usage",
+        "logs",
+        "parity",
+        "registry",
+        "registry-verdict",
+        "runs",
+        "secrets",
+        "submissions",
+        "telemetry",
+        "tokens",
+        "transactions",
+        "usage-ratios.json",
+        "workflow-runs",
+    },
+)
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+This module *is* the on-disk-name oracle -- see the module docstring. The
+provenance gate names it in PERMITTED_PRODUCERS for the same reason: it must
+build the expected location from its own oracle to measure the validator, and
+routing it through the accessor would compare the taxonomy with itself.
+"""
+
+
 DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
     "cadrumo_token_dir": "tokens",
     "cadrumo_secret_store_dir": "secrets",

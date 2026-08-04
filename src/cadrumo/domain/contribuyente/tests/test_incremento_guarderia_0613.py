@@ -159,31 +159,54 @@ class TestIncrementoGuarderia0613Oracle:
 
 
 class TestGastosGuarderiaFactPersistence:
-    """descendant_facts_from_list must emit renta_family.gastos_guarderia_reales_2024."""
+    """The projection stores per-child gastos and never the engine-owned aggregate.
 
-    def test_aggregate_emitted_when_eligible_hijos_have_gastos(self) -> None:
-        """Sum of gastos from eligible menores-3 stored as aggregate fact."""
+    The aggregate was previously materialised here at write time, and only when
+    the sum was positive. It is now injected at calculate time from these same
+    per-child facts, unconditionally, so a filer with no childcare spend gets a
+    zero rather than an absent binding. Two consequences this class pins:
+
+    the projection must NOT emit the aggregate -- the write door refuses that
+    path outright, so an emission would refuse every legitimate childcare save
+    in the same batch; and the per-child figures it does emit must still carry
+    everything the injector needs to recompute the sum.
+    """
+
+    def test_aggregate_is_not_emitted_even_when_eligible_hijos_have_gastos(self) -> None:
+        """The engine-owned aggregate never reaches the write door.
+
+        Inverted: this previously asserted the summed aggregate was stored. The
+        positive case is the one that matters, because the old emission was
+        conditional on a positive sum and so was invisible in the zero case.
+        """
         hijos = (
             _hijo_guarderia(2500),
             _hijo_guarderia(4000),
         )
         facts = dict(descendant_facts_from_list(hijos))
-        assert facts["renta_family.gastos_guarderia_reales_2024"] == "6500"
-
-    def test_aggregate_not_emitted_when_zero(self) -> None:
-        """Aggregate fact absent when gastos are all zero."""
-        hijos = (_hijo_guarderia(0),)
-        facts = dict(descendant_facts_from_list(hijos))
         assert "renta_family.gastos_guarderia_reales_2024" not in facts
 
-    def test_aggregate_excludes_non_eligible_hijos(self) -> None:
-        """Aggregate only sums gastos for children under 3 at year-end 2024."""
+    def test_per_child_gastos_survive_for_the_injector_to_sum(self) -> None:
+        """Each eligible child's own figure is stored, which is what the injector reads."""
         hijos = (
-            _hijo_guarderia(2000),
-            _hijo_no_menor_3(9999),
+            _hijo_guarderia(2500),
+            _hijo_guarderia(4000),
         )
         facts = dict(descendant_facts_from_list(hijos))
-        assert facts["renta_family.gastos_guarderia_reales_2024"] == "2000"
+        assert facts["renta_family.descendiente.0.gastos_guarderia"] == "2500"
+        assert facts["renta_family.descendiente.1.gastos_guarderia"] == "4000"
+
+    def test_a_non_eligible_child_still_stores_its_own_gastos(self) -> None:
+        """Eligibility filtering is the injector's job, not the projection's.
+
+        The projection is a faithful record of what the operator declared. Which
+        children count toward the Art. 81 bis sum is an Art. 58.3 question the
+        injector answers at calculate time, against the filing year it is
+        computing rather than a year baked into the stored facts.
+        """
+        facts = dict(descendant_facts_from_list((_hijo_guarderia(2000), _hijo_no_menor_3(9999))))
+        assert facts["renta_family.descendiente.0.gastos_guarderia"] == "2000"
+        assert facts["renta_family.descendiente.1.gastos_guarderia"] == "9999"
 
     def test_roundtrip_gastos_via_facts(self) -> None:
         """gastos_guarderia_euros survives descendant_facts_from_list → descendant_list_from_facts roundtrip."""

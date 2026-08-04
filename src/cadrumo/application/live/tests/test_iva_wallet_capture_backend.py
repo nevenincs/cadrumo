@@ -22,7 +22,12 @@ from ....domain.iva_compensation import (
     IvaCompensationPeriodState,
     IvaCompensationReconciliationDecision,
 )
-from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root, isolated_runtime_profile
+from ....tests.secure_sql import (
+    dev_test_database_password,
+    isolated_profile_storage_root,
+    isolated_runtime_profile,
+    read_db_at_rest_bytes,
+)
 from ....tests.user_profile import register_minimal_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -74,7 +79,7 @@ def _wallet_html(*, total: str, rows: str, target_year: int, target_period: str)
 @contextmanager
 def _secure_backend(tmp_path: Path):
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
-        yield profile.paths.db_dir / "cadrumo.db"
+        yield profile.paths.database_file
 
 
 def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_identity(tmp_path: Path) -> None:
@@ -121,7 +126,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         assert report.divergence == "match"
         assert report.blocked is False
         assert report.decision_key == iva_wallet_decision_key(_TAXPAYER_REF, Period.from_year_and_code(2026, "2T"))
-        database_bytes = db_path.read_bytes()
+        database_bytes = read_db_at_rest_bytes(db_path)
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert f"{_TAXPAYER_REF}:2026:2T".encode("ascii") not in database_bytes
 
@@ -293,7 +298,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         wallet_ref = FiledDeclaracionObservationStore(tmp_path / "remote-iva-evidence").persist_iva_wallet_observation(
             wallet,
         )
-        assert _secure_object_namespace_count(profile.paths.db_dir / "cadrumo.db", wallet_ref.parts[-2]) == 1
+        assert _secure_object_namespace_count(profile.paths.database_file, wallet_ref.parts[-2]) == 1
         assert not (tmp_path / "remote-iva-evidence").exists()
 
         IvaWalletDecisionRepository().save_decision(
@@ -361,7 +366,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         assert "303:2025:4T" not in remote_state.model_dump_json()
         assert _TAXPAYER_REF not in report.model_dump_json()
 
-        database_bytes = (profile.paths.db_dir / "cadrumo.db").read_bytes()
+        database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert b"EXP-2025-4T" not in database_bytes
 

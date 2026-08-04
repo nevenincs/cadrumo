@@ -15,6 +15,12 @@ with a real ``confirm`` callback in the same settings context the CLI
 harness installs: real master-key provider, real BIP-39 mint, real atomic
 envelope install. The verify/recover halves then run through the real CLI
 with ``--secrets-stdin``.
+
+The ``"master.recovery.key"`` literal is the provider's own filename choice
+(matches ``_RECOVERY_WRAP_FILENAME`` in
+``application/user_profile/_custody.py``, derived from
+``StorageCategory.SECRETS_MASTER_RECOVERY_KEY``'s declared subpath), not a
+caller-supplied value.
 """
 
 from __future__ import annotations
@@ -25,10 +31,14 @@ import subprocess
 import sys
 from pathlib import Path
 from textwrap import dedent
+from typing import Final
 
 import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.recovery.key"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _CLI_HARNESS = dedent(
     """

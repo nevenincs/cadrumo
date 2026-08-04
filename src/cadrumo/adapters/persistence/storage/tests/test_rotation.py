@@ -157,7 +157,7 @@ class TestRotationRoundTrip:
     ) -> None:
         """Rotation must NOT mutate the inner payload — every leaf
         survives unchanged after decryption under the new key."""
-        store = tmp_path / "drafts"
+        store = tmp_path / "probe-drafts"
         store.mkdir()
         target = store / "draft-001.envelope.json"
         _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_DRAFT)
@@ -267,7 +267,7 @@ class TestAadBindingSurvivesRotation:
         alice: EphemeralMasterKeyProvider,
         bob: EphemeralMasterKeyProvider,
     ) -> None:
-        store = tmp_path / "drafts"
+        store = tmp_path / "probe-drafts"
         store.mkdir()
         target = store / "rec.envelope.json"
         _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_DRAFT)
@@ -371,7 +371,7 @@ class TestMultiConsumerPlan:
         tx_store = tmp_path / "tx-store"
         tx_store.mkdir()
         _seed_envelope(tx_store / "a.envelope.json", provider=alice, hkdf_context=_HKDF_CONTEXT_TX)
-        drafts_store = tmp_path / "drafts"
+        drafts_store = tmp_path / "probe-drafts"
         drafts_store.mkdir()
         _seed_envelope(
             drafts_store / "b.envelope.json",
@@ -699,7 +699,7 @@ class TestRotationLockTargetAlignment:
         from .....core import exclusive_file_lock
         from .. import LockAcquisitionError
 
-        store = tmp_path / "drafts"
+        store = tmp_path / "probe-drafts"
         store.mkdir()
         draft_id = "abc123"
         envelope_path = store / f"{draft_id}.envelope.json"
@@ -728,10 +728,13 @@ class TestRotationLockTargetAlignment:
         # The usage-ratios writer locks
         # ``target.with_suffix('.lock')`` for ``target = usage-ratios.json``.
         # The rotation plan entry for the usage-ratios profile must
-        # produce the same lock target.
+        # produce the same lock target. "probe-store" is a fictional
+        # directory: RotationPlanEntry takes store_dir as a parameter, so the
+        # directory name is arbitrary and the test's subject is lock-target
+        # agreement, not any real taxonomy location.
         from .....core import exclusive_file_lock
 
-        store = tmp_path / "financial"
+        store = tmp_path / "probe-store"
         store.mkdir()
         envelope_path = store / "usage-ratios.json"
         envelope_path.write_text("{}", encoding=UTF_8_ENCODING)
@@ -788,7 +791,7 @@ def test_rotation_carries_every_cipher_envelope_field_it_does_not_own(
     :class:`CipherEnvelope` later reddens this until someone classifies it as
     rotation-owned or carried.
     """
-    store = tmp_path / "drafts"
+    store = tmp_path / "probe-drafts"
     store.mkdir()
     target = store / "draft-carry.envelope.json"
     _seed_envelope(target, provider=alice, hkdf_context=_HKDF_CONTEXT_DRAFT)

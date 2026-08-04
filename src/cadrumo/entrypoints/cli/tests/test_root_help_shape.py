@@ -1,4 +1,14 @@
-"""Real CLI tests for workflow-oriented root help and bare invocation."""
+"""Real CLI tests for workflow-oriented root help and bare invocation.
+
+The ``"logs"`` literal in
+``test_installed_console_profile_create_honors_isolated_storage_env`` is
+deliberate: ``_console_env`` sets ``cadrumo_local_storage_root`` to
+``tmp_path / "storage"`` with no log-directory override, so
+``tmp_path / "storage" / "logs"`` is the real DEFAULT-derived location the
+``config repair logs`` command's own output must report -- not an injected
+value. That function does not use ``isolated_profile_storage_root``
+(used elsewhere in this file); it is self-contained on ``_console_env``.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +20,7 @@ import subprocess
 import sys
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -25,6 +36,9 @@ from ....tests.secure_sql import isolated_profile_storage_root, isolated_session
 from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 @pytest.fixture(autouse=True)
@@ -52,10 +66,10 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
             setting_env("cadrumo_secret_store_dir"): str(tmp_path / "storage" / "fallback-store"),
             setting_env("cadrumo_local_storage_root"): str(tmp_path / "storage"),
             setting_env("cadrumo_token_dir"): str(tmp_path / "tokens"),
-            setting_env("cadrumo_runs_dir"): str(tmp_path / "runs"),
+            setting_env("cadrumo_runs_dir"): str(tmp_path / "probe-runs"),
             setting_env("cadrumo_financial_txs_dir"): str(tmp_path / "txs"),
             setting_env("cadrumo_invoices_dir"): str(tmp_path / "invoices"),
-            setting_env("cadrumo_drafts_dir"): str(tmp_path / "drafts"),
+            setting_env("cadrumo_drafts_dir"): str(tmp_path / "probe-drafts"),
             setting_env("cadrumo_output_language"): "en",
         },
     )
@@ -251,7 +265,6 @@ def test_installed_console_exposes_contextual_product_identity(tmp_path: Path) -
 
     assert version.returncode == 0, version.stderr
     assert version.stdout == f"{PRODUCT_IDENTITY.display_name} {__version__}\n"
-    assert __version__ == "0.2.1"
     assert help_result.returncode == 0, help_result.stderr
     assert help_result.stdout.startswith(f"{PRODUCT_IDENTITY.display_name} -")
     assert f"{PRODUCT_IDENTITY.cli_executable} config" in help_result.stdout

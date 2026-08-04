@@ -45,6 +45,7 @@ from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casill
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
     "collect_minimo_descendientes_prorrata_inferred_diagnostics",
+    "collect_minimo_descendientes_rentas_undeclared_diagnostics",
     "collect_minimo_descendientes_undeclared_diagnostics",
 ]
 
@@ -55,6 +56,7 @@ _DESCENDANTS_COUNT_PATH = "renta_family.descendientes_count"
 _UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
 _COUNT_DESYNC_SOURCE_KIND = "descendientes_count_desync"
 _PRORRATA_INFERRED_SOURCE_KIND = "minimo_descendientes_prorrata_inferred"
+_RENTAS_UNDECLARED_SOURCE_KIND = "minimo_descendientes_rentas_undeclared"
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -229,6 +231,115 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
                 "these descendants, state it with `aeat config profile descendiente add --descendiente "
                 "NACIMIENTO=YYYY-MM-DD,PRORRATA=false` to claim the full mínimo, or PRORRATA=true to "
                 "confirm the split"
+            ),
+            casilla_id=estatal_id,
+        ),
+    )
+
+
+#: How many descendant paths a message names before summarising the rest.
+#:
+#: The diagnostic message is length-bounded by contract, and the naming is the
+#: only unbounded part of it: a filer with many descendants would otherwise push
+#: the message past the bound and turn an advisory into a hard validation error
+#: at exactly the moment it had something to say. Naming a few and counting the
+#: remainder keeps it actionable without letting household size decide whether
+#: the advisory can be raised at all.
+_MAX_NAMED_DESCENDANTS = 3
+
+
+def _name_indices(indices: list[int]) -> str:
+    """Render descendant paths for a message, bounded regardless of household size."""
+    shown = ", ".join(f"renta_family.descendiente.{index}" for index in indices[:_MAX_NAMED_DESCENDANTS])
+    remainder = len(indices) - _MAX_NAMED_DESCENDANTS
+    return f"{shown} and {remainder} more" if remainder > 0 else shown
+
+
+def collect_minimo_descendientes_rentas_undeclared_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise when a descendant is claiming the mínimo with no rentas figure on record.
+
+    Art. 58.1 conditions the mínimo on the descendant's own annual rentas, and
+    Art. 61 norma 2ª on the rentas in any return they file. Both read an ABSENT
+    figure as non-excluding, deliberately: treating absence as exclusion would
+    zero the allowance for every young child, who is the overwhelming case and
+    has no rentas to declare. That default is correct and is not changed here.
+
+    What it leaves is an asymmetry. A descendant who genuinely earns above the
+    ceiling but whose figure was never entered still contributes a full tranche,
+    and nothing says so. The sibling
+    :func:`collect_minimo_descendientes_undeclared_diagnostics` cannot cover it:
+    it fires only when the aggregate is ZERO and returns early the moment any
+    descendiente fact exists, because its subject is a filer who declared no
+    children at all. A declared descendant with an absent figure is the opposite
+    state — a non-zero claim — so the two guards do not overlap.
+
+    This is therefore the over-claiming direction of the same gap, which is the
+    one that costs tax (`no-silent-under-declaration`).
+
+    NARROW BY CONSTRUCTION, and that is the design rather than an optimisation.
+    A blanket "some optional fact is blank" advisory fires on every ordinary
+    filer and trains the operator to ignore it, at which point it protects
+    nobody. Three conditions must all hold:
+
+    * the aggregate is non-zero, so a mínimo is actually being claimed;
+    * the descendant carries NO rentas figure — a declared zero is an answer,
+      not an absence, and is silent here;
+    * that descendant would contribute, i.e. it meets the non-income conditions
+      (:meth:`~domain.contribuyente.DescendantInfo.meets_non_income_conditions`).
+      A non-cohabiting or over-25 child changes nothing whether or not its
+      figure is known, so flagging it would be noise.
+
+    Args:
+        revision: The :class:`ModeloRevision` being calculated. Its ``valid_to``
+            supplies the devengo year the age test is anchored to.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        A one-element tuple carrying the advisory, or an empty tuple.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    if estatal_id is None:
+        return ()
+    if casilla_values.get(estatal_id, Decimal(0)) == Decimal(0):
+        # Nothing is being claimed, so an absent figure changes no outcome.
+        return ()
+    if revision.valid_to is None:
+        # An open-ended revision fixes no devengo date, so the age limb of the
+        # contribution test has no anchor. Silent rather than guessing a year.
+        return ()
+    facts = _profile_fact_strings(bucket_id)
+    if facts is None:
+        return ()
+
+    filing_year = revision.valid_to.year
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    undeclared = [
+        index
+        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
+        if descendant.rentas_anuales_euros is None and descendant.meets_non_income_conditions(filing_year)
+    ]
+    if not undeclared:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_RENTAS_UNDECLARED_SOURCE_KIND,
+            message=(
+                f"casilla {estatal_id!r} (mínimo por descendientes) claims a full tranche for "
+                f"{_name_indices(undeclared)} with no annual-rentas figure on record. Art. 58.1 LIRPF "
+                "withdraws it above the rentas ceiling, and Art. 61 norma 2ª when the descendant files "
+                "their own return above that figure; an absent figure exceeds neither. Declare it with "
+                "`descendiente add --descendiente RENTAS=N`. RENTAS=0 is a valid answer and silences this"
             ),
             casilla_id=estatal_id,
         ),

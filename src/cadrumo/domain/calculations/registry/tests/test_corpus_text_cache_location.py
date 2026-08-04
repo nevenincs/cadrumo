@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -24,6 +25,15 @@ from .._validate_evidence import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cache"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``tmp_path / "state" / "cache" / "corpus-text" / ...`` in
+``test_cache_path_derives_under_cache_namespace`` is the independent oracle
+for ``_corpus_text_cache_path``'s default-derivation, called with no
+``cadrumo_corpus_text_cache_dir`` override.
+"""
 
 
 def test_cache_path_derives_under_cache_namespace(tmp_path: Path) -> None:

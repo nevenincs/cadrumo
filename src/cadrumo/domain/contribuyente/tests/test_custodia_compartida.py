@@ -23,19 +23,22 @@ from .._descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from ..family import DescendantInfo, MinimoDescendientesThresholds, RentaFamilyProfile
+from ..family import DescendantInfo, RentaFamilyProfile
+from ._registry_thresholds import (
+    registry_birth_order_amounts,
+    registry_menor_tres_supplement,
+    registry_thresholds,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 FILING_YEAR = 2024
 
-# Registry-authoritative Art. 58 amounts (2024 revision)
-_MINIMO_1 = Decimal("2400")
-_MENOR_TRES = Decimal("2800")
-_THRESHOLDS = MinimoDescendientesThresholds(
-    rentas_anuales_limite=Decimal("8000"),
-    declaracion_propia_rentas_limite=Decimal("1800"),
-)
+# Art. 58 amounts read from the registry, never restated as Python literals
+# (`aeat-schema-central-config`).
+_MINIMO_1 = registry_birth_order_amounts(FILING_YEAR)[0]
+_MENOR_TRES = registry_menor_tres_supplement(FILING_YEAR)
+_THRESHOLDS = registry_thresholds(FILING_YEAR)
 _CUSTODIA_FACT_KEY = "renta_family.descendiente.0.custodia_compartida"
 _CUSTODIA_FIELD_CASES = (
     ("default", DescendantInfo(birth_date=date(2020, 3, 15)), False),

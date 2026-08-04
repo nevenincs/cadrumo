@@ -28,7 +28,7 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....core.resources import bundled_path
-from ....domain.calculations.registry import load_registry_tree, xml_dictionary_entries
+from ....domain.calculations.registry import XmlDictionaryEntry, load_registry_tree, xml_dictionary_entries
 from .._export_xml_dictionary import _modelo_100_sign_branch_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -48,7 +48,7 @@ def _dictionary_entries():
     return xml_dictionary_entries(layout, source_root=bundled_path(), sources=catalogues.sources)
 
 
-def _branch_entries() -> dict[str, object]:
+def _branch_entries() -> dict[str, XmlDictionaryEntry]:
     entries = {entry.field_id: entry for entry in _dictionary_entries() if entry.casilla_id == _SIGN_BRANCH_CASILLA}
     assert set(entries) == {_NON_NEGATIVE_BRANCH, _NEGATIVE_BRANCH}, (
         f"casilla {_SIGN_BRANCH_CASILLA} no longer declares exactly the two known branches: {sorted(entries)}"
@@ -102,6 +102,21 @@ def test_zero_needs_no_tie_break_because_both_branches_agree_on_it() -> None:
 
     assert _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], Decimal("0")) == Decimal("0")
     assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("0")) == Decimal("0")
+
+
+@pytest.mark.parametrize("uncoercible", ["abc", "", "1.234,56", True, None])
+def test_a_value_that_will_not_coerce_selects_a_branch_instead_of_raising(uncoercible: object) -> None:
+    """Branch selection must not fail on a value it cannot read a sign from.
+
+    ``coerce_decimal`` answers ``None`` for these, so comparing the result
+    against zero raised ``TypeError`` on the export path. Reading an unreadable
+    amount as zero keeps the selection total; deciding what the value *means*
+    belongs to the formatter, which is where every other casilla's is decided.
+    """
+    entries = _branch_entries()
+
+    assert _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], uncoercible) is uncoercible
+    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], uncoercible) == Decimal("0")
 
 
 def test_the_carry_class_is_left_alone() -> None:

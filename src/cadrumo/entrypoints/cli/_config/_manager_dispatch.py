@@ -180,7 +180,11 @@ def open_the_edit_target_or_refuse(ctx: _TyperClickContext, supplied: object) ->
     target = resolve_login_target(supplied)
     if target.bucket_id == resolve_active_bucket_id():
         return
-    if _authenticated_at_the_gate(cast("typer.Context", ctx), bucket_id=target.bucket_id):
+    # CAST-RATIONALE-TYPER-CLICK-CONTEXT: ctx is typed as the vendored
+    # typer._click.core.Context this module accepts at its own boundary;
+    # _authenticated_at_the_gate's signature wants the public typer.Context
+    # alias for the same runtime object.
+    if _authenticated_at_the_gate(cast(typer.Context, ctx), bucket_id=target.bucket_id):
         return
     raise CliRefusedBoundaryError(
         translated_message="cli.config.profile.edit_target_not_active",

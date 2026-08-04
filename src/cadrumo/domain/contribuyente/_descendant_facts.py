@@ -1,9 +1,10 @@
 """Helpers for persisting and reloading DescendantInfo as profile facts.
 
 DescendantInfo records are stored as individual profile facts under the
-``renta_family.descendiente.{n}.{field}`` key hierarchy. Aggregate summary
-facts are derived and stored alongside individual facts so that the registry
-binding resolver can look them up by a simple ``profile_key`` selector.
+``renta_family.descendiente.{n}.{field}`` key hierarchy. One aggregate — the
+row count — is stored alongside them so the registry binding resolver can look
+it up by a simple ``profile_key`` selector. Aggregates the ENGINE derives are
+not stored here; see the note below the fact table.
 
 Stored fact paths per descendant (n = 0-based index):
   renta_family.descendiente.{n}.birth_date              ISO-8601 date string
@@ -20,7 +21,14 @@ Stored fact paths per descendant (n = 0-based index):
 
 Aggregate facts stored:
   renta_family.descendientes_count               int count
-  renta_family.gastos_guarderia_reales_2024      sum of gastos_guarderia for eligible menores-3 (absent when zero)
+
+The Art. 81 bis guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
+is deliberately NOT stored here, and must not be re-added. It is a DERIVED path:
+the calculate-time injector recomputes it from the per-child
+``gastos_guarderia`` figures above and overwrites whatever the index holds,
+precisely so an operator's number can never be substituted for the law's. The
+profile write door refuses that path outright, so projecting it from here would
+refuse the whole batch rather than persist a second, divergent copy.
 """
 
 from __future__ import annotations
@@ -37,7 +45,38 @@ from .family import DescendantInfo
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
 _COUNT_PATH = "renta_family.descendientes_count"
-_GASTOS_REALES_2024_PATH = "renta_family.gastos_guarderia_reales_2024"
+
+_DESCENDIENTE_FLAG_KEYS = frozenset(
+    {
+        "NACIMIENTO",
+        "ADOPCION",
+        "DISCAPACIDAD",
+        "CONVIVENCIA",
+        "CUSTODIA",
+        "RENTAS",
+        "DECLARACION_PROPIA",
+        "PRORRATA",
+        "MESES_TRABAJO",
+        "GASTOS_GUARDERIA",
+        "NIF",
+    },
+)
+"""Every key ``--descendiente`` accepts, so an unrecognised one is refused rather than ignored.
+
+The parser looks each known key UP; without this set a token it does not
+recognise would sit unread in the parsed mapping while the field it was meant to
+set kept its default. That is a silent drop, and it shipped once: a catalogue
+translated the key tokens, the accented forms stopped matching, and an operator
+declaring a NON-cohabiting descendant got one recorded as cohabiting -- granting
+a minimo they were not entitled to. Help copy alone was under-declaring tax.
+
+The catalogues are fixed and a behavioural gate now drives every advertised token
+through this parser. This set closes the other half: a token that was never
+advertised at all -- a typo, a stale flag from a script, a future locale edit the
+gate's extraction misses -- now fails loudly instead of vanishing. Every other
+structured-token surface in this tree already refuses unknown keys, through a
+typed enum, a strict model, or an explicit check. This one was the exception.
+"""
 
 
 def _discapacidad_grade(value: int | None) -> Literal[0, 33, 65] | None:
@@ -84,9 +123,6 @@ def descendant_facts_from_list(
         if d.nif is not None:
             facts.append((f"{prefix}.nif", d.nif))
     facts.append((_COUNT_PATH, str(len(descendientes))))
-    gastos_reales_2024 = sum(d.gastos_guarderia_euros for d in descendientes if d.is_eligible_menor_tres(2024))
-    if gastos_reales_2024 > 0:
-        facts.append((_GASTOS_REALES_2024_PATH, str(gastos_reales_2024)))
     return facts
 
 
@@ -274,6 +310,13 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     on missing required keys or invalid values.
     """
     parts = {k.strip().upper(): v.strip() for k, _, v in (p.partition("=") for p in raw.split(","))}
+
+    unknown = sorted(key for key in parts if key not in _DESCENDIENTE_FLAG_KEYS)
+    if unknown:
+        raise ProfileAnswerTypeError(
+            f"--descendiente does not accept {', '.join(unknown)}; "
+            f"accepted keys are {', '.join(sorted(_DESCENDIENTE_FLAG_KEYS))}",
+        )
 
     nacimiento_raw = parts.get("NACIMIENTO")
     if not nacimiento_raw:

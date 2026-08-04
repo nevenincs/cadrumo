@@ -1,10 +1,19 @@
-"""Tests for the bucket-scoped notifications snapshot service."""
+"""Tests for the bucket-scoped notifications snapshot service.
+
+The ``"live"`` literal in ``cadrumo_audit_dir / "live" / "notifications" / ...``
+is a ``not (...).exists()`` refusal guard proving a captured notification never
+leaks into a plaintext audit-trail file alongside the encrypted secure-object
+write. An accessor aimed at the wrong location would leave that assertion
+trivially satisfied -- the exact silent-pass shape a refusal test must not
+risk -- so the literal stays.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Final
 
 import pytest
 from pydantic import AnyHttpUrl
@@ -15,7 +24,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ....core.config import Settings
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from .._errors import LiveApplicationInputError
 from .._notifications import (
     NotificationsService,
@@ -24,6 +33,10 @@ from .._notifications import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
+
 _AEAT = Settings.external_constants().aeat
 _NOTIFICATIONS_SUMMARY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_summary}"
 _NOTIFICATIONS_QUERY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_query.removesuffix('?VEZ=BUSCAR1')}"
@@ -277,7 +290,7 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"B12345678" in record.payload
-        assert b"B12345678" not in (secure_engine.paths.db_dir / "cadrumo.db").read_bytes()
+        assert b"B12345678" not in read_db_at_rest_bytes(secure_engine.paths.database_file)
         assert not (
             secure_engine.settings.cadrumo_audit_dir / "live" / "notifications" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()

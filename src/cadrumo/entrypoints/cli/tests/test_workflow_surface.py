@@ -19,6 +19,7 @@ from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.buckets import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.secure_sql import read_db_at_rest_bytes
 from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -86,10 +87,10 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
         cadrumo_active_profile=None,
         cadrumo_local_storage_root=tmp_path / "storage",
         cadrumo_token_dir=tmp_path / "tokens",
-        cadrumo_runs_dir=tmp_path / "runs",
+        cadrumo_runs_dir=tmp_path / "probe-runs",
         cadrumo_financial_txs_dir=tmp_path / "txs",
         cadrumo_invoices_dir=tmp_path / "invoices",
-        cadrumo_drafts_dir=tmp_path / "drafts",
+        cadrumo_drafts_dir=tmp_path / "probe-drafts",
     ):
         try:
             yield tmp_path
@@ -111,7 +112,7 @@ def encrypted_user_cli(isolated_user_cli: Path) -> Path:
 def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
     db_path = bucket_paths(tmp_path / "storage", "00000000-0000-4000-8000-000000000000").database_file
     assert db_path.exists()
-    on_disk = db_path.read_bytes()
+    on_disk = read_db_at_rest_bytes(db_path)
     assert b"secure_objects" in on_disk
     for canary in plaintext_canaries:
         assert canary.encode("utf-8") not in on_disk

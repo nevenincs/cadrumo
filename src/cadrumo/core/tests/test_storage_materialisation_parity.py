@@ -34,6 +34,7 @@ at the write, far from its cause.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -47,6 +48,16 @@ from .._storage_taxonomy import (
 from ..config import Settings, ensure_storage_tree, load_settings, override_settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"financial", "cache"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``"financial"`` and ``"cache"`` in the ancestor-detector tests
+(``test_the_unexplained_detector_accepts_ancestors_and_the_root`` and its
+sibling) are the example intermediate-segment shapes the detector must treat
+as ancestors rather than findings; the module's own docstring names both
+explicitly as ancestors this parity check must not misclassify.
+"""
 
 
 def _materialisable_members() -> tuple[StorageLocation, ...]:

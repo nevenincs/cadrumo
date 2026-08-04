@@ -16,6 +16,7 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage import (
+    BUCKET_MANIFEST_FILENAME,
     BUCKETS_DIRNAME,
     KEYSTORE_DIRNAME,
 )
@@ -79,7 +80,7 @@ def _bucket_directories_without_manifest(storage_root: Path) -> tuple[Path, ...]
     if not buckets_root.is_dir():
         return ()
     return tuple(
-        entry for entry in buckets_root.iterdir() if entry.is_dir() and not (entry / "manifest.toml").is_file()
+        entry for entry in buckets_root.iterdir() if entry.is_dir() and not (entry / BUCKET_MANIFEST_FILENAME).is_file()
     )
 
 

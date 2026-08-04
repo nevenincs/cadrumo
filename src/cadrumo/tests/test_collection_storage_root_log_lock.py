@@ -54,7 +54,7 @@ def test_an_open_log_handler_blocks_removal_on_this_platform(tmp_path: Path) -> 
     package that condition on the same real OS behaviour.
     """
     root = tmp_path / "cadrumo-pytest-probe-blocked"
-    handler = _root_logger_file_handler(root / "logs" / "cadrumo.log")
+    handler = _root_logger_file_handler(root / "probe-logs" / "cadrumo.log")
     logging.getLogger().info("probe line, keeps the handler's file open")
     try:
         shutil.rmtree(root, ignore_errors=True)
@@ -82,8 +82,8 @@ def test_releasing_the_handler_unblocks_removal(tmp_path: Path) -> None:
     """
     root = tmp_path / "cadrumo-pytest-probe-released"
     other_root = tmp_path / "cadrumo-pytest-probe-other"
-    handler = _root_logger_file_handler(root / "logs" / "cadrumo.log")
-    other_handler = _root_logger_file_handler(other_root / "logs" / "cadrumo.log")
+    handler = _root_logger_file_handler(root / "probe-logs" / "cadrumo.log")
+    other_handler = _root_logger_file_handler(other_root / "probe-logs" / "cadrumo.log")
     logging.getLogger().info("probe line for the root under test")
     logging.getLogger().info("probe line for the sibling root that must be left alone")
     try:
@@ -125,7 +125,7 @@ def test_registered_cleanup_removes_a_root_with_a_real_atexit_ordered_log_handle
         from cadrumo.tests._collection_storage_root import register_collection_storage_root_cleanup
 
         root = Path({str(root)!r})
-        log_dir = root / "logs"
+        log_dir = root / "probe-logs"
         log_dir.mkdir(parents=True)
         handler = logging.handlers.RotatingFileHandler(str(log_dir / "cadrumo.log"), encoding="utf-8")
         logging.getLogger().addHandler(handler)

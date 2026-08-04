@@ -27,6 +27,11 @@ Real-behavior only: the real ``cadrumo`` app object through
 the shared CLI runner over a real isolated profile, plus a real subprocess for
 the crash funnel (the only honest way to observe a terminal traceback
 replacement).
+
+The ``"logs"`` literal is deliberate: the crash subprocess sets only
+``CADRUMO_LOCAL_STORAGE_ROOT``, no log-directory override, so
+``state_root / "logs" / "cadrumo.log"`` is the real DEFAULT-derived
+diagnostic-log location, not an injected value.
 """
 
 from __future__ import annotations
@@ -38,6 +43,7 @@ import sys
 import textwrap
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -49,6 +55,9 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 @pytest.fixture(autouse=True)

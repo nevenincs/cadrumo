@@ -206,7 +206,7 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert outcome.reason is RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING
     assert outcome.legal_refs == ("ley-37-1992:art-90",)
     assert outcome.context == {"tipo_renta": "interest", "country": "ZW"}
-    assert (profile.paths.db_dir / "cadrumo.db").is_file()
+    assert profile.paths.database_file.is_file()
 
 
 def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(

@@ -40,7 +40,7 @@ def _settings(tmp_path: Path) -> EnvFileFreeSettings:
     return EnvFileFreeSettings(
         cadrumo_llm_provider=LLMProviderSetting.LOCAL,
         cadrumo_llm_model="gpt-oss",
-        cadrumo_llm_cache_dir=tmp_path / "cache",
+        cadrumo_llm_cache_dir=tmp_path / "probe-cache",
         cadrumo_llm_usage_dir=tmp_path / "usage",
         cadrumo_llm_run_telemetry_dir=tmp_path / "run-telemetry",
     )

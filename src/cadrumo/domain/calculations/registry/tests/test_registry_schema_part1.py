@@ -15,6 +15,7 @@ from .._schema import DataBindingDefinition
 from ._registry_schema_support import (
     _EXPECTED_DEADLINE_WINDOWS,
     _EXPECTED_LIVE_CROSS_REFERENCES,
+    _NUMERIC_CASILLA_01,
     _REQUIRED_APPLICATION_LINKS,
     _SNAPSHOT_HEADER_EXPECTATIONS,
     CasillaContinuidadEvolutionDefinition,
@@ -48,7 +49,6 @@ from ._registry_schema_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _MISSING_CASILLA: CasillaId = validated_casilla_id("missing", surface="_MISSING_CASILLA")
 _NAMED_LABEL_CASILLA: CasillaId = validated_casilla_id("my-label", surface="_NAMED_LABEL_CASILLA")
-_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _DECL_CNAE_CASILLA: CasillaId = validated_casilla_id("decl.cnae", surface="_DECL_CNAE_CASILLA")
 
 

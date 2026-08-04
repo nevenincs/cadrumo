@@ -28,18 +28,22 @@ from .._descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from ..family import DescendantInfo, MinimoDescendientesThresholds, RentaFamilyProfile
+from ..family import DescendantInfo, RentaFamilyProfile
+from ._registry_thresholds import (
+    registry_birth_order_amounts,
+    registry_menor_tres_supplement,
+    registry_thresholds,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 FILING_YEAR = 2024
 
-# Registry-authoritative Art. 58 amounts (from TOML parameters in 2024 revision)
-_MINIMO_1 = Decimal("2400")
-_MINIMO_2 = Decimal("2700")
-_MINIMO_3 = Decimal("4000")
-_MINIMO_4PLUS = Decimal("4500")
-_MENOR_TRES = Decimal("2800")
+# Art. 58 figures for the exercised filing year, read from the registry rather
+# than restated: a literal here would decouple these cases from the parameters
+# the engine actually resolves (`aeat-schema-central-config`).
+_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS = registry_birth_order_amounts(FILING_YEAR)
+_MENOR_TRES = registry_menor_tres_supplement(FILING_YEAR)
 
 _ART58_ORACLE_CASES: tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...] = (
     (
@@ -91,13 +95,7 @@ _ART58_ORACLE_CASES: tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...]
 )
 
 
-# Registry-authoritative Art. 58.1 / Art. 61 norma 2a eligibility ceilings
-# (2024 revision parameters renta-2024-minimo-descendientes-rentas-anuales-
-# limite-2024 and -declaracion-propia-rentas-limite-2024).
-_THRESHOLDS = MinimoDescendientesThresholds(
-    rentas_anuales_limite=Decimal("8000"),
-    declaracion_propia_rentas_limite=Decimal("1800"),
-)
+_THRESHOLDS = registry_thresholds(FILING_YEAR)
 
 
 def _minimo_descendientes_estatal(profile: RentaFamilyProfile) -> Decimal:

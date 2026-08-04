@@ -31,11 +31,11 @@ import hashlib
 import json
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....application.flows import FlowAnswerError, FlowPage, run_scripted_flow
 from ....application.modelo import get_filing_record
@@ -146,6 +146,7 @@ def _create_profile() -> None:
 def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", filing_year: int = 2025) -> None:
     """Persist the stored receipt metadata a justificante-bound evidence import requires."""
     body = f"{csv}-pdf".encode()
+    source_pdf_sha256 = hashlib.sha256(body).hexdigest()
     receipt = Justificante(
         csv=csv,
         modelo=modelo,
@@ -157,8 +158,8 @@ def _seed_justificante(*, csv: str, period: str = "1T", modelo: str = "130", fil
         total_a_ingresar=None,
         total_a_devolver=None,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-        source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
-        source_pdf_sha256=hashlib.sha256(body).hexdigest(),
+        source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+        source_pdf_sha256=source_pdf_sha256,
         parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
     )
     bucket_id = resolve_active_bucket_id()

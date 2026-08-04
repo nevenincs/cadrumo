@@ -152,7 +152,7 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
     assert superseded.external_evidence is not None
     assert superseded.external_evidence.kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
     assert superseded.external_evidence.reference_id == "just-303-2024-2T-original"
-    assert (profile.paths.db_dir / "cadrumo.db").is_file()
+    assert profile.paths.database_file.is_file()
 
 
 def test_filing_record_catalogue_allows_distinct_current_group_members() -> None:

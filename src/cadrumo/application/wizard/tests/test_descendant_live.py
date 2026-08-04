@@ -72,7 +72,10 @@ def test_scripted_walk_over_the_live_definition_collects_descendants_and_submits
     assert facts["renta_family.descendiente.1.adoption_date"] == "2016-06-01"
     assert facts["renta_family.descendiente.1.nif"] == "00000000T"
     assert facts["renta_family.descendientes_count"] == "2"
-    assert facts["renta_family.gastos_guarderia_reales_2024"] == "900"
+    # The per-child childcare figure is stored; its Art. 81 bis sum is derived
+    # at calculate time and refused at the write door, so it is absent here.
+    assert facts["renta_family.descendiente.0.gastos_guarderia"] == "900"
+    assert "renta_family.gastos_guarderia_reales_2024" not in facts
     # … and submission holds (run_scripted_flow refuses a non-submittable walk).
     assert projection.submit_eligible
 

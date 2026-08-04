@@ -24,6 +24,11 @@ real-console precondition further in. On POSIX the same spawn yields a non-tty
 below still hold there, but the platform carries no equivalent blocking read
 to regress. The preconditions recorded in the verdict make which case ran
 auditable rather than assumed.
+
+The ``"master.recovery.key"`` literal is a ``not (...).exists()`` refusal
+guard proving a refused enrollment mints no recovery envelope, and it is the
+provider's own filename choice (matches ``_RECOVERY_WRAP_FILENAME`` in
+``application/user_profile/_custody.py``), not a caller-supplied value.
 """
 
 from __future__ import annotations
@@ -34,10 +39,14 @@ import pathlib
 import subprocess
 import sys
 import textwrap
+from typing import Final
 
 import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.recovery.key"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 # A console-less child that blocks is unbounded, so any finite budget detects
 # the regression; the size only trades against a false failure. The child must
@@ -61,7 +70,7 @@ try:
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_secret_store_dir=storage_root / "fallback-store",
         cadrumo_secret_store_backend="file",
         cadrumo_secret_passphrase=None,
         cadrumo_output_language="en",
@@ -144,7 +153,7 @@ def _run_console_less_enrollment(storage_root: pathlib.Path) -> dict[str, object
 def test_recovery_create_refuses_on_a_console_less_host_instead_of_blocking(tmp_path: pathlib.Path) -> None:
     """The enrollment verb terminates with a refusal, minting no key material."""
     storage_root = tmp_path / "cadrumo-storage"
-    secret_store_dir = storage_root / "secrets"
+    secret_store_dir = storage_root / "fallback-store"
 
     verdict = _run_console_less_enrollment(storage_root)
 

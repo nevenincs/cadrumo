@@ -7,6 +7,11 @@ substrate's DIAGNOSTIC-class redaction rules
 the encrypted secure-object backend; these tests exercise canary NIF and
 bearer-token strings to prove that discipline holds without materializing
 JSON files.
+
+``"probe-cache"`` is a fictional directory: ``LLMCache.root_dir`` is a
+constructor parameter, never a taxonomy accessor, and the ``not (...).exists()``
+assertions prove the plaintext directory it names is never created regardless
+of what it is called.
 """
 
 from __future__ import annotations
@@ -71,13 +76,13 @@ class TestCacheRedaction:
         tmp_path: Path,
         secure_object_test_profile: TestRuntimeProfile,
     ) -> None:
-        cache = LLMCache(root_dir=tmp_path / "cache")
+        cache = LLMCache(root_dir=tmp_path / "probe-cache")
         request = _make_request()
         response = _make_response(text=f"the customer's tax id is {_NIF_CANARY}")
         cache.write(request, response)
 
-        assert not (tmp_path / "cache").exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        assert not (tmp_path / "probe-cache").exists()
+        db_path = secure_object_test_profile.paths.database_file
         assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_bearer_token_redacted_in_cache(
@@ -85,17 +90,17 @@ class TestCacheRedaction:
         tmp_path: Path,
         secure_object_test_profile: TestRuntimeProfile,
     ) -> None:
-        cache = LLMCache(root_dir=tmp_path / "cache")
+        cache = LLMCache(root_dir=tmp_path / "probe-cache")
         request = _make_request()
         response = _make_response(text=f"the auth header was {_BEARER_CANARY}")
         cache.write(request, response)
 
-        assert not (tmp_path / "cache").exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        assert not (tmp_path / "probe-cache").exists()
+        db_path = secure_object_test_profile.paths.database_file
         assert _BEARER_TAIL.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_cache_entry_remains_parseable(self, tmp_path: Path) -> None:
-        cache = LLMCache(root_dir=tmp_path / "cache")
+        cache = LLMCache(root_dir=tmp_path / "probe-cache")
         request = _make_request()
         response = _make_response(text="non sensitive output")
         cache.write(request, response)
@@ -114,7 +119,7 @@ class TestCacheRedaction:
     def test_idempotent_re_read(self, tmp_path: Path, secure_object_test_profile: TestRuntimeProfile) -> None:
         """A cache hit re-reads the (already-redacted) text. Re-applying
         the redaction rules to a redacted string is a no-op."""
-        cache = LLMCache(root_dir=tmp_path / "cache")
+        cache = LLMCache(root_dir=tmp_path / "probe-cache")
         request = _make_request()
         response = _make_response(text=f"the NIF is {_NIF_CANARY}")
         cache.write(request, response)
@@ -123,8 +128,8 @@ class TestCacheRedaction:
         # Re-write the same response (simulate re-cache) — still no
         # plaintext NIF in the encrypted database bytes.
         cache.write(request, first.model_copy(update={"cache_hit": False}))
-        assert not (tmp_path / "cache").exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        assert not (tmp_path / "probe-cache").exists()
+        db_path = secure_object_test_profile.paths.database_file
         assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
 
@@ -155,7 +160,7 @@ class TestUsageRedaction:
         record = self._make_record(text=f"customer NIF: {_NIF_CANARY}")
         path = recorder.record(record)
         assert not path.exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        db_path = secure_object_test_profile.paths.database_file
         assert _NIF_CANARY.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_bearer_token_redacted_in_usage(
@@ -167,7 +172,7 @@ class TestUsageRedaction:
         record = self._make_record(text=f"saw header {_BEARER_CANARY}")
         path = recorder.record(record)
         assert not path.exists()
-        db_path = secure_object_test_profile.paths.db_dir / "cadrumo.db"
+        db_path = secure_object_test_profile.paths.database_file
         assert _BEARER_TAIL.encode() not in read_db_at_rest_bytes(db_path)
 
     def test_each_record_is_one_jsonl_line(self, tmp_path: Path) -> None:

@@ -114,7 +114,7 @@ class TestPersistenceRoundTrip:
         self,
         tmp_path: Path,
     ) -> None:
-        runs_dir = tmp_path / "runs"
+        runs_dir = tmp_path / "probe-runs"
         runs_dir.mkdir()
         result = _result("c" * 16, datetime(2026, 4, 13, tzinfo=UTC))
         save_run(result, runs_dir=runs_dir)

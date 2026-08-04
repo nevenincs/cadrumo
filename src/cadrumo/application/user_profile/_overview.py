@@ -51,6 +51,7 @@ from ...core.i18n import tr
 from ...domain.user_profile import (
     ProfileFieldType,
     UserProfileStatus,
+    derived_selector_for_path,
     load_user_profile_schema,
     profile_field_label,
     profile_section_title,
@@ -59,9 +60,10 @@ from ._completeness import missing_required_field_paths, profile_section_rows, p
 from ._projections import record_to_path_values
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
 
     from ...domain.user_profile import (
+        ProfileDerivedSelectorDefinition,
         ProfileFieldDefinition,
         ProfileSchemaDefinition,
         ProfileSectionDefinition,
@@ -469,12 +471,23 @@ def _section_field_views(
     section: ProfileSectionDefinition,
     values: Mapping[str, str],
     present: frozenset[str],
+    derived_selectors: Iterable[ProfileDerivedSelectorDefinition] = (),
 ) -> list[ProfileFieldView]:
-    """Every row one section contributes, expanding whatever repeats."""
+    """Every row one section contributes, expanding whatever repeats.
+
+    A path the engine derives yields no row at all. The write door refuses it,
+    so rendering it would offer the operator a box whose value the record then
+    rejects -- the two-surfaces-disagreeing failure the write-door refusal
+    exists to prevent, reintroduced at the point of entry. The declarations
+    themselves are retired in a later change, at which point this filter
+    becomes vacuous rather than wrong.
+    """
     if section.repeatable:
         return _repeatable_section_views(section, values, present)
     views: list[ProfileFieldView] = []
     for field in section.fields:
+        if derived_selector_for_path(f"{section.key}.{field.key}", derived_selectors) is not None:
+            continue
         if field.type in _NAMESPACE_FIELD_TYPES:
             views.extend(_namespace_field_views(section.key, field, values))
             continue
@@ -547,7 +560,9 @@ def build_profile_overview(
             ProfileSectionView(
                 key=section.key,
                 title=profile_section_title(section),
-                fields=tuple(_section_field_views(section, values, present)),
+                fields=tuple(
+                    _section_field_views(section, values, present, resolved_schema.derived_selectors),
+                ),
             ),
         )
 

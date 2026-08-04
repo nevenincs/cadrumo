@@ -95,19 +95,41 @@ class StoragePathKind(StrEnum):
 class StoragePathAnchor(StrEnum):
     """Which directory a :class:`StoragePathDefinition` grammar's ``<root>`` token means.
 
-    Declared because it is not one thing. Nearly every
-    ``<root>``-anchored filesystem entry means the top-level storage root
-    (``cadrumo_local_storage_root``); the three blob-content entries
-    (``blob_manifest``, ``blob_content_plaintext``, ``blob_content_ciphertext``)
-    instead anchor ``<root>`` at
-    :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`'s
-    own ``root_dir`` constructor parameter -- a genuinely distinct value from
-    the storage root in how production wires it today
-    (``cadrumo_blob_store_dir``, which is itself already the storage root's
-    ``blobs`` subdirectory). Conflating the two let a directory-agreement
-    gate certify a match between two different anchors that happened to
-    share a literal subdirectory name (``blobs``), rather than verifying
-    anything real.
+    Measured fact, not a justification: ``STORAGE_ROOT`` is bound to
+    ``cadrumo_local_storage_root``, and every production
+    :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
+    construction at HEAD -- ``get_secret_store`` and
+    ``default_blob_store_roots`` -- passes ``root_dir`` the SAME value.
+    ``BLOB_STORE_ROOT`` appears at six sites in this tree and every one but
+    its own declaration here is a comparison against that fact; it is bound
+    to no value of its own anywhere.
+
+    This member's original justification -- that ``root_dir`` was "a
+    genuinely distinct value from the storage root in how production wires
+    it today" -- was FALSE, not merely dated: commits ``69b2e4338208`` and
+    ``5fbd329fd08d`` fixed a real ``blobs/blobs`` doubled-path bug by moving
+    both call sites onto the plain storage root, which collapsed the value
+    distinction this docstring used to claim. Two replacement
+    justifications were then proposed and both were refuted by measurement
+    before landing: that keeping the members apart prevents a
+    directory-agreement gate from certifying a coincidental name-collision
+    between two different anchors (dead once the anchors resolve to the
+    same directory -- the agreement would be genuine, not coincidental);
+    and that ``root_dir`` is caller-supplied and therefore not statically
+    knowable (dead on inspection of the actual caller: every production
+    path is settings-derived).
+
+    Whether this two-member split still earns its place is, as of this
+    writing, an OPEN QUESTION with no supporting answer on either side --
+    not resolved by asserting a fourth justification nobody has measured.
+    It is kept rather than collapsed because collapsing it is also an
+    unmeasured claim, not because keeping it is justified. What changed as
+    a direct consequence: the directory-agreement gate (in this package's
+    ``tests/``) no longer excludes ``BLOB_STORE_ROOT``-anchored entries
+    from its check -- that exclusion had no surviving justification
+    either, and measurement (an isolated-archive mutation proof) showed
+    including them costs nothing and catches a real break the prior
+    exclusion missed.
     """
 
     STORAGE_ROOT = "storage_root"

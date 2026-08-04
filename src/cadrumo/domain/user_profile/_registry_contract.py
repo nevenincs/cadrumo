@@ -13,7 +13,11 @@ from typing import TYPE_CHECKING, Literal, cast
 
 from pydantic import BaseModel, Field
 
-from ._schema import ProfileDerivedSelectorDefinition, ProfileSchemaDefinition
+from ._schema import (
+    ProfileDerivedSelectorDefinition,
+    ProfileSchemaDefinition,
+    derived_selector_for_path,
+)
 
 if TYPE_CHECKING:
     from ..calculations.registry import ModeloDefinition, ModeloRevision
@@ -58,19 +62,6 @@ class UserProfileSelectorIndex(BaseModel):
     #: see it -- and because a caller resolving a selector this way needs to
     #: know WHICH pattern matched, not merely that one did.
     derived_selectors: tuple[ProfileDerivedSelectorDefinition, ...] = ()
-
-    def derived_selector_for(self, selector: str) -> ProfileDerivedSelectorDefinition | None:
-        """Return the declared derived namespace owning *selector*, if any.
-
-        Scoped to binding-selector resolution. The schedule-predicate,
-        deadline, cross-reference and export-header surfaces read disjoint
-        namespaces that no derived path declares, so routing them through
-        here would silently retire real coverage warnings.
-        """
-        for definition in self.derived_selectors:
-            if definition.matches(selector):
-                return definition
-        return None
 
 
 class UserProfileRegistryContractReport(BaseModel):
@@ -189,7 +180,16 @@ def _binding_issues(
             # computes. The derived hop sits here, BELOW the empty-selector
             # arm above: that arm answers a malformed selector yielding no
             # path at all, which no pattern should ever excuse.
-            if selector not in index.profile_selectors and index.derived_selector_for(selector) is None:
+            #
+            # Asked through the one canonical judgment rather than a method on
+            # this index, so the write-door refusal and this validator cannot
+            # develop separate opinions about what "derived" means. Scoped to
+            # binding selectors only: the schedule, deadline, cross-reference
+            # and export-header surfaces read disjoint namespaces that no
+            # derived path declares, and routing them here would silently
+            # retire real coverage warnings.
+            derived = derived_selector_for_path(selector, index.derived_selectors)
+            if selector not in index.profile_selectors and derived is None:
                 issues.append(
                     _issue(
                         severity=BaseSeverity.ERROR,

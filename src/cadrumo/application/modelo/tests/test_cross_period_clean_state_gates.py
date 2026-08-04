@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -153,6 +154,7 @@ def _source_values(period: str, source_casilla_ids: tuple[CasillaId, ...]) -> di
 
 def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing_year: int) -> None:
     pdf_bytes = f"%PDF-1.4\n% synthetic justificante {csv}\n%%EOF\n".encode()
+    source_pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
     JustificanteRepository().save(
         Justificante(
             csv=csv,
@@ -165,8 +167,8 @@ def _persist_justificante_metadata(csv: str, *, modelo: str, period: str, filing
             total_a_ingresar=None,
             total_a_devolver=None,
             verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-            source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
-            source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+            source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+            source_pdf_sha256=source_pdf_sha256,
             parsed_at=_CLOCK,
         ),
     )

@@ -1,16 +1,25 @@
-"""Tests for the bucket-scoped verify audit service."""
+"""Tests for the bucket-scoped verify audit service.
+
+The ``"live"`` literal in ``cadrumo_audit_dir / "live" / "verify" / ...`` is a
+``not (...).exists()`` refusal guard proving a captured tax id never leaks
+into a plaintext audit-trail file alongside the encrypted secure-object
+write. An accessor aimed at the wrong location would leave that assertion
+trivially satisfied -- the exact silent-pass shape a refusal test must not
+risk -- so the literal stays.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
+from typing import Final
 
 import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from .._errors import LiveApplicationInputError
 from .._verify import (
     VerifyObservation,
@@ -22,6 +31,9 @@ from .._verify import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 _BUCKET_A_ID = "60606060-6060-4060-8060-606060606060"
 _BUCKET_B_ID = "61616161-6161-4161-8161-616161616161"
 
@@ -314,7 +326,7 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"DE123456789" in record.payload
-        assert b"DE123456789" not in (secure_engine.paths.db_dir / "cadrumo.db").read_bytes()
+        assert b"DE123456789" not in read_db_at_rest_bytes(secure_engine.paths.database_file)
         assert not (
             secure_engine.settings.cadrumo_audit_dir / "live" / "verify" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()

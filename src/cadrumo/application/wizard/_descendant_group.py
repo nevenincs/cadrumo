@@ -68,6 +68,9 @@ _ADOPTION_DATE_PAGE_ID = "adoption-date"
 _DISCAPACIDAD_PAGE_ID = "discapacidad"
 _CONVIVENCIA_PAGE_ID = "convivencia"
 _CUSTODIA_COMPARTIDA_PAGE_ID = "custodia-compartida"
+_RENTAS_ANUALES_PAGE_ID = "rentas-anuales"
+_DECLARACION_PROPIA_PAGE_ID = "declaracion-propia"
+_PRORRATA_MINIMO_PAGE_ID = "prorrata-minimo"
 _MESES_MADRE_TRABAJO_PAGE_ID = "meses-madre-trabajo"
 _GASTOS_GUARDERIA_PAGE_ID = "gastos-guarderia"
 _NIF_PAGE_ID = "nif"
@@ -79,6 +82,9 @@ DESCENDANT_PAGE_IDS: tuple[str, ...] = (
     _DISCAPACIDAD_PAGE_ID,
     _CONVIVENCIA_PAGE_ID,
     _CUSTODIA_COMPARTIDA_PAGE_ID,
+    _RENTAS_ANUALES_PAGE_ID,
+    _DECLARACION_PROPIA_PAGE_ID,
+    _PRORRATA_MINIMO_PAGE_ID,
     _MESES_MADRE_TRABAJO_PAGE_ID,
     _GASTOS_GUARDERIA_PAGE_ID,
     _NIF_PAGE_ID,
@@ -92,6 +98,9 @@ DESCENDANT_MESES_VALIDATOR_ID = "descendant-meses-range"
 
 #: Registered id of the per-answer descendant gastos-guardería sign validator.
 DESCENDANT_GASTOS_VALIDATOR_ID = "descendant-gastos-nonneg"
+
+#: Registered id of the per-answer descendant rentas-anuales sign validator.
+DESCENDANT_RENTAS_VALIDATOR_ID = "descendant-rentas-nonneg"
 
 #: Registered id of the flow-scope descendant adoption-date cross-field validator.
 DESCENDANT_ADOPTION_VALIDATOR_ID = "descendant-adoption-dates"
@@ -112,6 +121,14 @@ _DISCAPACIDAD_CHOICE_33_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.ch
 _DISCAPACIDAD_CHOICE_65_LOCALE_KEY = "wizard.setup.descendientes.discapacidad.choices.65.label"
 _CONVIVENCIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.convivencia.prompt"
 _CUSTODIA_COMPARTIDA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.custodia-compartida.prompt"
+_RENTAS_ANUALES_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.prompt"
+_RENTAS_ANUALES_HELP_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.help"
+_DECLARACION_PROPIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.declaracion-propia.prompt"
+_DECLARACION_PROPIA_HELP_LOCALE_KEY = "wizard.setup.descendientes.declaracion-propia.help"
+_PRORRATA_MINIMO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.prorrata-minimo.prompt"
+_PRORRATA_MINIMO_HELP_LOCALE_KEY = "wizard.setup.descendientes.prorrata-minimo.help"
+_PRORRATA_MINIMO_CHOICE_TRUE_LOCALE_KEY = "wizard.setup.descendientes.prorrata-minimo.choices.true.label"
+_PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY = "wizard.setup.descendientes.prorrata-minimo.choices.false.label"
 _MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.prompt"
 _MESES_MADRE_TRABAJO_HELP_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.help"
 _GASTOS_GUARDERIA_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.prompt"
@@ -123,6 +140,7 @@ _NIF_PROMPT_LOCALE_KEY = "wizard.setup.descendientes.nif.prompt"
 # first: the closest existing leaves (cli.config.descendiente.*) carry
 # CLI-flag-specific prose, so wizard-namespace keys are minted here.
 _MESES_INVALID_RANGE_LOCALE_KEY = "wizard.setup.descendientes.meses-madre-trabajo.invalid_range"
+_RENTAS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.rentas-anuales.invalid_negative"
 _GASTOS_INVALID_NEGATIVE_LOCALE_KEY = "wizard.setup.descendientes.gastos-guarderia.invalid_negative"
 _ADOPTION_BEFORE_BIRTH_LOCALE_KEY = "wizard.setup.descendientes.adoption-date.before_birth"
 _ADOPTION_IN_FUTURE_LOCALE_KEY = "wizard.setup.descendientes.adoption-date.in_future"
@@ -149,6 +167,14 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _DISCAPACIDAD_CHOICE_65_LOCALE_KEY,
     _CONVIVENCIA_PROMPT_LOCALE_KEY,
     _CUSTODIA_COMPARTIDA_PROMPT_LOCALE_KEY,
+    _RENTAS_ANUALES_PROMPT_LOCALE_KEY,
+    _RENTAS_ANUALES_HELP_LOCALE_KEY,
+    _DECLARACION_PROPIA_PROMPT_LOCALE_KEY,
+    _DECLARACION_PROPIA_HELP_LOCALE_KEY,
+    _PRORRATA_MINIMO_PROMPT_LOCALE_KEY,
+    _PRORRATA_MINIMO_HELP_LOCALE_KEY,
+    _PRORRATA_MINIMO_CHOICE_TRUE_LOCALE_KEY,
+    _PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY,
     _MESES_MADRE_TRABAJO_PROMPT_LOCALE_KEY,
     _MESES_MADRE_TRABAJO_HELP_LOCALE_KEY,
     _GASTOS_GUARDERIA_PROMPT_LOCALE_KEY,
@@ -156,6 +182,7 @@ DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _NIF_PROMPT_LOCALE_KEY,
     _MESES_INVALID_RANGE_LOCALE_KEY,
     _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
+    _RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
     _ADOPTION_BEFORE_BIRTH_LOCALE_KEY,
     _ADOPTION_IN_FUTURE_LOCALE_KEY,
 )
@@ -222,8 +249,23 @@ def _validate_gastos_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
     return ValidationVerdict.passed()
 
 
+def _validate_rentas_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict:
+    """Refuse a negative rentas figure (Art. 58.1 LIRPF; euros >= 0).
+
+    Blank (optional) passes and leaves the figure UNDECLARED, which the
+    eligibility predicate reads as non-excluding. A negative amount refuses
+    as a verdict so it never reaches the ``ge=0`` model constraint at persist.
+    """
+    if not canonical:
+        return ValidationVerdict.passed()
+    if int(canonical) < 0:
+        return ValidationVerdict.failed(_RENTAS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
+    return ValidationVerdict.passed()
+
+
 register_answer_validator(DESCENDANT_MESES_VALIDATOR_ID, _validate_meses_range)
 register_answer_validator(DESCENDANT_GASTOS_VALIDATOR_ID, _validate_gastos_nonneg)
+register_answer_validator(DESCENDANT_RENTAS_VALIDATOR_ID, _validate_rentas_nonneg)
 
 
 def _validate_descendant_adoption_dates(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
@@ -322,6 +364,15 @@ _DISCAPACIDAD_CHOICES: tuple[FlowChoice, ...] = (
 )
 
 
+#: Art. 61 norma 1a answers. Left unanswered the engine derives the answer
+#: from marital status, spouse record and declaration type, and raises a
+#: visible advisory saying so; an explicit answer always wins over that.
+_PRORRATA_MINIMO_CHOICES: tuple[FlowChoice, ...] = (
+    FlowChoice(value="true", label=_locale_ref(_PRORRATA_MINIMO_CHOICE_TRUE_LOCALE_KEY)),
+    FlowChoice(value="false", label=_locale_ref(_PRORRATA_MINIMO_CHOICE_FALSE_LOCALE_KEY)),
+)
+
+
 _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
     FlowPage(
         id=_BIRTH_DATE_PAGE_ID,
@@ -362,6 +413,34 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         default="false",
         required=False,
         answer_type=bool,
+    ),
+    FlowPage(
+        id=_RENTAS_ANUALES_PAGE_ID,
+        widget=FlowWidgetKind.INTEGER,
+        prompt=_locale_ref(_RENTAS_ANUALES_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_RENTAS_ANUALES_HELP_LOCALE_KEY),
+        format_hint=_locale_ref(_FORMAT_AMOUNT_LOCALE_KEY),
+        required=False,
+        answer_type=int,
+        answer_validator_ids=(DESCENDANT_RENTAS_VALIDATOR_ID,),
+    ),
+    FlowPage(
+        id=_DECLARACION_PROPIA_PAGE_ID,
+        widget=FlowWidgetKind.CONFIRM,
+        prompt=_locale_ref(_DECLARACION_PROPIA_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_DECLARACION_PROPIA_HELP_LOCALE_KEY),
+        default="false",
+        required=False,
+        answer_type=bool,
+    ),
+    FlowPage(
+        id=_PRORRATA_MINIMO_PAGE_ID,
+        widget=FlowWidgetKind.SELECT,
+        prompt=_locale_ref(_PRORRATA_MINIMO_PROMPT_LOCALE_KEY),
+        help=_locale_ref(_PRORRATA_MINIMO_HELP_LOCALE_KEY),
+        choices=_PRORRATA_MINIMO_CHOICES,
+        required=False,
+        answer_type=str,
     ),
     FlowPage(
         id=_MESES_MADRE_TRABAJO_PAGE_ID,

@@ -944,14 +944,21 @@ _PROFILE_SCHEMA_KEYS = ("config.profile.create", "config.profile.edit")
 _WIZARD_SCHEMA_OWNER_MODULE = "cadrumo.application.wizard._results"
 
 
-def _probe_script(*, block_schema_owner: bool) -> str:
-    """Render the fresh-interpreter probe script that builds the CLI manifest."""
+def _probe_script(*, block_schema_owner: bool, storage_root: Path) -> str:
+    """Render the fresh-interpreter probe script that builds the CLI manifest.
+
+    ``storage_root`` is the caller's own ``tmp_path``-derived directory rather
+    than a ``tempfile.mkdtemp()`` minted inside the subprocess: a directory
+    the subprocess mints itself outlives that process with nothing to remove
+    it, while a directory the outer test owns is reclaimed by pytest's normal
+    ``tmp_path`` teardown.
+    """
     return textwrap.dedent(
         """
-        import json, os, sys, tempfile
+        import json, os, sys
         for _k in [_k for _k in os.environ if _k.startswith(("CADRUMO_", "AEAT_"))]:
             del os.environ[_k]
-        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = tempfile.mkdtemp()
+        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = {storage_root!r}
         os.environ["CADRUMO_ACTIVE_PROFILE"] = " "
         schema_owner = "cadrumo.application.wizard._results"
         if {block!r} == "block":
@@ -974,10 +981,14 @@ def _probe_script(*, block_schema_owner: bool) -> str:
         present = [key for key in ("config.profile.create", "config.profile.edit") if key in commands]
         print("RESULT " + json.dumps({"present": present, "wizard_before_walk": wizard_before_walk}))
         """
-    ).replace("{block!r}", repr("block" if block_schema_owner else "keep"))
+    ).replace("{storage_root!r}", repr(str(storage_root))).replace(
+        "{block!r}", repr("block" if block_schema_owner else "keep")
+    )
 
 
-def _profile_schema_keys_in_fresh_process(*, block_schema_owner: bool) -> tuple[frozenset[str], bool]:
+def _profile_schema_keys_in_fresh_process(
+    *, block_schema_owner: bool, storage_root: Path
+) -> tuple[frozenset[str], bool]:
     """Build the CLI capability manifest in a clean interpreter and report the result.
 
     Returns ``(present_profile_keys, wizard_package_self_seeded)``. The subprocess
@@ -987,7 +998,11 @@ def _profile_schema_keys_in_fresh_process(*, block_schema_owner: bool) -> tuple[
     file that every peer would see.
     """
     completed = subprocess.run(
-        [sys.executable, "-c", _probe_script(block_schema_owner=block_schema_owner)],
+        [
+            sys.executable,
+            "-c",
+            _probe_script(block_schema_owner=block_schema_owner, storage_root=storage_root),
+        ],
         capture_output=True,
         text=True,
         timeout=180,
@@ -1003,7 +1018,7 @@ def _profile_schema_keys_in_fresh_process(*, block_schema_owner: bool) -> tuple[
     return frozenset(payload["present"]), bool(payload["wizard_before_walk"])
 
 
-def test_wizard_profile_schemas_reach_the_manifest_from_their_canonical_owner() -> None:
+def test_wizard_profile_schemas_reach_the_manifest_from_their_canonical_owner(tmp_path: Path) -> None:
     """The wizard-owned profile schemas reach the manifest from their producer.
 
     Runs in a fresh interpreter that does NOT import the wizard package, so
@@ -1015,7 +1030,9 @@ def test_wizard_profile_schemas_reach_the_manifest_from_their_canonical_owner() 
     present. If the canonical owner is omitted from the lazy table, both keys
     silently vanish and this reds, naming the owner to restore.
     """
-    present, wizard_before_walk = _profile_schema_keys_in_fresh_process(block_schema_owner=False)
+    present, wizard_before_walk = _profile_schema_keys_in_fresh_process(
+        block_schema_owner=False, storage_root=tmp_path / "storage"
+    )
 
     assert not wizard_before_walk, (
         "the guard imported the wizard package before running the payload walk, so it seeds its own "
@@ -1030,7 +1047,7 @@ def test_wizard_profile_schemas_reach_the_manifest_from_their_canonical_owner() 
     )
 
 
-def test_missing_canonical_schema_owner_drops_both_profile_schemas() -> None:
+def test_missing_canonical_schema_owner_drops_both_profile_schemas(tmp_path: Path) -> None:
     """Anti-tautology proof: without the canonical owner, both schemas disappear.
 
     Blocks the canonical owner in a fresh interpreter and confirms both keys drop
@@ -1038,7 +1055,7 @@ def test_missing_canonical_schema_owner_drops_both_profile_schemas() -> None:
     seeded some other way and carry no information; this proves the explicit lazy
     owner import is load-bearing and that the guard reds on its removal.
     """
-    present, _ = _profile_schema_keys_in_fresh_process(block_schema_owner=True)
+    present, _ = _profile_schema_keys_in_fresh_process(block_schema_owner=True, storage_root=tmp_path / "storage")
 
     assert "config.profile.create" not in present, (
         "config.profile.create survived the canonical owner's removal, so the guard cannot detect an omission"

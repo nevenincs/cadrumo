@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core import Modelo
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import CasillaId
+from cadrumo.domain.calculations.registry import BindingId, CasillaId, FormulaId, InputKind
 
 __all__ = [
     "CasillaSearchRecord",
@@ -97,13 +97,21 @@ class CasillaSearchRecord(SearchRecordBase):
     The localised descriptions are the registry casilla ``label`` (es
     invariant) plus per-revision ``localized_labels`` (en / ca / hu) where
     authored -- conforming to the official casilla descriptions. The
-    ``legal_refs`` / ``source_refs`` provenance is carried verbatim from
-    the casilla definition (the calculation-grounding contract).
+    registry definition contract is carried alongside them: localized help,
+    value shape, input kind, requiredness, and the canonical binding/formula
+    identities. The ``legal_refs`` / ``source_refs`` provenance is carried
+    verbatim from the casilla definition (the calculation-grounding contract).
     """
 
     kind: SearchRecordKind = SearchRecordKind.CASILLA
     modelo: Modelo
     casilla_id: CasillaId
+    localized_help: dict[str, str] = Field(default_factory=dict)
+    data_type: str
+    input_kind: InputKind
+    required: bool
+    binding: BindingId | None = None
+    formula_id: FormulaId | None = None
     number: str = Field(min_length=1, max_length=160)
     segmento: str | None = Field(default=None, min_length=1, max_length=32)
     section: tuple[str, ...] = ()

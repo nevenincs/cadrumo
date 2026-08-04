@@ -59,14 +59,14 @@ def test_two_buckets_persist_into_two_distinct_workflow_histories(tmp_path: Path
         repo_a = WorkflowStateRepository(objects=profile_a.repository)
         state_a = _state_for_label("profile-a")
         repo_a.save(state_a)
-        a_db = profile_a.paths.db_dir / "cadrumo.db"
+        a_db = profile_a.paths.database_file
         assert a_db.exists(), "bucket A's per-bucket SQLite database must exist after a save"
 
     with isolated_runtime_profile(tmp_path=bucket_b_root, bucket_id=_BUCKET_B_ID) as profile_b:
         repo_b = WorkflowStateRepository(objects=profile_b.repository)
         state_b = _state_for_label("profile-b")
         repo_b.save(state_b)
-        b_db = profile_b.paths.db_dir / "cadrumo.db"
+        b_db = profile_b.paths.database_file
         assert b_db.exists(), "bucket B's per-bucket SQLite database must exist after a save"
 
     assert a_db != b_db
@@ -91,7 +91,7 @@ def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: P
     with isolated_runtime_profile(tmp_path=bucket_b_root, bucket_id=_BUCKET_B_ID) as profile_b:
         repo_b = WorkflowStateRepository(objects=profile_b.repository)
         repo_b.save(expected_state)
-        b_db = profile_b.paths.db_dir / "cadrumo.db"
+        b_db = profile_b.paths.database_file
         assert b_db.exists()
 
     # B's engine is disposed on context exit (dispose_engine -> WAL checkpoint
@@ -103,7 +103,7 @@ def test_mutating_one_bucket_db_leaves_other_bucket_reads_unaffected(tmp_path: P
     with isolated_runtime_profile(tmp_path=bucket_a_root, bucket_id=_BUCKET_A_ID) as profile_a:
         repo_a = WorkflowStateRepository(objects=profile_a.repository)
         repo_a.save(_state_for_label("profile-a"))
-        a_db = profile_a.paths.db_dir / "cadrumo.db"
+        a_db = profile_a.paths.database_file
         assert a_db.exists()
 
     # Corrupt A's database AFTER its engine is disposed. Disposing the engine on

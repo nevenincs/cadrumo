@@ -32,6 +32,7 @@ from pydantic import BaseModel, ConfigDict
 
 from .....tests.master_key import EphemeralMasterKeyProvider
 from .. import (
+    BUCKET_DEK_FILENAME,
     BlobReference,
     EncryptedBlobStore,
     Envelope,
@@ -181,7 +182,7 @@ def seeded_three_stores(
         content_type="application/octet-stream",
     )
 
-    keystore_path = tmp_path / "keystore" / "bucket.dek.json"
+    keystore_path = tmp_path / "keystore" / BUCKET_DEK_FILENAME
     keystore_dek = b"D" * 32
     write_wrapped_bucket_dek(
         keystore_path,

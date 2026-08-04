@@ -101,7 +101,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 @pytest.fixture
 def secret_store(tmp_path: Path) -> Iterator[SecretStore]:
     provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "blobs", master_key_provider=provider)
+    blob_store = EncryptedBlobStore(root_dir=tmp_path / "store-root", master_key_provider=provider)
     store = SecretStore(store_dir=tmp_path / "fallback-store", blob_store=blob_store, master_key_provider=provider)
     yield store
 

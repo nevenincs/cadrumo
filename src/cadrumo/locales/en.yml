@@ -2003,12 +2003,14 @@ cli:
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
       filed:
+        casillas_not_enrolled: '{count} casilla(s) in the captured filings hold values
+          that are not amounts, so they were not enrolled as calculation evidence:
+          {affected}. Everything numeric in those filings was enrolled normally.'
         list_help: List filed declaration rows without downloading artefacts
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's
           dependencies.
-        casillas_not_enrolled: '{count} casilla(s) in the captured filings hold values that are not amounts, so they were not enrolled as calculation evidence: {affected}. Everything numeric in those filings was enrolled normally.'
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
@@ -3441,8 +3443,9 @@ cli:
         %{name} --yes' to confirm.
       delete_yes_help: Explicitly confirm the delete operation
       descendiente:
-        add_flag_help: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
-          Repeatable.
+        add_flag_help: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+          Repeatable. Run `aeat config profile descendiente` with no subcommand to
+          enter these guided.
         add_help: Add one or more descendants to the active profile.
         help: Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.
         index_out_of_range: Index %{index} is out of range; the profile has %{total}
@@ -3458,6 +3461,8 @@ cli:
       duplicate_target_help: Target profile id for the duplicate
       edit_help: Re-run the wizard against an existing profile and update values in
         place
+      edit_target_not_active: Profile '%{name}' is not the active profile, and 'profile
+        edit' only edits the active one. Log in to it first, then edit.
       export_cleartext_local_help: Write cleartext JSON for local/SAR handling only;
         not safe for email, sync, or transfer.
       export_confirm_passphrase_prompt: 'Confirm bundle passphrase: '
@@ -3655,7 +3660,6 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
-      edit_target_not_active: 'Profile ''%{name}'' is not the active profile, and ''profile edit'' only edits the active one. Log in to it first, then edit.'
     recover:
       errors:
         recovery_code_rejected: The recovery code did not open the recovery wrapper;
@@ -6882,18 +6886,6 @@ profile:
         valid_to:
           label: Valid to
       renta_family:
-        anualidades_sin_minimo_descendientes_2020:
-          label: Alimony annuities without descendant minimum (2020)
-        anualidades_sin_minimo_descendientes_2021:
-          label: Alimony annuities without descendant minimum (2021)
-        anualidades_sin_minimo_descendientes_2022:
-          label: Alimony annuities without descendant minimum (2022)
-        anualidades_sin_minimo_descendientes_2023:
-          label: Alimony annuities without descendant minimum (2023)
-        anualidades_sin_minimo_descendientes_2024:
-          label: Alimony annuities without descendant minimum (2024)
-        anualidades_sin_minimo_descendientes_2025:
-          label: Alimony annuities without descendant minimum (2025)
         ascendants:
           label: Ascendants
         cotizaciones_ss_madre_2024:
@@ -6906,34 +6898,6 @@ profile:
           label: Descendant
         descendientes_count:
           label: Descendant count
-        descendientes_menores_3_2024:
-          label: Descendants under 3 (2024)
-        descendientes_minimos_aggregate_2020:
-          label: Descendant minimum, state share (2020)
-        descendientes_minimos_aggregate_2021:
-          label: Descendant minimum, state share (2021)
-        descendientes_minimos_aggregate_2022:
-          label: Descendant minimum, state share (2022)
-        descendientes_minimos_aggregate_2023:
-          label: Descendant minimum, state share (2023)
-        descendientes_minimos_aggregate_2024:
-          label: Descendant minimum, state share (2024)
-        descendientes_minimos_aggregate_2025:
-          label: Descendant minimum, state share (2025)
-        descendientes_minimos_aggregate_autonomico_2020:
-          label: Descendant minimum, regional share (2020)
-        descendientes_minimos_aggregate_autonomico_2021:
-          label: Descendant minimum, regional share (2021)
-        descendientes_minimos_aggregate_autonomico_2022:
-          label: Descendant minimum, regional share (2022)
-        descendientes_minimos_aggregate_autonomico_2023:
-          label: Descendant minimum, regional share (2023)
-        descendientes_minimos_aggregate_autonomico_2024:
-          label: Descendant minimum, regional share (2024)
-        descendientes_minimos_aggregate_autonomico_2025:
-          label: Descendant minimum, regional share (2025)
-        gastos_guarderia_reales_2024:
-          label: Childcare expenses (2024)
         madrid_nacimiento_adopcion_eligible_count:
           label: Madrid birth/adoption deduction count
         minor_children_in_unit:
@@ -7368,6 +7332,10 @@ wizard:
         prompt: How many descendants (children) do you want to declare?
       custodia-compartida:
         prompt: Is custody shared with the other parent?
+      declaracion-propia:
+        help: This only removes the allowance if their income also exceeds the legal
+          limit.
+        prompt: Does the descendant file their own income tax return?
       discapacidad:
         choices:
           '0':
@@ -7390,6 +7358,18 @@ wizard:
         prompt: Months the mother worked while the child was under 3 (filing year)
       nif:
         prompt: Descendant's NIF/NIE (leave blank if none)
+      prorrata-minimo:
+        choices:
+          'false':
+            label: No, I claim it alone
+          'true':
+            label: Yes, split between both
+        help: Leave blank to derive it from your marital status and declaration type.
+        prompt: Is another taxpayer also entitled to the allowance for this descendant?
+      rentas-anuales:
+        help: Leave blank if unknown. High income can remove the descendant allowance.
+        invalid_negative: The descendant's income cannot be negative.
+        prompt: Descendant's annual income, excluding exempt income (euros)
       title: Descendants
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:

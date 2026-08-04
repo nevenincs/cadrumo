@@ -31,7 +31,7 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile="11111111-1111-4111-8111-111111111111",
         cadrumo_secret_store_backend="file",
-        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_secret_store_dir=storage_root / "fallback-store",
         cadrumo_output_language="en",
     )
     token = config_module._settings_override.set(settings)

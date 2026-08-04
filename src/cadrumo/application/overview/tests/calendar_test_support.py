@@ -6,11 +6,11 @@ import hashlib
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
-from pathlib import Path
 from typing import Literal
 
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
@@ -158,6 +158,7 @@ def justificante_metadata(
     tax_id: str = "X1234567L",
 ) -> Justificante:
     pdf_bytes = f"{csv}-pdf".encode()
+    source_pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
     return Justificante(
         csv=csv,
         modelo=modelo,
@@ -169,8 +170,8 @@ def justificante_metadata(
         total_a_ingresar=None,
         total_a_devolver=None,
         verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-        source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
-        source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+        source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+        source_pdf_sha256=source_pdf_sha256,
         parsed_at=datetime(filing_year, 4, 16, 12, 0, tzinfo=UTC),
     )
 

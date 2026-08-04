@@ -217,6 +217,13 @@ def test_schema_field_coverage_is_complete_in_the_projection() -> None:
     }
     assert namespaces, "no namespace field is declared, which would make the carve-out below vacuous"
 
+    # A path the engine derives renders no row, because the write door refuses
+    # it and a box the record then rejects is the disagreement that refusal
+    # exists to prevent. There is no second carve-out term to subtract here: a
+    # declared field and a derived-selector pattern are mutually exclusive by
+    # construction, so no declared field path ever matches a pattern and the
+    # equality below needs no such term.
+
     instance_path = "censo.divergencia.0.axis"
     record = _record().model_copy(
         update={"facts": (*_record().facts, UserProfileFact(path=instance_path, value="censo.iae_epigrafe"))},

@@ -42,11 +42,15 @@ from ._descendant_group import DESCENDANTS_COUNT_PAGE_ID
 from ._models import WizardFlow
 
 # The descendant fact namespace: indexed rows renta_family.descendiente.{n}.*
-# plus the two derived aggregates (see the domain descendant-facts projection).
+# plus the one aggregate the projection still stores.
+#
+# The Art. 81 bis guardería sum used to belong here too. It is now an
+# engine-derived path: nothing writes it, the calculate-time injector recomputes
+# it from the per-child figures, and the profile write door refuses a value at
+# it. Keeping it in this set made the clearing sweep emit a clear for a path
+# that can never be present -- dead work pointed at a retired declaration.
 _DESCENDANT_ROW_PREFIX = "renta_family.descendiente."
-_DESCENDANT_AGGREGATE_PATHS = frozenset(
-    {"renta_family.descendientes_count", "renta_family.gastos_guarderia_reales_2024"},
-)
+_DESCENDANT_AGGREGATE_PATHS = frozenset({"renta_family.descendientes_count"})
 
 
 def _in_descendant_namespace(path: str) -> bool:

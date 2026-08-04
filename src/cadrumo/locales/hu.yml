@@ -2093,13 +2093,15 @@ cli:
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
       filed:
+        casillas_not_enrolled: 'A rögzített bevallásokban {count} rovat értéke nem
+          összeg, ezért nem került be számítási bizonyítékként: {affected}. Az érintett
+          bevallások minden számszerű adata a szokásos módon bekerült.'
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
         pull_sources_help: Letölti egy cél-nyilatkozat függőségeihez szükséges benyújtott
           megfigyeléseket.
-        casillas_not_enrolled: 'A rögzített bevallásokban {count} rovat értéke nem összeg, ezért nem került be számítási bizonyítékként: {affected}. Az érintett bevallások minden számszerű adata a szokásos módon bekerült.'
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:
@@ -3644,8 +3646,9 @@ cli:
         profile delete %{name} --yes` a megerősítéshez.'
       delete_yes_help: Törlési művelet explicit megerősítése.
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
-          Ismételhető.
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX].
+          Ismételhető. Futtasd az `aeat config profile descendiente` parancsot alparancs
+          nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
@@ -3662,6 +3665,8 @@ cli:
       duplicate_target_help: A másolat célazonosítója.
       edit_help: A varázsló újrafuttatása meglévő profil ellen, értékek frissítése
         helyben.
+      edit_target_not_active: A(z) '%{name}' profil nem az aktív profil, és a 'profile
+        edit' csak az aktívat szerkeszti. Először jelentkezzen be rá, majd szerkessze.
       export_cleartext_local_help: Titkosítatlan JSON írása csak helyi/SAR kezelésre;
         nem biztonságos e-mailhez, szinkronizáláshoz vagy átvitelhez.
       export_confirm_passphrase_prompt: 'Erősítsd meg a csomag jelmondatát: '
@@ -3868,7 +3873,6 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
-      edit_target_not_active: 'A(z) ''%{name}'' profil nem az aktív profil, és a ''profile edit'' csak az aktívat szerkeszti. Először jelentkezzen be rá, majd szerkessze.'
     recover:
       errors:
         recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási
@@ -7217,18 +7221,6 @@ profile:
         valid_to:
           label: Érvényes eddig
       renta_family:
-        anualidades_sin_minimo_descendientes_2020:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2020)
-        anualidades_sin_minimo_descendientes_2021:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2021)
-        anualidades_sin_minimo_descendientes_2022:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2022)
-        anualidades_sin_minimo_descendientes_2023:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2023)
-        anualidades_sin_minimo_descendientes_2024:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2024)
-        anualidades_sin_minimo_descendientes_2025:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2025)
         ascendants:
           label: Felmenők
         cotizaciones_ss_madre_2024:
@@ -7241,34 +7233,6 @@ profile:
           label: Leszármazott
         descendientes_count:
           label: Leszármazottak száma
-        descendientes_menores_3_2024:
-          label: 3 év alatti leszármazottak (2024)
-        descendientes_minimos_aggregate_2020:
-          label: Leszármazottak utáni minimum, állami rész (2020)
-        descendientes_minimos_aggregate_2021:
-          label: Leszármazottak utáni minimum, állami rész (2021)
-        descendientes_minimos_aggregate_2022:
-          label: Leszármazottak utáni minimum, állami rész (2022)
-        descendientes_minimos_aggregate_2023:
-          label: Leszármazottak utáni minimum, állami rész (2023)
-        descendientes_minimos_aggregate_2024:
-          label: Leszármazottak utáni minimum, állami rész (2024)
-        descendientes_minimos_aggregate_2025:
-          label: Leszármazottak utáni minimum, állami rész (2025)
-        descendientes_minimos_aggregate_autonomico_2020:
-          label: Leszármazottak utáni minimum, regionális rész (2020)
-        descendientes_minimos_aggregate_autonomico_2021:
-          label: Leszármazottak utáni minimum, regionális rész (2021)
-        descendientes_minimos_aggregate_autonomico_2022:
-          label: Leszármazottak utáni minimum, regionális rész (2022)
-        descendientes_minimos_aggregate_autonomico_2023:
-          label: Leszármazottak utáni minimum, regionális rész (2023)
-        descendientes_minimos_aggregate_autonomico_2024:
-          label: Leszármazottak utáni minimum, regionális rész (2024)
-        descendientes_minimos_aggregate_autonomico_2025:
-          label: Leszármazottak utáni minimum, regionális rész (2025)
-        gastos_guarderia_reales_2024:
-          label: Bölcsődei kiadások (2024)
         madrid_nacimiento_adopcion_eligible_count:
           label: Madrid születési/örökbefogadási kedvezményre jogosultak száma
         minor_children_in_unit:
@@ -7724,6 +7688,10 @@ wizard:
         prompt: Hány leszármazót (gyermeket) szeretne bevallani?
       custodia-compartida:
         prompt: A felügyeletet megosztja a másik szülővel?
+      declaracion-propia:
+        help: Ez csak akkor szünteti meg a kedvezményt, ha a jövedelme is meghaladja
+          a törvényi határt.
+        prompt: Benyújtja a leszármazott a saját jövedelemadó-bevallását?
       discapacidad:
         choices:
           '0':
@@ -7747,6 +7715,19 @@ wizard:
         prompt: Hónapok, amíg az anya dolgozott a 3 év alatti gyermek mellett (adóév)
       nif:
         prompt: A leszármazó adószáma (NIF/NIE) (hagyja üresen, ha nincs)
+      prorrata-minimo:
+        choices:
+          'false':
+            label: Nem, egyedül érvényesítem
+          'true':
+            label: Igen, megosztva a kettő között
+        help: Hagyd üresen, és a családi állapotodból és a bevallás típusából vezetjük
+          le.
+        prompt: Jogosult másik adózó is a kedvezményre ezen leszármazott után?
+      rentas-anuales:
+        help: Hagyd üresen, ha nem tudod. A magas jövedelem megszüntetheti a kedvezményt.
+        invalid_negative: A leszármazott jövedelme nem lehet negatív.
+        prompt: A leszármazott éves jövedelme, az adómentes részt nem számítva (euró)
       title: Leszármazók
     description: Adóbevallási felkészültséget szolgáló beállítási varázsló az operátor
       számára

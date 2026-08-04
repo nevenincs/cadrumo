@@ -28,6 +28,7 @@ from ....domain.modelos import (
     ExternalEvidenceKind,
 )
 from ....tests.registry_observations import registry_grounded_observations
+from ....tests.secure_sql import read_db_at_rest_bytes
 from ...calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
@@ -849,7 +850,7 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
         assert listed.row_count == 1
         assert not hasattr(listed.rows[0], "taxpayer_nif")
 
-        database_bytes = db_path.read_bytes()
+        database_bytes = read_db_at_rest_bytes(db_path)
         assert _SYNTHETIC_PROFILE_ID.encode("utf-8") not in database_bytes
         assert _SYNTHETIC_EXPEDIENTE_ID.encode("utf-8") not in database_bytes
 

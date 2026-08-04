@@ -14,6 +14,11 @@ and projects the matching profile fact into the correct engine channel.
 The resolved bindings use :class:`ProfileSchemaDefinition` and
 :class:`UserProfileFactValue` to translate raw facts.
 
+The :class:`ModeloRevision` on that snapshot is also what decides whether a
+derived-fact injector runs at all: the injectors are gated on the revision
+declaring a binding that consumes their output, so extending coverage to a
+new filing year is registry work rather than a code edit.
+
 Channel selection is the load-bearing decision. The registry runtime
 resolves profile bindings through three engine channels:
 ``date_binding_values`` for date operands, ``enum_binding_values`` for
@@ -40,11 +45,11 @@ from pydantic import BaseModel
 from ...core import BindingSourceKind
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
+    ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
     enum_consumed_binding_ids,
@@ -65,10 +70,12 @@ from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
     UserProfileFactValue,
+    derived_selector_for_path,
     load_user_profile_schema,
     profile_binding_selectors,
 )
 from ..aggregation import (
+    CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
@@ -186,9 +193,29 @@ def _inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
 
 
+def _declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
+    """Every selector the revision's ``source = "profile"`` bindings name.
+
+    The gate on whether a derived injector has any consumer at all. Keying on
+    this rather than on a hardcoded filing-year set means a new revision needs
+    registry work only: declare the binding and the injector starts running.
+    A year the registry does not cover has no consuming binding, so the
+    injector is a no-op rather than a silent wrong answer -- and if a binding
+    IS declared and still resolves to nothing, the derived-scope advisory in
+    :func:`_derived_binding_diagnostics` reports it.
+    """
+    return frozenset(
+        selector
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.PROFILE
+        for selector in profile_binding_selectors(binding.selector)
+    )
+
+
 def _inject_derived_family_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
+    declared_selectors: frozenset[str],
 ) -> None:
     """Inject computed Art. 81 bis guardería integers into *fact_index* in-place.
 
@@ -196,19 +223,25 @@ def _inject_derived_family_facts(
     count of children whose age at year-end is < 3 (Art. 58.3 LIRPF) is
     computed and stored as ``renta_family.descendientes_menores_3_{year}``.
 
-    This function is idempotent: keys already present are not overwritten.
-    Only the 2024 filing year is handled; other years are ignored until a
-    dedicated binding is declared.
-    """
-    if filing_year != 2024:
-        return
+    Computes ALWAYS: a value already present at either key is overwritten
+    rather than deferred to. Both paths are declared derived, so the engine
+    owns them and a stored fact there can only be a stale or hand-planted
+    value. Deferring to it silently substituted an operator's number for the
+    law's. This mutates the ephemeral per-calculation index and never
+    persists, so a stray stored fact becomes inert rather than erased.
 
-    menores_key = "renta_family.descendientes_menores_3_2024"
-    if menores_key in fact_index:
+    Gated on a consuming binding rather than on a hardcoded filing year: the
+    injector runs for whatever year the registry declares a consumer for, so
+    extending coverage is registry work with no code edit.
+    """
+    menores_key = f"renta_family.descendientes_menores_3_{filing_year}"
+    gastos_key = f"renta_family.gastos_guarderia_reales_{filing_year}"
+    if menores_key not in declared_selectors and gastos_key not in declared_selectors:
         return
 
     # Reconstruct per-descendant birth_dates from stored facts.
     count_menores = 0
+    gastos_reales = 0
     idx = 0
     while True:
         birth_raw = fact_index.get(f"renta_family.descendiente.{idx}.birth_date")
@@ -217,25 +250,40 @@ def _inject_derived_family_facts(
         convivencia_raw = fact_index.get(f"renta_family.descendiente.{idx}.convivencia", "true")
         convive = str(convivencia_raw).lower() not in ("false", "0")
         if convive:
+            # A descendant whose birth date will not parse is REFUSED, not
+            # skipped. Skipping silently under-counted the menores-3 tally and
+            # dropped that child's guardería spend, quietly reducing a
+            # deducción the taxpayer was entitled to. An unparseable stored
+            # date is a data defect the operator can fix once told which row
+            # carries it, so the refusal names the index and the value.
             try:
                 birth = parse_iso8601_date(str(birth_raw))
-                if birth is None:
-                    raise ValueError("birth date parsed as None")
-                age_at_year_end = filing_year - birth.year
-                if age_at_year_end < 3:
-                    count_menores += 1
             except (ValueError, TypeError) as exc:
-                get_logger(__name__).debug(
-                    "profile-binding: failed to parse birth date for menores count; skipping entry (%s: %s)",
-                    type(exc).__name__,
-                    exc,
+                raise ProfileBindingResolutionError(
+                    f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+                ) from exc
+            if birth is None:
+                raise ProfileBindingResolutionError(
+                    f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
                 )
+            age_at_year_end = filing_year - birth.year
+            if age_at_year_end < 3:
+                count_menores += 1
+                gastos_raw = fact_index.get(f"renta_family.descendiente.{idx}.gastos_guarderia")
+                if gastos_raw is not None:
+                    try:
+                        gastos_reales += int(Decimal(str(gastos_raw)))
+                    except (ArithmeticError, ValueError, TypeError) as exc:
+                        raise ProfileBindingResolutionError(
+                            f"renta_family.descendiente.{idx}.gastos_guarderia is not a valid amount: "
+                            f"{gastos_raw!r}",
+                        ) from exc
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)
+    fact_index[gastos_key] = Decimal(gastos_reales)
 
 
-_MINIMO_DESCENDIENTES_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
 _MINIMO_DESCENDIENTES_BIRTH_ORDER_SUFFIXES = (
     "primer-hijo",
     "segundo-hijo",
@@ -385,22 +433,36 @@ def _second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactVal
     a fact about the descendant, so it is derived here from signals the profile
     already carries rather than demanded as new operator input.
 
-    A tributación CONJUNTA return is NOT prorated: the unidad familiar files
-    once and the mínimo is applied once inside that single return, so there is
-    no second contribuyente to share it with. An INDIVIDUAL return by a
-    partnered filer IS prorated, because the other progenitor is a separate
-    contribuyente entitled to the same descendant — this is the ordinary
-    two-parent household the derivation exists to correct.
+    An INDIVIDUAL return by a partnered filer IS prorated, because the other
+    progenitor is a separate contribuyente entitled to the same descendant —
+    the ordinary two-parent household this derivation exists to correct.
 
-    Returns ``False`` for an unpartnered individual filer and whenever the
-    signals are absent, which claims the full mínimo; the caller raises a
-    visible advisory whenever this derivation is what decided the factor, so a
-    wrong inference is correctable rather than silent.
+    A tributación CONJUNTA return turns on WHO the unidad familiar contains,
+    which LIRPF art. 82.1 makes a function of marriage:
+
+    * MARRIED (art. 82.1.1ª) — both progenitores are inside the one unit, it
+      files once, and the mínimo is applied once within it. There is no second
+      contribuyente to share with, so no prorrateo.
+    * NOT married (art. 82.1.2ª) — the unit is ONE progenitor plus the minor
+      children, and both progenitores cannot form a single unit at all. The
+      other progenitor therefore remains a separate entitled contribuyente and
+      norma 1ª still prorates, EVEN THOUGH this return is conjunta.
+
+    Collapsing those two into "conjunta is never prorated" over-grants the
+    mínimo for every unmarried cohabiting couple, which is an under-declaration
+    of the tax. The AEAT Renta manual's Capítulo 14 worked examples print both
+    outcomes and disagree by 2.550 euros on the same three children.
+
+    Returns ``False`` for an unpartnered filer and whenever the signals are
+    absent, which claims the full mínimo; the caller raises a visible advisory
+    whenever this derivation decided the factor, so a wrong inference is
+    correctable rather than silent.
     """
+    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
     declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
     if declaration_type == _CONJUNTA_DECLARATION_TYPE:
-        return False
-    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
+        # Only marriage puts the other progenitor inside this same unit.
+        return marital_status in _PARTNERED_STATUS_TOKENS - _MARRIED_STATUS_TOKENS
     if marital_status in _PARTNERED_STATUS_TOKENS:
         return True
     return any(
@@ -446,18 +508,19 @@ def _inject_derived_minimo_descendientes_facts(
     Always injects both keys (``Decimal("0")`` for a profile with no eligible
     descendant) so a genuinely childless filer's casillas resolve to the
     legally correct zero rather than an unresolved binding failing the
-    calculation outright. Idempotent per key: a key already present (an
-    explicit profile fact written by an older tooling version) is not
-    overwritten. Only the 2020-2025 filing years are handled; other years are
-    ignored until the engine is extended.
-    """
-    if snapshot.filing_year not in _MINIMO_DESCENDIENTES_FILING_YEARS:
-        return
+    calculation outright. Computes ALWAYS: both keys are declared derived, so
+    a value present at either can only be stale or hand-planted, and deferring
+    to it silently substituted an operator's figure for the Art. 58/61
+    computation. The write is to the ephemeral per-calculation index and never
+    persists.
 
+    No filing-year gate: the parameter-presence checks below already refuse a
+    revision that does not declare the full tranche and threshold tables, which
+    is the same ground the former year frozenset covered but derived from the
+    registry rather than restated as a Python constant.
+    """
     estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.filing_year}"
     autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot.filing_year}"
-    if estatal_key in fact_index and autonomico_key in fact_index:
-        return
 
     estatal_tranches = _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=None)
     if estatal_tranches is None:
@@ -483,41 +546,38 @@ def _inject_derived_minimo_descendientes_facts(
     profile = RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
     second_filer_indicated = _second_entitled_filer_indicated(fact_index)
 
-    if estatal_key not in fact_index:
-        birth_order_amounts, menor_tres_supplement = estatal_tranches
-        fact_index[estatal_key] = profile.minimo_descendientes_estatal(
-            snapshot.filing_year,
-            birth_order_amounts=birth_order_amounts,
-            menor_tres_supplement=menor_tres_supplement,
-            thresholds=thresholds,
-            second_filer_indicated=second_filer_indicated,
-        )
+    birth_order_amounts, menor_tres_supplement = estatal_tranches
+    fact_index[estatal_key] = profile.minimo_descendientes_estatal(
+        snapshot.filing_year,
+        birth_order_amounts=birth_order_amounts,
+        menor_tres_supplement=menor_tres_supplement,
+        thresholds=thresholds,
+        second_filer_indicated=second_filer_indicated,
+    )
 
-    if autonomico_key not in fact_index:
-        ccaa_infix = _minimo_descendientes_autonomico_ccaa_infix(fact_index)
-        autonomico_tranches = (
-            _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=ccaa_infix)
-            if ccaa_infix is not None
-            else estatal_tranches
-        )
-        if autonomico_tranches is None:
-            # A wired CCAA infix resolved to a partial table (should not
-            # happen given the per-tranche estatal fallback in
-            # ``_resolved_minimo_descendientes_tranches``, but stays
-            # defensive): fall back to the estatal tranches rather than
-            # leaving the autonómico casilla unresolved.
-            autonomico_tranches = estatal_tranches
-        birth_order_amounts, menor_tres_supplement = autonomico_tranches
-        fact_index[autonomico_key] = profile.minimo_descendientes_estatal(
-            snapshot.filing_year,
-            birth_order_amounts=birth_order_amounts,
-            menor_tres_supplement=menor_tres_supplement,
-            thresholds=thresholds,
-            second_filer_indicated=second_filer_indicated,
-        )
+    ccaa_infix = _minimo_descendientes_autonomico_ccaa_infix(fact_index)
+    autonomico_tranches = (
+        _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=ccaa_infix)
+        if ccaa_infix is not None
+        else estatal_tranches
+    )
+    if autonomico_tranches is None:
+        # A wired CCAA infix resolved to a partial table (should not
+        # happen given the per-tranche estatal fallback in
+        # ``_resolved_minimo_descendientes_tranches``, but stays
+        # defensive): fall back to the estatal tranches rather than
+        # leaving the autonómico casilla unresolved.
+        autonomico_tranches = estatal_tranches
+    birth_order_amounts, menor_tres_supplement = autonomico_tranches
+    fact_index[autonomico_key] = profile.minimo_descendientes_estatal(
+        snapshot.filing_year,
+        birth_order_amounts=birth_order_amounts,
+        menor_tres_supplement=menor_tres_supplement,
+        thresholds=thresholds,
+        second_filer_indicated=second_filer_indicated,
+    )
 
 
-_ANUALIDADES_ELIGIBILITY_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
 
 
 def _inject_derived_anualidades_eligibility_facts(
@@ -548,14 +608,15 @@ def _inject_derived_anualidades_eligibility_facts(
     descendant and denied a régimen the payer was entitled to — the one gap in
     this campaign that over-taxes rather than under-declares.
 
-    Idempotent: an explicit fact already present is not overwritten. Only the
-    revisions carrying the separate-escala régimen are handled.
+    Computes ALWAYS: the path is declared derived, so a value present there
+    can only be stale or hand-planted, and deferring to it silently decided a
+    régimen question the law owns. Only the revisions carrying the
+    separate-escala régimen are handled, identified by a declared consuming
+    binding rather than by a hardcoded filing-year set.
     """
     filing_year = snapshot.filing_year
-    if filing_year not in _ANUALIDADES_ELIGIBILITY_FILING_YEARS:
-        return
     key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
-    if key in fact_index:
+    if key not in _declared_profile_selectors(snapshot.revision):
         return
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
@@ -903,7 +964,8 @@ def _load_profile_facts(
     resolved_schema = schema if schema is not None else load_user_profile_schema()
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
-    _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    declared_selectors = _declared_profile_selectors(snapshot.revision)
+    _inject_derived_family_facts(fact_index, snapshot.filing_year, declared_selectors)
     _inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
     _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
     _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
@@ -1040,6 +1102,12 @@ def resolve_profile_sourced_bindings(
         binding_values=decimal_values,
         enum_binding_values=enum_values,
         date_binding_values=date_values,
+        diagnostics=_derived_binding_diagnostics(
+            selection.bindings,
+            facts.fact_index,
+            schema if schema is not None else load_user_profile_schema(),
+            bucket_id=bucket_id,
+        ),
         provenance=tuple(
             CalculationSourceProvenance(
                 source_kind=BindingSourceKind.PROFILE.value,
@@ -1051,6 +1119,54 @@ def resolve_profile_sourced_bindings(
     )
 
 
+def _derived_binding_diagnostics(
+    bindings: tuple[DataBindingDefinition, ...],
+    fact_index: Mapping[str, UserProfileFactValue],
+    schema: ProfileSchemaDefinition,
+    *,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise on a SELECTED derived binding that still resolved to nothing.
+
+    Narrow by construction, and that narrowness is the whole design. A blanket
+    "profile binding resolved to nothing" advisory would fire constantly on
+    optional facts an ordinary filer legitimately leaves blank, and an
+    operator who learns to ignore an advisory is worse off than one who never
+    saw it.
+
+    A DERIVED path is different: the engine owns it and every derived injector
+    now writes unconditionally, with a zero default where the law says zero.
+    So a derived binding that is selected and still resolves to nothing cannot
+    be an ordinary absence -- no injector claimed it, which means a structural
+    gap (a registry year with no injector coverage, or a pattern whose
+    consuming binding drifted). Every fire is real.
+    """
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for binding in bindings:
+        if _resolve_one(binding, fact_index) is not None:
+            continue
+        for selector in profile_binding_selectors(binding.selector):
+            derived = derived_selector_for_path(selector, schema.derived_selectors)
+            if derived is None:
+                continue
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="unresolved_derived_binding",
+                    source_kind=BindingSourceKind.PROFILE.value,
+                    resolver_id=_PROFILE_RESOLVER_ID,
+                    binding_id=binding.id,
+                    source_ref=f"profile:{bucket_id}:binding:{binding.id}",
+                    message=(
+                        f"binding {binding.id!r} selects the engine-derived path {selector!r} "
+                        f"but no value was computed for it; the aggregate derived from "
+                        f"{', '.join(derived.derived_from)} is missing from this calculation"
+                    ),
+                ),
+            )
+            break
+    return tuple(diagnostics)
+
+
 def _resolve_one(
     binding: DataBindingDefinition,
     fact_index: Mapping[str, UserProfileFactValue],
@@ -1060,7 +1176,21 @@ def _resolve_one(
         raw_categories = str(fact_index.get("taxpayer_type.irpf_income_categories", ""))
         categories = {token.strip() for token in raw_categories.split(",") if token.strip()}
         return Decimal("1") if _ECONOMIC_ACTIVITY_INCOME_CATEGORY in categories else Decimal("0")
+    # ``profile_binding_selectors`` returns the binding's DEPENDENCY set -- every
+    # fact it references -- and that includes ``required_when_profile_key``. The
+    # gate fact states WHETHER the binding applies, never WHAT it holds, so it
+    # must not stand in as a value. Without this, a gated binding whose real
+    # fact is absent silently resolves to its precondition: a conjunta filing
+    # missing the spouse's birth date wrote the declaration type ("2") into
+    # DPFNAC_C, and a missing EU country wrote a boolean into ZRUE2 -- wrong
+    # values on a filed artefact, indistinguishable from real ones. Measured
+    # across the whole registry: 12 gated bindings, all Modelo 100, every one
+    # declaring a real profile_key/profile_keys, so skipping the gate here
+    # can never leave a binding with nothing to resolve from.
+    gate_selector = getattr(binding.selector, "required_when_profile_key", None)
     for selector in profile_binding_selectors(binding.selector):
+        if gate_selector is not None and selector == gate_selector:
+            continue
         value = fact_index.get(selector)
         if value is None:
             continue
@@ -1070,6 +1200,7 @@ def _resolve_one(
             continue
         return value.strip() if isinstance(value, str) else value
     return None
+
 
 
 inject_derived_marriage_facts = _inject_derived_marriage_facts

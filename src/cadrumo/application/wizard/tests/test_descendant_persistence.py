@@ -115,12 +115,17 @@ def test_checkpoint_facts_weave_question_and_descendant_facts() -> None:
 
     # The question fact (top-level profile_key binding) rode through …
     assert paths["identity.tax_id"] == _TAX_ID
-    # … alongside the derived descendant facts and aggregates (values are
+    # … alongside the per-descendant facts and the count (values are
     # type-coerced by the fact model, so compare rendered forms / membership).
     assert "renta_family.descendiente.0.birth_date" in paths
     assert paths["renta_family.descendiente.1.nif"] == "00000000T"
     assert str(paths["renta_family.descendientes_count"]) == "2"
-    assert str(paths["renta_family.gastos_guarderia_reales_2024"]) == "900"
+    # The childcare figures persist per child. Their Art. 81 bis sum is derived
+    # at calculate time and refused at the write door, so it must NOT appear
+    # here: emitting it would refuse this whole batch and with it every
+    # legitimate childcare save.
+    assert str(paths["renta_family.descendiente.0.gastos_guarderia"]) == "900"
+    assert "renta_family.gastos_guarderia_reales_2024" not in paths
 
 
 # ── (b) round-trip no-drop across a group-less re-persist ───────────
@@ -153,11 +158,11 @@ def test_count_shrink_clears_orphaned_instance_rows(_backend: Path) -> None:
 
     before = _record_values(profile_id)
     assert before["renta_family.descendiente.1.birth_date"] == "2015-03-01"
-    assert before["renta_family.gastos_guarderia_reales_2024"] == "900"
+    assert before["renta_family.descendiente.0.gastos_guarderia"] == "900"
 
     # Resume answers a smaller count with one non-menor-3 instance; the
-    # descendant namespace is replaced, so index 1 and the stale reales
-    # aggregate go.
+    # descendant namespace is replaced, so index 1 and its own childcare
+    # figure go with it.
     store.persist(
         {
             "descendientes-count": "1",
@@ -170,7 +175,10 @@ def test_count_shrink_clears_orphaned_instance_rows(_backend: Path) -> None:
     assert after["renta_family.descendiente.0.birth_date"] == "2019-04-04"
     assert after["renta_family.descendientes_count"] == "1"
     assert not any(path.startswith("renta_family.descendiente.1.") for path in after)
-    assert "renta_family.gastos_guarderia_reales_2024" not in after
+    # The surviving instance declared no childcare figure, so none is stored;
+    # the engine derives a zero for it at calculate time rather than reading
+    # a stale sum left behind here.
+    assert "renta_family.descendiente.0.gastos_guarderia" not in after
 
 
 def test_count_zero_clears_every_descendant_row(_backend: Path) -> None:

@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.attachment import AttachmentStore
+from ....core import StorageCategory, storage_path
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._enums import AttachmentKind, AttachmentSource
 from .._errors import AttachmentNotFoundError, AttachmentValidationError
@@ -69,7 +70,7 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(
 
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    database_bytes = read_db_at_rest_bytes(runtime_profile.paths.db_dir / "cadrumo.db")
+    database_bytes = read_db_at_rest_bytes(runtime_profile.paths.database_file)
     assert b"secure_objects" in database_bytes
     assert body not in database_bytes
     assert b"ATTACHMENT_CANARY_00000000T" not in database_bytes
@@ -126,7 +127,7 @@ def test_put_file_reads_source_but_persists_only_secure_database_object(
     assert digest == hashlib.sha256(body).hexdigest()
     assert size == len(body)
     assert store.read_bytes(digest) == body
-    assert not (runtime_profile.storage_root / "attachments").exists()
+    assert not storage_path(StorageCategory.ATTACHMENTS).exists()
 
 
 def test_missing_blob_and_invalid_digest_fail_closed() -> None:

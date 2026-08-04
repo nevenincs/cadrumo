@@ -28,13 +28,13 @@ which that bundle verifier does not cover.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 from pathlib import Path
 
 import pytest
 
+from ..core.hashing import sha256_file
 from ..core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -131,7 +131,7 @@ def test_every_bundled_artefact_matches_its_recorded_digest() -> None:
         if not path.is_file():
             missing.append(f"{manifest.parent.name}/{stored}")
             continue
-        actual = hashlib.sha256(path.read_bytes()).hexdigest()
+        actual = sha256_file(path)
         if actual != recorded:
             mismatched.append(f"{manifest.parent.name}/{stored}: recorded {recorded[:12]} != actual {actual[:12]}")
 

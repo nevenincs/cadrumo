@@ -12,6 +12,19 @@ directly, for the reconciliation contract itself, and once through the operator
 path -- a plain later :func:`export_profile_bundle` call, with nothing in the
 test invoking reconciliation -- so the mechanism is proved reachable in
 production rather than only from the harness.
+
+The ``"secrets"`` literal in the child-process settings/env is NOT an
+arbitrary injected value: the profile the child process must unlock is
+created by :func:`~tests.secure_sql.isolated_profile_storage_root`, whose
+``cadrumo_secret_store_dir`` is derived from the REAL taxonomy accessor
+(``storage_overrides(tmp_path, StorageCategory.SECRETS)``, which resolves to
+``tmp_path / "secrets"``). The child process must independently compute the
+SAME location to find the master key that fixture minted, so the literal
+here has to agree with the taxonomy's real default -- renaming it to a
+fictional segment breaks the handoff between the fixture's process and the
+child's. (Discovered by mutation: renaming it to a fictional segment reds
+every crash-recovery test in this file with "no active profile", because the
+child looks in a directory that fixture never wrote to.)
 """
 
 from __future__ import annotations
@@ -23,7 +36,7 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 from textwrap import dedent
-from typing import override
+from typing import Final, override
 
 import pytest
 
@@ -51,6 +64,9 @@ from .._bundle_export_operation import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
+
 _CRASH_EXIT_CODE = 91
 
 _SETTINGS_PREAMBLE = dedent(
@@ -70,7 +86,7 @@ _SETTINGS_PREAMBLE = dedent(
         cadrumo_local_storage_root=root,
         cadrumo_active_profile=None,
         cadrumo_secret_store_backend="file",
-        cadrumo_secret_store_dir=root.parent / "fallback-store",
+        cadrumo_secret_store_dir=root.parent / "secrets",
         cadrumo_secret_passphrase=DEV_TEST_DATABASE_PASSWORD,
         cadrumo_output_language="en",
     )
@@ -116,7 +132,7 @@ def _child_env(root: Path, *, extra: dict[str, str] | None = None) -> dict[str, 
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
             "CADRUMO_SECRET_STORE_BACKEND": "file",
-            "CADRUMO_SECRET_STORE_DIR": str(root.parent / "fallback-store"),
+            "CADRUMO_SECRET_STORE_DIR": str(root.parent / "secrets"),
             "CADRUMO_SECRET_PASSPHRASE": DEV_TEST_DATABASE_PASSWORD,
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",

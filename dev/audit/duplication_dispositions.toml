@@ -53,7 +53,7 @@
 
 [meta]
 generated_from = "just audit-duplication (jscpd@4.2.0)"
-observed_groups = 14
+observed_groups = 17
 duplicated_pct = "0.07"
 files_analyzed = 1311
 source_root = "src/cadrumo"
@@ -88,8 +88,8 @@ count_is_advisory = true
 # `observed_groups` plus that one extra, tracked group.
 [summary]
 cluster_owned = 1
-intentional = 7
-advisory_residue = 6
+intentional = 8
+advisory_residue = 8
 actionable = 1
 
 # ---------------------------------------------------------------------------
@@ -141,6 +141,11 @@ classification = "intentional"
 where = ["adapters/inbound/tui/_form_screen.py [119-129]", "adapters/inbound/tui/_manager_screen.py [103-113]"]
 rationale = "Constraint-divergent, excluded by the substitutability pre-filter. The matched block is the input row plus the actions row of a modal edit dialog, but the two dialogs disagree on both halves of what an edit MEANS: the manager variant starts a masked field EMPTY rather than pre-filled (pre-filling would submit the placeholder dots back as the literal new value) and dismisses with the raw input, while the form variant pre-fills and routes save through _submit() so a refusal can render in its #edit-refusal slot, which the manager dialog does not carry. Consolidating either direction would add masking where it is unwanted or drop validation where it is load-bearing."
 
+[[group]]
+classification = "intentional"
+where = ["domain/attachments/_service.py [24-40]", "domain/attachments/_service.py [64-88]"]
+rationale = "A delegation boundary, and specifically the ARTEFACT of a dedup rather than a failure of one. 673938a11f extracted _persist_attachment as the shared write core of add_attachment and add_attachment_bytes; it takes fifteen keyword parameters, forwards every one to _build_attachment_manifest, and then commits through the single write_manifest path. The matched tokens ARE that parameter list, which extracting a helper necessarily writes twice in a typed signature. The only consolidation available is **kwargs, which would erase the typed signature the extraction exists to preserve, so the alternative is strictly worse. Read the pair before re-classifying: a mechanical token matcher flags every extract-helper refactor this way, so a clone report here is expected output rather than a finding."
+
 # ---------------------------------------------------------------------------
 # advisory-residue: low-value duplication left as visible debt (not a mandate)
 # ---------------------------------------------------------------------------
@@ -174,6 +179,16 @@ rationale = "Repeated health-metric shaping block within one module; low-value r
 classification = "advisory-residue"
 where = ["adapters/inbound/tui/_form_screen.py [187-199]", "adapters/inbound/tui/_form_screen.py [106-118]"]
 rationale = "TextEditScreen and OneChoiceEditScreen share a modal chrome: BINDINGS, the field-holding __init__, and the compose head (Vertical#edit-dialog, Label#edit-label, the optional Static#edit-path hint) and tail (Horizontal#edit-actions with cancel and save). Unlike the cross-file TUI pair above, this residue IS substitutable -- roughly six lines of chrome plus __init__ could move to a shared base. Recorded as visible debt rather than consolidated here for two reasons: this is another campaign's live surface, and Textual compose bodies are declarative widget trees where hiding the head and tail behind helper generators trades a readable tree for a smaller line count. Named rather than classified as intentional so the owning campaign can take the extraction on its own terms; do not read this entry as a verdict that it should not happen."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_registry_payloads.py [91-113]", "entrypoints/cli/_registry_payloads.py [123-145]"]
+rationale = "RegistryInspectResult and RegistryVerifyResult declare the same leading field block (registry_root, source_root, and the modelo/revision/legal-reference/source-reference counts). The match is a CONTRACT shape, not shared logic: every one of the nine payloads in this module subclasses OutputSchema directly, with no intermediate bases anywhere, and each is separately registered and extra=\"forbid\", so the JSON-schema conformance gate treats each as its own operator-facing contract. A shared base would couple two contracts that are permitted to diverge -- inspect reports what the tree holds, verify reports what validation found -- and the coupling would only surface when one of them needed a field the other must not carry. Left visible rather than consolidated."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_config/_profile_bundle.py [179-197]", "entrypoints/cli/_config/_profile_bundle.py [330-348]"]
+rationale = "The same shape as the _registry_payloads entry above, and recorded for the same reason rather than by resemblance: ConfigProfileSubjectAccessRequestResult and ConfigProfileExportResult are each constructed from one export object, so the matched tokens are the projection of a canonical model onto two result envelopes -- the field NAMES agreeing is the point of the canonical model, not duplicated behaviour. The two envelopes are distinct operator contracts (a subject-access request and an export differ in purpose and in what an operator may do with the artefact), so they are allowed to diverge and a shared base would prevent it."
 
 # ---------------------------------------------------------------------------
 # actionable: resolved in this commit (below jscpd's min-lines/min-tokens

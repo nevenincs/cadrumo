@@ -1,4 +1,14 @@
-"""Opt-in live application workflow test for the AEAT IVA wallet capture."""
+"""Opt-in live application workflow test for the AEAT IVA wallet capture.
+
+The ``"live"`` / ``"iva-wallet"`` literals joined onto ``cadrumo_audit_dir``
+mirror ``StorageCategory.AUDIT_LIVE_IVA_WALLET``'s declared subpath
+(``audit/live/iva-wallet``). ``AUDIT`` is operator-overridable, so this
+member -- like the ``SECRETS_MASTER_KEY`` family -- carries no
+``settings_field`` and is not safe to resolve via ``storage_path`` directly;
+production (``application/live/_iva_remote_state.py``) reads the same bare
+leaf names off the accessor-derived root, and this test mirrors that
+sanctioned pattern rather than a taxonomy-accessor call.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +16,7 @@ import asyncio
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -22,6 +33,9 @@ from ...user_profile import UserProfileLifecycleRepository, record_to_path_value
 from .. import capture_iva_compensation_wallet
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live", "iva-wallet"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> None:

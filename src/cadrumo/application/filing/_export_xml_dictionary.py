@@ -33,7 +33,7 @@ from xml.etree import ElementTree
 from defusedxml import ElementTree as DefusedElementTree
 
 from ...core import Modelo
-from ...core.decimal import coerce_decimal
+from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...domain.calculations.registry import (
     CasillaId,
@@ -83,6 +83,7 @@ def render_xml_dictionary_layout(
     *,
     draft: ModeloDraft,
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object] | None = None,
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
     """Render an XML-dictionary layout for an approved declaration draft.
@@ -94,6 +95,10 @@ def render_xml_dictionary_layout(
         draft: Approved :class:`~domain.filing.ModeloDraft` supplying casilla
             values, modelo, and period metadata.
         headers: Normalized declaration header values such as identity fields.
+        dictionary_values: Values addressed by the dictionary field id AEAT
+            declares for them, each still carrying its own Python type. Absent
+            (or ``None``) means the caller declares no such values, which is how
+            every caller outside the work-unit export service reaches here.
         schema_provider: :class:`~application.filing.runtime.RegistrySchemaAccessor`
             that resolves dictionary and XSD source references.
 
@@ -112,12 +117,20 @@ def render_xml_dictionary_layout(
     _append_declaration_aux(root, layout)
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
+    unfiled_paths: frozenset[str] = (
+        _modelo_100_unfiled_comunidad_paths(entries, casilla_values)
+        if draft.modelo == Modelo.M100
+        else frozenset[str]()
+    )
     for entry in entries:
+        if entry.path in unfiled_paths:
+            continue
         rendered = _xml_dictionary_rendered_value(
             entry,
             draft=draft,
             casilla_values=casilla_values,
             headers=normalized_headers,
+            dictionary_values=dictionary_values or {},
         )
         if rendered is None or rendered == "":
             continue
@@ -350,10 +363,11 @@ def _xml_dictionary_rendered_value(
     draft: ModeloDraft,
     casilla_values: dict[CasillaId, object],
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object],
 ) -> str | None:
     raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
     if raw is None:
-        raw = _xml_dictionary_header_value(entry, draft=draft, headers=headers)
+        raw = _xml_dictionary_non_casilla_value(entry, headers=headers, dictionary_values=dictionary_values)
     if raw is None:
         return None
     if draft.modelo == Modelo.M100:
@@ -365,6 +379,79 @@ def _xml_dictionary_rendered_value(
         except ValueError as exc:
             raise FilingExportValidationError(str(exc)) from exc
     return rendered
+
+
+# AEAT declares the fifteen autonomic-deduction blocks as an ``xs:choice``, so a
+# declaration carries the filer's own comunidad and no other -- writing more than
+# one is not merely wrong but a document the schema rejects. Each block also
+# declares its deduction total against casilla 0564, so rendering every declared
+# path for that casilla writes one comunidad's total into all fifteen.
+#
+# Which comunidad is the filer's is read from the draft rather than threaded in:
+# every block owns between twelve and sixty casillas of its own, disjoint from
+# 0564, so the block carrying any populated casilla is the one being filed. That
+# is how a return is completed -- the filer fills their own anexo B -- rather than
+# a proxy for it, and it needs no input the renderer does not already hold.
+_MODELO_100_COMUNIDAD_BLOCK_PREFIX = "/DatosEconomicos/Resultados/DeduccionAutonomicaRes/"
+_MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA = "0564"
+
+
+def _modelo_100_comunidad_block(path: str) -> str | None:
+    """Return the comunidad block ``path`` sits in, or ``None`` when it is elsewhere."""
+    if not path.startswith(_MODELO_100_COMUNIDAD_BLOCK_PREFIX):
+        return None
+    return path[len(_MODELO_100_COMUNIDAD_BLOCK_PREFIX) :].split("/", 1)[0]
+
+
+def _modelo_100_unfiled_comunidad_paths(
+    entries: tuple[XmlDictionaryEntry, ...],
+    casilla_values: Mapping[CasillaId, object],
+) -> frozenset[str]:
+    """Return the autonomic-deduction paths this draft must not write.
+
+    Args:
+        entries: Every dictionary row for the layout being rendered.
+        casilla_values: Casilla values the draft carries.
+
+    Returns:
+        Paths belonging to a comunidad the draft does not file, plus the shared
+        total when no comunidad is filed at all.
+
+    Raises:
+        FilingExportValidationError: when the draft populates casillas belonging
+            to more than one comunidad. The schema admits only one, so there is
+            no correct rendering and picking one would launder the conflict.
+    """
+    own_casillas_by_block: dict[str, set[CasillaId]] = {}
+    for entry in entries:
+        block = _modelo_100_comunidad_block(entry.path)
+        if block is None or entry.casilla_id is None:
+            continue
+        if entry.casilla_id != _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA:
+            own_casillas_by_block.setdefault(block, set()).add(entry.casilla_id)
+
+    filed = sorted(
+        block
+        for block, own in own_casillas_by_block.items()
+        if any(casilla_values.get(casilla) is not None for casilla in own)
+    )
+    if len(filed) > 1:
+        raise FilingExportValidationError(
+            "draft populates autonomic deductions for more than one comunidad "
+            f"({', '.join(filed)}); a declaration may carry only one",
+        )
+
+    resident = filed[0] if filed else None
+    unfiled = {
+        entry.path
+        for entry in entries
+        if (block := _modelo_100_comunidad_block(entry.path)) is not None and block != resident
+    }
+    if resident is None:
+        unfiled.update(
+            entry.path for entry in entries if entry.casilla_id == _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA
+        )
+    return frozenset(unfiled)
 
 
 # Casilla 0695 is declared against two sibling fields that are opposite branches
@@ -400,31 +487,63 @@ def _modelo_100_sign_branch_value(entry: XmlDictionaryEntry, raw: object) -> obj
     Returns:
         ``raw`` when the row's branch matches its sign, ``Decimal("0")`` when the
         row is the opposite branch, and ``raw`` unchanged for every other row.
+
+        A value that will not coerce carries no sign to route on, so it is read
+        as zero for the purpose of choosing a branch. This selects a branch
+        rather than validating a value: deciding what an uncoercible amount
+        means is :func:`_format_xml_dictionary_value`'s job, and it is the job
+        it does for every other casilla. Without the default, ``coerce_decimal``
+        answers ``None`` and the comparison below raises ``TypeError`` on the
+        export path.
     """
     negative_branch = entry.field_id in _MODELO_100_NEGATIVE_SIGN_BRANCH_FIELDS
     if not negative_branch and entry.field_id not in _MODELO_100_NON_NEGATIVE_SIGN_BRANCH_FIELDS:
         return raw
-    amount = coerce_decimal(raw)
+    amount = coerce_decimal(raw, default=Decimal("0"))
     return raw if (amount < 0) is negative_branch else Decimal("0")
 
 
-def _xml_dictionary_header_value(
+def _xml_dictionary_non_casilla_value(
     entry: XmlDictionaryEntry,
     *,
-    draft: ModeloDraft,
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object],
 ) -> object | None:
+    """Resolve a row no casilla addresses, keeping the value's Python type.
+
+    Two channels answer here, and the order between them is what makes the
+    declared one authoritative. ``dictionary_values`` is keyed by the field id
+    AEAT's own dictionary names, which is the address a registry binding
+    declares, and each value arrives as the type its fact carries -- a ``bool``
+    is still a ``bool``, a :class:`~datetime.date` still a ``date``, so
+    :func:`_format_xml_dictionary_value` can still decide ``SI``/``NO`` and
+    ``d/m/yyyy`` from it. ``headers`` is the flat declaration-header mapping,
+    whose contract is ``str`` throughout: a value reaching here through it has
+    already been rendered by its composer and is passed on as written.
+
+    Consulting the declared channel first means a header key that happens to
+    collide with a dictionary field id cannot shadow a typed value with a
+    pre-rendered string. No such collision exists today -- measured across all
+    2,383 rows of the Modelo 100 2024 dictionary against every key the export
+    header composer emits, the intersection is empty -- so the order states what
+    happens when one appears rather than changing what happens now.
+
+    Args:
+        entry: The dictionary row being written.
+        headers: Declaration headers, lowercased keys, string values.
+        dictionary_values: Values addressed by dictionary field id.
+
+    Returns:
+        The value to render, or ``None`` when neither channel addresses the row.
+    """
+    declared = dictionary_values.get(entry.field_id)
+    if declared is not None:
+        return declared
     path_tail = entry.path.rsplit("/", 1)[-1].lstrip("@").lower()
     for key in (entry.field_id.lower(), path_tail):
         value = headers.get(key)
         if value is not None:
             return value
-    if entry.field_id == "DPNIF_D":
-        return draft.profile_tax_id
-    if entry.field_id == "DP_APENOM_D":
-        return headers.get("legal_name") or " ".join(
-            part for part in (headers.get("surnames", ""), headers.get("name", "")) if part
-        )
     return None
 
 
@@ -448,6 +567,26 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
     """
     normalized_type = data_type.upper()
     if isinstance(value, bool):
+        # A boolean on a numeric row is an upstream type error, and rendering it
+        # would launder that error into a plausible amount: ``True`` on a euro-cent
+        # row reads as one euro, which the XSD accepts and no downstream check can
+        # question. Refusing here is the same decision the unreadable-amount branch
+        # below makes, for the same reason -- a wrong number that satisfies the
+        # schema is worse than no file at all.
+        #
+        # Only the two types AEAT declares boolean render a boolean. Every route
+        # into this function is expected to observe that already: the casilla input
+        # door refuses a boolean outright, and no Modelo 100 revision declares a
+        # boolean casilla on a numeric row. So this is a guard against a future
+        # route, not a live defect, and it must stay cheap and total rather than
+        # trying to guess what the value meant.
+        if _NUMERIC_DICTIONARY_TYPE.match(normalized_type) is not None:
+            raise FilingExportValidationError(
+                f"a {data_type} row is a numeric amount and cannot carry the boolean {value!r}. "
+                "The value reaching this row has the wrong type; correct it at the source "
+                "rather than rendering it, because a boolean written here would be filed as "
+                "the amount 1 or 0.",
+            )
         if normalized_type == _SINO_DICTIONARY_TYPE:
             return "SI" if value else "NO"
         return "1" if value else "0"
@@ -455,8 +594,34 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
         return f"{value.day}/{value.month}/{value.year}"
     numeric = _NUMERIC_DICTIONARY_TYPE.match(normalized_type)
     if numeric is not None:
-        amount = coerce_decimal(value, default=Decimal("0")) or Decimal("0")
         scale = int(numeric["scale"])
+        # A text amount is read through the canonical grammar under a cap, which
+        # is what refuses ``1.000`` on a euro-cent row: that text is either one
+        # euro or one thousand and no parser can tell, so it is refused rather
+        # than silently resolved one way. On a row AEAT declares with three
+        # decimals the same text is unambiguous and parses.
+        #
+        # The cap is never below two, so it stays an ambiguity rule rather than
+        # becoming a precision rule. Capping an integer row at its own scale of
+        # zero would refuse ``1.6``, which is unambiguous input this renderer has
+        # always rounded; only a three-digit fraction can be mistaken for a
+        # thousands group.
+        #
+        # A value that already arrives typed carries no such ambiguity and skips
+        # the text grammar entirely.
+        amount = (
+            try_parse_canonical_decimal(value, max_fraction_digits=max(scale, 2))
+            if isinstance(value, str)
+            else coerce_decimal(value)
+        )
+        if amount is None:
+            raise FilingExportValidationError(
+                f"amount for a {data_type} row could not be read: {value!r}. "
+                f"The accepted form is a dot decimal separator with at most {scale} "
+                "fractional digit(s) and no thousands grouping, e.g. 1234.56; the "
+                "Spanish shape 1.234,56 is refused because it cannot be told from "
+                "a three-decimal figure.",
+            )
         return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
     return str(value).strip()
 

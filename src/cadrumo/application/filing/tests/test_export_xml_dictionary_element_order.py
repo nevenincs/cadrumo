@@ -53,6 +53,13 @@ def _rendered_declaration() -> Element[str]:
         layout,
         draft=draft,
         headers=dict(_IDENTITY_HEADERS),
+        # The declaration's NIF reaches the renderer addressed by AEAT's own
+        # field id, which is the route the export service composes it on. It
+        # used to be answered by a hardcoded escape inside the renderer, so
+        # supplying nothing here left the row populated; now the row is written
+        # only when something declares it, and this module needs it populated
+        # for the same reason it populates the header identity fields.
+        dictionary_values={"DPNIF_D": draft.profile_tax_id},
         schema_provider=provider,
     )
     root = DefusedElementTree.fromstring(payload)

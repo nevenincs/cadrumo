@@ -90,7 +90,7 @@ def test_borrador_100_snapshot_survives_encrypted_storage_roundtrip(
         repo.save(original)
         loaded = repo.load(original.snapshot_id)
 
-        assert (profile.paths.db_dir / "cadrumo.db").is_file()
+        assert profile.paths.database_file.is_file()
         assert loaded == original
         # Witness the Decimal entries survive the union resolution.
         assert loaded.binding_values["casilla.0500"] == Decimal("42500.00")

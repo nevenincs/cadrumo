@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....core import Period
 from ....domain.justificante import Justificante
@@ -75,6 +76,7 @@ def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         csv = "LIVECAP130MISMATCH"
         pdf_bytes = b"%PDF-1.4\n% mismatched period justificante\n%%EOF\n"
+        source_pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
         JustificanteRepository().save(
             Justificante(
                 csv=csv,
@@ -87,8 +89,8 @@ def test_live_capture_evidence_rejects_mismatched_typed_justificante_period(tmp_
                 total_a_ingresar=None,
                 total_a_devolver=None,
                 verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-                source_pdf_path=Path("var") / "justificantes" / f"{csv}.pdf",
-                source_pdf_sha256=hashlib.sha256(pdf_bytes).hexdigest(),
+                source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+                source_pdf_sha256=source_pdf_sha256,
                 parsed_at=_CLOCK,
             ),
         )

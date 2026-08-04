@@ -175,10 +175,7 @@ def _seed_taxpayer_unit_profile() -> None:
             # Decimal-channel profile fact is a true zero for this persona.
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
             UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendientes_minimos_aggregate_2024", value=Decimal("0")),
-            UserProfileFact(path="renta_family.gastos_guarderia_reales_2024", value=Decimal("0")),
             UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),
-            UserProfileFact(path="renta_family.descendientes_menores_3_2024", value=Decimal("0")),
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
             UserProfileFact(path="renta_family.unidad_familiar_otros_miembros_base", value=Decimal("0")),
             UserProfileFact(path="renta_family.madrid_nacimiento_adopcion_eligible_count", value=Decimal("0")),

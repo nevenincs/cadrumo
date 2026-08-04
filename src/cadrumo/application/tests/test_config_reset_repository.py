@@ -9,6 +9,7 @@ import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Final
 
 import pytest
 from pydantic import ValidationError
@@ -33,6 +34,16 @@ from .._config_reset_repository import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"reset-operations"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+Both sites test the repository's own resolution behaviour: one composes the
+expected value independently to prove ``path_for`` resolves under the real
+segment name, and the other plants a symlink at that exact real location to
+prove a redirected root cannot smuggle operation bytes into a bucket -- the
+literal has to name the real segment for that attack to be meaningful.
+"""
 
 
 _OPERATION_ID = "c" * 64

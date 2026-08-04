@@ -49,7 +49,7 @@ def fixed_master_key() -> bytes:
 def store(tmp_path: Path, fixed_master_key: bytes) -> Iterator[SecretStore]:
     provider = EphemeralMasterKeyProvider(key=fixed_master_key)
     blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
+        root_dir=tmp_path / "store-root",
         master_key_provider=provider,
     )
     yield SecretStore(
@@ -380,7 +380,7 @@ class TestDeleteOwnershipOrdering:
         """
         record = _make_record(key="aeat:test:ordering", value=b"payload")
         store.put(record)
-        payloads = _payload_paths(tmp_path / "blobs")
+        payloads = _payload_paths(tmp_path / "store-root")
         assert len(payloads) == 1
         payload_path = payloads[0]
         with obstructed_path(payload_path):
@@ -395,7 +395,7 @@ class TestDeleteOwnershipOrdering:
         store.delete("aeat:test:ordering")
 
         assert list(store.list_digests()) == []
-        assert _payload_paths(tmp_path / "blobs") == []
+        assert _payload_paths(tmp_path / "store-root") == []
 
     def test_successful_delete_removes_both_the_payload_and_the_index_entry(
         self,
@@ -404,11 +404,11 @@ class TestDeleteOwnershipOrdering:
     ) -> None:
         """Positive control for the ordering above: the normal path still clears both."""
         store.put(_make_record(key="aeat:test:ordering", value=b"payload"))
-        assert len(_payload_paths(tmp_path / "blobs")) == 1
+        assert len(_payload_paths(tmp_path / "store-root")) == 1
 
         store.delete("aeat:test:ordering")
 
-        assert _payload_paths(tmp_path / "blobs") == []
+        assert _payload_paths(tmp_path / "store-root") == []
         assert list(store.list_digests()) == []
         with pytest.raises(SecretNotFoundError):
             store.get("aeat:test:ordering")
@@ -421,7 +421,7 @@ class TestPutBlobOwnership:
         """Every payload on disk is reachable through the index after a put."""
         store.put(_make_record(key="aeat:test:owned", value=b"payload"))
 
-        payloads = _payload_paths(tmp_path / "blobs")
+        payloads = _payload_paths(tmp_path / "store-root")
         index = json.loads((tmp_path / "fallback-store" / "index.json").read_text(encoding=UTF_8_ENCODING))
         owned = {entry["blob_sha256_plaintext_hex"] for entry in index["entries"].values()}
 
@@ -446,6 +446,6 @@ class TestPutBlobOwnership:
         second = store.put(record, overwrite=True)
 
         assert first.sha256_plaintext_hex != second.sha256_plaintext_hex
-        payloads = _payload_paths(tmp_path / "blobs")
+        payloads = _payload_paths(tmp_path / "store-root")
         assert [path.stem for path in payloads] == [second.sha256_plaintext_hex]
         assert store.get("aeat:test:same").value == b"payload"

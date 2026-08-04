@@ -10,6 +10,7 @@ resulting path against the declared grammar.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -18,6 +19,14 @@ from .....tests import assert_path_matches_grammar
 from .._validate_verdict import VERDICT_OUTCOME_GREEN, ValidationVerdict, verdict_cache_path, write_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cache"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``tmp_path / "cache" / "registry-verdict" / ...`` in the positive-control
+test is the real declared grammar shape, deliberately mis-named at the
+filename to prove the matcher can still fail.
+"""
 
 
 def test_the_real_verdict_file_matches_its_declared_shape(tmp_path: Path) -> None:

@@ -16,6 +16,10 @@ BOE permalinks where the legal catalogue resolves them (reusing the glossary
 generator's :func:`~dev.docs.glossary_reference._legal_permalinks` read),
 ``source_refs``, and ``source_revisions`` latest-first. Entries group by the
 registry ``section`` path so the two large modelos (M200, M100) stay navigable.
+The registry definition fields (help, data type, input kind, requiredness, and
+canonical binding/formula ids) render beside that metadata; localized labels
+and help use the Spanish invariant as the display fallback when a locale is
+not authored.
 
 Anchors: every entry carries a page-local raw-HTML anchor span whose id is
 :func:`~dev.docs.terminology._casilla_anchor.casilla_page_anchor`, the exact
@@ -95,17 +99,23 @@ def _section_display(section: tuple[str, ...]) -> str:
 
 
 def _localised_lines(record: CasillaSearchRecord) -> list[str]:
-    """Field lines for the non-Spanish localised labels, where authored."""
+    """Field lines for authored locales, falling back to Spanish labels/help."""
     from cadrumo.core.external_constants import OutputLanguage
 
     lines: list[str] = []
-    for language, label in (
-        ("en", record.descriptions.get(OutputLanguage.EN)),
-        ("ca", record.descriptions.get(OutputLanguage.CA)),
-        ("hu", record.descriptions.get(OutputLanguage.HU)),
-    ):
-        if label:
-            lines.append(f":Label ({language}): {_rst_escape(label)}")
+    spanish_help = record.localized_help.get(OutputLanguage.ES.value)
+    if spanish_help:
+        lines.append(f":Help (es): {_rst_escape(spanish_help)}")
+    for language in (OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU):
+        localized_label = record.descriptions.get(language)
+        localized_help = record.localized_help.get(language.value)
+        if localized_label is None and localized_help is None:
+            continue
+        label = localized_label or record.description_es
+        help_text = localized_help or spanish_help
+        lines.append(f":Label ({language.value}): {_rst_escape(label)}")
+        if help_text:
+            lines.append(f":Help ({language.value}): {_rst_escape(help_text)}")
     return lines
 
 
@@ -154,7 +164,16 @@ def _render_entry(
         f"**{_rst_escape(record.number)}** — {_rst_escape(label)}",
         "",
     ]
-    fields = [f":Casilla id: ``{record.casilla_id}``"]
+    fields = [
+        f":Casilla id: ``{record.casilla_id}``",
+        f":Data type: ``{_rst_escape(record.data_type)}``",
+        f":Input kind: ``{record.input_kind.value}``",
+        f":Required: {'yes' if record.required else 'no'}",
+    ]
+    if record.binding is not None:
+        fields.append(f":Binding id: ``{_rst_escape(str(record.binding))}``")
+    if record.formula_id is not None:
+        fields.append(f":Formula id: ``{_rst_escape(str(record.formula_id))}``")
     fields.extend(_localised_lines(record))
     if record.segmento:
         fields.append(f":Segmento: {_rst_escape(record.segmento)}")

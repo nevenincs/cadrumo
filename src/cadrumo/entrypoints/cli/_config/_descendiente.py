@@ -380,12 +380,21 @@ def descendiente_add(
     descendiente: list[str] = typer.Option(
         ...,
         "--descendiente",
+        # The key TOKENS are part of the parse contract and stay untranslated in
+        # every locale: the parser upper-cases and compares them literally, so a
+        # translated token is silently DROPPED rather than refused. Only the
+        # trailing sentence is translatable prose. No euro figure appears here --
+        # the ceilings live in the registry and copy naming one would drift the
+        # moment a revision moved it.
         help=tr(
             "cli.config.profile.descendiente.add_flag_help",
             default=(
                 "NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65]"
-                "[,CONVIVENCIA=true|false][,CUSTODIA=true|false][,MESES_TRABAJO=0..12]"
-                "[,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. Repeatable."
+                "[,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
+                "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
+                "[,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]. "
+                "Repeatable. Run `aeat config profile descendiente` with no "
+                "subcommand to enter these guided."
             ),
         ),
     ),

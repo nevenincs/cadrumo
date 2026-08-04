@@ -542,6 +542,11 @@ convention = "google"
 # module's own SCAN_ROOTS constants. It must read the TRACKED set rather than
 # the filesystem so a peer's untracked scratch module cannot red the gate.
 "src/cadrumo/tests/test_text_writer_newline_pinning.py" = ["S603", "S607"]
+# Runs a real `pytest --collect-only` in a child interpreter: collectability is
+# a property of a fresh import, so an in-process check would read modules this
+# process already imported. The command is built from `sys.executable` plus
+# repo-relative paths this module discovered itself, never operator input.
+"src/cadrumo/tests/test_every_test_module_is_collectable.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
 "dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
