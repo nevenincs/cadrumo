@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:584f53c55a4eeb8059d58d6e0efb7e16b814245e0a5b1255fcf2518c5b9ff768'
+body_hash: 'sha256:81285f4f46e40558c9a1a4ff835095739f169fceed3efb341646b70e56950090'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -499,3 +499,37 @@ The review ran before closure was declared, which is the gate. Four items, none 
 the one that could not be left was the artefact contradiction — with a Step unticked and a
 record contradicting itself, the campaign could not be assessed from its own artefacts, which
 is the condition the discipline names. That is resolved.
+
+
+## Recommendations
+
+The findings above state their own remedies inline. What this section records is the small
+number of things that outlive the campaign, in the order they unblock each other rather than
+by size — sequencing by magnitude would land the largest fix against a model that cannot
+express it.
+
+**Sequence the descendant-axis work as one piece.** The relationship-kind axis lands first
+because two separate fixes are blocked on it and neither is safe without it: one because the
+missing distinction makes the fix *wrong*, one because it makes the fix *worse than the
+defect*. The general entry-event date follows, and the guardería machinery last. All four
+decisions are recorded in the deferred-descendant-axes ADR; this audit supplies their
+measurements.
+
+**Reproduce before designing the entry surface.** The casilla residual is reasoned from four
+measured links rather than observed end to end. The remedy should begin by making that last
+step measured — the reverted port is the standing evidence that designing against an
+unreproduced premise on this surface produces a regression rather than a fix.
+
+**Treat the untested collector wirings as suspect rather than pending.** That class has
+produced findings twice, once severely: writing the missing tests for an advisory nobody
+drove found it raising a validation error instead of firing, silencing the disclosure an
+ADR's chosen default direction depended on. An unexercised collector here has not been
+merely unmeasured; it has twice been broken.
+
+**Carry the token lesson into any sweep that follows.** Every cheap uniform action attempted
+during this campaign was keyed on a token and every one was wrong, because the token is where
+two concepts collide rather than where they are the same thing — two help strings, one
+predicate serving five statutes, two decimal contracts, and two genuinely different articles
+sharing a name, one of them spelled differently in a fourth language. Match on the subject,
+never on the string.
+
