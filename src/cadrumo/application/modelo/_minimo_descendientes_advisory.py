@@ -218,19 +218,22 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     ]
     if not inferred:
         return ()
-    named = ", ".join(f"renta_family.descendiente.{index}" for index in inferred)
+    # Bounded for the same reason the sibling advisory is: naming every
+    # descendant is the only unbounded part of a length-capped message, and a
+    # large household would otherwise turn this advisory into a hard
+    # ValidationError -- silencing the disclosure the ADR's default rests on,
+    # for the filer with the most children at stake.
+    named = _name_indices(inferred)
     return (
         CalculationSourceDiagnostic(
             reason="source_issue",
             source_kind=_PRORRATA_INFERRED_SOURCE_KIND,
             message=(
                 f"casilla {estatal_id!r} (mínimo por descendientes) was HALVED under Art. 61 norma 1ª "
-                f"LIRPF for {named} because the profile indicates a second contribuyente entitled to the "
-                "same descendant (marital status, spouse record or declaration type) and no explicit "
-                "answer was given. This is an inference, not a declared fact: if no other filer claims "
-                "these descendants, state it with `aeat config profile descendiente add --descendiente "
-                "NACIMIENTO=YYYY-MM-DD,PRORRATA=false` to claim the full mínimo, or PRORRATA=true to "
-                "confirm the split"
+                f"LIRPF for {named}: the profile indicates a second entitled contribuyente (marital "
+                "status, spouse record or declaration type) and no explicit answer was given. That is "
+                "an inference, not a declared fact. State it with `descendiente add --descendiente "
+                "PRORRATA=false` to claim the full mínimo, or PRORRATA=true to confirm the split"
             ),
             casilla_id=estatal_id,
         ),

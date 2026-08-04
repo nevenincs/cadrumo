@@ -271,13 +271,17 @@ def test_the_manual_itself_shows_an_unmarried_conjunta_is_prorated() -> None:
     absent a marriage the unidad familiar is one progenitor plus the minor
     children and the other progenitor stays separately entitled.
 
-    Asserts a relation between two AEAT-printed numbers and the registry's own
-    tranches. It touches no engine output, so it cannot be satisfied by the
-    engine being wrong.
+    Touches no engine output, so it cannot be satisfied by the engine being
+    wrong. Both figures are module constants transcribed from the manual: the
+    fixtures assert the individual cases, and neither conjunta total appears in
+    an ``expected_by_casilla_id`` map.
     """
     assert _PRINTED_UNMARRIED_CONJUNTA_TOTAL < _PRINTED_THREE_CHILD_WHOLE_TRANCHES
-    # The married conjunta of Ejemplo 1 prints the whole-tranche total, so the
-    # gap between the two printed figures IS the prorrateo.
+    # Consistency check on the whole-tranche constant, NOT a second printed
+    # figure: it doubles the fixture's printed INDIVIDUAL total through the 2:1
+    # relation norma 1a describes. The married-conjunta 9.100 is grounded in the
+    # Asturias fixture's notes (L47434-L47445), not in its expected map, so
+    # nothing here reads it from the fixture.
     assert _expected(_ASTURIAS_ORACLE, "0513") * 2 == _PRINTED_THREE_CHILD_WHOLE_TRANCHES
 
 
