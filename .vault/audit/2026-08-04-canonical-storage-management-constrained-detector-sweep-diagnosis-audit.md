@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:48269f0e4cdba9acd0446378cdc09b7ab0b2908bf20e70251dbda373b3617d45'
+body_hash: 'sha256:419ea372b86664eec9559d9c877452602ea9ebd312715bafd0fd3a79e6c50605'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -129,6 +129,20 @@ join, not a bigger vocabulary.** A workable version would need to distinguish an
 accessor *call* from a coincidental local-variable or field-name match (require
 `ast.Call` context, not bare `ast.Name`/`ast.Attribute` presence), and would need
 to see across the fixture-to-consumer boundary the cross-module miss exposed —
-neither is a small change. Whether that investment is worth it, against six
-literal bands already closed by hand at effectively zero tooling cost, is a
-decision for whoever owns the campaign's remaining budget, not a default.
+neither is a small change.
+
+**Decided: not funded.** Call-context discrimination plus cross-module reach are
+both substantial builds, and the thing they would automate is already done — six
+literal bands closed by hand at zero tooling cost, with a handful of unrecorded
+segments left on the `S78` surface. The instrument would arrive after the work it
+was meant to accelerate. `WriteSite.constrained` is retired as a finding
+generator; the code, tests, and unresolved-rate self-report stand as noted above.
+
+**The pre-stated oracle is what made this result usable rather than a
+negotiation.** "Missing any known positive is disqualifying" was fixed before the
+sweep ran, so 114-flags-for-3-true-positives settled the question on contact
+instead of opening an argument about whether that ratio was tolerable. Read
+post-hoc, the same number is arguable in either direction — a defender could call
+it "close enough with tuning" and a critic could call it "obviously broken,"
+and neither could out-argue the other from the number alone. Fixing the bar in
+advance is what turned a measurement into a verdict.
