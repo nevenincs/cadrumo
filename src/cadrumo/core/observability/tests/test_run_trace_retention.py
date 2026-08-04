@@ -22,7 +22,7 @@ from ....tests.storage_scope import relocated_storage_path, storage_overrides
 from ... import StorageCategory
 from ...config import override_settings
 from .._models import RunOutcome, RunTrace
-from .._store import prune_run_traces, save_trace
+from .._store import _EVENTS_FILENAME, _TRACE_FILENAME, prune_run_traces, save_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -40,9 +40,9 @@ def _make_run_dir(
 ) -> Path:
     run_dir = runs_dir / run_id
     run_dir.mkdir(parents=True)
-    (run_dir / "trace.json").write_text("{}", encoding="utf-8")
+    (run_dir / _TRACE_FILENAME).write_text("{}", encoding="utf-8")
     if events_bytes:
-        (run_dir / "events.jsonl").write_bytes(b"x" * events_bytes)
+        (run_dir / _EVENTS_FILENAME).write_bytes(b"x" * events_bytes)
     stamp = (anchor - timedelta(days=age_days)).timestamp()
     os.utime(run_dir, (stamp, stamp))
     return run_dir
@@ -141,7 +141,7 @@ def test_save_trace_write_path_fires_retention_prune(tmp_path: Path) -> None:
         save_trace(trace)
 
     assert not stale.exists()
-    assert (runs_dir / fresh_run_id / "trace.json").exists()
+    assert (runs_dir / fresh_run_id / _TRACE_FILENAME).exists()
 
 
 def test_prune_enforces_total_size_ceiling_oldest_first(tmp_path: Path) -> None:

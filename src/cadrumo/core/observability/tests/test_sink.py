@@ -48,7 +48,7 @@ from .. import (
     save_trace,
 )
 from .._sink import JsonlRunSink
-from .._store import _EVENTS_FILENAME, runs_dir
+from .._store import _EVENTS_FILENAME, _TRACE_FILENAME, runs_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -289,7 +289,7 @@ class TestStorePersistenceErrors:
         run_id = "abcdef0123456789"
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
             runs_root = storage_path(StorageCategory.RUNS, settings=settings)
-            trace_path = runs_root / run_id / "trace.json"
+            trace_path = runs_root / run_id / _TRACE_FILENAME
 
             with obstructed_path(trace_path), pytest.raises(RunTracePersistenceError) as excinfo:
                 load_trace(run_id, settings=settings)
@@ -306,7 +306,7 @@ class TestStorePersistenceErrors:
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             trace_b = self._trace(run_b)
             source = save_trace(trace_b)
-            target = runs_dir() / run_a / "trace.json"
+            target = runs_dir() / run_a / _TRACE_FILENAME
             target.parent.mkdir()
             shutil.copyfile(source, target)
 
@@ -325,7 +325,7 @@ class TestStorePersistenceErrors:
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             trace_b = self._trace(run_b)
             source = save_trace(trace_b)
-            target = runs_dir() / run_a / "trace.json"
+            target = runs_dir() / run_a / _TRACE_FILENAME
             target.parent.mkdir()
             shutil.copyfile(source, target)
 

@@ -31,6 +31,7 @@ from .. import (
     record_event,
     run_context,
 )
+from .._store import _EVENTS_FILENAME, _TRACE_FILENAME
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -125,7 +126,7 @@ class TestRunContextOutcome:
             pytest.raises(RunTracePersistenceError) as excinfo,
             run_context(entrypoint="cadrumo test persist fail", arguments=(), run_id=run_id),
         ):
-            trace_path = storage_path(StorageCategory.RUNS, settings=settings) / run_id / "trace.json"
+            trace_path = storage_path(StorageCategory.RUNS, settings=settings) / run_id / _TRACE_FILENAME
             trace_path.mkdir(parents=True)
 
         assert excinfo.value.operation == "save_trace"
@@ -142,7 +143,7 @@ class TestRunContextOutcome:
             pytest.raises(RuntimeError, match="primary failure"),
             run_context(entrypoint="cadrumo test body fail", arguments=(), run_id=run_id),
         ):
-            (storage_path(StorageCategory.RUNS) / run_id / "trace.json").mkdir(parents=True)
+            (storage_path(StorageCategory.RUNS) / run_id / _TRACE_FILENAME).mkdir(parents=True)
             raise RuntimeError("primary failure")
 
         assert current_run_context() is None
@@ -234,7 +235,7 @@ class TestRunSinkScrubbing:
                 )
                 run_id = info.run_id
 
-            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / "events.jsonl"
+            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / _EVENTS_FILENAME
             assert jsonl_path.exists(), f"JSONL sink file not found: {jsonl_path}"
 
             raw_text = jsonl_path.read_text(encoding="utf-8")
@@ -279,7 +280,7 @@ class TestRunSinkScrubbing:
                 )
                 run_id = info.run_id
 
-            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / "events.jsonl"
+            jsonl_path = storage_path(StorageCategory.RUNS) / run_id / _EVENTS_FILENAME
             lines = [ln for ln in jsonl_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
             assert lines, "no JSONL lines written"
             for line in lines:
