@@ -6,7 +6,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:c95119ecfea2ebdf72c71f65a180842f6eb59048588f28e2a85f4c836bf1d928'
+body_hash: 'sha256:f8eeabce8eda71630ce9681956d977251bf42a7f2c8534bd0e76de272f1d2a1f'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -18,11 +18,13 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P06-S21]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S22]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S23]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P06-S24]]'
   - '[[2026-08-01-user-docs-search-consolidation-adr]]'
   - '[[2026-08-01-user-docs-search-consolidation-plan]]'
   - '[[2026-08-04-user-docs-search-consolidation-audit]]'
   - '[[2026-08-04-user-docs-search-consolidation-deterministic-casilla-enrollment-research]]'
   - '[[2026-08-04-user-docs-search-consolidation-p06-s23-review-audit]]'
+  - '[[2026-08-04-user-docs-search-consolidation-p06-s24-review-audit]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -39,6 +41,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 
 - `2026-08-04-user-docs-search-consolidation-audit` - `user-docs-search-consolidation` audit: `P01.S01 shipped search licence rule amendment`
 - `2026-08-04-user-docs-search-consolidation-p06-s23-review-audit` - `user-docs-search-consolidation` audit: `P06 deterministic enrollment follow-up`
+- `2026-08-04-user-docs-search-consolidation-p06-s24-review-audit` - `user-docs-search-consolidation` audit: `P06.S24 casilla enrollment gate review`
 
 ### exec
 
@@ -52,6 +55,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P06-S21` - Carry registry help, input-kind, data-type, formula, and locale metadata through the casilla search projection and unified record without changing the opaque identity
 - `2026-08-01-user-docs-search-consolidation-P06-S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback
 - `2026-08-01-user-docs-search-consolidation-P06-S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback
+- `2026-08-01-user-docs-search-consolidation-P06-S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability
 
 ### plan
 
