@@ -91,6 +91,20 @@ def _seed_cleanup_intent(*, operation_kind: AuthCleanupOperationKind) -> None:
     repository.update(prepare)
 
 
+def _bucket_database_file(storage_root: Path) -> Path:
+    """Resolve the bucket database file through the taxonomy, not a literal.
+
+    These tests are about transaction recovery; the path is scaffolding for
+    reaching the file a trigger is installed on. ``BUCKET_DATABASE_FILENAME`` is
+    bucket-relative and already carries its ``db/`` segment, so it joins onto
+    ``bucket_dir`` -- joining it onto ``db_dir`` doubles the directory.
+    """
+    from ....adapters.persistence.storage import BUCKET_DATABASE_FILENAME
+    from ....adapters.persistence.storage.bucket import bucket_paths
+
+    return bucket_paths(storage_root, _BUCKET_ID).bucket_dir / BUCKET_DATABASE_FILENAME
+
+
 @contextmanager
 def _blocking_workflow_update_trigger(db_path: Path):
     trigger_name = "fail_auth_cleanup_finalize"
@@ -291,7 +305,7 @@ def test_certificate_secret_set_event_failure_resumes_original_set_once(
         with profile_storage_session(_BUCKET_ID):
             register_operator_certificate_source(name="personal", certificate_path=certificate_path)
             repository = workflow_state_repository()
-            db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+            db_path = _bucket_database_file(storage_root)
 
             with _blocking_bucket_event_update_trigger(db_path), pytest.raises(RepositoryError):
                 set_operator_certificate_source_secret(
@@ -366,7 +380,7 @@ def test_certificate_secret_rotation_event_failure_resumes_original_rotation_onc
                 secret=SecretStr("original-passphrase"),
             )
             repository = workflow_state_repository()
-            db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+            db_path = _bucket_database_file(storage_root)
 
             with _blocking_bucket_event_update_trigger(db_path), pytest.raises(RepositoryError):
                 set_operator_certificate_source_secret(
@@ -410,7 +424,7 @@ def test_certificate_secret_remove_event_failure_reports_original_removal_once(
                 secret=SecretStr("private-passphrase"),
             )
             repository = workflow_state_repository()
-            db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+            db_path = _bucket_database_file(storage_root)
 
             with _blocking_bucket_event_update_trigger(db_path), pytest.raises(RepositoryError):
                 remove_operator_certificate_source_secret(name="personal")
@@ -460,7 +474,7 @@ def test_logout_write_failure_resumes_cleanup_and_emits_session_event_once(
                 metadata={"provider_kind": "certificate"},
             )
             _seed_cleanup_intent(operation_kind=AuthCleanupOperationKind.LOGOUT)
-            db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+            db_path = _bucket_database_file(storage_root)
 
             with _blocking_workflow_update_trigger(db_path), pytest.raises(RepositoryError):
                 logout_operator_auth(provider="certificate")
@@ -513,7 +527,7 @@ def test_reset_write_failure_resumes_real_cleanup_and_emits_effects_once(
                 metadata={"provider_kind": "certificate"},
             )
             _seed_cleanup_intent(operation_kind=AuthCleanupOperationKind.RESET)
-            db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+            db_path = _bucket_database_file(storage_root)
 
             with _blocking_workflow_update_trigger(db_path), pytest.raises(RepositoryError):
                 reset_operator_auth(provider="certificate")
@@ -625,7 +639,7 @@ def test_failed_reset_serializes_and_refuses_concurrent_central_session_writer(
         with profile_storage_session(_BUCKET_ID):
             _seed_cleanup_intent(operation_kind=AuthCleanupOperationKind.RESET)
 
-        db_path = storage_root / "buckets" / _BUCKET_ID / "db" / "cadrumo.db"
+        db_path = _bucket_database_file(storage_root)
         reset_locked = Event()
         continue_reset = Event()
         writer_started = Event()
