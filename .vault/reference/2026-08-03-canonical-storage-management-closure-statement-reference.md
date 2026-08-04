@@ -828,9 +828,26 @@ a mark. **Both are places where silence reads as coverage**, which is the failur
 this campaign exists to surface — and finding it in the campaign's own
 completeness accounting is the sharpest instance of it.
 
+**And the ledger inherits the enumeration flaw of whatever produced each entry.**
+A ledger entry means *"someone examined the set they found"*, never *"the set is
+closed"* — and the two came apart in practice. The `master.recovery.key` band was
+reported complete at "all 20 sites"; the real count is **21 across 7 files**, with
+the seventh untouched, because **the file set was enumerated from the files being
+edited rather than independently**. The missed site hardcodes
+`REPO_ROOT / "var" / "secrets"` — a taxonomy segment against the *repo* root,
+which makes it a `secrets`-band question, and `secrets` is also marked complete.
+
+So the ledger is a record of *examinations*, and an examination is only as
+complete as its enumeration. That is the same gap this element already describes,
+one level up: there the tree cannot distinguish examined from unexamined, here the
+ledger cannot distinguish *the set was closed* from *the set I found was closed*.
+**A ledger entry should therefore record how its file set was enumerated**, not
+only that a sweep happened.
+
 **What would make this "no"**: declaring `S78` complete on a clean scan. A clean
 scan is consistent with every remaining literal having been examined *and* with
-none of them having been.
+none of them having been. Equally, a complete ledger whose entries were each
+enumerated from the files already being edited.
 
 ## This document was itself untracked until hours before closure
 

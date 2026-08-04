@@ -585,6 +585,20 @@ keeps two independent checks for the cost of one frozenset. **Two oracles is the
 stronger design where the property is a literal on-disk name that must not
 change.**
 
+**The marker is inert, and this clause says so rather than letting a future
+reader assume otherwise.** Measured at `2698a73774`: **32 occurrences, 32 of them
+its own declaration, zero consumers.** No gate reads it. It is a comment carrying
+a type annotation.
+
+That does not overturn the ratification, but it relocates what is being ratified.
+**The literal at the assertion is the defence; the marker records why it is
+there.** Anyone citing `PINNED_TAXONOMY_LITERALS` as enforcement would be citing
+nothing — the same *declared-versus-defended* confusion this ruling's
+anti-tautology paragraph already warns about, in the opposite direction.
+
+*This was nearly ratified as "binding" without checking whether it did anything —
+the reasoning was scrutinised and the artefact was not.*
+
 **Binding form.** A pins-by-design literal **may remain at its assertion** when the
 module declares it in `PINNED_TAXONOMY_LITERALS` with a docstring stating what the
 pin defends. An *incidental* literal still migrates to the accessor, unchanged from
@@ -592,7 +606,22 @@ above — the marker is not a general exemption, and using it to avoid a migrati
 the failed-migration case this ruling already names. **A pin without the marker is
 indistinguishable from an unswept literal**, which is the completeness problem
 recorded against `S78`: of the six classification outcomes only `pin` marks itself,
-so the marker is the one disposition that leaves the tree self-describing.
+so the marker is the one disposition that leaves the tree self-describing — and
+that ledger function is what it provides, in place of enforcement rather than in
+addition to it.
+
+**If enforcement is wanted later**, the mechanical form is a gate that reads each
+module's `PINNED_TAXONOMY_LITERALS` and asserts every taxonomy-vocabulary literal
+in that module is either declared in it or absent. That would make the marker
+load-bearing and would close the ledger gap mechanically. It is **not** required by
+this clause, and it should not be implied to exist.
+
+**A pin's rationale is per-site and must not be generalised.** A refusal guard —
+`assert not (...).exists()` — keeps its literal for a reason unrelated to a
+provider or caller choosing the filename: **a wrong path trivially satisfies the
+guard**, so the assertion passes while checking nothing. Different mechanism,
+different survival condition under refactor, and characterising it with a generic
+justification loses the property the pin exists to defend.
 
 **R15 — The two isolation tiers have different dispositions, and conflating them
 misdirects the migration.** An earlier wording called the whole chain "the
