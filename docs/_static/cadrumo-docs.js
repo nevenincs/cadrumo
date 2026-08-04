@@ -408,7 +408,7 @@
           var seenHref = {};
           var matches = [];
           items.forEach(function (item) {
-            var href = item.result && item.result.url;
+            var href = item.data && item.data.url;
             if (!href || seenHref[href] || !isStructuredCasillaMatch(item.data, address)) {
               return;
             }
