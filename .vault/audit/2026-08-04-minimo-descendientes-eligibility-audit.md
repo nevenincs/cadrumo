@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9faf2e091ba57c0322a69112bce2c59bb96b3aec441d4fa3e2835cac840e6df1'
+body_hash: 'sha256:2a65b738c2bdf76eb7d255fe6c0055d7161848634d59a574b95da9b9fb239d20'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -225,6 +225,7 @@ trusting the read.
 
 ## Residuals carried forward
 
+
 Unchanged from the ADR's own deferrals, and tracked in the consolidated open-work plan rather
 than here: the three unmodelled Art. 58/61 conditions, all of which under-grant and therefore
 harm the taxpayer rather than the revenue; and the entry-surface follow-up.
@@ -239,9 +240,31 @@ predicate fix. It errs toward under-claiming, which is the safe direction, and i
 by a test asserting the printed figure is *not* claimed as an expectation, so the gap stays
 recorded rather than silent.
 
-Six collector wirings outside the mínimo family remain unaudited. Given this class has now
-produced an unguarded wiring and a live defect, they are being treated as suspect rather than
-presumed covered.
+**Five collector wirings outside the mínimo family are untested**, measured rather than
+estimated: ten collectors are wired into the advisory coordinator and only two test files
+drive that coordinator at all. The four mínimo kinds are now covered, as is the prorrata
+regularización kind by an existing M303 test. The remaining five span other modelos with
+their own fixture requirements, which is why they are a follow-up rather than absorbed here.
+
+That count corrects an earlier statement of six in this document, which was the coordinator's
+own tally before the sweep ran. The class has now produced findings three times, once
+severely, so the five are treated as suspect rather than presumed covered.
+
+A note carried into the conjunta-membership deferral rather than resolved here. The canonical
+Art. 82.1 authority — the enum carrying the unidad-familiar modality test and the
+registration-agnostic rule — now has **no consumer in the mínimo path at all**. The prorrata
+predicate deliberately reads the AEAT ECIVIL filing code instead, and that choice is correct
+and measured: both fields are optional and asked side by side in the same setup walk, so
+neither is better populated, and switching would silently drop the prorrata for any profile
+carrying only the ECIVIL code — the over-granting direction.
+
+The decision being right is what makes the note necessary. An enum that is the canonical
+authority for a question nothing asks it is the shape that invites a second one to be built
+alongside it. Should the membership modelling ever land, it must decide whether that enum
+becomes the source, and note that it distinguishes registered from unregistered pareja de
+hecho while the article does not — so both must count as partnered, or an unregistered couple
+over-grants.
+
 
 ## Assessment
 
