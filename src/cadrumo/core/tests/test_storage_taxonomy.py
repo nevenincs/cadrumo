@@ -43,7 +43,18 @@ from ..errors import CoreValidationError
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
-    {"registry", "cache", "buckets", "keystore", "tokens", "manifest.toml", "session.v1.json", "bucket.dek.json", "login-throttle.json"},
+    {
+        "registry",
+        "cache",
+        "buckets",
+        "keystore",
+        "tokens",
+        "db",
+        "manifest.toml",
+        "session.v1.json",
+        "bucket.dek.json",
+        "login-throttle.json",
+    },
 )
 """Taxonomy-vocabulary literals this module deliberately pins.
 

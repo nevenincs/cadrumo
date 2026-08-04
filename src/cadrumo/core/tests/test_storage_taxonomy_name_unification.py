@@ -43,7 +43,7 @@ from ..config import Settings, StorageRouteKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cadrumo.db", "buckets"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cadrumo.db", "buckets", "db"})
 """Taxonomy-vocabulary literals this module deliberately pins.
 
 ``root / "cadrumo.db"`` and ``root / "buckets" / "primary" / "db" / "cadrumo.db"``
