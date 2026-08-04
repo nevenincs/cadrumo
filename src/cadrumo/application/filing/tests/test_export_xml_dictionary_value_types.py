@@ -240,35 +240,42 @@ def test_an_already_typed_amount_skips_the_text_grammar() -> None:
     assert _format_xml_dictionary_value("P102", 0) == "0.00"
 
 
-def test_a_numeric_row_refuses_a_boolean() -> None:
-    """A boolean on an amount row refuses rather than rendering as 1 or 0.
+def test_a_row_aeat_does_not_declare_boolean_refuses_a_boolean() -> None:
+    """A boolean renders on the two boolean row types and nowhere else.
 
-    The boolean branch is evaluated before the numeric one, so ``True`` on a
-    ``P102`` euro-cent row used to render ``1`` -- a plausible one-euro amount that
-    the XSD accepts, exactly the shape of the unreadable-amount defect above. Both
-    launder an upstream error into a number a taxpayer never stated, and neither is
-    visible afterwards: nothing on the export path validates against the schema,
-    and ``1`` would satisfy it anyway.
+    The boolean branch is evaluated before every other, so it used to claim any
+    row a boolean arrived on: ``True`` on a ``P102`` euro-cent row rendered ``1``,
+    a plausible one-euro amount the XSD accepts, and on an ``X`` or ``FEC`` row it
+    rendered ``1`` where AEAT expects text or a date. Both launder an upstream type
+    error, and the amount case is the one that hides: nothing on the export path
+    validates against the schema, and ``1`` would satisfy it anyway, so a taxpayer
+    files a figure they never stated.
+
+    The row types are enumerated here rather than derived, because deriving them
+    from the same set the renderer consults would make this test agree with the
+    code by construction. ``MOD`` and ``AAA`` are the codes the Modelo 100
+    dictionary carries beyond the four asserted above.
 
     This is a guard rather than a live fix. No route measured today delivers a
     boolean here: the casilla input door refuses one for every declared family, and
-    no Modelo 100 revision declares a boolean casilla on a numeric row. The guard
-    exists so that a route added later fails loudly instead of filing a number.
+    no Modelo 100 revision declares a boolean casilla on a non-boolean row. The
+    guard exists so that a route added later fails loudly instead of filing a value.
     """
-    for dictionary_type in ("P102", "N102", "P010", "P012"):
+    for dictionary_type in ("P102", "N102", "P010", "P012", "X", "FEC", "TIT", "MOD", "AAA"):
         for value in (True, False):
             with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
                 _format_xml_dictionary_value(dictionary_type, value)
 
 
 def test_the_boolean_refusal_spares_the_rows_declared_boolean() -> None:
-    """Positive control: only numeric rows refuse a boolean.
+    """Positive control: the two rows AEAT declares boolean still render.
 
-    The boolean branch is correct for the two types AEAT declares boolean, and a
-    guard that refused every boolean would satisfy the refusal test above while
-    emptying the identity block of every declaration. The rendered tokens are
-    checked against the XSD facets rather than restated, so this stays an oracle
-    test rather than a copy of the code.
+    A guard that refused every boolean would satisfy the refusal test above while
+    emptying the identity block of every declaration, and a guard that refused
+    every value would satisfy it while breaking the whole export -- so both the
+    boolean rows and a representative non-boolean value are asserted here. The
+    rendered tokens are checked against the XSD facets rather than restated, so
+    this stays an oracle test rather than a copy of the code.
     """
     for dictionary_type, xsd_type in (("LGC", "tipo_logico"), ("S_N", "tipo_SINO_Exclusivo")):
         for value in (True, False):
@@ -277,3 +284,17 @@ def test_the_boolean_refusal_spares_the_rows_declared_boolean() -> None:
                 f"{dictionary_type} row rendered {rendered!r} for {value!r}, which {xsd_type} rejects"
             )
     assert _format_xml_dictionary_value("P102", Decimal("1")) == "1.00"
+    assert _format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
+
+
+def test_a_row_type_aeat_adds_later_refuses_a_boolean_by_default() -> None:
+    """The claim list is positive, so an unlisted row type is refused, not rendered.
+
+    This is the property that makes the guard survive AEAT extending its type
+    table. A negative carve-out -- "numeric rows refuse" -- would leave a new code
+    inheriting whatever the last branch did, which is how the defect existed in the
+    first place. ``ZZZ`` stands for that future code and is deliberately not a type
+    the dictionary declares today.
+    """
+    with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
+        _format_xml_dictionary_value("ZZZ", True)

@@ -62,9 +62,17 @@ _AUX_TAG = "Aux"
 # elements.
 _XSD_MODEL_GROUP_TAGS = frozenset({"complexType", "complexContent", "sequence", "choice", "all"})
 
-# The one dictionary type whose boolean states are spelled out. Every other
-# boolean-bearing row is ``tipo_logico``, whose pattern is ``([0-1]){1}``.
+# The one dictionary type whose boolean states are spelled out.
 _SINO_DICTIONARY_TYPE = "S_N"
+
+# The other, and the common one: ``tipo_logico``, whose pattern is ``([0-1]){1}``.
+_LOGICAL_DICTIONARY_TYPE = "LGC"
+
+# The complete set of row types AEAT declares boolean. Naming it positively is
+# what makes a boolean on any other row an error by default: a row type added to
+# the dictionary later is simply not on this list, so it refuses rather than
+# inheriting whatever the last branch happened to do.
+_BOOLEAN_DICTIONARY_TYPES = frozenset({_SINO_DICTIONARY_TYPE, _LOGICAL_DICTIONARY_TYPE})
 
 # The dictionary's numeric type codes are self-describing: ``P<width><scale>``
 # and ``N<width><scale>`` name the field's integer width and its fractional-digit
@@ -567,25 +575,31 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
     """
     normalized_type = data_type.upper()
     if isinstance(value, bool):
-        # A boolean on a numeric row is an upstream type error, and rendering it
-        # would launder that error into a plausible amount: ``True`` on a euro-cent
-        # row reads as one euro, which the XSD accepts and no downstream check can
-        # question. Refusing here is the same decision the unreadable-amount branch
-        # below makes, for the same reason -- a wrong number that satisfies the
-        # schema is worse than no file at all.
+        # A boolean renders on exactly the two rows AEAT declares boolean, and is
+        # a type error anywhere else. Stated this way round on purpose: asking
+        # what the row IS keeps the declared type in charge, which is the rule
+        # this whole function exists to enforce, while asking what it is NOT
+        # inverts the dependency and leaves every unlisted row inheriting the
+        # last branch by accident.
         #
-        # Only the two types AEAT declares boolean render a boolean. Every route
-        # into this function is expected to observe that already: the casilla input
-        # door refuses a boolean outright, and no Modelo 100 revision declares a
-        # boolean casilla on a numeric row. So this is a guard against a future
-        # route, not a live defect, and it must stay cheap and total rather than
-        # trying to guess what the value meant.
-        if _NUMERIC_DICTIONARY_TYPE.match(normalized_type) is not None:
+        # The damage that makes this worth refusing rather than rendering is
+        # clearest on an amount row: ``True`` on a euro-cent row reads as one
+        # euro, the XSD accepts it, nothing on the export path validates anyway,
+        # and a taxpayer files a figure they never stated. Same decision the
+        # unreadable-amount branch below makes, for the same reason -- a wrong
+        # number that satisfies every downstream check is worse than a refusal,
+        # because the refusal is the only place the error is still visible.
+        #
+        # No route delivers a boolean here today: the casilla input door refuses
+        # one for every declared family, and no Modelo 100 revision declares a
+        # boolean casilla on a non-boolean row. This guards a route added later,
+        # so it stays total and cheap rather than trying to interpret the value.
+        if normalized_type not in _BOOLEAN_DICTIONARY_TYPES:
             raise FilingExportValidationError(
-                f"a {data_type} row is a numeric amount and cannot carry the boolean {value!r}. "
-                "The value reaching this row has the wrong type; correct it at the source "
-                "rather than rendering it, because a boolean written here would be filed as "
-                "the amount 1 or 0.",
+                f"a {data_type} row cannot carry the boolean {value!r}. Only "
+                f"{'/'.join(sorted(_BOOLEAN_DICTIONARY_TYPES))} rows are declared boolean by AEAT. "
+                "The value reaching this row has the wrong type; correct it at the source rather "
+                "than rendering it, because a boolean written to an amount row is filed as 1 or 0.",
             )
         if normalized_type == _SINO_DICTIONARY_TYPE:
             return "SI" if value else "NO"
