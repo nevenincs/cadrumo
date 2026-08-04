@@ -14,7 +14,7 @@ from .....core.config import Settings, StorageRouteKind, override_settings
 from .....core.errors import CadrumoError, resolve_error_message
 from .....core.external_constants import OutputLanguage
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
-from ..bucket import provision_bucket_directory, write_bucket_output_language_hint
+from ..bucket import bucket_paths, provision_bucket_directory, write_bucket_output_language_hint
 from ..errors import StorageValidationError
 from ..master_key import BucketSession, activate_session
 from ..runtime import (
@@ -32,7 +32,6 @@ from ..runtime_repository import (
 )
 from ..sql import SecureObjectRepository
 from ..sql.secure_objects import SecureObjectWrite
-from ..bucket import bucket_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

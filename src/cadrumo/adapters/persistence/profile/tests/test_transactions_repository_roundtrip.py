@@ -46,8 +46,8 @@ from .....domain.transactions import (
     derive_transaction_id,
 )
 from .....tests.secure_sql import isolated_runtime_profile
-from ...storage.bucket import bucket_paths
 from ...storage import SecureObjectRepository, SensitivityClass
+from ...storage.bucket import bucket_paths
 from ...storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectRowIdentityError
 from ...storage.sql import SecureObjectRawRow
 from ..transactions import (
