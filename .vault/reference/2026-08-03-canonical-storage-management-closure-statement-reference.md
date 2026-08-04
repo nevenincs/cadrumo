@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:ae04994e3ff9d03cf76276c4c64925100f2700bbceaf1fc6619d84c65589e37a'
+body_hash: 'sha256:9af13a91871377ca545c64a1d91f0aa8f7f6c85e96c700bb2bc1f9c5231431ee'
 related: []
 ---
 
@@ -108,13 +108,13 @@ enrollment difference**; only re-typing the segment escapes the taxonomy.
 
 **Two consequences worth stating plainly.** Accessor adoption is **hygiene, not
 correctness**, and if this document's language overstates adoption the language
-narrows rather than modules migrating for zero enrollment gain. Measured at
-`5da2b328f9`, as three numbers rather than a ratio:
+narrows rather than modules migrating for zero enrollment gain. Re-measured at
+`83627b8830`, as three numbers rather than a ratio:
 
 ```
 modules calling storage_path(          8
-modules reading a bound path field    24
-in both                                1    core/observability/_store.py
+modules reading a bound path field    18
+in both                                1    master_key/_master_key.py
 ```
 
 **Deliberately not expressed as "8 of N".** An earlier version of this line said
@@ -123,6 +123,29 @@ name at end-of-line with no trailing comma, and the 26 was the sum of two
 overlapping samples presented as a population. The real denominator is however
 many production modules resolve a storage location at all, which nobody has
 measured, so a reader should form their own view from the three counts.
+
+**The field-reader count narrowed again, for a third reason.** A prior pass at
+`5da2b328f9` reported 24 by counting any file matching a bound-field pattern
+without checking whether the match was a genuine attribute read or a docstring
+cross-link. Three of those 24 — `blob_store/_blob_store.py`,
+`core/auth_session_keys.py`, `core/observability/_store.py` — carry exactly one
+match each, and every one is prose: a Sphinx `:attr:` role in a module docstring,
+not a line of code. `auth_session_keys.py`'s docstring in fact says the opposite
+of what the grep implied, that its key derivation is "deliberately independent
+of `Settings.cadrumo_token_dir`." `observability/_store.py`'s is the same shape,
+and explains why: `S53` re-pointed its real read onto `storage_path()`, and the
+docstring narrating that migration ("rather than by reading `cadrumo_runs_dir`")
+is what a substring-blind count mistook for a live second door. That also moves
+the **overlap** citation: `core/observability/_store.py` is accessor-only now,
+not a dual-door module, and the one real overlap is
+`master_key/_master_key.py` — it reads `settings.cadrumo_secret_store_dir`
+directly for the secret-store root (`SECRETS` is operator-overridable, so the
+module cannot resolve it through `storage_path()` without silently disagreeing
+with an override) while separately calling `bucket_scoped_storage_path()` for
+the bucket-scoped keystore DEK, a genuinely different location. Prose-mention
+false positives are the same failure mode a raw-substring literal count produces
+elsewhere in this campaign; a field-reader count needs the same content check
+before it can be cited as a code fact.
 
 And the parity gate makes the duplicate **safe, not single**: a subpath is still
 spelled in two places, it simply cannot drift. That residual is `S114`'s, not the
