@@ -12,6 +12,7 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.bucket import bucket_paths
 from ....adapters.persistence.storage.sql import dispose_engine
 from ....application.diagnostics import build_cli_version_report
 from ....core.config import SecretStoreBackend, load_settings, override_settings
@@ -108,7 +109,7 @@ def encrypted_user_cli(isolated_user_cli: Path) -> Path:
 
 
 def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
-    db_path = tmp_path / "storage" / "buckets" / "00000000-0000-4000-8000-000000000000" / "db" / "cadrumo.db"
+    db_path = bucket_paths(tmp_path / "storage", "00000000-0000-4000-8000-000000000000").database_file
     assert db_path.exists()
     on_disk = db_path.read_bytes()
     assert b"secure_objects" in on_disk

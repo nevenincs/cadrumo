@@ -10,6 +10,7 @@ import pytest
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...adapters.persistence.storage.bucket import bucket_paths
 from ...tests.secure_sql import isolated_runtime_profile
 from ..invoices import (
     Invoice,
@@ -96,7 +97,7 @@ def test_transaction_repository_default_uses_runtime_created_bucket_store(tmp_pa
         loaded = TransactionCatalogueRepository(bucket_id=bucket_id).load()
 
     assert loaded == original
-    assert (tmp_path / "cadrumo-storage" / "buckets" / bucket_id / "db" / "cadrumo.db").is_file()
+    assert bucket_paths(tmp_path / "cadrumo-storage", bucket_id).database_file.is_file()
 
 
 def test_invoice_repository_default_uses_runtime_created_bucket_store(tmp_path: Path) -> None:
@@ -111,4 +112,4 @@ def test_invoice_repository_default_uses_runtime_created_bucket_store(tmp_path: 
 
     assert loaded == original
     assert loaded.get(invoice.invoice_id) is not None
-    assert (tmp_path / "cadrumo-storage" / "buckets" / bucket_id / "db" / "cadrumo.db").is_file()
+    assert bucket_paths(tmp_path / "cadrumo-storage", bucket_id).database_file.is_file()
