@@ -19,12 +19,17 @@ from ..legal_reference import (
     load_legal_provisions,
     render_legal_reference,
 )
-from ._coverage import legal_target_record_id
 from ._search_record import LegalSearchRecord
 
-__all__ = ["LegalSearchRecord", "project_legal_search_records"]
+__all__ = ["LegalSearchRecord", "legal_target_record_id", "project_legal_search_records"]
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
+_LEGAL_RECORD_ID_PREFIX = "legal:"
+
+
+def legal_target_record_id(legal_id: str) -> str:
+    """Return the search-record id for a legal-catalogue provision."""
+    return f"{_LEGAL_RECORD_ID_PREFIX}{legal_id}"
 
 
 def project_legal_search_records(repo_root: Path | None = None) -> tuple[LegalSearchRecord, ...]:

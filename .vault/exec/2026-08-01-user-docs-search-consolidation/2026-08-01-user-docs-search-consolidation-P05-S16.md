@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9776a2bc79831cb198719aa17bbdc9c826e010e5b29c1ef8723485615df9ea70'
+body_hash: 'sha256:5fd7e12cda91c90f622bfd6b2a740c7f8a3c66924ebd258bc359aab68b69e831'
 step_id: 'S16'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -66,6 +66,16 @@ Implemented the S16 relevance reconciliation and fail-closed legal target gate. 
 - The current legal projection emits provision ids, not the two legacy `legal:rd-1007-2023` ids; the gate intentionally reports those missing ids as unresolved until the registry/relevance authority is reconciled. No alias or new mapping was invented.
 - `dev.docs.terminology._legal_projection` cannot be imported in this dirty tree because of a pre-existing `_miss_rate`/`_legal_projection` circular import; the artifact targets were derived directly from the same `dev.docs.legal_reference` renderer authority without modifying that unrelated surface.
 - Per instruction, no tests, builds, Pagefind runs, live probes, sweeps, deployment, or reindexing were run.
+
+- Historical note status: the preceding `dev.docs.terminology._legal_projection` importability note records the pre-remediation state and remains historical evidence; the current static state is recorded below.
+
+### Import-cycle remediation (2026-08-04)
+
+RAG grounding and exact `rg` inspection confirmed the source-grounded cause: package initialization imports `_miss_rate`, which imports `_sweep`, which imports `_resolution`, which imports `_legal_projection`; `_legal_projection` previously imported `legal_target_record_id` from `_coverage`, while `_coverage` imports `_miss_rate`, closing the cycle before projection or gate execution.
+
+The remediation defines `legal_target_record_id` once in `_legal_projection` and re-exports that same function object from `_coverage`. `_legal_projection` no longer imports `_coverage`; `_coverage` now imports the canonical helper from `_legal_projection`. No lazy import, helper module, duplicate implementation, legal identity change, target-authority change, coverage-semantics change, or injection change was introduced.
+
+Static import-graph evidence shows the initialization path now terminates at the shared search-record and renderer dependencies: `_miss_rate -> _sweep -> _resolution -> _legal_projection`, with no reverse `_legal_projection -> _coverage` edge. Based on this static evidence, the current projection/gate path is importable after the fix; no runtime import or test result is claimed. AST parsing, exact `rg` inspection, `git diff --check`, and conflict-marker scanning remain the only verification boundary; no tests, builds, Pagefind runs, live probes, sweeps, deployment, or reindexing were run.
 
 ## Remediation addendum (2026-08-04)
 
