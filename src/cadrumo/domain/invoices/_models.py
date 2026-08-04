@@ -207,7 +207,24 @@ def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, 
             payload[key] = coerce_decimal(payload[key])
     for key in ("retention_rate", "retention_amount", "fx_rate"):
         if key in payload and payload[key] is not None:
-            payload[key] = coerce_decimal(payload[key])
+            # These three are `Decimal | None`, and that optionality is what makes
+            # a silent failure possible here where the loop above is safe. The
+            # `is not None` test rules out ABSENT, not UNPARSEABLE, and
+            # `coerce_decimal` returns None for both -- so writing its result back
+            # unchecked turns an unreadable retención rate into "the taxpayer did
+            # not have one", which pydantic then accepts because None is a legal
+            # value for the field. The totals above coerce to None the same way and
+            # are refused only because they are required. Refusing here matches
+            # `_normalise_invoice_currency` directly above, which raises on a
+            # malformed currency rather than dropping it.
+            coerced = coerce_decimal(payload[key])
+            if coerced is None:
+                raise InvoiceValidationError(
+                    f"{key} could not be parsed as a decimal: {payload[key]!r}. "
+                    "Leave it out to declare it absent; a value that cannot be read "
+                    "is not the same as no value.",
+                )
+            payload[key] = coerced
     return payload
 
 
