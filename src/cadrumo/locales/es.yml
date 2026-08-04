@@ -3945,6 +3945,7 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      edit_target_not_active: 'El perfil ''%{name}'' no es el perfil activo, y ''profile edit'' solo edita el activo. Inicia sesión en él primero y luego edítalo.'
     recover:
       errors:
         recovery_code_rejected: El código de recuperación no abrió el envoltorio de

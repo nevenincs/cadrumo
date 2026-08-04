@@ -3871,6 +3871,7 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
+      edit_target_not_active: 'A(z) ''%{name}'' profil nem az aktív profil, és a ''profile edit'' csak az aktívat szerkeszti. Először jelentkezzen be rá, majd szerkessze.'
     recover:
       errors:
         recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási

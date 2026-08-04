@@ -3657,6 +3657,7 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
+      edit_target_not_active: 'Profile ''%{name}'' is not the active profile, and ''profile edit'' only edits the active one. Log in to it first, then edit.'
     recover:
       errors:
         recovery_code_rejected: The recovery code did not open the recovery wrapper;

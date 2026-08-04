@@ -319,3 +319,61 @@ def test_echo_suppression_refusal_key_resolves_to_operator_copy() -> None:
 
     assert _ECHO_KEY not in resolved, f"key {_ECHO_KEY!r} was not substituted; got {resolved!r}"
     assert len(resolved) > 10, f"key {_ECHO_KEY!r} resolved to suspiciously short copy: {resolved!r}"
+
+
+def test_the_predicate_predicts_the_refusal_it_names() -> None:
+    """``terminal_can_prompt_for_secrets`` answers False exactly where the prompt refuses.
+
+    ``config login`` routes on this predicate to decide whether to supply
+    the hardened prompt at all, keeping the substrate's own refusal and
+    exit code on a channel that could not have been prompted anyway. That
+    routing is only correct while the predicate and the prompt agree, and
+    they can only be trusted to agree while they share one implementation
+    — this is the test that extracting the predicate did not fork them.
+
+    Driven through a subprocess on a redirected pipe rather than the
+    suite's own stdin, so the non-console condition is created rather than
+    hoped for: the answer is then the same on a CI runner and on a
+    developer's console, and the test never has to opt out of running.
+    Both halves are asserted from the one probe, which is what makes this
+    a claim about their agreement rather than two separate facts.
+    """
+    completed = subprocess.run(  # noqa: S603 - fixed interpreter argv with controlled test inputs.
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent(
+                """
+                import json
+                from cadrumo.entrypoints.cli._config._secure_input import (
+                    prompt_secret_no_echo,
+                    terminal_can_prompt_for_secrets,
+                )
+                from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
+                verdict = {"predicate": terminal_can_prompt_for_secrets()}
+                try:
+                    value = prompt_secret_no_echo("secret: ")
+                    verdict |= {"outcome": "returned", "value_length": len(value)}
+                except CliRefusedBoundaryError as exc:
+                    verdict |= {"outcome": "refused", "key": exc.translated_message}
+                except BaseException as exc:
+                    verdict |= {"outcome": "escaped", "error_type": type(exc).__name__}
+                print(json.dumps(verdict))
+                """,
+            ),
+        ],
+        input=f"{_PLANTED_SECRET}\n",
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    verdict = json.loads(completed.stdout.strip().splitlines()[-1])
+
+    assert verdict["predicate"] is False, f"a redirected pipe must not be reported as promptable; got {verdict!r}"
+    assert verdict["outcome"] == "refused", (
+        f"the predicate said this channel cannot be prompted, so the prompt must refuse; got {verdict!r}"
+    )
+    assert verdict["key"] == _NON_INTERACTIVE_KEY, (
+        f"the non-interactive refusal must be the one that fires here; got {verdict['key']!r}"
+    )

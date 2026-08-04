@@ -3915,6 +3915,7 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      edit_target_not_active: 'El perfil ''%{name}'' no és el perfil actiu, i ''profile edit'' només edita l''actiu. Inicia la sessió primer i després edita''l.'
     recover:
       errors:
         recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de

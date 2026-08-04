@@ -171,14 +171,30 @@ def _login_through_the_prompt(
 ) -> ProfileLoginOutcome:
     """Log in through the line prompt, the stdin channel, or the env secret.
 
-    The path every scripted, piped, CI, and JSON caller takes, unchanged:
-    a named target, a bounded ``--secrets-stdin`` payload, a configured
-    ``CADRUMO_SECRET_PASSPHRASE``, or the interactive ``getpass`` prompt on
-    a host with no full-screen surface — and the same refusal when none of
-    those supplied a passphrase.
+    The path every scripted, piped, CI, and JSON caller takes: a named
+    target, a bounded ``--secrets-stdin`` payload, a configured
+    ``CADRUMO_SECRET_PASSPHRASE``, or a line prompt on a real console that
+    cannot go full-screen — and the same refusal when none of those
+    supplied a passphrase.
+
+    That line prompt is explicitly supplied rather than left to default.
+    Passing no callback hands the read to the storage substrate's own
+    resolver, which ends at a bare :func:`getpass.getpass`: an untranslated
+    English prompt that silently degrades to an *echoing* read whenever it
+    cannot control the terminal. ``login`` was the only custody path in
+    this package still reaching it; every other secret is read through
+    ``prompt_secret_no_echo``, which promotes that degradation to a
+    refusal.
+
+    The callback is supplied ONLY when it would change which channel is
+    used — a real console, with no configured passphrase to consume first.
+    A headless host keeps the substrate's env-var precedence, and a
+    console-less one keeps the substrate's own refusal and exit code
+    rather than acquiring this package's; neither behaviour moves.
     """
     from ....application.user_profile import login_profile
-    from ._secure_input import read_secrets_stdin
+    from .. import _headless_secret_channel_active
+    from ._secure_input import prompt_secret_no_echo, read_secrets_stdin, terminal_can_prompt_for_secrets
 
     passphrase_callback: Callable[[], str] | None = None
     if secrets_stdin:
@@ -187,6 +203,12 @@ def _login_through_the_prompt(
         def passphrase_callback() -> str:
             """Resolve the passphrase already read from the bounded stdin channel."""
             return secret
+
+    elif not _headless_secret_channel_active() and terminal_can_prompt_for_secrets():
+
+        def passphrase_callback() -> str:
+            """Read the profile passphrase on the hardened no-echo channel."""
+            return prompt_secret_no_echo(tr("cli.config.passphrase.current_passphrase_prompt"))
 
     try:
         return login_profile(name=name, passphrase_callback=passphrase_callback)
