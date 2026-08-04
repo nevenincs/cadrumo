@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-04'
-body_hash: 'sha256:30a592a03a2c5f5226c8ef519d30541d619fd667007b89295cca2a892cdf3efa'
+body_hash: 'sha256:157cd592152b23fccda317772491de23db7da71f1231b45affbcd2859be31fb8'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -77,8 +77,8 @@ Formal review follow-up is part of that queue: the P06.S22 Pagefind result contr
 
 - [x] `P06.S20` - Separate deterministic casilla enrollment from sparse semantic coverage by adding a coverage census for projected, exact-target, definition, locale, and relevance surfaces; `dev/docs/terminology/_coverage.py`.
 - [x] `P06.S21` - Carry registry help, input-kind, data-type, formula, and locale metadata through the casilla search projection and unified record without changing the opaque identity; `dev/docs/terminology/`.
-- [ ] `P06.S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback; `docs/_static/cadrumo-docs.js`.
-- [ ] `P06.S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback; `dev/docs/terminology/_resolution.py`.
+- [x] `P06.S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback; `docs/_static/cadrumo-docs.js`.
+- [x] `P06.S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback; `dev/docs/terminology/_resolution.py`.
 - [ ] `P06.S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability; `dev/docs/tests/`.
 
 ## Parallelization

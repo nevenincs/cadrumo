@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:501d0733c0fe6c76e37620497ca02d4c591c5d617d093565c57c40972186e551'
+body_hash: 'sha256:8077e88190255a87ea0349b5e5ca58eef80de453d26ca196b1e52fb61390376d'
 step_id: 'S23'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -34,8 +34,9 @@ Commits `18a777cc44` and `3fb2c90cae363b464daab7ef0efcf99f0be43d7f` remove the u
 - Stale/unprojected target refusal: complete.
 - Diseños or other non-TOML source locator: fail-closed pending a future typed locator contract.
 - Formal review found that the section-header parser accepted only quoted revision keys while real registry files also contain unquoted revision headers; `3fb2c90cae363b464daab7ef0efcf99f0be43d7f` now accepts both forms.
+- Fresh focused formal review of `3fb2c90cae363b464daab7ef0efcf99f0be43d7f`: PASS with no findings.
 - Re-sweep and exact target coverage measurement: pending P06.S24/P02; not run in this step.
 
 ## Notes
 
-The implementation agents ran RAG discovery, owned-file history/diff checks, and `git diff --check`. The focused header correction is committed, but a fresh review and a post-change sweep/target gate are required. Tests, builds, Pagefind compilation, deployment, and live probes were not run. The step must not be marked closed until P06.S24 acceptance passes.
+The implementation agents ran RAG discovery, owned-file history/diff checks, and `git diff --check`. The focused header correction is committed and its fresh formal review returned PASS with no findings. Tests, builds, Pagefind compilation, deployment, and live probes were not run. P06.S24 still owns the post-change sweep and exact target gate.

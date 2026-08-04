@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a3a73ef28ebfbee85199caf33d89f4c4697dbf17f470ad9af9ba24299f7b3a3'
+body_hash: 'sha256:6b13fa46d59621b87d5afc67b8fe27b7f1436e0f409104c5fde2fc1641b25563'
 step_id: 'S22'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -33,8 +33,9 @@ Commits `a4281864a9e31438ccc9b536657cb89d7576020f` and `21436e572dce4ae84de9358f
 - Stable target comes from the injected Pagefind record: implemented in code.
 - Segmented-modelo ambiguity protection: implemented in code.
 - Formal review found the structured path read `result.url`; `21436e572dce4ae84de9358fd990d8af30593aa4` now uses the URL returned by `result.data()`.
+- Fresh focused formal review of `21436e572dce4ae84de9358fd990d8af30593aa4`: PASS with no findings.
 - Browser/Pagefind API integration and exact M130 result: pending P06.S24; not run in this step.
 
 ## Notes
 
-The implementation agents ran RAG discovery, `node --check`, and `git diff --check`. The focused Pagefind correction is committed, but a fresh review and P06.S24 runtime gate are required. Tests, builds, Pagefind compilation, deployment, and live probes were not run. The step must not be marked closed until P06.S24 acceptance passes.
+The implementation agents ran RAG discovery, `node --check`, and `git diff --check`. The focused Pagefind correction is committed and its fresh formal review returned PASS with no findings. Tests, builds, Pagefind compilation, deployment, and live probes were not run. P06.S24 still owns the browser/Pagefind integration and exact M130 result gate.
