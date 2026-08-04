@@ -1,4 +1,27 @@
-"""Tests for primary SQL storage route classification."""
+"""Tests for primary SQL storage route classification.
+
+The ``cadrumo.db`` literals throughout are deliberate, not unmigrated. Two
+distinct reasons hold across the file's cases, and neither is served by
+routing the expected side through ``bucket_paths(...).database_file``:
+
+- The ``route.database_path`` assertions confirm an end-to-end round trip --
+  ``Settings`` deriving ``cadrumo_database_url`` (itself pinned against a raw
+  literal in ``test_the_database_url_resolves_to_its_pre_migration_shape``)
+  and ``classify_storage_route`` echoing that URL back as a path -- against
+  the real on-disk shape, independent of the taxonomy accessor either step
+  internally consumes. Re-deriving the expected side from that same accessor
+  would make the assertion pass unconditionally on a Settings/classifier
+  defect that drifted the two in lockstep.
+- The ``not (... / "cadrumo.db").exists()`` refusals prove the former-product
+  guard creates nothing at the canonical path when it refuses to touch a
+  legacy ``aeat.db``. An accessor aimed at the wrong location would leave
+  that assertion trivially satisfied -- the exact silent-pass shape a refusal
+  test must not risk.
+
+The explicit-database-URL parametrize cases (one of which is the unrelated
+``explicit.db``) exercise arbitrary caller-supplied URLs, not the canonical
+filename, so they stay literal for the same reason.
+"""
 
 from __future__ import annotations
 
