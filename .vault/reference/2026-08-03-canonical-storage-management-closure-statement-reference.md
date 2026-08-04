@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:dd9175765733e9fa90a96ab728cedc7a1c27123c56e6ca01121781ca91a8214c'
+body_hash: 'sha256:22342f95a8c30082e1d9a494cad9c7b9d50494c0d6828f51e6e7fbb0bf63a489'
 related: []
 ---
 
@@ -1167,13 +1167,36 @@ record covering a ten-file batch, which describes its own inputs as
 exists in the relay chain. This is element `5h`'s finding one level out: the tree
 cannot say whether `S78` is complete, and neither can the record.
 
-**An open question, not a count.** A sample of unclassified sites was measured at
-roughly 23% rename-sensitive. Two things about it are unresolved and each changes
-its meaning entirely: whether the sample drew from `src/cadrumo/tests/` or the
-whole tree, and whether *rename-sensitive* means *not enrolled* or merely *would
-need editing* — a rename-sensitive site that is a correctly-declared pin is
-resolved work. It is recorded here as an open question and must not be cited as a
-residual count until both are answered.
+**The residual, measured — two populations, quoted separately and deliberately
+not combined.** An earlier figure of *"roughly 23% rename-sensitive"* was
+recorded here as an open question because two things about it were unresolved:
+the scope it drew from, and whether *rename-sensitive* meant *not enrolled* or
+merely *would need editing*. Both are now answered, and the answers changed the
+number. A site that is sensitive but carries a declared pin is **resolved work**,
+so the measured quantity is *undeclared* sensitive:
+
+```
+S78-declared scope    exhaustive census   3 of 17   17.6%   CI  6.2 - 41.0%
+whole test tree       uniform sample      3 of 30   10.0%   CI  3.5 - 25.6%
+```
+
+**Quote whichever matches the scope you are reasoning about**, and quote its
+interval with it. The census needs no sampling argument because it is
+exhaustive; the tree-wide figure is a uniform draw, replacing an earlier
+nesting-weighted one that over-counted at 16.7%.
+
+**Do not read these as agreeing.** An earlier draft of this section was going to
+say the two converged at roughly 17% and treat that as two independent
+measurements confirming each other. **The convergence was an artefact of the
+biased draw and is withdrawn rather than restated more weakly** — a weakened
+restatement of a dead claim carries the dead claim's authority at a discount.
+The scope choice moves the point estimate by about seven points.
+
+**Do not read them as disagreeing either.** At n=17 and n=30 neither is precise,
+and the intervals overlap heavily. What both support is the same conclusion the
+scope ambiguity already had: **the undeclared residual is in the low tens of
+sites, and the unresolved `S78` scope reading does not change the disposition** —
+just not because the two numbers matched.
 
 ### The claim this closure makes
 
@@ -1215,3 +1238,23 @@ The resting place is not a gap in the record. An open question with its refuted
 answers written down is a stronger artefact than a confident answer nobody
 measured — which is the same judgement this document makes about leaving `S78`
 visibly open.
+
+**And one case where the discipline worked prospectively, which belongs here
+beside the four failures.** A residual sample was known to be drawn from a
+nesting-weighted population, so the point estimate was known to be biased. The
+auditor holding it could have reasoned out a correction — the available argument
+was that long multi-segment paths skew toward source-path homonyms, so 16.7%
+would be an **under**-estimate. It declined to reason where it could measure, and
+re-drew uniformly instead.
+
+**The measured answer was 10.0%. The bias ran the other way: 16.7% was an
+over-estimate, and the correction would have been applied in the wrong
+direction** — with a plausible argument attached, into a closure document, as a
+number a reader would have taken at face value.
+
+> **This is the only instance in the campaign where the failure was prevented
+> rather than caught afterwards, and the thing that prevented it was refusing to
+> reason where measuring was possible.**
+
+A reader who sees only the four expired justifications learns what the failure
+looks like. This is what the discipline buys, and it cost one re-draw.
