@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:a279e804f13db8f8c599dda2440e79a6a02c240eca26ba3abadc597d72e080e9'
+body_hash: 'sha256:dd9175765733e9fa90a96ab728cedc7a1c27123c56e6ca01121781ca91a8214c'
 related: []
 ---
 
@@ -868,7 +868,25 @@ how favourable the reading-volume arithmetic turns out to be.
 
 ### 5h. `S78` is not done, and the tree cannot tell you whether it is
 
-**STATUS: open — the campaign's only open Step, and larger than it looked.**
+**STATUS: open, and deliberately left so. See the closure decision at the end of
+this document — the campaign closes on its criterion without this Step.**
+
+**This element inherited the very failure it diagnoses, and the correction
+belongs at its top.** It previously read *"the campaign's only open Step"* — true
+— and every reader, including its author and the coordinator, took that to mean
+*the campaign's last obstacle*. It is not. `S78` sits in plan phase `W03.P16`,
+and the plan says phases `W03.P14` through `P16` *"remain real drift-reduction
+work but are not on the closure path."* That paragraph went unread for the whole
+campaign while the phrase "one Step from closure" was repeated.
+
+> **Elsewhere a clean report was mistaken for a checked surface. Here a single
+> open checkbox was mistaken for an incomplete campaign — the same instrument
+> failure with its sign flipped.**
+
+A progress count is an instrument too, and *114 of 115* measures Steps, not
+closure. **The document diagnosing scoreboard failure was itself keeping score
+wrong**, which is the most exact instance of this element's own thesis that the
+campaign produced.
 
 **The sizing instrument had to be replaced before the remainder could be seen.**
 Raw substring counting was wrong: the `live` band's 65 and the `runs` band's 60
@@ -1102,3 +1120,69 @@ like an answer, which is why it is named here and set aside.
 criterion element only; the conjunction rule stated at the top of this document
 still governs the whole, and one "not satisfied" elsewhere still makes the
 overall statement "no".
+
+## Closure decision
+
+**The campaign is closed on its criterion. `S78` remains open, recorded as
+drift-reduction work, with its residual named below.**
+
+**The conjunction rule does not block this, and the reason is a correction to
+this document.** The rule governs whether *every element* of this statement is
+satisfied — a stricter and broader question than the campaign's closure
+criterion. `S78` sits in plan phase `W03.P16`, and the plan states that phases
+`W03.P14` through `P16` *"remain real drift-reduction work but are not on the
+closure path under the operator's sharpened definition."* So element `5h` being
+open makes this **statement** incomplete without making the **campaign**
+unclosed. Those were being read as one thing, including here.
+
+**`S78` is deliberately not checked.** A visibly open Step with its limits
+written down is a better artefact than a checked box carrying a caveat: after
+`S114` it is established that a narrowed close is indistinguishable from
+abandonment to any reader who does not find the exec record.
+
+### What `S78` reached, and what it did not
+
+**Measured movement, two instruments, same direction** — the strongest positive
+evidence available, and evidence of progress rather than completion:
+
+```
+AST path-composition scan (tests)   442 -> 353 undeclared,  pins 101 -> 147
+coinciding-tail population           702 -> 307   (independent instrument)
+```
+
+**Method substitution.** The Step specifies a per-package walk gated by the
+provenance gate scoped to each package plus that package's own suite. Execution
+was per-literal-band, verified by `ruff` and `pytest` over the specific files
+edited. An independent read confirmed no band ran the specified gate and no
+package walk is recorded anywhere in the feature.
+
+**Scope ambiguity, unresolved.** The Step's scope field names
+`src/cadrumo/tests/` (171 modules, 28 undeclared hits); its own "roughly 350
+sites" denominator matches the whole test tree (353). The two readings differ by
+an order of magnitude and the text does not say which is meant.
+
+**Most of the work never reached the vault.** The durable ledger is a single exec
+record covering a ten-file batch, which describes its own inputs as
+"pre-identified" — so even there the enumeration method is unstated. The rest
+exists in the relay chain. This is element `5h`'s finding one level out: the tree
+cannot say whether `S78` is complete, and neither can the record.
+
+**An open question, not a count.** A sample of unclassified sites was measured at
+roughly 23% rename-sensitive. Two things about it are unresolved and each changes
+its meaning entirely: whether the sample drew from `src/cadrumo/tests/` or the
+whole tree, and whether *rename-sensitive* means *not enrolled* or merely *would
+need editing* — a rename-sensitive site that is a correctly-declared pin is
+resolved work. It is recorded here as an open question and must not be cited as a
+residual count until both are answered.
+
+### The claim this closure makes
+
+> Every literal in the enumerated bands was classified under one of six
+> dispositions; the path-composition population fell 442 → 353 in tests and
+> 702 → 307 by an independent instrument; 28 undeclared hits remain inside the
+> Step's declared scope and 353 across the whole test tree; **no claim is made
+> that the enumerated bands exhaust the corpus**, because four of six
+> dispositions leave no readable trace and no scan can establish exhaustion.
+
+The final clause is the load-bearing one. A future reader who takes anything from
+this section should take that.
