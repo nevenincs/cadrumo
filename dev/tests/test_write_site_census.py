@@ -15,9 +15,40 @@ import ast
 
 import pytest
 
-from dev.write_site_census import WriteSite, classify, write_target
+from dev.write_site_census import (
+    WriteSite,
+    _bindings,
+    _trace,
+    classify,
+    origin_symbol,
+    production_modules,
+    write_target,
+)
+
+# Aliased on import: pytest collects any module-level name matching
+# python_functions (default "test_*") -- including one merely imported, not
+# defined here -- so a bare "test_modules" import would itself be collected
+# and run as a (fixture-less, failing) test.
+from dev.write_site_census import test_modules as _test_modules_lister
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def _origin_at(source: str) -> str:
+    """Trace the write-target origin of the first file-producing call in ``source``.
+
+    Builds module-level bindings the same way :func:`census` does, so an
+    aliased import in the fixture source is visible to the traced call.
+    """
+    tree = ast.parse(source)
+    module_bindings = _bindings(tree)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            found = write_target(node)
+            if found is not None:
+                _primitive, path_expression = found
+                return _trace(origin_symbol(path_expression), [module_bindings])
+    raise AssertionError(f"no file-producing call in {source!r}")
 
 
 def _call(source: str) -> ast.Call:
@@ -97,11 +128,94 @@ def test_the_two_directions_disagree_on_the_same_method_name() -> None:
         ("tmp_dir", set(), "temporary"),
         ("<Subscript>", set(), "unresolved"),
         ("computed", set(), "local"),
+        ("FIXTURES_DIR", set(), "fixture"),
+        ("bundled_path", set(), "fixture"),
     ],
 )
 def test_provenance_classification(origin: str, local_params: set[str], expected: str) -> None:
     """Each origin shape lands in the bucket that describes where the path came from."""
     assert classify(origin, local_params=local_params, module_params=set()) == expected
+
+
+def test_a_fixture_named_local_is_not_a_fixture_marker() -> None:
+    """FIXTURE_MARKERS is an exact set, not a substring match on 'fixture'.
+
+    A local carrying the word without being one of the two real marker
+    symbols is exactly as unclassified as any other hand-rolled local -- the
+    same discipline TAXONOMY_MARKERS already applies (``cadrumo_x`` matches by
+    prefix, but nothing merely resembling a taxonomy name does).
+    """
+    assert classify("fixture_root", local_params=set(), module_params=set()) == "local"
+    assert classify("_my_fixtures", local_params=set(), module_params=set()) == "local"
+
+
+def test_an_aliased_fixture_import_still_resolves_to_the_real_marker() -> None:
+    """``from X import FIXTURES_DIR as Y`` must trace back through the rename.
+
+    The test tree's own convention (``from .....tests import FIXTURES_DIR as
+    _FIXTURES_ROOT``) is exactly this shape. Without following the import
+    alias, the aliased name resolves to nothing and the fixture-corpus split
+    silently fails on the codebase's own style.
+    """
+    source = (
+        "from cadrumo.tests import FIXTURES_DIR as _FIXTURES_ROOT\n\n"
+        "def build():\n"
+        '    target = _FIXTURES_ROOT / "justificantes" / "130.pdf"\n'
+        "    target.write_bytes(b'x')\n"
+    )
+    assert _origin_at(source) == "FIXTURES_DIR"
+
+
+def test_a_bundled_path_call_resolves_through_a_local_alias() -> None:
+    """``_DATA_ROOT = bundled_path()`` then a join off ``_DATA_ROOT`` traces to ``bundled_path``.
+
+    The registry corpus tests' own shape (``_DATA_ROOT = bundled_path()``,
+    ``_JUSTIFICANTE_CORPUS_ROOT = _DATA_ROOT.parent / "fixtures" /
+    "justificantes"``) chains a plain assignment through an attribute access;
+    the existing rebind-following must still land on the real accessor.
+    """
+    source = (
+        "def build():\n"
+        "    _data_root = bundled_path()\n"
+        '    corpus_root = _data_root.parent / "fixtures" / "justificantes"\n'
+        "    target = corpus_root / \"130.pdf\"\n"
+        "    target.write_bytes(b'x')\n"
+    )
+    assert _origin_at(source) == "bundled_path"
+
+
+def test_an_unrelated_import_alias_is_not_mistaken_for_a_fixture() -> None:
+    """Following import aliases must not manufacture a fixture classification out of nothing.
+
+    The positive control for the two tests above: an aliased import of an
+    ordinary name resolves to that ordinary name, not to a marker.
+    """
+    source = (
+        "from somewhere import storage_root as _root\n\n"
+        "def build():\n"
+        '    target = _root / "scratch.bin"\n'
+        "    target.write_bytes(b'x')\n"
+    )
+    assert _origin_at(source) == "storage_root"
+
+
+def test_production_modules_and_test_modules_are_a_disjoint_partition_at_head() -> None:
+    """The two real listers, driven for real, put a known production file and a known test file on opposite sides.
+
+    Reads actual committed HEAD through the real ``git ls-tree`` call both
+    functions make -- not a re-derivation of the filter predicate, which
+    would only prove the predicate agrees with itself. ``core/paths.py`` and
+    ``core/tests/test_paths.py`` are both long-lived, so the assertion is
+    stable rather than tied to a file likely to move.
+    """
+    production = set(production_modules("HEAD"))
+    tests = set(_test_modules_lister("HEAD"))
+
+    assert "src/cadrumo/core/paths.py" in production
+    assert "src/cadrumo/core/paths.py" not in tests
+    assert "src/cadrumo/core/tests/test_paths.py" in tests
+    assert "src/cadrumo/core/tests/test_paths.py" not in production
+    assert production.isdisjoint(tests), "a module must not be counted in both scopes"
 
 
 def test_a_caller_supplied_path_is_pass_through_not_unenrolled() -> None:

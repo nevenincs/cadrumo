@@ -39,10 +39,51 @@ What this cannot reach, stated rather than assumed away:
 Counts from this scanner are therefore an UPPER BOUND at a named revision, and
 should be cited as such -- with the revision -- rather than quoted bare.
 
+``--scope tests`` walks the test tree instead of production modules, for the
+storage campaign's literal-corpus triage (``S78``). This answers a narrower
+and different question than the production scope: not "is this write
+enrolled" but "what root does this test-composed path trace back to". Read
+the two things it can and cannot decide before trusting a bucket count:
+
+**Decidable from the rooted symbol alone -- three of five outcomes:**
+
+- ``fixture`` -- rooted at :data:`FIXTURE_MARKERS` (``FIXTURES_DIR``, the
+  package's own exported fixture-tree constant, or ``bundled_path``, the
+  canonical bundled-resource accessor every fixture alias eventually
+  resolves through). A different namespace than the storage taxonomy;
+  never chosen or written by the running application. Out of scope for
+  enrollment, not a finding.
+- ``temporary`` / ``pass_through`` -- rooted at ``tmp_path`` or a parameter
+  the enclosing function was called with. The test itself supplied the
+  root; there is no enrollment answer to give here, the same as
+  :func:`classify`'s production meaning -- a caller-injected path has no
+  answer of its own, the question relocates to the call site that chose it.
+- ``taxonomy`` -- rooted at a real accessor or a ``cadrumo_``-prefixed
+  settings field. Reaches a live, taxonomy-governed location.
+
+**NOT decidable from the root alone -- the remaining two outcomes require
+reading what the test measures, not where the expression is rooted:**
+
+``pin`` (a deliberate independent oracle a test must hand-write to avoid
+comparing the taxonomy against itself) and ``migrate`` (a hand-rolled
+scaffold path that should route through the accessor instead) can be
+**byte-identical expressions** -- ``storage_root / "buckets" / id / "db" /
+"cadrumo.db"`` is a correct oracle in one module and a missing-accessor
+smell in the next, and only the test's subject tells them apart. Both fall
+into the ``local`` bucket here, alongside anything genuinely unresolved.
+
+**This tool is therefore a triage that shrinks the hand-classified set, not
+one that replaces it.** Treat ``local`` as "still needs a human read", never
+as "everything else, safely ignorable" -- and read the reported unresolved
+rate before trusting any bucket count, since test-tree tracing hits
+``unresolved`` far more often than production (paths arrive via fixtures,
+parametrize tuples, and helper returns that this scanner does not follow).
+
 Usage::
 
     python -m dev.write_site_census <revision>
     python -m dev.write_site_census <revision> --json
+    python -m dev.write_site_census <revision> --scope tests
 """
 
 from __future__ import annotations
@@ -107,8 +148,20 @@ TAXONOMY_MARKERS: Final[frozenset[str]] = frozenset(
         "bucket_root",
     },
 )
+#: Symbols that mean the path came from a bundled, committed, read-only test
+#: resource -- a fixture tree -- rather than anything the running application
+#: chooses or writes. ``FIXTURES_DIR`` is ``cadrumo.tests``'s own exported
+#: constant; ``bundled_path`` is the canonical accessor for the packaged data
+#: root every fixture-corpus alias (``_JUSTIFICANTE_CORPUS_ROOT``,
+#: ``_DATA_ROOT``, a re-imported ``_FIXTURES_ROOT``, ...) eventually resolves
+#: through, once :func:`_bindings` follows the aliasing import.
+FIXTURE_MARKERS: Final[frozenset[str]] = frozenset({"FIXTURES_DIR", "bundled_path"})
 SETTINGS_FIELD_PREFIX: Final[str] = "cadrumo_"
 _MAX_TRACE_DEPTH: Final[int] = 6
+#: Module sets :func:`census` can walk. ``tests`` is the storage campaign's
+#: literal-corpus triage; see the module docstring for what it can and
+#: cannot decide.
+SCOPES: Final[frozenset[str]] = frozenset({"production", "tests"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -152,6 +205,28 @@ def production_modules(revision: str) -> list[str]:
         entry
         for entry in listing
         if entry.endswith(".py") and "/tests/" not in entry and not Path(entry).name.startswith("test_")
+    ]
+
+
+def test_modules(revision: str) -> list[str]:
+    """Return every tracked test module at ``revision`` -- the inverse filter of :func:`production_modules`.
+
+    Test-tree tracing answers the narrower, different question the module
+    docstring states: where a test-composed path traces back to, not whether
+    a write is enrolled. Read that caveat before treating any bucket from
+    this walk as a verdict.
+    """
+    listing = subprocess.run(  # noqa: S603
+        ["git", "ls-tree", "-r", "--name-only", revision, "src/cadrumo/"],  # noqa: S607
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+    return [
+        entry
+        for entry in listing
+        if entry.endswith(".py") and ("/tests/" in entry or Path(entry).name.startswith("test_"))
     ]
 
 
@@ -224,7 +299,16 @@ def _opens_for_write(node: ast.Call, *, receiver_form: bool = False) -> bool:
 
 
 def _bindings(scope: ast.AST) -> dict[str, ast.AST]:
-    """Map names and ``self`` attributes assigned in ``scope`` to their values."""
+    """Map names and ``self`` attributes assigned in ``scope`` to their values.
+
+    ``from X import Y as Z`` counts as a binding too: ``Z`` is a rebind of
+    ``Y``, exactly like a plain assignment, and without following it an
+    aliased import of a taxonomy or fixture marker (``FIXTURES_DIR as
+    _FIXTURES_ROOT`` is the shape the test tree actually uses) resolves to
+    nothing rather than to what it really names. The synthetic ``ast.Name``
+    node carries only the original imported name; it has no real location,
+    but :func:`origin_symbol` only ever reads ``.id`` off it.
+    """
     bound: dict[str, ast.AST] = {}
     for node in ast.walk(scope):
         if isinstance(node, ast.Assign):
@@ -233,6 +317,11 @@ def _bindings(scope: ast.AST) -> dict[str, ast.AST]:
             targets, value = [node.target], node.value
         elif isinstance(node, ast.withitem) and node.optional_vars is not None:
             targets, value = [node.optional_vars], node.context_expr
+        elif isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.asname is not None:
+                    bound.setdefault(alias.asname, ast.Name(id=alias.name))
+            continue
         else:
             continue
         for target in targets:
@@ -247,7 +336,7 @@ def _trace(symbol: str, scopes: list[dict[str, ast.AST]], depth: int = 0) -> str
     """Follow assignments until the symbol stops resolving to something else."""
     if depth >= _MAX_TRACE_DEPTH or symbol.startswith("<"):
         return symbol
-    if symbol in TAXONOMY_MARKERS or symbol.startswith(SETTINGS_FIELD_PREFIX):
+    if symbol in TAXONOMY_MARKERS or symbol.startswith(SETTINGS_FIELD_PREFIX) or symbol in FIXTURE_MARKERS:
         return symbol
     for scope in scopes:
         if symbol in scope:
@@ -262,6 +351,8 @@ def classify(origin: str, *, local_params: set[str], module_params: set[str]) ->
         return "literal"
     if origin in TAXONOMY_MARKERS or origin.startswith(SETTINGS_FIELD_PREFIX):
         return "taxonomy"
+    if origin in FIXTURE_MARKERS:
+        return "fixture"
     lowered = origin.lower()
     if "tmp" in lowered or "temp" in lowered:
         return "temporary"
@@ -274,10 +365,25 @@ def classify(origin: str, *, local_params: set[str], module_params: set[str]) ->
     return "local"
 
 
-def census(revision: str) -> list[WriteSite]:
-    """Return every file-producing site in production code at ``revision``."""
+def census(revision: str, *, scope: str = "production") -> list[WriteSite]:
+    """Return every file-producing site in the chosen module set at ``revision``.
+
+    Args:
+        revision: Git revision to read; pin it, never pass a moving name.
+        scope: One of :data:`SCOPES`. ``"production"`` (the default) preserves
+            the campaign's original closure question and its guarantees;
+            ``"tests"`` walks the test tree instead and answers a narrower,
+            different question -- read the module docstring before trusting
+            its buckets.
+
+    Raises:
+        ValueError: If ``scope`` is not a member of :data:`SCOPES`.
+    """
+    if scope not in SCOPES:
+        raise ValueError(f"scope must be one of {sorted(SCOPES)}, got {scope!r}")
+    module_lister = production_modules if scope == "production" else test_modules
     sites: list[WriteSite] = []
-    for module in production_modules(revision):
+    for module in module_lister(revision):
         try:
             tree = ast.parse(_git_show(revision, module))
         except SyntaxError:
@@ -331,13 +437,24 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("revision", help="git revision to read; pin it, never pass a moving name")
     parser.add_argument("--json", action="store_true", help="emit machine-readable output")
+    parser.add_argument(
+        "--scope",
+        choices=sorted(SCOPES),
+        default="production",
+        help="module set to walk; 'tests' answers a narrower question -- see the module docstring",
+    )
     arguments = parser.parse_args(argv)
 
-    sites = census(arguments.revision)
+    sites = census(arguments.revision, scope=arguments.scope)
+    unresolved_count = sum(1 for site in sites if site.provenance == "unresolved")
+    unresolved_rate = (unresolved_count / len(sites)) if sites else 0.0
     if arguments.json:
         payload = {
             "revision": arguments.revision,
+            "scope": arguments.scope,
             "site_count": len(sites),
+            "unresolved_count": unresolved_count,
+            "unresolved_rate": unresolved_rate,
             "ambiguous_count": sum(site.ambiguous for site in sites),
             "by_provenance": dict(Counter(site.provenance for site in sites)),
             "sites": [site.__dict__ for site in sites],
@@ -346,7 +463,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print(f"revision {arguments.revision}")
+    print(f"scope {arguments.scope}")
     print(f"file-producing sites (upper bound) {len(sites)}")
+    # Headline, not a footnote: an unresolved bucket that quietly absorbs a
+    # third of the corpus while the summary reads clean is the failure mode
+    # this line exists to prevent, especially under --scope tests where
+    # tracing hits it far more often than production.
+    print(
+        f"unresolved rate {unresolved_rate:.0%} ({unresolved_count} of {len(sites)}) "
+        "-- read these, do not trust them",
+    )
     for provenance, count in Counter(site.provenance for site in sites).most_common():
         print(f"  {provenance:14s} {count:4d}")
     ambiguous = [site for site in sites if site.ambiguous]
