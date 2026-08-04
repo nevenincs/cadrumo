@@ -84,7 +84,7 @@ _CLI_HARNESS = dedent(
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_secret_store_dir=storage_root / "fallback-store",
         cadrumo_secret_store_backend="file",
         cadrumo_output_language="en",
         **overrides,

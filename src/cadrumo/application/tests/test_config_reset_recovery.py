@@ -1,4 +1,15 @@
-"""Fresh-process recovery proofs for every durable config-reset boundary."""
+"""Fresh-process recovery proofs for every durable config-reset boundary.
+
+The ``"secrets"`` literal in the crash-subprocess settings preamble is
+deliberate, not injected: the profile the crash subprocess must unlock is
+created beforehand via ``_isolated_reset_root`` (from ``.test_config_reset``),
+which wraps ``isolated_profile_storage_root`` -- deriving
+``cadrumo_secret_store_dir`` from the real taxonomy accessor
+(``storage_overrides(tmp_path, StorageCategory.SECRETS)`` -> ``tmp_path /
+"secrets"``). The subprocess must independently compute the same location to
+find the master key that setup already minted; renaming it breaks the
+handoff between the two processes.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +19,7 @@ import subprocess
 import sys
 from pathlib import Path
 from textwrap import dedent
+from typing import Final
 
 import pytest
 
@@ -22,6 +34,9 @@ from .test_config_reset import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _CRASH_EXIT_CODE = 91
 _BOUNDARIES = (
