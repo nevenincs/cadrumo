@@ -17,6 +17,29 @@ The repair is deliberately split from the compilation. :func:`repair_xsd_regex_e
 is a pure text transformation that needs no XML toolchain, so its soundness
 property is provable on its own; only :func:`compile_record_design_schema` needs
 ``lxml``, which it imports lazily.
+
+Using the redacted submission fixture
+-------------------------------------
+``tests/fixtures/aeat-sede/submitted-files/modelo-100-2023-0A-redacted.xml`` is
+the only real AEAT submission in the tree, and it is a sound STRUCTURAL oracle
+and a dangerous VALUE one. Validating it against the 2023 schema yields exactly
+15 errors, every one a facet or enumeration failure on a redacted value and NOT
+ONE structural: element order, nesting and cardinality all hold, which is what
+makes it trustworthy for shape and worthless for content.
+
+Its redactor stamped each field's ordinal position into the placeholder it
+wrote, formatted to the field's type -- ``SANITIZED_IDIOMA_1``,
+``SANITIZED_DP_APENOM_D_5``, ``SANITIZED_TIPODECLARACION_88``, and for the
+numeric fields the bare ordinal. So ``VERSION`` reads ``2.02`` only because
+VERSION is the second field, not because the submission declares schema version
+2.02. The proof is in its siblings: ``ECIVIL`` holds ``6`` where the schema
+permits ``[1-4]`` and ``CL`` holds ``15`` where it enumerates ``1``-``5``. Values
+outside their own declared range cannot be real, so every value in this fixture
+is generated filler.
+
+A gate consuming this fixture should therefore expect those 15 facet errors as
+its baseline and assert the structural-error count is zero. Reading any value
+out of it -- most temptingly the version -- reads the field's position instead.
 """
 
 from __future__ import annotations
