@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:cc507b83242c5f4b3c1fdc3bc24479495312fee55d8ca480983039f189693019'
+body_hash: 'sha256:bb7cde74cb3c6a04763c3c4481316b1e80c1b846aa68549516a6eac07f553a64'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
@@ -166,3 +166,66 @@ an invalid integer rather than saying the field takes whole euros. The sibling g
 is integer-only too, so this is a consistent design rather than an oversight, and that one
 feeds a proportional deduction rather than a threshold test, so rounding there loses cents
 without flipping an outcome.
+
+
+## Closed, and the residuals the call-site gate exposed
+
+The canonicalization landed in two commits: the detector composed into the parsers so
+ambiguity refuses by construction, the bypassing sites routed, three contracts named in an
+amendment to the governing ADR, and the gate re-keyed from layer membership to call-site
+ownership.
+
+**The inversion earned itself immediately.** Keying on the call site rather than the layer
+surfaced seven sites no allowlist had covered. Five are machine-text adapters — bank import,
+PDF label extraction, two authority scrapes, a rates feed — exempted with reasons. **Two are
+operator input in `core/`**, a layer no allowlist would plausibly have named, which is the
+argument for the inversion made concrete rather than argued.
+
+### Residual one: two operator-input parseability predicates in `core/`
+
+Both parse the operator's value, discard the result, and store the answer as text — so they
+admit the ambiguous form at the wizard and defer the refusal downstream, where it now arrives
+as a message about *type* rather than about *notation*. Measured: the ambiguous forms are
+admitted and stored verbatim.
+
+One carries the INCN figure, threshold-bearing for the micro-empresa rate, so it was flagged
+as the more serious. **Measurement narrows it, and the narrowing is recorded so nobody
+re-escalates on the label alone.** A figure above that threshold cannot be written in Spanish
+notation with a single dot group — it needs two, and the bare constructor already refuses
+those. So within the single-group forms that *are* admitted, both readings sit on the same
+side of the threshold and the rate does not flip. The stored value is still wrong by three
+orders of magnitude, which is a data-integrity defect on a filing-grade field; what it is
+not, on this threshold, is a rate change. Whether that figure feeds anything with a different
+boundary is unchecked.
+
+### Residual two: a fragment capture, not an ambiguity
+
+At the rate-extraction site a three-decimal rate backtracks and captures a two-digit
+fragment, yielding a **zero** rate. That is a regex defect rather than a contract one — the
+pattern admits a partial match where it should reject the whole token — and it feeds a
+non-blocking advisory. Recorded rather than folded in, because fixing it inside a
+canonicalization would have buried a distinct bug in an unrelated change.
+
+### The third contract has no consumer, deliberately
+
+It was named for the rate site, and measurement then showed the ambiguous shape cannot reach
+that parse: the capture pattern admits at most two fraction digits while the ambiguous shape
+needs exactly three. The bound is enforced by the pattern, not by a resolve step. The
+contract stays recorded with `impossible` as its discriminator and is explicitly marked as
+having no consumer today, so the next bounded field inherits the reasoning without anyone
+believing it is live.
+
+### The counter-example worth keeping
+
+Retiring a local guard as "subsumed by the canonical grammar" turned a Spanish postcode into
+a number three orders of magnitude wrong, by discarding the leading zero that carries its
+meaning. The comment asserting the grammar decided it "the same way for the same reason" was
+unmeasured. The guard is restored and documented as non-redundant, at the site, so the next
+reader with the same correct-sounding intuition meets the argument rather than the
+temptation.
+
+That is the boundary of the whole exercise. Canonicalization establishes one home per
+**concept**, not a merge of every site that looks alike — and the discriminator is whether
+the specific case carries meaning the general authority discards. A postcode is not a
+decimal.
+
