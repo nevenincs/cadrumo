@@ -40,11 +40,11 @@ from pydantic import BaseModel
 from ...core import BindingSourceKind
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
-from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
     BindingId,
     DataBindingDefinition,
+    ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
     enum_consumed_binding_ids,
@@ -65,10 +65,12 @@ from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
     UserProfileFactValue,
+    derived_selector_for_path,
     load_user_profile_schema,
     profile_binding_selectors,
 )
 from ..aggregation import (
+    CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
@@ -186,9 +188,29 @@ def _inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
 
 
+def _declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
+    """Every selector the revision's ``source = "profile"`` bindings name.
+
+    The gate on whether a derived injector has any consumer at all. Keying on
+    this rather than on a hardcoded filing-year set means a new revision needs
+    registry work only: declare the binding and the injector starts running.
+    A year the registry does not cover has no consuming binding, so the
+    injector is a no-op rather than a silent wrong answer -- and if a binding
+    IS declared and still resolves to nothing, the derived-scope advisory in
+    :func:`_derived_binding_diagnostics` reports it.
+    """
+    return frozenset(
+        selector
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.PROFILE
+        for selector in profile_binding_selectors(binding.selector)
+    )
+
+
 def _inject_derived_family_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
+    declared_selectors: frozenset[str],
 ) -> None:
     """Inject computed Art. 81 bis guardería integers into *fact_index* in-place.
 
@@ -203,14 +225,14 @@ def _inject_derived_family_facts(
     law's. This mutates the ephemeral per-calculation index and never
     persists, so a stray stored fact becomes inert rather than erased.
 
-    Only the 2024 filing year is handled; other years are ignored until a
-    dedicated binding is declared.
+    Gated on a consuming binding rather than on a hardcoded filing year: the
+    injector runs for whatever year the registry declares a consumer for, so
+    extending coverage is registry work with no code edit.
     """
-    if filing_year != 2024:
+    menores_key = f"renta_family.descendientes_menores_3_{filing_year}"
+    gastos_key = f"renta_family.gastos_guarderia_reales_{filing_year}"
+    if menores_key not in declared_selectors and gastos_key not in declared_selectors:
         return
-
-    menores_key = "renta_family.descendientes_menores_3_2024"
-    gastos_key = "renta_family.gastos_guarderia_reales_2024"
 
     # Reconstruct per-descendant birth_dates from stored facts.
     count_menores = 0
@@ -223,29 +245,40 @@ def _inject_derived_family_facts(
         convivencia_raw = fact_index.get(f"renta_family.descendiente.{idx}.convivencia", "true")
         convive = str(convivencia_raw).lower() not in ("false", "0")
         if convive:
+            # A descendant whose birth date will not parse is REFUSED, not
+            # skipped. Skipping silently under-counted the menores-3 tally and
+            # dropped that child's guardería spend, quietly reducing a
+            # deducción the taxpayer was entitled to. An unparseable stored
+            # date is a data defect the operator can fix once told which row
+            # carries it, so the refusal names the index and the value.
             try:
                 birth = parse_iso8601_date(str(birth_raw))
-                if birth is None:
-                    raise ValueError("birth date parsed as None")
-                age_at_year_end = filing_year - birth.year
-                if age_at_year_end < 3:
-                    count_menores += 1
-                    gastos_raw = fact_index.get(f"renta_family.descendiente.{idx}.gastos_guarderia")
-                    if gastos_raw is not None:
-                        gastos_reales += int(Decimal(str(gastos_raw)))
             except (ValueError, TypeError) as exc:
-                get_logger(__name__).debug(
-                    "profile-binding: failed to parse birth date for menores count; skipping entry (%s: %s)",
-                    type(exc).__name__,
-                    exc,
+                raise ProfileBindingResolutionError(
+                    f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
+                ) from exc
+            if birth is None:
+                raise ProfileBindingResolutionError(
+                    f"renta_family.descendiente.{idx}.birth_date is not a valid ISO-8601 date: {birth_raw!r}",
                 )
+            age_at_year_end = filing_year - birth.year
+            if age_at_year_end < 3:
+                count_menores += 1
+                gastos_raw = fact_index.get(f"renta_family.descendiente.{idx}.gastos_guarderia")
+                if gastos_raw is not None:
+                    try:
+                        gastos_reales += int(Decimal(str(gastos_raw)))
+                    except (ArithmeticError, ValueError, TypeError) as exc:
+                        raise ProfileBindingResolutionError(
+                            f"renta_family.descendiente.{idx}.gastos_guarderia is not a valid amount: "
+                            f"{gastos_raw!r}",
+                        ) from exc
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)
     fact_index[gastos_key] = Decimal(gastos_reales)
 
 
-_MINIMO_DESCENDIENTES_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
 _MINIMO_DESCENDIENTES_BIRTH_ORDER_SUFFIXES = (
     "primer-hijo",
     "segundo-hijo",
@@ -474,12 +507,13 @@ def _inject_derived_minimo_descendientes_facts(
     a value present at either can only be stale or hand-planted, and deferring
     to it silently substituted an operator's figure for the Art. 58/61
     computation. The write is to the ephemeral per-calculation index and never
-    persists. Only the 2020-2025 filing years are handled; other years are
-    ignored until the engine is extended.
-    """
-    if snapshot.filing_year not in _MINIMO_DESCENDIENTES_FILING_YEARS:
-        return
+    persists.
 
+    No filing-year gate: the parameter-presence checks below already refuse a
+    revision that does not declare the full tranche and threshold tables, which
+    is the same ground the former year frozenset covered but derived from the
+    registry rather than restated as a Python constant.
+    """
     estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.filing_year}"
     autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot.filing_year}"
 
@@ -539,7 +573,6 @@ def _inject_derived_minimo_descendientes_facts(
     )
 
 
-_ANUALIDADES_ELIGIBILITY_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
 
 
 def _inject_derived_anualidades_eligibility_facts(
@@ -573,12 +606,13 @@ def _inject_derived_anualidades_eligibility_facts(
     Computes ALWAYS: the path is declared derived, so a value present there
     can only be stale or hand-planted, and deferring to it silently decided a
     régimen question the law owns. Only the revisions carrying the
-    separate-escala régimen are handled.
+    separate-escala régimen are handled, identified by a declared consuming
+    binding rather than by a hardcoded filing-year set.
     """
     filing_year = snapshot.filing_year
-    if filing_year not in _ANUALIDADES_ELIGIBILITY_FILING_YEARS:
-        return
     key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
+    if key not in _declared_profile_selectors(snapshot.revision):
+        return
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
         # Without the eligibility ceilings this flag cannot be derived on the
@@ -925,7 +959,8 @@ def _load_profile_facts(
     resolved_schema = schema if schema is not None else load_user_profile_schema()
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
-    _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    declared_selectors = _declared_profile_selectors(snapshot.revision)
+    _inject_derived_family_facts(fact_index, snapshot.filing_year, declared_selectors)
     _inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
     _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
     _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
@@ -1062,6 +1097,12 @@ def resolve_profile_sourced_bindings(
         binding_values=decimal_values,
         enum_binding_values=enum_values,
         date_binding_values=date_values,
+        diagnostics=_derived_binding_diagnostics(
+            selection.bindings,
+            facts.fact_index,
+            schema if schema is not None else load_user_profile_schema(),
+            bucket_id=bucket_id,
+        ),
         provenance=tuple(
             CalculationSourceProvenance(
                 source_kind=BindingSourceKind.PROFILE.value,
@@ -1071,6 +1112,54 @@ def resolve_profile_sourced_bindings(
             for binding_id in sourced
         ),
     )
+
+
+def _derived_binding_diagnostics(
+    bindings: tuple[DataBindingDefinition, ...],
+    fact_index: Mapping[str, UserProfileFactValue],
+    schema: ProfileSchemaDefinition,
+    *,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise on a SELECTED derived binding that still resolved to nothing.
+
+    Narrow by construction, and that narrowness is the whole design. A blanket
+    "profile binding resolved to nothing" advisory would fire constantly on
+    optional facts an ordinary filer legitimately leaves blank, and an
+    operator who learns to ignore an advisory is worse off than one who never
+    saw it.
+
+    A DERIVED path is different: the engine owns it and every derived injector
+    now writes unconditionally, with a zero default where the law says zero.
+    So a derived binding that is selected and still resolves to nothing cannot
+    be an ordinary absence -- no injector claimed it, which means a structural
+    gap (a registry year with no injector coverage, or a pattern whose
+    consuming binding drifted). Every fire is real.
+    """
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for binding in bindings:
+        if _resolve_one(binding, fact_index) is not None:
+            continue
+        for selector in profile_binding_selectors(binding.selector):
+            derived = derived_selector_for_path(selector, schema.derived_selectors)
+            if derived is None:
+                continue
+            diagnostics.append(
+                CalculationSourceDiagnostic(
+                    reason="unresolved_derived_binding",
+                    source_kind=BindingSourceKind.PROFILE.value,
+                    resolver_id=_PROFILE_RESOLVER_ID,
+                    binding_id=binding.id,
+                    source_ref=f"profile:{bucket_id}:binding:{binding.id}",
+                    message=(
+                        f"binding {binding.id!r} selects the engine-derived path {selector!r} "
+                        f"but no value was computed for it; the aggregate derived from "
+                        f"{', '.join(derived.derived_from)} is missing from this calculation"
+                    ),
+                ),
+            )
+            break
+    return tuple(diagnostics)
 
 
 def _resolve_one(
