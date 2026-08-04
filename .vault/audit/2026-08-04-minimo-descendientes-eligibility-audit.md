@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:26170b60d46cb5a138df7b476276c3b3dc77d93ecbf69bb7c05abb4160428e17'
+body_hash: 'sha256:584f53c55a4eeb8059d58d6e0efb7e16b814245e0a5b1255fcf2518c5b9ff768'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -379,6 +379,62 @@ alongside it. Should the membership modelling ever land, it must decide whether 
 becomes the source, and note that it distinguishes registered from unregistered pareja de
 hecho while the article does not — so both must count as partnered, or an unregistered couple
 over-grants.
+
+
+## One predicate, four divergent legal tests — the canonicalization the other fixes wait on
+
+The single largest structural finding of the session, reached by three independent routes
+that each started somewhere else. `is_eligible_menor_tres` tests cohabitation and age under
+three at year end. Four distinct legal rules now depend on it, and they have diverged:
+
+**One — the under-three mínimo supplement.** Age under three. The predicate is correct here,
+and this is the only rule it was written for.
+
+**Two — the age-independent adoption window.** The supplement applies regardless of the
+child's age in the inscription period and the two following, for adopción and acogimiento
+but *not* tutela. The predicate never consults the entry date, so a child adopted above
+three receives nothing. Confirmed against live authority.
+
+**Three — the maternity deduction's own adoption clause,** which carries a different window
+*shape*: three years from the inscription date, against the supplement's inscription period
+plus two periods. The two can diverge, so one predicate cannot serve both without silently
+applying one statute's window to the other's deduction.
+
+**Four — the guardería increment's extension into the year the child turns three.**
+Confirmed live, and broader than it first appeared. The authority states the increment
+applies in that period for spend incurred *after* the birthday, up to the month before the
+second cycle of infant education may begin. It further states that where the child turns
+three in January, or the mother begins work that year after the birthday, the maternity
+deduction itself does not apply **and that does not prevent the guardería increment**. So
+the increment is not gated on the deduction's own eligibility, and it is not gated on being
+under three at year end — which is exactly what the predicate tests.
+
+The fourth is likely the largest by population of every item on this ledger. It is not a
+rare household shape: it reaches every working parent paying for childcare in the year their
+child turns three, which is a full birth cohort rather than a minority case. It is also
+worth more per euro than the mínimo items, because the increment reduces the cuota directly
+rather than the base. Direction is under-grant — the taxpayer overpays.
+
+**Why this is recorded as canonicalization rather than as four defects.** Three separate
+fixes are currently blocked — the adoption supplement, the port of the guardería machinery
+to the live filing year, and this turning-three extension — and all three are blocked behind
+the same two pieces of structural work: decomposing this predicate into per-statute
+authorities, and giving the operator field an entry surface. Patching any one of them in
+isolation is what produced the shape this review found repeatedly: a correct change whose
+scope was narrower than the rule being written.
+
+The attempted port is the worked example, and the reason it is recorded rather than
+forgotten. It was built, measured, and reverted: the registry work was mechanically sound
+and cheap, and it would have converted "type one box by hand" into "cannot calculate at all
+without an undocumented per-invocation flag" for the live filing year, aimed at exactly the
+filers the deduction exists for. The measured blast radius — eighty sites requiring the new
+bindings, two supplying the casilla as an input — is preserved for whoever sequences the
+work properly.
+
+A documentation defect surfaced alongside it and is worth correcting independently: the
+guardería increment is governed by Art. 81.2, not Art. 81 bis. The implementing module's
+docstrings say *bis* and misdirected two separate passes into citing the wrong statute; the
+registry formula's own legal references were correct throughout.
 
 
 ## The Art. 58.2 supplement: attempted, stopped at the boundary, and why that was right
