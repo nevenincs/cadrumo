@@ -94,9 +94,14 @@ def _naming_violations(root: Path) -> tuple[list[str], int, int]:
         for position, path in enumerate(files, start=1):
             total_files += 1
             rel = path.relative_to(root).as_posix()
+            declared = _declared_ids(path)
+            if not declared and re.fullmatch(r"\d{4,}-casillas", path.stem):
+                # The new-modelo scaffolder's sanctioned skeleton: an EMPTY
+                # fragment may keep the placeholder name; authoring content
+                # into it forces the canonical content-derived name below.
+                continue
             match = _CANONICAL.match(path.stem)
             if match is None:
-                declared = _declared_ids(path)
                 hint = (
                     _expected_stem(position, width, declared) if declared else "<no casillas declared>"
                 )
@@ -106,7 +111,6 @@ def _naming_violations(root: Path) -> tuple[list[str], int, int]:
             if ordinal in seen_ordinals:
                 violations.append(f"{rel}: duplicate merge ordinal {ordinal}")
             seen_ordinals.add(ordinal)
-            declared = _declared_ids(path)
             if not declared:
                 violations.append(f"{rel}: canonical name but the file declares no casillas")
                 continue
@@ -160,6 +164,20 @@ def test_gate_fires_on_each_violation_class(tmp_path: Path) -> None:
     (casillas / "0002-c9999.toml").rename(casillas / "0003-c0003.toml")  # wrong position
     violations, *_ = _naming_violations(tmp_path)
     assert any("not this fragment's merge position" in v for v in violations)
+
+
+def test_scaffold_skeleton_is_tolerated_only_while_empty(tmp_path: Path) -> None:
+    """The new-modelo scaffolder's empty placeholder keeps its name; content
+    landing in it immediately forces the canonical content-derived name."""
+    casillas = tmp_path / "modelos" / "999" / "revisions" / "2024" / "casillas"
+    casillas.mkdir(parents=True)
+    (casillas / "0001-casillas.toml").write_text("# scaffolded skeleton\n", encoding="utf-8")
+    violations, *_ = _naming_violations(tmp_path)
+    assert not violations
+
+    _write_fragment(casillas, "0001-casillas.toml", ["0007"])
+    violations, *_ = _naming_violations(tmp_path)
+    assert any("'0001-c0007'" in v for v in violations), violations
 
 
 def test_colon_ids_round_trip_through_the_plus_substitution(tmp_path: Path) -> None:
