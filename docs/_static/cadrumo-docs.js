@@ -335,6 +335,105 @@
       return pagefindPromise;
     }
 
+    /* A structured address is deliberately resolved from shipped Pagefind
+     * metadata, not from a JavaScript copy of the registry. Numeric matching
+     * ignores presentation zero-padding and locale casing; a segmented
+     * modelo must name its segment, or remain on the ordinary ladder when the
+     * address is not unique. */
+    function normalizeStructuredText(value) {
+      var text = String(value || "").trim();
+      if (typeof text.normalize === "function") {
+        text = text.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+      }
+      return text.toLowerCase();
+    }
+
+    function normalizeStructuredValue(value) {
+      var text = normalizeStructuredText(value);
+      return /^\d+$/.test(text) ? text.replace(/^0+(?=\d)/, "") : text;
+    }
+
+    function parseStructuredCasillaQuery(query) {
+      var text = normalizeStructuredText(query)
+        .replace(/[^\w\s:.-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      var match = text.match(
+        /^(?:modelo|model|form)\s+([0-9]+)\s+(?:casilla|casella|box|field)\s+([a-z0-9][a-z0-9._:-]*)$/
+      );
+      if (!match) return null;
+
+      var casilla = match[2];
+      var separator = casilla.indexOf(":");
+      var segmento = "";
+      var number = casilla;
+      if (separator >= 0) {
+        if (separator === 0 || separator === casilla.length - 1) return null;
+        segmento = casilla.slice(0, separator);
+        number = casilla.slice(separator + 1);
+      }
+      return {
+        modelo: normalizeStructuredValue(match[1]),
+        number: normalizeStructuredValue(number),
+        segmento: segmento ? normalizeStructuredValue(segmento) : null,
+      };
+    }
+
+    function isStructuredCasillaMatch(data, address) {
+      var meta = data && data.meta;
+      if (!meta || meta.kind !== "casilla") return false;
+      if (normalizeStructuredValue(meta.modelo) !== address.modelo) return false;
+      if (normalizeStructuredValue(meta.number) !== address.number) return false;
+      return !address.segmento || normalizeStructuredValue(meta.segmento) === address.segmento;
+    }
+
+    function searchStructuredCasilla(pf, query) {
+      var address = parseStructuredCasillaQuery(query);
+      if (!address) return Promise.resolve([]);
+
+      return Promise.resolve(
+        pf.search(query, { filters: { kind: ["casilla"] } })
+      )
+        .then(function (response) {
+          var results = response && response.results ? response.results : [];
+          return Promise.all(
+            results.map(function (result) {
+              return Promise.resolve(result.data()).then(function (data) {
+                return { data: data, result: result };
+              });
+            })
+          );
+        })
+        .then(function (items) {
+          var seenHref = {};
+          var matches = [];
+          items.forEach(function (item) {
+            var href = item.result && item.result.url;
+            if (!href || seenHref[href] || !isStructuredCasillaMatch(item.data, address)) {
+              return;
+            }
+            seenHref[href] = true;
+            matches.push({ data: item.data, href: href });
+          });
+          if (matches.length !== 1) return [];
+
+          var match = matches[0];
+          return [
+            cardFromPagefind(
+              match.data.meta,
+              match.data.meta && match.data.meta.title,
+              match.href,
+              match.data.excerpt,
+              true
+            ),
+          ];
+        })
+        .catch(function () {
+          /* A malformed/older index falls through to the normal ladder. */
+          return [];
+        });
+    }
+
     /* Result iconography + ranking authority (ADR 2026-07-15 D7/D8). The Python
      * injection seam ships a closed `display_class` on every injected record
      * (`casilla`/`modelo`/`cli`/`technical`/`doc`) plus a `weight` already
@@ -502,10 +601,12 @@
            * rest to null - which silently emptied the card pass while a reader
            * was still typing. Awaiting each pass in turn removes the
            * self-supersede so both reliably return. */
-          return Promise.resolve(
-            pf.search(query, { sort: { weight: "desc" } })
-          ).then(function (cardRes) {
-            return Promise.resolve(pf.search(query)).then(function (pageRes) {
+          return searchStructuredCasilla(pf, query).then(function (structured) {
+            if (structured.length) return structured;
+            return Promise.resolve(
+              pf.search(query, { sort: { weight: "desc" } })
+            ).then(function (cardRes) {
+              return Promise.resolve(pf.search(query)).then(function (pageRes) {
               var cardResults = cardRes && cardRes.results ? cardRes.results : [];
               var pageResults = pageRes && pageRes.results ? pageRes.results : [];
               /* The weight-sorted pass ties every concept card at the flat
@@ -529,6 +630,7 @@
                   return all;
                 });
               });
+            });
             });
           });
         })
