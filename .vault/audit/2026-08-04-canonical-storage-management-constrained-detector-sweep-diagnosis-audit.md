@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:58aa5f9fe8f86af932efbc432d29428438e97ee328663de7cfa4be168bf9e812'
+body_hash: 'sha256:a6fadacaf6893cb7ec5fad3b311c3e7bbc3271468dc40c72800c1d8b43ee8252'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -197,10 +197,24 @@ revert commit on `dev/write_site_census.py`.
 Two of the seven surface a distinct, more dangerous failure mode: a rename
 does not break the test, it silently **voids** it — an absence assertion
 (`assert not (root / "buckets").exists()`) keeps passing once the thing it
-should have caught moved. "A broken test screams; a voided one does not," and
-neither is visible to any detector, including this one, framed around "a
-rename would break it." Tracked separately as its own severity category and
-owned elsewhere in this campaign rather than duplicated here.
+should have caught moved. Precisely stated, this is a **fragility with a
+silent-failure mode, not a live defect today**: the guard is correct and
+effective at the current taxonomy segment, and only stops working if that
+segment is renamed without the assertion being noticed and updated. "A broken
+test screams; a voided one does not," and neither is visible to any detector,
+including this one, framed around "a rename would break it." Tracked
+separately as its own severity category and owned elsewhere in this campaign
+rather than duplicated here.
+
+**Caveat on the central claim, stated plainly:** the five break-outright and
+two void sites above are classified by reading each callee, not by mutating
+the taxonomy segment and running the test — **reasoned, not measured.** A
+mutation-tested confirmation of these seven, and a check on whether the void
+pattern is itself a swept class, is in flight elsewhere in this campaign. This
+finding's verdict does not depend on that confirmation (the sample's
+structural argument — nothing in the caller to join on — holds from the read
+alone), but the seven-site figure itself should be treated as reasoned until
+that measurement lands, and this document updated in place once it does.
 
 ## Recommendations
 
