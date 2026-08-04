@@ -8,7 +8,7 @@ secure DB backend.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
@@ -274,6 +274,34 @@ class ProfileDerivedSelectorDefinition(BaseModel):
     def matches(self, selector: str) -> bool:
         """Return whether *selector* falls inside this derived namespace."""
         return _compiled_derived_selector_pattern(self.pattern).match(selector) is not None
+
+
+def derived_selector_for_path(
+    path: str,
+    derived_selectors: Iterable[ProfileDerivedSelectorDefinition],
+) -> ProfileDerivedSelectorDefinition | None:
+    """Return the declared namespace owning *path*, or ``None`` if it is not derived.
+
+    The single written-once judgment on whether a profile path is engine-derived.
+    Every consumer -- the registry contract validator and the write-door refusal --
+    asks through here, so the two can never disagree about what "derived" means.
+
+    Deliberately NOT routed through :func:`profile_value_refusal`, which is the
+    authority on whether a VALUE may be stored at a declared field. That judgment
+    is value-scoped against a :class:`ProfileFieldDefinition` and expressly
+    declines to judge absence; this one is path-scoped, refuses every value
+    including a clear, and must keep answering once the per-year field
+    declarations are gone and there is no declaration left to judge against. The
+    two live in one module because they are both schema-level judgments, not
+    because they are the same judgment.
+
+    The definition is returned rather than a bare bool so a caller can name the
+    surface that edits the real source facts without re-scanning the namespace.
+    """
+    for definition in derived_selectors:
+        if definition.matches(path):
+            return definition
+    return None
 
 
 class ProfileSchemaDefinition(BaseModel):
