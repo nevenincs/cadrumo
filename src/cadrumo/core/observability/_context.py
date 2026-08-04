@@ -41,12 +41,11 @@ from ._models import (
     StepBoundaryPayload,
 )
 from ._sink import JsonlRunSink
-from ._store import _run_dir, _validate_run_id, save_envelope, save_trace
+from ._store import _EVENTS_FILENAME, _run_dir, _validate_run_id, save_envelope, save_trace
 
 _log = get_logger(__name__)
 
 _DEFAULT_INITIAL_STEP = "step-0"
-_EVENTS_FILENAME = "events.jsonl"
 
 
 class RunContextInfo(BaseModel):
