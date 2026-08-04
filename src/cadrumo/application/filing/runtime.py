@@ -51,6 +51,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.aggregation import BindingSourceKind
 from ...core.identity import SubjectTaxId
 from ...core.resources import bundled_path
 
@@ -61,6 +62,7 @@ from ...domain.calculations.registry import (
     CasillaConstraints,
     CasillaDefinition,
     CasillaId,
+    DataBindingDefinition,
     ExportLayoutDefinition,
     FormulaDefinition,
     FormulaId,
@@ -235,6 +237,19 @@ class RegistryModeloSubview:
     deadline_window_ids: tuple[str, ...]
     completeness_manifest: CalculationCompletenessManifest | None
     casilla_record_metadata: tuple[CasillaRecordMetadata, ...] = ()
+    profile_export_bindings: tuple[DataBindingDefinition, ...] = ()
+    """Profile bindings that declare an address on the exported record.
+
+    Deliberately NOT every profile binding: only those carrying a
+    ``dictionary_field``, which is what makes a binding addressable on the
+    exported declaration. A subview carrying the whole binding set would stop
+    being a projection and start being a second snapshot, which is the shape the
+    registry authority owns and this class must not duplicate.
+
+    The export header composer reads these to populate the identity slots AEAT's
+    dictionary names, so the join is driven by the registry's own declarations
+    rather than by a hand-written map per field.
+    """
 
     def has_completeness_manifest(self) -> bool:
         """Return whether this revision carries a calculation-completeness manifest.
@@ -660,6 +675,25 @@ def _subview_from_snapshot(snapshot: RegistrySnapshot) -> RegistryModeloSubview:
             )
             for casilla in snapshot.revision.casillas
         ),
+        profile_export_bindings=tuple(
+            sorted(
+                (binding for binding in snapshot.revision.bindings if _is_profile_export_binding(binding)),
+                key=lambda binding: binding.id,
+            ),
+        ),
+    )
+
+
+def _is_profile_export_binding(binding: DataBindingDefinition) -> bool:
+    """Whether ``binding`` names a profile fact addressable on the exported record.
+
+    ``dictionary_field`` is the discriminator because it is what gives a binding
+    somewhere to land: a profile binding without one feeds the calculation and
+    has no export address at all, which is the same distinction
+    ``_is_calculation_only_profile_binding`` draws on the calculation side.
+    """
+    return (
+        binding.source == BindingSourceKind.PROFILE and getattr(binding.selector, "dictionary_field", None) is not None
     )
 
 
