@@ -83,9 +83,14 @@ def test_refusal_carries_the_key_value_and_message() -> None:
         ("0", Decimal("0")),
         ("-1234.56", Decimal("-1234.56")),
         ("  1234.56  ", Decimal("1234.56")),
-        # Uncapped fractional posture: sub-cent precision is a legitimate
-        # calculation input the export layer rounds ROUND_HALF_UP to cents.
-        ("2.345", Decimal("2.345")),
+        # Sub-cent precision is a legitimate calculation input the export layer
+        # rounds ROUND_HALF_UP to cents. The fractional digit count is NOT what
+        # is capped -- what refuses is a Spanish thousands lookalike, so a
+        # sub-cent value whose lead group cannot open a grouping run passes at
+        # any precision. `2.345` used to sit here and no longer can: `2` is a
+        # valid lead group, so that text is genuinely undecidable between two
+        # euros thirty-four and two thousand three hundred forty-five.
+        ("0.335", Decimal("0.335")),
         ("0.123456", Decimal("0.123456")),
     ],
 )
