@@ -162,7 +162,7 @@ class DescendantInfo(BaseModel):
         Default ``0`` (no deducción contribution from this child).
     gastos_guarderia_euros
         Actual guardería / centro educación infantil autorizado expenses paid
-        for this child (Art. 81.2 LIRPF).  Integer euros, ≥ 0.
+        for this child (Art. 81 bis LIRPF).  Integer euros, ≥ 0.
         Default ``0`` (no guardería expenses declared for this child).
     nif
         Optional NIF/NIE; validated for shape when present.
@@ -318,10 +318,72 @@ class DescendantInfo(BaseModel):
         return self.age_at_year_end(filing_year) < _MAX_AGE_ORDINARY
 
     def is_eligible_menor_tres(self, filing_year: int) -> bool:
-        """True when the descendant qualifies for the Art. 58.2 bajo-3-años supplement."""
+        """True when the descendant is under three at the devengo date and cohabits.
+
+        Scoped to the Art. 81 deductions — the deducción por maternidad
+        (art. 81.1) and the guardería incremento (art. 81.2). It is NOT the
+        Art. 58.2 test: see
+        :meth:`is_eligible_minimo_incremento_menor_tres`, which carries an
+        additional limb this one deliberately lacks.
+
+        Two known narrowings against the Art. 81 text, both in the
+        over-taxing direction and both needing data this axis does not carry:
+        art. 81.1 runs monthly "hasta que el menor alcance los tres años de
+        edad" rather than testing age once at year-end, and art. 81.2 extends
+        the guardería incremento through the period in which the child turns
+        three, "respecto de los gastos incurridos con posterioridad al
+        cumplimiento de dicha edad hasta el mes anterior a aquel en el que
+        pueda comenzar el segundo ciclo de educación infantil". Both need
+        month-level figures; ``gastos_guarderia_euros`` is an annual total, so
+        widening this predicate alone would swap an under-grant for an
+        over-grant.
+        """
         if not self.convive_con_contribuyente:
             return False
         return self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES
+
+    def is_eligible_minimo_incremento_menor_tres(self, filing_year: int) -> bool:
+        """True when Art. 58.2 grants the bajo-3-años increase for this descendant.
+
+        Two independent limbs, and the second is why this is separate from
+        :meth:`is_eligible_menor_tres` rather than shared with it:
+
+        * the ordinary limb — under three at the devengo instant Art. 61
+          norma 3ª fixes; and
+        * the adopción/acogimiento limb, granted "con independencia de la edad
+          del menor, en el período impositivo en que se inscriba en el Registro
+          Civil y en los dos siguientes".
+
+        The second limb is PERIOD-scoped: whole tax periods counted from the
+        entry period, so annual granularity suffices and no month-level figure
+        is required. Art. 81.1's adoption clause instead runs "durante los tres
+        años siguientes a la FECHA de la inscripción" — date-scoped, a
+        different shape. One predicate serving both would silently apply one
+        statute's window to the other's deduction, which is why the two are
+        resolved apart.
+
+        Art. 58.2 names "adopción o acogimiento" and NOT tutela, so this limb
+        keys on ``adoption_date``, documented here as the adoption's
+        finalisation date. A descendant under tutela carries none and is never
+        granted the increase by this limb, which is the correct outcome. An
+        acogimiento placement that is not an adoption also carries none, so it
+        stays under-granted; closing that needs a relationship-kind fact this
+        axis does not yet hold.
+
+        Precision limit worth stating: Art. 58.2 anchors on the Registro Civil
+        inscription, or on the resolución where inscription is not required,
+        while this model carries a single adoption date. Where the resolución
+        and the inscription straddle a year boundary the window can start one
+        period early or late.
+        """
+        if not self.convive_con_contribuyente:
+            return False
+        if self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES:
+            return True
+        if self.adoption_date is None:
+            return False
+        periods_since_entry = filing_year - self.adoption_date.year
+        return 0 <= periods_since_entry <= _NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS
 
     def entry_year(self) -> int:
         """Calendar year of the nacimiento/adopción event (deducción-window anchor)."""
@@ -419,7 +481,7 @@ class RentaFamilyProfile(BaseModel):
     cotizaciones_ss_madre_2024: int = Field(default=0, ge=0)
     """SS cotizaciones paid by the mother during 2024 (mirrors casilla 0013).
 
-    Used as the statutory cap for the Art. 81.2 guardería incremento:
+    Used as the statutory cap for the Art. 81 bis guardería incremento:
     0613 = min(gastos_guarderia_reales, hijos_menores_3 × 1000, cotizaciones_ss_madre_2024).
     Default ``0`` (cap not declared; guardería incremento will be zero).
     """
@@ -628,7 +690,7 @@ class RentaFamilyProfile(BaseModel):
         for ordinal, descendant in enumerate(eligible):
             tranche_index = min(ordinal, len(birth_order_amounts) - 1)
             amount = birth_order_amounts[tranche_index]
-            if descendant.is_eligible_menor_tres(filing_year):
+            if descendant.is_eligible_minimo_incremento_menor_tres(filing_year):
                 amount += menor_tres_supplement
             total += amount * self.minimo_prorrata_factor(
                 descendant,

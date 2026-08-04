@@ -50,6 +50,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _ORACLE_YEAR = 2024
 _ASTURIAS_ORACLE = "modelo-100-2024-minimo-descendientes-prorrateo-asturias.json"
 _VALENCIANA_ORACLE = "modelo-100-2024-minimo-descendientes-declaracion-propia-valenciana.json"
+_RIOJA_ORACLE = "modelo-100-2024-minimo-descendientes-adopcion-mayor-de-tres-rioja.json"
 
 
 def _oracle(name: str) -> ManualWorkedExamplePayload:
@@ -400,3 +401,88 @@ def test_the_anualidades_flag_consumes_the_same_eligibility_predicate() -> None:
     narrowed_eligible: Any = eligible
     inject_derived_anualidades_eligibility_facts(narrowed_eligible, _snapshot())
     assert eligible[key] == Decimal("0")
+
+
+# ---------------------------------------------------------------------------
+# Oracle C, adopcion - Art. 58.2's age-independent limb.
+# ---------------------------------------------------------------------------
+
+
+def _rioja_adopted_child(*, adoption_year: int) -> dict[str, object]:
+    """Ejemplo 6's child: five years old, adopted, cohabiting.
+
+    *adoption_year* is a parameter rather than a constant so the window's far
+    edge can be probed with the same household. The birth date is held fixed at
+    five years before the filing year, so age never satisfies the ordinary limb
+    and only the adopcion limb can grant the increase.
+    """
+    return {
+        "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 5}-01-01",
+        "renta_family.descendiente.0.adoption_date": f"{adoption_year}-05-05",
+        "renta_family.descendiente.0.convivencia": "true",
+    }
+
+
+def test_an_adopted_child_over_three_takes_the_printed_supplement() -> None:
+    """AEAT grants the bajo-3-anos increase to a FIVE-year-old, and prints the figure.
+
+    The whole point of Art. 58.2's second sentence: adoption suspends the age
+    test for the inscription period and the two following. The engine tested
+    only ``age_at_year_end < 3`` before this, so it returned the bare tranche
+    and the 2.800 was silently lost for three consecutive years.
+    """
+    estatal, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR))
+    assert estatal == _expected(_RIOJA_ORACLE, "0513")
+
+
+def test_both_rioja_casillas_carry_the_printed_descendientes_figure() -> None:
+    """La Rioja diverged on the discapacidad minimo only, so 0514 equals 0513 here.
+
+    Asserted rather than assumed: the manual's nota (3) puts the 3.000/3.300
+    divergence on the discapacidad concept, and both columns print the
+    descendientes rows identically. If a future revision wired a Rioja
+    descendientes table this would fail rather than quietly diverge.
+    """
+    estatal, autonomico = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR))
+    assert autonomico == _expected(_RIOJA_ORACLE, "0514")
+    assert autonomico == estatal
+
+
+def test_the_supplement_lapses_once_the_third_period_has_passed() -> None:
+    """Anti-tautology pair: the window is bounded, so a stale adoption grants nothing.
+
+    Art. 58.2 gives the inscription period "y en los dos siguientes" -- three
+    periods, not indefinitely. A predicate that granted on the mere presence of
+    an adoption date would pass the test above and fail this one.
+    """
+    inside, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR - 2))
+    outside, _ = _aggregates(_rioja_adopted_child(adoption_year=_ORACLE_YEAR - 3))
+    assert inside == _expected(_RIOJA_ORACLE, "0513")
+    assert outside < inside
+
+
+def test_a_child_over_three_without_an_adoption_date_takes_no_supplement() -> None:
+    """The tutela guard, and the reason this limb keys on the adoption date.
+
+    Art. 58.1 assimilates "tutela y acogimiento"; Art. 58.2's age-independent
+    sentence names "adopcion o acogimiento" and NOT tutela. A descendant under
+    tutela therefore generates the tranche but never this increase. Keying the
+    limb on ``adoption_date`` -- a field documented as the adoption's
+    finalisation date, which a tutela placement does not have -- is what keeps
+    that outcome correct without a relationship-kind fact.
+    """
+    facts = _rioja_adopted_child(adoption_year=_ORACLE_YEAR)
+    del facts["renta_family.descendiente.0.adoption_date"]
+    estatal, _ = _aggregates(facts)
+    assert estatal < _expected(_RIOJA_ORACLE, "0513")
+
+
+def test_the_ordinary_under_three_limb_still_grants_without_any_adoption() -> None:
+    """The first limb is untouched: a biological under-three keeps the increase."""
+    estatal, _ = _aggregates(
+        {
+            "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 1}-01-01",
+            "renta_family.descendiente.0.convivencia": "true",
+        },
+    )
+    assert estatal == _expected(_RIOJA_ORACLE, "0513")
