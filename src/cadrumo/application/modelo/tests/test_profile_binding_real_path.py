@@ -62,7 +62,7 @@ _CLOCK = datetime(2026, 5, 27, 9, 0, 0, tzinfo=UTC)
 _M100_2025_XSD = (
     REPO_ROOT
     / "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files"
-    / "03-100-esquema-xsd-ejercicio-2025-actualizado-14-04-2026-796-kb-ejecutable.xsd"
+    / "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd"
 )
 
 
