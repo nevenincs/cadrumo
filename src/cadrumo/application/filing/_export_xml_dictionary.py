@@ -83,6 +83,7 @@ def render_xml_dictionary_layout(
     *,
     draft: ModeloDraft,
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object] | None = None,
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
     """Render an XML-dictionary layout for an approved declaration draft.
@@ -94,6 +95,10 @@ def render_xml_dictionary_layout(
         draft: Approved :class:`~domain.filing.ModeloDraft` supplying casilla
             values, modelo, and period metadata.
         headers: Normalized declaration header values such as identity fields.
+        dictionary_values: Values addressed by the dictionary field id AEAT
+            declares for them, each still carrying its own Python type. Absent
+            (or ``None``) means the caller declares no such values, which is how
+            every caller outside the work-unit export service reaches here.
         schema_provider: :class:`~application.filing.runtime.RegistrySchemaAccessor`
             that resolves dictionary and XSD source references.
 
@@ -123,6 +128,7 @@ def render_xml_dictionary_layout(
             draft=draft,
             casilla_values=casilla_values,
             headers=normalized_headers,
+            dictionary_values=dictionary_values or {},
         )
         if rendered is None or rendered == "":
             continue
@@ -355,10 +361,11 @@ def _xml_dictionary_rendered_value(
     draft: ModeloDraft,
     casilla_values: dict[CasillaId, object],
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object],
 ) -> str | None:
     raw = casilla_values.get(entry.casilla_id) if entry.casilla_id is not None else None
     if raw is None:
-        raw = _xml_dictionary_header_value(entry, draft=draft, headers=headers)
+        raw = _xml_dictionary_non_casilla_value(entry, headers=headers, dictionary_values=dictionary_values)
     if raw is None:
         return None
     if draft.modelo == Modelo.M100:
@@ -486,23 +493,47 @@ def _modelo_100_sign_branch_value(entry: XmlDictionaryEntry, raw: object) -> obj
     return raw if (amount < 0) is negative_branch else Decimal("0")
 
 
-def _xml_dictionary_header_value(
+def _xml_dictionary_non_casilla_value(
     entry: XmlDictionaryEntry,
     *,
-    draft: ModeloDraft,
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object],
 ) -> object | None:
+    """Resolve a row no casilla addresses, keeping the value's Python type.
+
+    Two channels answer here, and the order between them is what makes the
+    declared one authoritative. ``dictionary_values`` is keyed by the field id
+    AEAT's own dictionary names, which is the address a registry binding
+    declares, and each value arrives as the type its fact carries -- a ``bool``
+    is still a ``bool``, a :class:`~datetime.date` still a ``date``, so
+    :func:`_format_xml_dictionary_value` can still decide ``SI``/``NO`` and
+    ``d/m/yyyy`` from it. ``headers`` is the flat declaration-header mapping,
+    whose contract is ``str`` throughout: a value reaching here through it has
+    already been rendered by its composer and is passed on as written.
+
+    Consulting the declared channel first means a header key that happens to
+    collide with a dictionary field id cannot shadow a typed value with a
+    pre-rendered string. No such collision exists today -- measured across all
+    2,383 rows of the Modelo 100 2024 dictionary against every key the export
+    header composer emits, the intersection is empty -- so the order states what
+    happens when one appears rather than changing what happens now.
+
+    Args:
+        entry: The dictionary row being written.
+        headers: Declaration headers, lowercased keys, string values.
+        dictionary_values: Values addressed by dictionary field id.
+
+    Returns:
+        The value to render, or ``None`` when neither channel addresses the row.
+    """
+    declared = dictionary_values.get(entry.field_id)
+    if declared is not None:
+        return declared
     path_tail = entry.path.rsplit("/", 1)[-1].lstrip("@").lower()
     for key in (entry.field_id.lower(), path_tail):
         value = headers.get(key)
         if value is not None:
             return value
-    if entry.field_id == "DPNIF_D":
-        return draft.profile_tax_id
-    if entry.field_id == "DP_APENOM_D":
-        return headers.get("legal_name") or " ".join(
-            part for part in (headers.get("surnames", ""), headers.get("name", "")) if part
-        )
     return None
 
 

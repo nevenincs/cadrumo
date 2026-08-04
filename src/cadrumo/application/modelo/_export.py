@@ -38,7 +38,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import date, datetime
 from pathlib import Path
 from typing import Annotated
@@ -695,6 +695,51 @@ def _compose_export_headers(
 compose_export_headers = _compose_export_headers
 
 
+def _compose_export_dictionary_values(
+    *,
+    draft: ModeloDraft,
+    headers: Mapping[str, str],
+) -> dict[str, object]:
+    """Compose the export values addressed by AEAT's own dictionary field ids.
+
+    A sibling channel to :func:`_compose_export_headers`, not a replacement for
+    it. The header dict is ``dict[str, str]`` by contract, and the
+    ``xml_dictionary`` renderer decides a row's rendering from the *Python type*
+    of the value it receives -- a ``bool`` becomes ``SI``/``NO`` or ``0``/``1``
+    depending on the row's declared type, a :class:`~datetime.date` becomes
+    ``d/m/yyyy``. A value that reaches the renderer as a string has already lost
+    the distinction the renderer needs, and is written through verbatim. So a
+    typed value needs a channel whose contract is not ``str``, and this is it.
+
+    Rendering here instead would be the other way to solve that, and is worse:
+    it would put a second formatting authority beside
+    ``_format_xml_dictionary_value``, and the two could disagree silently on a
+    filing artefact. This channel carries values; that function renders them.
+
+    Args:
+        draft: The approved draft being exported, supplying the taxpayer
+            identity it was built against.
+        headers: The already-composed export headers, read for the operator
+            name parts so the profile is loaded once per export rather than
+            twice.
+
+    Returns:
+        Values keyed by the dictionary field id AEAT declares for them.
+    """
+    return {
+        # Both rows were previously resolved by hardcoded escapes inside the
+        # renderer, which is the one place that must not know a field id.
+        # Sourcing DP_APENOM_D from the same header parts, and DPNIF_D from the
+        # same draft attribute, keeps the rendered bytes identical to what those
+        # escapes produced.
+        "DPNIF_D": draft.profile_tax_id,
+        "DP_APENOM_D": _compose_legal_full_name(
+            surnames=headers.get("surnames", ""),
+            name=headers.get("name", ""),
+        ),
+    }
+
+
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
     """Return the typed :class:`~cadrumo.core.Period` carried by the work unit."""
     if work_unit.period.filing_year != work_unit.filing_year:
@@ -801,7 +846,13 @@ def _persist_exported_draft(
         period=period,
         refund_election=command.refund_election,
     )
-    receipt = _write_export_tmp(command=command, approved=approved, headers=headers, schema_provider=schema_provider)
+    receipt = _write_export_tmp(
+        command=command,
+        approved=approved,
+        headers=headers,
+        dictionary_values=_compose_export_dictionary_values(draft=approved, headers=headers),
+        schema_provider=schema_provider,
+    )
     event = _emit_export_event(
         command=command,
         work_unit=work_unit,
@@ -877,6 +928,7 @@ def _write_export_tmp(
     command: ModeloExportCommand,
     approved: ModeloDraft,
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object],
     schema_provider: RegistrySchemaAccessor,
 ) -> DeclaracionExportResult:
     # Atomic-rename: write the fichero-BOE artefact to a sibling .tmp
@@ -886,7 +938,13 @@ def _write_export_tmp(
     # .tmp file, which carries no provenance and is safe to discard.
     tmp_output = command.output_path.with_name(command.output_path.name + ".tmp")
     try:
-        return export_draft(approved, output_path=tmp_output, headers=headers, schema_provider=schema_provider)
+        return export_draft(
+            approved,
+            output_path=tmp_output,
+            headers=headers,
+            dictionary_values=dictionary_values,
+            schema_provider=schema_provider,
+        )
     except filing_domain.FilingExportError as exc:
         _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
         # Surface the underlying FilingExportError cause in the typed context

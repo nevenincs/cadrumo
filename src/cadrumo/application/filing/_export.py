@@ -44,7 +44,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -297,6 +297,7 @@ def export_draft(
     *,
     output_path: Path,
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object] | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
 ) -> DeclaracionExportResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
@@ -311,6 +312,11 @@ def export_draft(
         draft: The :class:`ModeloDraft` to export; must be in ``APROBADO`` status.
         output_path: Destination path for the fichero-BOE bytes.
         headers: Registry header fields (NIF, ejercicio, etc.) embedded in the file.
+        dictionary_values: Optional values addressed by the dictionary field id
+            AEAT declares for them, each still carrying its own Python type.
+            Read only by the ``xml_dictionary`` renderer, which is the only
+            format addressing fields that way; the fixed-width renderer resolves
+            its fields from ``headers`` and the layout's record definitions.
         schema_provider: Optional registry schema provider override.
 
     Returns:
@@ -337,7 +343,13 @@ def export_draft(
         raise FilingExportError(_missing_export_layout_message(draft.modelo))
     layout = subview.export_layouts[0]
     _raise_if_export_layout_not_renderable(draft.modelo, layout)
-    payload = _render_export_layout(layout, draft=draft, headers=headers, schema_provider=provider)
+    payload = _render_export_layout(
+        layout,
+        draft=draft,
+        headers=headers,
+        dictionary_values=dictionary_values,
+        schema_provider=provider,
+    )
     if not payload:
         raise FilingExportError(f"modelo {draft.modelo!r} export layout {layout.id!r} rendered an empty payload")
     casilla_provenance = _exported_casilla_provenance(layout, draft=draft, schema_provider=provider)
@@ -589,10 +601,17 @@ def _render_export_layout(
     *,
     draft: ModeloDraft,
     headers: dict[str, str],
+    dictionary_values: Mapping[str, object] | None,
     schema_provider: RegistrySchemaAccessor,
 ) -> bytes:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        return render_xml_dictionary_layout(layout, draft=draft, headers=headers, schema_provider=schema_provider)
+        return render_xml_dictionary_layout(
+            layout,
+            draft=draft,
+            headers=headers,
+            dictionary_values=dictionary_values,
+            schema_provider=schema_provider,
+        )
     return _render_layout(layout, draft=draft, headers=headers)
 
 
