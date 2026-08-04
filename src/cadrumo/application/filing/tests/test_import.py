@@ -16,6 +16,7 @@ from typing import cast
 import pytest
 from pydantic import AnyHttpUrl
 
+from ....adapters.inbound.pdf import source_pdf_reference_path
 from ....core import Period
 from ....core.config import override_settings
 from ....core.errors import resolve_error_message
@@ -143,7 +144,7 @@ def test_submission_record_preserves_typed_draft_period(
         tax_id="12345678Z",
         total_a_ingresar=Decimal("10.00"),
         verification_url=AnyHttpUrl(justificante_cotejo_url("ABCD1234EFGH5678")),
-        source_pdf_path=Path("var") / "justificantes" / "modelo_130_2026Q1.pdf",
+        source_pdf_path=source_pdf_reference_path("a" * 64),
         source_pdf_sha256="a" * 64,
         parsed_at=datetime(2026, 4, 10, 9, 25, tzinfo=UTC),
     )
@@ -189,7 +190,7 @@ def test_submission_record_preserves_an_aware_receipt_instant(
         tax_id="12345678Z",
         total_a_ingresar=Decimal("10.00"),
         verification_url=AnyHttpUrl(justificante_cotejo_url("ABCD1234EFGH5678")),
-        source_pdf_path=Path("var") / "justificantes" / "modelo_130_2026Q1.pdf",
+        source_pdf_path=source_pdf_reference_path("a" * 64),
         source_pdf_sha256="a" * 64,
         parsed_at=datetime(2026, 4, 10, 9, 25, tzinfo=UTC),
     )
