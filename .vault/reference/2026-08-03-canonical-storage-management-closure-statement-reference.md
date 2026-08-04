@@ -75,6 +75,44 @@ outweighed a "no" here** — that asymmetry is why this section stays first
 even now that it is closed, rather than being folded into the numbered
 list below.
 
+## What "enrolled" means — the ruling, not an inference
+
+Stated here rather than left to be inferred from a ratio, because the two
+available readings **change what "done" means by roughly a factor of four** and
+the criterion's original wording does not distinguish them.
+
+```
+storage_path(StorageCategory.X)   ENROLLED
+settings.cadrumo_x_dir            ENROLLED
+storage_root / "llm-cache"        NOT enrolled  -- this is what S78 burns down
+```
+
+**The intent reading governs, and it is enforced rather than asserted.** A
+settings-field read is taxonomy-governed because two gates make it so, both green
+at HEAD:
+
+**`test_storage_binding_gate.py`** — every `Path`-typed `Settings` field is a
+taxonomy member, a declared escape, or the storage root: **total and disjoint**.
+Its discovery is anchored to `Settings.model_fields`, deliberately *independent*
+of the taxonomy, and the gate's own docstring says why: were the field set
+sourced from the taxonomy instead, both sides would move together and an empty
+discovery would compare empty against empty and pass. That property is what makes
+this a chain a reader can check rather than a conclusion to trust.
+
+**`test_storage_default_parity.py`** — each field's placeholder default states the
+same subpath the taxonomy declares.
+
+So a field read is a **gate-guaranteed member with a parity-pinned default**, not
+a second authority. **Accessor versus field is a style difference, not an
+enrollment difference**; only re-typing the segment escapes the taxonomy.
+
+**Two consequences worth stating plainly.** Accessor adoption — 8 call sites
+across 5 modules against 21 modules reading fields — is **hygiene, not
+correctness**, and if this document's language overstates adoption the language
+narrows rather than 21 modules migrating for zero enrollment gain. And the parity
+gate makes the duplicate **safe, not single**: a subpath is still spelled in two
+places, it simply cannot drift. That residual is `S114`'s, not the criterion's.
+
 ## Criterion elements
 
 Each element states the plan Step(s) that carry it, the artefact that will
@@ -623,7 +661,37 @@ passes, without recording that the class exists and its size is unknown.
 
 ### 5f. Encryption-at-rest assertions read a file the data is not in
 
-**STATUS: open, owner `conv2`. Highest severity on the board.**
+**STATUS: closed, landed and verified at `44e7f0d957` (8 files).** The finding
+below stood, and the fix resolved it while this element still read "open".
+
+**The distinction the fix established, which matters more than the closure.**
+Every converted assertion still passes under the real combined read — zero
+regressions, no green-to-red flip. So:
+
+> **The encryption guarantee held in every case checked. What was broken was the
+> check, not the guarantee.**
+
+Both halves are load-bearing and a reader should take neither alone. The defect
+was real — roughly fifteen assertions were vacuous and would have passed against
+a build with encryption disabled — *and* it was not masking a leak. Reporting
+only the first overstates; reporting only the second excuses a class of test
+that could not fail.
+
+**Verified independently before the fix, not taken on report.** The owner
+reproduced the measurement itself — instrumented an iva-wallet decision save,
+main file 4,096 bytes and zero rows, combined 173,048 bytes containing the
+marker — rather than trusting the coordinator's numbers.
+
+**Six bare main-file scans remain, deliberately**, each classified with reasoning
+in the commit: the two that demonstrate the gap, the two that run after
+`dispose_engine()`'s own checkpoint, the refused-write byte comparisons, and the
+helper's own implementation. A residual that is enumerated and reasoned is a
+different object from one that is merely left.
+
+The original finding follows, because the mechanism is why the conversion was
+needed and a closed element that deletes its own evidence teaches nothing.
+
+**STATUS as first found: open, highest severity on the board.**
 
 Roughly 14–18 assertions across ~10 modules assert
 `b"<marker>" not in database_file.read_bytes()` to prove secure-object content is
