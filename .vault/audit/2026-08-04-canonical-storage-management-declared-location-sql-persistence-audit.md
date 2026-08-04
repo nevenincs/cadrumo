@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:b6f93ec6543115e96d27f2381c1c4745cc08d29f06febb9ea4eb2109e2f8ebae'
+body_hash: 'sha256:e34d79a058eaba1aa19e43567d2e4f428dbeb996fee28e66a566dcfb0bdef2a7'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-closure-statement-reference]]'
