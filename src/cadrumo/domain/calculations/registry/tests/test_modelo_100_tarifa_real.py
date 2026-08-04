@@ -311,7 +311,7 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in scenarios
+        # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in scenarios
         # without childcare deduction (mínimo del contribuyente chain only).
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),

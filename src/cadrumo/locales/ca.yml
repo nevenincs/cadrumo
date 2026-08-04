@@ -7102,7 +7102,7 @@ profile:
     deduccion_maternidad_applied: 'Deducció maternitat Art. 81 LIRPF calculada: %{amount}
       € (casella 0611). Fórmula sum(min(mesos × 100, 1.200)) per descendent menor
       de 3 anys amb mesos de treball declarats.'
-    incremento_guarderia_applied: 'Suplement de guarderia (art. 81 bis LIRPF) aplicat:
+    incremento_guarderia_applied: 'Suplement de guarderia (art. 81.2 LIRPF) aplicat:
       %{amount} EUR (casella 0613). Límit: min(costos reals, fills menors de 3 anys
       x 1.000 EUR, cotitzacions a la seguretat social 2024).'
   errors:
@@ -7805,7 +7805,7 @@ wizard:
         prompt: Grau de discapacitat
       gastos-guarderia:
         help: Imports pagats a una llar d'infants o centre d'educació infantil autoritzat
-          (art. 81 bis LIRPF) que incrementen la deducció per maternitat; euros sencers.
+          (art. 81.2 LIRPF) que incrementen la deducció per maternitat; euros sencers.
         invalid_negative: Les despeses de llar d'infants no poden ser negatives; introduïu
           0 o un import positiu en euros (art. 81 bis LIRPF).
         prompt: Despeses de llar d'infants pagades en l'any de declaració (euros)

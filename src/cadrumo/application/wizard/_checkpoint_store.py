@@ -44,7 +44,7 @@ from ._models import WizardFlow
 # The descendant fact namespace: indexed rows renta_family.descendiente.{n}.*
 # plus the one aggregate the projection still stores.
 #
-# The Art. 81 bis guardería sum used to belong here too. It is now an
+# The Art. 81.2 guardería sum used to belong here too. It is now an
 # engine-derived path: nothing writes it, the calculate-time injector recomputes
 # it from the per-child figures, and the profile write door refuses a value at
 # it. Keeping it in this set made the clearing sweep emit a clear for a path

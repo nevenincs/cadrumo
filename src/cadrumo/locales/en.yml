@@ -6654,9 +6654,9 @@ profile:
     deduccion_maternidad_applied: 'Art. 81 LIRPF maternity deduction computed: %{amount}
       € (casilla 0611). Formula sum(min(months × 100, 1,200)) applied per dependent
       under 3 with declared working months.'
-    incremento_guarderia_applied: 'Nursery supplement (Art. 81 bis LIRPF) applied:
-      %{amount} EUR (box 0613). Limit: min(actual costs, children under 3 x 1000 EUR,
-      social-security contributions 2024).'
+    incremento_guarderia_applied: 'Nursery supplement (Art. 81.2 LIRPF) applied: %{amount}
+      EUR (box 0613). Limit: min(actual costs, children under 3 x 1000 EUR, social-security
+      contributions 2024).'
   errors:
     foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
       under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
@@ -7348,7 +7348,7 @@ wizard:
             label: 65% or more
         prompt: Disability grade
       gastos-guarderia:
-        help: Amounts paid to an authorised nursery (Art. 81 bis LIRPF) that increase
+        help: Amounts paid to an authorised nursery (Art. 81.2 LIRPF) that increase
           the maternity deduction; whole euros.
         invalid_negative: Nursery expenses cannot be negative; enter 0 or a positive
           amount in euros.

@@ -6989,7 +6989,7 @@ profile:
     deduccion_maternidad_applied: 'LIRPF 81. cikk szerinti anyasági levonás számítva:
       %{amount} € (0611. mező). A képlet: összeg(min(hónapok × 100; 1 200)) eltartottanként,
       akik 3 évesnél fiatalabbak és bejelentett munkahónapokkal rendelkeznek.'
-    incremento_guarderia_applied: 'Bölcsőde Art. 81 bis LIRPF pótlék kiszámítva: %{amount}
+    incremento_guarderia_applied: 'Bölcsőde Art. 81.2 LIRPF pótlék kiszámítva: %{amount}
       € (0613 rovatszám). Korlát: min(tényleges kiadások, 3 évesnél fiatalabb gyermekek
       × 1.000 €, tb-járulék 2024).'
   errors:
@@ -7704,7 +7704,7 @@ wizard:
             label: 65% vagy több
         prompt: Fogyatékosság mértéke
       gastos-guarderia:
-        help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81/A. cikk), amelyek
+        help: Engedélyezett bölcsődének fizetett összegek (LIRPF 81.2. cikk), amelyek
           növelik az anyasági levonást; egész euró.
         invalid_negative: A bölcsődei költség nem lehet negatív; adjon meg 0-t vagy
           pozitív összeget euróban (LIRPF 81 bis cikk).

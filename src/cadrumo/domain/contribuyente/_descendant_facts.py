@@ -22,7 +22,7 @@ Stored fact paths per descendant (n = 0-based index):
 Aggregate facts stored:
   renta_family.descendientes_count               int count
 
-The Art. 81 bis guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
+The Art. 81.2 guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
 is deliberately NOT stored here, and must not be re-added. It is a DERIVED path:
 the calculate-time injector recomputes it from the per-child
 ``gastos_guarderia`` figures above and overwrites whatever the index holds,
@@ -330,7 +330,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
                              contribuyente also entitled to this descendant's mínimo?
                              Omit to let the engine derive it from profile signals.
       MESES_TRABAJO=0..12    (optional, default 0) months mother worked — Art. 81 deducción maternidad
-      GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81 bis incremento 0613
+      GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81.2 incremento 0613
       NIF=XXXXXXXXX          (optional) NIF/NIE
 
     Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``

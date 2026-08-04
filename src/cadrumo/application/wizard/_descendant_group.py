@@ -237,7 +237,7 @@ def _validate_meses_range(page: FlowPage, canonical: str) -> ValidationVerdict:
 
 
 def _validate_gastos_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict:
-    """Refuse a negative guardería expense (Art. 81 bis LIRPF; euros >= 0).
+    """Refuse a negative guardería expense (Art. 81.2 LIRPF; euros >= 0).
 
     Blank (optional) passes; a parsed negative amount refuses as a verdict
     so it never reaches the ``ge=0`` model constraint at persist.
