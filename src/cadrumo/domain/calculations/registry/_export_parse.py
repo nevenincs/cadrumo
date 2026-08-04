@@ -185,6 +185,11 @@ def xml_dictionary_entries(
             f"XML export layout {layout.id!r} has unresolved dictionary source {layout.dictionary_source_ref!r}",
         )
     dictionary_path = source_root / Path(source.corpus_path)
+    # Applied here rather than at either consumer: the renderer and
+    # :func:`parse_export_payload` both resolve their rows from this call, so a
+    # correction reaching only one of them would make an exported artefact
+    # verify as drift against itself.
+    overrides = {override.field_id: override.path for override in layout.dictionary_path_overrides}
     entries: list[XmlDictionaryEntry] = []
     for line in _read_dictionary_text(dictionary_path).splitlines():
         stripped = line.strip()
@@ -194,17 +199,42 @@ def xml_dictionary_entries(
         if match is None:
             continue
         casilla_id = _parse_dictionary_casilla_id(match["casilla"])
+        field_id = match["field"].strip()
         entries.append(
             XmlDictionaryEntry(
-                field_id=match["field"].strip(),
-                path=match["path"].strip(),
+                field_id=field_id,
+                path=overrides.get(field_id, match["path"].strip()),
                 data_type=match["type"].strip(),
                 casilla_id=casilla_id,
             ),
         )
     if not entries:
         raise RegistryValidationError(f"XML export layout {layout.id!r} dictionary has no parseable entries")
+    _assert_every_override_was_applied(layout, entries)
     return tuple(entries)
+
+
+def _assert_every_override_was_applied(
+    layout: ExportLayoutDefinition,
+    entries: list[XmlDictionaryEntry],
+) -> None:
+    """Refuse an override naming a field this dictionary does not carry.
+
+    An override is a claim that a specific published row is wrong. If the row is
+    absent -- a typo, or a revision where AEAT never declared the field -- the
+    correction silently applies to nothing and the defect it was written for goes
+    on shipping, with a declaration in the registry that reads as if it were
+    fixed. Refusing at read time makes that impossible to leave in place.
+    """
+    declared = {entry.field_id for entry in entries}
+    unmatched = sorted(
+        override.field_id for override in layout.dictionary_path_overrides if override.field_id not in declared
+    )
+    if unmatched:
+        raise RegistryValidationError(
+            f"XML export layout {layout.id!r} declares dictionary path overrides for {unmatched!r}, "
+            "which the official dictionary does not declare, so the correction would apply to nothing",
+        )
 
 
 def _read_dictionary_text(path: Path) -> str:

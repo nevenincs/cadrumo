@@ -784,6 +784,26 @@ DeclaracionIdiomaValue = Annotated[DeclaracionIdioma | None, BeforeValidator(_co
 """Annotated ``Aux/Idioma`` language that hydrates TOML string literals to members."""
 
 
+class XmlDictionaryPathOverride(RegistryModel):
+    """One official dictionary row whose declared path AEAT itself got wrong.
+
+    The bundled ``.properties`` dictionaries are official AEAT evidence bytes and
+    are never edited: their value is that they are what AEAT published, defects
+    included. So where a row's path contradicts AEAT's own XSD, the correction is
+    declared here instead, beside the layout that consumes it.
+
+    Each override carries the evidence for itself in ``reason``. That is not
+    decoration: the override asserts that AEAT's published dictionary is wrong,
+    which is a claim a later reader must be able to audit rather than take on
+    trust — especially since a bundled corpus file can also have been edited by
+    us, so "it disagrees with the XSD" is not on its own sufficient grounds.
+    """
+
+    field_id: str = Field(min_length=1, max_length=64)
+    path: str = Field(min_length=1, max_length=512)
+    reason: str = Field(min_length=1, max_length=1024)
+
+
 class ExportLayoutDefinition(RegistryModel):
     id: ExportLayoutId
     format: ExportLayoutFormatValue = ExportLayoutFormat.FIXED_WIDTH
@@ -791,6 +811,15 @@ class ExportLayoutDefinition(RegistryModel):
     source_refs: SourceRefs
     legal_refs: LegalRefs
     records: tuple[ExportRecordDefinition, ...] = Field(default_factory=tuple)
+    dictionary_path_overrides: tuple[XmlDictionaryPathOverride, ...] = Field(default_factory=tuple)
+    """Dictionary rows whose AEAT-declared path is corrected before use.
+
+    Applied where the dictionary is read rather than where it is rendered,
+    because the writer and the export parser resolve their rows from the same
+    call: a correction applied to only one of them would make an artefact verify
+    as drift against itself.
+    """
+
     aux_idioma: DeclaracionIdiomaValue = None
     """Language the declaration's mandatory ``Aux/Idioma`` element declares.
 
@@ -837,9 +866,22 @@ class ExportLayoutDefinition(RegistryModel):
                     f"export layout {self.id!r} must declare aux_idioma: the declaration's Aux block is "
                     "mandatory in every AEAT XSD and no dictionary declares its rows",
                 )
-        elif self.aux_idioma is not None or self.aux_version is not None:
+            override_fields = [override.field_id for override in self.dictionary_path_overrides]
+            duplicates = sorted({name for name in override_fields if override_fields.count(name) > 1})
+            if duplicates:
+                raise RegistryValidationError(
+                    f"export layout {self.id!r} declares more than one dictionary path override for "
+                    f"{duplicates!r}, so which correction applies is ambiguous",
+                )
+            return self
+        if self.aux_idioma is not None or self.aux_version is not None:
             raise RegistryValidationError(
                 f"export layout {self.id!r} declares Aux identity on a {self.format} layout, which has no Aux block",
+            )
+        if self.dictionary_path_overrides:
+            raise RegistryValidationError(
+                f"export layout {self.id!r} declares dictionary path overrides on a {self.format} layout, "
+                "which reads no dictionary",
             )
         return self
 
