@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:7ce3a2826c6458f994e2d73947bce8d201ac6debd62ec4e312d952e992940f88'
+body_hash: 'sha256:06bdf5b9fa1f12cdb68b843eec68343b0f8828de3bec0bded9f42d44cc1b0d11'
 step_id: 'S02'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"

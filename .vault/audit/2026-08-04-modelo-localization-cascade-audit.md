@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:bd9712cd23c20b471d8bd3fd14295157bb4c6836b16a95f9e0190e8c78765eda'
+body_hash: 'sha256:1fadf03561c8a031af1ef39f26331f25baf3409ba816170cdb7532e9084051ad'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
 ---
@@ -33,10 +33,10 @@ related:
 
 ## Scope
 
-Review W01.P01.S01 and W01.P01.S02 against the authorizing plan, ADR, and
-research. Audit the read-only source fingerprint, supported revision inventory,
-resolved matrix, strict records, real behavior tests, and the explicit boundary
-against production mutation.
+Review W01.P01.S01, W01.P01.S02, and W01.P02.S03 against the authorizing plan,
+ADR, and research. Audit the read-only source fingerprint, supported revision
+inventory, resolved matrix, canonical candidates, strict records, real
+behavior tests, and the explicit boundary against production mutation.
 
 ## Findings
 
@@ -69,8 +69,19 @@ root/revision precedence, Spanish label fallback, absent help behavior, and
 unchanged source metadata. Ruff, basedpyright, and six focused integration tests
 passed. No critical, high, or medium findings were identified.
 
+### canonical-candidates | low | No actionable safety or intent findings
+
+S03 derives candidates only from the S02 matrix and the declared occurrence
+identity. Declared continuity ids use the accepted continuity address; all
+other occurrences remain revision-exact. Logical key validation preserves
+compound colon-bearing casilla ids without weakening filesystem fingerprint
+validation. Locale is kept outside semantic identity, and no repeated-id or
+text inference is introduced. The focused real-behavior tests passed after
+covering both exact and grounded addresses. No critical, high, or medium
+findings were identified.
+
 ## Recommendations
 
-Keep the S01 fingerprint and revision inventory immutable inputs to the S02
-matrix. Later candidate classification, emission, parity, and production
-mutation must remain separate plan steps.
+Keep the S01 fingerprint, S02 matrix, and S03 candidate addresses immutable
+inputs to later classification. Do not promote candidates, infer continuity,
+emit catalogues, compare parity, or mutate production in this step.

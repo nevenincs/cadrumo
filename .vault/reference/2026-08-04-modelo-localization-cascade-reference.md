@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:252755c2bbdd5a5cf98507da41982bad4ad93cc2b1630b2d2be34feb42317b5b'
+body_hash: 'sha256:2e8f493636ad70dd9d1334bb95487b2e5339e2c929702ceed918ed3002006400'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
 ---
@@ -54,6 +54,15 @@ validated, sorted by canonical identity, and bound to the S01 corpus
 fingerprint. Extraction captures the fingerprint before and after loading and
 refuses a mixed snapshot; it performs no writes to the registry or migration
 output.
+
+S03 canonical candidates serialize the existing identity contract only:
+`modelo/<modelo-id>/casilla/continuidad/<continuidad-id>/<field>` when the
+selected occurrence declares a grounded `continuidad_id`, otherwise
+`modelo/<modelo-id>/revision/<revision-id>/casilla/<casilla-id>/<field>`.
+Locale remains a catalogue dimension on the candidate row, not part of the
+semantic key. Repeated ids, printed numbers, labels, and normalized text must
+not create provisional continuity identities; that decision belongs to the
+later classification step.
 
 The governing ADR requires Spanish to remain source-authoritative, forbids
 non-Spanish locale fallthrough, and keeps migration-only extraction on the old

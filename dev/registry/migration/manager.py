@@ -37,6 +37,8 @@ from cadrumo.domain.calculations.registry import (
 _CORPUS_FINGERPRINT_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.corpus-fingerprint.v1"
 _SOURCE_INVENTORY_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.source-inventory.v1"
 _RESOLVED_MATRIX_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.resolved-matrix.v1"
+_CANONICAL_CANDIDATE_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.canonical-candidate.v1"
+_CANONICAL_CANDIDATES_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.canonical-candidates.v1"
 _CORPUS_SCOPE: Final[str] = "registry/aeat/**/*.toml"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 
@@ -44,6 +46,7 @@ ModeloSourceLayout = Literal["single_file", "directory"]
 RevisionSourceLayout = Literal["inline", "revision_file", "fragment_directory"]
 LocalizationField = Literal["label", "help"]
 LocalizationResolution = Literal["localized", "official_spanish", "absent"]
+CanonicalOccurrenceScope = Literal["continuity", "revision_occurrence"]
 
 _SUPPORTED_LOCALES: Final[tuple[str, ...]] = tuple(language.value for language in OutputLanguage)
 _LOCALIZATION_FIELDS: Final[tuple[LocalizationField, ...]] = ("label", "help")
@@ -287,6 +290,125 @@ class ResolvedLocalizationMatrix(_StrictRecord):
         return self
 
 
+def canonical_occurrence_key(
+    *,
+    modelo_id: str,
+    revision_id: str,
+    casilla_id: str,
+    continuidad_id: str | None,
+    field: LocalizationField,
+) -> str:
+    """Build the canonical occurrence address without inferring identity."""
+    if continuidad_id is not None:
+        key = f"modelo/{modelo_id}/casilla/continuidad/{continuidad_id}/{field}"
+    else:
+        key = f"modelo/{modelo_id}/revision/{revision_id}/casilla/{casilla_id}/{field}"
+    return _validate_canonical_key_path(key)
+
+
+class CanonicalOccurrenceCandidate(_StrictRecord):
+    """One locale value paired with its identity-derived canonical address."""
+
+    schema_id: str = _CANONICAL_CANDIDATE_SCHEMA
+    modelo_id: str = Field(min_length=1)
+    revision_id: str = Field(min_length=1)
+    casilla_id: str = Field(min_length=1)
+    continuidad_id: str | None = Field(default=None, min_length=1)
+    locale: str
+    field: LocalizationField
+    value: str | None
+    resolution: LocalizationResolution
+    identity_scope: CanonicalOccurrenceScope
+    canonical_key: str = Field(min_length=1)
+
+    @field_validator("modelo_id", "revision_id", "casilla_id")
+    @classmethod
+    def _validate_identifier(cls, value: str) -> str:
+        """Reject empty or whitespace-only candidate identities."""
+        if not value.strip():
+            raise ValueError("canonical candidate identities must not be blank")
+        return value
+
+    @field_validator("locale")
+    @classmethod
+    def _validate_locale(cls, value: str) -> str:
+        """Keep candidate rows bound to the supported locale set."""
+        if value not in _SUPPORTED_LOCALES:
+            raise ValueError(f"unsupported canonical candidate locale {value!r}")
+        return value
+
+    @field_validator("canonical_key")
+    @classmethod
+    def _validate_canonical_key(cls, value: str) -> str:
+        """Require one canonical POSIX address rather than a display token."""
+        return _validate_canonical_key_path(value)
+
+    @model_validator(mode="after")
+    def _validate_candidate(self) -> CanonicalOccurrenceCandidate:
+        """Ensure the address is exactly derived from declared source identity."""
+        expected_scope: CanonicalOccurrenceScope = (
+            "continuity" if self.continuidad_id is not None else "revision_occurrence"
+        )
+        if self.identity_scope != expected_scope:
+            raise ValueError("identity_scope does not match continuidad_id presence")
+        expected_key = canonical_occurrence_key(
+            modelo_id=self.modelo_id,
+            revision_id=self.revision_id,
+            casilla_id=self.casilla_id,
+            continuidad_id=self.continuidad_id,
+            field=self.field,
+        )
+        if self.canonical_key != expected_key:
+            raise ValueError("canonical_key does not match the declared occurrence identity")
+        if self.resolution == "official_spanish" and self.field != "label":
+            raise ValueError("official_spanish resolution is valid only for label candidates")
+        if self.resolution == "absent" and self.value is not None:
+            raise ValueError("absent candidate resolution must not carry a value")
+        if self.resolution != "absent" and self.value is None:
+            raise ValueError("resolved candidate must carry a value")
+        return self
+
+
+class CanonicalOccurrenceCandidates(_StrictRecord):
+    """Deterministic candidate set generated from one resolved matrix."""
+
+    schema_id: str = _CANONICAL_CANDIDATES_SCHEMA
+    corpus_fingerprint: CorpusFingerprint
+    candidate_count: int = Field(ge=0)
+    occurrence_count: int = Field(ge=0)
+    canonical_key_count: int = Field(ge=0)
+    candidates: tuple[CanonicalOccurrenceCandidate, ...]
+
+    @model_validator(mode="after")
+    def _validate_candidates(self) -> CanonicalOccurrenceCandidates:
+        """Reject reordered, duplicated, or incomplete candidate coordinates."""
+        if self.schema_id != _CANONICAL_CANDIDATES_SCHEMA:
+            raise ValueError(f"unsupported canonical candidate set schema {self.schema_id!r}")
+        candidate_keys = tuple(_canonical_candidate_sort_key(candidate) for candidate in self.candidates)
+        if candidate_keys != tuple(sorted(candidate_keys)) or len(candidate_keys) != len(set(candidate_keys)):
+            raise ValueError("canonical candidates must be unique and sorted by source coordinate")
+        if self.candidate_count != len(self.candidates):
+            raise ValueError("candidate_count does not match candidates")
+        occurrence_keys = {
+            (candidate.modelo_id, candidate.revision_id, candidate.casilla_id) for candidate in self.candidates
+        }
+        if self.occurrence_count != len(occurrence_keys):
+            raise ValueError("occurrence_count does not match candidate occurrences")
+        if self.canonical_key_count != len({candidate.canonical_key for candidate in self.candidates}):
+            raise ValueError("canonical_key_count does not match candidate keys")
+
+        expected_coordinates = {(locale, field) for locale in _SUPPORTED_LOCALES for field in _LOCALIZATION_FIELDS}
+        coordinates_by_occurrence: dict[tuple[str, str, str], set[tuple[str, LocalizationField]]] = {}
+        for candidate in self.candidates:
+            coordinates_by_occurrence.setdefault(
+                (candidate.modelo_id, candidate.revision_id, candidate.casilla_id),
+                set(),
+            ).add((candidate.locale, candidate.field))
+        if any(coordinates != expected_coordinates for coordinates in coordinates_by_occurrence.values()):
+            raise ValueError("each occurrence must have one candidate for every locale and field")
+        return self
+
+
 def _validate_relative_path(value: str) -> str:
     """Return ``value`` when it is a canonical POSIX relative path."""
     parsed = PurePosixPath(value)
@@ -299,6 +421,20 @@ def _validate_relative_path(value: str) -> str:
         or any(part in {"", ".", ".."} for part in parsed.parts)
     ):
         raise ValueError(f"path must be a canonical POSIX relative path, got {value!r}")
+    return value
+
+
+def _validate_canonical_key_path(value: str) -> str:
+    """Validate a logical key path while preserving colon-bearing casilla ids."""
+    parsed = PurePosixPath(value)
+    if (
+        not value
+        or parsed.is_absolute()
+        or value != parsed.as_posix()
+        or "\\" in value
+        or any(part in {"", ".", ".."} for part in parsed.parts)
+    ):
+        raise ValueError(f"canonical key must be a POSIX relative path, got {value!r}")
     return value
 
 
@@ -516,6 +652,17 @@ def _resolved_entry_key(entry: ResolvedLocalizationEntry) -> tuple[str, str, str
     return (entry.modelo_id, entry.revision_id, entry.casilla_id, entry.locale, entry.field)
 
 
+def _canonical_candidate_sort_key(candidate: CanonicalOccurrenceCandidate) -> tuple[str, str, str, str, str]:
+    """Return the source-coordinate order for one canonical candidate."""
+    return (
+        candidate.modelo_id,
+        candidate.revision_id,
+        candidate.casilla_id,
+        candidate.locale,
+        candidate.field,
+    )
+
+
 def _resolved_entries_for_casilla(
     *,
     modelo_id: str,
@@ -661,7 +808,56 @@ def extract_resolved_localization_matrix(
     )
 
 
+def generate_canonical_occurrence_candidates(
+    matrix: ResolvedLocalizationMatrix,
+) -> CanonicalOccurrenceCandidates:
+    """Generate identity-derived candidates from one resolved matrix.
+
+    This step serializes only identities already present in the selected
+    occurrence rows. A declared continuity id selects the continuity address;
+    every other occurrence remains revision-exact. No repeated-id, text, or
+    number-based continuity inference occurs here.
+    """
+    candidates = tuple(
+        sorted(
+            (
+                CanonicalOccurrenceCandidate(
+                    modelo_id=entry.modelo_id,
+                    revision_id=entry.revision_id,
+                    casilla_id=entry.casilla_id,
+                    continuidad_id=entry.continuidad_id,
+                    locale=entry.locale,
+                    field=entry.field,
+                    value=entry.value,
+                    resolution=entry.resolution,
+                    identity_scope=("continuity" if entry.continuidad_id is not None else "revision_occurrence"),
+                    canonical_key=canonical_occurrence_key(
+                        modelo_id=entry.modelo_id,
+                        revision_id=entry.revision_id,
+                        casilla_id=entry.casilla_id,
+                        continuidad_id=entry.continuidad_id,
+                        field=entry.field,
+                    ),
+                )
+                for entry in matrix.entries
+            ),
+            key=_canonical_candidate_sort_key,
+        ),
+    )
+    return CanonicalOccurrenceCandidates(
+        corpus_fingerprint=matrix.corpus_fingerprint,
+        candidate_count=len(candidates),
+        occurrence_count=len(
+            {(candidate.modelo_id, candidate.revision_id, candidate.casilla_id) for candidate in candidates}
+        ),
+        canonical_key_count=len({candidate.canonical_key for candidate in candidates}),
+        candidates=candidates,
+    )
+
+
 __all__ = [
+    "CanonicalOccurrenceCandidate",
+    "CanonicalOccurrenceCandidates",
     "CorpusFileFingerprint",
     "CorpusFingerprint",
     "MigrationInventoryError",
@@ -670,6 +866,8 @@ __all__ = [
     "ResolvedLocalizationMatrix",
     "RevisionInventoryEntry",
     "build_source_inventory",
+    "canonical_occurrence_key",
     "extract_resolved_localization_matrix",
     "fingerprint_registry_corpus",
+    "generate_canonical_occurrence_candidates",
 ]
