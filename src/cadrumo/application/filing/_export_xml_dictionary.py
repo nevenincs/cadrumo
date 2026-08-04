@@ -33,7 +33,7 @@ from xml.etree import ElementTree
 from defusedxml import ElementTree as DefusedElementTree
 
 from ...core import Modelo
-from ...core.decimal import coerce_decimal
+from ...core.decimal import coerce_decimal, try_parse_canonical_decimal
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...domain.calculations.registry import (
     CasillaId,
@@ -574,15 +574,34 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
         return f"{value.day}/{value.month}/{value.year}"
     numeric = _NUMERIC_DICTIONARY_TYPE.match(normalized_type)
     if numeric is not None:
-        amount = coerce_decimal(value)
+        scale = int(numeric["scale"])
+        # A text amount is read through the canonical grammar under a cap, which
+        # is what refuses ``1.000`` on a euro-cent row: that text is either one
+        # euro or one thousand and no parser can tell, so it is refused rather
+        # than silently resolved one way. On a row AEAT declares with three
+        # decimals the same text is unambiguous and parses.
+        #
+        # The cap is never below two, so it stays an ambiguity rule rather than
+        # becoming a precision rule. Capping an integer row at its own scale of
+        # zero would refuse ``1.6``, which is unambiguous input this renderer has
+        # always rounded; only a three-digit fraction can be mistaken for a
+        # thousands group.
+        #
+        # A value that already arrives typed carries no such ambiguity and skips
+        # the text grammar entirely.
+        amount = (
+            try_parse_canonical_decimal(value, max_fraction_digits=max(scale, 2))
+            if isinstance(value, str)
+            else coerce_decimal(value)
+        )
         if amount is None:
             raise FilingExportValidationError(
                 f"amount for a {data_type} row could not be read: {value!r}. "
-                "The accepted form is a dot decimal separator with no thousands "
-                "grouping, e.g. 1234.56; the Spanish shape 1.234,56 is refused "
-                "because it cannot be told from a three-decimal figure.",
+                f"The accepted form is a dot decimal separator with at most {scale} "
+                "fractional digit(s) and no thousands grouping, e.g. 1234.56; the "
+                "Spanish shape 1.234,56 is refused because it cannot be told from "
+                "a three-decimal figure.",
             )
-        scale = int(numeric["scale"])
         return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
     return str(value).strip()
 

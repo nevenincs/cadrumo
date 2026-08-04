@@ -200,3 +200,41 @@ def test_the_refusal_does_not_reach_a_value_the_row_can_read() -> None:
     assert _format_xml_dictionary_value("P102", "1234.56") == "1234.56"
     assert _format_xml_dictionary_value("P102", 0) == "0.00"
     assert _format_xml_dictionary_value("X", "1.234,56") == "1.234,56"
+
+
+def test_a_text_amount_that_could_be_a_thousands_group_is_refused() -> None:
+    """``1.000`` on a euro-cent row is ambiguous, so it refuses.
+
+    That text is either one euro or one thousand, and no parser in the tree can
+    tell -- ``coerce_decimal`` and ``parse_spanish_decimal`` both read it as one
+    euro. Silently resolving it either way under-declares by a factor of 1000 or
+    over-declares by the same, on a filed artefact. The canonical grammar's
+    fractional-digit cap is a decision about an undecidable input, and this is
+    the renderer applying it.
+    """
+    with pytest.raises(FilingExportValidationError, match="could not be read"):
+        _format_xml_dictionary_value("P102", "1.000")
+
+
+def test_the_cap_is_an_ambiguity_rule_and_not_a_precision_rule() -> None:
+    """A row AEAT declares with three decimals reads ``1.000`` unambiguously.
+
+    The cap tracks what could be mistaken for a thousands group, not the row's
+    own scale. Capping an integer row at its declared scale of zero would refuse
+    ``1.6`` -- unambiguous input this renderer has always rounded -- so the cap
+    never falls below two while still refusing the three-digit fraction.
+    """
+    assert _format_xml_dictionary_value("P083", "1.000") == "1.000"
+    assert _format_xml_dictionary_value("P060", "1.6") == "2"
+    with pytest.raises(FilingExportValidationError):
+        _format_xml_dictionary_value("P060", "1.000")
+
+
+def test_an_already_typed_amount_skips_the_text_grammar() -> None:
+    """A value that arrives typed carries no ambiguity to resolve.
+
+    The grammar exists to read *text*. A ``Decimal`` or ``int`` already says
+    what it is, so routing it through a text parser could only lose information.
+    """
+    assert _format_xml_dictionary_value("P102", Decimal("1.000")) == "1.00"
+    assert _format_xml_dictionary_value("P102", 0) == "0.00"
