@@ -24,10 +24,11 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
+from types import MappingProxyType
 from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
@@ -42,7 +43,7 @@ from ...domain.calculations.registry import (
     XmlDictionaryEntry,
     xml_dictionary_entries,
 )
-from ...domain.contribuyente import modelo100_ecivil_export_code
+from ...domain.contribuyente import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing import FilingExportError, FilingExportValidationError, ModeloDraft
 from .runtime import RegistrySchemaAccessor
 
@@ -79,6 +80,15 @@ _LOGICAL_DICTIONARY_TYPE = "LGC"
 # the dictionary later is simply not on this list, so it refuses rather than
 # inheriting whatever the last branch happened to do.
 _BOOLEAN_DICTIONARY_TYPES = frozenset({_SINO_DICTIONARY_TYPE, _LOGICAL_DICTIONARY_TYPE})
+
+# The date row type, and the exact form AEAT accepts in it. The pattern is
+# copied from the ``tipo_Fecha`` facet the bundled XSD declares -- an
+# ``xs:string`` restricted to ``([0-9]{1,2}/[0-9]{1,2}/[0-9]{4})`` -- so day and
+# month may be one or two digits and the year must be four. That is exactly what
+# rendering a :class:`~datetime.date` below produces, which is why a value that
+# arrives already typed never meets this check.
+_DATE_DICTIONARY_TYPE = "FEC"
+_DATE_DICTIONARY_TEXT = re.compile(r"[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}")
 
 # The dictionary's numeric type codes are self-describing: ``P<width><scale>``
 # and ``N<width><scale>`` name the field's integer width and its fractional-digit
@@ -406,6 +416,30 @@ def _xml_dictionary_element_order(
     return order
 
 
+# The rows whose rendered text is a domain token that AEAT files under a code of
+# its own: a comunidad reaches the export as ``andalucia`` where the schema
+# enumerates ``01``-``20``, and a marital status as the profile's own value where
+# the schema accepts Estado Civil ``1``-``4``.
+#
+# Applied AFTER :func:`_format_xml_dictionary_value` and never instead of it.
+# That function owns how a value is written; this owns which official code the
+# written value stands for. Collapsing the two would put a second formatting
+# authority beside it, which is the thing this module keeps refusing to grow.
+#
+# A table rather than a branch per field. One special case reads as a special
+# case, but the second starts a list and the third becomes a rule nobody finds by
+# reading the function -- so the next such row is an entry here, not another
+# ``elif``. Each converter is its own domain's authority for its code set,
+# grounded in the same bundled XSD that constrains the attribute, so the mapping
+# is declared once and consumed here rather than restated.
+_MODELO_100_EXPORT_CODE_CONVERTERS: Mapping[str, Callable[[str], str]] = MappingProxyType(
+    {
+        "ECIVIL": modelo100_ecivil_export_code,
+        "ZCCAD": modelo100_ccaa_codigo,
+    },
+)
+
+
 def _xml_dictionary_rendered_value(
     entry: XmlDictionaryEntry,
     *,
@@ -422,9 +456,10 @@ def _xml_dictionary_rendered_value(
     if draft.modelo == Modelo.M100:
         raw = _modelo_100_sign_branch_value(entry, raw)
     rendered = _format_xml_dictionary_value(entry.data_type, raw)
-    if draft.modelo == Modelo.M100 and entry.field_id == "ECIVIL":
+    converter = _MODELO_100_EXPORT_CODE_CONVERTERS.get(entry.field_id) if draft.modelo == Modelo.M100 else None
+    if converter is not None:
         try:
-            return modelo100_ecivil_export_code(rendered)
+            return converter(rendered)
         except ValueError as exc:
             raise FilingExportValidationError(str(exc)) from exc
     return rendered
@@ -678,7 +713,25 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
                 "a three-decimal figure.",
             )
         return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
-    return str(value).strip()
+    text = str(value).strip()
+    if normalized_type == _DATE_DICTIONARY_TYPE and not _DATE_DICTIONARY_TEXT.fullmatch(text):
+        # A date row reached by text rather than by a ``date``. The typed value
+        # is rendered above and never arrives here, so this is the case where
+        # something upstream held a date as a string -- and an ISO one renders
+        # verbatim, which AEAT's own ``tipo_Fecha`` pattern rejects.
+        #
+        # Checked rather than parsed, deliberately. Reading ``03/04/2024`` would
+        # mean choosing between day-month and month-day, and this renderer has
+        # no basis for that choice; the numeric branch above refuses an
+        # ambiguous amount for the same reason. Text already in AEAT's form
+        # passes through untouched, so the check costs a correct caller nothing.
+        raise FilingExportValidationError(
+            f"date for a {data_type} row is not in the form AEAT accepts: {value!r}. "
+            "The accepted form is d/m/yyyy with a four-digit year, e.g. 2/1/1980. "
+            "Supply the value as a date rather than as text and it is rendered "
+            "correctly without this check.",
+        )
+    return text
 
 
 def _set_xml_dictionary_path(

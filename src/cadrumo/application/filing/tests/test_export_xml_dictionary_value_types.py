@@ -23,6 +23,7 @@ happens to be populated, which document validation is not.
 from __future__ import annotations
 
 import re
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from xml.etree.ElementTree import Element
@@ -298,3 +299,42 @@ def test_a_row_type_aeat_adds_later_refuses_a_boolean_by_default() -> None:
     """
     with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
         _format_xml_dictionary_value("ZZZ", True)
+
+
+def test_a_date_row_refuses_text_that_is_not_in_aeats_form() -> None:
+    """An ISO date on a date row refuses rather than rendering verbatim.
+
+    Reachable, unlike the boolean guard above, and measured end to end: all 42
+    casillas addressing a ``FEC`` row in the 2024 revision declare the registry's
+    GENERIC ``text`` family, whose validator is an identity -- it accepts
+    ``1980-01-02``, ``not a date`` and ``''`` alike -- so an ISO date passes the
+    input door untouched and lands here as a string.
+
+    The renderer refuses instead of parsing. Reading ``03/04/2024`` would mean
+    choosing between day-month and month-day with no basis for the choice, which
+    is the same undecidable-input situation the amount grammar already refuses.
+
+    This is a backstop, not the fix. The root cause is that those casillas
+    declare ``text`` while the registry has a ``date`` family that no casilla in
+    the tree uses; declaring it would route them through the typed channel and
+    make this check unreachable again.
+    """
+    for unusable in ("1980-01-02", "02-01-1980", "1980/01/02", "2/1/80", "notadate", ""):
+        with pytest.raises(FilingExportValidationError, match="not in the form AEAT accepts"):
+            _format_xml_dictionary_value("FEC", unusable)
+
+
+def test_a_date_row_accepts_the_form_aeat_declares() -> None:
+    """Positive control: AEAT's own pattern decides what passes.
+
+    A guard that refused every string would satisfy the refusal test above while
+    breaking every correctly-supplied date, so the accepted forms are checked
+    against the ``tipo_Fecha`` facet rather than against a restatement of the
+    regex in the renderer. One- and two-digit day and month both pass because the
+    facet allows both.
+    """
+    for usable in ("2/1/1980", "02/01/1980", "31/12/2024"):
+        rendered = _format_xml_dictionary_value("FEC", usable)
+        assert _accepts("tipo_Fecha", rendered), f"tipo_Fecha rejects {rendered!r}"
+    assert _format_xml_dictionary_value("FEC", date(1980, 1, 2)) == "2/1/1980"
+    assert _accepts("tipo_Fecha", _format_xml_dictionary_value("FEC", date(1980, 1, 2)))
