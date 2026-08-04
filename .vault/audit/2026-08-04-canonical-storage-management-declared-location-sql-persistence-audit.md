@@ -55,17 +55,62 @@ _rotation.py:456                     store_dir=Path(settings.cadrumo_drafts_dir)
 `cadrumo.domain.filing.drafts`, declared at `_namespace_registry.py:888` —
 byte-for-byte the shape recorded above for `cadrumo_justificantes_dir`.
 
-**The four are not scattered. Two of them are twenty-three lines apart.**
-`_rotation.py:456` is `drafts`; `_rotation.py:479` is `justificantes`. Both are
-entries in the same `default_rotation_plan` function, reached the same way, both
-describing a file shape nothing writes.
+**Superseded, and by a stronger account.** This finding first said "two of the
+four are twenty-three lines apart", which was **proximity**. Queried against
+`STORAGE_TAXONOMY` rather than read off line numbers, the real relation is
+sharper: **all four declare
+`consumer_module = "adapters/persistence/storage/_rotation.py"` and nothing
+else.** Verified at `53400cfce3` for `DRAFTS`, `JUSTIFICANTES`, `ATTACHMENTS`
+and `ATTACHMENTS_MANIFESTS`.
 
-That distinction carries the finding. **"Four instances" invites a search for a
-fifth; "four instances, two in one function" names a plausible common origin** —
-a rotation plan enumerating locations from the taxonomy at a time when those
-locations were filesystem-backed, and surviving the migration of their contents
-into SQL because nothing forces a plan entry to prove its target still receives
-bytes.
+**One shared consumer, and the consumer is a sweep.** `default_rotation_plan`
+walks those directories to re-encrypt `.envelope.json` files on master-key
+rotation — **it reads; it does not write.** So the four are not four
+coincidences and not a proximity cluster: they are one function's view of four
+locations, and that view is read-only by construction. A rotation plan
+enumerating locations that were filesystem-backed, surviving the migration of
+their contents into SQL because nothing forces a plan entry to prove its target
+still receives bytes.
+
+That is a mechanism, and it replaces the proximity framing rather than
+supplementing it. Line adjacency was the visible shadow of a shared declaration.
+
+### the-answer-was-in-the-production-docstrings-the-whole-time | high | Five instruments were built to observe a property the owning modules already state
+
+```
+adapters/persistence/profile/filing_drafts.py:9   "no plaintext draft JSON or envelope file lands on disk"
+adapters/persistence/profile/justificante.py:7    "no plaintext metadata JSON or envelope file lands on disk"
+```
+
+Verified at `53400cfce3`. Same sentence, same architecture, in the modules that
+own the persistence.
+
+**Five instruments were built to discover this**: a filesystem watch, a
+non-interactive CLI drive, a runtime accessor hook, and the two static passes
+recorded below. Three of the five were withdrawn before or after producing a
+result, and every one of them was an attempt to *observe* whether bytes land at
+a location whose owning module **says in its first paragraph that they do not.**
+
+**The lesson is cheap and it is not about any of the instruments.** Read what the
+code claims before building something to find out. A docstring is not proof — it
+can be stale, and that is exactly why `ATTACHMENTS`' test matters — but it is a
+free hypothesis with a named author, and it would have pointed every one of those
+five instruments at a much narrower question.
+
+**So the finding restates, and it is a better position than this audit first
+recorded:**
+
+```
+ATTACHMENTS              proven by test (test_repository.py:130)
+DRAFTS, JUSTIFICANTES    stated in production docstrings, untested
+ATTACHMENTS_MANIFESTS    no coverage of any kind
+```
+
+**A test-coverage gap, not an epistemic one — for these four.** The population
+claim below is unchanged and still holds: *how many declared members are dormant*
+remains unmeasurable at reasonable cost. But for the four in hand we now have
+production-code evidence rather than an unbounded absence, and the remaining work
+is three assertions modelled on the one that exists.
 
 **It also bounds a question that the population question is not.** The
 population — how many declared members are dormant — is not statically
