@@ -30,7 +30,6 @@ sidecars; ``just check-corpus-text`` is the freshness gate.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import sys
 from pathlib import Path
 from typing import Final
@@ -44,6 +43,7 @@ from cadrumo.core import (
     ManualCorpusTextSidecar,
     normalise_corpus_text,
 )
+from cadrumo.core.hashing import sha256_file
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -51,11 +51,6 @@ _UTF_8: Final[str] = "utf-8"
 _REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 _CORPUS_ROOT: Final[Path] = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _SIDECAR_ROOT: Final[Path] = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
-
-
-def _sha256_hex(path: Path) -> str:
-    """Return the lowercase hex sha256 digest of a file's bytes."""
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _sidecar_path_for(pdf_path: Path) -> Path:
@@ -170,7 +165,7 @@ def extract_all(*, check: bool = False) -> int:
 
     stale: list[Path] = []
     for pdf_path in pdf_paths:
-        sha256 = _sha256_hex(pdf_path)
+        sha256 = sha256_file(pdf_path)
         if _is_current(pdf_path, sha256):
             continue
         stale.append(pdf_path)
