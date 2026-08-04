@@ -15,6 +15,7 @@ from .....core.resources import bundled_path
 from .. import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
+    CasillaId,
     ExportFieldDefinition,
     ExtractionTargetDefinition,
     FormulaExpression,
@@ -30,6 +31,7 @@ from .. import (
     build_snapshot,
     load_modelo_file,
     load_registry_tree,
+    validated_casilla_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -51,6 +53,12 @@ __all__ = [
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 _MODELO_130_DIR = _REGISTRY_ROOT / "modelos" / "130"
+
+#: The two lowest numeric casilla ids, used across this family's split modules
+#: to build minimal fixtures. Declared once here rather than per module: an
+#: identical private copy in each part is the duplication a split invites, and
+#: the validated id is the same object in every one of them.
+_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 
 
 @cache
