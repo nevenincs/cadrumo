@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:8ce616887bfb3e3fce94b1a26c06f8fb1361acbdada59538c2fd9a50fa7fcfe0'
+body_hash: 'sha256:a6bdad6de7e7b29ca9213ba046f4dea9c6b959b41e7eeb68b174bb7c883382b8'
 step_id: 'S78'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
@@ -604,3 +604,123 @@ sampling, not a package-by-package walk.
     response count fields, a synthetic pydantic model's own default for a
     detector's self-test). Zero migrate beyond the 5 sites above.
 - **Commit**: `7275e20b22`.
+
+## Batch: `cadrumo.db` literal band (`BUCKET_DATABASE_FILE`, seven-chunk migrate population)
+
+Method divergence recorded as fact, same shape as every batch above: the
+Step's specified gate (provenance gate scoped to the package, plus that
+package's own suite) did not run. Execution was a full per-site read of
+every raw hit, chunked by directory for landing, each chunk verified with a
+targeted `pytest` run plus `ruff check` -- not a package-by-package
+provenance-gate walk.
+
+This band was assigned as a coarse pattern-sample first; team-lead required
+the full per-site read before any chunk landed, on the stated reasoning
+that a wrong `migrate` classification is silent (a test that passes while
+defending nothing) where a wrong `injected` rename is loud (an immediate
+red test) -- so sampling cannot substitute for reading every site. The
+full read, not the sample, is what this record reflects.
+
+- **Enumeration method**: a raw literal grep for `"cadrumo.db"` across
+  `src/cadrumo`, filtered to test paths, followed by a full per-site read
+  of every hit (not a sample) classifying each as MIGRATE / PIN / INJECTED
+  / different-namespace / accessor-is-the-subject, per the same discipline
+  the rest of this Step's bands used. The equality-target rule applied
+  throughout: an assertion comparing the taxonomy accessor's output
+  against an independently-written literal is safe to migrate onto the
+  same accessor; an assertion comparing the accessor against ANOTHER call
+  to the same accessor is not, because migrating the literal side
+  collapses the check to the accessor compared against itself. "Does the
+  accessor have an opinion about this property" is not the right
+  question -- what matters is what sits on the OTHER side of the
+  comparison.
+- **Verification actually run, per chunk**: a targeted `pytest` invocation
+  scoped to that chunk's touched files (never the full suite) plus `ruff
+  check` on the same files, both green before landing; each chunk
+  committed separately, `git show <sha> --numstat` checked against the
+  stated file/insertion counts before moving to the next chunk.
+- **Site list**: 45 MIGRATE sites across 28 files, landed in seven chunks
+  chunked by directory, each chunk's commit stating its own file and site
+  count (verified again here against the commits' own `--stat` output,
+  totalling exactly 45/28):
+  - Chunk 1/7 (`91921ad634`, storage): `test_wal_sidecar_accounting.py`,
+    `test_submission_repository.py` -- 2 files, 3 sites. The local
+    `_db_path(db_dir)` helper wrapping the same join at two call sites was
+    deleted rather than kept as a second wrapper around the accessor.
+  - Chunk 2/7 (`f0b748ca8a`, `application/live/tests`): 8 files, 11 sites
+    (`_filed_capture_history_support.py`, `test_borrador_100_roundtrip.py`,
+    `test_expedientes.py`, `test_iva_remote_state_acquisition.py`,
+    `test_iva_wallet_capture_backend.py`, `test_justificante_capture.py`,
+    `test_notifications.py`, `test_verify.py`).
+  - Chunk 3/7 (`5b73dcb883`, application/workflow + user_profile +
+    calculations + domain/usage_ratios): 4 files, 10 sites
+    (`test_observations_repository_roundtrip.py`, `test_lifecycle.py`,
+    `test_per_bucket_engine_isolation.py`, `test_service.py`).
+    `test_per_bucket_engine_isolation.py`'s structural assertion
+    (`a_db.parent.parent.name == bucket_id`) stays meaningful under the
+    accessor because the comparison target is an independent literal
+    (`_BUCKET_A_ID`), not a second accessor call -- the equality-target
+    rule applied to a site that is NOT itself a plain roundtrip.
+  - Chunk 4/7 (`2f59886f75`, `adapters/persistence/profile/tests`): 5
+    files, 5 sites (`test_assets.py`,
+    `test_calculation_repository_roundtrip.py`, `test_inventory.py`,
+    `test_justificante_repository.py`, `test_secure_model_document.py`).
+  - Chunk 5/7 (`5a9b8f20b1`, `domain/attachments` + `domain/modelos` +
+    `domain/submission`): 6 files, 7 sites (`test_repository.py`,
+    `test_filing_record_repository_roundtrip.py`,
+    `test_participation_index_roundtrip.py`,
+    `test_secure_storage_roundtrip.py`,
+    `test_verification_report_roundtrip.py`, `test_repository.py`
+    [submission]). Self-caught arithmetic slip, recorded in the commit
+    message itself: reported as 8 sites in an earlier count, corrected to
+    7 before landing -- the classification did not change, only the
+    subtraction.
+  - Chunk 6/7 (`73021c6b94`, `adapters/outbound/llm` + `adapters/outbound/
+    aeat/sede`): 2 files, 6 sites (`test_redaction.py`,
+    `test_observation_store.py`).
+  - Chunk 7/7 (`d8aa97cc8c`, final, `tests/test_secure_sql.py`): 1 file, 3
+    of 6 sites migrated. The other 3 in the same file stay literal on
+    purpose: two (lines 90, 98) are direct consequences of
+    `isolated_ephemeral_secure_sql`'s own `database_name="cadrumo.db"`
+    default parameter (`tests/secure_sql.py:278`), not independent
+    choices; one (line 154, `assert not (profile.storage_root /
+    "cadrumo.db").exists()`) is a routing-correctness pin verifying no
+    stray root-fallback file exists alongside the routed bucket database,
+    not scaffolding. Mid-landing fix: line 96's `control_database` had
+    been hand-composed from `storage_root` and a bucket-id string with no
+    `TestRuntimeProfile` in scope at that point, so it routes through
+    `bucket_paths(storage_root, bucket_id).database_file` rather than a
+    `profile.paths` accessor -- caught and corrected before the chunk
+    landed, not after.
+- **PIN sites independently reconfirmed in this pass** (a subset of the
+  wider PIN population; the remainder is reported below rather than
+  re-derived): `core/tests/test_storage_route_classification.py` (7
+  sites, `cadrumo.db`/`buckets`/`db`/`active-profile` in the same chained
+  expressions, declared via `722cdc1c67` and independently re-read during
+  the void-assertion-class audit today -- the docstring names the exact
+  reason: the `database_path` round-trip assertions would tautologically
+  pass against the same accessor both derivation steps already consume,
+  and the two `not (... ).exists()` refusal guards would be trivially
+  satisfied by a wrong accessor target); `application/tests/
+  test_config_reset.py:169,214` (2 sites, an **adversarial fixture** pin,
+  distinct in kind from the other seventeen: the test deliberately writes
+  a decoy file literally named `cadrumo.db` at the reset root to prove the
+  config-reset scanner does not mistake it for a bucket-id-named
+  directory -- `assert all(target.bucket_id != "cadrumo.db" for target in
+  operation.targets)` -- so the literal IS the test subject here, not
+  scaffolding reaching past it, and migrating it onto the accessor would
+  remove the exact decoy the assertion needs).
+- **Remainder of the classification, relayed rather than re-derived in
+  this pass**: the full per-site read that gated the chunking reported 19
+  PIN and 3 INJECTED sites in total. 9 of the 19 PIN sites are
+  independently reconfirmed above against current source; the other 10,
+  and the identity of the 3 INJECTED sites, are not re-verified against
+  git artifacts in this record -- they were reported to `team-lead`
+  during the original read and are not reconstructed here from memory
+  alone, per the standing instruction to record `NOT STATED` rather than
+  invent a plausible list. A follow-up pass that re-runs the same grep
+  and re-reads every non-MIGRATE hit against current source would settle
+  this rather than trusting either the original report or this partial
+  reconfirmation.
+- **Commits**: `91921ad634`, `f0b748ca8a`, `5b73dcb883`, `2f59886f75`,
+  `5a9b8f20b1`, `73021c6b94`, `d8aa97cc8c`.
