@@ -1,9 +1,9 @@
 {
   "_comment": "GENERATED limit table for the size ratchet in src/cadrumo/tests/test_codebase_size_budgets.py. Do NOT hand-edit the 'modules' or 'callables' numbers: regenerate with `python -m dev.audit.size_budget --write-baseline`, then review and commit the diff. Every limit is a measured size plus a declared headroom, and the gate fails BOTH when an entry grows past its limit and when a limit drifts further above its subject than the declared slack tolerance, so a pin cannot silently outlive the size it was taken from. 'notes' is the one hand-maintained section: prose only, never numbers, carried forward verbatim across regeneration and dropped when its key disappears. Keys are repo-relative POSIX paths, and 'path::function' for callables.",
   "generated": {
-    "scanned_modules": 4050,
-    "scanned_callables": 10735,
-    "module_entries": 27,
+    "scanned_modules": 4109,
+    "scanned_callables": 10813,
+    "module_entries": 26,
     "callable_entries": 19
   },
   "notes": {
@@ -37,21 +37,20 @@
     "src/cadrumo/application/modelo/_verification_actions.py": 1431,
     "src/cadrumo/application/wizard/_commands.py": 1955,
     "src/cadrumo/application/workflow/_engine.py": 1356,
-    "src/cadrumo/core/config.py": 1554,
+    "src/cadrumo/core/config.py": 1574,
     "src/cadrumo/domain/calculations/registry/_applicability.py": 1751,
     "src/cadrumo/domain/calculations/registry/_formula_runtime.py": 1633,
     "src/cadrumo/domain/calculations/registry/_ledger_bindings.py": 1335,
     "src/cadrumo/domain/calculations/registry/_loader.py": 1398,
     "src/cadrumo/domain/calculations/registry/_record_design.py": 1341,
-    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1464,
+    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1487,
     "src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py": 1390,
     "src/cadrumo/domain/transactions/_models.py": 1541,
-    "src/cadrumo/entrypoints/cli/__init__.py": 1414,
-    "src/cadrumo/entrypoints/cli/_app_live.py": 1397,
+    "src/cadrumo/entrypoints/cli/_app_live.py": 1443,
     "src/cadrumo/entrypoints/cli/_config_payloads.py": 1545,
     "src/cadrumo/entrypoints/cli/_ledger_read_cli.py": 1316,
     "src/cadrumo/entrypoints/cli/_modelo.py": 1353,
-    "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1475
+    "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1478
   },
   "callables": {
     "src/cadrumo/application/aggregation/_iva_ledger.py::_classify_iva_transaction": 219,
