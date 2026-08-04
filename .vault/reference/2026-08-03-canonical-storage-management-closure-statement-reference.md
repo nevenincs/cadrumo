@@ -75,11 +75,25 @@ outweighed a "no" here** — that asymmetry is why this section stays first
 even now that it is closed, rather than being folded into the numbered
 list below.
 
-## What "enrolled" means — the ruling, not an inference
+## What "enrolled" means — see ADR `R5`, which now rules it
 
-Stated here rather than left to be inferred from a ratio, because the two
-available readings **change what "done" means by roughly a factor of four** and
-the criterion's original wording does not distinguish them.
+**The decision lives in the ADR, not here.** `R5` carries an explicit amendment
+clause: a read of a `Path`-typed `Settings` field bound to a taxonomy member
+**is** enrolled, and only re-typing a segment escapes. This section is a pointer
+and a summary; where the two differ, `R5` governs.
+
+It was written here first, as a lead's ruling inscribed in a closure statement,
+which was the wrong home — a closure document reporting compliance with a
+decision should cite the decision, not contain it. Worse, the ruling was made
+without reading `R5`, whose affirmative sentence says *produced by that accessor*
+and whose five disqualifiers do not mention a field read. The gap was real; the
+ruling was defensible on `R6`'s enrollment-unit logic and contradicted `R5` as
+written. It is now an amendment to `R5` rather than a paragraph citing a message.
+
+Summarised, because a reader of this document should not have to leave it to know
+what "done" means — the two available readings **change what "done" means by
+roughly a factor of two**, and the criterion's original wording did not
+distinguish them.
 
 ```
 storage_path(StorageCategory.X)   ENROLLED
