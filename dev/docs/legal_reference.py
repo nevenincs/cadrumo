@@ -435,6 +435,8 @@ def _validate_records(records: tuple[LegalProvisionRecord, ...]) -> None:
     for record in records:
         for field in _RENDERED_TEXT_FIELDS:
             value = getattr(record, field)
+            if value is None:
+                continue
             if not isinstance(value, str):
                 raise LegalReferenceError(
                     f"legal entry {record.legal_id!r} field {field!r} must be a string",
