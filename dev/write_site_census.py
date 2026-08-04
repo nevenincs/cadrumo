@@ -95,22 +95,40 @@ write primitive ever consumes it. Such a site's ``primitive`` field reads
 ``<expression>``, distinguishing "seen as a bare path expression" honestly
 from a real write call.
 
-**"Injected-but-constrained" is a real defect class this widened walk can
-catch mechanically.** A literal that reads as free (``temporary`` or
+**"Injected-but-constrained" is a real defect class, and this check does not
+reach most of it.** A literal that reads as free (``temporary`` or
 ``pass_through`` -- the test itself supplied it) can secretly be
-**required** to match what a sibling fixture or a spawned child process
-independently derives from the real accessor -- renaming it then breaks a
-cross-process handoff that only a live test run reveals, never a read. The
-constrained check is a coarse, cheap-false-positive, expensive-false-negative
-heuristic: a ``temporary``/``pass_through`` site's :func:`_literal_tail`
-(the contiguous trailing run of string-literal join segments) is flagged
+**required** to match what a sibling fixture, a spawned child process, or the
+*production code under test* independently derives -- renaming it then
+breaks, or silently voids, a test that only a live run (or a careful read of
+the callee) would reveal. The constrained check is a coarse heuristic that
+establishes coincidence plus module-local co-occurrence, never certainty: a
+``temporary``/``pass_through`` site's :func:`_literal_tail` (the contiguous
+trailing run of string-literal join segments) is flagged
 :attr:`WriteSite.constrained` when a segment coincides with a declared
 :data:`~cadrumo.core.STORAGE_TAXONOMY` subpath or one of its path parts,
 **and** the same module also references a real storage accessor or spawns a
-subprocess (:func:`_module_signals_constraint_risk`). It cannot see a
-cross-module fixture chain -- module-local co-occurrence is the whole
-signal -- so a constrained site outside that reach still needs a human read,
-same as any other ``local``.
+subprocess (:func:`_module_signals_constraint_risk`).
+
+**Measured, not assumed, to be an unsafe filter.** A random sample of 30
+sites from the population this check silently discards (temporary/
+pass_through, taxonomy-coincident, but module-signals-risk false) found 7
+genuinely rename-sensitive -- roughly 23%, Wilson 95% CI ~12-41%. Reading the
+five that break outright showed the dominant real mechanism is not a
+co-occurrence a wider vocabulary or a cross-module join could reach: the
+constraint lives in the *callee's implementation* (a production function
+deriving the same segment internally) while the caller's text names no
+marker at all, so there is nothing in the calling module to join on. Two
+more sites survive a rename by passing **vacuously** (an emptiness/absence
+assertion keeps passing once the thing it should have found moved) rather
+than failing loudly -- invisible to any framing built around "a rename would
+break it". Do not extend :data:`CONSTRAINT_RISK_SIGNALS`'s vocabulary to
+chase this: a targeted fix (adding a ``CADRUMO_*`` env-key check) was
+measured to recover the two known sweep misses but, per the sample above,
+addresses only a minority of the real risk and was retracted rather than
+shipped. :attr:`WriteSite.constrained` is not a trusted finding generator at
+any scope -- reading its output can surface a real site, but a clean run
+proves nothing about the sites it never printed.
 
 Usage::
 
@@ -206,6 +224,13 @@ BARE_EXPRESSION: Final[str] = "<expression>"
 #: batch actually were: a spawned CLI child, or a sibling fixture, deriving
 #: the same location from the real accessor while the site under test reads
 #: as free. See :func:`_module_signals_constraint_risk`.
+#:
+#: NOT extended with a ``CADRUMO_*`` env-var-key string-constant check, nor
+#: narrowed by excluding the ``root_dir``/``store_dir`` family -- both were
+#: proposed, measured, and retracted. See the module docstring's
+#: "injected-but-constrained" paragraph: a sampled recall read of the
+#: never-signals-risk discard pile found the check's dominant real miss is
+#: not a co-occurrence gap at all, so no signal-set tuning closes it.
 CONSTRAINT_RISK_SIGNALS: Final[frozenset[str]] = frozenset({"subprocess", "Popen", "CliRunner", *TAXONOMY_MARKERS})
 
 
@@ -670,7 +695,7 @@ def main(argv: list[str] | None = None) -> int:
     for site in ambiguous:
         print(f"  {site.module}:{site.line}  {site.primitive}({site.origin})")
     constrained = [site for site in sites if site.constrained]
-    print(f"\ninjected-but-constrained -- classification is pin, a rename would break it ({len(constrained)}):")
+    print(f"\ninjected-but-constrained -- coarse heuristic, read before trusting ({len(constrained)}):")
     for site in constrained:
         print(f"  {site.module}:{site.line}  {site.primitive}({site.origin})")
     return 0

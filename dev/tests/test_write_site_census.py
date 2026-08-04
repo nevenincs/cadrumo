@@ -420,8 +420,13 @@ def test_a_literal_matching_a_taxonomy_subpath_is_constrained_when_the_module_sp
 
 
 def test_the_same_literal_is_not_constrained_without_a_co_located_risk_signal() -> None:
-    """A taxonomy-coincident literal alone is not enough -- nothing in the module suggests a shared derivation."""
-    source = 'def build(tmp_path):\n    overrides = {"CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets")}\n'
+    """A taxonomy-coincident literal alone is not enough -- nothing in the module suggests a shared derivation.
+
+    No accessor/subprocess/CliRunner name and, deliberately, no CADRUMO_*
+    string constant either -- the env-var-key dict form belongs to the
+    positive-control test above; this is the genuine risk-free negative.
+    """
+    source = 'def build(tmp_path):\n    target = tmp_path / "secrets"\n    return str(target)\n'
     assert not _constrained_bare_chain_at(source)
 
 
