@@ -13,8 +13,10 @@ make an exported artefact verify as drift against itself.
 
 It is one declared exception, not a precedence rule. PH18 is the sole
 element-versus-attribute disagreement in 12,210 dictionary rows across all six
-revisions, and a rule granting the XSD blanket authority would generalise from a
-single instance onto a file that has itself been edited in this repository.
+revisions, so a rule granting the XSD blanket authority over the dictionary would
+generalise from a single instance — and, because AEAT republishes these schemas
+mid-year, would go on adopting whatever a later publication changes without
+anyone reviewing it.
 """
 
 from __future__ import annotations
@@ -106,9 +108,10 @@ def test_no_other_row_is_overridden() -> None:
 def test_every_override_records_why_it_overrules_aeat() -> None:
     """The claim that AEAT's own dictionary is wrong has to be auditable.
 
-    A bundled corpus file can also have been edited in this repository, so
-    "it disagrees with the XSD" is not on its own sufficient grounds and the
-    evidence must travel with the override rather than live in a commit message.
+    "It disagrees with the XSD" is not sufficient grounds on its own — AEAT
+    republishes these schemas mid-year, so which of two AEAT artefacts to believe
+    is a reviewed judgement about a specific row. The evidence therefore has to
+    travel with the override rather than live in a commit message.
     """
     for filing_year in range(2020, 2026):
         for override in _modelo_100_layout(filing_year).dictionary_path_overrides:

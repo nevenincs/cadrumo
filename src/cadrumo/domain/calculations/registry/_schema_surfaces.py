@@ -793,10 +793,12 @@ class XmlDictionaryPathOverride(RegistryModel):
     declared here instead, beside the layout that consumes it.
 
     Each override carries the evidence for itself in ``reason``. That is not
-    decoration: the override asserts that AEAT's published dictionary is wrong,
-    which is a claim a later reader must be able to audit rather than take on
-    trust — especially since a bundled corpus file can also have been edited by
-    us, so "it disagrees with the XSD" is not on its own sufficient grounds.
+    decoration: the override asserts that AEAT's own published dictionary is
+    wrong about a row, which is a claim a later reader must be able to audit
+    rather than take on trust. "It disagrees with the XSD" is not sufficient
+    grounds on its own, because AEAT republishes these schemas mid-year — so
+    which of two AEAT artefacts to believe is a reviewed judgement about a
+    specific row, never a fact derivable from the disagreement itself.
     """
 
     field_id: str = Field(min_length=1, max_length=64)
