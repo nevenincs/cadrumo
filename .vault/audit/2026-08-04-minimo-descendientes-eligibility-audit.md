@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:43a82fa4549974588c508059eec7cffb9251dbb052f420b310afa5158f17e20e'
+body_hash: 'sha256:9faf2e091ba57c0322a69112bce2c59bb96b3aec441d4fa3e2835cac840e6df1'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -97,6 +97,41 @@ duplicate-authority outcome the canonical-home discipline exists to prevent. The
 handover line on the legal entry's own notes, where the next author will actually be looking,
 rather than in an audit they may never open.
 
+
+### 5. MEDIUM — the three new descendiente pages are traversed and never answered
+
+Raised in a follow-up pass after the four above, and reproduced independently by the
+coordinator. The two established descendiente pages appear in four and six wizard test
+files respectively. The three pages this campaign added appear in **zero**, and the CLI
+door-surface test has zero hits for any of their tokens.
+
+The zero is not an artefact of a generic page-set iteration — that was checked before the
+finding was trusted, and none exists. The one genuine end-to-end walk drives the real flow
+definition, but its canonical answer set supplies only birth date, convivencia, guardería
+spend, adoption date and NIF. The three new pages sit unconditionally in the middle of the
+page sequence, so they are walked past and never answered.
+
+What that leaves unexercised: the new rentas non-negative validator never fires; the
+prorrata page's two choices are never recorded; and the tri-state distinction between an
+absent answer and an explicit decline never runs through the wizard, only at the domain
+layer.
+
+The wiring itself was checked specifically for a registered-but-unattached defect and is
+sound at every point examined, and the tri-state survives end to end by design — the
+canonical parser explicitly refuses to collapse a blank onto a false, and the encoded token
+is truthy so it survives the drop-blank filter. So this is not a live defect. Nothing checks
+that it stays that way.
+
+Tracked as a Step rather than a deferral, on the strength of the direction involved: an
+explicit decline on the prorrata page is the answer that *claims the whole mínimo*, an
+operator asserting sole entitlement. The ADR promises an explicit per-descendant value always
+beats the derivation; that promise is pinned at the predicate and not at the surface which
+produces the value. This campaign has now produced two defects in exactly that shape — a
+collector that existed and was merely unexercised, and a refusal test that could not
+discriminate its own guard — which is why an unexercised surface here is not treated as
+merely a coverage number.
+
+
 ## Verified clean
 
 The three claims flagged as most at risk before the review all hold.
@@ -119,6 +154,27 @@ campaign does not have the shape the discipline warns about.
 **Every remaining behavioural promise in the ADR has a named test** — explicit-override-wins,
 the spouse-record signal, shared-custody-remains-one-trigger, and anualidades sharing the same
 predicate.
+
+
+**The thresholds were re-measured per revision, not inferred from the gate.** Every one of
+the twelve parameters exists and carries the expected figure in all six revisions, read
+through the validated authority. That live probe was worth running rather than trusting the
+shipped gate, and for a reason worth recording: the resolvability test asserts only that each
+parameter is positive, so a parameter mis-valued at the *other* threshold's figure would pass
+it. The values are separately grounded against the LIRPF text across the same six years by a
+different gate. The division of labour is sound and the coverage is real — but neither gate
+alone would catch a swapped figure, and only reading both establishes that.
+
+**The four-failure attribution in the verification Step re-derives correctly.** Re-derived
+rather than inherited, because attribution in a shared worktree is this project's most
+error-prone class. The count survives a probe that gets it wrong: three of the four repaired
+sites became negative pins and the fourth became a positive per-child assertion, so counting
+pins undercounts. The failures were caused by an emitter removed in the *sibling* campaign's
+commit twelve minutes earlier, which is the load-bearing half of the claim and justifies the
+decision to decline the repair. Agent-level attribution within that is not recoverable — one
+shared git identity means author metadata distinguishes nothing — and is immaterial to the
+judgement, which rested on cross-campaign ownership.
+
 
 ## The live legal cross-check
 
