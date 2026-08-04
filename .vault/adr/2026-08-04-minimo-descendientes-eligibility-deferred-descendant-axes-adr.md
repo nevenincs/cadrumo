@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:62e442d3d2030e5bfcc6546898d6a4d229695c2055c727392bbdb2ea7022f66d'
+body_hash: 'sha256:e5761bd21fe30fbe3a0d06cb6d7ffc86a72f69f09ec8ac6a03650263f9b476ae'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -143,6 +143,44 @@ hard-codes its own phase and row counts, so any structural addition makes it ina
 itself. That is the same class as a gate whose prose argued against its own scope, found and
 fixed in the decimal campaign - documentation a reader will act on, describing a mechanism that
 has moved. Worth correcting in whichever change next touches that plan.
+
+
+### The spend window's upper bound: grounded, and it is regional
+
+The design review flagged the window's upper bound as REASONED and unverified — it read the
+boundary as September of the calendar year the child turns three, and said so plainly rather
+than asserting it. That grounding has now run against the live authority and the answer is
+different, in a way that strengthens the recommendation rather than merely confirming it.
+
+The authority states the rule and then declines to fix a month: the eligible window runs from
+the child's third birthday **until the month before the one in which the second cycle of
+infant education may begin**, and that is *"determined by when the second cycle of infant
+education may begin in each region, not by a fixed calendar month."* No worked example with
+concrete months is given.
+
+So the boundary is a **per-comunidad schooling-calendar determination**, not a national
+constant. That converts the argument for monthly primaries from prudent to forced:
+
+- Every pre-split shape — a post-birthday split, a three-way split, an operator-supplied
+  eligible figure — requires the boundary to be known **at the moment the data is written**.
+  It is not knowable there, because it depends on the filer's comunidad and on a calendar the
+  application does not hold.
+- A monthly map defers the determination to computation, where the comunidad is already
+  available on the profile. The persisted shape stays independent of a rule that varies by
+  region and can change.
+
+**A new precondition follows, and it is not the one the review named.** The engine cannot
+hard-code a month either. Applying the window requires a per-comunidad rule for when the
+second cycle may begin — a regional data table that must be grounded per comunidad before
+any engine work lands. The review recorded "ground the September reading"; the actual
+requirement is "ground a regional table", which is a materially larger piece and belongs in
+the sequencing.
+
+Until that table exists, the honest interim is the one the review already specified for a
+different reason: require the monthly map for the turning-three year, and where the window
+cannot be determined, grant nothing for that child-year with a visible advisory rather than
+guessing a boundary. That errs toward under-grant, keeps the error visible, and does not bake
+a regional guess into a filed figure.
 
 
 ## Amendment: a design review corrected all four decisions, and refuted one
