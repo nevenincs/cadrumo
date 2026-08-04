@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:22342f95a8c30082e1d9a494cad9c7b9d50494c0d6828f51e6e7fbb0bf63a489'
+body_hash: 'sha256:d3deab9223ed874c43bd7af7ebc6b32d5e4cba457b15d3b2dedc1ac917495dc7'
 related: []
 ---
 
@@ -1161,11 +1161,40 @@ package walk is recorded anywhere in the feature.
 sites" denominator matches the whole test tree (353). The two readings differ by
 an order of magnitude and the text does not say which is meant.
 
-**Most of the work never reached the vault.** The durable ledger is a single exec
-record covering a ten-file batch, which describes its own inputs as
-"pre-identified" — so even there the enumeration method is unstated. The rest
-exists in the relay chain. This is element `5h`'s finding one level out: the tree
-cannot say whether `S78` is complete, and neither can the record.
+**Most of the work had not reached the vault, and the backfill is incomplete.**
+When this was found, the durable ledger was a single exec record covering a
+ten-file batch; everything else lived in the relay chain. Backfill has since
+landed most of it — nine literal bands and four more batches now carry
+enumeration method, verification, and site list. **Two gaps remain, and they are
+different in kind:**
+
+- The original ten-file batch still describes its inputs as *"pre-identified"*.
+  Its **enumeration method is unrecoverable** — nothing in the tree records how
+  those ten files were selected. The site list can be reconstructed from the two
+  code commits the record documents; the selection method cannot. It is recorded
+  as unrecoverable rather than guessed.
+- **The campaign's largest band is unrecorded.** Seven commits routing
+  `cadrumo.db` scaffolding onto the accessor — roughly 45 sites across 28 files —
+  are referenced in **zero** vault documents.
+
+This is element `5h`'s finding one level out: the tree cannot say whether `S78`
+is complete, and neither could the record.
+
+**And a third turn of the same screw: the ledger is legible only if you already
+know how it was written.** Four lanes wrote into that one exec record under two
+section conventions — some as `## Batch: <literal>`, one as
+`## Description (continued)`. Both legitimate; **neither grep finds the other.**
+Two readers independently searched for `## Batch:`, found six sections, and each
+concluded nine documented bands were missing. One had the contradicting heading
+in the output being read at the time.
+
+> **A completeness check over a shared document must enumerate its headings, not
+> match a known form.**
+
+That is the enumerate-the-denominator discipline applied to a document rather
+than a corpus — and it is the sharpest version of this element, because **the
+ledger built to fix the invisible-work problem was itself invisible to the
+obvious query.**
 
 **The residual, measured — two populations, quoted separately and deliberately
 not combined.** An earlier figure of *"roughly 23% rename-sensitive"* was
@@ -1197,6 +1226,44 @@ and the intervals overlap heavily. What both support is the same conclusion the
 scope ambiguity already had: **the undeclared residual is in the low tens of
 sites, and the unresolved `S78` scope reading does not change the disposition** —
 just not because the two numbers matched.
+
+### The void-assertion class — a separate axis, with its own denominator
+
+**Kept separate deliberately.** The two residual figures above answer *"is this
+site's path governed?"* The void-assertion class answers *"would this test still
+be testing anything after a rename?"* A site can be in both, either, or neither:
+a correctly-enrolled site can carry a voidable assertion, and an unenrolled
+literal can sit in an assertion that breaks loudly and safely. **Combined into one
+figure the number answers neither question** — and it would be worse here than in
+the detector's denominator, because both populations carry live intervals.
+
+```
+400   absence assertions enumerated
+213   provably excluded
+ 13   already accessor-safe
+----
+174   candidate population
+155   of those not already surfaced by the current scan
+```
+
+**Quote 174, not 155.** 155 answers *"how much can the current scan not see?"* —
+a fact about the instrument, which would shrink whenever the tool improved while
+nothing about the corpus changed. 174 is the population the question is about.
+155 is worth stating as a second figure because it bounds what a future scan would
+have to reach; it is not the headline.
+
+**Dispositions within the class:**
+
+- **VOID + DECLARED = resolved, not residue.** Three `live` sites are void but
+  carry declared pins whose docstrings name the exact assertion. They are closed
+  work and are explicitly not counted twice.
+- **`test_engine.py:77` — undeclared and void. Open.** The one genuine remainder.
+- **`test_blob_store.py:457` — deferred, and the reason is the result.** Its
+  literal roots in a *different* file from the one that was cleared, so mutating
+  the available file would have produced a green run proving nothing. **A
+  deferral with a stated reason is a finding**, not an omission: it records that
+  the cheap version of the check would have been a false negative, which is
+  exactly the failure mode this document exists to name.
 
 ### The claim this closure makes
 
