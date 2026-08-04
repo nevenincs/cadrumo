@@ -518,7 +518,7 @@ def test_lifecycle_event_payload_values_are_encrypted_at_rest(tmp_path: Path, sc
 
         from ....tests.secure_sql import read_db_at_rest_bytes
 
-        database_bytes = read_db_at_rest_bytes(profile.paths.db_dir / "cadrumo.db")
+        database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         # Only values this flow actually writes are asserted absent. A value
         # nothing persists is absent trivially, which would read as encryption
         # coverage while proving nothing.
