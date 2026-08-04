@@ -44,6 +44,8 @@ from .._descendant_group import (
     _ADOPTION_IN_FUTURE_LOCALE_KEY,
     _GASTOS_INVALID_NEGATIVE_LOCALE_KEY,
     _MESES_INVALID_RANGE_LOCALE_KEY,
+    _RENTAS_INVALID_NEGATIVE_LOCALE_KEY,
+    _RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY,
     DESCENDANT_ADOPTION_VALIDATOR_ID,
     DESCENDANT_GROUP,
     DESCENDANTS_COUNT_PAGE,
@@ -246,6 +248,50 @@ def test_negative_gastos_refuses_as_a_verdict() -> None:
         _GASTOS_INVALID_NEGATIVE_LOCALE_KEY
     ]
     assert "descendientes#0.gastos-guarderia" not in rejected.answers
+
+
+def test_rentas_cents_figure_commits() -> None:
+    """The rentas page accepts a two-decimal figure -- unlike gastos-guarderia.
+
+    ``rentas_anuales_euros`` is genuinely ``Decimal`` on the domain model and
+    Art. 58.1's ceiling comparison is strict (``>``), so a taxpayer must be
+    able to enter a figure like ``8000.01`` precisely rather than round to a
+    whole euro, which could silently flip mínimo eligibility either way.
+    """
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+
+    committed = answer(definition, state, "descendientes#0.rentas-anuales", "8000.01")
+    assert committed.answers["descendientes#0.rentas-anuales"] == "8000.01"
+
+
+def test_rentas_over_precise_figure_refuses_as_a_verdict() -> None:
+    """A third fraction digit refuses: it is genuinely ambiguous, not merely precise.
+
+    A Spanish thousands grouping is always exactly three digits, so a figure
+    at that precision cannot be told apart from a grouped whole-euro amount;
+    the money-specific cap this validator applies (beyond the DECIMAL
+    widget's own, uncapped grammar check) refuses it rather than guessing.
+    """
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+
+    rejected = answer(definition, state, "descendientes#0.rentas-anuales", "8000.123")
+    assert [v.message_key for v in rejected.verdicts["descendientes#0.rentas-anuales"]] == [
+        _RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY
+    ]
+    assert "descendientes#0.rentas-anuales" not in rejected.answers
+
+
+def test_negative_rentas_refuses_as_a_verdict() -> None:
+    definition = _probe_definition()
+    state = _one_descendant_state(definition)
+
+    rejected = answer(definition, state, "descendientes#0.rentas-anuales", "-1.50")
+    assert [v.message_key for v in rejected.verdicts["descendientes#0.rentas-anuales"]] == [
+        _RENTAS_INVALID_NEGATIVE_LOCALE_KEY
+    ]
+    assert "descendientes#0.rentas-anuales" not in rejected.answers
 
 
 def test_adoption_before_birth_refuses_at_flow_scope() -> None:

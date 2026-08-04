@@ -32,6 +32,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR, CopyRefKind, FlowWidgetKind
 from ...core.identity import IdentityError, validate_identity
 from ...core.parsing import parse_iso8601_date
@@ -154,6 +155,15 @@ _FORMAT_UNITS_LOCALE_KEY = "wizard.setup.format.units-count"
 _FORMAT_TAX_ID_LOCALE_KEY = "wizard.setup.format.tax-id"
 _NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
+# The rentas grammar refusal reuses the exact key the checkpoint-persistence
+# path (`_persistence._descendant_from_row`) already raises for the same
+# malformed-amount case on the same field, rather than minting a second one:
+# the CLI `--descendiente RENTAS=` flag path carries it too
+# (`domain.contribuyente._descendant_facts`). Two keys for one refusal would
+# drift, and the operator would meet different words depending on which door
+# they came through.
+_RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_valid_amount"
+
 #: Every net-new locale key this module references, for the scaffold gate.
 DESCENDANT_LOCALE_KEYS: tuple[str, ...] = (
     _GROUP_TITLE_LOCALE_KEY,
@@ -250,15 +260,33 @@ def _validate_gastos_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict
 
 
 def _validate_rentas_nonneg(page: FlowPage, canonical: str) -> ValidationVerdict:
-    """Refuse a negative rentas figure (Art. 58.1 LIRPF; euros >= 0).
+    """Refuse a malformed or negative rentas figure (Art. 58.1 LIRPF; euros >= 0).
 
     Blank (optional) passes and leaves the figure UNDECLARED, which the
-    eligibility predicate reads as non-excluding. A negative amount refuses
-    as a verdict so it never reaches the ``ge=0`` model constraint at persist.
+    eligibility predicate reads as non-excluding. Unlike ``gastos_guarderia``,
+    this field is genuinely ``Decimal`` on the domain model
+    (:class:`~cadrumo.domain.contribuyente.DescendantInfo`), and the Art. 58.1
+    ceiling comparison is strict (``>``), so a cents figure genuinely at the
+    boundary (e.g. ``8000.01``) is legally significant, not cosmetic
+    precision. The DECIMAL widget's own shape validation already confirmed
+    the canonical grammar uncapped -- it is a generic numeric channel also
+    serving rates and percentages -- so this applies the money-specific
+    ambiguity cap here: at most two fraction digits, since a Spanish
+    thousands grouping is always exactly three and a longer fraction is
+    genuinely undecidable between one euro and one thousand. A malformed
+    figure refuses rather than resolving to zero or ``None``: ``None`` means
+    UNDECLARED and is the CLAIMING direction (Art. 58.1 reads an absent
+    figure as non-excluding), so silently mapping a typo onto it would assert
+    a mínimo the taxpayer never established -- the same over-claim this cap
+    guards against in the checkpoint-persistence and CLI flag paths that
+    already enforce it on the same field.
     """
     if not canonical:
         return ValidationVerdict.passed()
-    if int(canonical) < 0:
+    value = try_parse_canonical_decimal(canonical, max_fraction_digits=2)
+    if value is None:
+        return ValidationVerdict.failed(_RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY, page_id=page.id)
+    if value < 0:
         return ValidationVerdict.failed(_RENTAS_INVALID_NEGATIVE_LOCALE_KEY, page_id=page.id)
     return ValidationVerdict.passed()
 
@@ -415,13 +443,21 @@ _DESCENDANT_PAGES: tuple[FlowPage, ...] = (
         answer_type=bool,
     ),
     FlowPage(
+        # DECIMAL, not INTEGER: the domain field is genuinely Decimal (Art.
+        # 58.1's strict-`>` ceiling comparison makes cents legally
+        # significant), and the CLI `--descendiente RENTAS=` flag and the
+        # checkpoint-persistence re-projection already carry two-decimal
+        # precision for this exact field. DECIMAL-widget pages keep
+        # `answer_type=str`, per the widget's own canonicalisation contract
+        # (the parsed amount rides as its `str(Decimal)` form, mirroring the
+        # invoice wizard's `_validate_taxable_base`).
         id=_RENTAS_ANUALES_PAGE_ID,
-        widget=FlowWidgetKind.INTEGER,
+        widget=FlowWidgetKind.DECIMAL,
         prompt=_locale_ref(_RENTAS_ANUALES_PROMPT_LOCALE_KEY),
         help=_locale_ref(_RENTAS_ANUALES_HELP_LOCALE_KEY),
         format_hint=_locale_ref(_FORMAT_AMOUNT_LOCALE_KEY),
         required=False,
-        answer_type=int,
+        answer_type=str,
         answer_validator_ids=(DESCENDANT_RENTAS_VALIDATOR_ID,),
     ),
     FlowPage(

@@ -43,13 +43,13 @@ _DESCENDANTS_CANONICAL: dict[str, str] = {
     "descendientes-count": "2",
     "descendientes#0.birth-date": "2023-05-10",
     "descendientes#0.convivencia": "true",
-    # Whole euros, because the page declares FlowWidgetKind.INTEGER with
-    # answer_type=int. A cents figure is refused at widget-shape validation
-    # here, before the non-negative validator is ever consulted -- while the
-    # CLI `--descendiente RENTAS=` flag and the persistence layer both accept
-    # two decimal places. The wizard is internally consistent; the two entry
-    # surfaces simply admit different precision.
-    "descendientes#0.rentas-anuales": "1500",
+    # A two-decimal figure: the page declares FlowWidgetKind.DECIMAL, matching
+    # the genuinely-Decimal domain field and the precision the CLI
+    # `--descendiente RENTAS=` flag and the persistence layer already carry
+    # for this exact field. Art. 58.1's ceiling comparison is strict (``>``),
+    # so cents are legally significant here, unlike the whole-euro
+    # gastos-guarderia figure below.
+    "descendientes#0.rentas-anuales": "1523.45",
     "descendientes#0.declaracion-propia": "true",
     "descendientes#0.prorrata-minimo": "false",
     "descendientes#0.gastos-guarderia": "900",
@@ -102,9 +102,9 @@ def test_scripted_walk_over_the_live_definition_collects_descendants_and_submits
     assert facts["renta_family.descendiente.0.gastos_guarderia"] == "900"
     assert "renta_family.gastos_guarderia_reales_2024" not in facts
     # … the three Art. 58.1 / 61 pages are ANSWERED, not merely traversed …
-    assert state.answers["descendientes#0.rentas-anuales"] == "1500"
+    assert state.answers["descendientes#0.rentas-anuales"] == "1523.45"
     assert state.answers["descendientes#0.prorrata-minimo"] == "false"
-    assert facts["renta_family.descendiente.0.rentas_anuales"] == "1500"
+    assert facts["renta_family.descendiente.0.rentas_anuales"] == "1523.45"
     assert facts["renta_family.descendiente.0.declaracion_propia"] == "true"
     # … prorrata lands AS "false" rather than merely being present: this is the
     # operator claiming sole entitlement, so a projection that dropped it or
@@ -132,7 +132,7 @@ def test_scripted_walk_with_a_negative_rentas_refuses() -> None:
     further below it and claims a mínimo on a fabricated basis.
     """
     definition = _setup_flow_definition(SETUP_FLOW)
-    canonical = {**_DESCENDANTS_CANONICAL, "descendientes#0.rentas-anuales": "-1"}
+    canonical = {**_DESCENDANTS_CANONICAL, "descendientes#0.rentas-anuales": "-1.50"}
     tokens, _intended = _project_scripted_answers(definition, canonical, mode=FlowMode.CREATE)
 
     with pytest.raises((FlowAnswerError, FlowSubmitError)):
