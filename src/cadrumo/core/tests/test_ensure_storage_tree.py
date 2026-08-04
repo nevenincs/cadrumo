@@ -5,6 +5,13 @@ some consumer happened to write one: the local provider made its root on
 first write, the journal repository made its own, bucket provisioning made a
 bucket's. A caller could not ask for the tree, and a fresh machine held
 whichever subset had been reached.
+
+The directory names asserted below are deliberate literals. What this module
+defends is that bootstrap *materialises* the declared tree on disk, so the
+expectation must come from outside the declaration: resolving it through the
+accessor would assert that whatever the taxonomy declares is whatever
+bootstrap created, which holds even if bootstrap created nothing of the sort.
+A renamed subpath **should** red these assertions.
 """
 
 from __future__ import annotations
@@ -12,6 +19,7 @@ from __future__ import annotations
 import os
 import stat
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -19,6 +27,11 @@ from ..config import ensure_storage_tree, load_settings, override_settings
 from ..errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
+    {"tokens", "secrets", "blobs", "audit", "logs", "cache", "drafts"},
+)
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def test_it_builds_the_tree_and_returns_the_root(tmp_path: Path) -> None:
