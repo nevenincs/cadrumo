@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:d28c24e3d31ff5485568b9c4dd4cc5a10f1f78096ab86011c9cd5965ea74e13c'
+body_hash: 'sha256:fc69d82bb47447678e70ef683e49af56ad67edd1fe3f1d76424090122e384637'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
 ---
@@ -38,9 +38,9 @@ The JavaScript controller initially read `result.url` after awaiting `result.dat
 
 The casilla section parser initially accepted only `[[revisions."...".casillas]]`, while real registry fragments also use unquoted headers such as `[[revisions.2009-y-siguientes.casillas]]`; the reviewer found 536 such headers. `3fb2c90cae363b464daab7ef0efcf99f0be43d7f` now accepts both valid forms while preserving individual-section matching and no-representative fallback. The post-change sweep remains unrun.
 
-### census-invariants | medium | The coverage value object needs stronger internal invariants
+### census-invariants | corrected | The coverage value object now enforces its measurement invariants
 
-The new census validates surface names but does not yet enforce `covered <= total`, uniqueness of surface entries, or consistency between the covered ids and the declared total. P06.S24 must either add those real-behaviour invariants or record why the current strict model is sufficient before the census is accepted as a measurement contract.
+The initial census validated surface names but did not enforce `covered <= total`, uniqueness/order of surface entries, or consistency between the covered ids and the declared total. Commit `a294ac35ed` adds strict Pydantic validators for bounded counts, exact uncovered partitioning, unique sorted ids, canonical five-surface order, and one shared projected denominator. A fresh formal review returned PASS with no CRITICAL, HIGH, MEDIUM, or LOW findings. Runtime/Pagefind parity remains outside this model contract.
 
 ### source-compatibility | medium | Existing resolution expectations need reconciliation
 
@@ -54,9 +54,13 @@ The projection accepts whitespace-only localized labels or help as authored, whi
 
 The original formal review identified the two high findings above, and both corrective commits were inspected by the coordinator with owned-path diffs and non-test syntax checks. A fresh `vaultspec-code-reviewer` dispatch was then attempted, but it did not return after bounded waits and was shut down. P06.S22 and P06.S23 therefore remain open until a reviewer result or an explicit later review record is available.
 
+### coverage-review | low | Census invariant correction formally passes
+
+The replacement reviewer inspected `a294ac35ed` against the P06 plan and grounding documents and reported no findings. The review covered only the census value-object correction; it did not authorize closure of the browser/Pagefind, re-sweep, legal, Rung 2, or deployment work.
+
 ## Recommendations
 
 - The focused P06.S22 and P06.S23 corrections are landed; obtain a fresh formal review of the corrected paths before closing either step.
 - Execute P06.S24 with real-behaviour gates for the projection census, M130/casilla-15 structured search, locale/detail output, and target resolvability before closing P06.
 - Re-run the build-time sweep after the resolver change and compare relevance coverage and dropped-hit counts; do not interpret the old `22/6,359` report as current after the new fail-closed rule.
-- Reconcile the existing Diseño workbook/PDF expectations and the census/locale invariants in that gate; no test execution is authorized yet.
+- Reconcile the existing Diseño workbook/PDF expectations and locale behavior in that gate; the census invariants are now formally reviewed. No test execution is authorized yet.
