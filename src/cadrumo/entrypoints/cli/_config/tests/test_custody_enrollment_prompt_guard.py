@@ -61,7 +61,7 @@ try:
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
-        cadrumo_secret_store_dir=storage_root / "secrets",
+        cadrumo_secret_store_dir=storage_root / "fallback-store",
         cadrumo_secret_store_backend="file",
         cadrumo_secret_passphrase=None,
         cadrumo_output_language="en",
@@ -144,7 +144,7 @@ def _run_console_less_enrollment(storage_root: pathlib.Path) -> dict[str, object
 def test_recovery_create_refuses_on_a_console_less_host_instead_of_blocking(tmp_path: pathlib.Path) -> None:
     """The enrollment verb terminates with a refusal, minting no key material."""
     storage_root = tmp_path / "cadrumo-storage"
-    secret_store_dir = storage_root / "secrets"
+    secret_store_dir = storage_root / "fallback-store"
 
     verdict = _run_console_less_enrollment(storage_root)
 
