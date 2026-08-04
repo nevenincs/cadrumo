@@ -6,7 +6,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:b0178a080cf767f0020e6392998efc17f8db99aae59a3d69772e801abafc4e09'
+body_hash: 'sha256:dff797a3b2365eec62f3a133305f43c9f16365e5b7894578fc2d5b858183e40e'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -14,9 +14,15 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P04-S11]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S12]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S19]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P06-S20]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P06-S21]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P06-S22]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P06-S23]]'
   - '[[2026-08-01-user-docs-search-consolidation-adr]]'
   - '[[2026-08-01-user-docs-search-consolidation-plan]]'
   - '[[2026-08-04-user-docs-search-consolidation-audit]]'
+  - '[[2026-08-04-user-docs-search-consolidation-deterministic-casilla-enrollment-research]]'
+  - '[[2026-08-04-user-docs-search-consolidation-p06-s23-review-audit]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -32,6 +38,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 ### audit
 
 - `2026-08-04-user-docs-search-consolidation-audit` - `user-docs-search-consolidation` audit: `P01.S01 shipped search licence rule amendment`
+- `2026-08-04-user-docs-search-consolidation-p06-s23-review-audit` - `user-docs-search-consolidation` audit: `P06.S23 resolver review`
 
 ### exec
 
@@ -41,7 +48,15 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P01-S01` - Amend the shipped-search-licence-clean rule source to the licence-and-provenance-scoped form ruled in R5 and propagate it with vaultspec-core sync in a coordinated quiet window
 - `2026-08-01-user-docs-search-consolidation-P01-S02` - Confirm the semantic-search-precompile-boundary plan is closed through its honesty review and record that confirmation before any rung-2 step is dispatched
 - `2026-08-01-user-docs-search-consolidation-P04-S12` - Close the gap that leaves the built language roots unreachable on the live site and prove es, ca, and hu roots respond after deploy
+- `2026-08-01-user-docs-search-consolidation-P06-S20` - Separate deterministic casilla enrollment from sparse semantic coverage by adding a coverage census for projected, exact-target, definition, locale, and relevance surfaces
+- `2026-08-01-user-docs-search-consolidation-P06-S21` - Carry registry help, input-kind, data-type, formula, and locale metadata through the casilla search projection and unified record without changing the opaque identity
+- `2026-08-01-user-docs-search-consolidation-P06-S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback
+- `2026-08-01-user-docs-search-consolidation-P06-S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback
 
 ### plan
 
 - `2026-08-01-user-docs-search-consolidation-plan` - `user-docs-search-consolidation` plan
+
+### research
+
+- `2026-08-04-user-docs-search-consolidation-deterministic-casilla-enrollment-research` - `user-docs-search-consolidation` research: `Deterministic casilla enrollment research`

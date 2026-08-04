@@ -4,11 +4,13 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-04'
-body_hash: 'sha256:a7cba82bec8c83339abfea6d78fcc4e3f7fbdb9a6aadf2e3ee83a7ab9a870ec3'
+body_hash: 'sha256:04c5986a923ed3eb8a65bc5acd0a483343dc699ce179dc68cee135cc9149e604'
 tier: L2
 related:
-  - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
+  - '[[2026-07-13-docs-terminology-search-research]]'
   - '[[2026-07-13-docs-terminology-search-adr]]'
+  - '[[2026-08-01-user-docs-search-consolidation-adr]]'
+  - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
 ---
 
 # `user-docs-search-consolidation` plan
@@ -16,6 +18,8 @@ related:
 ## Description
 
 Executes the user-docs-search-consolidation ADR and its Update 1: the user-facing documentation search architecture is affirmed as the project's one semantic-search deliverable, and this plan completes it against the measured deployed ground truth. The corpus detangle the ADR ruled (adjudication annotations on the two 2026-07-31 audits, R6 dispositions) was executed at ruling time and is not re-planned here. What remains: the shipped-search-licence-clean rule amendment (R5), the deployed-contract remediation Update 1 adjudicates (the pages-only env value never decided by any ADR, the unreachable language roots, the stale live site), the legal-corpus record kind no shipped surface ever carried despite hundreds of compiled legal relevance targets, the rung-2 semantic layer whose IMPLEMENT-RUNG-2 verdict the 2026-07-13 docs-terminology-search ADR fired and nothing delivered, and the verification close. This plan starts where the in-flight semantic-search-precompile-boundary plan ends and duplicates none of its deletion steps: every step here is docs-side or deploy-side, disjoint from the product tree that plan deletes.
+
+The deterministic casilla enrollment clarification is now explicit in Phase P06. Registry projection, exact target/index enrollment, localized definition completeness, and sparse RAG relevance are separate contracts. P06 closes that distinction before semantic widening or deployment is treated as complete.
 
 ## Steps
 
@@ -63,9 +67,23 @@ Deliver the operator's core ask that no record kind ever served: project the leg
 - [ ] `P05.S16` - Reconcile the committed legal relevance targets to the new record ids and extend the target-resolution gate to refuse any target id no injector emits; `src/cadrumo/_data/terminology/relevance/`.
 - [ ] `P05.S17` - Add the legal per-kind parity gate proving anchor existence and destination-grounding coverage for every projected provision record; `dev/docs/tests/`.
 
+### Phase `P06` - Deterministic casilla enrollment and definition contract
+
+Close the distinction between registry projection, exact search enrollment, rich localized definition, and semantic relevance by making the deterministic casilla path measurable and reliable before further semantic widening.
+
+The internal tasklist for this phase is the canonical P06 Step queue below. Each completed Step Record will carry a `## Tracking` section with the smaller execution items and their status; no duplicate free-floating checklist is created.
+
+Formal review follow-up is part of that queue: the P06.S22 Pagefind result contract and P06.S23 registry-header parser must be corrected and freshly reviewed before P06.S24 acceptance gates are run. Source-only implementation is not a closure signal.
+
+- [ ] `P06.S20` - Separate deterministic casilla enrollment from sparse semantic coverage by adding a coverage census for projected, exact-target, definition, locale, and relevance surfaces; `dev/docs/terminology/_coverage.py`.
+- [ ] `P06.S21` - Carry registry help, input-kind, data-type, formula, and locale metadata through the casilla search projection and unified record without changing the opaque identity; `dev/docs/terminology/`.
+- [ ] `P06.S22` - Add a structured modelo/casilla exact-search route that resolves the canonical record and destination before lexical fallback; `docs/_static/cadrumo-docs.js`.
+- [ ] `P06.S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback; `dev/docs/terminology/_resolution.py`.
+- [ ] `P06.S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability; `dev/docs/tests/`.
+
 ## Parallelization
 
-Execution order is P01, then P04, then P05, then P02, then P03; document order preserves append-only identifiers and does not encode sequence. P01 leads: S01 may land at any time in a coordinated sync window, and S02 gates rung-2 dispatch (P02) on the boundary campaign's close. P04 is the cheapest reader-facing win and goes first after P01: S10 first, then S19 (the ADR Update 3 injection-language fix, conditional on the localized-root measurement confirming the predicted gap and landing before any publish if it does), then S11 with or after S19 (the per-root artefact gate lands with or after the fix per the born-red lesson, never before), then S12, then S13 which needs all of them. P05 follows P04 so its live verification lands on a full-mode site: S14 then S15, S16 and S17 after S15 in parallel. Within P02 the order is S03 then S04, then S05 and S06 in parallel, then S07, which is the final measurement and must run after P04 and P05 so the baseline reflects the deployed ladder. P03 runs last: S08 after everything lands (its probes run per language root), S09 as the final close. No step here may touch the boundary plan's deletion targets under `src/cadrumo/application/corpus_search/` or `command_search/`.
+Execution order is P01, then P06, then P04, then P05, then P02, then P03; document order preserves append-only identifiers and does not encode sequence. P01 leads: S01 may land at any time in a coordinated sync window, and S02 gates rung-2 dispatch (P02) on the boundary campaign's close. P06 is the reader-side deterministic prerequisite: S20 and S21 establish measurable projection/detail contracts, S22 and S23 may then proceed in parallel on disjoint surfaces, and S24 closes the phase after those contracts are present. P04 is the cheapest reader-facing win after P06: S10 first, then S19 (the ADR Update 3 injection-language fix, conditional on the localized-root measurement confirming the predicted gap and landing before any publish if it does), then S11 with or after S19 (the per-root artefact gate lands with or after the fix per the born-red lesson, never before), then S12, then S13 which needs all of them. P05 follows P04 so its live verification lands on a full-mode site: S14 then S15, S16 and S17 after S15 in parallel. Within P02 the order is S03 then S04, then S05 and S06 in parallel, then S07, which is the final measurement and must run after P04 and P05 so the baseline reflects the deployed ladder. P03 runs last: S08 after everything lands (its probes run per language root), S09 as the final close. No step here may touch the boundary plan's deletion targets under `src/cadrumo/application/corpus_search/` or `command_search/`.
 
 ## Verification
 
@@ -73,6 +91,10 @@ Execution order is P01, then P04, then P05, then P02, then P03; document order p
 - The deploy environment pins full mode, and the per-root deployment-parity gate fails when any root's own loaded language index misses the full record corpus or record-count parity across the en, es, ca, and hu roots breaks.
 - Live checks pass and are recorded: every deployed root's pagefind entry carries the injected record corpus in that root's language, `/_generated/casillas/303.html` resolves, and the es, ca, and hu roots respond.
 - The legal record kind ships with D1-conformant targets, its parity gate proves anchor existence and destination-grounding coverage, and the target-resolution gate refuses any relevance target id no injector emits, so the dead-target count at HEAD is zero.
+- The deterministic casilla census distinguishes registry/projection, exact target, definition, locale, and RAG-relevance coverage; a casilla can be exact-enrolled without requiring a semantic mapping.
+- The casilla search projection preserves the opaque identity while carrying the registry-backed localized definition and formula metadata needed by the destination surface.
+- A structured `modelo` plus `casilla` query resolves the canonical record and stable destination before Pagefind fallback, and the M130/casilla-15 worked example is covered by a real-behaviour gate.
+- Casilla relevance resolution never selects an arbitrary first record from a file-level hit; every committed casilla mapping resolves to the exact projected record it names.
 - The committed rung-2 matrix is int8, within the 1-3 MB bound scoped by the 2026-06-10 ADR, stamped with model id, licence, revision, and vocabulary fingerprint, and the extended licence gate fails when any stamp field is absent or the model licence is not MIT or Apache-2.0.
 - The wheel content is unchanged: the matrix ships in the built docs only, proven by the packaging content gates.
 - The re-taken held-out miss-rate report is committed and its figure is compared against the 0.1875 baseline in the exec record.

@@ -16,8 +16,8 @@ related:
   - "[[2026-06-10-docs-terminology-search-research]]"
   - "[[2026-07-31-corpus-search-model-cache-capability-gap-audit]]"
   - "[[2026-07-31-semantic-code-deduplication-campaign-audit]]"
+  - '[[2026-08-04-user-docs-search-consolidation-deterministic-casilla-enrollment-research]]'
 ---
-
 # `user-docs-search-consolidation` adr: `user documentation search: affirm the precompile pipeline, adjudicate rung 2, reconcile the corpus` | (**status:** `accepted`)
 
 ## Problem Statement
