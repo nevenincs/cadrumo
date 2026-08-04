@@ -14,6 +14,11 @@ and projects the matching profile fact into the correct engine channel.
 The resolved bindings use :class:`ProfileSchemaDefinition` and
 :class:`UserProfileFactValue` to translate raw facts.
 
+The :class:`ModeloRevision` on that snapshot is also what decides whether a
+derived-fact injector runs at all: the injectors are gated on the revision
+declaring a binding that consumes their output, so extending coverage to a
+new filing year is registry work rather than a code edit.
+
 Channel selection is the load-bearing decision. The registry runtime
 resolves profile bindings through three engine channels:
 ``date_binding_values`` for date operands, ``enum_binding_values`` for
