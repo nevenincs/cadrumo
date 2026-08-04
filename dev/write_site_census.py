@@ -151,6 +151,7 @@ from pathlib import Path, PurePosixPath
 from typing import Final
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
+_UTF_8: Final[str] = "utf-8"
 
 #: The written path is the RECEIVER: ``path.write_text(...)``, ``path.mkdir()``.
 RECEIVER_PRIMITIVES: Final[frozenset[str]] = frozenset(
@@ -339,7 +340,7 @@ def _git_show(revision: str, path: str) -> str:
         capture_output=True,
         check=True,
     ).stdout
-    return raw.decode("utf-8")
+    return raw.decode(_UTF_8)
 
 
 def production_modules(revision: str) -> list[str]:
