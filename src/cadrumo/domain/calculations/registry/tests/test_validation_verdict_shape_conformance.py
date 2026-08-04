@@ -20,12 +20,13 @@ from .._validate_verdict import VERDICT_OUTCOME_GREEN, ValidationVerdict, verdic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cache"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cache", "registry-verdict"})
 """Taxonomy-vocabulary literals this module deliberately pins.
 
 ``tmp_path / "cache" / "registry-verdict" / ...`` in the positive-control
 test is the real declared grammar shape, deliberately mis-named at the
-filename to prove the matcher can still fail.
+filename to prove the matcher can still fail -- both segments are the shape
+under test.
 """
 
 

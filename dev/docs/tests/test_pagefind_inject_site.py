@@ -84,7 +84,7 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
     This is the load-bearing mechanism the Ctrl-K palette relies on to surface
     term cards above the full-text pages: the injected records carry a
     ``weight`` sort key, the docs pages do not, so a search sorted by ``weight``
-    drops the pages and returns the term/casilla/CLI cards ordered by tier
+    drops the pages and returns the term/casilla/legal/CLI records ordered by tier
     weight (concept 1.0 first). Without this the concept record is buried under
     the many page hits for a corpus term like "prorrata".
 
@@ -141,15 +141,15 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
 
 
 def test_materialises_every_kind_with_graceful_cli() -> None:
-    """All four record kinds materialise into unified records.
+    """All five record kinds materialise into unified records.
 
-    Proves the full projection pipeline (concepts + casillas + CLI) funnels
-    into unified records, and that the CLI projection is skipped-and-reported
-    if the live CLI is unavailable rather than failing the whole injection -
-    concepts and casillas (the priority surfaces) always land. This tests the
-    materialisation directly; the Pagefind injection of the records is proven
-    by the per-language integration tests above, so the slow full 7k-record
-    Pagefind write is not repeated here.
+    Proves the full projection pipeline (concepts + casillas + legal provisions
+    + CLI) funnels into unified records, and that the CLI projection is
+    skipped-and-reported if the live CLI is unavailable rather than failing the
+    whole injection - concepts, casillas, and legal provisions (the priority
+    surfaces) always land. This tests the materialisation directly; the Pagefind
+    injection of the records is proven by the per-language integration tests
+    above, so the slow full 7k-record Pagefind write is not repeated here.
     """
     materialised = _materialise_records()
 
@@ -196,7 +196,7 @@ def test_compile_search_index_wires_the_real_injector_over_built_html(
     # The driver reports the compiled corpus (page count + record line).
     summary = capsys.readouterr().out
     assert "Search index compiled" in summary
-    assert "term/casilla/CLI records" in summary
+    assert "term/casilla/legal/CLI records" in summary
 
 
 def test_materialise_injects_approved_concepts_only_no_drafts() -> None:

@@ -163,10 +163,10 @@ __all__ = [
 
 @pytest.fixture(scope="module")
 def _ledger_module_runtime(tmp_path_factory: pytest.TempPathFactory) -> Iterator[TestRuntimeProfile]:
-    """Provision the expensive bucket runtime once per test module (S804).
+    """Provision the expensive bucket runtime once per test module.
 
     Hoisting the Argon2id KEK derivation, wrapped-DEK mint, session open, and
-    per-bucket engine/table create out of per-test scope is the S804 perf win.
+    per-bucket engine/table create out of per-test scope is the perf win.
     Per-test isolation is restored by the function-scoped ``secure_objects``
     fixture, which truncates the shared store before each test.
     """

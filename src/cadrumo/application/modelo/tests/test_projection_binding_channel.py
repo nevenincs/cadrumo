@@ -120,12 +120,32 @@ def test_a_decimal_binding_still_accepts_a_canonical_amount(
     assert enums == {}
 
 
-def test_a_decimal_binding_keeps_the_uncapped_sub_cent_posture(revision: ModeloRevision) -> None:
-    """Sub-cent precision is legitimate: the export encoder rounds it ROUND_HALF_UP."""
-    decimals, enums = _parse_projection_binding_overrides({_DECIMAL_BINDING: "2.345"}, revision)
+def test_a_decimal_binding_carries_sub_cent_precision(revision: ModeloRevision) -> None:
+    """Sub-cent precision is legitimate: the export encoder rounds it ROUND_HALF_UP.
 
-    assert decimals == {_DECIMAL_BINDING: Decimal("2.345")}
+    What the channel refuses is a Spanish thousands lookalike, not precision --
+    so a sub-cent value passes at any number of fractional digits provided its
+    lead group cannot open a grouping run. ``0.335`` qualifies because a leading
+    zero never starts one.
+    """
+    decimals, enums = _parse_projection_binding_overrides({_DECIMAL_BINDING: "0.335"}, revision)
+
+    assert decimals == {_DECIMAL_BINDING: Decimal("0.335")}
     assert enums == {}
+
+
+def test_a_decimal_binding_refuses_a_spanish_thousands_lookalike(revision: ModeloRevision) -> None:
+    """``2.345`` on a money binding is undecidable, so it refuses rather than guessing.
+
+    This test replaced an assertion that the channel kept an "uncapped sub-cent
+    posture" and accepted this very token. That posture was retired
+    deliberately: the binding under test declares ``data_type = "money"``, and a
+    taxpayer typing ``2.345`` euros may mean two thousand three hundred
+    forty-five. A parser that can detect the ambiguity and answers anyway is
+    guessing at a thousandfold error.
+    """
+    with pytest.raises(ModeloCalculateDecimalInputError):
+        _parse_projection_binding_overrides({_DECIMAL_BINDING: "2.345"}, revision)
 
 
 def test_a_genuine_enum_binding_still_carries_its_string_verbatim(revision: ModeloRevision) -> None:

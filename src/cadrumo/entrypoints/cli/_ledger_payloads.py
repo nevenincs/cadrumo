@@ -860,7 +860,7 @@ class LedgerExportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger export``.
 
     Distinct from the application
-    :class:`LedgerExportResult` (DB-26 S51): the backend
+    :class:`LedgerExportResult`: the backend
     result carries the raw ``payload`` bytes and typed members (``BucketId``,
     ``ExportSerializationFormat``, ``LedgerExportRow``); this
     envelope projects the JSON-coerced metadata + row view and appends the
@@ -904,7 +904,7 @@ class LedgerImportPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger import``.
 
     Distinct from the application
-    :class:`LedgerSourceImportResult` (DB-26 S51): this
+    :class:`LedgerSourceImportResult`: this
     envelope projects that result's JSON-coerced fields (the nested
     validation/source/diagnostic reports become the CLI ``*Payload`` shapes) and
     appends the optional operator-facing notice strings.

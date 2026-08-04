@@ -39,7 +39,7 @@ The redaction strategies, defined in
 ``SHA256_PREFIX_IF_IBAN``
     As ``SHA256_PREFIX``, but only when the matched span passes the ISO
     13616 mod-97 check. Used for bank accounts, by an operator decision
-    that deliberately reaches past the redaction ADR's tax-identity
+    that deliberately reaches past this module's stated tax-identity
     must-handle list. A BOE citation is the standing negative control: it
     must keep passing through untouched, and a pattern that starts eating
     one is too wide.
@@ -100,10 +100,10 @@ _CIF_PATTERN = r"\b[A-HJNPQRSUVWa-hjnpqrsuvw]\d{7}[0-9A-Ja-j]\b"
 
 # IBAN — a bank account number is sensitive financial data, so it is hashed
 # out of operator-facing output by operator decision. That decision is BROADER
-# than the redaction ADR's must-handle list, which names the tax-identity
+# than this module's stated must-handle list, which names the tax-identity
 # shapes and does not mention bank accounts: this arm is a deliberate
 # extension, not an inference from that list. Do not narrow it back on the
-# grounds that the ADR omits it.
+# grounds that the stated list omits it.
 #
 # Scanning form of the anchored :data:`IBAN_SHAPE_RE` in ``core._iban``, which
 # stays the authority on what an IBAN looks like. Two country letters, two

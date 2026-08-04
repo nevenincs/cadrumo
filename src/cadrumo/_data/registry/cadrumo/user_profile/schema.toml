@@ -1637,7 +1637,7 @@ type = "decimal"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Mother's Social Security cotizaciones paid in 2024 (Art. 81 bis LIRPF cap term)."
+description = "Mother's Social Security cotizaciones paid in 2024 (Art. 81.2 LIRPF cap term)."
 model_selectors = ["family.cotizaciones_ss_madre_2024"]
 
 [[sections.fields]]

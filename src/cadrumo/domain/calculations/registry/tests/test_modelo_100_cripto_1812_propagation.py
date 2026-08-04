@@ -77,7 +77,7 @@ def _binding_values_2024() -> dict[BindingId, Decimal]:
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-        # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
+        # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
         "renta-2024-profile-descendientes-menores-3": Decimal("0"),
@@ -147,7 +147,7 @@ def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot: RegistrySnaps
         f"casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
         f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}. "
         "Formula renta-2024-ganancia-cripto-imputable must copy 1811 to 1812 "
-        "(S371 regression: before the fix 1812 stayed at 0)."
+        "(regression: before the fix 1812 stayed at 0)."
     )
 
 

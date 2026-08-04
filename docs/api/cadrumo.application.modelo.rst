@@ -66,6 +66,7 @@ Submodules
    cadrumo.application.modelo._ports
    cadrumo.application.modelo._prior_payment_advisory
    cadrumo.application.modelo._profile_binding
+   cadrumo.application.modelo._profile_export_binding
    cadrumo.application.modelo._profile_readiness_gate
    cadrumo.application.modelo._projection
    cadrumo.application.modelo._prorrata_regularizacion_advisory

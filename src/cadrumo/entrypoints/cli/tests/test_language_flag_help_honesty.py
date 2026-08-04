@@ -54,7 +54,7 @@ def _console_env(tmp_path: Path, *, language: str | None) -> dict[str, str]:
             "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
             "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "CADRUMO_TOKEN_DIR": str(tmp_path / "tokens"),
+            "CADRUMO_TOKEN_DIR": str(tmp_path / "probe-tokens"),
             "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
             "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
             "CADRUMO_INVOICES_DIR": str(tmp_path / "invoices"),

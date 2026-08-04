@@ -43,6 +43,7 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 from ...core import BindingSourceKind
+from ...core.decimal import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
@@ -61,6 +62,7 @@ from ...domain.contribuyente import (
     CCAA,
     MinimoDescendientesThresholds,
     RentaFamilyProfile,
+    RentaMaritalStatus,
     descendant_list_from_facts,
     marriage_full_year,
     marriage_month_start,
@@ -82,20 +84,38 @@ from ..aggregation import (
 
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
-_MARRIED_STATUS_TOKENS = frozenset({"2", "casado"})
-_PARTNERED_STATUS_TOKENS = _MARRIED_STATUS_TOKENS | frozenset({"5", "pareja_hecho", "pareja_hecho_registrada"})
+# Marital-status token sets, derived from the enum rather than restated.
+#
+# Every predicate below reads ``renta_taxpayer.marital_status``, which the
+# profile schema constrains to :class:`RentaMaritalStatus` -- the AEAT ECIVIL
+# filing code, ``'1'``-``'5'``. These sets previously also carried word forms
+# (``"casado"``, ``"pareja_hecho_registrada"``, ...) belonging to
+# :class:`SituacionFamiliar`, a DIFFERENT taxonomy stored at a different field
+# (``renta_family.situacion_familiar``). Those words could never match a value
+# this field can hold, so they were dead -- and worse than dead: a test passing
+# a word form straight to an injector matched on the dead half while every real
+# filer took the code half, so dropping a CODE from the set regressed
+# production and failed nothing. Measured: removing ``'5'`` left the word form
+# answering True while the code form flipped to False.
+#
+# Deriving them from the enum removes the foreign vocabulary by construction
+# and makes a future divergence a type error rather than a silent miss.
+#
+# SOURCE CHOICE, deliberate. The Art. 61 norma 1a conjunta question is an
+# Art. 82.1 question, and :class:`SituacionFamiliar` is the canonical Art. 82
+# authority. This still reads the ECIVIL code because both fields are
+# ``required = false`` and are asked side by side in the same setup walk, so
+# neither is more reliably populated -- while switching would silently drop the
+# prorrata for any profile carrying only the ECIVIL code, which is the
+# OVER-granting direction. If the source is ever moved, note that
+# ``SituacionFamiliar`` distinguishes registered from unregistered pareja de
+# hecho and Art. 82.1.2a is registration-agnostic, so BOTH must count as
+# partnered; treating only the registered form as partnered would over-grant
+# for an unregistered couple.
+_MARRIED_STATUS_TOKENS = frozenset({RentaMaritalStatus.CASADO.value})
+_PARTNERED_STATUS_TOKENS = _MARRIED_STATUS_TOKENS | frozenset({RentaMaritalStatus.PAREJA_HECHO.value})
 _UNMARRIED_STATUS_TOKENS = frozenset(
-    {
-        "1",
-        "3",
-        "4",
-        "5",
-        "soltero",
-        "viudo",
-        "separado_divorciado",
-        "pareja_hecho",
-        "pareja_hecho_registrada",
-    }
+    member.value for member in RentaMaritalStatus if member is not RentaMaritalStatus.CASADO
 )
 _MARRIAGE_DERIVED_FACT_PATHS = (
     "renta_taxpayer.marriage_full_year",
@@ -271,13 +291,20 @@ def _inject_derived_family_facts(
                 count_menores += 1
                 gastos_raw = fact_index.get(f"renta_family.descendiente.{idx}.gastos_guarderia")
                 if gastos_raw is not None:
-                    try:
-                        gastos_reales += int(Decimal(str(gastos_raw)))
-                    except (ArithmeticError, ValueError, TypeError) as exc:
+                    # Tolerant coercion, not the strict grammar: this reads an
+                    # already-persisted profile fact whose text grammar the
+                    # entry boundary owns, and the index legitimately holds a
+                    # Decimal as well as a string, which coerce_decimal passes
+                    # through. The finiteness check is what the old catch-all
+                    # except was really doing -- NaN and Infinity parse happily
+                    # and only fail at int() -- so refusing them here keeps the
+                    # named refusal below and leaves int() unable to raise.
+                    gastos = coerce_decimal(gastos_raw)
+                    if gastos is None or not gastos.is_finite():
                         raise ProfileBindingResolutionError(
-                            f"renta_family.descendiente.{idx}.gastos_guarderia is not a valid amount: "
-                            f"{gastos_raw!r}",
-                        ) from exc
+                            f"renta_family.descendiente.{idx}.gastos_guarderia is not a valid amount: {gastos_raw!r}",
+                        )
+                    gastos_reales += int(gastos)
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)
@@ -576,8 +603,6 @@ def _inject_derived_minimo_descendientes_facts(
         thresholds=thresholds,
         second_filer_indicated=second_filer_indicated,
     )
-
-
 
 
 def _inject_derived_anualidades_eligibility_facts(
@@ -1200,7 +1225,6 @@ def _resolve_one(
             continue
         return value.strip() if isinstance(value, str) else value
     return None
-
 
 
 inject_derived_marriage_facts = _inject_derived_marriage_facts

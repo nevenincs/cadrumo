@@ -57,6 +57,11 @@ def store(tmp_path: Path) -> Iterator[EncryptedBlobStore]:
 
 
 def _manifest_path(store: EncryptedBlobStore, digest: str) -> Path:
+    # "blobs" is the independent oracle for the ``blob_manifest`` grammar
+    # (``<root>/blobs/<sha[:2]>/<sha>.manifest.json``), anchored at
+    # ``store.root_dir`` (the ``blob_store_root`` this store was constructed
+    # with) -- not the storage_root-anchored "blobs" category. Keep the
+    # literal; it locates the real on-disk file this module tampers with.
     return store.root_dir / "blobs" / digest[:2] / f"{digest}.manifest.json"
 
 

@@ -123,8 +123,8 @@ def ensure_profile_keys_registered() -> None:
     Called once when this module is first imported, so importing the wizard
     package is sufficient to seed the registry. It is also the public seam an
     entrypoint calls at its own initialisation, because the domain registry is
-    process-global and the domain layer may not pull upward to seed itself
-    (DB-17): a host that never imports this package would otherwise read an
+    process-global and the domain layer may not pull upward to seed itself:
+    a host that never imports this package would otherwise read an
     empty registry and raise
     :class:`~cadrumo.domain.contribuyente.ProfileKeysRegistrationError`.
 

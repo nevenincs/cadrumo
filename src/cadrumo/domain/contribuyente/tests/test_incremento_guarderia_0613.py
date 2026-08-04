@@ -1,6 +1,6 @@
-"""Oracle + anti-tautology tests for Art. 81 bis LIRPF incremento guardería (casilla 0613).
+"""Oracle + anti-tautology tests for Art. 81.2 LIRPF incremento guardería (casilla 0613).
 
-Art. 81 bis LIRPF formula:
+Art. 81.2 LIRPF formula:
     min(gastos_reales, hijos_menores_3 × 1.000, cotizaciones_ss_madre)
 
   - gastos_reales: sum of gastos_guarderia_euros for eligible children under 3 at year-end
@@ -45,7 +45,7 @@ def _hijo_guarderia(gastos: int) -> DescendantInfo:
 
 
 def _hijo_no_menor_3(gastos: int) -> DescendantInfo:
-    """Child born 2020-01-01 → age 4 at 2024-12-31, NOT eligible for Art. 81 bis."""
+    """Child born 2020-01-01 → age 4 at 2024-12-31, NOT eligible for Art. 81.2."""
     return DescendantInfo(
         birth_date=date(2020, 1, 1),
         gastos_guarderia_euros=gastos,
@@ -58,7 +58,7 @@ def _hijo_no_menor_3(gastos: int) -> DescendantInfo:
 
 
 class TestIncrementoGuarderia0613Oracle:
-    """Oracle values for Art. 81 bis: min(gastos_reales, hijos×1000, cotizaciones_ss)."""
+    """Oracle values for Art. 81.2: min(gastos_reales, hijos×1000, cotizaciones_ss)."""
 
     def test_spec_oracle_gastos_7700_dos_hijos_cotizaciones_1500(self) -> None:
         """Spec oracle: gastos 7700 + 2 hijos + cot.SS 1500 → min(7700, 2000, 1500) = 1500."""
@@ -200,7 +200,7 @@ class TestGastosGuarderiaFactPersistence:
         """Eligibility filtering is the injector's job, not the projection's.
 
         The projection is a faithful record of what the operator declared. Which
-        children count toward the Art. 81 bis sum is an Art. 58.3 question the
+        children count toward the Art. 81.2 sum is an Art. 58.3 question the
         injector answers at calculate time, against the filing year it is
         computing rather than a year baked into the stored facts.
         """

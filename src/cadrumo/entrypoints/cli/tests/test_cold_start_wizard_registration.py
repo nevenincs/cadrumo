@@ -35,7 +35,9 @@ from ....tests import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
+    {"secrets", "master.key", "master.kdf", "master.recovery.key"},
+)
 """Taxonomy-vocabulary literals this module deliberately pins.
 
 ``_workspace_secret_store_fingerprint`` targets the real, shared dev-workspace
@@ -46,7 +48,12 @@ test polluting the real workspace. The cold-process CLI assertions in
 ``CADRUMO_SECRET_STORE_DIR`` override, so they check production's real
 DEFAULT-derived location, not an injected value; migrating either to the
 accessor would make the assertion agree with the code path it exists to
-independently confirm.
+independently confirm. ``"master.key"``, ``"master.kdf"``, and
+``"master.recovery.key"`` are :data:`_SECRET_STORE_FILES`'s three real leaf
+names, checked by the same fingerprint and asserted directly under the
+``"secrets"`` directory (``"salt"`` is the fourth entry but is not a taxonomy
+member: the per-store salt lives inside ``master.kdf``, no standalone file is
+ever written).
 """
 
 # The internal registration-guard messages that must never reach the operator

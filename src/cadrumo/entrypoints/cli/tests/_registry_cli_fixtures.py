@@ -7,7 +7,11 @@ already minted the master key under, since that fixture derives
 (``storage_overrides(tmp_path, StorageCategory.SECRETS)`` -> ``tmp_path /
 "secrets"``). The CLI subprocesses this env drives must independently compute
 the same location to unlock the profile the fixture already created; renaming
-it to a fictional segment breaks that handoff.
+it to a fictional segment breaks that handoff. The blob-store and audit-dir
+overrides carry no equivalent handoff constraint -- nothing else in this
+fixture derives or re-reads those locations -- so they are named
+``"probe-blobs"`` / ``"probe-audit"`` precisely to keep them out of the
+taxonomy vocabulary rather than pinned as if they were.
 """
 
 from __future__ import annotations
@@ -41,8 +45,8 @@ def _isolated_registry_cli_backend(tmp_path_factory: pytest.TempPathFactory) -> 
                 "CADRUMO_ACTIVE_PROFILE": runtime.bucket_id,
                 "CADRUMO_SECRET_STORE_BACKEND": "file",
                 "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets"),
-                "CADRUMO_BLOB_STORE_DIR": str(tmp_path / "blobs"),
-                "CADRUMO_AUDIT_DIR": str(tmp_path / "audit"),
+                "CADRUMO_BLOB_STORE_DIR": str(tmp_path / "probe-blobs"),
+                "CADRUMO_AUDIT_DIR": str(tmp_path / "probe-audit"),
                 "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(runtime.settings),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
             },

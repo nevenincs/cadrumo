@@ -226,8 +226,7 @@ class InventoryValuationPreviewPayload(OutputSchema):
     """JSON envelope for ``aeat app ledger inventory valuation preview``.
 
     Distinct from the application wrapper
-    :class:`InventoryValuationPreviewResult` (DB-26
-    S52): this envelope *flattens* that wrapper, projecting its inner
+    :class:`InventoryValuationPreviewResult`: this envelope *flattens* that wrapper, projecting its inner
     ``preview`` (:class:`InventoryValuationPreview`)
     fields and lifting the wrapper's ``bucket_event_ids`` to the top level.
     Derive via

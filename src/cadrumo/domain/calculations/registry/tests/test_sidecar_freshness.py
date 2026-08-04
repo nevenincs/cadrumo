@@ -48,7 +48,7 @@ def test_manual_pdf_corpus_text_sidecar_mismatch_returns_none() -> None:
     assertion).
     """
     sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{_CORPUS_TEXT_SUFFIX}"))
-    assert sidecars, "no manual corpus text sidecars found — S05 must run first"
+    assert sidecars, "no manual corpus text sidecars found — the corpus text extraction must run first"
 
     first_sidecar = sidecars[0]
     data: dict[str, object] = json.loads(first_sidecar.read_text(encoding="utf-8"))

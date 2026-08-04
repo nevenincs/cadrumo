@@ -2,11 +2,11 @@
 
 The resolution map wrangles raw RAG sweep hits (path + line range + score) into
 typed, linkable targets across the five grounding surfaces -- modelo casillas,
-the CLI surface, BOE legal grounding, the codebase API reference, and built
-docs pages -- and DROPS+REPORTS any hit it cannot resolve (never shipped
-half-mapped). These gates drive real ``src/cadrumo/_data`` paths and the real
-registry/legal authority through the resolver, so each rule is exercised
-against the actual on-disk surfaces, not mocks.
+the CLI surface, generated legal-reference pages, the codebase API reference,
+and built docs pages -- and DROPS+REPORTS any hit it cannot resolve (never
+shipped half-mapped). These gates drive real ``src/cadrumo/_data`` paths and
+the real registry/legal authority through the resolver, so each rule is
+exercised against the actual on-disk surfaces, not mocks.
 
 No dependency on the live CLI tree walk (transiently peer-broken): the CLI
 grounding surface is reached via the generated ``docs/cli/*.rst`` reference
@@ -68,36 +68,50 @@ def test_diseno_source_resolves_to_the_casilla_surface(resolver: TargetResolver)
     assert out.record.metadata.modelo == "036"
 
 
-def test_normatives_source_resolves_to_the_boe_article_anchor(resolver: TargetResolver) -> None:
-    """A normatives source page resolves to the BOE permalink via the legal corpus_ref.
+def test_normatives_source_resolves_to_the_generated_legal_anchor(resolver: TargetResolver) -> None:
+    """A normatives source page resolves to the generated legal-reference target.
 
     The legal catalogue's ``corpus_ref`` points at the normatives html path;
     the hook-indexed hit path IS that source path, and the reverse index
-    resolves it to the legal id carrying the BOE permalink + ``#aN`` article
-    anchor.
+    resolves it to the legal id carrying the generated page/anchor target and
+    BOE permalink provenance.
     """
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
+    from dev.docs.terminology._search_record import SearchRecordKind
 
     # ley-37-1992:art-104 has corpus_ref corpus/normatives/html/ley-37-1992-art-104.html#a104
     path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
-    assert out.record.target.startswith("https://www.boe.es/")
-    assert "#a104" in out.record.target
+    assert out.record.kind is SearchRecordKind.LEGAL
+    assert out.record.target == "_generated/legal/ley-37-1992.html#legal-ley-37-1992-art-104"
+    assert out.record.metadata.legal_permalink.startswith("https://www.boe.es/")
     assert out.record.metadata.legal_refs == ("ley-37-1992:art-104",)
 
 
-def test_normatives_target_matches_the_catalogue_permalink(resolver: TargetResolver) -> None:
-    """The resolved BOE link equals the legal catalogue's permalink (real authority)."""
+def test_normatives_target_uses_generated_legal_reference_and_preserves_permalink(
+    resolver: TargetResolver,
+) -> None:
+    """The target follows the renderer while the catalogue permalink stays provenance."""
+    from dev.docs.legal_reference import legal_reference_target
     from dev.docs.terminology._resolution import ResolvedTarget
 
     catalogue = bundled_authority().catalogues.legal
-    entry = catalogue["ley-37-1992:art-104"]
+    legal_id = "ley-37-1992:art-104"
+    entry = catalogue[legal_id]
     path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
-    assert out.record.target == entry.permalink
+    assert out.record.target == legal_reference_target(
+        entry.document_id,
+        legal_id,
+        article=entry.article,
+        section=entry.section,
+        corpus_ref=entry.corpus_ref,
+        permalink=str(entry.permalink),
+    )
+    assert out.record.metadata.legal_permalink == str(entry.permalink)
 
 
 def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None:
@@ -112,7 +126,10 @@ def test_legal_toml_resolves_to_a_legal_target(resolver: TargetResolver) -> None
     out = resolver.resolve(_hit("src/cadrumo/_data/registry/aeat/legal/iva.toml"))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
-    assert out.record.target.startswith("https://www.boe.es/")
+    assert out.record.kind.value == "legal"
+    assert out.record.target.startswith("_generated/legal/")
+    assert ".html" in out.record.target
+    assert out.record.metadata.legal_permalink
     assert out.record.metadata.legal_refs  # at least one legal ref carried
 
 

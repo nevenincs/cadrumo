@@ -955,7 +955,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit_repository=wu_repo,
     )
 
-    # S26 boundary gate: reject any binding source that is neither enrolled in
+    # Boundary gate: reject any binding source that is neither enrolled in
     # the live resolver mesh nor explicitly deferred.  This converts a silent
     # blank into a loud error so a novel TOML source cannot slip through.
     assert_no_novel_source_kinds(snapshot.revision)
@@ -1261,7 +1261,7 @@ def _source_resolution_excluding_iva_compensation(
 
 
 def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
-    """Raise if any binding source kind is unknown to the live mesh (S26 boundary gate).
+    """Raise if any binding source kind is unknown to the live mesh (the boundary gate).
 
     A binding whose ``source`` is not in the enrolled-resolver union, the
     explicitly-deferred set, or ``manual_input`` would silently blank on every

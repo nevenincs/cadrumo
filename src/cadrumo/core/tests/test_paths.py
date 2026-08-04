@@ -15,9 +15,9 @@ from pathlib import Path
 import pytest
 
 from .._config_state_root import StateRootInputs, platform_user_data_root
+from ..errors import CoreValidationError
 from ..paths import (
     WINDOWS_MAX_PATH,
-    WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH,
     effective_storage_root,
     is_windows_long_path_error,
     resolve_project_path,
@@ -27,6 +27,12 @@ from ..paths import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+#: An arbitrary but realistic suffix budget for the margin arithmetic tests.
+#: ``core`` deliberately holds no opinion about the real value -- the layer
+#: that owns the on-disk grammar derives it and passes it in -- so these tests
+#: pin the arithmetic, not any particular storage layout.
+_SUFFIX = 155
 
 
 @pytest.fixture
@@ -243,100 +249,42 @@ def test_windows_storage_root_long_path_margin_shrinks_with_deeper_roots(tmp_pat
     shallow = tmp_path / "s"
     deep = tmp_path / ("segment-" + "x" * 60) / ("segment-" + "y" * 60)
 
-    shallow_margin = windows_storage_root_long_path_margin(shallow)
-    deep_margin = windows_storage_root_long_path_margin(deep)
+    shallow_margin = windows_storage_root_long_path_margin(shallow, object_path_suffix_length=_SUFFIX)
+    deep_margin = windows_storage_root_long_path_margin(deep, object_path_suffix_length=_SUFFIX)
 
     assert deep_margin < shallow_margin
 
 
 def test_windows_storage_root_long_path_margin_matches_the_explicit_formula(tmp_path: Path) -> None:
-    """The margin is exactly MAX_PATH minus the resolved root length minus the worst-case suffix."""
+    """The margin is exactly MAX_PATH minus the resolved root length minus the supplied suffix."""
     root = tmp_path / "storage"
-    expected = WINDOWS_MAX_PATH - len(str(root.resolve())) - WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH
-    assert windows_storage_root_long_path_margin(root) == expected
+    expected = WINDOWS_MAX_PATH - len(str(root.resolve())) - _SUFFIX
+    assert windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX) == expected
 
 
-def test_windows_worst_case_suffix_covers_the_real_bucket_layout_shape() -> None:
-    """The worst-case suffix constant matches the real bucket blob-sidecar filename shape.
+def test_windows_storage_root_long_path_margin_tracks_the_supplied_suffix(tmp_path: Path) -> None:
+    """A longer supplied suffix budget shrinks the margin one-for-one.
 
-    Anti-tautology guard: recomputes the suffix from the real
-    :mod:`cadrumo.adapters.persistence.storage` namespace constants and the
-    real :mod:`cadrumo.adapters.outbound.storage._local` filename-building
-    rules (HMAC prefix 8, label capped at 64 chars, ``.meta.json``
-    sidecar extension) so a change to either shape is caught here instead
-    of silently under-counting the margin.
-
-    A prior version of this guard omitted the ``<namespace>`` directory
-    ``LocalFileSystemProvider`` fans one out per (``_local.py:176``/``:292``,
-    ``self._root / namespace``) -- the same omission the constant it guards
-    carried, so it reproduced rather than caught the gap. The positive
-    control below proves this version would have caught it.
+    The suffix is an argument precisely so the owning layer can widen it when
+    its grammar grows; a margin that ignored the argument would silently keep
+    reporting the old, narrower ceiling.
     """
-    from ...adapters.outbound.storage._local import _SIDECAR_EXTENSION
-    from ...adapters.outbound.storage._object_name import _HMAC_PREFIX_LENGTH, sanitize_provider_object_label
-    from ...adapters.persistence.storage import (
-        BUCKET_BLOBS_DIRNAME,
-        BUCKETS_DIRNAME,
-    )
-    from ...domain.buckets import BucketEventObjectType
-    from ...domain.user_profile import new_profile_id
-
-    worst_label = sanitize_provider_object_label("x" * 200)  # clamps to 64 chars
-    # A real, representative outbound-attachment namespace value -- the same
-    # one the constant's own comment names. BucketEventObjectType carries no
-    # enforced length cap today (see the constant's comment); this recomputes
-    # the shape for the specific value the constant is pinned to, not a
-    # structurally-guaranteed ceiling over every possible namespace.
-    namespace = BucketEventObjectType.LEDGER_TRANSACTION.value
-    recomputed = (
-        "\\"
-        + BUCKETS_DIRNAME
-        + "\\"
-        + new_profile_id()  # canonical UUIDv4 string, always 36 chars
-        + "\\"
-        + BUCKET_BLOBS_DIRNAME
-        + "\\"
-        + namespace
-        + "\\"
-        + ("a" * _HMAC_PREFIX_LENGTH)
-        + "--"
-        + worst_label
-        + _SIDECAR_EXTENSION
-    )
-    assert len(recomputed) == WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH
+    root = tmp_path / "storage"
+    base = windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX)
+    wider = windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX + 54)
+    assert base - wider == 54
 
 
-def test_windows_worst_case_suffix_guard_catches_a_dropped_namespace_segment() -> None:
-    """Positive control: reproduces the exact prior omission and proves the guard would catch it.
+@pytest.mark.parametrize("suffix_length", [0, -1])
+def test_windows_storage_root_long_path_margin_refuses_a_non_positive_suffix(
+    tmp_path: Path,
+    suffix_length: int,
+) -> None:
+    """A non-positive suffix budget is refused rather than silently inflating the margin.
 
-    Recomputes the shape WITHOUT the ``<namespace>`` segment -- the shape the
-    constant carried before this fix -- and asserts it does NOT match the
-    corrected constant, so a future regression that drops the segment again
-    reds this guard instead of passing silently.
+    Zero or negative would report headroom that no real layout leaves, which
+    is the failure mode this probe exists to prevent.
     """
-    from ...adapters.outbound.storage._local import _SIDECAR_EXTENSION
-    from ...adapters.outbound.storage._object_name import _HMAC_PREFIX_LENGTH, sanitize_provider_object_label
-    from ...adapters.persistence.storage import (
-        BUCKET_BLOBS_DIRNAME,
-        BUCKETS_DIRNAME,
-    )
-    from ...domain.user_profile import new_profile_id
+    with pytest.raises(CoreValidationError):
+        windows_storage_root_long_path_margin(tmp_path, object_path_suffix_length=suffix_length)
 
-    worst_label = sanitize_provider_object_label("x" * 200)
-    without_namespace = (
-        "\\"
-        + BUCKETS_DIRNAME
-        + "\\"
-        + new_profile_id()
-        + "\\"
-        + BUCKET_BLOBS_DIRNAME
-        + "\\"
-        + ("a" * _HMAC_PREFIX_LENGTH)
-        + "--"
-        + worst_label
-        + _SIDECAR_EXTENSION
-    )
-    assert len(without_namespace) != WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH, (
-        "the namespace-dropping shape must NOT match the corrected constant -- if it does, "
-        "the guard above cannot actually catch the omission it was fixed to catch"
-    )

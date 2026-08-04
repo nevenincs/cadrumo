@@ -827,7 +827,7 @@ class AuthConfigurePayload(OutputSchema):
 
     Field set mirrors :class:`AuthConfigureResult` from
     the application layer, whose fields are non-nullable with empty/false
-    defaults; this envelope reconciles to the same nullability (DB-26 S50).
+    defaults; this envelope reconciles to the same nullability.
     ``status`` is the one CLI-only display field with no application
     counterpart.
     """
@@ -848,7 +848,7 @@ class AuthConfigurePayload(OutputSchema):
     def from_result(cls, result: AuthConfigureResult) -> AuthConfigurePayload:
         """Project the application auth result into this CLI envelope.
 
-        Explicit field projection (DB-26 S50): the envelope derives its values from
+        Explicit field projection: the envelope derives its values from
         the application :class:`AuthConfigureResult`
         instead of the command handler re-declaring the field map inline.
         ``status`` is a CLI-only display field left to its default.

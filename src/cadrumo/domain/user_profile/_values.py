@@ -18,6 +18,7 @@ from uuid import uuid4
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.hashing import sha256_hex
 from ...core.identity import ProfileId as _ProfileId
@@ -82,9 +83,15 @@ type UserProfileFactValue = str | bool | int | Decimal | date | None
 # zero: ``Decimal`` normalises ``08001`` to ``8001`` and ``model_dump(mode=
 # "json")`` emits that normalised form. A multi-digit string whose integer
 # part starts with ``0`` (``08001``) is therefore never a round-tripped
-# Decimal — it is a zero-significant identifier such as a Spanish 5-digit
-# postcode, and must stay a ``str``. The integer-part alternative below
-# matches a lone ``0`` or any digit run that does not start with ``0``.
+# Decimal -- it is a zero-significant identifier such as a Spanish 5-digit
+# postcode, and must stay a ``str``.
+#
+# This guard is NOT redundant with the canonical grammar and must not be
+# removed as though it were: the grammar accepts ``08001`` and returns
+# ``Decimal("8001")``, silently discarding the leading zero that carries the
+# meaning. The two rules answer different questions -- this one whether the
+# string is a serialised Decimal at all, the grammar whether it is an
+# unambiguous one -- and both have to hold.
 _DECIMAL_STRING_RE = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?$")
 _DATE_STRING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -118,11 +125,22 @@ def _coerce_profile_fact_value(value: object) -> object:
         _bool_candidate = parse_bool(value)
         if isinstance(_bool_candidate, bool):
             return _bool_candidate
+    # Routed through the canonical strict grammar rather than a bare
+    # ``Decimal()``. The local regex admitted the Spanish thousands shape, so
+    # an operator's ``8.000`` was promoted to eight euros -- silently, three
+    # orders of magnitude low, and past the numeric-field authority, which runs
+    # AFTER this coercion and by then sees a legal Decimal in range. The string
+    # is the only place that ambiguity is still visible, and this is the last
+    # point that holds it.
+    #
+    # A non-conforming string is left AS a string rather than coerced. That is
+    # the loud direction: the write door's numeric check then refuses it as not
+    # a number, so the operator is told, instead of a wrong figure being stored
+    # as a right-looking one.
     if isinstance(value, str) and _DECIMAL_STRING_RE.fullmatch(value):
-        try:
-            return Decimal(value)
-        except (ArithmeticError, ValueError):
-            return value
+        parsed = try_parse_canonical_decimal(value)
+        if parsed is not None:
+            return parsed
     return value
 
 

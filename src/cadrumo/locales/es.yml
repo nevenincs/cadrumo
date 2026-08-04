@@ -1648,6 +1648,9 @@ application:
       create_missing_filing_baseline: 'A la creación del perfil le faltan datos de
         identidad para presentar modelos. Añade estos flags y vuelve a ejecutar el
         comando: %{missing_flags}.'
+      descendant_rentas_not_a_valid_amount: Las rentas anuales del descendiente no
+        son un importe válido. Introduce los euros con punto decimal, por ejemplo
+        1234.56.
       edit_missing_filing_baseline: 'Esta edición dejaría incompletos los datos de
         identidad para presentar modelos. Añade estos flags al mismo comando y vuelve
         a ejecutarlo: %{missing_flags}.'
@@ -7143,7 +7146,7 @@ profile:
     deduccion_maternidad_applied: 'Deducción maternidad Art. 81 LIRPF calculada: %{amount}
       € (casilla 0611). Comprobada la fórmula sum(min(meses × 100, 1.200)) por descendiente
       menor de 3 años con meses de trabajo declarados.'
-    incremento_guarderia_applied: 'Incremento maternidad guardería Art. 81 bis LIRPF
+    incremento_guarderia_applied: 'Incremento maternidad guardería Art. 81.2 LIRPF
       calculado: %{amount} € (casilla 0613). Límite mínimo de gastos reales, hijos
       menores de 3 años × 1.000 € y cotizaciones SS satisfechas.'
   errors:
@@ -7845,7 +7848,7 @@ wizard:
         prompt: Grado de discapacidad
       gastos-guarderia:
         help: Importes pagados a una guardería o centro de educación infantil autorizado
-          (art. 81 bis LIRPF) que incrementan la deducción por maternidad; euros enteros.
+          (art. 81.2 LIRPF) que incrementan la deducción por maternidad; euros enteros.
         invalid_negative: Los gastos de guardería no pueden ser negativos; introduzca
           0 o un importe positivo en euros (art. 81 bis LIRPF).
         prompt: Gastos de guardería pagados en el año de declaración (euros)
@@ -7863,7 +7866,8 @@ wizard:
             label: No, lo aplico solo yo
           'true':
             label: Sí, se reparte entre ambos
-        help: Déjalo en blanco y se deducirá de tu estado civil y tipo de declaración.
+        help: Déjalo en blanco y se deducirá de tu estado civil, del cónyuge registrado
+          y del tipo de declaración.
         prompt: ¿Otro contribuyente tiene derecho al mínimo por este descendiente?
       rentas-anuales:
         help: Déjalo en blanco si no lo sabes. Una renta alta puede impedir el mínimo
@@ -7910,7 +7914,7 @@ wizard:
           FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
       descendiente:
         help: 'Datos de un descendiente para el mínimo del art. 58 LIRPF (repetible).
-          Formato: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,NIF=XXXXXXXXX]'
+          Formato: NACIMIENTO=AAAA-MM-DD[,ADOPCION=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=0..12][,GASTOS_GUARDERIA=N][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:

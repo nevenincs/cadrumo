@@ -22,7 +22,7 @@ Stored fact paths per descendant (n = 0-based index):
 Aggregate facts stored:
   renta_family.descendientes_count               int count
 
-The Art. 81 bis guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
+The Art. 81.2 guardería sum (``renta_family.gastos_guarderia_reales_{year}``)
 is deliberately NOT stored here, and must not be re-added. It is a DERIVED path:
 the calculate-time injector recomputes it from the per-child
 ``gastos_guarderia`` figures above and overwrites whatever the index holds,
@@ -39,9 +39,19 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import ProfileAnswerTypeError
 from ...core.parsing import parse_bool, parse_iso8601_date
 from .family import DescendantInfo
+
+#: Localised refusal for a rentas figure outside the canonical euro grammar.
+#:
+#: Reuses the key the wizard already raises for the SAME refusal on the same
+#: field, rather than minting a second one: it is present and translated in all
+#: four catalogues and its copy is exactly the accepted form ("enter euros with
+#: a dot for decimals"). Two keys for one refusal would drift, and the operator
+#: would meet different words depending on which door they came through.
+_RENTAS_GRAMMAR_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_valid_amount"
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
 _COUNT_PATH = "renta_family.descendientes_count"
@@ -236,17 +246,34 @@ def _stored_rentas_anuales(raw: str | None, *, index: int) -> Decimal | None:
     """
     if raw is None:
         return None
-    try:
-        value = Decimal(raw)
-    except (ArithmeticError, ValueError) as exc:
+    # The canonical grammar, not a bare ``Decimal()``. A bare constructor reads
+    # the Spanish thousands shape ``12.500`` as twelve euros fifty -- three
+    # orders of magnitude below what the taxpayer typed, silently, and in the
+    # CLAIMING direction: the real figure would breach the Art. 58.1 ceiling
+    # and disqualify the descendant, while the misread figure sits far below it
+    # and restores the full mínimo.
+    #
+    # ``max_fraction_digits=2`` is what makes the thousands shape refuse, since
+    # a Spanish grouping is always exactly three digits. That protection is
+    # therefore incidental rather than separator recognition, and it declines a
+    # literal ``8.000`` meaning eight euros exactly. The governing decision
+    # accepted that cost knowingly: a parser that GUESSES which convention the
+    # operator meant is the silent-corruption surface, and a loud refusal
+    # naming the accepted form is the safe direction.
+    value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if value is None:
         raise ProfileAnswerTypeError(
-            f"renta_family.descendiente.{index}.rentas_anuales must be a decimal number of euros; "
-            f"got {raw!r}. It is refused rather than ignored because an ignored figure restores the "
-            "full mínimo por descendientes, claiming a deduction the figure may disqualify.",
-        ) from exc
-    if not value.is_finite() or value < 0:
+            f"renta_family.descendiente.{index}.rentas_anuales must be euros with a dot decimal "
+            f"separator and no thousands grouping (for example 12500 or 12500.75); got {raw!r}. "
+            "The Spanish thousands shape is refused rather than read, because reading '12.500' as "
+            "twelve euros fifty would restore a mínimo por descendientes that the real figure "
+            "disqualifies.",
+            translated_message=_RENTAS_GRAMMAR_LOCALE_KEY,
+        )
+    if value < 0:
         raise ProfileAnswerTypeError(
-            f"renta_family.descendiente.{index}.rentas_anuales must be a finite non-negative amount; got {raw!r}.",
+            f"renta_family.descendiente.{index}.rentas_anuales must be a non-negative amount; got {raw!r}.",
+            translated_message=_RENTAS_GRAMMAR_LOCALE_KEY,
         )
     return value
 
@@ -303,7 +330,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
                              contribuyente also entitled to this descendant's mínimo?
                              Omit to let the engine derive it from profile signals.
       MESES_TRABAJO=0..12    (optional, default 0) months mother worked — Art. 81 deducción maternidad
-      GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81 bis incremento 0613
+      GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81.2 incremento 0613
       NIF=XXXXXXXXX          (optional) NIF/NIE
 
     Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``

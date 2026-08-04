@@ -149,6 +149,11 @@ def _index_path(store: SecretStore) -> Path:
 
 
 def _manifest_path(store: SecretStore, blob_digest: str) -> Path:
+    # "blobs" is the independent oracle for the ``blob_manifest`` grammar,
+    # anchored at ``store._blob_store.root_dir`` (the ``blob_store_root`` the
+    # inner blob store was constructed with), not the storage_root-anchored
+    # "blobs" category the string coincidentally shares a name with. Keep the
+    # literal.
     return store._blob_store.root_dir / "blobs" / blob_digest[:2] / f"{blob_digest}.manifest.json"
 
 

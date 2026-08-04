@@ -6,12 +6,13 @@ calls the returned async callback with the open ``PagefindIndex`` after the
 HTML directory pass and before the index is written. Where the directory pass
 indexes the built docs pages (full text, tier three), this injection
 adds the term cards (tier one) and the casilla / CLI navigation surfaces (tier
-two) as first-class custom records, so the one Pagefind index serves all four
+two) as first-class custom records, so the one Pagefind index serves all five
 record kinds.
 
 The records are materialised by the deterministic projections (concept cards
 from the Handbook, casilla projections from the registry authority, CLI
-surface records from the live command tree) and funnelled through the uniform
+surface records from the live command tree, legal provisions from the
+registry-backed legal-reference projection) and funnelled through the uniform
 :class:`~dev.docs.terminology._unified_record.SearchRecord`. Each record is
 injected ONCE, into the language of the root being built, with content
 carrying every language's description (see :func:`_content_for`). It is not
@@ -19,8 +20,9 @@ injected once per language section: Pagefind's reader loads only the index
 matching the page's own language, so a record duplicated into the other three
 splits would be unreachable weight, while a record placed in a split the root
 never loads would be invisible. Typed metadata (kind, concept id/domain,
-modelo/casilla.id, command path) rides on the record for the palette term
-card, and ``kind``/``domain`` filters let the palette narrow by surface.
+modelo/casilla.id, command path, and legal catalogue/BOE grounding) rides on
+the record for the palette term card, and ``kind``/``domain`` filters let the
+palette narrow by surface.
 
 Ranking: every record carries a base ranking weight from the unified
 projection (tier ordering - concepts outrank navigation outranks full
@@ -73,6 +75,7 @@ class InjectionStats:
 
     concepts: int = 0
     casillas: int = 0
+    legal_provisions: int = 0
     cli_commands: int = 0
     cli_options: int = 0
     custom_records_written: int = 0
@@ -88,6 +91,7 @@ class _Materialised:
     records: list[SearchRecord] = field(default_factory=list)
     concepts: int = 0
     casillas: int = 0
+    legal_provisions: int = 0
     cli_commands: int = 0
     cli_options: int = 0
     cli_skipped_reason: str | None = None
@@ -127,18 +131,23 @@ def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     return weights
 
 
-def _materialise_records() -> _Materialised:
+def _materialise_records(repo_root: Path | None = None) -> _Materialised:
     """Project and funnel every record kind into unified search records.
 
     Concepts and casillas are the priority surfaces and always project. The CLI
     projection runs the live-command-tree subprocess walk; if it fails (a
     transiently broken CLI), it is skipped-and-reported rather than failing the
-    whole injection - concepts + casillas still land.
+    whole injection - concepts + casillas + legal provisions still land. Legal
+    records are loaded from the registry-backed generated legal-reference
+    surface and fail closed when that authored catalogue cannot produce a safe
+    destination.
     """
     from .terminology._casilla_projection import project_casilla_search_records
     from .terminology._concept_cards import project_concept_cards
+    from .terminology._legal_projection import project_legal_search_records
 
     out = _Materialised()
+    root = repo_root if repo_root is not None else Path(__file__).resolve().parents[2]
 
     # Inject APPROVED concept cards only. A draft concept is scaffold-empty
     # (placeholder short_description) and absent from the approved-only
@@ -153,6 +162,10 @@ def _materialise_records() -> _Materialised:
     casilla_records, _ = project_casilla_search_records()
     out.casillas = len(casilla_records)
     out.records.extend(to_search_record(rec) for rec in casilla_records)
+
+    legal_records = project_legal_search_records(root)
+    out.legal_provisions = len(legal_records)
+    out.records.extend(to_search_record(rec) for rec in legal_records)
 
     try:
         from .terminology._cli_projection import project_cli_search_records
@@ -318,6 +331,7 @@ async def _inject_records(
     return InjectionStats(
         concepts=materialised.concepts,
         casillas=materialised.casillas,
+        legal_provisions=materialised.legal_provisions,
         cli_commands=materialised.cli_commands,
         cli_options=materialised.cli_options,
         custom_records_written=written,
@@ -347,6 +361,7 @@ def _bounded_to_sample(materialised: _Materialised, sample_per_kind: int) -> _Ma
         records=kept,
         concepts=min(materialised.concepts, sample_per_kind),
         casillas=min(materialised.casillas, sample_per_kind),
+        legal_provisions=min(materialised.legal_provisions, sample_per_kind),
         cli_commands=min(materialised.cli_commands, sample_per_kind),
         cli_options=min(materialised.cli_options, sample_per_kind),
         cli_skipped_reason=materialised.cli_skipped_reason,
@@ -393,7 +408,7 @@ def build_record_injector(
     relevance = load_relevance_weights(repo_root)
 
     async def _inject(index: PagefindIndex) -> None:
-        materialised = _materialise_records()
+        materialised = _materialise_records(repo_root)
         if sample_per_kind is not None:
             materialised = _bounded_to_sample(materialised, sample_per_kind)
         stats = await _inject_records(index, materialised, relevance, language)

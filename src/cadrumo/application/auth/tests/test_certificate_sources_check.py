@@ -19,7 +19,7 @@ import pytest
 from pydantic import SecretStr, ValidationError
 
 from ....adapters.outbound.aeat.auth import _session_store
-from ....adapters.persistence.storage import SecretStore, get_secret_store
+from ....adapters.persistence.storage import SECRET_INDEX_FILENAME, SecretStore, get_secret_store
 from ....adapters.persistence.storage.master_key import current_active_bucket_session
 from ....core import AuthProviderKind, BucketPointer, write_pointer
 from ....core.config import load_settings, override_settings
@@ -1230,7 +1230,7 @@ def test_check_named_source_fails_closed_when_secure_storage_cannot_be_read(
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
     set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
     select_operator_certificate_source(name="personal")
-    (_isolated_secret_store.store_dir / "index.json").write_text("{not-json", encoding="utf-8")
+    (_isolated_secret_store.store_dir / SECRET_INDEX_FILENAME).write_text("{not-json", encoding="utf-8")
 
     with override_settings(cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE)):
         report = check_operator_certificate_sources()

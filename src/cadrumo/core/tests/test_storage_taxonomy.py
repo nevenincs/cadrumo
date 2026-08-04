@@ -42,8 +42,38 @@ from ..errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"registry", "cache"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
+    {
+        "registry",
+        "cache",
+        "buckets",
+        "keystore",
+        "tokens",
+        "db",
+        "manifest.toml",
+        "session.v1.json",
+        "bucket.dek.json",
+        "login-throttle.json",
+        "audit",
+        "blobs",
+        "active-profile",
+    },
+)
 """Taxonomy-vocabulary literals this module deliberately pins.
+
+``"audit"`` and ``"blobs"`` are the shared on-disk names
+``test_the_duplicated_names_resolve_to_distinct_members`` asserts both the
+root and bucket-relative members resolve to, independent of the accessor
+under test. ``"active-profile"`` is the fixed-layout member's leaf name in
+``test_storage_path_falls_back_to_the_root_for_a_fieldless_member``.
+
+This module is the taxonomy's own accessor test: ``storage_path``,
+``bucket_scoped_storage_path``, and ``storage_tree_targets`` are the functions
+under test, so an assertion comparing their output against a hand-typed leaf
+name (``root / "buckets"``, ``keystore_tree / "session.v1.json"``, ...) *is*
+the oracle for what those accessors must resolve to. Re-deriving the expected
+side from ``storage_location(...).subpath`` would make the assertion compare
+the accessor against itself and pass for any subpath at all.
 
 ``root / "cache" / "registry"`` in
 ``test_tree_targets_skip_fixed_layout_and_absent_opt_in_members`` is the
@@ -53,6 +83,13 @@ be materialised) would be tautological if re-derived from the same
 accessor. Not to be confused with the CALCULATION registry's bundled TOML
 authoring tree (``_data/registry/aeat/...``), an unrelated concept several
 other modules in this corpus also spell ``"registry"``.
+
+The ``root / "buckets" / "primary" / "keystore"`` composition in
+``test_the_production_separation_check_still_refuses_a_nested_keystore`` is a
+refusal-guard literal: it is deliberately the WRONG (nested) shape
+``validate_keystore_separation`` must reject, so it must stay a literal for the
+same reason every other refusal-guard pin in this corpus does -- an accessor
+resolving to the wrong location would leave the refusal trivially satisfied.
 """
 
 
@@ -352,6 +389,10 @@ def test_the_production_separation_check_still_refuses_a_nested_keystore(tmp_pat
     from ...adapters.persistence.storage.bucket import BucketValidationError, validate_keystore_separation
 
     root = tmp_path / "state"
+    # Deliberately the WRONG shape -- this is the composition
+    # validate_keystore_separation must reject, not a pin of the correct
+    # keystore location (that is `root / "keystore" / "primary"`, asserted
+    # above in test_the_scoped_accessor_resolves_bucket_and_keystore_members).
     nested = root / "buckets" / "primary" / "keystore"
 
     with pytest.raises(BucketValidationError):

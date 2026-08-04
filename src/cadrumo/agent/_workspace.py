@@ -63,10 +63,10 @@ _PLUGIN_MANIFEST = "plugin.json"
 _PLUGIN_NAME = PRODUCT_IDENTITY.plugin_identifier
 _PYPI_DISTRIBUTION = PRODUCT_IDENTITY.distribution
 _PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
-# Bilingual (English + Spanish) product copy approved in the S06 docs-authority
-# act. The labeled sections (English: / Español:) satisfy the verifier's bilingual
-# claim-parity parser. Wording changes must re-enter through a new S06-equivalent
-# approval record and re-enrollment in verify_distribution_identity.py.
+# Bilingual (English + Spanish) product copy, approved through this project's
+# docs-authority process. The labeled sections (English: / Español:) satisfy
+# the verifier's bilingual claim-parity parser. Wording changes must re-enter
+# through a new approval record and re-enrollment in verify_distribution_identity.py.
 _PLUGIN_DESCRIPTION = (
     "English: Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude: "
     "grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided "

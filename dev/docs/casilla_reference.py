@@ -104,11 +104,17 @@ def _localised_lines(record: CasillaSearchRecord) -> list[str]:
 
     lines: list[str] = []
     spanish_help = record.localized_help.get(OutputLanguage.ES.value)
-    if spanish_help:
+    if spanish_help is not None and not spanish_help.strip():
+        spanish_help = None
+    if spanish_help is not None:
         lines.append(f":Help (es): {_rst_escape(spanish_help)}")
     for language in (OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU):
         localized_label = record.descriptions.get(language)
         localized_help = record.localized_help.get(language.value)
+        if localized_label is not None and not localized_label.strip():
+            localized_label = None
+        if localized_help is not None and not localized_help.strip():
+            localized_help = None
         if localized_label is None and localized_help is None:
             continue
         label = localized_label or record.description_es

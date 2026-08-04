@@ -5,9 +5,15 @@ decides a row's rendering from the *Python type* of the value it is handed: a
 ``bool`` becomes ``SI``/``NO`` on an ``S_N`` row and ``1``/``0`` on every other,
 a :class:`~datetime.date` becomes ``d/m/yyyy``. Anything else is written through
 as text. So a value that arrives already flattened to a string renders as that
-string -- ``"True"`` where AEAT's dictionary requires ``SI``, ``"1980-01-02"``
-where it requires ``2/1/1980`` -- and nothing on the export path detects it,
-because the artefact is never schema-validated before it reaches AEAT.
+string -- ``"true"`` where AEAT's dictionary requires ``SI`` -- and nothing on
+the export path detects it, because the artefact is never schema-validated
+before it reaches AEAT.
+
+The date rows are the exception, and only since the text they accept came to be
+checked against AEAT's ``tipo_Fecha`` pattern: a flattened date is refused there
+rather than written. That narrows what a flattened channel can silently ship; it
+does not remove the need for the channel to stay typed, which is what the rest
+of this module gates.
 
 The declaration header mapping is ``dict[str, str]`` by contract, which is why
 the identity fields it carries cannot be the route for a typed one. This module
@@ -29,6 +35,7 @@ import pytest
 from defusedxml import ElementTree as DefusedElementTree
 
 from ....domain.calculations.registry import xml_dictionary_entries
+from ....domain.filing import FilingExportValidationError
 from .._export_xml_dictionary import render_xml_dictionary_layout
 from ..runtime import RegistrySchemaAccessor
 from ._export_support import _schema_provider
@@ -157,18 +164,27 @@ def test_a_flattened_channel_writes_the_wrong_tokens() -> None:
     The strings used here are the ones the canonical profile-fact projection
     produces -- lowercase ``true``/``false`` for booleans, ISO for dates -- so
     this is the exact failure a resolver built on that projection would ship,
-    not a synthetic corruption. None of the three rendered values is schema-valid
-    for its declared type, and none of them would be caught downstream.
+    not a synthetic corruption.
+
+    The two failures now surface differently, which is the point of the split
+    below. A flattened boolean still RENDERS, as a token neither declared type
+    accepts, and nothing downstream questions it. A flattened date is REFUSED at
+    the row, because the date rows validate text against AEAT's own ``tipo_Fecha``
+    pattern. Both prove the channel must stay typed; only the second one tells
+    the operator so.
     """
-    flattened = _render({_SINO_FIELD: "true", _LOGICAL_FIELD: "true", _DATE_FIELD: _BIRTH_DATE.isoformat()})
+    flattened = _render({_SINO_FIELD: "true", _LOGICAL_FIELD: "true"})
 
     assert _text_at(flattened, _SINO_PATH) == "true"
     assert _text_at(flattened, _LOGICAL_PATH) == "true"
-    assert _text_at(flattened, _DATE_PATH) == "1980-01-02"
 
-    typed = _render({_SINO_FIELD: True, _LOGICAL_FIELD: True, _DATE_FIELD: _BIRTH_DATE})
-    for path in (_SINO_PATH, _LOGICAL_PATH, _DATE_PATH):
+    typed = _render({_SINO_FIELD: True, _LOGICAL_FIELD: True})
+    for path in (_SINO_PATH, _LOGICAL_PATH):
         assert _text_at(flattened, path) != _text_at(typed, path)
+
+    with pytest.raises(FilingExportValidationError, match="not in the form AEAT accepts"):
+        _render({_DATE_FIELD: _BIRTH_DATE.isoformat()})
+    assert _text_at(_render({_DATE_FIELD: _BIRTH_DATE}), _DATE_PATH) == "2/1/1980"
 
 
 def test_the_renderer_writes_no_identity_field_it_is_not_given() -> None:

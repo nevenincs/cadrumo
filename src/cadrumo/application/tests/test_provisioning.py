@@ -131,15 +131,21 @@ def test_playwright_browsers_root_escape_is_declared() -> None:
     assert PLAYWRIGHT_BROWSERS_ROOT_ROLE is ExternalPathRole.THIRD_PARTY_CACHE
 
 
-def test_playwright_browsers_root_still_honours_vendor_env_var(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
+def test_playwright_browsers_root_still_honours_vendor_env_var(tmp_path: Path) -> None:
     """The declared escape does not change resolution: an explicit
-    ``PLAYWRIGHT_BROWSERS_PATH`` still wins over the per-OS default."""
+    ``PLAYWRIGHT_BROWSERS_PATH`` still wins over the per-OS default.
+
+    Drives the injectable ``env`` mapping rather than mutating the process
+    environment, so the precedence is asserted against a real dict on the same
+    branch the live probe takes. ``cache_root`` would not test this: it
+    short-circuits before the override is ever read. The absent-override case
+    is asserted alongside it, since "the override wins" only means something
+    once the default it beats is pinned too.
+    """
     vendor_root = tmp_path / "vendor-playwright-cache"
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(vendor_root))
-    assert _playwright_browsers_root() == vendor_root
+
+    assert _playwright_browsers_root(env={"PLAYWRIGHT_BROWSERS_PATH": str(vendor_root)}) == vendor_root
+    assert _playwright_browsers_root(env={}) != vendor_root
 
 
 def test_probe_subprocess_providers_returns_typed_statuses_and_never_raises() -> None:

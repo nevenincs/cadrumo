@@ -38,7 +38,7 @@ from ..aggregation import CallerOverrideDisposition as _CallerOverrideDispositio
 from ..aggregation import build_binding_source_dispositions as _build_binding_source_dispositions
 from ..aggregation import precedence_ladder_sources as _precedence_ladder_sources
 
-# S26 boundary gate: source kinds handled by the live calculate path, either
+# Boundary gate: source kinds handled by the live calculate path, either
 # through an enrolled resolver or an explicitly-deferred advisory.
 _ENROLLED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {

@@ -5,13 +5,14 @@ The ratified search-surface decision retires the stock ``PagefindUI`` drop from
 controller inline on the page, so the page and the modal share ONE ranking
 implementation. The whole point of that extraction is that the page stops
 rendering Pagefind's flat relevance list and starts rendering the ratified tier
-ladder -- term/casilla/CLI cards ABOVE full-text pages, with the PERF-003
+ladder -- term/casilla/LEGAL/CLI cards ABOVE full-text pages, with the PERF-003
 exact-term tie-break inside the card tier.
 
 This is the inline-host sibling of ``test_palette_ranking.py`` (which proves the
 same ladder in the modal). It drives the REAL shipped ``search.html`` +
-``cadrumo-docs.js`` in a real browser: build the page, inject the approved
-concept cards into the Pagefind index, navigate to ``search.html?q=iva``, and
+``cadrumo-docs.js`` in a real browser: build the page, inject the deliberately
+narrowed approved-concept fixture into the Pagefind index, navigate to
+``search.html?q=iva``, and
 assert a concept CARD leads the rendered results -- proof the page inherited the
 palette ranking rather than Pagefind's flat list (which would surface no
 ``--concept`` card class and would not float the exact-term concept first).
@@ -21,8 +22,9 @@ regressed the inline host specifically; if both fail, the shared controller
 regressed and BOTH search surfaces degraded at once.
 
 Scope/cost: builds a Furo subset that renders the real search template + loads
-the real controller, injects the approved concept cards, indexes, and drives one
-browser -- seconds, ``integration`` marked.
+the real controller, injects only the approved concept-card fixture (the
+production funnel also carries casilla, LEGAL, and CLI records), indexes, and
+drives one browser -- seconds, ``integration`` marked.
 """
 
 from __future__ import annotations

@@ -49,7 +49,7 @@ _OTHER_TAXPAYER_REF = "87654321X"
 
 def test_sede_observation_satisfies_the_domain_wallet_protocol() -> None:
     """The Sede adapter observation structurally satisfies the domain wallet port the
-    reconciliation logic consumes, so the domain never imports the adapter (DB-26 contract)."""
+    reconciliation logic consumes, so the domain never imports the adapter."""
     wallet = _wallet(Decimal("100.00"))
     assert isinstance(wallet, IvaCompensationWalletObservationProtocol)
 

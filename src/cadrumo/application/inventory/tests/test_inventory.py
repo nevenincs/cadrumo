@@ -199,7 +199,7 @@ class TestMovementAdd:
             svc.movement_add(bucket_id=secure_engine.bucket_id, actividad_id="A1", year=2025, movement=cmd)
 
     def test_movement_add_refuses_invalid_negative_stock(self, secure_engine: TestRuntimeProfile) -> None:
-        """The domain valuation guard runs in the service before persisting (DB-32 B-3).
+        """The domain valuation guard runs in the service before persisting.
 
         A COGS movement that consumes more stock than the ledger holds must be
         refused by ``movement_add`` itself — the persistence adapter no longer

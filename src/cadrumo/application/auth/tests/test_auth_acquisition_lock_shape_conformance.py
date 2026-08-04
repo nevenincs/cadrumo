@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import AuthProviderKind
+from ....core import AuthProviderKind, StorageCategory, storage_location
 from ....core.config import Settings, override_settings
 from ....tests import assert_path_matches_grammar
 from .._acquisition_lock import acquire_auth_acquisition_lock, auth_acquisition_lock_path
@@ -45,6 +45,6 @@ def test_the_real_lock_file_matches_its_declared_shape(tmp_path: Path) -> None:
 
 def test_a_non_conforming_lock_filename_is_rejected_by_the_grammar(tmp_path: Path) -> None:
     """Positive control: the matcher can still fail."""
-    malformed = tmp_path / "tokens" / "not-shaped-like-a-lock-file.txt"
+    malformed = tmp_path / storage_location(StorageCategory.TOKENS).subpath / "not-shaped-like-a-lock-file.txt"
     with pytest.raises(AssertionError):
         assert_path_matches_grammar(key="auth_acquisition_lock", root=tmp_path, produced=malformed)

@@ -1267,6 +1267,22 @@ def setup(app):
 
         generate_casilla_reference(Path(__file__).resolve().parent)
 
+    def _generate_legal_reference(app):
+        """Render the per-document legal reference pages fresh from the catalogue.
+
+        The ``docs/_generated/legal/`` pages are a build-time projection of
+        the authored registry legal tables.  They are regenerated before
+        Sphinx reads the source tree and are never committed.  The generator
+        also owns the page/anchor target inventory consumed by the later legal
+        search-record projection.
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        from dev.docs.legal_reference import generate_legal_reference
+
+        generate_legal_reference(Path(__file__).resolve().parent)
+
     def _emit_cli_tree(app):
         """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
 
@@ -1319,6 +1335,7 @@ def setup(app):
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_glossary_reference)
     app.connect("builder-inited", _generate_casilla_reference)
+    app.connect("builder-inited", _generate_legal_reference)
     app.connect("builder-inited", _emit_cli_tree)
     app.connect("builder-inited", _check_cli_sequences)
     # Priority 700 runs after intersphinx (which resolves external targets at the

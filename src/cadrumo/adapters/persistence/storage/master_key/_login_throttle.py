@@ -6,7 +6,7 @@ recent one — never a secret, a passphrase, or any key material. It lives
 beside the wrapped bucket DEK in the separated keystore directory and is
 written through the same hardened atomic writer.
 
-The throttle enforces the ADR Decision 5 backoff: the caller evaluates the
+The throttle enforces this backoff: the caller evaluates the
 remaining wait BEFORE running any Argon2id derivation, so the KDF can never
 become a passphrase-testing timing oracle. The required wait after ``n``
 consecutive failures is ``min(2 ** n, 60)`` seconds, measured from

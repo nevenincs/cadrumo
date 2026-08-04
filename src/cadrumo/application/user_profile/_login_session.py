@@ -479,8 +479,8 @@ def login_profile(
 def _resume_for_idempotent_login(*, bucket_id: str, now: datetime):
     """Return the resumed record when the idempotent-login guard applies.
 
-    The guard requires a still-valid PERSISTED record in every case, per
-    ADR Decision 1 ("a login for a profile whose persisted session is
+    The guard requires a still-valid PERSISTED record in every case
+    ("a login for a profile whose persisted session is
     still valid returns the existing session as a no-op"). A live session
     already bound to this bucket only short-circuits the reopen — the
     record is still peeked, and its absence still means "not idempotent".

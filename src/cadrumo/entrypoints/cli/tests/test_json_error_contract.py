@@ -56,8 +56,14 @@ from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs", "cadrumo.log"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``state_root / "logs" / "cadrumo.log"`` is the real diagnostic-log location a
+crash's traceback must reach; both the directory and the leaf filename are
+asserted directly against the real DEFAULT-derived path, not an injected
+value.
+"""
 
 
 @pytest.fixture(autouse=True)

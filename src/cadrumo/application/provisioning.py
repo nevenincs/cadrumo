@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
 
@@ -182,7 +183,7 @@ keyed by settings field name.
 """
 
 
-def _playwright_browsers_root(cache_root: Path | None = None) -> Path:
+def _playwright_browsers_root(cache_root: Path | None = None, *, env: Mapping[str, str] | None = None) -> Path:
     """Return the directory Playwright installs browser binaries into.
 
     Uses an explicit ``cache_root`` when supplied, otherwise honours
@@ -190,17 +191,24 @@ def _playwright_browsers_root(cache_root: Path | None = None) -> Path:
     filesystem read only — it never launches the Playwright driver (which can
     hang inside the CLI process), so the probe stays fast and non-blocking.
 
+    Reads ``env`` (an injectable mapping so the vendor-override precedence is
+    unit-tested against real dict inputs without mutating process environment
+    state; defaults to ``os.environ`` for the live probe). ``cache_root`` is not
+    a substitute for it: that argument short-circuits resolution entirely, so it
+    exercises a different branch than the one the override precedence lives on.
+
     A third-party-owned cache (see :data:`PLAYWRIGHT_BROWSERS_ROOT_ROLE`): the
     application reads this location to probe for an installed build and never
     chooses or writes to it.
     """
     if cache_root is not None:
         return cache_root
-    override = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+    environment = os.environ if env is None else env
+    override = environment.get("PLAYWRIGHT_BROWSERS_PATH")
     if override:
         return Path(override)
     if sys.platform == "win32":
-        base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
+        base = environment.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
         return Path(base) / "ms-playwright"
     if sys.platform == "darwin":
         return Path.home() / "Library" / "Caches" / "ms-playwright"

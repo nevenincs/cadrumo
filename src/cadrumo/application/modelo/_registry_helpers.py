@@ -62,6 +62,22 @@ from ._registry_resources import (
 
 _NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"decimal", "money", "integer", "ratio"})
 
+# A boolean casilla answers on this same Decimal channel, encoded 0 / 1. That is
+# the engine's own representation rather than a convenience: the Modelo 100
+# art. 85 operand reads a boolean casilla out of the NUMERIC map and refuses
+# anything that is not 0 or 1, and the art. 23.2 arrendamiento reducción uses its
+# flag casilla as a multiplicative operand, so an absent flag arrives as zero and
+# silently withholds the reducción. A boolean-typed BINDING is already encoded
+# this way on the ``--binding`` channel, so accepting it for a casilla makes the
+# two channels agree instead of leaving the casilla half unreachable.
+#
+# Kept as its own set rather than folded into the numeric one because only this
+# family is domain-restricted to 0 / 1 below. A numeric casilla stays
+# unrestricted, and no ``bool`` is admitted anywhere: the value is and remains a
+# Decimal, so nothing widens toward writing a Python boolean onto a numeric row.
+_BOOLEAN_CASILLA_DATA_TYPES: frozenset[str] = frozenset({"boolean"})
+_BOOLEAN_CASILLA_ENCODED_VALUES: frozenset[Decimal] = frozenset({Decimal(0), Decimal(1)})
+
 
 @dataclass(frozen=True)
 class _ResolvedRegistryCasillaInputs:
@@ -154,6 +170,12 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
     by canonical :class:`~cadrumo.domain.calculations.registry.CasillaId` values and
     contains only ``Decimal`` numeric inputs that the registry engine may
     consume.
+
+    Two declared families may carry a value: the numeric ones over their full
+    range, and the boolean family restricted to ``0`` / ``1``, which is how the
+    engine itself reads a boolean casilla. Both arrive as ``Decimal``; a Python
+    ``bool`` is refused for either, so widening to booleans never widens toward
+    writing a ``True`` onto an amount row.
     """
     if not casilla_inputs:
         return {}
@@ -206,10 +228,11 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
                 "value_types": ",".join(type(canonical_inputs[casilla_id]).__name__ for casilla_id in non_decimal),
             },
         )
+    accepted_data_types = _NUMERIC_CASILLA_DATA_TYPES | _BOOLEAN_CASILLA_DATA_TYPES
     non_numeric = sorted(
         casilla_id
         for casilla_id in canonical_inputs
-        if revision_casillas_by_id[casilla_id].data_type not in _NUMERIC_CASILLA_DATA_TYPES
+        if revision_casillas_by_id[casilla_id].data_type not in accepted_data_types
     )
     if non_numeric:
         details = "; ".join(
@@ -223,6 +246,31 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
                 "casilla_ids": ",".join(non_numeric),
                 "revision_id": revision.id,
                 "data_types": ",".join(revision_casillas_by_id[casilla_id].data_type for casilla_id in non_numeric),
+            },
+        )
+    out_of_domain = sorted(
+        casilla_id
+        for casilla_id, value in canonical_inputs.items()
+        if revision_casillas_by_id[casilla_id].data_type in _BOOLEAN_CASILLA_DATA_TYPES
+        and isinstance(value, Decimal)
+        and value not in _BOOLEAN_CASILLA_ENCODED_VALUES
+    )
+    if out_of_domain:
+        # Named rather than rounded toward the nearer of 0 / 1. The engine refuses
+        # a boolean casilla that is not exactly 0 or 1, so coercing here would only
+        # move the same refusal further from the operator who typed the value, and
+        # guessing which answer a 2 meant is not a guess this boundary can make.
+        details = "; ".join(
+            f"{casilla_id}: {canonical_inputs[casilla_id]!s} ({revision_casillas_by_id[casilla_id].label})"
+            for casilla_id in out_of_domain
+        )
+        raise RegistryValidationError(
+            f"boolean casilla inputs must be 0 (no) or 1 (yes) for revision {revision.id!r}; {details}",
+            context={
+                "casilla_ids": ",".join(out_of_domain),
+                "revision_id": revision.id,
+                "accepted": "0,1",
+                "values": ",".join(str(canonical_inputs[casilla_id]) for casilla_id in out_of_domain),
             },
         )
     return {casilla_id: value for casilla_id, value in canonical_inputs.items() if isinstance(value, Decimal)}

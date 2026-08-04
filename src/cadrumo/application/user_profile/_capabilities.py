@@ -22,6 +22,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
 from ...core.config import Settings, load_settings
+from ...core.parsing import parse_bool
 from ...domain.user_profile import UserProfileRecord
 from ._orchestration import fact_value
 
@@ -32,8 +33,8 @@ __all__ = [
     "resolve_capability",
 ]
 
-_TRUE_TOKENS = frozenset({"true", "1", "yes", "on"})
-_FALSE_TOKENS = frozenset({"false", "0", "no", "off"})
+
+
 
 
 class CapabilitySource(StrEnum):
@@ -57,15 +58,27 @@ class CapabilityDecision(BaseModel):
 
 
 def _parse_bool_fact(value: str | None) -> bool | None:
-    """Parse a string-rendered boolean profile fact, or ``None`` when unset/unknown."""
-    if value is None:
-        return None
-    token = value.strip().casefold()
-    if token in _TRUE_TOKENS:
-        return True
-    if token in _FALSE_TOKENS:
-        return False
-    return None
+    """Parse a string-rendered boolean profile fact, or ``None`` when unset/unknown.
+
+    Delegates to the canonical parser the profile WRITE door already validates
+    with, so a value the taxpayer was allowed to store is a value this can read.
+    A private token set here decides capability posture -- including whether
+    sensitive evidence may leave the machine -- against a vocabulary the door
+    never agreed to, and the two drifted in both directions:
+
+    * The door accepts ``sí``/``si``/``s``/``verdadero``/``n``/``falso`` (its
+      refusal message names ``true/false, sí/no, 1/0`` explicitly, so the
+      taxpayer is TOLD to use them) while the private set recognised none of
+      them. An answer stored in Spanish read as *unset*, and an unset fact
+      falls through to the global deployment flag -- so an explicit opt-OUT of
+      cloud evidence upload was silently replaced by the deployment default,
+      and the decision recorded ``GLOBAL_SETTING``/"no profile opt-in" when a
+      profile opt-out existed.
+    * The private set accepted ``on``/``off``, which the door REFUSES outright
+      (``boolean_field_invalid``). Those tokens could never reach a stored
+      fact, so nothing is lost by dropping them.
+    """
+    return parse_bool(value)
 
 
 def resolve_capability(

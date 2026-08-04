@@ -25,7 +25,12 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot, resolve_parameter
-from ....domain.contribuyente import DescendantInfo, MinimoDescendientesThresholds, RentaFamilyProfile
+from ....domain.contribuyente import (
+    DescendantInfo,
+    MinimoDescendientesThresholds,
+    RentaFamilyProfile,
+    RentaMaritalStatus,
+)
 from .._profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
@@ -238,7 +243,7 @@ def test_two_entitled_filers_declaring_individually_each_take_half() -> None:
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": "casado",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
         "filing_export.declaration_type": "1",
     }
     _inject(facts, snapshot)
@@ -256,7 +261,7 @@ def test_conjunta_return_is_not_prorated() -> None:
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": "casado",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
         "filing_export.declaration_type": "2",
     }
     _inject(facts, snapshot)
@@ -269,7 +274,7 @@ def test_unpartnered_individual_filer_takes_the_full_minimo() -> None:
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": "soltero",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
         "filing_export.declaration_type": "1",
     }
     _inject(facts, snapshot)
@@ -287,7 +292,7 @@ def test_explicit_override_beats_the_derivation_in_both_directions() -> None:
     full = _parameter(snapshot, "primer-hijo")
     base: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
-        "renta_taxpayer.marital_status": "casado",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
         "filing_export.declaration_type": "1",
     }
 
@@ -307,7 +312,7 @@ def test_shared_custody_still_prorates_without_any_partner_signal() -> None:
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",
         "renta_family.descendiente.0.custodia_compartida": "true",
-        "renta_taxpayer.marital_status": "soltero",
+        "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
         "filing_export.declaration_type": "1",
     }
     _inject(facts, snapshot)
@@ -325,15 +330,22 @@ def test_second_filer_derivation_reads_a_spouse_record_when_status_is_absent() -
 # ---------------------------------------------------------------------------
 
 
-def test_anualidades_flag_reads_sin_derecho_for_a_capped_descendant() -> None:
+@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
+def test_anualidades_flag_reads_sin_derecho_for_a_capped_descendant(year: int) -> None:
     """The one gap in this campaign that over-taxes rather than under-declares.
 
     A descendant above the Art. 58.1 ceiling generates no mínimo, so the payer
     IS "sin derecho a la aplicación ... del mínimo por descendientes" and the
     Art. 64 separate escala applies — flag 1. Before the predicate carried the
     ceiling this profile read 0 and the régimen was denied.
+
+    Parameterised over every engine year rather than pinned at 2024. The flag's
+    DEFAULT already had six-year coverage; the corrected behaviour -- the flag
+    flipping for a capped descendant -- did not, so the coverage claim was
+    broader than the test. The ceiling is read from each year's own registry
+    parameters, so this asserts the predicate is year-parameterised in fact and
+    not only by construction.
     """
-    year = 2024
     snapshot = _snapshot(year)
     over_cap = _thresholds(snapshot).rentas_anuales_limite + Decimal("1")
     facts: dict[str, object] = {
@@ -346,9 +358,14 @@ def test_anualidades_flag_reads_sin_derecho_for_a_capped_descendant() -> None:
     assert facts[f"renta_family.anualidades_sin_minimo_descendientes_{year}"] == Decimal("1")
 
 
-def test_anualidades_flag_still_reads_con_derecho_for_an_eligible_shared_custody_child() -> None:
-    """Anti-tautology pair: drop the rentas figure and the flag flips back to 0."""
-    year = 2024
+@pytest.mark.parametrize("year", _ENGINE_FILING_YEARS)
+def test_anualidades_flag_still_reads_con_derecho_for_an_eligible_shared_custody_child(year: int) -> None:
+    """Anti-tautology pair: drop the rentas figure and the flag flips back to 0.
+
+    Parameterised alongside its partner. A pair whose halves cover different
+    year ranges is not a pair: the anti-tautology guarantee would hold at 2024
+    and be absent everywhere else, which is the shape that reads as covered.
+    """
     snapshot = _snapshot(year)
     facts: dict[str, object] = {
         "renta_family.descendiente.0.birth_date": f"{year - 10}-05-01",

@@ -7,7 +7,7 @@ transport can carry the full canonical contract without growing that module.
 :class:`~cadrumo.domain.contribuyente.DescendantInfo`: every field the canonical
 record validates is re-declared here with the same shape, including the two
 tax-driving inputs (``meses_madre_trabajo_2024``, ``gastos_guarderia_euros``) that
-feed the Art. 81 / 81 bis LIRPF deducción maternidad and guardería deductions.
+feed the Art. 81 LIRPF deducción maternidad (81.1) and guardería increment (81.2).
 Dropping either at the transport boundary would silently remove a taxpayer's
 deduction from every machine-readable surface, so they are carried, not summarised.
 

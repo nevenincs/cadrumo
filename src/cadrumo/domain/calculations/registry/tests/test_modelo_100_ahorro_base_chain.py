@@ -60,7 +60,7 @@ _BINDINGS_2024: dict[str, Decimal] = {
     # declaration_type = 1 (individual) → 0461 computed = 0
     "renta-2024-profile-declaration-type": Decimal("1"),
     "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
-    # Art. 81 bis LIRPF guarderia bindings (b7ad3a993): zero default for
+    # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero default for
     # scenarios that do not exercise the maternidad-guarderia chain.
     "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
     "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),

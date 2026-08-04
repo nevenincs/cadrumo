@@ -55,8 +55,23 @@ _SRC_ROOT = SRC_CADRUMO
 _ROUNDING_MODULE = _SRC_ROOT / "core" / "money" / "__init__.py"
 _COERCE_MODULE = _SRC_ROOT / "core" / "decimal" / "_coerce.py"
 
-_STRING_PARSE_LAYERS: tuple[str, ...] = ("entrypoints", "application")
-"""Layers rule 3 governs: the operator-facing boundary and the services behind it."""
+_CANONICAL_DECIMAL_HOME = _SRC_ROOT / "core" / "decimal"
+"""The one home allowed to construct a Decimal from operator-supplied text.
+
+Rule 3 is scoped by CALL SITE, not by layer. It used to name the layers it
+governed, and that allowlist is what let the defect through: a bare
+``Decimal()`` behind ``--descendiente RENTAS=`` lived in ``domain``, which the
+list did not include, so the gate that exists to catch exactly that misread
+``12.500`` euros as twelve fifty while staying green.
+
+Widening the list to include ``domain`` would have closed that instance and
+left the shape intact, because a layer allowlist encodes an assumption about
+where operator input arrives -- and this codebase has an operator-input parser
+sitting in ``domain``, which is precisely the assumption being wrong. Scoping
+by call site carries no such assumption: parsing text into a Decimal belongs to
+the canonical home wherever the caller lives, and everything outside it is in
+scope by default rather than by enumeration.
+"""
 
 _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     ("application/modelo/_calculate_input.py", "_validated_declarante_selector"): (
@@ -64,11 +79,6 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
         "Success means REFUSE (an amount was typed into a declarante-selector "
         "text casilla). Routing it through the strict grammar would make the "
         "guard more permissive, letting a mis-routed '1e3' past it."
-    ),
-    ("application/ledger/_evidence_advisory.py", "_parse_amount"): (
-        "Deliberately tolerant OCR scrape of printed invoice text, with explicit "
-        "Spanish-separator normalisation; returns None on failure and feeds only "
-        "a non-blocking advisory. The tolerant coerce posture, not the strict one."
     ),
     ("application/ledger/_evidence_draft.py", "_find_iva_rate"): (
         "Deliberately tolerant OCR rate scrape; returns None on failure. Same "
@@ -85,6 +95,74 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     ),
     ("application/modelo/_iva_wallet_gate.py", "_calculated_revision_local_iva_compensation_recurrence"): (
         "Reads a persisted casilla_values entry the calculate boundary already validated through the canonical grammar."
+    ),
+    # --- adapters + core, admitted to scope when rule 3 moved from a layer
+    # allowlist to a call-site scope. All five adapter entries read
+    # machine-produced text, which is the extraction posture, not the strict one.
+    ("adapters/inbound/financial/providers/_base.py", "parse_amount_value"): (
+        "Bank-statement import: the amount comes from a downloaded provider file, not from an operator keystroke."
+    ),
+    ("adapters/inbound/pdf/_label_regex.py", "parse_spanish_decimal"): (
+        "PDF label scrape of a printed document; the extraction posture, and "
+        "the function is named for the convention it reads."
+    ),
+    ("adapters/outbound/aeat/sede/_declarations_observations.py", "_parse_modelo_303_money"): (
+        "AEAT sede-rendered figure, machine-produced by the authority."
+    ),
+    ("adapters/outbound/aeat/sede/_iva_compensation_wallet_parsing.py", "_parse_spanish_decimal"): (
+        "Same AEAT sede source as its sibling above."
+    ),
+    ("adapters/outbound/fx/_ecb_provider.py", "_parse_observations"): (
+        "ECB reference-rate feed: machine XML from the central bank."
+    ),
+    ("core/setup_answers.py", "_validate_incn_prior_12_months"): (
+        "Inverted use: the constructor is a PARSEABILITY predicate whose result "
+        "is discarded -- the answer is stored as text and parsed downstream. "
+        "Reported as a residual rather than tightened here, and it is a real "
+        "one: it admits the ambiguous 8.000 at the wizard, where the operator "
+        "is present to retype, and defers the refusal to the profile fact "
+        "carrier, which now leaves it a str and lets the numeric check refuse "
+        "with a message about type rather than about notation. INCN feeds the "
+        "micro-empresa threshold, so the figure is threshold-bearing."
+    ),
+    ("core/setup_answers.py", "_validate_objective_estimation_modulos_units"): (
+        "Same inverted parseability predicate as its INCN sibling above, on the "
+        "modulos unit counts. Reported as a residual on the same terms."
+    ),
+    # --- domain layer, admitted to scope after the RENTAS=12.500 misread ---
+    ("domain/calculations/registry/_export_parse.py", "_parse_xml_decimal"): (
+        "AEAT-produced export XML, not operator text, and it already normalises "
+        "separators explicitly for that machine format."
+    ),
+    ("domain/calculations/registry/_export_parse.py", "_parse_decimal"): (
+        "Same AEAT-produced export payload as its sibling above."
+    ),
+    ("domain/calculations/registry/_formula_runtime.py", "_m100_eo_agraria_read_indice"): (
+        "Reads a registry-authored indice from the compiled snapshot's text "
+        "values; the registry TOML is committed data, not typed input."
+    ),
+    ("domain/calculations/registry/_formula_runtime_m131.py", "_read_modulos_indice"): (
+        "Same registry-authored modulos indice as its M100 sibling above."
+    ),
+    ("domain/calculations/registry/_renta_web_open_oracle.py", "_is_non_finite_numeric_text"): (
+        "Inverted use: the parse is a non-finiteness PREDICATE over Renta WEB "
+        "oracle text. Routing it through the strict grammar would make the "
+        "guard more permissive, the same shape as the declarante-selector "
+        "exemption above."
+    ),
+    ("domain/calculations/registry/_workbook_parity.py", "_comparison_status"): (
+        "Compares AEAT workbook oracle figures against registry output; both sides are machine-produced text."
+    ),
+    ("domain/calculations/registry/_workbook_parity.py", "_registry_decimal_value"): (
+        "Typed dispatch over an already-validated synthetic parity input; the "
+        "boolean and int arms raise or convert before any text is parsed."
+    ),
+    ("domain/deadlines/_profiles.py", "_parse_decimal"): (
+        "Reads canonical profile facts already persisted, so the text grammar "
+        "belongs to the profile write boundary rather than here. Reported as a "
+        "residual finding rather than tightened: the profile fact carrier "
+        "promotes an operator string to Decimal before this is reached, and "
+        "the grammar has to be enforced where the string is still a string."
     ),
 }
 """Reasoned exemptions from rule 3, keyed by ``(path, enclosing function)``.
@@ -104,11 +182,11 @@ def _is_excluded(path: Path) -> bool:
 def _string_parse_scan_items(
     source_tree_ast: Mapping[Path, ast.AST],
 ) -> tuple[tuple[Path, ast.AST], ...]:
-    """Return ``(path, AST)`` pairs for production files in the governed layers."""
+    """Return ``(path, AST)`` pairs for every production file outside the canonical home."""
     return tuple(
         (path, tree)
         for path, tree in production_ast_items(source_tree_ast)
-        if path.relative_to(_SRC_ROOT).parts[0] in _STRING_PARSE_LAYERS
+        if not path.is_relative_to(_CANONICAL_DECIMAL_HOME)
     )
 
 

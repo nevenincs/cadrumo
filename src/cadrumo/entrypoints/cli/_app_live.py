@@ -1231,7 +1231,9 @@ def _skipped_casilla_notice(skipped: Sequence[FiledCasillaSkipRow]) -> Notice | 
                 "so they were not enrolled as calculation evidence: {affected}. "
                 "Everything numeric in those filings was enrolled normally."
             ),
-        ).format(count=len(skipped), affected=affected),
+            count=len(skipped),
+            affected=affected,
+        ),
         context={
             "skipped_casilla_count": str(len(skipped)),
             "casilla_ids": ", ".join(sorted({row.casilla_id for row in skipped})),

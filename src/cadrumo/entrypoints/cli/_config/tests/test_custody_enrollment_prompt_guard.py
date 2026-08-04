@@ -45,8 +45,11 @@ import pytest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.recovery.key"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"master.recovery.key", "master.key"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring.
+
+``"master.key"`` is asserted absent alongside ``"master.recovery.key"`` in the
+same refused-enrollment proof: neither key material must be minted."""
 
 # A console-less child that blocks is unbounded, so any finite budget detects
 # the regression; the size only trades against a false failure. The child must

@@ -467,7 +467,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos: _Repos) -> None
 
     # Require at least one typed observation for the provenance cross-check
     assert len(revision.observations) >= 1, (
-        "The revision must carry at least one typed observation for S211 to be valid"
+        "The revision must carry at least one typed observation for the provenance cross-check to be valid"
     )
 
     # Demonstrate that assert_revision_content_integrity raises on provenance drift.

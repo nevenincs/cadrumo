@@ -25,13 +25,10 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import DEFER_TOKEN, FlowWidgetKind
-from ...core.parsing import parse_date
+from ...core.parsing import parse_bool, parse_date
 from ...core.redaction import redact_validation_context
 from ._definition import FlowPage
 from ._errors import FlowValidatorRegistryError
-
-_TRUE_TOKENS = frozenset({"true", "yes", "1", "y"})
-_FALSE_TOKENS = frozenset({"false", "no", "0", "n"})
 
 
 class ValidationVerdict(BaseModel):
@@ -171,10 +168,18 @@ def _validate_confirm(page: FlowPage, raw: str) -> tuple[str, ValidationVerdict]
         if _blank_allowed(page):
             return "", ValidationVerdict.passed()
         return "", ValidationVerdict.failed("flows.errors.invalid_confirm", page_id=page.id, raw=raw)
-    if token in _TRUE_TOKENS:
-        return "true", ValidationVerdict.passed()
-    if token in _FALSE_TOKENS:
-        return "false", ValidationVerdict.passed()
+    # The refusal below names the accepted forms in the operator's own language
+    # -- "Responde sí o no", "Válaszolj igennel vagy nemmel" -- so the door has
+    # to accept what its own message asks for. A private token set here did not:
+    # it knew no Spanish affirmative at all, so a taxpayer told to answer `sí`
+    # was refused with that same sentence again, able to decline but not to
+    # consent; and it knew neither Hungarian word, so `hu` could not answer
+    # either way. The canonical parser is the one vocabulary every reader of an
+    # operator-written boolean resolves through, and it carries the forms each
+    # shipped catalogue advertises.
+    answer = parse_bool(token)
+    if answer is not None:
+        return ("true" if answer else "false"), ValidationVerdict.passed()
     return "", ValidationVerdict.failed("flows.errors.invalid_confirm", page_id=page.id, raw=raw)
 
 

@@ -304,7 +304,7 @@ def _apply_bulk_classify_rows(
     applied = 0
     skipped = 0
 
-    # Load-once/save-once (S31): the per-row path re-encrypted the whole
+    # Load-once/save-once: the per-row path re-encrypted the whole
     # catalogue on every update, so a 270-row batch cost ~400s of O(n)
     # re-encryption. Load the catalogue and the finalized-modelo blocker map
     # once, mutate an in-memory working catalogue, accumulate events, and

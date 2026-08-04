@@ -86,7 +86,7 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
         cadrumo_allow_unencrypted="",
         cadrumo_active_profile=None,
         cadrumo_local_storage_root=tmp_path / "storage",
-        cadrumo_token_dir=tmp_path / "tokens",
+        cadrumo_token_dir=tmp_path / "probe-tokens",
         cadrumo_runs_dir=tmp_path / "probe-runs",
         cadrumo_financial_txs_dir=tmp_path / "txs",
         cadrumo_invoices_dir=tmp_path / "invoices",

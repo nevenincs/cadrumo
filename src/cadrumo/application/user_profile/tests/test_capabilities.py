@@ -14,8 +14,10 @@ import pytest
 
 from ....core import ServiceCapability
 from ....core.config import load_settings
+from ....core.parsing import parse_bool
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from .. import CapabilitySource, resolve_capability
+from .._capabilities import _parse_bool_fact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -63,6 +65,49 @@ def test_profile_fact_overrides_the_default() -> None:
         # profile fact is the deciding layer.
         assert resolved.enabled is expected_enabled
         assert resolved.source is CapabilitySource.PROFILE
+
+
+@pytest.mark.parametrize("token", ["no", "n", "false", "falso", "0"])
+def test_a_negative_answer_in_any_accepted_form_is_honoured(token: str) -> None:
+    """A stored opt-out decides, rather than deferring to the deployment flag.
+
+    The capability reader once carried its own token set that recognised none of
+    the Spanish forms, so ``falso`` and ``n`` read as UNSET -- and an unset
+    cloud-upload fact falls through to ``cadrumo_evidence_cloud_upload_permitted``.
+    An explicit opt-out was therefore replaced by the deployment default, and the
+    decision recorded ``GLOBAL_SETTING`` while a profile opt-out existed.
+
+    The ``source`` assertion is the load-bearing half: reading the token as unset
+    yields ``enabled=False`` too whenever the global flag happens to be off, so a
+    test checking only ``enabled`` would have passed throughout the defect.
+    """
+    record = _record(UserProfileFact(path="capabilities.cloud_evidence_upload", value=token))
+
+    resolved = resolve_capability(
+        ServiceCapability.CLOUD_EVIDENCE_UPLOAD,
+        profile_record=record,
+        settings=load_settings(),
+    )
+
+    assert resolved.enabled is False
+    assert resolved.source is CapabilitySource.PROFILE
+
+
+def test_the_reader_accepts_exactly_what_the_write_door_stores() -> None:
+    """Reader and write door share one vocabulary, by construction.
+
+    ``boolean_value_refusal`` admits a string exactly when ``parse_bool`` reads
+    it, and its refusal message names ``true/false, sí/no, 1/0`` -- so the
+    taxpayer is told those forms work. A reader with its own token set can
+    therefore silently discard an answer the door invited, which is what
+    happened. Binding the two here means a future divergence fails rather than
+    resolving to the deployment default.
+
+    ``on``/``off`` are in the sample deliberately: the reader once accepted them
+    while the door refuses them outright, so the drift ran in both directions.
+    """
+    for token in ("sí", "si", "s", "y", "yes", "true", "1", "verdadero", "no", "n", "falso", "0", "false", "on", "off"):
+        assert _parse_bool_fact(token) == parse_bool(token), f"reader and write door disagree on {token!r}"
 
 
 def test_gestor_mode_bars_cloud_upload_even_with_profile_opt_in() -> None:

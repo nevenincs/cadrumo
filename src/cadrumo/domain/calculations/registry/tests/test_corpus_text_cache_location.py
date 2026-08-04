@@ -26,13 +26,16 @@ from .._validate_evidence import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cache"})
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
+    {"cache", "corpus-text", "cadrumo_corpus_text_cache.json"},
+)
 """Taxonomy-vocabulary literals this module deliberately pins.
 
-``tmp_path / "state" / "cache" / "corpus-text" / ...`` in
-``test_cache_path_derives_under_cache_namespace`` is the independent oracle
+``tmp_path / "state" / "cache" / "corpus-text" / "cadrumo_corpus_text_cache.json"``
+in ``test_cache_path_derives_under_cache_namespace`` is the independent oracle
 for ``_corpus_text_cache_path``'s default-derivation, called with no
-``cadrumo_corpus_text_cache_dir`` override.
+``cadrumo_corpus_text_cache_dir`` override -- all three segments, including the
+leaf filename, are the oracle.
 """
 
 

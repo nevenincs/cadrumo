@@ -2,24 +2,35 @@
 
 Making the derived injectors compute-always was scoped by asking the profile
 schema's declared derived namespace which paths the engine owns, rather than by
-counting the guards that happened to share the skip-if-present shape. Three
-injector families share that shape and are NOT declared derived, so they keep
-deferring to a stored fact:
+counting the guards that happened to share the skip-if-present shape. FOUR
+non-derived families defer to a stored fact, across six paths:
 
-* the Art. 82 matrimonio-sobrevenido facts,
+* the Art. 82 matrimonio-sobrevenido facts (three paths),
 * the M303 state-attribution ratio,
-* the Madrid nacimiento/adopción pair (DL 1/2010) -- which is a different
-  shape again and is pinned separately below.
+* the Madrid nacimiento/adopción eligible count (DL 1/2010) -- a different
+  shape again, ``setdefault`` then conditional overwrite, so it is pinned in
+  both directions rather than flattened into a preservation assertion,
+* the unidad-familiar otros-miembros base, its ``setdefault``-only sibling.
+
+The count is stated here because it has drifted before: enumerate these from
+:func:`test_none_of_the_preserved_paths_is_declared_derived`, whose loop is the
+authoritative list, rather than from whichever injectors a change happened to
+touch.
 
 Nothing tested that boundary. Flipping any of them to compute-always is the
 exact mistake the scoping avoided, and no test failed. These assertions pin it,
 so the line between what changed and what deliberately did not is a gate rather
 than a paragraph in a commit message.
 
-Every assertion is paired with a positive control computing the SAME injector
-over the same profile WITHOUT the seed. Without that, "the stored value
-survived" is equally satisfied by an injector that writes nothing at all, and
-the test would pass against a function that had been gutted.
+Every assertion is paired, within its own test, with a positive control
+computing the SAME injector over the same profile WITHOUT the seed. Without
+that, "the stored value survived" is equally satisfied by an injector that
+writes nothing at all, and the test would pass against a function that had been
+gutted.
+
+One trap worth naming, because it is invisible at the call site: the Madrid
+injector is gated on filing year 2025. Probing it at 2024 returns before writing
+anything, which reads as a broken test rather than a year gate.
 """
 
 from __future__ import annotations
@@ -148,15 +159,24 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
 
 def test_unidad_familiar_base_preserves_a_stored_value() -> None:
     """The sibling Madrid key is default-only and never overwritten."""
-    seeded: dict[str, Any] = {
+    determinable_madrid: dict[str, Any] = {
         "tax_residence.ccaa": "madrid",
         "renta_taxpayer.marital_status": "1",
         "filing_export.declaration_type": "1",
-        _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY: _UNREACHABLE_COUNT,
     }
+    seeded: dict[str, Any] = {**determinable_madrid, _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY: _UNREACHABLE_COUNT}
     _inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR)
 
     assert seeded[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] == _UNREACHABLE_COUNT
+
+    # Positive control, in this test rather than borrowed from a sibling: the
+    # injector does write this key when it is absent, and writes something
+    # different, so the survival above is the setdefault deferring rather than
+    # the injector never touching the key at all.
+    computed: dict[str, Any] = dict(determinable_madrid)
+    _inject_derived_autonomic_deduccion_facts(computed, _MADRID_YEAR)
+    assert _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY in computed
+    assert computed[_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY] != _UNREACHABLE_COUNT
 
 
 # ---------------------------------------------------------------------------
@@ -165,7 +185,11 @@ def test_unidad_familiar_base_preserves_a_stored_value() -> None:
 
 
 def test_none_of_the_preserved_paths_is_declared_derived() -> None:
-    """The namespace is why these three families were left alone.
+    """The namespace is why these four families were left alone.
+
+    This loop is the authoritative enumeration: six paths across the four
+    families. Any prose elsewhere that counts them should be read off here
+    rather than recalled.
 
     If a future change declared one of these paths derived, its injector would
     have to become compute-always in the same change -- otherwise the write
@@ -176,12 +200,20 @@ def test_none_of_the_preserved_paths_is_declared_derived() -> None:
     from ....domain.user_profile import derived_selector_for_path, load_user_profile_schema
 
     schema = load_user_profile_schema()
-    for path in (
+    preserved_paths = (
         _MARRIAGE_FULL_YEAR,
         "renta_taxpayer.marriage_month_start",
         "renta_taxpayer.marriage_month_end",
         _STATE_ATTRIBUTION,
         _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY,
         _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY,
-    ):
+    )
+
+    # The prose above and in the module docstring counts this population. A
+    # recalled count drifts -- it already has -- so the number is asserted
+    # here, where adding a path forces the prose to be revisited instead of
+    # quietly disagreeing with it.
+    assert len(preserved_paths) == 6
+
+    for path in preserved_paths:
         assert derived_selector_for_path(path, schema.derived_selectors) is None, path

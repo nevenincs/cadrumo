@@ -43,6 +43,7 @@ from decimal import Decimal, InvalidOperation
 from typing import overload
 
 from ..logging import get_logger
+from ._grammar import european_thousands_reading_is_ambiguous
 
 _logger = get_logger(__name__)
 
@@ -133,8 +134,21 @@ def coerce_finite_european_decimal(value: object) -> Decimal | None:
     decimal separator and preceding dots are thousands separators. Invalid and
     non-finite values return ``None`` so their boundary can issue its own
     refusal rather than silently substituting a financial amount.
+
+    This is the EXTRACTION contract, and it drops an ambiguous token rather
+    than resolving it. The convention in extracted text is the SUPPLIER'S, not
+    one the reader can infer: a Spanish supplier prints one thousand two
+    hundred and thirty-four as ``1.234``, and reading that as a decimal is a
+    thousandfold light on a taxable base bound for Modelo 303/390 -- while
+    stripping the dot on a dot-decimal supplier is the same error upward. The
+    comma test below settles every token that carries its own evidence; the
+    remaining ones carry none, so they resolve to no value and the confirm
+    path asks the operator. A guessed figure is minted silently; a dropped one
+    is asked for.
     """
     if isinstance(value, str):
+        if european_thousands_reading_is_ambiguous(value.strip()):
+            return None
         value = normalize_decimal_separators(value, strip_thousands="," in value)
     parsed = coerce_decimal(value)
     return parsed if parsed is not None and parsed.is_finite() else None

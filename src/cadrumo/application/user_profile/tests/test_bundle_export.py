@@ -19,6 +19,7 @@ from pydantic import SecretStr
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.storage.bucket import bucket_paths
+from ....core import StorageCategory, storage_location
 from ....domain.buckets import BucketEvent, BucketEventType
 from ....domain.user_profile import (
     CoverageManifest,
@@ -378,7 +379,7 @@ def test_export_journal_directory_is_owner_only_on_posix(tmp_path: Path) -> None
     root = repository.root
     assert root.is_dir()
     assert root == tmp_path / "profile-export-operations"
-    assert tmp_path / "buckets" not in root.parents
+    assert tmp_path / storage_location(StorageCategory.BUCKETS).subpath not in root.parents
     if os.name != "nt":
         assert stat.S_IMODE(root.stat().st_mode) == 0o700
 

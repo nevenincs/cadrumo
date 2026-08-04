@@ -337,7 +337,7 @@ def _blockers_by_source_transaction_id(
 
     Computed once so a batch edit can look up the finalized-modelo guard per row
     without reloading the work-unit and calculation repositories on every row
-    (the load-once half of the ``bulk_classify_from_csv`` S31 contract).
+    (the load-once half of the ``bulk_classify_from_csv`` batching contract).
     """
     work_units = (work_unit_repository or WorkUnitCatalogueRepository()).load()
     revisions = (calculation_repository or CalculationRevisionCatalogueRepository()).load()

@@ -3,7 +3,7 @@
 The defect this gate exists to catch shipped for weeks in plain sight. The
 deploy environment set ``CADRUMO_DOCS_PAGEFIND_MODE=pages``, the build read that
 and skipped the record-injection seam entirely, and the published index carried
-75 rendered pages and not one concept, casilla, or CLI record — while every
+75 rendered pages and not one concept, casilla, legal, or CLI record — while every
 search test in the tree stayed green, because they all built in ``full`` mode.
 The build was correct, the deployment was not, and nothing compared the two.
 
@@ -78,13 +78,11 @@ _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 #: Record kinds the shipped index is required to carry. A kind absent from the
 #: built index means a reader cannot reach that surface at all.
 #:
-#: This set is the deployment contract's inventory, so it must grow with the
-#: contract: a fifth LEGAL record kind is already decided but no injector emits
-#: it yet, and whichever change builds it must add it here. A gate whose
-#: inventory silently lags the contract stops covering the newest surface while
-#: still reporting green — the same shape as the defect this module exists to
-#: catch.
-_DECIDED_RECORD_KINDS = frozenset({"concept", "casilla", "cli"})
+#: This set mirrors ``pagefind_index.DECIDED_INJECTED_RECORD_KINDS`` and is the
+#: deployment contract's inventory. It must grow with the emitted projection;
+#: LEGAL now travels through the generated legal-reference projection and must
+#: remain covered here as well.
+_DECIDED_RECORD_KINDS = frozenset({"concept", "casilla", "legal", "cli"})
 
 #: Real records per kind for the bounded injection (see the module docstring).
 _SAMPLE_PER_KIND = 4

@@ -1,7 +1,7 @@
 """Strict search-record schema for the compiled docs search index.
 
-The compiled index unifies four record kinds (concept cards, casilla
-projections, CLI surface records, doc pages). This module owns
+The compiled index unifies five record kinds (concept cards, casilla
+projections, CLI surface records, doc pages, and legal provisions). This module owns
 the shared base every kind extends -- a strict, frozen pydantic model
 carrying the ``kind`` discriminator, the four-language localised
 descriptions, and the legal grounding -- plus the casilla projection
@@ -10,12 +10,13 @@ record built by the casilla-projection compiler.
 The shared :class:`SearchRecordBase` is the seam the sibling CLI-surface
 and concept-card emitters extend: they declare their own ``kind`` member
 and add kind-specific fields, reusing the localised description map and
-the strict-frozen config defined here so all four record kinds serialise
+the strict-frozen config defined here so all five record kinds serialise
 to one homogeneous index payload.
 """
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -26,6 +27,7 @@ from cadrumo.domain.calculations.registry import BindingId, CasillaId, FormulaId
 
 __all__ = [
     "CasillaSearchRecord",
+    "LegalSearchRecord",
     "ResultDisplayClass",
     "SearchRecordBase",
     "SearchRecordKind",
@@ -35,12 +37,13 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class SearchRecordKind(StrEnum):
-    """The four record kinds the compiled search index unifies."""
+    """The five record kinds the compiled search index unifies."""
 
     CONCEPT = "concept"
     CASILLA = "casilla"
     CLI = "cli"
     PAGE = "page"
+    LEGAL = "legal"
 
 
 class ResultDisplayClass(StrEnum):
@@ -125,3 +128,37 @@ class CasillaSearchRecord(SearchRecordBase):
     def dedup_key(self) -> tuple[str, CasillaId]:
         """The cross-revision dedup identity ``(modelo, casilla_id)``."""
         return (self.modelo.value, self.casilla_id)
+
+
+class LegalSearchRecord(SearchRecordBase):
+    """One registry-backed legal catalogue provision for the docs index.
+
+    The projection carries authored catalogue metadata unchanged and receives
+    its site-relative target from the generated legal-reference renderer. The
+    BOE permalink remains typed provenance on the record; it is rendered at
+    the generated destination and is never used as the search target.
+    """
+
+    kind: SearchRecordKind = SearchRecordKind.LEGAL
+    record_id: str = Field(min_length=1, max_length=320)
+    title: str = Field(min_length=1, max_length=320)
+    target: str = Field(min_length=1, max_length=512)
+    legal_id: str = Field(min_length=1, max_length=320)
+    legal_kind: str = Field(min_length=1, max_length=128)
+    document_id: str = Field(min_length=1, max_length=320)
+    corpus_ref: str = Field(min_length=1, max_length=512)
+    permalink: str = Field(min_length=1, max_length=512)
+    authority: str | None = Field(default=None, min_length=1, max_length=128)
+    evidence_tier: str | None = Field(default=None, min_length=1, max_length=128)
+    article: str | None = Field(default=None, min_length=1, max_length=320)
+    section: str | None = Field(default=None, min_length=1, max_length=320)
+    published_at: date | None = None
+    effective_from: date | None = None
+    effective_to: date | None = None
+    consolidated_as_of: date | None = None
+    review_status: str | None = Field(default=None, min_length=1, max_length=64)
+    reviewed_at: date | None = None
+    reviewed_by: str | None = Field(default=None, min_length=1, max_length=160)
+    notes: str | None = None
+    required_text: tuple[str, ...] = ()
+    search_aliases: tuple[str, ...] = ()

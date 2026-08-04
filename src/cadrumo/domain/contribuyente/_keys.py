@@ -5,7 +5,7 @@ from the wizard descriptor catalogue
 (``cadrumo.application.wizard._catalogue.WIZARD_FLOWS``) and pushed into this
 domain registry via :func:`register_profile_keys` when the wizard package is
 imported (its ``__init__`` eagerly runs the compiler's registration). The
-domain never pulls upward into the application layer (DB-17): reading the
+domain never pulls upward into the application layer: reading the
 registry before the push raises :class:`ProfileKeysRegistrationError`. Each
 entry carries the canonical key path (dot-separated), a requirement flag
 (required vs optional for declaration export), and a short multilingual

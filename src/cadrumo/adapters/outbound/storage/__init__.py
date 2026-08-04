@@ -50,6 +50,7 @@ from ._mirror_manifest import (
     put_remote_mirror_namespace_manifest,
     remote_mirror_object_key_hmac,
 )
+from ._path_budget import windows_worst_case_object_path_suffix_length
 from ._protocol import StorageProvider
 from ._records import (
     ProviderKind,
@@ -96,4 +97,5 @@ __all__ = [
     "put_remote_mirror_namespace_manifest",
     "remote_mirror_object_key_hmac",
     "resolve_drive_root_folder_id",
+    "windows_worst_case_object_path_suffix_length",
 ]

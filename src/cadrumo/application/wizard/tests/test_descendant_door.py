@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -121,6 +122,30 @@ def test_door_seeds_existing_descendants_from_the_record(_backend: Path) -> None
     assert resume_state.answers[_instance_key(1, "birth-date")] == _D1.birth_date.isoformat()
     assert resume_state.answers[_instance_key(0, "convivencia")] == "true"
     assert resume_state.answers[_instance_key(1, "convivencia")] == "true"
+
+
+def test_door_reseeds_a_cents_rentas_figure_without_going_stale(_backend: Path) -> None:
+    """A CLI-set two-decimal rentas figure re-seeds live, not as a stale row.
+
+    Before the rentas page carried ``FlowWidgetKind.DECIMAL``, a rentas figure
+    set via the ``--descendiente RENTAS=`` flag (which always accepted cents)
+    could not re-validate on this exact re-entry path: the record's own
+    ``rentas_anuales_euros`` is genuinely ``Decimal``, and
+    :func:`~cadrumo.application.flows.resume_flow` re-validates every
+    persisted answer against the *current* page definition, so an
+    INTEGER-typed page refused the cents token and carried it as stale --
+    silently dropping the figure on the next door commit rather than
+    re-displaying it. This proves the door now re-seeds it as a live,
+    committed answer instead.
+    """
+    descendant = DescendantInfo(birth_date=date(2015, 6, 1), rentas_anuales_euros=Decimal("8000.01"))
+    profile_id = _seed_profile([descendant])
+    with profile_storage_session(profile_id):
+        record = workflow_state_repository().load().active_profile_record()
+        _definition, resume_state = build_descendant_door(record)
+
+    assert _instance_key(0, "rentas-anuales") not in resume_state.stale
+    assert resume_state.answers[_instance_key(0, "rentas-anuales")] == "8000.01"
 
 
 # ── commit: count-shrink clears the orphaned higher index ────────────

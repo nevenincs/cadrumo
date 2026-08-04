@@ -65,7 +65,7 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
             ),
             setting_env("cadrumo_secret_store_dir"): str(tmp_path / "storage" / "fallback-store"),
             setting_env("cadrumo_local_storage_root"): str(tmp_path / "storage"),
-            setting_env("cadrumo_token_dir"): str(tmp_path / "tokens"),
+            setting_env("cadrumo_token_dir"): str(tmp_path / "probe-tokens"),
             setting_env("cadrumo_runs_dir"): str(tmp_path / "probe-runs"),
             setting_env("cadrumo_financial_txs_dir"): str(tmp_path / "txs"),
             setting_env("cadrumo_invoices_dir"): str(tmp_path / "invoices"),

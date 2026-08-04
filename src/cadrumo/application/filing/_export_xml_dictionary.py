@@ -24,10 +24,11 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
+from types import MappingProxyType
 from xml.etree import ElementTree
 
 from defusedxml import ElementTree as DefusedElementTree
@@ -42,7 +43,7 @@ from ...domain.calculations.registry import (
     XmlDictionaryEntry,
     xml_dictionary_entries,
 )
-from ...domain.contribuyente import modelo100_ecivil_export_code
+from ...domain.contribuyente import modelo100_ccaa_codigo, modelo100_ecivil_export_code
 from ...domain.filing import FilingExportError, FilingExportValidationError, ModeloDraft
 from .runtime import RegistrySchemaAccessor
 
@@ -56,15 +57,38 @@ _XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
 # dictionary, so it is written from the layout rather than from a dictionary row.
 _AUX_TAG = "Aux"
 
+# The per-taxpayer block of a Modelo 100 declaration. Its mandatory ``nif``
+# attribute is declared in no dictionary, so it is stamped after the walk rather
+# than written from a dictionary row; its ``titular`` sibling IS declared and is
+# written by the walk like any other row.
+_TOMA_DATOS_TAG = "TomaDatosAmpliada"
+
 # Model groups carry no sibling position of their own when reading declared
 # order: a declaration nested inside one sits at the position the group occupies
 # in its parent, so the walk descends through them rather than treating them as
 # elements.
 _XSD_MODEL_GROUP_TAGS = frozenset({"complexType", "complexContent", "sequence", "choice", "all"})
 
-# The one dictionary type whose boolean states are spelled out. Every other
-# boolean-bearing row is ``tipo_logico``, whose pattern is ``([0-1]){1}``.
+# The one dictionary type whose boolean states are spelled out.
 _SINO_DICTIONARY_TYPE = "S_N"
+
+# The other, and the common one: ``tipo_logico``, whose pattern is ``([0-1]){1}``.
+_LOGICAL_DICTIONARY_TYPE = "LGC"
+
+# The complete set of row types AEAT declares boolean. Naming it positively is
+# what makes a boolean on any other row an error by default: a row type added to
+# the dictionary later is simply not on this list, so it refuses rather than
+# inheriting whatever the last branch happened to do.
+_BOOLEAN_DICTIONARY_TYPES = frozenset({_SINO_DICTIONARY_TYPE, _LOGICAL_DICTIONARY_TYPE})
+
+# The date row type, and the exact form AEAT accepts in it. The pattern is
+# copied from the ``tipo_Fecha`` facet the bundled XSD declares -- an
+# ``xs:string`` restricted to ``([0-9]{1,2}/[0-9]{1,2}/[0-9]{4})`` -- so day and
+# month may be one or two digits and the year must be four. That is exactly what
+# rendering a :class:`~datetime.date` below produces, which is why a value that
+# arrives already typed never meets this check.
+_DATE_DICTIONARY_TYPE = "FEC"
+_DATE_DICTIONARY_TEXT = re.compile(r"[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}")
 
 # The dictionary's numeric type codes are self-describing: ``P<width><scale>``
 # and ``N<width><scale>`` name the field's integer width and its fractional-digit
@@ -135,6 +159,8 @@ def render_xml_dictionary_layout(
         if rendered is None or rendered == "":
             continue
         _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
+    if draft.modelo == Modelo.M100:
+        _stamp_toma_datos_nif(root, draft)
     return ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
 
 
@@ -261,6 +287,39 @@ def _append_declaration_aux(root: ElementTree.Element[str], layout: ExportLayout
     ElementTree.SubElement(aux, "VERSION").text = layout.aux_version
 
 
+def _stamp_toma_datos_nif(root: ElementTree.Element[str], draft: ModeloDraft) -> None:
+    """Name whose NIF each ``TomaDatosAmpliada`` block reports figures for.
+
+    ``nif`` is ``use="required"`` on ``tipo_TomaDatosAmpliada`` in all six
+    bundled exercises, and AEAT's dictionary declares no field id whose path
+    reaches it -- so it can be written by neither the dictionary-driven walk nor
+    a ``dictionary_path_overrides`` correction, which only re-points a row the
+    dictionary already carries. Same shape as the ``Aux`` block, and written the
+    same way: from what the export already holds.
+
+    Its sibling attribute ``titular`` is deliberately NOT written here. That one
+    IS dictionary-declared -- thirty-five field ids (``TITA`` on casilla 0001,
+    ``TITBIH`` on 0026, and so on, all of them registry casillas) map to
+    ``/DatosEconomicos/TomaDatosAmpliada/@titular``, so the ordinary walk writes
+    it from whichever titular casilla the return populates. Stamping a constant
+    here would overwrite that: a declaración conjunta reports a spouse's income
+    section under código 3, and a hardcoded declarante 2 would silently
+    re-attribute it on a filed return. A blank ``titular`` means no titular
+    casilla carries a value, which is an input gap the completeness gate owns.
+
+    Runs AFTER the walk rather than before it, because unlike ``Aux`` the
+    element being stamped is one the walk creates.
+
+    The NIF is the draft's, deliberately, and is the same value ``DPNIF_D``
+    carries. Re-reading the profile here would let the block's identity
+    attribute disagree with the identity row above it in the same file when a
+    profile is edited between approval and export. Taking both from the approved
+    artefact makes that disagreement unrepresentable.
+    """
+    for block in root.iter(_TOMA_DATOS_TAG):
+        block.set("nif", draft.profile_tax_id)
+
+
 def _xsd_declared_children(node: ElementTree.Element[str]) -> list[ElementTree.Element[str]]:
     """Return ``node``'s child element declarations in the order the schema writes them.
 
@@ -357,6 +416,30 @@ def _xml_dictionary_element_order(
     return order
 
 
+# The rows whose rendered text is a domain token that AEAT files under a code of
+# its own: a comunidad reaches the export as ``andalucia`` where the schema
+# enumerates ``01``-``20``, and a marital status as the profile's own value where
+# the schema accepts Estado Civil ``1``-``4``.
+#
+# Applied AFTER :func:`_format_xml_dictionary_value` and never instead of it.
+# That function owns how a value is written; this owns which official code the
+# written value stands for. Collapsing the two would put a second formatting
+# authority beside it, which is the thing this module keeps refusing to grow.
+#
+# A table rather than a branch per field. One special case reads as a special
+# case, but the second starts a list and the third becomes a rule nobody finds by
+# reading the function -- so the next such row is an entry here, not another
+# ``elif``. Each converter is its own domain's authority for its code set,
+# grounded in the same bundled XSD that constrains the attribute, so the mapping
+# is declared once and consumed here rather than restated.
+_MODELO_100_EXPORT_CODE_CONVERTERS: Mapping[str, Callable[[str], str]] = MappingProxyType(
+    {
+        "ECIVIL": modelo100_ecivil_export_code,
+        "ZCCAD": modelo100_ccaa_codigo,
+    },
+)
+
+
 def _xml_dictionary_rendered_value(
     entry: XmlDictionaryEntry,
     *,
@@ -373,9 +456,10 @@ def _xml_dictionary_rendered_value(
     if draft.modelo == Modelo.M100:
         raw = _modelo_100_sign_branch_value(entry, raw)
     rendered = _format_xml_dictionary_value(entry.data_type, raw)
-    if draft.modelo == Modelo.M100 and entry.field_id == "ECIVIL":
+    converter = _MODELO_100_EXPORT_CODE_CONVERTERS.get(entry.field_id) if draft.modelo == Modelo.M100 else None
+    if converter is not None:
         try:
-            return modelo100_ecivil_export_code(rendered)
+            return converter(rendered)
         except ValueError as exc:
             raise FilingExportValidationError(str(exc)) from exc
     return rendered
@@ -567,25 +651,31 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
     """
     normalized_type = data_type.upper()
     if isinstance(value, bool):
-        # A boolean on a numeric row is an upstream type error, and rendering it
-        # would launder that error into a plausible amount: ``True`` on a euro-cent
-        # row reads as one euro, which the XSD accepts and no downstream check can
-        # question. Refusing here is the same decision the unreadable-amount branch
-        # below makes, for the same reason -- a wrong number that satisfies the
-        # schema is worse than no file at all.
+        # A boolean renders on exactly the two rows AEAT declares boolean, and is
+        # a type error anywhere else. Stated this way round on purpose: asking
+        # what the row IS keeps the declared type in charge, which is the rule
+        # this whole function exists to enforce, while asking what it is NOT
+        # inverts the dependency and leaves every unlisted row inheriting the
+        # last branch by accident.
         #
-        # Only the two types AEAT declares boolean render a boolean. Every route
-        # into this function is expected to observe that already: the casilla input
-        # door refuses a boolean outright, and no Modelo 100 revision declares a
-        # boolean casilla on a numeric row. So this is a guard against a future
-        # route, not a live defect, and it must stay cheap and total rather than
-        # trying to guess what the value meant.
-        if _NUMERIC_DICTIONARY_TYPE.match(normalized_type) is not None:
+        # The damage that makes this worth refusing rather than rendering is
+        # clearest on an amount row: ``True`` on a euro-cent row reads as one
+        # euro, the XSD accepts it, nothing on the export path validates anyway,
+        # and a taxpayer files a figure they never stated. Same decision the
+        # unreadable-amount branch below makes, for the same reason -- a wrong
+        # number that satisfies every downstream check is worse than a refusal,
+        # because the refusal is the only place the error is still visible.
+        #
+        # No route delivers a boolean here today: the casilla input door refuses
+        # one for every declared family, and no Modelo 100 revision declares a
+        # boolean casilla on a non-boolean row. This guards a route added later,
+        # so it stays total and cheap rather than trying to interpret the value.
+        if normalized_type not in _BOOLEAN_DICTIONARY_TYPES:
             raise FilingExportValidationError(
-                f"a {data_type} row is a numeric amount and cannot carry the boolean {value!r}. "
-                "The value reaching this row has the wrong type; correct it at the source "
-                "rather than rendering it, because a boolean written here would be filed as "
-                "the amount 1 or 0.",
+                f"a {data_type} row cannot carry the boolean {value!r}. Only "
+                f"{'/'.join(sorted(_BOOLEAN_DICTIONARY_TYPES))} rows are declared boolean by AEAT. "
+                "The value reaching this row has the wrong type; correct it at the source rather "
+                "than rendering it, because a boolean written to an amount row is filed as 1 or 0.",
             )
         if normalized_type == _SINO_DICTIONARY_TYPE:
             return "SI" if value else "NO"
@@ -623,7 +713,25 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
                 "a three-decimal figure.",
             )
         return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
-    return str(value).strip()
+    text = str(value).strip()
+    if normalized_type == _DATE_DICTIONARY_TYPE and not _DATE_DICTIONARY_TEXT.fullmatch(text):
+        # A date row reached by text rather than by a ``date``. The typed value
+        # is rendered above and never arrives here, so this is the case where
+        # something upstream held a date as a string -- and an ISO one renders
+        # verbatim, which AEAT's own ``tipo_Fecha`` pattern rejects.
+        #
+        # Checked rather than parsed, deliberately. Reading ``03/04/2024`` would
+        # mean choosing between day-month and month-day, and this renderer has
+        # no basis for that choice; the numeric branch above refuses an
+        # ambiguous amount for the same reason. Text already in AEAT's form
+        # passes through untouched, so the check costs a correct caller nothing.
+        raise FilingExportValidationError(
+            f"date for a {data_type} row is not in the form AEAT accepts: {value!r}. "
+            "The accepted form is d/m/yyyy with a four-digit year, e.g. 2/1/1980. "
+            "Supply the value as a date rather than as text and it is rendered "
+            "correctly without this check.",
+        )
+    return text
 
 
 def _set_xml_dictionary_path(

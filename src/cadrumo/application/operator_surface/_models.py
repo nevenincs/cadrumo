@@ -9,8 +9,8 @@ inventory, stable :class:`OperatorSurfaceLogFields`, and the aggregate
 :func:`~application.operator_surface.build_operator_surface_contract`.
 They are data contracts only; builders and renderers live in sibling modules.
 
-S538 invariant-guard classification note
------------------------------------------
+Invariant-guard classification note
+------------------------------------
 All :class:`ValueError` raises in this module appear inside Pydantic v2
 ``@field_validator`` / ``@model_validator`` methods. Pydantic wraps these into
 :class:`pydantic.ValidationError` automatically; raising any other exception

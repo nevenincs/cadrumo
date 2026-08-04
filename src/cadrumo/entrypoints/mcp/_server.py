@@ -587,7 +587,7 @@ def build_server(
     :func:`~application.wizard.ensure_profile_keys_registered` before any
     handler is registered. This is the server's initialisation point, the
     counterpart of the CLI root callback's own registration step: the domain
-    registry cannot seed itself (DB-17) and every production reader of it sits
+    registry cannot seed itself and every production reader of it sits
     behind a handler built here, so a host that never seeded it answered every
     identity call with a registration error.
 

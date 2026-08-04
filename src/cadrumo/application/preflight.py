@@ -303,6 +303,24 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
 
 # ── Windows MAX_PATH (long-path) headroom ───────────────────────────
 
+#: Headroom below which the long-path row advises rather than staying silent.
+#:
+#: The number expresses what the margin has to survive, not a taste for round
+#: figures. The deepest object path is budgeted from the LONGEST NAMESPACE THIS
+#: BUILD REGISTERS, so the margin shrinks whenever a longer one is added --
+#: without anyone editing a constant, and without the operator doing anything at
+#: all. Forty characters is roughly the room a further dotted module path needs,
+#: so a root inside the threshold is one that a plausible future namespace could
+#: push past ``WINDOWS_MAX_PATH``.
+#:
+#: It was calibrated against a budget understated by 54 characters, and the
+#: honest budget (``d10519946f``) leaves a DEFAULT install inside it. That is
+#: not a reason to raise the number: the advisory is true, and the gap is
+#: genuinely small -- the longest registered namespace is 72 characters and a
+#: default root survives only about 80, which an ordinary module path reaches.
+#: Tuning this to restore silence would re-hide exactly what that fix surfaced.
+_LONG_PATH_WARN_MARGIN = 40
+
 _LONG_PATH_REGISTRY_REMEDIATION = (
     "run `New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' "
     "-Name 'LongPathsEnabled' -Value 1 -PropertyType DWORD -Force` as Administrator, then "
@@ -320,8 +338,12 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
     :func:`~core.paths.windows_storage_root_long_path_margin` — the
     character headroom left before the deepest object the bucket / blob
     layout can produce
-    (``<root>\buckets\<uuid>\blobs\<hmac>--<label>.meta.json``) would
-    meet or exceed :data:`~core.paths.WINDOWS_MAX_PATH`. Zero or
+    (``<root>\buckets\<uuid>\blobs\<namespace>\<hmac>--<label>.meta.json``)
+    would meet or exceed :data:`~core.paths.WINDOWS_MAX_PATH`. The
+    ``<namespace>`` budget comes from
+    :func:`~adapters.outbound.storage.windows_worst_case_object_path_suffix_length`,
+    which measures the longest namespace this build actually registers
+    rather than a hand-picked sample. Zero or
     negative margin is an ``ERROR`` (a real object write can fail
     partway through); a thin positive margin is a ``WARN`` advisory so the
     operator can relocate the root before it runs out. This probe never
@@ -345,8 +367,13 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
             detail="LongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply",
         )
 
+    from ..adapters.outbound.storage import windows_worst_case_object_path_suffix_length
+
     root = settings.cadrumo_local_storage_root
-    margin = windows_storage_root_long_path_margin(root)
+    margin = windows_storage_root_long_path_margin(
+        root,
+        object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
+    )
     if margin <= 0:
         return PreflightCheck(
             check="storage:windows-long-path",
@@ -359,14 +386,21 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
             ),
             remediation=_LONG_PATH_REGISTRY_REMEDIATION,
         )
-    if margin < 40:
+    if margin < _LONG_PATH_WARN_MARGIN:
         return PreflightCheck(
             check="storage:windows-long-path",
             healthy=True,
             severity=HealthSeverity.WARN,
             detail=(
                 f"the storage root {root} has only {margin} characters of headroom "
-                f"below the Windows MAX_PATH ({WINDOWS_MAX_PATH}) ceiling; LongPathsEnabled is not set"
+                f"below the Windows MAX_PATH ({WINDOWS_MAX_PATH}) ceiling; LongPathsEnabled is not set. "
+                # The operator cannot act on a bare headroom figure, because what
+                # consumes it is not their doing: the budget tracks the longest
+                # namespace the build registers, so an upgrade can spend this
+                # margin without the root ever changing. Saying how much
+                # namespace growth is left names the thing that actually moves.
+                f"A storage namespace more than {margin} characters longer than the longest "
+                f"this build registers would put the deepest object path past that ceiling"
             ),
             remediation=_LONG_PATH_REGISTRY_REMEDIATION,
         )

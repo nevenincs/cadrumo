@@ -1,7 +1,7 @@
 """Durable ranking gate: full-text PAGE hits rank user docs above dev machinery.
 
 The ratified ranking decision extends the user-first ladder from the injected
-result CARDS (concept / casilla / cli) to the RAW full-text page hits. Before the
+result CARDS (concept / casilla / LEGAL / CLI) to the RAW full-text page hits. Before the
 build-side page-meta stamping this was structurally impossible: Pagefind
 directory-indexed pages carried no ranking meta, so the palette ordered them by
 raw relevance alone and an ``api/`` dev-machinery page could out-rank a
@@ -83,7 +83,7 @@ _PAGE = """<!DOCTYPE html>
 # and Pagefind drops from a sort-keyed search every result lacking that key --
 # but ONLY when the key exists somewhere in the index. In production the index
 # always carries thousands of injected sort-keyed records (concepts / casillas /
-# CLI), so full-text pages ALWAYS drop from the card pass and reach the palette
+# LEGAL / CLI), so full-text pages ALWAYS drop from the card pass and reach the palette
 # only via the relevance pass (`fromCardPass=false`), where their `display_class`
 # orders them. This anchor reproduces that production invariant with one record;
 # it does NOT contain the query token, so the query still matches only the two
@@ -155,9 +155,10 @@ def test_fulltext_user_doc_ranks_above_dev_machinery(tmp_path: Path) -> None:
     build.mkdir()
     _build_fulltext_site(build)
 
-    # Inject one weighted anchor so the index carries the `weight` sort key that
-    # makes the card pass drop full-text pages (the production invariant). The
-    # anchor does not match the query, so the query still returns only the two
+    # Inject one weighted concept anchor as a deliberately narrowed card fixture
+    # (production also injects casilla, LEGAL, and CLI records) so the index
+    # carries the `weight` sort key that makes the card pass drop full-text pages.
+    # The anchor does not match the query, so the query still returns only the two
     # pages, whose ordering is then decided purely by the page-band class rank.
     async def inject(index: object) -> None:
         await _inject_records(index, _Materialised(records=[_ANCHOR_CARD], concepts=1), {})  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]  # reason: pagefind index is dynamically typed

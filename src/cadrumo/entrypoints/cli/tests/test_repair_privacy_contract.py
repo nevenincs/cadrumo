@@ -36,7 +36,7 @@ def _isolated_secure_object_database(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
             cadrumo_output_language="en",
-            cadrumo_token_dir=tmp_path / "tokens",
+            cadrumo_token_dir=tmp_path / "probe-tokens",
             cadrumo_runs_dir=tmp_path / "probe-runs",
             cadrumo_financial_txs_dir=tmp_path / "txs",
             cadrumo_invoices_dir=tmp_path / "invoices",

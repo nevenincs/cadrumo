@@ -13,7 +13,9 @@ The four corrections, in composition order:
 1. **score-floor + TOC-noise filtering** -- drop a resolved target whose
    originating hit scored below the strong-signal floor
    (:data:`STRONG_SIGNAL_SCORE_FLOOR`, the ~0.5 strong-signal convention), and
-   drop low-value navigation / TOC / index pages that pollute the tail.
+   drop low-value PAGE navigation / TOC / index records that pollute the tail.
+   LEGAL records also use the full-text tier, but their ``LEGAL`` discriminator
+   keeps them out of this PAGE-only filter.
 2. **casilla-revision dedupe** -- collapse multiple hits landing on the SAME
    opaque casilla search-record id to one target, keeping the highest-scored
    hit. The canonical casilla identity remains typed metadata on the record,
@@ -228,14 +230,16 @@ def _filter_floor_and_toc(
 
 
 def _is_toc_noise(target: ResolvedTarget) -> bool:
-    # Only full-text page records can be TOC noise; a concept / casilla / CLI
-    # navigation entry is never filtered as TOC noise.
+    # Only full-text PAGE records can be TOC noise; a concept / casilla / CLI
+    # navigation entry or LEGAL record is never filtered as TOC noise. The kind
+    # discriminator, rather than the ranking tier alone, is authoritative here.
     if target.record.tier is not RankingTier.FULLTEXT:
         return False
     if target.record.kind is not SearchRecordKind.PAGE:
         return False
-    # The record id for a page is ``page:<rel>`` / ``code:<dotted>`` /
-    # ``legal:<id>``; only doc-page ids carry a navigable stem worth TOC-testing.
+    # PAGE record ids use ``page:<rel>`` for built docs and ``code:<dotted>``
+    # for API targets. A LEGAL record may use ``legal:<id>``, but it has already
+    # returned above because its discriminator is LEGAL, not PAGE.
     record_id = target.record.id
     if not record_id.startswith("page:"):
         return False

@@ -18,6 +18,7 @@ against an ambient `CADRUMO_TOKEN_DIR` leaking in via env precedence.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -26,6 +27,14 @@ from ..config import Settings
 from ..paths import resolve_project_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"tokens"})
+"""Taxonomy-vocabulary literals this module deliberately pins.
+
+``storage_root / "tokens"`` is the independent oracle for what
+``cadrumo_token_dir`` defaults to when unoverridden. Re-deriving it from the
+taxonomy accessor would compare the settings derivation against itself.
+"""
 
 
 def _without_token_dir_env():

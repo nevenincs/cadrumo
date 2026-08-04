@@ -43,7 +43,11 @@ from .....core.identity import ContentDigest
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
 from .....core.time import now, validate_utc_aware
-from .._storage_path_definitions import SECRET_RECORD_SCHEMA_VERSION
+from .._storage_path_definitions import (
+    SECRET_INDEX_FILENAME,
+    SECRET_INDEX_SCHEMA_VERSION,
+    SECRET_RECORD_SCHEMA_VERSION,
+)
 from ..blob_store import (
     BlobReference,
     EncryptedBlobStore,
@@ -69,7 +73,6 @@ from ..master_key import MasterKeyProvider, get_active_master_key
 
 _log = get_logger(__name__)
 
-_INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
 _HKDF_CONTEXT_SECRET_LOOKUP = b"cadrumo.secret_store.lookup.v1"
 _HKDF_CONTEXT_SECRET_VALUE_WITNESS = b"cadrumo.secret_store.value_witness.v1"
@@ -182,24 +185,6 @@ class _SecretIndexEntry(BaseModel):
         return _validated_secret_class(value, subject="_SecretIndexEntry.classification")
 
 
-SECRET_INDEX_SCHEMA_VERSION: Final[int] = 1
-"""The one secret-store index format version this build reads and writes.
-
-The field documented itself as a forward-compatibility marker, but
-``_read_index`` only model-validated it and never compared it with anything,
-so an index claiming any version was accepted and every read and mutation
-proceeded against it. A marker nothing compares is not forward compatibility:
-the first real format change would have been read by a build that could not
-interpret it, and -- because every mutation rewrites the whole index -- the
-misread would have been written back.
-
-The index is enrolled in the persistence compatibility policy as a DURABLE
-format (``secret_index`` in :data:`~core.PERSISTED_FORMATS`), so a future
-version bump is governed by the same upgrade-chain rules as every other
-persisted format rather than by this one constant alone.
-"""
-
-
 class _SecretIndex(BaseModel):
     """JSON-backed manifest mapping lookup digests to blob references.
 
@@ -281,7 +266,7 @@ class SecretStore:
 
     def _index_path(self) -> Path:
         """Return the catalogue file path."""
-        return self._store_dir / _INDEX_FILE_NAME
+        return self._store_dir / SECRET_INDEX_FILENAME
 
     def _lock_target(self) -> Path:
         """Return the path used as the exclusive-write lock sidecar."""
@@ -319,6 +304,19 @@ class SecretStore:
             index = _SecretIndex.model_validate_json(index_path.read_text(encoding=UTF_8_ENCODING))
         except (OSError, ValidationError, ValueError) as exc:
             raise _storage_validation_error("secret-store index is malformed or unreadable") from exc
+        # The field documented itself as a forward-compatibility marker, but
+        # this comparison used to be absent -- an index claiming any version
+        # was accepted and every read and mutation proceeded against it. A
+        # marker nothing compares is not forward compatibility: the first
+        # real format change would have been read by a build that could not
+        # interpret it, and -- because every mutation rewrites the whole
+        # index -- the misread would have been written back.
+        #
+        # The index is enrolled in the persistence compatibility policy as a
+        # DURABLE format (``secret_index`` in :data:`~core.PERSISTED_FORMATS`),
+        # so a future version bump is governed by the same upgrade-chain
+        # rules as every other persisted format rather than by this check
+        # alone.
         if index.schema_version != SECRET_INDEX_SCHEMA_VERSION:
             raise EnvelopeVersionError(
                 f"secret-store index is at version {index.schema_version}; "

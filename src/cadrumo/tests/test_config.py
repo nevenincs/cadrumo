@@ -25,7 +25,8 @@ from typing import Union, get_args, get_origin
 
 import pytest
 
-from ..core import AuthProviderKind, StateRootInputs, platform_user_data_root
+from ..adapters.persistence.storage.bucket import bucket_paths
+from ..core import AuthProviderKind, StateRootInputs, StorageCategory, platform_user_data_root, storage_location
 from ..core.config import (
     Settings,
     StorageRouteKind,
@@ -402,7 +403,9 @@ class TestDatabaseUrlDerivation:
         with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
             settings = settings_without_env_file()
 
-        expected = f"sqlite:///{(storage_root / 'cadrumo.db').as_posix()}"
+        expected = (
+            f"sqlite:///{(storage_root / storage_location(StorageCategory.ROOT_FALLBACK_DATABASE).subpath).as_posix()}"
+        )
         assert settings.cadrumo_database_url == expected
         assert settings.cadrumo_database_url, "URL must never be empty when the storage root is set"
 
@@ -430,7 +433,7 @@ class TestDatabaseUrlDerivation:
         with _isolated_aeat_env(CADRUMO_LOCAL_STORAGE_ROOT=storage_root.as_posix()):
             settings = settings_without_env_file(cadrumo_active_profile="acme")
 
-        expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'cadrumo.db').as_posix()}"
+        expected = f"sqlite:///{bucket_paths(storage_root, 'acme').database_file.as_posix()}"
         assert settings.cadrumo_database_url == expected
 
     def test_env_example_leaves_normal_profile_storage_on_the_bucket_route(self, tmp_path: Path) -> None:
@@ -453,6 +456,6 @@ class TestDatabaseUrlDerivation:
                 cadrumo_active_profile=bucket_id,
             )
 
-        expected = f"sqlite:///{(storage_root / 'buckets' / bucket_id / 'db' / 'cadrumo.db').as_posix()}"
+        expected = f"sqlite:///{bucket_paths(storage_root, bucket_id).database_file.as_posix()}"
         assert settings.cadrumo_database_url == expected
         assert classify_storage_route(settings).kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE

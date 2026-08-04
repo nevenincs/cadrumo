@@ -109,7 +109,15 @@ _NON_CANONICAL_CASILLA_VALUES = (
 # Canonical forms that MUST keep working, including sub-cent precision: the AEAT
 # fixed-width encoder rounds such a value to cents with ROUND_HALF_UP, so the
 # input boundary must not refuse it.
-_CANONICAL_CASILLA_VALUES = ("140000", "140000.00", "-140000.55", "0", "2.345", "0.075")
+#
+# Precision is NOT what the boundary caps -- a Spanish thousands lookalike is.
+# So a sub-cent value passes at any number of fractional digits provided its
+# lead group cannot open a grouping run, which a leading zero never does.
+# `2.345` used to sit in this tuple and no longer can: `2` IS a valid lead
+# group, so on a money field that text is undecidable between two euros
+# thirty-four and two thousand three hundred forty-five, and the boundary
+# refuses rather than guessing at a thousandfold error.
+_CANONICAL_CASILLA_VALUES = ("140000", "140000.00", "-140000.55", "0", "0.335", "0.075")
 
 
 def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCalculateInputBundle:

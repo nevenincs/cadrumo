@@ -41,9 +41,14 @@ from ._redaction_rules import diagnostic_rules
 _logger = get_logger(__name__)
 
 
-_TRACE_FILENAME = "trace.json"
-_EVENTS_FILENAME = "events.jsonl"
-_ENVELOPE_FILENAME = "envelope.json"
+TRACE_FILENAME = "trace.json"
+EVENTS_FILENAME = "events.jsonl"
+ENVELOPE_FILENAME = "envelope.json"
+"""Per-run artifact leaf names, owned by this module (see the ``run_trace`` /
+``run_events`` / ``run_envelope`` entries in
+:data:`~cadrumo.adapters.persistence.storage.STORAGE_PATH_DEFINITIONS`, each
+declared ``owner="cadrumo.core.observability"`` and interpolating these
+constants into their grammar rather than re-typing the names)."""
 
 # Both the public direct append path and JsonlRunSink write the same per-run
 # JSONL artefacts.  One process-wide lock keeps their independent file handles
@@ -171,7 +176,7 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
     """
     from ..redaction import redact_structured
 
-    target = _run_dir(trace.run_id, settings=settings) / _TRACE_FILENAME
+    target = _run_dir(trace.run_id, settings=settings) / TRACE_FILENAME
     redacted = redact_structured(trace.model_dump(mode="json"), rules=diagnostic_rules())
     try:
         atomic_write_text(target, json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
@@ -214,7 +219,7 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
             validation, or when its embedded identity names another run.
     """
     _validate_run_id(run_id)
-    target = runs_dir(settings) / run_id / _TRACE_FILENAME
+    target = runs_dir(settings) / run_id / TRACE_FILENAME
     try:
         exists = target.exists()
     except OSError as exc:
@@ -259,7 +264,7 @@ def save_envelope(
     Returns:
         Absolute path of the written ``envelope.json`` file.
     """
-    target = _run_dir(run_id, settings=settings) / _ENVELOPE_FILENAME
+    target = _run_dir(run_id, settings=settings) / ENVELOPE_FILENAME
     try:
         atomic_write_text(
             target,
@@ -294,7 +299,7 @@ def load_envelope_document(
             the file is missing, or its contents are not a JSON object.
     """
     _validate_run_id(run_id)
-    target = runs_dir(settings) / run_id / _ENVELOPE_FILENAME
+    target = runs_dir(settings) / run_id / ENVELOPE_FILENAME
     try:
         exists = target.exists()
     except OSError as exc:
@@ -346,7 +351,7 @@ def save_events_append(
     """
     from ..redaction import redact_structured
 
-    target = _run_dir(run_id, settings=settings) / _EVENTS_FILENAME
+    target = _run_dir(run_id, settings=settings) / EVENTS_FILENAME
     redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
     line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
     try:
@@ -381,7 +386,7 @@ def iter_events(
         An iterator of :class:`RunEvent` records in append order.
     """
     _validate_run_id(run_id)
-    target = runs_dir(settings) / run_id / _EVENTS_FILENAME
+    target = runs_dir(settings) / run_id / EVENTS_FILENAME
 
     def _stream() -> Iterator[RunEvent]:
         try:
@@ -473,7 +478,7 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
         if re.fullmatch(RUN_ID_PATTERN, entry.name) is None:
             _logger.debug("iter_runs: skipping non-run directory %s", entry.name)
             continue
-        trace_path = entry / _TRACE_FILENAME
+        trace_path = entry / TRACE_FILENAME
         if not trace_path.exists():
             _logger.debug("iter_runs: skipping run directory %s without trace.json", entry.name)
             continue
@@ -612,6 +617,9 @@ def _rmtree_pairs(pairs: list[tuple[Path, float]]) -> int:
 
 
 __all__ = [
+    "ENVELOPE_FILENAME",
+    "EVENTS_FILENAME",
+    "TRACE_FILENAME",
     "iter_events",
     "iter_runs",
     "load_envelope_document",

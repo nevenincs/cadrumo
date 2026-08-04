@@ -23,6 +23,7 @@ happens to be populated, which document validation is not.
 from __future__ import annotations
 
 import re
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from xml.etree.ElementTree import Element
@@ -240,35 +241,42 @@ def test_an_already_typed_amount_skips_the_text_grammar() -> None:
     assert _format_xml_dictionary_value("P102", 0) == "0.00"
 
 
-def test_a_numeric_row_refuses_a_boolean() -> None:
-    """A boolean on an amount row refuses rather than rendering as 1 or 0.
+def test_a_row_aeat_does_not_declare_boolean_refuses_a_boolean() -> None:
+    """A boolean renders on the two boolean row types and nowhere else.
 
-    The boolean branch is evaluated before the numeric one, so ``True`` on a
-    ``P102`` euro-cent row used to render ``1`` -- a plausible one-euro amount that
-    the XSD accepts, exactly the shape of the unreadable-amount defect above. Both
-    launder an upstream error into a number a taxpayer never stated, and neither is
-    visible afterwards: nothing on the export path validates against the schema,
-    and ``1`` would satisfy it anyway.
+    The boolean branch is evaluated before every other, so it used to claim any
+    row a boolean arrived on: ``True`` on a ``P102`` euro-cent row rendered ``1``,
+    a plausible one-euro amount the XSD accepts, and on an ``X`` or ``FEC`` row it
+    rendered ``1`` where AEAT expects text or a date. Both launder an upstream type
+    error, and the amount case is the one that hides: nothing on the export path
+    validates against the schema, and ``1`` would satisfy it anyway, so a taxpayer
+    files a figure they never stated.
+
+    The row types are enumerated here rather than derived, because deriving them
+    from the same set the renderer consults would make this test agree with the
+    code by construction. ``MOD`` and ``AAA`` are the codes the Modelo 100
+    dictionary carries beyond the four asserted above.
 
     This is a guard rather than a live fix. No route measured today delivers a
     boolean here: the casilla input door refuses one for every declared family, and
-    no Modelo 100 revision declares a boolean casilla on a numeric row. The guard
-    exists so that a route added later fails loudly instead of filing a number.
+    no Modelo 100 revision declares a boolean casilla on a non-boolean row. The
+    guard exists so that a route added later fails loudly instead of filing a value.
     """
-    for dictionary_type in ("P102", "N102", "P010", "P012"):
+    for dictionary_type in ("P102", "N102", "P010", "P012", "X", "FEC", "TIT", "MOD", "AAA"):
         for value in (True, False):
             with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
                 _format_xml_dictionary_value(dictionary_type, value)
 
 
 def test_the_boolean_refusal_spares_the_rows_declared_boolean() -> None:
-    """Positive control: only numeric rows refuse a boolean.
+    """Positive control: the two rows AEAT declares boolean still render.
 
-    The boolean branch is correct for the two types AEAT declares boolean, and a
-    guard that refused every boolean would satisfy the refusal test above while
-    emptying the identity block of every declaration. The rendered tokens are
-    checked against the XSD facets rather than restated, so this stays an oracle
-    test rather than a copy of the code.
+    A guard that refused every boolean would satisfy the refusal test above while
+    emptying the identity block of every declaration, and a guard that refused
+    every value would satisfy it while breaking the whole export -- so both the
+    boolean rows and a representative non-boolean value are asserted here. The
+    rendered tokens are checked against the XSD facets rather than restated, so
+    this stays an oracle test rather than a copy of the code.
     """
     for dictionary_type, xsd_type in (("LGC", "tipo_logico"), ("S_N", "tipo_SINO_Exclusivo")):
         for value in (True, False):
@@ -277,3 +285,56 @@ def test_the_boolean_refusal_spares_the_rows_declared_boolean() -> None:
                 f"{dictionary_type} row rendered {rendered!r} for {value!r}, which {xsd_type} rejects"
             )
     assert _format_xml_dictionary_value("P102", Decimal("1")) == "1.00"
+    assert _format_xml_dictionary_value("X", "12345678Z") == "12345678Z"
+
+
+def test_a_row_type_aeat_adds_later_refuses_a_boolean_by_default() -> None:
+    """The claim list is positive, so an unlisted row type is refused, not rendered.
+
+    This is the property that makes the guard survive AEAT extending its type
+    table. A negative carve-out -- "numeric rows refuse" -- would leave a new code
+    inheriting whatever the last branch did, which is how the defect existed in the
+    first place. ``ZZZ`` stands for that future code and is deliberately not a type
+    the dictionary declares today.
+    """
+    with pytest.raises(FilingExportValidationError, match="cannot carry the boolean"):
+        _format_xml_dictionary_value("ZZZ", True)
+
+
+def test_a_date_row_refuses_text_that_is_not_in_aeats_form() -> None:
+    """An ISO date on a date row refuses rather than rendering verbatim.
+
+    Reachable, unlike the boolean guard above, and measured end to end: all 42
+    casillas addressing a ``FEC`` row in the 2024 revision declare the registry's
+    GENERIC ``text`` family, whose validator is an identity -- it accepts
+    ``1980-01-02``, ``not a date`` and ``''`` alike -- so an ISO date passes the
+    input door untouched and lands here as a string.
+
+    The renderer refuses instead of parsing. Reading ``03/04/2024`` would mean
+    choosing between day-month and month-day with no basis for the choice, which
+    is the same undecidable-input situation the amount grammar already refuses.
+
+    This is a backstop, not the fix. The root cause is that those casillas
+    declare ``text`` while the registry has a ``date`` family that no casilla in
+    the tree uses; declaring it would route them through the typed channel and
+    make this check unreachable again.
+    """
+    for unusable in ("1980-01-02", "02-01-1980", "1980/01/02", "2/1/80", "notadate", ""):
+        with pytest.raises(FilingExportValidationError, match="not in the form AEAT accepts"):
+            _format_xml_dictionary_value("FEC", unusable)
+
+
+def test_a_date_row_accepts_the_form_aeat_declares() -> None:
+    """Positive control: AEAT's own pattern decides what passes.
+
+    A guard that refused every string would satisfy the refusal test above while
+    breaking every correctly-supplied date, so the accepted forms are checked
+    against the ``tipo_Fecha`` facet rather than against a restatement of the
+    regex in the renderer. One- and two-digit day and month both pass because the
+    facet allows both.
+    """
+    for usable in ("2/1/1980", "02/01/1980", "31/12/2024"):
+        rendered = _format_xml_dictionary_value("FEC", usable)
+        assert _accepts("tipo_Fecha", rendered), f"tipo_Fecha rejects {rendered!r}"
+    assert _format_xml_dictionary_value("FEC", date(1980, 1, 2)) == "2/1/1980"
+    assert _accepts("tipo_Fecha", _format_xml_dictionary_value("FEC", date(1980, 1, 2)))

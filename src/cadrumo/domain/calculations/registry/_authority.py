@@ -296,7 +296,7 @@ def _load_authority(
         # so this lru_cache invalidates when the manifest changes on disk.
         _authorization_manifest=load_authorization_manifest(root),
     )
-    # ADR mcp-call-latency D1: a persisted green verdict keyed by the exact
+    # A persisted green verdict keyed by the exact
     # fingerprint tuples this lru_cache already keys on lets an immutable tree
     # skip the multi-second re-validation. The build and continuous integration
     # are the validation gate; the runtime asserts fingerprint identity only. A
