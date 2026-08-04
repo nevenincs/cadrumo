@@ -42,22 +42,28 @@ def test_bundled_source_manifest_seals_all_observations_without_emission(
     root, manifest = bundled_source_manifest
     review = build_unresolved_review_register(manifest)
 
-    # These figures and digests stamp the CURRENT registry tree, not an invariant:
-    # the manifest digest is content-based over sorted source paths and bytes, so
-    # any legitimate registry edit (a casilla change, a fragment rename) moves
-    # them. Refresh by re-running this test and adopting the reported values once
-    # the corpus change is confirmed intentional.
-    assert manifest.entry_count == 126_192
-    assert manifest.grounded_count == 144
-    assert manifest.revision_exact_count == 32_008
-    assert manifest.continuity_candidate_count == 94_040
-    assert manifest.unresolved_entry_count == 94_040
-    assert manifest.source_file_count == 12_944
-    assert manifest.manifest_sha256 == "9e3ea533c4995081eeae0eec1a69c115f98b35377d4c118c832fced4012e0ac2"
+    # The registry corpus is live and edited daily, so no figure or digest here
+    # may stamp the current tree state (a pinned count or sha256 breaks on every
+    # legitimate registry edit and certifies nothing). What the seal must
+    # guarantee instead is internal consistency and determinism: the counts
+    # partition the entry set, the digests derive from the content, and an
+    # identical second build reproduces them bit-for-bit. The tree-state stamp
+    # itself belongs in the sealed migration evidence at execution time, not in
+    # a standing test.
+    assert manifest.entry_count > 100_000, "corpus shrank an order of magnitude; wrong tree?"
+    assert (
+        manifest.grounded_count
+        + manifest.revision_exact_count
+        + manifest.continuity_candidate_count
+        == manifest.entry_count
+    )
+    assert manifest.unresolved_entry_count == manifest.continuity_candidate_count
+    assert manifest.source_file_count > 5_000
+    assert len(manifest.manifest_sha256) == 64
 
-    assert review.entry_count == 94_040
-    assert review.group_count == 2_354
-    assert review.register_sha256 == "5b26f56daa12e4812dab619ab467e34df8340d67788e3df0208c50e57178f5fc"
+    assert review.entry_count == manifest.unresolved_entry_count
+    assert review.group_count > 1_000
+    assert len(review.register_sha256) == 64
     assert review.source_manifest_sha256 == manifest.manifest_sha256
 
     assert Counter(entry.leaf_state for entry in manifest.entries) == Counter(
@@ -83,6 +89,29 @@ def test_bundled_source_manifest_seals_all_observations_without_emission(
     before = fingerprint_registry_corpus(root)
     assert before == manifest.corpus_fingerprint
     assert fingerprint_registry_corpus(root) == before
+
+
+def test_source_manifest_is_deterministic_across_rebuilds(
+    bundled_source_manifest: tuple[Path, SourceManifest],
+) -> None:
+    """A second build over the same tree reproduces the seal bit-for-bit.
+
+    Reproducibility is the property the digest certifies; asserting it directly
+    replaces the old pinned tree-state digests, which broke on every legitimate
+    registry edit without certifying anything about the sealing logic.
+    """
+    root, manifest = bundled_source_manifest
+    inventory = build_source_inventory(root)
+    matrix = extract_resolved_localization_matrix(root, inventory)
+    classified = classify_canonical_occurrence_candidates(
+        generate_canonical_occurrence_candidates(matrix),
+    )
+    rebuilt = build_source_manifest(root, classified, inventory)
+    assert rebuilt.manifest_sha256 == manifest.manifest_sha256
+    assert rebuilt.entry_count == manifest.entry_count
+    assert build_unresolved_review_register(rebuilt).register_sha256 == (
+        build_unresolved_review_register(manifest).register_sha256
+    )
 
 
 def test_source_manifest_preserves_real_fallback_provenance_and_seal_validation(
