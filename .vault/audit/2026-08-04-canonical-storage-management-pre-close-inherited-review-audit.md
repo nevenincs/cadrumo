@@ -83,6 +83,64 @@ is the same homonym shape that let a liveness claim pass on
 
 Not a blocker for closure. A blocker for treating the remaining bands as sized.
 
+### s114-is-complete-as-scoped-and-the-residual-is-a-different-duplication | none | Checked, recorded, and narrower than a reader would assume
+
+Checked because the coordinator saw `S114` as both pending and completed and did
+not know which was true. **Both, for two different reasons, and neither is a
+defect.**
+
+The board carried two tasks for one Step — a duplicate — and the checkbox is
+right: `S114` is `[x]` at HEAD with an exec record whose claim is precise.
+
+**My first read of the code said partial and was wrong.** Fourteen grammars are
+now f-string interpolated and fifteen remain plain literals, which looks like
+half-done work. The exec record explains it: the Step's scope was entries that
+spelled a segment **twice within the same module** — once in `segment=`, once
+retyped inside `grammar=`. The fifteen remaining have no `segment=` field at all,
+so there was no second spelling to collapse. Complete as scoped.
+
+**The residual is real and is a different duplication.** Those fifteen — the
+blob, run-trace, `llm-usage`, `llm-run-telemetry` and `tokens` fan-out shapes —
+still hand-type a directory segment that a `StorageCategory` declares. That
+duplication is **across modules** (taxonomy against definitions), not within one,
+and the directory-agreement gate **pins it rather than eliminating it**. It is
+the finding from the original self-duplication review, still open, and `S114`
+never covered it.
+
+Recording the distinction because "checked but not done" and "done, but scoped
+narrower than a reader assumes" look identical on a board and need different
+responses. This is the second, and the exec record is what made it decidable —
+an argument for the exec-record requirement that is easy to lose.
+
+### the-criterion-ruling-settles-the-adoption-question | none | Established by two named gates rather than by judgement
+
+The accessor-versus-field question raised by the 5-against-21 measurement is
+**settled and no longer a matter of judgement**, on two gates green at HEAD:
+
+`test_storage_binding_gate.py` proves every `Path`-typed `Settings` field is a
+taxonomy member, a declared escape, or the storage root — **total and disjoint** —
+and its discovery is anchored to `Settings.model_fields` deliberately independent
+of the taxonomy, so the two sides cannot move together and pass vacuously.
+`test_storage_default_parity.py` pins each field's placeholder default to the
+taxonomy's subpath.
+
+So a field read is a **gate-guaranteed member with a parity-pinned default**, not
+a second authority:
+
+```
+storage_path(StorageCategory.X)   ENROLLED
+settings.cadrumo_x_dir            ENROLLED   (member by gate, default by parity)
+storage_root / "llm-cache"        NOT enrolled -- this is what S78 burns down
+```
+
+**Accessor versus field is style, not enrollment.** The adoption gap is hygiene
+and stays out of the criterion; if the closure statement's language overstates
+adoption, the language narrows rather than 21 modules migrating for zero
+enrollment gain.
+
+Worth noting what the ruling does *not* remove: the parity gate makes the
+duplicate safe, it does not make it one declaration.
+
 ### four-buckets-at-head | none | The honest remaining-work list
 
 **Landed and verified** — each read at HEAD, not taken from a commit subject:
