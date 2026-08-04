@@ -84,9 +84,6 @@ def descendant_facts_from_list(
         if d.nif is not None:
             facts.append((f"{prefix}.nif", d.nif))
     facts.append((_COUNT_PATH, str(len(descendientes))))
-    gastos_reales_2024 = sum(d.gastos_guarderia_euros for d in descendientes if d.is_eligible_menor_tres(2024))
-    if gastos_reales_2024 > 0:
-        facts.append((_GASTOS_REALES_2024_PATH, str(gastos_reales_2024)))
     return facts
 
 

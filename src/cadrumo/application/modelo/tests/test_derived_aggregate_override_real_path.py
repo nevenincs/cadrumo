@@ -49,7 +49,7 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId, CasillaId, validated_casilla_id
 from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
-from ....domain.user_profile import UserProfileFact
+from ....domain.user_profile import ProfileSchemaValidationError, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import (
@@ -203,52 +203,65 @@ def _store_sentinel_at_derived_path() -> None:
 
 
 @pytest.mark.usefixtures("_active_profile")
-def test_operator_write_door_accepts_a_value_at_the_derived_aggregate_path() -> None:
-    """The write door stores a value at the derived path without any refusal.
+def test_operator_write_door_refuses_a_value_at_the_derived_aggregate_path() -> None:
+    """The write door refuses the derived path and names where to edit instead.
 
-    This is the reachability half of the defect: the schema declares the derived
-    aggregate as an ordinary editable decimal field, so nothing between the
-    operator and storage judges the path illegitimate. A later Step makes this
-    write raise; when it does, this test is the one to invert.
+    Inverted from the reachability half of the defect this module was written to
+    pin. The schema once declared the derived aggregate as an ordinary editable
+    decimal, so nothing between the operator and storage judged the path
+    illegitimate. The path-legitimacy check now refuses every value at a declared
+    derived path, and the refusal carries the surface that edits the real source
+    facts rather than a bare rejection.
+
+    Storage is asserted as well as the raise: a refusal that still let the value
+    through would leave the calculation override open while looking closed.
     """
-    _store_sentinel_at_derived_path()
+    with pytest.raises(ProfileSchemaValidationError) as refusal:
+        _store_sentinel_at_derived_path()
+
+    assert _DERIVED_PATH in str(refusal.value)
+    assert "descendiente" in str(refusal.value), (
+        "the refusal must name the surface that edits the real source facts, "
+        "not merely reject the write"
+    )
 
     record = UserProfileLifecycleRepository(bucket_id=_BUCKET).load(_BUCKET)
-    stored = record_to_path_values(record)
-
-    assert _DERIVED_PATH in stored, (
-        f"the write door was expected to store {_DERIVED_PATH!r}; "
-        f"if it now refuses, this defect is closed and the test must be inverted"
-    )
-    assert Decimal(str(stored[_DERIVED_PATH])) == _SENTINEL
+    assert _DERIVED_PATH not in record_to_path_values(record)
 
 
 @pytest.mark.usefixtures("_active_profile")
-def test_stored_derived_aggregate_suppresses_the_art_58_computation() -> None:
-    """A stored value at the derived path reaches casilla 0513 instead of the law.
+def test_the_art_58_computation_can_no_longer_be_displaced_by_a_stored_value() -> None:
+    """Casilla 0513 carries the computed Art. 58 aggregate and cannot be overridden.
 
-    Two runs of the same production calculate entry point over the same two
-    eligible descendants. The only difference is the stored sentinel, so the
-    change in 0513 is attributable to it and to nothing else.
+    Inverted from the suppression half of the defect this module pinned. The
+    probe is unchanged in shape -- two runs of the same production calculate
+    entry point over the same two eligible descendants -- but the middle step
+    can no longer happen: the write door refuses the sentinel, so there is no
+    stored value left to displace the law.
+
+    The refusal is asserted rather than assumed. A test that merely observed
+    0513 holding the computed figure would pass equally well if the write had
+    silently failed for some unrelated reason, which would leave the override
+    channel open while looking closed.
     """
     computed = _calculate_estatal_minimo()
 
     # Control: the descendants really do drive a non-zero Art. 58 aggregate, so
-    # the second run has something to visibly displace. Without this the
-    # override assertion could pass against a computation that was already
-    # producing nothing.
+    # a displacement would be visible if one were still possible. Without this
+    # the assertion could pass against a computation producing nothing.
     assert computed > Decimal("0"), (
         "the two declared descendants must produce a non-zero Art. 58 aggregate for this probe to discriminate"
     )
     # The assertion below cannot be satisfied by coincidence.
     assert computed != _SENTINEL
 
-    _store_sentinel_at_derived_path()
-    overridden = _calculate_estatal_minimo()
+    with pytest.raises(ProfileSchemaValidationError):
+        _store_sentinel_at_derived_path()
 
-    assert overridden == _SENTINEL, (
-        f"casilla {_ESTATAL_CASILLA} resolved to {overridden} rather than the stored "
-        f"{_SENTINEL}; if the Art. 58 computation now wins, the override channel is "
-        f"closed and this test must be inverted"
+    unchanged = _calculate_estatal_minimo()
+
+    assert unchanged == computed, (
+        f"casilla {_ESTATAL_CASILLA} moved from {computed} to {unchanged} after a refused "
+        f"write; the refusal must leave the computation untouched"
     )
-    assert overridden != computed
+    assert unchanged != _SENTINEL

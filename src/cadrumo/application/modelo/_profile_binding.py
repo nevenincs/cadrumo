@@ -204,11 +204,13 @@ def _inject_derived_family_facts(
         return
 
     menores_key = "renta_family.descendientes_menores_3_2024"
+    gastos_key = "renta_family.gastos_guarderia_reales_2024"
     if menores_key in fact_index:
         return
 
     # Reconstruct per-descendant birth_dates from stored facts.
     count_menores = 0
+    gastos_reales = 0
     idx = 0
     while True:
         birth_raw = fact_index.get(f"renta_family.descendiente.{idx}.birth_date")
@@ -224,6 +226,9 @@ def _inject_derived_family_facts(
                 age_at_year_end = filing_year - birth.year
                 if age_at_year_end < 3:
                     count_menores += 1
+                    gastos_raw = fact_index.get(f"renta_family.descendiente.{idx}.gastos_guarderia")
+                    if gastos_raw is not None:
+                        gastos_reales += int(Decimal(str(gastos_raw)))
             except (ValueError, TypeError) as exc:
                 get_logger(__name__).debug(
                     "profile-binding: failed to parse birth date for menores count; skipping entry (%s: %s)",
@@ -233,6 +238,7 @@ def _inject_derived_family_facts(
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)
+    fact_index[gastos_key] = Decimal(gastos_reales)
 
 
 _MINIMO_DESCENDIENTES_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
