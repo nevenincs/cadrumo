@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:d99ec6947370fc64e3d04d7dc1349e396b8088e81646e6a2eabb29e5c13b75ce'
+body_hash: 'sha256:a9f1191ca87ebdbc6c8d5e5843edfd40dc40fda242498096ba65787695233193'
 related: []
 ---
 
@@ -1161,24 +1161,38 @@ package walk is recorded anywhere in the feature.
 sites" denominator matches the whole test tree (353). The two readings differ by
 an order of magnitude and the text does not say which is meant.
 
-**Most of the work had not reached the vault, and the backfill is incomplete.**
-When this was found, the durable ledger was a single exec record covering a
-ten-file batch; everything else lived in the relay chain. Backfill has since
-landed most of it — nine literal bands and four more batches now carry
-enumeration method, verification, and site list. **Two gaps remain, and they are
-different in kind:**
+**Most of the work had not reached the vault. The backfill is now complete except
+for one field, and that field is honestly bounded.** When this was found, the
+durable ledger was a single exec record covering a ten-file batch; everything
+else lived in the relay chain. Backfill has since landed all of it — nine literal
+bands, four further batches, and the campaign's largest band (seven commits
+routing `cadrumo.db` scaffolding onto the accessor, **45 sites across 28 files**,
+which at the time of the finding was referenced in zero vault documents) each now
+carry enumeration method, verification, and site list.
 
-- The original ten-file batch still describes its inputs as *"pre-identified"*.
-  Its **enumeration method is unrecoverable** — nothing in the tree records how
-  those ten files were selected. The site list can be reconstructed from the two
-  code commits the record documents; the selection method cannot. It is recorded
-  as unrecoverable rather than guessed.
-- **The campaign's largest band is unrecorded.** Seven commits routing
-  `cadrumo.db` scaffolding onto the accessor — roughly 45 sites across 28 files —
-  are referenced in **zero** vault documents.
+**One field remains open, and it is bounded rather than blank.** The original
+ten-file batch still describes its inputs as *"pre-identified"*: its
+**enumeration method is unrecoverable**, because nothing in the tree records how
+those ten files were selected. The site list *is* reconstructable from the two
+code commits the record documents. It is recorded as unrecoverable rather than
+guessed — a lane declined to invent a plausible method, which after this campaign
+is itself information worth keeping.
+
+> **A bounded absence is a finding; a bare absence is a hole.** `NOT STATED`
+> tells a reader nothing about how much is missing. Naming what can still be
+> rebuilt tells them exactly where the evidence stops.
 
 This is element `5h`'s finding one level out: the tree cannot say whether `S78`
-is complete, and neither could the record.
+is complete, and for most of the campaign neither could the record.
+
+**This paragraph has itself gone stale twice while being written**, each time
+because the gap it described was being closed underneath it — first when the band
+backfill landed, then when the seven chunk commits were recorded. That is the
+mildest form of the pattern this document catalogues, and the only one where the
+staleness is good news: **a document describing a problem, outliving the
+problem.** It is recorded because the habit that caught it — re-checking the
+claim before restating it — is the same habit that failed four times today when
+the news was worse.
 
 **And a third turn of the same screw: the ledger is legible only if you already
 know how it was written.** Four lanes wrote into that one exec record under two
