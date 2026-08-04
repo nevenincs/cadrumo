@@ -1,8 +1,9 @@
 """The unified search record -- one homogeneous index payload.
 
-The four projected record kinds -- concept cards, casilla projections, CLI
-surface records, doc pages -- are heterogeneous (each carries kind-specific
-fields). The compiled search index, and the Pagefind injection that consumes
+The five projected record kinds -- concept cards, casilla projections, CLI
+surface records, doc pages, and legal provisions -- are heterogeneous (each
+carries kind-specific fields). The compiled search index, and the Pagefind
+injection that consumes
 it, need ONE homogeneous shape per entry. :class:`SearchRecord` is that shape:
 a strict frozen pydantic record carrying a stable ``id``, the ``kind``
 discriminator, a ``title``, the four-language ``descriptions`` map, a ``target``
@@ -10,7 +11,7 @@ URL/anchor a palette card jumps to, a normalised ``ranking_weight``, and typed
 ``metadata``.
 
 :func:`to_search_record` is the uniform serialisation funnel: it projects any
-of the four kind records into a :class:`SearchRecord`, deriving the per-kind
+of the five kind records into a :class:`SearchRecord`, deriving the per-kind
 ``id`` / ``title`` / ``target`` and the base ranking weight. The ranking
 authority is the user-first per-display-class ladder
 :data:`_DISPLAY_CLASS_BASE_WEIGHT` (user documentation first, then modelo,
@@ -23,6 +24,7 @@ kind rather than the fully-derived display class.
 
 from __future__ import annotations
 
+from datetime import date
 from enum import StrEnum
 from hashlib import sha256
 
@@ -37,7 +39,7 @@ from ._casilla_projection import CasillaSearchRecord
 from ._cli_projection import CliOptionRecord, CliSurfaceRecord
 from ._concept_cards import ConceptCardRecord
 from ._glossary_anchor import glossary_term_anchor
-from ._search_record import ResultDisplayClass, SearchRecordKind
+from ._search_record import LegalSearchRecord, ResultDisplayClass, SearchRecordKind
 
 __all__ = [
     "RankingTier",
@@ -98,7 +100,8 @@ _DISPLAY_CLASS_BASE_WEIGHT: dict[ResultDisplayClass, float] = {
 #: Legacy per-kind projection of the one class table, for the sweep-relevance
 #: reweight path (``_resolution._reweight``) that keys on record kind rather
 #: than the fully-derived display class. CONCEPT collapses to the general-fact
-#: ``DOC`` band (a per-hit reweight has no Handbook domain to split on), and a
+#: ``DOC`` band (a per-hit reweight has no Handbook domain to split on), legal
+#: provisions use the same user-facing ``DOC`` band, and a
 #: full-text PAGE hit collapses to the ``TECHNICAL`` floor. Derived so the
 #: per-kind values can never drift from the one declared table.
 _KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
@@ -106,6 +109,7 @@ _KIND_TO_DISPLAY_CLASS: dict[SearchRecordKind, ResultDisplayClass] = {
     SearchRecordKind.CASILLA: ResultDisplayClass.CASILLA,
     SearchRecordKind.CLI: ResultDisplayClass.CLI,
     SearchRecordKind.PAGE: ResultDisplayClass.TECHNICAL,
+    SearchRecordKind.LEGAL: ResultDisplayClass.DOC,
 }
 
 _KIND_BASE_WEIGHT: dict[SearchRecordKind, float] = {
@@ -204,6 +208,8 @@ def _display_class_for(
         if domain == ConceptDomain.MODELO.value:
             return ResultDisplayClass.MODELO
         return ResultDisplayClass.DOC
+    if kind is SearchRecordKind.LEGAL:
+        return ResultDisplayClass.DOC
     path = target.split("#", 1)[0].lstrip("/")
     if path.startswith("cli/"):
         return ResultDisplayClass.CLI
@@ -232,7 +238,8 @@ class SearchRecordMetadata(BaseModel):
     casillas carry canonical ``modelo`` / ``casilla_id`` plus display/export
     metadata ``number`` / ``segmento``, the registry definition contract, and
     provenance ``legal_refs`` / ``source_refs`` / ``source_revisions``; CLI
-    records carry ``command_path`` / ``registry_key`` / ``option_names``. This
+    records carry ``command_path`` / ``registry_key`` / ``option_names``; legal
+    records carry their authored catalogue metadata and BOE grounding. This
     keeps the unified payload one shape while preserving the definition and
     provenance the calculation-grounding contract requires (legal/source refs
     survive into the unified record).
@@ -263,10 +270,29 @@ class SearchRecordMetadata(BaseModel):
     # Grounding provenance (calculation-grounding contract).
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
+    # Legal catalogue fields.
+    legal_id: str | None = Field(default=None, min_length=1, max_length=320)
+    legal_kind: str | None = Field(default=None, min_length=1, max_length=128)
+    legal_document_id: str | None = Field(default=None, min_length=1, max_length=320)
+    legal_corpus_ref: str | None = Field(default=None, min_length=1, max_length=512)
+    legal_permalink: str | None = Field(default=None, min_length=1, max_length=512)
+    legal_authority: str | None = Field(default=None, min_length=1, max_length=128)
+    legal_evidence_tier: str | None = Field(default=None, min_length=1, max_length=128)
+    legal_article: str | None = Field(default=None, min_length=1, max_length=320)
+    legal_section: str | None = Field(default=None, min_length=1, max_length=320)
+    legal_published_at: date | None = None
+    legal_effective_from: date | None = None
+    legal_effective_to: date | None = None
+    legal_consolidated_as_of: date | None = None
+    legal_review_status: str | None = Field(default=None, min_length=1, max_length=64)
+    legal_reviewed_at: date | None = None
+    legal_reviewed_by: str | None = Field(default=None, min_length=1, max_length=160)
+    legal_notes: str | None = None
+    legal_required_text: tuple[str, ...] = ()
 
 
 class SearchRecord(BaseModel):
-    """One homogeneous compiled-index entry over the four record kinds.
+    """One homogeneous compiled-index entry over the five record kinds.
 
     This is the shape the Pagefind ``addCustomRecord`` injection consumes:
     every projected kind funnels into it via :func:`to_search_record`, so the
@@ -307,11 +333,13 @@ class SearchRecord(BaseModel):
 # Uniform serialisation funnel
 # ---------------------------------------------------------------------------
 
-KindRecord = CasillaSearchRecord | CliSurfaceRecord | CliOptionRecord | ConceptCardRecord
+KindRecord = (
+    LegalSearchRecord | CasillaSearchRecord | CliSurfaceRecord | CliOptionRecord | ConceptCardRecord
+)
 
 
 def to_search_record(record: KindRecord, *, sweep_score: float | None = None) -> SearchRecord:
-    """Project any of the four kind records into a unified :class:`SearchRecord`.
+    """Project any of the five kind records into a unified :class:`SearchRecord`.
 
     Derives the per-kind ``id`` / ``title`` / ``target`` and the normalised
     ranking weight, copying the four-language ``descriptions`` verbatim and
@@ -328,6 +356,8 @@ def to_search_record(record: KindRecord, *, sweep_score: float | None = None) ->
         return _from_concept(record, sweep_score)
     if isinstance(record, CasillaSearchRecord):
         return _from_casilla(record, sweep_score)
+    if isinstance(record, LegalSearchRecord):
+        return _from_legal(record, sweep_score)
     if isinstance(record, CliSurfaceRecord):
         return _from_cli_command(record, sweep_score)
     return _from_cli_option(record, sweep_score)
@@ -416,6 +446,43 @@ def _from_casilla(record: CasillaSearchRecord, sweep_score: float | None) -> Sea
             source_revisions=record.source_revisions,
             legal_refs=record.legal_refs,
             source_refs=record.source_refs,
+        ),
+    )
+
+
+def _from_legal(record: LegalSearchRecord, sweep_score: float | None) -> SearchRecord:
+    return SearchRecord(
+        id=record.record_id,
+        kind=SearchRecordKind.LEGAL,
+        tier=RankingTier.FULLTEXT,
+        title=record.title,
+        descriptions=dict(record.descriptions),
+        # The target comes from legal_reference.render_legal_reference(). Its
+        # page/anchor authority is the same one that emits the destination;
+        # the BOE permalink remains destination provenance in typed metadata.
+        target=record.target,
+        ranking_weight=normalise_display_class_weight(ResultDisplayClass.DOC, sweep_score),
+        search_aliases=record.search_aliases,
+        metadata=SearchRecordMetadata(
+            legal_id=record.legal_id,
+            legal_kind=record.legal_kind,
+            legal_document_id=record.document_id,
+            legal_corpus_ref=record.corpus_ref,
+            legal_permalink=record.permalink,
+            legal_authority=record.authority,
+            legal_evidence_tier=record.evidence_tier,
+            legal_article=record.article,
+            legal_section=record.section,
+            legal_published_at=record.published_at,
+            legal_effective_from=record.effective_from,
+            legal_effective_to=record.effective_to,
+            legal_consolidated_as_of=record.consolidated_as_of,
+            legal_review_status=record.review_status,
+            legal_reviewed_at=record.reviewed_at,
+            legal_reviewed_by=record.reviewed_by,
+            legal_notes=record.notes,
+            legal_required_text=record.required_text,
+            legal_refs=(record.legal_id,),
         ),
     )
 

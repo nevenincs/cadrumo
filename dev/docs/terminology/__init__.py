@@ -99,6 +99,7 @@ from ._unified_record import (
     normalise_ranking_weight,
     to_search_record,
 )
+from ._legal_projection import LegalSearchRecord, project_legal_search_records
 from ._wrangle import (
     STRONG_SIGNAL_SCORE_FLOOR,
     CollapsedHit,
@@ -131,6 +132,7 @@ __all__ = [
     "HeldOutQueryCase",
     "HeldOutQuerySet",
     "LegalGroundingLink",
+    "LegalSearchRecord",
     "LocalisedDefinition",
     "MissRateEvaluation",
     "MissRateRow",
@@ -179,6 +181,7 @@ __all__ = [
     "project_casilla_search_records",
     "project_cli_search_records",
     "project_concept_cards",
+    "project_legal_search_records",
     "project_modelo_casillas",
     "read_clusters",
     "relevance_mapping_path",
