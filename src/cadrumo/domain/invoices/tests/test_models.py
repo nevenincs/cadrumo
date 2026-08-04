@@ -569,3 +569,24 @@ def test_optional_monetary_field_still_accepts_what_it_should(raw: object, expec
     direction would be just as wrong as the defect this replaces.
     """
     assert _normalise_invoice_monetary_fields({"retention_rate": raw}) == {"retention_rate": expected}
+
+
+def test_refusal_bounds_what_it_quotes_back() -> None:
+    """The echo is bounded, because a mis-mapped column can put anything here.
+
+    Echoing the value is what lets an operator find the offending cell, and these
+    fields are numeric by declared purpose, so what lands here is normally a short
+    malformed number. The bound covers the accident: an import that maps an address
+    column onto ``fx_rate`` would otherwise put the whole cell into an error
+    message, and nothing on the error path redacts a message body. A value long
+    enough to be truncated was never a number, so the operator loses nothing.
+    """
+    overlong = "x" * 500
+
+    with pytest.raises(InvoiceValidationError) as caught:
+        _normalise_invoice_monetary_fields({"fx_rate": overlong})
+
+    message = str(caught.value)
+    assert overlong not in message, "the full value must not reach the message"
+    assert "(502 chars)" in message, "and the operator is told how much was withheld"
+    assert len(message) < 250, f"the message stays readable; got {len(message)} chars"
