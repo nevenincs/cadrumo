@@ -80,13 +80,26 @@ DERIVED_FIELD_ISSUE_CODE: Final[str] = "derived_field_not_editable"
 """Issue code for a write aimed at a path the engine computes.
 
 Path legitimacy, not value admissibility, which is why it is judged here beside
-``unknown_field`` rather than through the value-refusal authority: it refuses
-every value including a clear, and it must keep answering once the per-year
-field declarations are gone and there is no declaration left to judge against.
+``unknown_field`` rather than through the value-refusal authority: it must keep
+answering once the per-year field declarations are gone and there is no
+declaration left to judge against.
 
 Evaluated BEFORE the field-index lookup. While those declarations still stand
 the lookup succeeds, so a check placed after it would never run and the write
 would be admitted by the type checks below.
+
+A CLEAR is exempt, and the exemption is load-bearing rather than a softening.
+The validator judges the whole merged fact set on every edit, so a fact stored
+at a derived path before this rule existed is re-judged on every later edit to
+any other field. Refusing a clear too would leave no way to remove it: the
+profile could not be edited, cleared or promoted through the lifecycle API at
+all, with no in-band remedy. That was measured, not reasoned.
+
+Exempting the clear costs nothing the rule was protecting. The injectors
+compute always and overwrite whatever the index holds, so a stored value at a
+derived path is already inert for calculation; the rule exists to stop a value
+being WRITTEN, and a clear writes none. What it buys is that a profile carrying
+a stale fact is recoverable instead of bricked.
 """
 
 _ISSUE_CODE_BY_REFUSAL_KIND: Final[dict[ProfileValueRefusalKind, str]] = {
@@ -171,7 +184,7 @@ class ProfileValidationService:
 
     def _validate_one_fact(self, fact: UserProfileFact) -> tuple[ProfileValidationIssue, ...]:
         derived = derived_selector_for_path(fact.path, self._schema.derived_selectors)
-        if derived is not None:
+        if derived is not None and fact.value is not None:
             return (
                 ProfileValidationIssue(
                     severity=BaseSeverity.ERROR,
