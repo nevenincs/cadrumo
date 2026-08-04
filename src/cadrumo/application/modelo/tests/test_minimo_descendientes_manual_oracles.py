@@ -41,6 +41,7 @@ from ....domain.calculations.registry import ManualWorkedExamplePayload, Registr
 from .._profile_binding import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
+    second_entitled_filer_indicated,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -221,6 +222,126 @@ def test_the_youngest_child_is_excluded_by_norma_2a_and_not_by_the_cap() -> None
     # The restored child is the third by birth order, so it takes the 4.000
     # tranche at the same 50 % prorrateo the other two carry.
     assert without_own_return == printed_with_exclusion + Decimal("4000") * Decimal("0.5")
+
+
+# ---------------------------------------------------------------------------
+# Oracle B, conjunta - LIRPF art. 82.1's two modalities of unidad familiar.
+# ---------------------------------------------------------------------------
+
+
+def _valenciana_conjunta() -> dict[str, object]:
+    """The same three children, filed jointly by one unmarried progenitor.
+
+    In the joint return the youngest does not present a separate declaración,
+    so the norma 2ª own-return flag is absent for this filing while the rentas
+    figure stays on record. Only the marital status and declaration type differ
+    from the individual case above.
+    """
+    return {
+        "renta_family.descendiente.0.birth_date": f"{_ORACLE_YEAR - 18}-01-01",
+        "renta_family.descendiente.1.birth_date": f"{_ORACLE_YEAR - 12}-01-01",
+        "renta_family.descendiente.2.birth_date": f"{_ORACLE_YEAR - 6}-01-01",
+        "renta_family.descendiente.2.rentas_anuales": "4050",
+        "renta_taxpayer.marital_status": "pareja_hecho_registrada",
+        "filing_export.declaration_type": "2",
+    }
+
+
+#: The first three Art. 58.1 tranches WHOLE, as AEAT prints them.
+#:
+#: Ejemplo 1 prints exactly this for a married couple's joint return, and both
+#: examples' first three children draw the same 1º/2º/3º tranches, so it is the
+#: un-prorated total for either household. Taken from the manual rather than
+#: recomputed, like every other figure in this module.
+_PRINTED_THREE_CHILD_WHOLE_TRANCHES = Decimal("9100")
+
+#: What Ejemplo 2 prints for the SAME three children filed jointly by one
+#: unmarried progenitor: 1.200 + 1.350 + 4.000.
+_PRINTED_UNMARRIED_CONJUNTA_TOTAL = Decimal("6550")
+
+
+def test_the_manual_itself_shows_an_unmarried_conjunta_is_prorated() -> None:
+    """Ground the DIRECTION in AEAT's printed figures before asserting anything of the engine.
+
+    Ejemplo 2's conjunta block prints 6.550 for three children whose whole
+    tranches sum to 9.100. A joint return that were NOT prorated would print
+    9.100 -- which is exactly what Ejemplo 1's married conjunta does print for
+    the same three tranches. So the manual states, in figures, that an
+    unmarried couple's joint return still prorates: LIRPF art. 82.1.2ª, since
+    absent a marriage the unidad familiar is one progenitor plus the minor
+    children and the other progenitor stays separately entitled.
+
+    Asserts a relation between two AEAT-printed numbers and the registry's own
+    tranches. It touches no engine output, so it cannot be satisfied by the
+    engine being wrong.
+    """
+    assert _PRINTED_UNMARRIED_CONJUNTA_TOTAL < _PRINTED_THREE_CHILD_WHOLE_TRANCHES
+    # The married conjunta of Ejemplo 1 prints the whole-tranche total, so the
+    # gap between the two printed figures IS the prorrateo.
+    assert _expected(_ASTURIAS_ORACLE, "0513") * 2 == _PRINTED_THREE_CHILD_WHOLE_TRANCHES
+
+
+def test_an_unmarried_conjunta_return_is_prorated_and_a_married_one_is_not() -> None:
+    """The campaign's most consequential correction, pinned on its own input.
+
+    Before it, every conjunta return took whole tranches: the derivation read
+    the declaration type alone and never asked whether marriage put the other
+    progenitor inside the same unit. That over-granted 2.550 euros on this very
+    household -- an under-declaration of the tax.
+
+    The assertion is a STRICT INEQUALITY against the un-prorated total rather
+    than an equality against a figure, because the engine cannot yet reach the
+    printed 6.550 (see the recorded gap below) and re-pinning whatever it does
+    produce would bless the shortfall as correct. What must hold, and what the
+    branch exists to make hold, is that the unmarried joint return is prorated
+    while the married one is not.
+    """
+    whole = _PRINTED_THREE_CHILD_WHOLE_TRANCHES
+
+    unmarried, _ = _aggregates(_valenciana_conjunta())
+    married, _ = _aggregates({**_valenciana_conjunta(), "renta_taxpayer.marital_status": "casado"})
+
+    # Married: both progenitores inside the one unit, nobody to share with.
+    assert married == whole
+    # Unmarried: the other progenitor is a separate entitled contribuyente.
+    assert unmarried < whole
+    assert unmarried < married
+
+
+def test_the_unmarried_conjunta_branch_is_the_thing_being_exercised() -> None:
+    """Pins the derivation input directly, so the branch cannot go unentered.
+
+    The engine assertions above run through several layers; this one names the
+    predicate. Replacing the conjunta branch's return with a constant flips
+    exactly this pair.
+    """
+    conjunta = _valenciana_conjunta()
+    assert second_entitled_filer_indicated(conjunta) is True
+    assert second_entitled_filer_indicated({**conjunta, "renta_taxpayer.marital_status": "casado"}) is False
+
+
+def test_the_printed_conjunta_total_is_a_recorded_gap_not_an_expectation() -> None:
+    """The engine cannot yet reach 6.550, and the fixture must not claim it can.
+
+    AEAT prints 1.200 + 1.350 + 4.000: hijos 1º and 2º prorated, hijo 3º WHOLE.
+    The third child sits inside this joint return, whose rentas exceed the
+    norma 2ª figure, which bars the OTHER progenitor and leaves sole
+    entitlement for that child alone. Per-descendant unidad-familiar membership
+    is not a fact the profile carries, so the engine prorates all three and
+    lands below the printed figure -- an under-grant, the safe direction, and
+    far better than the over-grant it replaced.
+
+    Asserts the fixture does NOT list the conjunta figure as an expectation,
+    which is what keeps the shortfall an honest recorded gap rather than a
+    silent one. The moment membership becomes expressible, this test is what
+    says the fixture may claim it.
+    """
+    payload = _oracle(_VALENCIANA_ORACLE)
+    assert set(payload.expected_by_casilla_id) == {"0513"}
+    assert Decimal(payload.expected_by_casilla_id["0513"]) == Decimal("2550"), (
+        "the grounded expectation is the individual case"
+    )
+    assert "6.550" in payload.notes, "the printed conjunta figure must stay recorded as evidence"
 
 
 # ---------------------------------------------------------------------------
