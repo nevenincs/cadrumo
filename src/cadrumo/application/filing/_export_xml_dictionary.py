@@ -112,7 +112,12 @@ def render_xml_dictionary_layout(
     _append_declaration_aux(root, layout)
     normalized_headers = {key.lower(): value for key, value in headers.items()}
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
+    unfiled_paths = (
+        _modelo_100_unfiled_comunidad_paths(entries, casilla_values) if draft.modelo == Modelo.M100 else frozenset()
+    )
     for entry in entries:
+        if entry.path in unfiled_paths:
+            continue
         rendered = _xml_dictionary_rendered_value(
             entry,
             draft=draft,
@@ -365,6 +370,79 @@ def _xml_dictionary_rendered_value(
         except ValueError as exc:
             raise FilingExportValidationError(str(exc)) from exc
     return rendered
+
+
+# AEAT declares the fifteen autonomic-deduction blocks as an ``xs:choice``, so a
+# declaration carries the filer's own comunidad and no other -- writing more than
+# one is not merely wrong but a document the schema rejects. Each block also
+# declares its deduction total against casilla 0564, so rendering every declared
+# path for that casilla writes one comunidad's total into all fifteen.
+#
+# Which comunidad is the filer's is read from the draft rather than threaded in:
+# every block owns between twelve and sixty casillas of its own, disjoint from
+# 0564, so the block carrying any populated casilla is the one being filed. That
+# is how a return is completed -- the filer fills their own anexo B -- rather than
+# a proxy for it, and it needs no input the renderer does not already hold.
+_MODELO_100_COMUNIDAD_BLOCK_PREFIX = "/DatosEconomicos/Resultados/DeduccionAutonomicaRes/"
+_MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA = "0564"
+
+
+def _modelo_100_comunidad_block(path: str) -> str | None:
+    """Return the comunidad block ``path`` sits in, or ``None`` when it is elsewhere."""
+    if not path.startswith(_MODELO_100_COMUNIDAD_BLOCK_PREFIX):
+        return None
+    return path[len(_MODELO_100_COMUNIDAD_BLOCK_PREFIX) :].split("/", 1)[0]
+
+
+def _modelo_100_unfiled_comunidad_paths(
+    entries: tuple[XmlDictionaryEntry, ...],
+    casilla_values: Mapping[CasillaId, object],
+) -> frozenset[str]:
+    """Return the autonomic-deduction paths this draft must not write.
+
+    Args:
+        entries: Every dictionary row for the layout being rendered.
+        casilla_values: Casilla values the draft carries.
+
+    Returns:
+        Paths belonging to a comunidad the draft does not file, plus the shared
+        total when no comunidad is filed at all.
+
+    Raises:
+        FilingExportValidationError: when the draft populates casillas belonging
+            to more than one comunidad. The schema admits only one, so there is
+            no correct rendering and picking one would launder the conflict.
+    """
+    own_casillas_by_block: dict[str, set[CasillaId]] = {}
+    for entry in entries:
+        block = _modelo_100_comunidad_block(entry.path)
+        if block is None or entry.casilla_id is None:
+            continue
+        if entry.casilla_id != _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA:
+            own_casillas_by_block.setdefault(block, set()).add(entry.casilla_id)
+
+    filed = sorted(
+        block
+        for block, own in own_casillas_by_block.items()
+        if any(casilla_values.get(casilla) is not None for casilla in own)
+    )
+    if len(filed) > 1:
+        raise FilingExportValidationError(
+            "draft populates autonomic deductions for more than one comunidad "
+            f"({', '.join(filed)}); a declaration may carry only one",
+        )
+
+    resident = filed[0] if filed else None
+    unfiled = {
+        entry.path
+        for entry in entries
+        if (block := _modelo_100_comunidad_block(entry.path)) is not None and block != resident
+    }
+    if resident is None:
+        unfiled.update(
+            entry.path for entry in entries if entry.casilla_id == _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA
+        )
+    return frozenset(unfiled)
 
 
 # Casilla 0695 is declared against two sibling fields that are opposite branches
