@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:5c365e8bc862a00d5f30b6eb910606f80fb6162a0d5bfde00eaa5fadd96e4f7c'
+body_hash: 'sha256:6858c6f1387edd2802fe547edb295b395d69187957db585fdf0652d5c604b496'
 related:
   - "[[2026-08-04-canonical-storage-management-collapse-predictor-verification-audit]]"
 ---
@@ -232,18 +232,44 @@ package some `S78` figures scope to — only 3 of the 30 sites sit inside that
 narrower package. If a citation of this figure needs that narrower scope, it
 should be re-drawn against it rather than assumed comparable.)
 
-**A further caveat, not yet resolved.** The `519` this sample was drawn from
-is the raw-`ast.BinOp`-node discard pile (see the correction above); the
-line-deduplicated discard pile is `328`. Because a multi-segment path enters
-the raw population once per nested join, the sample was drawn
-**nesting-weighted** — a four-segment path had four times the selection
-probability of a one-segment one, and longer paths skew toward
-source-path-shaped homonyms rather than an injected literal. Whether that
-biases the 16.7% rate itself (not only the projection's denominator) is
-open; simply re-projecting onto `328` would understate the correction if the
-bias also moved the rate. Left as a stated limitation rather than a
-recomputed figure — a re-draw against the deduplicated population, not
-arithmetic on this one, is what would settle it.
+**Resolved by a second draw, superseding the figure above rather than
+re-projecting it.** The `519`/`16.7%` result above was drawn
+**nesting-weighted** from the raw-`ast.BinOp`-node discard pile — a
+four-segment path had four times the selection probability of a
+one-segment one. `honesty` re-drew, same seed, **uniformly over the
+deduplicated `328`-line discard pile**:
+
+```
+                        nesting-weighted (519, superseded)   uniform (328, current)
+undeclared sensitive          5 of 30  16.7%                       3 of 30  10.0%
+Wilson 95% CI                 7.4%-33.6%                           3.5%-25.6%
+projected onto the pile       38-174  (point ~87)                  11-84  (point ~33)
+```
+
+**Arithmetic re-projection onto `328` would have been wrong, and wrong in
+the opposite direction than assumed.** The working hypothesis was that
+longer, more-nested paths skew toward source-path-shaped homonyms, biasing
+the nesting-weighted rate *upward* relative to the true population — i.e.
+16.7% would understate the correction, not overstate it. Measured, the
+nesting-weighted draw was itself the **over-estimate**: 16.7% against a
+directly-measured 10.0%. Left un-guessed rather than resolved with a
+plausible-sounding direction, which is exactly why re-drawing rather than
+re-projecting was the right call.
+
+The uniform 30 graded on both axes, same enrollment discount as before (1
+of 4 candidates was a declared pin): 3 undeclared-sensitive
+(`test_engine.py:176`, `test_profile_lifecycle_navigation.py:76`, `:92`),
+1 declared-pin (`test_storage_route_classification.py:88`, pins
+`{"cadrumo.db","buckets","db","active-profile"}`), 26 not constrained.
+
+**This also retires the "S78-scoped census and the tree-wide sample
+converge at ~17%" observation elsewhere in this campaign.** That
+convergence was an artefact of the nesting-weighted draw agreeing, by
+coincidence, with a narrower-scope census; the corrected tree-wide rate
+(10.0%) and the `S78`-scoped census (17.6%, `n=17`) no longer coincide,
+though their intervals still overlap heavily at these sample sizes and are
+not in tension either — both place the undeclared residual in the low tens
+of sites, not a discrepancy this document needs to reconcile further.
 
 Read against the real callees, the undeclared breaks share one structural
 property none of this detector's vocabulary reaches: the segment is
@@ -287,8 +313,8 @@ document updated in place once it does.
 
 **Final: `WriteSite.constrained` stays retired, at every scope, not funded.**
 The recall measurement is the disqualifier the precision estimate never could
-be: a random sample of the sites this check silently discards found roughly
-17% genuinely rename-sensitive and undeclared, dominated by a mechanism
+be: a uniform random sample of the sites this check silently discards found
+10.0% genuinely rename-sensitive and undeclared, dominated by a mechanism
 (production-side derivation) no co-occurrence signal — current or extended —
 can reach. A clean tree-wide or
 diff-scoped run proves nothing about the population it never printed, so
