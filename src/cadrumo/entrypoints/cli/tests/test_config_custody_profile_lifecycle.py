@@ -12,6 +12,7 @@ from textwrap import dedent
 
 import pytest
 
+from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
 from ....core.config import load_settings
 from ....tests import REPO_ROOT
 
@@ -131,7 +132,7 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     bucket_dirs = list((tmp_path / "buckets").iterdir())
     assert len(bucket_dirs) == 1
     bucket_id = bucket_dirs[0].name
-    manifest = tomllib.loads((bucket_dirs[0] / "manifest.toml").read_text(encoding="utf-8"))
+    manifest = tomllib.loads((bucket_dirs[0] / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
     assert manifest["key_schedule"] == "bucket-dek-v1"
     assert (tmp_path / "keystore" / bucket_id / "bucket.dek.json").is_file()
 
@@ -367,7 +368,7 @@ def test_profile_selection_precedence_uses_explicit_flag_then_pointer(tmp_path: 
     bucket_dirs = sorted(path for path in (tmp_path / "buckets").iterdir() if path.is_dir())
     labels_by_id: dict[str, str] = {}
     for bucket_dir in bucket_dirs:
-        manifest = tomllib.loads((bucket_dir / "manifest.toml").read_text(encoding="utf-8"))
+        manifest = tomllib.loads((bucket_dir / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
         labels_by_id[bucket_dir.name] = manifest["label"]
     alpha_id = next(bucket_id for bucket_id, label in labels_by_id.items() if label == "alpha")
     beta_id = next(bucket_id for bucket_id, label in labels_by_id.items() if label == "beta")
