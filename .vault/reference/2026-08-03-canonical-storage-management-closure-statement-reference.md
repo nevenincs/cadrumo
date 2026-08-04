@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:d3deab9223ed874c43bd7af7ebc6b32d5e4cba457b15d3b2dedc1ac917495dc7'
+body_hash: 'sha256:d99ec6947370fc64e3d04d7dc1349e396b8088e81646e6a2eabb29e5c13b75ce'
 related: []
 ---
 
@@ -1196,6 +1196,21 @@ than a corpus — and it is the sharpest version of this element, because **the
 ledger built to fix the invisible-work problem was itself invisible to the
 obvious query.**
 
+**But enumerating is necessary and not sufficient, and the two readers failed
+differently.** One ran a narrow query and never saw the line. The other ran the
+*wide* query — `^## `, which returned the contradicting heading — and **read past
+it**, because the output was scanned for a predicted form rather than read.
+
+> **A wider query does not help if the reading is narrow.** Enumerate, then read
+> the enumeration, rather than scanning it for the answer you expect.
+
+The second failure is the harder one to defend against, because every visible
+signal says the check was done properly: the right command, the complete output,
+the evidence present in it. Only the reading was narrow. It is the same shape as a
+declaration sitting eighteen lines above the code that was quoted, and a clause
+found absent by two greps that both broke on a line wrap — three instances in one
+day, all of them a correct instrument read through an expectation.
+
 **The residual, measured — two populations, quoted separately and deliberately
 not combined.** An earlier figure of *"roughly 23% rename-sensitive"* was
 recorded here as an open question because two things about it were unresolved:
@@ -1213,6 +1228,23 @@ whole test tree       uniform sample      3 of 30   10.0%   CI  3.5 - 25.6%
 interval with it. The census needs no sampling argument because it is
 exhaustive; the tree-wide figure is a uniform draw, replacing an earlier
 nesting-weighted one that over-counted at 16.7%.
+
+**The closure decision never depended on any of these numbers, and that is worth
+stating rather than leaving to inference.** The supporting figure was revised
+three times — **23% → 16.7% → 10.0%** — and the disposition was the same
+throughout: the campaign closes on its criterion, `S78` stays open with its
+residual named. What sharpened across the revisions was the *characterisation* of
+the residual, from "unknown, do not cite" to "low tens of sites"; the decision
+rested on the structural argument, never on the magnitude.
+
+> **A decision that survives three revisions of its supporting number is better
+> evidenced than one that needed the number.** That is the difference between a
+> verdict and a threshold.
+
+Stated because a reader who arrives at a revised figure will reasonably ask
+whether the conclusion moved with it. It did not, and if a fourth revision lands
+the conclusion should not move then either — if it would, the decision was a
+threshold all along and this paragraph is the falsifier for that.
 
 **Do not read these as agreeing.** An earlier draft of this section was going to
 say the two converged at roughly 17% and treat that as two independent
