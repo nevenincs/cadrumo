@@ -145,3 +145,27 @@ def test_art109_profile_advisory_ignores_high_retention_amount_ratio_when_profil
 # ---------------------------------------------------------------------------
 # contract: M130 all-zero regression
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("threshold", "hazard"),
+    (
+        pytest.param("NaN", "builds without raising, then raises InvalidOperation at the comparison", id="nan"),
+        pytest.param("Infinity", "compares False to every ratio, silencing the advisory", id="infinity"),
+        pytest.param("-Infinity", "compares True to every ratio, firing the advisory always", id="negative-infinity"),
+    ),
+)
+def test_advisory_when_ratio_ge_refuses_a_non_finite_threshold(threshold: str, hazard: str) -> None:
+    """A non-finite threshold must not fire and must not escape as an exception.
+
+    Registry build refuses these, so a validated registry cannot reach here with
+    one; this is the defence in depth for anything that bypasses that gate. The
+    ``NaN`` case is the one that used to escape: the evaluator's ``try`` wrapped
+    only the ``Decimal`` construction, which does NOT raise for ``NaN``, while
+    the comparison that does raise sat outside it. Not firing is the honest
+    reading of a threshold that cannot be evaluated.
+    """
+    values = _casilla_values((_CASILLA_00501, "10500"), (_M200_BIN_GENERATED_CASILLA, "15000"))
+    expression = f'advisory_when_ratio_ge(["00501", "DP200014:00552", "{threshold}"])'
+
+    assert evaluate_advisory_predicate_fires(expression, values) is False, hazard

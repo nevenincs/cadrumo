@@ -1193,3 +1193,114 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
             legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
             source_refs=("aeat-modelo-210-procedure",),
         )
+
+
+@pytest.mark.parametrize(
+    ("threshold", "why"),
+    (
+        pytest.param("Infinity", "compares False to every ratio: the advisory can never fire", id="infinity"),
+        pytest.param("NaN", "builds without raising, then raises at the comparison", id="nan"),
+        pytest.param("1e5", "scientific notation is not how a registry threshold is written", id="scientific"),
+        pytest.param("+1", "a leading plus is not part of the canonical grammar", id="leading-plus"),
+        pytest.param("1_000", "an underscore separator is Python syntax, not a written number", id="underscore"),
+        pytest.param("nonsense", "not a number at all", id="not-numeric"),
+    ),
+)
+def test_validator_rejects_advisory_when_ratio_ge_unreadable_threshold(threshold: str, why: str) -> None:
+    """A ratio advisory must carry a plain decimal threshold, refused at registry load.
+
+    The runtime builds this literal with a bare ``Decimal`` and compares it, and
+    a bare ``Decimal`` accepts more than a written number: ``Infinity`` compares
+    ``False`` to every ratio, so the advisory becomes permanently silent, and
+    ``NaN`` builds cleanly and then raises at ``>=``. An advisory exists to warn
+    about under-declaration, so one that cannot fire is worse than absent -- it
+    reads as a checked box. Refusing at build means a registry cannot ship one.
+    """
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-ratio-bad-threshold",
+        legal_refs=("rd-439-2007:art-110",),
+        expression=f'advisory_when_ratio_ge(["01", "02", "{threshold}"])',
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="is not a plain decimal number") as caught:
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+    assert threshold in str(caught.value), f"the refusal must echo the rejected threshold ({why})"
+
+
+@pytest.mark.parametrize(
+    "threshold",
+    (
+        pytest.param("0.5", id="one-decimal"),
+        pytest.param("0.333", id="three-decimal-ratio"),
+        pytest.param("1", id="integer"),
+        pytest.param("0", id="zero"),
+    ),
+)
+def test_validator_accepts_advisory_when_ratio_ge_plain_threshold(threshold: str) -> None:
+    """The refusal is narrow: an ordinary written ratio still builds.
+
+    ``0.333`` is the case that matters. A ratio threshold is not a euro amount,
+    so a two-fractional-digit cap would refuse legitimate thresholds; the
+    canonical grammar is applied here for its SHAPE only, with fraction digits
+    unconstrained.
+    """
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-ratio-ok-threshold",
+        legal_refs=("rd-439-2007:art-110",),
+        expression=f'advisory_when_ratio_ge(["01", "02", "{threshold}"])',
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_advisory_when_ratio_ge_unknown_casilla() -> None:
+    """Both ratio operands must resolve against the revision, like every other operator."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-ratio-unknown-casilla",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='advisory_when_ratio_ge(["01", "missing-casilla", "0.5"])',
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="unknown denominator casilla 'missing-casilla'"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_advisory_when_ratio_ge_wrong_arity() -> None:
+    """Three tokens exactly: numerator, denominator, threshold."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-ratio-bad-arity",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='advisory_when_ratio_ge(["01", "02"])',  # threshold missing
+        finding_kind="ADVISORY",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, predicate)},
+    )
+
+    with pytest.raises(RegistryValidationError, match="must name exactly three tokens"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo, mutated))

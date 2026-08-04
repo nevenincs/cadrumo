@@ -16,6 +16,7 @@ from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_verification_predicates import (
     _CASILLA_LIST_OPERATORS,
+    _advisory_when_ratio_ge_predicate_failures,
     _casilla_equals_implies_diverges_predicate_failures,
     _casilla_equals_implies_nonzero_predicate_failures,
     _casilla_equals_implies_profile_flag_predicate_failures,
@@ -278,6 +279,22 @@ def validate_verification_expectation_section(
             )
         elif op_name == "profile_flag_enabled":
             failures.extend(_profile_flag_enabled_predicate_failures(prefix, owner, predicate.expression))
+        elif op_name == "advisory_when_ratio_ge":
+            # advisory_when_ratio_ge(["num_id", "den_id", "threshold"]) carries a
+            # numeric literal as its third token, so it cannot route through the
+            # generic casilla-list validators. The threshold is the reason this
+            # branch exists: the runtime builds it with a bare Decimal and
+            # compares outside its own except clause, so an unvalidated literal
+            # either never fires (Infinity) or raises uncaught (NaN).
+            failures.extend(
+                _advisory_when_ratio_ge_predicate_failures(
+                    prefix,
+                    owner,
+                    predicate.expression,
+                    casillas,
+                    casilla_by_id,
+                ),
+            )
         elif op_name in _CASILLA_LIST_OPERATORS:
             failures.extend(
                 _casilla_list_predicate_failures(

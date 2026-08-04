@@ -51,9 +51,9 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     # deduccion_requires_adquisicion_before, profile_flag_enabled) live in
     # _validate_verification_predicates.py rather than alongside the section
     # validators, which is why it is the largest module here.
-    "_validate_verification_predicates.py": 431,
+    "_validate_verification_predicates.py": 494,
     "_validate_evidence.py": 395,
-    "_validate_surfaces.py": 342,
+    "_validate_surfaces.py": 359,
     "_validate_cross_revision.py": 328,
     "_validate_relation_sources.py": 311,
     "_validate_record_sections.py": 305,

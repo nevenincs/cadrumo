@@ -550,11 +550,23 @@ def _advisory_ratio_ge_fires(
     den = casilla_values.get(den_id, Decimal(0))
     if den <= Decimal(0):
         return False
+    # The threshold is registry-authored text. Its shape is refused at registry
+    # build by _advisory_when_ratio_ge_predicate_failures, so a validated
+    # registry cannot reach here with a bad one; this is the defence in depth for
+    # anything that bypasses that gate. Both guards below are load-bearing:
+    # a bare Decimal builds "NaN" and "Infinity" WITHOUT raising, and the
+    # comparison is where they do their damage -- NaN raises InvalidOperation at
+    # `>=` (which is why the comparison is inside this try, not after it), and
+    # Infinity compares False to every ratio, silently disabling an advisory
+    # written to catch under-declaration. Refusing to fire on an unreadable
+    # threshold is the honest reading: the predicate cannot be evaluated.
     try:
         threshold = Decimal(m.group("thr"))
+        if not threshold.is_finite():
+            return False
+        return (casilla_values.get(num_id, Decimal(0)) / den) >= threshold
     except _decimal.InvalidOperation:
         return False
-    return (casilla_values.get(num_id, Decimal(0)) / den) >= threshold
 
 
 def _advisory_profile_flag_fires(
