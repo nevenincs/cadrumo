@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f18108b637f49eb6442aac9d39d9da62405fd5b57e6235759d9c25be07745eae'
+body_hash: 'sha256:acc50900788db5e57cab7af36759be5b066d3e42dbfbca97a5d008447a3e4e8e'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-plan]]'
@@ -1292,6 +1292,33 @@ as described: the provenance gate's census does undercount by construction;
 re-scope excluding tests is correctly and consistently applied. I found no third
 unaccountable checkbox, though I cannot verify checkbox authorship — one shared git
 identity — so absence of evidence is the most I can offer there.
+
+### bucket-database-file-hardcoded-its-shared-prefix | none | A file member re-typed the directory prefix it nests under, and a rename would have silently orphaned it
+
+`BUCKET_DATABASE_FILE` at `src/cadrumo/core/_storage_taxonomy_locations.py:562-563`
+declared its subpath as `f"db/{_PRODUCT_DATABASE_FILENAME}"` — a hand-typed `"db"`
+prefix duplicating `BUCKET_DATABASE`'s own subpath four lines above it, rather than
+reading it off that member. Both are `FIXED`, so nothing blocked a reference-based
+fix the way `SECRETS`'s operator-overridability blocks one for the neighbouring
+`SECRETS_MASTER_KEY`/`SECRETS_MASTER_KDF`/`SECRETS_MASTER_LOCK`/`SECRETS_KEYRING_LOCK`
+members a few lines above it in the same module — those stay hand-composed
+`"secrets/..."` literals on purpose, because `SECRETS` itself is operator-overridable
+and those members bypass `storage_path()` entirely, resolving instead through
+`self._store_dir` plus a bare filename; a future reader must not "fix" that
+inconsistency into a real defect.
+
+Mutation-proven against a standalone copy of the module, never the tracked file:
+renaming `BUCKET_DATABASE`'s subpath `"db"` to `"database"` left
+`BUCKET_DATABASE_FILE`'s subpath pinned at the stale `db/cadrumo.db` before the fix —
+the exact silent-orphaning shape, since nothing provisions a directory the file
+member still points inside — and both members moved to `database/cadrumo.db`
+together after hoisting the shared segment into a `_BUCKET_DATABASE_DIRNAME`
+constant, mirroring the module's own existing `_PRODUCT_DATABASE_FILENAME` pattern.
+Fixed at `src/cadrumo/core/_storage_taxonomy_locations.py`, full core/adapters
+storage suite green (1860 passed). Discovered in flight while closing the
+`BUCKET_DATABASE_FILENAME` literal-corpus batch; not a plan Step, since the plan's
+denominator should record intended work rather than defects found while executing
+it.
 
 ## Recommendations
 
