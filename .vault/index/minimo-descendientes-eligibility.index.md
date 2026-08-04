@@ -6,7 +6,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:251737c41223aa516142a194ea9ee5f31f1d778388ecfc2c0b63502f1c849ae2'
+body_hash: 'sha256:2a75fc96b8690c3bd88b8bcb369a47aa3108a1ef0d7ee7eddca84e4f257cc8c7'
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S01]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P01-S02]]'
@@ -22,6 +22,7 @@ related:
   - '[[2026-08-04-minimo-descendientes-eligibility-P03-S12]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S13]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-P04-S14]]'
+  - '[[2026-08-04-minimo-descendientes-eligibility-P04-S17]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-audit]]'
   - '[[2026-08-04-minimo-descendientes-eligibility-deferred-descendant-axes-adr]]'
@@ -62,6 +63,7 @@ Auto-generated index of all documents tagged with `#minimo-descendientes-eligibi
 - `2026-08-04-minimo-descendientes-eligibility-P03-S12` - Advise when a declared descendant contributes to the minimo with no rentas figure on record, because the existing undeclared diagnostic returns early whenever descendiente facts exist and that early return reasons about a declared ZERO, which does not hold for a declared descendant whose rentas are simply absent and who therefore over-claims silently
 - `2026-08-04-minimo-descendientes-eligibility-P04-S13` - Add the DescendantRelacion closed set, the two named entry-event dates replacing adoption_date, and their flag, wizard and locale entry surface
 - `2026-08-04-minimo-descendientes-eligibility-P04-S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche
+- `2026-08-04-minimo-descendientes-eligibility-P04-S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades
 
 ### plan
 

@@ -4,7 +4,7 @@ tags:
   - '#minimo-descendientes-eligibility'
 date: '2026-08-04'
 modified: '2026-08-04'
-body_hash: 'sha256:7bc139cb415d46e0229925c98991716a431e477ba1436cc6dac5f2e52c338976'
+body_hash: 'sha256:762777896d822162d22ca944e0833530a33485d4432f79fa5b324c093b456394'
 tier: L2
 related:
   - '[[2026-08-04-minimo-descendientes-eligibility-adr]]'
@@ -63,7 +63,7 @@ Reopens this feature for the residue its own closing audit carried forward, so i
 - [x] `P04.S14` - Scope the Art. 58.2 missing-anchor advisory to descendants that actually carry a tranche; `src/cadrumo/domain/contribuyente/family.py`.
 - [ ] `P04.S15` - Give the Art. 81.1 maternidad adoption clause its own date-scoped three-year window, separate from the Art. 58.2 period-scoped one; `src/cadrumo/domain/contribuyente/family.py`.
 - [ ] `P04.S16` - Model month-level guarderia spend as an optional sparse per-month map alongside the annual figure, refusing both at once for one child, BLOCKED on a per-comunidad regional table for when the second infant-education cycle may begin; `src/cadrumo/domain/contribuyente/family.py`.
-- [ ] `P04.S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades; `src/cadrumo/application/modelo/_profile_binding.py`.
+- [x] `P04.S17` - Assimilate an economically dependent descendant where the filer declares no anualidades at all, sweeping the existing incompatibility injector in the same change, BLOCKED on per-child attribution of anualidades; `src/cadrumo/application/modelo/_profile_binding.py`.
 
 ## Parallelization
 
