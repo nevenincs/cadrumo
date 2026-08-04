@@ -4,8 +4,9 @@ Projects every casilla of every modelo revision -- read through the
 validated registry authority, never raw TOML -- into a strict
 :class:`~dev.docs.terminology._search_record.CasillaSearchRecord`, then
 deduplicates across revisions by the canonical ``(modelo, casilla.id)``
-identity. ``number`` and ``segmento`` are projected as AEAT metadata only,
-never as the search-record identity.
+identity. The record carries the registry definition contract as well as the
+display metadata; none of those fields participate in the search-record
+identity.
 
 The calculation-grounding contract binds this compiler: EVERY casilla is
 emitted (input, bound, and computed alike -- never dropped), and each
@@ -193,6 +194,12 @@ def _build_record(entry: _RevisionCasilla, source_revisions: tuple[str, ...]) ->
         descriptions=descriptions,
         modelo=entry.modelo,
         casilla_id=casilla.id,
+        localized_help=dict(casilla.localized_help),
+        data_type=casilla.data_type,
+        input_kind=casilla.input_kind,
+        required=casilla.required,
+        binding=casilla.binding,
+        formula_id=casilla.formula,
         number=casilla.number,
         segmento=casilla.segmento,
         section=tuple(casilla.section),

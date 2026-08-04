@@ -29,7 +29,7 @@ from hashlib import sha256
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.domain.calculations.registry import CasillaId, ModeloId
+from cadrumo.domain.calculations.registry import BindingId, CasillaId, FormulaId, InputKind, ModeloId
 
 from ..terminology_handbook import ConceptDomain
 from ._casilla_anchor import casilla_reference_target
@@ -230,11 +230,12 @@ class SearchRecordMetadata(BaseModel):
     Every field is optional: a record populates only the fields its kind
     provides. Concepts carry ``concept_id`` / ``domain`` / ``lifecycle``;
     casillas carry canonical ``modelo`` / ``casilla_id`` plus display/export
-    metadata ``number`` / ``segmento`` and provenance ``legal_refs`` /
-    ``source_refs`` / ``source_revisions``; CLI records carry ``command_path`` /
-    ``registry_key`` / ``option_names``. This keeps the unified payload one
-    shape while preserving the provenance the calculation-grounding contract
-    requires (legal/source refs survive into the unified record).
+    metadata ``number`` / ``segmento``, the registry definition contract, and
+    provenance ``legal_refs`` / ``source_refs`` / ``source_revisions``; CLI
+    records carry ``command_path`` / ``registry_key`` / ``option_names``. This
+    keeps the unified payload one shape while preserving the definition and
+    provenance the calculation-grounding contract requires (legal/source refs
+    survive into the unified record).
     """
 
     model_config = _STRICT_FROZEN
@@ -246,6 +247,12 @@ class SearchRecordMetadata(BaseModel):
     # Casilla fields.
     modelo: ModeloId | None = None
     casilla_id: CasillaId | None = None
+    localized_help: dict[str, str] = Field(default_factory=dict)
+    data_type: str | None = None
+    input_kind: InputKind | None = None
+    required: bool | None = None
+    binding: BindingId | None = None
+    formula_id: FormulaId | None = None
     number: str | None = Field(default=None, min_length=1, max_length=160)
     segmento: str | None = Field(default=None, min_length=1, max_length=32)
     source_revisions: tuple[str, ...] = ()
@@ -395,6 +402,15 @@ def _from_casilla(record: CasillaSearchRecord, sweep_score: float | None) -> Sea
         metadata=SearchRecordMetadata(
             modelo=record.modelo.value,
             casilla_id=record.casilla_id,
+            localized_help=dict(record.localized_help),
+            data_type=record.data_type,
+            input_kind=record.input_kind,
+            required=record.required,
+            binding=record.binding,
+            # The projection has the canonical formula id but not the
+            # revision's formula table, so the unified record deliberately
+            # carries no invented expression or synthetic formula target.
+            formula_id=record.formula_id,
             number=record.number,
             segmento=record.segmento,
             source_revisions=record.source_revisions,
