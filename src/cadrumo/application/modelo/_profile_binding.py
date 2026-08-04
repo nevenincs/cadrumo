@@ -43,6 +43,7 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 from ...core import BindingSourceKind
+from ...core.decimal import coerce_decimal
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
@@ -290,12 +291,20 @@ def _inject_derived_family_facts(
                 count_menores += 1
                 gastos_raw = fact_index.get(f"renta_family.descendiente.{idx}.gastos_guarderia")
                 if gastos_raw is not None:
-                    try:
-                        gastos_reales += int(Decimal(str(gastos_raw)))
-                    except (ArithmeticError, ValueError, TypeError) as exc:
+                    # Tolerant coercion, not the strict grammar: this reads an
+                    # already-persisted profile fact whose text grammar the
+                    # entry boundary owns, and the index legitimately holds a
+                    # Decimal as well as a string, which coerce_decimal passes
+                    # through. The finiteness check is what the old catch-all
+                    # except was really doing -- NaN and Infinity parse happily
+                    # and only fail at int() -- so refusing them here keeps the
+                    # named refusal below and leaves int() unable to raise.
+                    gastos = coerce_decimal(gastos_raw)
+                    if gastos is None or not gastos.is_finite():
                         raise ProfileBindingResolutionError(
                             f"renta_family.descendiente.{idx}.gastos_guarderia is not a valid amount: {gastos_raw!r}",
-                        ) from exc
+                        )
+                    gastos_reales += int(gastos)
         idx += 1
 
     fact_index[menores_key] = Decimal(count_menores)

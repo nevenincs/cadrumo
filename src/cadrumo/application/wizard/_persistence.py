@@ -15,7 +15,6 @@ of a populated profile to its descriptor defaults.
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
-from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -25,6 +24,7 @@ if TYPE_CHECKING:
     from ...domain.contribuyente import DescendantInfo
     from ...domain.user_profile import UserProfileRecord
 
+from ...core.decimal import try_parse_canonical_decimal
 from ...core.flows import REPEATING_INSTANCE_SEPARATOR
 from ...core.parsing import parse_bool, parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
@@ -327,6 +327,26 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     prorrata = row.get("prorrata-minimo", "").strip()
     adoption_token = _safe_adoption_date(row["birth-date"], row.get("adoption-date"))
     adoption_date = parse_iso8601_date(adoption_token) if adoption_token else None
+    # Operator-typed euros, so the strict grammar with the money cap: a bare
+    # Decimal() admitted '1e3', '+100', 'NaN' and 'Infinity', and read the
+    # Spanish thousands shape '1.000' as one euro. The cap refuses that shape
+    # because it is genuinely undecidable, not because three decimals are too
+    # precise.
+    #
+    # A malformed figure REFUSES rather than resolving to None. None here means
+    # UNDECLARED, and Art. 58.1 reads an absent figure as non-excluding -- so
+    # None is the claiming direction, and quietly mapping a typo onto it would
+    # assert a mínimo the taxpayer never established. That is the same
+    # over-claim the sibling flags resolve away from.
+    #
+    # `signed` stays at its permissive default: a negative figure has its own
+    # upstream verdict and the record's own ge=0 constraint, both of which say
+    # "cannot be negative" far more usefully than this refusal would.
+    rentas_anuales_euros = try_parse_canonical_decimal(rentas, max_fraction_digits=2) if rentas else None
+    if rentas and rentas_anuales_euros is None:
+        raise WorkflowInputMismatchError(
+            translated_message="application.wizard.errors.descendant_rentas_not_a_valid_amount",
+        )
     return DescendantInfo(
         birth_date=birth_date,
         adoption_date=adoption_date,
@@ -355,7 +375,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         # earned nothing, and asserting it for an operator who skipped the
         # page would re-create the silent over-claim the Art. 58.1 ceiling
         # exists to prevent; None instead records that nobody answered.
-        rentas_anuales_euros=Decimal(rentas) if rentas else None,
+        rentas_anuales_euros=rentas_anuales_euros,
         # Both remaining flags resolve an unanswered question to the
         # non-claiming direction, as convivencia and custodia above do.
         presenta_declaracion_propia=parse_bool(row.get("declaracion-propia", "")) is True,
