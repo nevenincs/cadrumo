@@ -141,6 +141,34 @@ def test_relative_and_absolute_paths_of_the_same_name_do_not_collide(tmp_path: P
     assert relative != absolute
 
 
+def _bind_directory(link: Path, target: Path) -> None:
+    """Make ``link`` resolve to ``target``, by whichever mechanism the OS allows.
+
+    This replaces a ``pytest.skip`` that fired whenever ``os.symlink`` was
+    refused. That skip was reached for a reason narrower than it looked:
+    Windows withholds SYMLINK creation without developer mode or elevation,
+    but a directory JUNCTION needs neither and rebinds resolution identically
+    — which is why :func:`clear_resolved_path_cache` names both. Only symlink
+    had been tried, so the one test pinning the invalidation contract quietly
+    did not run on any ordinary Windows workstation.
+
+    Falls through to a hard failure rather than a skip when no mechanism is
+    available: a deterministic test that cannot establish its precondition has
+    to say so, not report success it did not earn.
+    """
+    try:
+        os.symlink(target, link, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        if sys.platform != "win32":
+            raise
+        import _winapi
+
+        create_junction = getattr(_winapi, "CreateJunction", None)
+        if create_junction is None:  # pragma: no cover - absent only on non-CPython builds
+            raise
+        create_junction(str(target), str(link))
+
+
 def test_invalidation_is_required_when_a_directory_is_rebound(tmp_path: Path) -> None:
     """The one case that genuinely invalidates a memo entry.
 
@@ -158,13 +186,7 @@ def test_invalidation_is_required_when_a_directory_is_rebound(tmp_path: Path) ->
 
     before = resolve_project_path(swap)
     swap.rmdir()
-    try:
-        os.symlink(real, swap, target_is_directory=True)
-    except (OSError, NotImplementedError):
-        # Windows withholds symlink creation without developer mode or
-        # elevation; the memo's correctness does not depend on this test
-        # running, only its invalidation contract does.
-        pytest.skip("this environment does not permit creating a directory link")
+    _bind_directory(swap, real)
 
     assert resolve_project_path(swap) == before, "the stale entry is what the memo is for"
 
