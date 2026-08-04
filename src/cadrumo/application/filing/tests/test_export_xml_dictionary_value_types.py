@@ -25,6 +25,7 @@ from __future__ import annotations
 import re
 from decimal import Decimal
 from pathlib import Path
+from xml.etree.ElementTree import Element
 
 import pytest
 from defusedxml import ElementTree as DefusedElementTree
@@ -38,7 +39,7 @@ _XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
 _MODELO_100_2024_XSD = "29-100-esquema-xsd-ejercicio-2024-actualizado-19-01-2026-747-kb-ejecutable.xsd"
 
 
-def _xsd_root() -> object:
+def _xsd_root() -> Element[str]:
     xsd = bundled_path(
         "corpus",
         "aeat_official",
@@ -52,7 +53,7 @@ def _xsd_root() -> object:
     return root
 
 
-def _simple_type(type_name: str) -> object:
+def _simple_type(type_name: str) -> Element[str]:
     for simple_type in _xsd_root().iter(f"{_XSD_NS}simpleType"):
         if simple_type.attrib.get("name") == type_name:
             return simple_type

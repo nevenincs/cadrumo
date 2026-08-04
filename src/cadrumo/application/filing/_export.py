@@ -943,7 +943,14 @@ def _mismatched_casilla_ids(
         if parsed.casilla_id is None:
             continue
         checked.append(parsed.casilla_id)
-        expected = values.get(parsed.casilla_id) or Decimal("0")
+        # A casilla the draft does not carry is compared as zero, but only when it
+        # is genuinely absent. Coalescing on falsiness instead swallowed a value
+        # the draft really holds: a boolean casilla set to false became a zero and
+        # then disagreed with the false read back from the file, so a marker the
+        # taxpayer had deliberately left unset reported drift on a matching file.
+        expected = values.get(parsed.casilla_id)
+        if expected is None:
+            expected = Decimal("0")
         if isinstance(parsed.value, Decimal):
             expected_decimal = coerce_decimal(expected, default=Decimal("0")) or Decimal("0")
             if round_to_cents(expected_decimal) != round_to_cents(parsed.value):

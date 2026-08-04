@@ -29,6 +29,12 @@ from ._schema import (
 )
 
 _MONEY_SCALE = Decimal("100")
+# The dictionary's two boolean row types. ``LGC`` resolves to the XSD's
+# ``tipo_logico`` (``0``/``1``) and ``S_N`` to ``tipo_SINO_Exclusivo``
+# (``NO``/``SI``); the tokens differ but both rows carry a boolean. Named as a set
+# rather than matched by prefix so a future type code beginning with the same
+# letter is not silently read as a boolean.
+_BOOLEAN_DICTIONARY_TYPES = frozenset({"LGC", "S_N"})
 _DICTIONARY_LINE_RE = re.compile(
     r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$",
 )
@@ -247,10 +253,21 @@ def _local_name(tag: str) -> str:
 
 
 def _parse_xml_dictionary_value(data_type: str, raw: str) -> Decimal | str | bool | None:
+    """Read one dictionary value back as the type its row declares.
+
+    Both boolean row types are read as booleans. They differ only in the tokens
+    AEAT spells them with -- ``LGC`` rows carry ``0``/``1`` and ``S_N`` rows carry
+    ``NO``/``SI`` -- which is a spelling difference, not a difference in what the
+    row means. Reading one as a boolean and the other as text made the two halves
+    of this boundary disagree about an ``S_N`` row: the writer emitted a marker
+    for a boolean casilla and the reader handed back a string, so a comparison
+    against the draft saw ``True`` on one side and ``"SI"`` on the other and
+    reported drift on a file that matched.
+    """
     normalized = data_type.upper()
     if normalized.startswith(("N", "P")):
         return _parse_xml_decimal(raw)
-    if normalized.startswith("L"):
+    if normalized in _BOOLEAN_DICTIONARY_TYPES:
         return _parse_boolean(raw)
     return raw
 

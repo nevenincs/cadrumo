@@ -199,7 +199,7 @@ Turns the three declared-but-unwritten categories into an explicit wire-or-delet
 Retires per-field overrides that duplicate the taxonomy at a call site, including the fixture pinning a category to a path that disagrees with the taxonomy, while leaving the two-tier root-redirection chain verbatim.
 
 - [x] `W03.P14.S75` - Add storage_overrides reading the field and subpath from STORAGE_TAXONOMY so a fixture can no longer disagree with the declaration, and converge the four tier-two isolation fixtures onto it, correcting isolated_cli_runtime_profile's drifted pin of the transactions category to a literal txs directory; `src/cadrumo/tests/secure_sql.py`.
-- [ ] `W03.P14.S76` - Converge the remaining tier-two isolation fixture-internal sites onto storage_overrides beyond the four already migrated; `src/cadrumo/tests/secure_sql.py, src/cadrumo/tests/env_scope.py`.
+- [x] `W03.P14.S76` - Converge the remaining tier-two isolation fixture-internal sites onto storage_overrides beyond the four already migrated; `src/cadrumo/tests/secure_sql.py, src/cadrumo/tests/env_scope.py`.
 
 ### Phase `W03.P15` - pins-by-design test re-expression
 
