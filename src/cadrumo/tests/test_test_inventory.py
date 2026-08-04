@@ -121,6 +121,12 @@ def test_project_test_control_modules_do_not_execute_control_flow_at_import_time
         ast.ImportFrom,
         ast.Assign,
         ast.AnnAssign,
+        # A PEP 695 ``type X = ...`` statement is a declaration, and its value is
+        # evaluated lazily rather than at import. So it does strictly LESS work at
+        # import time than the ``Assign`` form above, which this gate has always
+        # permitted -- omitting it flagged the newer spelling of a construct the
+        # older spelling is allowed to use.
+        ast.TypeAlias,
         ast.FunctionDef,
         ast.AsyncFunctionDef,
         ast.ClassDef,
