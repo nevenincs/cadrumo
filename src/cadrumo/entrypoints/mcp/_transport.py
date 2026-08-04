@@ -96,6 +96,16 @@ def _transport_error_envelope(
     failures of the dispatch itself — a timeout, an unusable installation — are
     built here, which is why the contract above is affordable.
 
+    Both halves of that were run rather than reasoned, and the checks are named
+    so a later change meets what was verified instead of a conclusion. In-process:
+    redaction happens inside the CLI's writer, so a ``redirect_stderr`` capture
+    receives text that is already filtered. Subprocess: the runtime relays the
+    child's ``stdout``/``stderr`` verbatim rather than re-rendering them, and a
+    tax identifier written through that writer in a child does not survive the
+    process boundary. If either path is ever changed to re-render an error rather
+    than relay one, this paragraph stops being true and the contract above needs
+    redaction behind it.
+
     :func:`~entrypoints.mcp.tests.test_call_runtime` pins the ``context`` key set
     of every caller, so widening this surface reds a gate rather than passing
     silently. Adding a key that carries operator- or taxpayer-derived data means
