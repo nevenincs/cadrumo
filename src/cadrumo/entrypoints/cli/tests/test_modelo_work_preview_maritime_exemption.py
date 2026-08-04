@@ -45,7 +45,7 @@ _BUCKET_ID = "70707070-7070-4507-8507-070707070707"
 def isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        override_settings(cadrumo_audit_dir=tmp_path / "audit"),
+        override_settings(cadrumo_audit_dir=tmp_path / "probe-audit"),
         profile_create_storage_span(_BUCKET_ID),
     ):
         yield

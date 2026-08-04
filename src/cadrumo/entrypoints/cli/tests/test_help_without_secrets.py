@@ -108,7 +108,7 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
     env.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "CADRUMO_TOKEN_DIR": str(tmp_path / "tokens"),
+            "CADRUMO_TOKEN_DIR": str(tmp_path / "probe-tokens"),
             "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
             "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "storage" / "fallback-store"),
             "CADRUMO_SECRET_STORE_BACKEND": "file",

@@ -7,12 +7,20 @@ all resolve correctly from a no-active-session state. They are the
 navigation-and-relabel sibling of ``test_profile_lifecycle_verbs`` (which owns
 the record-level show / create / edit / repair surface); both share the
 fixtures and helpers in ``_profile_lifecycle_support``.
+
+The ``"buckets"`` literal below is deliberate: ``isolated_profile_storage_root``
+overrides only the secret store, so ``_per_bucket_backend / "buckets" /
+uuid_before`` checks production's real DEFAULT-derived bucket directory, not
+an injected value. Re-deriving it from the taxonomy accessor would make the
+assertion agree unconditionally with the code path it exists to
+independently confirm.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterator, Sequence
 from pathlib import Path
+from typing import Final
 
 import pytest
 from click.testing import Result
@@ -23,6 +31,9 @@ from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_lifecycle_support import create_profile_via_cli, seed
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def _invoke(args: Sequence[str]) -> Result:

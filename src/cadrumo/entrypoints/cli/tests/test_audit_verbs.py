@@ -34,7 +34,11 @@ def _invoke(args: Sequence[str]) -> Result:
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
-    audit_dir = tmp_path / "audit"
+    # "probe-audit", not the taxonomy's "audit": isolated_profile_storage_root
+    # overrides only StorageCategory.SECRETS during bucket provisioning, so
+    # nothing else derives or re-reads this location -- it is a pure
+    # isolation destination for cadrumo_audit_dir, never asserted upon.
+    audit_dir = tmp_path / "probe-audit"
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(cadrumo_audit_dir=audit_dir),

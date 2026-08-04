@@ -1,4 +1,14 @@
-"""Real-entrypoint custody coverage for the profile lifecycle surface."""
+"""Real-entrypoint custody coverage for the profile lifecycle surface.
+
+The ``"buckets"`` and ``"keystore"`` literals below are not arbitrary
+injected values: the ``_CLI_HARNESS`` subprocess sets no bucket-root or
+keystore-dir override, so ``tmp_path / "buckets"`` and
+``tmp_path / "keystore" / bucket_id`` check production's real
+DEFAULT-derived locations -- the on-disk shape the CLI must actually
+produce for the profile lifecycle to be filing-grade. Re-deriving either
+side from the taxonomy accessor would make the assertion agree
+unconditionally with the code path it exists to independently confirm.
+"""
 
 from __future__ import annotations
 
@@ -9,6 +19,7 @@ import sys
 import tomllib
 from pathlib import Path
 from textwrap import dedent
+from typing import Final
 
 import pytest
 
@@ -17,6 +28,9 @@ from ....core.config import load_settings
 from ....tests import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets", "keystore"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _CLI_HARNESS = dedent(
     """

@@ -58,6 +58,8 @@ _disable_rich_cli_rendering()
 
 from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core import ProfileSessionRefusalReason as _ProfileSessionRefusalReason
+from ...core import StorageCategory as _StorageCategory
+from ...core import storage_location as _storage_location
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import tr
@@ -1197,11 +1199,17 @@ def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
     # no-I/O computation like the platform user-data directory) reintroduces
     # the dependency this scope exists to sever, and could break --help on
     # exactly the broken-root case it is meant to survive. The OS-default
-    # temp root is the correct home, not a gap.
+    # temp root is the correct home, not a gap. The FILENAME joined onto it
+    # is a different axis: `storage_location` is a pure dict lookup with no
+    # settings/I-O dependency, and `cadrumo.core` is already fully imported
+    # above (`_PRODUCT_IDENTITY`), so reading the taxonomy's declared
+    # root-fallback-database subpath here costs nothing extra and tracks a
+    # future rename instead of drifting from it.
     with TemporaryDirectory(prefix="cadrumo-cli-metadata-") as temporary_root:
         root = Path(temporary_root)
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(root)
-        os.environ["CADRUMO_DATABASE_URL"] = f"sqlite:///{(root / 'cadrumo.db').as_posix()}"
+        database_filename = _storage_location(_StorageCategory.ROOT_FALLBACK_DATABASE).subpath
+        os.environ["CADRUMO_DATABASE_URL"] = f"sqlite:///{(root / database_filename).as_posix()}"
         try:
             yield
         finally:

@@ -1,4 +1,13 @@
-"""Real-entrypoint regressions for the root-fallback write guard."""
+"""Real-entrypoint regressions for the root-fallback write guard.
+
+The ``"cadrumo.db"`` literal below is deliberate, the same shape as
+``core.tests.test_storage_route_classification``: the ``not (tmp_path /
+"cadrumo.db").exists()`` assertions prove the guard refuses BEFORE writing
+to the canonical root-fallback path, not merely before writing somewhere.
+An accessor aimed at the wrong location by a Settings/classifier defect
+would leave the assertion trivially satisfied -- the exact silent-pass
+shape a refusal test must not risk.
+"""
 
 from __future__ import annotations
 
@@ -7,6 +16,7 @@ import subprocess
 import sys
 from pathlib import Path
 from textwrap import dedent
+from typing import Final
 
 import pytest
 
@@ -18,6 +28,9 @@ from ....tests import REPO_ROOT
 from .._bootstrap_exempt import is_bootstrap_exempt
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cadrumo.db"})
+"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 _GUARDED_WRITE_VERBS: tuple[tuple[str, ...], ...] = (
