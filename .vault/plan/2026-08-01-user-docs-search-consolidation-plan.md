@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
-modified: '2026-08-01'
-body_hash: 'sha256:801865389a1cce1018ff256609e05dbcecdcb25d2fdb8a0767866844e41538fa'
+modified: '2026-08-04'
+body_hash: 'sha256:7c7fdd9f2d9d8bf0972161a160128f9602f23fce9e04a4c2ec9d24ef7e4d020a'
 tier: L2
 related:
   - '[[2026-07-31-semantic-search-precompile-boundary-plan]]'
@@ -23,7 +23,7 @@ Executes the user-docs-search-consolidation ADR and its Update 1: the user-facin
 
 Amend the licence rule at its source per ruling R5 and gate rung-2 dispatch on the boundary campaign's close, so the amended constraint is in force before any artefact is built and the two campaigns never overlap in the tree.
 
-- [ ] `P01.S01` - Amend the shipped-search-licence-clean rule source to the licence-and-provenance-scoped form ruled in R5 and propagate it with vaultspec-core sync in a coordinated quiet window; `.vaultspec/rules/shipped-search-licence-clean.md`.
+- [x] `P01.S01` - Amend the shipped-search-licence-clean rule source to the licence-and-provenance-scoped form ruled in R5 and propagate it with vaultspec-core sync in a coordinated quiet window; `.vaultspec/rules/shipped-search-licence-clean.md`.
 - [ ] `P01.S02` - Confirm the semantic-search-precompile-boundary plan is closed through its honesty review and record that confirmation before any rung-2 step is dispatched; `.vault/plan/2026-07-31-semantic-search-precompile-boundary-plan.md`.
 
 ### Phase `P02` - Rung-2 semantic layer delivery
