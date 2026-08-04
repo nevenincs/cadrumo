@@ -55,8 +55,16 @@ _SRC_ROOT = SRC_CADRUMO
 _ROUNDING_MODULE = _SRC_ROOT / "core" / "money" / "__init__.py"
 _COERCE_MODULE = _SRC_ROOT / "core" / "decimal" / "_coerce.py"
 
-_STRING_PARSE_LAYERS: tuple[str, ...] = ("entrypoints", "application")
-"""Layers rule 3 governs: the operator-facing boundary and the services behind it."""
+_STRING_PARSE_LAYERS: tuple[str, ...] = ("entrypoints", "application", "domain")
+"""Layers rule 3 governs: the operator-facing boundary and the services behind it.
+
+``domain`` was added after a live defect escaped precisely because it was absent.
+``--descendiente RENTAS=12.500`` was read by a bare ``Decimal()`` as twelve euros
+fifty -- a silent factor-of-1000 misread in the claiming direction -- from a
+parser sitting in ``domain/contribuyente``. The gate that exists to catch exactly
+that could not see it and was green throughout. An operator-input parser is not
+made safe by which layer it lives in, so the scope now follows the input rather
+than the package."""
 
 _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     ("application/modelo/_calculate_input.py", "_validated_declarante_selector"): (
@@ -85,6 +93,41 @@ _STRING_PARSE_EXEMPTIONS: Mapping[tuple[str, str], str] = {
     ),
     ("application/modelo/_iva_wallet_gate.py", "_calculated_revision_local_iva_compensation_recurrence"): (
         "Reads a persisted casilla_values entry the calculate boundary already validated through the canonical grammar."
+    ),
+    # --- domain layer, admitted to scope after the RENTAS=12.500 misread ---
+    ("domain/calculations/registry/_export_parse.py", "_parse_xml_decimal"): (
+        "AEAT-produced export XML, not operator text, and it already normalises "
+        "separators explicitly for that machine format."
+    ),
+    ("domain/calculations/registry/_export_parse.py", "_parse_decimal"): (
+        "Same AEAT-produced export payload as its sibling above."
+    ),
+    ("domain/calculations/registry/_formula_runtime.py", "_m100_eo_agraria_read_indice"): (
+        "Reads a registry-authored indice from the compiled snapshot's text "
+        "values; the registry TOML is committed data, not typed input."
+    ),
+    ("domain/calculations/registry/_formula_runtime_m131.py", "_read_modulos_indice"): (
+        "Same registry-authored modulos indice as its M100 sibling above."
+    ),
+    ("domain/calculations/registry/_renta_web_open_oracle.py", "_is_non_finite_numeric_text"): (
+        "Inverted use: the parse is a non-finiteness PREDICATE over Renta WEB "
+        "oracle text. Routing it through the strict grammar would make the "
+        "guard more permissive, the same shape as the declarante-selector "
+        "exemption above."
+    ),
+    ("domain/calculations/registry/_workbook_parity.py", "_comparison_status"): (
+        "Compares AEAT workbook oracle figures against registry output; both sides are machine-produced text."
+    ),
+    ("domain/calculations/registry/_workbook_parity.py", "_registry_decimal_value"): (
+        "Typed dispatch over an already-validated synthetic parity input; the "
+        "boolean and int arms raise or convert before any text is parsed."
+    ),
+    ("domain/deadlines/_profiles.py", "_parse_decimal"): (
+        "Reads canonical profile facts already persisted, so the text grammar "
+        "belongs to the profile write boundary rather than here. Reported as a "
+        "residual finding rather than tightened: the profile fact carrier "
+        "promotes an operator string to Decimal before this is reached, and "
+        "the grammar has to be enforced where the string is still a string."
     ),
 }
 """Reasoned exemptions from rule 3, keyed by ``(path, enclosing function)``.
