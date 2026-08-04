@@ -320,8 +320,12 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
     :func:`~core.paths.windows_storage_root_long_path_margin` — the
     character headroom left before the deepest object the bucket / blob
     layout can produce
-    (``<root>\buckets\<uuid>\blobs\<hmac>--<label>.meta.json``) would
-    meet or exceed :data:`~core.paths.WINDOWS_MAX_PATH`. Zero or
+    (``<root>\buckets\<uuid>\blobs\<namespace>\<hmac>--<label>.meta.json``)
+    would meet or exceed :data:`~core.paths.WINDOWS_MAX_PATH`. The
+    ``<namespace>`` budget comes from
+    :func:`~adapters.outbound.storage.windows_worst_case_object_path_suffix_length`,
+    which measures the longest namespace this build actually registers
+    rather than a hand-picked sample. Zero or
     negative margin is an ``ERROR`` (a real object write can fail
     partway through); a thin positive margin is a ``WARN`` advisory so the
     operator can relocate the root before it runs out. This probe never
@@ -345,8 +349,13 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
             detail="LongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply",
         )
 
+    from ..adapters.outbound.storage import windows_worst_case_object_path_suffix_length
+
     root = settings.cadrumo_local_storage_root
-    margin = windows_storage_root_long_path_margin(root)
+    margin = windows_storage_root_long_path_margin(
+        root,
+        object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
+    )
     if margin <= 0:
         return PreflightCheck(
             check="storage:windows-long-path",

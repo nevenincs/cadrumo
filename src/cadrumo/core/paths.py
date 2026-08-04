@@ -22,8 +22,10 @@ errors wrap this module in their own typed containment layer.
 (260-character) hardening surface: classifying an ``OSError`` that legacy
 Windows raises once a resolved path exceeds the limit, reading the
 machine-wide long-path opt-in, and computing whether a candidate storage root
-leaves enough headroom for the deepest object path the bucket / outbound
-storage layout can produce.
+leaves enough headroom for the deepest object path the caller's storage layout
+can produce. The worst-case suffix that last helper measures against is
+supplied by its caller: this module owns the arithmetic, never the on-disk
+grammar of a layer above it.
 """
 
 from __future__ import annotations
@@ -101,45 +103,13 @@ _WIN_ERROR_FILENAME_EXCED_RANGE = 206
 
 _WINDOWS_LONG_PATH_WINERRORS = frozenset({_WIN_ERROR_PATH_NOT_FOUND, _WIN_ERROR_FILENAME_EXCED_RANGE})
 
-#: Worst-case path suffix (leading separator through file extension) that
-#: the bucket-directory layout can append below a configured storage root.
-#: Mirrors the ``local_provider_object_sidecar`` grammar declared in
-#: :data:`cadrumo.adapters.persistence.storage.STORAGE_NAMESPACE_REGISTRY`
-#: (``<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.meta.json``),
-#: not the earlier, shorter mirror
-#: (``\buckets\<uuid-36>\blobs\<hmac-8>--<label-64>.meta.json``) that omitted
-#: the ``<namespace>`` segment ``LocalFileSystemProvider`` fans out one
-#: directory per outbound-attachment namespace into
-#: (``_local.py:176``/``:292``, ``self._root / namespace``) -- the omission
-#: understated the true worst case by 19 characters (136 measured versus the
-#: correct 155), which could let the preflight margin in
-#: :func:`windows_storage_root_long_path_margin` accept a storage root from
-#: which a real outbound write then exceeds ``MAX_PATH``.
-#:
-#: ``bucket_id`` is a 36-character UUID; ``hmac_prefix`` is 8 hex characters;
-#: ``label`` is capped at 64 characters
-#: (:func:`~adapters.outbound.storage.sanitize_provider_object_label`).
-#: ``namespace`` carries no enforced length cap today -- ``ledger_transaction``
-#: (:class:`~domain.buckets.BucketEventObjectType`, the object-type catalogue
-#: an outbound attachment namespaces by) is used here as a real, representative
-#: value, not a structurally-guaranteed ceiling; a longer namespace value
-#: would understate the margin again. Tracked as a separate finding, not
-#: fixed here.
-#: Kept as a literal here (not imported) because this module sits below the
-#: persistence and outbound-storage layers in the dependency graph; the
-#: two call sites that use this constant assert their real deepest-suffix
-#: shapes against it in tests.
-WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH: int = len(
-    "\\buckets\\"
-    + ("0" * 36)
-    + "\\blobs\\"
-    + "ledger_transaction"
-    + "\\"
-    + ("a" * 8)
-    + "--"
-    + ("b" * 64)
-    + ".meta.json",
-)
+#: Minimum plausible object-path suffix length, used only to reject a
+#: caller that passes a nonsensical budget to
+#: :func:`windows_storage_root_long_path_margin`. The real worst-case
+#: suffix is supplied by the layer that owns the on-disk grammar (see that
+#: function's ``object_path_suffix_length`` argument); this module holds no
+#: opinion about its value.
+_MIN_OBJECT_PATH_SUFFIX_LENGTH = 1
 
 
 def is_windows_long_path_error(exc: OSError) -> bool:
@@ -202,27 +172,53 @@ def windows_long_paths_enabled() -> bool | None:
     return bool(value)
 
 
-def windows_storage_root_long_path_margin(root: Path) -> int:
+def windows_storage_root_long_path_margin(root: Path, *, object_path_suffix_length: int) -> int:
     """Return the headroom, in characters, before an object write risks ``MAX_PATH``.
 
     Computes ``WINDOWS_MAX_PATH - len(str(root.resolve())) -
-    WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH``. A positive result is
-    the number of characters of slack remaining; zero or negative means
-    the deepest object the bucket / outbound-storage layout can write
-    already meets or exceeds the legacy ``MAX_PATH`` ceiling from this
-    root. Platform-independent by design: the margin is informative on
-    every OS, but only Windows without the long-path opt-in enforces the
-    ceiling it measures against.
+    object_path_suffix_length``. A positive result is the number of
+    characters of slack remaining; zero or negative means the deepest
+    object the caller's layout can write already meets or exceeds the
+    legacy ``MAX_PATH`` ceiling from this root. Platform-independent by
+    design: the margin is informative on every OS, but only Windows
+    without the long-path opt-in enforces the ceiling it measures against.
+
+    The worst-case suffix is a required argument rather than a constant of
+    this module. It was previously a literal here, spelling one
+    hand-picked ``<namespace>`` sample into the arithmetic because
+    ``core`` sits below the layers that own the on-disk grammar. That
+    sample was drawn from the wrong vocabulary entirely: the
+    ``<namespace>`` segment of a provider object path is a registered
+    *secure-object storage namespace*, and the literal named a bucket-event
+    object type, none of whose values is a registered namespace. The real
+    longest namespace is materially longer, so the resulting ceiling
+    understated every margin this function returned. Taking the budget from
+    the caller lets the owning layer derive it from its own registry —
+    structurally, over the whole domain — without inverting the dependency
+    graph. See
+    :func:`~adapters.outbound.storage.windows_worst_case_object_path_suffix_length`.
 
     Args:
         root: The candidate storage root (``cadrumo_local_storage_root`` or
             an outbound-storage provider root).
+        object_path_suffix_length: Length of the deepest path suffix
+            (leading separator through file extension) the caller's layout
+            can append below ``root``.
 
     Returns:
         The signed character margin described above.
+
+    Raises:
+        CoreValidationError: When ``object_path_suffix_length`` is not a
+            positive length, which would silently inflate the margin.
     """
+    if object_path_suffix_length < _MIN_OBJECT_PATH_SUFFIX_LENGTH:
+        raise CoreValidationError(
+            f"object_path_suffix_length must be at least {_MIN_OBJECT_PATH_SUFFIX_LENGTH}, "
+            f"got {object_path_suffix_length}",
+        )
     resolved_length = len(str(root.resolve()))
-    return WINDOWS_MAX_PATH - resolved_length - WINDOWS_WORST_CASE_OBJECT_PATH_SUFFIX_LENGTH
+    return WINDOWS_MAX_PATH - resolved_length - object_path_suffix_length
 
 
 def resolve_project_path(value: str | Path, *, state_root_inputs: StateRootInputs | None = None) -> Path:
