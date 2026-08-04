@@ -279,9 +279,33 @@ that qualifier load-bearing.
 It is two partial covers whose overlap is unmeasured; that is materially better
 than either alone and materially weaker than completeness.
 
-### 5b. The liveness gate passes on a name collision — instance fixed, mechanism unchanged
+### 5b. The liveness gate passes on a name collision — now closed at both levels
 
-**STATUS: instance closed, class open.** `StorageCategory.AUDIT`'s consumer
+**STATUS: closed.** This element previously read "instance closed, class open",
+which is **no longer true and is corrected here rather than left standing.**
+`consumption_evidence` now requires the matched name to resolve to an attribute
+bound to `StorageCategory`, and the gate's own docstring names the
+`SensitivityClass.AUDIT` case as the defect it exists to prevent. Verified at
+`19154e664e` by reading the matcher, not from the commit subject.
+
+**The re-run returned a null, and the null is the informative part.** 13 pass,
+**no newly-failing member** — no currently-declared `consumer_module` claim was
+ever satisfied *only* by the collision. The `AUDIT` instance was the sole
+exploitation of the hole and had already been re-pointed before the mechanism
+was closed.
+
+That matters for element 5e rather than for this one: it means every claim the
+gate can see is honestly backed, so **the gate will not surface the
+declared-location-with-SQL-persistence class**, because a member can be
+genuinely referenced while nothing ever writes a file there. The gate is not
+weak; it answers a different question, correctly.
+
+The original finding follows unedited, because the mechanism it describes is why
+the fix was needed.
+
+### 5b-original. The collision as first found — instance fixed, mechanism unchanged
+
+`StorageCategory.AUDIT`'s consumer
 claim was satisfied by **14 references to `SensitivityClass.AUDIT`** — an
 unrelated encryption-sensitivity enum — and **zero** references to the storage
 category. The category is genuinely live, so the claim was **true,
@@ -596,6 +620,48 @@ own.
 
 **What would make this "no"**: closing on a criterion that a dead declaration
 passes, without recording that the class exists and its size is unknown.
+
+### 5f. Encryption-at-rest assertions read a file the data is not in
+
+**STATUS: open, owner `conv2`. Highest severity on the board.**
+
+Roughly 14–18 assertions across ~10 modules assert
+`b"<marker>" not in database_file.read_bytes()` to prove secure-object content is
+encrypted at rest. **SQLite in WAL mode does not put it there.** Mutation-proven:
+after a real secure-object write the main `.db` is **4096 bytes with delta zero**
+while the WAL holds **169 KB**, and the positive control settles it — the
+namespace, a plaintext lookup column certainly on disk, is **present in the WAL
+and absent from main**.
+
+So the assertion passes while that exact string sits in cleartext on disk. These
+are **not weak checks; they are not checks.** They would pass against a build
+with encryption disabled entirely.
+
+This is the day's fourth instance of a protection whose failure is
+indistinguishable from its success, and the most consequential, because the
+property it fails to check is the product's load-bearing confidentiality claim.
+
+**What would make this "no"**: converting the assertions and accepting a green
+result without confirming the conversion can fail — the owner's instruction is to
+escalate rather than weaken if a converted assertion goes red.
+
+### 5g. A sixth classification outcome: injected-but-constrained
+
+**STATUS: open, mechanical detection in progress with `rootpath`.**
+
+`S78`'s dispositions were pin / migrate / injected / different-namespace. A sixth
+exists: **the test supplies the path, so it reads as freely chosen, but a sibling
+fixture derives it from the real accessor or a child process recomputes it** — so
+the literal is load-bearing after all and renaming it breaks the handoff.
+
+Found the hard way: two independent reviewers classified the same three `secrets`
+sites as free, and only an attempted rename revealed the constraint. Three
+renames were reverted at `dee79c3a3b`.
+
+**Why it belongs in a closure statement**: every other disposition is decidable
+by reading one site. This one is not — it is a property of the *relationship*
+between a site and a fixture or subprocess elsewhere, so a site-by-site review
+cannot see it by construction, and two careful readers already proved that.
 
 ## This document was itself untracked until hours before closure
 
