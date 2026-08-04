@@ -22,7 +22,12 @@ from ....domain.iva_compensation import (
     IvaCompensationPeriodState,
     IvaCompensationReconciliationDecision,
 )
-from ....tests.secure_sql import dev_test_database_password, isolated_profile_storage_root, isolated_runtime_profile
+from ....tests.secure_sql import (
+    dev_test_database_password,
+    isolated_profile_storage_root,
+    isolated_runtime_profile,
+    read_db_at_rest_bytes,
+)
 from ....tests.user_profile import register_minimal_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -121,7 +126,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         assert report.divergence == "match"
         assert report.blocked is False
         assert report.decision_key == iva_wallet_decision_key(_TAXPAYER_REF, Period.from_year_and_code(2026, "2T"))
-        database_bytes = db_path.read_bytes()
+        database_bytes = read_db_at_rest_bytes(db_path)
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert f"{_TAXPAYER_REF}:2026:2T".encode("ascii") not in database_bytes
 
@@ -361,7 +366,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         assert "303:2025:4T" not in remote_state.model_dump_json()
         assert _TAXPAYER_REF not in report.model_dump_json()
 
-        database_bytes = profile.paths.database_file.read_bytes()
+        database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert b"EXP-2025-4T" not in database_bytes
 

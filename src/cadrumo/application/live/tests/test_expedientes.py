@@ -36,7 +36,7 @@ from ....adapters.outbound.aeat.sede import Declaracion
 from ....adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from .. import LIVE_EXPEDIENTES_READ_OPERATION
 from .._errors import LiveApplicationInputError
 from .._expedientes import (
@@ -253,7 +253,7 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"12345678901234567890" in record.payload
-        assert b"12345678901234567890" not in secure_engine.paths.database_file.read_bytes()
+        assert b"12345678901234567890" not in read_db_at_rest_bytes(secure_engine.paths.database_file)
         assert not (
             secure_engine.settings.cadrumo_audit_dir / "live" / "expedientes" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()

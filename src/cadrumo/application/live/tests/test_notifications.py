@@ -24,7 +24,7 @@ from ....adapters.outbound.aeat.sede import (
 )
 from ....adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ....core.config import Settings
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from .._errors import LiveApplicationInputError
 from .._notifications import (
     NotificationsService,
@@ -290,7 +290,7 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"B12345678" in record.payload
-        assert b"B12345678" not in secure_engine.paths.database_file.read_bytes()
+        assert b"B12345678" not in read_db_at_rest_bytes(secure_engine.paths.database_file)
         assert not (
             secure_engine.settings.cadrumo_audit_dir / "live" / "notifications" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()

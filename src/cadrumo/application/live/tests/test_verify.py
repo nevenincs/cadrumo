@@ -19,7 +19,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, read_db_at_rest_bytes
 from .._errors import LiveApplicationInputError
 from .._verify import (
     VerifyObservation,
@@ -326,7 +326,7 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"DE123456789" in record.payload
-        assert b"DE123456789" not in secure_engine.paths.database_file.read_bytes()
+        assert b"DE123456789" not in read_db_at_rest_bytes(secure_engine.paths.database_file)
         assert not (
             secure_engine.settings.cadrumo_audit_dir / "live" / "verify" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()
