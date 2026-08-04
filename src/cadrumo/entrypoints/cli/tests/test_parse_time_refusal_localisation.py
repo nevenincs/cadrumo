@@ -116,9 +116,16 @@ def test_unknown_command_refusal_names_command_and_localises() -> None:
 
 
 def test_missing_argument_refusal_names_parameter_and_localises() -> None:
-    """A missing required argument renders the keyed refusal naming the parameter."""
+    """A missing required argument renders the keyed refusal naming the parameter.
+
+    ``config profile create`` has no genuine click-level required argument (its
+    ``--profile`` is optional, resolved by the wizard), so it never reaches
+    click's ``MissingParameter`` path -- it hits a different, unrelated
+    refusal instead. ``config profile rename`` has a real required positional
+    (``source``), so it is the fixture that actually exercises this path.
+    """
     result = invoke_cached_cli(
-        ["--format", "json", "--language", "hu", "config", "profile", "create"],
+        ["--format", "json", "--language", "hu", "config", "profile", "rename"],
     )
     assert result.exit_code == 2, result.output
     error = _error_member(result.output)
