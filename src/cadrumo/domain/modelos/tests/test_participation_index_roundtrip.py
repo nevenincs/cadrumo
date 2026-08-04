@@ -108,7 +108,7 @@ def test_participation_index_survives_encrypted_storage_roundtrip(tmp_path: Path
     verified = next(p for p in loaded.participations if p.filing_record_id is None)
     assert verified.revision_state == "verificado_completo"
     assert verified.justificante_reference is None
-    assert (profile.paths.db_dir / "cadrumo.db").is_file()
+    assert profile.paths.database_file.is_file()
 
 
 def test_participation_index_empty_for_unknown_transaction(tmp_path: Path) -> None:

@@ -69,7 +69,7 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(
 
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    database_bytes = read_db_at_rest_bytes(runtime_profile.paths.db_dir / "cadrumo.db")
+    database_bytes = read_db_at_rest_bytes(runtime_profile.paths.database_file)
     assert b"secure_objects" in database_bytes
     assert body not in database_bytes
     assert b"ATTACHMENT_CANARY_00000000T" not in database_bytes
