@@ -201,7 +201,7 @@ _DOCS_PAGE_RE = re.compile(
     r"^docs/(?P<rel>.+)\.(?:md|rst)$",
 )
 _CASILLA_TABLE_RE = re.compile(
-    r'^\[\[revisions\."[^"]+"\.casillas\]\]\s*$',
+    r'^\[\[revisions\.(?:"[^"]+"|[A-Za-z0-9_-]+)\.casillas\]\]\s*$',
 )
 _CASILLA_ID_RE = re.compile(r'^\s*id\s*=\s*"(?P<id>[^"]+)"\s*$')
 
