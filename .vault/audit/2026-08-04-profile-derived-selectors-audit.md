@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:a669c9d66bca176909f9e7e6ae7ccfde690213239a872f398cf130c32c8a2f43'
+body_hash: 'sha256:b10aebba0f79ef158e3d00f63921f2c8ea7d59966778bb06e492627f21354afc'
 related:
   - "[[2026-08-04-profile-derived-selectors-adr]]"
   - "[[2026-08-04-profile-derived-selectors-plan]]"
@@ -143,7 +143,6 @@ closes on reports rather than on artefacts. Every correction in both campaigns c
 measurement contradicting something written down, including four of the coordinator's own
 judgements.
 
-
 ### CORRECTION to Finding A: the remedy was taken, and the governance bar this audit set was walked past
 
 A second adversarial pass measured this document against the code and found three of
@@ -195,6 +194,78 @@ one novel claim it made was right and had been missed by the reference pass that
 The useful reading is not that the audit was poor but that a closing document written by the
 agent that drove the campaign decays as fast as the campaign moves, and is not self-checking.
 It held only because a hostile reader measured it against the code.
+
+### The one operator carve-out with no entry surface is recorded nowhere
+
+Knowingly accepted, and recorded here because until now it existed only in a dispatch
+message. The campaign kept two fields out of the derived namespace as genuine operator
+input. One of them, `renta_family.cotizaciones_ss_madre_2024`, has no way for an operator to
+enter it.
+
+Four links, each measured against the tree:
+
+No entry surface exists. The path appears nowhere under `entrypoints/` or
+`application/wizard/` except one test that hand-seeds it.
+
+It is formula-consumed. Casilla 0613 reads it through
+`0181-renta-2024-incremento-guarderia-0613.toml:12`.
+
+Its binding offers no escape. `0018-renta-2024-profile-cotizaciones-ss-madre.toml` declares
+only a selector and `aggregation = { op = "copy" }`. There is no default, and
+`absent_by_design` is not available to it: that flag is set at resolution time on a
+carry-forward observation, not declared on a `profile` binding.
+
+The derived-scoped advisory cannot reach it. That advisory fires only for a selected binding
+whose selector matches a declared derived pattern, and this field is deliberately not
+declared derived. Excluding it was correct, since declaring it derived would refuse the
+operator's write to a fact only the operator can know. The consequence is that the one
+diagnostic this campaign added is the one diagnostic that cannot cover it.
+
+The hard failure itself is REASONED from those four links, not reproduced. A formula operand
+with no resolved value and no default should fail the calculation, but nobody has driven a
+live calculate to watch it raise. The corroboration is indirect and pointed:
+`entrypoints/cli/tests/test_modelo_source_mesh_calculate.py:261` hand-seeds the path with
+`Decimal("0")`, which is a test supplying a value so that calculate can complete.
+
+The sharp part is this campaign's own doing and is better stated than left for a reader to
+notice. Casilla 0613 is a three-operand `min`. This campaign gave two of those operands a
+compute-always legal zero, the guarderia aggregate and the menores-3 count, recorded in
+`P02-S13` as closing a latent defect nobody had set out to fix. The third operand sits one
+line below them in the same expression and received neither a default nor a surface. So 0613
+moved from three-ways-unresolvable to one-way-unresolvable: a real improvement, with the same
+defect class surviving beside the fix, inside the same formula.
+
+Why it is accepted rather than fixed here: the remedy is an entry surface, which is a feature
+rather than a closing tidy, and the ADR already anticipated exactly this shape - a casilla
+that hard-fails because a declared operator field has no entry surface, left as loud as it is
+today and needing its own record together with the entry-surface work for the eligibility
+inputs. That is one follow-up, not two. This section deliberately does not open a second home
+for it. It makes the residual explicit and hands it to the entry-surface work being opened in
+`2026-07-30-open-work-consolidation-plan`, where the sibling campaign's three descendiente
+fields are already headed.
+
+Two things a reader of that follow-up should carry. The remedy is not only an input box: this
+field is one of the two the campaign classified as genuine operator input, so whatever surface
+it gets must also be reachable from the refusal an operator meets when they try to write a
+derived path. And the `--descendiente` flag help string is already stale against its own
+parser, which accepts three keys the help does not list, so that follow-up should treat
+discoverability as part of the work rather than assume a parser that accepts a key is a
+surface that offers it.
+## Recommendations
+
+Earlier findings state their remedies inline, including the ones deliberately not taken and
+why. This section records the handoffs that outlive the campaign.
+
+Give `renta_family.cotizaciones_ss_madre_2024` an entry surface as part of the single
+entry-surface follow-up in `2026-07-30-open-work-consolidation-plan`, alongside the sibling
+campaign's three descendiente fields. Treat discoverability as part of that work: a parser
+that accepts a key is not a surface that offers it, and the `--descendiente` help string is
+already stale against its own parser.
+
+Reproduce the casilla 0613 hard failure before designing the remedy. This record reasons it
+from four measured links and says so; a live calculate against a profile lacking that fact
+would turn the last reasoned step into a measured one and confirm the failure mode is a
+refusal rather than a silent zero.
 
 ## Sources
 
