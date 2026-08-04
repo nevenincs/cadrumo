@@ -11,12 +11,21 @@ Nothing here calls a collector, which is the whole point -- a test that would
 still pass with the wiring line removed is testing the collector twice and the
 wiring never.
 
-All FOUR mínimo-family collectors the coordinator wires are covered here. An
-earlier pass claimed "both collectors" and covered two, having enumerated the
-population from what it had touched rather than from the coordinator's own call
-block. Reading that block whole gives ten collectors, four of them
-mínimo-family: undeclared, prorrata-inferred, rentas-undeclared and
-count-desync.
+All four mínimo-family collectors are covered, plus ``settlement_not_computed``
+as the first of the non-mínimo wirings. An earlier pass claimed "both
+collectors" and covered two, having enumerated the population from what it had
+touched rather than from the coordinator's own call block. Read whole, that
+block wires TEN collectors.
+
+Audit state of the other five, measured rather than assumed:
+``prorrata_regularizacion`` is covered by
+``test_prorrata_especial_mandatory_live_emit``, which drives this coordinator
+and asserts its kind arrives. ``official_box_unpopulated``,
+``prior_payment_not_deducted``, ``prior_payment_minoracion_not_captured`` and
+``bienes_inversion_regularizacion`` remain unwired-tested: each needs its own
+modelo fixture (a seeded observation repository, an M303 ledger) rather than a
+revision and a profile, so they are a separate piece of work rather than more
+cases here.
 """
 
 from __future__ import annotations
@@ -52,6 +61,7 @@ _RENTAS_UNDECLARED = "minimo_descendientes_rentas_undeclared"
 _UNDECLARED = "minimo_descendientes_undeclared"
 _PRORRATA_INFERRED = "minimo_descendientes_prorrata_inferred"
 _COUNT_DESYNC = "descendientes_count_desync"
+_SETTLEMENT = "settlement_casilla"
 
 
 @pytest.fixture(autouse=True)
@@ -146,6 +156,46 @@ def test_the_count_desync_advisory_reaches_the_coordinator() -> None:
     """
     _write(DescendantInfo(birth_date=date(_FILING_YEAR - 10, 5, 1)), descendientes_count="7")
     assert _COUNT_DESYNC in _source_kinds({_ESTATAL_CASILLA: Decimal("2400")})
+
+
+def test_the_settlement_advisory_reaches_the_coordinator() -> None:
+    """A non-mínimo wiring, audited because this class keeps producing findings.
+
+    ``settlement_not_computed`` fires where a revision declares a settlement-role
+    casilla that is NOT computed, which the 2020-2023 Modelo 100 revisions do
+    (2024 computes them, which is why the fixture year differs from every other
+    case in this module). The state is a property of the revision alone, so no
+    profile setup is needed.
+    """
+    revision = resources().modelos.authority.snapshot("100", filing_year=2020, period=_ANNUAL_PERIOD).revision
+    diagnostics = collect_bucket_aggregation_advisory_diagnostics(
+        revision,
+        {},
+        modelo=Modelo.M100.value,
+        period_token=_ANNUAL_PERIOD,
+        filing_year=2020,
+        bucket_id=_BUCKET_ID,
+    )
+    assert _SETTLEMENT in {diagnostic.source_kind for diagnostic in diagnostics}
+
+
+def test_the_settlement_advisory_is_absent_where_the_revision_computes_it() -> None:
+    """Control for the case above, and it is the same collector on a different year.
+
+    2024 computes its settlement casillas, so the kind must NOT appear. Without
+    this the test above would pass against a collector that fired on every
+    revision, which would say nothing about the condition it claims to detect.
+    """
+    revision = resources().modelos.authority.snapshot("100", filing_year=2024, period=_ANNUAL_PERIOD).revision
+    diagnostics = collect_bucket_aggregation_advisory_diagnostics(
+        revision,
+        {},
+        modelo=Modelo.M100.value,
+        period_token=_ANNUAL_PERIOD,
+        filing_year=2024,
+        bucket_id=_BUCKET_ID,
+    )
+    assert _SETTLEMENT not in {diagnostic.source_kind for diagnostic in diagnostics}
 
 
 def test_the_coordinator_stays_quiet_when_no_collector_has_anything_to_say() -> None:
