@@ -2165,13 +2165,16 @@ cli:
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de expedientes
       filed:
+        casillas_not_enrolled: '{count} casilla(s) de las declaraciones capturadas
+          contienen valores que no son importes, por lo que no se incorporaron como
+          evidencia de cálculo: {affected}. Todo lo numérico de esas declaraciones
+          se incorporó con normalidad.'
         list_help: Listar declaraciones presentadas sin descargar artefactos
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
         pull_sources_help: Descarga las observaciones presentadas que requieren las
           dependencias de una declaración objetivo.
-        casillas_not_enrolled: '{count} casilla(s) de las declaraciones capturadas contienen valores que no son importes, por lo que no se incorporaron como evidencia de cálculo: {affected}. Todo lo numérico de esas declaraciones se incorporó con normalidad.'
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -3738,6 +3741,8 @@ cli:
       duplicate_source_help: Id del perfil de origen a duplicar
       duplicate_target_help: Id del perfil de destino para el duplicado
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
+      edit_target_not_active: El perfil '%{name}' no es el perfil activo, y 'profile
+        edit' solo edita el activo. Inicia sesión en él primero y luego edítalo.
       export_cleartext_local_help: Escribe JSON en claro solo para gestión local/SAR;
         no es seguro para correo, sincronización ni transferencia.
       export_confirm_passphrase_prompt: 'Confirma la frase de contraseña del paquete: '
@@ -3942,7 +3947,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
-      edit_target_not_active: 'El perfil ''%{name}'' no es el perfil activo, y ''profile edit'' solo edita el activo. Inicia sesión en él primero y luego edítalo.'
     recover:
       errors:
         recovery_code_rejected: El código de recuperación no abrió el envoltorio de
@@ -7866,6 +7870,9 @@ wizard:
         prompt: ¿Cuántos descendientes (hijos) quiere declarar?
       custodia-compartida:
         prompt: ¿La custodia es compartida con el otro progenitor?
+      declaracion-propia:
+        help: Solo impide el mínimo si además sus rentas superan el límite legal.
+        prompt: ¿Presenta el descendiente su propia declaración de la renta?
       discapacidad:
         choices:
           '0':
@@ -7889,6 +7896,19 @@ wizard:
         prompt: Meses que la madre trabajó con el hijo menor de 3 años (año de declaración)
       nif:
         prompt: NIF/NIE del descendiente (deje en blanco si no tiene)
+      prorrata-minimo:
+        choices:
+          'false':
+            label: No, lo aplico solo yo
+          'true':
+            label: Sí, se reparte entre ambos
+        help: Déjalo en blanco y se deducirá de tu estado civil y tipo de declaración.
+        prompt: ¿Otro contribuyente tiene derecho al mínimo por este descendiente?
+      rentas-anuales:
+        help: Déjalo en blanco si no lo sabes. Una renta alta puede impedir el mínimo
+          por descendientes.
+        invalid_negative: Las rentas del descendiente no pueden ser negativas.
+        prompt: Rentas anuales del descendiente, excluidas las exentas (euros)
       title: Descendientes
     description: Asistente de configuración para preparar las declaraciones
     enrollment:

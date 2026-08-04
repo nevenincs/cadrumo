@@ -2155,13 +2155,16 @@ cli:
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot d'expedients
       filed:
+        casillas_not_enrolled: '{count} casella/es de les declaracions capturades
+          contenen valors que no són imports, per la qual cosa no es van incorporar
+          com a evidència de càlcul: {affected}. Tot el numèric d''aquestes declaracions
+          es va incorporar amb normalitat.'
         list_help: Llistar declaracions presentades sense descarregar artefactes
         pull_help: Descàrrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
         pull_sources_help: Descàrrega les observacions presentades que requereixen
           les dependències d'una declaració objectiu.
-        casillas_not_enrolled: '{count} casella/es de les declaracions capturades contenen valors que no són imports, per la qual cosa no es van incorporar com a evidència de càlcul: {affected}. Tot el numèric d''aquestes declaracions es va incorporar amb normalitat.'
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
@@ -3710,6 +3713,8 @@ cli:
       duplicate_source_help: Id del perfil d''origen a duplicar
       duplicate_target_help: Id del perfil de destinació per al duplicat
       edit_help: Torna a executar l'assistent sobre un perfil existent
+      edit_target_not_active: El perfil '%{name}' no és el perfil actiu, i 'profile
+        edit' només edita l'actiu. Inicia la sessió primer i després edita'l.
       export_cleartext_local_help: Escriu JSON en clar només per a gestió local/SAR;
         no és segur per a correu, sincronització ni transferència.
       export_confirm_passphrase_prompt: 'Confirma la frase de contrasenya del paquet: '
@@ -3912,7 +3917,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
-      edit_target_not_active: 'El perfil ''%{name}'' no és el perfil actiu, i ''profile edit'' només edita l''actiu. Inicia la sessió primer i després edita''l.'
     recover:
       errors:
         recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de
@@ -7824,6 +7828,9 @@ wizard:
         prompt: Quants descendents (fills) vol declarar?
       custodia-compartida:
         prompt: La custòdia és compartida amb l'altre progenitor?
+      declaracion-propia:
+        help: Només impedeix el mínim si a més les seves rendes superen el límit legal.
+        prompt: El descendent presenta la seva pròpia declaració de la renda?
       discapacidad:
         choices:
           '0':
@@ -7848,6 +7855,19 @@ wizard:
           declaració)
       nif:
         prompt: NIF/NIE del descendent (deixi en blanc si no en té)
+      prorrata-minimo:
+        choices:
+          'false':
+            label: No, l'aplico només jo
+          'true':
+            label: Sí, es reparteix entre tots dos
+        help: Deixa-ho en blanc i es deduirà del teu estat civil i tipus de declaració.
+        prompt: Un altre contribuent també té dret al mínim per aquest descendent?
+      rentas-anuales:
+        help: Deixa-ho en blanc si no ho saps. Una renda alta pot impedir el mínim
+          per descendents.
+        invalid_negative: Les rendes del descendent no poden ser negatives.
+        prompt: Rendes anuals del descendent, excloses les exemptes (euros)
       title: Descendents
     description: Auxiliar de configuració per preparar les declaracions
     enrollment:

@@ -15,6 +15,7 @@ of a populated profile to its descriptor defaults.
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
+from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -322,6 +323,8 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     gastos = row.get("gastos-guarderia") or ""
     birth_date = parse_iso8601_date(row["birth-date"])
     assert birth_date is not None
+    rentas = row.get("rentas-anuales", "").strip()
+    prorrata = row.get("prorrata-minimo", "").strip()
     adoption_token = _safe_adoption_date(row["birth-date"], row.get("adoption-date"))
     adoption_date = parse_iso8601_date(adoption_token) if adoption_token else None
     return DescendantInfo(
@@ -347,6 +350,16 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         # for one who never saw the question.
         convive_con_contribuyente=parse_bool(row.get("convivencia", "")) is True,
         custodia_compartida=parse_bool(row.get("custodia-compartida", "")) is True,
+        # An unanswered rentas figure stays UNDECLARED (None) rather than
+        # collapsing to zero. Zero is a positive claim that the descendant
+        # earned nothing, and asserting it for an operator who skipped the
+        # page would re-create the silent over-claim the Art. 58.1 ceiling
+        # exists to prevent; None instead records that nobody answered.
+        rentas_anuales_euros=Decimal(rentas) if rentas else None,
+        # Both remaining flags resolve an unanswered question to the
+        # non-claiming direction, as convivencia and custodia above do.
+        presenta_declaracion_propia=parse_bool(row.get("declaracion-propia", "")) is True,
+        prorrata_minimo=parse_bool(prorrata) if prorrata else None,
         meses_madre_trabajo_2024=int(meses) if meses else 0,
         gastos_guarderia_euros=int(gastos) if gastos else 0,
         nif=row.get("nif") or None,
@@ -436,6 +449,7 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
         f"{prefix}.birth-date": descendant.birth_date.isoformat(),
         f"{prefix}.convivencia": "true" if descendant.convive_con_contribuyente else "false",
         f"{prefix}.custodia-compartida": "true" if descendant.custodia_compartida else "false",
+        f"{prefix}.declaracion-propia": "true" if descendant.presenta_declaracion_propia else "false",
     }
     optional: tuple[tuple[str, object | None], ...] = (
         ("adoption-date", descendant.adoption_date.isoformat() if descendant.adoption_date is not None else None),
@@ -447,6 +461,11 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
             descendant.meses_madre_trabajo_2024 if descendant.meses_madre_trabajo_2024 > 0 else None,
         ),
         ("gastos-guarderia", descendant.gastos_guarderia_euros if descendant.gastos_guarderia_euros > 0 else None),
+        # Unlike the counts above, zero rentas is a MEANINGFUL declaration
+        # ("this child earned nothing"), distinct from never having been
+        # asked, so a zero emits its answer rather than being dropped.
+        ("rentas-anuales", descendant.rentas_anuales_euros),
+        ("prorrata-minimo", None if descendant.prorrata_minimo is None else str(descendant.prorrata_minimo).lower()),
         ("nif", descendant.nif),
     )
     answers.update({f"{prefix}.{page_id}": str(value) for page_id, value in optional if value is not None})

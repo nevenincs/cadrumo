@@ -391,22 +391,36 @@ def _second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactVal
     a fact about the descendant, so it is derived here from signals the profile
     already carries rather than demanded as new operator input.
 
-    A tributación CONJUNTA return is NOT prorated: the unidad familiar files
-    once and the mínimo is applied once inside that single return, so there is
-    no second contribuyente to share it with. An INDIVIDUAL return by a
-    partnered filer IS prorated, because the other progenitor is a separate
-    contribuyente entitled to the same descendant — this is the ordinary
-    two-parent household the derivation exists to correct.
+    An INDIVIDUAL return by a partnered filer IS prorated, because the other
+    progenitor is a separate contribuyente entitled to the same descendant —
+    the ordinary two-parent household this derivation exists to correct.
 
-    Returns ``False`` for an unpartnered individual filer and whenever the
-    signals are absent, which claims the full mínimo; the caller raises a
-    visible advisory whenever this derivation is what decided the factor, so a
-    wrong inference is correctable rather than silent.
+    A tributación CONJUNTA return turns on WHO the unidad familiar contains,
+    which LIRPF art. 82.1 makes a function of marriage:
+
+    * MARRIED (art. 82.1.1ª) — both progenitores are inside the one unit, it
+      files once, and the mínimo is applied once within it. There is no second
+      contribuyente to share with, so no prorrateo.
+    * NOT married (art. 82.1.2ª) — the unit is ONE progenitor plus the minor
+      children, and both progenitores cannot form a single unit at all. The
+      other progenitor therefore remains a separate entitled contribuyente and
+      norma 1ª still prorates, EVEN THOUGH this return is conjunta.
+
+    Collapsing those two into "conjunta is never prorated" over-grants the
+    mínimo for every unmarried cohabiting couple, which is an under-declaration
+    of the tax. The AEAT Renta manual's Capítulo 14 worked examples print both
+    outcomes and disagree by 2.550 euros on the same three children.
+
+    Returns ``False`` for an unpartnered filer and whenever the signals are
+    absent, which claims the full mínimo; the caller raises a visible advisory
+    whenever this derivation decided the factor, so a wrong inference is
+    correctable rather than silent.
     """
+    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
     declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
     if declaration_type == _CONJUNTA_DECLARATION_TYPE:
-        return False
-    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
+        # Only marriage puts the other progenitor inside this same unit.
+        return marital_status in _PARTNERED_STATUS_TOKENS - _MARRIED_STATUS_TOKENS
     if marital_status in _PARTNERED_STATUS_TOKENS:
         return True
     return any(

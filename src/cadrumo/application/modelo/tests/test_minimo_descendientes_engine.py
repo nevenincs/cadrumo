@@ -169,6 +169,21 @@ def test_ineligible_descendant_over_25_contributes_nothing() -> None:
     assert fact_index[_aggregate_key(2024)] == Decimal("0")
 
 
+#: Signals that make a scenario an explicit SINGLE-FILER household.
+#:
+#: Art. 61 norma 1a prorates whenever a second contribuyente is also
+#: entitled, and the engine derives that from marital status, a spouse
+#: record and the declaration type. A scenario that declares NONE of those
+#: exercises the unpartnered branch by omission, so it would assert a full
+#: tranche while reading as an ordinary two-parent family. These fixtures
+#: therefore say which household they model rather than leaving it to the
+#: absence of a fact.
+_SINGLE_FILER_HOUSEHOLD: dict[str, object] = {
+    "renta_taxpayer.marital_status": "soltero",
+    "filing_export.declaration_type": "1",
+}
+
+
 def test_custodia_compartida_halves_the_contribution() -> None:
     snapshot = _snapshot(2024)
     tranches, _ = _registry_tranches(snapshot)
@@ -182,10 +197,17 @@ def test_custodia_compartida_halves_the_contribution() -> None:
     assert fact_index[_aggregate_key(2024)] == tranches[0] * Decimal("0.5")
 
 
-def test_two_descendientes_stack_first_and_second_tranche() -> None:
+def test_two_descendientes_stack_first_and_second_tranche_for_a_single_filer() -> None:
+    """A SINGLE filer with two children takes both tranches whole.
+
+    Explicitly a single-filer household: a partnered filer declaring
+    individually would have each tranche prorated under Art. 61 norma 1a,
+    so the full sum asserted here is specific to the sole-entitlement case.
+    """
     snapshot = _snapshot(2024)
     tranches, _ = _registry_tranches(snapshot)
     fact_index: dict[str, object] = {
+        **_SINGLE_FILER_HOUSEHOLD,
         "renta_family.descendiente.0.birth_date": "2010-01-01",
         "renta_family.descendiente.0.convivencia": "true",
         "renta_family.descendiente.1.birth_date": "2015-01-01",

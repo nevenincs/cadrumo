@@ -2003,12 +2003,14 @@ cli:
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         view_help: Show an expediente snapshot
       filed:
+        casillas_not_enrolled: '{count} casilla(s) in the captured filings hold values
+          that are not amounts, so they were not enrolled as calculation evidence:
+          {affected}. Everything numeric in those filings was enrolled normally.'
         list_help: List filed declaration rows without downloading artefacts
         pull_help: Pull filed-declaration data from the authenticated AEAT register.
         pull_modelo_help: Limit this pull to this modelo.
         pull_sources_help: Pull the filed observations required by a target filing's
           dependencies.
-        casillas_not_enrolled: '{count} casilla(s) in the captured filings hold values that are not amounts, so they were not enrolled as calculation evidence: {affected}. Everything numeric in those filings was enrolled normally.'
       filed_app_help: Read-only filed declaration observations
       from_year_help: First filing year
       iva_wallet:
@@ -3458,6 +3460,8 @@ cli:
       duplicate_target_help: Target profile id for the duplicate
       edit_help: Re-run the wizard against an existing profile and update values in
         place
+      edit_target_not_active: Profile '%{name}' is not the active profile, and 'profile
+        edit' only edits the active one. Log in to it first, then edit.
       export_cleartext_local_help: Write cleartext JSON for local/SAR handling only;
         not safe for email, sync, or transfer.
       export_confirm_passphrase_prompt: 'Confirm bundle passphrase: '
@@ -3655,7 +3659,6 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
-      edit_target_not_active: 'Profile ''%{name}'' is not the active profile, and ''profile edit'' only edits the active one. Log in to it first, then edit.'
     recover:
       errors:
         recovery_code_rejected: The recovery code did not open the recovery wrapper;
@@ -7368,6 +7371,10 @@ wizard:
         prompt: How many descendants (children) do you want to declare?
       custodia-compartida:
         prompt: Is custody shared with the other parent?
+      declaracion-propia:
+        help: This only removes the allowance if their income also exceeds the legal
+          limit.
+        prompt: Does the descendant file their own income tax return?
       discapacidad:
         choices:
           '0':
@@ -7390,6 +7397,18 @@ wizard:
         prompt: Months the mother worked while the child was under 3 (filing year)
       nif:
         prompt: Descendant's NIF/NIE (leave blank if none)
+      prorrata-minimo:
+        choices:
+          'false':
+            label: No, I claim it alone
+          'true':
+            label: Yes, split between both
+        help: Leave blank to derive it from your marital status and declaration type.
+        prompt: Is another taxpayer also entitled to the allowance for this descendant?
+      rentas-anuales:
+        help: Leave blank if unknown. High income can remove the descendant allowance.
+        invalid_negative: The descendant's income cannot be negative.
+        prompt: Descendant's annual income, excluding exempt income (euros)
       title: Descendants
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:

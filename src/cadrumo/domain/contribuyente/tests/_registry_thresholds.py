@@ -66,3 +66,23 @@ def registry_thresholds(filing_year: int) -> MinimoDescendientesThresholds:
         rentas_anuales_limite=_parameter(filing_year, "rentas-anuales-limite"),
         declaracion_propia_rentas_limite=_parameter(filing_year, "declaracion-propia-rentas-limite"),
     )
+
+
+@cache
+def registry_birth_order_amounts(filing_year: int) -> tuple[Decimal, ...]:
+    """The four Art. 58.1 birth-order tranches the registry declares, in order.
+
+    The same argument this module's docstring makes for the ceilings applies to
+    the granted AMOUNTS: a module that restates 2.400 / 2.700 / 4.000 / 4.500 as
+    literals keeps passing against a stale table if a revision moves one. The
+    figures' own external grounding is asserted in
+    :mod:`test_minimo_personal_familiar_grounded`, which is where a euro literal
+    legitimately appears because there the figure is the assertion target.
+    """
+    return tuple(_parameter(filing_year, suffix) for suffix in _BIRTH_ORDER_SUFFIXES)
+
+
+@cache
+def registry_menor_tres_supplement(filing_year: int) -> Decimal:
+    """The Art. 58.2 under-three supplement the registry declares for *filing_year*."""
+    return _parameter(filing_year, "menor-tres-anos")
