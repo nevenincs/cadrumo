@@ -1,0 +1,23 @@
+# Modelo 100 Art. 58.1 LIRPF rentas ceiling conditioning the mínimo por
+# descendientes. A descendant holding rentas anuales (excluidas las exentas)
+# above this figure generates no mínimo, so the ceiling is an eligibility
+# threshold rather than an amount paid.
+
+[[revisions."2023".parameters]]
+id = "renta-2023-minimo-descendientes-rentas-anuales-limite-2023"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-58", "ley-35-2006:art-58-1"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = [
+    "que el descendiente no haya obtenido en el ejercicio 2023 rentas superiores a 8.000 euros anuales, excluidas las rentas exentas del impuesto",
+]
+
+[[revisions."2023".parameters.values]]
+value = "8000"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31

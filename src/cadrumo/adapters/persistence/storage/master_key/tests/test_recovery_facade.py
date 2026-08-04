@@ -320,7 +320,7 @@ def _cancel(_mnemonic: str) -> str:
 
 
 def test_recovery_create_enrolls_and_status_reports_fingerprint(tmp_path: Path) -> None:
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -341,7 +341,7 @@ def test_recovery_create_enrolls_and_status_reports_fingerprint(tmp_path: Path) 
 
 def test_recovery_create_refuses_existing_enrollment(tmp_path: Path) -> None:
     """Create refuses when a recovery envelope already exists, untouched."""
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -356,7 +356,7 @@ def test_recovery_create_refuses_existing_enrollment(tmp_path: Path) -> None:
 
 def test_recovery_rotate_requires_existing_enrollment(tmp_path: Path) -> None:
     """Rotate refuses when no recovery envelope is enrolled yet."""
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -377,7 +377,7 @@ def test_create_refuses_when_a_competing_enrollment_lands_during_confirmation(tm
     raises, and must leave the winner's envelope byte-identical: replacing it
     would silently void a mnemonic its operator was just told to keep.
     """
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -420,7 +420,7 @@ def test_rotate_refuses_when_the_enrollment_disappears_during_confirmation(tmp_p
     A rotation whose envelope is removed during the confirmation pause must
     refuse rather than quietly completing as a first enrollment.
     """
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -442,7 +442,7 @@ def test_rotate_refuses_when_the_enrollment_disappears_during_confirmation(tmp_p
 
 
 def test_recovery_rotate_replaces_envelope_after_confirmation(tmp_path: Path) -> None:
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -460,7 +460,7 @@ def test_recovery_rotate_replaces_envelope_after_confirmation(tmp_path: Path) ->
 
 def test_rotate_preserves_prior_envelope_on_failed_confirmation(tmp_path: Path) -> None:
     """A mistyped confirmation leaves the prior envelope byte-identical."""
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -477,7 +477,7 @@ def test_rotate_preserves_prior_envelope_on_failed_confirmation(tmp_path: Path) 
 
 def test_rotate_preserves_prior_envelope_on_cancelled_confirmation(tmp_path: Path) -> None:
     """A cancelled confirmation propagates and never rewrites the envelope."""
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -492,7 +492,7 @@ def test_rotate_preserves_prior_envelope_on_cancelled_confirmation(tmp_path: Pat
 
 def test_create_writes_no_envelope_on_failed_confirmation(tmp_path: Path) -> None:
     """A first enrollment whose retype fails leaves the store with no envelope."""
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -504,7 +504,7 @@ def test_create_writes_no_envelope_on_failed_confirmation(tmp_path: Path) -> Non
 
 
 def test_recovery_verify_reports_match_and_preserves_fingerprint(tmp_path: Path) -> None:
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
 
@@ -529,7 +529,7 @@ def test_recovery_verify_reports_match_and_preserves_fingerprint(tmp_path: Path)
 
 
 def test_recovery_recover_rewraps_master_key_and_preserves_fingerprint(tmp_path: Path) -> None:
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
     original_master_key = provider.get_master_key()
@@ -557,7 +557,7 @@ def test_recovery_recover_rewraps_master_key_and_preserves_fingerprint(tmp_path:
 
 
 def test_recovery_recover_refuses_wrong_mnemonic(tmp_path: Path) -> None:
-    store_dir = tmp_path / "secrets"
+    store_dir = tmp_path / "fallback-store"
     provider = _provisioned_file_provider(store_dir)
     path = _recovery_path(store_dir)
     recovery_create(provider=provider, path=path, created_at=_NOW, confirm=_echo)

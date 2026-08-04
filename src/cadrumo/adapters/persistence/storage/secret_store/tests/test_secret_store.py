@@ -53,7 +53,7 @@ def store(tmp_path: Path, fixed_master_key: bytes) -> Iterator[SecretStore]:
         master_key_provider=provider,
     )
     yield SecretStore(
-        store_dir=tmp_path / "secrets",
+        store_dir=tmp_path / "fallback-store",
         blob_store=blob_store,
         master_key_provider=provider,
     )
@@ -173,7 +173,7 @@ class TestPutAndGet:
         record = _make_record(key="aeat:test:index-mutation", value=b"indexed-secret")
         store.put(record)
         assert store.get(record.key) == record
-        index_path = tmp_path / "secrets" / "index.json"
+        index_path = tmp_path / "fallback-store" / "index.json"
         index_payload = json.loads(index_path.read_text(encoding="utf-8"))
         digest, entry = next(iter(index_payload["entries"].items()))
         assert len(digest) == 64
@@ -194,7 +194,7 @@ class TestPutAndGet:
         tmp_path: Path,
         store: SecretStore,
     ) -> None:
-        index_path = tmp_path / "secrets" / "index.json"
+        index_path = tmp_path / "fallback-store" / "index.json"
         index_path.parent.mkdir(parents=True, exist_ok=True)
         index_path.write_text("{not-json", encoding="utf-8")
 
@@ -208,7 +208,7 @@ class TestPutAndGet:
         secret_value = b"super-leak-canary-value-not-on-disk"
         record = _make_record(key="aeat:test:plaintext-key", value=secret_value)
         store.put(record)
-        index_path = tmp_path / "secrets" / "index.json"
+        index_path = tmp_path / "fallback-store" / "index.json"
         contents = index_path.read_text(encoding="utf-8")
         assert "plaintext-key" not in contents
         assert secret_value.decode() not in contents
@@ -340,7 +340,7 @@ class TestNaturalKeyBinding:
         store.put(_make_record(key="wave7:A", value=b"payload-A"))
         store.put(_make_record(key="wave7:B", value=b"payload-B"))
 
-        index_path = tmp_path / "secrets" / "index.json"
+        index_path = tmp_path / "fallback-store" / "index.json"
         index = json.loads(index_path.read_text(encoding=UTF_8_ENCODING))
         a_digest, b_digest = list(index["entries"])
         index["entries"][a_digest]["blob_sha256_plaintext_hex"] = index["entries"][b_digest][
@@ -422,7 +422,7 @@ class TestPutBlobOwnership:
         store.put(_make_record(key="aeat:test:owned", value=b"payload"))
 
         payloads = _payload_paths(tmp_path / "blobs")
-        index = json.loads((tmp_path / "secrets" / "index.json").read_text(encoding=UTF_8_ENCODING))
+        index = json.loads((tmp_path / "fallback-store" / "index.json").read_text(encoding=UTF_8_ENCODING))
         owned = {entry["blob_sha256_plaintext_hex"] for entry in index["entries"].values()}
 
         assert len(payloads) == 1

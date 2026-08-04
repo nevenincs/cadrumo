@@ -337,6 +337,33 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2025-minimo-descendientes-madrid-tercer-hijo-2025",
         "renta-2025-minimo-descendientes-madrid-cuarto-y-siguientes-2025",
         "renta-2025-minimo-descendientes-madrid-menor-tres-anos-2025",
+        # Art. 58.1 rentas ceiling and Art. 61 norma 2ª own-return exclusion
+        # (LIRPF). Unlike every other entry in this set these are ELIGIBILITY
+        # THRESHOLDS rather than amounts: they gate whether a descendant
+        # generates the mínimo at all, so no formula multiplies them and none
+        # ever will. They are staged here grounded and resolvable ahead of the
+        # eligibility predicate that consumes them, so the legal figures are
+        # never re-entered as Python literals at the point of use.
+        #
+        # Exit condition: remove each entry once the descendant-eligibility
+        # predicate reads it. If that consumer lands in
+        # ``src/cadrumo/domain/contribuyente/family.py`` via ``read_parameter``
+        # the AST scan above picks it up and these entries MUST be deleted; if
+        # it instead lands in the application-layer injector alongside the
+        # Madrid tranches above, it stays outside the scan's reach and the
+        # entry stays, re-documented against its real consumer.
+        "renta-2020-minimo-descendientes-rentas-anuales-limite-2020",
+        "renta-2021-minimo-descendientes-rentas-anuales-limite-2021",
+        "renta-2022-minimo-descendientes-rentas-anuales-limite-2022",
+        "renta-2023-minimo-descendientes-rentas-anuales-limite-2023",
+        "renta-2024-minimo-descendientes-rentas-anuales-limite-2024",
+        "renta-2025-minimo-descendientes-rentas-anuales-limite-2025",
+        "renta-2020-minimo-descendientes-declaracion-propia-rentas-limite-2020",
+        "renta-2021-minimo-descendientes-declaracion-propia-rentas-limite-2021",
+        "renta-2022-minimo-descendientes-declaracion-propia-rentas-limite-2022",
+        "renta-2023-minimo-descendientes-declaracion-propia-rentas-limite-2023",
+        "renta-2024-minimo-descendientes-declaracion-propia-rentas-limite-2024",
+        "renta-2025-minimo-descendientes-declaracion-propia-rentas-limite-2025",
     },
 )
 

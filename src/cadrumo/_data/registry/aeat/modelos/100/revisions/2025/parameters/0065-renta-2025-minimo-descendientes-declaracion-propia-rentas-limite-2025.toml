@@ -1,0 +1,25 @@
+# Modelo 100 Art. 61 norma 2ª LIRPF own-return exclusion. When the descendant
+# who generates the entitlement files their own declaración for this Impuesto
+# with rentas above this figure, the mínimo por descendientes does not apply at
+# all. Distinct from the Art. 58.1 rentas ceiling: this one tests the
+# descendant's OWN filing, not their income alone.
+
+[[revisions."2025".parameters]]
+id = "renta-2025-minimo-descendientes-declaracion-propia-rentas-limite-2025"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-61", "ley-35-2006:art-61-norma-2"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = [
+    "que el descendiente no presente declaración del IRPF con rentas superiores a 1.800",
+    "si las rentas son superiores a 1.800 euros, ninguno de ellos puede aplicar el mínimo por descendientes",
+]
+
+[[revisions."2025".parameters.values]]
+value = "1800"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31

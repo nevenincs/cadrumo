@@ -86,6 +86,27 @@ class ManagerAction:
     ``label`` remains the fallback for a host-supplied action that does not
     have a catalogue key.
     """
+    owns_paths: tuple[str, ...] = ()
+    """Profile paths this action is the sole writer of.
+
+    A row naming one of these opens the ACTION rather than the single-field
+    edit box. Some fields cannot be set one at a time and stay correct:
+    writing them means writing several together, or doing something beside
+    the write that the generic door knows nothing about.
+
+    The authentication rows are the worked case. Setting
+    ``auth.provider`` through the generic door recorded the choice on the
+    profile while leaving the workflow state unactivated, so the profile
+    claimed a provider no session had been established for; and setting
+    ``auth.dni_nie`` alone let it drift from ``identity.tax_id``, which
+    the fail-closed session guard then refused a login over. Both are the
+    compound work the owning action already does correctly, so the row
+    routes there instead of growing a second writer.
+
+    Declared by the action rather than by the schema or this screen: the
+    action is what knows why its fields are inseparable, and this module
+    stays ignorant of what any of them mean.
+    """
 
 
 _PRESENT_GLYPH = "●"
@@ -500,7 +521,7 @@ class ProfileManagerApp(App[None]):
     # ── editing ─────────────────────────────────────────────────────────
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Open the edit dialog for the selected field.
+        """Open the edit dialog for the selected field, or its owning action.
 
         Refused while a write is in flight: the door merges into the record
         as it loads it, so a second edit started before the first landed
@@ -510,6 +531,13 @@ class ProfileManagerApp(App[None]):
         an action rewrites the whole profile, so a field edited against the
         page as it looks now would be merged into a record the action is
         about to replace.
+
+        A field an action declares itself the sole writer of opens that
+        action instead of the edit box. The box writes exactly one fact and
+        does nothing else, which is right for almost every row and wrong
+        for a field that cannot be correct on its own — so rather than
+        teach the generic door about particular fields, the row is handed
+        to the writer that already knows.
         """
         if self._pending_write is not None:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
@@ -523,10 +551,24 @@ class ProfileManagerApp(App[None]):
         field = self._field_by_key.get(str(key))
         if field is None:
             return
+        owner = self._action_owning(field.path)
+        if owner is not None:
+            self._start_action(owner)
+            return
         self.push_screen(
             FieldEditScreen(field, validate=self._validator_for(field)),
             self._apply_edit_for(field),
         )
+
+    def _action_owning(self, path: str) -> ManagerAction | None:
+        """Return the action that is the sole writer of ``path``, or ``None``.
+
+        Only the declaring action decides this. The screen holds no list of
+        special paths of its own, so an action that stops owning a field
+        takes the routing with it and cannot leave a row pointing at a
+        writer that no longer wants it.
+        """
+        return next((action for action in self._actions if path in action.owns_paths), None)
 
     def _validator_for(self, field: ProfileFieldView) -> Callable[[str], str | None] | None:
         """Bind the injected judge to one field, or ``None`` when there is none.
@@ -769,6 +811,17 @@ class ProfileManagerApp(App[None]):
         action = next((item for item in self._actions if f"action-{item.key}" == button_id), None)
         if action is None:
             return
+        self._start_action(action)
+
+    def _start_action(self, action: ManagerAction) -> None:
+        """Run one action on a worker thread, from a button or an owned row.
+
+        Extracted so a row that routes to its owning action reaches it by
+        the same path a button press does. A second launcher would be a
+        second place for the busy check, the context copy, the presenter
+        binding and the progress line to drift out of agreement, over an
+        operation whose whole purpose here is having one writer.
+        """
         if self._pending_action is not None or self._pending_write is not None:
             self._refuse(tr("flows.manager.action.busy"))
             return
