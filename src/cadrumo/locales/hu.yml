@@ -279,10 +279,6 @@ adapters:
           movement_already_exists: Ez a készletmozgás már létezik.
   sede:
     errors:
-      casillas_not_decimal_valued: Ez a modelo olyan rovatokat tartalmaz, amelyek
-        értéke nem decimális, ezért ez a bevallás nem rögzíthető nyilvántartásra alapozott
-        számítási bizonyítékként. A korlátozás a modelo minden bevallását érinti,
-        nem csak ezt.
       censal_bad_landing: Az AEAT nyilvántartási adatlapja nem töltődött be megfelelően;
         jelentkezz be újra, és próbáld meg ismét.
       censal_modification_surface: A nyilvántartási olvasás elutasítva, mert módosító

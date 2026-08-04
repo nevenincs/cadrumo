@@ -295,10 +295,6 @@ adapters:
           movement_already_exists: Aquest moviment d'inventari ja existeix.
   sede:
     errors:
-      casillas_not_decimal_valued: Aquest model declara caselles el valor de les quals
-        no és decimal, per la qual cosa aquesta declaració no es pot incorporar com
-        a evidència de càlcul fonamentada en el registre. La limitació afecta totes
-        les declaracions d'aquest model, no només aquesta.
       censal_bad_landing: La pàgina de dades censals de l'AEAT no s'ha carregat correctament;
         torna a autenticar-te i prova-ho de nou.
       censal_modification_surface: S'ha rebutjat la lectura censal perquè ha aterrat

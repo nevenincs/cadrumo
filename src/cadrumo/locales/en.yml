@@ -263,9 +263,6 @@ adapters:
           movement_already_exists: That inventory movement already exists.
   sede:
     errors:
-      casillas_not_decimal_valued: This modelo declares casillas that are not decimal-valued,
-        so this filing cannot be enrolled as registry-grounded calculation evidence.
-        The limitation affects every filing of this modelo, not this return.
       censal_bad_landing: The AEAT censal page did not load correctly; re-authenticate
         and retry.
       censal_modification_surface: The AEAT censal read was refused because it landed

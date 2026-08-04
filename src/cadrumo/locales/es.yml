@@ -296,10 +296,6 @@ adapters:
           movement_already_exists: Ese movimiento de inventario ya existe.
   sede:
     errors:
-      casillas_not_decimal_valued: Este modelo declara casillas cuyo valor no es decimal,
-        por lo que esta declaración no puede incorporarse como evidencia de cálculo
-        fundamentada en el registro. La limitación afecta a todas las declaraciones
-        de este modelo, no solo a esta.
       censal_bad_landing: La página de datos censales de la AEAT no se cargó correctamente;
         vuelve a autenticarte e inténtalo de nuevo.
       censal_modification_surface: Se rechazó la lectura censal porque aterrizó en
