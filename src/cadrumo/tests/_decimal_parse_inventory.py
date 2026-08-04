@@ -70,11 +70,17 @@ positives by construction.
 
 It is recorded rather than built because at the time of writing the blind spot has
 **zero live instances**: the three that existed were each closed at the call site.
-A checker-backed gate would be the first of its kind here (nothing in the tree
-invokes ``ty`` or uses ``reveal_type``), arriving with its own anti-tautology
-proof, its own exemption discipline, and a checker run in every invocation — a
-permanent cost against a contingent benefit. Build it when there is something to
-catch.
+The true price is higher than the mechanism suggests, and is recorded here so
+whoever revives it inherits the estimate rather than repeating it. Nothing in the
+tree invokes ``ty`` or uses ``reveal_type``, so such a gate would be the first of
+its kind: no pattern to copy, no established way to pin checker-version drift (the
+revealed-type text is the checker's output format, not a contract), a checker run
+added to every invocation, and its own anti-tautology proof and exemption
+discipline to build from scratch. The nearest analogue,
+``dev/docs/sequence_build_gate.py``, invokes an external engine from a gate — but
+its own engine, not a checker's output, so it is precedent for the *shape* and not
+for the *dependency*. Permanent cost against a contingent benefit; build it when
+there is something to catch.
 
 Why ``adapters/`` is out of scope
 ---------------------------------
@@ -90,6 +96,13 @@ None of this means the detector is weak where it does reach. It correctly report
 a resolvable ``Decimal(str(...))`` — it has been red on exactly such a site while
 blind to an attribute one file away. The edge is precise: it resolves names, not
 attribute types.
+
+Stating a detector's blind spot in its own docstring is the house pattern, not an
+apology for this one: :mod:`~tests.test_storage_provenance_gate` opens by naming
+what its predecessor structurally could not reach (a literal census cannot see a
+path built by joining onto the storage root) and gives the structural reason. A
+reader who finds a limitation recorded here should expect to find the same
+discipline there.
 
 See Also:
     :func:`~core.decimal.try_parse_canonical_decimal`
