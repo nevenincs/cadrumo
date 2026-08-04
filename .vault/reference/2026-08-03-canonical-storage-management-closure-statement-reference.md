@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9af13a91871377ca545c64a1d91f0aa8f7f6c85e96c700bb2bc1f9c5231431ee'
+body_hash: 'sha256:df36cb1a70975a05ad9903e1ce3e59810055dbd752e6660ec634493ee579a201'
 related: []
 ---
 
@@ -842,38 +842,47 @@ a mark. **Both are places where silence reads as coverage**, which is the failur
 this campaign exists to surface — and finding it in the campaign's own
 completeness accounting is the sharpest instance of it.
 
-**And the ledger's own indexing hides closed work, which looks identical to a
-gap.** The ledger is **keyed by literal**, but a file can carry several literals
-and be swept under any one of them. So a site correctly closed under band A is
-invisible to a review of band B — and presents exactly as an omission.
+**This element carries no worked example, deliberately. Two were tried and both
+were wrong.**
 
-**The worked example nearly entered this document as a defect, and it was not
-one.** A `master.recovery.key` sweep was reported complete at "all 20 sites"; a
-review counted 21 across 7 files and reported the seventh as missed. Both counts
-were right about their own domain, and **the site had already been closed four
-hours earlier under a different literal's sweep**. One `git log -- <file>` settled
-it. This paragraph originally stated the miss as fact, relayed from that review
-without running the check — the correction is recorded rather than quietly
-applied, because *a finding you like gets less scrutiny* is the same bias this
-element is about.
+An incident was offered as the illustration: a `master.recovery.key` sweep
+reported complete at "all 20 sites" while a review counted 21 and named the
+seventh file as missed.
 
-Two things follow, and they are separate:
+- **First explanation** — the file set had been enumerated from the files being
+  edited, so a site was missed. **Wrong**: no site was missed. It had been
+  correctly declared hours earlier under the `secrets` band.
+- **Second explanation** — the ledger is keyed by literal, so a file swept under
+  band A is invisible to a review of band B. **Also wrong**: the declaration was
+  at line 38 of the very file the review read, twenty-two lines above the tuple
+  it quoted at line 60, its rationale naming the exact function the review then
+  analysed. Not history, not another file. The top of the open buffer.
 
-- **A completeness claim needs its domain stated.** *"All 20 sites"* — of what?
-  Of the sites this commit addressed, or of every site carrying the literal? Both
-  readings were internally consistent, so neither party noticed the mismatch.
-  Write *"N sites in the M files I examined"*, never a bare "all".
-- **A reviewer who finds extra sites has found a scope mismatch, not yet a gap.**
-  Cross-band closure and version skew are indistinguishable from an omission
-  until the file's history is checked.
+Each explanation was structurally sound, independently evidenced elsewhere, and
+**not what happened here.** The lesson that survives is the one the two failures
+teach:
 
-So a ledger entry records an *examination*, and an examination is only as complete
-as its enumeration and only as visible as its indexing. That is this element's own
-gap one level up: the tree cannot distinguish examined from unexamined, and the
-ledger cannot distinguish *the set was closed* from *the set I found was closed*
-— nor *closed under another band* from *never closed*. **An entry should record
-how its file set was enumerated**, and a review should check history before
-reporting a miss.
+> **A structural explanation that fits the shape of an error is not evidence that
+> it produced that one.**
+
+Both were reached for because they fitted, and each was believed a little faster
+than the last — the second precisely because the first had just been corrected,
+which felt like diligence. **A pattern you have just been burned by is the one
+you will over-apply next.**
+
+The element's falsifier never depended on either. Four of six dispositions leave
+no trace, so a clean scan is consistent with every literal having been examined
+and with none of them having been — that stands on the disposition table alone.
+**Two secondary points survive as claims in their own right**, both independently
+evidenced and neither resting on the retracted incident: a completeness claim
+needs its domain stated (*"N sites in the M files I examined"*, never a bare
+"all"), and a reviewer who finds extra sites has found a **scope mismatch** until
+history or the file itself says otherwise.
+
+**A third specimen is not wanted here.** Two attempts to illustrate this element
+produced two false findings; the honest record is that the element is real and
+its illustrations were not, which is itself the clearest demonstration available
+of what it describes.
 
 **What would make this "no"**: declaring `S78` complete on a clean scan. A clean
 scan is consistent with every remaining literal having been examined *and* with
