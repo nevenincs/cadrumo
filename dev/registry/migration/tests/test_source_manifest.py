@@ -42,17 +42,22 @@ def test_bundled_source_manifest_seals_all_observations_without_emission(
     root, manifest = bundled_source_manifest
     review = build_unresolved_review_register(manifest)
 
+    # These figures and digests stamp the CURRENT registry tree, not an invariant:
+    # the manifest digest is content-based over sorted source paths and bytes, so
+    # any legitimate registry edit (a casilla change, a fragment rename) moves
+    # them. Refresh by re-running this test and adopting the reported values once
+    # the corpus change is confirmed intentional.
     assert manifest.entry_count == 126_192
     assert manifest.grounded_count == 144
     assert manifest.revision_exact_count == 32_008
     assert manifest.continuity_candidate_count == 94_040
     assert manifest.unresolved_entry_count == 94_040
     assert manifest.source_file_count == 12_944
-    assert manifest.manifest_sha256 == "48dcec377463ba3f801d300299d87b11bacd2384b1d005d4d03030b05e4d7508"
+    assert manifest.manifest_sha256 == "9e3ea533c4995081eeae0eec1a69c115f98b35377d4c118c832fced4012e0ac2"
 
     assert review.entry_count == 94_040
     assert review.group_count == 2_354
-    assert review.register_sha256 == "bf3deab6777fecaff70158de926dce28737a390f2f643207efb6b8aeedc000b2"
+    assert review.register_sha256 == "5b26f56daa12e4812dab619ab467e34df8340d67788e3df0208c50e57178f5fc"
     assert review.source_manifest_sha256 == manifest.manifest_sha256
 
     assert Counter(entry.leaf_state for entry in manifest.entries) == Counter(
@@ -103,7 +108,7 @@ def test_source_manifest_preserves_real_fallback_provenance_and_seal_validation(
     fallback = find("2020", "en", "label")
     assert fallback.official_fallback
     assert fallback.source_scope == "schema"
-    assert fallback.source_path == "modelos/100/revisions/2020/casillas/0001-0001.toml"
+    assert fallback.source_path == "modelos/100/revisions/2020/casillas/0001-c0001.toml"
     assert fallback.raw_value == fallback.old_resolved_value
     assert fallback.leaf_state == "absent"
     assert fallback.review_status == "unresolved"

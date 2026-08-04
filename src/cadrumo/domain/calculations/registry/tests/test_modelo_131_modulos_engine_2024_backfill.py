@@ -27,7 +27,7 @@ See Also:
         Baseline 2025 módulos-engine behavior this back-fill must reproduce.
     :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine_2026_rollforward`
         Sibling roll-forward proof for the 2026 revision.
-    ``src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/formulas/0003-modulos-engine.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/formulas/0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml``
         Registry-authored 2024 formula chain under test.
 """
 

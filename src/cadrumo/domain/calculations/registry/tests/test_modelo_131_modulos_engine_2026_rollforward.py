@@ -22,7 +22,7 @@ See Also:
         Public registry calculation entry point exercised by the parity cases.
     :mod:`~domain.calculations.registry.tests.test_modelo_131_modulos_engine`
         Baseline 2025 módulos-engine behavior this roll-forward must preserve.
-    ``src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/formulas/0003-modulos-engine.toml``
+    ``src/cadrumo/_data/registry/aeat/modelos/131/revisions/2026/formulas/0003-cmodulos-epigrafe__cmodulos-rendimiento-neto-actividad.toml``
         Registry-authored 2026 formula chain under test.
 """
 

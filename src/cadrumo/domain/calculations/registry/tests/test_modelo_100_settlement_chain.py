@@ -214,7 +214,7 @@ def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapsh
         "casilla 0587 (cuota líquida total) is 0.00; "
         "the formula regression has re-appeared: check "
         "2024/formulas/0169-renta-2024-cuota-liquida-incrementada-total.toml "
-        "and 2024/casillas/0569-0587.toml (input_kind must be 'computed')."
+        "and 2024/casillas/0569-c0587.toml (input_kind must be 'computed')."
     )
     assert abs(result.values[_M100_CUOTA_LIQUIDA_TOTAL_CASILLA] - _EXPECTED_0587) <= _TOLERANCE, (
         f"casilla 0587 = {result.values[_M100_CUOTA_LIQUIDA_TOTAL_CASILLA]!r}; "

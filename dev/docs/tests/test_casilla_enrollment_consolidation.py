@@ -33,7 +33,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _M130_CASILLA_15_SOURCE = (
     "src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/"
-    "casillas/0001-casillas.toml"
+    "casillas/0001-c01__csaldo-negativo-fin-periodo.toml"
 )
 
 

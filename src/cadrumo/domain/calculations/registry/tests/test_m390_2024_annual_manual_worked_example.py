@@ -12,7 +12,7 @@ calendar year of Modelo 303 quarterly liquidaciones feeding the annual Modelo
 390 resumen. Chapter 9 never prints a single casilla-keyed M390 annual table
 (the M390 casillas this revision computes are internal reconciliation
 aggregates, not literal AEAT DR-390 box numbers - see
-``iva.anual.cuota-devengada-total`` in ``casillas/0001-casillas.toml``), so
+``iva.anual.cuota-devengada-total`` in ``casillas/0001-civa.anual.repercutido.general__civa.anual.resultado-regimen-general.toml``), so
 this test grounds the annual totals as the SUM of the manual's own four
 printed quarterly "Liquidacion" solucion lines - itself simple arithmetic
 over AEAT's own stated subtotals, never a hand-run of the registry formula
