@@ -536,7 +536,7 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         assert "AEAT wallet auth gate" not in manifest_json
         assert "remote-state" not in manifest_json
 
-        db_path = profile.paths.db_dir / "cadrumo.db"
+        db_path = profile.paths.database_file
         assert _secure_object_namespace_count(db_path, LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE.namespace) == 1
         database_bytes = db_path.read_bytes()
         assert b"AEAT wallet auth gate" not in database_bytes
@@ -653,7 +653,7 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
         remote_state = load_iva_remote_state(as_of_year=2026)
 
         rendered = f"{report.model_dump_json()} {manifest.model_dump_json()} {remote_state.model_dump_json()}"
-        database_bytes = (profile.paths.db_dir / "cadrumo.db").read_bytes()
+        database_bytes = profile.paths.database_file.read_bytes()
 
     for raw in (
         sensitive_nif,

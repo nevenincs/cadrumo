@@ -99,7 +99,7 @@ def test_active_capture_survives_encrypted_storage_roundtrip(tmp_path: Path) -> 
         repo.save(original)
         loaded = repo.load(original.snapshot_id)
 
-        assert (profile.paths.db_dir / "cadrumo.db").is_file()
+        assert profile.paths.database_file.is_file()
         assert loaded == original
         # The load-bearing binary field: the exact PDF survives the envelope.
         assert loaded.decoded_pdf_bytes() == _PDF_BYTES

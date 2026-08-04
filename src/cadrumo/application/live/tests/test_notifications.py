@@ -277,7 +277,7 @@ class TestSecureStorage:
 
         assert record is not None
         assert b"B12345678" in record.payload
-        assert b"B12345678" not in (secure_engine.paths.db_dir / "cadrumo.db").read_bytes()
+        assert b"B12345678" not in secure_engine.paths.database_file.read_bytes()
         assert not (
             secure_engine.settings.cadrumo_audit_dir / "live" / "notifications" / f"{secure_engine.bucket_id}.jsonl"
         ).exists()
