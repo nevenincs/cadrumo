@@ -37,6 +37,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import pointer_path
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
@@ -76,10 +77,10 @@ def _corrupt_pointer_root(tmp_path: Path) -> Iterator[Path]:
     validation-boundary envelope.
     """
     with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
-        pointer_path = storage_root / "active-profile"
-        pointer_path.parent.mkdir(parents=True, exist_ok=True)
+        pointer_file = pointer_path(storage_root)
+        pointer_file.parent.mkdir(parents=True, exist_ok=True)
         # Valid TOML syntax, but missing ``bucket_id`` — triggers ValidationError.
-        pointer_path.write_text("schema_version = 1\n", encoding="utf-8")
+        pointer_file.write_text("schema_version = 1\n", encoding="utf-8")
         yield storage_root
 
 

@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ....core import PRODUCT_IDENTITY
+from ....core import PRODUCT_IDENTITY, pointer_path
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
 
@@ -105,7 +105,7 @@ def test_version_does_not_provision_storage(_clean_storage_root: Path) -> None:
     result = invoke_cached_cli(["--version"])
     assert result.exit_code == 0, result.output
     assert not (_clean_storage_root / "buckets").exists()
-    assert not (_clean_storage_root / "active-profile").exists()
+    assert not pointer_path(_clean_storage_root).exists()
     assert not any(_clean_storage_root.glob("**/*.db"))
 
 
@@ -116,5 +116,5 @@ def test_help_does_not_provision_storage(_clean_storage_root: Path) -> None:
     result = invoke_cached_cli(["--help"])
     assert result.exit_code == 0, result.output
     assert not (_clean_storage_root / "buckets").exists()
-    assert not (_clean_storage_root / "active-profile").exists()
+    assert not pointer_path(_clean_storage_root).exists()
     assert not any(_clean_storage_root.glob("**/*.db"))

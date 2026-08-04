@@ -12,7 +12,7 @@ from textwrap import dedent
 
 import pytest
 
-from ....adapters.persistence.storage import BUCKET_MANIFEST_FILENAME
+from ....adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKET_MANIFEST_FILENAME
 from ....core.config import load_settings
 from ....tests import REPO_ROOT
 
@@ -134,7 +134,7 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     bucket_id = bucket_dirs[0].name
     manifest = tomllib.loads((bucket_dirs[0] / BUCKET_MANIFEST_FILENAME).read_text(encoding="utf-8"))
     assert manifest["key_schedule"] == "bucket-dek-v1"
-    assert (tmp_path / "keystore" / bucket_id / "bucket.dek.json").is_file()
+    assert (tmp_path / "keystore" / bucket_id / BUCKET_DEK_FILENAME).is_file()
 
     logged_out = _run_cadrumo(tmp_path, ("config", "logout"))
     assert logged_out.returncode == 0, _combined_output(logged_out)
