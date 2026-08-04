@@ -17,19 +17,28 @@ from typing import Any
 
 import pytest
 
+from ....core.resources import resources
+from ....domain.calculations.registry import RegistrySnapshot
 from .._profile_binding import inject_derived_anualidades_eligibility_facts
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
 def _key(year: int) -> str:
     return f"renta_family.anualidades_sin_minimo_descendientes_{year}"
 
 
+def _snapshot(year: int) -> RegistrySnapshot:
+    """Real Modelo 100 snapshot: the flag now shares the aggregates' eligibility
+    predicate, which reads the Art. 58.1 / Art. 61 norma 2a ceilings from the
+    revision's own registry parameters."""
+    return resources().modelos.authority.snapshot("100", filing_year=year, period="0A")
+
+
 def test_default_eligible_when_no_descendants() -> None:
     fact_index: dict[str, object] = {}
     fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
     assert fact_index[_key(2024)] == Decimal("1")
 
 
@@ -39,7 +48,7 @@ def test_flag_off_when_custody_shared() -> None:
         "renta_family.descendiente.0.custodia_compartida": "true",
     }
     fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
     assert fact_index[_key(2024)] == Decimal("0")
 
 
@@ -49,7 +58,7 @@ def test_flag_eligible_when_custody_not_shared() -> None:
         "renta_family.descendiente.0.custodia_compartida": "false",
     }
     fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
     assert fact_index[_key(2024)] == Decimal("1")
 
 
@@ -62,21 +71,25 @@ def test_shared_custody_ignored_when_descendant_not_eligible_ordinary() -> None:
         "renta_family.descendiente.0.convivencia": "false",
     }
     fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
     assert fact_index[_key(2024)] == Decimal("1")
 
 
 def test_untouched_for_out_of_scope_year() -> None:
+    # Modelo 100 publishes no 2019 revision, so the out-of-scope year is
+    # exercised by re-stamping a real snapshot's filing_year rather than by
+    # asking the authority for a revision that does not exist.
+    out_of_scope = _snapshot(2024).model_copy(update={"filing_year": 2019})
     fact_index: dict[str, object] = {}
     fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2019)
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, out_of_scope)
     assert _key(2019) not in fact_index
 
 
 def test_idempotent_explicit_fact_preserved() -> None:
     fact_index: dict[str, object] = {_key(2024): Decimal("0")}
     fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, 2024)
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
     assert fact_index[_key(2024)] == Decimal("0")
 
 
@@ -84,5 +97,5 @@ def test_idempotent_explicit_fact_preserved() -> None:
 def test_all_in_scope_years_default_eligible(year: int) -> None:
     fact_index: dict[str, object] = {}
     fact_index_narrowed: Any = fact_index
-    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, year)
+    inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(year))
     assert fact_index[_key(year)] == Decimal("1")

@@ -341,17 +341,19 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         # (LIRPF). Unlike every other entry in this set these are ELIGIBILITY
         # THRESHOLDS rather than amounts: they gate whether a descendant
         # generates the mínimo at all, so no formula multiplies them and none
-        # ever will. They are staged here grounded and resolvable ahead of the
-        # eligibility predicate that consumes them, so the legal figures are
-        # never re-entered as Python literals at the point of use.
+        # ever will.
         #
-        # Exit condition: remove each entry once the descendant-eligibility
-        # predicate reads it. If that consumer lands in
-        # ``src/cadrumo/domain/contribuyente/family.py`` via ``read_parameter``
-        # the AST scan above picks it up and these entries MUST be deleted; if
-        # it instead lands in the application-layer injector alongside the
-        # Madrid tranches above, it stays outside the scan's reach and the
-        # entry stays, re-documented against its real consumer.
+        # CONSUMED, not pending. Resolved by the SAME out-of-formula pattern as
+        # the Madrid tranches above: ``_resolved_minimo_descendientes_thresholds``
+        # (``src/cadrumo/application/modelo/_profile_binding.py``) reads them by
+        # iterating ``snapshot.revision.parameters`` rather than calling
+        # ``read_parameter(...)``, and lives under ``src/cadrumo/application/``
+        # rather than ``src/cadrumo/domain/`` — outside both branches this
+        # gate's AST scan can see. They feed
+        # :meth:`DescendantInfo.is_eligible_ordinary` as caller-supplied
+        # ``MinimoDescendientesThresholds``, which is what keeps the two legal
+        # figures out of Python. Verified consumed by
+        # ``test_minimo_descendientes_eligibility.py``.
         "renta-2020-minimo-descendientes-rentas-anuales-limite-2020",
         "renta-2021-minimo-descendientes-rentas-anuales-limite-2021",
         "renta-2022-minimo-descendientes-rentas-anuales-limite-2022",

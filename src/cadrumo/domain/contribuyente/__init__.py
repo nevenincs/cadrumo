@@ -56,6 +56,7 @@ from ._renta_codes import (
 )
 from .family import (
     DescendantInfo,
+    MinimoDescendientesThresholds,
     RentaAscendantProfile,
     RentaDescendantProfile,
     RentaFamilyProfile,
@@ -189,6 +190,7 @@ __all__ = [
     "DescendantInfo",
     "FiscalResidency",
     "ForalRegimeError",
+    "MinimoDescendientesThresholds",
     "ProfileKey",
     "ProfileKeyRequirement",
     "ProfileName",

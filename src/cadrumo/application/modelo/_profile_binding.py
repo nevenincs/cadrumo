@@ -54,6 +54,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.contribuyente import (
     CCAA,
+    MinimoDescendientesThresholds,
     RentaFamilyProfile,
     descendant_list_from_facts,
     marriage_full_year,
@@ -339,6 +340,76 @@ def _resolved_minimo_descendientes_tranches(
     return birth_order_amounts, menor_tres_supplement
 
 
+_MINIMO_DESCENDIENTES_RENTAS_LIMITE_SUFFIX = "rentas-anuales-limite"
+_MINIMO_DESCENDIENTES_DECLARACION_PROPIA_SUFFIX = "declaracion-propia-rentas-limite"
+
+
+def _resolved_minimo_descendientes_thresholds(
+    snapshot: RegistrySnapshot,
+) -> MinimoDescendientesThresholds | None:
+    """Resolve the Art. 58.1 / Art. 61 norma 2ª eligibility ceilings for the revision.
+
+    These are the two registry ``money`` parameters carrying the figures
+    Art. 58.1 ("rentas anuales, excluidas las exentas, superiores a 8.000
+    euros") and Art. 61 norma 2ª ("presenten declaración por este Impuesto con
+    rentas superiores a 1.800 euros") state, resolved for the snapshot's filing
+    year exactly as the birth-order tranches are. They are never Python
+    literals (`aeat-schema-central-config`).
+
+    Returns ``None`` when the revision declares neither parameter, which leaves
+    the caller to skip the derivation rather than evaluate eligibility against
+    a fabricated ceiling.
+    """
+    filing_year = snapshot.filing_year
+    date_context = {"filing_period": date(filing_year, 12, 31)}
+
+    def _resolve(suffix: str) -> Decimal | None:
+        parameter = _minimo_descendientes_parameter(snapshot, filing_year=filing_year, suffix=suffix)
+        return resolve_parameter(parameter, date_context) if parameter is not None else None
+
+    rentas_limite = _resolve(_MINIMO_DESCENDIENTES_RENTAS_LIMITE_SUFFIX)
+    declaracion_limite = _resolve(_MINIMO_DESCENDIENTES_DECLARACION_PROPIA_SUFFIX)
+    if rentas_limite is None or declaracion_limite is None:
+        return None
+    return MinimoDescendientesThresholds(
+        rentas_anuales_limite=rentas_limite,
+        declaracion_propia_rentas_limite=declaracion_limite,
+    )
+
+
+def _second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+    """Derive whether a second contribuyente is also entitled to the mínimo.
+
+    Art. 61 norma 1ª prorates whenever two or more contribuyentes hold the
+    right to the same descendant's mínimo. Whether a second filer claims is not
+    a fact about the descendant, so it is derived here from signals the profile
+    already carries rather than demanded as new operator input.
+
+    A tributación CONJUNTA return is NOT prorated: the unidad familiar files
+    once and the mínimo is applied once inside that single return, so there is
+    no second contribuyente to share it with. An INDIVIDUAL return by a
+    partnered filer IS prorated, because the other progenitor is a separate
+    contribuyente entitled to the same descendant — this is the ordinary
+    two-parent household the derivation exists to correct.
+
+    Returns ``False`` for an unpartnered individual filer and whenever the
+    signals are absent, which claims the full mínimo; the caller raises a
+    visible advisory whenever this derivation is what decided the factor, so a
+    wrong inference is correctable rather than silent.
+    """
+    declaration_type = str(fact_index.get("filing_export.declaration_type", "")).strip()
+    if declaration_type == _CONJUNTA_DECLARATION_TYPE:
+        return False
+    marital_status = str(fact_index.get("renta_taxpayer.marital_status", "")).strip().lower()
+    if marital_status in _PARTNERED_STATUS_TOKENS:
+        return True
+    return any(
+        str(value).strip() != ""
+        for key, value in fact_index.items()
+        if key.startswith("renta_spouse.") and value is not None
+    )
+
+
 def _inject_derived_minimo_descendientes_facts(
     fact_index: dict[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
@@ -395,12 +466,22 @@ def _inject_derived_minimo_descendientes_facts(
         # against a partial tranche table.
         return
 
+    thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
+    if thresholds is None:
+        # The revision declares tranche amounts but not the Art. 58.1 / Art. 61
+        # norma 2ª eligibility ceilings. Leave the aggregates unresolved rather
+        # than compute an over-granting mínimo that skips both income
+        # conditions — a silently inflated figure is the defect this predicate
+        # exists to close, so refusing is the safe direction.
+        return
+
     descendant_facts = {
         fact_key: str(value)
         for fact_key, value in fact_index.items()
         if fact_key.startswith("renta_family.descendiente.")
     }
     profile = RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
+    second_filer_indicated = _second_entitled_filer_indicated(fact_index)
 
     if estatal_key not in fact_index:
         birth_order_amounts, menor_tres_supplement = estatal_tranches
@@ -408,6 +489,8 @@ def _inject_derived_minimo_descendientes_facts(
             snapshot.filing_year,
             birth_order_amounts=birth_order_amounts,
             menor_tres_supplement=menor_tres_supplement,
+            thresholds=thresholds,
+            second_filer_indicated=second_filer_indicated,
         )
 
     if autonomico_key not in fact_index:
@@ -429,6 +512,8 @@ def _inject_derived_minimo_descendientes_facts(
             snapshot.filing_year,
             birth_order_amounts=birth_order_amounts,
             menor_tres_supplement=menor_tres_supplement,
+            thresholds=thresholds,
+            second_filer_indicated=second_filer_indicated,
         )
 
 
@@ -437,7 +522,7 @@ _ANUALIDADES_ELIGIBILITY_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024,
 
 def _inject_derived_anualidades_eligibility_facts(
     fact_index: dict[str, UserProfileFactValue],
-    filing_year: int,
+    snapshot: RegistrySnapshot,
 ) -> None:
     """Inject the LIRPF art. 64/75 anualidades separate-escala eligibility flag.
 
@@ -455,13 +540,28 @@ def _inject_derived_anualidades_eligibility_facts(
     has ``custodia_compartida = true`` the mínimo por descendientes is split
     50/50, the payer retains it, and the régimen does NOT apply (flag 0).
 
+    Eligibility here is the SAME Art. 58.1 / Art. 61 predicate the two
+    aggregates use, so a descendant excluded by the rentas ceiling or by the
+    norma 2ª own-return rule generates no mínimo, leaves the payer legally sin
+    derecho, and correctly RESTORES the separate-escala régimen. Before the
+    predicate carried those conditions this flag read ``0`` for such a
+    descendant and denied a régimen the payer was entitled to — the one gap in
+    this campaign that over-taxes rather than under-declares.
+
     Idempotent: an explicit fact already present is not overwritten. Only the
     revisions carrying the separate-escala régimen are handled.
     """
+    filing_year = snapshot.filing_year
     if filing_year not in _ANUALIDADES_ELIGIBILITY_FILING_YEARS:
         return
     key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
     if key in fact_index:
+        return
+    thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
+    if thresholds is None:
+        # Without the eligibility ceilings this flag cannot be derived on the
+        # same predicate as the aggregates; leaving it unresolved keeps the two
+        # surfaces from disagreeing about who holds the mínimo.
         return
     descendant_facts = {
         fact_key: str(value)
@@ -469,7 +569,7 @@ def _inject_derived_anualidades_eligibility_facts(
         if fact_key.startswith("renta_family.descendiente.")
     }
     shared_custody = any(
-        descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year)
+        descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year, thresholds=thresholds)
         for descendant in descendant_list_from_facts(descendant_facts)
     )
     fact_index[key] = Decimal("0") if shared_custody else Decimal("1")
@@ -804,7 +904,7 @@ def _load_profile_facts(
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     _inject_derived_family_facts(fact_index, snapshot.filing_year)
-    _inject_derived_anualidades_eligibility_facts(fact_index, snapshot.filing_year)
+    _inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
     _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
     _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
     _inject_derived_state_attribution_facts(fact_index)
@@ -975,6 +1075,7 @@ def _resolve_one(
 inject_derived_marriage_facts = _inject_derived_marriage_facts
 inject_derived_autonomic_deduccion_facts = _inject_derived_autonomic_deduccion_facts
 inject_derived_anualidades_eligibility_facts = _inject_derived_anualidades_eligibility_facts
+second_entitled_filer_indicated = _second_entitled_filer_indicated
 inject_derived_minimo_descendientes_facts = _inject_derived_minimo_descendientes_facts
 profile_fact_index = _profile_fact_index
 resolve_profile_binding_value = _resolve_one
@@ -992,4 +1093,5 @@ __all__ = [
     "profile_fact_index",
     "resolve_profile_binding_value",
     "resolve_profile_sourced_bindings",
+    "second_entitled_filer_indicated",
 ]

@@ -28,7 +28,7 @@ from .._descendant_facts import (
     descendant_list_from_facts,
     parse_descendiente_flag,
 )
-from ..family import DescendantInfo, RentaFamilyProfile
+from ..family import DescendantInfo, MinimoDescendientesThresholds, RentaFamilyProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -91,11 +91,21 @@ _ART58_ORACLE_CASES: tuple[tuple[str, tuple[DescendantInfo, ...], Decimal], ...]
 )
 
 
+# Registry-authoritative Art. 58.1 / Art. 61 norma 2a eligibility ceilings
+# (2024 revision parameters renta-2024-minimo-descendientes-rentas-anuales-
+# limite-2024 and -declaracion-propia-rentas-limite-2024).
+_THRESHOLDS = MinimoDescendientesThresholds(
+    rentas_anuales_limite=Decimal("8000"),
+    declaracion_propia_rentas_limite=Decimal("1800"),
+)
+
+
 def _minimo_descendientes_estatal(profile: RentaFamilyProfile) -> Decimal:
     return profile.minimo_descendientes_estatal(
         2024,
         birth_order_amounts=[_MINIMO_1, _MINIMO_2, _MINIMO_3, _MINIMO_4PLUS],
         menor_tres_supplement=_MENOR_TRES,
+        thresholds=_THRESHOLDS,
     )
 
 
@@ -176,15 +186,15 @@ class TestDescendantInfoAgeCalculation:
         cases = ((date(2000, 1, 1), True), (date(1999, 1, 1), False))
         for birth_date, expected in cases:
             d = DescendantInfo(birth_date=birth_date)
-            assert d.is_eligible_ordinary(2024) is expected, birth_date
+            assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is expected, birth_date
 
     def test_is_eligible_ordinary_over_25_with_discapacidad_is_true(self) -> None:
         d = DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33)
-        assert d.is_eligible_ordinary(2024) is True
+        assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is True
 
     def test_is_eligible_ordinary_non_cohabiting_is_false(self) -> None:
         d = DescendantInfo(birth_date=date(2020, 1, 1), convive_con_contribuyente=False)
-        assert d.is_eligible_ordinary(2024) is False
+        assert d.is_eligible_ordinary(2024, thresholds=_THRESHOLDS) is False
 
     def test_is_eligible_menor_tres_age_1_is_true(self) -> None:
         d = DescendantInfo(birth_date=date(2023, 1, 15))
@@ -231,7 +241,7 @@ class TestRentaFamilyProfileDerivedProperties:
                 DescendantInfo(birth_date=date(1990, 1, 1), discapacidad_grado=33),  # disabled, eligible
             ),
         )
-        assert p.descendientes_eligible_minimum(2024) == 2
+        assert p.descendientes_eligible_minimum(2024, thresholds=_THRESHOLDS) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -263,7 +273,9 @@ class TestArt58MinimoDescendientesEstatalOracleCases:
     def test_empty_birth_order_amounts_is_rejected(self) -> None:
         p = RentaFamilyProfile(descendientes=(DescendantInfo(birth_date=date(2015, 1, 1)),))
         with pytest.raises(ValueError, match="birth_order_amounts"):
-            p.minimo_descendientes_estatal(2024, birth_order_amounts=[], menor_tres_supplement=_MENOR_TRES)
+            p.minimo_descendientes_estatal(
+                2024, birth_order_amounts=[], menor_tres_supplement=_MENOR_TRES, thresholds=_THRESHOLDS
+            )
 
 
 # ---------------------------------------------------------------------------

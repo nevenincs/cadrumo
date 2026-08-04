@@ -37,12 +37,14 @@ from decimal import Decimal
 
 from ...core import Modelo
 from ...domain.calculations.registry import CasillaId, ModeloRevision
+from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.user_profile import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic
 from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
 __all__ = [
     "collect_descendientes_count_desync_diagnostics",
+    "collect_minimo_descendientes_prorrata_inferred_diagnostics",
     "collect_minimo_descendientes_undeclared_diagnostics",
 ]
 
@@ -52,6 +54,7 @@ _DESCENDANTS_COUNT_PATH = "renta_family.descendientes_count"
 
 _UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
 _COUNT_DESYNC_SOURCE_KIND = "descendientes_count_desync"
+_PRORRATA_INFERRED_SOURCE_KIND = "minimo_descendientes_prorrata_inferred"
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -133,6 +136,99 @@ def collect_minimo_descendientes_undeclared_diagnostics(
                 "or other eligible descendants, declare them with `aeat config profile descendiente add "
                 "--descendiente NACIMIENTO=YYYY-MM-DD[,...]` before filing, or the Art. 58 LIRPF allowance "
                 "is silently omitted"
+            ),
+            casilla_id=estatal_id,
+        ),
+    )
+
+
+def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
+    """Return every non-null profile fact as a ``{path: str-value}`` map, or ``None``."""
+    from ..user_profile import UserProfileLifecycleRepository
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+
+
+def collect_minimo_descendientes_prorrata_inferred_diagnostics(
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise when the Art. 61 norma 1ª prorrata was INFERRED rather than answered.
+
+    Norma 1ª halves the mínimo whenever a second contribuyente is also entitled
+    to the same descendant. Whether one is is not a fact about the descendant,
+    so when the operator has not answered per-descendant the engine derives it
+    from marital status, a spouse record and the declaration type
+    (:func:`~application.modelo._profile_binding.second_entitled_filer_indicated`).
+
+    A derivation that silently halved a filing's mínimo is exactly the kind of
+    inference the operator must be able to see and correct before filing, which
+    is why it surfaces here rather than staying internal. The direction of the
+    default is deliberate: where the signals indicate a second entitled filer
+    the engine prorates rather than claiming the full amount, erring toward
+    under-claiming — which this advisory makes visible and correctable —
+    instead of toward the silent over-claim `no-silent-under-declaration`
+    forbids.
+
+    Fires only when the derivation actually DECIDED something: the aggregate is
+    non-zero, the profile indicates a second entitled filer, and at least one
+    descendant carries neither an explicit ``prorrata_minimo`` answer nor the
+    shared-custody trigger. A descendant whose factor came from an explicit
+    answer or from shared custody is not flagged, because nothing was inferred.
+
+    Args:
+        revision: The :class:`ModeloRevision` being calculated.
+        casilla_values: The computed engine values keyed by :class:`CasillaId`.
+        modelo: The modelo identifier of the filing being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        A one-element tuple carrying the advisory, or an empty tuple.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    estatal_id = _casilla_id_for_role(revision, _MINIMO_ESTATAL_SEMANTIC_ROLE, modelo_id=modelo)
+    if estatal_id is None:
+        return ()
+    if casilla_values.get(estatal_id, Decimal(0)) == Decimal(0):
+        # Nothing was granted, so nothing was halved.
+        return ()
+    facts = _profile_fact_strings(bucket_id)
+    if facts is None:
+        return ()
+
+    from ._profile_binding import second_entitled_filer_indicated
+
+    if not second_entitled_filer_indicated(facts):
+        return ()
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    inferred = [
+        index
+        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
+        if descendant.prorrata_minimo is None and not descendant.custodia_compartida
+    ]
+    if not inferred:
+        return ()
+    named = ", ".join(f"renta_family.descendiente.{index}" for index in inferred)
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_PRORRATA_INFERRED_SOURCE_KIND,
+            message=(
+                f"casilla {estatal_id!r} (mínimo por descendientes) was HALVED under Art. 61 norma 1ª "
+                f"LIRPF for {named} because the profile indicates a second contribuyente entitled to the "
+                "same descendant (marital status, spouse record or declaration type) and no explicit "
+                "answer was given. This is an inference, not a declared fact: if no other filer claims "
+                "these descendants, state it with `aeat config profile descendiente add --descendiente "
+                "NACIMIENTO=YYYY-MM-DD,PRORRATA=false` to claim the full mínimo, or PRORRATA=true to "
+                "confirm the split"
             ),
             casilla_id=estatal_id,
         ),
