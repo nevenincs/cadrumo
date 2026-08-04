@@ -336,8 +336,8 @@ class TestRepoRelativePathNormalisationCoverage:
         the platform user-data root (not the process cwd).
 
         ``"probe-category"`` is a deliberately fictional segment, not the real
-        ``StorageCategory.FINANCIAL_TRANSACTIONS`` subpath: the env value the
-        test supplies is arbitrary, and the property under test is the
+        ``StorageCategory.FINANCIAL_TRANSACTIONS`` subpath: the env values the
+        test supplies are arbitrary, and the property under test is the
         anchoring mechanism, not any particular taxonomy default.
 
         The running platform's live anchor variable is pinned to an isolated
@@ -355,13 +355,13 @@ class TestRepoRelativePathNormalisationCoverage:
             with _isolated_aeat_env(
                 CADRUMO_INVOICES_DIR="var/probe-category/invoices",
                 CADRUMO_ATTACHMENTS_DIR="var/probe-category/attachments",
-                CADRUMO_RUNS_DIR="var/runs",
+                CADRUMO_RUNS_DIR="var/probe-runs",
             ):
                 settings = settings_without_env_file(cadrumo_local_storage_root=tmp_path / "cadrumo-state")
         app_root = platform_user_data_root(inputs)
         assert settings.cadrumo_invoices_dir == app_root / "var" / "probe-category" / "invoices"
         assert settings.cadrumo_attachments_dir == app_root / "var" / "probe-category" / "attachments"
-        assert settings.cadrumo_runs_dir == app_root / "var" / "runs"
+        assert settings.cadrumo_runs_dir == app_root / "var" / "probe-runs"
 
 
 def _parse_env_example_kv() -> dict[str, str]:
