@@ -1,7 +1,7 @@
 """Real-behaviour conformance for the unified SearchRecord funnel.
 
-The four projected record kinds -- concept cards, casilla projections, CLI
-surface/option records -- funnel through :func:`to_search_record` into one
+The five projected record kinds -- concept cards, casilla projections, legal
+provisions, and CLI surface/option records -- funnel through :func:`to_search_record` into one
 homogeneous :class:`SearchRecord` shape (the Pagefind injection payload). These
 gates prove the funnel produces a uniform record for every kind, carries the
 four-language descriptions and grounding provenance, and that the ranking
@@ -201,11 +201,11 @@ def test_funnelled_records_are_json_serialisable() -> None:
 
 
 def test_base_weights_follow_the_declared_tier_ordering() -> None:
-    """Concept > casilla > CLI > page base weights (the per-class ladder).
+    """Concept/legal > casilla > CLI > page base weights (the per-class ladder).
 
     The per-kind view now projects the one declared per-display-class table
-    declared once for the shipped ranking: CONCEPT collapses to
-    the general-fact ``DOC`` band, and it reverses the navigation-tier order to
+    declared once for the shipped ranking: CONCEPT and LEGAL use the
+    general-fact ``DOC`` band, and it reverses the navigation-tier order to
     casilla > cli (previously cli > casilla), while a full-text PAGE hit
     collapses to the ``TECHNICAL`` floor.
     """

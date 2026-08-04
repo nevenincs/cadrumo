@@ -4,9 +4,10 @@ The build-time RAG sweep returns raw chunk hits -- a source file path, a line
 range, a relevance score. Output wrangling is a typed transformation layer,
 not ad-hoc filtering: each hit is resolved, by its path, to a typed, linkable
 target across the five grounding surfaces the operator named: modelo
-casillas, the CLI surface, BOE legal grounding, the codebase API reference,
-and the built docs pages. A hit with no resolvable target is DROPPED and
-REPORTED (a typed dropped-hit report), never shipped half-mapped.
+casillas, the CLI surface, generated legal-reference pages with BOE provenance,
+the codebase API reference, and the built docs pages. A hit with no resolvable
+target is DROPPED and REPORTED (a typed dropped-hit report), never shipped
+half-mapped.
 
 The five resolution rules (by source path):
 
@@ -20,20 +21,21 @@ The five resolution rules (by source path):
   preprocess-hook rules) -> an individual casilla only when the hit carries
   such a locator; a modelo-only source path is not enough to fabricate one.
 * a normatives source page (``.../normatives/.../*.html``, hook-indexed) or a
-  legal catalogue TOML (``.../registry/aeat/legal/*.toml``) -> the
-  legal-grounding target (the BOE permalink + ``#aN`` article anchor, resolved through the
-  legal catalogue's ``corpus_ref`` -- the BOE grounding surface).
+  legal catalogue TOML (``.../registry/aeat/legal/*.toml``) -> the generated
+  legal-reference page/anchor target, resolved through the same projection and
+  renderer authority as the injected LEGAL records; the BOE permalink remains
+  typed destination provenance.
 * ``src/cadrumo/**/*.py`` -> the generated API stub
   (``docs/api/cadrumo.<dotted.module>.html`` -- the CODEBASE grounding surface).
 * ``docs/**/*.md`` / ``*.rst`` -> the built page anchor (the DOCS surface).
 * a CLI module path -> the generated CLI-reference page (the CLI surface),
   resolved against the projected CLI records.
 
-The registry and legal lookups go through ``ValidatedRegistryAuthority`` /
+The registry lookup goes through ``ValidatedRegistryAuthority`` /
 ``bundled_authority()`` (never a raw TOML re-parse, per
-``aeat-registry-authority-flow``); the legal-grounding link carries the
-permalink and corpus anchor so provenance survives into the resolved target
-(``aeat-calculation-grounding``).
+``aeat-registry-authority-flow``). Legal hits use the generated legal-reference
+projection for their site-relative target while carrying the BOE permalink as
+typed provenance (``aeat-calculation-grounding``).
 """
 
 from __future__ import annotations
@@ -51,6 +53,7 @@ from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bun
 
 from ._casilla_projection import project_casilla_search_records
 from ._concept_cards import ConceptCardRecord
+from ._legal_projection import project_legal_search_records
 from ._search_record import SearchRecordKind
 from ._unified_record import SearchRecord, to_search_record
 
@@ -213,10 +216,10 @@ _EXCLUDED_SEGMENTS: frozenset[str] = frozenset({"tests", "test", "fixtures", "sc
 class TargetResolver:
     """Resolves chunk hits to typed targets across the five grounding surfaces.
 
-    Holds the projected casilla records (indexed by modelo) and the legal
-    catalogue's ``corpus_ref`` reverse index, both built once from the
-    validated authority, so a batch of hits resolves without re-projecting or
-    re-parsing per hit.
+    Holds the projected casilla records (indexed by modelo), the legal
+    catalogue's ``corpus_ref`` reverse index, and the generated legal search
+    records, all built once so a batch of hits resolves without re-projecting
+    or re-parsing per hit.
     """
 
     def __init__(self, authority: ValidatedRegistryAuthority | None = None) -> None:
@@ -236,8 +239,15 @@ class TargetResolver:
             modelo = record.modelo.value
             self._casillas_by_modelo.setdefault(modelo, ())
             self._casillas_by_modelo[modelo] = (*self._casillas_by_modelo[modelo], unified)
+        # Index the same generated legal-reference projection that the
+        # Pagefind injector emits. Its target is the renderer's site-relative
+        # page/anchor; BOE remains typed provenance on the unified record.
+        self._legal_by_id: dict[str, SearchRecord] = {
+            record.legal_id: to_search_record(record)
+            for record in project_legal_search_records(_REPO_ROOT)
+        }
         # Reverse index: a normatives corpus html path -> the legal id whose
-        # corpus_ref points at it (carries the BOE permalink + #aN anchor).
+        # corpus_ref points at it.
         self._legal_by_corpus_path: dict[str, str] = {}
         for legal_id, entry in self._authority.catalogues.legal.items():
             corpus_ref = getattr(entry, "corpus_ref", None)
@@ -432,26 +442,15 @@ class TargetResolver:
         return self._legal_target(hit, declared[0])
 
     def _legal_target(self, hit: ChunkHit, legal_id: str) -> ResolvedTarget | DroppedHit:
-        entry = self._authority.catalogues.legal.get(legal_id)
-        permalink = getattr(entry, "permalink", None) if entry is not None else None
-        if not permalink:
+        base = self._legal_by_id.get(legal_id)
+        if base is None:
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"legal entry {legal_id!r} has no permalink",
+                detail=f"legal entry {legal_id!r} has no generated legal-reference target",
             )
-        from ._unified_record import RankingTier, SearchRecordMetadata
-
-        title = f"BOE · {legal_id}"
-        record = SearchRecord(
-            id=f"legal:{legal_id}",
-            kind=SearchRecordKind.PAGE,
-            tier=RankingTier.FULLTEXT,
-            title=title,
-            descriptions=_legal_descriptions(entry),
-            target=str(permalink),
-            ranking_weight=_reweight(SearchRecordKind.PAGE, hit.score),
-            metadata=SearchRecordMetadata(legal_refs=(legal_id,)),
+        record = base.model_copy(
+            update={"ranking_weight": _reweight(SearchRecordKind.LEGAL, hit.score)},
         )
         return ResolvedTarget(surface=GroundingSurface.LEGAL, record=record, source_hit=hit)
 
@@ -662,12 +661,6 @@ def _module_to_dotted(path: str) -> str | None:
     if not parts:
         return None
     return ".".join(parts)
-
-
-def _legal_descriptions(entry: object) -> dict[OutputLanguage, str]:
-    notes = getattr(entry, "notes", None)
-    text = str(notes).strip() if notes else "BOE legal provision"
-    return {OutputLanguage.ES: text[:240]}
 
 
 def _plain_descriptions(text: str) -> dict[OutputLanguage, str]:

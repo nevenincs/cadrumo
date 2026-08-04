@@ -346,7 +346,7 @@ def to_search_record(record: KindRecord, *, sweep_score: float | None = None) ->
     carrying the kind-specific provenance into typed ``metadata``.
 
     Args:
-        record: A concept-card, casilla, CLI-surface, or CLI-option record.
+        record: A concept-card, casilla, legal, CLI-surface, or CLI-option record.
         sweep_score: Optional RAG relevance score that modulates the weight.
 
     Returns:

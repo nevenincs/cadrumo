@@ -1,10 +1,10 @@
 """Kind-agnostic built-site target-resolvability sweep.
 
 This is the coarse cross-kind backstop the ratified
-search-record contract mandates: the single gate
-whose absence let three of the four search-record kinds ship dead or
-self-referential deep links with no test noticing. Where the per-kind parity
-gates (``test_glossary_anchor_parity``, ``test_casilla_anchor_parity``,
+search-record contract mandates: the single gate whose absence let the
+pre-LEGAL custom record producers ship dead or self-referential deep links
+with no test noticing. Where the existing per-kind parity gates
+(``test_glossary_anchor_parity``, ``test_casilla_anchor_parity``,
 ``test_cli_anchor_parity``) validate each producer against its OWN generator's
 RST/render-level anchor inventory -- fast, no full build -- this sweep validates
 every injected record against the ACTUALLY BUILT site. It therefore catches what
@@ -35,9 +35,9 @@ site artefact is shared by the harness (the docs-build gate uses the ``dummy``
 builder and emits no HTML), so this gate builds one. The user scope excludes the
 ``api/``/``_modules/`` autodoc tree -- by far the most expensive part of the
 build -- which is a PRINCIPLED narrowing, not a shortcut: no injected record
-target points under ``api/`` (the CONCEPT, CASILLA and CLI destinations are the
-generated glossary, the generated per-modelo casilla pages, and the CLI
-reference, all outside ``api/``; full-text PAGE hits, which do live under
+target points under ``api/`` (the CONCEPT, CASILLA, LEGAL and CLI destinations
+are the generated glossary, per-modelo casilla pages, generated legal-reference
+pages, and the CLI reference, all outside ``api/``; full-text PAGE hits, which do live under
 ``api/``, are Pagefind's own records and are not part of this projection), so
 excluding it loses no sweep coverage while it renders the casilla, glossary and
 CLI destinations in full.
@@ -144,7 +144,7 @@ def _element_ids(page: Path, cache: dict[Path, set[str]]) -> set[str]:
 def test_every_injected_record_target_resolves_in_built_site(tmp_path: Path) -> None:
     """Every injected search-record target resolves to a real built page + anchor.
 
-    Walks the unified projection (concept + casilla + CLI records -- the same set
+    Walks the unified projection (concept + casilla + legal + CLI records -- the same set
     the Pagefind injection ships) and, against a real user-scope HTML build,
     asserts for every record's ``target`` that: it is not a query-string form
     (D1); the ``<page>.html`` exists under the built tree; and where the target
@@ -185,6 +185,6 @@ def test_every_injected_record_target_resolves_in_built_site(tmp_path: Path) -> 
     )
 
     # Guard against a silent empty pass: the projection ships the full concept +
-    # casilla + CLI surface (thousands of records), so a near-zero count means the
+    # casilla + legal + CLI surface (thousands of records), so a near-zero count means the
     # projection collapsed rather than everything genuinely resolving.
     assert len(records) > 200, f"expected the full injected surface (200+ records); walked only {len(records)}"

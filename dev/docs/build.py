@@ -416,7 +416,7 @@ def docs_build_jobs(env: Mapping[str, str]) -> str:
 
 
 #: The two search-index contracts the deployment may select. ``full`` runs the
-#: custom-record injection (concept/casilla/CLI records boosted by the sweep);
+#: custom-record injection (concept/casilla/legal/CLI records boosted by the sweep);
 #: ``pages`` indexes only the rendered HTML pages, shipping a lighter index with
 #: no injected navigation records.
 _PAGEFIND_MODES = ("full", "pages")
@@ -456,7 +456,7 @@ def docs_build_language(env: Mapping[str, str]) -> OutputLanguage:
 def pagefind_index_mode(env: Mapping[str, str]) -> str:
     """Resolve the Pagefind indexing contract from the deployment override.
 
-    Defaults to ``full`` so local docs keep the injected concept/casilla/CLI
+    Defaults to ``full`` so local docs keep the injected concept/casilla/legal/CLI
     records. The deployment may set ``CADRUMO_DOCS_PAGEFIND_MODE=pages`` to
     index only the rendered pages, skipping the custom-record injection seam.
 
@@ -490,7 +490,7 @@ def resolve_record_injector(
     """Resolve one environment's Pagefind contract into an injection callback.
 
     The single place a build environment decides whether the shipped index
-    carries the injected concept/casilla/CLI records: ``full`` returns the real
+    carries the injected concept/casilla/legal/CLI records: ``full`` returns the real
     record injector, ``pages`` returns ``None`` and the index carries the
     rendered pages alone. It also decides WHICH language index those records
     land in, and it resolves that from the same environment the pages are built
@@ -725,7 +725,7 @@ def compile_search_index(
     """Compile the bundled Ctrl-K search corpus over the freshly built HTML.
 
     Runs the post-build Pagefind index pass and injects the unified
-    search records -- concept cards, casilla and CLI navigation surfaces --
+    search records -- concept cards, casilla, legal, and CLI navigation surfaces --
     boosted by the committed build-time RAG sweep. The resulting
     per-language index is an uncommitted build artifact, regenerated on every
     full build exactly like the generated CLI/API surfaces. A missing vendored
@@ -738,7 +738,7 @@ def compile_search_index(
         repo_root: Repository root (for the committed relevance sweep file).
         injector: Optional pre-built injection callback. When omitted, the
             injector is chosen from :func:`pagefind_index_mode`: the ``full``
-            contract builds the record injector (concepts + casillas + CLI),
+            contract builds the record injector (concepts + casillas + legal provisions + CLI),
             while the deployment ``pages`` contract injects no custom records
             and indexes only the rendered pages. Injectable so a test can drive
             a small real injector without paying the full materialisation cost.
@@ -764,7 +764,7 @@ def compile_search_index(
     written = stats.custom_records_written if stats is not None else 0
     boosts = stats.relevance_boosts_applied if stats is not None else 0
     print(
-        f"Search index compiled: {outcome.page_count} pages + {written} term/casilla/CLI records "
+        f"Search index compiled: {outcome.page_count} pages + {written} term/casilla/legal/CLI records "
         f"({boosts} relevance-boosted) -> {outcome.html_root / outcome.output_subdir}",
         flush=True,
     )

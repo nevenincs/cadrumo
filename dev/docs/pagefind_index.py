@@ -88,7 +88,7 @@ _BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefi
 #: except PAGE" on purpose -- a kind added to the enum before its injector ships
 #: would then refuse a correct publish, and a false RED at publish time is its
 #: own outage. When a new injector ships, add its kind here in the same change.
-DECIDED_INJECTED_RECORD_KINDS: Final[frozenset[str]] = frozenset({"concept", "casilla", "cli"})
+DECIDED_INJECTED_RECORD_KINDS: Final[frozenset[str]] = frozenset({"concept", "casilla", "legal", "cli"})
 
 #: A ``<body>`` tag that is neither excluded from the index nor already carrying
 #: a Pagefind meta attribute. The two negative lookaheads keep the display-class
