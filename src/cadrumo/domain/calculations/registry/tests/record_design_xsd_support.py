@@ -13,6 +13,12 @@ two of six revisions while appearing to cover all six, which is why
 :func:`compile_record_design_schemas` refuses to return a short set rather than
 reporting one.
 
+The module is public rather than underscored because it is consumed from outside
+this package: the filing export gate validates a rendered declaration against the
+same compiled schemas. A cross-package consumer may not reach a private module,
+and duplicating the compilation would put a second repair authority beside this
+one, so the oracle is named publicly and shared.
+
 The repair is deliberately split from the compilation. :func:`repair_xsd_regex_escapes`
 is a pure text transformation that needs no XML toolchain, so its soundness
 property is provable on its own; only :func:`compile_record_design_schema` needs

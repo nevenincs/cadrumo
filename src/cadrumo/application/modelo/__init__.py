@@ -253,6 +253,10 @@ from ._profile_binding import (
     profile_resolved_binding_ids,
     resolve_profile_sourced_bindings,
 )
+from ._profile_export_binding import (
+    compose_legal_full_name,
+    resolve_profile_export_values,
+)
 from ._profile_readiness_gate import (
     modelo_applicability_refusal,
     modelo_work_profile_baseline_missing_paths,
@@ -764,6 +768,7 @@ __all__ = [
     "compare_taxation_for_work_address",
     "compare_taxation_for_work_unit",
     "compare_taxation_modes",
+    "compose_legal_full_name",
     "correct_iva_compensation_period_for_bucket",
     "counter_sign_review_package",
     "create_m145_communication_record",
@@ -882,6 +887,7 @@ __all__ = [
     "resolve_modelo_work_unit_for_operator_target",
     "resolve_modelo_work_unit_id",
     "resolve_optional_modelo_work_address",
+    "resolve_profile_export_values",
     "resolve_profile_sourced_bindings",
     "resolve_registry_revision_for_work_target",
     "resolve_verifiable_modelo_calculation_revision_address",

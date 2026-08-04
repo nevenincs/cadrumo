@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from lxml import etree
 
-from ._record_design_xsd_support import (
+from .record_design_xsd_support import (
     SchemaCompilationError,
     bundled_modelo_100_xsds,
     compile_record_design_schema,
