@@ -1371,3 +1371,38 @@ number a reader would have taken at face value.
 
 A reader who sees only the four expired justifications learns what the failure
 looks like. This is what the discipline buys, and it cost one re-draw.
+
+## How to check this document rather than trust it
+
+The campaign's own standard, turned on its own conclusion. Nothing below asks to
+be believed; each line names what would falsify it.
+
+**The decision.** The campaign closes on its criterion; `S78` stays open with its
+residual named. Its supporting figure was revised three times — 23% → 16.7% →
+10.0% — and the decision did not move.
+
+> **If a fourth revision would move it, the decision was a threshold all along,
+> and this sentence is how you find that out.**
+
+That is the test to apply first, because it is the one that governs everything
+else here. A robustness claim that can only be admired is not a claim.
+
+**The rest, in the same form:**
+
+- The criterion holds over path-*choosing* sites. It would fail if a
+  path-choosing site were found unenrolled by either instrument at the pinned
+  revision.
+- The residual is in the low tens. It would fail if a census of the declared
+  scope, or a uniform draw over the tree, put it materially outside the stated
+  intervals.
+- `S78` is off the closure path. It would fail if the plan's own `W03.P23`
+  statement were superseded.
+- The enumerated bands do not exhaust the corpus, and **no claim is made that
+  they do** — that one cannot be falsified, which is precisely why it is stated
+  rather than assumed.
+
+**And the standing caution, earned four times over in a single day:** a
+structural explanation that fits the shape of an error is not evidence it caused
+that one, and a conclusion you are right about is when its reasoning gets the
+least scrutiny. Both of those were learned here by being wrong, publicly, and
+then measuring.
