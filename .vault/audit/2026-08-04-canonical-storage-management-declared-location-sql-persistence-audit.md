@@ -75,6 +75,51 @@ still receives bytes.
 That is a mechanism, and it replaces the proximity framing rather than
 supplementing it. Line adjacency was the visible shadow of a shared declaration.
 
+### the-bounded-rotation-question-answered-as-far-as-it-can-be | medium | Every rotation target has a SQL namespace, which is a hypothesis about twelve entries and proof about none
+
+The bounded question — *how many `default_rotation_plan` entries name a location
+nothing writes to* — is answerable in a way the population question is not,
+because the entry list is finite. Read at `17591aa403`, without reopening the
+function. Twelve entries, and each one's target matched against the declared
+secure-object namespaces:
+
+```
+cadrumo_financial_txs_dir          cadrumo.domain.transactions.bucket
+cadrumo_invoices_dir               cadrumo.domain.invoices
+cadrumo_attachments_dir            cadrumo.domain.attachments.blobs
+  .../manifests                    cadrumo.domain.attachments.manifests
+cadrumo_usage_ratios_path          cadrumo.domain.usage_ratios
+cadrumo_drafts_dir                 cadrumo.domain.filing.drafts
+cadrumo_submissions_dir            cadrumo.domain.submission.records
+  .../amendments                   cadrumo.domain.filing.amendments
+  .../amendment-results            cadrumo.domain.filing.amendments
+cadrumo_justificantes_dir          cadrumo.domain.justificante.metadata
+cadrumo_filing_history_dir         cadrumo.application.filing.history
+cadrumo_workflow_runs_dir          cadrumo.application.workflow.runs
+```
+
+**Twelve of twelve.** Every location the rotation plan walks has its records
+declared in `secure_objects`.
+
+**That is a hypothesis about all twelve and proof about none of them**, and the
+distinction is the whole value of stating it. A SQL namespace existing does not
+establish that the filesystem location is unused — a location can legitimately
+carry both, and content-addressed blob bytes are exactly the shape that would.
+What the correspondence does is **raise all twelve to the evidence standard the
+four already met**, rather than leaving eight of them unexamined because nobody
+had a reason to look.
+
+**The honest form of the result:** the four confirmed candidates are not a subset
+picked by luck — they are the four somebody happened to examine, drawn from a
+set of twelve that all share the signal. The remaining eight are now a named,
+finite list, and the check that settles each is cheap and already demonstrated:
+read the owning module's docstring, then look for a test.
+
+**And this does not enlarge the population claim.** Twelve rotation entries is
+still a subset of the taxonomy, chosen because a sweep enumerates them — not a
+measurement of how many declared members are dormant. Reporting it as one would
+be the proxy error this audit already warns against.
+
 ### the-answer-was-in-the-production-docstrings-the-whole-time | high | Five instruments were built to observe a property the owning modules already state
 
 ```
