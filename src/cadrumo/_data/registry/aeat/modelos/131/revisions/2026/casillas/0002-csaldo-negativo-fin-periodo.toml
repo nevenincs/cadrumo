@@ -5,6 +5,7 @@ label = "Saldo negativo trasladable a periodos posteriores (max 0, -casilla 10)"
 section = ["computed_carry_forward"]
 data_type = "money"
 semantic_role = "irpf_pf_saldo_negativo_fin_periodo"
+continuidad_id = "irpf-pf-saldo-negativo-fin-periodo"
 required = false
 input_kind = "computed"
 formula = "modelo-131-2026-saldo-negativo-fin-periodo"

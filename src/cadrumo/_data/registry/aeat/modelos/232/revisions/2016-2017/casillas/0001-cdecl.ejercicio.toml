@@ -5,6 +5,7 @@ label = "Ejercicio de devengo"
 section = ["declarante", "devengo"]
 data_type = "year"
 semantic_role = "filing_year"
+continuidad_id = "filing-year"
 required = true
 input_kind = "informational"
 export_refs = ["modelo-232-2016-page-01-year"]
