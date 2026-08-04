@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import StorageCategory, storage_location
+from ....core.observability import ENVELOPE_FILENAME, EVENTS_FILENAME, TRACE_FILENAME
 from ._namespace_taxonomy import StoragePathAnchor, StoragePathKind
 from .errors import NamespaceRegistryError
 
@@ -347,21 +348,21 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # promoted to a declared shape until now.
         key="run_trace",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/trace.json",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{TRACE_FILENAME}",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="run_events",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/events.jsonl",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{EVENTS_FILENAME}",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),
     StoragePathDefinition(
         key="run_envelope",
         kind=StoragePathKind.FILE,
-        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/envelope.json",
+        grammar=f"<root>/{RUNS_DIRNAME}/<run_id>/{ENVELOPE_FILENAME}",
         owner="cadrumo.core.observability",
         anchor=StoragePathAnchor.STORAGE_ROOT,
     ),

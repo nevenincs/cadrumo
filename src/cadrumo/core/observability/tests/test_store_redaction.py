@@ -36,7 +36,7 @@ from .. import (
     save_events_append,
     save_trace,
 )
-from .._store import _EVENTS_FILENAME, _TRACE_FILENAME, runs_dir
+from .._store import EVENTS_FILENAME, TRACE_FILENAME, runs_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -89,7 +89,7 @@ def test_save_trace_redacts_sensitive_arguments(tmp_path: Path) -> None:
     with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
         for trace, forbidden_fragments, required_fragments in cases:
             save_trace(trace)
-            on_disk = (runs_dir() / trace.run_id / _TRACE_FILENAME).read_text(encoding="utf-8")
+            on_disk = (runs_dir() / trace.run_id / TRACE_FILENAME).read_text(encoding="utf-8")
 
             for forbidden in forbidden_fragments:
                 assert forbidden not in on_disk
@@ -111,7 +111,7 @@ def test_save_events_append_redacts_url_path(
             module="cadrumo.core.observability.test_store_redaction",
         )
         save_events_append(event.run_id, event)
-        on_disk = (runs_dir() / event.run_id / _EVENTS_FILENAME).read_text(encoding="utf-8")
+        on_disk = (runs_dir() / event.run_id / EVENTS_FILENAME).read_text(encoding="utf-8")
         assert "/internal/path" not in on_disk
         assert "token=12345" not in on_disk
         assert AEAT_HOST_SUFFIX_EXPECTED in on_disk

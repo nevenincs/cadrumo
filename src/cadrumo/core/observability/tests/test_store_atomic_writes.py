@@ -42,7 +42,7 @@ from .. import (
     save_trace,
 )
 from .._errors import RunTracePersistenceError
-from .._store import _ENVELOPE_FILENAME, _TRACE_FILENAME, runs_dir
+from .._store import ENVELOPE_FILENAME, TRACE_FILENAME, runs_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -81,7 +81,7 @@ class TestSaveTraceReplacesAtomically:
 
     def test_prior_trace_inode_never_receives_the_new_artifact(self, tmp_path: Path) -> None:
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
-            target = runs_dir() / _RUN_ID / _TRACE_FILENAME
+            target = runs_dir() / _RUN_ID / TRACE_FILENAME
             witness = _seed_prior_artifact(target)
 
             save_trace(_trace())
@@ -94,7 +94,7 @@ class TestSaveTraceReplacesAtomically:
     def test_real_replace_failure_leaves_no_temporary_file(self, tmp_path: Path) -> None:
         """A directory occupying ``trace.json`` is a real ``os.replace`` refusal."""
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
-            target = runs_dir() / _RUN_ID / _TRACE_FILENAME
+            target = runs_dir() / _RUN_ID / TRACE_FILENAME
             target.mkdir(parents=True, exist_ok=True)
             (target / "marker.txt").write_text("still a directory", encoding="utf-8")
 
@@ -111,7 +111,7 @@ class TestSaveEnvelopeReplacesAtomically:
 
     def test_prior_envelope_inode_never_receives_the_new_artifact(self, tmp_path: Path) -> None:
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
-            target = runs_dir() / _RUN_ID / _ENVELOPE_FILENAME
+            target = runs_dir() / _RUN_ID / ENVELOPE_FILENAME
             witness = _seed_prior_artifact(target)
 
             save_envelope(_RUN_ID, {"schema_version": 2, "status": "success"})
@@ -124,7 +124,7 @@ class TestSaveEnvelopeReplacesAtomically:
     def test_real_replace_failure_leaves_no_temporary_file(self, tmp_path: Path) -> None:
         """A directory occupying ``envelope.json`` is a real ``os.replace`` refusal."""
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
-            target = runs_dir() / _RUN_ID / _ENVELOPE_FILENAME
+            target = runs_dir() / _RUN_ID / ENVELOPE_FILENAME
             target.mkdir(parents=True, exist_ok=True)
             (target / "marker.txt").write_text("still a directory", encoding="utf-8")
 

@@ -79,6 +79,9 @@ from ._recorder import record_event
 from ._replay import REPLAY_ACTIVE_ENV_VAR, replay_run
 from ._sink import JsonlRunSink
 from ._store import (
+    ENVELOPE_FILENAME,
+    EVENTS_FILENAME,
+    TRACE_FILENAME,
     iter_events,
     iter_runs,
     load_envelope_document,
@@ -91,12 +94,15 @@ from ._store import (
 )
 
 __all__ = [
+    "ENVELOPE_FILENAME",
+    "EVENTS_FILENAME",
     "GOLDEN_MASK_FIELDS",
     "MASK_SENTINEL",
     "REPLAY_ACTIVE_ENV_VAR",
     "RUN_CONTEXT_VAR",
     "RUN_ID_PATTERN",
     "STEP_CONTEXT_VAR",
+    "TRACE_FILENAME",
     "AeatCorpusDriftError",
     "ArgumentRecord",
     "ArgumentSource",

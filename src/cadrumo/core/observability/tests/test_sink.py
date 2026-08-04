@@ -48,7 +48,7 @@ from .. import (
     save_trace,
 )
 from .._sink import JsonlRunSink
-from .._store import _EVENTS_FILENAME, _TRACE_FILENAME, runs_dir
+from .._store import EVENTS_FILENAME, TRACE_FILENAME, runs_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -92,7 +92,7 @@ class TestJsonlStoreRoundTrip:
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             evt = self._make_event(1)
             save_events_append(evt.run_id, evt)
-            target = runs_dir() / evt.run_id / _EVENTS_FILENAME
+            target = runs_dir() / evt.run_id / EVENTS_FILENAME
             with target.open("a", encoding="utf-8") as handle:
                 handle.write('{"not_a": "valid_run_event"}\n')
             with pytest.raises(RunTraceValidationError, match=r"failed strict validation"):
@@ -289,7 +289,7 @@ class TestStorePersistenceErrors:
         run_id = "abcdef0123456789"
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)) as settings:
             runs_root = storage_path(StorageCategory.RUNS, settings=settings)
-            trace_path = runs_root / run_id / _TRACE_FILENAME
+            trace_path = runs_root / run_id / TRACE_FILENAME
 
             with obstructed_path(trace_path), pytest.raises(RunTracePersistenceError) as excinfo:
                 load_trace(run_id, settings=settings)
@@ -306,7 +306,7 @@ class TestStorePersistenceErrors:
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             trace_b = self._trace(run_b)
             source = save_trace(trace_b)
-            target = runs_dir() / run_a / _TRACE_FILENAME
+            target = runs_dir() / run_a / TRACE_FILENAME
             target.parent.mkdir()
             shutil.copyfile(source, target)
 
@@ -325,7 +325,7 @@ class TestStorePersistenceErrors:
         with override_settings(**storage_overrides(tmp_path, StorageCategory.RUNS)):
             trace_b = self._trace(run_b)
             source = save_trace(trace_b)
-            target = runs_dir() / run_a / _TRACE_FILENAME
+            target = runs_dir() / run_a / TRACE_FILENAME
             target.parent.mkdir()
             shutil.copyfile(source, target)
 
@@ -426,7 +426,7 @@ class TestIterEvents:
             run_id = "abcdef0123456789"
             save_events_append(run_id, self._event(run_id, 0))
             # Append a malformed line after the valid one.
-            target = runs_dir() / run_id / _EVENTS_FILENAME
+            target = runs_dir() / run_id / EVENTS_FILENAME
             with target.open("a", encoding="utf-8", newline="") as handle:
                 handle.write('{"invalid": "event"}\n')
             save_events_append(run_id, self._event(run_id, 2))

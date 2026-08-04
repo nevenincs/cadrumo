@@ -41,7 +41,7 @@ from ._models import (
     StepBoundaryPayload,
 )
 from ._sink import JsonlRunSink
-from ._store import _EVENTS_FILENAME, _run_dir, _validate_run_id, save_envelope, save_trace
+from ._store import EVENTS_FILENAME, _run_dir, _validate_run_id, save_envelope, save_trace
 
 _log = get_logger(__name__)
 
@@ -255,7 +255,7 @@ def run_context(
         step_id=step_id,
     )
     target = _run_dir(info.run_id)
-    sink = JsonlRunSink(target / _EVENTS_FILENAME, run_id=info.run_id)
+    sink = JsonlRunSink(target / EVENTS_FILENAME, run_id=info.run_id)
 
     # Arm result-envelope capture for the run so the emitted
     # ``SchemaEnvelope`` is persisted as a golden artifact (closing the
