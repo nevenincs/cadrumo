@@ -43,7 +43,33 @@ work is one Step, and the denominator has held at 114 as intended.
 The coordinator's board was stale in the safe direction. Recording it because
 the same staleness in the other direction is what a close review exists to catch.
 
-### the-s78-collapse-rule-is-not-verified-and-my-verification-failed | medium | A cheap test of the predictor disagrees with a known result, so the rule must not shape assignments yet
+### the-s78-collapse-rule-is-unverified-and-my-proxy-could-not-test-it | medium | Corrected on second read: the proxy did not disagree, it was structurally unable to agree
+
+**Correction, recorded in place.** This finding first read *"a cheap test of the
+predictor disagrees with a known result"* and described `registry` as
+*contradicting* the rule. **Both overstate.** The second reader applied the
+standard I had asked it to apply to me: could the measurement have produced the
+other answer?
+
+It could not. My proxy scores a literal by counting quoted occurrences in a
+fixture or bundled-data context. `registry` collapses through the *modelo
+registry* tree and `STORAGE_NAMESPACE_REGISTRY` — referents that are frequently
+not quoted string literals at all, as this finding's own body says. So there is
+no reading under which the proxy scores `registry` as collapsing. **A test that
+cannot agree has not disagreed.**
+
+The distinction changes what happens next, which is why it is worth the
+correction rather than a footnote: *contradicted* invites the next reader to
+discard a rule that has never been tested, while *unverified* leaves it standing
+and untested, which is its actual state. The recommendation is unchanged — it
+must not size the bands — and the diagnosis of **why** the proxy fails survives
+intact and is the part worth keeping.
+
+The original finding follows, because a refutation that turns out to be
+unearned is exactly the shape this review exists to catch, and deleting it would
+remove the evidence.
+
+### the-original-refutation-claim | superseded | A cheap test of the predictor disagrees with a known result
 
 The coordinator's predictor: a literal collapses when the word names something
 else in the codebase. Known results — `justificantes` 97 → 0 genuine, `registry`
@@ -158,17 +184,53 @@ sites (`rootpath`); the filesystem observation of which declared locations
 receive bytes (`honesty`, redesigning after two workloads proved inert and an
 accessor-hook design was withdrawn); `S78`'s remaining literal bands.
 
-**Open and unowned** — accessor adoption is unmeasured, and the one number I have
-says 5 of 26 production modules import `storage_path` while 21 read settings
-fields directly; the declared-location-with-SQL-persistence population is
-unbounded after two failed instruments; the `S78` collapse predictor is
-unverified per the finding above; whether the two-instrument union covering the
-criterion is complete, which no instrument currently answers.
+**Open and unowned** — accessor adoption, measured below rather than as a ratio;
+the declared-location-with-SQL-persistence population, unbounded after two failed
+instruments; the `S78` collapse predictor, unverified per the finding above;
+whether the two-instrument union covering the criterion is complete, which no
+instrument currently answers.
 
-**Deferred with a reason** — `default_rotation_plan`'s justificantes entry, left
-to its own reachability question at `rootpath`'s boundary; test-migration and
-`W02.P07`/`P08`, out of scope by prior ruling; test hygiene `S84`/`S85`,
-explicitly not a closure gate and now complete anyway.
+**Deferred with a reason** — the dynamic observation of which declared locations
+receive bytes, **closed rather than in flight**: three instruments, three
+structural failures, and the conclusion that a category resolved once at import
+into a constant is a static fact, so it is handed to the static scanner;
+`default_rotation_plan`'s justificantes entry, left to its own reachability
+question at `rootpath`'s boundary; test-migration and `W02.P07`/`P08`, out of
+scope by prior ruling; test hygiene `S84`/`S85`, explicitly not a closure gate
+and complete anyway.
+
+### my-adoption-figure-was-wrong-twice-and-the-denominator-was-constructed | medium | Corrected: 8 accessor modules, 24 field modules, 1 in both, union 31
+
+**"5 of 26" should not have been published, and both halves were wrong.**
+
+The **5** came from a grep pattern of mine — `import storage_path\|storage_path,`
+— that misses `from .. import StorageCategory, storage_path`, a name at
+end-of-line with no trailing comma. That is the substring-and-pattern trap I had
+flagged in two other lanes' measurements the same day, committed in my own. The
+second reader found it by checking whether the two sets overlapped.
+
+The **26** was worse in kind: it was `5 + 21`, the sum of two samples presented
+as a population. A constructed denominator reads as a measured one, which is the
+literal-corpus lesson in a different costume.
+
+Re-measured at `5da2b328f9` with a call-form predicate:
+
+```
+modules calling storage_path(          8
+modules reading a bound path field    24
+in both                                1    core/observability/_store.py
+union                                 31
+```
+
+The overlap module and its identity are exactly what the second reader predicted.
+
+**Report it as three numbers, never as a ratio.** "8 modules call the accessor,
+24 read a bound field, 1 does both" lets a reader form their own view; "8 of 31"
+implies a population nobody has measured — the real denominator is however many
+production modules resolve a storage location at all, which remains unmeasured.
+
+The substantive conclusion is untouched: adoption is hygiene, not correctness,
+because the enrollment ruling makes a field read taxonomy-governed either way.
 
 ### what-slipped-between-buckets | medium | Three items had no bucket at all until this pass
 
