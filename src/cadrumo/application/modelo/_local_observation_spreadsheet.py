@@ -30,13 +30,17 @@ from __future__ import annotations
 
 import csv
 import io
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
 from openpyxl import load_workbook
 
-from ...core.decimal import european_thousands_reading_is_ambiguous, normalize_decimal_separators
+from ...core.decimal import (
+    european_thousands_reading_is_ambiguous,
+    normalize_decimal_separators,
+    try_parse_canonical_decimal,
+)
 from ...core.external_constants import CSV_ENCODING_FALLBACK_CHAIN, XLSX_EXTENSION
 from ._action_errors import ModeloLocalObservationError
 
@@ -131,14 +135,27 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
                 f"or {written.replace('.', ',')} if you meant the second",
             )
             continue
-        try:
-            normalized = normalize_decimal_separators(raw_value, strip_thousands="," in raw_value)
-            value = Decimal(normalized)
-        except InvalidOperation:
-            malformed.append(f"row {row_number}: value {raw_value!r} for casilla {code!r} is not numeric")
-            continue
-        if not value.is_finite():
-            malformed.append(f"row {row_number}: value {raw_value!r} for casilla {code!r} must be finite")
+        # Separators are normalised first, because the operator's grammar is
+        # Spanish and the canonical one is not: "1.234,56" has to become
+        # "1234.56" before anything can judge its shape. What survives that is
+        # then held to the canonical grammar rather than handed to a bare
+        # Decimal, which accepts a good deal that no one writes in a
+        # spreadsheet cell -- "1e5" (silently a hundred thousand), a leading
+        # "+", "1_000", and the non-finite "NaN"/"Infinity". Fraction digits
+        # are deliberately left unconstrained: this runs before registry
+        # canonicalisation, so the casilla's type is unknown here, and a
+        # two-decimal euro cap would refuse a coefficient row like "0.333" to
+        # catch an amount row. Shape is decidable without knowing the type;
+        # precision is not, and belongs where the declared type is known.
+        normalized = normalize_decimal_separators(raw_value, strip_thousands="," in raw_value)
+        value = try_parse_canonical_decimal(normalized)
+        if value is None:
+            malformed.append(
+                f"row {row_number}: value {raw_value!r} for casilla {code!r} is not a plain number; "
+                f'write digits with an optional decimal comma (for example "1234,56"). Scientific '
+                f"notation, a leading '+', underscore separators, 'NaN' and 'Infinity' are refused "
+                f"because they are not what a figure on a return looks like",
+            )
             continue
         values[code] = value
     if malformed:
