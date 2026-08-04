@@ -56,6 +56,12 @@ _XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
 # dictionary, so it is written from the layout rather than from a dictionary row.
 _AUX_TAG = "Aux"
 
+# The per-taxpayer block of a Modelo 100 declaration. Its mandatory ``nif``
+# attribute is declared in no dictionary, so it is stamped after the walk rather
+# than written from a dictionary row; its ``titular`` sibling IS declared and is
+# written by the walk like any other row.
+_TOMA_DATOS_TAG = "TomaDatosAmpliada"
+
 # Model groups carry no sibling position of their own when reading declared
 # order: a declaration nested inside one sits at the position the group occupies
 # in its parent, so the walk descends through them rather than treating them as
@@ -143,6 +149,8 @@ def render_xml_dictionary_layout(
         if rendered is None or rendered == "":
             continue
         _set_xml_dictionary_path(root, entry.path, rendered, element_order=element_order)
+    if draft.modelo == Modelo.M100:
+        _stamp_toma_datos_nif(root, draft)
     return ElementTree.tostring(root, encoding=_UTF_8, xml_declaration=True)
 
 
@@ -267,6 +275,39 @@ def _append_declaration_aux(root: ElementTree.Element[str], layout: ExportLayout
     aux = ElementTree.SubElement(root, _AUX_TAG)
     ElementTree.SubElement(aux, "Idioma").text = layout.aux_idioma.value
     ElementTree.SubElement(aux, "VERSION").text = layout.aux_version
+
+
+def _stamp_toma_datos_nif(root: ElementTree.Element[str], draft: ModeloDraft) -> None:
+    """Name whose NIF each ``TomaDatosAmpliada`` block reports figures for.
+
+    ``nif`` is ``use="required"`` on ``tipo_TomaDatosAmpliada`` in all six
+    bundled exercises, and AEAT's dictionary declares no field id whose path
+    reaches it -- so it can be written by neither the dictionary-driven walk nor
+    a ``dictionary_path_overrides`` correction, which only re-points a row the
+    dictionary already carries. Same shape as the ``Aux`` block, and written the
+    same way: from what the export already holds.
+
+    Its sibling attribute ``titular`` is deliberately NOT written here. That one
+    IS dictionary-declared -- thirty-five field ids (``TITA`` on casilla 0001,
+    ``TITBIH`` on 0026, and so on, all of them registry casillas) map to
+    ``/DatosEconomicos/TomaDatosAmpliada/@titular``, so the ordinary walk writes
+    it from whichever titular casilla the return populates. Stamping a constant
+    here would overwrite that: a declaración conjunta reports a spouse's income
+    section under código 3, and a hardcoded declarante 2 would silently
+    re-attribute it on a filed return. A blank ``titular`` means no titular
+    casilla carries a value, which is an input gap the completeness gate owns.
+
+    Runs AFTER the walk rather than before it, because unlike ``Aux`` the
+    element being stamped is one the walk creates.
+
+    The NIF is the draft's, deliberately, and is the same value ``DPNIF_D``
+    carries. Re-reading the profile here would let the block's identity
+    attribute disagree with the identity row above it in the same file when a
+    profile is edited between approval and export. Taking both from the approved
+    artefact makes that disagreement unrepresentable.
+    """
+    for block in root.iter(_TOMA_DATOS_TAG):
+        block.set("nif", draft.profile_tax_id)
 
 
 def _xsd_declared_children(node: ElementTree.Element[str]) -> list[ElementTree.Element[str]]:
