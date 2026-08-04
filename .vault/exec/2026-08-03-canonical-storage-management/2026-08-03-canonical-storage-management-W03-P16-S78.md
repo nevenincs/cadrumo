@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ee05e393f07ebb2ec15c3688b39c30e2b90fe27108815c3e2b3272e61a85f4f'
+body_hash: 'sha256:8ce616887bfb3e3fce94b1a26c06f8fb1361acbdada59538c2fd9a50fa7fcfe0'
 step_id: 'S78'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
@@ -24,6 +24,19 @@ related:
   `BUCKET_DATABASE_FILE` taxonomy member), not the Step's full ~108-file /
   ~350-site corpus. `S78` stays unchecked; a ten-file batch against a
   stated ~108 would misrepresent the Step as closed.
+- **Enumeration method (amended)**: unrecoverable. This record's own text
+  describes the ten files as "pre-identified" without stating how the list
+  was produced, and nothing in the tree records the selection method --
+  neither a saved grep command, a script, nor a cross-referenced task
+  description. The site list below IS recoverable from the two commits
+  this batch's own description matches (`722cdc1c67`, "declare
+  route-classification cadrumo.db literals as pins, not drift"; `278d1c6d8a`,
+  "migrate scaffolding db-path literals onto bucket_paths().database_file"
+  -- their diffs are exactly the 4 migrated / 7 declared-pin split this
+  record states), so the WORK is reconstructable even though the SELECTION
+  is not. Recorded as unrecoverable rather than reconstructed with a
+  plausible-sounding method neither commit's author is confirmed to have
+  used.
 - Migrated three files (four occurrences) onto `bucket_paths(...)
   .database_file`: `entrypoints/cli/_config/tests/test_certificate.py`
   (3x, each feeding `_blocking_certificate_secret_event_commit(db_path)` --
