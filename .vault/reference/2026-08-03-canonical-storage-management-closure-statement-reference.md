@@ -270,18 +270,34 @@ restated here as a bare number, because a count in prose has no maintainer and
 this corpus has already lost two to that.
 
 **Evidence**: classified by where the written path comes from. Measured at
-revision `9e96c02bab`, **98 matched sites of which 43 are pass-through**; of the
+revision `a5889c3199`, **98 matched sites of which 43 are pass-through**; of the
 9 sites on duck-typed method names, reading each cleared 6 as non-filesystem,
 giving **92 file-producing sites as an upper bound**. Every figure here belongs
 to that revision and is reproduced by re-running the tool, not by reading it back
 out of this paragraph.
 
-**The figure held at three independent revisions** — `611df3a67e`, `9e96c02bab`,
-and `800767930f` — byte-identical distributions across the taxonomy
+**The figure held at four independent revisions** — `611df3a67e`, `9e96c02bab`,
+`800767930f` and `a5889c3199` — byte-identical distributions across the taxonomy
 restructure that moved the declarations into their own module, the tracked corpus
-growing by a third, and the `BUCKET_DATABASE_FILE` prefix fix. Stability under
-change is stronger evidence than agreement at a single point: three readings of
-one unchanged tree would prove only that the tool is deterministic. A primitive doing
+growing by a third, the `BUCKET_DATABASE_FILE` prefix fix, and the scanner's own
+test-scope extension. Stability under change is stronger evidence than agreement
+at a single point: four readings of one unchanged tree would prove only that the
+tool is deterministic.
+
+**The instrument's own limits, stated here rather than only in its audit**, so a
+reader who follows this citation meets the number and the limit together:
+
+- **43 of 98 sites are `pass_through`** — the path arrives from a caller, so
+  `_trace()` bottoms out at `self` or a parameter. That is the tool reporting the
+  boundary correctly, not failing to resolve; the site genuinely has no
+  enrollment answer of its own.
+- **9 of 98 are `unresolved`** — a 9% rate the tool now self-reports with the
+  instruction *"read these, do not trust them"*.
+- **Duck-typed method names cannot be separated from their filesystem namesakes
+  without type inference**, which is why the 9 ambiguous sites are enumerated for
+  a human read rather than silently counted either way.
+
+A primitive doing
 `path.parent.mkdir()` on a path it was handed **has no enrollment answer of its
 own**; its answer is "wherever the caller said". Asking whether such a site is
 enrolled is not a question with a truth value, and nearly half the domain is in
