@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9be9c2a8e88c8908446a52d81e17dd3a4351d46a69dbd6f12f0365fdecb44777'
+body_hash: 'sha256:6ee05e393f07ebb2ec15c3688b39c30e2b90fe27108815c3e2b3272e61a85f4f'
 step_id: 'S78'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
@@ -388,7 +388,33 @@ regardless of what it said, and 14 of the 15 were renamed
 rather than corrected in place: the discrepancy is itself evidence for
 this Step's own finding that no two lanes' classification passes agreed
 on the same site without cross-checking, and deleting the earlier read
-would erase that evidence.
+would erase that evidence. (This batch's text predates any edit by
+`census` -- it landed with `4297576fda`; the reconciliation is not a
+correction of `census`'s work.)
+
+Cross-reference to the dormancy lineage: `cadrumo_drafts_dir` has exactly
+three non-test production references -- `core/config.py`'s own `Field`
+declaration and a settings-field name list, `_storage_taxonomy_locations.py`'s
+`settings_field=` declaration, and `_rotation.py`'s
+`default_rotation_plan`, the only site that actually READS it
+(`settings.cadrumo_drafts_dir`). No production reader ever consults the
+value for anything a draft-loading test path exercises -- the same shape
+as `JUSTIFICANTES`, `ATTACHMENTS`, and the other rotation-only entries
+`conv2` catalogued from the opposite direction (reading production
+docstrings for a stated no-filesystem-write claim). This reconciliation
+re-derives the same fact for `DRAFTS` by asking what actually consumes
+the field rather than what claims to; the two are the same finding
+reached two ways, not two findings.
+
+**Provenance note**: the four batches below (`secrets`, `manifest.toml`,
+`iva-wallet`/`invoices`/`llm-cache`/`llm-usage`/`llm-run-telemetry`, and the
+small-band tail) were authored by a different lane than the sections above
+this note. The commit that landed all of them together
+(`docs(exec): record treegates' S78 literal-band batches and the method
+divergence`) attributes the whole diff to one lane by subject line, because a
+pathspec commit takes the working tree for the named path -- it landed these
+four sections along with the others in one hunk. Recorded here so a reader
+tracing authorship by commit subject alone does not misattribute.
 
 ## Batch: `secrets` literal band (`StorageCategory.SECRETS`)
 
