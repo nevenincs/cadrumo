@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from ....deadlines import CalendarCCAA
 from .._schema import (
     BicString,
     CalendarDate,
@@ -106,32 +107,53 @@ class TestNifIvaString:
 _CCAA = TypeAdapter(CCAACode)
 
 
+def _accepted_two_digit_codes() -> set[str]:
+    """Return the codes the validator actually accepts, by probing every two-digit string.
+
+    Derived from behaviour rather than read from the constant, so the assertions
+    below cannot be satisfied by restating the thing they test.
+    """
+    accepted = set()
+    for number in range(100):
+        candidate = f"{number:02d}"
+        try:
+            _CCAA.validate_python(candidate)
+        except ValidationError:
+            continue
+        accepted.add(candidate)
+    return accepted
+
+
 class TestCCAACode:
-    def test_supported_accepted(self) -> None:
-        cases = (
-            "01",
-            "02",
-            "03",
-            "04",
-            "05",
-            "06",
-            "07",
-            "08",
-            "09",
-            "10",
-            "11",
-            "12",
-            "13",
-            "14",
-            "15",
-            "16",
-            "17",
-            "18",
-            "19",
+    def test_accepts_one_code_per_spanish_autonomous_territory(self) -> None:
+        """The accepted count matches an independently-authored enumeration.
+
+        :class:`CalendarCCAA` enumerates the same population — the seventeen
+        autonomous communities plus Ceuta and Melilla — keyed by ISO 3166-2:ES
+        code for holiday calendars. It shares no source with this validator, so
+        agreeing on how many Spanish autonomous territories exist is a real
+        check rather than a restatement.
+        """
+        accepted = _accepted_two_digit_codes()
+
+        assert accepted, "the validator accepts nothing; this probe cannot discriminate"
+        assert len(accepted) == len(CalendarCCAA), (
+            f"the shape check accepts {len(accepted)} codes but Spain has {len(CalendarCCAA)} autonomous territories"
         )
 
-        for code in cases:
-            assert _CCAA.validate_python(code) == code, code
+    def test_accepts_a_contiguous_run_of_ordinals_starting_at_one(self) -> None:
+        """The accepted set is an ordinal run, asserted as a rule rather than a list.
+
+        A shape check numbers territories consecutively from one; ``00`` is not
+        an ordinal, and a gap would mean the set had become some particular
+        modelo's numbering, which this deliberately is not.
+        """
+        accepted = _accepted_two_digit_codes()
+        ordinals = sorted(int(code) for code in accepted)
+
+        assert ordinals[0] == 1, "an ordinal run starts at 01, and 00 names no territory"
+        assert ordinals == list(range(ordinals[0], ordinals[-1] + 1)), f"the accepted codes have a gap: {ordinals}"
+        assert all(len(code) == 2 and code.isdigit() for code in accepted), "every code is two ASCII digits"
 
     def test_rejected(self) -> None:
         for raw in ("", "20", "1", "ES", "  01  ", "00"):
