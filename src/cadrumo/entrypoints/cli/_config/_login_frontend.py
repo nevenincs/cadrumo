@@ -1,18 +1,30 @@
 """Capability-selecting presenter for ``aeat config login``.
 
 ``login`` serves two callers through one verb. A script, an agent, or a
-CI job names the profile, pipes the secret in, or configures the headless
-secret channel, and wants a JSON envelope with no screen at all. An
-operator at a terminal typing ``aeat config login`` on its own wants to
-be shown which profiles exist, pick one, and type its password — the same
-page they met when the profile was created.
+CI job pipes the secret in, configures the headless secret channel, or
+reads the JSON envelope, and wants no screen at all. An operator at a
+terminal wants to be shown which profiles exist, pick one, and type its
+password — the same page they met when the profile was created.
 
 Only the second gets a screen, and the split is decided here rather than
 in the command body so the rule is one pure predicate that can be
-exercised without a terminal a test host cannot provide. Every arm that
-is not that exact bare interactive invocation falls through to the
-existing path untouched: the same ``getpass`` prompt, the same
-``--secrets-stdin`` channel, the same non-interactive refusal.
+exercised without a terminal a test host cannot provide.
+
+Naming a target is NOT part of that split. The page is a chooser AND the
+password form, and naming a profile answers only the chooser half, so a
+named target preselects its row instead of discarding the page. Routing
+on it used to send the commonest interactive invocation —
+``aeat config login <profile>`` — to a line prompt, and that prompt is
+strictly worse than the page it skipped: with no callback supplied,
+``login_profile`` falls through to the storage substrate's own resolver,
+which ends at a bare :func:`getpass.getpass` carrying an untranslated
+English prompt and an *echoing* fallback whenever it cannot control the
+terminal. Every other custody secret in this package is read through
+``prompt_secret_no_echo``, which promotes that failure to a refusal.
+
+Every arm that genuinely cannot show a screen still falls through to the
+existing path untouched: the same ``--secrets-stdin`` channel, the same
+headless secret, the same non-interactive refusal.
 
 This seam also owns the translation between the application's refusal
 exceptions and the text the screen shows, which is what keeps the adapter
@@ -42,7 +54,6 @@ if TYPE_CHECKING:
 
 def login_tui_is_the_right_frontend(
     *,
-    named: bool,
     secrets_stdin: bool,
     headless_secret: bool,
     json_format: bool,
@@ -58,8 +69,6 @@ def login_tui_is_the_right_frontend(
     exists to ask, so the screen would either strand their answer or
     block a host that cannot type into it.
 
-    - ``named`` — the operator already said which profile, so the chooser
-      has nothing to choose and today's prompt is the shorter path.
     - ``secrets_stdin`` — the password has already arrived on the bounded
       stdin channel; there is nothing left to type.
     - ``headless_secret`` — ``CADRUMO_SECRET_PASSPHRASE`` is the sanctioned
@@ -71,11 +80,16 @@ def login_tui_is_the_right_frontend(
     - ``profile_count`` — with nothing registered there is nothing to log
       in to, and the existing path already refuses that with the envelope
       and exit code a caller expects.
+
+    A named target is deliberately absent from that set: it answers which
+    profile, which the page accepts as a preselection, and it leaves the
+    password — the whole reason the page exists — still to be typed. See
+    :func:`preselected_profile_id`.
     """
-    return not (named or secrets_stdin or headless_secret or json_format or not full_screen or profile_count == 0)
+    return not (secrets_stdin or headless_secret or json_format or not full_screen or profile_count == 0)
 
 
-def login_screen_is_available(ctx: typer.Context, *, name: str | None, secrets_stdin: bool) -> bool:
+def login_screen_is_available(ctx: typer.Context, *, secrets_stdin: bool) -> bool:
     """Resolve the routing predicate against this host and this storage root.
 
     Kept separate from the predicate it feeds so the rule stays pure and
@@ -85,13 +99,41 @@ def login_screen_is_available(ctx: typer.Context, *, name: str | None, secrets_s
     from ._manager_frontend import host_can_run_full_screen
 
     return login_tui_is_the_right_frontend(
-        named=name is not None,
         secrets_stdin=secrets_stdin,
         headless_secret=_headless_secret_channel_active(),
         json_format=_format_of(ctx) == "json",
         full_screen=host_can_run_full_screen(),
         profile_count=len(_login_choices()),
     )
+
+
+def preselected_profile_id(name: str | None) -> str | None:
+    """Which row the screen opens on, for an optionally-named target.
+
+    An unnamed invocation opens on the active profile, which is what the
+    operator almost always means and what the page already defaults to.
+
+    A named one goes through
+    :func:`~cadrumo.application.user_profile.resolve_login_target` — the
+    very resolver ``login_profile`` applies to the same argument on the
+    prompt arm, rather than a second reading of it here. That matters
+    beyond tidiness: it is what makes the screen agree with the prompt on
+    the surrounding whitespace it tolerates, on a bare sandbox short name
+    being unknown rather than implicitly namespaced, and on the exact
+    refusal an unknown target renders.
+
+    An unknown target is therefore refused HERE, before the screen opens.
+    The page falls back to its first row for a preselection it does not
+    recognise, which is right for a stale pointer but wrong for something
+    the operator typed: a mistyped label would otherwise open somebody
+    else's profile with no sign the name had been ignored.
+    """
+    from ....application.user_profile import resolve_login_target
+    from ....core import resolve_active_bucket_id
+
+    if name is None:
+        return resolve_active_bucket_id()
+    return resolve_login_target(name).bucket_id
 
 
 def _login_choices() -> tuple[LoginChoice, ...]:
@@ -142,21 +184,27 @@ def attempt_login(profile_id: str, passphrase: str) -> LoginAttempt:
     return LoginAttempt(outcome=outcome)
 
 
-def present_login() -> ProfileLoginOutcome | None:
+def present_login(*, preselected: str | None) -> ProfileLoginOutcome | None:
     """Run the login screen and return the session it opened, or ``None``.
 
     ``None`` means the operator left without logging in, which the caller
     reports as a refusal rather than a success: ``login`` is a
     precondition verb, so an exit code saying it worked when no session
     was minted is the one answer a script must never be given.
+
+    ``preselected`` is required rather than defaulted so the caller states
+    which row opens selected. It carried the active profile implicitly
+    before a named target could reach this screen at all; leaving that as
+    a default would have let a caller silently drop the operator's named
+    target and land on the active profile instead — the exact misroute
+    :func:`preselected_profile_id` exists to prevent.
     """
     from ....adapters.inbound.tui import run_login_tui
-    from ....core import resolve_active_bucket_id
 
     return run_login_tui(
         choices=_login_choices(),
         authenticate=attempt_login,
-        preselected=resolve_active_bucket_id(),
+        preselected=preselected,
     )
 
 
@@ -164,5 +212,6 @@ __all__ = [
     "attempt_login",
     "login_screen_is_available",
     "login_tui_is_the_right_frontend",
+    "preselected_profile_id",
     "present_login",
 ]

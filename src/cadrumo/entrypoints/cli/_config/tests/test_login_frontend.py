@@ -25,7 +25,12 @@ from typer.core import TyperCommand
 from .....core.config import override_settings
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import _headless_secret_channel_active
-from .._login_frontend import _login_choices, login_screen_is_available, login_tui_is_the_right_frontend
+from .._login_frontend import (
+    _login_choices,
+    login_screen_is_available,
+    login_tui_is_the_right_frontend,
+    preselected_profile_id,
+)
 from .._manager_frontend import host_can_run_full_screen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -34,7 +39,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 class _RoutingInputs(TypedDict):
     """The exact keyword set :func:`login_tui_is_the_right_frontend` accepts."""
 
-    named: bool
     secrets_stdin: bool
     headless_secret: bool
     json_format: bool
@@ -44,7 +48,6 @@ class _RoutingInputs(TypedDict):
 
 def _interactive_operator(
     *,
-    named: bool = False,
     secrets_stdin: bool = False,
     headless_secret: bool = False,
     json_format: bool = False,
@@ -53,14 +56,13 @@ def _interactive_operator(
 ) -> _RoutingInputs:
     """The one shape that gets a screen, with any single condition overridden.
 
-    Defaults describe a bare ``aeat config login`` typed at a capable terminal
+    Defaults describe an ``aeat config login`` typed at a capable terminal
     on a machine that has a profile to open. Overrides are named parameters
     rather than a ``str``-keyed merge, so a typo in a case below is a type
     error instead of a silently-ignored extra key that would leave the case
     asserting the untouched interactive shape and passing for the wrong reason.
     """
     return {
-        "named": named,
         "secrets_stdin": secrets_stdin,
         "headless_secret": headless_secret,
         "json_format": json_format,
@@ -69,15 +71,30 @@ def _interactive_operator(
     }
 
 
-def test_a_bare_interactive_login_on_a_capable_host_opens_the_screen() -> None:
+def test_an_interactive_login_on_a_capable_host_opens_the_screen() -> None:
     """The positive control: without this, every case below proves nothing."""
     assert login_tui_is_the_right_frontend(**_interactive_operator()) is True
+
+
+def test_naming_a_profile_is_not_a_routing_input_at_all() -> None:
+    """A named target must not be able to send ``login`` back to the prompt.
+
+    Asserted against the signature rather than by passing ``named=True``
+    and checking the answer: a re-added parameter with a default would
+    keep every other case here green while quietly restoring the routing
+    this rule exists to forbid, and a call-site assertion cannot see it.
+    The page is a chooser AND the password form, so naming a profile
+    answers half of it and preselects; it never discards the page.
+    """
+    import inspect
+
+    parameters = set(inspect.signature(login_tui_is_the_right_frontend).parameters)
+    assert "named" not in parameters, f"routing must not read a named target; takes {sorted(parameters)}"
 
 
 @pytest.mark.parametrize(
     "inputs",
     [
-        pytest.param(_interactive_operator(named=True), id="named"),
         pytest.param(_interactive_operator(secrets_stdin=True), id="secrets_stdin"),
         pytest.param(_interactive_operator(headless_secret=True), id="headless_secret"),
         pytest.param(_interactive_operator(json_format=True), id="json_format"),
@@ -151,7 +168,7 @@ def test_this_non_interactive_host_never_reaches_the_screen(tmp_path) -> None:
             assert host_can_run_full_screen() is False, "this host must genuinely be the non-interactive case"
 
             ctx = _context(output_format="text")
-            assert login_screen_is_available(ctx, name=None, secrets_stdin=False) is False
+            assert login_screen_is_available(ctx, secrets_stdin=False) is False
 
 
 def test_the_resolved_rule_reads_the_format_and_the_arguments(tmp_path) -> None:
@@ -161,12 +178,57 @@ def test_the_resolved_rule_reads_the_format_and_the_arguments(tmp_path) -> None:
     below cannot turn on the format or the arguments and asserting it
     would prove nothing — those conditions are proved against the pure
     rule. What IS proved here is the threading: each argument reaches the
-    predicate as itself, and neither a named profile nor a piped secret
-    makes the resolved call raise on the way.
+    predicate as itself, and a piped secret does not make the resolved
+    call raise on the way.
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _a_profile_exists()
-        assert login_screen_is_available(_context(output_format="json"), name=None, secrets_stdin=False) is False
+        assert login_screen_is_available(_context(output_format="json"), secrets_stdin=False) is False
         ctx = _context(output_format="text")
-        assert login_screen_is_available(ctx, name="Routing Subject", secrets_stdin=False) is False
-        assert login_screen_is_available(ctx, name=None, secrets_stdin=True) is False
+        assert login_screen_is_available(ctx, secrets_stdin=True) is False
+
+
+def test_an_unnamed_login_preselects_nothing_when_no_profile_is_active(tmp_path) -> None:
+    """With no active profile the page opens on its own first row.
+
+    ``_a_profile_exists`` logs out after registering, so there is no
+    active pointer to preselect. ``None`` is the honest answer, and the
+    screen's own fallback picks the first row from there.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _a_profile_exists()
+        assert preselected_profile_id(None) is None
+
+
+def test_a_named_login_preselects_that_profiles_row(tmp_path) -> None:
+    """A label resolves to the bucket id the chooser rows are keyed by.
+
+    Asserted against the id the live listing carries rather than a
+    literal, because a preselection the screen cannot match is silently
+    discarded in favour of its first row — the precise failure this
+    resolution exists to prevent, and one a hardcoded expectation could
+    not distinguish from success.
+    """
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _a_profile_exists()
+        (only_choice,) = _login_choices()
+        assert preselected_profile_id("Routing Subject") == only_choice.profile_id
+        assert preselected_profile_id(only_choice.profile_id) == only_choice.profile_id
+
+
+def test_an_unknown_named_login_is_refused_before_the_screen_opens(tmp_path) -> None:
+    """A mistyped target refuses rather than opening on somebody else.
+
+    The screen falls back to its first row for a preselection it does not
+    recognise, which is right for a stale pointer and wrong for something
+    the operator typed. A live profile exists here, so the fallback row
+    is available and would have been taken — which is what makes the
+    refusal meaningful rather than vacuous.
+    """
+    from .....domain.user_profile import ProfileNotFoundError
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _a_profile_exists()
+        assert len(_login_choices()) == 1, "a fallback row must exist for the refusal to be the reason"
+        with pytest.raises(ProfileNotFoundError):
+            preselected_profile_id("Routing Subjekt")

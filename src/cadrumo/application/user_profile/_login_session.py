@@ -300,7 +300,7 @@ def _persist_advanced_idle_deadline(
         zeroise(key_buffer)
 
 
-def _resolve_login_target(name: str) -> ProfileBucketPointer:
+def resolve_login_target(name: str) -> ProfileBucketPointer:
     """Resolve a ``login NAME`` target from an unambiguous UUID or exact label.
 
     Delegates to the workflow's one live-profile resolver. That authority
@@ -309,6 +309,13 @@ def _resolve_login_target(name: str) -> ProfileBucketPointer:
     buckets for both forms. A bare sandbox short name carries no
     ``sandbox:`` prefix, so it remains an unknown profile rather than being
     implicitly namespaced.
+
+    Public because the login SCREEN must resolve the same named target to
+    preselect its row, and must refuse an unknown one identically. Left
+    private, that arm would have had to re-derive the resolution — and a
+    second derivation is a second refusal wording and a second answer to
+    "is a bare sandbox name a profile?", for one question that has one
+    answer.
     """
     from ..workflow import resolve_profile_bucket
 
@@ -399,7 +406,7 @@ def login_profile(
 
     with active_profile_pointer_transaction() as pointer_transaction:
         selected = pointer_transaction.read()
-        target = _resolve_login_target(name) if name is not None else _resolve_selected_target(selected)
+        target = resolve_login_target(name) if name is not None else _resolve_selected_target(selected)
 
         closed_previous: str | None = None
         if selected is not None and selected.bucket_id != target.bucket_id:
