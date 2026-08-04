@@ -221,7 +221,14 @@ revision `9e96c02bab`, **98 matched sites of which 43 are pass-through**; of the
 9 sites on duck-typed method names, reading each cleared 6 as non-filesystem,
 giving **92 file-producing sites as an upper bound**. Every figure here belongs
 to that revision and is reproduced by re-running the tool, not by reading it back
-out of this paragraph. A primitive doing
+out of this paragraph.
+
+**The figure held at three independent revisions** — `611df3a67e`, `9e96c02bab`,
+and `800767930f` — byte-identical distributions across the taxonomy
+restructure that moved the declarations into their own module, the tracked corpus
+growing by a third, and the `BUCKET_DATABASE_FILE` prefix fix. Stability under
+change is stronger evidence than agreement at a single point: three readings of
+one unchanged tree would prove only that the tool is deterministic. A primitive doing
 `path.parent.mkdir()` on a path it was handed **has no enrollment answer of its
 own**; its answer is "wherever the caller said". Asking whether such a site is
 enrolled is not a question with a truth value, and nearly half the domain is in
@@ -344,6 +351,32 @@ corpus against a vocabulary derived live from `STORAGE_TAXONOMY`: **257 files an
 777 sites**, against the row's ~108 files and ~350 sites. Both figures belong in
 the record with their method beside them, because the row's number was an
 estimate and the measurement is reproducible.
+
+**Provisional: a fourth category may deflate that measurement substantially.**
+Of 94 `justificantes` hits, **69 are rooted at `FIXTURES_DIR`** — the repo's own
+test-corpus tree, declared as `_FIXTURES_ROOT / "justificantes"` in
+`adapters/inbound/justificante/tests/test_parser.py` and again in
+`test_corpus_sidecar_roundtrip.py`, verified at HEAD — and 25 more are synthetic
+`source_pdf_path` metadata values. That folder shares a word with the taxonomy
+category and nothing else.
+
+The mechanism is worth naming because it is the same one that produced the
+`blobs`/`blobs` anchor collision and the liveness gate's `SensitivityClass`
+collision in element 5b: **the scanner matches vocabulary against `/` operands
+without knowing which tree the root belongs to.** Three findings, one root cause —
+a name compared without its namespace.
+
+So beyond pin, migrate, and injected there is a fourth disposition: **different
+namespace, not in scope at all.** If that fraction generalises, 777 is an upper
+bound over a substantially non-storage corpus and the plan row's ~350 was closer
+to right than the measurement that appeared to overturn it — for a reason nobody
+had identified at the time.
+
+**Held as provisional deliberately.** One literal, and `secrets` behaved
+completely differently, so the fraction is not known to generalise. `rootpath` is
+testing it; a root-origin discriminator on the scanner would settle it. Until
+then 777 must not be carried as a scope figure — which is the same discipline as
+the census figures above, applied to a number that arrived from another lane.
 
 ### 6. Runtime census cross-check
 
@@ -549,6 +582,53 @@ resolved to the wrong object, here the object was a third of the corpus.
 **Untracked is worse than uncommitted.** A modified tracked file has a git
 object behind it and is recoverable. An untracked file has none — it is
 invisible to `git grep`, to every HEAD-anchored audit, and to recovery.
+
+**That distinction was then tested for real, on live code rather than on
+documents.** A revert loop matched every modified file under `entrypoints/cli/`
+instead of the twelve it intended, and overwrote peer work with HEAD content.
+**Six of eight files were recovered from dangling blobs via
+`git fsck --lost-found`; two were unrecoverable**, because their content had
+never reached the object store at all.
+
+That is the same hazard as the 36 untracked exec records, and it decided both
+outcomes by exactly the same rule: **reaching the object store at all is what
+made six recoveries possible and two impossible — and nothing in the workflow
+guarantees it.** A file that has been added, committed, or even staged once has
+a blob; one that has only ever existed in a working tree has nothing to recover
+from. The corpus survived by luck rather than by design, and so did six of those
+eight files.
+
+## A protection that was registered but never ran
+
+Recorded because the campaign's own coordinator held the wrong conclusion and
+measurement overturned it, which is the shape worth preserving rather than the
+outcome.
+
+**The claim** — accumulating isolated storage roots were designed 24-hour
+retention rather than leakage, and two lanes were told not to report them.
+**Measurement overturned it.** Every root was failing its own `atexit` cleanup on
+every run.
+
+**The mechanism, spelled out so the next reader does not rediscover it:**
+`atexit` handlers run **last-in-first-out**, and `logging.shutdown` is registered
+at `atexit` too. It therefore runs *after* the module's `rmtree`. The log handler
+still holds the file open, Windows refuses the unlink, and `ignore_errors=True`
+swallows the failure completely. Now fixed and verified by measurement rather
+than by inspection: **2207 roots before a fresh run, 2207 after — delta 0**,
+where every prior run leaked one.
+
+**Registration is not execution.** The hooks genuinely were registered, and
+verifying that is what made the wrong conclusion reasonable. Nobody checked
+whether the directories had actually disappeared, which is the only question that
+separates the two.
+
+This is the fourth protection in this campaign whose failure is indistinguishable
+from its success, and it is a **different mechanism from the other three** —
+not a measurement against the wrong object, not a selector broader than its
+concept, not a retained handle hiding a write from an instrument, but **a correct
+registration standing in for an uncompleted action.** The other three are errors
+of measurement; this one is an error of inference from a true observation, which
+is why checking harder in the same direction would never have caught it.
 
 ## Verdict
 
