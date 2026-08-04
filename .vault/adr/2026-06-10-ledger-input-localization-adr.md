@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#ledger-input-localization'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:8697c0d48e3fcded92ed57130eb331d95929a2a6c58f977b5eb2293e6ade4eac'
+modified: '2026-08-04'
+body_hash: 'sha256:7943192ac7711538085dfa08192dc805898f1e4e8a99d89858a1b9fc3528aa4f'
 related:
   - "[[2026-06-10-ledger-input-localization-research]]"
+  - '[[2026-08-04-decimal-notation-under-declaration-research]]'
 ---
 
 # `ledger-input-localization` adr: `Enforce canonical amount and date input with localised actionable rejection` | (**status:** `accepted`)
@@ -170,6 +171,91 @@ Pathways opened: a single owned amount/date validation surface that C4 (the
 invoice command) and any future manual entry command consume directly, ending
 the copy-paste-parser pattern.
 
+## Amendment 2026-08-04: one canonical home, two named contracts
+
+This ruling was right and is unchanged. What this amendment records is that it was
+enforced by caller discipline rather than by construction, and that caller discipline
+failed twice in two months on the exact input the Problem Statement above names.
+
+Measurements are in `2026-08-04-decimal-notation-under-declaration-research`.
+
+### What was found
+
+`--descendiente RENTAS=12.500` was read as twelve euros fifty: a silent factor-of-1000
+misread on a threshold field, in the claiming direction, because a bare `Decimal()` sat
+in a parser this ruling never reached.
+
+The canonical package already shipped the detector for it.
+`european_thousands_reading_is_ambiguous` returns `True` for `8.000`, `12.500` and
+`1.800`, and `False` for `8000`, `8.50` and `0.335`. Every strict parser in the same
+package accepted the ambiguous form anyway. The detector was exported as a separate
+thing a caller had to remember to call, so each caller could be individually right or
+individually wrong. That is the fragmentation this amendment closes.
+
+The `max_fraction_digits=2` workaround that partially masked it is not equivalent to
+the detector and never was. It refuses `0.335`, which is not ambiguous because a
+leading zero cannot be a thousands group, and it catches the Spanish shape only
+because a grouping happens to be three digits. Protection by side effect.
+
+### The two contracts
+
+**Strict operator input.** Ambiguity is REFUSED with a localised actionable message
+naming the accepted form. The operator is present and can retype. This is the original
+ruling, now enforced by construction: the strict parsers consult the detector, and
+`max_fraction_digits` reverts to meaning precision.
+
+**Extraction.** Ambiguity resolves to NO VALUE, not to a guess. The downstream confirm
+path treats a missing amount as a hard refusal naming the override flag, so the
+operator supplies the figure.
+
+This second contract is adopted from the shipped implementation rather than designed:
+`_evidence_draft_vision._grounded_decimal` already composes the detector exactly this
+way, and its reasoning is the record's. The convention in an extracted string is the
+SUPPLIER'S, not one the reader can infer; a Spanish supplier prints one thousand two
+hundred and thirty-four as `1.234`, and reading that as a decimal is a thousandfold
+light on a taxable base bound for Modelo 303/390.
+
+An earlier framing of this amendment had extraction resolve the ambiguity by Spanish
+convention on the grounds that guessing is the job when reading a printed page. That
+framing is recorded and NOT adopted, because it is wrong in the over-declaring
+direction for a dot-decimal supplier and because the shipped path already argued the
+point: a guessed figure is minted silently, a dropped one is asked for. Both contracts
+therefore refuse to guess; they differ only in whether the refusal is loud at the
+boundary or deferred to the confirm prompt.
+
+### Deliberately outside both contracts
+
+Rate extraction. An IVA rate of `21.000` is ambiguous by shape, but its thousands
+reading is impossible — there is no 21000% rate — so dropping it would refuse a value
+whose alternative cannot exist. `_evidence_draft._find_iva_rate` is left as it is and
+named here so the omission is a decision rather than an oversight.
+
+### The reload question, measured
+
+Composing the detector changes what an existing persisted value reloads as, so the
+shapes were scanned rather than reasoned about. The at-risk shape is one to three
+integer digits, no leading zero, exactly three decimals. No production site quantizes
+to three decimals, and every committed data file carrying such a token carries it as
+Spanish-formatted prose in a legal `notes` field or a `required_text` corpus matcher,
+never as a parsed amount. The residual is empty.
+
+One bound is not scannable and is accepted rather than closed: an operator who typed
+`12.500` into a percentage field in a developer bucket would have it stored as 12.5
+today and refused after this change. Under the pre-release compatibility regime there
+is no released data, so the exposure is developer buckets, whose sanctioned remedy is
+recreation rather than migration.
+
+### Enforcement
+
+The gate moves from scoping by layer to scoping by call site. A layer scope encodes an
+assumption about where operator input arrives, and that assumption is what let this
+defect through: the parser lived in `domain`, which the gate did not scan. A bare
+`Decimal(<str>)` outside the canonical home is the violation, in any layer.
+
+Left as a separate finding rather than carried here: `parse_descendiente_flag` is an
+operator-input parser living in `domain/contribuyente`. Gating on the call site makes
+the boundary robust without requiring it to move, and relocating an operator parser
+across a package boundary is a larger decision than this fix should compel.
 ## Codification candidates
 
 - **Rule slug:** `cli-manual-input-canonical-formats`.

@@ -78,14 +78,34 @@ def test_accepts_canonical_forms(raw: str, expected: Decimal) -> None:
     assert try_parse_canonical_decimal(raw) == expected
 
 
-@pytest.mark.parametrize("raw", ["2.345", "0.075", "1.00000"])
+@pytest.mark.parametrize("raw", ["0.075", "1.00000", "1234.567"])
 def test_uncapped_fraction_accepts_sub_cent_precision(raw: str) -> None:
     """Sub-cent precision conforms when no cap is set.
 
     The AEAT fixed-width encoder rounds a sub-cent value to cents with
     ``ROUND_HALF_UP``, so a calculation input channel must admit it.
+
+    ``2.345`` used to be one of these cases and is now refused, because it is
+    exactly the Spanish thousands shape -- two thousand three hundred and
+    forty-five -- and the parser no longer picks a reading. The cases here are
+    chosen to keep the sub-cent guarantee while carrying their own evidence: a
+    leading zero and a four-digit lead group cannot open a thousands run, and
+    five fraction digits are not a grouping.
     """
     assert try_parse_canonical_decimal(raw) == Decimal(raw)
+
+
+@pytest.mark.parametrize("raw", ["2.345", "8.000", "12.500", "100.000"])
+def test_sub_cent_precision_is_refused_when_the_token_is_ambiguous(raw: str) -> None:
+    """The narrow window where sub-cent precision is unavailable, named.
+
+    One to three integer digits with no leading zero and exactly three
+    fraction digits is indistinguishable from a Spanish thousands group, so it
+    refuses rather than resolving. This is a real cost of the ruling and it is
+    pinned here so it reads as a decision rather than a gap: a caller needing
+    2.345 supplies it as a Decimal, not as operator-typed text.
+    """
+    assert try_parse_canonical_decimal(raw) is None
 
 
 @pytest.mark.parametrize("raw", ["1.000", "2.345", "0.075", "1.00000"])

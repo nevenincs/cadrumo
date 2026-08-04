@@ -109,6 +109,19 @@ def try_parse_canonical_decimal(
         True
     """
     stripped = text.strip()
+    # Ambiguity is refused BY CONSTRUCTION, not by caller discipline. This
+    # module exported the predicate and the parser side by side and left it to
+    # each caller to remember to consult one before the other; two callers
+    # forgot, and one of them read an operator's 12.500 euros as twelve fifty
+    # on a threshold field. A parser that can detect the ambiguity and answers
+    # anyway is guessing at a thousandfold error.
+    #
+    # This is what ``max_fraction_digits=2`` was standing in for, badly: the cap
+    # caught the Spanish shape only because a grouping is always three digits,
+    # while also refusing 0.335, which is not ambiguous at all. With the check
+    # here, that parameter goes back to meaning precision.
+    if european_thousands_reading_is_ambiguous(stripped):
+        return None
     if _pattern(signed=signed, max_fraction_digits=max_fraction_digits).fullmatch(stripped) is None:
         return None
     try:
