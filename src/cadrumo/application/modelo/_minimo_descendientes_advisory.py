@@ -36,6 +36,7 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core import Modelo
+from ...core.decimal import coerce_decimal
 from ...domain.calculations.registry import CasillaId, ModeloRevision
 from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.user_profile import ProfileNotFoundError
@@ -375,10 +376,14 @@ def _stored_descendientes_count(bucket_id: str) -> Decimal | None:
         return None
     for fact in record.facts:
         if fact.path == _DESCENDANTS_COUNT_PATH and fact.value is not None:
-            try:
-                return Decimal(str(fact.value))
-            except (ArithmeticError, ValueError):
-                return None
+            # Tolerant coercion, not the strict grammar: this is an
+            # already-persisted profile fact whose text grammar the entry
+            # boundary owns, and the stored value is legitimately a Decimal as
+            # well as a string. Returning None on an unreadable value is the
+            # existing contract and coerce_decimal's own default, so the
+            # desync advisory stays silent rather than firing on a value it
+            # could not read -- an unreadable count is not evidence of drift.
+            return coerce_decimal(fact.value)
     return None
 
 
