@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
-body_hash: 'sha256:03f16f736d394744e00e7736b75ebce507c446cd8c5ccf7a070e85d289bba582'
+modified: '2026-08-04'
+body_hash: 'sha256:fba8b181fe99deb1e3f9784603246b389fe6de0c166fe6f315c3fb9adc0a59b9'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -217,8 +217,8 @@ Burns down the mechanically re-pointable literal corpus one test package at a ti
 
 Tests are not required to route their scratch and temp files through the taxonomy; the operator's own correction is that a test creating a file is not the same thing as a production site producing one. What tests owe instead is cleanup: nothing a test creates should survive the test. Measured empirically, not structurally, because a static read of test code cannot see what actually lands on disk: snapshot the repository tree and the platform user-data root before and after a full suite run, diff both, and treat any file that appears and does not disappear as a leak, whether it sits inside an isolated root or outside one entirely. Distinct from the closure criterion in the reference document and from the bulk test-migration phases W03.P14 through P16, which remain real drift-reduction work but are not on the closure path under the operator's sharpened definition.
 
-- [ ] `W03.P23.S84` - Run the commissioned test-cleanup census, snapshotting the repository tree and the platform user-data root before and after a full suite run and diffing both, classifying every surviving file as residue inside an isolated root or a leak outside one entirely, gated by the diff itself rather than by reading test source; `src/cadrumo/tests/`.
-- [ ] `W03.P23.S85` - Fix every leak and residue file the census finds, adding teardown where a test lacks it rather than widening an isolated root's lifetime to paper over the leak; `src/cadrumo/tests/`.
+- [x] `W03.P23.S84` - Run the commissioned test-cleanup census, snapshotting the repository tree and the platform user-data root before and after a full suite run and diffing both, classifying every surviving file as residue inside an isolated root or a leak outside one entirely, gated by the diff itself rather than by reading test source; `src/cadrumo/tests/`.
+- [x] `W03.P23.S85` - Fix every leak and residue file the census finds, adding teardown where a test lacks it rather than widening an isolated root's lifetime to paper over the leak; `src/cadrumo/tests/`.
 
 ## Wave `W04` - the config storage operator surface, dev tooling, and documentation
 
