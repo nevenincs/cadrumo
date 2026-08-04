@@ -15,14 +15,16 @@ entries only. The three blob-content grammars
 (``blob_manifest``, ``blob_content_plaintext``, ``blob_content_ciphertext``) anchor
 their ``<root>`` token at
 :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`'s own
-``root_dir`` instead -- a genuinely different coordinate system, with no
-``StorageCategory`` subpath declared relative to IT for this gate to compare
-against. An earlier version of this gate matched their literal ``blobs`` run
-against ``StorageCategory.BLOBS.subpath`` (also ``"blobs"``) and reported
-agreement -- but the two spellings only coincided by sharing a name; the gate was
-comparing two different anchors, not verifying one. See
-``StoragePathAnchor``'s own docstring for why the anchors differ (a real,
-separately-tracked production discrepancy, not merely a labelling gap).
+``root_dir`` instead -- a different coordinate system BY CONTRACT (whatever the
+two currently happen to resolve to in production), with no ``StorageCategory``
+subpath declared relative to IT for this gate to compare against. An earlier
+version of this gate matched their literal ``blobs`` run against
+``StorageCategory.BLOBS.subpath`` (also ``"blobs"``) and reported agreement --
+but the two spellings only coincided by sharing a name; the gate was comparing
+two different anchors, not verifying one. That risk is value-independent: even
+on a day both anchors resolve to the same directory, a check that conflates
+them still verifies nothing but a coincidental token match. See
+``StoragePathAnchor``'s own docstring for the full reasoning.
 
 ``config_reset_journal``'s ``reset-operations`` directory was the one
 pre-existing exception -- joined onto the raw storage root in
@@ -171,11 +173,11 @@ def test_a_blob_store_root_entrys_blobs_literal_would_falsely_agree_by_name_coll
     ``blob_content_plaintext``'s literal run ('blobs') coincidentally equals
     ``StorageCategory.BLOBS.subpath`` -- proving that checking it against the
     known-subpath set, as the main gate does for STORAGE_ROOT entries, would
-    have reported "agreement" here too. The two anchors are not the same
-    directory in production (see the module docstring and StoragePathAnchor),
-    so that agreement would have been coincidental, not verified -- which is
-    exactly why this key is excluded from the main gate rather than included
-    and passing.
+    have reported "agreement" here too. The two anchors are distinct BY
+    CONTRACT (see the module docstring and StoragePathAnchor) whatever they
+    currently happen to resolve to, so that agreement would have been
+    coincidental, not verified -- which is exactly why this key is excluded
+    from the main gate rather than included and passing.
     """
     definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("blob_content_plaintext")
     assert definition.anchor is StoragePathAnchor.BLOB_STORE_ROOT
@@ -185,3 +187,67 @@ def test_a_blob_store_root_entrys_blobs_literal_would_falsely_agree_by_name_coll
         "fixture assumption: 'blobs' must still coincidentally match BLOBS.subpath for this "
         "test to demonstrate the false-positive risk the anchor exclusion avoids"
     )
+
+
+_EXPECTED_RENDERED_GRAMMARS: Final[dict[str, str]] = {
+    "root_fallback_database": "<root>/cadrumo.db",
+    "bucket_root": "<root>/buckets/<bucket_id>/",
+    "bucket_db": "<root>/buckets/<bucket_id>/db/",
+    "bucket_database_file": "<root>/buckets/<bucket_id>/db/cadrumo.db",
+    "bucket_blobs": "<root>/buckets/<bucket_id>/blobs/",
+    "bucket_audit": "<root>/buckets/<bucket_id>/audit/",
+    "bucket_manifest": "<root>/buckets/<bucket_id>/manifest.toml",
+    "bucket_lock": "<root>/buckets/<bucket_id>/.lock",
+    "bucket_output_language_hint": "<root>/buckets/<bucket_id>/output-language.hint",
+    "keystore_bucket": "<root>/keystore/<bucket_id>/",
+    "bucket_dek": "<root>/keystore/<bucket_id>/bucket.dek.json",
+    "profile_session": "<root>/keystore/<bucket_id>/session.v1.json",
+    "login_throttle": "<root>/keystore/<bucket_id>/login-throttle.json",
+    "secret_index": "<root>/secrets/index.json",
+    "config_reset_journal": "<root>/reset-operations/<operation_id>.json",
+    "secure_objects_table": "db://secure_objects/<namespace>/<object_key>",
+    "blob_manifest": "<root>/blobs/<sha256[:2]>/<sha256>.manifest.json",
+    "blob_content_plaintext": "<root>/blobs/<sha256[:2]>/<sha256>",
+    "blob_content_ciphertext": "<root>/blobs/<sha256[:2]>/<sha256>.enc",
+    "local_provider_object": "<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.bin",
+    "local_provider_object_sidecar": ("<root>/buckets/<bucket_id>/blobs/<namespace>/<hmac_prefix>--<label>.meta.json"),
+    "run_trace": "<root>/runs/<run_id>/trace.json",
+    "run_events": "<root>/runs/<run_id>/events.jsonl",
+    "run_envelope": "<root>/runs/<run_id>/envelope.json",
+    "llm_usage_record": "<root>/llm-usage/usage-<timestamp>.jsonl",
+    "llm_run_telemetry_record": "<root>/llm-run-telemetry/run-telemetry-<timestamp>.jsonl",
+    "auth_acquisition_lock": "<root>/tokens/<bucket_id>-<auth_provider_kind>-auth.lock",
+    "validation_verdict_cache_entry": ("<root>/cache/registry-verdict/cadrumo_validation_verdict_<sha256[:16]>.json"),
+    "llm_cache_entry": "<root>/cache/llm-cache/<provider>/<model>/<sha256>-<sha256>.json",
+}
+"""One byte-exact expected string per :data:`STORAGE_PATH_DEFINITIONS` key.
+
+The directory-agreement gate above checks *membership*: every literal run a
+grammar spells must be SOME declared subpath. Measured directly against
+:func:`~cadrumo.tests.literal_directory_runs`, that check catches a
+DOUBLED segment (``bucket_database_file`` briefly interpolated
+``BUCKET_DB_DIRNAME`` twice, rendering ``<root>/buckets/<bucket_id>/db/db/cadrumo.db``;
+the collapsed run ``"db/db"`` matches no declared subpath, so the existing
+gate above already fails on it) -- but it cannot catch a DROPPED segment.
+Removing the same interpolated segment renders
+``<root>/buckets/<bucket_id>/cadrumo.db``: the run set shrinks from
+``("buckets", "db")`` to ``("buckets",)``, and ``"buckets"`` alone is still
+a real, declared subpath, so membership holds and the gate above reports
+nothing missing. A membership check can only see an EXTRA run that matches
+nothing; it is structurally blind to a run that silently stopped
+appearing. This test closes that gap with a full-string equality pin, so a
+dropped interpolation segment -- which produces zero unmatched tokens --
+still fails loudly here.
+"""
+
+
+def test_every_definitions_rendered_grammar_matches_its_pinned_string() -> None:
+    """Full-string pin, catching a dropped interpolation segment the membership gate cannot see."""
+    actual = {definition.key: definition.grammar for definition in STORAGE_NAMESPACE_REGISTRY.paths}
+    assert actual == _EXPECTED_RENDERED_GRAMMARS
+
+
+def test_the_pinned_grammar_map_covers_every_declared_key() -> None:
+    """Anti-rot: a new StoragePathDefinition must be added here, not silently pass by omission."""
+    actual_keys = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.paths}
+    assert actual_keys == set(_EXPECTED_RENDERED_GRAMMARS)

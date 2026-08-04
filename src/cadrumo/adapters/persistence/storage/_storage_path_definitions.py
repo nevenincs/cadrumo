@@ -98,8 +98,9 @@ class StoragePathDefinition(BaseModel):
     path has no ``<root>`` token to anchor). Declared rather than assumed
     uniform: the three blob-content entries anchor at
     :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`'s
-    own ``root_dir``, a genuinely distinct value from the storage root every
-    other entry means -- see :class:`StoragePathAnchor`.
+    own ``root_dir``, distinct BY CONTRACT from the storage root every other
+    entry means, whatever the two currently happen to resolve to
+    -- see :class:`StoragePathAnchor`.
     """
 
     @field_validator("key")

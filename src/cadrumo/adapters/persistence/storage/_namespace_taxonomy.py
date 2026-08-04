@@ -101,13 +101,20 @@ class StoragePathAnchor(StrEnum):
     (``blob_manifest``, ``blob_content_plaintext``, ``blob_content_ciphertext``)
     instead anchor ``<root>`` at
     :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`'s
-    own ``root_dir`` constructor parameter -- a genuinely distinct value from
-    the storage root in how production wires it today
-    (``cadrumo_blob_store_dir``, which is itself already the storage root's
-    ``blobs`` subdirectory). Conflating the two let a directory-agreement
-    gate certify a match between two different anchors that happened to
-    share a literal subdirectory name (``blobs``), rather than verifying
-    anything real.
+    own ``root_dir`` constructor parameter -- distinct BY CONTRACT from the
+    storage root, whatever the two currently happen to resolve to. Both
+    production call sites pass the plain storage root today
+    (``get_secret_store``, ``default_blob_store_roots``), so the two anchors
+    are presently coincident in value; that is current wiring, not the
+    ``EncryptedBlobStore`` contract, which still documents ``root_dir`` as
+    the caller-supplied parent of its own internal ``blobs/`` segment and
+    accepts any directory a caller constructs it with. The distinction this
+    member exists to preserve is value-independent: even where the two
+    anchors resolve identically, a check that conflates them is verifying a
+    coincidental token match, not a real agreement -- exactly what let an
+    earlier directory-agreement gate certify a match between two different
+    anchors that happened to share a literal subdirectory name (``blobs``)
+    rather than verifying anything real.
     """
 
     STORAGE_ROOT = "storage_root"
