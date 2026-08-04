@@ -15,8 +15,11 @@ See Also:
 from __future__ import annotations
 
 from .manager import (
+    CandidateClassification,
     CanonicalOccurrenceCandidate,
     CanonicalOccurrenceCandidates,
+    ClassifiedOccurrenceCandidate,
+    ClassifiedOccurrenceCandidates,
     CorpusFileFingerprint,
     CorpusFingerprint,
     MigrationInventoryError,
@@ -26,14 +29,18 @@ from .manager import (
     RevisionInventoryEntry,
     build_source_inventory,
     canonical_occurrence_key,
+    classify_canonical_occurrence_candidates,
     extract_resolved_localization_matrix,
     fingerprint_registry_corpus,
     generate_canonical_occurrence_candidates,
 )
 
 __all__ = [
+    "CandidateClassification",
     "CanonicalOccurrenceCandidate",
     "CanonicalOccurrenceCandidates",
+    "ClassifiedOccurrenceCandidate",
+    "ClassifiedOccurrenceCandidates",
     "CorpusFileFingerprint",
     "CorpusFingerprint",
     "MigrationInventoryError",
@@ -43,6 +50,7 @@ __all__ = [
     "RevisionInventoryEntry",
     "build_source_inventory",
     "canonical_occurrence_key",
+    "classify_canonical_occurrence_candidates",
     "extract_resolved_localization_matrix",
     "fingerprint_registry_corpus",
     "generate_canonical_occurrence_candidates",

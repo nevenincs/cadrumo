@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:2e8f493636ad70dd9d1334bb95487b2e5339e2c929702ceed918ed3002006400'
+body_hash: 'sha256:7c427695c38b21ed42be175deae8581d78e05b81dc51094e737e42feb22aab36'
 related:
   - "[[2026-08-04-modelo-localization-cascade-plan]]"
 ---
@@ -63,6 +63,14 @@ Locale remains a catalogue dimension on the candidate row, not part of the
 semantic key. Repeated ids, printed numbers, labels, and normalized text must
 not create provisional continuity identities; that decision belongs to the
 later classification step.
+
+S04 classification is structural triage, not semantic promotion. A declared
+continuity id is `grounded`; an ungrounded `casilla.id` seen in only one
+revision remains `revision_exact`; an ungrounded id repeated across revisions
+is `continuity_candidate` with a migration-only provisional group token. The
+candidate's S03 exact address remains unchanged in the last case. Values,
+labels, printed numbers, and normalized text cannot upgrade a candidate into a
+production continuity identity.
 
 The governing ADR requires Spanish to remain source-authoritative, forbids
 non-Spanish locale fallthrough, and keeps migration-only extraction on the old

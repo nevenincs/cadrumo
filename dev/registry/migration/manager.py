@@ -39,6 +39,8 @@ _SOURCE_INVENTORY_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.sour
 _RESOLVED_MATRIX_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.resolved-matrix.v1"
 _CANONICAL_CANDIDATE_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.canonical-candidate.v1"
 _CANONICAL_CANDIDATES_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.canonical-candidates.v1"
+_CLASSIFIED_CANDIDATE_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.classified-candidate.v1"
+_CLASSIFIED_CANDIDATES_SCHEMA: Final[str] = "cadrumo.modelo-localization-cascade.classified-candidates.v1"
 _CORPUS_SCOPE: Final[str] = "registry/aeat/**/*.toml"
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 
@@ -47,6 +49,7 @@ RevisionSourceLayout = Literal["inline", "revision_file", "fragment_directory"]
 LocalizationField = Literal["label", "help"]
 LocalizationResolution = Literal["localized", "official_spanish", "absent"]
 CanonicalOccurrenceScope = Literal["continuity", "revision_occurrence"]
+CandidateClassification = Literal["grounded", "revision_exact", "continuity_candidate"]
 
 _SUPPORTED_LOCALES: Final[tuple[str, ...]] = tuple(language.value for language in OutputLanguage)
 _LOCALIZATION_FIELDS: Final[tuple[LocalizationField, ...]] = ("label", "help")
@@ -409,6 +412,74 @@ class CanonicalOccurrenceCandidates(_StrictRecord):
         return self
 
 
+class ClassifiedOccurrenceCandidate(_StrictRecord):
+    """One S03 candidate with a structural migration-only classification."""
+
+    schema_id: str = _CLASSIFIED_CANDIDATE_SCHEMA
+    candidate: CanonicalOccurrenceCandidate
+    classification: CandidateClassification
+    provisional_candidate_id: str | None = None
+
+    @model_validator(mode="after")
+    def _validate_classification(self) -> ClassifiedOccurrenceCandidate:
+        """Refuse classifications that disagree with declared continuity."""
+        if self.schema_id != _CLASSIFIED_CANDIDATE_SCHEMA:
+            raise ValueError(f"unsupported classified candidate schema {self.schema_id!r}")
+        has_continuity = self.candidate.continuidad_id is not None
+        if has_continuity and self.classification != "grounded":
+            raise ValueError("declared continuidad_id candidates must be grounded")
+        if not has_continuity and self.classification == "grounded":
+            raise ValueError("ungrounded candidates must not be classified as grounded")
+        if self.classification == "continuity_candidate":
+            expected_id = _provisional_candidate_id(self.candidate)
+            if self.provisional_candidate_id != expected_id:
+                raise ValueError("continuity_candidate must carry its migration-only provisional group id")
+        elif self.provisional_candidate_id is not None:
+            raise ValueError("only continuity_candidate rows may carry a provisional group id")
+        return self
+
+
+class ClassifiedOccurrenceCandidates(_StrictRecord):
+    """Deterministic structural classification of one canonical candidate set."""
+
+    schema_id: str = _CLASSIFIED_CANDIDATES_SCHEMA
+    corpus_fingerprint: CorpusFingerprint
+    candidate_count: int = Field(ge=0)
+    grounded_count: int = Field(ge=0)
+    revision_exact_count: int = Field(ge=0)
+    continuity_candidate_count: int = Field(ge=0)
+    continuity_candidate_group_count: int = Field(ge=0)
+    candidates: tuple[ClassifiedOccurrenceCandidate, ...]
+
+    @model_validator(mode="after")
+    def _validate_classified_candidates(self) -> ClassifiedOccurrenceCandidates:
+        """Reject reordered rows or classification counter drift."""
+        if self.schema_id != _CLASSIFIED_CANDIDATES_SCHEMA:
+            raise ValueError(f"unsupported classified candidate set schema {self.schema_id!r}")
+        candidate_keys = tuple(_canonical_candidate_sort_key(item.candidate) for item in self.candidates)
+        if candidate_keys != tuple(sorted(candidate_keys)) or len(candidate_keys) != len(set(candidate_keys)):
+            raise ValueError("classified candidates must be unique and sorted by source coordinate")
+        if self.candidate_count != len(self.candidates):
+            raise ValueError("candidate_count does not match classified candidates")
+        grounded_count = sum(item.classification == "grounded" for item in self.candidates)
+        revision_exact_count = sum(item.classification == "revision_exact" for item in self.candidates)
+        continuity_candidate_count = sum(item.classification == "continuity_candidate" for item in self.candidates)
+        continuity_groups = {
+            item.provisional_candidate_id for item in self.candidates if item.classification == "continuity_candidate"
+        }
+        if self.grounded_count != grounded_count:
+            raise ValueError("grounded_count does not match classifications")
+        if self.revision_exact_count != revision_exact_count:
+            raise ValueError("revision_exact_count does not match classifications")
+        if self.continuity_candidate_count != continuity_candidate_count:
+            raise ValueError("continuity_candidate_count does not match classifications")
+        if self.continuity_candidate_group_count != len(continuity_groups):
+            raise ValueError("continuity_candidate_group_count does not match provisional groups")
+        if self.candidate_count != grounded_count + revision_exact_count + continuity_candidate_count:
+            raise ValueError("classification counts do not partition candidates")
+        return self
+
+
 def _validate_relative_path(value: str) -> str:
     """Return ``value`` when it is a canonical POSIX relative path."""
     parsed = PurePosixPath(value)
@@ -663,6 +734,13 @@ def _canonical_candidate_sort_key(candidate: CanonicalOccurrenceCandidate) -> tu
     )
 
 
+def _provisional_candidate_id(candidate: CanonicalOccurrenceCandidate) -> str:
+    """Build a migration-only grouping token without creating continuity identity."""
+    return _validate_canonical_key_path(
+        f"candidate/{candidate.modelo_id}/casilla/{candidate.casilla_id}",
+    )
+
+
 def _resolved_entries_for_casilla(
     *,
     modelo_id: str,
@@ -855,9 +933,61 @@ def generate_canonical_occurrence_candidates(
     )
 
 
+def classify_canonical_occurrence_candidates(
+    candidates: CanonicalOccurrenceCandidates,
+) -> ClassifiedOccurrenceCandidates:
+    """Classify candidates structurally without promoting provisional identity.
+
+    A declared continuity id is grounded. An ungrounded casilla id that occurs
+    in one revision remains revision-exact. An ungrounded id repeated across
+    revisions receives a migration-only provisional grouping token and remains
+    an unresolved continuity candidate. No value, label, printed number, or
+    normalized text participates in this decision.
+    """
+    revisions_by_group: dict[tuple[str, str], set[str]] = {}
+    for item in candidates.candidates:
+        if item.continuidad_id is None:
+            revisions_by_group.setdefault((item.modelo_id, item.casilla_id), set()).add(item.revision_id)
+
+    classified: list[ClassifiedOccurrenceCandidate] = []
+    for item in candidates.candidates:
+        if item.continuidad_id is not None:
+            classification: CandidateClassification = "grounded"
+            provisional_id = None
+        elif len(revisions_by_group[(item.modelo_id, item.casilla_id)]) > 1:
+            classification = "continuity_candidate"
+            provisional_id = _provisional_candidate_id(item)
+        else:
+            classification = "revision_exact"
+            provisional_id = None
+        classified.append(
+            ClassifiedOccurrenceCandidate(
+                candidate=item,
+                classification=classification,
+                provisional_candidate_id=provisional_id,
+            ),
+        )
+
+    frozen = tuple(sorted(classified, key=lambda item: _canonical_candidate_sort_key(item.candidate)))
+    return ClassifiedOccurrenceCandidates(
+        corpus_fingerprint=candidates.corpus_fingerprint,
+        candidate_count=len(frozen),
+        grounded_count=sum(item.classification == "grounded" for item in frozen),
+        revision_exact_count=sum(item.classification == "revision_exact" for item in frozen),
+        continuity_candidate_count=sum(item.classification == "continuity_candidate" for item in frozen),
+        continuity_candidate_group_count=len(
+            {item.provisional_candidate_id for item in frozen if item.classification == "continuity_candidate"},
+        ),
+        candidates=frozen,
+    )
+
+
 __all__ = [
+    "CandidateClassification",
     "CanonicalOccurrenceCandidate",
     "CanonicalOccurrenceCandidates",
+    "ClassifiedOccurrenceCandidate",
+    "ClassifiedOccurrenceCandidates",
     "CorpusFileFingerprint",
     "CorpusFingerprint",
     "MigrationInventoryError",
@@ -867,6 +997,7 @@ __all__ = [
     "RevisionInventoryEntry",
     "build_source_inventory",
     "canonical_occurrence_key",
+    "classify_canonical_occurrence_candidates",
     "extract_resolved_localization_matrix",
     "fingerprint_registry_corpus",
     "generate_canonical_occurrence_candidates",
