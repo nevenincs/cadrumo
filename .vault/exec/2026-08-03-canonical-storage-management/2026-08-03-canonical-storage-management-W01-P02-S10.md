@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:ea792f4a7748ee04f613326c278a87f6dcccb04208fa62ba950515de332e51ef'
+body_hash: 'sha256:82b5d633c6e91d0a604f6c3543d50cbee37bddae56c961d8bf41c298dd28e64b'
 step_id: 'S10'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"

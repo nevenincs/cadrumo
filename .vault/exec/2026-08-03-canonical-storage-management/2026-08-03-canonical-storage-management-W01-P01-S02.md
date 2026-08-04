@@ -5,44 +5,11 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:1eb84b3afc07e1561b60574d75b96c198fcd4957d1f9359cb79c0175be816d76'
+body_hash: 'sha256:0f4b03bce015dc630d29ebae91c5a2a4e9a358b84bd4741ecb975b2978786e66'
 step_id: 'S02'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S02 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Declare ExternalPathRole as a StrEnum carrying the four escape roles plus OPERATOR_DIRECTED_OUTPUT, gated by a test asserting the five members and rejecting an undeclared role string and ## Scope
-
-- `src/cadrumo/core/_storage_taxonomy.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Declare ExternalPathRole as a StrEnum carrying the four escape roles plus OPERATOR_DIRECTED_OUTPUT, gated by a test asserting the five members and rejecting an undeclared role string
 
@@ -52,10 +19,10 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Declare `ExternalPathRole` as a StrEnum carrying five members: the four escape roles plus `OPERATOR_DIRECTED_OUTPUT`.
 
 ## Outcome
 
-## Notes
+Landed in commit `08c61859c0`, already carrying all five members at first landing — `OPERATOR_DIRECTED_OUTPUT` (ADR R17's correction on re-checking R6's escape test against a real field) was not a later follow-up commit; the correction evidently happened before this commit was authored, not after. Gated by `test_external_path_role_carries_the_five_escape_roles` and `test_an_undeclared_escape_role_is_not_a_member`.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+## Notes

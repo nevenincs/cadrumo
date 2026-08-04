@@ -5,44 +5,11 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:525e11bc20d7fdf5d0b03925a018b9d9819c7e2a3ebd9d5c4d0bdd6711cb39ed'
+body_hash: 'sha256:7a31dab1ec8f845aeed9bfb46ed4fff0e8eb2aae2c8ce54bef69ff54145e100d'
 step_id: 'S103'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S103 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Run the commissioned runtime write census, instrumenting the actual write primitives for a full suite run and recording every real destination, cross-checking the static census against what code paths the suite actually exercises and ## Scope
-
-- `src/cadrumo/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Run the commissioned runtime write census, instrumenting the actual write primitives for a full suite run and recording every real destination, cross-checking the static census against what code paths the suite actually exercises
 

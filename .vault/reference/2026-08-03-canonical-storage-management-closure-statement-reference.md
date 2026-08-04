@@ -216,9 +216,12 @@ members cannot see an *un*enrolled site. Recomputable at any revision by
 restated here as a bare number, because a count in prose has no maintainer and
 this corpus has already lost two to that.
 
-**Evidence**: classified by where the written path comes from, roughly
-**44 of the sites are pass-through** — the path arrives as a caller argument or
-as a `self` attribute set by a constructor. A primitive doing
+**Evidence**: classified by where the written path comes from. Measured at
+revision `9e96c02bab`, **98 matched sites of which 43 are pass-through**; of the
+9 sites on duck-typed method names, reading each cleared 6 as non-filesystem,
+giving **92 file-producing sites as an upper bound**. Every figure here belongs
+to that revision and is reproduced by re-running the tool, not by reading it back
+out of this paragraph. A primitive doing
 `path.parent.mkdir()` on a path it was handed **has no enrollment answer of its
 own**; its answer is "wherever the caller said". Asking whether such a site is
 enrolled is not a question with a truth value, and nearly half the domain is in
@@ -259,9 +262,88 @@ expressions.
 performs unbounded real writes, and duck-typed method names that no static pass
 can separate from their filesystem namesakes without type inference.
 
+**And one of the two instruments accepts a coincidence** — see element 5b. The
+liveness gate's evidence test matches a bare attribute name without qualifying
+its owner, so a claim can pass on a reference to an unrelated enum. That does
+not weaken the "by either instrument" qualifier in the verdict; it is what makes
+that qualifier load-bearing.
+
 **What would make this "no"**: recording the union as though it were a proof.
 It is two partial covers whose overlap is unmeasured; that is materially better
 than either alone and materially weaker than completeness.
+
+### 5b. The liveness gate passes on a name collision — instance fixed, mechanism unchanged
+
+**STATUS: instance closed, class open.** `StorageCategory.AUDIT`'s consumer
+claim was satisfied by **14 references to `SensitivityClass.AUDIT`** — an
+unrelated encryption-sensitivity enum — and **zero** references to the storage
+category. The category is genuinely live, so the claim was **true,
+mis-attributed, and passing for the wrong reason**: the most expensive shape a
+gate can have, because nothing about it looks wrong.
+
+**Verified at HEAD**, not taken on report. The `AUDIT` member's claim is
+re-pointed and carries an inline note recording the collision. But
+`consumption_evidence` still matches
+`isinstance(node, ast.Attribute) and node.attr in names` with **no qualification
+of the attribute's owner**, and `_claim_names` still reduces a member to the bare
+tokens `{category.name, settings_field}`. So the specific claim is corrected and
+**the mechanism that admitted it is not**: any member whose name collides with an
+attribute of an unrelated type in its claimed module would pass the same way.
+
+**What would close the class**: require the owner, not just the token — evidence
+must be `StorageCategory.<NAME>` or the bound settings field, never a bare
+`<NAME>`. Until then the residual is every member whose name is a plausible
+attribute elsewhere, and that set has not been enumerated.
+
+**Why it belongs in a closure statement**: this is the same defect as the
+`blobs`/`blobs` anchor collision — two spellings agreeing because they share a
+name rather than because they name the same thing — now found in a *gate* rather
+than in a declaration. A campaign closing on "two instruments agree" must record
+that one of them can agree by coincidence.
+
+### 5c. The canonical authority re-typed its own declaration
+
+**STATUS: closed**, commit `b7334e6ee2`, audit entry `9782459683`.
+
+`BUCKET_DATABASE_FILE` hardcoded the `db/` prefix that `BUCKET_DATABASE.subpath`
+already owned, so renaming the directory would have silently orphaned the file
+member nested inside it. Mutation-proven — 13 errors before the fix, both members
+moving together after. Verified at HEAD: the member now composes
+`f"{_BUCKET_DATABASE_DIRNAME}/{_PRODUCT_DATABASE_FILENAME}"` from a name declared
+once.
+
+Worth stating plainly rather than filing as one more fix: **this is the
+campaign's defining defect — a name re-typed instead of read from its
+declaration — found inside the canonical authority the campaign built to end
+it.** A closure statement that omits it would imply the authority was exempt from
+the problem it solves.
+
+### 5d. A third literal category: the test-side pass-through
+
+**STATUS: open, treatment known.** `S78`'s migrate-or-pin split does not cover a
+third shape. A test writing
+`FileFallbackMasterKeyProvider(store_dir=tmp_path / "secrets")` **supplies the
+path itself**; the string `"secrets"` is arbitrary scratch naming that collides
+with taxonomy vocabulary by coincidence. It is neither a literal to migrate onto
+the taxonomy nor one to pin against it.
+
+**This is the test-side `pass_through`** — the same "no enrollment answer of its
+own" that element 5 establishes for roughly half of production write sites,
+rediscovered independently in the test corpus by a lane that had not read that
+measurement. Independent rediscovery in a different corpus is what makes it a
+property of the shape rather than an artefact of production code, and it
+strengthens element 5's central claim rather than complicating it: **the
+pass-through class recurs wherever a caller supplies the path.**
+
+**Treatment**: rename to a word outside the vocabulary, precedented by `S55`'s
+`probe-cert-store`. The path is the test's own scratch space, so any name works
+and a non-colliding one stops it reading as an ungoverned literal forever.
+
+**`S78`'s scope was also 2.5× its plan row** — measured by AST over the test
+corpus against a vocabulary derived live from `STORAGE_TAXONOMY`: **257 files and
+777 sites**, against the row's ~108 files and ~350 sites. Both figures belong in
+the record with their method beside them, because the row's number was an
+estimate and the measurement is reproducible.
 
 ### 6. Runtime census cross-check
 

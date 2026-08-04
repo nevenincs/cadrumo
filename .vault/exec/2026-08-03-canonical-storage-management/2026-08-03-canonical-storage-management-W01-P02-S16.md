@@ -5,44 +5,11 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:7999b5d2cff11aeb0315ef7f4bf9463d8eda8b5168a896a58e814301e351e697'
+body_hash: 'sha256:3bea710712ca3c4f434935cbf7c634956a1c73d9a1398c0c56fd484b927374b0'
 step_id: 'S16'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S16 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add the missing root permission-bits test asserting the mode after ensure_storage_tree, with a positive control proving the assertion fails when the hardening is removed and ## Scope
-
-- `src/cadrumo/core/tests/test_ensure_storage_tree.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Add the missing root permission-bits test asserting the mode after ensure_storage_tree, with a positive control proving the assertion fails when the hardening is removed
 
@@ -52,10 +19,12 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Add the missing root permission-bits test asserting the mode after `ensure_storage_tree`, with a positive control proving the assertion fails when the hardening is removed.
 
 ## Outcome
 
+Landed in commit `ceaee35e78` as `test_the_root_is_restricted_to_its_owner` (genuinely new — confirmed absent before this commit), asserting `stat.S_IMODE(root.stat().st_mode) == 0o700` with a positive control (`root.chmod(0o755)` then re-asserting the mode differs, guarding against a platform that accepts `chmod` without applying it).
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Code and gate exist, but per W05.P21.S81 this test's assertions have not yet actually executed on a real POSIX host — that verification remains separately open and is not a gap in this Step.

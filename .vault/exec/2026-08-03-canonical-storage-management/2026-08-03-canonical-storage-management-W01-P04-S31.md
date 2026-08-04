@@ -5,44 +5,11 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:310c3ef76007be7745a04b36d177dd1b928f77897e69bb8d487d115acfa4ea41'
+body_hash: 'sha256:b624e69d07c448287fe44e13e309434bdfab4c03b1bd5340cb358a24fec3f18e'
 step_id: 'S31'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S31 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add trash_rename_and_remove in the bucket package beside the provisioning primitive, taking an explicit trash-cleanup error policy, gated by a test covering both the rename-succeeds and rename-fails branches and ## Scope
-
-- `src/cadrumo/adapters/persistence/storage/bucket/_layout.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Add trash_rename_and_remove in the bucket package beside the provisioning primitive, taking an explicit trash-cleanup error policy, gated by a test covering both the rename-succeeds and rename-fails branches
 
@@ -52,10 +19,12 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Add `trash_rename_and_remove(target, on_trash_cleanup_error=...)` beside `provision_bucket_directory` in `_layout.py`, taking an explicit trash-cleanup error policy (raise vs. ignore).
 
 ## Outcome
 
+Landed in commit `d5fb3f802f`. Gated by a real held-open-file-handle reproduction (not a mock) at the primitive level, covering both the rename-succeeds and rename-fails branches, proven by mutation (flipping either call site's policy argument reddens its dedicated test).
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+This Step's checkbox was set in the prior reconciliation pass (commit `bb18425074`, "33 of 64") before the primitive existed — `d5fb3f802f` is the only commit in this history that ever defines `trash_rename_and_remove`. The exec record was scaffolded but left empty at that time. Recorded here for honesty; the Step is now genuinely satisfied.

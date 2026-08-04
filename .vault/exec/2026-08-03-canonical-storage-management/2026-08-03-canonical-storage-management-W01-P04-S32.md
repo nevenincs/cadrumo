@@ -5,44 +5,11 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:c457143ca07558553f6445b51bd542104cbe575fd540395ec223c50130d6115c'
+body_hash: 'sha256:52f21e9f20464d8f50269ee9e0dbf37dc0281093fa625f917b5d7ef438900090'
 step_id: 'S32'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S32 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rewrite remove_profile_bucket_directory as a caller of the shared trash-rename primitive passing the ignore policy, gated by the existing profile-deletion suite and ## Scope
-
-- `src/cadrumo/application/user_profile/_orchestration.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Rewrite remove_profile_bucket_directory as a caller of the shared trash-rename primitive passing the ignore policy, gated by the existing profile-deletion suite
 
@@ -52,10 +19,12 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Rewrite `remove_profile_bucket_directory` (`_orchestration.py`) as a caller of `trash_rename_and_remove`, passing the `ignore` cleanup policy explicitly (leftover trash litter from an ordinary delete is tolerable), still surfacing a genuine failure as a `UserProfileError` via its own `target.exists()` check rather than a raw `OSError`.
 
 ## Outcome
 
+Landed in commit `d5fb3f802f`.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+Same premature-checkbox history as S31; see that record.

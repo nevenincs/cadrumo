@@ -5,7 +5,7 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:20747819f32f93986c141a26be181c98f479dfab3bbc0610f4b7a4ea73b34664'
+body_hash: 'sha256:b29c7bcd55e9869bcf6405cbcccc527a97bb06ea37e5ac4539c3d073fd0b2e9d'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-plan]]'
@@ -224,8 +224,6 @@ amendment is correct and is the closing state of this item.
 
 The original finding text follows, unedited, so the record shows what was claimed
 and how it failed.
-
-
 
 Ruling `R16` in the ADR states the excluded set "settled at nine excluded
 members, not eight and not merely the old eight plus `cache/registry`", verified

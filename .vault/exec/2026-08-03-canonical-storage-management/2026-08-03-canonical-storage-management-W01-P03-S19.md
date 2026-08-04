@@ -5,44 +5,11 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:cf378bb32d6048e649d3dd23423ba75afdacf5731bbadba450276f6a935b18f5'
+body_hash: 'sha256:f9410b9f1b33ed72393a6cf1e04ea659b5f69ad58490227576c4d87589ceb4c3'
 step_id: 'S19'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S19 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Rewrite the namespace registry's filesystem-name constants as consumers of the core taxonomy while leaving the secure-object namespace definitions untouched, gated by a test asserting each constant equals its taxonomy member value and ## Scope
-
-- `src/cadrumo/adapters/persistence/storage/_namespace_registry.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Rewrite the namespace registry's filesystem-name constants as consumers of the core taxonomy while leaving the secure-object namespace definitions untouched, gated by a test asserting each constant equals its taxonomy member value
 
@@ -52,10 +19,10 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Rewrite the namespace registry's filesystem-name constants as consumers of the core taxonomy, leaving the secure-object namespace definitions untouched.
 
 ## Outcome
 
-## Notes
+Landed in commit `8abb148218` ("make the namespace registry a consumer of the core taxonomy"). All 11 constants in `_namespace_registry.py` rewritten as `storage_location(StorageCategory.X).subpath` calls; the `SECURE_OBJECT_*` namespace keys confirmed untouched per ADR R10's explicit carve-out, and the import direction (`adapters` → `core`) is the legal one. Gated by new `test_namespace_registry_taxonomy_consumer.py`, an AST-walk asserting every constant equals its taxonomy member's subpath in both directions.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+## Notes

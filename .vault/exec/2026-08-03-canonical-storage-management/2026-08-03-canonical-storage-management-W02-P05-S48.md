@@ -5,44 +5,11 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:5168b2d66361b283a1079dc3990b531834f862110eef573a86da718a70e0f326'
+body_hash: 'sha256:e0214524bc10634c600d17c1202f64a5033e002512c4f2e0aa54933e62e7b381'
 step_id: 'S48'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S48 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Widen the path-typed field selector from name suffix to annotation so no path-valued setting can hide behind an inconvenient name, gated by a test asserting the selector now returns the LibreOffice field and ## Scope
-
-- `src/cadrumo/core/config.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Widen the path-typed field selector from name suffix to annotation so no path-valued setting can hide behind an inconvenient name, gated by a test asserting the selector now returns the LibreOffice field
 
@@ -52,10 +19,10 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Widen the path-typed field selector from name suffix to annotation so no path-valued setting can hide behind an inconvenient name.
 
 ## Outcome
 
-## Notes
+Landed in commit `3ee34dc721` ("give every path setting a declared home, or name it"). Verified at committed HEAD: `path_typed_settings_fields` (relocated to `core/tests/_settings_path_fields.py` by the later W03.P11 lifecycle-gate rewrite) selects via `annotation_mentions_path`, checking whether the field's type annotation admits `Path` (including `Path | None`), not the field name.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+## Notes

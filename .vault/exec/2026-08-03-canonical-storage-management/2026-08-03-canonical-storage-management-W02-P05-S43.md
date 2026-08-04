@@ -5,44 +5,11 @@ tags:
 date: '2026-08-03'
 modified: '2026-08-03'
 body_schema: 'body-v1'
-body_hash: 'sha256:9890eeb6bf4a64f0f7c19d09a50652638646cb4bb0cadb7d7e1b0aa7e612881a'
+body_hash: 'sha256:5e13ebc40bc29ba58177c79948960ecead1727fbe88eec3a57b354fa520595b2'
 step_id: 'S43'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S43 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add an MCP session-telemetry category member and delete the module-local telemetry directory constant, gated by a test asserting the telemetry directory resolves through the accessor under an overridden root and ## Scope
-
-- `src/cadrumo/entrypoints/mcp/_telemetry.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Add an MCP session-telemetry category member and delete the module-local telemetry directory constant, gated by a test asserting the telemetry directory resolves through the accessor under an overridden root
 
@@ -52,10 +19,10 @@ related:
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Add an MCP session-telemetry category member and delete the module-local telemetry directory constant.
 
 ## Outcome
 
-## Notes
+Landed in commit `b062897f8e` ("retire the last module-local storage locations"), the same commit as S42 (corpus-search). Commit message: the bare `"telemetry"` literal and its own `mkdir` workaround are replaced by a declared member with a field; the override resolves and the materialiser builds it. The MCP process keeps its own creation call deliberately — not a workaround, but because the directory is suppressed mid-session and the MCP executable never runs the CLI startup that builds the tree.
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+## Notes
