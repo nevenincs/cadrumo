@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:2c590196e1d79aa0b06a17396263b70f078e7c882b2331c0b9db2be452090d9d'
+body_hash: 'sha256:0ecfc82fa7c317bc0518d42dea56f797276c636da2b6cc59c7243c6374010d6d'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
@@ -90,9 +90,41 @@ different method than it specifies is either a *recorded narrowing* or an
 *unrecorded substitution*. Only the exec record distinguishes those, which is the
 shape already established for `S114`.
 
-*An independent read of the enumeration-method column of every band report is in
-flight with a second auditor; this finding rests on the plan text alone, which is
-verifiable without it.*
+**The independent read has returned and it confirms the divergence on every
+axis.** A second auditor, reading only what exists in `.vault/exec/`, found: every
+band's enumeration was a **raw literal grep** (`git grep -n '"<literal>"'` filtered
+to test paths after the fact), never an AST path-composition scan, never a package
+walk; **no band ran the Step's specified gate** — verification was `ruff check` plus
+`pytest` over *the specific files edited*, and the provenance gate appears in the
+one exec record only as a file being classified, never as a check invoked; and
+there is **no record of a package-by-package walk anywhere in the feature**, the
+only textual match being that exec record's own heading, which restates the Step's
+title verbatim.
+
+The single exec record under `W03.P16` covers a ten-file `cadrumo.db` batch and
+describes its inputs as *"pre-identified"* — so even for the one band that reached
+the vault, the enumeration method is **NOT STATED**; the record documents what was
+done with a handed-off list, not how the list was produced.
+
+### most-of-the-s78-work-never-reached-the-vault | high | The durable ledger is one exec record; the rest exists only in the relay chain
+
+The second auditor's sharpest result was about its own work: **none of the band
+sweeps it performed has a `.vault/exec/` record at all.** They exist as
+SendMessage reports and task descriptions — the relay chain — not as durable
+artefacts.
+
+This directly refutes *"the ledger is complete"* as a closure argument, in the only
+sense that matters for a closure decision. It is complete as a **conversation** and
+nearly absent as a **record**: one exec record for a corpus of ten-plus bands. A
+reader inheriting this campaign next month has the plan, this audit, the closure
+statement, and a single ten-file exec record.
+
+**And it makes the method-divergence question partly unanswerable from the vault
+alone** — which is a second-order instance of the same failure. The `5h` finding
+is that four of six dispositions leave no trace *in the tree*. This is the
+same shape one level out: **most of the classification work left no trace in the
+vault either.** The tree cannot answer whether `S78` is complete, and now neither
+can the record, because the record largely does not exist.
 
 ### the-scope-field-and-the-denominator-describe-different-populations | medium | The Step names a scope one-tenth the size of its own stated denominator
 
@@ -176,6 +208,16 @@ that states the narrowing, names the method substitution in finding 2, and carri
 the residual counts. A Step closed on a narrower claim with the narrowing recorded
 is a decision; the same close without the record is indistinguishable from
 abandonment.
+
+**Before any close, write the exec records.** Finding 6 is the cheapest and most
+valuable remaining action in the campaign and it does not depend on resolving any
+of the others: the band sweeps that exist only in the relay chain should be
+recorded, each naming its enumeration method (literal grep), its verification
+(`ruff` plus `pytest` over the edited files), and its site list. That is a
+transcription task, not an investigation. Without it, a close of any width rests
+on a ledger a future reader cannot open — and the relay chain is the least durable
+artefact this campaign produced, as four expired-premise incidents in a single
+thread demonstrated.
 
 **Two cheap measurements would change this assessment, and both should precede a
 close on the broad reading:** resolve which population the residual sample drew
