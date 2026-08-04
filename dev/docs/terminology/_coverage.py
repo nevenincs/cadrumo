@@ -81,8 +81,8 @@ _LEGAL_RECORD_ID_PREFIX: Final[str] = "legal:"
 class CoverageKind(StrEnum):
     """The four enumerable target surfaces a coverage report measures.
 
-    ``legal`` is a distinct coverage axis even though a legal target serialises
-    into the unified index as a ``page``-kind record: it is derived from the
+    ``legal`` is a distinct coverage axis because a legal target serialises
+    into the unified index as a ``LEGAL``-kind record: it is derived from the
     legal catalogue's provision vocabulary, not from a page walk, so the report
     tracks it as its own surface.
     """

@@ -1,16 +1,17 @@
 """Real-behaviour conformance for the unified SearchRecord funnel.
 
-The five projected record kinds -- concept cards, casilla projections, legal
-provisions, and CLI surface/option records -- funnel through :func:`to_search_record` into one
-homogeneous :class:`SearchRecord` shape (the Pagefind injection payload). These
-gates prove the funnel produces a uniform record for every kind, carries the
-four-language descriptions and grounding provenance, and that the ranking
-weights are normalised onto one comparable cross-kind scale (term cards
-first, navigation second, full text third).
+The five typed input projections -- concept cards, casilla projections, legal
+provisions, CLI surface records, and CLI option records -- funnel through
+:func:`to_search_record` into one homogeneous :class:`SearchRecord` shape (the
+Pagefind injection payload). These gates prove the funnel produces a uniform
+record for every input projection, carries each projection's authored
+descriptions and grounding provenance, and normalises ranking weights onto one
+comparable cross-kind scale (term cards first, navigation second, full text
+third).
 
 No live CLI walk: the CLI records are constructed directly (their shape is the
 contract under test, not their projection from the transiently-broken tree).
-The concept and casilla records come from the real projections.
+The concept, casilla, and legal records come from the real projections.
 """
 
 from __future__ import annotations
@@ -127,6 +128,25 @@ def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> No
     assert record.metadata.segmento == "DP200014"
 
 
+def test_legal_provision_funnels_to_a_search_record_with_provenance() -> None:
+    """A real registry-backed legal projection funnels into the LEGAL kind."""
+    from dev.docs.terminology._legal_projection import project_legal_search_records
+    from dev.docs.terminology._search_record import SearchRecordKind
+    from dev.docs.terminology._unified_record import SearchRecord, to_search_record
+
+    legal = project_legal_search_records()[0]
+    record = to_search_record(legal)
+
+    assert isinstance(record, SearchRecord)
+    assert record.kind is SearchRecordKind.LEGAL
+    assert record.id == legal.record_id
+    assert record.target == legal.target
+    assert record.metadata.legal_id == legal.legal_id
+    assert record.metadata.legal_permalink == legal.permalink
+    assert record.metadata.legal_refs == (legal.legal_id,)
+    assert OutputLanguage.ES in record.descriptions
+
+
 def test_casilla_search_record_ids_are_opaque_and_unique() -> None:
     """Every projected casilla has a unique non-parseable search record id."""
     from dev.docs.terminology._casilla_projection import project_casilla_search_records
@@ -163,13 +183,16 @@ def test_all_kinds_serialise_to_the_same_shape() -> None:
     """Every kind serialises to the identical SearchRecord field set (homogeneous)."""
     from dev.docs.terminology._casilla_projection import project_modelo_casillas
     from dev.docs.terminology._concept_cards import project_concept_cards
+    from dev.docs.terminology._legal_projection import project_legal_search_records
     from dev.docs.terminology._unified_record import SearchRecord, to_search_record
 
     cards, _ = project_concept_cards()
     casillas = project_modelo_casillas(Modelo.M303)
+    legal = project_legal_search_records()[0]
     kinds = [
         to_search_record(cards[0]),
         to_search_record(casillas[0]),
+        to_search_record(legal),
         to_search_record(_cli_command_record()),
         to_search_record(_cli_option_record()),
     ]

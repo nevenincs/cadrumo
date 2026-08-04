@@ -37,8 +37,9 @@ builder and emits no HTML), so this gate builds one. The user scope excludes the
 build -- which is a PRINCIPLED narrowing, not a shortcut: no injected record
 target points under ``api/`` (the CONCEPT, CASILLA, LEGAL and CLI destinations
 are the generated glossary, per-modelo casilla pages, generated legal-reference
-pages, and the CLI reference, all outside ``api/``; full-text PAGE hits, which do live under
-``api/``, are Pagefind's own records and are not part of this projection), so
+pages (the LEGAL targets use these site-relative pages, not authored BOE URLs), and the
+CLI reference, all outside ``api/``; full-text PAGE hits, which do live under ``api/``,
+are Pagefind's own records and are not part of this projection), so
 excluding it loses no sweep coverage while it renders the casilla, glossary and
 CLI destinations in full.
 """

@@ -9,10 +9,11 @@ to exactly one valid :class:`ResultDisplayClass` member, with no record falling
 through to a null/unknown class. A record with no derivable class is a gate
 failure: a record that maps to no class is a unit-gate failure.
 
-The concept and casilla records come from the real deterministic projections
-(no live CLI subprocess walk); the CLI records are constructed directly, mirroring
-``test_unified_record.py``, because their shape -- not the transiently-broken tree
-walk -- is the contract under test.
+The concept, casilla, and legal records come from the real deterministic
+projections consumed by injection (including the registry-backed
+``LegalSearchRecord`` projection). The CLI records are constructed directly,
+mirroring ``test_unified_record.py``, because their shape -- not the
+transiently-broken tree walk -- is the contract under test.
 """
 
 from __future__ import annotations
@@ -54,23 +55,27 @@ def _cli_option_record():
 
 
 def _injected_unified_records():
-    """The unified records the injection ships: concepts + casillas + CLI.
+    """The deterministic custom-record projections consumed by injection.
 
     Mirrors ``_materialise_records`` (only approved concept cards are injected;
-    a draft card is scaffold-empty and 404s), but drives the real projections
-    directly so the gate is deterministic and independent of the fragile live
-    CLI subprocess walk.
+    a draft card is scaffold-empty and 404s), and includes the real legal
+    projection. CLI records remain representative constructed records so the
+    gate is deterministic and independent of the fragile live CLI subprocess
+    walk.
     """
     from dev.docs.terminology._casilla_projection import project_casilla_search_records
     from dev.docs.terminology._concept_cards import project_concept_cards
+    from dev.docs.terminology._legal_projection import project_legal_search_records
     from dev.docs.terminology._unified_record import to_search_record
 
     concept_cards, _ = project_concept_cards()
     approved = [card for card in concept_cards if card.is_approved]
     casilla_records, _ = project_casilla_search_records()
+    legal_records = project_legal_search_records()
 
     records = [to_search_record(card) for card in approved]
     records.extend(to_search_record(rec) for rec in casilla_records)
+    records.extend(to_search_record(rec) for rec in legal_records)
     records.append(to_search_record(_cli_command_record()))
     records.append(to_search_record(_cli_option_record()))
     return records
@@ -100,10 +105,10 @@ def test_every_display_class_is_exercised_by_the_injected_corpus() -> None:
     """The injected corpus + a technical page cover every navigable display class.
 
     Concept cards split into ``DOC`` (general-fact) and ``MODELO`` (modelo-domain)
-    cards, casillas are ``CASILLA``, CLI records are ``CLI``. ``TECHNICAL`` is only
-    reachable from a full-text ``api/`` page hit (not an injected custom record),
-    so it is exercised through a constructed PAGE record to prove the derivation
-    authority produces it.
+    cards, casillas are ``CASILLA``, legal records are ``DOC``, and CLI records
+    are ``CLI``. ``TECHNICAL`` is only reachable from a full-text ``api/`` page
+    hit (not an injected custom record), so it is exercised through a constructed
+    PAGE record to prove the derivation authority produces it.
     """
     from dev.docs.terminology._search_record import ResultDisplayClass, SearchRecordKind
     from dev.docs.terminology._unified_record import (
@@ -114,7 +119,7 @@ def test_every_display_class_is_exercised_by_the_injected_corpus() -> None:
     )
 
     derived = {derive_display_class(record) for record in _injected_unified_records()}
-    # The injected surfaces cover DOC + MODELO (concepts), CASILLA, and CLI.
+    # The injected surfaces cover DOC + MODELO (concepts and legal), CASILLA, and CLI.
     assert {
         ResultDisplayClass.DOC,
         ResultDisplayClass.MODELO,
