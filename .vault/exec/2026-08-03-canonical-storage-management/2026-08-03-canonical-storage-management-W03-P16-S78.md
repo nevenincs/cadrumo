@@ -847,3 +847,43 @@ the genuine hold is NOT STATED; no further explanation is offered.
 - `PENDING_UNDECLARED` in the pin gate carries two live entries (`master.key`,
   `master.kdf` in `test_config_custody_profile_lifecycle.py`), shrink-only and
   reconciled by their own test.
+
+### Addendum: the anchor-resolved headline, now that the census finished
+
+The section above recorded that no anchor-resolved number existed because the
+full-corpus run had not completed. It has since completed at revision
+`1e37fde8f8`, and the figure supersedes that gap:
+
+```
+scope production -- taxonomy-vocabulary literals in path-composition position: 22
+  in_taxonomy    0   real candidates
+  out_of_tree    7   excluded (pass_through 6, fixture 1)
+  unresolved    15   root not statically classifiable -- read individually
+```
+
+**Zero in-taxonomy candidates in production.** This is an independent
+confirmation rather than a restatement: the census is a different instrument
+written by a different agent, carrying its own positive controls (including a
+minimised reproduction of the `_modelo_manager` false-positive pair), and it
+walks a *wider* vocabulary than the coordinator's scanner -- it surfaces
+`corpus-search`, `iva-compensation-history`, `iva-read-evidence`,
+`transactions`, `financial`, and `parity`, none of which were in the hand-built
+segment list.
+
+The 15 `unresolved` are not an open question; they are the tool correctly
+declining to statically resolve a root, and each falls in a class already
+verdicted by hand:
+
+- eleven with `root=Path` in `core/_config_integration_fields.py`,
+  `core/_config_llm_fields.py`, and `core/config.py` are **Settings field
+  placeholder defaults** -- the pinned-by-design class. Pydantic requires a
+  default and deriving it from the taxonomy closes an import cycle, so the
+  duplicate must exist; `test_storage_default_parity.py` is what stops it
+  disagreeing.
+- four with `root=<Dict>` in `domain/calculations/registry/_loader.py` are the
+  registry authoring tree's directory-mode `manifest.toml`, a different tree
+  from the taxonomy's `<root>/buckets/<bucket_id>/manifest.toml`.
+
+Reporting `unresolved` as its own bucket rather than folding it into either
+side is the property that makes the zero trustworthy: a tool that guessed on
+these would have produced a cleaner-looking number and a less honest one.
