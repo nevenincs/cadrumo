@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Final
+from urllib.parse import urlsplit
 
 from .glossary_reference import _LEGAL_CATALOGUE_RELPATH
 
@@ -51,6 +52,44 @@ _DATE_FIELDS: Final[tuple[str, ...]] = (
     "consolidated_as_of",
     "reviewed_at",
 )
+
+_LEGAL_TABLE_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "kind",
+        "document_id",
+        "corpus_ref",
+        "permalink",
+        "authority",
+        "evidence_tier",
+        "article",
+        "section",
+        "published_at",
+        "effective_from",
+        "effective_to",
+        "consolidated_as_of",
+        "review_status",
+        "reviewed_at",
+        "reviewed_by",
+        "notes",
+        "required_text",
+    },
+)
+_RENDERED_TEXT_FIELDS: Final[tuple[str, ...]] = (
+    "legal_id",
+    "kind",
+    "document_id",
+    "corpus_ref",
+    "permalink",
+    "authority",
+    "evidence_tier",
+    "article",
+    "section",
+    "review_status",
+    "reviewed_by",
+    "notes",
+)
+_GENERATED_INDEX_SLUG: Final[str] = "index"
+_UNSAFE_LINK_CHARS: Final[frozenset[str]] = frozenset({"<", ">", '"', "'", "`", "\\"})
 
 
 class LegalReferenceError(RuntimeError):
@@ -149,6 +188,10 @@ def legal_document_slug(document_id: str) -> str:
     slug = _slug(str(document_id))
     if not slug:
         raise LegalReferenceError(f"document id {document_id!r} folds to an empty page slug")
+    if slug == _GENERATED_INDEX_SLUG:
+        raise LegalReferenceError(
+            f"document id {document_id!r} uses the reserved generated page slug {slug!r}",
+        )
     return slug
 
 
@@ -238,11 +281,40 @@ def legal_reference_target(
     return f"{page}#{anchor}" if anchor is not None else page
 
 
+def _validate_authored_text(value: str, *, path: Path, legal_id: str, field: str) -> str:
+    """Reject authored control characters before text enters generated RST."""
+    if any(unicodedata.category(char).startswith("C") for char in value):
+        raise LegalReferenceError(
+            f"{path}: legal entry {legal_id!r} field {field!r} contains a control character",
+        )
+    return value
+
+
+def _validate_boe_permalink(value: str, *, path: Path, legal_id: str) -> str:
+    """Validate an authored BOE URL before it enters an RST link target."""
+    _validate_authored_text(value, path=path, legal_id=legal_id, field="permalink")
+    if any(char.isspace() for char in value) or any(char in _UNSAFE_LINK_CHARS for char in value):
+        raise LegalReferenceError(
+            f"{path}: legal entry {legal_id!r} field 'permalink' contains unsafe URL characters",
+        )
+    try:
+        parsed = urlsplit(value)
+    except ValueError as exc:
+        raise LegalReferenceError(
+            f"{path}: legal entry {legal_id!r} field 'permalink' is malformed",
+        ) from exc
+    if parsed.scheme != "https" or parsed.netloc != "www.boe.es" or not parsed.path.startswith("/"):
+        raise LegalReferenceError(
+            f"{path}: legal entry {legal_id!r} field 'permalink' must be an https://www.boe.es URL",
+        )
+    return value
+
+
 def _required_string(body: dict[str, object], key: str, *, path: Path, legal_id: str) -> str:
     value = body.get(key)
     if not isinstance(value, str) or not value.strip():
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} requires string field {key!r}")
-    return value
+    return _validate_authored_text(value, path=path, legal_id=legal_id, field=key)
 
 
 def _optional_string(body: dict[str, object], key: str, *, path: Path, legal_id: str) -> str | None:
@@ -251,7 +323,7 @@ def _optional_string(body: dict[str, object], key: str, *, path: Path, legal_id:
         return None
     if not isinstance(value, str):
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} field {key!r} must be a string")
-    return value
+    return _validate_authored_text(value, path=path, legal_id=legal_id, field=key)
 
 
 def _optional_date(body: dict[str, object], key: str, *, path: Path, legal_id: str) -> date | None:
@@ -269,18 +341,29 @@ def _required_text(body: dict[str, object], *, path: Path, legal_id: str) -> tup
         return ()
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise LegalReferenceError(f"{path}: legal entry {legal_id!r} field 'required_text' must be a string array")
-    return tuple(value)
+    return tuple(
+        _validate_authored_text(item, path=path, legal_id=legal_id, field="required_text")
+        for item in value
+    )
 
 
 def _record_from_table(path: Path, legal_id: str, body: object) -> LegalProvisionRecord:
     if not isinstance(body, dict):
         raise LegalReferenceError(f"{path}: [legal.{legal_id!r}] must be a table")
+    unknown_fields = set(body).difference(_LEGAL_TABLE_FIELDS)
+    if unknown_fields:
+        fields = ", ".join(repr(field) for field in sorted(unknown_fields))
+        raise LegalReferenceError(
+            f"{path}: legal entry {legal_id!r} contains unknown field(s): {fields}",
+        )
+    permalink = _required_string(body, "permalink", path=path, legal_id=legal_id)
+    _validate_boe_permalink(permalink, path=path, legal_id=legal_id)
     return LegalProvisionRecord(
         legal_id=legal_id,
         kind=_required_string(body, "kind", path=path, legal_id=legal_id),
         document_id=_required_string(body, "document_id", path=path, legal_id=legal_id),
         corpus_ref=_required_string(body, "corpus_ref", path=path, legal_id=legal_id),
-        permalink=_required_string(body, "permalink", path=path, legal_id=legal_id),
+        permalink=permalink,
         authority=_optional_string(body, "authority", path=path, legal_id=legal_id),
         evidence_tier=_optional_string(body, "evidence_tier", path=path, legal_id=legal_id),
         article=_optional_string(body, "article", path=path, legal_id=legal_id),
@@ -323,6 +406,7 @@ def load_legal_provisions(repo_root: Path) -> tuple[LegalProvisionRecord, ...]:
             if not isinstance(raw_id, str) or not raw_id.strip():
                 raise LegalReferenceError(f"{fragment}: legal provision id must be a non-empty string")
             legal_id = raw_id
+            _validate_authored_text(legal_id, path=fragment, legal_id=legal_id, field="legal id")
             previous = seen_ids.get(legal_id)
             if previous is not None:
                 raise LegalReferenceError(
@@ -349,6 +433,29 @@ def _validate_records(records: tuple[LegalProvisionRecord, ...]) -> None:
     seen_ids: set[str] = set()
     page_slugs: dict[str, str] = {}
     for record in records:
+        for field in _RENDERED_TEXT_FIELDS:
+            value = getattr(record, field)
+            if not isinstance(value, str):
+                raise LegalReferenceError(
+                    f"legal entry {record.legal_id!r} field {field!r} must be a string",
+                )
+            _validate_authored_text(value, path=Path("<rendered records>"), legal_id=record.legal_id, field=field)
+        if not isinstance(record.required_text, tuple) or not all(
+            isinstance(item, str) for item in record.required_text
+        ):
+            raise LegalReferenceError(f"legal entry {record.legal_id!r} field 'required_text' must be a string tuple")
+        for item in record.required_text:
+            _validate_authored_text(
+                item,
+                path=Path("<rendered records>"),
+                legal_id=record.legal_id,
+                field="required_text",
+            )
+        _validate_boe_permalink(
+            record.permalink,
+            path=Path("<rendered records>"),
+            legal_id=record.legal_id,
+        )
         if record.legal_id in seen_ids:
             raise LegalReferenceError(f"duplicate legal provision id {record.legal_id!r}; refusing to merge rows")
         seen_ids.add(record.legal_id)
@@ -519,18 +626,59 @@ def render_legal_reference(
 
 def generate_legal_reference(docs_root: Path) -> LegalReferenceResult:
     """Materialise the generated legal pages before Sphinx reads the tree."""
-    repo_root = docs_root.resolve().parent
+    docs_root = docs_root.resolve()
+    repo_root = docs_root.parent
     result = render_legal_reference(repo_root)
-    out_dir = docs_root / LEGAL_REFERENCE_DIR
-    out_dir.mkdir(parents=True, exist_ok=True)
-    _write_if_changed(out_dir / "index.rst", _render_index(result.pages))
+    out_dir = _validated_output_dir(docs_root)
+    output_paths = [out_dir / "index.rst"]
     for page in result.pages:
-        _write_if_changed(docs_root / page.output_relpath, page.rst)
+        page_path = docs_root / Path(page.output_relpath)
+        if page_path.parent != out_dir or page_path.suffix != ".rst":
+            raise LegalReferenceError(f"generated legal page escaped the validated output directory: {page_path}")
+        output_paths.append(page_path)
+    if len(set(output_paths)) != len(output_paths):
+        raise LegalReferenceError("generated legal output paths collide")
+    _remove_generated_rst(out_dir)
+    _write_if_changed(output_paths[0], _render_index(result.pages))
+    for page, path in zip(result.pages, output_paths[1:], strict=True):
+        _write_if_changed(path, page.rst)
     return result
+
+
+def _validated_output_dir(docs_root: Path) -> Path:
+    """Return the exact legal output directory, refusing symlinked or broad paths."""
+    relative = Path(LEGAL_REFERENCE_DIR)
+    if relative.parts != ("_generated", "legal"):
+        raise LegalReferenceError(f"unexpected legal output path constant: {LEGAL_REFERENCE_DIR!r}")
+    generated_dir = docs_root / "_generated"
+    out_dir = docs_root / relative
+    if out_dir.parent != generated_dir or out_dir.name != "legal":
+        raise LegalReferenceError(f"unexpected legal output directory: {out_dir}")
+    if not docs_root.is_dir() or docs_root.is_symlink():
+        raise LegalReferenceError(f"docs root is not a real directory: {docs_root}")
+    if generated_dir.is_symlink() or not generated_dir.is_dir():
+        raise LegalReferenceError(f"generated docs directory is not a real directory: {generated_dir}")
+    if out_dir.is_symlink():
+        raise LegalReferenceError(f"legal output directory is not the exact real directory: {out_dir}")
+    if out_dir.exists():
+        if out_dir.is_symlink() or not out_dir.is_dir() or out_dir.resolve() != out_dir:
+            raise LegalReferenceError(f"legal output directory is not the exact real directory: {out_dir}")
+    else:
+        out_dir.mkdir()
+    return out_dir
+
+
+def _remove_generated_rst(out_dir: Path) -> None:
+    """Remove only direct generated RST files from the validated legal directory."""
+    for path in out_dir.iterdir():
+        if path.suffix != ".rst":
+            continue
+        if path.is_symlink() or not path.is_file() or path.parent != out_dir:
+            raise LegalReferenceError(f"refusing to remove unsafe generated legal path: {path}")
+        path.unlink()
 
 
 def _write_if_changed(path: Path, rst: str) -> None:
     """Write generated RST with LF endings only when its bytes changed."""
     if not (path.is_file() and path.read_text(encoding=_UTF_8) == rst):
-        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(rst, encoding=_UTF_8, newline="\n")
