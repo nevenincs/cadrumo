@@ -109,6 +109,28 @@ class MinimoDescendientesThresholds(BaseModel):
     declaracion_propia_rentas_limite: Decimal = Field(ge=0)
 
 
+class GuarderiaMonthSpend(BaseModel):
+    """One month's guardería spend for one descendant (Art. 81.2 LIRPF).
+
+    Month-granular because the statute is: the increase runs while the child is
+    under three and, in the period the child TURNS three, extends to the spend
+    "incurridos con posterioridad al cumplimiento de dicha edad" up to the month
+    before the second cycle of infant education may begin. An annual total
+    cannot express either boundary.
+
+    The map these build is SPARSE by construction — a month with no spend simply
+    has no entry — so nothing here encodes a window. That is deliberate and is
+    the whole reason the shape is monthly primaries rather than a pre-split
+    figure: every split shape would bake a boundary into stored data, and the
+    upper boundary is not this application's to determine.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    month: int = Field(ge=1, le=12)
+    amount_euros: int = Field(ge=0)
+
+
 class DescendantInfo(BaseModel):
     """Structured per-descendant data for Art. 58 mínimo-por-descendientes.
 
@@ -203,8 +225,18 @@ class DescendantInfo(BaseModel):
         Default ``0`` (no deducción contribution from this child).
     gastos_guarderia_euros
         Actual guardería / centro educación infantil autorizado expenses paid
-        for this child (Art. 81.2 LIRPF).  Integer euros, ≥ 0.
-        Default ``0`` (no guardería expenses declared for this child).
+        for this child (Art. 81.2 LIRPF), as an ANNUAL total.  Integer euros,
+        ≥ 0. Default ``0`` (no guardería expenses declared for this child).
+        Sufficient only while the child is under three for the whole period; it
+        cannot express either month boundary the statute draws.
+    gastos_guarderia_mensuales
+        The same spend broken down by month, sparse: only months with spend
+        appear. Required for the period in which the child turns three, because
+        that period needs the post-birthday months separated and an annual total
+        cannot be apportioned across a birthday. Mutually exclusive with
+        ``gastos_guarderia_euros`` for one child — declaring both is refused
+        rather than reconciled, so a descendant always has exactly one spend
+        authority.
     nif
         Optional NIF/NIE; validated for shape when present.
     """
@@ -224,6 +256,7 @@ class DescendantInfo(BaseModel):
     prorrata_minimo: bool | None = None
     meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
     gastos_guarderia_euros: int = Field(default=0, ge=0)
+    gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...] = ()
     nif: str | None = None
 
     @field_validator(
@@ -275,6 +308,35 @@ class DescendantInfo(BaseModel):
         if raw.get("inscripcion_registro_civil_date") is not None:
             return {**raw, "relacion": DescendantRelacion.ADOPTADO}
         return {key: value for key, value in raw.items() if key != "relacion"}
+
+    @model_validator(mode="after")
+    def _validate_guarderia_spend(self) -> DescendantInfo:
+        """One spend authority per child, and a coherent monthly map.
+
+        Refuses BOTH an annual total and a monthly breakdown for the same child.
+        Reconciling two figures would mean choosing one silently, and whichever
+        was chosen the other would sit in the record contradicting it; a filer
+        reading their own profile could not tell which one reached the filing.
+
+        Also refuses a repeated month, which is the only way a sparse map can be
+        internally inconsistent: two entries for the same month are either a
+        duplicate or a partial, and summing them silently would invent a figure
+        the operator never stated.
+        """
+        months = [entry.month for entry in self.gastos_guarderia_mensuales]
+        duplicates = sorted({month for month in months if months.count(month) > 1})
+        if duplicates:
+            raise ProfileValidationError(
+                f"gastos_guarderia_mensuales declares month(s) {duplicates} more than once; "
+                "give one entry per month carrying that month's total.",
+            )
+        if self.gastos_guarderia_mensuales and self.gastos_guarderia_euros > 0:
+            raise ProfileValidationError(
+                "gastos_guarderia_euros and gastos_guarderia_mensuales cannot both be declared for "
+                "one descendant. The monthly breakdown is the authority where it exists; drop the "
+                "annual total rather than stating the spend twice.",
+            )
+        return self
 
     @model_validator(mode="after")
     def _validate_entry_event_dates(self) -> DescendantInfo:
@@ -575,6 +637,84 @@ class DescendantInfo(BaseModel):
         if not self.convive_con_contribuyente:
             return False
         return self.age_at_year_end(filing_year) < _MAX_AGE_MENOR_TRES
+
+    def guarderia_contributing_spend(self, filing_year: int) -> int:
+        """Art. 81.2 guardería spend this descendant contributes in *filing_year*.
+
+        Applies the LOWER bound and deliberately not the upper one.
+
+        The lower bound is computable from data held: in the period the child
+        turns three, only spend "incurridos con posterioridad al cumplimiento de
+        dicha edad" counts, so months up to and including the birthday month are
+        dropped. Before that period the child is under three throughout and every
+        month counts; after it, nothing does.
+
+        The UPPER bound is not derived, and that is a decision rather than a gap.
+        The statute ends the extension at the month before the second cycle of
+        infant education may begin, which each region determines. The informative
+        return reporting childcare custody is filed EXCLUSIVELY by the centre,
+        never by the taxpayer, and the centre is required to report exactly those
+        months. Re-deriving the boundary here would compute, from a calendar this
+        application does not hold, a determination the law assigns to a party who
+        does — and risk contradicting the return the authority already holds from
+        that party. So the months a taxpayer can evidence are taken as the months
+        the centre determined.
+
+        Returns ``0`` for a non-cohabiting descendant, and for the turning-three
+        period when only an ANNUAL total is on record: that total spans the
+        birthday and cannot be apportioned across it. That is not the withheld
+        window — it is an unanswerable question about a figure the operator can
+        replace with the monthly detail their centre already certified.
+        """
+        if not self.convive_con_contribuyente:
+            return 0
+        age_at_year_end = self.age_at_year_end(filing_year)
+        if age_at_year_end < _MAX_AGE_MENOR_TRES:
+            # Under three for the whole period: every declared month counts, and
+            # an annual total needs no apportioning.
+            if self.gastos_guarderia_mensuales:
+                return sum(entry.amount_euros for entry in self.gastos_guarderia_mensuales)
+            return self.gastos_guarderia_euros
+        if age_at_year_end > _MAX_AGE_MENOR_TRES:
+            return 0
+        # The turning-three period: the Art. 81.2 extension, month-scoped.
+        return sum(
+            entry.amount_euros for entry in self.gastos_guarderia_mensuales if entry.month > self.birth_date.month
+        )
+
+    def guarderia_needs_monthly_detail(self, filing_year: int) -> bool:
+        """True when only an annual total is on record for the turning-three period.
+
+        The one state where declared spend contributes nothing purely because of
+        its SHAPE. Reported so the operator is told to supply the monthly
+        breakdown their centre certified, rather than left to wonder why a
+        declared figure produced no increase.
+        """
+        if not self.convive_con_contribuyente:
+            return False
+        if self.age_at_year_end(filing_year) != _MAX_AGE_MENOR_TRES:
+            return False
+        return self.gastos_guarderia_euros > 0 and not self.gastos_guarderia_mensuales
+
+    def is_eligible_guarderia(self, filing_year: int) -> bool:
+        """True when this descendant may carry an Art. 81.2 guardería increase at all.
+
+        Wider than :meth:`is_eligible_menor_tres`, which tests age under three at
+        year end and is the Art. 81.1 maternidad population. The guardería
+        increase additionally reaches the period the child TURNS three, which is
+        the largest under-grant this campaign measured: it is a full birth cohort
+        rather than a minority case, and it reduces cuota directly rather than
+        the base.
+
+        The authority is explicit that the increase is not gated on the
+        maternidad deduction's own eligibility — where the child turns three in
+        January, or the mother starts work after the birthday, the deduction does
+        not apply and that does NOT prevent the increase. Hence a separate
+        predicate rather than a widened shared one.
+        """
+        if not self.convive_con_contribuyente:
+            return False
+        return self.age_at_year_end(filing_year) <= _MAX_AGE_MENOR_TRES
 
     def is_eligible_minimo_incremento_menor_tres(self, filing_year: int) -> bool:
         """True when Art. 58.2 grants the bajo-3-años increase for this descendant.
@@ -896,17 +1036,39 @@ class RentaFamilyProfile(BaseModel):
         """
         return self.descendientes_menores_3_year_end(2024)
 
+    def descendientes_guarderia_count(self, filing_year: int) -> int:
+        """Count of descendants who may carry an Art. 81.2 guardería increase.
+
+        Wider than the Art. 58.2 menor-de-tres count by exactly the turning-three
+        period. Kept separate rather than widening that count, which has its own
+        registry binding and its own statutory meaning for the supplement.
+        """
+        return sum(1 for d in self.descendientes if d.is_eligible_guarderia(filing_year))
+
     @property
     def gastos_guarderia_reales_2024(self) -> int:
         """Sum of Art. 81.2 guardería expenses across eligible children under 3 in 2024.
 
-        Only children eligible for the bajo-3-años supplement (age < 3 at
-        year-end 2024 AND cohabiting) contribute their ``gastos_guarderia_euros``.
+        Sums :meth:`DescendantInfo.guarderia_contributing_spend`, which applies
+        the Art. 81.2 month rules per child: every declared month while the child
+        is under three, and only the post-birthday months in the period the child
+        turns three. The turning-three period is INCLUDED here and was not
+        before, which is the campaign's largest measured under-grant — a full
+        birth cohort rather than a minority case, reducing cuota directly.
+
         Used as the ``gastos_reales`` term in the 0613 formula:
         min(gastos_guarderia_reales_2024, descendientes_menores_3_2024 × 1000,
         cotizaciones_ss_madre_2024).
         """
-        return sum(d.gastos_guarderia_euros for d in self.descendientes if d.is_eligible_menor_tres(2024))
+        return sum(d.guarderia_contributing_spend(2024) for d in self.descendientes)
+
+    def guarderia_needs_monthly_detail_indices(self, filing_year: int) -> tuple[int, ...]:
+        """Indices whose declared spend contributes nothing only because of its shape."""
+        return tuple(
+            index
+            for index, descendant in enumerate(self.descendientes)
+            if descendant.guarderia_needs_monthly_detail(filing_year)
+        )
 
     def descendientes_eligible_minimum(
         self,
@@ -1194,7 +1356,13 @@ class RentaFamilyProfile(BaseModel):
         if filing_year != 2024:
             return 0
         gastos_reales = self.gastos_guarderia_reales_2024
-        hijos_menores_3 = self.descendientes_menores_3_2024
+        # The GUARDERÍA population, not the Art. 58.2 one. The two diverged when
+        # the turning-three period became eligible for spend: a child in that
+        # period contributes euros but is not "menor de 3 al devengo", so reusing
+        # the Art. 58.2 count would cap their spend at zero and hand back the
+        # under-grant this change exists to close. The Art. 58.2 count keeps its
+        # own meaning for the supplement and its registry binding.
+        hijos_menores_3 = self.descendientes_guarderia_count(filing_year)
         cotizaciones = self.cotizaciones_ss_madre_2024
         if gastos_reales == 0 or hijos_menores_3 == 0 or cotizaciones == 0:
             return 0
