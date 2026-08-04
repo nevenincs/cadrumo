@@ -14,9 +14,14 @@ imports and a package building its own facade out of its own private modules
 are fine. When the symbol is not yet exported, promotion to ``__all__`` is a
 precondition of the consuming change, not a follow-up: add the symbol to the
 owning package's ``__all__`` (eager ``from .module import Name`` by default;
-lazy ``__getattr__`` / PEP 562 ONLY if the owning package already uses that
-pattern or an eager import risks a circular-import cost — never retrofit an
-existing eager facade to lazy). Never mechanically rename a private ``_name``
+lazy ``__getattr__`` / PEP 562 when the owning package already uses that
+pattern, or when eager import costs enough to matter — a measured
+import-time or cycle cost is sufficient justification, and converting an
+eager facade to lazy is a normal, permitted change, not a violation). What
+this rule governs is WHERE a symbol lives, never WHEN its module executes:
+lazy resolution keeps exactly one canonical home per symbol and one import
+path for consumers, so it satisfies the ownership constraint rather than
+bending it. Never mechanically rename a private ``_name``
 straight into ``__all__``; per-symbol, either rename-to-public and promote a
 genuinely shared primitive, or expose a narrower purpose-built public API for a
 single caller's need, or treat the reach as a design defect to remove. A
@@ -62,6 +67,19 @@ set are structural data).
 
 Active; generalized project-wide. Supersedes the prior narrower "new application-layer
 service" scope, now the first `Good` worked example.
+
+The eager/lazy clause was relaxed on 2026-08-04 after tracing where it came from.
+It had read "never retrofit an existing eager facade to lazy", which was stricter
+than the ADR it was codified from: ruling 2 of `2026-07-01-import-centralization-adr`
+permits lazy when "eager import risks a cycle/**cost**", and appended "do not
+retrofit the ~93 eager facades" as blast-radius control for a campaign already
+promoting 149 facades across 250 files. The backing research contains no mention of
+`lazy`, `PEP 562`, or `__getattr__` at all — no hazard was ever investigated — while
+twelve packages in this tree (`core`, `domain.transactions`, `domain.user_profile`,
+`entrypoints.cli`, …) already ship the pattern. One campaign's scope guard had
+hardened into a permanent prohibition with nothing behind it, and it was blocking a
+measured multi-second CLI import cost. Ownership — the constraint this rule exists
+to protect — is untouched by lazy resolution.
 
 ## Source
 
