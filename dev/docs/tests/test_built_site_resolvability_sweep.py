@@ -41,7 +41,7 @@ pages (the LEGAL targets use these site-relative pages, not authored BOE URLs), 
 CLI reference, all outside ``api/``; full-text PAGE hits, which do live under ``api/``,
 are Pagefind's own records and are not part of this projection), so
 excluding it loses no sweep coverage while it renders the casilla, glossary and
-CLI destinations in full.
+generated legal-reference pages, and CLI destinations in full.
 """
 
 from __future__ import annotations

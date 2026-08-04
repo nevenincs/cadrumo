@@ -155,11 +155,12 @@ def test_materialises_every_kind_with_graceful_cli() -> None:
 
     assert materialised.concepts > 0
     assert materialised.casillas > 1000  # thousands of deduped casillas
+    assert materialised.legal_provisions > 0
     # CLI either projected (commands > 0) or was cleanly skipped-and-reported.
     assert materialised.cli_commands > 0 or materialised.cli_skipped_reason is not None
     # The unified record list spans every kind that projected.
     kinds = {r.kind.value for r in materialised.records}
-    assert {"concept", "casilla"} <= kinds
+    assert {"concept", "casilla", "legal"} <= kinds
     # Every record carries a deep-link target and a weight in [0, 1].
     sample = materialised.records[0]
     assert sample.target
