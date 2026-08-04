@@ -71,6 +71,16 @@ def store(tmp_path: Path, fixed_master_key: bytes) -> Iterator[EncryptedBlobStor
     )
 
 
+# ``store.root_dir / "blobs" / ...`` below is the independent oracle for the
+# ``blob_content_plaintext`` / ``blob_content_ciphertext`` / ``blob_manifest``
+# grammar (``<root>/blobs/<sha256[:2]>/<sha256>[.enc|.manifest.json]``,
+# anchored at ``blob_store_root`` -- i.e. whatever ``root_dir`` the store was
+# constructed with, which ``store.root_dir`` supplies here). The store derives
+# its own "blobs" segment from that same grammar constant
+# (``_BLOB_STORE_DIRNAME``), so re-deriving the expected side through it would
+# assert the accessor equals itself. Keep the literal.
+
+
 class TestPlaintextCorpusBlobs:
     """CORPUS-class blobs are stored as plaintext under a content-addressed path."""
 
