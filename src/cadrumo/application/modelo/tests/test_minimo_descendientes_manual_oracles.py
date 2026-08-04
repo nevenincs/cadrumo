@@ -210,7 +210,7 @@ def test_the_youngest_child_is_excluded_by_norma_2a_and_not_by_the_cap() -> None
 
 
 # ---------------------------------------------------------------------------
-# S10 - one predicate, three consuming surfaces.
+# One predicate, three consuming surfaces.
 # ---------------------------------------------------------------------------
 
 
