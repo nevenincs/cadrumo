@@ -335,6 +335,13 @@ dev = [
   "pillow==12.3.0",
   # Used only to generate synthetic fixture PDFs in tests.
   "reportlab>=4.4.10",
+  # libxml2 binding, used only by test support to compile the bundled AEAT
+  # record-design XSDs as validation oracles. It is already installed as a
+  # transitive of pikepdf; declaring it makes that reliance explicit, so a
+  # future pikepdf change surfaces as a resolution failure rather than an
+  # ImportError inside one test module. Nothing in src/cadrumo/ compiles a
+  # schema, so this stays out of the runtime dependencies.
+  "lxml>=6.0",
   "ruff>=0.15.12",
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/cadrumo/. vaultspec-rag
