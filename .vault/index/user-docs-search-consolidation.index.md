@@ -6,10 +6,11 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed4fb63d4136645c105528ccceb8e1b13686c5f84a253456539ac8ec54b0ba5c'
+body_hash: 'sha256:4bfe887084a433acf4bed6e64a85bb43e71adbecdaa663f84f7441e6ddb7ff4b'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S03]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S10]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S11]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S12]]'
@@ -33,6 +34,7 @@ related:
   - '[[2026-08-04-user-docs-search-consolidation-p05-s17-review-audit]]'
   - '[[2026-08-04-user-docs-search-consolidation-p06-s23-review-audit]]'
   - '[[2026-08-04-user-docs-search-consolidation-p06-s24-review-audit]]'
+  - '[[2026-08-04-user-docs-search-consolidation-rung-2-static-embedding-boundary-research]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -62,6 +64,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P04-S19` - Make the record-injection language follow the build language with the card summary preferring the root language's description, so every localized root's records land in the index its palette loads, correcting the module's stale per-language docstring in the same change and citing the localized-root artefact measurement in the exec record
 - `2026-08-01-user-docs-search-consolidation-P01-S01` - Amend the shipped-search-licence-clean rule source to the licence-and-provenance-scoped form ruled in R5 and propagate it with vaultspec-core sync in a coordinated quiet window
 - `2026-08-01-user-docs-search-consolidation-P01-S02` - Confirm the semantic-search-precompile-boundary plan is closed through its honesty review and record that confirmation before any rung-2 step is dispatched
+- `2026-08-01-user-docs-search-consolidation-P02-S03` - Author the rung-2 research record sharpening the offline-measurement caveat, the token-coverage bound, and the candidate pinned licence-clean static-embedding models with their licences and footprints
 - `2026-08-01-user-docs-search-consolidation-P04-S12` - Close the gap that leaves the built language roots unreachable on the live site and prove es, ca, and hu roots respond after deploy
 - `2026-08-01-user-docs-search-consolidation-P05-S14` - Build the generated legal reference surface rendering per-law pages with per-provision anchors from one shared slug authority, each entry carrying its BOE permalink and catalogue metadata
 - `2026-08-01-user-docs-search-consolidation-P05-S15` - Project the legal catalogue into the fifth search record kind with D1-conformant targets on the new surface and inject it beside the existing kinds with declared weights
@@ -80,3 +83,4 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 ### research
 
 - `2026-08-04-user-docs-search-consolidation-deterministic-casilla-enrollment-research` - `user-docs-search-consolidation` research: `Deterministic casilla enrollment research`
+- `2026-08-04-user-docs-search-consolidation-rung-2-static-embedding-boundary-research` - `user-docs-search-consolidation` research: `Sharpen the Rung-2 static-embedding boundary`

@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-04'
-body_hash: 'sha256:157cd592152b23fccda317772491de23db7da71f1231b45affbcd2859be31fb8'
+body_hash: 'sha256:090bdc0bb5fd5e82262dbe1adf59d2994076158ebe7513646f797e5ab5fa52c6'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -34,7 +34,7 @@ Amend the licence rule at its source per ruling R5 and gate rung-2 dispatch on t
 
 Deliver the fired rung-2 verdict: a pinned licence-clean static-embedding model compiles a bounded int8 term-embedding matrix over the closed vocabulary on the dev box, shipped as committed provenance-stamped data and consumed client-side as a cosine tier in the shared search controller.
 
-- [ ] `P02.S03` - Author the rung-2 research record sharpening the offline-measurement caveat, the token-coverage bound, and the candidate pinned licence-clean static-embedding models with their licences and footprints; `.vault/research/`.
+- [x] `P02.S03` - Author the rung-2 research record sharpening the offline-measurement caveat, the token-coverage bound, and the candidate pinned licence-clean static-embedding models with their licences and footprints; `.vault/research/`.
 - [ ] `P02.S04` - Build the dev-side matrix compiler that embeds the closed vocabulary and its token inventory with the pinned model and emits the bounded int8 matrix as committed, reviewable, provenance-stamped data; `dev/docs/`.
 - [ ] `P02.S05` - Add the client-side cosine tier over the shipped matrix to the shared search controller so both the palette host and the search-page host rank through it inside the existing compose ladder; `docs/_static/cadrumo-docs.js`.
 - [ ] `P02.S06` - Extend the licence gate to validate the shipped matrix's provenance stamp, model licence, and size bound while keeping every oracle-output and NC-ND bar intact; `dev/docs/tests/`.

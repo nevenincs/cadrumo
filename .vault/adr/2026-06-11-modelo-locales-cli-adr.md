@@ -1,15 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#modelo-locales-cli'
+  - "#adr"
+  - "#modelo-locales-cli"
 date: '2026-06-11'
-modified: '2026-07-17'
-body_hash: 'sha256:7ed0987fcd54bb347e991a3343a53d5f1f8227a778ea708ad1c41c9f1d6ef1b2'
 related:
-  - '[[2026-06-11-modelo-locales-cli-research]]'
+  - "[[2026-06-11-modelo-locales-cli-research]]"
+superseded_by: '2026-08-04-modelo-localization-cascade-adr'
+modified: '2026-08-04'
+body_hash: 'sha256:b0249f284f86f3fd3eb27556f7f29e736aa1e12e7afaf353a29148190f0e32e6'
 ---
-
-# `modelo-locales-cli` adr: `cadrumo.locales manages modelo schema-local translations` | (**status:** `accepted`)
+# `modelo-locales-cli` adr: `cadrumo.locales manages modelo schema-local translations` | (**status:** `superseded`)
 
 ## Problem Statement
 

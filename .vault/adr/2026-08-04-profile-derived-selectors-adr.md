@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:8780a099f99550ae13b7f8ae66353526bd484d10360926793b9770e2b637c738'
+body_hash: 'sha256:b9205bf2f56bc17cf1fadc241a2fd43cf5e7ea87b1d7800579d90e41b73756b0'
 related:
   - "[[2026-08-04-profile-derived-selectors-research]]"
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
@@ -191,3 +191,28 @@ to ignore it. The narrow derived-scoped advisory covers the sub-class where ever
 real. A related standing defect — a casilla that hard-fails because a declared operator
 field has no entry surface — is left exactly as loud as it is today and needs its own
 record, together with the entry-surface work for the eligibility inputs.
+
+
+AMENDMENT: a clear is exempt from the refusal.
+
+The rule as first written refused every value at a derived path, including a clear, on the
+reasoning that it is path-scoped rather than value-scoped. That reasoning was about a WRITE.
+Applied to a clear it produced a consequence nobody chose: because the validator judges the
+whole merged fact set on every edit rather than the incoming delta, a fact stored at a derived
+path before this rule existed is re-judged on every later edit to any other field -- and could
+not be removed, because removing it was refused too. Such a profile could not be edited,
+cleared or promoted through the lifecycle API at all. Reproduced, not inferred.
+
+The exemption returns nothing to the defect this record closes. The injectors compute always
+and overwrite whatever the fact index holds, so a stored value at a derived path is already
+inert for the calculation. The rule exists to stop a value being WRITTEN, and a clear writes
+none. What it buys is that a profile in that state is recoverable.
+
+One consequence survives the exemption and is accepted rather than solved: a stale VALUED fact
+still blocks an unrelated edit until it is cleared, so the recovery is clear-then-edit rather
+than edit-directly. That is pinned by test rather than left as prose.
+
+This amendment is recorded here because the campaign's own closing audit classified the change
+as ADR-level and said it belonged in a decision record. It then shipped as an ordinary fix
+commit without one, and the audit was not updated. Both halves are corrected: the ruling is
+here, and the audit records that its stated residual had closed.

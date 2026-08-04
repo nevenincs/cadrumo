@@ -1,5 +1,7 @@
 [[revisions."2025".casillas]]
 id = "0246"
+input_kind = "computed"
+formula = "renta-2025-matrimonio-mes-inicio"
 number = "0246"
 label = "Primer mes en que estuvo vigente el matrimonio en 2025"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]

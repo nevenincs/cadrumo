@@ -1,5 +1,7 @@
 [[revisions."2023".casillas]]
 id = "0529"
+input_kind = "computed"
+formula = "renta-2023-cuota-escala-autonomica-sobre-base-liquidable-general"
 number = "0529"
 label = "Aplicación de la escala general y autonómica del Impuesto al importe de la casilla [0505]. Importes resultantes: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]

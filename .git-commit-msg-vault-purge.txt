@@ -1,0 +1,29 @@
+fix(source): purge vault Step/ADR identifiers leaked into production and test comments
+
+The Code Stands Alone mandate forbids source, comments, docstrings, and tests
+citing this project's own development-process history: a vault Step id, an ADR
+stem or bare reference, or a finding-tracker token. Ran the marker-integrity gate
+and read its real failure (ADR citations in three test docstrings, not the S26 or
+S10 sites reported by prior sweeps), then swept the tree by meaning and by pattern
+for the whole class rather than the two originally-reported sites.
+
+Every site kept its technical explanation; only the process identifier was
+stripped. Two classes of site the automated gate cannot see were included in the
+sweep: conftest.py / test-support modules outside the gate's test_*.py glob, and
+assertion-message string literals inside test bodies (not comments or docstrings).
+
+Population found and fixed:
+- Two production files citing "S26 boundary gate" (three occurrences).
+- Nine production files citing "ADR", "ADR Decision N", or a specific ADR stem
+  (mcp-call-latency, m202-first-period-attestation) in docstrings/comments.
+- Five production/CLI-payload files citing "DB-NN" / "DB-NN S##" finding tokens.
+- Five conftest.py / test-support files citing a Step id for a prior perf attempt.
+- Five test files citing a Step id inside an assertion-message string literal.
+- One test file citing a dated ADR stem by full filename.
+- Four test-docstring sites (the gate's own real failure) citing "the ADR" as an
+  abstract authority for a design default.
+
+Two further sites the sweep found (test_minimo_descendientes_advisory_wiring.py,
+test_minimo_descendientes_prorrata_inferred_advisory.py) were already captured,
+fix included, in peer commits 97496fedcbdcab4 and 75096e6577716c9 by the time this
+commit landed; not re-committed here.

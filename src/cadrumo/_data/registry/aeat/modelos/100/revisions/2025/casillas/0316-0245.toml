@@ -1,5 +1,7 @@
 [[revisions."2025".casillas]]
 id = "0245"
+input_kind = "computed"
+formula = "renta-2025-matrimonio-vigente-todo-anio"
 number = "0245"
 label = "Si el matrimonio ha estado vigente durante todo el año 2025, marque esta casilla"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]

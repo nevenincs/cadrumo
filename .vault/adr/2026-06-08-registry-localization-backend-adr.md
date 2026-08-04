@@ -1,15 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#registry-localization-backend'
+  - "#adr"
+  - "#registry-localization-backend"
 date: '2026-06-08'
-modified: '2026-07-17'
-body_hash: 'sha256:7cdcb12584856c0aa45d6f58d71c366c4e42ef9089d5bf7245fede7da9e1947c'
 related:
   - "[[2026-06-08-registry-localization-backend-research]]"
+superseded_by: '2026-08-04-modelo-localization-cascade-adr'
+modified: '2026-08-04'
+body_hash: 'sha256:5744488feab4ad752bac89d0cac308453055ba0e77c58690be72c73ae80e8725'
 ---
-
-# `registry-localization-backend` adr: `schema localization support architecture` | (**status:** `accepted`)
+# `registry-localization-backend` adr: `schema localization support architecture` | (**status:** `superseded`)
 
 ## Problem Statement
 
