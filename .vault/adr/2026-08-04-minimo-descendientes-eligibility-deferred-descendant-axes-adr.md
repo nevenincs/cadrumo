@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:e5761bd21fe30fbe3a0d06cb6d7ffc86a72f69f09ec8ac6a03650263f9b476ae'
+body_hash: 'sha256:59daf9761d5ef3ddb184697ec0e8754f7225f29f33d5c1002bf9883078928a58'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-audit]]"
   - "[[2026-08-04-decimal-notation-under-declaration-research]]"
@@ -181,6 +181,55 @@ different reason: require the monthly map for the turning-three year, and where 
 cannot be determined, grant nothing for that child-year with a visible advisory rather than
 guessing a boundary. That errs toward under-grant, keeps the error visible, and does not bake
 a regional guess into a filed figure.
+
+
+### The regional-table blocker is DISSOLVED: the determination is not ours to make
+
+Recorded after the blocker was attacked at source rather than accepted. The conclusion
+reverses the precondition twice over — first the reading, then the requirement itself.
+
+**What was checked, and what each source said.** The national ordenación fixes the second
+cycle at ages three to six and is silent on the enrolment mechanism, leaving it to regional
+administrations. The tax authority is deliberately formula-based and names no month, only
+*"hasta el mes anterior a aquel en que pueda comenzar el segundo ciclo de educación
+infantil"*, with no worked example carrying concrete months. So the earlier reading — that a
+per-comunidad table must be grounded before any engine work — followed correctly from those
+two sources.
+
+**It was the wrong question.** The informative return that reports childcare custody is filed
+**exclusively by the centre, never by the parents**, and the authority's own guidance states
+what the centre must include for a child turning three: *"los meses posteriores al
+cumplimiento de dicha edad hasta el mes anterior a aquel en que el menor pueda comenzar el
+segundo ciclo de educación infantil."*
+
+**The window determination is a legal obligation of the childcare centre.** The centre knows
+its own region's calendar, is required to apply it, and reports the resulting months to the
+authority directly. The figure a taxpayer holds — their invoices and the centre's certificate
+— already encodes that determination.
+
+**So this application must not re-derive it.** Building a per-comunidad table would mean
+computing, from a calendar we do not hold, a determination the law assigns to a third party
+who does — and then risking disagreement with the return the authority has already received
+from that party. A mismatch would put the filer's figure at odds with the authority's own
+data, in whichever direction our table erred.
+
+**Consequence for the engine.** It applies what is computable from data it holds and refuses
+to invent what is not:
+
+- The lower bound is computable and stays enforced: only spend after the third birthday counts
+  in that period.
+- The upper bound is **not derived**. Monthly spend is accepted as supplied, because the
+  months a taxpayer can evidence are the months the centre determined and reported.
+- The operator-facing advisory points at the authoritative artefact rather than at a rule we
+  cannot state: the eligible months are those the centre reports, checkable against the
+  certificate the taxpayer already holds.
+
+That is better than the table it replaces — it directs the filer to the document that settles
+the question, instead of to a figure we computed and they cannot verify.
+
+**Sequencing effect.** The monthly spend model is no longer blocked. The regional table is
+retired as a precondition and should not be built. What remains is the shape, the entry
+surface, the birthday bound and the caps — all unblocked.
 
 
 ## Amendment: a design review corrected all four decisions, and refuted one
