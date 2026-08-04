@@ -4,7 +4,7 @@ tags:
   - '#canonical-storage-management'
 date: '2026-08-03'
 modified: '2026-08-04'
-body_hash: 'sha256:fba8b181fe99deb1e3f9784603246b389fe6de0c166fe6f315c3fb9adc0a59b9'
+body_hash: 'sha256:e0332f7934bfab820d379ba7df9764cff2f2390479b734a2fa7508535d6d573e'
 tier: L3
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
@@ -106,13 +106,13 @@ Enrolls or explicitly escapes every remaining root-anchored cache, telemetry, an
 - [x] `W02.P05.S47` - Declare the LibreOffice executable field as an external-executable escape carrying its role, gated by the binding gate seeing it once the selector widens; `src/cadrumo/core/config.py`.
 - [x] `W02.P05.S48` - Widen the path-typed field selector from name suffix to annotation so no path-valued setting can hide behind an inconvenient name, gated by a test asserting the selector now returns the LibreOffice field; `src/cadrumo/core/config.py`.
 - [x] `W02.P05.S49` - Declare the wallet diagnostic dump directory as an operator-directed-output escape, gated by a test asserting the role and that the feature stays off when the field is unset; `src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
-- [x] `W02.P05.S50` - Correct the wallet diagnostic field docstring so it stops overstating the capture scope relative to the implementation, gated by the generated environment reference regenerating without drift; `src/cadrumo/core/config.py` (this row's original file citation was wrong -- the field actually lives in `core/config.py`, swapped with S105's citation at authoring time).
+- [x] `W02.P05.S50` - Correct the wallet diagnostic field docstring so it stops overstating the capture scope relative to the implementation, gated by the generated environment reference regenerating without drift; `src/cadrumo/core/config.py` (this row's original file citation was wrong -- the field actually lives in `core/config.py`, swapped with S105's citation at authoring time)`.
 - [x] `W02.P05.S51` - Re-point the corpus-text cache read onto the accessor, gated by the existing corpus-text cache location test re-expressed against the taxonomy; `src/cadrumo/domain/calculations/registry/_validate_evidence.py`.
 - [x] `W02.P05.S52` - Re-point the validation-verdict cache read onto the accessor, gated by the existing verdict location test re-expressed against the taxonomy; `src/cadrumo/domain/calculations/registry/_validate_verdict.py`.
 - [x] `W02.P05.S53` - Re-point the observability run-trace directory read onto the accessor, gated by the existing run-store suite; `src/cadrumo/core/observability/_store.py`.
 - [x] `W02.P05.S54` - Re-point the default log file path onto the accessor, gated by the existing logging tests plus the rendered-help assertion naming the resolved log directory; `src/cadrumo/core/logging.py`.
 - [x] `W02.P05.S55` - Declare or escape the MCP certificate option's relative default so it stops naming a taxonomy-governed segment by literal, gated by the tools-and-dispatch tests re-expressed against whichever ruling applies; `src/cadrumo/entrypoints/mcp/_tools.py`.
-- [x] `W02.P05.S105` - Correct the five settings-field defaults that disagree with their taxonomy member's declared subpath, cadrumo_registry_parity_store_dir defaulting to var slash audit slash registry slash parity against a declared audit slash registry slash parity, and cadrumo_financial_txs_dir, cadrumo_invoices_dir, cadrumo_attachments_dir, cadrumo_usage_ratios_path each carrying a var-prefixed default against an unprefixed declaration, dead at runtime since the derived-output validator overrides them from the taxonomy but a live second declaration of an already-drifted name that no gate compares; `src/cadrumo/core/_config_integration_fields.py` (this row's original file citation was wrong -- the fields actually live in `_config_integration_fields.py`, swapped with S50's citation at authoring time).
+- [x] `W02.P05.S105` - Correct the five settings-field defaults that disagree with their taxonomy member's declared subpath, cadrumo_registry_parity_store_dir defaulting to var slash audit slash registry slash parity against a declared audit slash registry slash parity, and cadrumo_financial_txs_dir, cadrumo_invoices_dir, cadrumo_attachments_dir, cadrumo_usage_ratios_path each carrying a var-prefixed default against an unprefixed declaration, dead at runtime since the derived-output validator overrides them from the taxonomy but a live second declaration of an already-drifted name that no gate compares; `src/cadrumo/core/_config_integration_fields.py` (this row's original file citation was wrong -- the fields actually live in `_config_integration_fields.py`, swapped with S50's citation at authoring time)`.
 
 ### Phase `W02.P06` - nested subpath governance beneath enrolled categories
 
@@ -270,6 +270,7 @@ Resolves the one measurement this campaign ratified without proving: whether bro
 Runs the mandatory fresh-context honesty review before any completion claim, tracks every item it surfaces, reconciles the out-of-scope register, and confirms one execution record per closed Step.
 
 - [x] `W05.P22.S82` - Backfill real Description and Outcome content into the seventeen W01.P01-P03 exec records that were checked complete but left as empty scaffolds since the campaign's earliest reconciliation pass, predating even the 33-of-64 mark, so plan-closure-requires-exec-records holds for the whole plan and not only the steps reconciled in this pass; `.vault/exec/2026-08-03-canonical-storage-management/`.
+- [x] `W05.P22.S115` - Search the test corpus for assertions that a taxonomy-declared storage location is never created, via both the storage_path accessor and direct settings-field reads, classify each hit as a genuine dormancy claim or a refusal-guard/setup-baseline false positive, then write and land an accessor-routed persist-then-assert-absent test for each confirmed dormant category a real writer could ever populate; `src/cadrumo/domain/filing/tests/test_secure_storage_roundtrip.py, src/cadrumo/adapters/persistence/profile/tests/test_justificante_repository.py`.
 
 ## Parallelization
 
