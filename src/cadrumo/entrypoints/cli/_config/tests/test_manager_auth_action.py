@@ -35,7 +35,7 @@ carried, which no choice of words can satisfy by accident.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -53,15 +53,19 @@ from .....tests.user_profile import register_minimal_profile
 from .._manager_actions import (
     _AUTH_DNI_NIE_PATH,
     _AUTH_FECHA_VALIDEZ_PATH,
+    _AUTH_PAGE_PATHS,
     _AUTH_PROFILE_PATHS,
     _AUTH_PROVIDER_PATH,
     _AUTH_SOPORTE_PATH,
     _CERTIFICATE_KEY,
+    _IDENTITY_TAX_ID_PATH,
     _auth_facts_on_record,
     _auth_form_page,
     _clave_refusal,
     _commit_auth_choice,
     _run_certificate,
+    _suggested_tax_id,
+    certificate_action,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -78,11 +82,13 @@ _SUPPORTED_LOCALES = ("en", "es", "ca", "hu")
 def _page(
     *,
     on_record: Mapping[str, str] | None = None,
+    suggested_tax_id: str = "",
     certificate_names: tuple[str, ...] = (),
     active_certificate: str = "",
 ) -> FormPage:
     return _auth_form_page(
         on_record=on_record or {},
+        suggested_tax_id=suggested_tax_id,
         certificate_names=certificate_names,
         active_certificate=active_certificate,
     )
@@ -118,9 +124,26 @@ def _form_screen(app: FormApp) -> FormScreen:
 
 def _label_of(page: FormPage, key: str) -> str:
     """Return the label the page gave one field."""
+    return _field_of(page, key).label
+
+
+def _value_of(page: FormPage, key: str) -> str:
+    """Return the value one field opens on."""
+    return _field_of(page, key).value
+
+
+def _validator_of(page: FormPage, key: str):
+    """Return the row validator the page bound to one field."""
+    validate = _field_of(page, key).validate
+    assert validate is not None, f"page field {key!r} carries no validator"
+    return validate
+
+
+def _field_of(page: FormPage, key: str):
+    """Return one field off the page, naming what it offers when absent."""
     for field in page.fields:
         if field.key == key:
-            return field.label
+            return field
     message = f"page has no field {key!r}; it offers {[field.key for field in page.fields]}"
     raise AssertionError(message)
 
@@ -136,7 +159,7 @@ async def test_the_page_is_reachable_when_no_certificate_is_registered() -> None
     app = FormApp(_page(certificate_names=()))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
-        assert list(_rows(app)) == list(_AUTH_PROFILE_PATHS)
+        assert list(_rows(app)) == list(_AUTH_PAGE_PATHS)
         assert _CERTIFICATE_KEY not in _rows(app), "an empty choice list must not become a dead row"
         app.exit(None)
 
@@ -147,9 +170,21 @@ async def test_a_registered_certificate_adds_a_row_opened_on_the_active_one() ->
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
         rows = _rows(app)
-        assert list(rows) == [*_AUTH_PROFILE_PATHS, _CERTIFICATE_KEY]
+        assert list(rows) == [*_AUTH_PAGE_PATHS, _CERTIFICATE_KEY]
         assert rows[_CERTIFICATE_KEY] == "personal"
         app.exit(None)
+
+
+def test_the_declared_row_order_is_the_order_the_page_builds() -> None:
+    """Keep the declared row order honest against the page it describes.
+
+    ``_AUTH_PAGE_PATHS`` is read by cases that pin what the page offers,
+    so a row added to the page without being declared — or declared
+    without being added — would otherwise leave those cases asserting
+    against a stale list they agree with.
+    """
+    built = tuple(field.key for field in _page().fields)
+    assert built == _AUTH_PAGE_PATHS
 
 
 @pytest.mark.asyncio
@@ -192,18 +227,18 @@ async def test_an_unanswered_profile_opens_on_a_mode_it_can_actually_use() -> No
 async def test_committing_hands_back_every_auth_path_the_action_writes() -> None:
     """The page's output has to carry exactly what the commit half reads.
 
-    The expectation is derived from the path tuple the commit half
-    iterates, so a fifth path added to one side and not the other fails
-    here rather than passing against a literal this test wrote for
-    itself.
+    The expectation is derived from the path tuple the page declares, so
+    a row added to one side and not the other fails here rather than
+    passing against a literal this test wrote for itself.
     """
     values = {
         _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+        _IDENTITY_TAX_ID_PATH: "00000000T",
         _AUTH_DNI_NIE_PATH: "00000000T",
         _AUTH_SOPORTE_PATH: "ABC123456",
         _AUTH_FECHA_VALIDEZ_PATH: "1990-01-01",
     }
-    seeded = {path: values.get(path, "seeded") for path in _AUTH_PROFILE_PATHS}
+    seeded = {path: values.get(path, "seeded") for path in _AUTH_PAGE_PATHS}
     app = FormApp(_page(on_record=seeded))
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
         await pilot.pause()
@@ -211,7 +246,7 @@ async def test_committing_hands_back_every_auth_path_the_action_writes() -> None
         await pilot.pause()
     assert app.collected is not None
     assert dict(app.collected) == seeded
-    assert set(app.collected) == set(_AUTH_PROFILE_PATHS), "the page and the commit half must agree on the path set"
+    assert set(app.collected) == set(_AUTH_PAGE_PATHS), "the page and the commit half must agree on the path set"
 
 
 _NO_CLAVE_SETTINGS: Mapping[str, object] = {
@@ -393,6 +428,15 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
             lambda state: register_minimal_profile(state, profile_id=_PROFILE_ID),
         )
         yield
+
+
+def _stored_tax_id() -> str:
+    """Return the fiscal identity as the encrypted record holds it."""
+    record = ProfileRepository().load(require_active_bucket_id()).record
+    for fact in record.facts:
+        if fact.path == _IDENTITY_TAX_ID_PATH:
+            return str(fact.value)
+    return ""
 
 
 def _auth_facts() -> Mapping[str, object]:
@@ -702,3 +746,233 @@ def test_run_certificate_reports_the_provider_as_done_when_operationally_complet
         name="-",
         provider=AuthProviderKind.CLAVE_MOVIL.value,
     )
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_the_page_offers_the_fiscal_identity_to_the_credential_row() -> None:
+    """The defect: two rows that must agree, neither seeding the other.
+
+    The session guard refuses whenever ``auth.dni_nie`` and
+    ``identity.tax_id`` disagree, yet the page read only the ``auth``
+    section, so an operator who had already declared their fiscal
+    identity met a blank credential row. They retyped it, and any typo
+    surfaced not here but at a login they could not explain.
+    """
+    stored = _stored_tax_id()
+
+    on_record = _auth_facts_on_record()
+
+    assert on_record[_IDENTITY_TAX_ID_PATH] == stored, "the page must be able to see the fiscal identity"
+    assert _suggested_tax_id(on_record) == stored
+    assert _page(on_record=on_record, suggested_tax_id=_suggested_tax_id(on_record)).fields, "page must build"
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_a_declared_credential_seeds_the_fiscal_identity_row() -> None:
+    """The reverse direction: whichever one is answered offers itself to the other.
+
+    An operator who answered the Cl@ve credential first must not meet a
+    blank fiscal-identity row and conclude the two are unrelated.
+    """
+    assert _suggested_tax_id({_AUTH_DNI_NIE_PATH: "00000000T"}) == "00000000T"
+
+
+def test_the_fiscal_identity_the_profile_holds_outranks_the_credential() -> None:
+    """One of the two is the taxpayer this profile describes; that one wins.
+
+    The credential is the same person typed at a prompt, so it fills a
+    gap rather than displacing the answer the profile already carries.
+    """
+    suggestion = _suggested_tax_id({_IDENTITY_TAX_ID_PATH: "00000000T", _AUTH_DNI_NIE_PATH: "00000001R"})
+
+    assert suggestion == "00000000T"
+
+
+def test_an_empty_row_is_seeded_but_an_answered_one_is_never_overwritten() -> None:
+    """Suggesting must not become deciding.
+
+    The two fields are separate on purpose. A suggestion that overwrote
+    an answer would make the day they legitimately diverge unsayable,
+    which is a stronger claim than this change is entitled to make.
+    """
+    page = _page(on_record={_AUTH_DNI_NIE_PATH: "00000001R"}, suggested_tax_id="00000000T")
+
+    assert _value_of(page, _AUTH_DNI_NIE_PATH) == "00000001R", "an answered row keeps its answer"
+    assert _value_of(page, _IDENTITY_TAX_ID_PATH) == "00000000T", "an empty row takes the suggestion"
+
+
+def test_the_identity_row_refuses_a_malformed_identifier_before_any_write() -> None:
+    """Refuse here rather than at a login the operator cannot explain.
+
+    The row asks the very validator the fail-closed session guard
+    applies, so the page cannot accept an identifier that could never
+    authenticate.
+    """
+    validate = _validator_of(_page(), _IDENTITY_TAX_ID_PATH)
+
+    assert validate("00000000X") is not None, "a wrong check letter must be refused at the row"
+    assert validate("00000000T") is None
+    assert validate("") is None, "blank is 'not answered yet', which this row must be able to hold"
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_committing_a_fiscal_identity_writes_it_to_the_identity_section() -> None:
+    """The page shows the row so the operator can answer it, not just read it."""
+    _commit_auth_choice(
+        {
+            _AUTH_PROVIDER_PATH: AuthProviderKind.CLAVE_MOVIL.value,
+            _IDENTITY_TAX_ID_PATH: "00000000T",
+            _AUTH_DNI_NIE_PATH: "00000000T",
+        },
+    )
+
+    assert _stored_tax_id() == "00000000T"
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_a_blank_identity_row_does_not_take_the_whole_commit_down_with_it() -> None:
+    """The one row on this page that must NOT ride the blank-clears rule.
+
+    Every ``auth`` path treats blank as "clear this fact", which is right
+    for a credential. ``identity.tax_id`` is schema-required, so a blank
+    one is not cleared but REFUSED — and the batch is judged as a whole,
+    so that refusal would reject the provider and every credential beside
+    it. An operator who has not declared a fiscal identity yet could then
+    not save an authentication mode at all.
+
+    Measured, not assumed: submitting ``identity.tax_id`` as ``None``
+    through ``set_active_fields`` raises ``ProfileSchemaValidationError``
+    rather than clearing the fact, which is why this row is omitted from
+    the batch instead of being cleared by it.
+    """
+    before = _stored_tax_id()
+    assert before, "the fixture profile must carry a fiscal identity for this to prove anything"
+
+    _, configure_result = _commit_auth_choice(
+        {
+            _AUTH_PROVIDER_PATH: AuthProviderKind.CERTIFICATE.value,
+            _IDENTITY_TAX_ID_PATH: "   ",
+            _AUTH_DNI_NIE_PATH: "",
+        },
+    )
+
+    assert configure_result.provider == AuthProviderKind.CERTIFICATE.value, "the commit must not have been refused"
+    assert _auth_facts()[_AUTH_PROVIDER_PATH] == AuthProviderKind.CERTIFICATE.value
+    assert _stored_tax_id() == before
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_the_required_identity_is_refused_when_cleared_not_silently_dropped() -> None:
+    """The control behind the case above: prove the hazard is real.
+
+    Were a blank ``identity.tax_id`` merely a no-op at the write door,
+    omitting it from the batch would guard nothing and the case above
+    would pass for the wrong reason.
+    """
+    from .....application.user_profile import set_active_fields
+    from .....domain.user_profile import UserProfileFact
+
+    cleared = UserProfileFact(path=_IDENTITY_TAX_ID_PATH, value=None)
+
+    with pytest.raises(ProfileSchemaValidationError):
+        workflow_state_repository().update(lambda state: set_active_fields(state, (cleared,)))
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_a_certificate_set_up_first_offers_the_identity_it_names(tmp_path: Path) -> None:
+    """The scenario this change exists for, end to end.
+
+    An operator registers a certificate before answering anything else.
+    The certificate's subject already names them, but nothing read it
+    until a session bound, so both identity rows opened blank and the
+    operator retyped what the app was holding.
+
+    The profile fields are cleared first because the fixture profile
+    carries a fiscal identity, and a certificate must not displace an
+    answer the operator already gave — the fall-through to the
+    certificate is exactly the case where they gave none.
+    """
+    from pydantic import SecretStr
+
+    from .....application.auth import (
+        register_operator_certificate_source,
+        select_operator_certificate_source,
+        set_operator_certificate_source_secret,
+    )
+    from .....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
+
+    now = datetime.now(UTC)
+    bundle = build_pkcs12_bundle(
+        tmp_path,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=200),
+        name="personal",
+        subject_cn="TEST HOLDER - 00000000T",
+    )
+    register_operator_certificate_source(name="personal", certificate_path=bundle)
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
+    select_operator_certificate_source(name="personal")
+
+    suggestion = _suggested_tax_id({})
+
+    assert suggestion == "00000000T", "the certificate names its holder; the page must offer that"
+    page = _page(on_record={}, suggested_tax_id=suggestion)
+    assert _value_of(page, _IDENTITY_TAX_ID_PATH) == "00000000T"
+    assert _value_of(page, _AUTH_DNI_NIE_PATH) == "00000000T"
+
+
+@pytest.mark.usefixtures("active_profile")
+def test_the_certificate_is_not_read_when_the_profile_already_answers(tmp_path: Path) -> None:
+    """A PKCS#12 decode is not paid for a question already answered.
+
+    Also the substantive guarantee behind it: a certificate never
+    displaces an identity the operator declared. Were the order reversed,
+    a gestor selecting a client's certificate would silently restamp the
+    profile's fiscal identity.
+    """
+    from pydantic import SecretStr
+
+    from .....application.auth import (
+        register_operator_certificate_source,
+        select_operator_certificate_source,
+        set_operator_certificate_source_secret,
+    )
+    from .....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
+
+    now = datetime.now(UTC)
+    bundle = build_pkcs12_bundle(
+        tmp_path,
+        not_valid_before=now - timedelta(days=1),
+        not_valid_after=now + timedelta(days=200),
+        name="personal",
+        subject_cn="TEST HOLDER - 00000001R",
+    )
+    register_operator_certificate_source(name="personal", certificate_path=bundle)
+    set_operator_certificate_source_secret(name="personal", secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE))
+    select_operator_certificate_source(name="personal")
+
+    declared = _stored_tax_id()
+    assert declared != "00000001R", "the fixture identity must differ from the certificate's for this to prove anything"
+
+    assert _suggested_tax_id(_auth_facts_on_record()) == declared
+
+
+def test_the_action_claims_exactly_the_auth_paths_it_commits() -> None:
+    """The routed set and the written set are one declaration, not two.
+
+    A path this page commits but does not claim stays reachable through
+    the generic single-field door, which is the second write path this
+    routing exists to close; a path claimed but not committed sends the
+    operator to a page that will not set it.
+    """
+    assert certificate_action().owns_paths == _AUTH_PROFILE_PATHS
+
+
+def test_the_action_does_not_claim_the_fiscal_identity() -> None:
+    """``identity.tax_id`` belongs to the identity section and stays editable.
+
+    This page shows it so the credential can agree with it. Claiming it
+    would take an ordinary edit away from a required field owned
+    elsewhere, to solve a problem it does not have.
+    """
+    assert _IDENTITY_TAX_ID_PATH not in certificate_action().owns_paths
