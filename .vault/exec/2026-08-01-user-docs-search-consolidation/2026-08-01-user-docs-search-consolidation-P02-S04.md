@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9af4e8cf887ec45d8b9d24a2dfd07e3f7b5606390a0e7910c33b4d772da1e583'
+body_hash: 'sha256:452481979a2827a85a865c150be1352c4d712688f3e085a638a4388ddb7973a7'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -40,3 +40,26 @@ The change was grounded by vaultspec-rag searches over the existing sweep, miss-
 No tests, builds, model downloads, matrix generation, browser probes, live-service sweeps, deployment, or runtime gates were run. The formal source review is recorded separately and must pass before any future plan-state transition.
 
 The formal remediation review recorded PASS for the four compiler strictness findings: required schema markers, exact canonical provider identity, float32 scale representation, and raw canonical artifact bytes. Vocabulary-source provenance and aggregate token-coverage evidence remain LOW follow-ons for P02.S05-P02.S07. The P02.S04 plan row remains open because this source seam has no ratified provider, generated matrix, or measured acceptance artifact yet.
+
+## 2026-08-05 source continuation: browser-recognizable query-token contract
+
+The source seam now distinguishes candidate result rows from the separate
+query-token rows a future browser reader would average. The query-token rows
+carry exact provider token text, model token ids, quantised values, and the
+same dimension/scale/byte-bound checks as result rows. The matrix fingerprints
+the query-token vocabulary separately, requires complete exact provider
+coverage, and advances the schema marker to version 2. The terminology package
+exports the new contract.
+
+This continuation is intentionally model-agnostic and source-only. It does not
+choose or download a model, implement the browser reader, generate a matrix,
+or establish tokenizer/normalisation, cosine-threshold, drift, licence, or
+held-out recall acceptance. Sol-medium architecture advice established that
+P02.S05 cannot safely proceed while the matrix contains only term vectors and
+token ids. P02.S04 remains open until the model and measured artifact gates
+are satisfied; P02.S05 through P02.S07 remain open as planned.
+
+The current source-only evidence is AST parsing and focused diff whitespace
+validation. No tests, builds, model downloads, matrix generation, Pagefind
+compilation, browser probes, live sweeps, runtime gates, or deployment were
+run.

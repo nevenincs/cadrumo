@@ -6,6 +6,8 @@ plain-data matrix that a later browser-side cosine tier may consume:
 
 * the vocabulary is normalised, deduplicated, byte-sorted, and fingerprinted;
 * a provider must return exactly one tokenised, finite vector for every term;
+* a provider must separately return exact browser-recognizable query-token
+  vectors; and
 * vectors are normalised and quantised with a specified per-row int8 scheme;
 * the output carries model, licence, vocabulary, row-order, and artifact
   provenance; and
@@ -38,21 +40,25 @@ __all__ = [
     "EmbeddingObservation",
     "MatrixCompilationError",
     "ModelMetadata",
+    "QueryTokenObservation",
+    "QuantizedQueryTokenRow",
     "QuantizedEmbeddingRow",
     "StaticEmbeddingMatrix",
     "StaticEmbeddingProvider",
     "TokenInventoryEntry",
     "canonical_vocabulary",
     "canonical_vocabulary_bytes",
+    "canonical_query_tokens",
     "compile_static_embedding_matrix",
     "load_static_embedding_matrix",
     "write_static_embedding_matrix",
+    "query_token_fingerprint",
     "vocabulary_fingerprint",
 ]
 
 _UTF_8: Final[str] = "utf-8"
 DEFAULT_MAX_SERIALIZED_BYTES: Final[int] = 3_000_000
-EMBEDDING_MATRIX_SCHEMA_VERSION: Final[int] = 1
+EMBEDDING_MATRIX_SCHEMA_VERSION: Final[int] = 2
 INT8_QUANTIZATION_ALGORITHM: Final[str] = "symmetric-per-row-int8-f32-v1"
 ROW_ORDER: Final[str] = "canonical-utf8-byte-order-v1"
 _WHITESPACE = re.compile(r"\s+")
@@ -60,6 +66,7 @@ _IMMUTABLE_REVISION = re.compile(r"^[0-9a-f]{40}$")
 _ALLOWED_SPDX_LICENSES = frozenset({"MIT", "Apache-2.0"})
 
 _Term = Annotated[str, StringConstraints(min_length=1, max_length=160)]
+_QueryToken = Annotated[str, StringConstraints(min_length=1, max_length=160)]
 _TokenId = Annotated[int, Field(ge=0)]
 _Int8Value = Annotated[int, Field(ge=-127, le=127)]
 _Sha256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
@@ -127,6 +134,39 @@ class EmbeddingObservation(BaseModel):
         return self
 
 
+class QueryTokenObservation(BaseModel):
+    """One provider response for one browser-recognizable query token.
+
+    A term row is a candidate result representation.  A query-token row is a
+    separate contract: its exact token text and model token id are retained so
+    the browser can recognise covered query material without shipping the
+    model tokenizer or weights.  The provider, not this compiler, owns the
+    tokenizer and must echo the requested token identity exactly.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    token: _QueryToken
+    token_id: _TokenId
+    vector: tuple[float, ...] = Field(min_length=1)
+
+    @field_validator("token")
+    @classmethod
+    def _require_non_blank_token(cls, value: str) -> str:
+        """Reject whitespace-only identities without rewriting tokenizer text."""
+        if not value.strip():
+            raise ValueError("query-token text cannot be blank")
+        return value
+
+    @field_validator("vector")
+    @classmethod
+    def _require_finite_vector(cls, value: tuple[float, ...]) -> tuple[float, ...]:
+        """Reject non-finite provider output before any arithmetic occurs."""
+        if any(not math.isfinite(component) for component in value):
+            raise ValueError("query-token vectors must contain only finite values")
+        return value
+
+
 class TokenInventoryEntry(BaseModel):
     """The model-token inventory for one shipped vocabulary row."""
 
@@ -168,20 +208,63 @@ class QuantizedEmbeddingRow(BaseModel):
         return value
 
 
-class StaticEmbeddingMatrix(BaseModel):
-    """Self-attesting, bounded plain-data term-embedding matrix."""
+class QuantizedQueryTokenRow(BaseModel):
+    """One browser-addressable query token encoded as a symmetric int8 row."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal[1]
+    token: _QueryToken
+    token_id: _TokenId
+    scale: float = Field(gt=0)
+    values: tuple[_Int8Value, ...] = Field(min_length=1)
+
+    @field_validator("token")
+    @classmethod
+    def _require_non_blank_token(cls, value: str) -> str:
+        """Keep token identity exact while rejecting a blank lookup key."""
+        if not value.strip():
+            raise ValueError("query-token text cannot be blank")
+        return value
+
+    @field_validator("scale")
+    @classmethod
+    def _require_finite_scale(cls, value: float) -> float:
+        """Reject a scale that is not the declared float32 representation."""
+        if not math.isfinite(value) or value <= 0.0:
+            raise ValueError("query-token quantization scale must be finite and positive")
+        try:
+            round_tripped = struct.unpack("<f", struct.pack("<f", value))[0]
+        except (OverflowError, struct.error) as exc:
+            raise ValueError("query-token quantization scale cannot be represented as float32") from exc
+        if round_tripped != value:
+            raise ValueError("query-token quantization scale must be exactly representable as float32")
+        return value
+
+
+class StaticEmbeddingMatrix(BaseModel):
+    """Self-attesting, bounded matrix with separate term/query-token rows.
+
+    ``rows`` describe the closed candidate-result vocabulary.  ``query_token_rows``
+    are intentionally a different typed surface: they are the only rows a
+    future browser reader may average to represent query material.  Keeping
+    the two collections distinct prevents a term-only artifact from being
+    mistaken for a usable client-side tokenizer contract.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    schema_version: Literal[2]
     model: ModelMetadata
     vocabulary_sha256: _Sha256
     vocabulary_count: int = Field(ge=1)
+    query_token_sha256: _Sha256
+    query_token_count: int = Field(ge=1)
     dimension: int = Field(gt=0, le=8192)
     quantization_algorithm: Literal["symmetric-per-row-int8-f32-v1"]
     row_order: Literal["canonical-utf8-byte-order-v1"]
     token_inventory: tuple[TokenInventoryEntry, ...] = Field(min_length=1)
     rows: tuple[QuantizedEmbeddingRow, ...] = Field(min_length=1)
+    query_token_rows: tuple[QuantizedQueryTokenRow, ...] = Field(min_length=1)
     serialized_bytes: int = Field(gt=0, le=DEFAULT_MAX_SERIALIZED_BYTES)
     artifact_sha256: _Sha256
 
@@ -192,20 +275,35 @@ class StaticEmbeddingMatrix(BaseModel):
             raise ValueError("matrix dimension must match model metadata dimension")
         if self.vocabulary_count != len(self.rows) or self.vocabulary_count != len(self.token_inventory):
             raise ValueError("vocabulary_count must match rows and token_inventory")
+        if self.query_token_count != len(self.query_token_rows):
+            raise ValueError("query_token_count must match query_token_rows")
 
         row_terms = tuple(row.term for row in self.rows)
         inventory_terms = tuple(entry.term for entry in self.token_inventory)
+        query_tokens = tuple(row.token for row in self.query_token_rows)
+        query_token_ids = tuple(row.token_id for row in self.query_token_rows)
+        expected_query_order = tuple(sorted(query_tokens, key=lambda token: token.encode(_UTF_8)))
         expected_order = tuple(sorted(row_terms, key=lambda term: term.encode(_UTF_8)))
         if any(term != _canonical_term(term) for term in row_terms):
             raise ValueError("matrix rows must contain canonical vocabulary terms")
         if row_terms != expected_order or len(row_terms) != len(set(row_terms)):
             raise ValueError("matrix rows must be unique and sorted by canonical UTF-8 byte order")
+        if any(not token.strip() for token in query_tokens):
+            raise ValueError("matrix query-token rows must not contain blank token identities")
+        if query_tokens != expected_query_order or len(query_tokens) != len(set(query_tokens)):
+            raise ValueError("query-token rows must be unique and sorted by canonical UTF-8 byte order")
+        if len(query_token_ids) != len(set(query_token_ids)):
+            raise ValueError("query-token rows must carry unique model token ids")
         if inventory_terms != row_terms:
             raise ValueError("token inventory must have the same row order and terms as the matrix")
-        if any(len(row.values) != self.dimension for row in self.rows):
+        if any(len(row.values) != self.dimension for row in self.rows) or any(
+            len(row.values) != self.dimension for row in self.query_token_rows
+        ):
             raise ValueError("every matrix row must match the declared dimension")
         if self.vocabulary_sha256 != vocabulary_fingerprint(row_terms):
             raise ValueError("vocabulary_sha256 does not match the canonical row vocabulary")
+        if self.query_token_sha256 != query_token_fingerprint(query_tokens):
+            raise ValueError("query_token_sha256 does not match the query-token vocabulary")
 
         unsigned_payload = self.model_dump(mode="json", exclude={"serialized_bytes", "artifact_sha256"})
         expected_artifact = sha256(_canonical_json_bytes(unsigned_payload)).hexdigest()
@@ -232,6 +330,10 @@ class StaticEmbeddingProvider(Protocol):
         """Return exactly one tokenized vector observation per requested term."""
         ...
 
+    def embed_query_tokens(self, tokens: tuple[str, ...]) -> tuple[QueryTokenObservation, ...]:
+        """Return one exact, browser-addressable vector per query token."""
+        ...
+
 
 def canonical_vocabulary(terms: Iterable[str]) -> tuple[str, ...]:
     """Return the closed vocabulary in deterministic UTF-8 byte order."""
@@ -254,25 +356,60 @@ def vocabulary_fingerprint(terms: Iterable[str]) -> str:
     return sha256(canonical_vocabulary_bytes(terms)).hexdigest()
 
 
+def canonical_query_tokens(tokens: Iterable[str]) -> tuple[str, ...]:
+    """Return exact provider token identities in deterministic UTF-8 order.
+
+    Unlike the result-term vocabulary, query-token text is not case-folded or
+    whitespace-rewritten here: those transformations belong to the pinned
+    provider/tokenizer contract.  The compiler only establishes a stable byte
+    order and rejects blank identities, so the browser lookup key is exactly
+    the text the provider declared.
+    """
+    canonical: set[str] = set()
+    for token in tokens:
+        if not isinstance(token, str) or not token.strip():
+            raise MatrixCompilationError("query-token identities must be non-blank strings")
+        if len(token) > 160:
+            raise MatrixCompilationError("query-token identities cannot exceed 160 characters")
+        if "\r" in token or "\n" in token:
+            raise MatrixCompilationError("query-token identities cannot contain line breaks")
+        canonical.add(token)
+    if not canonical:
+        raise MatrixCompilationError("the static matrix query-token vocabulary cannot be empty")
+    return tuple(sorted(canonical, key=lambda token: token.encode(_UTF_8)))
+
+
+def query_token_fingerprint(tokens: Iterable[str]) -> str:
+    """Return the SHA-256 fingerprint of the exact query-token identities."""
+    canonical = canonical_query_tokens(tokens)
+    return sha256("\n".join(canonical).encode(_UTF_8)).hexdigest()
+
+
 def compile_static_embedding_matrix(
     vocabulary: Iterable[str],
     provider: StaticEmbeddingProvider,
     *,
+    query_tokens: Iterable[str],
     max_serialized_bytes: int = DEFAULT_MAX_SERIALIZED_BYTES,
 ) -> StaticEmbeddingMatrix:
     """Compile and validate a bounded matrix from a pinned provider.
 
-    The provider receives canonical terms and must return one observation for
-    each term.  Missing, duplicate, or foreign observations are hard failures;
-    no row is silently dropped or replaced by a fallback vector.
+    The provider receives canonical result terms and exact query-token
+    identities and must return one observation for each item in both sets.
+    Missing, duplicate, or foreign observations are hard failures; no row is
+    silently dropped or replaced by a fallback vector.
     """
     if max_serialized_bytes <= 0 or max_serialized_bytes > DEFAULT_MAX_SERIALIZED_BYTES:
         raise MatrixCompilationError(
             f"max_serialized_bytes must be between 1 and {DEFAULT_MAX_SERIALIZED_BYTES}"
         )
     terms = canonical_vocabulary(vocabulary)
+    tokens = canonical_query_tokens(query_tokens)
     metadata = ModelMetadata.model_validate(provider.metadata)
     observations = tuple(EmbeddingObservation.model_validate(row) for row in provider.embed(terms))
+    query_observations = tuple(
+        QueryTokenObservation.model_validate(row) for row in provider.embed_query_tokens(tokens)
+    )
     expected = set(terms)
     by_term: dict[str, EmbeddingObservation] = {}
     for observation in observations:
@@ -290,8 +427,22 @@ def compile_static_embedding_matrix(
     if missing:
         raise MatrixCompilationError(f"provider returned no observation for {missing[0]!r}")
 
+    expected_tokens = set(tokens)
+    query_by_token: dict[str, QueryTokenObservation] = {}
+    for observation in query_observations:
+        token = observation.token
+        if token not in expected_tokens:
+            raise MatrixCompilationError(f"provider returned an observation for unknown query token {token!r}")
+        if token in query_by_token:
+            raise MatrixCompilationError(f"provider returned duplicate observations for query token {token!r}")
+        query_by_token[token] = observation
+    missing_tokens = tuple(token for token in tokens if token not in query_by_token)
+    if missing_tokens:
+        raise MatrixCompilationError(f"provider returned no observation for query token {missing_tokens[0]!r}")
+
     rows: list[QuantizedEmbeddingRow] = []
     inventory: list[TokenInventoryEntry] = []
+    query_rows: list[QuantizedQueryTokenRow] = []
     for term in terms:
         observation = by_term[term]
         scale, values = _quantize_vector(observation.vector, dimension=metadata.dimension, term=term)
@@ -303,17 +454,31 @@ def compile_static_embedding_matrix(
                 token_count=observation.token_count,
             )
         )
+    for token in tokens:
+        observation = query_by_token[token]
+        scale, values = _quantize_vector(observation.vector, dimension=metadata.dimension, term=token)
+        query_rows.append(
+            QuantizedQueryTokenRow(
+                token=token,
+                token_id=observation.token_id,
+                scale=scale,
+                values=values,
+            )
+        )
 
     core: dict[str, object] = {
         "schema_version": EMBEDDING_MATRIX_SCHEMA_VERSION,
         "model": metadata.model_dump(mode="json"),
         "vocabulary_sha256": vocabulary_fingerprint(terms),
         "vocabulary_count": len(terms),
+        "query_token_sha256": query_token_fingerprint(tokens),
+        "query_token_count": len(tokens),
         "dimension": metadata.dimension,
         "quantization_algorithm": INT8_QUANTIZATION_ALGORITHM,
         "row_order": ROW_ORDER,
         "token_inventory": [entry.model_dump(mode="json") for entry in inventory],
         "rows": [row.model_dump(mode="json") for row in rows],
+        "query_token_rows": [row.model_dump(mode="json") for row in query_rows],
     }
     artifact_sha256 = sha256(_canonical_json_bytes(core)).hexdigest()
     payload: dict[str, object] = {**core, "serialized_bytes": 0, "artifact_sha256": artifact_sha256}
