@@ -86,11 +86,24 @@ def test_untouched_for_out_of_scope_year() -> None:
     assert _key(2019) not in fact_index
 
 
-def test_idempotent_explicit_fact_preserved() -> None:
+def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> None:
+    """The art. 64/75 eligibility derivation wins over a value stored at the path.
+
+    Inverted from the former idempotency test, which pinned the injector
+    deferring to a stored fact and so let an operator decide a régimen
+    question the law owns.
+
+    The seeded ``0`` discriminates here for a reason worth stating, since
+    unlike its mínimo sibling ``0`` IS reachable by the real derivation (a
+    shared-custody descendant yields it). It cannot be reached by THIS
+    profile: no descendants are declared, so the form-faithful default is
+    ``1``. Seed and computation therefore differ, and the assertion proves
+    which one survived rather than restating the seed.
+    """
     fact_index: dict[str, object] = {_key(2024): Decimal("0")}
     fact_index_narrowed: Any = fact_index
     inject_derived_anualidades_eligibility_facts(fact_index_narrowed, _snapshot(2024))
-    assert fact_index[_key(2024)] == Decimal("0")
+    assert fact_index[_key(2024)] == Decimal("1")
 
 
 @pytest.mark.parametrize("year", [2020, 2021, 2022, 2023, 2024, 2025])

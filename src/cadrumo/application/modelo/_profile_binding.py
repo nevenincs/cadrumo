@@ -196,7 +196,13 @@ def _inject_derived_family_facts(
     count of children whose age at year-end is < 3 (Art. 58.3 LIRPF) is
     computed and stored as ``renta_family.descendientes_menores_3_{year}``.
 
-    This function is idempotent: keys already present are not overwritten.
+    Computes ALWAYS: a value already present at either key is overwritten
+    rather than deferred to. Both paths are declared derived, so the engine
+    owns them and a stored fact there can only be a stale or hand-planted
+    value. Deferring to it silently substituted an operator's number for the
+    law's. This mutates the ephemeral per-calculation index and never
+    persists, so a stray stored fact becomes inert rather than erased.
+
     Only the 2024 filing year is handled; other years are ignored until a
     dedicated binding is declared.
     """
@@ -205,8 +211,6 @@ def _inject_derived_family_facts(
 
     menores_key = "renta_family.descendientes_menores_3_2024"
     gastos_key = "renta_family.gastos_guarderia_reales_2024"
-    if menores_key in fact_index:
-        return
 
     # Reconstruct per-descendant birth_dates from stored facts.
     count_menores = 0
@@ -466,9 +470,11 @@ def _inject_derived_minimo_descendientes_facts(
     Always injects both keys (``Decimal("0")`` for a profile with no eligible
     descendant) so a genuinely childless filer's casillas resolve to the
     legally correct zero rather than an unresolved binding failing the
-    calculation outright. Idempotent per key: a key already present (an
-    explicit profile fact written by an older tooling version) is not
-    overwritten. Only the 2020-2025 filing years are handled; other years are
+    calculation outright. Computes ALWAYS: both keys are declared derived, so
+    a value present at either can only be stale or hand-planted, and deferring
+    to it silently substituted an operator's figure for the Art. 58/61
+    computation. The write is to the ephemeral per-calculation index and never
+    persists. Only the 2020-2025 filing years are handled; other years are
     ignored until the engine is extended.
     """
     if snapshot.filing_year not in _MINIMO_DESCENDIENTES_FILING_YEARS:
@@ -476,8 +482,6 @@ def _inject_derived_minimo_descendientes_facts(
 
     estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.filing_year}"
     autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot.filing_year}"
-    if estatal_key in fact_index and autonomico_key in fact_index:
-        return
 
     estatal_tranches = _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=None)
     if estatal_tranches is None:
@@ -503,38 +507,36 @@ def _inject_derived_minimo_descendientes_facts(
     profile = RentaFamilyProfile(descendientes=descendant_list_from_facts(descendant_facts))
     second_filer_indicated = _second_entitled_filer_indicated(fact_index)
 
-    if estatal_key not in fact_index:
-        birth_order_amounts, menor_tres_supplement = estatal_tranches
-        fact_index[estatal_key] = profile.minimo_descendientes_estatal(
-            snapshot.filing_year,
-            birth_order_amounts=birth_order_amounts,
-            menor_tres_supplement=menor_tres_supplement,
-            thresholds=thresholds,
-            second_filer_indicated=second_filer_indicated,
-        )
+    birth_order_amounts, menor_tres_supplement = estatal_tranches
+    fact_index[estatal_key] = profile.minimo_descendientes_estatal(
+        snapshot.filing_year,
+        birth_order_amounts=birth_order_amounts,
+        menor_tres_supplement=menor_tres_supplement,
+        thresholds=thresholds,
+        second_filer_indicated=second_filer_indicated,
+    )
 
-    if autonomico_key not in fact_index:
-        ccaa_infix = _minimo_descendientes_autonomico_ccaa_infix(fact_index)
-        autonomico_tranches = (
-            _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=ccaa_infix)
-            if ccaa_infix is not None
-            else estatal_tranches
-        )
-        if autonomico_tranches is None:
-            # A wired CCAA infix resolved to a partial table (should not
-            # happen given the per-tranche estatal fallback in
-            # ``_resolved_minimo_descendientes_tranches``, but stays
-            # defensive): fall back to the estatal tranches rather than
-            # leaving the autonómico casilla unresolved.
-            autonomico_tranches = estatal_tranches
-        birth_order_amounts, menor_tres_supplement = autonomico_tranches
-        fact_index[autonomico_key] = profile.minimo_descendientes_estatal(
-            snapshot.filing_year,
-            birth_order_amounts=birth_order_amounts,
-            menor_tres_supplement=menor_tres_supplement,
-            thresholds=thresholds,
-            second_filer_indicated=second_filer_indicated,
-        )
+    ccaa_infix = _minimo_descendientes_autonomico_ccaa_infix(fact_index)
+    autonomico_tranches = (
+        _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=ccaa_infix)
+        if ccaa_infix is not None
+        else estatal_tranches
+    )
+    if autonomico_tranches is None:
+        # A wired CCAA infix resolved to a partial table (should not
+        # happen given the per-tranche estatal fallback in
+        # ``_resolved_minimo_descendientes_tranches``, but stays
+        # defensive): fall back to the estatal tranches rather than
+        # leaving the autonómico casilla unresolved.
+        autonomico_tranches = estatal_tranches
+    birth_order_amounts, menor_tres_supplement = autonomico_tranches
+    fact_index[autonomico_key] = profile.minimo_descendientes_estatal(
+        snapshot.filing_year,
+        birth_order_amounts=birth_order_amounts,
+        menor_tres_supplement=menor_tres_supplement,
+        thresholds=thresholds,
+        second_filer_indicated=second_filer_indicated,
+    )
 
 
 _ANUALIDADES_ELIGIBILITY_FILING_YEARS = frozenset({2020, 2021, 2022, 2023, 2024, 2025})
@@ -568,15 +570,15 @@ def _inject_derived_anualidades_eligibility_facts(
     descendant and denied a régimen the payer was entitled to — the one gap in
     this campaign that over-taxes rather than under-declares.
 
-    Idempotent: an explicit fact already present is not overwritten. Only the
-    revisions carrying the separate-escala régimen are handled.
+    Computes ALWAYS: the path is declared derived, so a value present there
+    can only be stale or hand-planted, and deferring to it silently decided a
+    régimen question the law owns. Only the revisions carrying the
+    separate-escala régimen are handled.
     """
     filing_year = snapshot.filing_year
     if filing_year not in _ANUALIDADES_ELIGIBILITY_FILING_YEARS:
         return
     key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
-    if key in fact_index:
-        return
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
     if thresholds is None:
         # Without the eligibility ceilings this flag cannot be derived on the

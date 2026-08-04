@@ -218,12 +218,26 @@ def test_two_descendientes_stack_first_and_second_tranche_for_a_single_filer() -
     assert fact_index[_aggregate_key(2024)] == tranches[0] + tranches[1]
 
 
-def test_idempotent_explicit_fact_preserved() -> None:
+def test_stored_fact_at_the_derived_path_is_overwritten_by_the_computation() -> None:
+    """The Art. 58 computation wins over a value stored at the derived path.
+
+    Inverted from the former idempotency test, which pinned the injector
+    deferring to a stored fact. That deference was the override channel: a
+    value written at the derived aggregate path suppressed the law's figure
+    with no diagnostic. The injector now computes always.
+
+    ``999`` remains the anti-tautology sentinel it was chosen to be -- the
+    registry tranches and the menor-3 supplement are whole hundreds and every
+    eligibility split is a halving, so no real Art. 58 arithmetic lands on it.
+    The profile declares no descendants, so the computed answer is the
+    legally-correct zero, and the assertion discriminates between the two.
+    """
     snapshot = _snapshot(2024)
     fact_index: dict[str, object] = {_aggregate_key(2024): Decimal("999")}
     fact_index_narrowed: Any = fact_index
     inject_derived_minimo_descendientes_facts(fact_index_narrowed, snapshot)
-    assert fact_index[_aggregate_key(2024)] == Decimal("999")
+    assert fact_index[_aggregate_key(2024)] == Decimal("0")
+    assert fact_index[_aggregate_key(2024)] != Decimal("999")
 
 
 def test_one_eligible_descendant_matches_registry_first_tranche_across_all_years() -> None:
