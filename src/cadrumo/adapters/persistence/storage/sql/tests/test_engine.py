@@ -173,6 +173,11 @@ def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> 
         cadrumo_active_profile=None,
         cadrumo_local_storage_root=storage_root,
     )
+    # "cadrumo.db" is the independent oracle for the fallback derivation:
+    # ``Settings`` computes this same path via ``storage_path(StorageCategory
+    # .ROOT_FALLBACK_DATABASE, ...)``, so re-deriving the expected side
+    # through that accessor would assert the accessor equals itself. Keep
+    # the literal.
     fallback_db = storage_root / "cadrumo.db"
     assert settings.cadrumo_database_url == f"sqlite:///{fallback_db.as_posix()}"
     with _engine_for(settings) as engine:
