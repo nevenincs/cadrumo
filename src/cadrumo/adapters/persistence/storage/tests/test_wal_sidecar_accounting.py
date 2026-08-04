@@ -36,17 +36,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _ROW_BLOB = b"committed-but-uncheckpointed financial payload for the WAL accounting test"
 
 
-def _db_path(db_dir: Path) -> Path:
-    return db_dir / "cadrumo.db"
-
-
 def test_at_rest_scan_reads_a_committed_row_from_the_wal_sidecar(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         # A real committed secure-object write. In WAL mode with no checkpoint,
         # the row's ciphertext lands in the -wal sidecar, not the main .db file.
         AttachmentStore(objects=profile.repository).put_bytes(_ROW_BLOB)
 
-        db_path = _db_path(profile.paths.db_dir)
+        db_path = profile.paths.database_file
         wal_path = db_path.with_name(db_path.name + "-wal")
 
         # The sidecar exists and carries the committed delta.
@@ -71,7 +67,7 @@ def test_sql_read_layer_carries_an_uncheckpointed_row_for_the_sealed_export(tmp_
         store = AttachmentStore(objects=profile.repository)
         digest = store.put_bytes(_ROW_BLOB)
 
-        db_path = _db_path(profile.paths.db_dir)
+        db_path = profile.paths.database_file
         wal_path = db_path.with_name(db_path.name + "-wal")
 
         # The committed row is in the WAL sidecar, not yet folded into main.
