@@ -40,7 +40,7 @@ def test_kernel_roundtrips_a_strict_document_as_encrypted_registry_governed_byte
         write = persistence.to_secure_object_write(document)
         persistence.save(document)
 
-        at_rest = read_db_at_rest_bytes(profile.paths.db_dir / "cadrumo.db")
+        at_rest = read_db_at_rest_bytes(profile.paths.database_file)
         assert persistence.load() == document
 
     assert write.namespace == PROFILE_ASSETS_LEDGER_NAMESPACE.namespace
