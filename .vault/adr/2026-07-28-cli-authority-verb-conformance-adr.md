@@ -70,7 +70,8 @@ state MUST be reachable by exactly one of two mechanisms: it is listed in
 `PROFILE_BOUND_WRITE_VERB_PATHS`, or it is listed in
 `BOOTSTRAP_EXEMPT_VERB_PATHS` because it must legitimately run before a
 profile is unlocked. It MUST NOT be in neither. A leaf that only reads is in
-neither by design.
+neither by design. (Amended 2026-08-03: a read-only leaf is still unguarded,
+but is no longer *implicitly* so - see AMENDMENT below.)
 
 ENFORCEMENT. `test_every_unambiguously_mutating_app_leaf_is_guarded_or_bootstrap_exempt`
 materialises the live tree through the shipped lazy path, selects leaves whose
@@ -79,6 +80,43 @@ mechanisms. It carries two floors - a minimum app-leaf count and a minimum
 selected-mutation count - so a materialisation collapse cannot green it. A
 companion asserts every token in the set still names a live verb, so a rename
 cannot silently narrow the guarantee.
+
+AMENDMENT 2026-08-03 - THE CRITERION HOLDS, THE MECHANISM COUNT IS NOW THREE.
+
+The criterion above is unchanged and was not the thing that needed correcting:
+"mutates active-bucket state" is exactly the line the follow-on pass traced
+against, and it discharged the ambiguous tail this record named rather than
+departing from it. Twenty-five leaves were traced to a bucket-scoped persistence
+call and guarded, four of them from the named tail (`work wizard`,
+`invoice catalogue wizard`, `work amend-wizard`, `maintenance reconcile`).
+
+What changed is the shape of the enforcement, and the sentence "a leaf that only
+reads is in neither by design" no longer describes it. Enforcement by mutation
+token was total only over what the token set selected - 38 of 200 live app
+leaves - and could never have selected `app modelo aggregate`, whose CLI
+entrypoint owns a durable set-replace of percepcion and retencion observations
+behind a name no vocabulary would flag. Lengthening the token list re-arms the
+same failure one verb later, and a per-leaf mutation signal proved underivable:
+call-graph reachability from each leaf to the write primitives returns "reaches
+a write" for 112 of 112, because deferred function-local imports and bare-name
+resolution make everything reach everything.
+
+So a name-independent census was added alongside the token gate. Every live
+`app` leaf must now be guarded, bootstrap-exempt, or listed on a reviewed
+non-mutating roster - three outcomes, no fourth, no allowlist. A read-only leaf
+is unguarded exactly as this record intends; it must simply be DECLARED so,
+rather than qualifying by absence. "In neither" is therefore a failure state
+under the census where it was a resting state here. Nothing about a verb's
+runtime behaviour follows from the census: it is a classification requirement,
+and the runtime change was the twenty-five catalogue entries, which sit inside
+this record's own criterion.
+
+The census does not claim to detect mutation. It refuses to let a leaf go
+unread, which is the honest substitute where no per-leaf signal exists.
+
+Note for anyone renaming: the token gate keeps its original name despite that
+name overclaiming its scope, because this record cites the test by name above.
+The docstring was corrected instead. A rename would orphan the citation.
 
 RECONCILIATION. Nine leaves were outside both mechanisms and are now guarded:
 ledger evidence confirm, ledger restore, the three invoice-catalogue mutations,
