@@ -356,6 +356,8 @@ def _xml_dictionary_rendered_value(
         raw = _xml_dictionary_header_value(entry, draft=draft, headers=headers)
     if raw is None:
         return None
+    if draft.modelo == Modelo.M100:
+        raw = _modelo_100_sign_branch_value(entry, raw)
     rendered = _format_xml_dictionary_value(entry.data_type, raw)
     if draft.modelo == Modelo.M100 and entry.field_id == "ECIVIL":
         try:
@@ -363,6 +365,47 @@ def _xml_dictionary_rendered_value(
         except ValueError as exc:
             raise FilingExportValidationError(str(exc)) from exc
     return rendered
+
+
+# Casilla 0695 is declared against two sibling fields that are opposite branches
+# of one quantity, not two copies of it:
+#
+#   TCPP112  "Resto a ingresar ... diferencia positiva o igual a cero"
+#   TCNN112  "Resto ... cuya devolucion se solicita: diferencia negativa o igual a cero"
+#
+# Writing the casilla's value into both declares an amount to pay AND an amount to
+# refund. Only the branch matching the value's sign carries it.
+#
+# Both fields are minOccurs=1 inside a minOccurs=0 parent, so the branch that does
+# not apply is written as zero rather than omitted -- omitting it would render a
+# CompensacionConyugesRes block the schema rejects. At zero the two rules coincide
+# and both branches carry zero, so no tie-break is needed.
+#
+# Keyed on the field id rather than on the P102/N102 type codes: those do not
+# encode a sign domain. Thirty-five P102 rows in the 2024 dictionary carry labels
+# reading "negativa" (the perdida-patrimonial rows among them), and the reader
+# parses both prefixes identically, so the codes agree with the branches here by
+# coincidence rather than by rule.
+_MODELO_100_NEGATIVE_SIGN_BRANCH_FIELDS: frozenset[str] = frozenset({"TCNN112"})
+_MODELO_100_NON_NEGATIVE_SIGN_BRANCH_FIELDS: frozenset[str] = frozenset({"TCPP112"})
+
+
+def _modelo_100_sign_branch_value(entry: XmlDictionaryEntry, raw: object) -> object:
+    """Return ``raw`` for the sign branch it belongs to, and zero for the other.
+
+    Args:
+        entry: Dictionary row being rendered.
+        raw: Value resolved for the row's casilla.
+
+    Returns:
+        ``raw`` when the row's branch matches its sign, ``Decimal("0")`` when the
+        row is the opposite branch, and ``raw`` unchanged for every other row.
+    """
+    negative_branch = entry.field_id in _MODELO_100_NEGATIVE_SIGN_BRANCH_FIELDS
+    if not negative_branch and entry.field_id not in _MODELO_100_NON_NEGATIVE_SIGN_BRANCH_FIELDS:
+        return raw
+    amount = coerce_decimal(raw)
+    return raw if (amount < 0) is negative_branch else Decimal("0")
 
 
 def _xml_dictionary_header_value(
