@@ -22,6 +22,8 @@ a hand list could only ever be measured against its author's memory.
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from pathlib import Path
 from typing import Literal
 
@@ -33,7 +35,6 @@ from .....core.config import override_settings
 from .....core.resources import bundled_path
 from .._compiled_cache import (
     _CADRUMO_PACKAGE_DIR,
-    _LOADER_CODE_FINGERPRINT,
     _REGISTRY_PACKAGE_DIR,
     _classify_foreign_type,
     _compiled_payload_root_models,
@@ -41,6 +42,7 @@ from .._compiled_cache import (
     _derive_embedded_foreign_types,
     _encode_frame,
     _registry_disk_cache_key,
+    loader_code_fingerprint,
 )
 from .._loader import (
     _collect_registry_tree_fingerprints,
@@ -109,26 +111,26 @@ def test_cache_key_differs_when_loader_code_fingerprint_differs() -> None:
     root = "/registry/root"
     fingerprints = (("a/b.toml", 10, 123, "digest-a"), ("c/d.toml", 20, 456, "digest-b"))
 
-    key_a = _registry_disk_cache_key(root, fingerprints, loader_code_fingerprint="loader-vA")
-    key_b = _registry_disk_cache_key(root, fingerprints, loader_code_fingerprint="loader-vB")
+    key_a = _registry_disk_cache_key(root, fingerprints, loader_code_fingerprint_override="loader-vA")
+    key_b = _registry_disk_cache_key(root, fingerprints, loader_code_fingerprint_override="loader-vB")
     assert key_a != key_b
 
     # Deterministic for a fixed loader fingerprint and fixed tree inputs.
-    assert key_a == _registry_disk_cache_key(root, fingerprints, loader_code_fingerprint="loader-vA")
+    assert key_a == _registry_disk_cache_key(root, fingerprints, loader_code_fingerprint_override="loader-vA")
 
-    # The production key uses the real module-level source fingerprint.
+    # The production key resolves the real source fingerprint lazily.
     assert _registry_disk_cache_key(root, fingerprints) == _registry_disk_cache_key(
         root,
         fingerprints,
-        loader_code_fingerprint=_LOADER_CODE_FINGERPRINT,
+        loader_code_fingerprint_override=loader_code_fingerprint(),
     )
 
 
 def test_loader_code_fingerprint_is_a_stable_nonempty_sha256() -> None:
-    """The module-level loader fingerprint is a real 64-hex sha256 digest."""
-    assert isinstance(_LOADER_CODE_FINGERPRINT, str)
-    assert len(_LOADER_CODE_FINGERPRINT) == 64
-    assert all(character in "0123456789abcdef" for character in _LOADER_CODE_FINGERPRINT)
+    """The loader fingerprint is a real 64-hex sha256 digest."""
+    assert isinstance(loader_code_fingerprint(), str)
+    assert len(loader_code_fingerprint()) == 64
+    assert all(character in "0123456789abcdef" for character in loader_code_fingerprint())
 
 
 def test_package_roots_are_the_real_directories() -> None:
@@ -196,7 +198,7 @@ def test_loader_fingerprint_incorporates_embedded_foreign_module_source() -> Non
         registry_only.update(path.relative_to(package_dir).as_posix().encode("utf-8"))
         registry_only.update(path.read_bytes())
 
-    assert registry_only.hexdigest() != _LOADER_CODE_FINGERPRINT, (
+    assert registry_only.hexdigest() != loader_code_fingerprint(), (
         "the loader fingerprint must fold in the embedded foreign-module source, not the registry package alone"
     )
 
@@ -344,7 +346,7 @@ def test_stale_loader_pickle_is_not_served_while_current_key_pickle_is(tmp_path:
         stale_key = _registry_disk_cache_key(
             root_str,
             fingerprints,
-            loader_code_fingerprint="pre-change-loader-state",
+            loader_code_fingerprint_override="pre-change-loader-state",
         )
         assert stale_key != current_key
         stale_path = isolated_cache_dir / f"cadrumo_registry_{stale_key}.pkl"
@@ -356,3 +358,58 @@ def test_stale_loader_pickle_is_not_served_while_current_key_pickle_is(tmp_path:
             "a pickle keyed to a different loader-code state must not be served; "
             "the loader must recompile the real content instead of serving the stale pickle"
         )
+
+
+def test_the_fingerprint_is_not_computed_at_import_time() -> None:
+    """Importing the module must not hash the registry source tree.
+
+    Deriving the fingerprint walks every registry source file, reads its
+    bytes, and introspects the compiled models' annotations to read each
+    embedded foreign type's defining file -- around 150 filesystem calls. It
+    used to run at import, as the default argument of
+    ``_registry_disk_cache_key``, so every process that imported this module
+    paid it whether or not it ever touched the disk cache: ``aeat app ledger
+    --help`` hashed the whole registry source tree to print command names.
+
+    Checked in a subprocess because the assertion is about a FRESH import;
+    by the time this module's other tests have run, the memo is warm and an
+    in-process check could not tell eager from already-used. The counter
+    comes from the real memo rather than a copy of its logic, so a default
+    argument reinstating the eager call fails here.
+    """
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import cadrumo.domain.calculations.registry._compiled_cache as c;"
+            "print(c.loader_code_fingerprint.cache_info().currsize)",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert result.stdout.strip() == "0", (
+        "importing the compiled-cache module computed the loader fingerprint eagerly; it must be deferred to first use"
+    )
+
+
+def test_the_fingerprint_is_computed_once_and_reused() -> None:
+    """Control: deferring must not turn one hash into one hash per caller.
+
+    Without this, moving the work out of import could simply relocate it to
+    every cache-key derivation -- strictly worse than the eager version it
+    replaced.
+    """
+    loader_code_fingerprint.cache_clear()
+    try:
+        assert loader_code_fingerprint.cache_info().currsize == 0
+        first = loader_code_fingerprint()
+        assert loader_code_fingerprint.cache_info().misses == 1
+
+        for _ in range(5):
+            assert loader_code_fingerprint() == first
+        assert loader_code_fingerprint.cache_info().misses == 1, (
+            "the fingerprint must be derived once per process, not once per caller"
+        )
+    finally:
+        loader_code_fingerprint.cache_clear()
