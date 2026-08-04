@@ -18,6 +18,11 @@ import pytest
 from dev.write_site_census import (
     WriteSite,
     _bindings,
+    _is_constrained,
+    _literal_tail,
+    _module_signals_constraint_risk,
+    _taxonomy_subpath_tokens,
+    _top_level_div_chains,
     _trace,
     classify,
     origin_symbol,
@@ -58,6 +63,30 @@ def _call(source: str) -> ast.Call:
         if isinstance(node, ast.Call):
             return node
     raise AssertionError(f"no call expression in {source!r}")
+
+
+def _constrained_at(source: str) -> bool:
+    """Drive the real per-call pipeline for the first file-producing call in ``source``.
+
+    Mirrors the sequencing :func:`census` runs -- bindings, trace, classify,
+    then :func:`_is_constrained` -- without touching git, the same testing
+    shape :func:`_origin_at` already uses for provenance. This calls the
+    production functions in the production order; it does not re-derive
+    their answer, so it cannot silently agree with a broken one of them.
+    """
+    tree = ast.parse(source)
+    module_bindings = _bindings(tree)
+    module_signals_risk = _module_signals_constraint_risk(tree)
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            found = write_target(node)
+            if found is None:
+                continue
+            _primitive, path_expression = found
+            origin = _trace(origin_symbol(path_expression), [module_bindings])
+            provenance = classify(origin, local_params=set(), module_params=set())
+            return _is_constrained(path_expression, provenance=provenance, module_signals_risk=module_signals_risk)
+    raise AssertionError(f"no file-producing call in {source!r}")
 
 
 @pytest.mark.parametrize(
@@ -237,3 +266,200 @@ def test_ambiguity_is_reported_rather_than_silently_trusted() -> None:
     unambiguous = WriteSite(module="m.py", line=2, primitive="mkdir", origin="target", provenance="local")
     assert ambiguous.ambiguous
     assert not unambiguous.ambiguous
+
+
+# ---------------------------------------------------------------------------
+# injected-but-constrained: a literal that coincides with a declared taxonomy
+# subpath, in a module that also references a real accessor or spawns a
+# subprocess -- the shape three renamed "free" ``secrets`` literals actually
+# were, breaking a cross-process fixture handoff nobody had marked as shared.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ('tmp_path / "secrets"', ("secrets",)),
+        ('root / bucket_id / "db"', ("db",)),
+        ("tmp_path / bucket_id", ()),
+        ("tmp_path", ()),
+    ],
+)
+def test_literal_tail_returns_the_trailing_contiguous_string_literal_run(
+    source: str, expected: tuple[str, ...]
+) -> None:
+    """The walk stops at the first non-literal segment met walking backward from the tail."""
+    node = ast.parse(source, mode="eval").body
+    assert _literal_tail(node) == expected
+
+
+def test_literal_tail_is_empty_for_an_expression_with_no_division_at_all() -> None:
+    """A bare name (no ``/`` join at all) has no literal tail to report."""
+    node = ast.parse("tmp_path", mode="eval").body
+    assert _literal_tail(node) == ()
+
+
+def test_taxonomy_subpath_tokens_contains_both_whole_subpaths_and_their_path_components() -> None:
+    """A leaf-only injection (``"secrets"``) must match, not only an exact full multi-segment subpath."""
+    tokens = _taxonomy_subpath_tokens()
+    assert "secrets" in tokens  # SECRETS' own whole declared subpath
+    assert "master.key" in tokens  # a path component of SECRETS_MASTER_KEY's "secrets/master.key"
+
+
+def test_taxonomy_subpath_tokens_does_not_contain_an_unrelated_word() -> None:
+    """The positive control's negative: a plausible-looking directory name with no taxonomy referent."""
+    assert "fallback-store" not in _taxonomy_subpath_tokens()
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("import subprocess\ndef f():\n    subprocess.run(['x'])\n", True),
+        ("from subprocess import Popen\ndef f():\n    Popen(['x'])\n", True),
+        ("def f():\n    CliRunner().invoke(app)\n", True),
+        ("def f():\n    storage_path(StorageCategory.SECRETS)\n", True),
+        ("def f():\n    return 1 + 1\n", False),
+        ("def f():\n    subprocess_like_name()\n", False),
+    ],
+)
+def test_module_signals_constraint_risk(source: str, expected: bool) -> None:
+    """Any of the three named spawners, or a taxonomy-accessor reference, signals risk -- nothing else does."""
+    assert _module_signals_constraint_risk(ast.parse(source)) is expected
+
+
+@pytest.mark.parametrize(
+    ("path_source", "provenance", "module_signals_risk", "expected"),
+    [
+        # The real incident, minimal: a temporary-scoped literal matching a
+        # declared taxonomy subpath, in a module that signals risk.
+        ('tmp_path / "secrets"', "temporary", True, True),
+        # Same coincidence, but nothing in the module suggests a shared
+        # derivation -- not enough on its own.
+        ('tmp_path / "secrets"', "temporary", False, False),
+        # Risk signal present, but the literal has no taxonomy referent.
+        ('tmp_path / "fallback-store"', "temporary", True, False),
+        # Already has a real enrollment answer (or an unresolved one) that
+        # this refinement does not touch.
+        ('tmp_path / "secrets"', "taxonomy", True, False),
+        ('tmp_path / "secrets"', "local", True, False),
+        ('tmp_path / "secrets"', "literal", True, False),
+        # pass_through is the other provenance this check applies to.
+        ('output_dir / "secrets"', "pass_through", True, True),
+    ],
+)
+def test_is_constrained(path_source: str, provenance: str, module_signals_risk: bool, expected: bool) -> None:
+    """Only a temporary/pass_through site, in a risk-signalling module, on a taxonomy-coincident tail is constrained."""
+    node = ast.parse(path_source, mode="eval").body
+    assert _is_constrained(node, provenance=provenance, module_signals_risk=module_signals_risk) is expected
+
+
+def test_is_constrained_is_false_when_the_path_expression_is_absent() -> None:
+    """A write primitive with no path argument (e.g. a bare ``mkdir()``) has nothing to check."""
+    assert _is_constrained(None, provenance="temporary", module_signals_risk=True) is False
+
+
+def test_top_level_div_chains_counts_a_multi_segment_join_once() -> None:
+    """``a / "b" / "c"`` parses as nested BinOp nodes; only the outermost is a chain."""
+    tree = ast.parse('root = a / "b" / "c"\n')
+    chains = _top_level_div_chains(tree)
+    assert len(chains) == 1
+    assert isinstance(chains[0].right, ast.Constant)
+    assert chains[0].right.value == "c"
+
+
+def test_top_level_div_chains_counts_two_independent_joins_separately() -> None:
+    """Two unrelated joins in the same scope are two chains, not folded together."""
+    tree = ast.parse('x = a / "b"\ny = c / "d"\n')
+    assert len(_top_level_div_chains(tree)) == 2
+
+
+def test_top_level_div_chains_is_empty_for_an_expression_with_no_division() -> None:
+    """A module with no ``/``-join at all reports zero chains."""
+    assert _top_level_div_chains(ast.parse("x = a\n")) == []
+
+
+def _constrained_bare_chain_at(source: str) -> bool:
+    """Drive the real bare-``/``-chain pipeline census runs under ``scope="tests"``.
+
+    The incident this feature exists to catch (``{"CADRUMO_SECRET_STORE_DIR":
+    str(tmp_path / "secrets")}``, a dict value handed to an env-var override)
+    is a chain no write primitive ever consumes -- :func:`write_target` never
+    sees it, only :func:`_top_level_div_chains` does. This mirrors that half
+    of :func:`census`, the same shape :func:`_constrained_at` mirrors for the
+    write-primitive half.
+    """
+    tree = ast.parse(source)
+    module_bindings = _bindings(tree)
+    module_signals_risk = _module_signals_constraint_risk(tree)
+    chains = _top_level_div_chains(tree)
+    if not chains:
+        raise AssertionError(f"no / -join chain in {source!r}")
+    chain = chains[0]
+    origin = _trace(origin_symbol(chain), [module_bindings])
+    provenance = classify(origin, local_params=set(), module_params=set())
+    return _is_constrained(chain, provenance=provenance, module_signals_risk=module_signals_risk)
+
+
+def test_a_literal_matching_a_taxonomy_subpath_is_constrained_when_the_module_spawns_a_subprocess() -> None:
+    """The exact incident this feature exists to catch, minimised.
+
+    Three sites of the shape ``str(tmp_path / "secrets")``, injected as an
+    env-var override value, were renamed to a seemingly-free literal and
+    broke -- a spawned child process independently derived the same
+    location from the real accessor while the site under test read as free.
+    No write primitive ever consumes this expression; only the bare-chain
+    walk sees it.
+    """
+    source = (
+        "import subprocess\n\n"
+        "def build(tmp_path):\n"
+        '    overrides = {"CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets")}\n'
+        "    subprocess.run(['aeat', 'config'], env=overrides)\n"
+    )
+    assert _constrained_bare_chain_at(source)
+
+
+def test_the_same_literal_is_not_constrained_without_a_co_located_risk_signal() -> None:
+    """A taxonomy-coincident literal alone is not enough -- nothing in the module suggests a shared derivation."""
+    source = 'def build(tmp_path):\n    overrides = {"CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets")}\n'
+    assert not _constrained_bare_chain_at(source)
+
+
+def test_a_risk_signal_alone_does_not_constrain_an_unrelated_literal() -> None:
+    """The positive control's negative: a subprocess call plus a literal with no taxonomy referent."""
+    source = (
+        "import subprocess\n\n"
+        "def build(tmp_path):\n"
+        '    overrides = {"CADRUMO_FALLBACK_DIR": str(tmp_path / "fallback-store")}\n'
+        "    subprocess.run(['aeat', 'config'], env=overrides)\n"
+    )
+    assert not _constrained_bare_chain_at(source)
+
+
+def test_a_taxonomy_accessor_reference_also_signals_risk_not_only_a_spawned_process() -> None:
+    """CONSTRAINT_RISK_SIGNALS includes the taxonomy accessor markers too, not only subprocess/Popen/CliRunner."""
+    source = (
+        "def build(tmp_path):\n"
+        '    overrides = {"CADRUMO_SECRET_STORE_DIR": str(tmp_path / "secrets")}\n'
+        "    other = storage_path(StorageCategory.SECRETS)\n"
+    )
+    assert _constrained_bare_chain_at(source)
+
+
+def test_a_write_primitive_called_directly_on_the_chain_is_also_caught() -> None:
+    """The write-primitive half catches the same coincidence when the chain feeds a real write call inline.
+
+    ``_is_constrained`` receives whatever :func:`write_target` calls the
+    "path expression" for a given primitive shape; for a receiver primitive
+    (``.mkdir()``) that is the receiver expression itself. Inlining the
+    chain as the receiver, rather than assigning it to a local first, is
+    what lets :func:`_literal_tail` see the join -- proving the write-call
+    half of the wiring independently of the bare-chain half above.
+    """
+    source = (
+        "import subprocess\n\n"
+        "def build(tmp_path):\n"
+        '    (tmp_path / "secrets").mkdir(parents=True)\n'
+        "    subprocess.run(['aeat', 'config'])\n"
+    )
+    assert _constrained_at(source)

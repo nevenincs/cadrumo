@@ -79,6 +79,39 @@ rate before trusting any bucket count, since test-tree tracing hits
 ``unresolved`` far more often than production (paths arrive via fixtures,
 parametrize tuples, and helper returns that this scanner does not follow).
 
+**Site discovery is wider under ``--scope tests`` than under production.**
+The production scope stays exactly what it always was: a census of
+file-*producing* calls (:func:`write_target`'s primitive gate), because that
+is the closure question it answers and widening it would blur a settled
+guarantee. The test-tree walk is not answering that question -- it needs
+every hand-composed taxonomy-vocabulary path expression, most of which a
+test never passes to a write primitive at all (a fixture lookup fed to
+``open(..., "rb")``, a value assigned to a Pydantic field, an *expected*
+path built only to appear on the right of an ``assert``, a dict value
+handed to an env-var override). So ``--scope tests`` also walks every
+maximal ``/``-join chain in the module -- one entry per **outermost** chain,
+so ``a / "b" / "c"`` is one site, not three -- independent of whether a
+write primitive ever consumes it. Such a site's ``primitive`` field reads
+``<expression>``, distinguishing "seen as a bare path expression" honestly
+from a real write call.
+
+**"Injected-but-constrained" is a real defect class this widened walk can
+catch mechanically.** A literal that reads as free (``temporary`` or
+``pass_through`` -- the test itself supplied it) can secretly be
+**required** to match what a sibling fixture or a spawned child process
+independently derives from the real accessor -- renaming it then breaks a
+cross-process handoff that only a live test run reveals, never a read. The
+constrained check is a coarse, cheap-false-positive, expensive-false-negative
+heuristic: a ``temporary``/``pass_through`` site's :func:`_literal_tail`
+(the contiguous trailing run of string-literal join segments) is flagged
+:attr:`WriteSite.constrained` when a segment coincides with a declared
+:data:`~cadrumo.core.STORAGE_TAXONOMY` subpath or one of its path parts,
+**and** the same module also references a real storage accessor or spawns a
+subprocess (:func:`_module_signals_constraint_risk`). It cannot see a
+cross-module fixture chain -- module-local co-occurrence is the whole
+signal -- so a constrained site outside that reach still needs a human read,
+same as any other ``local``.
+
 Usage::
 
     python -m dev.write_site_census <revision>
@@ -94,8 +127,9 @@ import json
 import subprocess
 import sys
 from collections import Counter
-from dataclasses import dataclass
-from pathlib import Path
+from dataclasses import asdict, dataclass
+from functools import cache
+from pathlib import Path, PurePosixPath
 from typing import Final
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
@@ -162,6 +196,96 @@ _MAX_TRACE_DEPTH: Final[int] = 6
 #: literal-corpus triage; see the module docstring for what it can and
 #: cannot decide.
 SCOPES: Final[frozenset[str]] = frozenset({"production", "tests"})
+#: A bare path expression seen under ``--scope tests`` that no write
+#: primitive ever consumed -- honest about what was actually observed,
+#: distinct from a real write call's primitive name.
+BARE_EXPRESSION: Final[str] = "<expression>"
+#: Names whose presence anywhere in a module signal a cross-process or
+#: real-accessor dependency a co-located literal could secretly be
+#: constrained by -- the shape the three broken renames from the ``secrets``
+#: batch actually were: a spawned CLI child, or a sibling fixture, deriving
+#: the same location from the real accessor while the site under test reads
+#: as free. See :func:`_module_signals_constraint_risk`.
+CONSTRAINT_RISK_SIGNALS: Final[frozenset[str]] = frozenset({"subprocess", "Popen", "CliRunner", *TAXONOMY_MARKERS})
+
+
+@cache
+def _taxonomy_subpath_tokens() -> frozenset[str]:
+    """Return every declared taxonomy subpath, and each of its path components, as bare strings.
+
+    A test that injects a literal rarely spells the full multi-segment
+    declared subpath (``financial/attachments``) -- it usually injects only
+    the leaf segment (``attachments``) as one join operand. Registering both
+    the whole subpath and each of its parts is what lets the constrained
+    check catch a leaf-only injection, not only an exact full-path match.
+
+    Imports ``cadrumo.core`` lazily so a caller that never asks for
+    ``constrained`` (or the production scope, which never computes it) pays
+    nothing for the import.
+    """
+    from cadrumo.core import STORAGE_TAXONOMY
+
+    tokens: set[str] = set()
+    for location in STORAGE_TAXONOMY.values():
+        tokens.add(location.subpath)
+        tokens.update(PurePosixPath(location.subpath).parts)
+    return frozenset(tokens)
+
+
+def _literal_tail(node: ast.expr | None) -> tuple[str, ...]:
+    """Return the ordered string-literal segments in a ``/``-join chain's contiguous trailing run.
+
+    ``tmp_path / "secrets"`` -> ``("secrets",)``. ``root / bucket_id / "db"``
+    -> ``("db",)`` -- the walk stops at the first non-literal segment met
+    walking backward from the tail, since that is where the
+    taxonomy-coincidence question stops being answerable syntactically.
+    """
+    segments: list[str] = []
+    while isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+        right = node.right
+        if isinstance(right, ast.Constant) and isinstance(right.value, str):
+            segments.insert(0, right.value)
+            node = node.left
+        else:
+            break
+    return tuple(segments)
+
+
+def _module_signals_constraint_risk(tree: ast.AST) -> bool:
+    """Whether ``tree`` references a real storage accessor or spawns a subprocess/CLI runner.
+
+    Coarse by design, matching the rest of this scanner's discrimination
+    philosophy: a module that does either is one where an apparently-free
+    literal could secretly have to match what a sibling fixture, or a
+    spawned child process, independently derives from the real accessor.
+    False positives here cost a human a few seconds to clear; the false
+    negative is a cross-process handoff nobody notices broken until a
+    rename lands and a run turns red.
+    """
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and node.id in CONSTRAINT_RISK_SIGNALS:
+            return True
+        if isinstance(node, ast.Attribute) and node.attr in CONSTRAINT_RISK_SIGNALS:
+            return True
+    return False
+
+
+def _is_constrained(
+    path_expression: ast.expr | None,
+    *,
+    provenance: str,
+    module_signals_risk: bool,
+) -> bool:
+    """Whether an apparently-free literal coincides with a declared taxonomy subpath.
+
+    Only meaningful for a site already classified ``temporary`` or
+    ``pass_through`` -- anything else already has an enrollment answer (or
+    an unresolved one) that this refinement does not change.
+    """
+    if provenance not in {"temporary", "pass_through"} or not module_signals_risk:
+        return False
+    tail = _literal_tail(path_expression)
+    return bool(tail) and not _taxonomy_subpath_tokens().isdisjoint(tail)
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +297,7 @@ class WriteSite:
     primitive: str
     origin: str
     provenance: str
+    constrained: bool = False
 
     @property
     def ambiguous(self) -> bool:
@@ -365,6 +490,30 @@ def classify(origin: str, *, local_params: set[str], module_params: set[str]) ->
     return "local"
 
 
+def _top_level_div_chains(scope_node: ast.AST) -> list[ast.BinOp]:
+    """Return each maximal ``/``-join chain in ``scope_node``, outermost node only.
+
+    ``a / "b" / "c"`` parses as nested ``BinOp`` nodes; without this, a
+    plain walk visits the inner ``a / "b"`` too and double-counts what is
+    really one chain. A node is excluded when its immediate parent is
+    itself a division ``BinOp`` whose left operand *is* this node -- the
+    shape a left-associative chain produces.
+    """
+    parent_of: dict[int, ast.AST] = {}
+    for parent in ast.walk(scope_node):
+        for child in ast.iter_child_nodes(parent):
+            parent_of[id(child)] = parent
+    chains: list[ast.BinOp] = []
+    for node in ast.walk(scope_node):
+        if not (isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div)):
+            continue
+        parent = parent_of.get(id(node))
+        if isinstance(parent, ast.BinOp) and isinstance(parent.op, ast.Div) and parent.left is node:
+            continue
+        chains.append(node)
+    return chains
+
+
 def census(revision: str, *, scope: str = "production") -> list[WriteSite]:
     """Return every file-producing site in the chosen module set at ``revision``.
 
@@ -401,6 +550,10 @@ def census(revision: str, *, scope: str = "production") -> list[WriteSite]:
                 for child in ast.walk(node):
                     class_bindings.setdefault(id(child), shared)
         module_bindings = _bindings(tree)
+        # Only the test walk needs the constraint-risk signal, and computing
+        # it costs a full extra tree walk -- skip it outright for
+        # production, where _is_constrained always returns False anyway.
+        module_signals_risk = scope == "tests" and _module_signals_constraint_risk(tree)
 
         seen: set[int] = set()
         for scope_node in ast.walk(tree):
@@ -419,6 +572,7 @@ def census(revision: str, *, scope: str = "production") -> list[WriteSite]:
                     continue
                 primitive, path_expression = found
                 origin = _trace(origin_symbol(path_expression), scopes)
+                provenance = classify(origin, local_params=local_params, module_params=module_params)
                 seen.add(node.lineno)
                 sites.append(
                     WriteSite(
@@ -426,7 +580,38 @@ def census(revision: str, *, scope: str = "production") -> list[WriteSite]:
                         line=node.lineno,
                         primitive=primitive,
                         origin=origin,
-                        provenance=classify(origin, local_params=local_params, module_params=module_params),
+                        provenance=provenance,
+                        constrained=_is_constrained(
+                            path_expression,
+                            provenance=provenance,
+                            module_signals_risk=module_signals_risk,
+                        ),
+                    ),
+                )
+            if scope != "tests":
+                continue
+            # The test tree's literal-corpus question needs every hand-composed
+            # path expression, not only ones a write primitive consumes -- see
+            # the module docstring. A chain whose lineno a write call above
+            # already claimed is the same expression counted once, not twice.
+            for chain in _top_level_div_chains(scope_node):
+                if chain.lineno in seen:
+                    continue
+                origin = _trace(origin_symbol(chain), scopes)
+                provenance = classify(origin, local_params=local_params, module_params=module_params)
+                seen.add(chain.lineno)
+                sites.append(
+                    WriteSite(
+                        module=module,
+                        line=chain.lineno,
+                        primitive=BARE_EXPRESSION,
+                        origin=origin,
+                        provenance=provenance,
+                        constrained=_is_constrained(
+                            chain,
+                            provenance=provenance,
+                            module_signals_risk=module_signals_risk,
+                        ),
                     ),
                 )
     return sorted(sites, key=lambda site: (site.module, site.line))
@@ -456,8 +641,13 @@ def main(argv: list[str] | None = None) -> int:
             "unresolved_count": unresolved_count,
             "unresolved_rate": unresolved_rate,
             "ambiguous_count": sum(site.ambiguous for site in sites),
+            "constrained_count": sum(site.constrained for site in sites),
             "by_provenance": dict(Counter(site.provenance for site in sites)),
-            "sites": [site.__dict__ for site in sites],
+            # WriteSite is a slots dataclass -- it has no __dict__ to read.
+            # A prior version of this line (`site.__dict__`) raised
+            # AttributeError on every --json invocation; asdict() is the
+            # slots-safe equivalent.
+            "sites": [asdict(site) for site in sites],
         }
         print(json.dumps(payload, indent=2))
         return 0
@@ -478,6 +668,10 @@ def main(argv: list[str] | None = None) -> int:
     ambiguous = [site for site in sites if site.ambiguous]
     print(f"\nambiguous primitives needing a read ({len(ambiguous)}):")
     for site in ambiguous:
+        print(f"  {site.module}:{site.line}  {site.primitive}({site.origin})")
+    constrained = [site for site in sites if site.constrained]
+    print(f"\ninjected-but-constrained -- classification is pin, a rename would break it ({len(constrained)}):")
+    for site in constrained:
         print(f"  {site.module}:{site.line}  {site.primitive}({site.origin})")
     return 0
 
