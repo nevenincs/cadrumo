@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:b510836132d750e055859fb8aa17960c28878167b9f82296e1593fc9821622c3'
+body_hash: 'sha256:9be9c2a8e88c8908446a52d81e17dd3a4351d46a69dbd6f12f0365fdecb44777'
 step_id: 'S78'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
@@ -75,12 +75,210 @@ no genuine occurrence of the Step's stated literal shape. `S78` remains
 open: this batch closes ten named files against the Step's ~108-file
 corpus, not the Step itself.
 
-## Notes
+## Description (continued, treegates' literal-band batches)
 
-No incidents, no data loss, no `rm`/`Remove-Item` of any form. The
-provenance-gate and taxonomy false positives in the originally-handed-off
-file list were resolved by reading, not by editing -- two files were
-correctly left untouched rather than churned against a stale count.
+Method divergence, recorded as fact rather than apology: the Step's own
+text specifies one test package at a time, each gated by the provenance
+gate scoped to that package. Every batch below (and the ten-file batch
+above) instead worked by literal band -- one taxonomy-vocabulary word
+across the whole test corpus -- verified with `ruff check`/`ruff format`
+plus a targeted `pytest` run named per batch, never the package-by-package
+provenance-gate walk the Step specifies. No package-by-package walk
+exists anywhere in this feature's history. `S78` stays open under this
+divergence too: closing it as written would require re-running the
+literal-band work as a package walk, which did not happen.
+
+Enumeration method, common to every batch below unless stated otherwise:
+an ad hoc AST scan (not the Step's provenance gate) over every
+`src/cadrumo/**/tests/*.py` file, matching string constants that are the
+operand of a `/` `BinOp` or an argument to `joinpath`/`glob`/`rglob`, then
+cross-referencing each module's `PINNED_TAXONOMY_LITERALS` declaration
+(also read via the same AST walk) to separate already-declared sites from
+open ones. A raw substring scan was tried first and discarded: it
+inflated every band's true count by counting CLI argv tokens (`["app",
+"live", ...]`) as if they were path segments -- confirmed directly by
+diffing the two instruments' output on the "live" and "runs" bands, where
+raw substring reported roughly 60-65 hits each and the AST instrument
+reported 4-8 genuine path-composition sites.
+
+- **`secrets`** (`dee79c3a3b`, `4d60fc7125`, `fdf203ed7d`). Enumeration:
+  AST scan as above. Verification: targeted `pytest -n 0` per file named
+  below (not the full suite). Site list: `test_bundle_export_recovery.py`,
+  `_registry_cli_fixtures.py`, `test_m145_communication_cli.py` -- reverted
+  from an earlier wrong "fallback-store" rename back to "secrets" and
+  declared `PINNED_TAXONOMY_LITERALS`, because each spawns a CLI subprocess
+  that must independently locate a master key an `isolated_profile_storage_root`
+  / `isolated_runtime_profile` fixture already minted under the real
+  taxonomy default; renaming only the subprocess override broke the
+  handoff with a "no active profile" refusal (13/13 and 3/3 failures
+  respectively, both reproduced before the revert). `test_custody_enrollment_prompt_guard.py`
+  -- two sites renamed "secrets" to "fallback-store", genuinely injected
+  (no fixture dependency), landed late after being edited and tested but
+  never committed in an earlier session. `test_cli_startup_smoke.py`,
+  `test_profile_login_session_lifecycle.py` -- confirmed self-contained
+  (no `isolated_profile_storage_root`/`isolated_runtime_profile` use) and
+  landed clean, also recovered from an earlier uncommitted state.
+
+- **`master.recovery.key`** (`05efc71958`, `50ec933ca2`). Enumeration: AST
+  scan as above. Verification: read against `_RECOVERY_WRAP_FILENAME` in
+  `_custody.py` and `StorageCategory.SECRETS_MASTER_RECOVERY_KEY`'s declared
+  subpath; no test run needed since no code changed, only
+  `PINNED_TAXONOMY_LITERALS` declarations. Site list: all 20 hits across 6
+  files (`test_recovery.py`, `test_recovery_facade.py`,
+  `test_custody_enrollment_passphrase_channel.py`, `test_custody_store_matrix.py`,
+  `test_custody_enrollment_prompt_guard.py`, `test_config_recovery_lifecycle.py`)
+  declared pinned: the recovery-envelope provider chooses the filename, the
+  caller supplies the directory -- the same boundary already drawn for
+  `master.key`/`master.kdf`. One follow-up correction: the `not (...).exists()`
+  refusal guard in `test_custody_enrollment_passphrase_channel.py` had been
+  given the generic "provider chooses the filename" reason; corrected to
+  the refusal-guard-specific reason (a wrong path trivially satisfies the
+  assertion), matching `test_custody_enrollment_prompt_guard.py`'s existing
+  phrasing.
+
+- **`registry`** (`66d1b2951c`). Enumeration: AST scan as above, 54 raw
+  hits across 24 files. Verification: none needed, declaration-only
+  (both sites already correct accessor self-tests). Site list: 52 of 54
+  are a different-namespace collision with the bundled calculation-registry
+  TOML authoring tree (`_data/registry/aeat/...`), left untouched; 2 are
+  the genuine `StorageCategory.REGISTRY_DISK_CACHE` (`cache/registry`)
+  storage-taxonomy pin, declared.
+
+- **`live`** (`a0b128e2c7`). Enumeration: AST scan as above, 5 raw hits in
+  `application/live/tests/`. Verification: none needed, declaration-only.
+  Site list: all 5 declared pins -- 3 are `not (...).exists()` refusal
+  guards proving captured PII never leaks into a plaintext audit-trail file
+  (`test_expedientes.py`, `test_notifications.py`, `test_verify.py`); 1
+  mirrors `StorageCategory.AUDIT_LIVE_IVA_WALLET`'s declared subpath the
+  same way the `SECRETS_MASTER_KEY` family does (`AUDIT` is
+  operator-overridable, so production reads the same bare leaf names off
+  the accessor-derived root rather than calling `storage_path()` directly).
+  This band's outcome (5/5 genuine pins) explicitly refuted a predicted
+  "mostly injected, will collapse like the other bands" hypothesis stated
+  before the sweep.
+
+- **`runs`** (`df842a9fd8`, `624ee75618`). Enumeration: AST scan as above.
+  Verification: per-file `pytest` runs, all green. Site list: 2 genuine
+  pins (`test_storage_scope.py`'s widened marker; `test_run_trace_shape_conformance.py`'s
+  positive-control malformed run-id shape); 9 injected sites renamed
+  `"runs"` -> `"probe-runs"` (`test_config.py`'s env-anchoring round-trip
+  test, plus 8 `CADRUMO_RUNS_DIR`/`cadrumo_runs_dir` overrides confirmed
+  self-contained -- none derives its runs directory from a sibling
+  `isolated_profile_storage_root`/`isolated_runtime_profile` fixture, since
+  only `cadrumo_secret_store_dir` is accessor-derived by those fixtures).
+
+- **`financial`** (`1a89afbc82`). Enumeration: AST scan as above, 29 raw
+  hits. Verification: none needed for the pins (accessor self-tests); the
+  2 renamed sites' owning suites green. Site list: 4 genuine pins
+  (`test_storage_scope.py`'s widened marker; `test_storage_materialisation_parity.py`'s
+  detector's own ancestor-segment example); 2 injected sites renamed to
+  fictional segments (`test_config.py`'s env-round-trip anchoring test;
+  `test_rotation.py`'s lock-target-matching test, `store_dir` a
+  caller-supplied `RotationPlanEntry` parameter); 22 of 29 are a
+  different-namespace collision with the bundled ledger/financial-provider
+  fixture corpus (`FIXTURES_DIR / "financial"`), left untouched.
+
+- **`cache`** (`76b9575eb2`). Enumeration: AST scan as above. Verification:
+  per-file `pytest` runs across the touched files, all green. Site list: 10
+  genuine pins (default-derivation and accessor self-tests for
+  `REGISTRY_DISK_CACHE`, corpus-text cache, validation-verdict cache;
+  positive-control malformed shapes for llm-cache and registry-verdict;
+  the materialisation-parity detector's own ancestor-segment example,
+  widened alongside its existing "financial" marker); 11 injected sites
+  renamed `"cache"` -> `"probe-cache"` across `test_cache.py`,
+  `test_redaction.py`, `test_client.py`, `test_live_anthropic.py`
+  (`LLMCache.root_dir` is a constructor parameter, never a taxonomy
+  accessor; confirmed not entangled with
+  `isolated_profile_storage_root`/`isolated_runtime_profile`, since neither
+  fixture derives `cadrumo_llm_cache_dir`).
+
+- **`drafts`** (`fc3ef4c951`). Enumeration: AST scan as above, 15 raw hits
+  across 11 files (one already pinned by a prior pass). Verification:
+  full `pytest` run across the 10 touched files (`-m ""`), 119 passed, 1
+  pre-existing unrelated failure (see below); `ruff check`/`ruff format`
+  clean. Site list: 5 sites in `test_rotation.py`
+  (`RotationPlanEntry.store_dir`, a generic caller-supplies-the-directory
+  mechanism with no taxonomy dependency) plus 9 occurrences of the same
+  "populate every `Settings` dir field with a tmp_path subdir" boilerplate
+  builder across `application/review`, `application/setup`,
+  `domain/calculations/registry`, and `entrypoints/cli` test files, all
+  renamed `"drafts"` -> `"probe-drafts"` after confirming
+  `drafts_pending`/`ModeloDraftRepository` read from secure SQL storage,
+  never the filesystem `cadrumo_drafts_dir` field, and none of the ten
+  files import `isolated_profile_storage_root`/`isolated_runtime_profile`.
+  The one remaining `"drafts"` site (`test_output_dir_state_root.py`) is
+  the real default-derivation assertion its own `PINNED_TAXONOMY_LITERALS`
+  already defends -- left untouched, correctly resolved before this batch.
+
+- **`logs`** (`f9cb8468c7`). Enumeration: AST scan as above, applied across
+  7 files. Verification: 54 unit tests plus 21 of 22 integration tests
+  passed; the one integration failure
+  (`test_installed_console_exposes_contextual_product_identity`) is
+  pre-existing and unrelated -- it hardcodes `__version__ == "0.2.1"` while
+  the installed console reports the current `0.2.2`, and this batch
+  touched only docstrings, one import, and rename sites, never that
+  assertion (the stale pin was later deleted outright as part of `#56`'s
+  `StoragePathAnchor` work, `ccff620297`, once its root cause -- a
+  deliberate version bump nobody updated the test for -- was confirmed).
+  Site list: 3 sites renamed `"logs"` -> `"probe-logs"` in
+  `test_logging.py`; 2 in `test_logging_rotation.py`; 4 in
+  `test_path_resolution_memo.py`; 4 in
+  `test_collection_storage_root_log_lock.py`; 1 targeted rename in
+  `test_logging_override.py` (leaving a second, genuinely-different
+  `.name ==` default-assertion site on the same literal untouched); 2
+  pins declared in `test_json_error_contract.py` and
+  `test_root_help_shape.py` (both default-derived: the crash-subprocess
+  and `_console_env` harnesses set `cadrumo_local_storage_root` with no
+  log-directory override, so `<root>/logs` is the real unoverridden
+  default the `config repair logs` output must report). This batch was
+  authored across a session boundary; the working tree was rescued and
+  committed by a teammate, verified line-by-line against the authoring
+  session's own edits before landing.
+
+Separately, two ad hoc structural items landed under the same `S78`
+umbrella but scoped to `_storage_path_definitions.py` rather than a test
+literal, tracked as their own team-lead-assigned items (not part of the
+literal-band burndown method above, so not subject to the same
+enumeration-method note): interpolating the eleven `STORAGE_PATH_DEFINITIONS`
+grammars S114 had not covered (`520f74f769`), and the `StoragePathAnchor`
+docstring/gate-widening correction (`156dc48b24`, superseded by
+`ccff620297` after three proposed justifications were each measured and
+refuted in turn).
+
+## Outcome (continued)
+
+Roughly 95 individual sites classified across 9 literal bands (secrets,
+master.recovery.key, registry, live, runs, financial, cache, drafts,
+logs): about half declared as genuine storage-taxonomy pins with an inline
+or `PINNED_TAXONOMY_LITERALS`-declared reason, the rest renamed to a
+`probe-`/fictional segment once confirmed free of any cross-process
+fixture dependency. Two renames were caught and reverted after breaking a
+real fixture handoff, both before landing. `S78` remains open: none of
+this closes the Step's ~108-file / ~350-site corpus or satisfies its
+stated package-by-package provenance-gate method: this record exists so
+that gap is visible rather than merely relayed. `#49`'s own accounting
+(442 path-composition hits in files without a pin declaration measured at
+`5da2b328f9`) makes explicit that most raw hits are correctly-untouched
+different-namespace collisions, not remaining work -- but the tree cannot
+distinguish "correctly untouched" from "never examined" for any band this
+record does not name, which is the reason this record exists.
+
+## Notes (continued)
+
+No incidents, no data loss, no `rm`/`Remove-Item` of any form across any
+of the batches above. Two genuine near-misses, both caught before
+landing rather than after: a rename that broke a cross-process fixture
+handoff (`secrets`, reproduced and reverted twice, independently, in two
+different files across two different sessions -- the same mistake was
+not learned from the first time), and uncommitted work surviving across
+a session boundary three separate times (`test_custody_enrollment_prompt_guard.py`,
+the `test_config_reset_recovery.py` trio, and the full `logs` band),
+each recovered by reading the dirty working tree rather than by
+re-deriving the work. The enumeration-method gap this record's opening
+section names -- literal-band sweeps verified by targeted suites, not the
+Step's specified package-by-package provenance-gate walk -- applies to
+every batch in this continuation exactly as it does to the ten-file batch
+above.
 
 ## Batch: scanner tooling built to support this Step's triage
 
@@ -175,3 +373,195 @@ no test edits (nothing needed migrating), not a package-by-package walk.
   mentions (excluded above), no action.
 - **Reference**: full prediction-versus-measured writeup in the audit
   document cited above; no separate commit, since nothing was edited.
+
+**Reconciliation, added by treegates**: this batch's "already-enrolled, no
+action" disposition on the same 15 sites is superseded by the `drafts`
+entry earlier in this record (`fc3ef4c951`). "Enrolled via `cadrumo_drafts_dir`"
+(the settings field the site sets carries the real field name) and "a
+genuine default-derivation pin" (the VALUE assigned to that field is
+actually consulted by the code path under test) are different claims --
+`drafts_pending`/`ModeloDraftRepository` load drafts from secure SQL
+storage and never read the filesystem `cadrumo_drafts_dir` field for
+these test paths, so the value each site assigned it was inert
+regardless of what it said, and 14 of the 15 were renamed
+`"drafts"` -> `"probe-drafts"` rather than left as-is. Left in place
+rather than corrected in place: the discrepancy is itself evidence for
+this Step's own finding that no two lanes' classification passes agreed
+on the same site without cross-checking, and deleting the earlier read
+would erase that evidence.
+
+## Batch: `secrets` literal band (`StorageCategory.SECRETS`)
+
+Method divergence recorded as fact: the Step's specified gate (provenance gate
+scoped to the package, plus that package's own suite) did not run. Execution
+was a raw literal grep across the whole `src/cadrumo` tree, filtered to test
+paths after the fact, not a package-by-package walk.
+
+- **Enumeration method**: `git grep -nE "['\"]secrets['\"]" -- 'src/cadrumo' |
+  grep -i "/tests/"` (exact-quoted literal grep). 26 hits / 11 files measured
+  at the cited pin `0341f5864d`; 21 hits / 7 files at HEAD `08705ee6f0` --
+  four files (`test_config_reset_recovery.py`, `test_custody_enrollment_prompt_guard.py`,
+  `test_cli_startup_smoke.py`, `test_profile_login_session_lifecycle.py`) had
+  already been fixed by other lanes between the pin and HEAD, not by this pass.
+- **Verification actually run**: no code changed (every remaining site was
+  already correctly resolved), so verification was reading each site against
+  its module's `PINNED_TAXONOMY_LITERALS` declaration. No `ruff`/`pytest`
+  invocation, since nothing was edited.
+- **Site list**: 21 sites across 7 files. 18 code-level sites already
+  pin-declared -- `tests/test_storage_scope.py`, `core/tests/
+  test_storage_substrate_state_root.py`, `entrypoints/cli/tests/
+  test_cold_start_wizard_registration.py` (each declared before this pass),
+  `core/tests/test_ensure_storage_tree.py` and `core/tests/
+  test_output_dir_state_root.py` (declared by a peer commit `d80e996623`
+  landing concurrently with this read). 2 sites are pure docstring prose, not
+  code (`adapters/persistence/storage/master_key/tests/
+  test_master_key_file_fallback.py`, `tests/
+  test_isolation_fixture_state_root_coverage.py`). A wider net beyond the
+  exact-quote pattern found 2 more sites correctly out of scope: `core/tests/
+  test_config_state_root.py`'s `"operator-secrets"` (an injected override
+  deliberately renamed off the real vocabulary, same shape as the accepted
+  `"fallback-store"` precedent) and `entrypoints/cli/_config/tests/
+  test_status_frontend_gate.py`'s `"secrets.api_token"` (a profile-field
+  mask-path string, different namespace entirely). Disposition: zero migrate,
+  no commit from this pass -- everything was already resolved by the time it
+  was read.
+- **Note**: a separate lane (`treegates`) independently found and reverted
+  three sites in this same corpus that HAD been incorrectly renamed away from
+  `"secrets"` earlier in the campaign, breaking a cross-process fixture
+  handoff (`isolated_profile_storage_root` mints a master key at the real
+  taxonomy default; a CLI subprocess spawned by the same test must
+  independently locate it, and the earlier rename pointed the subprocess's
+  literal at a location the fixture never wrote to). Reverted at `dee79c3a3b`;
+  verified post-hoc against HEAD by this pass, not touched further.
+
+## Batch: `manifest.toml` literal band (bucket manifest, distinct from the registry's own directory-mode manifest.toml)
+
+Method divergence recorded as fact: the Step's specified gate did not run.
+Execution was a literal grep, corrected mid-pass for an instrument bug, not a
+package-by-package walk.
+
+- **Enumeration method**: `git grep -n '"manifest\.toml"'` (escaped dot).
+  The first pass used an unescaped `"manifest.toml"` regex, where the bare
+  `.` matched any character and silently caught every occurrence of the
+  unrelated function name `_manifest_toml` (definition and every call site)
+  in `application/workflow/tests/test_profile_bucket_scan.py`, inflating
+  that file's count from 6 to 11. Caught and corrected before landing
+  anything, by re-running with the dot escaped. Final count at HEAD: 45 raw
+  hits / 20 files, split into two namespaces by reading each site -- 34
+  hits / 15 files are the calculation registry's own directory-mode
+  fragment manifest (`domain/calculations/registry/tests/`,
+  `core/tests/test_resources.py`'s `packaged_data(...)` tuples,
+  `core/tests/test_modelo.py`, `core/tests/test_toml_registry_parity.py`,
+  `locales/tests/test_modelo_manager.py` -- same filename, unrelated
+  concept, out of this band's scope), and 11 hits / 5 files are the bucket
+  manifest this band covers.
+- **Verification actually run**: `ruff check` on the four edited files
+  (`application/wizard/tests/test_create_pointer_atomicity.py`,
+  `entrypoints/cli/tests/test_profile_lifecycle_verbs.py`,
+  `application/workflow/tests/test_profile_bucket_scan.py`,
+  `entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`) --
+  clean. `pytest` on the same four files plus `core/tests/
+  test_storage_taxonomy.py` (read, not edited): 36 passed.
+- **Site list**: 10 of the 11 bucket-manifest sites migrated onto the
+  canonical `BUCKET_MANIFEST_FILENAME` constant -- two duplicated
+  `_bucket_directories_without_manifest` helpers (one site each), six
+  malformed-manifest write targets in one file, two real-CLI-output reads
+  in a third file. The eleventh (`core/tests/test_storage_taxonomy.py:293`)
+  stays a literal: it tests `bucket_scoped_storage_path` directly
+  (accessor-is-the-subject), so composing the expectation independently is
+  the point. Commit `26beb3cace`.
+
+## Batch: `iva-wallet` / `invoices` / `llm-cache` / `llm-usage` / `llm-run-telemetry` literal bands
+
+Method divergence recorded as fact: the Step's specified gate did not run
+for any of these five. Execution was a literal grep per band, reading only
+-- no files were edited in this batch.
+
+- **Enumeration method**: `git grep -c '"<literal>"' -- 'src/cadrumo' |
+  grep -i "/tests/"` per band, exact-quoted. Raw hit counts at the time of
+  reading: `iva-wallet` 26, `invoices` 21, `llm-cache` 21, `llm-usage` 19,
+  `llm-run-telemetry` 14 (these differ slightly from the ~26/20/19/17/12
+  figures cited in the assignment; treated as independent re-measurement,
+  not a correction of someone else's count).
+- **Verification actually run**: reading only. No `ruff`/`pytest`
+  invocation in this batch, since nothing was edited.
+- **Site list and disposition, per band**:
+  - `iva-wallet`: 24 of 26 sites are a Typer CLI command-group name
+    (`aeat app modelo iva-wallet correct/seed/balance`, `aeat app live
+    iva-wallet pull/history`) across seven CLI/MCP test files -- different
+    namespace, out of scope. The remaining 2
+    (`application/live/tests/test_iva_wallet_live.py:50,54`,
+    `settings.cadrumo_audit_dir / "live" / "iva-wallet"`) were independently
+    resolved by a peer commit (`a0b128e2c7`, pin declaration with rationale)
+    landing while this band was being read; not touched.
+  - `invoices`: collapses to zero migrate work, but not into the same
+    shape as `iva-wallet`. ~6 sites are dict/payload keys or a source
+    package path (different namespace); ~11 sites are `cadrumo_invoices_dir=
+    tmp_path / "invoices"` via `override_settings`/`Settings()` -- the
+    sanctioned override mechanism, not a hand-composed path bypassing it;
+    ~2 sites build synthetic path sets to test a comparison algorithm
+    directly (accessor-is-the-subject); 2 sites are the existing pin
+    declaration and its on-disk-name oracle assertion.
+  - `llm-cache` / `llm-usage` / `llm-run-telemetry`: majority of each band
+    (13 / 9 / 12 sites respectively) are `LLMCache`/`UsageRecorder`/
+    `LLMRunTelemetryRecorder(root_dir=tmp_path / "llm-...")` -- a genuine
+    constructor-override parameter (`root_dir: Path | None = None`,
+    defaulting to the real settings field), checked explicitly for the
+    injected-but-constrained trap (no subprocess or sibling fixture in
+    these files recomputes the same path independently) and found clean.
+    2 sites per band are the existing pin declaration. `llm-usage` carries
+    6 further different-namespace sites (`aeat app diagnostics llm-usage`,
+    also a CLI verb). A few grammar-conformance sites deliberately build a
+    malformed path resembling the real shape to prove a shape-validator
+    catches the defect (accessor-is-the-subject).
+- **A judgment call raised, not made unilaterally**: the ~34 injected
+  `root_dir=tmp_path / "llm-..."` sites across the three `llm-*` bands
+  coincide with an already-pinned taxonomy word, matching the shape of the
+  `"fallback-store"`/`"operator-secrets"` rename precedent. Not renamed:
+  unlike those precedents, no test in these files makes an adjacent claim
+  about the real default that the literal could be confused with. Flagged
+  to `team-lead` rather than executed silently; no further instruction to
+  proceed was given, so the sites remain untouched.
+- **Commits**: none. Every site in this batch was already correctly
+  resolved (pin, injected-via-sanctioned-mechanism, accessor-is-the-subject,
+  or different-namespace) by the time it was read.
+
+## Batch: small-band tail -- `tokens`, `filed-declarations`, `filed-history`, `cadrumo.log`, `attachments`, `active-profile`, `transactions`, `corpus-text`, `submissions`, `usage-ratios.json`, `bucket.dek.json`, `reset-operations`, `registry-verdict`
+
+Method divergence recorded as fact: the Step's specified gate did not run.
+Execution was a literal grep per segment, reading exhaustively rather than
+sampling, not a package-by-package walk.
+
+- **Enumeration method**: `git grep -n '"<segment>"' -- 'src/cadrumo' |
+  grep -i "/tests/"` per segment, exact-quoted, 58 hits / 40 files total
+  across the 13 segments as assigned.
+- **Verification actually run**: `ruff check` on the seven edited files
+  (listed below) -- clean. `pytest` on the same seven files: 23 passed.
+- **Site list and disposition**:
+  - 5 sites migrated onto a real accessor across 5 files:
+    `bucket.dek.json` at `adapters/persistence/storage/tests/
+    test_rotation_crash_windows.py:184` and `entrypoints/cli/tests/
+    test_config_custody_profile_lifecycle.py:137` -> `BUCKET_DEK_FILENAME`;
+    `active-profile` at `entrypoints/cli/tests/test_fast_path_no_state.py:108,119`
+    and `entrypoints/cli/tests/test_ledger_exception_propagation.py:79`
+    -> `pointer_path()` (a local variable shadowing the imported function
+    renamed `pointer_file`); `attachments` at `domain/attachments/tests/
+    test_repository.py:129` -> `storage_path(StorageCategory.ATTACHMENTS)`,
+    whose own assertion is that this location never materialises, since
+    `AttachmentStore` persists to the encrypted SQL substrate rather than
+    the filesystem.
+  - 2 files gained a `PINNED_TAXONOMY_LITERALS` declaration they were
+    missing despite carrying accessor-is-the-subject sites:
+    `application/tests/test_config_reset_repository.py` (`reset-operations`,
+    previously undeclared) and `tests/test_storage_scope.py` (adding
+    `transactions`, already used at two sites but absent from an existing
+    declaration a peer had landed concurrently for other segments).
+  - The remaining 8 segments (`tokens`, `filed-declarations`,
+    `filed-history`, `cadrumo.log`, `corpus-text`, `submissions`,
+    `usage-ratios.json`, `registry-verdict`) were read exhaustively across
+    every raw hit and found already correctly resolved: pin /
+    accessor-is-the-subject, injected via `override_settings`/`Settings()`,
+    or different-namespace (dict/payload keys, source package paths, JSON
+    response count fields, a synthetic pydantic model's own default for a
+    detector's self-test). Zero migrate beyond the 5 sites above.
+- **Commit**: `7275e20b22`.
