@@ -7,6 +7,12 @@ the routing and dropped in the work: naming another taxpayer opened the
 active profile's page instead, and every field edited from there landed on
 the wrong one.
 
+A name for another live profile is offered that profile's login screen, so
+this host — which cannot show one — is also the proof of the fallback: the
+offer declines and the refusal it protects stays reachable. The path where
+the screen IS shown needs a terminal no test host here provides, so it is
+left to the login screen's own tests rather than simulated with a double.
+
 These are real registrations against an isolated storage root rather than
 a described scenario, because the whole property is about which of two
 concrete profiles the pointer names.
@@ -15,11 +21,18 @@ concrete profiles the pointer names.
 from __future__ import annotations
 
 import pytest
+import typer
+from typer.core import TyperCommand
 
 from .....tests.secure_sql import isolated_profile_storage_root
-from .._manager_dispatch import refuse_an_edit_target_the_manager_cannot_open
+from .._manager_dispatch import open_the_edit_target_or_refuse
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _context() -> typer.Context:
+    """A real Typer context, which the offer needs to re-point the profile."""
+    return typer.Context(TyperCommand("edit"), obj={"format": "text"})
 
 
 #: One passphrase for every profile a test registers. Profiles in a storage
@@ -58,9 +71,9 @@ def test_an_unnamed_edit_is_left_alone(tmp_path) -> None:
     """
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _register("Solo Subject")
-        assert refuse_an_edit_target_the_manager_cannot_open(None) is None
-        assert refuse_an_edit_target_the_manager_cannot_open("") is None
-        assert refuse_an_edit_target_the_manager_cannot_open("   ") is None
+        assert open_the_edit_target_or_refuse(_context(), None) is None
+        assert open_the_edit_target_or_refuse(_context(), "") is None
+        assert open_the_edit_target_or_refuse(_context(), "   ") is None
 
 
 def test_naming_the_active_profile_is_allowed_through(tmp_path) -> None:
@@ -74,18 +87,24 @@ def test_naming_the_active_profile_is_allowed_through(tmp_path) -> None:
         bucket_id = _register("Active Subject")
         assert _active_bucket_id() == bucket_id, "registration must leave this profile active"
 
-        assert refuse_an_edit_target_the_manager_cannot_open("Active Subject") is None
-        assert refuse_an_edit_target_the_manager_cannot_open(bucket_id) is None
+        assert open_the_edit_target_or_refuse(_context(), "Active Subject") is None
+        assert open_the_edit_target_or_refuse(_context(), bucket_id) is None
 
 
-def test_naming_another_live_profile_refuses_instead_of_editing_the_active_one(tmp_path) -> None:
+def test_naming_another_live_profile_never_edits_the_active_one(tmp_path) -> None:
     """The defect: a live profile that is not the active one.
 
-    Both profiles are real and both resolve, so the refusal cannot come
+    Both profiles are real and both resolve, so the outcome cannot come
     from the target being unknown — it comes from it not being the one the
     manager would open, which is the whole point. Asserted against the
     pointer rather than registration order, so the test still means what
     it says if registration ever stops selecting what it creates.
+
+    On a host that can show a screen the operator would be offered the
+    named profile's login page. This host cannot, so what is proved here
+    is the other half of that: the offer declines and the refusal it
+    protects still fires. Either way the one outcome ruled out is the
+    defect — silently editing the active profile.
     """
     from ..._errors import CliRefusedBoundaryError
 
@@ -96,7 +115,7 @@ def test_naming_another_live_profile_refuses_instead_of_editing_the_active_one(t
         assert other_id != active_id
 
         with pytest.raises(CliRefusedBoundaryError):
-            refuse_an_edit_target_the_manager_cannot_open("Other Subject")
+            open_the_edit_target_or_refuse(_context(), "Other Subject")
 
 
 def test_an_unknown_edit_target_refuses_as_login_would(tmp_path) -> None:
@@ -111,4 +130,4 @@ def test_an_unknown_edit_target_refuses_as_login_would(tmp_path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _register("Active Subject")
         with pytest.raises(ProfileNotFoundError):
-            refuse_an_edit_target_the_manager_cannot_open("Aktive Subjekt")
+            open_the_edit_target_or_refuse(_context(), "Aktive Subjekt")

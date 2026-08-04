@@ -7,10 +7,11 @@ pointer — is the authority for the create-vs-edit branch.
 
 Those refusals live in the WIZARD command, which the manager arm returns
 before ever calling, so this module re-states the `edit` one at the diversion
-(:func:`refuse_an_edit_target_the_manager_cannot_open`) and adds the
-constraint the manager brings with it: the manager edits whichever profile is
-ACTIVE, so a name for any other live profile is refused rather than silently
-redirected onto the active one.
+(:func:`open_the_edit_target_or_refuse`) and settles what the manager brings
+with it: the manager edits whichever profile is ACTIVE, so a name for any
+other live profile opens the login screen for that profile rather than being
+silently redirected onto the active one. An operator who declines the screen
+gets a refusal; one who authenticates gets the profile they asked for.
 
 Both are registered as per-LEAF lazy subcommands rather than built at
 package-import time. :func:`~cadrumo.application.wizard.build_wizard_command`
@@ -127,7 +128,7 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
             emit_manager_closed(ctx, outcome.label, created=True)
             return None
 
-        refuse_an_edit_target_the_manager_cannot_open(kwargs.get("profile_name"))
+        open_the_edit_target_or_refuse(ctx, kwargs.get("profile_name"))
         present_profile_manager()
         emit_manager_closed(ctx, active_profile_label(), created=False)
         return None
@@ -135,8 +136,8 @@ def with_manager_frontend(wizard_command, *, mode: WizardPersistMode):
     return _dispatch
 
 
-def refuse_an_edit_target_the_manager_cannot_open(supplied: object) -> None:
-    """Refuse an ``edit NAME`` the manager would silently redirect.
+def open_the_edit_target_or_refuse(ctx: _TyperClickContext, supplied: object) -> None:
+    """Make ``edit NAME`` open NAME, authenticating to it if that is what it takes.
 
     The manager edits the ACTIVE profile: ``build_active_profile_overview``
     resolves its subject through ``require_active_bucket_id`` and never sees
@@ -158,20 +159,28 @@ def refuse_an_edit_target_the_manager_cannot_open(supplied: object) -> None:
     ``login`` applies to its own ``NAME``, so an unknown target refuses
     identically here and there rather than growing a second wording.
 
-    A live profile that is simply not the active one is refused rather than
-    adopted: changing which profile is active is ``login``'s job, and this
-    verb silently performing a session handover would be a larger surprise
-    than the one being fixed. The refusal names that verb.
+    A live profile that is not the active one is OPENED, not refused. The
+    root callback's gate cannot help here — it runs before the verb is
+    parsed, so it preselects whoever was already selected and knows nothing
+    about this argument — so the offer is repeated with the target this verb
+    actually names. Authenticating to it performs the handover ``login NAME``
+    already owns, which is not a silent switch: the operator typed the name
+    and then entered that profile's secret. Declining leaves the previous
+    profile untouched and refuses, naming the verb that would have done it
+    on its own.
     """
     if not isinstance(supplied, str) or not supplied.strip():
         return
 
     from ....application.user_profile import resolve_login_target
     from ....core import resolve_active_bucket_id
+    from .. import _authenticated_at_the_gate
     from .._errors import CliRefusedBoundaryError
 
     target = resolve_login_target(supplied)
     if target.bucket_id == resolve_active_bucket_id():
+        return
+    if _authenticated_at_the_gate(cast("typer.Context", ctx), bucket_id=target.bucket_id):
         return
     raise CliRefusedBoundaryError(
         translated_message="cli.config.profile.edit_target_not_active",

@@ -56,6 +56,7 @@ _AUTH_PROVIDER_PATH = "auth.provider"
 _AUTH_DNI_NIE_PATH = "auth.dni_nie"
 _AUTH_SOPORTE_PATH = "auth.numero_soporte"
 _AUTH_FECHA_VALIDEZ_PATH = "auth.fecha_validez"
+_IDENTITY_TAX_ID_PATH = "identity.tax_id"
 
 _AUTH_PROFILE_PATHS = (
     _AUTH_PROVIDER_PATH,
@@ -63,11 +64,34 @@ _AUTH_PROFILE_PATHS = (
     _AUTH_SOPORTE_PATH,
     _AUTH_FECHA_VALIDEZ_PATH,
 )
-"""Every profile path this page collects, in the order it shows them.
+"""Every ``auth`` path this page collects, in the order it shows them.
 
 The two contraste paths are alternatives rather than a pair: Cl@ve asks a
 NIE holder for the numero de soporte and a DNI holder for the document's
 validity date, so an operator fills in whichever their document carries.
+
+``identity.tax_id`` is collected here too but is deliberately NOT in this
+tuple: these paths are written blank-clears-the-fact, and the schema
+declares the fiscal identity required, so a blank one is REFUSED rather
+than cleared. Since the batch is judged as a whole, that refusal would
+take every other row on the page down with it — an operator who has not
+declared their identity yet could not save an authentication mode at all.
+It is committed on its own terms in :func:`_commit_auth_choice`.
+"""
+
+_AUTH_PAGE_PATHS = (
+    _AUTH_PROVIDER_PATH,
+    _IDENTITY_TAX_ID_PATH,
+    _AUTH_DNI_NIE_PATH,
+    _AUTH_SOPORTE_PATH,
+    _AUTH_FECHA_VALIDEZ_PATH,
+)
+"""Every profile row the page shows, in the order it shows them.
+
+The fiscal identity sits directly above the credential it must agree
+with, because the two rows exist beside each other to be read against
+each other. Kept honest against the page it describes by
+``test_the_declared_row_order_is_the_order_the_page_builds``.
 """
 
 _VALIDATION_SCRATCH_PROFILE_ID = "00000000-0000-4000-8000-000000000000"
@@ -380,7 +404,29 @@ def _run_export() -> ManagerActionOutcome:
 
 
 def certificate_action() -> ManagerAction:
-    """Choose how this taxpayer authenticates, and with which certificate."""
+    """Choose how this taxpayer authenticates, and with which certificate.
+
+    Declares itself the sole writer of the ``auth`` section, so selecting
+    one of those rows in the table opens this page instead of the
+    single-field edit box.
+
+    Every one of them is a field that cannot be set alone and stay
+    correct. Writing ``auth.provider`` through the generic door recorded
+    the choice on the profile but never called ``configure_operator_auth``,
+    so the workflow state kept its old provider and the profile claimed one
+    no session had been activated for — the exact drift ``_commit_auth_choice``
+    was written to prevent. Writing ``auth.dni_nie`` alone let it diverge
+    from ``identity.tax_id``, which the fail-closed session guard then
+    refuses a login over, with nothing at setup time having said so. The
+    two contraste paths are alternatives whose sufficiency only the whole
+    page can judge, since which one is required follows the route.
+
+    ``identity.tax_id`` is deliberately NOT claimed. This page offers it
+    so the credential can agree with it, but it belongs to the identity
+    section and is editable there on its own terms; claiming it would take
+    a required field's ordinary edit away to solve a problem it does not
+    have.
+    """
     from ....adapters.inbound.tui import ManagerAction
 
     return ManagerAction(
@@ -388,6 +434,7 @@ def certificate_action() -> ManagerAction:
         label=tr("flows.manager.action.certificate"),
         label_key="flows.manager.action.certificate",
         run=_run_certificate,
+        owns_paths=_AUTH_PROFILE_PATHS,
     )
 
 
@@ -420,9 +467,11 @@ def _run_certificate() -> ManagerActionOutcome:
     from ._manager_frontend import build_active_profile_overview, present_form
 
     listing = list_operator_certificate_sources()
+    on_record = _auth_facts_on_record()
     collected = present_form(
         _auth_form_page(
-            on_record=_auth_facts_on_record(),
+            on_record=on_record,
+            suggested_tax_id=_suggested_tax_id(on_record),
             certificate_names=tuple(source.name for source in listing.sources),
             active_certificate=listing.active_source,
         ),
@@ -456,6 +505,7 @@ def _run_certificate() -> ManagerActionOutcome:
 def _auth_form_page(
     *,
     on_record: Mapping[str, str],
+    suggested_tax_id: str,
     certificate_names: Sequence[str],
     active_certificate: str,
 ) -> FormPage:
@@ -477,9 +527,22 @@ def _auth_form_page(
     out every operator who authenticates with Cl@ve and needs no
     certificate at all.
 
+    The fiscal identity and the Cl@ve identity are both shown, and both
+    open on ``suggested_tax_id`` when they hold nothing. They are separate
+    fields on purpose — one names the taxpayer, the other is a credential
+    input — but the fail-closed session guard refuses whenever they
+    disagree, so they are two rows that must carry one value. Opening them
+    blank made an operator who had already answered one of them retype it
+    into the other, and get no warning until a login refused much later.
+    Suggesting is as far as this goes: neither row is locked, so the day
+    they legitimately diverge the operator can still say so.
+
     Args:
-        on_record: The ``auth.*`` values the profile already holds, which
-            seed the fields so the page opens on the current answer.
+        on_record: The ``auth.*`` and ``identity.tax_id`` values the
+            profile already holds, which seed the fields so the page opens
+            on the current answer.
+        suggested_tax_id: The identifier to open both identity rows on
+            when they hold nothing, or ``""`` when none is known.
         certificate_names: Names of the registered certificate sources.
         active_certificate: The currently selected certificate name, or
             ``""`` when none is selected.
@@ -504,9 +567,15 @@ def _auth_form_page(
             validate=lambda value: None if value else tr("flows.manager.action.auth_provider"),
         ),
         FormField(
+            key=_IDENTITY_TAX_ID_PATH,
+            label=tr("flows.manager.action.auth_tax_id"),
+            value=on_record.get(_IDENTITY_TAX_ID_PATH, "") or suggested_tax_id,
+            validate=_validated_tax_id,
+        ),
+        FormField(
             key=_AUTH_DNI_NIE_PATH,
             label=tr("flows.manager.action.auth_dni_nie"),
-            value=on_record.get(_AUTH_DNI_NIE_PATH, ""),
+            value=on_record.get(_AUTH_DNI_NIE_PATH, "") or suggested_tax_id,
         ),
         FormField(
             key=_AUTH_SOPORTE_PATH,
@@ -535,6 +604,38 @@ def _auth_form_page(
         section=tr("flows.manager.action.certificate"),
         fields=tuple(fields),
     )
+
+
+def _validated_tax_id(value: str) -> str | None:
+    """Refuse a fiscal identity that could never authenticate, at the row.
+
+    Asks :func:`~core.identity.validate_spanish_tax_id` — the very
+    authority the fail-closed session guard applies to this field — so
+    the page cannot accept an identifier the first login would refuse.
+    Restating the rule here instead would let the two drift, and the
+    drift would only ever surface as a login the operator cannot explain.
+
+    A blank passes. This row seeds from other sources and is committed
+    only when it carries something, so "I have not answered this yet" is
+    a state the page must be able to hold; absence is answered by the
+    profile's own required-field reporting, not by this row.
+
+    Args:
+        value: The text the operator typed into the row.
+
+    Returns:
+        The refusal to show, or ``None`` when the value is storable.
+    """
+    from ....core.identity import IdentityError, validate_spanish_tax_id
+
+    text = value.strip()
+    if not text:
+        return None
+    try:
+        validate_spanish_tax_id(text)
+    except IdentityError:
+        return tr("flows.manager.action.auth_tax_id_invalid")
+    return None
 
 
 def _validated_schema_value(value: str) -> str | None:
@@ -656,8 +757,27 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
     the active provider means the provider is never briefly active with
     nothing behind it.
 
-    A blank field clears its fact rather than storing an empty string, so
-    "I have not answered this" and "this is empty" stay one state.
+    A blank ``auth`` field clears its fact rather than storing an empty
+    string, so "I have not answered this" and "this is empty" stay one
+    state.
+
+    ``identity.tax_id`` is committed on the opposite rule: it is written
+    when it carries a value and simply omitted when blank. That is not an
+    inconsistency to tidy away. The schema declares the path required, so
+    submitting it blank does not clear it — it is REFUSED, and because
+    the batch is judged as a whole the refusal would reject the provider
+    and every credential beside it. An operator who has not yet declared
+    a fiscal identity would then be unable to save an authentication mode
+    at all, which is the flow-breaking refusal this page already exists
+    to have stopped doing.
+
+    Omitting it is also the narrower claim. The path is the ownership
+    anchor the censal read and every filing resolve against, and it is
+    the only row here owned by another section: the page shows it so the
+    credential can agree with it, which is a reason to let the operator
+    SET it, not a mandate to let an authentication page decide it is
+    gone. Clearing stays on its own row on the profile page, where
+    clearing is the operator's evident intent.
 
     Args:
         collected: The values committed on the page.
@@ -676,10 +796,12 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
     from ....application.workflow import workflow_state_repository
     from ....domain.user_profile import UserProfileFact
 
-    facts = tuple(
-        UserProfileFact(path=path, value=collected.get(path, "").strip() or None) for path in _AUTH_PROFILE_PATHS
-    )
-    workflow_state_repository().update(lambda state: set_active_fields(state, facts))
+    facts = [UserProfileFact(path=path, value=collected.get(path, "").strip() or None) for path in _AUTH_PROFILE_PATHS]
+    declared_tax_id = collected.get(_IDENTITY_TAX_ID_PATH, "").strip()
+    if declared_tax_id:
+        facts.append(UserProfileFact(path=_IDENTITY_TAX_ID_PATH, value=declared_tax_id))
+    committed = tuple(facts)
+    workflow_state_repository().update(lambda state: set_active_fields(state, committed))
 
     chosen_certificate = collected.get(_CERTIFICATE_KEY, "").strip()
     if chosen_certificate:
@@ -689,7 +811,7 @@ def _commit_auth_choice(collected: Mapping[str, str]) -> tuple[str, AuthConfigur
 
 
 def _auth_facts_on_record() -> dict[str, str]:
-    """Return the auth fields already stored, so the page opens on them.
+    """Return the fields this page already holds, so it opens on them.
 
     These values reach the page as ordinary text rows, so the identity
     and the contraste are legible on screen while the profile overview
@@ -699,14 +821,59 @@ def _auth_facts_on_record() -> dict[str, str]:
     recorded here so the next reader meets a reason instead of an
     inconsistency; a field kind that masks until focused would resolve it
     properly, and none exists yet.
+
+    ``identity.tax_id`` is read alongside the ``auth`` section because
+    the page shows it: the session guard refuses whenever it and
+    ``auth.dni_nie`` disagree, so a page that could not see the fiscal
+    identity could not open the credential row on it either — which is
+    exactly what made an operator retype an answer they had given.
     """
     from ....application.user_profile import ProfileRepository
     from ....core import require_active_bucket_id
 
     record = ProfileRepository().load(require_active_bucket_id()).record
     return {
-        fact.path: str(fact.value) for fact in record.facts if fact.value is not None and fact.path.startswith("auth.")
+        fact.path: str(fact.value)
+        for fact in record.facts
+        if fact.value is not None and (fact.path.startswith("auth.") or fact.path == _IDENTITY_TAX_ID_PATH)
     }
+
+
+def _suggested_tax_id(on_record: Mapping[str, str]) -> str:
+    """Return the identifier to open an empty identity row on, or ``""``.
+
+    Three surfaces name one taxpayer — the fiscal identity, the Cl@ve
+    credential, and the certificate's own subject — and the fail-closed
+    session guard refuses whenever they disagree. None of them used to
+    populate the others, so an operator who had answered one met a blank
+    row on the next surface and learned they disagreed only when a login
+    refused.
+
+    Order is by how much the answer is already the operator's own.
+    ``identity.tax_id`` is the taxpayer this profile describes and wins.
+    ``auth.dni_nie`` is the same person typed at a credential prompt.
+    The certificate's subject comes last: it is a fact read out of a file
+    rather than an answer anybody gave here, so it fills a gap the
+    operator has left rather than displacing something they said.
+
+    Reading the certificate costs a PKCS#12 decode, so it is reached only
+    when the two profile fields are both empty — the case where the
+    operator has set up a certificate first and nothing else knows who
+    they are yet.
+
+    Args:
+        on_record: The values the profile already holds.
+
+    Returns:
+        The identifier to suggest, or ``""`` when none is known.
+    """
+    from ....application.auth import certificate_source_tax_id
+
+    for path in (_IDENTITY_TAX_ID_PATH, _AUTH_DNI_NIE_PATH):
+        known = on_record.get(path, "").strip()
+        if known:
+            return known
+    return certificate_source_tax_id()
 
 
 def _provider_label(kind: AuthProviderKind) -> str:

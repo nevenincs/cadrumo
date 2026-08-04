@@ -188,6 +188,53 @@ def test_the_resolved_rule_reads_the_format_and_the_arguments(tmp_path) -> None:
         assert login_screen_is_available(ctx, secrets_stdin=True) is False
 
 
+def test_a_gated_verb_is_offered_no_screen_on_a_host_that_cannot_show_one(tmp_path) -> None:
+    """The gate degrades to today's refusal wherever a screen cannot be shown.
+
+    This is the safety half of offering login inside other verbs: a JSON
+    reader, a pipe, and a CI runner must keep the refusal and exit code
+    they already depend on, and must never block on a page they cannot
+    type into. The suite's own host IS that case, so this is the real
+    scripted arm rather than a described one.
+
+    A live profile is registered first so an empty storage root cannot be
+    the reason for the answer — without it this would stay ``None`` with
+    the host check deleted and prove nothing.
+    """
+    from .._login_frontend import offer_login_to_a_gated_verb
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _a_profile_exists()
+        assert len(_login_choices()) == 1, "an empty storage root must not be the reason"
+        assert host_can_run_full_screen() is False, "this host must genuinely be the non-interactive case"
+
+        (only_choice,) = _login_choices()
+        assert offer_login_to_a_gated_verb(_context(output_format="text"), bucket_id=only_choice.profile_id) is None
+
+
+def test_the_gate_reports_no_session_when_no_screen_was_shown(tmp_path) -> None:
+    """No screen means the caller still refuses — the gate cannot admit a verb.
+
+    The wiring's whole safety claim is that it can only ever remove a
+    round trip, never let an unauthenticated verb through. Asserted
+    against the real callback rather than the presenter it delegates to,
+    because it is the callback's ``False`` that keeps the refusal below
+    it reachable.
+
+    What is NOT covered here is the path where a screen IS shown and a
+    session opens: that needs a terminal this host cannot provide, so it
+    is exercised by the login screen's own tests plus the shared
+    ``login_profile`` door, not simulated with a double.
+    """
+    from ... import _authenticated_at_the_gate
+
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        _a_profile_exists()
+        (only_choice,) = _login_choices()
+
+        assert _authenticated_at_the_gate(_context(output_format="text"), bucket_id=only_choice.profile_id) is False
+
+
 def test_an_unnamed_login_preselects_nothing_when_no_profile_is_active(tmp_path) -> None:
     """With no active profile the page opens on its own first row.
 

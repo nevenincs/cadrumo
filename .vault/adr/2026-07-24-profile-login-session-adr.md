@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#profile-login-session'
 date: '2026-07-24'
-modified: '2026-07-24'
-body_hash: 'sha256:0a2bf0499c4a8b8ce778001ad95bf95cdc412f73f98be55d7a950d7136bfe31f'
+modified: '2026-08-04'
+body_hash: 'sha256:37a532f9185c57a0f1cb72b2221badd497a9ac7ead475f6a740fb389afb1bfc5'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
@@ -118,3 +118,83 @@ Option ii is the only mechanism that delivers the operator's login-once requirem
 - Two new persisted artefacts per bucket (session record, throttle sidecar) and one keychain entry — all revocable caches, deleted by logout and bucket removal; no durability-floor obligations.
 - New failure modes are all fail-closed refusals with next-verb guidance; the bare-invocation landing card and bootstrap-exempt flows are unaffected.
 - Follow-up (out of scope): surfacing session state in `config profile status`, and any future TPM/DPAPI-NG hardening of the keychain anchor.
+
+## Update — the gate may present the login screen in place (Decision 4 narrowed)
+
+Decision 4 says non-exempt verbs "resume a valid persisted session or refuse
+with an instructive `Notice` naming `aeat config login`; only `login` prompts".
+That clause is narrowed here: on an interactive host a gated verb MAY present
+the canonical login screen in place and continue into the verb once a session
+is minted. Everything else in Decision 4 stands unchanged.
+
+### What went wrong
+
+The decision optimised the wrong quantity. It counts *prompts* and drove them
+to one; the operator counts *commands*, and for anyone whose session has
+lapsed the surface costs three:
+
+    aeat app ledger add ...      -> refused, "run aeat config login"
+    aeat config login            -> authenticate
+    aeat app ledger add ...      -> retype the original invocation
+
+The passphrase is entered exactly once in both that shape and the in-place one.
+The two extra commands buy no security whatsoever — they are the operator
+re-typing an invocation the CLI already parsed and then discarded. On a
+keyring-backend host it is starker still: authentication there is an OS
+prompt, so the ceremony wraps a Hello/Touch-ID tap in two round trips.
+
+This lands hardest on exactly the operator the campaign was for. The stated
+requirement was "log in once, stay logged in"; a 15-minute idle window means a
+working session is punctuated by these three-command detours all day.
+
+### Why this does not reopen what the decision closed
+
+The prohibition Decision 4 exists to enforce survives intact, because the thing
+it forbade is not the thing this permits:
+
+- The retired behaviour was an *implicit* unlock: the root callback entered the
+  master-key provider on every command, so the file backend re-read the
+  passphrase and the keyring backend unlocked **with no authentication gate at
+  all**. There was no act, and nothing on screen.
+- The permitted behaviour is an *explicit* one: a full-screen page that names
+  the profile, demands the passphrase (or the OS keychain gesture), and mints a
+  session through the same `login_profile` door. The authentication act is
+  preserved in full; only the operator's re-typed second invocation is removed.
+
+The Constraints section already draws this line in its own words — "no
+**silent** re-prompt fallback inside a non-login verb". A page the operator
+looks at and types into is not a silent fallback, so this Update contradicts
+no constraint; it narrows one clause of Decision 4 whose wording generalised
+past its own rationale.
+
+### Scope of the narrowing
+
+- The screen is offered ONLY where it can be shown and where no other caller
+  has already answered the question: a full-screen-capable host, not
+  `--format json`, no `--secrets-stdin`, no `CADRUMO_SECRET_PASSPHRASE`, and at
+  least one registered profile. Every scripted, piped, CI, and JSON caller
+  keeps today's refusal, `Notice`, and exit code byte for byte. This is the
+  same predicate `config login` already routes on.
+- Abandoning the screen is NOT a silent failure: it falls back to exactly the
+  refusal the verb raises today, so a caller that gets no session still gets
+  the instruction and the exit code.
+- Bootstrap-exempt verbs are untouched — they run with no session by design and
+  must not acquire a gate.
+- The session minted is an ordinary one: same lifetimes, same throttle, same
+  custody, same `Notice` set. Nothing about Decisions 1, 2, 3, or 5 moves.
+- A named target preselects its row. Where that names a profile other than the
+  active one, authenticating to it performs the ordinary handover
+  `login NAME` already owns (previous session closed, `Notice` emitted) — the
+  operator has visibly authenticated to the named profile, so the switch is an
+  explicit consequence of what they typed rather than a side effect.
+
+### Interim state this supersedes
+
+`config profile edit NAME` currently REFUSES a live profile that is not the
+active one, naming `aeat config login NAME`. That refusal was the correct
+interim once it was found that the manager arm dropped the name entirely and
+silently edited the active profile instead — a wrong-taxpayer hazard that had
+to close before this Update could land. It is a step-count regression against
+that (broken) prior behaviour and is superseded by the in-place gate: the
+target is still validated, but the operator authenticates to it on the spot
+instead of being sent away and asked to type the verb again.

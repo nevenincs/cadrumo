@@ -208,10 +208,40 @@ def present_login(*, preselected: str | None) -> ProfileLoginOutcome | None:
     )
 
 
+def offer_login_to_a_gated_verb(ctx: typer.Context, *, bucket_id: str) -> ProfileLoginOutcome | None:
+    """Present the login screen to a verb that met the session gate.
+
+    Returns the session the operator opened, or ``None`` when no screen
+    could be shown or they left without unlocking — in both cases the
+    caller falls back to the refusal it would have raised anyway, so a
+    verb never proceeds unauthenticated and a caller that cannot show a
+    screen keeps its exact refusal and exit code.
+
+    The gate exists because the alternative costs the operator two extra
+    commands and buys nothing: refusing, having them run ``login``, and
+    having them retype the invocation the CLI already parsed asks for the
+    same single passphrase this screen asks for. What it does NOT do is
+    unlock without an authentication act — that implicit unlock is what
+    the login-session decision retired, and this is its opposite: a page
+    that names the profile and demands the secret.
+
+    The screen opens on the profile the verb was already addressing, so
+    the common case is a password and nothing else. The chooser stays
+    live because the operator who discovers at the gate that they are on
+    the wrong profile would otherwise have to leave, switch, and come
+    back; the caller is responsible for re-pointing the active profile
+    when they do pick another one.
+    """
+    if not login_screen_is_available(ctx, secrets_stdin=False):
+        return None
+    return present_login(preselected=preselected_profile_id(bucket_id))
+
+
 __all__ = [
     "attempt_login",
     "login_screen_is_available",
     "login_tui_is_the_right_frontend",
+    "offer_login_to_a_gated_verb",
     "preselected_profile_id",
     "present_login",
 ]

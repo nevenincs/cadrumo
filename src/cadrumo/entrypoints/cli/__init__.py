@@ -561,6 +561,14 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
     interactively instead of at a prompt. An operator who has not supplied
     it — every interactive operator, and every keyring-backend host — meets
     the gate and must log in.
+
+    An interactive operator logs in HERE, on the screen this callback
+    offers, rather than being sent away to run ``login`` and then retype
+    the invocation that was already parsed. Both shapes ask for the same
+    single passphrase; only one of them costs two extra commands. Every
+    caller that cannot be shown a screen — JSON, piped, CI, dumb terminal
+    — and every operator who leaves the screen without unlocking falls
+    through to the refusals below unchanged.
     """
     from ...adapters.persistence.storage import get_master_key_provider
     from ...application.user_profile import resume_active_profile_session
@@ -571,6 +579,8 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
         return
     if _headless_secret_channel_active():
         ctx.with_resource(get_master_key_provider())
+        return
+    if _authenticated_at_the_gate(ctx, bucket_id=bucket_id):
         return
     if refusal in _LOGGED_OUT_REFUSALS:
         raise CliRefusedBoundaryError(
@@ -583,6 +593,47 @@ def _resume_profile_session_or_refuse(ctx: typer.Context, bucket_id: str) -> Non
         context={"reason": refusal.value},
         suggestion="aeat config login",
     )
+
+
+def _authenticated_at_the_gate(ctx: typer.Context, *, bucket_id: str) -> bool:
+    """Offer the login screen to a gated verb; report whether a session is open.
+
+    ``False`` means the verb must still refuse — no screen could be shown,
+    the operator left without unlocking, or the session did not survive
+    into this context. The caller then raises exactly the refusal it would
+    have raised without this step, so the gate can only ever remove a
+    round trip, never admit an unauthenticated verb.
+
+    Two things have to happen after the screen closes, and neither is
+    optional:
+
+    The session is re-resumed rather than assumed. Textual runs the unlock
+    in an asyncio task, and a ``ContextVar`` bound inside that child task
+    does not flow back into this synchronous context — so the login is
+    real and persisted, but the in-process session this callback is
+    supposed to leave open is not yet bound here. Re-resuming through the
+    same authority binds it. (``_manager_dispatch`` learned this on the
+    registration screen and does the same thing for the same reason.)
+
+    The active profile is re-pointed when the operator picked a different
+    one. By the time this runs, ``_resolve_active_profile_pointer`` has
+    already pinned ``cadrumo_active_profile`` to whoever was selected
+    BEFORE the screen opened. Left alone, a verb would then run against
+    the old profile holding the new profile's session — the wrong-taxpayer
+    shape this whole surface exists to avoid. The override is re-applied
+    to whatever was actually authenticated, so the verb and the session
+    always name the same profile.
+    """
+    from ...application.user_profile import resume_active_profile_session
+    from ...core.config import override_settings
+    from ._config import offer_login_to_a_gated_verb
+
+    outcome = offer_login_to_a_gated_verb(ctx, bucket_id=bucket_id)
+    if outcome is None:
+        return False
+    if outcome.bucket_id != bucket_id:
+        ctx.with_resource(override_settings(cadrumo_active_profile=outcome.bucket_id))
+    return resume_active_profile_session(bucket_id=outcome.bucket_id) is None
 
 
 def _headless_secret_channel_active() -> bool:

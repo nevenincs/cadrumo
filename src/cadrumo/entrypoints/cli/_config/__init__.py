@@ -38,6 +38,7 @@ from ._certificate import certificate_app
 from ._collab import register_collab_commands
 from ._custody import register_custody_commands
 from ._descendiente import register_descendiente_commands
+from ._login_frontend import offer_login_to_a_gated_verb
 from ._manager_dispatch import register_lazy_wizard_leaf as _register_lazy_wizard_leaf
 from ._profile_bundle import register_profile_bundle_commands
 
@@ -782,6 +783,7 @@ __all__ = [
     "auth_app",
     "auth_diagnostics_app",
     "certificate_app",
+    "offer_login_to_a_gated_verb",
     "profile_app",
     "register_apoderado_commands",
     "register_bucket_archive_commands",
