@@ -1262,7 +1262,21 @@ def main() -> None:
 
     arguments = sys.argv[1:]
     metadata_invocation = _is_metadata_invocation(arguments)
-    _apply_language_argv_to_environment(arguments)
+    if _apply_language_argv_to_environment(arguments) is not None:
+        # load_settings() holds a process-wide Settings singleton cached by
+        # the active-profile pointer, not by env var (core/config.py,
+        # _constructed_settings), so the CADRUMO_OUTPUT_LANGUAGE write above is
+        # invisible to it once that singleton already exists -- any tr() call
+        # that resolved a language before this point (an eager Settings()
+        # build during import, for instance) would otherwise keep serving
+        # that stale language for the rest of the process, including to
+        # _localise_help_section_headers() below. reset_settings_cache() is
+        # the sanctioned way to make a process-environment change observed
+        # (see its docstring); the same pairing already exists in
+        # test_flow_tui_app.py for a language change mid-session.
+        from ...core.config import reset_settings_cache
+
+        reset_settings_cache()
     _localise_help_section_headers()
     _localise_typer_parse_error_messages()
     # Route the Cl@ve auth-wait progress banner (which carries the AEAT
