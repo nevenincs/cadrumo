@@ -4,7 +4,7 @@ tags:
   - '#descendant-profile-axis'
 date: '2026-05-27'
 modified: '2026-08-04'
-body_hash: 'sha256:6f2cdedd0e753185d46eb1fabc843274510d395d55fed8c1e66a01c503d8fa62'
+body_hash: 'sha256:afc60b8b0d4408d10be18c768415b3b2f60e8cd813b0141094c150835a9ffc40'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
@@ -136,11 +136,12 @@ parser.
 **"Adoption supplement: Art. 67 grants an additional deduction in the year of adoption,
 requiring `adoption_date`."** Both halves are wrong.
 
-The supplement is **Art. 58.2**, not Art. 67. That misattribution propagated: it was found
-and corrected across module docstrings, a registry formula comment, a schema description and
-four locale catalogues — including one language where the wrong citation was spelled
-differently, so a search for the original token would have missed it. Every one of those
-sites was faithfully consistent with this record.
+The supplement is **Art. 58.2**, not Art. 67 — which the corpus shows is *Cuota líquida
+estatal*, an unrelated provision. That misattribution propagated: it was found and corrected
+across module docstrings, a registry formula comment, a schema description and four locale
+catalogues — including one language where the wrong citation was spelled differently, so a
+search for the original token would have missed it. Every one of those sites was faithfully
+consistent with this record.
 
 More consequentially, **"in the year of adoption" is a single period and the law grants
 three.** Art. 58.2: *"En los supuestos de adopción o acogimiento, tanto preadoptivo como
@@ -154,14 +155,22 @@ age threshold qualifies — the engine granted nothing for three years to exactl
 household. And the clause covers **adopción o acogimiento** while the assimilation clause
 covers **tutela y acogimiento**, so the three placements are not interchangeable.
 
-**"Prorrata (Art. 58 §3)"** is also wrong. The prorrata is **Art. 61 norma 1ª**, and it is not
-the 50%-per-contributor rule stated here — it prorates in equal parts among two **or more**
-entitled contribuyentes, with a closer-degree rule and an exception routing entitlement to
-the next degree. The fixed-half reading is recorded as a known narrowing elsewhere.
+**"Prorrata (Art. 58 §3)"** is wrong twice over, and the second way is sharper than the
+first. Art. 58 has only apartados **1 and 2**, so §3 cites a subdivision that does not exist
+— independently of being the wrong article. The prorrata is **Art. 61 norma 1ª**, which the
+corpus confirms positively rather than by elimination: *partes iguales* appears in Art. 61
+and nowhere in Art. 58. Nor is it the 50%-per-contributor rule stated here — it prorates in
+equal parts among two **or more** entitled contribuyentes, with a closer-degree rule and an
+exception routing entitlement to the next degree. The fixed-half reading is recorded as a
+known narrowing elsewhere.
 
-**Art. 60 and Art. 81 are not re-verified by this amendment.** Two wrong citations in one
-paragraph means the others are not safe to assume; they are flagged rather than corrected,
-because sweeping beyond this amendment's scope is its own decision.
+**The remaining citations and every figure were subsequently verified against the corpus and
+all hold.** Art. 58's four tranche amounts, Art. 60's two disability figures and its article,
+and Art. 81 for maternidad are correct as D1 states them. This check was deferred when the
+amendment was first written, on the reasoning that two wrong citations in one paragraph made
+the others unsafe to assume. That suspicion was right in direction and bounded in extent:
+the two errors above are the only ones. Recorded explicitly because "not re-verified" reads
+to a later author as "possibly also wrong", and no wider sweep is warranted.
 
 ### D6.2 — D2.1's field list is superseded, and where
 
