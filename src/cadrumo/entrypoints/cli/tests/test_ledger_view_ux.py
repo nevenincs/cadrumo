@@ -298,7 +298,7 @@ def test_classify_can_correct_and_view_iva_category(tmp_path: Path) -> None:
         "fecha",
         "importe",
         "descripción",
-        "Categoria de IVA",
+        "Categoría de IVA",
         "estado_revisión",
     ]
     listed_es_row = next(line for line in listed_es.output.splitlines() if txn in line)
