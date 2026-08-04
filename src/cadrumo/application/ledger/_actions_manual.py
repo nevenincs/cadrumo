@@ -874,7 +874,7 @@ def update_manual_transaction_fields(
     When ``reaffirm`` is :data:`True` the automatic re-affirmation no-op guard
     is bypassed and the command is forced through even if the patched fields are
     field-for-field identical to the stored transaction. This is the explicit
-    operator-driven counterpart to the automatic silent no-op (S14).
+    operator-driven counterpart to the automatic silent no-op.
 
     ``_preloaded_catalogue`` is an internal optimisation: a caller that has
     already decrypted the bucket :class:`TransactionCatalogue` (e.g.
@@ -910,7 +910,7 @@ def update_manual_transaction_fields(
     # carries.  ``_command_from_patch`` produces a command identical to the stored transaction,
     # which would trigger the mutation-required guard in ``update_manual_transaction``.  Treat
     # field-for-field-identical commands originating from a ``business_classification`` patch as
-    # confirmed no-ops rather than errors (option b from the S14 architecture verdict).
+    # confirmed no-ops rather than errors (the deliberate direction chosen for this guard).
     # When ``reaffirm`` is True the operator explicitly requests re-application; skip the guard.
     if (
         not reaffirm

@@ -44,7 +44,7 @@ _BUCKET_ID = "filing-test"
 
 @pytest.fixture(scope="module")
 def _active_bucket_runtime(tmp_path_factory: pytest.TempPathFactory) -> Iterator[TestRuntimeProfile]:
-    """Provision the active filing bucket runtime once per test module (S804)."""
+    """Provision the active filing bucket runtime once per test module."""
     tmp_path = tmp_path_factory.mktemp("filing-runtime")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         yield profile

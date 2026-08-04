@@ -1,4 +1,4 @@
-"""Anti-regression tests for the workflow declaration-pointer surface (DB-05).
+"""Anti-regression tests for the workflow declaration-pointer surface.
 
 The public facade and engine must use the canonical ``_models.py`` helpers,
 and ``declaration_key`` stores the filing year and bare registry token as
@@ -35,7 +35,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_workflow_declaration_pointer_surface_uses_canonical_helpers() -> None:
-    """DB-05: public and engine call sites use the canonical model helpers."""
+    """Public and engine call sites use the canonical model helpers."""
     assert declaration_key is _models.declaration_key
     assert update_declaration_pointer is _models.update_declaration_pointer
     assert _engine.declaration_key is declaration_key

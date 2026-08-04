@@ -598,7 +598,7 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
         d for d in unhandled if d.source_kind == "withholding" and d.reason == "unhandled_binding_source"
     ]
     assert not withholding_advisories, (
-        f"S27: withholding is enrolled and must not appear as unhandled; unhandled={unhandled}"
+        f"withholding is enrolled and must not appear as unhandled; unhandled={unhandled}"
     )
     assert BindingSourceKind.WITHHOLDING not in DEFERRED_SOURCE_KINDS
 

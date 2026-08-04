@@ -49,13 +49,12 @@ LIVE_PARITY_STATE_CREATING_PATH_CANARIES = (
 # Real AEAT write surfaces independently corroborating a specific
 # AEAT_WRITE_FORBIDDEN_VERB_TOKENS entry, beyond the TGVI/PRET family above.
 # Each path is a genuine AEAT-published surface, not a synthetic canary shape:
-# ``RealizarPresentacionLotes`` is the batch-presentation endpoint named in
-# ``2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr``;
+# ``RealizarPresentacionLotes`` is the batch-presentation endpoint named while
+# closing a write-verb substring-match gap in the adjacent-domain dedup pass;
 # the cancellation path is this project's own deployed Clave Movil
 # configuration (``core/external_constants.toml``); the payment path is quoted
 # verbatim from the bundled AEAT Manual Practico de Sociedades 2024 PDF. Most
-# tokens in AEAT_WRITE_FORBIDDEN_VERB_TOKENS have NO comparable witness today
-# -- see the token-witness split recorded against this task.
+# tokens in AEAT_WRITE_FORBIDDEN_VERB_TOKENS have NO comparable witness today.
 WRITE_VERB_WITNESS_PRESENTACION_PATH_CANARY = "/wlpl/OVPT-NTGV/RealizarPresentacionLotes"
 WRITE_VERB_WITNESS_CANCELAR_PATH_CANARY = _AEAT.clave_movil.cancelar_clave_movil_path
 WRITE_VERB_WITNESS_PAGAR_PATH_CANARY = (

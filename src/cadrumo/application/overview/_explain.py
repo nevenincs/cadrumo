@@ -352,8 +352,8 @@ def _out_of_plazo_warning(
     """Return an old-deadline warning for ``overview explain``.
 
     Applicability answers the taxpayer-model question ("does this
-    modelo apply?"). This helper adds the separate timing warning S347
-    asks for: a historical return can still be applicable while its
+    modelo apply?"). This helper adds a separate timing warning: a
+    historical return can still be applicable while its
     voluntary filing window closed long ago.
     """
     deadline_engine = DeadlineEngine()

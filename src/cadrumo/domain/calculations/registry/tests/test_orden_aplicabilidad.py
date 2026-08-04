@@ -500,5 +500,5 @@ def test_s24_open_ended_backfilled_revision_has_orden_aplicabilidad(modelo_id: s
     # Confirm the connective gate is satisfied.
     assert len(revision.orden_aplicabilidad) > 0, (
         f"Open-ended revision {modelo_id}/{revision_id} has no orden_aplicabilidad "
-        f"— the *-y-siguientes claim is not BOE-anchored (S24 connective gate)"
+        f"— the *-y-siguientes claim is not BOE-anchored (the connective gate)"
     )

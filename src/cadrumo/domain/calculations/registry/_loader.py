@@ -1213,7 +1213,7 @@ def _load_registry_tree_cached(
     resolved = Path(root)
     use_disk_cache = registry_disk_cache_enabled(is_bundled=is_bundled_registry_root(resolved))
     if use_disk_cache:
-        # ADR mcp-call-latency D3: a strict-validated compiled cache lets a warm
+        # A strict-validated compiled cache lets a warm
         # process skip the TOML parse. It is a shortcut to the same compiled
         # authority, never a second one: the loader here is the sole compile
         # path, and the cache read integrity-checks and structurally validates

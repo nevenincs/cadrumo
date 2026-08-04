@@ -4,7 +4,7 @@ A green ``validate_registry`` run persists a verdict keyed by the registry
 fingerprint tuples, the package version, and the outcome. On a later load a
 match lets :class:`ValidatedRegistryAuthority` construct with validation marked
 done and skip the multi-second re-validation of an immutable bundled registry
-(ADR ``mcp-call-latency`` D1: build and continuous integration are the gate;
+(build and continuous integration are the gate;
 the runtime asserts fingerprint identity only).
 
 Two homes back the verdict: a writable per-storage-root file (mutable trees,
@@ -102,7 +102,7 @@ def compute_bundled_verdict_key(
     entries (both packaging-unstable) and keys on the release version plus the
     sorted ``(relative-path, size)`` of every registry FILE -- stable from the
     build machine to every install because the bundled tree is byte-identical
-    per release. Per the ADR, install byte integrity is owned by the
+    per release. Install byte integrity is owned by the
     package-manager digest chain; any file-set or size change re-validates.
 
     Returns:

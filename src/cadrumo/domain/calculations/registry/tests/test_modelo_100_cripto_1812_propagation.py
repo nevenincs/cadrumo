@@ -147,7 +147,7 @@ def test_2024_1812_identity_copy_standard_gain(m100_2024_snapshot: RegistrySnaps
         f"casilla 1812 = {result.values[_M100_CRIPTO_GANANCIA_IMPUTABLE_CASILLA]!r}; "
         f"expected {result.values[_M100_CRIPTO_GANANCIA_NO_EXENTA_CASILLA]!r}. "
         "Formula renta-2024-ganancia-cripto-imputable must copy 1811 to 1812 "
-        "(S371 regression: before the fix 1812 stayed at 0)."
+        "(regression: before the fix 1812 stayed at 0)."
     )
 
 

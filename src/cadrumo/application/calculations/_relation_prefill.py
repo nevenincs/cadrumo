@@ -368,7 +368,7 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     missing activity-start date, or any modality other than ``ART_40_2_OPTIONAL``
     (i.e. ``ART_40_3_MANDATORY`` / ``INCOMPLETE``) returns ``False`` — the Modelo
     202 relation stays unresolved and the gate keeps blocking, never a silent
-    under-declaration. ADR 2026-06-19-m202-first-period-attestation.
+    under-declaration.
     """
     from ...domain.calculations.registry import Modelo202Modality, modelo_202_modality_from_inputs
 
@@ -597,7 +597,7 @@ def resolve_relations_from_local_store(
         grounding = _relation_value_grounding(relation, requirement)
         resolved = resolved_map.get(relation.id)
         if resolved is None:
-            # IS-3 / ADR 2026-06-19-m202-first-period-attestation: a first-year IS
+            # A first-year IS
             # filer under modalidad cuota (LIS art. 40.2) has no Modelo 202
             # pago-fraccionado obligation, so the M202 fold-in relation has no
             # source filing to resolve. Resolve it to 0 (rather than leaving it
@@ -857,7 +857,7 @@ class RelationPrefillSourceResolver:
         # ``target_binding`` slots HERE, inside the resolver, so the merged
         # resolution carries them in ``binding_values`` and the mesh
         # ``_claim_binding`` exclusive-ownership guard adjudicates any collision
-        # with another resolver loudly (aggregation-taxonomy ADR ruling 4). This
+        # with another resolver loudly. This
         # replaces the silent post-mesh merge that previously let every other
         # source override a relation-materialised value without a finding.
         binding_values = materialize_relation_binding_values(

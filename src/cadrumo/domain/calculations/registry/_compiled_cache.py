@@ -1,4 +1,4 @@
-"""Strict-validated, fingerprint-keyed compiled-registry cache (ADR mcp-call-latency D3).
+"""Strict-validated, fingerprint-keyed compiled-registry cache.
 
 Persists the compiled ``(modelos, catalogues)`` set so a warm process skips the
 17,276-file TOML parse (measured cold compile 8.2 s versus a warm cache load of
@@ -26,7 +26,7 @@ user-owned settings cache directory (never a shared OS temp dir in production),
 the bytes are produced solely by this module's own compile, and the embedded
 digest plus structural type-check refuse any corrupt or foreign file rather than
 serving it. Deliberate local tampering that also rewrites the digest is out of
-the cache's threat model per the ADR (install byte integrity is owned by the
+the cache's threat model (install byte integrity is owned by the
 package-manager digest chain); the digest defends corruption, partial writes,
 and stale/foreign files. Per ``no-legacy-compatibility`` the cache is derived
 and rebuildable: on any mismatch, delete and recompute -- never migrated.

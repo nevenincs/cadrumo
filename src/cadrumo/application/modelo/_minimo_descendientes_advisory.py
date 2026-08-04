@@ -221,7 +221,7 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     # Bounded for the same reason the sibling advisory is: naming every
     # descendant is the only unbounded part of a length-capped message, and a
     # large household would otherwise turn this advisory into a hard
-    # ValidationError -- silencing the disclosure the ADR's default rests on,
+    # ValidationError -- silencing the disclosure the chosen default rests on,
     # for the filer with the most children at stake.
     named = _name_indices(inferred)
     return (

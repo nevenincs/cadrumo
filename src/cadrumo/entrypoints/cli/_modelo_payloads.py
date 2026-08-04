@@ -916,7 +916,7 @@ class ModeloRequiresResult(OutputSchema):
 class ModeloExportPayload(OutputSchema):
     """Modelo export result (path reference only — no raw bytes in envelope).
 
-    Distinct from the application :class:`ModeloExportResult` (DB-26 S51 T8):
+    Distinct from the application :class:`ModeloExportResult`:
     the backend result carries the write metadata plus an absolute ``Path`` and
     extra audit fields; this envelope projects the path-reference receipt
     (fichero-BOE bytes are never carried) using ``output_path`` (stringified),

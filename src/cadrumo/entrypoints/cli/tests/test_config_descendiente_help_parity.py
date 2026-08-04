@@ -1,8 +1,8 @@
 """Parity gate: every key the ``--descendiente`` help advertises is one the parser honours.
 
 The help string is the only place an operator learns how to express a descendant
-fact non-interactively, and it drifted from the parser twice in one campaign.
-Three keys the parser had accepted for a whole phase were missing from it, so a
+fact non-interactively, and it drifted from the parser more than once.
+Three keys the parser had accepted were missing from it, so a
 filer refused at the write door and reaching for ``--help`` could not discover
 how to state a rentas figure at all.
 
@@ -33,8 +33,19 @@ from ....domain.contribuyente import parse_descendiente_flag
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_HELP_KEY = "cli.config.profile.descendiente.add_flag_help"
+#: EVERY string describing the ``--descendiente`` format. There are two, and
+#: guarding one is how the other drifted: the flag-verb help was corrected and
+#: gated together, while this sibling — describing the same surface — sat
+#: outside that frame from birth and accumulated four missing keys before this
+#: campaign added three more.
+_HELP_KEYS = (
+    "cli.config.profile.descendiente.add_flag_help",
+    "wizard.setup.flags.descendiente.help",
+)
 _LOCALES = ("en", "es", "ca", "hu")
+
+#: Every (locale, string) pair both directions are asserted over.
+_SURFACES = [(locale, key) for locale in _LOCALES for key in _HELP_KEYS]
 
 #: A token is a bare ``KEY=`` occurrence in the help copy.
 _TOKEN_RE = re.compile(r"([A-Za-zÀ-ÿ_]+)=")
@@ -60,8 +71,14 @@ _PROBES: dict[str, tuple[str, str]] = {
 }
 
 
-def _advertised_tokens(locale: str) -> set[str]:
-    return set(_TOKEN_RE.findall(tr(_HELP_KEY, locale=locale)))
+def _advertised_tokens(locale: str, help_key: str) -> set[str]:
+    """Tokens a given string advertises in a given locale.
+
+    Extracted from the COPY, never from the parser source. The accepted set
+    below is the parser's; deriving both from the same place would let the two
+    strings agree with each other while both drifted from what is accepted.
+    """
+    return set(_TOKEN_RE.findall(tr(help_key, locale=locale)))
 
 
 def _rendered_option_tokens() -> set[str]:
@@ -80,20 +97,20 @@ def _rendered_option_tokens() -> set[str]:
     return set(_TOKEN_RE.findall(getattr(option, "help", "") or ""))
 
 
-@pytest.mark.parametrize("locale", _LOCALES)
-def test_every_advertised_key_is_honoured_by_the_parser(locale: str) -> None:
+@pytest.mark.parametrize(("locale", "help_key"), _SURFACES)
+def test_every_advertised_key_is_honoured_by_the_parser(locale: str, help_key: str) -> None:
     """No locale may advertise a token the parser drops.
 
     This is the Catalan-token regression: a mistranslated key parses without
     error and silently keeps the claiming default, so only round-tripping the
     advertised token through the real parser catches it.
     """
-    advertised = _advertised_tokens(locale)
-    assert advertised, f"{locale}: help advertises no KEY= tokens at all"
+    advertised = _advertised_tokens(locale, help_key)
+    assert advertised, f"{locale}/{help_key}: help advertises no KEY= tokens at all"
 
     unknown = advertised - set(_PROBES)
     assert not unknown, (
-        f"{locale}: help advertises token(s) the parser does not accept: {sorted(unknown)}. "
+        f"{locale}/{help_key}: help advertises token(s) the parser does not accept: {sorted(unknown)}. "
         "Key tokens are part of the parse contract and must not be translated."
     )
 
@@ -102,21 +119,21 @@ def test_every_advertised_key_is_honoured_by_the_parser(locale: str) -> None:
         fragment, attribute = _PROBES[token]
         parsed = parse_descendiente_flag(f"{_BIRTH},{fragment}")
         assert getattr(parsed, attribute) != getattr(baseline, attribute), (
-            f"{locale}: help advertises {token}= but the parser ignored it -- "
+            f"{locale}/{help_key}: help advertises {token}= but the parser ignored it -- "
             f"{attribute} stayed at {getattr(baseline, attribute)!r}"
         )
 
 
-@pytest.mark.parametrize("locale", _LOCALES)
-def test_every_parser_key_is_advertised(locale: str) -> None:
+@pytest.mark.parametrize(("locale", "help_key"), _SURFACES)
+def test_every_parser_key_is_advertised(locale: str, help_key: str) -> None:
     """The discoverability half: a key the parser accepts must appear in the help.
 
-    Three keys were accepted for a whole phase while absent from this string, so
+    Three keys the parser had accepted were missing from this string, so
     the only surface an operator consults could not lead them to the facts the
     write door was refusing them for.
     """
-    missing = set(_PROBES) - _advertised_tokens(locale)
-    assert not missing, f"{locale}: parser accepts {sorted(missing)} but the help never mentions them"
+    missing = set(_PROBES) - _advertised_tokens(locale, help_key)
+    assert not missing, f"{locale}/{help_key}: parser accepts {sorted(missing)} but the help never mentions them"
 
 
 def test_the_rendered_option_names_every_accepted_key() -> None:
@@ -131,7 +148,7 @@ def test_the_help_names_no_euro_figure() -> None:
     filing year. Naming one here would decouple the copy from the figure the
     engine resolves and drift the moment a revision moved it.
     """
-    for locale in _LOCALES:
-        help_text = tr(_HELP_KEY, locale=locale)
+    for locale, help_key in _SURFACES:
+        help_text = tr(help_key, locale=locale)
         for figure in ("8.000", "8000", "1.800", "1800"):
-            assert figure not in help_text, f"{locale}: help restates the registry figure {figure!r}"
+            assert figure not in help_text, f"{locale}/{help_key}: help restates the registry figure {figure!r}"

@@ -7,7 +7,7 @@ per-test isolation comes from filesystem separation rather than a shared
 module-scoped fixture. No module-shared runtime and no per-test on-disk reset is
 needed here: nothing is shared across tests, so there is no cross-test bleed.
 
-The module-scope hoist with ``Session().begin_nested()`` rollback that the S804
+The module-scope hoist with ``Session().begin_nested()`` rollback that a prior
 attempt (peer commit ``4f83fefb9``) added here was never wired into any test and
 ``begin_nested`` was never implemented; the surfaces that genuinely reuse a
 module-shared runtime (application/filing, application/ledger) do so with a real
