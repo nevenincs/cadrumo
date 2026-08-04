@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f7fe46994a5b0ce81d109ab7994f61f286282fe2158df14714885ed456050b0d'
+body_hash: 'sha256:26170b60d46cb5a138df7b476276c3b3dc77d93ecbf69bb7c05abb4160428e17'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-adr]]"
   - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
@@ -272,6 +272,49 @@ modelling would have silently destroyed. It was not modelled that way.
 An undeclared rentas figure excludes nothing, which is the fail-open direction; the advisory
 that fires in exactly that state is what keeps it visible rather than silent.
 
+
+### Second pass: the two deferred amounts, cross-checked before anyone authors a parameter
+
+Run because the grounding discipline requires a live check for any numeric amount and the
+reviewer who sized these residuals has no network access. It declined to author a registry
+parameter on a bundled-corpus-only figure, which was the correct refusal; this closes that
+block in advance rather than at implementation time.
+
+Both confirm against the live authority: the under-three increment at **2.800 euros**, and
+the mínimo where a descendant dies during the period at **2.400 euros**. The adopción and
+acogimiento rule confirms too — the increment applies regardless of the child's age, in the
+period of Registro Civil inscription and the two following, or from the judicial or
+administrative resolution where inscription is not required.
+
+**Three rules surfaced that no pass had found, and each is an implementation trap.**
+
+**The increment survives the death of the descendant.** The authority states the under-three
+increment applies even where the descendant died during the tax period. So the death case
+and the supplement are not alternatives to be chosen between — they compose. An
+implementation that treats the flat death amount as replacing the whole computation would
+drop the increment for the household least able to query it.
+
+**The three-year window is a cap, not a restart.** Where circumstances change — the
+authority's own example is an adoption following a fostering — the increment continues for
+the remaining periods up to a maximum of three. So a child fostered and later adopted does
+not begin a fresh window on the adoption. An implementation anchoring on whichever entry
+event it happens to hold would grant up to six years where the law allows three, which
+under-declares. This also settles a design question the earlier passes left open: the field
+cannot be a single entry date whose meaning depends on relationship kind, because both
+events can occur for the same descendant and the window spans them.
+
+**The death amount overrides autonomic divergence.** Where a comunidad has set mínimos por
+descendientes different from the state figures, the death case is nonetheless 2.400 euros.
+That matters here specifically: this engine already wires a divergent autonomic tranche
+table for one comunidad, so a death-case implementation must override that table rather than
+feed through it. A fix that applied the flat amount only to the estatal aggregate would
+leave the autonomic side wrong for exactly the filers whose comunidad diverges.
+
+None of these three is expressible today, and together they raise the norma 4ª item's cost
+above the flat-amount framing it carried when it was sized — it is not one figure but an
+interaction with the supplement, the window and the autonomic table.
+
+
 ## The defect this review's finding-class predicted
 
 Recorded because it is the campaign's most consequential find and it arrived through the
@@ -336,6 +379,62 @@ alongside it. Should the membership modelling ever land, it must decide whether 
 becomes the source, and note that it distinguishes registered from unregistered pareja de
 hecho while the article does not — so both must count as partnered, or an unregistered couple
 over-grants.
+
+
+## The Art. 58.2 supplement: attempted, stopped at the boundary, and why that was right
+
+Added after the review, when acting on one of its own residuals surfaced a defect the
+residual list had not anticipated. Recorded in full because the reasons are non-obvious and
+would otherwise be re-derived by whoever takes it.
+
+**The defect is real and sizeable.** Art. 58.2 grants the menor-de-tres supplement to an
+adopted or fostered child **regardless of age**, in the inscription period and the two
+following. The engine's predicate tests only age at year end from the birth date and never
+consults the entry date, so a child adopted at five receives nothing where the law gives the
+supplement, three years running. Confirmed against the live authority, not only the bundled
+corpus, and backed by a printed worked example whose figures are usable because that
+comunidad modified only the discapacidad mínimo.
+
+**It was stopped before landing, and the reason is a scope difference of one word.** Art.
+58.1 assimilates persons linked by *tutela y acogimiento* — both take tranches. Art. 58.2
+covers *adopción o acogimiento* and omits tutela entirely. The descendant model carries an
+adoption-named date and no relationship-kind axis at all, so the rule "adopción and
+acogimiento but not tutela" is not expressible. A supplement keyed on the presence of that
+date would pay a tutela guardian who recorded one — an over-grant, which under-declares.
+The fix as scoped would have manufactured a silent revenue error while correcting a visible
+over-tax.
+
+**Measurement then found a second, independent reason, from a direction nobody anticipated.**
+The predicate is shared across **three statutes**, not one: the menor-three count and the
+aggregate supplement answer to Art. 58.2, the guardería population to Art. 81 bis, and the
+maternidad deduction to Art. 81. And Art. 81 carries its own adoption clause with a
+different window **shape** — three years from the inscription *date*, against Art. 58.2's
+inscription *period* plus two periods. The two can diverge.
+
+So a single shared predicate cannot serve all three correctly, and changing it in place
+would silently apply one statute's window to another's deduction. That is the same
+half-a-mechanism shape this review found three times elsewhere, arriving here through an
+over-shared predicate rather than through a missed sibling.
+
+**The oracle grounds less than it appears to.** The worked example's child is adopted, so it
+evidences the adopción route only. It says nothing about acogimiento and nothing about
+tutela — which is precisely the distinction that blocks the fix. An implementer who takes
+the oracle as licence for the whole clause will ground the one route that was never in
+doubt.
+
+**Leaving the defect in place is the safer state**, and that is a deliberate judgement
+rather than an inability to proceed. Today it over-taxes an adoptive family: wrong, but in
+the direction the taxpayer can see and challenge. The available fix would leak the
+supplement to tutela cases silently, in this article and possibly in Art. 81 as well. A
+partially-correct supplement is worse than none.
+
+**What the work actually needs**, from the measurement rather than as a design: a
+relationship-kind axis distinguishing adopción, acogimiento preadoptivo o permanente, and
+tutela; an entry-date field whose name is not adoption-specific, since the clause anchors on
+Registro Civil inscription *or* the resolución judicial o administrativa where inscription
+is not required, and a foster carer has no correct field for either today; and per-statute
+predicates rather than one shared test. Whether Art. 81 bis carries its own adoption clause
+is unread — if it does, the count is four statutes rather than three.
 
 
 ## Assessment
