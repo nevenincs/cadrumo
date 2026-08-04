@@ -82,15 +82,52 @@ its own engine, not a checker's output, so it is precedent for the *shape* and n
 for the *dependency*. Permanent cost against a contingent benefit; build it when
 there is something to catch.
 
-Why ``adapters/`` is out of scope
----------------------------------
+Why the scope is the call site and not a list of layers
+-------------------------------------------------------
 
-:data:`_STRING_PARSE_LAYERS` covers ``entrypoints`` and ``application`` only, and
-that follows from the rule rather than from inertia: operator-typed text belongs
-to :func:`~core.decimal.try_parse_canonical_decimal` and machine-produced text to
-:func:`~core.decimal.coerce_decimal`, and ``adapters/`` carries machine-produced
-AEAT artefact text. Widening the scope is therefore a change of intent needing its
-own justification, not a bug fix.
+This section used to argue the opposite, and the argument was wrong in a way
+worth recording rather than deleting. It said the governed set covered
+``entrypoints`` and ``application`` only, that this followed from the rule
+rather than from inertia because ``adapters/`` carries machine-produced text,
+and that widening it would be a change of intent needing its own justification.
+
+A live defect refuted it. ``--descendiente RENTAS=12.500`` was read as twelve
+euros fifty by a bare ``Decimal()`` sitting in ``domain`` — an operator-input
+parser in a layer the list did not name — so the gate that exists to catch
+exactly that stayed green while the misread shipped. The premise was not that
+adapters carry machine text, which is true; it was that layer membership tells
+you whether operator text arrives, which is false, and this codebase already
+contained the counter-example.
+
+So the gate module's ``_CANONICAL_DECIMAL_HOME`` now scopes by CALL SITE
+(the constant lives in ``test_decimal_enrollment_inventory``, not here, so it
+is named rather than cross-referenced -- an unqualified role pointing at
+another module is how the reference this paragraph replaces came to dangle). Constructing a
+Decimal from text belongs to ``core.decimal`` wherever the caller lives, and
+everything outside that package is in scope by default rather than by
+enumeration. The adapters that read machine-produced AEAT artefact text are
+still exempt — but by a stated per-site reason rather than by never having been
+looked at, which is the difference between a decision and a gap.
+
+The three contracts the canonical home now names are strict operator input
+(ambiguity refuses), extraction (ambiguity yields no value), and bounded-range
+extraction (ambiguity resolves only where the declared range makes the other
+reading impossible, not merely unlikely).
+
+When a local guard is NOT redundant
+------------------------------------
+
+Routing a site into the canonical home is right most of the time and wrong when
+the local guard carries meaning the general grammar discards. The worked example
+is in :mod:`~domain.user_profile._values`: its leading-zero check was retired as
+"subsumed by the grammar", and ``08001`` — a Spanish postcode — promptly became
+``Decimal("8001")``, losing the zero that carries its meaning. The canonical
+grammar accepts that string; it simply answers a different question.
+
+Grant such a site an exemption with the reason stated AT the site, so the next
+canonicaliser meets the argument rather than the temptation. The discriminator
+is whether the specific case carries information the general authority throws
+away — not whether routing it would compile.
 
 None of this means the detector is weak where it does reach. It correctly reports
 a resolvable ``Decimal(str(...))`` — it has been red on exactly such a site while
