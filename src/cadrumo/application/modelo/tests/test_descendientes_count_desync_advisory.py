@@ -26,8 +26,7 @@ from pathlib import Path
 import pytest
 
 from ....core import Modelo
-from ....domain.contribuyente import DescendantInfo
-from ....domain.contribuyente._descendant_facts import descendant_facts_from_list
+from ....domain.contribuyente import DescendantInfo, descendant_facts_from_list
 from ....domain.user_profile import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
