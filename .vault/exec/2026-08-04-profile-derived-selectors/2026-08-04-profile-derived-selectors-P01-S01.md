@@ -5,44 +5,11 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:cf5c830de182e028c88a9189155a3635a1b943958151bcf4bafe2b95e52011a2'
+body_hash: 'sha256:c81efd3a396b2ba7c6a11a147755a7f82d417678433f92e0eb6fdb95c941bdb7'
 step_id: 'S01'
 related:
   - "[[2026-08-04-profile-derived-selectors-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace profile-derived-selectors with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S01 and 2026-08-04-profile-derived-selectors-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Prove with a real failing test that an operator-stored value at a derived aggregate path suppresses the Art. 58 computation on the live calculate path, and record the red run before flipping it and ## Scope
-
-- `src/cadrumo/application/modelo/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Prove with a real failing test that an operator-stored value at a derived aggregate path suppresses the Art. 58 computation on the live calculate path, and record the red run before flipping it
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo/application/modelo/tests/`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 ## Outcome
 
@@ -102,5 +67,3 @@ The executor's underlying observation still stands and is recorded: the codebase
 already relying on this channel, which is evidence for the ADR rather than against it.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

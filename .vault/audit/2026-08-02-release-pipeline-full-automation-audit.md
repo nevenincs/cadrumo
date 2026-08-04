@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#release-pipeline-full-automation'
 date: '2026-08-02'
-modified: '2026-08-02'
+modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:caefb4a122eeda3adb53dc8786fbfbdf05e36bad7523a7be4f845c868f2b4395'
+body_hash: 'sha256:da54d7f31d3a013e0b4a0e891aa597328865cbb76582844394801a0f2535353a'
 related:
   - "[[2026-08-02-release-pipeline-full-automation-adr]]"
   - "[[2026-08-02-release-pipeline-full-automation-plan]]"

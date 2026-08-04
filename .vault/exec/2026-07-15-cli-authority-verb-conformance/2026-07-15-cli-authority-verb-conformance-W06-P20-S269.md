@@ -3,8 +3,8 @@ tags:
   - '#exec'
   - '#cli-authority-verb-conformance'
 date: '2026-07-28'
-modified: '2026-07-28'
-body_hash: 'sha256:7f93d008cd1d1800dc6ae35ccd210fc68f5c7159f4e2292bec52f425cb3524e9'
+modified: '2026-08-04'
+body_hash: 'sha256:e59d5ddab39e6da75bb60ca135de7af5c2cfd4e194fca4006e2d8b433286d485'
 step_id: 'S269'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-plan]]"

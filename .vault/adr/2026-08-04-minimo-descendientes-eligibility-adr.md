@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:5d34e0b0d61be618c48f6236c9da7ae1dcfde5ea707ef0d923c6fe684cb63327'
+body_hash: 'sha256:38decf1c39a13263671e6d8f1deb6abd03c8de6ee29f080404427a45f216c364'
 related:
   - "[[2026-08-04-minimo-descendientes-eligibility-research]]"
   - "[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]"

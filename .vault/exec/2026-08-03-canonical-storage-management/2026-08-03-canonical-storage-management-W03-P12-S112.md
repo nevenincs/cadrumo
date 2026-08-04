@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:2afa7e1cec0a2c5de419a36a0711f5a85a3753f64d6e0e992ba3c7c3d311232b'
+body_hash: 'sha256:98bcac1267057062c66bce70646bbf22cc2bfb3a8d2170aa6ff2be66bbfff023'
 step_id: 'S112'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"

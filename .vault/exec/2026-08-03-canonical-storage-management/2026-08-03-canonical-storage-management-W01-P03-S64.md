@@ -3,45 +3,13 @@ tags:
   - '#exec'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d7d297474c8d8696d1156e98053d39f98008e458a61066fb8b10b7e9909e27d'
+body_hash: 'sha256:6601d7d0a687c173ba8dc81c6928b490cae20587f24ac291eb12ec5e5440f4d0'
 step_id: 'S64'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S64 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Delete the fifth unpinned buckets literal in the journal repository's containment check and read the taxonomy member instead, a copy found after the plan was authored and covered by no existing row, gated by the journal repository suite plus the name-unification gate seeing the module and ## Scope
-
-- `src/cadrumo/application/_journal_repository.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Delete the fifth unpinned buckets literal in the journal repository's containment check and read the taxonomy member instead, a copy found after the plan was authored and covered by no existing row, gated by the journal repository suite plus the name-unification gate seeing the module
 

@@ -5,44 +5,11 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:c015c3cf09e21d965a8dc5801db2f903ce401b454254e2b2b1bde4558d82c495'
+body_hash: 'sha256:426cf4f597d5450d633f27d42bb80a66a4188b4797b42616bd71be2710062865'
 step_id: 'S77'
 related:
   - "[[2026-08-03-canonical-storage-management-plan]]"
 ---
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace canonical-storage-management with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S77 and 2026-08-03-canonical-storage-management-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Re-express each pins-by-design test so it still defends its original on-disk-name property against the taxonomy's resolved value rather than degenerating into an accessor-equals-itself tautology, starting with the five master-key and keystore entries the provenance gate still carries as pending debt and ## Scope
-
-- `src/cadrumo/adapters/persistence/storage/master_key/tests/`
-- `src/cadrumo/adapters/persistence/storage/bucket/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Re-express each pins-by-design test so it still defends its original on-disk-name property against the taxonomy's resolved value rather than degenerating into an accessor-equals-itself tautology, starting with the five master-key and keystore entries the provenance gate still carries as pending debt
 
@@ -107,5 +74,3 @@ not to this Step's narrower, named scope.
 None. No skipped work in the Step's own scope, no scaffolds left in code.
 The broader `master_key/tests/` literal survey is recorded here as a
 finding for `S78`, not treated as this Step's own remaining work.
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f2433f85cc797ff68b2a1f8a17b7dd933960a27e422ee167b613eec2f4a3b130'
+body_hash: 'sha256:1254b6341e5e078f4c2d93eea8b485188e8806404e7622773611076055607ed0'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-plan]]'

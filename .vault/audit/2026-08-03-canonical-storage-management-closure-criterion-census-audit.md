@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f962abbb790997e1818b42ba719b59bd9d450e96f7fdc65d720f7cbe759c44a6'
+body_hash: 'sha256:9bac4cac1959e29bb3d903f84dd9f5da0161e31d982b3dd3da11d6e4ec26baec'
 related:
   - '[[2026-08-03-canonical-storage-management-adr]]'
   - '[[2026-08-03-canonical-storage-management-plan]]'

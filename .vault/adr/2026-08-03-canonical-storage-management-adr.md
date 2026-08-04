@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-storage-management'
 date: '2026-08-03'
-modified: '2026-08-03'
+modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:9cfe7b7c10467948ce9099ef734bcc1b808238a59b6066a660f84f0ddf7ad464'
+body_hash: 'sha256:8b3385c7a7b9ed9570d4d184579e12778f6497c500e25bede60fcb3472e87f73'
 related:
   - "[[2026-08-03-canonical-storage-management-research]]"
   - "[[2026-07-13-data-output-standardization-adr]]"

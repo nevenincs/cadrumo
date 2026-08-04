@@ -3,31 +3,12 @@ tags:
   - '#audit'
   - '#profile-setup-flow'
 date: '2026-08-02'
-modified: '2026-08-02'
+modified: '2026-08-04'
 body_schema: 'body-v1'
-body_hash: 'sha256:f0da5f97f8620bf1400a5390ed171afbd4a818bae65db6a20f67a85810cb66ce'
+body_hash: 'sha256:af1dc92322af83f8a3a5e9179b13a8840e35e9037140677cfffb0bc0f75cac9d'
 related:
   - "[[2026-07-23-profile-setup-flow-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace profile-setup-flow with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `profile-setup-flow` audit: `profile create TUI trigger`
 
