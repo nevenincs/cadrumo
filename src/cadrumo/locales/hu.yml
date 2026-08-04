@@ -7220,18 +7220,6 @@ profile:
         valid_to:
           label: Érvényes eddig
       renta_family:
-        anualidades_sin_minimo_descendientes_2020:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2020)
-        anualidades_sin_minimo_descendientes_2021:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2021)
-        anualidades_sin_minimo_descendientes_2022:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2022)
-        anualidades_sin_minimo_descendientes_2023:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2023)
-        anualidades_sin_minimo_descendientes_2024:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2024)
-        anualidades_sin_minimo_descendientes_2025:
-          label: Anualidades por alimentos (leszármazott-minimum nélkül, 2025)
         ascendants:
           label: Felmenők
         cotizaciones_ss_madre_2024:
@@ -7244,34 +7232,6 @@ profile:
           label: Leszármazott
         descendientes_count:
           label: Leszármazottak száma
-        descendientes_menores_3_2024:
-          label: 3 év alatti leszármazottak (2024)
-        descendientes_minimos_aggregate_2020:
-          label: Leszármazottak utáni minimum, állami rész (2020)
-        descendientes_minimos_aggregate_2021:
-          label: Leszármazottak utáni minimum, állami rész (2021)
-        descendientes_minimos_aggregate_2022:
-          label: Leszármazottak utáni minimum, állami rész (2022)
-        descendientes_minimos_aggregate_2023:
-          label: Leszármazottak utáni minimum, állami rész (2023)
-        descendientes_minimos_aggregate_2024:
-          label: Leszármazottak utáni minimum, állami rész (2024)
-        descendientes_minimos_aggregate_2025:
-          label: Leszármazottak utáni minimum, állami rész (2025)
-        descendientes_minimos_aggregate_autonomico_2020:
-          label: Leszármazottak utáni minimum, regionális rész (2020)
-        descendientes_minimos_aggregate_autonomico_2021:
-          label: Leszármazottak utáni minimum, regionális rész (2021)
-        descendientes_minimos_aggregate_autonomico_2022:
-          label: Leszármazottak utáni minimum, regionális rész (2022)
-        descendientes_minimos_aggregate_autonomico_2023:
-          label: Leszármazottak utáni minimum, regionális rész (2023)
-        descendientes_minimos_aggregate_autonomico_2024:
-          label: Leszármazottak utáni minimum, regionális rész (2024)
-        descendientes_minimos_aggregate_autonomico_2025:
-          label: Leszármazottak utáni minimum, regionális rész (2025)
-        gastos_guarderia_reales_2024:
-          label: Bölcsődei kiadások (2024)
         madrid_nacimiento_adopcion_eligible_count:
           label: Madrid születési/örökbefogadási kedvezményre jogosultak száma
         minor_children_in_unit:

@@ -70,22 +70,6 @@ def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
     assert "profile_tax_id" in index.export_headers
 
 
-def test_modelo_100_anualidades_selector_is_declared_for_each_separate_escala_year() -> None:
-    schema = load_user_profile_schema()
-    index = build_user_profile_selector_index(schema)
-    failures: list[str] = []
-
-    for year in _MODELO_100_ANUALIDADES_YEARS:
-        selector = f"renta_family.anualidades_sin_minimo_descendientes_{year}"
-        if selector not in schema.field_paths:
-            failures.append(f"{year}: {selector!r} missing from schema.field_paths")
-            continue
-        if selector not in index.profile_selectors:
-            failures.append(f"{year}: {selector!r} missing from profile selectors")
-
-    assert not failures, "\n".join(failures)
-
-
 def test_anualidades_selector_still_resolves_through_its_derived_pattern() -> None:
     """Dropping the per-year field leaves the selector resolvable via the pattern.
 

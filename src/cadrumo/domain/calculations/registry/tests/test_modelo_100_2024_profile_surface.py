@@ -135,7 +135,8 @@ def test_modelo_100_2024_descendientes_minimos_aggregate_binding_is_wired() -> N
     declared (no formula or bound casilla consumed it either) -- a dangling
     selector per ``no-dormant-source-resolvers``. The Option B interim removed
     the binding outright. Option A's computed engine retires the gap for real:
-    the user-profile schema field ``renta_family.descendientes_minimos_aggregate_2024``
+    the derived selector ``renta_family.descendientes_minimos_aggregate_{filing_year}``
+    (declared as a year-parameterised pattern rather than a per-year schema field)
     is now populated by
     :func:`~cadrumo.application.modelo.inject_derived_minimo_descendientes_facts`
     and consumed by the binding ``renta-2024-profile-minimo-descendientes-estatal``,

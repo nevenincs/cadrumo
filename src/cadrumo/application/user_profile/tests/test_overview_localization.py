@@ -28,7 +28,6 @@ from ....domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
     UserProfileStatus,
-    derived_selector_for_path,
     load_user_profile_schema,
     profile_field_label_key,
 )
@@ -218,18 +217,12 @@ def test_schema_field_coverage_is_complete_in_the_projection() -> None:
     }
     assert namespaces, "no namespace field is declared, which would make the carve-out below vacuous"
 
-    # The second carve-out: a path the engine derives renders no row, because the
-    # write door refuses it and a box the record then rejects is the disagreement
-    # that refusal exists to prevent. Asserted non-empty for the same reason as
-    # the namespaces above -- a carve-out that silently emptied would let a real
-    # missing field pass as derived.
-    derived = {
-        f"{section.key}.{field.key}"
-        for section in schema.sections
-        for field in section.fields
-        if derived_selector_for_path(f"{section.key}.{field.key}", schema.derived_selectors) is not None
-    }
-    assert derived, "no derived path is declared, which would make the carve-out below vacuous"
+    # A path the engine derives renders no row, because the write door refuses
+    # it and a box the record then rejects is the disagreement that refusal
+    # exists to prevent. There is no second carve-out term to subtract here: a
+    # declared field and a derived-selector pattern are mutually exclusive by
+    # construction, so no declared field path ever matches a pattern and the
+    # equality below needs no such term.
 
     instance_path = "censo.divergencia.0.axis"
     record = _record().model_copy(
@@ -239,4 +232,4 @@ def test_schema_field_coverage_is_complete_in_the_projection() -> None:
         overview = build_profile_overview(record)
     projected = {field.path for section in overview.sections for field in section.fields}
 
-    assert projected == (set(schema.field_paths) - namespaces - derived) | {instance_path}
+    assert projected == (set(schema.field_paths) - namespaces) | {instance_path}

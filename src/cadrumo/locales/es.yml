@@ -7376,18 +7376,6 @@ profile:
         valid_to:
           label: Válido hasta
       renta_family:
-        anualidades_sin_minimo_descendientes_2020:
-          label: Anualidades por alimentos sin mínimo por descendientes (2020)
-        anualidades_sin_minimo_descendientes_2021:
-          label: Anualidades por alimentos sin mínimo por descendientes (2021)
-        anualidades_sin_minimo_descendientes_2022:
-          label: Anualidades por alimentos sin mínimo por descendientes (2022)
-        anualidades_sin_minimo_descendientes_2023:
-          label: Anualidades por alimentos sin mínimo por descendientes (2023)
-        anualidades_sin_minimo_descendientes_2024:
-          label: Anualidades por alimentos sin mínimo por descendientes (2024)
-        anualidades_sin_minimo_descendientes_2025:
-          label: Anualidades por alimentos sin mínimo por descendientes (2025)
         ascendants:
           label: Ascendientes
         cotizaciones_ss_madre_2024:
@@ -7400,34 +7388,6 @@ profile:
           label: Descendiente
         descendientes_count:
           label: Número de descendientes
-        descendientes_menores_3_2024:
-          label: Descendientes menores de 3 años (2024)
-        descendientes_minimos_aggregate_2020:
-          label: Mínimo por descendientes, parte estatal (2020)
-        descendientes_minimos_aggregate_2021:
-          label: Mínimo por descendientes, parte estatal (2021)
-        descendientes_minimos_aggregate_2022:
-          label: Mínimo por descendientes, parte estatal (2022)
-        descendientes_minimos_aggregate_2023:
-          label: Mínimo por descendientes, parte estatal (2023)
-        descendientes_minimos_aggregate_2024:
-          label: Mínimo por descendientes, parte estatal (2024)
-        descendientes_minimos_aggregate_2025:
-          label: Mínimo por descendientes, parte estatal (2025)
-        descendientes_minimos_aggregate_autonomico_2020:
-          label: Mínimo por descendientes, parte autonómica (2020)
-        descendientes_minimos_aggregate_autonomico_2021:
-          label: Mínimo por descendientes, parte autonómica (2021)
-        descendientes_minimos_aggregate_autonomico_2022:
-          label: Mínimo por descendientes, parte autonómica (2022)
-        descendientes_minimos_aggregate_autonomico_2023:
-          label: Mínimo por descendientes, parte autonómica (2023)
-        descendientes_minimos_aggregate_autonomico_2024:
-          label: Mínimo por descendientes, parte autonómica (2024)
-        descendientes_minimos_aggregate_autonomico_2025:
-          label: Mínimo por descendientes, parte autonómica (2025)
-        gastos_guarderia_reales_2024:
-          label: Gastos de guardería (2024)
         madrid_nacimiento_adopcion_eligible_count:
           label: Descendientes elegibles para la deducción de Madrid por nacimiento
             o adopción

@@ -6885,18 +6885,6 @@ profile:
         valid_to:
           label: Valid to
       renta_family:
-        anualidades_sin_minimo_descendientes_2020:
-          label: Alimony annuities without descendant minimum (2020)
-        anualidades_sin_minimo_descendientes_2021:
-          label: Alimony annuities without descendant minimum (2021)
-        anualidades_sin_minimo_descendientes_2022:
-          label: Alimony annuities without descendant minimum (2022)
-        anualidades_sin_minimo_descendientes_2023:
-          label: Alimony annuities without descendant minimum (2023)
-        anualidades_sin_minimo_descendientes_2024:
-          label: Alimony annuities without descendant minimum (2024)
-        anualidades_sin_minimo_descendientes_2025:
-          label: Alimony annuities without descendant minimum (2025)
         ascendants:
           label: Ascendants
         cotizaciones_ss_madre_2024:
@@ -6909,34 +6897,6 @@ profile:
           label: Descendant
         descendientes_count:
           label: Descendant count
-        descendientes_menores_3_2024:
-          label: Descendants under 3 (2024)
-        descendientes_minimos_aggregate_2020:
-          label: Descendant minimum, state share (2020)
-        descendientes_minimos_aggregate_2021:
-          label: Descendant minimum, state share (2021)
-        descendientes_minimos_aggregate_2022:
-          label: Descendant minimum, state share (2022)
-        descendientes_minimos_aggregate_2023:
-          label: Descendant minimum, state share (2023)
-        descendientes_minimos_aggregate_2024:
-          label: Descendant minimum, state share (2024)
-        descendientes_minimos_aggregate_2025:
-          label: Descendant minimum, state share (2025)
-        descendientes_minimos_aggregate_autonomico_2020:
-          label: Descendant minimum, regional share (2020)
-        descendientes_minimos_aggregate_autonomico_2021:
-          label: Descendant minimum, regional share (2021)
-        descendientes_minimos_aggregate_autonomico_2022:
-          label: Descendant minimum, regional share (2022)
-        descendientes_minimos_aggregate_autonomico_2023:
-          label: Descendant minimum, regional share (2023)
-        descendientes_minimos_aggregate_autonomico_2024:
-          label: Descendant minimum, regional share (2024)
-        descendientes_minimos_aggregate_autonomico_2025:
-          label: Descendant minimum, regional share (2025)
-        gastos_guarderia_reales_2024:
-          label: Childcare expenses (2024)
         madrid_nacimiento_adopcion_eligible_count:
           label: Madrid birth/adoption deduction count
         minor_children_in_unit:
