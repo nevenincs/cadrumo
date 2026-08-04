@@ -220,9 +220,15 @@ def test_operator_write_door_refuses_a_value_at_the_derived_aggregate_path() -> 
         _store_sentinel_at_derived_path()
 
     assert _DERIVED_PATH in str(refusal.value)
-    assert "descendiente" in str(refusal.value), (
-        "the refusal must name the surface that edits the real source facts, "
-        "not merely reject the write"
+    # Deliberately NOT asserting "descendiente": the derived path itself contains
+    # that substring, so an assertion on it is satisfied by the path echo and
+    # would hold for any refusal that names the path -- including the
+    # unknown-path one, which fires for this same path now the per-year
+    # declarations are deleted. This phrase appears only in the derived
+    # refusal's own message, so it discriminates between the two guards.
+    assert "is computed by the engine" in str(refusal.value), (
+        "the refusal must be the derived-path judgment naming why the write is "
+        "rejected, not merely any refusal that echoes the path"
     )
 
     record = UserProfileLifecycleRepository(bucket_id=_BUCKET).load(_BUCKET)
