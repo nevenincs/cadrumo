@@ -6,19 +6,25 @@ that fails the build if a refactor introduces a forbidden verb in
 the public API surface or in any module name. The same pattern
 applies to every read-only AEAT subpackage.
 
-The guard inspects every ``.py`` file under
-``src/cadrumo/adapters/inbound/sanitizer/`` and
-``src/cadrumo/entrypoints/cli/sanitize/``, every public function and
-class definition with module-level constants, plus every public
-CLI verb attached to the Typer ``app``.
+The guard inspects every non-test ``.py`` file under each root in
+:data:`_GUARDED_ROOTS`, checking every public function and class
+definition.
 
-The false-positive whitelist is narrow: ``commit_id`` is allowed
-because git commit identifiers are read-only state, not mutation
-verbs.
+This module previously declared a second root,
+``src/cadrumo/entrypoints/cli/sanitize/``, and said in prose that it
+scanned it. That package does not exist and never has -- ``git log``
+over the path is empty -- so the guard claimed coverage it had never
+had, over a surface that was not there. ``Path.rglob`` on a missing
+directory yields nothing without raising, and the old floor asserted
+only that the collection was non-empty overall, which the surviving
+root satisfied by itself. Hence :meth:`test_every_guarded_root_exists`:
+**a vacuity floor must be per-root whenever the scope is multi-root**,
+because a global "at least one file" floor is satisfied by any single
+surviving root and so can never detect that another has gone away or
+never arrived.
 
-See Also:
-    :mod:`~entrypoints.cli.sanitize`
-        Read-only CLI bridge whose public verbs are covered by this guard.
+There is no false-positive whitelist. The only entry was ``commit_id``,
+which matched no symbol and no module name in the scanned tree.
 """
 
 from __future__ import annotations
@@ -49,15 +55,11 @@ _FORBIDDEN_VERBS: tuple[str, ...] = (
     "rechazar",
 )
 
-# Identifiers that incidentally contain a forbidden verb but are
-# semantically benign. Match exactly (not by substring) so a
-# malicious-looking ``commit_streams_to_aeat`` cannot piggyback on
-# a benign whitelist entry. Keep narrow and explicit.
-_WHITELIST: frozenset[str] = frozenset(
-    {
-        "commit_id",  # git commit hashes are read-only identifiers
-    },
-)
+#: Repository-relative subpackages this guard scans. Every root declared here
+#: must exist and must contribute at least one non-test module; that floor is
+#: enforced PER ROOT (see the module docstring for why a global floor cannot
+#: see a dead root). Adding a root here automatically extends the floor to it.
+_GUARDED_ROOTS: tuple[str, ...] = ("src/cadrumo/adapters/inbound/sanitizer",)
 
 
 def _project_root() -> Path:
@@ -67,35 +69,49 @@ def _project_root() -> Path:
     return here.parents[6]
 
 
-def _public_python_files() -> list[Path]:
-    """Returns every ``.py`` file under the two guarded subpackages.
+def _modules_under(directory: Path) -> list[Path]:
+    """Returns every non-test ``.py`` file under *directory*.
 
     Excludes test modules — they may legitimately reference the
     forbidden verbs in test names like ``test_refuse_submit``.
     """
+    return [
+        path
+        for path in directory.rglob("*.py")
+        if not (path.name.startswith("test_") or path.name.startswith("_test_"))
+    ]
+
+
+def _public_python_files() -> list[Path]:
+    """Returns every scanned ``.py`` file across all guarded subpackages."""
     root = _project_root()
-    candidates: list[Path] = []
-    for sub in ("src/cadrumo/adapters/inbound/sanitizer", "src/cadrumo/entrypoints/cli/sanitize"):
-        for path in (root / sub).rglob("*.py"):
-            name = path.name
-            if name.startswith("test_") or name.startswith("_test_"):
-                continue
-            candidates.append(path)
-    return candidates
+    return [path for sub in _GUARDED_ROOTS for path in _modules_under(root / sub)]
 
 
 class TestPublicSurfaceCarriesNoForbiddenVerb:
     """No public function / class name in the sanitiser carries a banned verb."""
 
-    def test_files_present(self) -> None:
-        """The sanitizer subpackage must contribute at least one source file."""
-        files = _public_python_files()
-        sanitizer_files = [p for p in files if "sanitizer" in p.parts]
-        assert len(sanitizer_files) >= 1
-        # The verb-coverage loop below scans every file in `files`; pin
-        # the file collection's non-emptiness so a stripped layout would
-        # surface here rather than silently leaving the loop empty.
-        assert len(files) >= 1
+    def test_every_guarded_root_exists(self) -> None:
+        """Each declared root must exist on disk and yield a scanned module.
+
+        Checked per root rather than over the union: a global "at least one
+        file" floor is satisfied by any single surviving root, so it cannot
+        distinguish "every declared surface is covered" from "one declared
+        surface is covered and the rest are absent". A root that is deleted,
+        renamed, or never created reds here instead of silently contributing
+        nothing to every scan below.
+        """
+        root = _project_root()
+        for sub in _GUARDED_ROOTS:
+            directory = root / sub
+            assert directory.is_dir(), (
+                f"guarded root {sub!r} does not exist; rglob over a missing directory yields "
+                "nothing without raising, so every scan below would silently skip it"
+            )
+            assert _modules_under(directory), (
+                f"guarded root {sub!r} exists but contributes no non-test module, so the scans "
+                "below cover nothing there"
+            )
 
     def test_no_public_symbol_uses_forbidden_verb(self) -> None:
         offenders: list[tuple[Path, str]] = []
@@ -109,8 +125,6 @@ class TestPublicSurfaceCarriesNoForbiddenVerb:
                     continue
                 lowered = name.lower()
                 if any(verb in lowered for verb in _FORBIDDEN_VERBS):
-                    if name in _WHITELIST:
-                        continue
                     offenders.append((path, name))
         assert offenders == [], (
             f"Public symbols in the sanitiser subpackages carry forbidden mutation verbs: {offenders}"
@@ -121,8 +135,6 @@ class TestPublicSurfaceCarriesNoForbiddenVerb:
         for path in _public_python_files():
             stem = path.stem.lower().lstrip("_")
             if any(verb in stem for verb in _FORBIDDEN_VERBS):
-                if stem in _WHITELIST:
-                    continue
                 offenders.append(path)
         assert offenders == [], (
             f"Module filenames in the sanitiser subpackages carry forbidden mutation verbs: {offenders}"
