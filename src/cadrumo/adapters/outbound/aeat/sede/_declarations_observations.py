@@ -19,9 +19,9 @@ See Also:
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Final, NoReturn
+from typing import TYPE_CHECKING, Final, Literal
 from urllib.parse import urlsplit
 
 from pydantic import AnyHttpUrl
@@ -65,7 +65,12 @@ from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_byt
 from ._browser_constants import SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING
 from ._declarations_schema import Declaracion
 from ._errors import SedeParseError, SedeValidationError
-from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
+from ._schema import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
+    ObservedCasillaSkip,
+    ObservedCasillaValue,
+)
 
 if TYPE_CHECKING:
     from .....domain.calculations.registry import ModeloRevision, ValidatedRegistryAuthority
@@ -83,6 +88,7 @@ __all__ = [
     "_submitted_file_extraction_coverage",
     "_verify_submitted_file_context",
     "_with_derived_303_compensation_available_observation",
+    "non_numeric_observed_casillas",
     "observed_casillas_from_submitted_file",
     "registry_observation_from_filed_declaration",
     "resolve_previous_filing_bindings_from_filed_declarations",
@@ -350,11 +356,6 @@ def _submitted_file_coverage_for_casillas(
     )
 
 
-#: Ceiling on the casillas named individually in the non-decimal refusal. A modelo
-#: whose schema declares free-text casillas can breach this by hundreds, and the
-#: count in the leading sentence already carries the magnitude.
-_MAX_ENUMERATED_CASILLAS: Final[int] = 10
-
 _MODELO_303_PAGE_03_TAG = "<T30303000>"
 _MODELO_303_PAGE_03_END_TAG = "</T30303000>"
 _MODELO_303_PAGE_03_MONEY_FIELDS: Final[Mapping[str, tuple[int, int]]] = {
@@ -559,47 +560,58 @@ def _verify_submitted_file_context(
             )
 
 
-def _refuse_non_decimal_casillas(
-    affected: Sequence[tuple[CasillaId, str]],
-    *,
-    modelo: str,
-    revision_id: str,
-    filing_year: int,
-    period_token: str,
-) -> NoReturn:
-    """Refuse enrolment, naming every casilla the Decimal-only channel cannot carry.
+def non_numeric_observed_casillas(
+    observation: FiledDeclaracionObservation,
+) -> tuple[ObservedCasillaSkip, ...]:
+    """Return every casilla the Decimal-only registry channel cannot carry.
 
-    NEVER interpolate the observed VALUE, here or in any future rewrite of this
-    message. The tokens behind these casillas are taxpayer personal data -- Modelo
-    100 ``0066`` is a referencia catastral and ``0069`` is the taxpayer's street
-    address -- and this message is carried verbatim into the operator-facing
-    capture failure row. The casilla id and its registry label say which field
-    stopped the enrolment without putting the field's contents on that surface.
+    Returns an empty tuple when every observed casilla is readable as an amount.
+    A non-empty tuple enumerates the casillas that are not: a declared kind that
+    is not numeric, or a numeric casilla whose token will not parse.
 
-    The leading sentence carries the modelo, the count, and the cause because the
-    failure row bounds the message well below the length of the full enumeration,
-    so anything the operator must act on has to appear before the list.
+    Caller-opt-in, in the shape of
+    :func:`~adapters.outbound.google.verify_pull_coverage`: this is a query, not
+    a step in enrolment. It performs no side effects and can be called before or
+    after
+    :func:`registry_observation_from_filed_declaration`, so a caller with an
+    operator surface can report the gap while a caller without one is unaffected
+    and unchanged.
+
+    Rows carry no value, deliberately -- see
+    :class:`~adapters.outbound.aeat.sede.ObservedCasillaSkip`.
     """
-    shown = [f"{casilla_id} ({label})" for casilla_id, label in affected[:_MAX_ENUMERATED_CASILLAS]]
-    remainder = len(affected) - len(shown)
-    if remainder > 0:
-        shown.append(f"and {remainder} more")
-    raise SedeParseError(
-        f"modelo {modelo} revision {revision_id} declares {len(affected)} filed casilla(s) that are not "
-        f"decimal-valued, so filing {filing_year}/{period_token} cannot be enrolled as registry-grounded "
-        f"calculation evidence: the registry observation channel carries Decimal values only. This is a "
-        f"modelo-level limitation, not a defect in this return, and it recurs on every filing of this "
-        f"modelo. Affected casillas: {', '.join(shown)}.",
-        context={
-            "modelo": modelo,
-            "revision": revision_id,
-            "filing_year": str(filing_year),
-            "period": period_token,
-            "non_decimal_casilla_count": str(len(affected)),
-            "casilla_ids": [casilla_id for casilla_id, _label in affected],
-        },
-        translated_message=tr("adapters.sede.errors.casillas_not_decimal_valued"),
+    period_token = observation.period.registry_token
+    snapshot = _registry_authority().snapshot(
+        observation.modelo,
+        filing_year=observation.ejercicio,
+        period=period_token,
     )
+    revision_casillas_by_id = casillas_by_id(snapshot.revision)
+    skips: list[ObservedCasillaSkip] = []
+    for casilla in observation.casillas:
+        if casilla.source_artefact_kind == "justificante_pdf":
+            continue
+        registry_casilla = revision_casillas_by_id.get(casilla.casilla_id)
+        if registry_casilla is None:
+            continue
+        if casilla.value_kind is not CasillaValueKind.NUMERIC:
+            reason: Literal["not_numeric", "unreadable_numeric_token"] = "not_numeric"
+        else:
+            try:
+                casilla.decimal_value()
+            except InvalidOperation:
+                reason = "unreadable_numeric_token"
+            else:
+                continue
+        skips.append(
+            ObservedCasillaSkip(
+                casilla_id=casilla.casilla_id,
+                label=registry_casilla.label,
+                value_kind=casilla.value_kind,
+                reason=reason,
+            ),
+        )
+    return tuple(skips)
 
 
 def registry_observation_from_filed_declaration(
@@ -636,7 +648,6 @@ def registry_observation_from_filed_declaration(
             "has incomplete extraction coverage",
         )
     casilla_values: dict[CasillaId, Decimal] = {}
-    non_decimal: list[tuple[CasillaId, str]] = []
     for casilla in observation.casillas:
         if casilla.source_artefact_kind == "justificante_pdf":
             raise SedeParseError("justificante metadata cannot populate registry casilla values")
@@ -656,30 +667,22 @@ def registry_observation_from_filed_declaration(
         # wrong number -- `0065` (clave) reads as 15, `0167` (epígrafe IAE) as 22 --
         # so a conversion attempt admits exactly the values it needed to reject.
         #
-        # Collect rather than raise on the first one: a modelo whose schema declares
-        # free-text or boolean casillas fails on EVERY filing, so the operator needs
-        # the whole affected set to see it is a modelo-wide gap, not a bad figure in
-        # this return.
+        # A casilla this channel cannot carry is skipped rather than fatal: a modelo
+        # whose schema declares free-text or boolean casillas has them on EVERY
+        # filing, so refusing here discarded a whole return's numeric evidence over
+        # fields that were never destined for a Decimal map. The skipped set is not
+        # lost -- non_numeric_observed_casillas enumerates it for the operator, and
+        # a return with no numeric casilla at all still refuses below.
         if casilla.value_kind is not CasillaValueKind.NUMERIC:
-            non_decimal.append((casilla.casilla_id, registry_casilla.label))
             continue
         try:
             value = casilla.decimal_value()
         except InvalidOperation:
-            non_decimal.append((casilla.casilla_id, registry_casilla.label))
             continue
         previous = casilla_values.get(casilla.casilla_id)
         if previous is not None and previous != value:
             raise SedeParseError(f"observed casilla {casilla.casilla_id!r} has contradictory values")
         casilla_values[casilla.casilla_id] = value
-    if non_decimal:
-        _refuse_non_decimal_casillas(
-            non_decimal,
-            modelo=observation.modelo,
-            revision_id=snapshot.revision.id,
-            filing_year=observation.ejercicio,
-            period_token=period_token,
-        )
     if not casilla_values:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{period_token!r} "

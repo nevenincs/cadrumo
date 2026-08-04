@@ -22,13 +22,15 @@ import pytest
 
 from ......core import CasillaValueKind
 from ......domain.calculations.registry import validated_casilla_id
-from .._declarations_observations import _observed_value_kind
+from .._declarations_observations import _observed_value_kind, non_numeric_observed_casillas
 from .._errors import SedeValidationError
-from .._schema import ObservedCasillaValue
+from .._schema import ObservedCasillaSkip, ObservedCasillaValue
+from ._declarations_support import _filed_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _SRC_ROOT = Path(__file__).resolve().parents[5]
+_M100_NUMERIC_CASILLA = validated_casilla_id("0224", surface="test_observed_casilla_value_kind")
 
 
 def _carrier(value: str, kind: CasillaValueKind) -> ObservedCasillaValue:
@@ -99,6 +101,67 @@ def _decimal_on_dot_value_sites(tree: ast.AST) -> list[int]:
         if isinstance(argument, ast.Attribute) and argument.attr == "value":
             found.append(node.lineno)
     return found
+
+
+def test_skip_row_model_declares_no_value_field() -> None:
+    """The skip record must never gain a value field.
+
+    Its rows name the non-numeric casillas, which on Modelo 100 include a
+    referencia catastral and the taxpayer's street address, and the rows exist to
+    be rendered to an operator. A value field would put personal data on that
+    surface, so this asserts the shape rather than trusting the docstring.
+    """
+    fields = set(ObservedCasillaSkip.model_fields)
+    assert fields == {"casilla_id", "label", "value_kind", "reason"}
+    assert "value" not in fields
+
+
+def test_skip_query_returns_empty_when_every_casilla_is_numeric() -> None:
+    """An all-numeric observation reports nothing, so a caller can trust silence."""
+    observation = _filed_observation(
+        modelo="100",
+        ejercicio=2025,
+        period="0A",
+        casilla_values={_M100_NUMERIC_CASILLA: Decimal("1234.56")},
+    )
+
+    assert non_numeric_observed_casillas(observation) == ()
+
+
+def test_skip_query_names_a_text_casilla_without_disclosing_its_value() -> None:
+    """The row identifies the casilla and its label, never what it holds."""
+    filed_address = "CL SANITIZADA 0000 LOCALIDAD"
+    observation = _filed_observation(
+        modelo="100",
+        ejercicio=2025,
+        period="0A",
+        casilla_values={_M100_NUMERIC_CASILLA: filed_address},
+    )
+
+    skips = non_numeric_observed_casillas(observation)
+
+    assert len(skips) == 1
+    assert skips[0].casilla_id == _M100_NUMERIC_CASILLA
+    assert skips[0].reason == "not_numeric"
+    assert skips[0].label
+    assert filed_address not in str(skips[0].model_dump())
+    assert "SANITIZADA" not in str(skips[0].model_dump())
+
+
+def test_skip_query_reports_a_numeric_casilla_whose_token_will_not_parse() -> None:
+    """A numeric casilla with an unreadable token is a distinct, named reason."""
+    observation = _filed_observation(
+        modelo="100",
+        ejercicio=2025,
+        period="0A",
+        casilla_values={_M100_NUMERIC_CASILLA: "no-decimal"},
+        value_kind=CasillaValueKind.NUMERIC,
+    )
+
+    skips = non_numeric_observed_casillas(observation)
+
+    assert len(skips) == 1
+    assert skips[0].reason == "unreadable_numeric_token"
 
 
 _CARRIER_NAMES = ("ObservedCasillaValue", "ObservedCasillaValueProtocol")

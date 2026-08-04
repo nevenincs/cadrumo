@@ -75,6 +75,32 @@ class FiledDataCaptureFailureRow(BaseModel):
     message: str
 
 
+class FiledCasillaSkipRow(BaseModel):
+    """One casilla a filing carries that the registry channel cannot read.
+
+    Sibling of :class:`FiledDataCaptureFailureRow` and keyed the same way, but a
+    different kind of event: the capture succeeded and this row says what the
+    artefact holds that could not be enrolled as an amount. A failure row says
+    the capture did not happen.
+
+    Carries no value, by the same rule as
+    :class:`~adapters.outbound.aeat.sede.ObservedCasillaSkip`: these casillas are
+    the non-numeric ones, which include a referencia catastral and the
+    taxpayer's address, and this row is built to be rendered.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    modelo: str
+    year: int
+    period: Period | None = None
+    expediente_id: str | None = None
+    casilla_id: str
+    label: str
+    value_kind: str
+    reason: str
+
+
 class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     """Read-only bulk filed-declaration capture report."""
 
@@ -84,6 +110,7 @@ class BulkFiledDataCaptureReport(FiledCaptureEvidenceTally):
     year_to: int
     failed_count: int
     failures: tuple[FiledDataCaptureFailureRow, ...] = ()
+    skipped_casillas: tuple[FiledCasillaSkipRow, ...] = ()
 
 
 class ExpedientesBulkCaptureFailureRow(BaseModel):

@@ -572,6 +572,7 @@ async def capture_filed_data_bulk(
         calculation_observation_count=len(calculation_observation_keys),
         calculation_observation_keys=tuple(calculation_observation_keys),
         failures=tuple(failures),
+        skipped_casillas=finalization.skipped_casillas,
     )
 
 

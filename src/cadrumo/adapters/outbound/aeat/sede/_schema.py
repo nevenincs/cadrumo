@@ -290,6 +290,32 @@ class ObservedCasillaValue(BaseModel):
         return coerce_decimal_strict(self.value)
 
 
+class ObservedCasillaSkip(BaseModel):
+    """One casilla the Decimal-only registry channel cannot carry.
+
+    Enumerated by
+    :func:`~adapters.outbound.aeat.sede.non_numeric_observed_casillas` so a
+    caller can refuse, log, or surface a diagnostic, rather than being folded
+    into the enrolment result. The check is caller-opt-in: a caller with no
+    operator surface to report on has nothing to do with these rows.
+
+    There is deliberately NO value field, and adding one later would be a
+    regression rather than an enrichment. The casillas that land here are the
+    non-numeric ones, which on Modelo 100 include a referencia catastral
+    (``0066``) and the taxpayer's street address (``0069``); these rows are
+    built to be rendered to an operator, so carrying the value would put
+    personal data on that surface. The casilla id and its registry label say
+    which field was skipped without disclosing what it holds.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    casilla_id: CasillaId
+    label: str = Field(min_length=1, max_length=512)
+    value_kind: CasillaValueKind
+    reason: Literal["not_numeric", "unreadable_numeric_token"]
+
+
 class IvaCompensationWalletRow(BaseModel):
     """One AEAT wallet row for IVA compensation generated in a source period.
 
