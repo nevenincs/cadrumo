@@ -14,7 +14,7 @@ from ..adapters.persistence.storage import (
     WORKFLOW_STATE_NAMESPACE,
     has_active_bucket_session,
 )
-from ..adapters.persistence.storage.bucket import read_manifest
+from ..adapters.persistence.storage.bucket import bucket_paths, read_manifest
 from ..adapters.persistence.storage.master_key import (
     BucketSession,
     activate_session,
@@ -93,7 +93,7 @@ def test_isolated_ephemeral_secure_sql_routes_default_engine_to_tmp_database(
 
 def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(tmp_path: Path) -> None:
     storage_root = tmp_path / "operator-storage"
-    control_database = storage_root / "buckets" / _CONTROL_BUCKET_ID / "db" / "cadrumo.db"
+    control_database = bucket_paths(storage_root, _CONTROL_BUCKET_ID).database_file
     isolated_root = tmp_path / "isolated-storage"
     isolated_database = isolated_root / "cadrumo.db"
 
@@ -150,7 +150,7 @@ def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp
     assert profile.runtime.readiness.code is StorageRuntimeReadinessCode.READY
     assert runtime.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
     assert runtime.route_attached_to_active_bucket
-    assert _secure_object_row_count(profile.paths.db_dir / "cadrumo.db") == 1
+    assert _secure_object_row_count(profile.paths.database_file) == 1
     assert not (profile.storage_root / "cadrumo.db").exists()
     assert not has_active_bucket_session()
 
@@ -185,7 +185,7 @@ def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to
         revisions.save(revisions.load())
 
         active_bucket = workflow_repository.load().active_profile_bucket_id()
-        database_path = profile.paths.db_dir / "cadrumo.db"
+        database_path = profile.paths.database_file
 
     assert active_bucket == _CONTROL_BUCKET_ID
     assert work_units.bucket_id == _CONTROL_BUCKET_ID
