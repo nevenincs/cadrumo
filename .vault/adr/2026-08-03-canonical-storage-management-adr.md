@@ -248,6 +248,49 @@ tests-are-different carve-out: every fixture, every conftest, every
 `override_settings` call, and every re-typed literal migrates to the canonical
 API. This is a first-class part of the contract, not an afterthought.
 
+**Amendment — a read of a bound path field satisfies enrollment.** The affirmative
+sentence above says *produced by that accessor*, and the five disqualifiers do not
+mention reading `settings.cadrumo_X_dir`. A field read therefore fell in a gap: not
+the affirmative case, not excluded. It was measured, and the gap is real —
+**8 production modules call `storage_path(`, 21 read a bound path field, and the
+two sets are disjoint**, at `bfe2da17f6`. Left unruled, the two available
+readings change what "done" means by roughly a factor of three.
+
+*The figure took four attempts and the failures are instructive, so the counts
+above should be recomputed rather than quoted.* A first pass gave `5` from an
+import-form pattern that missed a name at end-of-line with no trailing comma; a
+second gave `5 + 21 = 26`, a sum of overlapping samples presented as a
+population; a third gave 8 / 24 / 1 overlap by counting **file presence**. The
+last was still wrong: three of those 24 mention a field only in a Sphinx
+`:attr:` role, and one of the three is the supposed overlap module, whose
+docstring records that it resolves through the accessor **rather than** by
+reading the field. **A mention is not a use, and the prose asserted the negation
+of what matching it implied.**
+
+**Ruling: a read of a `Path`-typed `Settings` field bound to a taxonomy member is
+enrolled.** Not by preference — by two gates that make the field a taxonomy-governed
+door rather than a second authority:
+
+- `test_storage_binding_gate.py` proves every `Path`-typed field is a taxonomy
+  member, a declared escape, or the storage root — **total and disjoint**. Its
+  discovery is anchored to `Settings.model_fields`, deliberately *independent* of
+  the taxonomy; the gate's own docstring records why, since a field set sourced
+  from the taxonomy would move in lock-step and an empty discovery would compare
+  empty against empty and pass.
+- `test_storage_default_parity.py` pins each field's placeholder default to the
+  taxonomy's declared subpath.
+
+So the accessor and the field are two doors onto one declaration, and **only
+re-typing a segment escapes** — which is what the five disqualifiers already
+describe and what `S78` burns down. This clause states explicitly what R6's
+enrollment-unit logic implied and R5's first sentence did not admit.
+
+**Consequence, so the clause is not read as more than it is.** Accessor adoption
+is a **style** question, not an enrollment one; the ratio above is hygiene and
+must not be reported as outstanding enrollment work. And the parity gate makes the
+duplicate **safe, not single** — a subpath is still spelled in two places, it
+simply cannot drift. That residual belongs to `S114`, not to this contract.
+
 **R6 — Escapes are declared, not merely absent.** A path-valued setting stays
 outside the taxonomy only when it fails one of two questions: does the
 application *choose* this location, and does the application *write data* there?
@@ -511,6 +554,45 @@ A migration that turns a pinning test into an assertion that the accessor equals
 itself has deleted the test's reason for existing while leaving it green. That
 is a failed migration and must be treated as such in review. This is the single
 most likely way the mandate is satisfied on paper and gutted in substance.
+
+**Amendment — the executing convention differs from this ruling, and the
+convention is ratified.** Six lanes converged on a shape this ruling does not
+describe: **keep the pinned literal at the assertion, and declare it deliberate**
+via a module-level `PINNED_TAXONOMY_LITERALS` frozenset naming the taxonomy
+vocabulary that module pins on purpose. It is in **27 test modules** and appeared
+**nowhere in `.vault/`** until this clause — a convention at that spread, absent
+from the decision record, is precisely the drift this pipeline exists to prevent.
+
+**The two designs differ on one axis: where the oracle lives.** This ruling puts
+it at the declaration — the test asserts against the taxonomy's resolved value,
+and a declaration-side gate defends the name. The convention keeps it at the
+assertion — the test retains the literal, and the declaration-side gate exists in
+addition.
+
+**Ratified in the convention's favour**, on the reasoning this campaign already
+accepted elsewhere. `DERIVED_OUTPUT_SUBPATHS` in `test_output_dir_state_root.py`
+duplicates the taxonomy's subpaths **deliberately**, because an oracle derived
+from the thing it checks is not an oracle; deriving it would make the test assert
+the taxonomy against itself. A pinning test carries the identical property, so
+re-expressing its literal against `storage_location(...).subpath` would move it
+one step toward the tautology this ruling's own second paragraph forbids — the
+name half of the assertion would then be the accessor compared with itself, with
+only the declaration-side gate left holding the name.
+
+R14's shape is *sound* — the declaration-side gate genuinely exists and is
+non-vacuous. But it concentrates the guarantee in one place, and the convention
+keeps two independent checks for the cost of one frozenset. **Two oracles is the
+stronger design where the property is a literal on-disk name that must not
+change.**
+
+**Binding form.** A pins-by-design literal **may remain at its assertion** when the
+module declares it in `PINNED_TAXONOMY_LITERALS` with a docstring stating what the
+pin defends. An *incidental* literal still migrates to the accessor, unchanged from
+above — the marker is not a general exemption, and using it to avoid a migration is
+the failed-migration case this ruling already names. **A pin without the marker is
+indistinguishable from an unswept literal**, which is the completeness problem
+recorded against `S78`: of the six classification outcomes only `pin` marks itself,
+so the marker is the one disposition that leaves the tree self-describing.
 
 **R15 — The two isolation tiers have different dispositions, and conflating them
 misdirects the migration.** An earlier wording called the whole chain "the
