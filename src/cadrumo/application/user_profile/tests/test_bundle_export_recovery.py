@@ -70,7 +70,7 @@ _SETTINGS_PREAMBLE = dedent(
         cadrumo_local_storage_root=root,
         cadrumo_active_profile=None,
         cadrumo_secret_store_backend="file",
-        cadrumo_secret_store_dir=root.parent / "secrets",
+        cadrumo_secret_store_dir=root.parent / "fallback-store",
         cadrumo_secret_passphrase=DEV_TEST_DATABASE_PASSWORD,
         cadrumo_output_language="en",
     )
@@ -116,7 +116,7 @@ def _child_env(root: Path, *, extra: dict[str, str] | None = None) -> dict[str, 
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
             "CADRUMO_SECRET_STORE_BACKEND": "file",
-            "CADRUMO_SECRET_STORE_DIR": str(root.parent / "secrets"),
+            "CADRUMO_SECRET_STORE_DIR": str(root.parent / "fallback-store"),
             "CADRUMO_SECRET_PASSPHRASE": DEV_TEST_DATABASE_PASSWORD,
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",

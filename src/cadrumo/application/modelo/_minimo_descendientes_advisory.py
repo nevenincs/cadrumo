@@ -41,13 +41,17 @@ from ...domain.user_profile import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic
 from ._semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_revision_semantic_role
 
-__all__ = ["collect_minimo_descendientes_undeclared_diagnostics"]
+__all__ = [
+    "collect_descendientes_count_desync_diagnostics",
+    "collect_minimo_descendientes_undeclared_diagnostics",
+]
 
 _MINIMO_ESTATAL_SEMANTIC_ROLE = "irpf_minimo_descendientes_estatal"
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente."
 _DESCENDANTS_COUNT_PATH = "renta_family.descendientes_count"
 
 _UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
+_COUNT_DESYNC_SOURCE_KIND = "descendientes_count_desync"
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -131,5 +135,108 @@ def collect_minimo_descendientes_undeclared_diagnostics(
                 "is silently omitted"
             ),
             casilla_id=estatal_id,
+        ),
+    )
+
+
+def _declared_descendant_row_count(bucket_id: str) -> int | None:
+    """Return how many descendant rows the profile carries, or ``None`` if unreadable."""
+    from ..user_profile import UserProfileLifecycleRepository
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    instances = {
+        fact.path.split(".")[2]
+        for fact in record.facts
+        if fact.value is not None and fact.path.startswith(_DESCENDANT_FACT_PREFIX) and fact.path.count(".") >= 3
+    }
+    return len(instances)
+
+
+def _stored_descendientes_count(bucket_id: str) -> Decimal | None:
+    """Return the stored aggregate count fact, or ``None`` when absent."""
+    from ..user_profile import UserProfileLifecycleRepository
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    for fact in record.facts:
+        if fact.path == _DESCENDANTS_COUNT_PATH and fact.value is not None:
+            try:
+                return Decimal(str(fact.value))
+            except (ArithmeticError, ValueError):
+                return None
+    return None
+
+
+def collect_descendientes_count_desync_diagnostics(
+    *,
+    modelo: str,
+    bucket_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise when the stored descendientes count contradicts the rows it aggregates.
+
+    ``renta_family.descendientes_count`` is a DERIVED aggregate over the
+    ``renta_family.descendiente.{n}.*`` rows: the entry surface, the wizard
+    descendant door and the checkpoint projection each rewrite it in the
+    same atomic batch as the rows, precisely so the two cannot drift.
+
+    Nothing enforced that afterwards. The count is a declared schema field,
+    so the profile manager renders it as an ordinary editable row -- while
+    the rows it counts are an indexed fact namespace the manager does not
+    render at all. An operator therefore sees a count with nothing beside
+    it to contradict, and editing it desyncs silently: measured, writing
+    ``7`` through the manager's single-field door against a profile
+    carrying two descendant rows leaves the count at ``7`` and the rows at
+    two.
+
+    That divergence reaches the filing, and splits it. The registry
+    binding ``renta-2024-profile-descendientes-count`` reads the STORED
+    count out of the profile fact index, while casillas 0513/0514 are
+    injected from the ROWS by
+    :func:`~application.modelo._profile_binding.inject_derived_minimo_descendientes_facts`
+    -- so one Modelo 100 casilla follows the operator's number and another
+    follows the descendants actually on record, with nothing saying they
+    disagree (`no-silent-under-declaration`).
+
+    Advisory rather than blocking, deliberately. A bare count with NO rows
+    is a supported declaration -- the sibling undeclared-advisory treats it
+    as an explicit "this is my family situation", including a positive
+    declaration of zero -- so a count standing alone is not a fault and is
+    not flagged. Only a count that contradicts rows that exist is, because
+    there the profile holds two different answers to one question.
+
+    Args:
+        modelo: The modelo identifier being calculated.
+        bucket_id: Bucket whose profile carries the descendant facts.
+
+    Returns:
+        A one-element tuple carrying the advisory, or an empty tuple when
+        the two agree, when no rows exist, or when no count is stored.
+    """
+    if modelo != Modelo.M100.value:
+        return ()
+    rows = _declared_descendant_row_count(bucket_id)
+    if not rows:
+        # No rows to contradict: a standalone count is a supported declaration.
+        return ()
+    stored = _stored_descendientes_count(bucket_id)
+    if stored is None or stored == Decimal(rows):
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_COUNT_DESYNC_SOURCE_KIND,
+            message=(
+                f"profile fact {_DESCENDANTS_COUNT_PATH!r} declares {stored} but the profile carries "
+                f"{rows} renta_family.descendiente row(s). The count feeds its own Modelo 100 binding "
+                "while the mínimo por descendientes casillas are computed from the rows, so the filing "
+                "would carry two different answers. Re-enter the descendants with `aeat config profile "
+                "descendiente add --descendiente NACIMIENTO=YYYY-MM-DD[,...]`, which rewrites the count "
+                "and the rows together"
+            ),
         ),
     )

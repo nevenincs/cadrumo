@@ -215,6 +215,7 @@ from ._certificate_sources import (
     CertificateSourceNotFoundError as StateCertificateSourceNotFoundError,
 )
 from ._certificate_sources_operator import (
+    certificate_source_tax_id,
     check_operator_certificate_sources,
     list_operator_certificate_sources,
     register_operator_certificate_source,
@@ -379,6 +380,7 @@ __all__ = [
     "auth_lock_ttl_seconds",
     "build_apoderado_flow_definition",
     "build_live_auth_preflight_report",
+    "certificate_source_tax_id",
     "check_operator_certificate_sources",
     "clave_auth_facts_from_profile_values",
     "clear_auth_acquisition_lock",

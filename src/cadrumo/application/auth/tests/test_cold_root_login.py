@@ -9,12 +9,12 @@ from pydantic import SecretStr
 
 from ....core import AuthProviderKind
 from ....core.config import override_settings
+from ....tests.certificates import CERTIFICATE_BUNDLE_PASSPHRASE, build_pkcs12_bundle
 from .. import (
     AuthConfigureNoActiveBucketError,
     active_auth_projection_span,
     login_operator_auth,
 )
-from ._certificate_bundle_support import _SECRET, _build_pkcs12
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -22,7 +22,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(tmp_path: Path) -> None:
     """The route snapshot retains explicit certificate settings even without a profile."""
     now = datetime.now(UTC)
-    certificate_path = _build_pkcs12(
+    certificate_path = build_pkcs12_bundle(
         tmp_path,
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=200),
@@ -35,7 +35,7 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
         cadrumo_local_storage_root=cold_root,
         cadrumo_active_profile=None,
         cadrumo_certificate_path=certificate_path,
-        cadrumo_certificate_password_secret=SecretStr(_SECRET),
+        cadrumo_certificate_password_secret=SecretStr(CERTIFICATE_BUNDLE_PASSPHRASE),
         cadrumo_live_tests_enabled="1",
     ) as settings:
         with active_auth_projection_span(

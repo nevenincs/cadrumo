@@ -94,6 +94,7 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from ...domain.buckets import BucketEvent, BucketEventType
+    from .._workflow_auth_models import CertificateSourceRecord
     from ..workflow import WorkflowState, WorkflowStateRepository
 
 
@@ -423,6 +424,100 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
         return CertificateSourceCheckReport(entries=tuple(entries), has_warnings=has_warnings)
 
 
+def certificate_source_tax_id(*, name: str = "", settings: Settings | None = None) -> str:
+    """Return the taxpayer identifier a registered certificate names, or ``""``.
+
+    An FNMT *persona física* certificate carries its holder's NIF or NIE
+    in the subject, and
+    :func:`~adapters.outbound.aeat.auth.certificate.extract_nif_from_subject`
+    is the one reader of it. The live session already consults that reader
+    to decide whether the certificate belongs to the active profile; this
+    exposes the same fact BEFORE a session, so a setup surface can offer
+    the identifier the operator would otherwise retype from the document
+    the certificate was issued against.
+
+    Reading it costs one PKCS#12 decode against the per-source secret,
+    the same load
+    :func:`~application.auth.check_operator_certificate_sources` performs
+    for its health probe.
+
+    Every ordinary reason the read cannot happen — no source registered,
+    none selected, no stored passphrase, the file moved, an expired or
+    corrupt bundle, a certificate whose subject carries no individual
+    identifier — answers ``""`` rather than raising. This function exists
+    to SEED a field the operator may always type themselves, so a failure
+    to read must degrade to an empty suggestion; raising here would turn
+    a certificate this app cannot open into a setup page that cannot
+    open either. What the certificate is worth for authentication is
+    settled by the health probe and by the session bind, both of which
+    report their failures in their own vocabulary.
+
+    Args:
+        name: The registered source to read. Blank reads whichever
+            source is currently selected.
+        settings: Resolved settings, or ``None`` to load them.
+
+    Returns:
+        The uppercase NIF/NIE the certificate's subject carries, or ``""``
+        when it cannot be read.
+    """
+    from ...adapters.outbound.aeat.auth.certificate import (
+        CertificateBundle,
+        CertificateError,
+        extract_nif_from_subject,
+        load_certificate,
+    )
+    from ..workflow import workflow_state_repository
+
+    resolved_settings = settings or load_settings()
+    with active_profile_storage_span(resolved_settings) as active_bucket_id:
+        if active_bucket_id is None:
+            return ""
+        state = workflow_state_repository().load()
+        record = _selected_certificate_record(state, name=name.strip())
+        if record is None:
+            return ""
+        path = Path(record.certificate_path)
+        if not path.is_file():
+            return ""
+        try:
+            secret = resolve_certificate_source_secret(
+                name=record.name,
+                bucket_id=active_bucket_id,
+                settings=resolved_settings,
+            )
+        except (OSError, CadrumoError):
+            return ""
+        if secret is None:
+            return ""
+        try:
+            loaded = load_certificate(
+                CertificateBundle(
+                    path=path,
+                    password=secret,
+                    friendly_name=record.friendly_name,
+                ),
+            )
+            return extract_nif_from_subject(loaded)
+        except (OSError, CertificateError):
+            return ""
+
+
+def _selected_certificate_record(state: WorkflowState, *, name: str) -> CertificateSourceRecord | None:
+    """Return the named registered source, or the active one when unnamed.
+
+    Returns ``None`` rather than raising for an unknown name, because the
+    only caller is a seeding read whose whole contract is to answer
+    "nothing to suggest" instead of refusing.
+    """
+    if not name:
+        return _active_certificate_source(state)
+    for record in list_certificate_sources(state):
+        if record.name == name:
+            return record
+    return None
+
+
 def set_operator_certificate_source_secret(
     *,
     name: str,
@@ -744,6 +839,7 @@ def _finalize_certificate_secret_mutation(
 
 __all__ = [
     "ActiveCertificateCredentials",
+    "certificate_source_tax_id",
     "check_operator_certificate_sources",
     "list_operator_certificate_sources",
     "register_operator_certificate_source",

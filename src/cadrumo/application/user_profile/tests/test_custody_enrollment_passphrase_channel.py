@@ -55,7 +55,7 @@ def _settings(tmp_path: Path, *, passphrase: str | None) -> Settings:
     """
     return Settings(
         cadrumo_local_storage_root=tmp_path / "cadrumo-storage",
-        cadrumo_secret_store_dir=tmp_path / "secrets",
+        cadrumo_secret_store_dir=tmp_path / "fallback-store",
         cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         cadrumo_secret_passphrase=SecretStr(passphrase) if passphrase is not None else None,
     )
@@ -69,7 +69,7 @@ def _provision(tmp_path: Path, passphrase: str) -> None:
     an unrelated reason and would make the assertions pass vacuously.
     """
     FileFallbackMasterKeyProvider(
-        store_dir=tmp_path / "secrets",
+        store_dir=tmp_path / "fallback-store",
         passphrase_callback=lambda: passphrase,
     ).provision_master_key()
 
@@ -99,7 +99,7 @@ def test_enrollment_without_a_callback_refuses_rather_than_prompting(tmp_path: P
         f"material itself; got {type(refusal.value).__name__}"
     )
     assert shown == [], "the refusal must precede minting and displaying a candidate mnemonic"
-    assert not (tmp_path / "secrets" / "master.recovery.key").exists(), (
+    assert not (tmp_path / "fallback-store" / "master.recovery.key").exists(), (
         "a refused enrollment must not install a recovery envelope"
     )
 
@@ -132,16 +132,16 @@ def test_enrollment_callback_is_the_passphrase_authority(tmp_path: Path) -> None
 
     assert callback_calls, "the explicit callback must be the resolver the provider consults"
     assert result.rotated is False
-    assert (tmp_path / "secrets" / "master.recovery.key").is_file()
+    assert (tmp_path / "fallback-store" / "master.recovery.key").is_file()
 
     opened = FileFallbackMasterKeyProvider(
-        store_dir=tmp_path / "secrets",
+        store_dir=tmp_path / "fallback-store",
         passphrase_callback=lambda: _CALLBACK_PASSPHRASE,
     )
     assert len(opened.get_master_key()) == 32, "the store must open under the callback's passphrase"
 
     refused = FileFallbackMasterKeyProvider(
-        store_dir=tmp_path / "secrets",
+        store_dir=tmp_path / "fallback-store",
         passphrase_callback=lambda: _CONFIGURED_PASSPHRASE,
     )
     with pytest.raises(MasterKeyPassphraseMismatchError):
