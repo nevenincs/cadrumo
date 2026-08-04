@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import date
-from typing import TYPE_CHECKING
 from xml.etree import ElementTree
 
 import pytest
@@ -31,11 +30,9 @@ from defusedxml import ElementTree as DefusedElementTree
 
 from ....domain.calculations.registry import xml_dictionary_entries
 from .._export_xml_dictionary import render_xml_dictionary_layout
+from ..runtime import RegistrySchemaAccessor
 from ._export_support import _schema_provider
 from .test_export import _approved_modelo_100_xml_dictionary_draft
-
-if TYPE_CHECKING:
-    from ..runtime import RegistrySchemaAccessor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
