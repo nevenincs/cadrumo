@@ -38,7 +38,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date, datetime
 from pathlib import Path
 from typing import Annotated
@@ -59,6 +59,7 @@ from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
+    DataBindingDefinition,
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
@@ -108,6 +109,7 @@ from ._action_errors import (
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
+from ._profile_binding import compose_legal_full_name, resolve_profile_export_values
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -157,8 +159,10 @@ _COMPLETENESS_UNVERIFIED_MESSAGE = (
 type _Sha256Ref = Annotated[str, Field(min_length=71, max_length=71, pattern=r"^sha256:[0-9a-f]{64}$")]
 
 
-def _compose_legal_full_name(*, surnames: str, name: str) -> str:
-    return " ".join(part for part in (surnames.strip(), name.strip()) if part)
+#: Composing the operator's legal name is a profile-identity rule, not an
+#: export one, so it lives with the profile bindings that also write it. Both
+#: writers land on the same declaration; two joins could disagree on one file.
+_compose_legal_full_name = compose_legal_full_name
 
 
 class ModeloIvaWalletDecisionProvenance(BaseModel):
@@ -699,6 +703,8 @@ def _compose_export_dictionary_values(
     *,
     draft: ModeloDraft,
     headers: Mapping[str, str],
+    bucket_id: str,
+    profile_export_bindings: Sequence[DataBindingDefinition] = (),
 ) -> dict[str, object]:
     """Compose the export values addressed by AEAT's own dictionary field ids.
 
@@ -716,28 +722,42 @@ def _compose_export_dictionary_values(
     ``_format_xml_dictionary_value``, and the two could disagree silently on a
     filing artefact. This channel carries values; that function renders them.
 
+    Every row beyond the declarante's own name and NIF is resolved from the
+    registry's ``source = "profile"`` bindings rather than named here. A field
+    id written into this function is a second place the registry's declarations
+    would have to be kept in step with; reading the bindings means a revision
+    that declares a new identity slot populates it with no code change.
+
     Args:
         draft: The approved draft being exported, supplying the taxpayer
             identity it was built against.
         headers: The already-composed export headers, read for the operator
             name parts so the profile is loaded once per export rather than
             twice.
+        bucket_id: Active profile bucket whose facts the registry-declared
+            bindings resolve against.
+        profile_export_bindings: The revision's export-addressed profile
+            bindings, projected onto the schema subview.
 
     Returns:
         Values keyed by the dictionary field id AEAT declares for them.
     """
-    return {
-        # Both rows were previously resolved by hardcoded escapes inside the
-        # renderer, which is the one place that must not know a field id.
-        # Sourcing DP_APENOM_D from the same header parts, and DPNIF_D from the
-        # same draft attribute, keeps the rendered bytes identical to what those
-        # escapes produced.
-        "DPNIF_D": draft.profile_tax_id,
-        "DP_APENOM_D": _compose_legal_full_name(
-            surnames=headers.get("surnames", ""),
-            name=headers.get("name", ""),
-        ),
-    }
+    values: dict[str, object] = dict(
+        resolve_profile_export_values(profile_export_bindings, bucket_id=bucket_id),
+    )
+    # The declarante's own name and NIF keep their existing sources, and are
+    # applied AFTER the registry-driven pass so they win on conflict. Both are
+    # taken from the artefact being exported rather than re-read live: the
+    # draft was approved against one taxpayer identity, and a profile edited
+    # between approval and export must not silently file a different NIF than
+    # the figures were computed for. Holding them here also keeps the rendered
+    # bytes identical to what the retired renderer escapes produced.
+    values["DPNIF_D"] = draft.profile_tax_id
+    values["DP_APENOM_D"] = compose_legal_full_name(
+        surnames=headers.get("surnames", ""),
+        name=headers.get("name", ""),
+    )
+    return values
 
 
 def _resolve_work_unit_period(work_unit: WorkUnit) -> Period:
@@ -850,7 +870,12 @@ def _persist_exported_draft(
         command=command,
         approved=approved,
         headers=headers,
-        dictionary_values=_compose_export_dictionary_values(draft=approved, headers=headers),
+        dictionary_values=_compose_export_dictionary_values(
+            draft=approved,
+            headers=headers,
+            bucket_id=work_unit.bucket_id,
+            profile_export_bindings=schema_provider.get_subview(str(work_unit.modelo)).profile_export_bindings,
+        ),
         schema_provider=schema_provider,
     )
     event = _emit_export_event(

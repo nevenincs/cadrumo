@@ -27,6 +27,11 @@ from ._export_test_support import _snapshot_ref
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NIF = "12345678Z"
+#: These cases cover the two identity rows the composer sources from the draft
+#: and the headers, so they pass no export bindings. The resolver short-circuits
+#: on an empty binding set and never opens the bucket, which is what lets these
+#: stay unit tests rather than needing an isolated profile runtime.
+_BUCKET_ID = "bucket-under-test"
 _PERIOD = Period.from_year_and_code(2024, "0A")
 
 
@@ -66,6 +71,7 @@ def test_the_identity_rows_carry_what_the_retired_escapes_produced() -> None:
     values = _compose_export_dictionary_values(
         draft=_draft(),
         headers={"surnames": "SURNAME BLANK", "name": "STATE", "tax_id": _NIF},
+        bucket_id=_BUCKET_ID,
     )
 
     assert values == {"DPNIF_D": _NIF, "DP_APENOM_D": "SURNAME BLANK STATE"}
@@ -82,6 +88,7 @@ def test_a_legal_entity_name_is_not_padded_with_a_trailing_separator() -> None:
     values = _compose_export_dictionary_values(
         draft=_draft(),
         headers={"surnames": "EMPRESA EJEMPLO SL", "name": "", "tax_id": _NIF},
+        bucket_id=_BUCKET_ID,
     )
 
     assert values["DP_APENOM_D"] == "EMPRESA EJEMPLO SL"
@@ -99,6 +106,7 @@ def test_the_taxpayer_identity_is_read_from_the_draft_not_from_the_headers() -> 
     values = _compose_export_dictionary_values(
         draft=_draft(),
         headers={"surnames": "SURNAME BLANK", "name": "STATE", "tax_id": "87654321X"},
+        bucket_id=_BUCKET_ID,
     )
 
     assert values["DPNIF_D"] == _NIF
