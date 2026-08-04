@@ -1,4 +1,4 @@
-"""P06.S24 real-authority gates for deterministic casilla enrollment.
+"""Real-authority gates for deterministic casilla enrollment.
 
 These focused gates close the worked example that the broader projection and
 anchor suites cannot name: M130/casilla 15 must exist in the validated registry
