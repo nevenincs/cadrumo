@@ -1,5 +1,14 @@
 """Real-file tests for the per-bucket failed-login throttle sidecar.
 
+The ``"keystore"`` literal in the sidecar-location assertion is deliberate.
+``login_throttle_path`` resolves through ``keystore_sidecar_path``, which reads
+``storage_location(StorageCategory.BUCKET_KEYSTORE)``, so expressing the
+expected side through the same accessor would move both sides together and the
+assertion would hold no matter where the sidecar landed. What it defends is
+that throttle state is written *inside the keystore* rather than beside it --
+a placement claim about the filesystem, not a lookup. Keep the literal.
+
+
 The throttle is driven through real files under a real keystore directory
 (no mocks, no patched clock): every test supplies an explicit ``now`` and
 inspects the on-disk sidecar the production writer produced.

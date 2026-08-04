@@ -1,4 +1,20 @@
-"""Tests for the keystore-separation invariant helpers."""
+"""Tests for the keystore-separation invariant helpers.
+
+The on-disk names below are written as literals **on purpose**, and must stay
+that way. ``keystore_root`` and ``keystore_path`` resolve through
+``storage_location(StorageCategory.BUCKET_KEYSTORE)``, so re-expressing the
+expected side through the same accessor would move both sides of every
+assertion together: the test would assert the accessor equals itself, pass
+unconditionally, and stop defending anything.
+
+What these assertions defend is the *on-disk contract* -- that a keystore
+lands at ``<root>/keystore/<bucket-id>/``, a sibling of ``buckets/`` and never
+nested beneath it. That is the separation a later unlock depends on, and it is
+a fact about the filesystem rather than about the taxonomy. A change to the
+declared subpath **should** red these tests; that is the signal, not a defect.
+
+The literal is the independent oracle. Do not migrate it to the accessor.
+"""
 
 from __future__ import annotations
 
