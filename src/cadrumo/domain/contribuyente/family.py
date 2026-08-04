@@ -162,7 +162,7 @@ class DescendantInfo(BaseModel):
         Default ``0`` (no deducción contribution from this child).
     gastos_guarderia_euros
         Actual guardería / centro educación infantil autorizado expenses paid
-        for this child (Art. 81 bis LIRPF).  Integer euros, ≥ 0.
+        for this child (Art. 81.2 LIRPF).  Integer euros, ≥ 0.
         Default ``0`` (no guardería expenses declared for this child).
     nif
         Optional NIF/NIE; validated for shape when present.
@@ -481,7 +481,7 @@ class RentaFamilyProfile(BaseModel):
     cotizaciones_ss_madre_2024: int = Field(default=0, ge=0)
     """SS cotizaciones paid by the mother during 2024 (mirrors casilla 0013).
 
-    Used as the statutory cap for the Art. 81 bis guardería incremento:
+    Used as the statutory cap for the Art. 81.2 guardería incremento:
     0613 = min(gastos_guarderia_reales, hijos_menores_3 × 1000, cotizaciones_ss_madre_2024).
     Default ``0`` (cap not declared; guardería incremento will be zero).
     """
