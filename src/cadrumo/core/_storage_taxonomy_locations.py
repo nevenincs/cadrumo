@@ -44,6 +44,14 @@ this value back off the taxonomy -- can never drift from what these two
 members actually resolve.
 """
 
+_BUCKET_DATABASE_DIRNAME: Final[str] = "db"
+"""Directory name shared by ``BUCKET_DATABASE`` and ``BUCKET_DATABASE_FILE``.
+
+Named once rather than hand-typed a second time as the ``BUCKET_DATABASE_FILE``
+member's own subpath prefix, so a rename of the directory cannot silently
+orphan the file member nested inside it.
+"""
+
 
 _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     # ── State substrate and identity ────────────────────────────────────────
@@ -546,7 +554,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
 _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.BUCKET_DATABASE,
-        "db",
+        _BUCKET_DATABASE_DIRNAME,
         consumer_module="adapters/persistence/storage/_storage_path_definitions.py",
         scope=StorageScope.BUCKET_RELATIVE,
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -560,7 +568,7 @@ _BUCKET_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         # the taxonomy -- exactly the nested-path gap the taxonomy exists to
         # close.
         StorageCategory.BUCKET_DATABASE_FILE,
-        f"db/{_PRODUCT_DATABASE_FILENAME}",
+        f"{_BUCKET_DATABASE_DIRNAME}/{_PRODUCT_DATABASE_FILENAME}",
         consumer_module="core/config.py",
         node_kind=StorageNodeKind.FILE,
         scope=StorageScope.BUCKET_RELATIVE,
