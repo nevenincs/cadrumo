@@ -1186,3 +1186,32 @@ residual count until both are answered.
 
 The final clause is the load-bearing one. A future reader who takes anything from
 this section should take that.
+
+### What the campaign learned about its own reasoning
+
+On the last technical question it asked — whether a two-member anchor enum still
+earns its place — the campaign produced **four justifications in one thread,
+across three agents, on one subsystem. Every one was refuted by measurement.**
+The original was false rather than merely dated, invalidated by the campaign's
+own bug fix. Three replacements followed, each structurally sound, each reached
+for because it fitted, and each accepted a little faster than the last.
+
+> **Four expired justifications in one thread, three agents, one subsystem — and
+> what survived is *"we do not know."* That is the correct resting place and it
+> cost all four to reach.**
+
+That sentence is in this document because a reader who understands why it took
+four attempts will read the rest of it correctly. The mechanism, stated once:
+
+**Soundness kept substituting for instantiation.** Each account was checked for
+whether it *could* be true and never for whether it *was what happened*. The
+cheapest check of the four — *"has this ever been observed?"* — went unasked the
+longest, because a claim that costs nothing to state invites nothing to test it.
+And the three agents who supplied the failed accounts had each spent that same
+thread correcting someone else's expired reasoning: **practising the check on
+others manufactures the feeling of having already applied it.**
+
+The resting place is not a gap in the record. An open question with its refuted
+answers written down is a stronger artefact than a confident answer nobody
+measured — which is the same judgement this document makes about leaving `S78`
+visibly open.
