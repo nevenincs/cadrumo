@@ -15,24 +15,7 @@ from pydantic import ValidationError
 
 from ...application.ledger import (
     LLMProvider,
-    LlmReviewDecision,
-    LlmReviewInvocationOrigin,
     LLMSplitApplyResult,
-    PurchaseInvoiceEvidenceInputError,
-    SplitChildCommand,
-    archive_manual_transaction,
-    attach_manual_transaction_evidence,
-    compute_display_id_width,
-    execute_reviewed_decision,
-    is_llm_provider_available,
-    mark_transaction_reviewed_excluded,
-    merge_transactions,
-    remove_manual_transaction,
-    reset_ledger_catalogue,
-    restore_manual_transaction,
-    split_transaction,
-    stash_manual_transaction,
-    suggest_evidence_split,
 )
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import PDF_MIME_TYPE
@@ -107,6 +90,11 @@ def ledger_attach(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.attach.actor_help")),
 ) -> None:
     """Attach existing secure evidence objects to one ledger transaction."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import attach_manual_transaction_evidence
+
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
@@ -241,9 +229,13 @@ def ledger_doclink(
     provenance. Gmail links, arbitrary URLs, and out-of-scope Drive files are
     **refused** — a link is never stored as evidence.
     """
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
     from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
     from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
+    from ...application.ledger import attach_manual_transaction_evidence
     from ...domain.attachments import AttachmentKind, add_attachment_bytes
 
     attachment_source = source.to_attachment_source()
@@ -532,6 +524,11 @@ def ledger_archive(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.archive.actor_help")),
 ) -> None:
     """Archive one ledger transaction through the bucket-scoped backend."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import archive_manual_transaction
+
     if not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
     state = _state()
@@ -565,6 +562,11 @@ def ledger_stash(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.stash.actor_help")),
 ) -> None:
     """Stash one ledger transaction through the bucket-scoped backend."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import stash_manual_transaction
+
     if not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
     state = _state()
@@ -613,6 +615,11 @@ def ledger_exclude(
     ),
 ) -> None:
     """Mark one active ledger transaction as reviewed and excluded from filing."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import mark_transaction_reviewed_excluded
+
     if not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
     state = _state()
@@ -646,6 +653,11 @@ def ledger_restore(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.restore.actor_help")),
 ) -> None:
     """Restore one stashed or archived ledger transaction to active."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import restore_manual_transaction
+
     if not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
     state = _state()
@@ -680,6 +692,11 @@ def ledger_remove(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.remove.actor_help")),
 ) -> None:
     """Remove one ledger transaction through the bucket-scoped backend."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import remove_manual_transaction
+
     if not dry_run and not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
     state = _state()
@@ -717,6 +734,11 @@ def ledger_reset(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.reset.actor_help")),
 ) -> None:
     """Reset the active bucket ledger catalogue through the backend."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import reset_ledger_catalogue
+
     if not dry_run and not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
     state = _state()
@@ -798,6 +820,14 @@ def ledger_split(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.split.actor_help")),
 ) -> None:
     """Redistribute one parent transaction into N child transactions (manual or --llm)."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import (
+        SplitChildCommand,
+        split_transaction,
+    )
+
     if llm is not None or read_evidence:
         _ledger_split_llm(
             ctx,
@@ -882,6 +912,10 @@ def _split_child_id_rows(child_transaction_ids: tuple[str, ...]) -> list[LedgerS
     display-width convention the ledger list surface uses — so the operator can
     read or copy either form into ``aeat app ledger merge --child-id ...``.
     """
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import compute_display_id_width
     from ._ledger_payloads import LedgerSplitChildIdPayload
 
     width = compute_display_id_width(child_transaction_ids)
@@ -927,6 +961,11 @@ def _validate_split_llm_options(
     yes: bool,
 ) -> None:
     """Reject manual-override flag combinations and an unconfirmed apply for ``ledger split --llm``."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import is_llm_provider_available
+
     if child_amount or child_description:
         raise _bad(
             tr(
@@ -1070,6 +1109,17 @@ def _ledger_split_llm(
     ``--child-description`` flags are the explicit operator override and cannot be
     combined with ``--llm``.
     """
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import (
+        LlmReviewDecision,
+        LlmReviewInvocationOrigin,
+        PurchaseInvoiceEvidenceInputError,
+        execute_reviewed_decision,
+        suggest_evidence_split,
+    )
+
     _validate_split_llm_options(
         child_amount=child_amount,
         child_description=child_description,
@@ -1141,6 +1191,11 @@ def ledger_merge(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.merge.actor_help")),
 ) -> None:
     """Re-merge a complete cohort of split children into a fresh transaction."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import merge_transactions
+
     if not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
     if len(child_id) < 2:

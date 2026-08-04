@@ -23,17 +23,6 @@ import typer
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.export import ExportSerializationFormat
-from ...application.ledger import (
-    LedgerExportCommand,
-    available_llm_providers,
-    export_ledger_transactions,
-    get_manual_transaction,
-    ledger_transaction_payload,
-    ledger_transaction_result_payload,
-    ledger_transaction_review_status,
-    ledger_transaction_tracking_payload,
-    summarize_manual_transactions,
-)
 from ...application.review import FilterParseError
 from ...core import LedgerSortField, LedgerSortOrder, Period, resolve_active_bucket_id
 from ...core.decimal import coerce_decimal_strict
@@ -123,6 +112,11 @@ def _ledger_list_pairing_error_year(filters: list[str], option_year: int | None)
 
 
 def _register_ledger_providers_command(app: typer.Typer) -> None:
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import available_llm_providers
+
     @app.command("providers", help=tr("cli.ledger.providers.help"))
     def ledger_providers(ctx: typer.Context) -> None:
         """List the cloud-provider CLIs on PATH and the on-host vision model."""
@@ -729,6 +723,14 @@ def _register_ledger_history_command(app: typer.Typer, *, resolve_transaction_id
 
 
 def _register_ledger_export_command(app: typer.Typer) -> None:
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import (
+        LedgerExportCommand,
+        export_ledger_transactions,
+    )
+
     @app.command("export", help=tr("cli.ledger.export.help"))
     def ledger_export(
         ctx: typer.Context,
@@ -866,6 +868,15 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
 
 
 def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import (
+        get_manual_transaction,
+        ledger_transaction_result_payload,
+        ledger_transaction_review_status,
+    )
+
     @app.command("view", help=tr("cli.ledger.view.help"))
     def ledger_view(
         ctx: typer.Context,
@@ -946,6 +957,11 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
 
 
 def _register_ledger_status_command(app: typer.Typer) -> None:
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import summarize_manual_transactions
+
     @app.command("status", help=tr("cli.ledger.status.help"))
     def ledger_status(
         ctx: typer.Context,
@@ -1035,6 +1051,15 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
 
 
 def _register_ledger_track_command(app: typer.Typer, *, resolve_transaction_id: ResolveTransactionId) -> None:
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import (
+        get_manual_transaction,
+        ledger_transaction_payload,
+        ledger_transaction_tracking_payload,
+    )
+
     @app.command("track", help=tr("cli.ledger.track.help"))
     def ledger_track(
         ctx: typer.Context,

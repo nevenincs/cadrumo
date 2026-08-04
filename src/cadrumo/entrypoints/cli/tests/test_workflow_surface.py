@@ -81,7 +81,7 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
         cadrumo_clave_movil_nie_soporte=None,
         cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         cadrumo_secret_passphrase=dev_test_passphrase,
-        cadrumo_secret_store_dir=tmp_path / "secrets",
+        cadrumo_secret_store_dir=tmp_path / "fallback-store",
         cadrumo_allow_unencrypted="",
         cadrumo_active_profile=None,
         cadrumo_local_storage_root=tmp_path / "storage",

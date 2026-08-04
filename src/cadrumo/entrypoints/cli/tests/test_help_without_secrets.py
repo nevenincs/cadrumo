@@ -110,7 +110,7 @@ def _passphraseless_env(tmp_path: Path) -> dict[str, str]:
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
             "CADRUMO_TOKEN_DIR": str(tmp_path / "tokens"),
             "CADRUMO_RUNS_DIR": str(tmp_path / "runs"),
-            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "storage" / "secrets"),
+            "CADRUMO_SECRET_STORE_DIR": str(tmp_path / "storage" / "fallback-store"),
             "CADRUMO_SECRET_STORE_BACKEND": "file",
         },
     )
@@ -157,7 +157,7 @@ def _provision_profile(tmp_path: Path, passphrase: str) -> None:
     created = _run(["config", "profile", "create", "control", *_PROFILE_ARGS], tmp_path, passphrase=passphrase)
     combined = f"{created.stdout}\n{created.stderr}"
     assert created.returncode == 0, combined
-    assert (tmp_path / "storage" / "secrets" / "master.key").is_file(), combined
+    assert (tmp_path / "storage" / "fallback-store" / "master.key").is_file(), combined
     assert passphrase not in combined
 
 

@@ -19,7 +19,6 @@ import typer
 from typer.core import TyperGroup
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger import get_transaction_participation
 from ...application.modelo import rebuild_participation_index
 from ...core.i18n import tr
 from ._common import _active_bucket_id_or_bad, _emit_envelope, _state, _tx_repo, emit_help_text
@@ -113,6 +112,10 @@ def _emit_participation_lookup(
     resolve_transaction_id: ResolveTransactionId,
 ) -> None:
     """Read and emit one :class:`TransactionRevisionParticipationIndex`."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import get_transaction_participation
     from ._ledger_payloads import (
         LedgerTransactionParticipationEntryPayload,
         LedgerTransactionParticipationPayload,

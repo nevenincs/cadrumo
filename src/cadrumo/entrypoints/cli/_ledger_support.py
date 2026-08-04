@@ -17,12 +17,6 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger import (
-    ledger_transaction_payload,
-    ledger_transaction_review_status,
-    list_manual_transactions,
-    resolve_transaction_id,
-)
 from ...core.decimal import format_decimal
 from ...core.i18n import tr
 from ...core.json_contract import Notice
@@ -58,6 +52,14 @@ def _emit_update_result(
     non-blocking advisory here rather than re-modelling it as a bespoke result
     field.
     """
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import (
+        ledger_transaction_payload,
+        ledger_transaction_review_status,
+    )
+
     transaction_payload = ledger_transaction_payload(result_transaction)
     review_status = ledger_transaction_review_status(result_transaction)
     result = result_cls.model_validate(
@@ -86,6 +88,11 @@ def _emit_update_result(
 
 def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[str, ...]:
     """Return the full transaction ids known to the active bucket."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import list_manual_transactions
+
     bucket_id = transaction_repository.bucket_id
     results = list_manual_transactions(
         bucket_id=bucket_id,
@@ -137,6 +144,11 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
     catalogue, because a mutation always targets a live row. Read verbs use the
     lineage-following ``_resolve_read_id`` in :mod:`_ledger` instead.
     """
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import resolve_transaction_id
+
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
     except TransactionIdPrefixError as exc:

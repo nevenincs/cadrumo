@@ -9,11 +9,9 @@ import typer
 
 from ...application.ledger import (
     LedgerProviderID,
-    LedgerSourceImportCommand,
     LedgerSourceImportResult,
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
-    import_ledger_source,
 )
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
@@ -55,6 +53,13 @@ def _validate_import_provider(provider: str) -> str:
 
 def register_import_commands(app: typer.Typer) -> None:
     """Register ledger import commands."""
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import (
+        LedgerSourceImportCommand,
+        import_ledger_source,
+    )
 
     @app.command("import", help=tr("cli.ledger.import.help"))
     def ledger_import(

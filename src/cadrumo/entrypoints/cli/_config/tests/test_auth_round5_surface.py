@@ -52,7 +52,7 @@ def _isolated_application_layer(tmp_path: Path) -> Iterator[None]:
     """
 
     storage_root = tmp_path / "cadrumo-storage"
-    secret_store_dir = tmp_path / "secrets"
+    secret_store_dir = tmp_path / "fallback-store"
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
         cadrumo_local_storage_root=storage_root,

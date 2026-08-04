@@ -33,7 +33,6 @@ import os
 import pathlib
 import subprocess
 import sys
-import tempfile
 import textwrap
 
 import pytest
@@ -109,7 +108,7 @@ def _child_env() -> dict[str, str]:
 
 def _run_console_less_enrollment(storage_root: pathlib.Path) -> dict[str, object]:
     """Run ``config recovery create`` in a console-less child and return its verdict."""
-    verdict_path = pathlib.Path(tempfile.mkdtemp()) / "verdict.json"
+    verdict_path = storage_root.parent / "verdict.json"
     creationflags = 0
     if sys.platform == "win32":
         creationflags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NO_WINDOW

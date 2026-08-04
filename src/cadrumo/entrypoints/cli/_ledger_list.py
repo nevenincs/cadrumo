@@ -16,11 +16,6 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...application.ledger import (
     LedgerReviewQuery,
     ManualLedgerTransactionResult,
-    compute_display_id_width,
-    ledger_transaction_review_payload,
-    ledger_transaction_review_status,
-    list_manual_transactions,
-    query_ledger_review_rows,
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core import LedgerSortField, LedgerSortOrder
@@ -220,6 +215,11 @@ def project_ledger_list(
     latest decision in the :class:`BucketEventHistoryRepository` is an LLM
     rejection.
     """
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import list_manual_transactions
+
     bucket_id = transaction_repository.bucket_id
     all_results = list_manual_transactions(
         bucket_id=bucket_id,
@@ -323,6 +323,11 @@ def _filter_results_by_review_spec(
     spec: LedgerReviewFilterSpec,
     results: tuple[ManualLedgerTransactionResult, ...],
 ) -> tuple[ManualLedgerTransactionResult, ...]:
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import query_ledger_review_rows
+
     matching = query_ledger_review_rows(
         ledger_review_query_for_spec(spec, bucket_id=bucket_id),
         transaction_repository=transaction_repository,
@@ -337,6 +342,15 @@ def _ledger_list_rows_and_lines(
     all_transaction_ids: tuple[str, ...],
     by_group: bool,
 ) -> tuple[list[LedgerListRowPayload], list[str]]:
+    # Imported here rather than at module scope: the CLI module is
+    # loaded to register commands, and pulling the owning submodule
+    # then costs every invocation for work only this verb does.
+    from ...application.ledger import (
+        compute_display_id_width,
+        ledger_transaction_review_payload,
+        ledger_transaction_review_status,
+    )
+
     rows: list[LedgerListRowPayload] = []
     lines = [
         tr("cli.ledger.list.header"),
